@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/builders/oneassetoption.hpp
+/*! \file portfolio/builders/vanillaoption.hpp
     \brief
     \ingroup builders
 */
@@ -42,9 +42,9 @@ namespace data {
 
     \ingroup builders
  */
-class OneAssetOptionEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&> {
+class VanillaOptionEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&> {
 public:
-    OneAssetOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes, const AssetClass& assetClass)
+    VanillaOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes, const AssetClass& assetClass)
         : CachingEngineBuilder(model, engine, tradeTypes), assetClass_(assetClass) {}
 
     boost::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& ccy) {
@@ -89,10 +89,10 @@ protected:
 
     \ingroup builders
  */
-class OneAssetEuropeanOptionEngineBuilder : public OneAssetOptionEngineBuilder {
+class EuropeanOptionEngineBuilder : public VanillaOptionEngineBuilder {
 public:
-    OneAssetEuropeanOptionEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : OneAssetOptionEngineBuilder(model, "AnalyticEuropeanEngine", tradeTypes, assetClass) {}
+    EuropeanOptionEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
+        : VanillaOptionEngineBuilder(model, "AnalyticEuropeanEngine", tradeTypes, assetClass) {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy, const AssetClass& assetClassUnderlying) override {
@@ -109,10 +109,10 @@ protected:
 
     \ingroup builders
  */
-class OneAssetAmericanOptionEngineBuilder : public OneAssetOptionEngineBuilder {
+class AmericanVanillaOptionAnalyticEngineBuilder : public VanillaOptionEngineBuilder {
 public:
-    OneAssetAmericanOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : OneAssetOptionEngineBuilder(model, engine, tradeTypes, assetClass) {}
+    AmericanVanillaOptionAnalyticEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes, const AssetClass& assetClass)
+        : VanillaOptionEngineBuilder(model, engine, tradeTypes, assetClass) {}
 };
 
 //! Abstract Engine Builder for American One Asset Options using Finite Difference Method
@@ -120,10 +120,10 @@ public:
 
     \ingroup builders
  */
-class OneAssetAmericanOptionFDEngineBuilder : public OneAssetAmericanOptionEngineBuilder {
+class AmericanOptionFDEngineBuilder : public AmericanVanillaOptionAnalyticEngineBuilder {
 public:
-    OneAssetAmericanOptionFDEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : OneAssetAmericanOptionEngineBuilder(model, "FdBlackScholesVanillaEngine", tradeTypes, assetClass) {}
+    AmericanOptionFDEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
+        : AmericanVanillaOptionAnalyticEngineBuilder(model, "FdBlackScholesVanillaEngine", tradeTypes, assetClass) {}
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClass) override {
@@ -143,10 +143,10 @@ protected:
 
     \ingroup builders
  */
-class OneAssetAmericanOptionBaroneAdesiWhaleyEngineBuilder : public OneAssetAmericanOptionEngineBuilder {
+class AmericanOptionBAWEngineBuilder : public AmericanVanillaOptionAnalyticEngineBuilder {
 public:
-    OneAssetAmericanOptionBaroneAdesiWhaleyEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : OneAssetAmericanOptionEngineBuilder(model, "BaroneAdesiWhaleyApproximationEngine", tradeTypes, assetClass) {}
+    AmericanOptionBAWEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
+        : AmericanVanillaOptionAnalyticEngineBuilder(model, "BaroneAdesiWhaleyApproximationEngine", tradeTypes, assetClass) {}
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClass) override {

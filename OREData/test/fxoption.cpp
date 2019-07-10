@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(testFXAmericanOptionPrice) {
         engineData->engine("FxOptionAmerican") = "BaroneAdesiWhaleyApproximationEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<ore::data::FxAmericanOptionBaroneAdesiWhaleyEngineBuilder>());
+        engineFactory->registerBuilder(boost::make_shared<ore::data::FxAmericanOptionBAWEngineBuilder>());
         
         fxOption.build(engineFactory);
 

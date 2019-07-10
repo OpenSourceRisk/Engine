@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/portfolio/oneassetoption.hpp>
+#include <ored/portfolio/vanillaoption.hpp>
 
 namespace ore {
 namespace data {
@@ -33,14 +33,14 @@ using std::string;
 /*!
   \ingroup tradedata
 */
-class FxOption : public OneAssetOption {
+class FxOption : public VanillaOptionTrade {
 public:
     //! Default constructor
-    FxOption() : OneAssetOption(AssetClass::FX) { tradeType_ = "FxOption"; }
+    FxOption() : VanillaOptionTrade(AssetClass::FX) { tradeType_ = "FxOption"; }
     //! Constructor
     FxOption(Envelope& env, OptionData option, string boughtCurrency, double boughtAmount, string soldCurrency,
              double soldAmount)
-        : OneAssetOption(env, AssetClass::FX, option, boughtCurrency, soldCurrency, soldAmount / boughtAmount, boughtAmount)
+        : VanillaOptionTrade(env, AssetClass::FX, option, boughtCurrency, soldCurrency, soldAmount / boughtAmount, boughtAmount)
           { tradeType_ = "FxOption"; }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine

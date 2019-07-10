@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/portfolio/builders/oneassetoption.hpp>
+#include <ored/portfolio/builders/vanillaoption.hpp>
 
 namespace ore {
 namespace data {
@@ -33,10 +33,10 @@ namespace data {
 
     \ingroup builders
  */
-class EquityEuropeanOptionEngineBuilder : public OneAssetEuropeanOptionEngineBuilder {
+class EquityEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
 public:
     EquityEuropeanOptionEngineBuilder()
-        : OneAssetEuropeanOptionEngineBuilder("BlackScholesMerton", {"EquityOption"}, AssetClass::EQ) {}
+        : EuropeanOptionEngineBuilder("BlackScholesMerton", {"EquityOption"}, AssetClass::EQ) {}
 };
 
 //! Engine Builder for American Equity Options using Finite Difference Method
@@ -44,10 +44,10 @@ public:
 
     \ingroup builders
  */
-class EquityAmericanOptionFDEngineBuilder : public OneAssetAmericanOptionFDEngineBuilder {
+class EquityAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
 public:
     EquityAmericanOptionFDEngineBuilder()
-        : OneAssetAmericanOptionFDEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}
+        : AmericanOptionFDEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}
 };
 
 //! Engine Builder for American Equity Options using Barone Adesi Whaley Approximation
@@ -55,10 +55,10 @@ public:
 
     \ingroup builders
  */
-class EquityAmericanOptionBaroneAdesiWhaleyEngineBuilder : public OneAssetAmericanOptionBaroneAdesiWhaleyEngineBuilder {
+class EquityAmericanOptionBAWEngineBuilder : public AmericanOptionBAWEngineBuilder {
 public:
-    EquityAmericanOptionBaroneAdesiWhaleyEngineBuilder()
-        : OneAssetAmericanOptionBaroneAdesiWhaleyEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}
+    EquityAmericanOptionBAWEngineBuilder()
+        : AmericanOptionBAWEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}
 };
 
 } // namespace data

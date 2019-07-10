@@ -3,13 +3,13 @@
  All rights reserved.
 */
 
-/*! \file ored/portfolio/oneassetoption.hpp
-\brief one asset option representation
+/*! \file ored/portfolio/vanillaoption.hpp
+\brief vanilla option representation
 \ingroup tradedata
 */
 
-#include <ored/portfolio/oneassetoption.hpp>
-#include <ored/portfolio/builders/oneassetoption.hpp>
+#include <ored/portfolio/vanillaoption.hpp>
+#include <ored/portfolio/builders/vanillaoption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/instruments/oneassetoption.hpp>
 #include <ql/instruments/vanillaoption.hpp>
@@ -20,11 +20,11 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void OneAssetOption::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
 
     Currency ccy = parseCurrency(currency_);
 
-    QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for OneAssetOption");
+    QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for VanillaOption");
 
     // Payoff
     Option::Type type = parseOptionType(option_.callPut());
@@ -56,15 +56,15 @@ void OneAssetOption::build(const boost::shared_ptr<ore::data::EngineFactory>& en
 
     // QL does not have an FXOption or EquityOption, so we add a vanilla one here and wrap
     // it in a composite to get the notional in.
-    boost::shared_ptr<Instrument> vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
+    boost::shared_ptr<Instrument> vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
 
     string tradeTypeBuider = tradeType_ + (exerciseType == QuantLib::Exercise::Type::European ? "" : "American");
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuider);
     QL_REQUIRE(builder, "No builder found for " << tradeTypeBuider);
-    boost::shared_ptr<OneAssetOptionEngineBuilder> oneAssetOptionBuilder =
-        boost::dynamic_pointer_cast<OneAssetOptionEngineBuilder>(builder);
+    boost::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
+        boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
 
-    vanilla->setPricingEngine(oneAssetOptionBuilder->engine(assetName_, ccy));
+    vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy));
 
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
@@ -80,7 +80,7 @@ void OneAssetOption::build(const boost::shared_ptr<ore::data::EngineFactory>& en
         Currency premiumCurrency = parseCurrency(option_.premiumCcy());
         Date premiumDate = parseDate(option_.premiumPayDate());
         addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, ccy,
-                   engineFactory, oneAssetOptionBuilder->configuration(MarketContext::pricing));
+                   engineFactory, vanillaOptionBuilder->configuration(MarketContext::pricing));
         DLOG("option premium added for asset option " << id());
     }
 
@@ -95,11 +95,11 @@ void OneAssetOption::build(const boost::shared_ptr<ore::data::EngineFactory>& en
     notional_ = strike_ * quantity_;
 }
 
-void OneAssetOption::fromXML(XMLNode* node) {
+void VanillaOptionTrade::fromXML(XMLNode* node) {
     Trade::fromXML(node);
 }
 
-XMLNode* OneAssetOption::toXML(XMLDocument& doc) {
+XMLNode* VanillaOptionTrade::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
     return node;
 }

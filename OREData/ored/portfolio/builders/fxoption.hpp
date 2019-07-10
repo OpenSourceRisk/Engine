@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/portfolio/builders/oneassetoption.hpp>
+#include <ored/portfolio/builders/vanillaoption.hpp>
 
 namespace ore {
 namespace data {
@@ -33,10 +33,10 @@ namespace data {
 
     \ingroup builders
  */
-class FxEuropeanOptionEngineBuilder : public OneAssetEuropeanOptionEngineBuilder {
+class FxEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
 public:
     FxEuropeanOptionEngineBuilder()
-        : OneAssetEuropeanOptionEngineBuilder("GarmanKohlhagen", {"FxOption"}, AssetClass::FX) {}
+        : EuropeanOptionEngineBuilder("GarmanKohlhagen", {"FxOption"}, AssetClass::FX) {}
 };
 
 //! Engine Builder for American Fx Options using Finite Difference Method
@@ -44,10 +44,10 @@ public:
 
     \ingroup builders
  */
-class FxAmericanOptionFDEngineBuilder : public OneAssetAmericanOptionFDEngineBuilder {
+class FxAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
 public:
     FxAmericanOptionFDEngineBuilder()
-        : OneAssetAmericanOptionFDEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX) {}
+        : AmericanOptionFDEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX) {}
 };
 
 //! Engine Builder for American Fx Options using Barone Adesi Whaley Approximation
@@ -55,10 +55,10 @@ public:
 
     \ingroup builders
  */
-class FxAmericanOptionBaroneAdesiWhaleyEngineBuilder : public OneAssetAmericanOptionBaroneAdesiWhaleyEngineBuilder {
+class FxAmericanOptionBAWEngineBuilder : public AmericanOptionBAWEngineBuilder {
 public:
-    FxAmericanOptionBaroneAdesiWhaleyEngineBuilder()
-        : OneAssetAmericanOptionBaroneAdesiWhaleyEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX) {}
+    FxAmericanOptionBAWEngineBuilder()
+        : AmericanOptionBAWEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX) {}
 };
 
 } // namespace data

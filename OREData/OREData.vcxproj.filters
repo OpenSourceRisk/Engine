@@ -186,9 +186,6 @@
     <ClInclude Include="ored\portfolio\nettingsetmanager.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\oneassetoption.hpp">
-      <Filter>portfolio</Filter>
-    </ClInclude>
     <ClInclude Include="ored\portfolio\optiondata.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
@@ -441,7 +438,10 @@
     <ClInclude Include="ored\portfolio\forwardbond.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\builders\oneassetoption.hpp">
+    <ClInclude Include="ored\portfolio\vanillaoption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\vanillaoption.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
     <ClInclude Include="ored\marketdata\structuredcurveerror.hpp">
@@ -791,7 +791,7 @@
     <ClCompile Include="ored\portfolio\forwardbond.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
-    <ClCompile Include="ored\portfolio\oneassetoption.cpp">
+    <ClCompile Include="ored\portfolio\vanillaoption.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>

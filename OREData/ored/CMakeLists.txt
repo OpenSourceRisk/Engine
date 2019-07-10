@@ -90,7 +90,6 @@ portfolio/legbuilders.cpp
 portfolio/legdata.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetmanager.cpp
-portfolio/oneassetoption.cpp
 portfolio/optiondata.cpp
 portfolio/optionwrapper.cpp
 portfolio/portfolio.cpp
@@ -100,6 +99,7 @@ portfolio/swaption.cpp
 portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradefactory.cpp
+portfolio/vanillaoption.cpp
 report/csvreport.cpp
 utilities/calendaradjustmentconfig.cpp
 utilities/correlationmatrix.cpp
@@ -203,9 +203,9 @@ portfolio/builders/equityoption.hpp
 portfolio/builders/forwardbond.hpp
 portfolio/builders/fxforward.hpp
 portfolio/builders/fxoption.hpp
-portfolio/builders/oneassetoption.hpp
 portfolio/builders/swap.hpp
 portfolio/builders/swaption.hpp
+portfolio/builders/vanillaoption.hpp
 portfolio/builders/yoycapfloor.hpp
 portfolio/capfloor.hpp
 portfolio/commodityforward.hpp
@@ -229,7 +229,6 @@ portfolio/legbuilders.hpp
 portfolio/legdata.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetmanager.hpp
-portfolio/oneassetoption.hpp
 portfolio/optiondata.hpp
 portfolio/optionwrapper.hpp
 portfolio/portfolio.hpp
@@ -240,6 +239,7 @@ portfolio/swaption.hpp
 portfolio/trade.hpp
 portfolio/tradeactions.hpp
 portfolio/tradefactory.hpp
+portfolio/vanillaoption.hpp
 report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
