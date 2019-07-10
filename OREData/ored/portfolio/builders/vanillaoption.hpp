@@ -30,14 +30,14 @@
 #include <ored/utilities/log.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
-#include <ql/pricingengines/vanilla/baroneadesiwhaleyengine.hpp>
+#include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/version.hpp>
 
 namespace ore {
 namespace data {
 
-//! Abstract Engine Builder for One Asset Options
+//! Abstract Engine Builder for Vanilla Options
 /*! Pricing engines are cached by asset/currency
 
     \ingroup builders
@@ -84,7 +84,7 @@ protected:
     AssetClass assetClass_;
 };
 
-//! Abstract Engine Builder for European One Asset Options
+//! Abstract Engine Builder for European Vanilla Options
 /*! Pricing engines are cached by asset/currency
 
     \ingroup builders
@@ -104,26 +104,26 @@ protected:
     }
 };
 
-//! Abstract Engine Builder for American One Asset Options
+//! Abstract Engine Builder for American Vanilla Options
 /*! Pricing engines are cached by asset/currency
 
     \ingroup builders
  */
-class AmericanVanillaOptionAnalyticEngineBuilder : public VanillaOptionEngineBuilder {
+class AmericanOptionAnalyticEngineBuilder : public VanillaOptionEngineBuilder {
 public:
-    AmericanVanillaOptionAnalyticEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes, const AssetClass& assetClass)
+    AmericanOptionAnalyticEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes, const AssetClass& assetClass)
         : VanillaOptionEngineBuilder(model, engine, tradeTypes, assetClass) {}
 };
 
-//! Abstract Engine Builder for American One Asset Options using Finite Difference Method
+//! Abstract Engine Builder for American Vanilla Options using Finite Difference Method
 /*! Pricing engines are cached by asset/currency
 
     \ingroup builders
  */
-class AmericanOptionFDEngineBuilder : public AmericanVanillaOptionAnalyticEngineBuilder {
+class AmericanOptionFDEngineBuilder : public AmericanOptionAnalyticEngineBuilder {
 public:
     AmericanOptionFDEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : AmericanVanillaOptionAnalyticEngineBuilder(model, "FdBlackScholesVanillaEngine", tradeTypes, assetClass) {}
+        : AmericanOptionAnalyticEngineBuilder(model, "FdBlackScholesVanillaEngine", tradeTypes, assetClass) {}
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClass) override {
@@ -138,20 +138,20 @@ protected:
     }
 };
 
-//! Abstract Engine Builder for American One Asset Options using Barone Adesi Whaley Approximation
+//! Abstract Engine Builder for American Vanilla Options using Barone Adesi Whaley Approximation
 /*! Pricing engines are cached by asset/currency
 
     \ingroup builders
  */
-class AmericanOptionBAWEngineBuilder : public AmericanVanillaOptionAnalyticEngineBuilder {
+class AmericanOptionBAWEngineBuilder : public AmericanOptionAnalyticEngineBuilder {
 public:
     AmericanOptionBAWEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : AmericanVanillaOptionAnalyticEngineBuilder(model, "BaroneAdesiWhaleyApproximationEngine", tradeTypes, assetClass) {}
+        : AmericanOptionAnalyticEngineBuilder(model, "BaroneAdesiWhaleyApproximationEngine", tradeTypes, assetClass) {}
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClass) override {
             boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
-            return boost::make_shared<BaroneAdesiWhaleyApproximationEngine>(gbsp);
+            return boost::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
         }
 };
 
