@@ -197,6 +197,7 @@
 #include <qle/termstructures/optionletstripper.hpp>
 #include <qle/termstructures/optionletstripper1.hpp>
 #include <qle/termstructures/optionletstripper2.hpp>
+#include <qle/termstructures/piecewisezerospreadedtermstructure.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
