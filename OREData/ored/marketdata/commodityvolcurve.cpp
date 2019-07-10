@@ -26,12 +26,13 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
-#include <qle/math/fillemptymatrix.hpp>
+#include <qle/termstructures/blackvariancesurfacesparse.hpp>
 
 #include <regex>
 
 using namespace std;
 using namespace QuantLib;
+using namespace QuantExt;
 
 namespace ore {
 namespace data {
@@ -135,18 +136,25 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
 
             // relevant quote?
             bool addQuote = false;
-            string qName;                     // for printing quote name (wild-card or not)
-            vector<string>::const_iterator it; // if not wild-card -> find quote.
+            vector<string>::const_iterator it;  // if not wild-card -> find quote.
             if (foundRegex) {
                 if (regex_match(q->name(), reg1)) {
-                    addQuote = true;
-                    qName = config.quotes()[0];
+                    // quote only valid of expiry date is > asof
+                    Date eDate;
+                    Period ePeriod;
+                    bool isDate;
+                    parseDateOrPeriod(q->expiry(), eDate, ePeriod, isDate);
+                    if (!isDate) {
+                        eDate = calendar.adjust(asof + ePeriod);
+                     }
+                    if (eDate > asof) {
+                        addQuote = true;
+                    }
                 }
             } else {
                 it = find(config.quotes().begin(), config.quotes().end(), q->name()); // find in config
                 if (it != config.quotes().end()) {
                     addQuote = true;
-                    qName = *it;
                 }
             }
 
@@ -158,7 +166,7 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
                 bool isDate;
                 parseDateOrPeriod(q->expiry(), aDate, aPeriod, isDate);
                 if (isDate) {
-                    QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << qName << "' is for a past date ("
+                    QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << q->name() << "' has expiry in the past ("
                                                                             << io::iso_date(aDate) << ")");
                 } else {
                     aDate = calendar.adjust(asof + aPeriod);
@@ -199,8 +207,9 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
                                                const Loader& loader) {
 
     map<Date, vector<Real>> surfaceData; // implicit order is assumed here for known stirkes and expiries from config.
-    map<string, map<string, Real>>
-        wcMat; // same as "surfaceDate but in case of wild cards (unknowsn size => need to preserve more information)
+    vector<Real> strikes;       // wild card case
+    vector<Date> expiries;      // wild card case
+    vector<Volatility> vols;    // wild card case
 
     // Assume the config has required strike strings to be sorted by value
     const vector<string>& configStrikes = config.strikes();
@@ -243,7 +252,7 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
                     bool isDate;
                     parseDateOrPeriod(q->expiry(), aDate, aPeriod, isDate);
                     if (isDate) {
-                        QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << q->name() << "' is for a past date ("
+                        QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << q->name() << "' has expiry in past ("
                                                                                 << io::iso_date(aDate) << ")");
                     } else {
                         aDate = calendar.adjust(asof + aPeriod);
@@ -286,17 +295,17 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
                 relevantQuote = strikeRelevant && expiryRelevant;
 
                 if (relevantQuote) {
-                    // strike found?
-                    if (wcMat.find(q->strike()) != wcMat.end()) {
-                        // add expiry
-                        QL_REQUIRE(wcMat[q->strike()].find(q->expiry()) == wcMat[q->strike()].end(),
-                                   "quote " << q->name() << "duplicate.");
-                        wcMat[q->strike()].insert(make_pair(q->expiry(), q->quote()->value()));
-                    } else {
-                        // add strike and expiry
-                        map<string, Real> tmp_inner = {{q->expiry(), q->quote()->value()}};
-                        wcMat.insert(pair<string, map<string, Real>>(q->strike(), tmp_inner));
+                    //expiry (may be tenor or date)
+                    Date eDate;
+                    Period ePeriod;
+                    bool isDate;
+                    parseDateOrPeriod(q->expiry(), eDate, ePeriod,isDate);
+                    if (!isDate) {
+                        eDate = calendar.adjust(asof + ePeriod);
                     }
+                    // strike + vol
+                    strikes.push_back(parseReal(q->strike()));
+                    vols.push_back(q->quote()->value());
                     quotesAdded++;
                 }
             }
@@ -311,6 +320,8 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
                                                                    << " quotes required by config.");
     } else {
         QL_REQUIRE(quotesAdded > 0, "No quotes loaded for" << config.curveID());
+        QL_REQUIRE(strikes.size() == vols.size() && vols.size() == expiries.size(),
+                   "Quotes loaded don't produce strike,vol,expiry vectors of equal length.");
     }
 
     // Build the volatility surface
@@ -344,109 +355,13 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
             boost::make_shared<BlackVarianceSurface>(asof, calendar, get<1>(sAndE), get<0>(sAndE), volatilities,
                                                      dayCounter, lowerStrikeExtrap, upperStrikeExtrap);
     } else {
-        // Vol matrix (strikes, dates), date & expiry vectors
-        int wcMatRows = wcMat.size();
-        int wcMatCols;
-        set<string> tmpLenSet;
-        for (map<string, map<string, Real>>::iterator itr = wcMat.begin(); itr != wcMat.end(); itr++) {
-            for (map<string, Real>::iterator itr2 = itr->second.begin(); itr2 != itr->second.end(); itr2++) {
-                tmpLenSet.insert(itr2->first); // if not found add
-            }
-        }
-        wcMatCols = tmpLenSet.size();
-        volatilities = Matrix(wcMatRows, wcMatCols, -1.0);
-
-        // populate sparse_vols matrix with contents of wc_mat map.
-        sAndE = populateMatrixFromMap(volatilities, wcMat,
-                                        asof); // Builds matrix and returns expiries as dates (may still be tenors)
-        QuantExt::fillIncompleteMatrix(volatilities, true, -1.0); // interpolate missing.
-
-        // set up surface
-        LOG("CommodityVolCurve: Building BlackVarianceSurface");
-
-        // Calendar cal = NullCalendar(); // why do we need this?
-
-        // This can get wrapped in a QuantExt::BlackVolatilityWithATM later on
+        bool lowerConstStrikeExtrap = lowerStrikeExtrap == BlackVarianceSurface::Extrapolation::ConstantExtrapolation;
+        bool upperConstStrikeExtrap = lowerStrikeExtrap == BlackVarianceSurface::Extrapolation::ConstantExtrapolation;
+      
         volatility_ =
-            boost::make_shared<BlackVarianceSurface>(asof, calendar, get<1>(sAndE), get<0>(sAndE), volatilities,
-                                                     dayCounter, lowerStrikeExtrap, upperStrikeExtrap);
+            boost::make_shared<BlackVarianceSurfaceSparse>(asof, calendar, expiries, strikes, vols,
+                                                     dayCounter, lowerConstStrikeExtrap, upperConstStrikeExtrap); // Flat extraoplate strikes always good
     }
-}
-
-std::pair<vector<Real>, vector<Date>>
-CommodityVolCurve::populateMatrixFromMap(Matrix& mt, map<string, map<string, Real>>& mp, Date asf) {
-    map<string, map<string, Real>>::iterator outItr;
-    map<string, Real>::iterator inItr;
-    bool isATM = false;
-    set<Date> exprsSet;
-    set<Real> strksSet;
-    // Get and sort unique strikes and expiries in map. To create matrix with ordered cols and rows.
-    for (outItr = mp.begin(); outItr != mp.end(); outItr++) {
-        // strikes
-        if (outItr->first == "ATMF" && mp.size() == 1) {
-            strksSet.insert(9999);
-            isATM = true;
-        } else {
-            strksSet.insert(parseReal(outItr->first));
-        }
-        // expiries
-        for (inItr = outItr->second.begin(); inItr != outItr->second.end(); inItr++) {
-            Date tmpDate;
-            Period tmpPer;
-            bool tmpIsDate;
-            parseDateOrPeriod(inItr->first, tmpDate, tmpPer, tmpIsDate);
-            if (!tmpIsDate)
-                tmpDate = WeekendsOnly().adjust(asf + tmpPer);
-            QL_REQUIRE(tmpDate > asf,
-                       "Equity Vol Curve cannot contain a vol quote for a past date (" << io::iso_date(tmpDate) << ")");
-            exprsSet.insert(tmpDate);
-        }
-    }
-    QL_REQUIRE(mt.rows() == mp.size(),
-               "Matrix and map incompatible number of rows"); // input matrix rows match map size
-    QL_REQUIRE(mt.columns() == exprsSet.size(),
-               "Matrix and map incompatible number of  columns"); // input matrix cols match map unique expires
-
-    // sort
-    vector<Real> strksVect(strksSet.begin(), strksSet.end());
-    vector<Date> exprsVect(exprsSet.begin(), exprsSet.end());
-    sort(strksVect.begin(), strksVect.end());
-    sort(exprsVect.begin(), exprsVect.end());
-
-    // populate matrix
-    ptrdiff_t rw;
-    ptrdiff_t cl;
-    vector<Real>::iterator rfind;
-    vector<Date>::iterator cfind;
-    for (outItr = mp.begin(); outItr != mp.end(); outItr++) {
-        // which row
-        if (isATM) {
-            rw = 0;
-        } else {
-            Real a = parseReal(outItr->first);
-            rfind = find_if(strksVect.begin(), strksVect.end(), [a](Real b) { return close(a, b); });
-            rw = distance(strksVect.begin(), rfind);
-        }
-
-        // which column
-        for (inItr = outItr->second.begin(); inItr != outItr->second.end(); inItr++) {
-            // date/period string to date obj
-            Date tmpDate;
-            Period tmpPer;
-            bool tmpIsDate;
-            parseDateOrPeriod(inItr->first, tmpDate, tmpPer, tmpIsDate);
-            if (!tmpIsDate)
-                tmpDate = WeekendsOnly().adjust(asf + tmpPer);
-
-            cfind = find(exprsVect.begin(), exprsVect.end(), tmpDate);
-            cl = distance(exprsVect.begin(), cfind);
-
-            mt[rw][cl] = inItr->second;
-        }
-    }
-
-    // return
-    return std::make_pair(strksVect, exprsVect);
 }
 
 } // namespace data

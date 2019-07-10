@@ -113,10 +113,7 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
             QL_REQUIRE(curveData.size() == config->quotes().size(), "Found " << curveData.size() << " quotes, but "
                                                                              << config->quotes().size()
                                                                              << " quotes given in config.");
-        } else {
-            QL_REQUIRE(curveData.size() > 0,
-                       "wild card specified in commodity config " << config->curveID() << " but no quotes read");
-        }
+        } 
 
         // curveData is already ordered by date. Make sure asof is first entry.
         QL_REQUIRE(curveData.begin()->first == asof, "All quotes must be after the asof date, " << asof << ".");
