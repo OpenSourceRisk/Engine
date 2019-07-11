@@ -24,6 +24,7 @@
 #pragma once
 
 #include <boost/make_shared.hpp>
+#include <boost/lexical_cast.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -42,22 +43,39 @@ namespace data {
 
     \ingroup builders
  */
-class VanillaOptionEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&> {
+class VanillaOptionEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&,
+                                                                              const AssetClass&, const Real&> {
 public:
-    VanillaOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : CachingEngineBuilder(model, engine, tradeTypes), assetClass_(assetClass) {}
+    VanillaOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes,
+        const AssetClass& assetClass, const Real& bucketedExpiry)
+        : CachingEngineBuilder(model, engine, tradeTypes),
+          assetClass_(assetClass), bucketedExpiry_(bucketedExpiry) {}
 
-    boost::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& ccy) {
-        return CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&>::engine(assetName, ccy, assetClass_);
+    boost::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& ccy, const Real& expiry) {
+        return CachingPricingEngineBuilder<string, const string&, const Currency&,
+            const AssetClass&, const Real&>::engine(assetName, ccy, assetClass_, getBucketedExpiry(expiry));
     }
 
-    boost::shared_ptr<PricingEngine> engine(const Currency& ccy1, const Currency& ccy2) {
-        return CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&>::engine(ccy1.code(), ccy2, assetClass_);
+    boost::shared_ptr<PricingEngine> engine(const Currency& ccy1, const Currency& ccy2, const Real& expiry) {
+        return CachingPricingEngineBuilder<string, const string&, const Currency&,
+            const AssetClass&, const Real&>::engine(ccy1.code(), ccy2, assetClass_, getBucketedExpiry(expiry));
     }
 
 protected:
-    virtual string keyImpl(const string& assetName, const Currency& ccy, const AssetClass& assetClassUnderlying) override {
-        return assetName + "/" + ccy.code();
+    virtual string keyImpl(const string& assetName, const Currency& ccy,
+                           const AssetClass& assetClassUnderlying, const Real& bucketedExpiry) override {
+        return assetName + "/" + ccy.code() + "/" + boost::lexical_cast<string>(bucketedExpiry);
+    }
+
+    const Time getBucketedExpiry(const Time& expiry) {
+        QL_REQUIRE(expiry >=0, "expiry cannot be negative");
+        if(expiry <= 2) {
+            // Round to next quarter of year for expiry within 2 years
+            return UpRounding(0).operator()(expiry * 4) / 4;
+        } else {
+            // Round to next year for expiry from 2 years
+            return UpRounding(0).operator()(expiry);
+        }
     }
 
     boost::shared_ptr<GeneralizedBlackScholesProcess> getBlackScholesProcess(const string& assetName,
@@ -82,6 +100,7 @@ protected:
         }
     }
     AssetClass assetClass_;
+    Real bucketedExpiry_;
 };
 
 //! Abstract Engine Builder for European Vanilla Options
@@ -92,11 +111,12 @@ protected:
 class EuropeanOptionEngineBuilder : public VanillaOptionEngineBuilder {
 public:
     EuropeanOptionEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : VanillaOptionEngineBuilder(model, "AnalyticEuropeanEngine", tradeTypes, assetClass) {}
+        : VanillaOptionEngineBuilder(model, "AnalyticEuropeanEngine", tradeTypes, assetClass, 0) {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy, const AssetClass& assetClassUnderlying) override {
-        string key = keyImpl(assetName, ccy, assetClassUnderlying);
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+        const AssetClass& assetClassUnderlying, const Real& bucketedExpiry) override {
+        string key = keyImpl(assetName, ccy, assetClassUnderlying, bucketedExpiry);
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
@@ -109,10 +129,11 @@ protected:
 
     \ingroup builders
  */
-class AmericanOptionAnalyticEngineBuilder : public VanillaOptionEngineBuilder {
+class AmericanOptionEngineBuilder : public VanillaOptionEngineBuilder {
 public:
-    AmericanOptionAnalyticEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : VanillaOptionEngineBuilder(model, engine, tradeTypes, assetClass) {}
+    AmericanOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes,
+                                const AssetClass& assetClass, const Real& bucketedExpiry)
+        : VanillaOptionEngineBuilder(model, engine, tradeTypes, assetClass, bucketedExpiry) {}
 };
 
 //! Abstract Engine Builder for American Vanilla Options using Finite Difference Method
@@ -120,15 +141,16 @@ public:
 
     \ingroup builders
  */
-class AmericanOptionFDEngineBuilder : public AmericanOptionAnalyticEngineBuilder {
+class AmericanOptionFDEngineBuilder : public AmericanOptionEngineBuilder {
 public:
-    AmericanOptionFDEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : AmericanOptionAnalyticEngineBuilder(model, "FdBlackScholesVanillaEngine", tradeTypes, assetClass) {}
+    AmericanOptionFDEngineBuilder(const string& model, const set<string>& tradeTypes,
+                                  const AssetClass& assetClass, const Real& bucketedExpiry)
+        : AmericanOptionEngineBuilder(model, "FdBlackScholesVanillaEngine", tradeTypes, assetClass, bucketedExpiry) {}
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClass) override {
+                                                        const AssetClass& assetClass, const Real& bucketedExpiry) override {
         FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
-        Size tGrid = ore::data::parseInteger(engineParameter("TimeGrid"));
+        Size tGrid = ore::data::parseInteger(engineParameter("TimeGridPerYear")) * bucketedExpiry;
         Size xGrid = ore::data::parseInteger(engineParameter("XGrid"));
         Size dampingSteps = ore::data::parseInteger(engineParameter("DampingSteps"));
 
@@ -143,16 +165,16 @@ protected:
 
     \ingroup builders
  */
-class AmericanOptionBAWEngineBuilder : public AmericanOptionAnalyticEngineBuilder {
+class AmericanOptionBAWEngineBuilder : public AmericanOptionEngineBuilder {
 public:
     AmericanOptionBAWEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : AmericanOptionAnalyticEngineBuilder(model, "BaroneAdesiWhaleyApproximationEngine", tradeTypes, assetClass) {}
+        : AmericanOptionEngineBuilder(model, "BaroneAdesiWhaleyApproximationEngine", tradeTypes, assetClass, 0) {}
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClass) override {
+                                                        const AssetClass& assetClass, const Real& bucketedExpiry) override {
             boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
             return boost::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
-        }
+    }
 };
 
 } // namespace data

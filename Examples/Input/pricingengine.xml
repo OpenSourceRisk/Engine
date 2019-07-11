@@ -30,7 +30,7 @@
     <Engine>FdBlackScholesVanillaEngine</Engine>
     <EngineParameters>
       <Parameter name="Scheme">Douglas</Parameter>
-      <Parameter name="TimeGrid">100</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
       <Parameter name="XGrid">100</Parameter>
       <Parameter name="DampingSteps">0</Parameter>
     </EngineParameters>
@@ -110,7 +110,7 @@
     <Engine>FdBlackScholesVanillaEngine</Engine>
     <EngineParameters>
       <Parameter name="Scheme">Douglas</Parameter>
-      <Parameter name="TimeGrid">100</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
       <Parameter name="XGrid">100</Parameter>
       <Parameter name="DampingSteps">0</Parameter>
     </EngineParameters>

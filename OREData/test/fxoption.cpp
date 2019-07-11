@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(testFdValues) {
         engineData->engine("FxOptionAmerican") = "FdBlackScholesVanillaEngine";
         engineData->engineParameters("FxOptionAmerican") = {
             {"Scheme", "Douglas"},
-            {"TimeGrid", "100"},
+            {"TimeGridPerYear", "100"},
             {"XGrid", "100"},
             {"DampingSteps", "0"}
         };
