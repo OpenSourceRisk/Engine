@@ -11,7 +11,6 @@
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/portfolio/builders/vanillaoption.hpp>
 #include <ored/utilities/log.hpp>
-#include <ql/instruments/oneassetoption.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 
 
