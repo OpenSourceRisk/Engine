@@ -338,7 +338,6 @@ termstructures/oisratehelper.hpp
 termstructures/optionletstripper.hpp
 termstructures/optionletstripper1.hpp
 termstructures/optionletstripper2.hpp
-termstructures/piecewisezerospreadedtermstructure.hpp
 termstructures/pricecurve.hpp
 termstructures/pricetermstructure.hpp
 termstructures/pricetermstructureadapter.hpp
