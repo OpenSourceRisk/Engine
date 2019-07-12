@@ -3,6 +3,7 @@ OREDATA_TESTS = \
 	testsuite.cpp \
 	bond.cpp \
 	calendars.cpp \
+	calendaradjustment.cpp \
 	fxoption.cpp \
 	ccyswapwithresets.cpp \
 	cpiswap.cpp \
