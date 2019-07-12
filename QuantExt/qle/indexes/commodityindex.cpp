@@ -27,11 +27,10 @@
 
 namespace QuantExt {
 
-CommodityIndex::CommodityIndex(const std::string& underlyingName, const Date& expiryDate, const Currency& currency,
+CommodityIndex::CommodityIndex(const std::string& underlyingName, const Date& expiryDate,
                                const Calendar& fixingCalendar, const Handle<QuantExt::PriceTermStructure>& curve,
                                const std::string& separator)
-    : underlyingName_(underlyingName), expiryDate_(expiryDate), currency_(currency), fixingCalendar_(fixingCalendar),
-      curve_(curve) {
+    : underlyingName_(underlyingName), expiryDate_(expiryDate), fixingCalendar_(fixingCalendar), curve_(curve) {
     if (expiryDate_ == Date()) {
         // spot price index
         name_ = underlyingName_;

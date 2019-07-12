@@ -183,6 +183,8 @@ public:
         //! additional leg builders
         const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders = {});
 
+    virtual ~EngineFactory() {}
+
     //! Return the market used by this EngineFactory
     const boost::shared_ptr<Market>& market() const { return market_; };
     //! Return the market configurations used by this EngineFactory
