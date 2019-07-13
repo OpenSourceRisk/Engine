@@ -128,7 +128,7 @@ boost::shared_ptr<QuantExt::BondIndex> parseBondIndex(const string& s);
  */
 boost::shared_ptr<QuantExt::CommodityIndex>
 parseCommodityIndex(const string& s,
-		    const Calendar& cal = Calendar(),
+		    const Calendar& cal = NullCalendar(),
                     const Handle<QuantExt::PriceTermStructure>& ts = Handle<QuantExt::PriceTermStructure>());
 
 //! Convert std::string to QuantLib::Index
