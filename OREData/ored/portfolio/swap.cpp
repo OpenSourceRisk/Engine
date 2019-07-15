@@ -127,8 +127,20 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                     "' on swap's " << io::ordinal(i) << " leg.");
                 nameIndexPairs_.erase(nameIndex);
 
-                // First coupon is the same (no reset or FX link)
-                // The reset are FX Linked
+                // We will add the FX linked component of the leg to additionalLegs_ also so erase it here. Do this because 
+                // the first coupon on the FX linked floating leg is a simple floating coupon. If we just process it as 
+                // normal, we would associate the floating coupon's fixing date with the FX index and ask for an FX fixing 
+                // that we do not need. additionalLegs_ for the FX linked floating leg will contain all but the first coupon.
+                nameIndex = make_pair(legData_[i].fxIndex(), i);
+                QL_REQUIRE(nameIndexPairs_.count(nameIndex) == 1, "Expected FX index '" << legData_[i].fxIndex() <<
+                    "' on swap's " << io::ordinal(i) << " leg.");
+                nameIndexPairs_.erase(nameIndex);
+
+                // First coupon a plain floating rate coupon i.e. it is not FX linked because the initial notional is known.
+                // But, we need to add it to additionalLegs_ so that we don't miss the first coupon's ibor fixing
+                additionalLegs_[floatIndex].push_back(legs_[i][0]);
+
+                // All but first coupon are FX linked floating rate coupons
                 for (Size j = 1; j < legs_[i].size(); ++j) {
                     boost::shared_ptr<FloatingRateCoupon> coupon =
                         boost::dynamic_pointer_cast<FloatingRateCoupon>(legs_[i][j]);
@@ -142,6 +154,9 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                     // set the same pricer
                     fxLinkedCoupon->setPricer(coupon->pricer());
                     legs_[i][j] = fxLinkedCoupon;
+
+                    // Add the FX linked floating coupon to the additionalLegs_
+                    additionalLegs_[legData_[i].fxIndex()].push_back(fxLinkedCoupon);
                 }
         }
 

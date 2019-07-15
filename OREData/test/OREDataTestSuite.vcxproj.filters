@@ -109,5 +109,11 @@
     <ClCompile Include="fixings.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="mxnircurves.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="calendaradjustment.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

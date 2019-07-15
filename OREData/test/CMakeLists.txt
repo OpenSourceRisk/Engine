@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
 set(OREData-Test_SRC bond.cpp
+calendaradjustment.cpp
 calendars.cpp
 ccyswapwithresets.cpp
 cds.cpp
@@ -26,6 +27,7 @@ fxtriangulation.cpp
 indices.cpp
 inflationcapfloor.cpp
 legdata.cpp
+mxnircurves.cpp
 ored_commodityforward.cpp
 parser.cpp
 portfolio.cpp

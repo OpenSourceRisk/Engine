@@ -44,7 +44,7 @@ No MYR Calendar in QuantLib
 class MYRKlibor : public IborIndex {
 public:
     MYRKlibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("MYR-KLIBOR", tenor, 2, MYRCurrency(), Malaysia(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+        : IborIndex("MYR-KLIBOR", tenor, 0, MYRCurrency(), Malaysia(), ModifiedFollowing, false, Actual365Fixed(), h) {}
 };
 } // namespace QuantExt
 

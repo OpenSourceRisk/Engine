@@ -25,6 +25,7 @@
 #include <map>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
@@ -154,7 +155,7 @@ bool parseBool(const string& s) {
     }
 }
 
-Calendar parseCalendar(const string& s) {
+Calendar parseCalendar(const string& s, bool adjustCalendar) {
     static map<string, Calendar> m = {{"TGT", TARGET()},
                                       {"TARGET", TARGET()},
                                       {"EUR", TARGET()},
@@ -259,6 +260,7 @@ Calendar parseCalendar(const string& s) {
                                       {"AED", TARGET()},
                                       {"NGN", TARGET()},
                                       {"MAD", TARGET()},
+                                      {"PKR", TARGET()},
                                       // ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
                                       {"EUTA", TARGET()},
                                       {"BEBR", TARGET()}, // Belgium, Brussels not in QL
@@ -266,10 +268,34 @@ Calendar parseCalendar(const string& s) {
                                       {"UNMAPPED", WeekendsOnly()},
                                       {"NullCalendar", NullCalendar()},
                                       {"", NullCalendar()}};
+    static bool isInitialised = false;
+    if (!isInitialised) {
+        //extend the static map to include quantlib map names 
+        //allCals should be set, but it doesn't know how to order calendar
+        vector<Calendar> allCals;
+        for (auto it : m) 
+            allCals.push_back(it.second);
+        for (auto cal : allCals)
+            m[cal.name()] = cal;
+        isInitialised = true;
+    }
 
     auto it = m.find(s);
     if (it != m.end()) {
-        return it->second;
+        Calendar cal = it->second;
+        if (adjustCalendar) {
+            //add custom holidays from populated calendar adjustments
+            const CalendarAdjustmentConfig& config = CalendarAdjustments::instance().config();
+            for (auto h : config.getHolidays(s)) {
+                cal.addHoliday(h);
+            }
+            for (auto b : config.getBusinessDays(s)) {
+                cal.removeHoliday(b);
+            }
+
+        }
+         return cal;
+
     } else {
         // Try to split them up
         vector<string> calendarNames;
@@ -286,7 +312,7 @@ Calendar parseCalendar(const string& s) {
         for (Size i = 0; i < calendarNames.size(); i++) {
             boost::trim(calendarNames[i]);
             try {
-                calendars.push_back(parseCalendar(calendarNames[i]));
+                calendars.push_back(parseCalendar(calendarNames[i], adjustCalendar));
             } catch (std::exception& e) {
                 QL_FAIL("Cannot convert " << s << " to Calendar [exception:" << e.what() << "]");
             } catch (...) {
@@ -369,9 +395,13 @@ DayCounter parseDayCounter(const string& s) {
                                         {"ActActISMA", ActualActual(ActualActual::ISMA)},
                                         {"Actual/Actual (ISMA)", ActualActual(ActualActual::ISMA)},
                                         {"ActualActual (ISMA)", ActualActual(ActualActual::ISMA)},
+                                        {"ACT/ACT.ISMA", ActualActual(ActualActual::ISMA)},
+                                        {"ActActICMA", ActualActual(ActualActual::ISMA)},
+                                        {"Actual/Actual (ICMA)", ActualActual(ActualActual::ISMA)},
+                                        {"ActualActual (ICMA)", ActualActual(ActualActual::ISMA)},
+                                        {"ACT/ACT.ICMA", ActualActual(ActualActual::ISMA)},
                                         {"ActActAFB", ActualActual(ActualActual::AFB)},
                                         {"ACT/ACT.AFB", ActualActual(ActualActual::AFB)},
-                                        {"ACT/ACT.ISMA", ActualActual(ActualActual::ISMA)},
                                         {"Actual/Actual (AFB)", ActualActual(ActualActual::AFB)},
                                         {"1/1", OneDayCounter()},
                                         {"BUS/252", Business252()},
@@ -405,12 +435,13 @@ Currency parseCurrency(const string& s) {
         {"SEK", SEKCurrency()}, {"SGD", SGDCurrency()}, {"THB", THBCurrency()}, {"TRY", TRYCurrency()},
         {"TWD", TWDCurrency()}, {"USD", USDCurrency()}, {"ZAR", ZARCurrency()}, {"ARS", ARSCurrency()},
         {"CLP", CLPCurrency()}, {"COP", COPCurrency()}, {"IDR", IDRCurrency()}, {"ILS", ILSCurrency()},
-        {"KWD", KWDCurrency()}, {"PEN", PENCurrency()}, {"MXN", MXNCurrency()}, {"SAR", SARCurrency()},
-        {"RUB", RUBCurrency()}, {"TND", TNDCurrency()}, {"MYR", MYRCurrency()}, {"UAH", UAHCurrency()},
-        {"KZT", KZTCurrency()}, {"QAR", QARCurrency()}, {"MXV", MXVCurrency()}, {"CLF", CLFCurrency()},
-        {"EGP", EGPCurrency()}, {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()}, {"VND", VNDCurrency()},
-        {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()}, {"MAD", MADCurrency()},
-        {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()}, {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}};
+        {"KWD", KWDCurrency()}, {"PEN", PENCurrency()}, {"PKR", PKRCurrency()}, {"MXN", MXNCurrency()},
+        {"SAR", SARCurrency()}, {"RUB", RUBCurrency()}, {"TND", TNDCurrency()}, {"MYR", MYRCurrency()},
+        {"UAH", UAHCurrency()}, {"KZT", KZTCurrency()}, {"QAR", QARCurrency()}, {"MXV", MXVCurrency()},
+        {"CLF", CLFCurrency()}, {"EGP", EGPCurrency()}, {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()},
+        {"VND", VNDCurrency()}, {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()},
+        {"MAD", MADCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()}, {"XPD", XPDCurrency()},
+        {"XPT", XPTCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -435,11 +466,6 @@ DateGeneration::Rule parseDateGenerationRule(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        // fall back for CDS2015
-        if (s == "CDS2015") {
-            ALOG("Date Generation Rule CDS2015 replaced with CDS because QuantLib Version is < 1.10");
-            return DateGeneration::CDS;
-        }
         QL_FAIL("Date Generation Rule " << s << " not recognized");
     }
 }
@@ -549,6 +575,7 @@ Exercise::Type parseExerciseType(const std::string& s) {
 Option::Type parseOptionType(const std::string& s) {
     static map<string, Option::Type> m = {{"Put", Option::Put}, {"Call", Option::Call}};
 
+    QL_REQUIRE(!s.empty(), "Option type not given.");
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;

@@ -637,6 +637,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bond.cpp" />
+    <ClCompile Include="calendaradjustment.cpp" />
     <ClCompile Include="calendars.cpp" />
     <ClCompile Include="ccyswapwithresets.cpp" />
     <ClCompile Include="cds.cpp" />
@@ -662,6 +663,7 @@
     <ClCompile Include="indices.cpp" />
     <ClCompile Include="inflationcapfloor.cpp" />
     <ClCompile Include="legdata.cpp" />
+    <ClCompile Include="mxnircurves.cpp" />
     <ClCompile Include="ored_commodityforward.cpp" />
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="portfolio.cpp" />

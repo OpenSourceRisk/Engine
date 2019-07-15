@@ -20,9 +20,11 @@
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/utilities/parsers.hpp>
 
 using ore::analytics::RiskFactorKey;
 using ore::data::XMLDocument;
+using ore::data::parseBool;
 using std::string;
 
 using namespace QuantLib;
@@ -49,6 +51,11 @@ void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& 
     data.shiftStrikes = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", requireShiftStrikes);
     if (data.shiftStrikes.size() == 0)
         data.shiftStrikes = {0.0};
+
+    // Set data.isRelative if it is provided explicitly
+    if (XMLNode* n = XMLUtils::getChildNode(child, "IsRelative")) {
+        data.isRelative = parseBool(XMLUtils::getNodeValue(n));
+    }
 }
 
 void SensitivityScenarioData::shiftDataToXML(XMLDocument& doc, XMLNode* node, const ShiftData& data) const {
@@ -67,7 +74,7 @@ void SensitivityScenarioData::volShiftDataToXML(XMLDocument& doc, XMLNode* node,
     XMLUtils::addChild(doc, node, "ShiftStrikes", data.shiftStrikes);
 }
 
-const ShiftData& SensitivityScenarioData::shiftData(const RFType& keyType, const string& name) const {
+const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType& keyType, const string& name) const {
     // Not nice but not spending time refactoring the class now.
     switch (keyType) {
     case RFType::DiscountCurve:
@@ -96,6 +103,8 @@ const ShiftData& SensitivityScenarioData::shiftData(const RFType& keyType, const
         return *creditCurveShiftData().at(name);
     case RFType::YoYInflationCurve:
         return *yoyInflationCurveShiftData().at(name);
+    case RFType::YoYInflationCapFloorVolatility:
+        return yoyInflationCapFloorVolShiftData().at(name);
     case RFType::EquitySpot:
         return equityShiftData().at(name);
     case RFType::EquityVolatility:
@@ -331,6 +340,18 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
+    LOG("Get yoy inflation cap/floor vol sensitivity parameters");
+    XMLNode* yoyCapVols = XMLUtils::getChildNode(node, "YYCapFloorVolatilities");
+    if (yoyCapVols) {
+        for (XMLNode* child = XMLUtils::getChildNode(yoyCapVols, "YYCapFloorVolatility"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            VolShiftData data;
+            volShiftDataFromXML(child, data);
+            yoyInflationCapFloorVolShiftData_[index] = data;
+        }
+    }
+
     LOG("Get commodity spot sensitivity parameters");
     XMLNode* csNode = XMLUtils::getChildNode(node, "CommoditySpots");
     if (csNode) {
@@ -435,9 +456,9 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         }
     }
 
-    XMLNode* yieldCurvesNode = XMLUtils::addChild(doc, root, "YieldCurves");
     if (!yieldCurveShiftData_.empty()) {
-        LOG("toXML for YieldCurves that are not of type Yield");
+        XMLNode* yieldCurvesNode = XMLUtils::addChild(doc, root, "YieldCurves");
+        LOG("toXML for YieldCurves");
         for (const auto& kv : yieldCurveShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, yieldCurvesNode, "YieldCurve");
             XMLUtils::addAttribute(doc, node, "name", kv.first);
@@ -495,6 +516,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "ccy", kv.first);
             volShiftDataToXML(doc, node, kv.second);
             XMLUtils::addChild(doc, node, "Index", kv.second.indexName);
+            XMLUtils::addChild(doc, node, "IsRelative", kv.second.isRelative);
         }
     }
 

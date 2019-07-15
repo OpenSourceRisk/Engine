@@ -47,7 +47,7 @@ EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
 
     Array sigmaTimes, sigma;
     if (data->sigmaParamType() == ParamType::Constant) {
-        QL_REQUIRE(data->sigmaTimes().size() == 0, "empty sigma tme grid expected");
+        QL_REQUIRE(data->sigmaTimes().size() == 0, "empty sigma time grid expected");
         QL_REQUIRE(data->sigmaValues().size() == 1, "initial sigma grid size 1 expected");
         sigmaTimes = Array(0);
         sigma = Array(data_->sigmaValues().begin(), data_->sigmaValues().end());

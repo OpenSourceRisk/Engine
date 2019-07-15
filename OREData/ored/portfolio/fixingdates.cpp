@@ -36,6 +36,7 @@ using QuantExt::AverageONIndexedCoupon;
 using QuantExt::EquityCoupon;
 using QuantExt::FloatingRateFXLinkedNotionalCoupon;
 using QuantExt::FXLinkedCashFlow;
+using QuantExt::SubPeriodsCoupon;
 using QuantLib::Leg;
 using QuantLib::Settings;
 using QuantLib::ZeroInflationIndex;
@@ -56,21 +57,21 @@ namespace {
 
 // Add fixing dates on coupons with fxFixingDate method i.e. FX fixings
 template <class Coupon>
-void addFxFixings(const Coupon& c, set<Date>& dates, const Date& today, bool ethf) {
+void addFxFixings(const Coupon& c, set<Date>& dates, const Date& today) {
     Date fxFixingDate = c.fxFixingDate();
-    if (fxFixingDate < today || (fxFixingDate == today && ethf)) {
+    if (fxFixingDate <= today) {
         dates.insert(fxFixingDate);
     }
 }
 
 // Add fixing dates on coupons with fixingDates method i.e. multiple fixings
 template <class Coupon>
-void addMultipleFixings(const Coupon& c, set<Date>& dates, const Date& today, bool ethf) {
+void addMultipleFixings(const Coupon& c, set<Date>& dates, const Date& today) {
     // Assume that I get sorted fixing dates here
     vector<Date> fixingDates = c.fixingDates();
     if (fixingDates.front() <= today) {
         for (const auto& fixingDate : fixingDates) {
-            if (fixingDate < today || (fixingDate == today && ethf)) {
+            if (fixingDate <= today) {
                 dates.insert(fixingDate);
             }
         }
@@ -161,8 +162,7 @@ void FixingDateGetter::visit(CashFlow& c) {
 void FixingDateGetter::visit(FloatingRateCoupon& c) {
     if (!c.hasOccurred(today_)) {
         Date fixingDate = c.fixingDate();
-        if (fixingDate < today_ || (fixingDate == today_ &&
-            Settings::instance().enforcesTodaysHistoricFixings())) {
+        if (fixingDate <= today_) {
             fixingDates_.insert(fixingDate);
         }
     }
@@ -224,37 +224,47 @@ void FixingDateGetter::visit(YoYInflationCoupon& c) {
 
 void FixingDateGetter::visit(OvernightIndexedCoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addMultipleFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
+        addMultipleFixings(c, fixingDates_, today_);
     }
 }
 
 void FixingDateGetter::visit(AverageBMACoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addMultipleFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
+        addMultipleFixings(c, fixingDates_, today_);
     }
 }
 
 void FixingDateGetter::visit(AverageONIndexedCoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addMultipleFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
+        addMultipleFixings(c, fixingDates_, today_);
     }
 }
 
 void FixingDateGetter::visit(EquityCoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addMultipleFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
+        addMultipleFixings(c, fixingDates_, today_);
     }
 }
 
 void FixingDateGetter::visit(FloatingRateFXLinkedNotionalCoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addFxFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
+        addFxFixings(c, fixingDates_, today_);
     }
 }
 
 void FixingDateGetter::visit(FXLinkedCashFlow& c) {
     if (!c.hasOccurred(today_)) {
-        addFxFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
+        addFxFixings(c, fixingDates_, today_);
+    }
+}
+
+void FixingDateGetter::visit(SubPeriodsCoupon& c) {
+    if (!c.hasOccurred(today_)) {
+        for (auto const& fixingDate : c.fixingDates()) {
+            if (fixingDate <= today_) {
+                fixingDates_.insert(fixingDate);
+            }
+        }
     }
 }
 

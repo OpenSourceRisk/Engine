@@ -25,6 +25,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 
 #include <ql/cashflows/couponpricer.hpp>
+#include <ql/cashflows/inflationcouponpricer.hpp>
 
 namespace ore {
 namespace data {
@@ -79,6 +80,9 @@ using CachingPricingEngineBuilder = CachingEngineBuilder<T, PricingEngine, Args.
 
 template <class T, typename... Args>
 using CachingCouponPricerBuilder = CachingEngineBuilder<T, FloatingRateCouponPricer, Args...>;
+
+template <class T, typename... Args>
+using CachingInflationCouponPricerBuilder = CachingEngineBuilder<T, InflationCouponPricer, Args...>;
 
 } // namespace data
 } // namespace ore

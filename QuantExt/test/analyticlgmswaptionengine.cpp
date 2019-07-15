@@ -89,16 +89,16 @@
 using namespace QuantLib;
 using namespace QuantExt;
 
-using boost::unit_test_framework::test_suite;
-
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
-
-struct F {
+namespace {
+struct F : public qle::test::TopLevelFixture {
     F() {
         Settings::instance().evaluationDate() = Date(20, March, 2019);
     }
     ~F() {}
 };
+}
+
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_FIXTURE_TEST_SUITE(AnalyticLgmSwaptionEngineTest, F)
 

@@ -25,6 +25,7 @@
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
 #include <qle/cashflows/quantocouponpricer.hpp>
+#include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
 #include <qle/currencies/africa.hpp>
@@ -32,6 +33,8 @@
 #include <qle/currencies/asia.hpp>
 #include <qle/currencies/metals.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/indexes/bondindex.hpp>
+#include <qle/indexes/cacpi.hpp>
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -50,7 +53,10 @@
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
 #include <qle/indexes/ibor/idridrfix.hpp>
+#include <qle/indexes/ibor/idrjibor.hpp>
+#include <qle/indexes/ibor/ilstelbor.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
+#include <qle/indexes/ibor/krwcd.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
 #include <qle/indexes/ibor/mxntiie.hpp>
 #include <qle/indexes/ibor/myrklibor.hpp>
@@ -58,6 +64,7 @@
 #include <qle/indexes/ibor/nowa.hpp>
 #include <qle/indexes/ibor/nzdbkbm.hpp>
 #include <qle/indexes/ibor/phpphiref.hpp>
+#include <qle/indexes/ibor/plnpolonia.hpp>
 #include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/rubmosprime.hpp>
 #include <qle/indexes/ibor/saibor.hpp>
@@ -86,6 +93,7 @@
 #include <qle/instruments/deposit.hpp>
 #include <qle/instruments/equityforward.hpp>
 #include <qle/instruments/fixedbmaswap.hpp>
+#include <qle/instruments/forwardbond.hpp>
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/impliedbondspread.hpp>
 #include <qle/instruments/makeaverageois.hpp>
@@ -95,6 +103,7 @@
 #include <qle/instruments/payment.hpp>
 #include <qle/instruments/subperiodsswap.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
+#include <qle/interpolators/optioninterpolator2d.hpp>
 #include <qle/math/deltagammavar.hpp>
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/flatextrapolation.hpp>
@@ -139,6 +148,7 @@
 #include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
+#include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 #include <qle/pricingengines/cpibacheliercapfloorengine.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
@@ -148,6 +158,7 @@
 #include <qle/pricingengines/discountingcommodityforwardengine.hpp>
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>
 #include <qle/pricingengines/discountingequityforwardengine.hpp>
+#include <qle/pricingengines/discountingforwardbondengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
@@ -164,6 +175,7 @@
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 #include <qle/termstructures/blackvariancecurve3.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
+#include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/brlcdiratehelper.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
@@ -180,6 +192,8 @@
 #include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
+#include <qle/termstructures/dynamicyoyoptionletvolatilitystructure.hpp>
+#include <qle/termstructures/equityforwardcurvestripper.hpp>
 #include <qle/termstructures/equityvolconstantspread.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
@@ -191,12 +205,14 @@
 #include <qle/termstructures/interpolateddiscountcurve.hpp>
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
+#include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oiccbasisswaphelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/optionletstripper.hpp>
 #include <qle/termstructures/optionletstripper1.hpp>
 #include <qle/termstructures/optionletstripper2.hpp>
+#include <qle/termstructures/optionpricesurface.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
@@ -207,6 +223,7 @@
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
+#include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>

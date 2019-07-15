@@ -29,6 +29,7 @@
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
+#include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 
 #include <algorithm>
 
@@ -307,8 +308,8 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
             boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
                 boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex, hovs);
 
-            boost::shared_ptr<KInterpolatedYoYOptionletVolatilitySurface<Linear>> interpVolSurface =
-                boost::make_shared<KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
+            boost::shared_ptr<QuantExt::StrikeInterpolatedYoYOptionletVolatilitySurface<Linear>> interpVolSurface =
+	      boost::make_shared<QuantExt::StrikeInterpolatedYoYOptionletVolatilitySurface<Linear>>(
                     yoySurface->settlementDays(), yoySurface->calendar(), yoySurface->businessDayConvention(),
                     yoySurface->dayCounter(), yoySurface->observationLag(), yoySurface, cfEngine, yoyStripper, 0);
 

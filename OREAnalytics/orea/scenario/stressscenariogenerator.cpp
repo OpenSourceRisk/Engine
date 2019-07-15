@@ -462,12 +462,16 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
                                                    boost::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
 
-    vector<Real> volStrikes = simMarketData_->capFloorVolStrikes();
-    Size n_cfvol_strikes = volStrikes.size();
-
     for (auto d : std.capVolShifts) {
         std::string ccy = d.first;
         LOG("Apply stress scenario to cap/floor vol structure " << ccy);
+
+        vector<Real> volStrikes = simMarketData_->capFloorVolStrikes(ccy);
+        // Strikes may be empty which indicates that the optionlet structure in the simulation market is an ATM curve
+        if (volStrikes.empty()) {
+            volStrikes = { 0.0 };
+        }
+        Size n_cfvol_strikes = volStrikes.size();
 
         Size n_cfvol_exp = simMarketData_->capFloorVolExpiries(ccy).size();
         vector<vector<Real>> volData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));

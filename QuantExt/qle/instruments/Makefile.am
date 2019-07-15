@@ -13,6 +13,7 @@ libInstruments_la_SOURCES = \
 	currencyswap.cpp \
 	deposit.cpp \
 	equityforward.cpp \
+	forwardbond.cpp \
 	fxforward.cpp \
 	makeaverageois.cpp \
 	oibasisswap.cpp \
@@ -39,6 +40,7 @@ this_include_HEADERS = \
 	currencyswap.hpp \
 	deposit.hpp \
 	equityforward.hpp \
+	forwardbond.hpp \
 	fxforward.hpp \
 	makeaverageois.hpp \
 	oibasisswap.hpp \

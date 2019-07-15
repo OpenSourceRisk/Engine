@@ -14,10 +14,12 @@ libPricingEngines_la_SOURCES = \
 	analyticlgmswaptionengine.cpp \
 	analyticdkcpicapfloorengine.cpp \
 	analyticlgmcdsoptionengine.cpp \
+	baroneadesiwhaleyengine.cpp \
 	crossccyswapengine.cpp \
 	depositengine.cpp \
 	discountingcurrencyswapengine.cpp \
 	discountingequityforwardengine.cpp \
+	discountingforwardbondengine.cpp \
 	discountingfxforwardengine.cpp \
 	discountingswapenginemulticurve.cpp \
 	oiccbasisswapengine.cpp \
@@ -39,10 +41,12 @@ this_include_HEADERS = \
 	analyticlgmswaptionengine.hpp \
 	analyticdkcpicapfloorengine.hpp \
 	analyticlgmcdsoptionengine.hpp \
+	baroneadesiwhaleyengine.hpp \
 	crossccyswapengine.hpp \
 	depositengine.hpp \
 	discountingcurrencyswapengine.hpp \
 	discountingequityforwardengine.hpp \
+	discountingforwardbondengine.hpp \
 	discountingfxforwardengine.hpp \
 	discountingswapenginemulticurve.hpp \
 	oiccbasisswapengine.hpp \

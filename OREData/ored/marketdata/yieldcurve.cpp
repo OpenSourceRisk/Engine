@@ -62,6 +62,52 @@ string yieldCurveKey(const Currency& curveCcy, const string& curveID, const Date
 namespace ore {
 namespace data {
 
+template <template <class> class CurveType>
+boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates,
+    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod) {
+    
+    boost::shared_ptr<YieldTermStructure> yieldts;
+    switch (interpolationMethod) {
+    case YieldCurve::InterpolationMethod::Linear:
+        yieldts.reset(new CurveType<QuantLib::Linear>(dates, rates, dayCounter, QuantLib::Linear()));
+        break;
+    case YieldCurve::InterpolationMethod::LogLinear:
+        yieldts.reset(new CurveType<QuantLib::LogLinear>(dates, rates, dayCounter, QuantLib::LogLinear()));
+        break;
+    case YieldCurve::InterpolationMethod::NaturalCubic:
+        yieldts.reset(new CurveType<QuantLib::Cubic>(dates, rates, dayCounter,
+            QuantLib::Cubic(CubicInterpolation::Kruger, true)));
+        break;
+    case YieldCurve::InterpolationMethod::FinancialCubic:
+        yieldts.reset(new CurveType<QuantLib::Cubic>(
+            dates, rates, dayCounter,
+            QuantLib::Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                CubicInterpolation::FirstDerivative)));
+        break;
+    case YieldCurve::InterpolationMethod::ConvexMonotone:
+        yieldts.reset(new CurveType<QuantLib::ConvexMonotone>(dates, rates, dayCounter));
+        break;
+    default:
+        QL_FAIL("Interpolation method not recognised.");
+    }
+    return yieldts;
+}
+
+boost::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
+    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod) {
+    return buildYieldCurve<InterpolatedZeroCurve>(dates, yields, dayCounter, interpolationMethod);
+}
+
+boost::shared_ptr<YieldTermStructure> discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs,
+    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod) {
+    return buildYieldCurve<InterpolatedDiscountCurve>(dates, dfs, dayCounter, interpolationMethod);
+}
+
+boost::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
+    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod) {
+    return buildYieldCurve<InterpolatedForwardCurve>(dates, forwards, dayCounter, interpolationMethod);
+}
+
 /* Helper functions
  */
 YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string& s) {
@@ -92,9 +138,10 @@ YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const str
 
 YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigurations& curveConfigs,
                        const Loader& loader, const Conventions& conventions,
-                       const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves)
+                       const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves, 
+                       const FXTriangulation& fxTriangulation)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), conventions_(conventions),
-      requiredYieldCurves_(requiredYieldCurves) {
+      requiredYieldCurves_(requiredYieldCurves), fxTriangulation_(fxTriangulation) {
 
     try {
 
@@ -279,107 +326,15 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
     zeros[0] = zeros[1];
     forwards[0] = forwards[1];
     if (interpolationVariable_ == InterpolationVariable::Zero)
-        p_ = zerocurve(dates, zeros, zeroDayCounter_);
+        p_ = zerocurve(dates, zeros, zeroDayCounter_, interpolationMethod_);
     else if (interpolationVariable_ == InterpolationVariable::Discount)
-        p_ = discountcurve(dates, discounts, zeroDayCounter_);
+        p_ = discountcurve(dates, discounts, zeroDayCounter_, interpolationMethod_);
     else if (interpolationVariable_ == InterpolationVariable::Forward)
-        p_ = forwardcurve(dates, forwards, zeroDayCounter_);
+        p_ = forwardcurve(dates, forwards, zeroDayCounter_, interpolationMethod_);
     else
         QL_FAIL("Interpolation variable not recognised.");
 
     return p_;
-}
-
-boost::shared_ptr<YieldTermStructure> YieldCurve::zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
-                                                            const DayCounter& dayCounter) {
-
-    boost::shared_ptr<YieldTermStructure> yieldts;
-    switch (interpolationMethod_) {
-    case InterpolationMethod::Linear:
-        yieldts.reset(new InterpolatedZeroCurve<QuantLib::Linear>(dates, yields, dayCounter, QuantLib::Linear()));
-        break;
-    case InterpolationMethod::LogLinear:
-        yieldts.reset(new InterpolatedZeroCurve<QuantLib::LogLinear>(dates, yields, dayCounter, QuantLib::LogLinear()));
-        break;
-    case InterpolationMethod::NaturalCubic:
-        yieldts.reset(new InterpolatedZeroCurve<QuantLib::Cubic>(dates, yields, dayCounter,
-                                                                 QuantLib::Cubic(CubicInterpolation::Kruger, true)));
-        break;
-    case InterpolationMethod::FinancialCubic:
-        yieldts.reset(new InterpolatedZeroCurve<QuantLib::Cubic>(
-            dates, yields, dayCounter,
-            QuantLib::Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                            CubicInterpolation::FirstDerivative)));
-        break;
-    case InterpolationMethod::ConvexMonotone:
-        yieldts.reset(new InterpolatedZeroCurve<QuantLib::ConvexMonotone>(dates, yields, dayCounter));
-        break;
-    default:
-        QL_FAIL("Interpolation method not recognised.");
-    }
-    return yieldts;
-}
-
-boost::shared_ptr<YieldTermStructure>
-YieldCurve::discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs, const DayCounter& dayCounter) {
-
-    boost::shared_ptr<YieldTermStructure> yieldts;
-    switch (interpolationMethod_) {
-    case InterpolationMethod::Linear:
-        yieldts.reset(new InterpolatedDiscountCurve<QuantLib::Linear>(dates, dfs, dayCounter, QuantLib::Linear()));
-        break;
-    case InterpolationMethod::LogLinear:
-        yieldts.reset(
-            new InterpolatedDiscountCurve<QuantLib::LogLinear>(dates, dfs, dayCounter, QuantLib::LogLinear()));
-        break;
-    case InterpolationMethod::NaturalCubic:
-        yieldts.reset(new InterpolatedDiscountCurve<QuantLib::Cubic>(
-            dates, dfs, dayCounter, QuantLib::Cubic(CubicInterpolation::Kruger, true)));
-        break;
-    case InterpolationMethod::FinancialCubic:
-        yieldts.reset(new InterpolatedDiscountCurve<QuantLib::Cubic>(
-            dates, dfs, dayCounter,
-            QuantLib::Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                            CubicInterpolation::FirstDerivative)));
-        break;
-    case InterpolationMethod::ConvexMonotone:
-        yieldts.reset(new InterpolatedDiscountCurve<QuantLib::ConvexMonotone>(dates, dfs, dayCounter));
-        break;
-    default:
-        QL_FAIL("Interpolation method not recognised.");
-    }
-    return yieldts;
-}
-
-boost::shared_ptr<YieldTermStructure> YieldCurve::forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
-                                                               const DayCounter& dayCounter) {
-
-    boost::shared_ptr<YieldTermStructure> yieldts;
-    switch (interpolationMethod_) {
-    case InterpolationMethod::Linear:
-        yieldts.reset(new InterpolatedForwardCurve<QuantLib::Linear>(dates, forwards, dayCounter, QuantLib::Linear()));
-        break;
-    case InterpolationMethod::LogLinear:
-        yieldts.reset(
-            new InterpolatedForwardCurve<QuantLib::LogLinear>(dates, forwards, dayCounter, QuantLib::LogLinear()));
-        break;
-    case InterpolationMethod::NaturalCubic:
-        yieldts.reset(new InterpolatedForwardCurve<QuantLib::Cubic>(dates, forwards, dayCounter,
-                                                                    QuantLib::Cubic(CubicInterpolation::Kruger, true)));
-        break;
-    case InterpolationMethod::FinancialCubic:
-        yieldts.reset(new InterpolatedForwardCurve<QuantLib::Cubic>(
-            dates, forwards, dayCounter,
-            QuantLib::Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                            CubicInterpolation::FirstDerivative)));
-        break;
-    case InterpolationMethod::ConvexMonotone:
-        yieldts.reset(new InterpolatedForwardCurve<QuantLib::ConvexMonotone>(dates, forwards, dayCounter));
-        break;
-    default:
-        QL_FAIL("Interpolation method not recognised.");
-    }
-    return yieldts;
 }
 
 void YieldCurve::buildZeroCurve() {
@@ -475,21 +430,21 @@ void YieldCurve::buildZeroCurve() {
 
     // Now build curve with requested conventions
     if (interpolationVariable_ == YieldCurve::InterpolationVariable::Zero) {
-        boost::shared_ptr<YieldTermStructure> tempCurve = zerocurve(dates, zeroes, quoteDayCounter);
+        boost::shared_ptr<YieldTermStructure> tempCurve = zerocurve(dates, zeroes, quoteDayCounter, interpolationMethod_);
         zeroes.clear();
         for (Size i = 0; i < dates.size(); ++i) {
             Rate zero = tempCurve->zeroRate(dates[i], zeroDayCounter_, Continuous);
             zeroes.push_back(zero);
         }
-        p_ = zerocurve(dates, zeroes, zeroDayCounter_);
+        p_ = zerocurve(dates, zeroes, zeroDayCounter_, interpolationMethod_);
     } else if (interpolationVariable_ == YieldCurve::InterpolationVariable::Discount) {
-        boost::shared_ptr<YieldTermStructure> tempCurve = discountcurve(dates, discounts, quoteDayCounter);
+        boost::shared_ptr<YieldTermStructure> tempCurve = discountcurve(dates, discounts, quoteDayCounter, interpolationMethod_);
         discounts.clear();
         for (Size i = 0; i < dates.size(); ++i) {
             DiscountFactor discount = tempCurve->discount(dates[i]);
             discounts.push_back(discount);
         }
-        p_ = discountcurve(dates, discounts, zeroDayCounter_);
+        p_ = discountcurve(dates, discounts, zeroDayCounter_, interpolationMethod_);
     } else {
         QL_FAIL("Unknown yield curve interpolation variable.");
     }
@@ -600,7 +555,7 @@ void YieldCurve::buildDiscountCurve() {
 
     QL_REQUIRE(dates.size() == discounts.size(), "Date and discount vectors differ in size.");
 
-    boost::shared_ptr<YieldTermStructure> tempDiscCurve = discountcurve(dates, discounts, zeroDayCounter_);
+    boost::shared_ptr<YieldTermStructure> tempDiscCurve = discountcurve(dates, discounts, zeroDayCounter_, interpolationMethod_);
 
     // Now build curve with requested conventions
     if (interpolationVariable_ == YieldCurve::InterpolationVariable::Discount) {
@@ -611,7 +566,7 @@ void YieldCurve::buildDiscountCurve() {
             Rate zero = tempDiscCurve->zeroRate(dates[i], zeroDayCounter_, Continuous);
             zeroes.push_back(zero);
         }
-        p_ = zerocurve(dates, zeroes, zeroDayCounter_);
+        p_ = zerocurve(dates, zeroes, zeroDayCounter_, interpolationMethod_);
     } else {
         QL_FAIL("Unknown yield curve interpolation variable.");
     }
@@ -741,30 +696,27 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
             Period fwdStart = depositQuote->fwdStart();
             Natural fwdStartDays = static_cast<Natural>(fwdStart.length());
             Handle<Quote> hQuote(depositQuote->quote());
+            
             if (depositConvention->indexBased()) {
-                string indexName;
+                // indexName will have the form ccy-name so examples would be:
+                // EUR-EONIA, USD-FedFunds, EUR-EURIBOR, USD-LIBOR, etc.
+                string indexName = depositConvention->index();
                 boost::shared_ptr<IborIndex> index;
-                if (depositTerm.units() == Days) {
-                    // TODO: what is this about?
-                    /* To avoid problems constructing daily tenor indices. This works fine for overnight
-                       indices also since the last token, i.e. 1W, is ignored in the IborParser */
-                    indexName = depositConvention->index() + "-1D";
-                    try {
-                        index = parseIborIndex(indexName);
-                    } catch (...) {
-                        indexName = depositConvention->index() + "-1W";
-                        index = parseIborIndex(indexName);
-                    }
-                    depositHelper.reset(new DepositRateHelper(hQuote, depositTerm, fwdStartDays,
-                                                              index->fixingCalendar(), index->businessDayConvention(),
-                                                              index->endOfMonth(), index->dayCounter()));
+                if (isOvernightIndex(indexName)) {
+                    // No need for the term here
+                    index = parseIborIndex(indexName);
                 } else {
+                    // Note that a depositTerm with units Days here could end up as a string with another unit
+                    // For example:
+                    // 7 * Days will go to ccy-tenor-1W - CNY IR index is a case
+                    // 28 * Days will go to ccy-tenor-4W - MXN TIIE is a case
+                    // parseIborIndex should be able to handle this for appropriate depositTerm values
                     stringstream ss;
-                    ss << depositConvention->index() << "-" << io::short_period(depositTerm);
+                    ss << indexName << "-" << io::short_period(depositTerm);
                     indexName = ss.str();
                     index = parseIborIndex(indexName);
-                    depositHelper.reset(new DepositRateHelper(hQuote, index));
                 }
+                depositHelper = boost::make_shared<DepositRateHelper>(hQuote, index);
             } else {
                 QL_REQUIRE(fwdStart.units() == Days, "The forward start time unit for deposits "
                                                      "must be expressed in days.");
@@ -1336,15 +1288,7 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
     /* Need to retrieve the market FX spot rate */
     // LOG("YieldCurve::addFXForwards(), retrieve FX rate");
     string spotRateID = fxForwardSegment->spotRateID();
-    boost::shared_ptr<MarketDatum> fxSpotMarketQuote = loader_.get(spotRateID, asofDate_);
-    boost::shared_ptr<FXSpotQuote> fxSpotQuote;
-    if (fxSpotMarketQuote) {
-        QL_REQUIRE(fxSpotMarketQuote->instrumentType() == MarketDatum::InstrumentType::FX_SPOT,
-                   "Market quote not of type FX spot.");
-        fxSpotQuote = boost::dynamic_pointer_cast<FXSpotQuote>(fxSpotMarketQuote);
-    } else {
-        QL_FAIL("Could not find quote for ID " << spotRateID << " with as of date " << io::iso_date(asofDate_) << ".");
-    }
+    boost::shared_ptr<FXSpotQuote> fxSpotQuote = getFxSpotQuote(spotRateID);
 
     /* Create an FX spot quote from the retrieved FX spot rate */
     Currency fxSpotSourceCcy = parseCurrency(fxSpotQuote->unitCcy());
@@ -1416,15 +1360,7 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
 
     /* Need to retrieve the market FX spot rate */
     string spotRateID = basisSwapSegment->spotRateID();
-    boost::shared_ptr<MarketDatum> fxSpotMarketQuote = loader_.get(spotRateID, asofDate_);
-    boost::shared_ptr<FXSpotQuote> fxSpotQuote;
-    if (fxSpotMarketQuote) {
-        QL_REQUIRE(fxSpotMarketQuote->instrumentType() == MarketDatum::InstrumentType::FX_SPOT,
-                   "Market quote not of type FX spot.");
-        fxSpotQuote = boost::dynamic_pointer_cast<FXSpotQuote>(fxSpotMarketQuote);
-    } else {
-        QL_FAIL("Could not find quote for ID " << spotRateID << " with as of date " << io::iso_date(asofDate_) << ".");
-    }
+    boost::shared_ptr<FXSpotQuote> fxSpotQuote = getFxSpotQuote(spotRateID);
 
     /* Create an FX spot quote from the retrieved FX spot rate */
     Currency fxSpotSourceCcy = parseCurrency(fxSpotQuote->unitCcy());
@@ -1509,6 +1445,9 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
         spreadIndex = domesticIndex;
     }
 
+    Period flatTenor = basisSwapConvention->flatTenor();
+    Period spreadTenor = basisSwapConvention->spreadTenor();
+
     auto basisSwapQuoteIDs = basisSwapSegment->quotes();
     for (Size i = 0; i < basisSwapQuoteIDs.size(); i++) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(basisSwapQuoteIDs[i], asofDate_);
@@ -1529,10 +1468,10 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
                     basisSwapQuote->quote(), fxSpotQuote->quote(), basisSwapConvention->settlementDays(),
                     basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(),
                     flatIndex, spreadIndex, flatDiscountCurve, spreadDiscountCurve, basisSwapConvention->eom(),
-                    flatIndex->currency().code() != fxSpotQuote->unitCcy()));
+                    flatIndex->currency().code() != fxSpotQuote->unitCcy(), flatTenor, spreadTenor));
                 instruments.push_back(basisSwapHelper);
             } else { // the quote is for a cross currency basis swap with a resetting notional
-                bool resetsOnFlatLeg = basisSwapConvention->FlatIndexIsResettable();
+                bool resetsOnFlatLeg = basisSwapConvention->flatIndexIsResettable();
                 // the convention here is to call the resetting leg the "domestic leg",
                 // and the constant notional leg the "foreign leg"
                 bool spreadOnForeignCcy = resetsOnFlatLeg ? true : false;
@@ -1542,12 +1481,16 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
                 Handle<YieldTermStructure> domesticDiscount = resetsOnFlatLeg ? flatDiscountCurve : spreadDiscountCurve;
                 bool invertFxQuote = (foreignIndex->currency().code() !=
                                       fxSpotQuote->unitCcy()); // set to true if the spotFXQuote is DOM/FOR
+                Period foreignTenor = resetsOnFlatLeg ? spreadTenor : flatTenor;
+                Period domesticTenor = resetsOnFlatLeg ? flatTenor : spreadTenor;
+
                 // Use foreign and dom discount curves for projecting FX forward rates (for e.g. resetting cashflows)
                 boost::shared_ptr<RateHelper> basisSwapHelper(new CrossCcyBasisMtMResetSwapHelper(
                     basisSwapQuote->quote(), fxSpotQuote->quote(), basisSwapConvention->settlementDays(),
                     basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(),
                     foreignIndex, domesticIndex, foreignDiscount, domesticDiscount, Handle<YieldTermStructure>(),
-                    Handle<YieldTermStructure>(), basisSwapConvention->eom(), spreadOnForeignCcy, invertFxQuote));
+                    Handle<YieldTermStructure>(), basisSwapConvention->eom(), spreadOnForeignCcy, invertFxQuote,
+                    foreignTenor, domesticTenor));
                 instruments.push_back(basisSwapHelper);
             }
         }
@@ -1600,9 +1543,7 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
     // Create the FX spot quote for the helper. The quote needs to be number of units of fixed leg
     // currency for 1 unit of float leg currency. We convert the market quote here if needed.
     string fxSpotId = swapSegment->spotRateID();
-    boost::shared_ptr<MarketDatum> md = loader_.get(fxSpotId, asofDate_);
-    boost::shared_ptr<FXSpotQuote> fxSpotMd = boost::dynamic_pointer_cast<FXSpotQuote>(md);
-    QL_REQUIRE(fxSpotMd, "Market quote " << fxSpotId << " should be of type 'FXSpotQuote'");
+    boost::shared_ptr<FXSpotQuote> fxSpotMd = getFxSpotQuote(fxSpotId);
     Currency mdUnitCcy = parseCurrency(fxSpotMd->unitCcy());
     Currency mdCcy = parseCurrency(fxSpotMd->ccy());
     Handle<Quote> fxSpotQuote;
@@ -1640,6 +1581,49 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
     }
 }
 
+boost::shared_ptr<FXSpotQuote> YieldCurve::getFxSpotQuote(string spotId) {
+    // check the spot id, if like FX/RATE/CCY/CCY we go straight to the loader first
+    std::vector<string> tokens;
+    split(tokens, spotId, boost::is_any_of("/"));
+    
+    boost::shared_ptr<FXSpotQuote> fxSpotQuote;
+    if (tokens.size() == 4 && tokens[0] == "FX" && tokens[1] == "RATE") {
+        if (loader_.has(spotId, asofDate_)) {
+            boost::shared_ptr<MarketDatum> fxSpotMarketQuote = loader_.get(spotId, asofDate_);
+
+            if (fxSpotMarketQuote) {
+                QL_REQUIRE(fxSpotMarketQuote->instrumentType() == MarketDatum::InstrumentType::FX_SPOT,
+                    "Market quote not of type FX spot.");
+                fxSpotQuote = boost::dynamic_pointer_cast<FXSpotQuote>(fxSpotMarketQuote);
+                return fxSpotQuote;
+            }
+        }
+    }
+
+    // Try to use triangulation otherwise
+    string unitCcy;
+    string ccy;
+    Handle<Quote> spot;
+    if (tokens.size() >1 && tokens[0] == "FX") {
+        if (tokens.size() == 3) {
+            unitCcy = tokens[1];
+            ccy = tokens[2];
+        } else if (tokens.size() == 4 && tokens[1] == "RATE") {
+            unitCcy = tokens[2];
+            ccy = tokens[3];
+        } else {
+            QL_FAIL("Invalid FX spot ID " << spotId);
+        }
+    } else if (tokens.size() == 1 && spotId.size() == 6){
+        unitCcy = spotId.substr(0, 3);
+        ccy = spotId.substr(3);
+    } else {
+        QL_FAIL("Could not find quote for ID " << spotId << " with as of date " << io::iso_date(asofDate_) << ".");
+    }
+    spot = fxTriangulation_.getQuote(unitCcy + ccy);
+    fxSpotQuote = boost::make_shared<FXSpotQuote>(spot->value(), asofDate_, spotId, MarketDatum::QuoteType::RATE, unitCcy, ccy);
+    return fxSpotQuote;
+}
 
 // Get Pillar Dates
 // we have to try to cast and then call dates() on the subclasses, a bit messy

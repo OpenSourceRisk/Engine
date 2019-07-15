@@ -359,7 +359,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="Indices">
+      <xs:element name="Indices" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element type="indexNameType" name="Index" maxOccurs="unbounded" minOccurs="0"/>
@@ -531,12 +531,28 @@
             <xs:element name="Currencies">
               <xs:complexType>
                 <xs:sequence>
-                  <xs:element type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="0"/>
+                  <xs:element type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="1"/>
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
-            <xs:element type="xs:string" name="Expiries"/>
-            <xs:element type="xs:string" name="Strikes"/>
+            <xs:element name="Expiries" maxOccurs="unbounded" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="ccy" type="xs:string" use="optional"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="Strikes" maxOccurs="unbounded" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="ccy" type="xs:string" use="optional"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
             <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>

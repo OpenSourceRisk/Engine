@@ -24,8 +24,8 @@ using namespace QuantLib;
 namespace QuantExt {
 
 VannaVolgaSmileSection::VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr25d,
-                                               Volatility bf25d)
-    : FxSmileSection(spot, rd, rf, t, atmVol, rr25d, bf25d) {
+                                               Volatility bf25d, bool firstApprox)
+    : FxSmileSection(spot, rd, rf, t, atmVol, rr25d, bf25d), firstApprox_(firstApprox) {
 
     // Consistent Pricing of FX Options
     // Castagna & Mercurio (2006)
@@ -68,6 +68,9 @@ Volatility VannaVolgaSmileSection::volatility(Real k) const {
     Real r3 = log(k / k1) * log(k / k2) / (log(k3 / k1) * log(k3 / k2));
 
     Real sigma1_k = r1 * vol_25p_ + r2 * atmVol_ + r3 * vol_25c_;
+    if (firstApprox_) {
+        return std::max(sigma1_k, Real(0.0001));    // for extreme ends: cannot return negative impl vols
+    }
 
     Real D1 = sigma1_k - atmVol_;
 
@@ -78,7 +81,8 @@ Volatility VannaVolgaSmileSection::volatility(Real k) const {
     Real d1d2k = d1(k) * d2(k);
 
     Real tmp = atmVol_ * atmVol_ + d1d2k * (2 * atmVol_ * D1 + D2);
-    QL_REQUIRE(tmp >= 0, "VannaVolga attempting to take square root of negative number");
+    QL_REQUIRE(tmp >= 0, "VannaVolga attempting to take square root of negative number in second approximation. "
+                         "Consider using first approximation in fxvol config.");
 
     return atmVol_ + (-atmVol_ + sqrt(tmp)) / d1d2k;
 }
