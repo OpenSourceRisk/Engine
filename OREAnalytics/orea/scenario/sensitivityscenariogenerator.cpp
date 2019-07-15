@@ -1952,7 +1952,6 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
         DayCounter dc = parseDayCounter(simMarketData_->correlationDayCounter(pair.first, pair.second));
 
         // cache original vol data
-        bool valid = true;
         for (Size j = 0; j < n_c_exp; ++j) {
             Date expiry = asof + simMarketData_->correlationExpiries()[j];
             corrExpiryTimes[j] = dc.yearFraction(asof, expiry);
@@ -1965,9 +1964,6 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
                 valid = valid && tryGetBaseScenarioValue(baseScenario_, key, corrData[j][k], continueOnError_);
             }
         }
-        if (!valid)
-            continue;
-
         if (!valid)
             continue;
 
