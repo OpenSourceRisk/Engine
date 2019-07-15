@@ -26,14 +26,15 @@
 #include <map>
 #include <ored/configuration/conventions.hpp>
 #include <ored/utilities/indexparser.hpp>
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/cacpi.hpp>
+#include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -76,7 +77,6 @@
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/secpi.hpp>
-#include <qle/indexes/commodityindex.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -410,8 +410,7 @@ boost::shared_ptr<BondIndex> parseBondIndex(const string& s) {
     return boost::make_shared<BondIndex>(tokens[1]);
 }
 
-boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& s,
-								const Calendar& cal,
+boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& s, const Calendar& cal,
                                                                 const Handle<QuantExt::PriceTermStructure>& ts) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of(":"));
@@ -419,8 +418,9 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& s,
     QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3, "two or three tokens required in " << s << ": COMMODITY");
 
     if (tokens.size() == 3) {
+        std::string name = tokens[0] + ":" + tokens[1];
         Date expiry = parseDate(tokens[2]);
-        return boost::make_shared<CommodityFuturesIndex>(s, expiry, cal, ts);
+        return boost::make_shared<CommodityFuturesIndex>(name, expiry, cal, ts);
     } else {
         return boost::make_shared<CommoditySpotIndex>(s, cal, ts);
     }
