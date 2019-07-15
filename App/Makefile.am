@@ -7,7 +7,8 @@ bin_PROGRAMS = ore
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} \
 	-I${top_builddir}/../OREAnalytics \
 	-I${top_builddir}/../OREData \
-	-I${top_builddir}/../QuantExt
+	-I${top_builddir}/../QuantExt \
+	-I${top_builddir}/../QuantLib
 
 AM_LDFLAGS = \
 	-L${top_builddir}/../OREAnalytics/orea -lOREAnalytics \

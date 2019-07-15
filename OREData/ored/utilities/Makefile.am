@@ -1,4 +1,4 @@
-AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt -I${top_builddir}/../ThirdPartyLibs/rapidxml-1.13
+AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantLib -I${top_builddir}/../QuantExt -I${top_builddir}/../ThirdPartyLibs/rapidxml-1.13
 
 noinst_LTLIBRARIES = libOREDataUtilities.la
 
