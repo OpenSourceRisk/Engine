@@ -1776,20 +1776,6 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const string& yieldS
     if (yieldSpecId.empty()) return Handle<YieldTermStructure>();
     
     if (todaysMarketParams.hasConfiguration(configuration)) {
-        // Look for yield spec ID in discount curves of todays market  
-        if (todaysMarketParams.hasMarketObject(MarketObject::DiscountCurve)) {
-            for (const auto& discountMapping : todaysMarketParams.mapping(MarketObject::DiscountCurve, configuration)) {
-                if (discountMapping.second == yieldSpecId) {
-                    if (market) {
-                        return market->discountCurve(discountMapping.first, configuration);
-                    }
-                    else {
-                        return discountCurve(discountMapping.first, configuration);
-                    }
-                }
-            }
-        }
-
         // Look for yield spec ID in index curves of todays market  
         if (todaysMarketParams.hasMarketObject(MarketObject::IndexCurve)) {
             for (const auto& indexMapping : todaysMarketParams.mapping(MarketObject::IndexCurve, configuration)) {
@@ -1813,6 +1799,19 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const string& yieldS
                     }
                     else {
                         return yieldCurve(yieldMapping.first, configuration);
+                    }
+                }
+            }
+        }
+        
+        // Look for yield spec ID in discount curves of todays market  
+        if (todaysMarketParams.hasMarketObject(MarketObject::DiscountCurve)) {
+            for (const auto& discountMapping : todaysMarketParams.mapping(MarketObject::DiscountCurve, configuration)) {
+                if (discountMapping.second == yieldSpecId) {
+                    if (market) {
+                        return market->discountCurve(discountMapping.first, configuration);
+                    } else {
+                        return discountCurve(discountMapping.first, configuration);
                     }
                 }
             }
