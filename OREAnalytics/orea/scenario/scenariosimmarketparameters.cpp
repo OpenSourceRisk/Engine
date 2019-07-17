@@ -263,6 +263,14 @@ const vector<Period>& ScenarioSimMarketParameters::commodityVolExpiries(const st
     return lookup(commodityVolExpiries_, commodityName);
 }
 
+const vector<Real>& ScenarioSimMarketParameters::fxVolMoneyness(const string& ccypair) const {
+    return lookup(fxMoneyness_, ccypair);
+}
+
+bool ScenarioSimMarketParameters::fxVolIsSurface(const string& ccypair) const {
+    return lookup(fxVolIsSurface_, ccypair);
+}
+
 const vector<Real>& ScenarioSimMarketParameters::commodityVolMoneyness(const string& commodityName) const {
     if (commodityVolMoneyness_.count(commodityName) > 0) {
         return commodityVolMoneyness_.at(commodityName);
@@ -976,11 +984,16 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         setFxVolCcyPairs(XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true));
         XMLNode* fxSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
         if (fxSurfaceNode) {
-            fxVolIsSurface_ = true;
-            fxMoneyness_ = XMLUtils::getChildrenValuesAsDoublesCompact(fxSurfaceNode, "Moneyness", true);
+            hasFxPairWithSurface_ = true;
+            for (XMLNode* child = XMLUtils::getChildNode(fxSurfaceNode, "Moneyness"); child;
+                 child = XMLUtils::getNextSibling(child)) {
+                string label = XMLUtils::getAttribute(child, "ccyPair");
+                fxMoneyness_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
+                fxVolIsSurface_[label] = true;
+            }
         } else {
-            fxVolIsSurface_ = false;
-            fxMoneyness_ = {0.0};
+            fxVolIsSurface_[""] = false;
+            fxMoneyness_[""] = {0.0};
         }
         XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
         if (dc) {
@@ -1356,9 +1369,18 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, fxVolatilitiesNode, "ReactionToTimeDecay", fxVolDecayMode_);
         XMLUtils::addChildren(doc, fxVolatilitiesNode, "CurrencyPairs", "CurrencyPair", fxVolCcyPairs());
         XMLUtils::addGenericChildAsList(doc, fxVolatilitiesNode, "Expiries", fxVolExpiries_);
-        if (fxVolIsSurface_) {
+        if (hasFxPairWithSurface_) {
             XMLNode* surfaceNode = XMLUtils::addChild(doc, fxVolatilitiesNode, "Surface");
-            XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_);
+            map<string, vector<Real>>::const_iterator it;
+            for (it = fxMoneyness_.begin(); it != fxMoneyness_.end(); it++) {
+                if (it->first == "") {
+                    XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first]);
+                } else {
+                    XMLNode* tmpMoneyness =
+                        XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first]);
+                    XMLUtils::addAttribute(doc, tmpMoneyness, "ccyPair", it->first);
+                }
+            }
         }
         if (fxVolDayCounters_.size() > 0) {
             XMLNode* node = XMLUtils::addChild(doc, fxVolatilitiesNode, "DayCounters");

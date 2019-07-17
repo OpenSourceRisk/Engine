@@ -131,16 +131,16 @@ public:
     }
 
     template <class T>
-    static void addGenericChildAsList(XMLDocument& doc, XMLNode* n, const string& name, const vector<T>& values) {
+    static XMLNode* addGenericChildAsList(XMLDocument& doc, XMLNode* n, const string& name, const vector<T>& values) {
         if (values.size() == 0) {
-            addChild(doc, n, name);
+            return addChild(doc, n, name);
         } else {
             std::ostringstream oss;
             oss << values[0];
             for (Size i = 1; i < values.size(); i++) {
                 oss << ", " << values[i];
             }
-            addChild(doc, n, name, oss.str());
+            return addChild(doc, n, name, oss.str());
         }
     }
 
@@ -208,6 +208,9 @@ public:
 
     //! Get a node's value
     static string getNodeValue(XMLNode* node);
+
+    //! Get a node's compact values as vector of doubles
+    static vector<Real> getNodeValueAsDoublesCompact(XMLNode* node);
 };
 } // namespace data
 } // namespace ore

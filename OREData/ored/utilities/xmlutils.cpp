@@ -305,6 +305,11 @@ vector<Real> XMLUtils::getChildrenValuesAsDoublesCompact(XMLNode* node, const st
     return parseListOfValues(s, std::function<Real(string)>(&parseReal));
 }
 
+vector<Real> XMLUtils::getNodeValueAsDoublesCompact(XMLNode* node) { 
+    string s = getNodeValue(node);
+    return parseListOfValues(s, std::function<Real(string)>(&parseReal));
+}
+
 vector<Real> XMLUtils::getChildrenValuesAsDoublesWithAttributes(XMLNode* parent, const string& names,
                                                                 const string& name, const string& attrName,
                                                                 vector<string>& attrs, bool mandatory) {

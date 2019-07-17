@@ -49,9 +49,9 @@ public:
     //! Default constructor
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0.0}),
-          fxVolIsSurface_(false), fxMoneyness_({0.0}), equityIsSurface_(false), equityVolSimulateATMOnly_(true),
-          equityMoneyness_({1.0}), cprSimulate_(false), correlationIsSurface_(false), correlationStrikes_({0.0}) {
-        // set defaults
+          hasFxPairWithSurface_(false)equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), cprSimulate_(false),
+          correlationIsSurface_(false), correlationStrikes_({0.0}) {
+        // set defaults :fxVolIsSurface_(false), fxMoneyness_({0.0}) was there
         setDefaults();
     }
 
@@ -106,11 +106,17 @@ public:
     bool capFloorVolIsAtm(const std::string& key) const;
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
 
-    bool simulateYoYInflationCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility); }
-    vector<string> yoyInflationCapFloorVolNames() const { return paramsLookup(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility); }
+    bool simulateYoYInflationCapFloorVols() const {
+        return paramsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility);
+    }
+    vector<string> yoyInflationCapFloorVolNames() const {
+        return paramsLookup(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility);
+    }
     const string& yoyInflationCapFloorVolDayCounter(const string& key) const;
     const vector<Period>& yoyInflationCapFloorVolExpiries(const string& key) const;
-    bool hasYoYInflationCapFloorVolExpiries(const string& key) const { return yoyInflationCapFloorVolExpiries_.count(key) > 0; }
+    bool hasYoYInflationCapFloorVolExpiries(const string& key) const {
+        return yoyInflationCapFloorVolExpiries_.count(key) > 0;
+    }
     const vector<Real>& yoyInflationCapFloorVolStrikes() const { return yoyInflationCapFloorVolStrikes_; }
     const string& yoyInflationCapFloorVolDecayMode() const { return yoyInflationCapFloorVolDecayMode_; }
 
@@ -135,12 +141,12 @@ public:
     bool simulateDividendYield() const { return paramsSimulate(RiskFactorKey::KeyType::DividendYield); }
 
     bool simulateFXVols() const { return paramsSimulate(RiskFactorKey::KeyType::FXVolatility); }
-    bool fxVolIsSurface() const { return fxVolIsSurface_; }
+    bool fxVolIsSurface(const std::string& ccypair) const;
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
     const string& fxVolDayCounter(const string& key) const;
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
     vector<string> fxVolCcyPairs() const { return paramsLookup(RiskFactorKey::KeyType::FXVolatility); }
-    const vector<Real>& fxVolMoneyness() const { return fxMoneyness_; }
+    const vector<Real>& fxVolMoneyness(const string& ccypair) const;
 
     bool simulateEquityVols() const { return paramsSimulate(RiskFactorKey::KeyType::EquityVolatility); }
     bool equityVolIsSurface() const { return equityIsSurface_; }
@@ -266,12 +272,13 @@ public:
     void setEquityDividendTenors(const string& key, const vector<Period>& p);
     void setSimulateDividendYield(bool simulate);
 
+    // FX volatility data setters
     void setSimulateFXVols(bool simulate);
-    bool& fxVolIsSurface() { return fxVolIsSurface_; }
+    bool& fxVolIsSurface(const string& ccypair) { return fxVolIsSurface_[ccypair]; }
     vector<Period>& fxVolExpiries() { return fxVolExpiries_; }
     string& fxVolDecayMode() { return fxVolDecayMode_; }
     void setFxVolCcyPairs(vector<string> names);
-    vector<Real>& fxVolMoneyness() { return fxMoneyness_; }
+    vector<Real>& fxVolMoneyness(const string& ccypair) { return fxMoneyness_[ccypair]; }
     void setFxVolDayCounters(const string& key, const string& p);
 
     void setSimulateEquityVols(bool simulate);
@@ -396,11 +403,13 @@ private:
 
     map<string, vector<Period>> equityDividendTenors_;
 
-    bool fxVolIsSurface_;
+    // FX volatility data
+    bool hasFxPairWithSurface_;
+    map<std::string, bool> fxVolIsSurface_;
     vector<Period> fxVolExpiries_;
     map<string, string> fxVolDayCounters_;
     string fxVolDecayMode_;
-    vector<Real> fxMoneyness_;
+    map<string, vector<Real>> fxMoneyness_;
 
     bool equityIsSurface_;
     bool equityVolSimulateATMOnly_;
