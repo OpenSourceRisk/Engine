@@ -123,7 +123,9 @@ void Portfolio::removeMatured(const Date& asof) {
 }
 
 void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+    reset();
     LOG("Building Portfolio of size " << trades_.size());
+    
     auto trade = trades_.begin();
     while (trade != trades_.end()) {
         try {
