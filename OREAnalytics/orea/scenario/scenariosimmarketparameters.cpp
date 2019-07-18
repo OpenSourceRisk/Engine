@@ -1006,6 +1006,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         }
         QL_REQUIRE(fxVolDayCounters_.find("") != fxVolDayCounters_.end(),
                    "default daycounter is not set for fxVolSurfaces");
+        }
     }
 
     DLOG("Loading EquityVolatilities");
