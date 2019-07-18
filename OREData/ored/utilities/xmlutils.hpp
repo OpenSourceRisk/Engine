@@ -117,7 +117,8 @@ public:
     static void checkNode(XMLNode* n, const string& expectedName);
 
     static XMLNode* addChild(XMLDocument& doc, XMLNode* n, const string& name);
-    static void addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value);
+    static void addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value,
+                         const string& attrName = string(""), const string& attr = string(""));
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, const char* value);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, Real value);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, int value);
@@ -131,17 +132,17 @@ public:
     }
 
     template <class T>
-    static XMLNode* addGenericChildAsList(XMLDocument& doc, XMLNode* n, const string& name, const vector<T>& values) {
+    static void addGenericChildAsList(XMLDocument& doc, XMLNode* n, const string& name, const vector<T>& values, const string& attrName = "", const string& attr = "") {
+        std::ostringstream oss;
         if (values.size() == 0) {
-            return addChild(doc, n, name);
+            oss << "";
         } else {
-            std::ostringstream oss;
             oss << values[0];
             for (Size i = 1; i < values.size(); i++) {
                 oss << ", " << values[i];
             }
-            return addChild(doc, n, name, oss.str());
         }
+        addChild(doc, n, name, oss.str(), attrName, attr);
     }
 
     static void addChildren(XMLDocument& doc, XMLNode* n, const string& names, const string& name,

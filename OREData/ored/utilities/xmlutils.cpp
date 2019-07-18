@@ -160,13 +160,17 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
     addChild(doc, n, name, string(value));
 }
 
-void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value) {
+void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value, const string& attrName, const string& attr) {
+    XMLNode* node;
     if (value.size() == 0) {
-        addChild(doc, n, name);
+        node = addChild(doc, n, name);
     } else {
-        XMLNode* node = doc.allocNode(name, value);
+        node = doc.allocNode(name, value);
         QL_REQUIRE(n, "XML Node is NULL (adding " << name << ")");
         n->insert_node(0, node);
+    }
+    if (attrName != "" || attr != "") {
+        XMLUtils::addAttribute(doc, node, attrName, attr);
     }
 }
 
@@ -305,7 +309,7 @@ vector<Real> XMLUtils::getChildrenValuesAsDoublesCompact(XMLNode* node, const st
     return parseListOfValues(s, std::function<Real(string)>(&parseReal));
 }
 
-vector<Real> XMLUtils::getNodeValueAsDoublesCompact(XMLNode* node) { 
+vector<Real> XMLUtils::getNodeValueAsDoublesCompact(XMLNode* node) {
     string s = getNodeValue(node);
     return parseListOfValues(s, std::function<Real(string)>(&parseReal));
 }
