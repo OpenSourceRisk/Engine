@@ -1376,9 +1376,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
                 if (it->first == "") {
                     XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first]);
                 } else {
-                    XMLNode* tmpMoneyness =
-                        XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first]);
-                    XMLUtils::addAttribute(doc, tmpMoneyness, "ccyPair", it->first);
+                    XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first], "ccyPair", it->first);
                 }
             }
         }
