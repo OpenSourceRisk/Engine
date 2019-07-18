@@ -29,4 +29,10 @@ DenmarkRegion::DenmarkRegion() {
     static boost::shared_ptr<Data> DKdata(new Data("Denmark", "DK"));
     data_ = DKdata;
 }
+
+CanadaRegion::CanadaRegion() {
+    static boost::shared_ptr<Data> CAdata = boost::make_shared<Data>("Canada", "CA");
+    data_ = CAdata;
+}
+
 } // namespace QuantExt

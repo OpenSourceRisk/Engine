@@ -235,6 +235,15 @@ std::set<string> CurveConfigurations::conventions() const {
     return conventions;
 }
 
+set<string> CurveConfigurations::yieldCurveConfigIds() {
+
+    set<string> curves;
+    for (auto yc : yieldCurveConfigs_)
+        curves.insert(yc.first);
+
+    return curves;
+}
+
 bool CurveConfigurations::hasYieldCurveConfig(const string& curveID) const { return has(curveID, yieldCurveConfigs_); }
 
 const boost::shared_ptr<YieldCurveConfig>& CurveConfigurations::yieldCurveConfig(const string& curveID) const {

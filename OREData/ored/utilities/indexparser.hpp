@@ -31,6 +31,7 @@
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/indexes/bondindex.hpp>
 
 namespace ore {
 namespace data {
@@ -113,6 +114,12 @@ boost::shared_ptr<ZeroInflationIndex>
 parseZeroInflationIndex(const string& s, bool isInterpolated = false,
                         const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
 
+//! Convert std::string to QuantExt::BondIndex
+/*!
+ \ingroup utilities
+ */
+boost::shared_ptr<QuantExt::BondIndex> parseBondIndex(const string& s);
+
 //! Convert std::string to QuantLib::Index
 /*!
     \ingroup utilities
@@ -123,6 +130,17 @@ boost::shared_ptr<Index> parseIndex(const string& s, const Conventions& conventi
 /*! \ingroup utilities
 */
 bool isOvernightIndex(const std::string& indexName);
+
+/*! In some cases, we allow multiple external index names to represent the same QuantLib index. This function returns 
+    the unique index name that we use internally to represent the QuantLib index.
+
+    For example, we allow:
+    - \c USD-FedFunds-1D and \c USD-FedFunds externally but we use \c USD-FedFunds internally
+    - \c CAD-BA-tenor and \c CAD-CDOR-tenor externally but we use \c CAD-CDOR-tenor internally
+
+    \ingroup utilities
+*/
+std::string internalIndexName(const std::string& indexName);
 
 } // namespace data
 } // namespace ore

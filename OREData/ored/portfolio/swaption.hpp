@@ -41,7 +41,7 @@ public:
     //! Default constructor
     Swaption() : Trade("Swaption") {}
     //! Constructor
-    Swaption(Envelope& env, OptionData& option, vector<LegData>& swap)
+    Swaption(const Envelope& env, const OptionData& option, const vector<LegData>& swap)
         : Trade("Swaption", env), option_(option), swap_(swap) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine

@@ -638,7 +638,9 @@
   <ItemGroup>
     <ClCompile Include="analyticlgmswaptionengine.cpp" />
     <ClCompile Include="blackvariancecurve.cpp" />
+    <ClCompile Include="blackvariancesurfacesparse.cpp" />
     <ClCompile Include="bonds.cpp" />
+    <ClCompile Include="capfloortermvolcurve.cpp" />
     <ClCompile Include="cashflow.cpp" />
     <ClCompile Include="commodityforward.cpp" />
     <ClCompile Include="correlationtermstructure.cpp" />
@@ -658,6 +660,7 @@
     <ClCompile Include="discountratiomodifiedcurve.cpp" />
     <ClCompile Include="dynamicblackvoltermstructure.cpp" />
     <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
+    <ClCompile Include="equityforwardcurvestripper.cpp" />
     <ClCompile Include="fillemptymatrix.cpp" />
     <ClCompile Include="fxvolsmile.cpp" />
     <ClCompile Include="index.cpp" />
@@ -665,6 +668,9 @@
     <ClCompile Include="logquote.cpp" />
     <ClCompile Include="optionletstripper.cpp" />
     <ClCompile Include="payment.cpp" />
+    <ClCompile Include="piecewiseatmoptionletcurve.cpp" />
+    <ClCompile Include="piecewiseoptionletcurve.cpp" />
+    <ClCompile Include="piecewiseoptionletstripper.cpp" />
     <ClCompile Include="pricecurve.cpp" />
     <ClCompile Include="pricetermstructureadapter.cpp" />
     <ClCompile Include="qle_calendars.cpp" />
@@ -672,6 +678,7 @@
     <ClCompile Include="stabilisedglls.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
     <ClCompile Include="strippedoptionletadapter.cpp" />
+    <ClCompile Include="strippedoptionletadapter2.cpp" />
     <ClCompile Include="survivalprobabilitycurve.cpp" />
     <ClCompile Include="swaptionvolatilityconverter.cpp" />
     <ClCompile Include="swaptionvolconstantspread.cpp" />

@@ -35,6 +35,7 @@
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
+#include <qle/cashflows/subperiodscoupon.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 
 #include <set>
@@ -42,8 +43,17 @@
 namespace ore {
 namespace data {
 
-/*! Gives back the dates for which fixings will be required to price the 
-    \p leg.
+/*! Gives back the dates for which fixings will be required to price the \p leg assuming a given \p settlementDate. If 
+    the \p settlementDate is not provided or is set equal to \c QuantLib::Date(), the settlement date in the 
+    implementation is assumed to be the \c Settings::instance().evaluationDate().
+
+    If a cashflow payment is deemed to have already occured relative to the settlement date, then no fixing is needed.
+    The determination of whether a cashflow has or has not occurred will in general rely on a call to 
+    \c CashFlow::hasOccurred which is important in cases where the cash flow payment date falls on the settlement date.
+
+    Another important case is where a cash flow fixing date occurs on the settlement date. In this case, we should 
+    always add the fixing date to the set of fixing dates regardless of 
+    \c Settings::instance().enforcesTodaysHistoricFixings().
 */
 std::set<QuantLib::Date> fixingDates(const QuantLib::Leg& leg, 
     QuantLib::Date settlementDate = QuantLib::Date());
@@ -65,7 +75,8 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
     public QuantLib::Visitor<QuantExt::AverageONIndexedCoupon>,
     public QuantLib::Visitor<QuantExt::EquityCoupon>,
     public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon>,
-    public QuantLib::Visitor<QuantExt::FXLinkedCashFlow> {
+    public QuantLib::Visitor<QuantExt::FXLinkedCashFlow>,
+    public QuantLib::Visitor<QuantExt::SubPeriodsCoupon> {
 public:
     //! Constructor
     FixingDateGetter(const QuantLib::Date& settlementDate = QuantLib::Date());
@@ -87,6 +98,7 @@ public:
     void visit(QuantExt::EquityCoupon& c);
     void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c);
     void visit(QuantExt::FXLinkedCashFlow& c);
+    void visit(QuantExt::SubPeriodsCoupon& c);
     //@}
 
     //! Return the retrieved fixing dates

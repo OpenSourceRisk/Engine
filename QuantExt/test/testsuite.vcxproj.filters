@@ -119,6 +119,27 @@
     <ClCompile Include="strippedoptionletadapter.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="piecewiseoptionletcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="blackvariancesurfacesparse.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="piecewiseoptionletstripper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="capfloortermvolcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="piecewiseatmoptionletcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="equityforwardcurvestripper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="strippedoptionletadapter2.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

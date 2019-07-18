@@ -144,7 +144,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                 for (size_t j = 0; j < leg.size(); j++) {
                     boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
                     Date payDate = ptrFlow->date();
-                    if (payDate >= asof) {
+                    if (!ptrFlow->hasOccurred(asof)) {
                         Real amount = ptrFlow->amount();
                         string flowType = "";
                         if (payer)

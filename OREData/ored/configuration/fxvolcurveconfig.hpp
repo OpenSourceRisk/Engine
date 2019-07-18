@@ -31,12 +31,12 @@
 
 namespace ore {
 namespace data {
+using ore::data::XMLNode;
+using QuantLib::Calendar;
+using QuantLib::DayCounter;
+using QuantLib::Period;
 using std::string;
 using std::vector;
-using ore::data::XMLNode;
-using QuantLib::Period;
-using QuantLib::DayCounter;
-using QuantLib::Calendar;
 
 //! FX volatility structure configuration
 /*!
@@ -47,8 +47,12 @@ public:
     //! supported volatility structure types
     /*! For ATM we will only load ATM quotes, for Smile we load ATM, 25RR, 25BF
      *  TODO: Add more options (e.g. Delta)
+     *  SmileInterpolation - currently suports which of the 2 Vanna Volga approximations,
+     *  as per  Castagna& Mercurio(2006), to use. The second approximation is more accurate
+     *  but can ask for the square root of a negative number under unusual circumstances.
      */
-    enum class Dimension { ATM, Smile };
+    enum class Dimension { ATM, Smile };   
+    enum class SmileInterpolation { VannaVolga1, VannaVolga2 }; // Vanna Volga first/second approximation respectively
 
     //! \name Constructors/Destructors
     //@{
@@ -59,7 +63,9 @@ public:
                             const vector<string>& expiries, const string& fxSpotID = "",
                             const string& fxForeignCurveID = "", const string& fxDomesticCurveID = "",
                             const DayCounter& dayCounter = QuantLib::Actual365Fixed(),
-                            const Calendar& calendar = QuantLib::TARGET());
+                            const Calendar& calendar = QuantLib::TARGET(),
+                            const SmileInterpolation& interp = SmileInterpolation::VannaVolga2);
+
     //@}
 
     //! \name Serialisation
@@ -78,20 +84,27 @@ public:
     const string& fxSpotID() const { return fxSpotID_; }
     const string& fxForeignYieldCurveID() const { return fxForeignYieldCurveID_; }
     const string& fxDomesticYieldCurveID() const { return fxDomesticYieldCurveID_; }
+    const SmileInterpolation& smileInterpolation() const { return smileInterpolation_; }
     const vector<string>& quotes() override;
     //@}
 
     //! \name Setters
     //@{
     Dimension& dimension() { return dimension_; }
+    SmileInterpolation& smileInterpolation() { return smileInterpolation_; }
     vector<string>& expiries() { return expiries_; }
     DayCounter& dayCounter() { return dayCounter_; }
     Calendar& calendar() { return calendar_; }
     string& fxSpotID() { return fxSpotID_; }
     string& fxForeignYieldCurveID() { return fxForeignYieldCurveID_; }
     string& fxDomesticYieldCurveID() { return fxDomesticYieldCurveID_; }
+    const std::set<string>& requiredYieldCurveIDs() const {
+        return requiredYieldCurveIDs_;
+    };
     //@}
 private:
+    void populateRequiredYieldCurveIDs();
+
     Dimension dimension_;
     vector<string> expiries_;
     DayCounter dayCounter_;
@@ -99,6 +112,8 @@ private:
     string fxSpotID_;
     string fxForeignYieldCurveID_;
     string fxDomesticYieldCurveID_;
+    std::set<string> requiredYieldCurveIDs_;
+    SmileInterpolation smileInterpolation_;
 };
 } // namespace data
 } // namespace ore

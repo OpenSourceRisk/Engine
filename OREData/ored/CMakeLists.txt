@@ -81,6 +81,7 @@ portfolio/equityforward.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
 portfolio/fixingdates.cpp
+portfolio/forwardbond.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
@@ -99,6 +100,7 @@ portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradefactory.cpp
 report/csvreport.cpp
+utilities/calendaradjustmentconfig.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
 utilities/currencycheck.cpp
@@ -189,6 +191,7 @@ portfolio/builders/bond.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
 portfolio/builders/capfloorediborleg.hpp
+portfolio/builders/capflooredyoyleg.hpp
 portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
 portfolio/builders/commodityforward.hpp
@@ -196,6 +199,7 @@ portfolio/builders/commodityoption.hpp
 portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityoption.hpp
+portfolio/builders/forwardbond.hpp
 portfolio/builders/fxforward.hpp
 portfolio/builders/fxoption.hpp
 portfolio/builders/swap.hpp
@@ -213,6 +217,7 @@ portfolio/equityforward.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
 portfolio/fixingdates.hpp
+portfolio/forwardbond.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxforward.hpp
 portfolio/fxoption.hpp
@@ -235,6 +240,7 @@ portfolio/tradefactory.hpp
 report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
+utilities/calendaradjustmentconfig.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
 utilities/currencycheck.hpp

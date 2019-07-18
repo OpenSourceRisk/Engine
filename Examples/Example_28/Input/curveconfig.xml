@@ -65,7 +65,6 @@
         <Simple>
           <Type>Deposit</Type>
           <Quotes>
-            <Quote>MM/RATE/EUR/0D/1D</Quote>
             <Quote>MM/RATE/EUR/2D/1W</Quote>
             <Quote>MM/RATE/EUR/2D/1M</Quote>
             <Quote>MM/RATE/EUR/2D/2M</Quote>
@@ -342,7 +341,6 @@
         <Simple>
           <Type>Deposit</Type>
           <Quotes>
-            <Quote>MM/RATE/USD/0D/1D</Quote>
             <Quote>MM/RATE/USD/2D/1W</Quote>
             <Quote>MM/RATE/USD/2D/1M</Quote>
             <Quote>MM/RATE/USD/2D/2M</Quote>
