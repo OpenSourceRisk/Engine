@@ -982,19 +982,20 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         fxVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
         fxVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
         setFxVolCcyPairs(XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true));
+
+        // surface params should always default (in case params are only given for specific ccy pairs
+        fxVolIsSurface_[""] = false;
+        fxMoneyness_[""] = {0.0};
+        hasFxPairWithSurface_ = false;
         XMLNode* fxSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
         if (fxSurfaceNode) {
             hasFxPairWithSurface_ = true;
             for (XMLNode* child = XMLUtils::getChildNode(fxSurfaceNode, "Moneyness"); child;
                  child = XMLUtils::getNextSibling(child)) {
-                string label = XMLUtils::getAttribute(child, "ccyPair");
+                string label = XMLUtils::getAttribute(child, "ccyPair");    // will be "" if no attr
                 fxMoneyness_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
                 fxVolIsSurface_[label] = true;
             }
-        } else {
-            fxVolIsSurface_[""] = false;
-            fxMoneyness_[""] = {0.0};
-        }
         XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
         if (dc) {
             for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
