@@ -729,8 +729,6 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
     std::vector<Real> times(n_fxvol_exp);
 
-    
-
     for (auto f : sensitivityData_->fxVolShiftData()) {
         string ccyPair = f.first;
         QL_REQUIRE(ccyPair.length() == 6, "invalid ccy pair length");
