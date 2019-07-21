@@ -160,6 +160,21 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
     addChild(doc, n, name, string(value));
 }
 
+
+void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value) {
+    ;
+    if (value.size() == 0) {
+        addChild(doc, n, name);
+    } else {
+        XMLNode* node = doc.allocNode(name, value);
+        QL_REQUIRE(n, "XML Node is NULL (adding " << name << ")");
+        n->insert_node(0, node);
+    }
+}
+
+
+
+
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value, const string& attrName, const string& attr) {
     XMLNode* node;
     if (value.size() == 0) {

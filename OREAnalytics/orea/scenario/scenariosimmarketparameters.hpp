@@ -51,7 +51,6 @@ public:
         : extrapolate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0.0}),
           hasFxPairWithSurface_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), cprSimulate_(false),
           correlationIsSurface_(false), correlationStrikes_({0.0}) {
-        // set defaults :fxVolIsSurface_(false), fxMoneyness_({0.0}) was there
         setDefaults();
     }
 
@@ -140,13 +139,17 @@ public:
     vector<string> equityDividendYields() const { return paramsLookup(RiskFactorKey::KeyType::DividendYield); }
     bool simulateDividendYield() const { return paramsSimulate(RiskFactorKey::KeyType::DividendYield); }
 
+    // fxvol getters
     bool simulateFXVols() const { return paramsSimulate(RiskFactorKey::KeyType::FXVolatility); }
     bool fxVolIsSurface(const std::string& ccypair) const;
+    bool fxVolIsSurface() const;
+    bool hasFxPairWithSurface() const { return hasFxPairWithSurface_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
     const string& fxVolDayCounter(const string& key) const;
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
     vector<string> fxVolCcyPairs() const { return paramsLookup(RiskFactorKey::KeyType::FXVolatility); }
     const vector<Real>& fxVolMoneyness(const string& ccypair) const;
+    const vector<Real>& fxVolMoneyness() const;
 
     bool simulateEquityVols() const { return paramsSimulate(RiskFactorKey::KeyType::EquityVolatility); }
     bool equityVolIsSurface() const { return equityIsSurface_; }
@@ -275,10 +278,13 @@ public:
     // FX volatility data setters
     void setSimulateFXVols(bool simulate);
     bool& fxVolIsSurface(const string& ccypair) { return fxVolIsSurface_[ccypair]; }
+    bool& fxVolIsSurface() { return fxVolIsSurface_[""]; }
+    bool& hasFxPairWithSurface() { return hasFxPairWithSurface_; }
     vector<Period>& fxVolExpiries() { return fxVolExpiries_; }
     string& fxVolDecayMode() { return fxVolDecayMode_; }
     void setFxVolCcyPairs(vector<string> names);
     vector<Real>& fxVolMoneyness(const string& ccypair) { return fxMoneyness_[ccypair]; }
+    vector<Real>& fxVolMoneyness() { return fxMoneyness_[""]; }
     void setFxVolDayCounters(const string& key, const string& p);
 
     void setSimulateEquityVols(bool simulate);
