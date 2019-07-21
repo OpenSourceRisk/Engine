@@ -149,6 +149,7 @@ void ScenarioSimMarketParameters::setDefaults() {
     // Default fxVol params
     fxVolIsSurface_[""] = false;
     fxMoneyness_[""] = {0.0};
+    hasFxPairWithSurface_ = false;
 }
 
 void ScenarioSimMarketParameters::reset() {
@@ -769,7 +770,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
             if (dc) {
                 for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
-                     child = XMLUtils::getNextSibling(child)) {
+                    child = XMLUtils::getNextSibling(child)) {
                     string label = XMLUtils::getAttribute(child, "ccy");
                     yieldVolDayCounters_[label] = XMLUtils::getNodeValue(child);
                 }
@@ -990,7 +991,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         fxVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
         fxVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
         setFxVolCcyPairs(XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true));
-
         XMLNode* fxSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
         if (fxSurfaceNode) {
             hasFxPairWithSurface_ = true;
@@ -1382,8 +1382,9 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
             for (it = fxMoneyness_.begin(); it != fxMoneyness_.end(); it++) {
                 if (it->first == "") {
                     // only print default moneyness if it's not ATM
-                    if (fxMoneyness_[""].size() > 1 || !(close(fxMoneyness_[""][0], 0.0) || close(fxMoneyness_[""][0], 0.0)))
-                    XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first]); // default not atm
+                    if (fxMoneyness_[""].size() > 1 || !(close(fxMoneyness_[""][0], 0.0) || close(fxMoneyness_[""][0], 1.0))) {
+                        XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first]); // default not atm
+                    }
                 } else {
                     XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first], "ccyPair",
                                                     it->first);
