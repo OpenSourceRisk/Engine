@@ -160,9 +160,7 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
     addChild(doc, n, name, string(value));
 }
 
-
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value) {
-    ;
     if (value.size() == 0) {
         addChild(doc, n, name);
     } else {
@@ -171,9 +169,6 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
         n->insert_node(0, node);
     }
 }
-
-
-
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value, const string& attrName, const string& attr) {
     XMLNode* node;
