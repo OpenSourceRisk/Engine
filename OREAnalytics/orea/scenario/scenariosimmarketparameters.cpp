@@ -1000,17 +1000,17 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 fxMoneyness_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
                 fxVolIsSurface_[label] = true;
             }
-            XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
-            if (dc) {
-                for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
-                     child = XMLUtils::getNextSibling(child)) {
-                    string label = XMLUtils::getAttribute(child, "ccyPair");
-                    fxVolDayCounters_[label] = XMLUtils::getNodeValue(child);
-                }
-            }
-            QL_REQUIRE(fxVolDayCounters_.find("") != fxVolDayCounters_.end(),
-                       "default daycounter is not set for fxVolSurfaces");
         }
+        XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
+        if (dc) {
+            for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
+                 child = XMLUtils::getNextSibling(child)) {
+                string label = XMLUtils::getAttribute(child, "ccyPair");
+                fxVolDayCounters_[label] = XMLUtils::getNodeValue(child);
+            }
+        }
+        QL_REQUIRE(fxVolDayCounters_.find("") != fxVolDayCounters_.end(),
+                   "default daycounter is not set for fxVolSurfaces");
     }
 
     DLOG("Loading EquityVolatilities");
