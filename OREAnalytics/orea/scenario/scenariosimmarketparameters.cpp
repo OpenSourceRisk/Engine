@@ -369,23 +369,23 @@ void ScenarioSimMarketParameters::setFxVolDayCounters(const string& key, const s
     fxVolDayCounters_[key] = s;
 }
 
-void ScenarioSimMarketParameters::setFxVolIsSurface(const string& key, const bool& val) { 
+void ScenarioSimMarketParameters::setFxVolIsSurface(const string& key, bool val) { 
     fxVolIsSurface_[key] = val; 
 }
 
-void ScenarioSimMarketParameters::setFxVolIsSurface(const bool& val) { 
+void ScenarioSimMarketParameters::setFxVolIsSurface(bool val) { 
     fxVolIsSurface_[""] = val; 
 }
 
-void ScenarioSimMarketParameters::setHasFxPairWithSurface(const bool& val) { 
+void ScenarioSimMarketParameters::setHasFxPairWithSurface(bool val) { 
     hasFxPairWithSurface_ = val; 
 }
 
-void ScenarioSimMarketParameters::setFxVolExpiries(vector<Period>& expiries) { 
+void ScenarioSimMarketParameters::setFxVolExpiries(const vector<Period>& expiries) { 
     fxVolExpiries_ = expiries; 
 }
 
-void ScenarioSimMarketParameters::setFxVolDecayMode(string& val) { 
+void ScenarioSimMarketParameters::setFxVolDecayMode(const string& val) { 
     fxVolDecayMode_ = val; 
 }
 
@@ -393,7 +393,7 @@ void ScenarioSimMarketParameters::setFxVolMoneyness(const string& ccypair, vecto
     fxMoneyness_[ccypair] = moneyness;
 }
 
-void ScenarioSimMarketParameters::setFxVolMoneyness(vector<Real>& moneyness) { 
+void ScenarioSimMarketParameters::setFxVolMoneyness(const vector<Real>& moneyness) { 
     fxMoneyness_[""] = moneyness; 
 }
 
