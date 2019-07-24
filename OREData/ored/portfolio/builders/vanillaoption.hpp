@@ -32,6 +32,7 @@
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
+#include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/version.hpp>
 
@@ -44,27 +45,27 @@ namespace data {
     \ingroup builders
  */
 class VanillaOptionEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&,
-                                                                              const AssetClass&, const Real&> {
+                                                                              const AssetClass&, const Time&> {
 public:
     VanillaOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes,
-        const AssetClass& assetClass, const Real& bucketedExpiry)
+        const AssetClass& assetClass, const Time& maturity)
         : CachingEngineBuilder(model, engine, tradeTypes),
-          assetClass_(assetClass), bucketedExpiry_(bucketedExpiry) {}
+          assetClass_(assetClass), maturity_(maturity) {}
 
-    boost::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& ccy, const Real& expiry) {
+    boost::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& ccy, const Time& maturity) {
         return CachingPricingEngineBuilder<string, const string&, const Currency&,
-            const AssetClass&, const Real&>::engine(assetName, ccy, assetClass_, getBucketedExpiry(expiry));
+            const AssetClass&, const Time&>::engine(assetName, ccy, assetClass_, maturity);
     }
 
-    boost::shared_ptr<PricingEngine> engine(const Currency& ccy1, const Currency& ccy2, const Real& expiry) {
+    boost::shared_ptr<PricingEngine> engine(const Currency& ccy1, const Currency& ccy2, const Time& maturity) {
         return CachingPricingEngineBuilder<string, const string&, const Currency&,
-            const AssetClass&, const Real&>::engine(ccy1.code(), ccy2, assetClass_, getBucketedExpiry(expiry));
+            const AssetClass&, const Time&>::engine(ccy1.code(), ccy2, assetClass_, maturity);
     }
 
 protected:
     virtual string keyImpl(const string& assetName, const Currency& ccy,
-                           const AssetClass& assetClassUnderlying, const Real& bucketedExpiry) override {
-        return assetName + "/" + ccy.code() + "/" + boost::lexical_cast<string>(bucketedExpiry);
+                           const AssetClass& assetClassUnderlying, const Time& maturity) override {
+        return assetName + "/" + ccy.code() + "/" + boost::lexical_cast<string>(maturity);
     }
 
     const Time getBucketedExpiry(const Time& expiry) {
@@ -80,27 +81,40 @@ protected:
 
     boost::shared_ptr<GeneralizedBlackScholesProcess> getBlackScholesProcess(const string& assetName,
                                                                              const Currency& ccy,
-                                                                             const AssetClass& assetClassUnderlying) {
+                                                                             const AssetClass& assetClassUnderlying,
+                                                                             const std::vector<Time>& timePoints = {}) {
         if (assetClassUnderlying == AssetClass::EQ) {
+            Handle<BlackVolTermStructure> vol = market_->equityVol(assetName, configuration(ore::data::MarketContext::pricing));
+            if(!timePoints.empty()) {
+                vol = Handle<BlackVolTermStructure>(
+                    boost::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
+                vol->enableExtrapolation();
+            }
             return boost::make_shared<GeneralizedBlackScholesProcess>(
                 market_->equitySpot(assetName, configuration(ore::data::MarketContext::pricing)),
                 market_->equityDividendCurve(assetName, configuration(ore::data::MarketContext::pricing)),
                 market_->equityForecastCurve(assetName, configuration(ore::data::MarketContext::pricing)),
-                market_->equityVol(assetName, configuration(ore::data::MarketContext::pricing)));
+                vol);
 
         } else if (assetClassUnderlying == AssetClass::FX) {
             const string& ccyPairCode = assetName + ccy.code();
+            Handle<BlackVolTermStructure> vol = market_->fxVol(ccyPairCode, configuration(ore::data::MarketContext::pricing));
+            if(!timePoints.empty()) {
+                vol = Handle<BlackVolTermStructure>(
+                    boost::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
+                vol->enableExtrapolation();
+            }
             return boost::make_shared<GeneralizedBlackScholesProcess>(
                 market_->fxSpot(ccyPairCode, configuration(ore::data::MarketContext::pricing)),
                 market_->discountCurve(assetName, configuration(ore::data::MarketContext::pricing)),
                 market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing)),
-                market_->fxVol(ccyPairCode, configuration(ore::data::MarketContext::pricing)));
+                vol);
         } else {
             QL_FAIL("Asset class of " << (int)assetClassUnderlying << " not recognized.");
         }
     }
     AssetClass assetClass_;
-    Real bucketedExpiry_;
+    Time maturity_;
 };
 
 //! Abstract Engine Builder for European Vanilla Options
@@ -115,8 +129,8 @@ public:
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-        const AssetClass& assetClassUnderlying, const Real& bucketedExpiry) override {
-        string key = keyImpl(assetName, ccy, assetClassUnderlying, bucketedExpiry);
+        const AssetClass& assetClassUnderlying, const Time& maturity) override {
+        string key = keyImpl(assetName, ccy, assetClassUnderlying, maturity);
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
@@ -132,8 +146,8 @@ protected:
 class AmericanOptionEngineBuilder : public VanillaOptionEngineBuilder {
 public:
     AmericanOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes,
-                                const AssetClass& assetClass, const Real& bucketedExpiry)
-        : VanillaOptionEngineBuilder(model, engine, tradeTypes, assetClass, bucketedExpiry) {}
+                                const AssetClass& assetClass, const Time& maturity)
+        : VanillaOptionEngineBuilder(model, engine, tradeTypes, assetClass, maturity) {}
 };
 
 //! Abstract Engine Builder for American Vanilla Options using Finite Difference Method
@@ -144,17 +158,33 @@ public:
 class AmericanOptionFDEngineBuilder : public AmericanOptionEngineBuilder {
 public:
     AmericanOptionFDEngineBuilder(const string& model, const set<string>& tradeTypes,
-                                  const AssetClass& assetClass, const Real& bucketedExpiry)
-        : AmericanOptionEngineBuilder(model, "FdBlackScholesVanillaEngine", tradeTypes, assetClass, bucketedExpiry) {}
+                                  const AssetClass& assetClass, const Time& maturity)
+        : AmericanOptionEngineBuilder(model, "FdBlackScholesVanillaEngine", tradeTypes, assetClass, maturity) {}
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClass, const Real& bucketedExpiry) override {
+                                                        const AssetClass& assetClass, const Time& maturity) override {
         FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
-        Size tGrid = ore::data::parseInteger(engineParameter("TimeGridPerYear")) * bucketedExpiry;
+        Size tGrid = ore::data::parseInteger(engineParameter("TimeGridPerYear")) * getBucketedExpiry(maturity);
         Size xGrid = ore::data::parseInteger(engineParameter("XGrid"));
         Size dampingSteps = ore::data::parseInteger(engineParameter("DampingSteps"));
+        bool monotoneVar = ore::data::parseBool(engineParameter("EnforceMonotoneVariance", "", false, "true"));
 
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
+        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp;
+
+        if(monotoneVar) {
+            // Replicate the construction of time grid in FiniteDifferenceModel::rollbackImpl
+            // This time grid is required to build a BlackMonotoneVarVolTermStructure which
+            // ensures monotonic variance along the time grid
+            std::vector<Time> timePoints(tGrid + 2);
+            Array timePointsArray(tGrid, maturity, -maturity / tGrid);
+            timePoints[0] = 0.0;
+            timePoints[1] = 0.99 / 365;
+            for(Size i = 0; i < tGrid; i++)
+                timePoints[timePoints.size() - i - 1] = timePointsArray[i];
+            gbsp = getBlackScholesProcess(assetName, ccy, assetClass, timePoints);
+        } else {
+            gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
+        }
         return boost::make_shared<FdBlackScholesVanillaEngine>(gbsp, tGrid, xGrid,
                                                                dampingSteps, scheme);
     }
@@ -171,7 +201,7 @@ public:
         : AmericanOptionEngineBuilder(model, "BaroneAdesiWhaleyApproximationEngine", tradeTypes, assetClass, 0) {}
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClass, const Real& bucketedExpiry) override {
+                                                        const AssetClass& assetClass, const Time& maturity) override {
             boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
             return boost::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
     }
