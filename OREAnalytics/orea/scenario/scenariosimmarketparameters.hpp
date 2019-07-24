@@ -283,7 +283,7 @@ public:
     void setFxVolExpiries(const vector<Period>& expiries);
     void setFxVolDecayMode(const string& val);
     void setFxVolCcyPairs(vector<string> names);
-    void setFxVolMoneyness(const string& ccypair, vector<Real>& moneyness);
+    void setFxVolMoneyness(const string& ccypair, const vector<Real>& moneyness);
     void setFxVolMoneyness(const vector<Real>& moneyness);
     void setFxVolDayCounters(const string& key, const string& p);
 

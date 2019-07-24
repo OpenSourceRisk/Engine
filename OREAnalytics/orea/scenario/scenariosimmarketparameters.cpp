@@ -389,7 +389,7 @@ void ScenarioSimMarketParameters::setFxVolDecayMode(const string& val) {
     fxVolDecayMode_ = val; 
 }
 
-void ScenarioSimMarketParameters::setFxVolMoneyness(const string& ccypair, vector<Real>& moneyness) {
+void ScenarioSimMarketParameters::setFxVolMoneyness(const string& ccypair, const vector<Real>& moneyness) {
     fxMoneyness_[ccypair] = moneyness;
 }
 
