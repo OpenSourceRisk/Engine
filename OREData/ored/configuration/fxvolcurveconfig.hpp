@@ -98,8 +98,13 @@ public:
     string& fxSpotID() { return fxSpotID_; }
     string& fxForeignYieldCurveID() { return fxForeignYieldCurveID_; }
     string& fxDomesticYieldCurveID() { return fxDomesticYieldCurveID_; }
+    const std::set<string>& requiredYieldCurveIDs() const {
+        return requiredYieldCurveIDs_;
+    };
     //@}
 private:
+    void populateRequiredYieldCurveIDs();
+
     Dimension dimension_;
     vector<string> expiries_;
     DayCounter dayCounter_;
@@ -107,6 +112,7 @@ private:
     string fxSpotID_;
     string fxForeignYieldCurveID_;
     string fxDomesticYieldCurveID_;
+    std::set<string> requiredYieldCurveIDs_;
     SmileInterpolation smileInterpolation_;
 };
 } // namespace data
