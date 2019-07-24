@@ -277,14 +277,14 @@ public:
 
     // FX volatility data setters
     void setSimulateFXVols(bool simulate);
-    bool& fxVolIsSurface(const string& ccypair) { return fxVolIsSurface_[ccypair]; }
-    bool& fxVolIsSurface() { return fxVolIsSurface_[""]; }
-    bool& hasFxPairWithSurface() { return hasFxPairWithSurface_; }
-    vector<Period>& fxVolExpiries() { return fxVolExpiries_; }
-    string& fxVolDecayMode() { return fxVolDecayMode_; }
+    void setFxVolIsSurface(const string& ccypair, const bool& val);
+    void setFxVolIsSurface(const bool& val);
+    void setHasFxPairWithSurface(const bool& val);
+    void setFxVolExpiries(vector<Period>& expiries);
+    void setFxVolDecayMode(string& val);
     void setFxVolCcyPairs(vector<string> names);
-    vector<Real>& fxVolMoneyness(const string& ccypair) { return fxMoneyness_[ccypair]; }
-    vector<Real>& fxVolMoneyness() { return fxMoneyness_[""]; }
+    void setFxVolMoneyness(const string& ccypair, vector<Real>& moneyness);
+    void setFxVolMoneyness(vector<Real>& moneyness);
     void setFxVolDayCounters(const string& key, const string& p);
 
     void setSimulateEquityVols(bool simulate);

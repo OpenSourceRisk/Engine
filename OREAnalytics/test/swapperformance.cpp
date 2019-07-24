@@ -294,8 +294,9 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     parameters->swapVolDecayMode() = "ForwardVariance";
     parameters->setSwapVolDayCounters("", "ACT/ACT");
 
-    parameters->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    parameters->fxVolDecayMode() = "ConstantVariance";
+    parameters->setFxVolExpiries(
+        vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
+    parameters->setFxVolDecayMode(string("ConstantVariance"));
     parameters->setFxVolDayCounters("", "ACT/ACT");
     parameters->setSimulateFXVols(false);
 

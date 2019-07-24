@@ -369,6 +369,34 @@ void ScenarioSimMarketParameters::setFxVolDayCounters(const string& key, const s
     fxVolDayCounters_[key] = s;
 }
 
+void ScenarioSimMarketParameters::setFxVolIsSurface(const string& key, const bool& val) { 
+    fxVolIsSurface_[key] = val; 
+}
+
+void ScenarioSimMarketParameters::setFxVolIsSurface(const bool& val) { 
+    fxVolIsSurface_[""] = val; 
+}
+
+void ScenarioSimMarketParameters::setHasFxPairWithSurface(const bool& val) { 
+    hasFxPairWithSurface_ = val; 
+}
+
+void ScenarioSimMarketParameters::setFxVolExpiries(vector<Period>& expiries) { 
+    fxVolExpiries_ = expiries; 
+}
+
+void ScenarioSimMarketParameters::setFxVolDecayMode(string& val) { 
+    fxVolDecayMode_ = val; 
+}
+
+void ScenarioSimMarketParameters::setFxVolMoneyness(const string& ccypair, vector<Real>& moneyness) {
+    fxMoneyness_[ccypair] = moneyness;
+}
+
+void ScenarioSimMarketParameters::setFxVolMoneyness(vector<Real>& moneyness) { 
+    fxMoneyness_[""] = moneyness; 
+}
+
 void ScenarioSimMarketParameters::setSwapVolDayCounters(const string& key, const string& s) {
     swapVolDayCounters_[key] = s;
 }
