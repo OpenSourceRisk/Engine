@@ -623,7 +623,7 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         cdsVolDecayMode_ != rhs.cdsVolDecayMode_ || equityDividendTenors_ != rhs.equityDividendTenors_ ||
         fxVolIsSurface_ != rhs.fxVolIsSurface_ ||
         fxVolExpiries_ != rhs.fxVolExpiries_ || fxVolDayCounters_ != rhs.fxVolDayCounters_ ||
-        fxVolDecayMode_ != rhs.fxVolDecayMode_ || equityVolExpiries_ != rhs.equityVolExpiries_ || 
+        fxVolDecayMode_ != rhs.fxVolDecayMode_ || equityVolExpiries_ != rhs.equityVolExpiries_ ||
         equityVolDayCounters_ != rhs.equityVolDayCounters_ || equityVolDecayMode_ != rhs.equityVolDecayMode_ ||
         equityIsSurface_ != rhs.equityIsSurface_ || equityVolSimulateATMOnly_ != rhs.equityVolSimulateATMOnly_ ||
         equityMoneyness_ != rhs.equityMoneyness_ ||
@@ -787,7 +787,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             }
         }
         QL_REQUIRE(swapVolDayCounters_.find("") != swapVolDayCounters_.end(),
-            "default daycounter is not set for swapVolSurfaces");
+                   "default daycounter is not set for swapVolSurfaces");
     }
 
     DLOG("Loading YieldVolatilities");
@@ -809,7 +809,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 }
             }
             QL_REQUIRE(yieldVolDayCounters_.find("") != yieldVolDayCounters_.end(),
-                       "default daycounter is not set for yieldVolSurfaces");
+                "default daycounter is not set for yieldVolSurfaces");
         }
     }
 
@@ -857,7 +857,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     DLOG("Loading CapFloorVolatilities");
     nodeChild = XMLUtils::getChildNode(node, "CapFloorVolatilities");
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
-
+        
         // Are we simulating caps
         setSimulateCapFloorVols(false);
         XMLNode* capVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
@@ -881,7 +881,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             // If there is no "ccy" attribute, getAttribute returns "" which is what we want in any case
             string ccy = XMLUtils::getAttribute(expiryNode, "ccy");
             vector<Period> expiries = parseListOfValues<Period>(XMLUtils::getNodeValue(expiryNode), &parsePeriod);
-            QL_REQUIRE(capFloorVolExpiries_.insert(make_pair(ccy, expiries)).second,
+            QL_REQUIRE(capFloorVolExpiries_.insert(make_pair(ccy, expiries)).second, 
                 "CapFloorVolatilities has duplicate expiries for key '" << ccy << "'");
             currenciesCheck.erase(ccy);
             defaultProvided = ccy == "";
@@ -901,19 +901,19 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             vector<Rate> strikes;
             string strStrike = XMLUtils::getNodeValue(strikeNode);
             if (strStrike == "ATM") {
-                QL_REQUIRE(capFloorVolIsAtm_.insert(make_pair(ccy, true)).second, 
+                QL_REQUIRE(capFloorVolIsAtm_.insert(make_pair(ccy, true)).second,
                     "CapFloorVolatilities has duplicate strikes for key '" << ccy << "'");
             } else {
                 QL_REQUIRE(capFloorVolIsAtm_.insert(make_pair(ccy, false)).second,
                     "CapFloorVolatilities has duplicate strikes for key '" << ccy << "'");
                 strikes = parseListOfValues<Rate>(strStrike, &parseReal);
             }
-            QL_REQUIRE(capFloorVolStrikes_.insert(make_pair(ccy, strikes)).second,
+            QL_REQUIRE(capFloorVolStrikes_.insert(make_pair(ccy, strikes)).second, 
                 "CapFloorVolatilities has duplicate strikes for key '" << ccy << "'");
             currenciesCheck.erase(ccy);
             defaultProvided = ccy == "";
         }
-        QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "CapFloorVolatilities has no strikes for " << 
+        QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "CapFloorVolatilities has no strikes for " <<
             "currencies '" << join(currenciesCheck, ",") << "' and no default strike set has been given");
 
         capFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
@@ -1372,9 +1372,8 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         for (auto kv : capFloorVolStrikes_) {
             // If strikes vector is empty, the node value is ATM else it is the comma separated list of strikes
             // No checks here on the string repr of each strike value - dangerous but in lots of places.
-            string nodeValue = kv.second.empty()
-                                   ? "ATM"
-                                   : join(kv.second | transformed([](Rate s) { return ore::data::to_string(s); }), ",");
+            string nodeValue = kv.second.empty() ? "ATM" :  
+                join(kv.second | transformed([](Rate s) { return ore::data::to_string(s); }), ",");
             XMLNode* strikesNode = doc.allocNode("Strikes", nodeValue);
             XMLUtils::addAttribute(doc, strikesNode, "ccy", kv.first);
             XMLUtils::appendNode(capFloorVolatilitiesNode, strikesNode);
@@ -1540,8 +1539,8 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     // additional scenario data currencies
     if (!additionalScenarioDataCcys_.empty()) {
         DLOG("Writing aggregation scenario data currencies");
-        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataCurrencies", "Currency",
-                              additionalScenarioDataCcys_);
+        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataCurrencies", "Currency", 
+            additionalScenarioDataCcys_);
     }
 
     // additional scenario data indices
