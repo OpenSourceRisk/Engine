@@ -1372,7 +1372,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         for (auto kv : capFloorVolStrikes_) {
             // If strikes vector is empty, the node value is ATM else it is the comma separated list of strikes
             // No checks here on the string repr of each strike value - dangerous but in lots of places.
-            string nodeValue = kv.second.empty() ? "ATM" :  
+            string nodeValue = kv.second.empty() ? "ATM" : 
                 join(kv.second | transformed([](Rate s) { return ore::data::to_string(s); }), ",");
             XMLNode* strikesNode = doc.allocNode("Strikes", nodeValue);
             XMLUtils::addAttribute(doc, strikesNode, "ccy", kv.first);
@@ -1539,7 +1539,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     // additional scenario data currencies
     if (!additionalScenarioDataCcys_.empty()) {
         DLOG("Writing aggregation scenario data currencies");
-        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataCurrencies", "Currency", 
+        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataCurrencies", "Currency",
             additionalScenarioDataCcys_);
     }
 
