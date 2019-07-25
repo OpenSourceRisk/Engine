@@ -68,17 +68,6 @@ protected:
         return assetName + "/" + ccy.code() + "/" + boost::lexical_cast<string>(expiryDate);
     }
 
-    const Time getBucketedExpiry(const Time& expiry) {
-        QL_REQUIRE(expiry >=0, "expiry cannot be negative");
-        if(expiry <= 2) {
-            // Round to next quarter of year for expiry within 2 years
-            return UpRounding(0).operator()(expiry * 4) / 4;
-        } else {
-            // Round to next year for expiry from 2 years
-            return UpRounding(0).operator()(expiry);
-        }
-    }
-
     boost::shared_ptr<GeneralizedBlackScholesProcess> getBlackScholesProcess(const string& assetName,
                                                                              const Currency& ccy,
                                                                              const AssetClass& assetClassUnderlying,
@@ -165,7 +154,7 @@ protected:
                                                         const AssetClass& assetClass, const Date& expiryDate) override {
         Time expiry = Actual365Fixed().yearFraction(Settings::instance().evaluationDate(), expiryDate);
         FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
-        Size tGrid = ore::data::parseInteger(engineParameter("TimeGridPerYear")) * getBucketedExpiry(expiry);
+        Size tGrid = ore::data::parseInteger(engineParameter("TimeGridPerYear")) * expiry;
         Size xGrid = ore::data::parseInteger(engineParameter("XGrid"));
         Size dampingSteps = ore::data::parseInteger(engineParameter("DampingSteps"));
         bool monotoneVar = ore::data::parseBool(engineParameter("EnforceMonotoneVariance", "", false, "true"));
