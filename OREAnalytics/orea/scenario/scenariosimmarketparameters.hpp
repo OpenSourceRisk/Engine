@@ -105,17 +105,13 @@ public:
     bool capFloorVolIsAtm(const std::string& key) const;
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
 
-    bool simulateYoYInflationCapFloorVols() const {
-        return paramsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility);
-    }
+    bool simulateYoYInflationCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility); }
     vector<string> yoyInflationCapFloorVolNames() const {
         return paramsLookup(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility);
     }
     const string& yoyInflationCapFloorVolDayCounter(const string& key) const;
     const vector<Period>& yoyInflationCapFloorVolExpiries(const string& key) const;
-    bool hasYoYInflationCapFloorVolExpiries(const string& key) const {
-        return yoyInflationCapFloorVolExpiries_.count(key) > 0;
-    }
+    bool hasYoYInflationCapFloorVolExpiries(const string& key) const { return yoyInflationCapFloorVolExpiries_.count(key) > 0; }
     const vector<Real>& yoyInflationCapFloorVolStrikes() const { return yoyInflationCapFloorVolStrikes_; }
     const string& yoyInflationCapFloorVolDecayMode() const { return yoyInflationCapFloorVolDecayMode_; }
 
