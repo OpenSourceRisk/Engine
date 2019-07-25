@@ -35,8 +35,7 @@ class closeDouble : public std::binary_function<double,double,bool>
 public:
     bool operator()(const double &left, const double &right) const
     {
-        static QuantLib::UpRounding rounding(3);
-        return rounding(left) < rounding(right);
+        return left < right && !QuantLib::close_enough(left, right);
     }
 };
 
