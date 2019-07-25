@@ -48,7 +48,7 @@ class EquityAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder
 public:
     EquityAmericanOptionFDEngineBuilder()
         : AmericanOptionFDEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"},
-                                        AssetClass::EQ, maturity_) {}
+                                        AssetClass::EQ, expiryDate_) {}
 };
 
 //! Engine Builder for American Equity Options using Barone Adesi Whaley Approximation

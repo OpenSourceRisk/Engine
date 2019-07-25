@@ -48,7 +48,7 @@ class FxAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
 public:
     FxAmericanOptionFDEngineBuilder()
         : AmericanOptionFDEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"},
-                                        AssetClass::FX, maturity_) {}
+                                        AssetClass::FX, expiryDate_) {}
 };
 
 //! Engine Builder for American Fx Options using Barone Adesi Whaley Approximation

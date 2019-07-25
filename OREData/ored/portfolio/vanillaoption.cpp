@@ -62,8 +62,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     boost::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
         boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
 
-    Time expiry = Actual365Fixed().yearFraction(Settings::instance().evaluationDate(), expiryDate);
-    vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiry));
+    vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate));
 
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
