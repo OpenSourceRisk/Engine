@@ -38,7 +38,7 @@ namespace analytics {
 
 namespace {
 
-template <typename T>
+template<typename T>
 const vector<T>& lookup(const map<string, vector<T>>& m, const string& k) {
     if (m.count(k) > 0) {
         return m.at(k);
@@ -48,7 +48,7 @@ const vector<T>& lookup(const map<string, vector<T>>& m, const string& k) {
         QL_FAIL("no vector for key \"" << k << "\" found.");
 }
 
-template <typename T>
+template<typename T>
 const T& lookup(const map<string, T>& m, const string& k) {
     if (m.count(k) > 0) {
         return m.at(k);
@@ -175,8 +175,8 @@ const vector<Rate>& ScenarioSimMarketParameters::capFloorVolStrikes(const string
     return lookup(capFloorVolStrikes_, key);
 }
 
-bool ScenarioSimMarketParameters::capFloorVolIsAtm(const string& key) const { 
-    return lookup(capFloorVolIsAtm_, key); 
+bool ScenarioSimMarketParameters::capFloorVolIsAtm(const string& key) const {
+    return lookup(capFloorVolIsAtm_, key);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::yoyInflationCapFloorVolExpiries(const string& key) const {
