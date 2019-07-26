@@ -1,0 +1,37 @@
+<Portfolio>
+<Trade id="FX_UPIN_BARRIER_CALL_OPTION_EURUSD_10Y">
+    <TradeType>FxBarrierOption</TradeType>
+    <Envelope>
+        <CounterParty>001B456BCDEFGH67XY89</CounterParty>
+        <NettingSetId>ABC1234</NettingSetId>
+        <AdditionalFields>
+            <party_id>549300A08LH2961IPN13</party_id>
+            <valuation_date>2018-02-19</valuation_date>
+        </AdditionalFields>
+    </Envelope>
+    <FxBarrierOptionData>
+        <OptionData>
+            <LongShort>Long</LongShort>
+            <OptionType>Call</OptionType>
+            <Style>European</Style>
+            <Settlement>Cash</Settlement>
+            <PayOffAtExpiry>false</PayOffAtExpiry>
+            <ExerciseDates>
+                <ExerciseDate>2026-03-01</ExerciseDate>
+            </ExerciseDates>
+        </OptionData>
+        <BarrierData>
+            <Type>UpAndIn</Type>
+            <Levels>
+                <Level>1.2</Level>
+            </Levels>
+            <Rebate>0.0</Rebate>
+        </BarrierData>
+        <FXIndex>FX-ECB-EUR-USD</FXIndex>
+        <BoughtCurrency>EUR</BoughtCurrency>
+        <BoughtAmount>1000000</BoughtAmount>
+        <SoldCurrency>USD</SoldCurrency>
+        <SoldAmount>1100000</SoldAmount>
+    </FxBarrierOptionData>
+</Trade>
+</Portfolio>

@@ -1,0 +1,22 @@
+<Portfolio>
+  <Trade id="FRA">
+    <TradeType>ForwardRateAgreement</TradeType>
+    <Envelope>
+      <CounterParty>001B456BCDEFGH67XY89</CounterParty>
+      <NettingSetId>ABC1234</NettingSetId>
+      <AdditionalFields>
+          <party_id>549300A08LH2961IPN13</party_id>
+          <valuation_date>2018-02-19</valuation_date>
+      </AdditionalFields>
+    </Envelope>
+    <ForwardRateAgreementData>
+      <StartDate>2019-10-28</StartDate>
+      <EndDate>2020-04-28</EndDate>
+      <Currency>EUR</Currency>
+      <Index>EUR-EURIBOR-6M</Index>
+      <LongShort>Long</LongShort>
+      <Strike>0.005</Strike>
+      <Notional>100000000</Notional>
+    </ForwardRateAgreementData>
+  </Trade>
+</Portfolio>

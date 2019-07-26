@@ -1,0 +1,29 @@
+<Portfolio>
+<Trade id="FX_DIGITAL_CALL_OPTION_EURUSD_10Y">
+    <TradeType>FxDigitalOption</TradeType>
+    <Envelope>
+        <CounterParty>001B456BCDEFGH67XY89</CounterParty>
+        <NettingSetId>ABC1234</NettingSetId>
+        <AdditionalFields>
+            <party_id>549300A08LH2961IPN13</party_id>
+            <valuation_date>2018-02-19</valuation_date>
+        </AdditionalFields>
+    </Envelope>
+    <FxDigitalOptionData>
+        <OptionData>
+            <LongShort>Long</LongShort>
+            <OptionType>Call</OptionType>
+            <Style>European</Style>
+            <Settlement>Cash</Settlement>
+            <PayOffAtExpiry>false</PayOffAtExpiry>
+            <ExerciseDates>
+                <ExerciseDate>2026-03-01</ExerciseDate>
+            </ExerciseDates>
+        </OptionData>
+        <Strike>1.1</Strike>
+        <PayoffAmount>100</PayoffAmount>
+        <ForeignCurrency>EUR</ForeignCurrency>
+        <DomesticCurrency>USD</DomesticCurrency>
+    </FxDigitalOptionData>
+</Trade>
+</Portfolio>

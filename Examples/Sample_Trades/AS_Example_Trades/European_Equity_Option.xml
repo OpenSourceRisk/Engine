@@ -1,0 +1,28 @@
+<Portfolio>
+<Trade id="EquityOption">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+        <CounterParty>001B456BCDEFGH67XY89</CounterParty>
+        <NettingSetId>ABC1234</NettingSetId>
+        <AdditionalFields>
+            <party_id>549300A08LH2961IPN13</party_id>
+            <valuation_date>2018-02-19</valuation_date>
+        </AdditionalFields>
+    </Envelope>
+    <EquityOptionData>
+        <OptionData>
+            <LongShort>Long</LongShort>
+            <OptionType>Call</OptionType>
+            <Style>European</Style>
+            <Settlement>Cash</Settlement>
+            <ExerciseDates>
+                <ExerciseDate>2018-03-01</ExerciseDate>
+            </ExerciseDates>
+        </OptionData>
+        <Name>RIC:.SPX</Name>
+        <Currency>USD</Currency>
+        <Strike>2800</Strike>
+        <Quantity>775</Quantity>
+    </EquityOptionData>
+</Trade>
+</Portfolio>
