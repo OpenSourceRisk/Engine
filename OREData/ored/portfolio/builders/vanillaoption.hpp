@@ -24,11 +24,11 @@
 #pragma once
 
 #include <boost/make_shared.hpp>
-#include <boost/lexical_cast.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
@@ -65,7 +65,7 @@ public:
 protected:
     virtual string keyImpl(const string& assetName, const Currency& ccy,
                            const AssetClass& assetClassUnderlying, const Date& expiryDate) override {
-        return assetName + "/" + ccy.code() + "/" + boost::lexical_cast<string>(expiryDate);
+        return assetName + "/" + ccy.code() + "/" + to_string(expiryDate);
     }
 
     boost::shared_ptr<GeneralizedBlackScholesProcess> getBlackScholesProcess(const string& assetName,
@@ -152,7 +152,11 @@ public:
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClass, const Date& expiryDate) override {
-        Time expiry = Actual365Fixed().yearFraction(Settings::instance().evaluationDate(), expiryDate);
+        // We follow the way FdBlackScholesBarrierEngine determines maturity for time grid generation
+        Handle<YieldTermStructure> riskFreeRate =
+            market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing));
+        Time expiry = riskFreeRate->dayCounter().yearFraction(riskFreeRate->referenceDate(), expiryDate);
+
         FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
         Size tGrid = ore::data::parseInteger(engineParameter("TimeGridPerYear")) * expiry;
         Size xGrid = ore::data::parseInteger(engineParameter("XGrid"));
@@ -165,12 +169,13 @@ protected:
             // Replicate the construction of time grid in FiniteDifferenceModel::rollbackImpl
             // This time grid is required to build a BlackMonotoneVarVolTermStructure which
             // ensures monotonic variance along the time grid
-            std::vector<Time> timePoints(tGrid + 2);
-            Array timePointsArray(tGrid, expiry, -expiry / tGrid);
+            const Size totalSteps = tGrid + dampingSteps;
+            std::vector<Time> timePoints(totalSteps + 1);
+            Array timePointsArray(totalSteps, expiry, -expiry / totalSteps);
             timePoints[0] = 0.0;
-            timePoints[1] = 0.99 / 365;
-            for(Size i = 0; i < tGrid; i++)
+            for(Size i = 0; i < totalSteps; i++)
                 timePoints[timePoints.size() - i - 1] = timePointsArray[i];
+            timePoints.insert(std::upper_bound(timePoints.begin(), timePoints.end(), 0.99 / 365), 0.99 / 365);
             gbsp = getBlackScholesProcess(assetName, ccy, assetClass, timePoints);
         } else {
             gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
