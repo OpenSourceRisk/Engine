@@ -747,6 +747,9 @@
     <ClInclude Include="qle\pricingengines\baroneadesiwhaleyengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\blackmonotonevarvoltermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
