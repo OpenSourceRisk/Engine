@@ -484,12 +484,24 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::COMMODITY_FWD: {
+        // Expects the following form:
+        // COMMODITY_FWD/PRICE/<COMDTY_NAME>/<CCY>/<DATE/TENOR>
         QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::PRICE, "Invalid quote type for " << datumName);
 
-        Date expiryDate = getDateFromDateOrPeriod(tokens[4], asof);
-        return boost::make_shared<CommodityForwardQuote>(value, asof, datumName, quoteType, tokens[2], tokens[3],
-                                                         expiryDate);
+        // The last token can be a date or a tenor
+        Date date;
+        Period tenor;
+        bool isDate;
+        parseDateOrPeriod(tokens[4], date, tenor, isDate);
+
+        if (isDate) {
+            return boost::make_shared<CommodityForwardQuote>(
+                value, asof, datumName, quoteType, tokens[2], tokens[3], date);
+        } else {
+            return boost::make_shared<CommodityForwardQuote>(
+                value, asof, datumName, quoteType, tokens[2], tokens[3], tenor);
+        }
     }
 
     case MarketDatum::InstrumentType::COMMODITY_OPTION: {
