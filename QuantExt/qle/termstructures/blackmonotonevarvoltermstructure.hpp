@@ -25,6 +25,7 @@
 #define quantext_black_monotone_var_vol_termstructure_hpp
 
 #include <ql/math/array.hpp>
+#include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/rounding.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
@@ -87,12 +88,12 @@ protected:
 
     void setMonotoneVar(const Real& strike) const {
         QL_REQUIRE(timePoints_.size() > 0, "timePoints cannot be empty");
-        std::map<Time, Real, closeDouble> vars;
-        vars[timePoints_[0]] = vol_->blackVariance(timePoints_[0], strike);
+        std::vector<Real> vars(timePoints_.size());
+        vars[0] = vol_->blackVariance(timePoints_[0], strike);
         for(Size i = 1; i < timePoints_.size(); i++) {
             Real var = vol_->blackVariance(timePoints_[i], strike);
-            var = std::max(var, vars[timePoints_[i - 1]]);
-            vars[timePoints_[i]] = var;
+            var = std::max(var, vars[i - 1]);
+            vars[i] = var;
         }
         monoVars_[strike] = vars;
     }
@@ -100,16 +101,14 @@ protected:
     Real getMonotoneVar(const Time& t, const Real& strike) const {
         if(monoVars_.find(strike) == monoVars_.end())
             setMonotoneVar(strike);
-        if(monoVars_[strike].find(t) == monoVars_[strike].end()) {
-            QL_FAIL(t << " is not on the list of time points supplied at construction");
-        }
-        return monoVars_[strike][t];
+        BackwardFlatInterpolation interpolation(timePoints_.begin(), timePoints_.end(), monoVars_[strike].begin());
+        return interpolation(t);
     }
 
 private:
     Handle<BlackVolTermStructure> vol_;
     std::vector<Time> timePoints_;
-    mutable std::map<Real, std::map<Time, Real, closeDouble>, closeDouble> monoVars_;
+    mutable std::map<Real, std::vector<Real>, closeDouble> monoVars_;
 };
 
 // inline definitions
