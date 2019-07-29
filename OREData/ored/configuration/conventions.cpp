@@ -29,6 +29,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -998,6 +999,62 @@ XMLNode* CmsSpreadOptionConvention::toXML(XMLDocument& doc) {
 
     return node;
 }
+
+CommodityConvention::CommodityConvention(
+    const string& id,
+    const string& spotDays,
+    const string& pointsFactor,
+    const string& advanceCalendar,
+    const string& spotRelative,
+    bool outright)
+    : Convention(id, Type::Commodity),
+      strSpotDays_(spotDays),
+      strPointsFactor_(pointsFactor),
+      strAdvanceCalendar_(advanceCalendar),
+      strSpotRelative_(spotRelative),
+      outright_(outright) {
+    build();
+}
+
+void CommodityConvention::build() {
+    spotDays_ = strSpotDays_.empty() ? 2 : lexical_cast<Natural>(strSpotDays_);
+    pointsFactor_ = strPointsFactor_.empty() ? 1.0 : parseReal(strPointsFactor_);
+    advanceCalendar_ = strAdvanceCalendar_.empty() ? WeekendsOnly() : parseCalendar(strAdvanceCalendar_);
+    spotRelative_ = strSpotRelative_.empty() ? true : parseBool(strSpotRelative_);
+}
+
+void CommodityConvention::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "Commodity");
+    type_ = Type::Commodity;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+
+    strSpotDays_ = XMLUtils::getChildValue(node, "SpotDays", false);
+    strPointsFactor_ = XMLUtils::getChildValue(node, "PointsFactor", false);
+    strAdvanceCalendar_ = XMLUtils::getChildValue(node, "AdvanceCalendar", false);
+    strSpotRelative_ = XMLUtils::getChildValue(node, "SpotRelative", false);
+    
+    outright_ = true;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "Outright")) {
+        outright_ = parseBool(XMLUtils::getNodeValue(n));
+    }
+
+    build();
+}
+
+XMLNode* CommodityConvention::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("Commodity");
+    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "SpotDays", strSpotDays_);
+    XMLUtils::addChild(doc, node, "PointsFactor", strPointsFactor_);
+    XMLUtils::addChild(doc, node, "AdvanceCalendar", strAdvanceCalendar_);
+    XMLUtils::addChild(doc, node, "SpotRelative", strSpotRelative_);
+    XMLUtils::addChild(doc, node, "Outright", outright_);
+
+    return node;
+}
+
 void Conventions::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "Conventions");
@@ -1041,6 +1098,8 @@ void Conventions::fromXML(XMLNode* node) {
             convention.reset(new InflationSwapConvention());
         } else if (childName == "CmsSpreadOption") {
             convention.reset(new CmsSpreadOptionConvention());
+        } else if (childName == "Commodity") {
+            convention = boost::make_shared<CommodityConvention>();
         } else {
             QL_FAIL("Convention name, " << childName << ", not recognized.");
         }
