@@ -28,7 +28,9 @@
 #include <ored/marketdata/loader.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <qle/termstructures/capfloortermvolcurve.hpp>
+#include <qle/termstructures/optionletstripper.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
+#include <ql/termstructures/volatility/optionlet/strippedoptionlet.hpp>
 
 namespace ore {
 namespace data {
@@ -85,6 +87,15 @@ private:
     //! Get a shift quote value from the configured quotes
     Real shiftQuote(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader) const;
 
+    //! Transform QuantExt::OptionletStripper to QuantLib::StrippedOptionlet
+    boost::shared_ptr<QuantLib::StrippedOptionlet> transform(const QuantExt::OptionletStripper& os) const;
+
+    //! Create a stripped optionlet curve from ATM optionlet dates and optionlet vols
+    boost::shared_ptr<QuantLib::StrippedOptionlet> transform(const std::vector<QuantLib::Date>& dates,
+        const std::vector<QuantLib::Volatility>& volatilities, QuantLib::Natural settleDays, 
+        const QuantLib::Calendar& cal, QuantLib::BusinessDayConvention bdc,
+        boost::shared_ptr<QuantLib::IborIndex> iborIndex, const QuantLib::DayCounter& dc,
+        QuantLib::VolatilityType type, QuantLib::Real displacement) const;
 };
 
 }
