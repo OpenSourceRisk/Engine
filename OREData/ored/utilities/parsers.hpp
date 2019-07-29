@@ -97,19 +97,6 @@ QuantLib::Calendar parseCalendar(const string& s, bool adjustCalendar=true);
  */
 QuantLib::Period parsePeriod(const string& s);
 
-//! Convert text representing a period to a pair of QuantLib::Period defining the start and duration of the period.
-/*! The following \e special period strings are covered by this function:
-    - ON: populates \p periods with <code>{ 0 * Days, 1 * Days }</code>
-    - TN: populates \p periods with <code>{ 1 * Days, 1 * Days }</code>
-    - SN: populates \p periods with <code>{ spotPeriod, 1 * Days }</code>
-
-    If the function succeeds in parsing the string to a Period pair, it returns \c true. If not, it returns \c false.
-    
-    \ingroup utilities
- */
-bool parsePeriods(const std::string& s, std::pair<QuantLib::Period, QuantLib::Period>& periods, 
-    const QuantLib::Period& spotPeriod = 2 * QuantLib::Days);
-
 //! Convert text to QuantLib::BusinessDayConvention
 /*!
   \ingroup utilities

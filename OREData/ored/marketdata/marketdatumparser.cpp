@@ -27,6 +27,7 @@
 using namespace std;
 using QuantLib::WeekendsOnly;
 using QuantLib::Currency;
+using QuantLib::Days;
 
 namespace ore {
 namespace data {
@@ -490,10 +491,15 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::PRICE, "Invalid quote type for " << datumName);
 
         // The last token can be a string defining a special tenor i.e. ON, TN or SN
-        pair<Period, Period> tenors;
-        if (parsePeriods(tokens[4], tenors)) {
+        if (tokens[4] == "ON") {
             return boost::make_shared<CommodityForwardQuote>(
-                value, asof, datumName, quoteType, tokens[2], tokens[3], tenors.second, tenors.first);
+                value, asof, datumName, quoteType, tokens[2], tokens[3], 1 * Days, 0 * Days);
+        } else if (tokens[4] == "TN") {
+            return boost::make_shared<CommodityForwardQuote>(
+                value, asof, datumName, quoteType, tokens[2], tokens[3], 1 * Days, 1 * Days);
+        } else if (tokens[4] == "SN") {
+            return boost::make_shared<CommodityForwardQuote>(
+                value, asof, datumName, quoteType, tokens[2], tokens[3], 1 * Days);
         }
 
         // The last token can be a date or a standard tenor

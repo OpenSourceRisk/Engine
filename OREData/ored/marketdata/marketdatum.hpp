@@ -30,6 +30,7 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/types.hpp>
 #include <string>
+#include <boost/optional.hpp>
 
 namespace ore {
 namespace data {
@@ -1251,7 +1252,7 @@ public:
     //! Tenor based commodity forward constructor
     CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
         QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
-        const QuantLib::Period& tenor, const QuantLib::Period& startTenor = 2 * QuantLib::Days)
+        const QuantLib::Period& tenor, boost::optional<QuantLib::Period> startTenor = boost::none)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), commodityName_(commodityName),
           quoteCurrency_(quoteCurrency), tenor_(tenor), startTenor_(startTenor), tenorBased_(true) {
         QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
@@ -1268,12 +1269,12 @@ public:
     //! The commodity forward's tenor if the quote is tenor based
     const QuantLib::Period& tenor() const { return tenor_; }
     
-    /*! The period between the as of date and the date from which the forward tenor is applied
-        This is generally the spot tenor which we assume here is <code>2 * Days</code> but there are special cases:
+    /*! The period between the as of date and the date from which the forward tenor is applied. This is generally the 
+        spot tenor which is indicated by \c boost::none but there are special cases:
         - overnight forward: \c startTenor will be <code>0 * Days</code> and \c tenor will be <code>1 * Days</code>
         - tom-next forward: \c startTenor will be <code>1 * Days</code> and \c tenor will be <code>1 * Days</code>
     */
-    const QuantLib::Period& startTenor() const { return startTenor_; }
+    const boost::optional<QuantLib::Period>& startTenor() const { return startTenor_; }
     
     //! Returns \c true if the forward is tenor based and \c false if forward is date based
     bool tenorBased() const { return tenorBased_; }
@@ -1284,7 +1285,7 @@ private:
     std::string quoteCurrency_;
     QuantLib::Date expiryDate_;
     QuantLib::Period tenor_;
-    QuantLib::Period startTenor_;
+    boost::optional<QuantLib::Period> startTenor_;
     bool tenorBased_;
 };
 
