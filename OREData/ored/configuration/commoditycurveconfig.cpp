@@ -27,9 +27,11 @@ namespace data {
 CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& curveDescription,
                                            const string& currency, const string& commoditySpotQuote,
                                            const vector<string>& quotes, const string& dayCountId,
-                                           const string& interpolationMethod, bool extrapolation)
+                                           const string& interpolationMethod, bool extrapolation,
+                                           const string& conventionsId)
     : CurveConfig(curveId, curveDescription), fwdQuotes_(quotes), currency_(currency), commoditySpotQuoteId_(commoditySpotQuote),
-      dayCountId_(dayCountId), interpolationMethod_(interpolationMethod), extrapolation_(extrapolation) {
+      dayCountId_(dayCountId), interpolationMethod_(interpolationMethod), extrapolation_(extrapolation), 
+      conventionsId_(conventionsId) {
 
     quotes_ = quotes;
     quotes_.insert(quotes_.begin(), commoditySpotQuote);
@@ -49,6 +51,7 @@ void CommodityCurveConfig::fromXML(XMLNode* node) {
     quotes_.insert(quotes_.begin(), commoditySpotQuoteId_);
     interpolationMethod_ = XMLUtils::getChildValue(node, "InterpolationMethod", false);
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation");
+    conventionsId_ = XMLUtils::getChildValue(node, "Conventions", false);
 }
 
 XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
@@ -64,6 +67,7 @@ XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "DayCounter", dayCountId_);
     XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
+    XMLUtils::addChild(doc, node, "Conventions", conventionsId_);
 
     return node;
 }

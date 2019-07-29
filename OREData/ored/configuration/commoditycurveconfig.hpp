@@ -42,7 +42,7 @@ public:
     CommodityCurveConfig(const std::string& curveId, const std::string& curveDescription, const std::string& currency,
                          const std::string& commoditySpotQuote, const std::vector<std::string>& quotes,
                          const std::string& dayCountId = "A365", const std::string& interpolationMethod = "Linear",
-                         bool extrapolation = true);
+                         bool extrapolation = true, const std::string& conventionsId = "");
     //@}
 
     //! \name Serialisation
@@ -58,7 +58,8 @@ public:
     const std::string& dayCountId() const { return dayCountId_; }
     const std::string& interpolationMethod() const { return interpolationMethod_; }
     bool extrapolation() const { return extrapolation_; }
-    const vector<string>& fwdQuotes() { return fwdQuotes_; }
+    const vector<string>& fwdQuotes() const { return fwdQuotes_; }
+    const std::string& conventionsId() const { return conventionsId_; }
     //@}
 
     //! \name Setters
@@ -68,6 +69,7 @@ public:
     std::string& dayCountId() { return dayCountId_; }
     std::string& interpolationMethod() { return interpolationMethod_; }
     bool& extrapolation() { return extrapolation_; }
+    std::string& conventionsId() { return conventionsId_; }
     //@}
 
 private:
@@ -77,6 +79,7 @@ private:
     std::string dayCountId_;
     std::string interpolationMethod_;
     bool extrapolation_;
+    std::string conventionsId_;
 };
 } // namespace data
 } // namespace ore
