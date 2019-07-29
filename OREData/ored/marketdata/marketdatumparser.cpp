@@ -489,7 +489,14 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::PRICE, "Invalid quote type for " << datumName);
 
-        // The last token can be a date or a tenor
+        // The last token can be a string defining a special tenor i.e. ON, TN or SN
+        pair<Period, Period> tenors;
+        if (parsePeriods(tokens[4], tenors)) {
+            return boost::make_shared<CommodityForwardQuote>(
+                value, asof, datumName, quoteType, tokens[2], tokens[3], tenors.second, tenors.first);
+        }
+
+        // The last token can be a date or a standard tenor
         Date date;
         Period tenor;
         bool isDate;
