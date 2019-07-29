@@ -335,6 +335,21 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
 
 Period parsePeriod(const string& s) { return PeriodParser::parse(s); }
 
+bool parsePeriods(const string& s, pair<Period, Period>& periods, const Period& spotPeriod) {
+    if (s == "ON") {
+        periods = { 0 * Days, 1 * Days };
+        return true;
+    } else if (s == "TN") {
+        periods = { 1 * Days, 1 * Days };
+        return true;
+    } else if (s == "SN") {
+        periods = { spotPeriod, 1 * Days };
+        return true;
+    } else {
+        return false;
+    }
+}
+
 BusinessDayConvention parseBusinessDayConvention(const string& s) {
     static map<string, BusinessDayConvention> m = {{"F", Following},
                                                    {"Following", Following},
