@@ -1008,18 +1008,18 @@ CommodityConvention::CommodityConvention(
     const string& spotRelative,
     bool outright)
     : Convention(id, Type::Commodity),
+      outright_(outright),
       strSpotDays_(spotDays),
       strPointsFactor_(pointsFactor),
       strAdvanceCalendar_(advanceCalendar),
-      strSpotRelative_(spotRelative),
-      outright_(outright) {
+      strSpotRelative_(spotRelative) {
     build();
 }
 
 void CommodityConvention::build() {
     spotDays_ = strSpotDays_.empty() ? 2 : lexical_cast<Natural>(strSpotDays_);
     pointsFactor_ = strPointsFactor_.empty() ? 1.0 : parseReal(strPointsFactor_);
-    advanceCalendar_ = strAdvanceCalendar_.empty() ? WeekendsOnly() : parseCalendar(strAdvanceCalendar_);
+    advanceCalendar_ = strAdvanceCalendar_.empty() ? NullCalendar() : parseCalendar(strAdvanceCalendar_);
     spotRelative_ = strSpotRelative_.empty() ? true : parseBool(strSpotRelative_);
 }
 
