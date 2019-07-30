@@ -427,6 +427,7 @@
         </xs:simpleType>
       </xs:element>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
