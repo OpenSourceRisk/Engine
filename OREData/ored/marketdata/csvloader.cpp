@@ -35,29 +35,37 @@ using namespace std;
 namespace ore {
 namespace data {
 
-CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename, bool implyTodaysFixings)
+CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename,
+                     const string& dividendFilename, bool implyTodaysFixings)
     : implyTodaysFixings_(implyTodaysFixings) {
 
     // load market data
-    loadFile(marketFilename, true);
+    loadFile(marketFilename, DataType::Market);
     // log
     for (auto it : data_) {
         LOG("CSVLoader loaded " << it.second.size() << " market data points for " << it.first);
     }
 
     // load fixings
-    loadFile(fixingFilename, false);
+    loadFile(fixingFilename, DataType::Fixing);
     LOG("CSVLoader loaded " << fixings_.size() << " fixings");
+
+     // load dividends
+    if (dividendFilename != "") {
+        loadFile(dividendFilename, DataType::Dividend);
+        LOG("CSVLoader loaded " << dividends_.size() << " dividends");
+    }
 
     LOG("CSVLoader complete.");
 }
 
-CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fixingFiles, bool implyTodaysFixings)
+CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fixingFiles,
+                     const vector<string>& dividendFiles, bool implyTodaysFixings)
     : implyTodaysFixings_(implyTodaysFixings) {
 
     for (auto marketFile : marketFiles)
         // load market data
-        loadFile(marketFile, true);
+        loadFile(marketFile, DataType::Market);
 
     // log
     for (auto it : data_)
@@ -65,13 +73,18 @@ CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fi
 
     for (auto fixingFile : fixingFiles)
         // load fixings
-        loadFile(fixingFile, false);
+        loadFile(fixingFile, DataType::Fixing);
     LOG("CSVLoader loaded " << fixings_.size() << " fixings");
+
+    for (auto dividendFile : dividendFiles)
+        // load dividends
+        loadFile(dividendFile, DataType::Dividend);
+    LOG("CSVLoader loaded " << dividends_.size() << " dividends");
 
     LOG("CSVLoader complete.");
 }
 
-void CSVLoader::loadFile(const string& filename, bool isMarket) {
+void CSVLoader::loadFile(const string& filename, DataType dataType) {
     LOG("CSVLoader loading from " << filename);
 
     Date today = QuantLib::Settings::instance().evaluationDate();
@@ -96,7 +109,7 @@ void CSVLoader::loadFile(const string& filename, bool isMarket) {
             const string& key = tokens[1];
             Real value = parseReal(tokens[2]);
 
-            if (isMarket) {
+            if (dataType == DataType::Market) {
                 // process market
                 // build market datum and add to map
                 try {
@@ -105,10 +118,16 @@ void CSVLoader::loadFile(const string& filename, bool isMarket) {
                 } catch (std::exception& e) {
                     WLOG("Failed to parse MarketDatum " << key << ": " << e.what());
                 }
-            } else {
+            } else if (dataType == DataType::Fixing) {
                 // process fixings
                 if (date < today || (date == today && !implyTodaysFixings_))
                     fixings_.emplace_back(Fixing(date, key, value));
+            } else if (dataType == DataType::Dividend) {
+                // process dividends
+                if (date <= today)
+                    dividends_.emplace_back(Fixing(date, key, value));
+            } else {
+                QL_FAIL("unknown data type");
             }
         }
     }
