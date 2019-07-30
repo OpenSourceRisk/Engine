@@ -56,7 +56,27 @@ public:
 private:
     CommodityCurveSpec spec_;
     boost::shared_ptr<QuantExt::PriceTermStructure> commodityPriceCurve_;
+
+    //! Store the commodity spot value
     QuantLib::Real commoditySpot_;
+
+    //! Store the overnight value if any
+    QuantLib::Real onValue_;
+
+    //! Store the tomorrow next value if any
+    QuantLib::Real tnValue_;
+
+    //! Populate \p data with dates and prices from the loader
+    void populateData(std::map<QuantLib::Date, QuantLib::Real>& data, const QuantLib::Date& asof, 
+        const boost::shared_ptr<CommodityCurveConfig>& config, const Loader& loader, const Conventions& conventions);
+
+    //! Add node to price curve \p data with check for duplicate expiry dates
+    void add(const QuantLib::Date& asof, const QuantLib::Date& expiry, QuantLib::Real value,
+        std::map<QuantLib::Date, QuantLib::Real>& data, bool outright, QuantLib::Real pointsFactor = 1.0);
+
+    //! Build price curve using the curve \p data
+    void buildCurve(const std::map<QuantLib::Date, QuantLib::Real>& data,
+        const boost::shared_ptr<CommodityCurveConfig>& config);
 };
 } // namespace data
 } // namespace ore
