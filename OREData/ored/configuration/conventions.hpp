@@ -1079,6 +1079,7 @@ public:
         const string& pointsFactor = "",
         const string& advanceCalendar = "",
         const string& spotRelative = "",
+        BusinessDayConvention bdc = Following,
         bool outright = true);
     //@}
 
@@ -1088,6 +1089,7 @@ public:
     Real pointsFactor() const { return pointsFactor_; }
     const Calendar& advanceCalendar() const { return advanceCalendar_; }
     bool spotRelative() const { return spotRelative_; }
+    BusinessDayConvention bdc() const { return bdc_; }
     bool outright() const { return outright_; }
     //@}
 
@@ -1103,6 +1105,7 @@ private:
     Real pointsFactor_;
     Calendar advanceCalendar_;
     bool spotRelative_;
+    BusinessDayConvention bdc_;
     bool outright_;
 
     // Strings to store the inputs

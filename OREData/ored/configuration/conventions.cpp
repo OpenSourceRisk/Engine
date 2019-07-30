@@ -28,6 +28,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 
@@ -1006,8 +1007,10 @@ CommodityConvention::CommodityConvention(
     const string& pointsFactor,
     const string& advanceCalendar,
     const string& spotRelative,
+    BusinessDayConvention bdc,
     bool outright)
     : Convention(id, Type::Commodity),
+      bdc_(bdc),
       outright_(outright),
       strSpotDays_(spotDays),
       strPointsFactor_(pointsFactor),
@@ -1034,6 +1037,11 @@ void CommodityConvention::fromXML(XMLNode* node) {
     strAdvanceCalendar_ = XMLUtils::getChildValue(node, "AdvanceCalendar", false);
     strSpotRelative_ = XMLUtils::getChildValue(node, "SpotRelative", false);
     
+    bdc_ = Following;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "BusinessDayConvention")) {
+        bdc_ = parseBusinessDayConvention(XMLUtils::getNodeValue(n));
+    }
+    
     outright_ = true;
     if (XMLNode* n = XMLUtils::getChildNode(node, "Outright")) {
         outright_ = parseBool(XMLUtils::getNodeValue(n));
@@ -1050,6 +1058,7 @@ XMLNode* CommodityConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "PointsFactor", strPointsFactor_);
     XMLUtils::addChild(doc, node, "AdvanceCalendar", strAdvanceCalendar_);
     XMLUtils::addChild(doc, node, "SpotRelative", strSpotRelative_);
+    XMLUtils::addChild(doc, node, "BusinessDayConvention", ore::data::to_string(bdc_));
     XMLUtils::addChild(doc, node, "Outright", outright_);
 
     return node;
