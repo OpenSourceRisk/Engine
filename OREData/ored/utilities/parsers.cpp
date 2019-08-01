@@ -40,6 +40,7 @@
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
+#include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/thailand.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
@@ -173,7 +174,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"Denmark", Denmark()},
                                       {"Japan", Japan()},
                                       {"Norway", Norway()},
-                                      {"Switzerland", Switzerland()},
+                                      {"Switzerland", QuantExt::Switzerland()},
                                       {"Sweden", Sweden()},
                                      
                                       // city specific calendars
@@ -181,7 +182,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
 
                                       // Country City
                                       {"CATO", Canada()},
-                                      {"CHZU", Switzerland()},
+                                      {"CHZU", QuantExt::Switzerland()},
                                       {"JPTO", Japan()},
                                       {"GBLO", UnitedKingdom()},
                                       {"SEST", Sweden()},
@@ -198,7 +199,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"BR", Brazil()},
                                       {"BW", Botswana()},
                                       {"CA", Canada()},
-                                      {"CH", Switzerland()},
+                                      {"CH", QuantExt::Switzerland()},
                                       {"CL", Chile()},
                                       {"CN", China()},
                                       {"CO", Colombia()},
@@ -241,7 +242,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"AUS", Australia()},
                                       {"BRA", Brazil()},
                                       {"CAN", Canada()},
-                                      {"CHE", Switzerland()},
+                                      {"CHE", QuantExt::Switzerland()},
                                       {"CHL", Chile()},
                                       {"CHN", China()},
                                       {"COL", Colombia()},
@@ -283,7 +284,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"BRL", Brazil()},
                                       {"BWP", Botswana()},
                                       {"CAD", Canada()},
-                                      {"CHF", Switzerland()},
+                                      {"CHF", QuantExt::Switzerland()},
                                       {"CLP", Chile()},
                                       {"CNH", China()},
                                       {"CNY", China()},
@@ -347,13 +348,14 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"EUWA", Germany(Germany::Euwax)},
                                       {"XJKT", Indonesia(Indonesia::JSX)},
                                       {"XIDX", Indonesia(Indonesia::IDX)},
-                                      {"XMIL", Italy(Italy::Exchange)},
                                       {"XTAE", Israel(Israel::TASE)},
-                                      {"XNYS", UnitedStates(UnitedStates::NYSE)},
+                                      {"XMIL", Italy(Italy::Exchange)},
                                       {"MISX", Russia(Russia::MOEX)},
                                       {"XKRX", SouthKorea(SouthKorea::KRX)},
+                                      {"XSWX", QuantExt::Switzerland(QuantExt::Switzerland::SIX)},
                                       {"XLON", UnitedKingdom(UnitedKingdom::Exchange)},
                                       {"XLME", UnitedKingdom(UnitedKingdom::Metals)},
+                                      {"XNYS", UnitedStates(UnitedStates::NYSE)},
 
                                       // Other / Legacy
                                       {"DEN", Denmark()}, // TODO: consider remove it, not ISO
@@ -371,7 +373,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"UK settlement", UnitedKingdom()},
                                       {"US settlement", UnitedStates(UnitedStates::Settlement)},
                                       {"US with Libor impact", UnitedStates(UnitedStates::LiborImpact)},
-                                      {"ZUB", Switzerland()},
+                                      {"ZUB", QuantExt::Switzerland()},
 
                                       // Simple calendars
                                       {"WeekendsOnly", WeekendsOnly()},
