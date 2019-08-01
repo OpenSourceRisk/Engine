@@ -518,6 +518,8 @@
       <xs:enumeration value="Equity"/>
       <xs:enumeration value="FormulaBased"/>
       <xs:enumeration value="ZeroCouponFixed"/>
+      <xs:enumeration value="CommodityFixed"/>
+      <xs:enumeration value="CommodityFloating"/>
     </xs:restriction>
   </xs:simpleType>
 
