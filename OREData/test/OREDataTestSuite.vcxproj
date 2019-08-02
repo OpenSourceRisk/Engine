@@ -674,11 +674,6 @@
     <ClCompile Include="xmlmanipulation.cpp" />
     <ClCompile Include="yieldcurve.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\OREData.vcxproj">
-      <Project>{ad0a27da-91da-46a2-acbd-296c419ed3aa}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
