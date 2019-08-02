@@ -28,50 +28,77 @@
   \label{tab:allow_stand_data}
 \end{table}
 
-\begin{table}[H]
-  \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+\begin{longtable}{| p{.30\textwidth} | p{.70\textwidth} |}
     \hline
-%    \multicolumn{2}{|l|} {\lstinline{Calendar} } \\ \hline
     \multicolumn{2}{|l|} {\tt Calendar}  \\ \hline
     \bfseries{Allowable Values} & \bfseries{Resulting Calendar} \\
     \hline
     \emph{TARGET, TGT, EUR} & Target Calendar  \\ \hline
-    \emph{CA,TRB, CAD} & Canada Calendar \\ \hline
-    \emph{TKB, JP, JPY} & Japan Calendar \\ \hline
-    \emph{ZUB, CHF} & Switzerland Calendar \\ \hline
-    \emph{GB, LNB, UK} & UK Calendar \\ \hline
+    \emph{CA, CAN, CAD, TRB} & Canada Calendar \\ \hline
+    \emph{JP, JPN, JPY, TKB} & Japan Calendar \\ \hline
+    \emph{CH, CHE, CHF, ZUB} & Switzerland Calendar \\ \hline
+    \emph{GB, GBR, GBP, LNB, UK} & UK Calendar \\ \hline
     \emph{London stock exchange} & London Stock Exchange Calendar \\ \hline
-    \emph{US, NYB, USD} & US Calendar \\ \hline
+    \emph{US, USA, USD, NYB} & US Calendar \\ \hline
     \emph{US-SET} & US Settlement Calendar \\ \hline
     \emph{US-GOV} & US Government Bond Calendar \\ \hline    
     \emph{US-NYSE, New York stock exchange} & US NYSE Calendar \\ \hline
     \emph{US with Libor impact} & US Calendar for Libor fixings \\ \hline
     \emph{US-NERC} & US NERC Calendar \\ \hline  
-    \emph{AU, AUD} & Australia Calendar \\ \hline
-    \emph{SA, ZAR} & South Africa Calendar \\ \hline
-    \emph{SS, SEK} & Sweden Calendar \\ \hline
-    \emph{ARS} & Argentina Calendar \\ \hline
-    \emph{BRL} & Brazil Calendar \\ \hline
-    \emph{CNY} & China Calendar \\ \hline
-    \emph{CZK} & Czech Republic Calendar \\ \hline
-    \emph{DEN, DKK} & Denmark Calendar \\ \hline
-    \emph{FIN} & Finland Calendar \\ \hline
-    \emph{HKD} & HongKong Calendar \\ \hline
-    \emph{ISK} & Iceland Calendar \\ \hline
-    \emph{INR} & India Calendar \\ \hline
-    \emph{IDR} & Indonesia Calendar \\ \hline
-    \emph{MXN} & Mexico Calendar \\ \hline
-    \emph{NZD} & New Zealand Calendar\\ \hline
-    \emph{NOK} & Norway Calendar \\ \hline
-    \emph{PLN} & Poland Calendar \\ \hline
-    \emph{RUB} & Russia Calendar \\ \hline
-    \emph{SAR} & Saudi Arabia \\ \hline
-    \emph{SGD} & Singapore Calendar \\ \hline
-    \emph{KRW} & South Korea Calendar \\ \hline
-    \emph{TWD} & Taiwan Calendar \\ \hline
-    \emph{TRY} & Turkey Calendar \\ \hline
-    \emph{UAH} & Ukraine Calendar \\ \hline
+    \emph{AU, AUD, AUS} & Australia Calendar \\ \hline
+    \emph{ZA, ZAF, ZAR, SA} & South Africa Calendar \\ \hline
+    \emph{SE, SWE, SEK, SS} & Sweden Calendar \\ \hline
+    \emph{AR, ARG, ARS} & Argentina Calendar \\ \hline
+    \emph{BW, BWA, BWP} & Botswana Calendar \\ \hline
+    \emph{BR, BRA, BRL} & Brazil Calendar \\ \hline
+    \emph{CL, CHL, CLP} & Chile Calendar \\ \hline
+    \emph{CN, CHN, CNH, CNY} & China Calendar \\ \hline
+    \emph{CO, COL, COP} & Colombia Calendar \\ \hline
+    \emph{CZ, CZE, CZK} & Czech Republic Calendar \\ \hline
+    \emph{DK, DNK, DKK, DEN} & Denmark Calendar \\ \hline
+    \emph{FI, FIN} & Finland Calendar \\ \hline
+    \emph{FR, FRF} & France Calendar \\ \hline
+    \emph{DE, DEU} & Germany Calendar \\ \hline
+    \emph{HK, HKG, HKD} & Hong Kong Calendar \\ \hline
+    \emph{HU, HUN, HUF} & Hungary Calendar \\ \hline
+    \emph{IS, ISL, ISK} & Iceland Calendar \\ \hline
+    \emph{IN, IND, INR} & India Calendar \\ \hline
+    \emph{ID, IDN, IDR} & Indonesia Calendar \\ \hline
+    \emph{IL, ISR, ILS} & Israel Calendar \\ \hline
+    \emph{IT, ITA} & Italy Calendar \\ \hline
+    \emph{MX, MEX, MXN} & Mexico Calendar \\ \hline
+    \emph{MY, MYS, MYR} & Malaysia Calendar \\ \hline
+    \emph{NL, NLD, NZD} & New Zealand Calendar\\ \hline
+    \emph{NO, NOR, NOK} & Norway Calendar \\ \hline
+    \emph{PE, PER, PEN} & Peru Calendar \\ \hline
+    \emph{PH, PHL, PHP} & Philippines Calendar \\ \hline
+    \emph{PO, POL, PLN} & Poland Calendar \\ \hline
+    \emph{RO, ROU, RON} & Romania Calendar \\ \hline
+    \emph{RU, RUS, RUB} & Russia Calendar \\ \hline
+    \emph{SAU, SAR} & Saudi Arabia \\ \hline
+    \emph{SG, SGP, SGD} & Singapore Calendar \\ \hline
+    \emph{KR, KOR, KRW} & South Korea Calendar \\ \hline
+    \emph{TW, TWN, TWD} & Taiwan Calendar \\ \hline
+    \emph{TH, THA, THB} & Thailand Calendar \\ \hline
+    \emph{TR, TUR, TRY} & Turkey Calendar \\ \hline
+    \emph{UA, UKR, UAH} & Ukraine Calendar \\ \hline
+    \emph{BVMF} & Brazil Bovespa Calendar \\ \hline
+    \emph{XTSE} & Canada Toronto Stock Exchange Calendar \\ \hline
+    \emph{XSHG} & China Shanghai Stock Exchange Calendar \\ \hline
+    \emph{XFRA} & Germany Frankfurt Stock Exchange \\ \hline
+    \emph{XETR} & Germany XETRA Calendar \\ \hline
+    \emph{ECAG} & Germany EUREX Calendar \\ \hline
+    \emph{EUWA} & Germany EUWAX Calendar \\ \hline
+    \emph{XJKT} & Indonesia Jakarta Stock Exchange (now IDX) Calendar \\ \hline
+    \emph{XIDX} & Indonesia Indonesia Stock Exchange Calendar \\ \hline
+    \emph{XTAE} & Israel Tel Aviv Stock Exchange Calendar \\ \hline
+    \emph{XMIL} & Italy Italian Stock Exchange Calendar \\ \hline
+    \emph{MISX} & Russia Moscow Exchange Calendar \\ \hline
+    \emph{XKRX} & Korea Exchange Calendar \\ \hline
+    \emph{XSWX} & Switzerland SIX Swiss Exchange Calendar \\ \hline
+    \emph{XLON} & UK London Stock Exchange \\ \hline
+    \emph{XLME} & UK London Metal Exchange \\ \hline
+    \emph{XNYS} & US New York Stock Exchange Calendar \\ \hline
     \emph{WeekendsOnly} & Weekends Only Calendar \\ \hline
     % \emph{US+TARGET, NYB\_TGT, TGT\_NYB} & US and Target Calendar \\ \hline  
     % \emph{NYB\_LNB, LNB\_NYB} & US and UK Calendar \\ \hline    
@@ -85,11 +112,10 @@
     % \emph{LNB\_NYB\_TRB} & UK, US and Canada Calendar \\ \hline 
     % \emph{LNB\_NYB\_TKB} & UK, US and Japan Calendar \\ \hline   
     % \emph{NullCalendar} & Null Calendar, i.e. all days are business days \\ \hline                 
-  \end{tabu}
   \caption{Allowable Values for Calendar. Combinations of up to four
     calendars can be provided using comma separated calendar names.}
   \label{tab:calendar}
-\end{table}
+\end{longtable}
 
 \begin{table}[H]
 \centering
