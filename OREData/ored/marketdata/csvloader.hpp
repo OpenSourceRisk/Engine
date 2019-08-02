@@ -43,6 +43,20 @@ public:
         const string& marketFilename,
         //! Fixing file name
         const string& fixingFilename,
+        //! Enable/disable implying today's fixings
+        bool implyTodaysFixings = false);
+
+    CSVLoader( //! Quote file name
+        const vector<string>& marketFiles,
+        //! Fixing file name
+        const vector<string>& fixingFiles,
+        //! Enable/disable implying today's fixings
+        bool implyTodaysFixings = false);
+
+    CSVLoader( //! Quote file name
+        const string& marketFilename,
+        //! Fixing file name
+        const string& fixingFilename,
         //! Dividend file name
         const string& dividendFilename,
         //! Enable/disable implying today's fixings

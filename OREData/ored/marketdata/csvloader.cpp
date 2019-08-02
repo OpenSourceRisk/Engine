@@ -35,6 +35,12 @@ using namespace std;
 namespace ore {
 namespace data {
 
+CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename, bool implyTodaysFixings)
+    : CSVLoader(marketFilename, fixingFilename, "", implyTodaysFixings) {}
+
+CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fixingFiles, bool implyTodaysFixings)
+    : CSVLoader(marketFiles, fixingFiles, {}, implyTodaysFixings) {}
+
 CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename,
                      const string& dividendFilename, bool implyTodaysFixings)
     : implyTodaysFixings_(implyTodaysFixings) {
