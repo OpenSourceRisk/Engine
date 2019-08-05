@@ -747,6 +747,9 @@
     <ClInclude Include="qle\pricingengines\baroneadesiwhaleyengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\commodityindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1263,6 +1266,9 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\baroneadesiwhaleyengine.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\commodityindex.cpp">
+      <Filter>indexes</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
