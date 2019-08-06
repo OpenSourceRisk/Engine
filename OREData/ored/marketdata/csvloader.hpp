@@ -39,6 +39,8 @@ namespace data {
 class CSVLoader : public Loader {
 public:
     //! Constructor
+    CSVLoader() {}
+
     CSVLoader( //! Quote file name
         const string& marketFilename,
         //! Fixing file name
