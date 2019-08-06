@@ -72,6 +72,7 @@ void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         throw;
     }
     // Set up Legs
+    legs_.clear();
     legs_.resize(4);
     legCurrencies_.resize(4);
     legPayers_.resize(4);

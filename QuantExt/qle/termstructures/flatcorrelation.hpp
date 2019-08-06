@@ -48,6 +48,11 @@ public:
     //@{
     Date maxDate() const { return Date::maxDate(); }
     //@}
+    //! \name Inspectors
+    //@{
+    const Handle<Quote>& quote() const { return correlation_; }
+    //@}
+
 private:
     //! \name CorrelationTermStructure interface
     //@{
