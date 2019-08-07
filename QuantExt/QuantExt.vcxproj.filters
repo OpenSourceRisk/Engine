@@ -552,6 +552,9 @@
     <ClInclude Include="qle\calendars\thailand.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\switzerland.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
     <ClInclude Include="qle\cashflows\equitycoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
@@ -1151,6 +1154,9 @@
       <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\calendars\thailand.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\switzerland.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\equitycoupon.cpp">
