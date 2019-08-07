@@ -145,7 +145,9 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<LGMGridBermudanSwaptionEngineBuilder>());
 
     registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
-    registerBuilder(boost::make_shared<FxOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<FxAmericanOptionFDEngineBuilder>());
+    registerBuilder(boost::make_shared<FxAmericanOptionBAWEngineBuilder>());
 
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());
@@ -155,7 +157,9 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<YoYCapFloorEngineBuilder>());
 
     registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
-    registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityAmericanOptionFDEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityAmericanOptionBAWEngineBuilder>());
 
     registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
     registerBuilder(boost::make_shared<DiscountingForwardBondEngineBuilder>());

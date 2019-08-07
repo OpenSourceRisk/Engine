@@ -727,17 +727,18 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
     }
 
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
-    Size n_fxvol_strikes = simMarketData_->fxVolMoneyness().size();
-    vector<Real> vol_strikes = simMarketData_->fxVolMoneyness();
-    vector<vector<Real>> values(n_fxvol_exp, vector<Real>(n_fxvol_strikes, 0.0));
     std::vector<Real> times(n_fxvol_exp);
-
-    // buffer for shifted zero curves
-    vector<vector<Real>> shiftedValues(n_fxvol_exp, vector<Real>(n_fxvol_strikes, 0.0));
 
     for (auto f : sensitivityData_->fxVolShiftData()) {
         string ccyPair = f.first;
         QL_REQUIRE(ccyPair.length() == 6, "invalid ccy pair length");
+
+        Size n_fxvol_strikes = simMarketData_->fxVolMoneyness(ccyPair).size();
+        vector<Real> vol_strikes = simMarketData_->fxVolMoneyness(ccyPair);
+        vector<vector<Real>> values(n_fxvol_exp, vector<Real>(n_fxvol_strikes, 0.0));
+
+        // buffer for shifted zero curves
+        vector<vector<Real>> shiftedValues(n_fxvol_exp, vector<Real>(n_fxvol_strikes, 0.0));
 
         SensitivityScenarioData::VolShiftData data = f.second;
         ShiftType shiftType = parseShiftType(data.shiftType);

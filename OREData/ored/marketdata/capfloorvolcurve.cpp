@@ -127,7 +127,7 @@ void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConf
                 QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<Linear, QuantExt::IterativeBootstrap>::
                 optionlet_curve>(globalAccuracy, dontThrow, dontThrowUsePrevious));
             capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(
-                asof, transform(tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(), 
+                asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(), 
                 tmp->calendar(), tmp->businessDayConvention(), iborIndex, tmp->dayCounter(), tmp->volatilityType(), 
                     tmp->displacement()));
         } else if (config.timeInterpolation() == "LinearFlat") {
@@ -138,7 +138,7 @@ void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConf
                 QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<LinearFlat, QuantExt::IterativeBootstrap>::
                 optionlet_curve>(globalAccuracy, dontThrow, dontThrowUsePrevious));
             capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, Linear>>(
-                asof, transform(tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
+                asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                     tmp->calendar(), tmp->businessDayConvention(), iborIndex, tmp->dayCounter(), tmp->volatilityType(),
                     tmp->displacement()));
         } else if (config.timeInterpolation() == "BackwardFlat") {
@@ -149,7 +149,7 @@ void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConf
                 QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<BackwardFlat, QuantExt::IterativeBootstrap>::
                 optionlet_curve>(globalAccuracy, dontThrow, dontThrowUsePrevious));
             capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, Linear>>(
-                asof, transform(tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
+                asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                     tmp->calendar(), tmp->businessDayConvention(), iborIndex, tmp->dayCounter(), tmp->volatilityType(),
                     tmp->displacement()));
         } else if (config.timeInterpolation() == "Cubic") {
@@ -160,7 +160,7 @@ void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConf
                 QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<Cubic, QuantExt::IterativeBootstrap>::
                 optionlet_curve>(globalAccuracy, dontThrow, dontThrowUsePrevious));
             capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Linear>>(
-                asof, transform(tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
+                asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                     tmp->calendar(), tmp->businessDayConvention(), iborIndex, tmp->dayCounter(), tmp->volatilityType(),
                     tmp->displacement()));
         } else if (config.timeInterpolation() == "CubicFlat") {
@@ -171,7 +171,7 @@ void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConf
                 QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<CubicFlat, QuantExt::IterativeBootstrap>::
                 optionlet_curve>(globalAccuracy, dontThrow, dontThrowUsePrevious));
             capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, Linear>>(
-                asof, transform(tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
+                asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                     tmp->calendar(), tmp->businessDayConvention(), iborIndex, tmp->dayCounter(), tmp->volatilityType(),
                     tmp->displacement()));
         } else {
@@ -190,7 +190,7 @@ void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConf
                     QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<CubicFlat, QuantExt::IterativeBootstrap>::
                     optionlet_curve>(globalAccuracy, dontThrow, dontThrowUsePrevious));
                 capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, Linear>>(
-                    asof, transform(tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
+                    asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                         tmp->calendar(), tmp->businessDayConvention(), iborIndex, tmp->dayCounter(),
                         tmp->volatilityType(), tmp->displacement()));
             } else {
@@ -201,7 +201,7 @@ void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConf
                     QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<Cubic, QuantExt::IterativeBootstrap>::
                     optionlet_curve>(globalAccuracy, dontThrow, dontThrowUsePrevious));
                 capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Linear>>(
-                    asof, transform(tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
+                    asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                         tmp->calendar(), tmp->businessDayConvention(), iborIndex, tmp->dayCounter(), 
                         tmp->volatilityType(), tmp->displacement()));
             }
@@ -214,7 +214,7 @@ void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConf
                     QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<LinearFlat, QuantExt::IterativeBootstrap>::
                     optionlet_curve>(globalAccuracy, dontThrow, dontThrowUsePrevious));
                 capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, Linear>>(
-                    asof, transform(tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
+                    asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                         tmp->calendar(), tmp->businessDayConvention(), iborIndex, tmp->dayCounter(), 
                         tmp->volatilityType(), tmp->displacement()));
             } else {
@@ -225,7 +225,7 @@ void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConf
                     QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<Linear, QuantExt::IterativeBootstrap>::
                     optionlet_curve>(globalAccuracy, dontThrow, dontThrowUsePrevious));
                 capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(
-                    asof, transform(tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
+                    asof, transform(asof, tmp->curve()->dates(), tmp->curve()->volatilities(), tmp->settlementDays(),
                         tmp->calendar(), tmp->businessDayConvention(), iborIndex, tmp->dayCounter(),
                         tmp->volatilityType(), tmp->displacement()));
             }
@@ -654,13 +654,19 @@ boost::shared_ptr<StrippedOptionlet> CapFloorVolCurve::transform(const QuantExt:
     return res;
 }
 
-boost::shared_ptr<StrippedOptionlet> CapFloorVolCurve::transform(const vector<Date>& dates,
+boost::shared_ptr<StrippedOptionlet> CapFloorVolCurve::transform(const Date& asof, vector<Date> dates,
     const vector<Volatility>& volatilities, Natural settleDays, const Calendar& cal, BusinessDayConvention bdc,
     boost::shared_ptr<IborIndex> iborIndex, const DayCounter& dc, VolatilityType type, Real displacement) const {
 
     vector<vector<Handle<Quote>>> vols(dates.size());
     for (Size i = 0; i < dates.size(); i++) {
             vols[i].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(volatilities[i])));
+    }
+
+    // Temp fix because QuantLib::StrippedOptionlet requires optionlet dates strictly greater than 
+    // the evaluation date. Would rather relax this to '>=' in QuantLib::StrippedOptionlet
+    if (dates[0] == asof) {
+        dates[0]++;
     }
 
     vector<Rate> strikes = { 0.0 };

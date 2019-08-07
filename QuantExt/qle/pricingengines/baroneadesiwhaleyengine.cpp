@@ -176,6 +176,7 @@ void BaroneAdesiWhaleyApproximationEngine::calculate() const {
         riskFreeDiscount);
 
     if ((dividendDiscount >= 1.0 && riskFreeDiscount < 1.0 && payoff->optionType() == Option::Call) ||
+        // early exercise of the put option is never optimal
         (dividendDiscount < 1.0 && riskFreeDiscount >= 1.0 && payoff->optionType() == Option::Put)) {
         // early exercise never optimal
         results_.value = black.value();
