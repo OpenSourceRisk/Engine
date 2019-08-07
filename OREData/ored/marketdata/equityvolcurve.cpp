@@ -51,7 +51,8 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         bool isSurface = config->dimension() == EquityVolatilityCurveConfig::Dimension::Smile;
 
         vector<string> expiries = config->expiries();
-        vector<string> strikes({"ATMF"});
+        vector<string> strikes({"ATMF"});   // in case of ATM all quotes must have ATMF strike. Strikes in config are superflous.
+        map<Date,Real> atmWcDateMap; // in case of ATM with expiry wc
         if (isSurface)
             strikes = config->strikes();
         QL_REQUIRE(expiries.size() > 0, "No expiries defined");
@@ -81,6 +82,12 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         bool expiryRelevant = expiriesWc;
         bool quoteRelevant;
 
+        if (!isSurface) {
+            if (strikes.size() > 1 || strikes[0] != "ATMF") {
+                WLOG("ATM specified in curver config for " << spec << " but strikes are not 'ATMF'. 'ATMF' will be used regardless.")
+            }
+        }
+
         // We loop over all market data, looking for quotes that match the configuration
         Size quotesAdded = 0;
         for (auto& md : loader.loadQuotes(asof)) {
@@ -101,8 +108,8 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                             quotesAdded++;
                         }
                     }
-                    // some wild card
-                    else {
+                    // some wild card + surface
+                    else if(!noWildCard && isSurface) {
                         if (!expiriesWc) {
                             vector<string>::iterator j = std::find(expiries.begin(), expiries.end(), q->expiry());
                             expiryRelevant = j != expiries.end();
@@ -132,6 +139,31 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
 
                             quotesAdded++;
                         }
+                    }
+                    // Expiries wild-card and ATM
+                    else if (expiriesWc && !isSurface) {
+                        // here we still set up a BlackVarianceCurve (we just have an unknown number of expiries)
+                        bool expiryRelevant, strikeRelevant;
+
+                        // expiry relevant
+                        Date tmpDate;
+                        Period tmpPer;
+                        bool tmpIsDate;
+                        parseDateOrPeriod(q->expiry(), tmpDate, tmpPer, tmpIsDate);
+                        if (!tmpIsDate)
+                            tmpDate = WeekendsOnly().adjust(asof + tmpPer);
+                        tmpDate >= asof ? expiryRelevant = true : false;
+
+                        // strike relevant
+                        vector<string>::iterator i = std::find(strikes.begin(), strikes.end(), q->strike());
+                        strikeRelevant = i != strikes.end();
+
+                        if (expiryRelevant && strikeRelevant) {
+                            if (atmWcDateMap.find(tmpDate) != atmWcDateMap.end()) {
+                                ALOG("dublicate market datum in loader in " << spec << " for quote " << q->name() << ". Taking second read value")
+                            }
+                            atmWcDateMap[tmpDate] = q->quote()->value();
+                        };
                     }
                 }
             }
@@ -194,6 +226,25 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                 }
             }
             vol_->enableExtrapolation();
+        }
+        else if (expiriesWc && !isSurface) {
+
+            dVols = Matrix(strikes.size(), atmWcDateMap.size(), -1.0);
+            vector<Date> dates(dVols.columns());
+
+            map<Date, Real>::iterator ii = atmWcDateMap.begin();
+            int ctr = 0;
+            for (ii; ii != atmWcDateMap.end(); ii++) {
+                dates[ctr] = ii->first;
+                dVols[0][ctr] = ii->second;
+                ctr++;
+            }
+
+            QL_REQUIRE(dVols.rows() == 1, "Matrix error, should only have 1 row (ATMF)");
+            vector<Volatility> atmVols(dVols.begin(), dVols.end());
+            vol_ = boost::make_shared<BlackVarianceCurve>(asof, dates, atmVols, dc);
+            vol_->enableExtrapolation();
+
         } else {
             // some wild card
             Calendar cal = NullCalendar(); 
