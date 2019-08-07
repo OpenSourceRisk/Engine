@@ -806,5 +806,42 @@ SequenceType parseSequenceType(const std::string& s) {
         QL_FAIL("sequence type \"" << s << "\" not recognised");
 }
 
+FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
+    static std::map<std::string, FdmSchemeDesc> m = {
+            {"Hundsdorfer", FdmSchemeDesc::Hundsdorfer()},
+            {"Douglas", FdmSchemeDesc::Douglas()},
+            {"CraigSneyd", FdmSchemeDesc::CraigSneyd()},
+            {"ModifiedCraigSneyd", FdmSchemeDesc::ModifiedCraigSneyd()},
+            {"ImplicitEuler", FdmSchemeDesc::ImplicitEuler()},
+            {"ExplicitEuler", FdmSchemeDesc::ExplicitEuler()},
+            {"MethodOfLines", FdmSchemeDesc::MethodOfLines()},
+            {"TrBDF2", FdmSchemeDesc::TrBDF2()}
+    };
+
+    auto it = m.find(s);
+    if (it != m.end())
+        return it->second;
+    else
+        QL_FAIL("fdm scheme \"" << s << "\" not recognised");
+}
+
+AssetClass parseAssetClass(const std::string& s) {
+    static map<string, AssetClass> assetClasses = {
+        {"EQ", AssetClass::EQ},
+        {"FX", AssetClass::FX},
+        {"COM", AssetClass::COM},
+        {"IR", AssetClass::IR},
+        {"INF", AssetClass::INF},
+        {"CR", AssetClass::CR}
+    };
+    auto it = assetClasses.find(s);
+    if (it != assetClasses.end()) {
+        return it->second;
+    }
+    else {
+        QL_FAIL("AssetClass \"" << s << "\" not recognized");
+    }
+}
+
 } // namespace data
 } // namespace ore
