@@ -82,12 +82,6 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         bool expiryRelevant = expiriesWc;
         bool quoteRelevant;
 
-        if (!isSurface) {
-            if (strikes.size() > 1 || strikes[0] != "ATMF") {
-                WLOG("ATM specified in curver config for " << spec << " but strikes are not 'ATMF'. 'ATMF' will be used regardless.")
-            }
-        }
-
         // We loop over all market data, looking for quotes that match the configuration
         Size quotesAdded = 0;
         for (auto& md : loader.loadQuotes(asof)) {
