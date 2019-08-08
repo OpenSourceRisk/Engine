@@ -600,10 +600,18 @@
               </xs:complexType>
             </xs:element>
             <xs:element type="xs:string" name="Expiries"/>
-            <xs:element name="Surface" minOccurs="0">
+            <xs:element name="Surface" maxOccurs="1" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
-                  <xs:element type="xs:string" name="Moneyness" maxOccurs="1" minOccurs="0"/>
+                  <xs:element name="Moneyness" maxOccurs="unbounded" minOccurs="0">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="ccyPair" type="xs:string" use="optional"/>
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
                 </xs:sequence>
               </xs:complexType>
             </xs:element>

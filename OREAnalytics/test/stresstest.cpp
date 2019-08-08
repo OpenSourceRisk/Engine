@@ -126,11 +126,12 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
     simMarketData->setSimulateSwapVols(true); // false;
     simMarketData->setSwapVolDayCounters("", "ACT/ACT");
 
-    simMarketData->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    simMarketData->fxVolDecayMode() = "ConstantVariance";
+    simMarketData->setFxVolExpiries(
+        vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
+    simMarketData->setFxVolDecayMode(string("ConstantVariance"));
     simMarketData->setSimulateFXVols(true); // false;
-    simMarketData->fxVolIsSurface() = false;
-    simMarketData->fxVolMoneyness() = {0.0};
+    simMarketData->setFxVolIsSurface(false);
+    simMarketData->setFxVolMoneyness(vector<Real>{0.0});
     simMarketData->setFxVolCcyPairs({"EURUSD", "EURGBP", "EURCHF", "EURJPY"});
     simMarketData->setFxVolDayCounters("", "ACT/ACT");
 
@@ -304,7 +305,7 @@ BOOST_AUTO_TEST_CASE(regression) {
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, simMarket);
     factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<FxOptionEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
     factory->registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
     factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
 

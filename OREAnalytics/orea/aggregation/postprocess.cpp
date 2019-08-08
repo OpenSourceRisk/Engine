@@ -729,17 +729,17 @@ void PostProcess::updateNettingSetKVA() {
 		 << " EEPE=" << setprecision(2) << eepe_kva_1
 		 << " EPE=" << epe[j] 
 		 << " RC=" << kvaRC1
-		 << " M=" << kvaNWMaturity1
+		 << " M=" << setprecision(6) << kvaNWMaturity1
 		 << " MA=" << kvaMatAdj1 
-		 << " Cost=" << kvaCCRIncrement1 
+		 << " Cost=" << setprecision(2) << kvaCCRIncrement1
 		 << " KVA=" << ourNettingSetKVACCR_[nettingSetId]);
             DLOG("Their KVA-CCR for " << nettingSetId << ": " << j
 		 << " EENE=" << eepe_kva_2
 		 << " ENE=" << ene[j] 
 		 << " RC=" << kvaRC2
-		 << " M=" << kvaNWMaturity1
-		 << " MA=" << kvaMatAdj1
-		 << " Cost=" << kvaCCRIncrement2
+		 << " M=" << setprecision(6) << kvaNWMaturity2
+		 << " MA=" << kvaMatAdj2
+		 << " Cost=" << setprecision(2) << kvaCCRIncrement2
 		 << " KVA=" << theirNettingSetKVACCR_[nettingSetId]);
 
 	    // CVA Capital
