@@ -176,9 +176,6 @@ protected:
             for(Size i = 0; i < totalSteps; i++)
                 timePoints[timePoints.size() - i - 1] = timePointsArray[i];
             timePoints.insert(std::upper_bound(timePoints.begin(), timePoints.end(), 0.99 / 365), 0.99 / 365);
-            for(auto tp : timePoints) {
-                ALOG(tp);
-            }
             gbsp = getBlackScholesProcess(assetName, ccy, assetClass, timePoints);
         } else {
             gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
