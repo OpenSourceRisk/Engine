@@ -81,8 +81,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->setDefaultCurveDayCounters("", "ACT/ACT");
 
     parameters->setSimulateFXVols(false);
-    parameters->fxVolExpiries() = {2 * Years, 3 * Years, 4 * Years};
-    parameters->fxVolDecayMode() = "ConstantVariance";
+    parameters->setFxVolExpiries(vector<Period>{2 * Years, 3 * Years, 4 * Years});
+    parameters->setFxVolDecayMode(string("ConstantVariance"));
     parameters->setSimulateEquityVols(false);
     parameters->setFxVolDayCounters("", "ACT/ACT");
 

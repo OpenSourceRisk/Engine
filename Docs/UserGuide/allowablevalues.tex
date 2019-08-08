@@ -175,3 +175,18 @@ TENOR                    & An integer followed by \emph{D, W, M or Y}           
   \caption{Allowable values for Index.}
   \label{tab:indices}
 \end{table}
+
+
+\begin{table}[H]
+\centering
+  \begin{tabu} to 1.0\linewidth {| X[-1.65,l,m] | X[-5.7,l,m] |}
+    \hline
+    \bfseries{Trade Data} & \bfseries{Allowable Values} \\
+    \hline
+    \lstinline!Name!   for equity trades & \begin{tabular}[l]{@{}l@{}}  Any string (provided it is the ID of an equity in the market \\conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: \\  \emph{RIC:.SPX}  (S\&P 500 Index) \\ \emph{RIC:EEM.N}  (iShares MSCI Emerging Markets ETF)    \\  \end{tabular}  \\ \hline
+%    \lstinline!Name!   for credit trades & \begin{tabular}[l]{@{}l@{}} 
+%\end{tabular}  \\ \hline
+  \end{tabu}
+  \caption{Allowable values for equity  data.}
+  \label{tab:equity_credit_data}
+\end{table}

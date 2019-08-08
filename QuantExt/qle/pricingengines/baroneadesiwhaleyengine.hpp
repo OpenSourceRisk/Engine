@@ -46,7 +46,10 @@
 
 namespace QuantExt {
 
-//! Barone-Adesi and Whaley pricing engine for American options (1987)
+/*! Barone-Adesi and Whaley pricing engine for American options (1987)
+    This QuantExt class is a copy of the class with the same name in
+    QuantLib v1.14 with the following change
+    - Added handling for put option where early exercise is never optimal */
 /*! \ingroup vanillaengines
 
     \test the correctness of the returned value is tested by
