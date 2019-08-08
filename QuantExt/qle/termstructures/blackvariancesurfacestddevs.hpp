@@ -38,12 +38,16 @@ using namespace QuantLib;
 //! \ingroup termstructures
     class BlackVarianceSurfaceStdDevs : public BlackVarianceSurfaceMoneyness {
     public:
-        /*! Moneyness is defined here as forward moneyness, ie K/F */
+
         BlackVarianceSurfaceStdDevs(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
-            const std::vector<Real>& moneyness,
+            const std::vector<Real>& stdDevs,
             const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
             const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
             const Handle<YieldTermStructure>& domTS, bool stickyStrike = false, bool flatExtrapMoneyness = false);
+
+        static void populateVolMatrix(const QuantLib::Handle<QuantLib::BlackVolTermStructure>& termStructre,
+            std::vector<std::vector<Handle<QuantLib::Quote>>>& quotesToPopulate, const std::vector<QuantLib::Period>& expiries, const std::vector<Real>& stdDevPoints, 
+            const QuantLib::Interpolation& forwardCurve, const QuantLib::Interpolation atmVolCurve);
 
     private:
         virtual Real moneyness(Time t, Real strike) const;

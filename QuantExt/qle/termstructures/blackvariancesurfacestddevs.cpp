@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ql/quotes/all.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
 #include <cmath>
 
@@ -25,18 +26,18 @@ using namespace QuantLib;
 namespace QuantExt {
 
     BlackVarianceSurfaceStdDevs::BlackVarianceSurfaceStdDevs(
-        const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& moneyness,
+        const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& stdDevs,
         const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix, const DayCounter& dayCounter,
         const Handle<YieldTermStructure>& forTS, const Handle<YieldTermStructure>& domTS, bool stickyStrike, bool flatExtrapMoneyness)
-        : BlackVarianceSurfaceMoneyness(cal, spot, times, moneyness, blackVolMatrix, dayCounter, stickyStrike),
+        : BlackVarianceSurfaceMoneyness(cal, spot, times, stdDevs, blackVolMatrix, dayCounter, stickyStrike),
         forTS_(forTS), domTS_(domTS), flatExtrapolateMoneyness_(flatExtrapMoneyness) {
         
         // set up atm variance curve - maybe just take ATM vols in
-        vector<Real>::const_iterator it = find(moneyness.begin(), moneyness.end(), 0.0);
-        QL_REQUIRE(it != moneyness.end(), "atm D is required."); // this might fail
+        vector<Real>::const_iterator it = find(stdDevs.begin(), stdDevs.end(), 0.0);
+        QL_REQUIRE(it != stdDevs.end(), "atm D is required."); // this might fail
         atmVariances_.push_back(Real(0.0));
         atmTimes_.push_back(0.0);
-        int atmIndex = distance(moneyness.begin(), it);
+        int atmIndex = distance(stdDevs.begin(), it);
         for (int i = 0; i < times.size(); i++) {
             atmVariances_.push_back(blackVolMatrix[atmIndex][i]->value() * blackVolMatrix[atmIndex][i]->value() * times[i]);
             atmTimes_.push_back(times[i]);
@@ -90,6 +91,28 @@ namespace QuantExt {
                 }
             }
             return reqD;
+        }
+    }
+
+    //void BlackVarianceSurfaceStdDevs::populateVolMatrix(const QuantLib::Handle<QuantLib::BlackVolTermStructure>& termStructre, vector<vector<Handle<Quote>>>& quotesToPopulate,
+    //    const std::vector<QuantLib::Period>& expiries, const std::vector<Real>& stdDevPoints, const QuantLib::Interpolation & forwardCurve, const QuantLib::Interpolation atmVolCurve) {
+
+    void BlackVarianceSurfaceStdDevs::populateVolMatrix(const QuantLib::Handle<QuantLib::BlackVolTermStructure>& termStructre,
+        vector<vector<Handle<Quote>>>& quotesToPopulate, const std::vector<QuantLib::Period>& expiries, const std::vector<Real>& stdDevPoints,
+        const QuantLib::Interpolation& forwardCurve, const QuantLib::Interpolation atmVolCurve){
+
+        
+        (stdDevPoints.size(), vector<Handle<Quote>>(expiries.size(), Handle<Quote>()));
+
+        for (int j = 0; j < expiries.size(); j++) {
+            Date tmpDate = termStructre->referenceDate() + expiries[j]; // todo: is the reference date of this termstructure as the asof date
+            Time tmpTime = termStructre->timeFromReference(tmpDate);
+            for (int i = 0; i < stdDevPoints.size(); i++) {
+                Real tmpStrike = forwardCurve(tmpTime) * exp(atmVolCurve(j)*sqrt(j)*stdDevPoints[i]);
+                Volatility vol = termStructre->blackVol(tmpDate, tmpStrike, true);
+                boost::shared_ptr<QuantLib::SimpleQuote> q(new SimpleQuote(vol));
+                quotesToPopulate[i][j] = Handle<Quote>(q);
+            }
         }
     }
 } // namespace QuantExt
