@@ -137,7 +137,8 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                     // Expiries wild-card and ATM
                     else if (expiriesWc && !isSurface) {
                         // here we still set up a BlackVarianceCurve (we just have an unknown number of expiries)
-                        bool expiryRelevant, strikeRelevant;
+                        bool expiryRelevant = true; 
+                        bool strikeRelevant = true;
 
                         // expiry relevant
                         Date tmpDate;
