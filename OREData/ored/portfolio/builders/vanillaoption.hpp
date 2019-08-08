@@ -158,7 +158,7 @@ protected:
         Time expiry = riskFreeRate->dayCounter().yearFraction(riskFreeRate->referenceDate(), expiryDate);
 
         FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
-        Size tGrid = ore::data::parseInteger(engineParameter("TimeGridPerYear")) * expiry;
+        Size tGrid = (Size)(ore::data::parseInteger(engineParameter("TimeGridPerYear")) * expiry);
         Size xGrid = ore::data::parseInteger(engineParameter("XGrid"));
         Size dampingSteps = ore::data::parseInteger(engineParameter("DampingSteps"));
         bool monotoneVar = ore::data::parseBool(engineParameter("EnforceMonotoneVariance", "", false, "true"));
@@ -176,6 +176,9 @@ protected:
             for(Size i = 0; i < totalSteps; i++)
                 timePoints[timePoints.size() - i - 1] = timePointsArray[i];
             timePoints.insert(std::upper_bound(timePoints.begin(), timePoints.end(), 0.99 / 365), 0.99 / 365);
+            for(auto tp : timePoints) {
+                ALOG(tp);
+            }
             gbsp = getBlackScholesProcess(assetName, ccy, assetClass, timePoints);
         } else {
             gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
