@@ -961,7 +961,12 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
             vector<string> marketFiles = getFilenames(marketFileString, inputPath_);
             string fixingFileString = params_->get("setup", "fixingDataFile");
             vector<string> fixingFiles = getFilenames(fixingFileString, inputPath_);
-            CSVLoader loader(marketFiles, fixingFiles, implyTodaysFixings);
+            vector<string> dividendFiles = {};
+            if (params_->has("setup", "dividendDataFile")) {
+                string dividendFileString = params_->get("setup", "dividendDataFile");
+                dividendFiles = getFilenames(dividendFileString, inputPath_);
+            }
+            CSVLoader loader(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings);
             out_ << "OK" << endl;
             market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs_, conventions_, continueOnError_);
         } else {
