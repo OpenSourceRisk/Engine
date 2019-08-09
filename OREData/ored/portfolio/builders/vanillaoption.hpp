@@ -158,7 +158,7 @@ protected:
         Time expiry = riskFreeRate->dayCounter().yearFraction(riskFreeRate->referenceDate(), expiryDate);
 
         FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
-        Size tGrid = ore::data::parseInteger(engineParameter("TimeGridPerYear")) * expiry;
+        Size tGrid = (Size)(ore::data::parseInteger(engineParameter("TimeGridPerYear")) * expiry);
         Size xGrid = ore::data::parseInteger(engineParameter("XGrid"));
         Size dampingSteps = ore::data::parseInteger(engineParameter("DampingSteps"));
         bool monotoneVar = ore::data::parseBool(engineParameter("EnforceMonotoneVariance", "", false, "true"));
