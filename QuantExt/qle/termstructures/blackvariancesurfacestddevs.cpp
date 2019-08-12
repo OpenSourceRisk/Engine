@@ -108,7 +108,7 @@ namespace QuantExt {
             Date tmpDate = termStructre->referenceDate() + expiries[j]; // todo: is the reference date of this termstructure as the asof date
             Time tmpTime = termStructre->timeFromReference(tmpDate);
             for (int i = 0; i < stdDevPoints.size(); i++) {
-                Real tmpStrike = forwardCurve(tmpTime) * exp(atmVolCurve(j)*sqrt(j)*stdDevPoints[i]);
+                Real tmpStrike = forwardCurve(tmpTime) * exp(atmVolCurve(tmpTime)*sqrt(tmpTime)*stdDevPoints[i]);
                 Volatility vol = termStructre->blackVol(tmpDate, tmpStrike, true);
                 boost::shared_ptr<QuantLib::SimpleQuote> q(new SimpleQuote(vol));
                 quotesToPopulate[i][j] = Handle<Quote>(q);
