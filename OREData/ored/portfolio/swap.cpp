@@ -138,10 +138,22 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
                 // First coupon a plain floating rate coupon i.e. it is not FX linked because the initial notional is known.
                 // But, we need to add it to additionalLegs_ so that we don't miss the first coupon's ibor fixing
-                additionalLegs_[floatIndex].push_back(legs_[i][0]);
 
-                // All but first coupon are FX linked floating rate coupons
-                for (Size j = 1; j < legs_[i].size(); ++j) {
+
+                //if the first coupon is forward starting and the notional value is unknown
+                //then this coupon should be fxlinked 
+                // All other coupons are FX linked floating rate coupons
+                Size startLoop = 0;
+                Schedule schedule = makeSchedule(legData_[i].schedule());
+                if (legData_[i].notionals().size() == 0 && schedule.startDate() > Settings::instance().evaluationDate()) {
+                    DLOG("Building forward starting FX Resettable with unknown first notional");
+                } else {
+                    LOG("Building FX Resettable with known first notional");
+                    additionalLegs_[floatIndex].push_back(legs_[i][0]);
+                    startLoop = 1;
+                }
+
+                for (Size j = startLoop; j < legs_[i].size(); ++j) {
                     boost::shared_ptr<FloatingRateCoupon> coupon =
                         boost::dynamic_pointer_cast<FloatingRateCoupon>(legs_[i][j]);
                     additionalLegs_[floatIndex].push_back(coupon);
