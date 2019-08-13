@@ -330,7 +330,10 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
 }
 
 boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() const {
-    return boost::make_shared<TradeFactory>(getExtraTradeBuilders());
+    boost::shared_ptr<TradeFactory> tf = boost::make_shared<TradeFactory>();
+    auto extraBuilders = getExtraTradeBuilders(tf);
+    tf->addExtraBuilders(extraBuilders);
+    return tf;
 }
 
 boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
