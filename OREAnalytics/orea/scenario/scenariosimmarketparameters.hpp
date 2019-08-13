@@ -140,6 +140,7 @@ public:
     bool fxVolIsSurface(const std::string& ccypair) const;
     bool fxVolIsSurface() const;
     bool hasFxPairWithSurface() const { return hasFxPairWithSurface_; }
+    bool useMoneyness() const { return useMoneyness_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
     const string& fxVolDayCounter(const string& key) const;
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
@@ -276,6 +277,7 @@ public:
     void setFxVolIsSurface(const string& ccypair, bool val);
     void setFxVolIsSurface(bool val);
     void setHasFxPairWithSurface(bool val);
+    void setUseMoneyness(bool val);
     void setFxVolExpiries(const vector<Period>& expiries);
     void setFxVolDecayMode(const string& val);
     void setFxVolCcyPairs(vector<string> names);
@@ -407,6 +409,7 @@ private:
 
     // FX volatility data
     bool hasFxPairWithSurface_;
+    bool useMoneyness_;
     map<std::string, bool> fxVolIsSurface_;
     vector<Period> fxVolExpiries_;
     map<string, string> fxVolDayCounters_;

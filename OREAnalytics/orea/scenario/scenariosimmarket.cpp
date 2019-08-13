@@ -46,6 +46,7 @@
 
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/termstructures/blackvariancesurfacestddevs.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
@@ -876,6 +877,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             // FIXME hardcoded in todaysmarket
                             DayCounter dc = ore::data::parseDayCounter(parameters->fxVolDayCounter(name));
                             vector<Time> times;
+                            vector<Date> dates;
 
                             // Attempt to get the relevant yield curves from the initial market  
                             Handle<YieldTermStructure> forTS = getYieldCurve(foreignTsId, todaysMarketParams, configuration, initMarket);
@@ -890,26 +892,66 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 domTS = initMarket->discountCurve(domCcy, configuration);
                             }
 
-                            for (Size i = 0; i < n; i++) {
-                                Date date = asof_ + parameters->fxVolExpiries()[i];
+                            // get vol matrix to feed to surface
+                            if (parameters->useMoneyness() || !(parameters->fxVolIsSurface(name))) {    // if moneyness or ATM
+                                for (Size i = 0; i < n; i++) {
+                                    Date date = asof_ + parameters->fxVolExpiries()[i];
 
-                                times.push_back(wrapper->timeFromReference(date));
+                                    times.push_back(wrapper->timeFromReference(date));
 
-                                for (Size j = 0; j < m; j++) {
-                                    Size idx = j * n + i;
-                                    Real mon = parameters->fxVolMoneyness(name)[j]; // 0 if ATM
+                                    for (Size j = 0; j < m; j++) {
+                                        Size idx = j * n + i;
+                                        Real mon = parameters->fxVolMoneyness(name)[j]; // 0 if ATM
 
-                                    // strike (assuming forward prices)
-                                    Real k = spot->value() * mon * forTS->discount(date) / domTS->discount(date);
-                                    Volatility vol = wrapper->blackVol(date, k, true);
-                                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
-                                    simDataTmp.emplace(std::piecewise_construct,
-                                                       std::forward_as_tuple(param.first, name, idx),
-                                                       std::forward_as_tuple(q));
-                                    quotes[j][i] = Handle<Quote>(q);
+                                        // strike (assuming forward prices)
+                                        Real k = spot->value() * mon * forTS->discount(date) / domTS->discount(date);
+                                        Volatility vol = wrapper->blackVol(date, k, true);
+                                        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                                        simDataTmp.emplace(std::piecewise_construct,
+                                            std::forward_as_tuple(param.first, name, idx),
+                                            std::forward_as_tuple(q));
+                                        quotes[j][i] = Handle<Quote>(q);
+                                    }
+                                }
+                            } else {  // if stdDevPoints
+
+                                // times (for fwds)
+                                for (Size i = 0; i < n; i++) {
+                                    Date date = asof_ + parameters->fxVolExpiries()[i];
+                                    times.push_back(wrapper->timeFromReference(date));
+                                    dates.push_back(date);
+                                }
+
+                                //forwards
+                                vector<Real> fwds;
+                                vector<Real> atmVols;
+                                for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
+                                    fwds.push_back(spot->value() * forTS->discount(times[i]) / domTS->discount(times[i]));
+                                    atmVols.push_back(wrapper->blackVol(dates[i], spot->value()));
+                                }
+
+                                // interpolations
+                                Interpolation forwardCurve = Linear().interpolate(times.begin(), times.end(), fwds.begin());
+                                Interpolation atmVolCurve = Linear().interpolate(times.begin(), times.end(), atmVols.begin());
+
+                                // populate quotes
+                                BlackVarianceSurfaceStdDevs::populateVolMatrix(wrapper, quotes, parameters->fxVolExpiries(), parameters->fxVolMoneyness(name), forwardCurve, atmVolCurve);
+
+                                // sort out simDataTemp
+                                for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
+                                    for (Size j = 0; j < parameters->fxVolMoneyness(name).size(); j++) {
+                                        Size idx = j * n + i;
+                                        boost::shared_ptr<Quote> q = *(quotes[j][i]);
+                                        boost::shared_ptr<SimpleQuote> sq = boost::dynamic_pointer_cast<SimpleQuote>(q);
+                                        QL_REQUIRE(sq, "no, problem");
+                                        simDataTmp.emplace(std::piecewise_construct,
+                                            std::forward_as_tuple(param.first, name, idx),
+                                            std::forward_as_tuple(sq)); // this is garbage!
+                                    }
                                 }
                             }
-
+                            
+                            // build surface
                             boost::shared_ptr<BlackVolTermStructure> fxVolCurve;
                             if (parameters->fxVolIsSurface(name)) {
 
@@ -926,12 +968,19 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     domTS = discountCurve(domCcy);
 
                                 }
-
                                 bool stickyStrike = true;
                                 bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
-                                fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
-                                    new BlackVarianceSurfaceMoneynessForward(cal, spot, times, parameters->fxVolMoneyness(name),
-                                                                             quotes, dc, forTS, domTS, stickyStrike, flatExtrapolation));
+
+                                if (parameters->useMoneyness()) {
+                                    fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
+                                        new BlackVarianceSurfaceMoneynessForward(cal, spot, times, parameters->fxVolMoneyness(name),
+                                            quotes, dc, forTS, domTS, stickyStrike, flatExtrapolation));
+                                } else {
+                                    fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
+                                        new BlackVarianceSurfaceStdDevs(cal, spot, times, parameters->fxVolMoneyness(name), quotes, 
+                                            dc, forTS, domTS, stickyStrike, flatExtrapolation));
+                                }
+                                
                             } else {
                                 fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
                                     0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false));

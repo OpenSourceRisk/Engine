@@ -152,6 +152,7 @@ void ScenarioSimMarketParameters::setDefaults() {
     fxVolIsSurface_[""] = false;
     fxMoneyness_[""] = {0.0};
     hasFxPairWithSurface_ = false;
+    useMoneyness_ = false; // moneyness vs stdDevs - default to standard deviations
 }
 
 void ScenarioSimMarketParameters::reset() {
@@ -383,6 +384,10 @@ void ScenarioSimMarketParameters::setFxVolIsSurface(bool val) {
 
 void ScenarioSimMarketParameters::setHasFxPairWithSurface(bool val) { 
     hasFxPairWithSurface_ = val; 
+}
+
+void ScenarioSimMarketParameters::setUseMoneyness(bool val) {
+    useMoneyness_ = val;
 }
 
 void ScenarioSimMarketParameters::setFxVolExpiries(const vector<Period>& expiries) { 
@@ -1025,8 +1030,22 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         XMLNode* fxSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
         if (fxSurfaceNode) {
             hasFxPairWithSurface_ = true;
-            for (XMLNode* child = XMLUtils::getChildNode(fxSurfaceNode, "Moneyness"); child;
-                 child = XMLUtils::getNextSibling(child)) {
+            XMLNode* moneynessNode = XMLUtils::getChildNode(fxSurfaceNode, "Moneyness");
+            XMLNode* stdDevsNode = XMLUtils::getChildNode(fxSurfaceNode, "StandardDeviations");
+            string strikeDimension;
+            if (moneynessNode) {
+                strikeDimension = "Moneyness";
+                useMoneyness_ = true;
+            }
+            else if (stdDevsNode) {
+                strikeDimension = "StandardDeviations";
+                useMoneyness_ = false;
+            }
+            else {
+                QL_FAIL("Moneyness or StandardDeviations need to be specified in surface of the FxVolatilities config " );
+            }
+            for (XMLNode* child = XMLUtils::getChildNode(fxSurfaceNode, strikeDimension); child;
+                child = XMLUtils::getNextSibling(child)) {
                 string label = XMLUtils::getAttribute(child, "ccyPair"); // will be "" if no attr
                 fxMoneyness_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
                 fxVolIsSurface_[label] = true;
@@ -1409,14 +1428,15 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         if (hasFxPairWithSurface_) {
             XMLNode* surfaceNode = XMLUtils::addChild(doc, fxVolatilitiesNode, "Surface");
             map<string, vector<Real>>::const_iterator it;
+            string useMon = useMoneyness_ ? "Moneyness" : "StandardDeviations";
             for (it = fxMoneyness_.begin(); it != fxMoneyness_.end(); it++) {
                 if (it->first == "") {
                     // only print default moneyness if it's not ATM
                     if (fxMoneyness_[""].size() > 1 || !(close(fxMoneyness_[""][0], 0.0) || close(fxMoneyness_[""][0], 1.0))) {
-                        XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first]); // default not atm
+                        XMLUtils::addGenericChildAsList(doc, surfaceNode, useMon, fxMoneyness_[it->first]); // default not atm
                     }
                 } else {
-                    XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first], "ccyPair",
+                    XMLUtils::addGenericChildAsList(doc, surfaceNode, useMon, fxMoneyness_[it->first], "ccyPair",
                                                     it->first);
                 }
             }
