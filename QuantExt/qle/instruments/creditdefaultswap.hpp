@@ -104,7 +104,8 @@ public:
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
                       bool paysAtDefaultTime = true, const Date& protectionStart = Date(),
                       const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
-                      const DayCounter& lastPeriodDayCounter = DayCounter());
+                      const DayCounter& lastPeriodDayCounter = DayCounter(),
+                      const Real price = Null<Real>());
     //! CDS quoted as upfront and running spread
     /*! @param side  Whether the protection is bought or sold.
         @param notional  Notional value
@@ -127,12 +128,14 @@ public:
         @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to
                                      allow for possibility of including maturity date in the last
                                      period's coupon accrual which is standard.
+        @param price Price for running spread calculation.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate upfront, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
                       bool paysAtDefaultTime = true, const Date& protectionStart = Date(),
                       const Date& upfrontDate = Date(), const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
-                      const DayCounter& lastPeriodDayCounter = DayCounter());
+                      const DayCounter& lastPeriodDayCounter = DayCounter(),
+                      const Real price = Null<Real>());
     //@}
     //! \name Instrument interface
     //@{
@@ -153,6 +156,8 @@ public:
     const Date& protectionStartDate() const;
     //! The last date for which defaults will trigger the contract
     const Date& protectionEndDate() const;
+    const Leg& annuityLeg() const;
+    const Real price() const;
     //@}
     //! \name Results
     //@{
@@ -177,6 +182,7 @@ public:
     Real defaultLegNPV() const;
     Real upfrontNPV() const;
     Real accrualRebateNPV() const;
+    Real priceImpliedSpread() const;
 
     Date maturity() const { return maturity_; }
 
@@ -251,12 +257,15 @@ protected:
     Leg leg_;
     boost::shared_ptr<CashFlow> upfrontPayment_, accrualRebate_;
     Date protectionStart_, maturity_;
+    Leg annuityLeg_;
+    Real price_;
     // results
     mutable Rate fairUpfront_;
     mutable Rate fairSpread_;
     mutable Real couponLegBPS_, couponLegNPV_;
     mutable Real upfrontBPS_, upfrontNPV_;
     mutable Real defaultLegNPV_, accrualRebateNPV_;
+    mutable Real priceImpliedSpread_;
     //! \name Additional interface
     //@{
     virtual boost::shared_ptr<PricingEngine> buildPricingEngine(const Handle<DefaultProbabilityTermStructure>& p,
@@ -279,6 +288,8 @@ public:
     bool paysAtDefaultTime;
     boost::shared_ptr<Claim> claim;
     Date protectionStart, maturity;
+    Leg annuityLeg;
+    Real price;
     void validate() const;
 };
 
@@ -294,6 +305,7 @@ public:
     Real upfrontBPS;
     Real upfrontNPV;
     Real accrualRebateNPV;
+    Real priceImpliedSpread;
     void reset();
 };
 
