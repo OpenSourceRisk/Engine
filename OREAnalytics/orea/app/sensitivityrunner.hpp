@@ -38,11 +38,11 @@ namespace analytics {
 class SensitivityRunner {
 public:
     SensitivityRunner(boost::shared_ptr<Parameters> params,
-                      std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraTradeBuilders = {},
+                      boost::shared_ptr<TradeFactory> tradeFactory = boost::make_shared<TradeFactory>(),
                       std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
                       std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
                       const bool continueOnError = false)
-        : params_(params), extraTradeBuilders_(extraTradeBuilders), extraEngineBuilders_(extraEngineBuilders),
+        : params_(params), tradeFactory_(tradeFactory), extraEngineBuilders_(extraEngineBuilders),
           extraLegBuilders_(extraLegBuilders), continueOnError_(continueOnError) {}
 
     virtual ~SensitivityRunner(){};
@@ -62,7 +62,7 @@ public:
 
 protected:
     boost::shared_ptr<Parameters> params_;
-    std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraTradeBuilders_;
+    boost::shared_ptr<TradeFactory> tradeFactory_;
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
     const bool continueOnError_;
