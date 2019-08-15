@@ -130,14 +130,7 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
                                  discountCurve_->discount(arguments.paysAtDefaultTime ? defaultDate : paymentDate);
     }
 
-    if (arguments.price != Null<Real>()) {
-        results.couponLegNPV = results.defaultLegNPV - arguments.price;
-        results.priceImpliedSpread = results.couponLegNPV / riskyAnnuity;
-    } else {
-        results.couponLegNPV = arguments.spread * riskyAnnuity;
-        results.priceImpliedSpread = Null<Real>();
-    }
-    Rate coupon = results.priceImpliedSpread == Null<Real>() ? arguments.spread : results.priceImpliedSpread;
+    results.couponLegNPV = arguments.spread * riskyAnnuity;
 
     Real upfPVO1 = 0.0;
     Real upfrontPayment = 0.0;
@@ -149,7 +142,7 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
             upfrontPayment = arguments.upfrontPayment->amount();
         else
             upfrontPayment = -survivalProbability(arguments.protectionStart) *
-                             riskyAnnuity * (arguments.upfrontStrike - coupon);
+                             riskyAnnuity * (arguments.upfrontStrike - arguments.spread);
         results.upfrontNPV = upfPVO1 * upfrontPayment;
     }
 
@@ -172,7 +165,7 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
     results.errorEstimate = Null<Real>();
 
     if (results.couponLegNPV != 0.0) {
-        results.fairSpread = -results.defaultLegNPV * coupon / (results.couponLegNPV + results.accrualRebateNPV);
+        results.fairSpread = -results.defaultLegNPV * arguments.spread / (results.couponLegNPV + results.accrualRebateNPV);
     } else {
         results.fairSpread = Null<Rate>();
     }

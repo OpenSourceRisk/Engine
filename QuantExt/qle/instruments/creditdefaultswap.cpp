@@ -52,12 +52,10 @@ namespace QuantExt {
 CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate spread, const Schedule& schedule,
                                      BusinessDayConvention convention, const DayCounter& dayCounter,
                                      bool settlesAccrual, bool paysAtDefaultTime, const Date& protectionStart,
-                                     const boost::shared_ptr<Claim>& claim, const DayCounter& lastPeriodDayCounter,
-                                     const Real price)
+                                     const boost::shared_ptr<Claim>& claim, const DayCounter& lastPeriodDayCounter)
     : side_(side), notional_(notional), upfront_(boost::none), runningSpread_(spread), settlesAccrual_(settlesAccrual),
       paysAtDefaultTime_(paysAtDefaultTime), claim_(claim),
-      protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart),
-      price_(price) {
+      protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
     
     QL_REQUIRE((schedule.hasRule() && (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
         protectionStart_ <= schedule[0], "protection can not start after accrual for (pre big bang-) CDS");
@@ -99,11 +97,11 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
                                      const DayCounter& dayCounter, bool settlesAccrual, bool paysAtDefaultTime,
                                      const Date& protectionStart, const Date& upfrontDate,
                                      const boost::shared_ptr<Claim>& claim, const DayCounter& lastPeriodDayCounter,
-                                     const Real upfrontStrike, const Real price)
+                                     const Real upfrontStrike)
     : side_(side), notional_(notional), upfront_(upfront), runningSpread_(runningSpread),
       settlesAccrual_(settlesAccrual), paysAtDefaultTime_(paysAtDefaultTime), claim_(claim),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart),
-      upfrontStrike_(upfrontStrike), price_(price) {
+      upfrontStrike_(upfrontStrike) {
 
     QL_REQUIRE((schedule.hasRule() && (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
         protectionStart_ <= schedule[0], "protection can not start after accrual for (pre big bang-) CDS");
@@ -191,7 +189,6 @@ void CreditDefaultSwap::setupArguments(PricingEngine::arguments* args) const {
     arguments->maturity = maturity_;
     arguments->annuityLeg = annuityLeg_;
     arguments->upfrontStrike = upfrontStrike_;
-    arguments->price = price_;
 }
 
 void CreditDefaultSwap::fetchResults(const PricingEngine::results* r) const {
@@ -208,7 +205,6 @@ void CreditDefaultSwap::fetchResults(const PricingEngine::results* r) const {
     upfrontNPV_ = results->upfrontNPV;
     upfrontBPS_ = results->upfrontBPS;
     accrualRebateNPV_ = results->accrualRebateNPV;
-    priceImpliedSpread_ = results->priceImpliedSpread;
 }
 
 Rate CreditDefaultSwap::fairUpfront() const {
@@ -257,12 +253,6 @@ Real CreditDefaultSwap::upfrontBPS() const {
     calculate();
     QL_REQUIRE(upfrontBPS_ != Null<Real>(), "upfront BPS not available");
     return upfrontBPS_;
-}
-
-Real CreditDefaultSwap::priceImpliedSpread() const {
-    calculate();
-    QL_REQUIRE(priceImpliedSpread_ != Null<Real>(), "price implied spread not available");
-    return priceImpliedSpread_;
 }
 
 namespace {
@@ -334,8 +324,6 @@ const Date& CreditDefaultSwap::protectionEndDate() const {
 const Leg& CreditDefaultSwap::annuityLeg() const { return annuityLeg_; }
 
 const Real CreditDefaultSwap::upfrontStrike() const { return upfrontStrike_; }
-
-const Real CreditDefaultSwap::price() const { return price_; }
 
 CreditDefaultSwap::arguments::arguments() : side(Protection::Side(-1)), notional(Null<Real>()), spread(Null<Rate>()) {}
 
