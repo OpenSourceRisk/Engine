@@ -91,7 +91,8 @@ private:
     boost::shared_ptr<QuantLib::StrippedOptionlet> transform(const QuantExt::OptionletStripper& os) const;
 
     //! Create a stripped optionlet curve from ATM optionlet dates and optionlet vols
-    boost::shared_ptr<QuantLib::StrippedOptionlet> transform(const std::vector<QuantLib::Date>& dates,
+    boost::shared_ptr<QuantLib::StrippedOptionlet> transform(
+        const QuantLib::Date& asof, std::vector<QuantLib::Date> dates,
         const std::vector<QuantLib::Volatility>& volatilities, QuantLib::Natural settleDays, 
         const QuantLib::Calendar& cal, QuantLib::BusinessDayConvention bdc,
         boost::shared_ptr<QuantLib::IborIndex> iborIndex, const QuantLib::DayCounter& dc,
