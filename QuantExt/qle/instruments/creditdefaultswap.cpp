@@ -99,11 +99,11 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
                                      const DayCounter& dayCounter, bool settlesAccrual, bool paysAtDefaultTime,
                                      const Date& protectionStart, const Date& upfrontDate,
                                      const boost::shared_ptr<Claim>& claim, const DayCounter& lastPeriodDayCounter,
-                                     const Real price)
+                                     const Real upfrontStrike, const Real price)
     : side_(side), notional_(notional), upfront_(upfront), runningSpread_(runningSpread),
       settlesAccrual_(settlesAccrual), paysAtDefaultTime_(paysAtDefaultTime), claim_(claim),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart),
-      price_(price) {
+      upfrontStrike_(upfrontStrike), price_(price) {
 
     QL_REQUIRE((schedule.hasRule() && (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
         protectionStart_ <= schedule[0], "protection can not start after accrual for (pre big bang-) CDS");
@@ -190,6 +190,7 @@ void CreditDefaultSwap::setupArguments(PricingEngine::arguments* args) const {
     arguments->protectionStart = protectionStart_;
     arguments->maturity = maturity_;
     arguments->annuityLeg = annuityLeg_;
+    arguments->upfrontStrike = upfrontStrike_;
     arguments->price = price_;
 }
 
@@ -331,6 +332,8 @@ const Date& CreditDefaultSwap::protectionEndDate() const {
 }
 
 const Leg& CreditDefaultSwap::annuityLeg() const { return annuityLeg_; }
+
+const Real CreditDefaultSwap::upfrontStrike() const { return upfrontStrike_; }
 
 const Real CreditDefaultSwap::price() const { return price_; }
 

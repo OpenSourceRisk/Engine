@@ -135,7 +135,7 @@ public:
                       bool paysAtDefaultTime = true, const Date& protectionStart = Date(),
                       const Date& upfrontDate = Date(), const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
                       const DayCounter& lastPeriodDayCounter = DayCounter(),
-                      const Real price = Null<Real>());
+                      const Real upfrontStrike = Null<Real>(), const Real price = Null<Real>());
     //@}
     //! \name Instrument interface
     //@{
@@ -157,6 +157,7 @@ public:
     //! The last date for which defaults will trigger the contract
     const Date& protectionEndDate() const;
     const Leg& annuityLeg() const;
+    const Real upfrontStrike() const;
     const Real price() const;
     //@}
     //! \name Results
@@ -258,6 +259,7 @@ protected:
     boost::shared_ptr<CashFlow> upfrontPayment_, accrualRebate_;
     Date protectionStart_, maturity_;
     Leg annuityLeg_;
+    Real upfrontStrike_;
     Real price_;
     // results
     mutable Rate fairUpfront_;
@@ -289,6 +291,7 @@ public:
     boost::shared_ptr<Claim> claim;
     Date protectionStart, maturity;
     Leg annuityLeg;
+    Real upfrontStrike;
     Real price;
     void validate() const;
 };

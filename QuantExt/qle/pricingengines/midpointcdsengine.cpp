@@ -82,14 +82,6 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
     Date effectiveProtectionStart = arguments.protectionStart > refDate ? arguments.protectionStart : refDate;
     Probability nonKnockOut = survivalProbability(effectiveProtectionStart);
 
-    Real upfPVO1 = 0.0;
-    results.upfrontNPV = 0.0;
-    if (arguments.upfrontPayment &&
-        !arguments.upfrontPayment->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
-        upfPVO1 = nonKnockOut * discountCurve_->discount(arguments.upfrontPayment->date());
-        results.upfrontNPV = upfPVO1 * arguments.upfrontPayment->amount();
-    }
-
     results.accrualRebateNPV = 0.;
     if (arguments.accrualRebate && !arguments.accrualRebate->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
         results.accrualRebateNPV =
@@ -145,6 +137,21 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
         results.couponLegNPV = arguments.spread * riskyAnnuity;
         results.priceImpliedSpread = Null<Real>();
     }
+    Rate coupon = results.priceImpliedSpread == Null<Real>() ? arguments.spread : results.priceImpliedSpread;
+
+    Real upfPVO1 = 0.0;
+    Real upfrontPayment = 0.0;
+    results.upfrontNPV = 0.0;
+    if (arguments.upfrontPayment &&
+        !arguments.upfrontPayment->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+        upfPVO1 = nonKnockOut * discountCurve_->discount(arguments.upfrontPayment->date());
+        if (arguments.upfrontStrike == Null<Real>())
+            upfrontPayment = arguments.upfrontPayment->amount();
+        else
+            upfrontPayment = -survivalProbability(arguments.protectionStart) *
+                             riskyAnnuity * (arguments.upfrontStrike - coupon);
+        results.upfrontNPV = upfPVO1 * upfrontPayment;
+    }
 
     Real upfrontSign = 1.0;
     switch (arguments.side) {
@@ -165,10 +172,7 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
     results.errorEstimate = Null<Real>();
 
     if (results.couponLegNPV != 0.0) {
-        results.fairSpread =
-            -results.defaultLegNPV *
-            (results.priceImpliedSpread == Null<Real>() ? arguments.spread : results.priceImpliedSpread) /
-            (results.couponLegNPV + results.accrualRebateNPV);
+        results.fairSpread = -results.defaultLegNPV * coupon / (results.couponLegNPV + results.accrualRebateNPV);
     } else {
         results.fairSpread = Null<Rate>();
     }
@@ -190,7 +194,7 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
     }
 
     if (arguments.upfront && *arguments.upfront != 0.0) {
-        results.upfrontBPS = results.upfrontNPV * basisPoint / (*arguments.upfront);
+        results.upfrontBPS = results.upfrontNPV * basisPoint / (upfrontPayment / arguments.notional);
     } else {
         results.upfrontBPS = Null<Rate>();
     }
