@@ -1,13 +1,13 @@
 \subsubsection{Commodity Forward}
 
-The \lstinline!CommodityForwardData!  node is the trade data container for the commodity forward trade type.   The structure of an example \lstinline!CommodityForwardData! node for an equity option is shown in 
+The \lstinline!CommodityForwardData!  node is the trade data container for the  {\tt CommodityForward} trade type.   The structure of an example \lstinline!CommodityForwardData! node for a commodity option is shown in 
 Listing \ref{lst:comfwd_data}.
 
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <CommodityForwardData>
-  <LongShort>Long</LongShort>
+  <Position>Long</Position>
   <Maturity>2018-06-30</Maturity>
   <Name>COMDTY_GOLD_USD</Name>
   <Currency>USD</Currency>
@@ -22,7 +22,7 @@ Listing \ref{lst:comfwd_data}.
 The meanings and allowable values of the elements in the \lstinline!CommodityForwardData!  node follow below.
 
 \begin{itemize}
-	\item LongShort: Defines whether the underlying commodity will be bought (long) or sold (short). \\
+	\item Position: Defines whether the underlying commodity will be bought (long) or sold (short). \\
 	Allowable values: \emph{Long, Short}
 	\item Maturity: The maturity date of the forward contract, i.e. the date when the underlying commodity will be bought/sold. \\
 	Allowable values: Any date string, see \lstinline!Date! in Table \ref{tab:allow_stand_data}.
