@@ -27,6 +27,7 @@
 #include <ql/math/array.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/matrixutilities/choleskydecomposition.hpp>
+#include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/math/randomnumbers/rngtraits.hpp>
 #include <ql/utilities/disposable.hpp>
 
