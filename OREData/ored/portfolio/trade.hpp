@@ -34,10 +34,10 @@
 
 namespace ore {
 namespace data {
-using std::string;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
+using ore::data::XMLSerializable;
 using QuantLib::Date;
+using std::string;
 
 //! Trade base class
 /*! Instrument interface to pricing and risk applications
@@ -61,16 +61,16 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&) = 0;
 
-    /*! Return the fixings that will be requested in order to price this Trade given the \p settlementDate. 
-        
-        If the \p settlementDate is not provided, the current evaluation date is taken as the settlement date. 
+    /*! Return the fixings that will be requested in order to price this Trade given the \p settlementDate.
+        
+        If the \p settlementDate is not provided, the current evaluation date is taken as the settlement date.
         If a Trade does not have any fixings, this method will return an empty map.
         The map key is the ORE name of the index and the map value is the set of fixing dates.
 
         \warning This method will return an empty map if the Trade has not been built.
     */
-    virtual std::map<std::string, std::set<QuantLib::Date>> fixings(
-        const QuantLib::Date& settlementDate = QuantLib::Date()) const = 0;
+    virtual std::map<std::string, std::set<QuantLib::Date>>
+    fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const = 0;
 
     //! \name Serialisation
     //@{
@@ -91,8 +91,17 @@ public:
         tradeActions_.clear();
     }
 
+    //! \name Setters
+    //@{
     //! Set the trade id
     string& id() { return id_; }
+
+    //! Set the envelope with counterparty and portfolio info
+    Envelope& envelope() { return envelope_; }
+
+    //! Set the trae actions
+    TradeActions& tradeActions() { return tradeActions_; }
+    //@}
 
     //! \name Inspectors
     //@{
@@ -104,7 +113,7 @@ public:
 
     const set<string>& portfolioIds() const { return envelope().portfolioIds(); }
 
-    const TradeActions& tradeActions() { return tradeActions_; }
+    const TradeActions& tradeActions() const { return tradeActions_; }
 
     const boost::shared_ptr<InstrumentWrapper>& instrument() { return instrument_; }
 
@@ -123,8 +132,13 @@ public:
     const Date& maturity() { return maturity_; }
     //@}
 
+    //! \name Utility
+    //@{
+    //! Utility to validate that everything that needs to be set in this base class is actually set
+    void validate() const;
+    //@}
+
 protected:
-    // protected members, to be set by build functions of derived classes
     string tradeType_; // class name of the derived class
     boost::shared_ptr<InstrumentWrapper> instrument_;
     std::vector<QuantLib::Leg> legs_;
