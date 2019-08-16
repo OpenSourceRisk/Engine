@@ -99,7 +99,7 @@ public:
     //! Set the envelope with counterparty and portfolio info
     Envelope& envelope() { return envelope_; }
 
-    //! Set the trae actions
+    //! Set the trade actions
     TradeActions& tradeActions() { return tradeActions_; }
     //@}
 
