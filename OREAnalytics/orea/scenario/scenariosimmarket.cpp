@@ -866,9 +866,15 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<BlackVolTermStructure> fvh;
 
                         if (param.second.first) {
-                            LOG("Simulating FX Vols (BlackVarianceCurve3) for " << name);
+                            LOG("Simulating FX Vols for " << name);
                             Size n = parameters->fxVolExpiries().size();
-                            Size m = parameters->fxVolMoneyness(name).size();
+                            Size m;
+                            if (parameters->useMoneyness(name)) {
+                                m = parameters->fxVolMoneyness(name).size();
+                            }
+                            else {
+                                m = parameters->fxVolStdDevs(name).size();
+                            }
                             vector<vector<Handle<Quote>>> quotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
                             Calendar cal = wrapper->calendar();
                             if (cal.empty()) {
@@ -893,7 +899,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
 
                             // get vol matrix to feed to surface
-                            if (parameters->useMoneyness() || !(parameters->fxVolIsSurface(name))) {    // if moneyness or ATM
+                            if (parameters->useMoneyness(name) || !(parameters->fxVolIsSurface(name))) {    // if moneyness or ATM
                                 for (Size i = 0; i < n; i++) {
                                     Date date = asof_ + parameters->fxVolExpiries()[i];
 
@@ -935,18 +941,18 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 Interpolation atmVolCurve = Linear().interpolate(times.begin(), times.end(), atmVols.begin());
 
                                 // populate quotes
-                                BlackVarianceSurfaceStdDevs::populateVolMatrix(wrapper, quotes, parameters->fxVolExpiries(), parameters->fxVolMoneyness(name), forwardCurve, atmVolCurve);
+                                BlackVarianceSurfaceStdDevs::populateVolMatrix(wrapper, quotes, parameters->fxVolExpiries(), parameters->fxVolStdDevs(name), forwardCurve, atmVolCurve);
 
                                 // sort out simDataTemp
                                 for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
-                                    for (Size j = 0; j < parameters->fxVolMoneyness(name).size(); j++) {
+                                    for (Size j = 0; j < parameters->fxVolStdDevs(name).size(); j++) {
                                         Size idx = j * n + i;
                                         boost::shared_ptr<Quote> q = *(quotes[j][i]);
                                         boost::shared_ptr<SimpleQuote> sq = boost::dynamic_pointer_cast<SimpleQuote>(q);
                                         QL_REQUIRE(sq, "no, problem");
                                         simDataTmp.emplace(std::piecewise_construct,
                                             std::forward_as_tuple(param.first, name, idx),
-                                            std::forward_as_tuple(sq)); // this is garbage!
+                                            std::forward_as_tuple(sq)); 
                                     }
                                 }
                             }
@@ -971,13 +977,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 bool stickyStrike = true;
                                 bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
 
-                                if (parameters->useMoneyness()) {
+                                if (parameters->useMoneyness()) { // moneyness
                                     fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
                                         new BlackVarianceSurfaceMoneynessForward(cal, spot, times, parameters->fxVolMoneyness(name),
                                             quotes, dc, forTS, domTS, stickyStrike, flatExtrapolation));
-                                } else {
+                                } else { // standard deviations
                                     fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
-                                        new BlackVarianceSurfaceStdDevs(cal, spot, times, parameters->fxVolMoneyness(name), quotes, 
+                                        new BlackVarianceSurfaceStdDevs(cal, spot, times, parameters->fxVolStdDevs(name), quotes, 
                                             dc, forTS, domTS, stickyStrike, flatExtrapolation));
                                 }
                                 

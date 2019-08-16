@@ -151,8 +151,9 @@ void ScenarioSimMarketParameters::setDefaults() {
     // Default fxVol params
     fxVolIsSurface_[""] = false;
     fxMoneyness_[""] = {0.0};
+    fxStandardDevs_[""] = { 0.0 };
     hasFxPairWithSurface_ = false;
-    useMoneyness_ = false; // moneyness vs stdDevs - default to standard deviations
+    useMoneyness_[""] = true; // moneyness vs stdDevs - default to moneyness
 }
 
 void ScenarioSimMarketParameters::reset() {
@@ -276,12 +277,28 @@ const vector<Real>& ScenarioSimMarketParameters::fxVolMoneyness() const {
     return fxVolMoneyness("");
 }
 
+const vector<Real>& ScenarioSimMarketParameters::fxVolStdDevs(const string& ccypair) const {
+    return lookup(fxStandardDevs_, ccypair);
+}
+
+const vector<Real>& ScenarioSimMarketParameters::fxVolStdDevs() const {
+    return fxVolStdDevs("");
+}
+
 bool ScenarioSimMarketParameters::fxVolIsSurface(const string& ccypair) const {
     return lookup(fxVolIsSurface_, ccypair);
 }
 
 bool ScenarioSimMarketParameters::fxVolIsSurface() const {
     return fxVolIsSurface("");
+}
+
+bool ScenarioSimMarketParameters::useMoneyness(const string& ccypair) const {
+    return lookup(useMoneyness_, ccypair);
+}
+
+bool ScenarioSimMarketParameters::useMoneyness() const {
+    return useMoneyness("");
 }
 
 const vector<Real>& ScenarioSimMarketParameters::commodityVolMoneyness(const string& commodityName) const {
@@ -386,8 +403,12 @@ void ScenarioSimMarketParameters::setHasFxPairWithSurface(bool val) {
     hasFxPairWithSurface_ = val; 
 }
 
+void ScenarioSimMarketParameters::setUseMoneyness(const string& key, bool val) {
+    useMoneyness_[key] = val;
+}
+
 void ScenarioSimMarketParameters::setUseMoneyness(bool val) {
-    useMoneyness_ = val;
+    useMoneyness_[""] = val;
 }
 
 void ScenarioSimMarketParameters::setFxVolExpiries(const vector<Period>& expiries) { 
@@ -404,6 +425,14 @@ void ScenarioSimMarketParameters::setFxVolMoneyness(const string& ccypair, const
 
 void ScenarioSimMarketParameters::setFxVolMoneyness(const vector<Real>& moneyness) { 
     fxMoneyness_[""] = moneyness; 
+}
+
+void ScenarioSimMarketParameters::setFxVolStdDevs(const string& ccypair, const vector<Real>& moneyness) {
+    fxStandardDevs_[ccypair] = moneyness;
+}
+
+void ScenarioSimMarketParameters::setFxVolStdDevs(const vector<Real>& moneyness) {
+    fxStandardDevs_[""] = moneyness;
 }
 
 void ScenarioSimMarketParameters::setSwapVolDayCounters(const string& key, const string& s) {
@@ -627,6 +656,7 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         cdsVolExpiries_ != rhs.cdsVolExpiries_ || cdsVolDayCounters_ != rhs.cdsVolDayCounters_ ||
         cdsVolDecayMode_ != rhs.cdsVolDecayMode_ || equityDividendTenors_ != rhs.equityDividendTenors_ ||
         fxVolIsSurface_ != rhs.fxVolIsSurface_ ||
+        useMoneyness_ != rhs.useMoneyness_ ||
         fxVolExpiries_ != rhs.fxVolExpiries_ || fxVolDayCounters_ != rhs.fxVolDayCounters_ ||
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || equityVolExpiries_ != rhs.equityVolExpiries_ ||
         equityVolDayCounters_ != rhs.equityVolDayCounters_ || equityVolDecayMode_ != rhs.equityVolDecayMode_ ||
@@ -1030,25 +1060,19 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         XMLNode* fxSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
         if (fxSurfaceNode) {
             hasFxPairWithSurface_ = true;
-            XMLNode* moneynessNode = XMLUtils::getChildNode(fxSurfaceNode, "Moneyness");
-            XMLNode* stdDevsNode = XMLUtils::getChildNode(fxSurfaceNode, "StandardDeviations");
-            string strikeDimension;
-            if (moneynessNode) {
-                strikeDimension = "Moneyness";
-                useMoneyness_ = true;
-            }
-            else if (stdDevsNode) {
-                strikeDimension = "StandardDeviations";
-                useMoneyness_ = false;
-            }
-            else {
-                QL_FAIL("Moneyness or StandardDeviations need to be specified in surface of the FxVolatilities config " );
-            }
-            for (XMLNode* child = XMLUtils::getChildNode(fxSurfaceNode, strikeDimension); child;
+            for (XMLNode* child = XMLUtils::getChildNode(fxSurfaceNode, "Moneyness"); child;
                 child = XMLUtils::getNextSibling(child)) {
                 string label = XMLUtils::getAttribute(child, "ccyPair"); // will be "" if no attr
                 fxMoneyness_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
                 fxVolIsSurface_[label] = true;
+                useMoneyness_[label] = true;
+            }
+            for (XMLNode* child = XMLUtils::getChildNode(fxSurfaceNode, "StandardDeviations"); child;
+                child = XMLUtils::getNextSibling(child)) {
+                string label = XMLUtils::getAttribute(child, "ccyPair"); // will be "" if no attr
+                fxStandardDevs_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
+                fxVolIsSurface_[label] = true;
+                useMoneyness_[label] = false;
             }
         }
         XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
@@ -1427,17 +1451,30 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLUtils::addGenericChildAsList(doc, fxVolatilitiesNode, "Expiries", fxVolExpiries_);
         if (hasFxPairWithSurface_) {
             XMLNode* surfaceNode = XMLUtils::addChild(doc, fxVolatilitiesNode, "Surface");
+
             map<string, vector<Real>>::const_iterator it;
-            string useMon = useMoneyness_ ? "Moneyness" : "StandardDeviations";
             for (it = fxMoneyness_.begin(); it != fxMoneyness_.end(); it++) {
                 if (it->first == "") {
-                    // only print default moneyness if it's not ATM
-                    if (fxMoneyness_[""].size() > 1 || !(close(fxMoneyness_[""][0], 0.0) || close(fxMoneyness_[""][0], 1.0))) {
-                        XMLUtils::addGenericChildAsList(doc, surfaceNode, useMon, fxMoneyness_[it->first]); // default not atm
+                    // only print default moneyness/stdDevs if it's not ATM (so it was specifically changed)
+                    if (useMoneyness_[it->first]) {
+                        if (fxMoneyness_[""].size() > 1 || !(close(fxMoneyness_[""][0], 0.0) || close(fxMoneyness_[""][0], 1.0))) {
+                            XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first]); // default not atm
+                        }
+                    }
+                    else {
+                        if (fxMoneyness_[""].size() > 1 || !(close(fxMoneyness_[""][0], 0.0))) {
+                            XMLUtils::addGenericChildAsList(doc, surfaceNode, "StandardDeviations", fxStandardDevs_[it->first]); // default not atm
+                        }
                     }
                 } else {
-                    XMLUtils::addGenericChildAsList(doc, surfaceNode, useMon, fxMoneyness_[it->first], "ccyPair",
-                                                    it->first);
+                    if (useMoneyness_[it->first]) {
+                        XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first], "ccyPair",
+                            it->first);
+                    }
+                    else {
+                        XMLUtils::addGenericChildAsList(doc, surfaceNode, "StandardDeviations", fxStandardDevs_[it->first], "ccyPair",
+                            it->first);
+                    }
                 }
             }
         }
