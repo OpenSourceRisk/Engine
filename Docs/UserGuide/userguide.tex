@@ -906,6 +906,7 @@ examples. The particular selection of input files is determined by the 'master' 
   {\tt simulation.xml} & Configuration of simulation model and market\\
   {\tt market.txt} &  Market data snapshot \\
   {\tt fixings.txt} &  Index fixing history \\
+  {\tt dividends.txt} &  Dividends history \\
   {\tt curveconfig.xml} & Curve and term structure composition from individual market instruments\\
   {\tt conventions.xml} & Market conventions for all market data points\\
   {\tt todaysmarket.xml} &  Configuration of the market composition, relevant for the pricing of the given portfolio as
@@ -2079,6 +2080,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="logMask">255</Parameter>
   <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
   <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
+  <Parameter name="dividendDataFile">../../Input/dividends_20160205.txt</Parameter> <!-- Optional -->
   <Parameter name="implyTodaysFixings">Y</Parameter>
   <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
   <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
@@ -2105,7 +2107,7 @@ Parameter {\tt logMask} determines the verbosity of log file output. Log message
 internally labelled as Alert, Critical, Error, Warning, Notice, Debug, associated with logMask values 1, 2, 4, 8, ..., 64. 
 The logMask allows filtering subsets of these categories and controlling the verbosity of log file output\footnote{by bitwise comparison of the the external logMask value with each message's log level}. LogMask 255 ensures maximum verbosity. \\
 
-When ORE starts, it will initialise today's market, i.e. load market data and fixings, and build all term structures as
+When ORE starts, it will initialise today's market, i.e. load market data, fixings and dividends, and build all term structures as
 specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the trades in {\tt portfolio.xml} and link them with
 pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt implyTodaysFixings} is set to Y, today's
 fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as e.g. in
@@ -4580,6 +4582,11 @@ Listing \ref{lst:correlation_configuration} shows the configuration of the Corre
 %\section{Fixing History}
 %========================================================
 \include{fixingdata}
+
+%========================================================
+%\section{Dividend History}
+%========================================================
+\include{dividenddata}
 
 \newpage
 \begin{appendix}
