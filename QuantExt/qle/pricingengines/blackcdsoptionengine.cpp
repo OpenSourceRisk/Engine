@@ -61,7 +61,7 @@ Real BlackCdsOptionEngine::defaultProbability(const Date& d) const { return prob
 
 void BlackCdsOptionEngine::calculate() const {
     BlackCdsOptionEngineBase::calculate(*arguments_.swap, arguments_.exercise->dates().front(), arguments_.knocksOut,
-                                        results_, probability_->referenceDate(), arguments_.upfrontStrike);
+                                        results_, termStructure_->referenceDate(), arguments_.upfrontStrike);
 }
 
 BlackCdsOptionEngineBase::BlackCdsOptionEngineBase(const Handle<YieldTermStructure>& termStructure,
