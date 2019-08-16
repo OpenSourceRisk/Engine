@@ -36,6 +36,7 @@
 
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 
+#include <ql/cashflows/simplecashflow.hpp>
 #include <ql/exercise.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/quote.hpp>
@@ -45,8 +46,10 @@ namespace QuantExt {
 
 BlackCdsOptionEngine::BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>& probability,
                                            Real recoveryRate, const Handle<YieldTermStructure>& termStructure,
-                                           const Handle<BlackVolTermStructure>& volatility)
-    : BlackCdsOptionEngineBase(termStructure, volatility), probability_(probability), recoveryRate_(recoveryRate) {
+                                           const Handle<BlackVolTermStructure>& volatility,
+                                           boost::optional<bool> includeSettlementDateFlows)
+    : BlackCdsOptionEngineBase(termStructure, volatility, includeSettlementDateFlows),
+      probability_(probability), recoveryRate_(recoveryRate) {
     registerWith(probability_);
     registerWith(termStructure_);
     registerWith(volatility_);
@@ -58,15 +61,16 @@ Real BlackCdsOptionEngine::defaultProbability(const Date& d) const { return prob
 
 void BlackCdsOptionEngine::calculate() const {
     BlackCdsOptionEngineBase::calculate(*arguments_.swap, arguments_.exercise->dates().front(), arguments_.knocksOut,
-                                        results_);
+                                        results_, probability_->referenceDate(), arguments_.upfrontStrike);
 }
 
 BlackCdsOptionEngineBase::BlackCdsOptionEngineBase(const Handle<YieldTermStructure>& termStructure,
-                                                   const Handle<BlackVolTermStructure>& vol)
-    : termStructure_(termStructure), volatility_(vol) {}
+                                                   const Handle<BlackVolTermStructure>& vol,
+                                                   boost::optional<bool> includeSettlementDateFlows)
+    : termStructure_(termStructure), volatility_(vol), includeSettlementDateFlows_(includeSettlementDateFlows) {}
 
 void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Date& exerciseDate, const bool knocksOut,
-                                         CdsOption::results& results) const {
+                                         CdsOption::results& results, const Date& refDate, const Real upfrontStrike) const {
 
     Date maturityDate = swap.coupons().front()->date();
     QL_REQUIRE(maturityDate > exerciseDate, "Underlying CDS should start after option maturity");
@@ -88,15 +92,34 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
     Real couponLegNpvNoAccrual = std::fabs(swap.couponLegNPV()) - std::fabs(swap.accrualRebateNPV());
     Real riskyAnnuityNoAccrual = couponLegNpvNoAccrual / swapSpread;
 
+    Real upfrontNPV;
+    if (upfrontStrike == Null<Real>())
+        upfrontNPV = swap.upfrontNPV();
+    else {
+        SimpleCashFlow scf = SimpleCashFlow(1, swap.upfrontPaymentDate()); // dummy cashflow for hasOccured condition
+        if (!scf.hasOccurred(termStructure_->referenceDate(), includeSettlementDateFlows_)) {
+            Date effectiveProtectionStart = swap.protectionStartDate() > refDate ? swap.protectionStartDate() : refDate;
+            
+            // the probability survival so we have to pay the upfront flows (did not knock out)
+            // upfront is still based on full notional
+            // upfront is paid no matter the option is exercised or not (model deficiency)
+            // TODO: improve this model to properly handle upfront
+            Probability nonKnockOut = 1 - defaultProbability(effectiveProtectionStart);
+            upfrontNPV = nonKnockOut * riskyAnnuityNoAccrual * (upfrontStrike - swapSpread) *
+                         termStructure_->discount(swap.upfrontPaymentDate());
+        } else
+            upfrontNPV = 0;
+    }
+
     // Take into account the NPV from the upfront amount
     // If buyer and upfront NPV > 0 => receiving upfront amount => should reduce the pay spread
     // If buyer and upfront NPV < 0 => paying upfront amount => should increase the pay spread
     // If seller and upfront NPV > 0 => receiving upfront amount => should increase the receive spread
     // If seller and upfront NPV < 0 => paying upfront amount => should reduce the receive spread
     if (swap.side() == Protection::Buyer) {
-        swapSpread -= swap.upfrontNPV() / riskyAnnuityNoAccrual;
+        swapSpread -= upfrontNPV / riskyAnnuityNoAccrual;
     } else {
-        swapSpread += swap.upfrontNPV() / riskyAnnuityNoAccrual;
+        swapSpread += upfrontNPV / riskyAnnuityNoAccrual;
     }
 
     Time T = tSDc.yearFraction(settlement, exerciseDate);

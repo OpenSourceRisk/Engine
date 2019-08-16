@@ -66,12 +66,6 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
                .withPaymentAdjustment(convention)
                .withLastPeriodDayCounter(lastPeriodDayCounter);
 
-    annuityLeg_ = FixedRateLeg(schedule)
-               .withNotionals(notional)
-               .withCouponRates(1.0, dayCounter)
-               .withPaymentAdjustment(convention)
-               .withLastPeriodDayCounter(lastPeriodDayCounter);
-
     // acrual rebate
     if (schedule.hasRule() && (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) {
         boost::shared_ptr<FixedRateCoupon> firstCoupon = boost::dynamic_pointer_cast<FixedRateCoupon>(leg_[0]);
@@ -96,12 +90,10 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
                                      const Schedule& schedule, BusinessDayConvention convention,
                                      const DayCounter& dayCounter, bool settlesAccrual, bool paysAtDefaultTime,
                                      const Date& protectionStart, const Date& upfrontDate,
-                                     const boost::shared_ptr<Claim>& claim, const DayCounter& lastPeriodDayCounter,
-                                     const Real upfrontStrike)
+                                     const boost::shared_ptr<Claim>& claim, const DayCounter& lastPeriodDayCounter)
     : side_(side), notional_(notional), upfront_(upfront), runningSpread_(runningSpread),
       settlesAccrual_(settlesAccrual), paysAtDefaultTime_(paysAtDefaultTime), claim_(claim),
-      protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart),
-      upfrontStrike_(upfrontStrike) {
+      protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
 
     QL_REQUIRE((schedule.hasRule() && (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
         protectionStart_ <= schedule[0], "protection can not start after accrual for (pre big bang-) CDS");
@@ -109,12 +101,6 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
     leg_ = FixedRateLeg(schedule)
                .withNotionals(notional)
                .withCouponRates(runningSpread, dayCounter)
-               .withPaymentAdjustment(convention)
-               .withLastPeriodDayCounter(lastPeriodDayCounter);
-    
-    annuityLeg_ = FixedRateLeg(schedule)
-               .withNotionals(notional)
-               .withCouponRates(1.0, dayCounter)
                .withPaymentAdjustment(convention)
                .withLastPeriodDayCounter(lastPeriodDayCounter);
 
@@ -187,8 +173,6 @@ void CreditDefaultSwap::setupArguments(PricingEngine::arguments* args) const {
     arguments->spread = runningSpread_;
     arguments->protectionStart = protectionStart_;
     arguments->maturity = maturity_;
-    arguments->annuityLeg = annuityLeg_;
-    arguments->upfrontStrike = upfrontStrike_;
 }
 
 void CreditDefaultSwap::fetchResults(const PricingEngine::results* r) const {
@@ -321,9 +305,9 @@ const Date& CreditDefaultSwap::protectionEndDate() const {
     return boost::dynamic_pointer_cast<Coupon>(leg_.back())->accrualEndDate();
 }
 
-const Leg& CreditDefaultSwap::annuityLeg() const { return annuityLeg_; }
-
-const Real CreditDefaultSwap::upfrontStrike() const { return upfrontStrike_; }
+const Date CreditDefaultSwap::upfrontPaymentDate() const {
+    return upfrontPayment_->date();
+}
 
 CreditDefaultSwap::arguments::arguments() : side(Protection::Side(-1)), notional(Null<Real>()), spread(Null<Rate>()) {}
 

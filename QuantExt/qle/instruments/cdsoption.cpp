@@ -81,8 +81,9 @@ private:
 } // namespace
 
 CdsOption::CdsOption(const boost::shared_ptr<CreditDefaultSwap>& swap, const boost::shared_ptr<Exercise>& exercise,
-                     bool knocksOut)
-    : Option(boost::shared_ptr<Payoff>(new NullPayoff), exercise), swap_(swap), knocksOut_(knocksOut) {
+                     bool knocksOut, const Real upfrontStrike)
+    : Option(boost::shared_ptr<Payoff>(new NullPayoff), exercise), swap_(swap), knocksOut_(knocksOut),
+      upfrontStrike_(upfrontStrike) {
     registerWith(swap_);
 }
 
@@ -103,6 +104,7 @@ void CdsOption::setupArguments(PricingEngine::arguments* args) const {
 
     arguments->swap = swap_;
     arguments->knocksOut = knocksOut_;
+    arguments->upfrontStrike = upfrontStrike_;
 }
 
 void CdsOption::fetchResults(const PricingEngine::results* r) const {

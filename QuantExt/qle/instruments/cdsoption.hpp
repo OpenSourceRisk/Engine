@@ -70,7 +70,7 @@ public:
     class results;
     class engine;
     CdsOption(const boost::shared_ptr<CreditDefaultSwap>& swap, const boost::shared_ptr<Exercise>& exercise,
-              bool knocksOut = true);
+              bool knocksOut = true, const Real upfrontStrike = Null<Real>());
 
     //! \name Instrument interface
     //@{
@@ -94,6 +94,7 @@ public:
 private:
     boost::shared_ptr<CreditDefaultSwap> swap_;
     bool knocksOut_;
+    Real upfrontStrike_;
 
     mutable Real riskyAnnuity_;
     void setupExpired() const;
@@ -107,6 +108,7 @@ public:
 
     boost::shared_ptr<CreditDefaultSwap> swap;
     bool knocksOut;
+    Real upfrontStrike;
     void validate() const;
 };
 

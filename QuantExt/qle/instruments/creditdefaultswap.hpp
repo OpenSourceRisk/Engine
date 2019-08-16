@@ -127,13 +127,12 @@ public:
         @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to
                                      allow for possibility of including maturity date in the last
                                      period's coupon accrual which is standard.
-        @param upfrontStrike Upfront expressed as strike. Usually found in some CDS Index Options
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate upfront, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
                       bool paysAtDefaultTime = true, const Date& protectionStart = Date(),
                       const Date& upfrontDate = Date(), const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
-                      const DayCounter& lastPeriodDayCounter = DayCounter(), const Real upfrontStrike = Null<Real>());
+                      const DayCounter& lastPeriodDayCounter = DayCounter());
     //@}
     //! \name Instrument interface
     //@{
@@ -154,8 +153,7 @@ public:
     const Date& protectionStartDate() const;
     //! The last date for which defaults will trigger the contract
     const Date& protectionEndDate() const;
-    const Leg& annuityLeg() const;
-    const Real upfrontStrike() const;
+    const Date upfrontPaymentDate() const;
     //@}
     //! \name Results
     //@{
@@ -254,8 +252,6 @@ protected:
     Leg leg_;
     boost::shared_ptr<CashFlow> upfrontPayment_, accrualRebate_;
     Date protectionStart_, maturity_;
-    Leg annuityLeg_;
-    Real upfrontStrike_;
     // results
     mutable Rate fairUpfront_;
     mutable Rate fairSpread_;
@@ -284,8 +280,6 @@ public:
     bool paysAtDefaultTime;
     boost::shared_ptr<Claim> claim;
     Date protectionStart, maturity;
-    Leg annuityLeg;
-    Real upfrontStrike;
     void validate() const;
 };
 
