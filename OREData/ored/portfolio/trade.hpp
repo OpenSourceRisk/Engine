@@ -137,7 +137,7 @@ public:
     //! \name Utility
     //@{
     //! Utility to validate that everything that needs to be set in this base class is actually set
-    void validate() const;
+    void validate(bool checkEnvelope = true) const;
     //@}
 
 protected:

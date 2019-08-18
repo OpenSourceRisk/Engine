@@ -79,14 +79,14 @@ void Trade::addPayment(std::vector<boost::shared_ptr<Instrument>>& addInstrument
     legPayers_.push_back(false);
 }
 
-void Trade::validate() const {
+void Trade::validate(bool checkEnvelope) const {
     QL_REQUIRE(id_ !="", "Trade id has not been set.");
     QL_REQUIRE(tradeType_ !="", "Trade id has not been set.");
     QL_REQUIRE(instrument_ || legs_.size()>0, "Trade " << id_ << " requires either QuantLib instruments or legs to be created.");
     QL_REQUIRE(npvCurrency_ != "", "NPV currency has not been set for trade " << id_ << ".");
     QL_REQUIRE(notional_ != Null<Real>() && notional_ != 0.0, "Notional has not been set for trade " << id_ << ".");
     QL_REQUIRE(maturity_ != Null<Date>(), "Maturity not set for trade " << id_ << ".");
-    QL_REQUIRE(!envelope_.empty(), "Envelope not set for trade " << id_ << ".");
+    QL_REQUIRE(!envelope_.empty() || !checkEnvelope, "Envelope not set for trade " << id_ << ".");
     if (legs_.size() > 0) {
         QL_REQUIRE(legs_.size() == legPayers_.size(),
                    "Inconsistent number of pay/receive indicators for legs in trade " << id_ << ".");
