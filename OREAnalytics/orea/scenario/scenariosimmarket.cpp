@@ -977,7 +977,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 bool stickyStrike = true;
                                 bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
 
-                                if (parameters->useMoneyness()) { // moneyness
+                                if (parameters->useMoneyness(name)) { // moneyness
                                     fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
                                         new BlackVarianceSurfaceMoneynessForward(cal, spot, times, parameters->fxVolMoneyness(name),
                                             quotes, dc, forTS, domTS, stickyStrike, flatExtrapolation));
