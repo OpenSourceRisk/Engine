@@ -103,8 +103,8 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
                            { SGDSor(pd), "SGD-SOR", Singapore().name(), SGDCurrency().name() },
                            { SKKBribor(pd), "SKK-BRIBOR", Slovakia().name(), SKKCurrency().name() },
                            { Tonar(), "TONAR", Japan().name(), JPYCurrency().name() },
-                           { KRWCd(pd), "KRW-CD", SouthKorea().name(), KRWCurrency().name() },
-                           { KRWKoribor(pd), "KRW-KORIBOR", SouthKorea().name(), KRWCurrency().name() },
+                           { KRWCd(pd), "KRW-CD", SouthKorea(SouthKorea::Settlement).name(), KRWCurrency().name() },
+                           { KRWKoribor(pd), "KRW-KORIBOR", SouthKorea(SouthKorea::Settlement).name(), KRWCurrency().name() },
                            { MYRKlibor(pd), "MYR-KLIBOR", Malaysia().name(), MYRCurrency().name() },
                            { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() } };
 
