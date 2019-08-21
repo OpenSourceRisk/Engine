@@ -99,13 +99,26 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
         SimpleCashFlow scf = SimpleCashFlow(1, swap.upfrontPaymentDate()); // dummy cashflow for hasOccured condition
         if (!scf.hasOccurred(termStructure_->referenceDate(), includeSettlementDateFlows_)) {
             Date effectiveProtectionStart = swap.protectionStartDate() > refDate ? swap.protectionStartDate() : refDate;
-            
+
+            // According to market standard, for exercise price calcualtion,  risky annuity is calcualted on a credit curve
+            // that has been fitted to a flat CDS term structure with spreads equal to strike, using a recovery-given-default
+            // of 40%
+            // We make further assumptions to simplify the calculation
+            // 1) Constant continuous interest rate from protection start to protection end
+            // 2) Continuous CDS coupons
+            // 3) CDS payment date = CDS proection end date, and other conventions related assumptions
+            double forwardRate = termStructure_->forwardRate(effectiveProtectionStart, swap.protectionEndDate(),
+                                                             termStructure_->dayCounter(), Compounding::Continuous);
+            double hazardRateStrike = (upfrontStrike - forwardRate) / (1 - 0.4);
+            Time maturity = termStructure_->dayCounter().yearFraction(effectiveProtectionStart, swap.maturity());
+            double riskyAnnuityStrike = exp((-hazardRateStrike + forwardRate) * maturity) * swap.notional() * maturity;
+
             // the probability survival so we have to pay the upfront flows (did not knock out)
             // upfront is still based on full notional
             // upfront is paid no matter the option is exercised or not (model deficiency)
             // TODO: improve this model to properly handle upfront
             Probability nonKnockOut = 1 - defaultProbability(effectiveProtectionStart);
-            upfrontNPV = nonKnockOut * riskyAnnuityNoAccrual * (upfrontStrike - swapSpread) *
+            upfrontNPV = nonKnockOut * riskyAnnuityStrike * (upfrontStrike - swapSpread) *
                          termStructure_->discount(swap.upfrontPaymentDate());
         } else
             upfrontNPV = 0;
