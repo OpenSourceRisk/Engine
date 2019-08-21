@@ -1061,14 +1061,14 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         if (fxSurfaceNode) {
             hasFxPairWithSurface_ = true;
             for (XMLNode* child = XMLUtils::getChildNode(fxSurfaceNode, "Moneyness"); child;
-                child = XMLUtils::getNextSibling(child)) {
+                child = XMLUtils::getNextSibling(child, "Moneyness")) {
                 string label = XMLUtils::getAttribute(child, "ccyPair"); // will be "" if no attr
                 fxMoneyness_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
                 fxVolIsSurface_[label] = true;
                 useMoneyness_[label] = true;
             }
             for (XMLNode* child = XMLUtils::getChildNode(fxSurfaceNode, "StandardDeviations"); child;
-                child = XMLUtils::getNextSibling(child)) {
+                child = XMLUtils::getNextSibling(child, "StandardDeviations")) {
                 string label = XMLUtils::getAttribute(child, "ccyPair"); // will be "" if no attr
                 fxStandardDevs_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
                 fxVolIsSurface_[label] = true;
@@ -1455,15 +1455,10 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
             map<string, vector<Real>>::const_iterator it;
             for (it = fxMoneyness_.begin(); it != fxMoneyness_.end(); it++) {
                 if (it->first == "") {
-                    // only print default moneyness/stdDevs if it's not ATM (so it was specifically changed)
+                    // only print default moneyness if it's not ATM (so it was specifically changed)
                     if (useMoneyness_[it->first]) {
                         if (fxMoneyness_[""].size() > 1 || !(close(fxMoneyness_[""][0], 0.0) || close(fxMoneyness_[""][0], 1.0))) {
                             XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first]); // default not atm
-                        }
-                    }
-                    else {
-                        if (fxMoneyness_[""].size() > 1 || !(close(fxMoneyness_[""][0], 0.0))) {
-                            XMLUtils::addGenericChildAsList(doc, surfaceNode, "StandardDeviations", fxStandardDevs_[it->first]); // default not atm
                         }
                     }
                 } else {
@@ -1471,7 +1466,19 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
                         XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first], "ccyPair",
                             it->first);
                     }
-                    else {
+                }
+            }
+            for (it = fxStandardDevs_.begin(); it != fxStandardDevs_.end(); it++) {
+                if (it->first == "") {
+                    // only print default standard deviation if it's not ATM (so it was specifically changed)
+                    if (!useMoneyness_[it->first]) {
+                        if (fxStandardDevs_[""].size() > 1 || !close(fxStandardDevs_[""][0], 0.0)) {
+                            XMLUtils::addGenericChildAsList(doc, surfaceNode, "StandardDeviations", fxStandardDevs_[it->first]); // default not atm
+                        }
+                    }
+                }
+                else {
+                    if (!useMoneyness_[it->first]) {
                         XMLUtils::addGenericChildAsList(doc, surfaceNode, "StandardDeviations", fxStandardDevs_[it->first], "ccyPair",
                             it->first);
                     }
@@ -1503,9 +1510,9 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     }
 
     // benchmark yield curves
+    XMLNode* benchmarkCurvesNode = XMLUtils::addChild(doc, marketNode, "BenchmarkCurves");
     for (Size i = 0; i < yieldCurveNames().size(); ++i) {
         DLOG("Writing benchmark yield curves data");
-        XMLNode* benchmarkCurvesNode = XMLUtils::addChild(doc, marketNode, "BenchmarkCurves");
         XMLNode* benchmarkCurveNode = XMLUtils::addChild(doc, benchmarkCurvesNode, "BenchmarkCurve");
         XMLUtils::addChild(doc, benchmarkCurveNode, "Currency", yieldCurveCurrencies_[yieldCurveNames()[i]]);
         XMLUtils::addChild(doc, benchmarkCurveNode, "Name", yieldCurveNames()[i]);
