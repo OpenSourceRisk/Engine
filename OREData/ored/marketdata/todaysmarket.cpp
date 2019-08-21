@@ -755,7 +755,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         // build the curve
                         LOG("Building CommodityCurve for asof " << asof);
                         boost::shared_ptr<CommodityCurve> commodityCurve = boost::make_shared<CommodityCurve>(
-                            asof, *commodityCurveSpec, loader, curveConfigs, conventions);
+                            asof, *commodityCurveSpec, loader, curveConfigs, conventions, 
+                            fxT, requiredYieldCurves, requiredCommodityCurves);
                         itr =
                             requiredCommodityCurves.insert(make_pair(commodityCurveSpec->name(), commodityCurve)).first;
                     }

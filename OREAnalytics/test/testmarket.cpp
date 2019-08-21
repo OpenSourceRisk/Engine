@@ -277,12 +277,12 @@ TestMarket::TestMarket(Date asof) {
 
     // Commodity price curves and spots
     Actual365Fixed ccDayCounter;
-    vector<Time> times = {0.0, 1.0, 2.0, 5.0};
+    vector<Period> commTenors = { 0 * Days, 365 * Days, 730 * Days, 1825 * Days };
 
     // Gold curve
     vector<Real> prices = {1155.593, 1160.9, 1168.1, 1210};
     commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] =
-        Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(times, prices, ccDayCounter));
+        Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(commTenors, prices, ccDayCounter));
     commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")]->enableExtrapolation();
     commoditySpots_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] =
         Handle<Quote>(boost::make_shared<SimpleQuote>(1155.593));
@@ -290,7 +290,7 @@ TestMarket::TestMarket(Date asof) {
     // WTI Oil curve
     prices = {30.89, 41.23, 44.44, 49.18};
     commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")] =
-        Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(times, prices, ccDayCounter));
+        Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(commTenors, prices, ccDayCounter));
     commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")]->enableExtrapolation();
     commoditySpots_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")] =
         Handle<Quote>(boost::make_shared<SimpleQuote>(30.89));

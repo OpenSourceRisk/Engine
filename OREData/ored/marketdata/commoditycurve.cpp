@@ -18,6 +18,7 @@
 
 #include <ored/marketdata/commoditycurve.hpp>
 #include <ored/utilities/log.hpp>
+#include <qle/termstructures/crosscurrencypricetermstructure.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/time/date.hpp>
@@ -27,25 +28,50 @@
 #include <regex>
 
 using QuantExt::InterpolatedPriceCurve;
+using QuantExt::CrossCurrencyPriceTermStructure;
+using QuantExt::PriceTermStructure;
+using std::map;
 using std::regex;
+using std::string;
 
 namespace ore {
 namespace data {
 
-CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec, const Loader& loader,
-                               const CurveConfigurations& curveConfigs, const Conventions& conventions)
+CommodityCurve::CommodityCurve(const Date& asof,
+    const CommodityCurveSpec& spec,
+    const Loader& loader,
+    const CurveConfigurations& curveConfigs,
+    const Conventions& conventions,
+    const FXTriangulation& fxSpots,
+    const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+    const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves)
     : spec_(spec), onValue_(Null<Real>()), tnValue_(Null<Real>()) {
 
     try {
 
         boost::shared_ptr<CommodityCurveConfig> config = curveConfigs.commodityCurveConfig(spec_.curveConfigID());
 
-        // Populate the raw price curve data
-        map<Date, Real> data;
-        populateData(data, asof, config, loader, conventions);
+        if (config->type() == CommodityCurveConfig::Type::Direct) {
+            
+            // Populate the raw price curve data
+            map<Date, Real> data;
+            populateData(data, asof, config, loader, conventions);
 
-        // Create the commodity price curve
-        buildCurve(data, config);
+            // Create the commodity price curve
+            buildCurve(data, config);
+
+        } else {
+
+            // We have a cross currency type commodity curve configuration
+            boost::shared_ptr<CommodityCurveConfig> baseConfig = 
+                curveConfigs.commodityCurveConfig(config->basePriceCurveId());
+            
+            buildCrossCurrencyPriceCurve(asof, config, baseConfig, fxSpots, yieldCurves, commodityCurves);
+
+        }
+
+        // Apply extrapolation from the curve configuration
+        commodityPriceCurve_->enableExtrapolation(config->extrapolation());
 
     } catch (std::exception& e) {
         QL_FAIL("commodity curve building failed: " << e.what());
@@ -221,8 +247,44 @@ void CommodityCurve::buildCurve(const map<Date, Real>& data, const boost::shared
             ", is not supported. Needs to be Linear or LogLinear");
     }
 
-    // Apply extrapolation from the curve configuration
-    commodityPriceCurve_->enableExtrapolation(config->extrapolation());
+}
+
+void CommodityCurve::buildCrossCurrencyPriceCurve(const Date& asof,
+    const boost::shared_ptr<CommodityCurveConfig>& config,
+    const boost::shared_ptr<CommodityCurveConfig>& baseConfig, const FXTriangulation& fxSpots,
+    const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+    const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves) {
+
+    // Look up the required base price curve in the commodityCurves map
+    // We pass in the commodity curve ID only in the member basePriceCurveId of config e.g. PM:XAUUSD.
+    // But, the map commodityCurves is keyed on the spec name e.g. Commodity/USD/PM:XAUUSD
+    auto commIt = commodityCurves.find(CommodityCurveSpec(baseConfig->currency(), baseConfig->curveID()).name());
+    QL_REQUIRE(commIt != commodityCurves.end(), "Could not find base commodity curve with id " << baseConfig->curveID()
+        << " required in the building of commodity curve with id " << config->curveID());
+
+    // Look up the two yield curves in the yieldCurves map
+    auto baseYtsIt = yieldCurves.find(YieldCurveSpec(baseConfig->currency(), config->baseYieldCurveId()).name());
+    QL_REQUIRE(baseYtsIt != yieldCurves.end(), "Could not find base yield curve with id " << 
+        config->baseYieldCurveId() << " and currency " << baseConfig->currency() << 
+        " required in the building of commodity curve with id " << config->curveID());
+
+    auto ytsIt = yieldCurves.find(YieldCurveSpec(config->currency(), config->yieldCurveId()).name());
+    QL_REQUIRE(ytsIt != yieldCurves.end(), "Could not find yield curve with id " <<
+        config->yieldCurveId() << " and currency " << config->currency() <<
+        " required in the building of commodity curve with id " << config->curveID());
+
+    // Get the FX spot rate, number of units of this currency per unit of base currency
+    Handle<Quote> fxSpot = fxSpots.getQuote(baseConfig->currency() + config->currency());
+
+    // Populate the commoditySpot_ member. Make the assumption here that the FX spot and the base commodity spot 
+    // have same maturity date.
+    commoditySpot_ = commIt->second->commoditySpot() * fxSpot->value();
+
+    // Populate the commodityPriceCurve_ member
+    commodityPriceCurve_ = boost::make_shared<CrossCurrencyPriceTermStructure>(asof, 
+        QuantLib::Handle<PriceTermStructure>(commIt->second->commodityPriceCurve()), 
+        fxSpot, baseYtsIt->second->handle(), ytsIt->second->handle());
+
 }
 
 }

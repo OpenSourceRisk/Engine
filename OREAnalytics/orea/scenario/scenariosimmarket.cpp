@@ -1416,12 +1416,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // Get prices at specified simulation tenors from time 0 market curve and place in quotes
                         vector<Period> simulationTenors = parameters->commodityCurveTenors(name);
                         DayCounter commodityCurveDayCounter = parseDayCounter(parameters->commodityCurveDayCounter(name));
-                        vector<Time> times(simulationTenors.size());
                         vector<Handle<Quote>> quotes(simulationTenors.size());
 
                         for (Size i = 0; i < simulationTenors.size(); i++) {
-                            times[i] = commodityCurveDayCounter.yearFraction(asof_, asof_ + simulationTenors[i]);
-                            Real price = initialCommodityCurve->price(times[i], allowsExtrapolation);
+                            Date d = asof_ + simulationTenors[i];
+                            Real price = initialCommodityCurve->price(d, allowsExtrapolation);
                             boost::shared_ptr<SimpleQuote> quote = boost::make_shared<SimpleQuote>(price);
                             quotes[i] = Handle<Quote>(quote);
 
@@ -1435,7 +1434,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // Create a commodity price curve with simulation tenors as pillars and store
                         // Hard-coded linear interpolation here - may need to make this more dynamic
                         Handle<PriceTermStructure> simCommodityCurve(
-                            boost::make_shared<InterpolatedPriceCurve<Linear>>(times, quotes, commodityCurveDayCounter));
+                            boost::make_shared<InterpolatedPriceCurve<Linear>>(simulationTenors, quotes, commodityCurveDayCounter));
                         simCommodityCurve->enableExtrapolation(allowsExtrapolation);
 
                         commodityCurves_.emplace(piecewise_construct, forward_as_tuple(Market::defaultConfiguration, name),

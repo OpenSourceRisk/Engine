@@ -28,6 +28,7 @@
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 
@@ -42,8 +43,14 @@ public:
     CommodityCurve() {}
 
     //! Detailed constructor
-    CommodityCurve(const QuantLib::Date& asof, const CommodityCurveSpec& spec, const Loader& loader,
-                   const CurveConfigurations& curveConfigs, const Conventions& conventions);
+    CommodityCurve(const QuantLib::Date& asof,
+        const CommodityCurveSpec& spec,
+        const Loader& loader,
+        const CurveConfigurations& curveConfigs,
+        const Conventions& conventions,
+        const FXTriangulation& fxSpots = FXTriangulation(),
+        const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves = {},
+        const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves = {});
     //@}
 
     //! \name Inspectors
@@ -77,6 +84,13 @@ private:
     //! Build price curve using the curve \p data
     void buildCurve(const std::map<QuantLib::Date, QuantLib::Real>& data,
         const boost::shared_ptr<CommodityCurveConfig>& config);
+
+    //! Build cross currency commodity price curve
+    void buildCrossCurrencyPriceCurve(const QuantLib::Date& asof,
+        const boost::shared_ptr<CommodityCurveConfig>& config, 
+        const boost::shared_ptr<CommodityCurveConfig>& baseConfig, const FXTriangulation& fxSpots,
+        const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+        const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves);
 };
 } // namespace data
 } // namespace ore
