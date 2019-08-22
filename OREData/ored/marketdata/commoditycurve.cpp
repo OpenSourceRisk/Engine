@@ -45,7 +45,7 @@ CommodityCurve::CommodityCurve(const Date& asof,
     const FXTriangulation& fxSpots,
     const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
     const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves)
-    : spec_(spec), onValue_(Null<Real>()), tnValue_(Null<Real>()) {
+    : spec_(spec), commoditySpot_(Null<Real>()), onValue_(Null<Real>()), tnValue_(Null<Real>()) {
 
     try {
 
@@ -58,7 +58,7 @@ CommodityCurve::CommodityCurve(const Date& asof,
             populateData(data, asof, config, loader, conventions);
 
             // Create the commodity price curve
-            buildCurve(data, config);
+            buildCurve(asof, data, config);
 
         } else {
 
@@ -126,10 +126,15 @@ void CommodityCurve::populateData(map<Date, Real>& data, const Date& asof,
         reg = regex(regexstr);
     }
 
-    // Commodity spot quote
-    commoditySpot_ = loader.get(config->commoditySpotQuoteId(), asof)->quote()->value();
+    // Commodity spot quote if provided by the configuration
     Date spotDate = cal.advance(asof, spotTenor);
-    data[spotDate] = commoditySpot_;
+    if (!config->commoditySpotQuoteId().empty()) {
+        commoditySpot_ = loader.get(config->commoditySpotQuoteId(), asof)->quote()->value();
+        data[spotDate] = commoditySpot_;
+    } else {
+        QL_REQUIRE(outright, "If the commodity forward quotes are not outright," <<
+            " a commodity spot quote needs to be configured");
+    }
 
     // Add the forward quotes to the curve data
     for (auto& md : loader.loadQuotes(asof)) {
@@ -200,13 +205,6 @@ void CommodityCurve::populateData(map<Date, Real>& data, const Date& asof,
         QL_REQUIRE(data.size() > 0, "Regular expression specified in commodity config " <<
             config->curveID() << " but no quotes read");
     }
-
-    // Need first date to be asof. So, if we have not got a direct quote for asof or if we have not been given 
-    // ON and TN quotes, we take the first value in curveData. Spot will always be there.
-    auto it = data.begin();
-    if (it->first != asof) {
-        data[asof] = it->second;
-    }
 }
 
 void CommodityCurve::add(const Date& asof, const Date& expiry, Real value, 
@@ -217,13 +215,16 @@ void CommodityCurve::add(const Date& asof, const Date& expiry, Real value,
 
     QL_REQUIRE(data.find(expiry) == data.end(), "Duplicate quote for expiry " << io::iso_date(expiry) << " found.");
 
-    if (!outright)
+    if (!outright) {
+        QL_REQUIRE(commoditySpot_ != Null<Real>(), "Can't use forward points without a commodity spot value");
         value = commoditySpot_ + value / pointsFactor;
+    }
 
     data[expiry] = value;
 }
 
-void CommodityCurve::buildCurve(const map<Date, Real>& data, const boost::shared_ptr<CommodityCurveConfig>& config) {
+void CommodityCurve::buildCurve(const Date& asof, 
+    const map<Date, Real>& data, const boost::shared_ptr<CommodityCurveConfig>& config) {
 
     vector<Date> curveDates;
     curveDates.reserve(data.size());
@@ -239,9 +240,9 @@ void CommodityCurve::buildCurve(const map<Date, Real>& data, const boost::shared
     boost::algorithm::to_upper(interpolationMethod);
 
     if (interpolationMethod == "LINEAR") {
-        commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<Linear>>(curveDates, curvePrices, dc);
+        commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<Linear>>(asof, curveDates, curvePrices, dc);
     } else if (interpolationMethod == "LOGLINEAR") {
-        commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<LogLinear>>(curveDates, curvePrices, dc);
+        commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<LogLinear>>(asof, curveDates, curvePrices, dc);
     } else {
         QL_FAIL("The interpolation method, " << interpolationMethod <<
             ", is not supported. Needs to be Linear or LogLinear");
@@ -275,10 +276,6 @@ void CommodityCurve::buildCrossCurrencyPriceCurve(const Date& asof,
 
     // Get the FX spot rate, number of units of this currency per unit of base currency
     Handle<Quote> fxSpot = fxSpots.getQuote(baseConfig->currency() + config->currency());
-
-    // Populate the commoditySpot_ member. Make the assumption here that the FX spot and the base commodity spot 
-    // have same maturity date.
-    commoditySpot_ = commIt->second->commoditySpot() * fxSpot->value();
 
     // Populate the commodityPriceCurve_ member
     commodityPriceCurve_ = boost::make_shared<CrossCurrencyPriceTermStructure>(asof, 

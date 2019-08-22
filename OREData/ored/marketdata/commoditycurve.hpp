@@ -57,14 +57,13 @@ public:
     //@{
     const CommodityCurveSpec& spec() const { return spec_; }
     boost::shared_ptr<QuantExt::PriceTermStructure> commodityPriceCurve() const { return commodityPriceCurve_; }
-    QuantLib::Real commoditySpot() const { return commoditySpot_; }
     //@}
 
 private:
     CommodityCurveSpec spec_;
     boost::shared_ptr<QuantExt::PriceTermStructure> commodityPriceCurve_;
 
-    //! Store the commodity spot value
+    //! Store the commodity spot value with \c Null<Real>() indicating that none has been provided.
     QuantLib::Real commoditySpot_;
 
     //! Store the overnight value if any
@@ -82,7 +81,7 @@ private:
         std::map<QuantLib::Date, QuantLib::Real>& data, bool outright, QuantLib::Real pointsFactor = 1.0);
 
     //! Build price curve using the curve \p data
-    void buildCurve(const std::map<QuantLib::Date, QuantLib::Real>& data,
+    void buildCurve(const QuantLib::Date& asof, const std::map<QuantLib::Date, QuantLib::Real>& data,
         const boost::shared_ptr<CommodityCurveConfig>& config);
 
     //! Build cross currency commodity price curve

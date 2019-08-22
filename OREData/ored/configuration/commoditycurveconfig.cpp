@@ -25,8 +25,8 @@ namespace ore {
 namespace data {
 
 CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& curveDescription,
-                                           const string& currency, const string& commoditySpotQuote,
-                                           const vector<string>& quotes, const string& dayCountId,
+                                           const string& currency, const vector<string>& quotes,
+                                           const string& commoditySpotQuote, const string& dayCountId,
                                            const string& interpolationMethod, bool extrapolation,
                                            const string& conventionsId)
     : CurveConfig(curveId, curveDescription), type_(Type::Direct), fwdQuotes_(quotes), currency_(currency), 
@@ -34,7 +34,9 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& 
       extrapolation_(extrapolation), conventionsId_(conventionsId) {
 
     quotes_ = quotes;
-    quotes_.insert(quotes_.begin(), commoditySpotQuote);
+    if (!commoditySpotQuote.empty()) {
+        quotes_.insert(quotes_.begin(), commoditySpotQuote);
+    }
 }
 
 CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& curveDescription,
@@ -61,7 +63,7 @@ void CommodityCurveConfig::fromXML(XMLNode* node) {
     } else {
         type_ = Type::Direct;
         dayCountId_ = XMLUtils::getChildValue(node, "DayCounter", false);
-        commoditySpotQuoteId_ = XMLUtils::getChildValue(node, "SpotQuote", true);
+        commoditySpotQuoteId_ = XMLUtils::getChildValue(node, "SpotQuote", false);
         fwdQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote");
         quotes_ = fwdQuotes_;
         quotes_.insert(quotes_.begin(), commoditySpotQuoteId_);
@@ -85,7 +87,8 @@ XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "BaseYieldCurve", baseYieldCurveId_);
         XMLUtils::addChild(doc, node, "YieldCurve", yieldCurveId_);
     } else {
-        XMLUtils::addChild(doc, node, "SpotQuote", commoditySpotQuoteId_);
+        if (!commoditySpotQuoteId_.empty())
+            XMLUtils::addChild(doc, node, "SpotQuote", commoditySpotQuoteId_);
         vector<string> forwardQuotes(quotes_.begin() + 1, quotes_.end());
         XMLUtils::addChildren(doc, node, "Quotes", "Quote", forwardQuotes);
         XMLUtils::addChild(doc, node, "DayCounter", dayCountId_);

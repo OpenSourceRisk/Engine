@@ -1388,21 +1388,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                 }
                 break;
 
-            case RiskFactorKey::KeyType::CommoditySpot:
-                for (const auto& name : param.second.second) {
-                    try {
-                        Real spot = initMarket->commoditySpot(name, configuration)->value();
-                        DLOG("adding " << name << " commodity spot price");
-                        boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(spot);
-                        commoditySpots_.emplace(piecewise_construct, forward_as_tuple(Market::defaultConfiguration, name),
-                                                forward_as_tuple(q));
-                        simDataTmp.emplace(piecewise_construct, forward_as_tuple(param.first, name), forward_as_tuple(q));
-                    } catch (const std::exception& e) {
-                        processException(continueOnError, e);
-                    }
-                }
-                break;
-
             case RiskFactorKey::KeyType::CommodityCurve:
                 for (const auto& name : param.second.second) {
                     try {
@@ -1453,7 +1438,8 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         Handle<BlackVolTermStructure> newVol;
                         if (param.second.first) {
-                            Handle<Quote> spot = commoditySpot(name, configuration);
+                            Handle<Quote> spot(boost::make_shared<SimpleQuote>(
+                                initMarket->commodityPriceCurve(name, configuration)->price(0)));
                             const vector<Real>& moneyness = parameters->commodityVolMoneyness(name);
                             QL_REQUIRE(!moneyness.empty(), "Commodity volatility moneyness for "
                                                                << name << " should have at least one element");

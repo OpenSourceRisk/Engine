@@ -233,10 +233,6 @@ Handle<QuantExt::InflationIndexObserver> MarketImpl::baseCpis(const string& key,
     return lookup<Handle<QuantExt::InflationIndexObserver>>(baseCpis_, key, configuration, "base CPI");
 }
 
-Handle<Quote> MarketImpl::commoditySpot(const string& commodityName, const string& configuration) const {
-    return lookup<Handle<Quote>>(commoditySpots_, commodityName, configuration, "commodity spot");
-}
-
 Handle<PriceTermStructure> MarketImpl::commodityPriceCurve(const string& commodityName,
                                                            const string& configuration) const {
     return lookup<Handle<PriceTermStructure>>(commodityCurves_, commodityName, configuration, "commodity price curve");

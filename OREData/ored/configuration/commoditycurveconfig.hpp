@@ -47,7 +47,7 @@ public:
 
     //! Detailed constructor for Direct commodity curve configuration
     CommodityCurveConfig(const std::string& curveId, const std::string& curveDescription, const std::string& currency,
-                         const std::string& commoditySpotQuote, const std::vector<std::string>& quotes,
+                         const std::vector<std::string>& quotes, const std::string& commoditySpotQuote = "",
                          const std::string& dayCountId = "A365", const std::string& interpolationMethod = "Linear",
                          bool extrapolation = true, const std::string& conventionsId = "");
     

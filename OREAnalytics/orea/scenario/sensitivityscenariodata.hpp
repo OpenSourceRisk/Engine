@@ -116,7 +116,6 @@ public:
     const map<string, boost::shared_ptr<CurveShiftData>>& dividendYieldShiftData() const {
         return dividendYieldShiftData_;
     }
-    const map<string, SpotShiftData>& commodityShiftData() const { return commodityShiftData_; }
     const map<string, string>& commodityCurrencies() const { return commodityCurrencies_; }
     const map<string, boost::shared_ptr<CurveShiftData>>& commodityCurveShiftData() const {
         return commodityCurveShiftData_;
@@ -153,7 +152,6 @@ public:
     map<string, SpotShiftData>& equityShiftData() { return equityShiftData_; }
     map<string, boost::shared_ptr<CurveShiftData>>& dividendYieldShiftData() { return dividendYieldShiftData_; }
     map<string, VolShiftData>& equityVolShiftData() { return equityVolShiftData_; }
-    map<string, SpotShiftData>& commodityShiftData() { return commodityShiftData_; }
     map<string, string>& commodityCurrencies() { return commodityCurrencies_; }
     map<string, boost::shared_ptr<CurveShiftData>>& commodityCurveShiftData() { return commodityCurveShiftData_; }
     map<string, VolShiftData>& commodityVolShiftData() { return commodityVolShiftData_; }
@@ -211,7 +209,6 @@ protected:
     map<string, SpotShiftData> equityShiftData_;                                  // key: equity name
     map<string, VolShiftData> equityVolShiftData_;                                // key: equity name
     map<string, boost::shared_ptr<CurveShiftData>> dividendYieldShiftData_;       // key: equity name
-    map<string, SpotShiftData> commodityShiftData_;
     map<string, std::string> commodityCurrencies_;
     map<string, boost::shared_ptr<CurveShiftData>> commodityCurveShiftData_;
     map<string, VolShiftData> correlationShiftData_;
