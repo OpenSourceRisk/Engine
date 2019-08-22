@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(testFloatingDiscountFixedPrice) {
         prices[i + 1] = Handle<Quote>(td.priceQuotes[i]);
     }
     boost::shared_ptr<PriceTermStructure> fixedReferencePriceCurve =
-        boost::make_shared<InterpolatedPriceCurve<Linear> >(dates, prices, td.dayCounter);
+        boost::make_shared<InterpolatedPriceCurve<Linear> >(asof, dates, prices, td.dayCounter);
 
     // Check construction of adapted price curve passes => reference dates same on construction
     BOOST_REQUIRE_NO_THROW(

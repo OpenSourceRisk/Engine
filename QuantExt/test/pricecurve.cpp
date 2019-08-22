@@ -285,13 +285,13 @@ BOOST_AUTO_TEST_CASE(testDatesAndPricesCurve) {
 
     // Create a linearly interpolated price curve
     vector<Date> dates = td.dates(0);
-    InterpolatedPriceCurve<Linear> priceCurve(dates, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<Linear> priceCurve(dates[0], dates, td.prices, td.curveDayCounter);
 
     // Common checks on curve
     commonChecks(td, priceCurve, false);
 
     // Create a loglinearly interpolated price curve
-    InterpolatedPriceCurve<LogLinear> logPriceCurve(dates, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<LogLinear> logPriceCurve(dates[0], dates, td.prices, td.curveDayCounter);
 
     // Common checks on curve
     commonChecks(td, logPriceCurve, true);
@@ -323,13 +323,13 @@ BOOST_AUTO_TEST_CASE(testDatesAndQuotesCurve) {
 
     // Create a linearly interpolated price curve
     vector<Date> dates = td.dates(0);
-    InterpolatedPriceCurve<Linear> priceCurve(dates, td.quotes, td.curveDayCounter);
+    InterpolatedPriceCurve<Linear> priceCurve(dates[0], dates, td.quotes, td.curveDayCounter);
 
     // Common checks on curve
     commonChecks(td, priceCurve, false);
 
     // Create a loglinearly interpolated price curve
-    InterpolatedPriceCurve<LogLinear> logPriceCurve(dates, td.quotes, td.curveDayCounter);
+    InterpolatedPriceCurve<LogLinear> logPriceCurve(dates[0], dates, td.quotes, td.curveDayCounter);
 
     // Common checks on curve
     commonChecks(td, logPriceCurve, true);

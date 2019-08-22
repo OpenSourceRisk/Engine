@@ -60,13 +60,14 @@ public:
                            const QuantLib::DayCounter& dc, const Interpolator& interpolator = Interpolator());
 
     //! Curve constructed from dates and prices
-    InterpolatedPriceCurve(const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& prices,
-                           const QuantLib::DayCounter& dc, const Interpolator& interpolator = Interpolator());
+    InterpolatedPriceCurve(const QuantLib::Date& referenceDate, 
+        const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& prices,
+        const QuantLib::DayCounter& dc, const Interpolator& interpolator = Interpolator());
 
     //! Curve constructed from dates and quotes
-    InterpolatedPriceCurve(const std::vector<QuantLib::Date>& dates,
-                           const std::vector<QuantLib::Handle<QuantLib::Quote> >& quotes,
-                           const QuantLib::DayCounter& dc, const Interpolator& interpolator = Interpolator());
+    InterpolatedPriceCurve(const QuantLib::Date& referenceDate, 
+        const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Handle<QuantLib::Quote> >& quotes,
+        const QuantLib::DayCounter& dc, const Interpolator& interpolator = Interpolator());
     //@}
 
     //! \name Observer interface
@@ -147,11 +148,12 @@ InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(
 }
 
 template <class Interpolator>
-InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(const std::vector<QuantLib::Date>& dates,
+InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(const QuantLib::Date& referenceDate,
+                                                             const std::vector<QuantLib::Date>& dates,
                                                              const std::vector<QuantLib::Real>& prices,
                                                              const QuantLib::DayCounter& dc,
                                                              const Interpolator& interpolator)
-    : PriceTermStructure(dates.at(0), QuantLib::NullCalendar(), dc), QuantLib::InterpolatedCurve<Interpolator>(
+    : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), dc), QuantLib::InterpolatedCurve<Interpolator>(
                                                                          std::vector<QuantLib::Time>(dates.size()),
                                                                          prices, interpolator),
       dates_(dates) {
@@ -161,10 +163,10 @@ InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(const std::vector<Q
 }
 
 template <class Interpolator>
-InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(
+InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(const QuantLib::Date& referenceDate,
     const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Handle<QuantLib::Quote> >& quotes,
     const QuantLib::DayCounter& dc, const Interpolator& interpolator)
-    : PriceTermStructure(dates.at(0), QuantLib::NullCalendar(), dc), QuantLib::InterpolatedCurve<Interpolator>(
+    : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), dc), QuantLib::InterpolatedCurve<Interpolator>(
                                                                          std::vector<QuantLib::Time>(dates.size()),
                                                                          std::vector<QuantLib::Real>(quotes.size()),
                                                                          interpolator),
@@ -250,11 +252,11 @@ template <class Interpolator> void InterpolatedPriceCurve<Interpolator>::populat
 
 template <class Interpolator> void InterpolatedPriceCurve<Interpolator>::convertDatesToTimes() {
 
-    this->times_[0] = 0.0;
-    for (QuantLib::Size i = 1; i < this->dates_.size(); ++i) {
-        QL_REQUIRE(this->dates_[i] > this->dates_[i - 1],
-            "invalid date (" << this->dates_[i] << ", vs " << this->dates_[i - 1] << ")");
-        this->times_[i] = dayCounter().yearFraction(this->dates_[0], this->dates_[i]);
+    QL_REQUIRE(!dates_.empty(), "Dates cannot be empty for InterpolatedPriceCurve");
+    this->times_[0] = timeFromReference(dates_[0]);
+    for (QuantLib::Size i = 1; i < dates_.size(); ++i) {
+        QL_REQUIRE(dates_[i] > dates_[i - 1], "invalid date (" << dates_[i] << ", vs " << dates_[i - 1] << ")");
+        this->times_[i] = timeFromReference(dates_[i]);
         QL_REQUIRE(!QuantLib::close(this->times_[i], this->times_[i - 1]), "two dates correspond to the same time "
             "under this curve's day count convention");
     }
