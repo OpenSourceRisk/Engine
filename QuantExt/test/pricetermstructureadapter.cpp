@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(testImpliedZeroRates) {
 
     // Check the implied zero rates
     Real spot = priceCurve->price(0);
-    for (Size i = 0; i < times.size(); i++) {
+    for (Size i = 1; i < times.size(); i++) {
         Real impliedZero = priceAdapter.zeroRate(times[i], Continuous);
         Real expectedZero = td.flatZero->value() - std::log(td.priceQuotes[i]->value() / spot) / times[i];
         BOOST_CHECK_CLOSE(impliedZero, expectedZero, td.tolerance);
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(testImpliedZeroRates) {
 
     // Check the implied zero rates
     spot = priceCurve->price(0);
-    for (Size i = 0; i < times.size(); i++) {
+    for (Size i = 1; i < times.size(); i++) {
         Real impliedZero = priceAdapter.zeroRate(times[i], Continuous);
         Real expectedZero = td.flatZero->value() - std::log(td.priceQuotes[i]->value() / spot) / times[i];
         BOOST_CHECK_CLOSE(impliedZero, expectedZero, td.tolerance);
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(testImpliedZeroRates) {
 
     // Bump discount curve and check again
     td.flatZero->setValue(td.flatZero->value() * 0.9);
-    for (Size i = 0; i < times.size(); i++) {
+    for (Size i = 1; i < times.size(); i++) {
         Real impliedZero = priceAdapter.zeroRate(times[i], Continuous);
         Real expectedZero = td.flatZero->value() - std::log(td.priceQuotes[i]->value() / spot) / times[i];
         BOOST_CHECK_CLOSE(impliedZero, expectedZero, td.tolerance);
@@ -243,17 +243,12 @@ BOOST_AUTO_TEST_CASE(testExtrapolation) {
     BOOST_CHECK_NO_THROW(adaptedPriceCurve.zeroRate(asof + 1 * Years, td.dayCounter, Continuous));
 
     // Asking for zero at time ~ 4.0 should throw because > 3.0, max time for discount curve
+    // Note: max time for the adapted price curve is the min of the max times for the underlying curves.
     BOOST_CHECK_THROW(adaptedPriceCurve.zeroRate(4.0, Continuous), Error);
     BOOST_CHECK_THROW(adaptedPriceCurve.zeroRate(asof + 4 * Years, td.dayCounter, Continuous), Error);
 
-    // Allow extrapolation on discount curve - should hit the max date restriction on the price curve at ~ t = 5
-    zeroCurve->enableExtrapolation();
-    BOOST_CHECK_THROW(adaptedPriceCurve.zeroRate(6.0, Continuous), Error);
-    BOOST_CHECK_THROW(adaptedPriceCurve.zeroRate(asof + 6 * Years, td.dayCounter, Continuous), Error);
-
-    // Allow extrapolation on price curve, expect no errors
-    priceCurve->enableExtrapolation();
-    // above max
+    // Allow extrapolation on adapted price curve, expect no errors
+    adaptedPriceCurve.enableExtrapolation();
     BOOST_CHECK_NO_THROW(adaptedPriceCurve.zeroRate(6.0, Continuous));
     BOOST_CHECK_NO_THROW(adaptedPriceCurve.zeroRate(asof + 6 * Years, td.dayCounter, Continuous));
 }
