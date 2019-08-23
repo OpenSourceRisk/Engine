@@ -1276,5 +1276,8 @@
     <ClCompile Include="qle\pricingengines\baroneadesiwhaleyengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
+    <ClCompile Include="qle\termstructures\crosscurrencypricetermstructure.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
