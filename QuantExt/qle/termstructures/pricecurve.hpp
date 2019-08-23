@@ -243,7 +243,7 @@ template <class Interpolator> void InterpolatedPriceCurve<Interpolator>::initial
 }
 
 template <class Interpolator> void InterpolatedPriceCurve<Interpolator>::populateDatesFromTenors() const {
-    QuantLib::Date asof = Settings::instance().evaluationDate();
+    QuantLib::Date asof = QuantLib::Settings::instance().evaluationDate();
     for (QuantLib::Size i = 0; i < dates_.size(); ++i) {
         dates_[i] = asof + tenors_[i];
         this->times_[i] = timeFromReference(dates_[i]);
