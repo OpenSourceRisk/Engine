@@ -6,14 +6,12 @@
       <Currency>USD</Currency>
       <SpotQuote>COMMODITY/PRICE/PM:XAUUSD/USD</SpotQuote>
       <Quotes>
-        <Quote>COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2019-07-29</Quote>
-        <Quote>COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2019-07-30</Quote>
-        <Quote>COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2019-08-01</Quote>
-        <Quote>COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2019-08-30</Quote>
-        <Quote>COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2019-09-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/PM:XAUUSD/USD/SN</Quote>
+        <Quote>COMMODITY_FWD/PRICE/PM:XAUUSD/USD/1M</Quote>
+        <Quote>COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2M</Quote>
       </Quotes>
       <DayCounter>A365</DayCounter>
-      <InterpolationMethod>Linear</InterpolationMethod>
+      <InterpolationMethod>CubicFlat</InterpolationMethod>
       <Extrapolation>true</Extrapolation>
       <Conventions>PM:XAUUSD</Conventions>
     </CommodityCurve>

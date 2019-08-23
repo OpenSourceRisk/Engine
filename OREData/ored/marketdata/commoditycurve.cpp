@@ -19,6 +19,7 @@
 #include <ored/marketdata/commoditycurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <qle/termstructures/crosscurrencypricetermstructure.hpp>
+#include <qle/math/flatextrapolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/time/date.hpp>
@@ -30,6 +31,9 @@
 using QuantExt::InterpolatedPriceCurve;
 using QuantExt::CrossCurrencyPriceTermStructure;
 using QuantExt::PriceTermStructure;
+using QuantExt::LinearFlat;
+using QuantExt::LogLinearFlat;
+using QuantExt::CubicFlat;
 using std::map;
 using std::regex;
 using std::string;
@@ -243,6 +247,14 @@ void CommodityCurve::buildCurve(const Date& asof,
         commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<Linear>>(asof, curveDates, curvePrices, dc);
     } else if (interpolationMethod == "LOGLINEAR") {
         commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<LogLinear>>(asof, curveDates, curvePrices, dc);
+    } else if (interpolationMethod == "CUBIC") {
+        commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<Cubic>>(asof, curveDates, curvePrices, dc);
+    } else if (interpolationMethod == "LINEARFLAT") {
+        commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(asof, curveDates, curvePrices, dc);
+    } else if (interpolationMethod == "LOGLINEARFLAT") {
+        commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<LogLinearFlat>>(asof, curveDates, curvePrices, dc);
+    } else if (interpolationMethod == "CUBICFLAT") {
+        commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<CubicFlat>>(asof, curveDates, curvePrices, dc);
     } else {
         QL_FAIL("The interpolation method, " << interpolationMethod <<
             ", is not supported. Needs to be Linear or LogLinear");

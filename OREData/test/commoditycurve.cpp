@@ -18,6 +18,7 @@
 
 #include <boost/make_shared.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/toplevelfixture.hpp>
 
@@ -38,10 +39,22 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace ore::data;
 
+namespace bdata = boost::unit_test::data;
+
 namespace {
 
-// The expected commodity curve inclusive of ON and TN
-map<Date, Real> expectedCurveOnTn = {
+// List of curve configuration file names for data test case below
+vector<string> curveConfigFiles = {
+    "curveconfig_linear.xml",
+    "curveconfig_linear_flat.xml",
+    "curveconfig_loglinear.xml",
+    "curveconfig_loglinear_flat.xml",
+    "curveconfig_cubic.xml",
+    "curveconfig_cubic_flat.xml"
+};
+
+// The expected commodity curve
+map<Date, Real> expectedCurve = {
     { Date(29, Jul, 2019), 1417.8998900 },
     { Date(30, Jul, 2019), 1417.9999450 },
     { Date(31, Jul, 2019), 1418.1000000 },
@@ -50,17 +63,30 @@ map<Date, Real> expectedCurveOnTn = {
     { Date(30, Sep, 2019), 1424.1312750 }
 };
 
-// The expected commodity curve without ON and TN
-map<Date, Real> expectedCurveNoOnTn = {
-    { Date(29, Jul, 2019), 1418.1000000 },
-    { Date(30, Jul, 2019), 1418.1000000 },
+// Pillars for interpolated curve tests (purposely leave out elements below spot to test interpolation there)
+map<Date, Real> expectedInterpCurvePillars = {
     { Date(31, Jul, 2019), 1418.1000000 },
     { Date( 1, Aug, 2019), 1418.2000550 },
     { Date(30, Aug, 2019), 1421.1016535 },
     { Date(30, Sep, 2019), 1424.1312750 }
 };
 
-boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir) {
+// Expected results for extrapolation below spot, interpolation and extrapolation beyond max date for the 
+// various interpolation methods
+vector<Date> offPillarDates = { Date(29, Jul, 2019), Date(15, Sep, 2019), Date(1, Nov, 2019) };
+
+map<string, vector<Real>> expectedInterpCurveOffPillars = {
+    { "curveconfig_linear.xml", { 1417.89989, 1422.6653291129, 1427.2586262258 } },
+    { "curveconfig_linear_flat.xml", { 1418.1, 1422.6653291129, 1424.131275 } },
+    { "curveconfig_loglinear.xml", { 1417.89991117635, 1422.66452345277, 1427.26540106042 } },
+    { "curveconfig_loglinear_flat.xml", { 1418.1, 1422.66452345277, 1424.131275 } },
+    { "curveconfig_cubic.xml", { 1417.89988981896, 1422.67192914531, 1427.25983144911 } },
+    { "curveconfig_cubic_flat.xml", { 1418.1, 1422.67192914531, 1424.131275 } }
+};
+
+
+boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir, 
+    const string& curveConfigFile = "curveconfig.xml") {
     
     // As of date
     Date asof(29, Jul, 2019);
@@ -69,7 +95,7 @@ boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir) {
     string filename = inputDir + "/conventions.xml";
     conventions.fromFile(TEST_INPUT_FILE(filename));
     CurveConfigurations curveConfigs;
-    filename = inputDir + "/curveconfig.xml";
+    filename = inputDir + "/" + curveConfigFile;
     curveConfigs.fromFile(TEST_INPUT_FILE(filename));
     filename = inputDir + "/market.txt";
     CSVLoader loader(TEST_INPUT_FILE(filename), TEST_INPUT_FILE("fixings.txt"), false);
@@ -85,17 +111,15 @@ boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir) {
     return curve;
 }
 
-void checkCurve(const boost::shared_ptr<PriceTermStructure>& priceCurve, bool includeOnTn) {
+void checkCurve(const boost::shared_ptr<PriceTermStructure>& priceCurve, const map<Date, Real>& expectedValues) {
 
-    map<Date, Real> expected = includeOnTn ? expectedCurveOnTn : expectedCurveNoOnTn;
-
-    for (const auto& kv : expected) {
+    for (const auto& kv : expectedValues) {
         Real price = priceCurve->price(kv.first);
         BOOST_CHECK_CLOSE(price, kv.second, 1e-12);
     }
 }
 
-} // namespace
+}
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
@@ -106,7 +130,31 @@ BOOST_AUTO_TEST_CASE(testCommodityCurveTenorBasedOnTnPoints) {
     BOOST_TEST_MESSAGE("Testing commodity curve building with tenor based points quotes including ON and TN");
     
     boost::shared_ptr<CommodityCurve> curve = createCurve("tenor_based_on_tn_points");
-    checkCurve(curve->commodityPriceCurve(), true);
+    checkCurve(curve->commodityPriceCurve(), expectedCurve);
+}
+
+BOOST_AUTO_TEST_CASE(testCommodityCurveFixedDatePoints) {
+
+    BOOST_TEST_MESSAGE("Testing commodity curve building with fixed date quotes");
+
+    boost::shared_ptr<CommodityCurve> curve = createCurve("fixed_date_points");
+    checkCurve(curve->commodityPriceCurve(), expectedCurve);
+}
+
+// Testing various interpolation methods
+BOOST_DATA_TEST_CASE(testCommodityInterpolations, bdata::make(curveConfigFiles), curveConfigFile) {
+
+    BOOST_TEST_MESSAGE("Testing with configuration file: " << curveConfigFile);
+
+    boost::shared_ptr<CommodityCurve> curve = createCurve("different_interpolations", curveConfigFile);
+    checkCurve(curve->commodityPriceCurve(), expectedInterpCurvePillars);
+
+    BOOST_REQUIRE(expectedInterpCurveOffPillars.count(curveConfigFile) == 1);
+    for (Size i = 0; i < offPillarDates.size(); i++) {
+        Real price = curve->commodityPriceCurve()->price(offPillarDates[i]);
+        Real expPrice = expectedInterpCurveOffPillars.at(curveConfigFile)[i];
+        BOOST_CHECK_CLOSE(price, expPrice, 1e-12);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
