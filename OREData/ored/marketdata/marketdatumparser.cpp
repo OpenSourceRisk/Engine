@@ -213,11 +213,26 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::BASIS_SWAP: {
-        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
-        Period flatTerm = parsePeriod(tokens[2]);
-        Period term = parsePeriod(tokens[3]);
-        const string& ccy = tokens[4];
-        Period maturity = parsePeriod(tokens[5]);
+        //BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/5Y
+        //BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-PRIME/5Y
+        //BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/5Y
+        QL_REQUIRE(tokens.size() == 5 || tokens.size() == 6, "5 or 6 tokens expected in " << datumName);
+        Period flatTerm;
+        Period term;
+        Period maturity;
+        string ccy = "";
+        if (tokens.size() == 6) {
+            flatTerm = parsePeriod(tokens[2]);
+            term = parsePeriod(tokens[3]);
+            ccy = tokens[4];
+            maturity = parsePeriod(tokens[5]);
+        }else{
+            QL_REQUIRE(tokens[2] == "USD-LIBOR-3M" && (tokens[3] == "USD-PRIME" || tokens[3] == "USD-FEDFUNDS"), "for now only additional these two cases implemented: /USD-LIBOR-3M/USD-PRIME and /USD-LIBOR-3M/USD-FEDFUNDS" << datumName);
+            flatTerm = parsePeriod("3M");
+            term = parsePeriod("1D");
+            ccy = "USD";
+            maturity = parsePeriod(tokens[4]);
+        }
         return boost::make_shared<BasisSwapQuote>(value, asof, datumName, quoteType, flatTerm, term, ccy, maturity);
     }
 

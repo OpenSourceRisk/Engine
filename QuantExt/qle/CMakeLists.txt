@@ -31,6 +31,7 @@ indexes/bondindex.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
 indexes/ibor/brlcdi.cpp
+indexes/ibor/primeindex.cpp
 indexes/inflationindexwrapper.cpp
 indexes/region.cpp
 instruments/averageois.cpp
@@ -231,6 +232,7 @@ indexes/ibor/skkbribor.hpp
 indexes/ibor/thbbibor.hpp
 indexes/ibor/tonar.hpp
 indexes/ibor/twdtaibor.hpp
+indexes/ibor/primeindex.hpp
 indexes/inflationindexobserver.hpp
 indexes/inflationindexwrapper.hpp
 indexes/region.hpp

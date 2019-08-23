@@ -75,6 +75,7 @@
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/secpi.hpp>
+#include <qle/indexes/ibor/primeindex.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -218,6 +219,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         { "CHF-TOIS", boost::make_shared<CHFTois>() },
         { "CHF-SARON", boost::make_shared<CHFSaron>() },
         { "USD-FedFunds", boost::make_shared<FedFunds>() },
+        { "USD-Prime", boost::make_shared<PrimeIndex>() },
         { "AUD-AONIA", boost::make_shared<Aonia>() },
         { "CAD-CORRA", boost::make_shared<CORRA>() },
         { "DKK-DKKOIS", boost::make_shared<DKKOis>() },
