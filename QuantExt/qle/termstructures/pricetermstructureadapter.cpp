@@ -64,9 +64,9 @@ DiscountFactor PriceTermStructureAdapter::discountImpl(Time t) const {
     // Returns discount factor exp(-s(t) * t) where s(t) is defined such that
     // FP(0, t) = S(0) exp([z(t) - s(t)] t)
     Time spotTime = timeFromReference(spotCalendar_.advance(referenceDate(), spotDays_ * Days));
-    Real spotPrice = priceCurve_->price(spotTime);
-    Real forwardPrice = priceCurve_->price(t);
-    DiscountFactor discount = discount_->discount(t);
+    Real spotPrice = priceCurve_->price(spotTime, true);
+    Real forwardPrice = priceCurve_->price(t, true);
+    DiscountFactor discount = discount_->discount(t, true);
     return discount * forwardPrice / spotPrice;
 }
 
