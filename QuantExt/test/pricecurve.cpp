@@ -87,19 +87,19 @@ public:
         curveTenors[0] = 0 * Days;
         prices[0] = 14.5;
         shiftedPrices[0] = 16.6;
-        curveTenors[1] = 6 * Months;
+        curveTenors[1] = 181 * Days;
         prices[1] = 16.7;
         shiftedPrices[1] = 19.9;
-        curveTenors[2] = 1 * Years;
+        curveTenors[2] = 365 * Days;
         prices[2] = 19.9;
         shiftedPrices[2] = 24.4;
-        curveTenors[3] = 18 * Months;
+        curveTenors[3] = 546 * Days;
         prices[3] = 24.5;
         shiftedPrices[3] = 31.3;
-        curveTenors[4] = 2 * Years;
+        curveTenors[4] = 730 * Days;
         prices[4] = 28.5;
         shiftedPrices[4] = 38.1;
-        curveTenors[5] = 5 * Years;
+        curveTenors[5] = 1826 * Days;
         prices[5] = 38.8;
         shiftedPrices[5] = 54.5;
 
