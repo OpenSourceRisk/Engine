@@ -26,6 +26,7 @@
 
 #include <ql/math/interpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/interpolations/cubicinterpolation.hpp>
 
 #include <boost/make_shared.hpp>
