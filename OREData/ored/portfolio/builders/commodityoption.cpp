@@ -31,33 +31,6 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-// Helper class so that the spot price can be pulled from the price curve each time the spot price is requested. For 
-// example in the GeneralizedBlackScholesProcess in CommodityOptionEngineBuilder below, failing to link the spot price
-// to the price curve causes problems when calculating sensitivities and the price curve is bumped.
-class DerivedPriceQuote : public Quote, public Observer {
-public:
-    DerivedPriceQuote(const Handle<PriceTermStructure>& priceTs)
-        : priceTs_(priceTs) {
-        registerWith(priceTs_);
-    }
-
-    Real value() const {
-        QL_REQUIRE(isValid(), "Invalid DerivedPriceQuote");
-        return priceTs_->price(0);
-    }
-
-    bool isValid() const {
-        return !priceTs_.empty();
-    }
-
-    void update() {
-        notifyObservers();
-    }
-
-private:
-    Handle<PriceTermStructure> priceTs_;
-};
-
 boost::shared_ptr<QuantLib::PricingEngine> CommodityOptionEngineBuilder::engineImpl(const string& commodityName,
                                                                                     const Currency& ccy) {
 
