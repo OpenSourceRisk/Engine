@@ -345,6 +345,9 @@ void EquityLegData::fromXML(XMLNode* node) {
     else
         dividendFactor_ = 1.0;
     eqName_ = XMLUtils::getChildValue(node, "Name");
+    eqCurrency_ = XMLUtils::getChildValue(node, "UnderlyingCurrency");
+    fxIndex_ = XMLUtils::getChildValue(node, "FXIndex");
+    fxIndexFixingDays_ = XMLUtils::getChildValueAsInt(node, "FXIndexFixingDays");
     indices_.insert("EQ-" + eqName_);
     if (XMLUtils::getChildNode(node, "InitialPrice"))
         initialPrice_ = XMLUtils::getChildValueAsDouble(node, "InitialPrice");
@@ -367,6 +370,8 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "DividendFactor", dividendFactor_);
     }
     XMLUtils::addChild(doc, node, "Name", eqName_);
+    if (eqCurrency_ != "")
+        XMLUtils::addChild(doc, node, "UnderlyingCurrency", eqCurrency_);
     if (initialPrice_)
         XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
     XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
@@ -1228,7 +1233,8 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
     return tmpLeg;
 }
 
-Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equityCurve) {
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equityCurve, 
+                  const boost::shared_ptr<QuantExt::FxIndex>& fxIndex) {
     boost::shared_ptr<EquityLegData> eqLegData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
     QL_REQUIRE(eqLegData, "Wrong LegType, expected Equity, got " << data.legType());
 
@@ -1248,7 +1254,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
 
     applyAmortization(notionals, data, schedule, false);
 
-    Leg leg = EquityLeg(schedule, equityCurve)
+    Leg leg = EquityLeg(schedule, equityCurve, fxIndex)
                   .withNotionals(notionals)
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)

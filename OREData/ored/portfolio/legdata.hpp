@@ -523,10 +523,12 @@ public:
     EquityLegData() : LegAdditionalData("Equity") {}
     //! Constructor
     EquityLegData(string returnType, Real dividendFactor, string eqName, Real initialPrice,  
-        bool notionalReset, Natural fixingDays = 0, const ScheduleData& valuationSchedule = ScheduleData())
+        bool notionalReset, Natural fixingDays = 0, const ScheduleData& valuationSchedule = ScheduleData(), 
+        string eqCurrency = "", string fxIndex = "", Natural fxIndexFixingDays = 2, string fxIndexCalendar = "" )
         : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor), eqName_(eqName),
           initialPrice_(initialPrice), notionalReset_(notionalReset), fixingDays_(fixingDays), 
-          valuationSchedule_(valuationSchedule) {
+          valuationSchedule_(valuationSchedule), eqCurrency_(eqCurrency), fxIndex_(fxIndex), 
+          fxIndexFixingDays_(fxIndexFixingDays), fxIndexCalendar_(fxIndexCalendar) {
         indices_.insert("EQ-" + eqName_);
     }
 
@@ -538,6 +540,10 @@ public:
     Real initialPrice() const { return initialPrice_; }
     Natural fixingDays() const { return fixingDays_; }
     ScheduleData valuationSchedule() const { return valuationSchedule_; }
+    const string& eqCurrency() const { return eqCurrency_; }
+    const string& fxIndex() const { return fxIndex_; }
+    Natural fxIndexFixingDays() const { return fxIndexFixingDays_; }
+    const string& fxIndexCalendar() const { return fxIndexCalendar_; }
     bool notionalReset() const { return notionalReset_; }
     //@}
 
@@ -554,6 +560,10 @@ private:
     bool notionalReset_ = false;
     Natural fixingDays_ = 0;
     ScheduleData valuationSchedule_;
+    string eqCurrency_ = "";
+    string fxIndex_ = "";
+    Natural fxIndexFixingDays_ = 2;
+    string fxIndexCalendar_ = "";
 };
 
 //! Serializable object holding amortization rules
@@ -701,7 +711,8 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
                      const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
 Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                             const boost::shared_ptr<EngineFactory>& engineFactory);
-Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityIndex>& equityCurve);
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityIndex>& equityCurve, 
+                  const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
 Real currentNotional(const Leg& leg);
 
 //@}

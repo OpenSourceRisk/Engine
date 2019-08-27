@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/portfolio/enginefactory.hpp>
+#include <qle/indexes/fxindex.hpp>
 
 namespace ore {
 namespace data {
@@ -97,6 +98,11 @@ public:
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                  const string& configuration) const override;
 };
+
+// build an FX Index needed by legbuilders
+boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, string domestic, string foreign,
+    const boost::shared_ptr<Market> market, const string& configuration, const string& calendar, 
+    Size fixingDays = 0);
 
 } // namespace data
 } // namespace ore

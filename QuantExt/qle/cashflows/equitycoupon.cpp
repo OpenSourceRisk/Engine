@@ -30,11 +30,11 @@ EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& st
                            const DayCounter& dayCounter, bool isTotalReturn, Real dividendFactor, 
                            bool notionalReset, Real initialPrice, Real quantity,
                            const Date& refPeriodStart, const Date& refPeriodEnd,
-                           const Date& exCouponDate)
+                           const Date& exCouponDate, const boost::shared_ptr<FxIndex>& fxIndex)
     : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart, refPeriodEnd, exCouponDate),
       fixingDays_(fixingDays), equityCurve_(equityCurve), dayCounter_(dayCounter),
       isTotalReturn_(isTotalReturn), dividendFactor_(dividendFactor), notionalReset_(notionalReset), 
-      initialPrice_(initialPrice), quantity_(quantity) {
+      initialPrice_(initialPrice), quantity_(quantity), fxIndex_(fxIndex) {
     QL_REQUIRE(dividendFactor_ > 0.0, "Dividend factor should not be negative. It is expected to be between 0 and 1.");
     QL_REQUIRE(equityCurve_, "Equity underlying an equity swap coupon cannot be empty.");
 
@@ -67,10 +67,13 @@ void EquityCoupon::setPricer(const boost::shared_ptr<EquityCouponPricer>& pricer
 }
 
 Real EquityCoupon::nominal() const {
-    if (notionalReset_) 
-        return initialPrice() * quantity();
-    else
+    if (notionalReset_) {
+        // fxRate applied if equity underlying currency differs from leg
+        Real fxRate = fxIndex_ ? fxIndex_->fixing(fixingStartDate_) : 1.0;
+        return initialPrice() * fxRate * quantity();
+    } else {
         return nominal_;
+    }
 }
 
 Real EquityCoupon::initialPrice() const {
@@ -108,9 +111,10 @@ std::vector<Date> EquityCoupon::fixingDates() const {
     return fixingDates;
 };
 
-EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve)
-    : schedule_(schedule), equityCurve_(equityCurve), paymentAdjustment_(Following), paymentCalendar_(Calendar()),
-      dividendFactor_(1.0), fixingDays_(0) {}
+EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
+                     const boost::shared_ptr<FxIndex>& fxIndex)
+    : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentAdjustment_(Following), 
+      paymentCalendar_(Calendar()), dividendFactor_(1.0), fixingDays_(0) {}
 
 EquityLeg& EquityLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);

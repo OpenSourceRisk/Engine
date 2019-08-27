@@ -59,11 +59,11 @@ public:
         this class uses the exchange rate manager to retrieve spot values */
     FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
             const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
-            const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>());
+            const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false);
     FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
             const Calendar& fixingCalendar, const Handle<Quote> fxQuote,
             const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
-            const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>());
+            const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false);
     //! \name Index interface
     //@{
     std::string name() const;
@@ -99,6 +99,7 @@ protected:
     std::string name_;
     const Handle<Quote> fxQuote_;
     bool useQuote_;
+    bool inverseIndex_;
 
 private:
     Calendar fixingCalendar_;
