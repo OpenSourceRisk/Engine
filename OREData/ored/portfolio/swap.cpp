@@ -255,7 +255,15 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // unless the first leg is a Resettable XCCY, then use the second leg
     // For a XCCY Resettable the currentNotional may fail due missing FX fixing so we avoid
     // using this leg if possible
-    if (legData_.size() > 1 && !legData_[0].isNotResetXCCY()) {
+    // For a equity swap with resetting notional may fail due to missing equity fixing so avoid
+    bool isEquityNotionalReset = false;
+    if (legData_[0].legType() == "Equity") {
+        boost::shared_ptr<EquityLegData> eld = boost::dynamic_pointer_cast<EquityLegData>(
+            legData_[0].concreteLegData());
+        isEquityNotionalReset = eld->notionalReset();
+    }
+
+    if (legData_.size() > 1 && (!legData_[0].isNotResetXCCY() || isEquityNotionalReset)) {
         npvCurrency_ = legData_[1].currency();
         notional_ = currentNotional(legs_[1]);
     } else {
