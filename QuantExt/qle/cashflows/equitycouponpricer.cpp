@@ -46,6 +46,7 @@ void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
     coupon_ = &coupon;
 
     equityCurve_ = boost::dynamic_pointer_cast<EquityIndex>(coupon.equityCurve());
+    fxIndex_ = boost::dynamic_pointer_cast<FxIndex>(coupon.fxIndex());
     isTotalReturn_ = coupon.isTotalReturn();
     dividendFactor_ = coupon.dividendFactor();
 }

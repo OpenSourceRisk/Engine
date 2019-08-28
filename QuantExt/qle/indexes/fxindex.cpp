@@ -38,7 +38,7 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
                  const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts,
                  const Handle<YieldTermStructure>& targetYts, bool inverseIndex)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
-      sourceYts_(sourceYts), targetYts_(targetYts), fixingCalendar_(fixingCalendar) {
+      sourceYts_(sourceYts), targetYts_(targetYts), fixingCalendar_(fixingCalendar), inverseIndex_(inverseIndex) {
 
     std::ostringstream tmp;
     if (inverseIndex) {
@@ -61,7 +61,7 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
                  bool inverseIndex)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
       sourceYts_(sourceYts), targetYts_(targetYts), fxQuote_(fxQuote), useQuote_(true),
-      fixingCalendar_(fixingCalendar) {
+      fixingCalendar_(fixingCalendar), inverseIndex_(inverseIndex) {
 
     std::ostringstream tmp;
     if (inverseIndex) {
