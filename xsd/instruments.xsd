@@ -454,7 +454,7 @@
             <xs:element type="date" name="StartDate"/>
             <xs:element type="date" name="EndDate"/>
             <xs:element type="xs:string" name="Tenor"/>
-            <xs:element type="calendar" name="Calendar"/>
+            <xs:element type="calendar" name="Calendar" minOccurs="0"/>
             <xs:element type="businessDayConvention" name="Convention"/>
             <xs:element type="businessDayConvention" name="TermConvention"/>
             <xs:element type="dateRule" name="Rule" minOccurs="0"/>
