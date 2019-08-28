@@ -170,6 +170,20 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
     }
 }
 
+void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value, const string& attrName, const string& attr) {
+    XMLNode* node;
+    if (value.size() == 0) {
+        node = addChild(doc, n, name);
+    } else {
+        node = doc.allocNode(name, value);
+        QL_REQUIRE(n, "XML Node is NULL (adding " << name << ")");
+        n->insert_node(0, node);
+    }
+    if (attrName != "" || attr != "") {
+        XMLUtils::addAttribute(doc, node, attrName, attr);
+    }
+}
+
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, Real value) {
     // We want to write out a double that conforms to xs:double, this means no
     // scientific notation, so we check for really small numbers here and explicitly set
@@ -302,6 +316,11 @@ vector<Real> XMLUtils::getChildrenValuesAsDoubles(XMLNode* node, const string& n
 
 vector<Real> XMLUtils::getChildrenValuesAsDoublesCompact(XMLNode* node, const string& name, bool mandatory) {
     string s = getChildValue(node, name, mandatory);
+    return parseListOfValues(s, std::function<Real(string)>(&parseReal));
+}
+
+vector<Real> XMLUtils::getNodeValueAsDoublesCompact(XMLNode* node) {
+    string s = getNodeValue(node);
     return parseListOfValues(s, std::function<Real(string)>(&parseReal));
 }
 

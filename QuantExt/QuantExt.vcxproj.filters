@@ -552,6 +552,9 @@
     <ClInclude Include="qle\calendars\thailand.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\switzerland.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
     <ClInclude Include="qle\cashflows\equitycoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
@@ -749,6 +752,9 @@
     </ClInclude>
     <ClInclude Include="qle\indexes\commodityindex.hpp">
       <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blackmonotonevarvoltermstructure.hpp">
+      <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1154,6 +1160,9 @@
       <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\calendars\thailand.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\switzerland.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\equitycoupon.cpp">
