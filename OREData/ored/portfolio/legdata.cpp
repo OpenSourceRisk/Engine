@@ -371,10 +371,13 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
     XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
 
-    if (valuationSchedule_.hasData())
-        XMLUtils::appendNode(node, valuationSchedule_.toXML(doc));
-    else
+    if (valuationSchedule_.hasData()) {
+        XMLNode* schedNode = valuationSchedule_.toXML(doc);
+        XMLUtils::setNodeName(doc, schedNode, "ValuationSchedule"); 
+        XMLUtils::appendNode(node, schedNode);
+    } else {
         XMLUtils::addChild(doc, node, "FixingDays", static_cast<Integer>(fixingDays_));
+    }
     return node;
 }
 

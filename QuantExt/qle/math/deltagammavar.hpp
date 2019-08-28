@@ -27,6 +27,7 @@
 #include <ql/math/array.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/matrixutilities/choleskydecomposition.hpp>
+#include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/math/randomnumbers/rngtraits.hpp>
 #include <ql/utilities/disposable.hpp>
 
@@ -97,7 +98,7 @@ Disposable<std::vector<Real> > deltaGammaVarMc(const Matrix& omega, const Array&
         return res;
     }
 
-    Matrix L = CholeskyDecomposition(omega, true);
+    Matrix L = pseudoSqrt(omega, SalvagingAlgorithm::Spectral);
 
     Real pmin = QL_MAX_REAL;
     BOOST_FOREACH (Real q, p) { pmin = std::min(pmin, q); }

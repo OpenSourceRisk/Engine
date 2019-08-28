@@ -815,7 +815,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                             DayCounter dc = ore::data::parseDayCounter(parameters->cdsVolDayCounter(name));
                             boost::shared_ptr<BlackVolTermStructure> cdsVolCurve(new BlackVarianceCurve3(
-                                0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes));
+                                0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes, false));
 
                             cvh = Handle<BlackVolTermStructure>(cdsVolCurve);
                         } else {
@@ -867,7 +867,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (param.second.first) {
                             LOG("Simulating FX Vols (BlackVarianceCurve3) for " << name);
                             Size n = parameters->fxVolExpiries().size();
-                            Size m = parameters->fxVolMoneyness().size();
+                            Size m = parameters->fxVolMoneyness(name).size();
                             vector<vector<Handle<Quote>>> quotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
                             Calendar cal = wrapper->calendar();
                             if (cal.empty()) {
@@ -897,7 +897,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                                 for (Size j = 0; j < m; j++) {
                                     Size idx = j * n + i;
-                                    Real mon = parameters->fxVolMoneyness()[j]; // 0 if ATM
+                                    Real mon = parameters->fxVolMoneyness(name)[j]; // 0 if ATM
 
                                     // strike (assuming forward prices)
                                     Real k = spot->value() * mon * forTS->discount(date) / domTS->discount(date);
@@ -911,7 +911,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
 
                             boost::shared_ptr<BlackVolTermStructure> fxVolCurve;
-                            if (parameters->fxVolIsSurface()) {
+                            if (parameters->fxVolIsSurface(name)) {
 
                                 // Attempt to get the relevant yield curves from this scenario simulation market  
                                 Handle<YieldTermStructure> forTS = getYieldCurve(foreignTsId, todaysMarketParams, Market::defaultConfiguration);
@@ -930,7 +930,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 bool stickyStrike = true;
                                 bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
                                 fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
-                                    new BlackVarianceSurfaceMoneynessForward(cal, spot, times, parameters->fxVolMoneyness(),
+                                    new BlackVarianceSurfaceMoneynessForward(cal, spot, times, parameters->fxVolMoneyness(name),
                                                                              quotes, dc, forTS, domTS, stickyStrike, flatExtrapolation));
                             } else {
                                 fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
@@ -1017,7 +1017,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             } else {
                                 LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << name);
                                 eqVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
-                                    0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0]));
+                                    0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false));
                             }
 
                             // if we have a surface but are only simulating atm vols we wrap the atm curve and the full t0
@@ -1487,7 +1487,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 LOG("Simulating commodity volatilites for " << name << " using BlackVarianceCurve3.");
                                 newVol = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceCurve3>(
                                     0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes,
-                                    quotes[0]));
+                                    quotes[0], false));
                             } else {
                                 // We have a volatility surface
                                 LOG("Simulating commodity volatilites for " << name

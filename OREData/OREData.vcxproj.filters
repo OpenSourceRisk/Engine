@@ -438,6 +438,12 @@
     <ClInclude Include="ored\portfolio\forwardbond.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\vanillaoption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\vanillaoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
     <ClInclude Include="ored\marketdata\structuredcurveerror.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
@@ -783,6 +789,9 @@
       <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\forwardbond.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\vanillaoption.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>
