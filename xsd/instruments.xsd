@@ -350,6 +350,9 @@
         <xs:element type="xs:boolean" name="NotionalReset" minOccurs="0" maxOccurs="1"/>
         <xs:element type="scheduleData" name="ValuationSchedule" minOccurs="0" maxOccurs="1" />
         <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:string" name="UnderlyingCurrency" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:string" name="FXIndex" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:integer" name="FXIndexFixingDays" minOccurs="0" maxOccurs="1"/>
       </xs:all>
     </xs:complexType>
   </xs:element>
