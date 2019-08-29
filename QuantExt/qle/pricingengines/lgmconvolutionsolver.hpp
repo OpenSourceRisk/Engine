@@ -38,6 +38,9 @@ public:
     LgmConvolutionSolver(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
                          const Real sx, const Size nx);
 
+    /* get grid size */
+    Size gridSize() const { return 2 * mx_ + 1; }
+
     /* get discretised states grid at time t */
     std::vector<Real> stateGrid(const Real t) const;
 
