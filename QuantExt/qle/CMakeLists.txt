@@ -100,6 +100,7 @@ pricingengines/discountingforwardbondengine.cpp
 pricingengines/discountingfxforwardengine.cpp
 pricingengines/discountingriskybondengine.cpp
 pricingengines/discountingswapenginemulticurve.cpp
+pricingengines/lgmconvolutionsolver.cpp
 pricingengines/midpointcdsengine.cpp
 pricingengines/numericlgmswaptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
@@ -315,6 +316,7 @@ pricingengines/discountingforwardbondengine.hpp
 pricingengines/discountingfxforwardengine.hpp
 pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingswapenginemulticurve.hpp
+pricingengines/lgmconvolutionsolver.hpp
 pricingengines/midpointcdsengine.hpp
 pricingengines/numericlgmswaptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
