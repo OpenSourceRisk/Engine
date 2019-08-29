@@ -415,17 +415,31 @@
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="currencyCode" name="Currency"/>
-      <xs:element type="xs:string" name="SpotQuote"/>
-      <xs:element type="quoteType" name="Quotes"/>
-      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
-      <xs:element name="InterpolationMethod" minOccurs="0" maxOccurs="1">
-        <xs:simpleType>
-          <xs:restriction base="interpolationMethodType">
-            <xs:enumeration value="Linear"/>
-            <xs:enumeration value="LogLinear"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
+      <xs:choice>
+        <xs:sequence>
+          <xs:element type="xs:string" name="BasePriceCurve"/>
+          <xs:element type="xs:string" name="BaseYieldCurve"/>
+          <xs:element type="xs:string" name="YieldCurve"/>
+        </xs:sequence>
+        <xs:sequence>
+          <xs:element type="xs:string" name="SpotQuote"/>
+          <xs:element type="quoteType" name="Quotes"/>
+          <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+          <xs:element name="InterpolationMethod" minOccurs="0" maxOccurs="1">
+            <xs:simpleType>
+              <xs:restriction base="interpolationMethodType">
+                <xs:enumeration value="Linear"/>
+                <xs:enumeration value="LogLinear"/>
+                <xs:enumeration value="Cubic"/>
+                <xs:enumeration value="LinearFlat"/>
+                <xs:enumeration value="LogLinearFlat"/>
+                <xs:enumeration value="CubicFlat"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+      </xs:choice>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
@@ -596,7 +610,7 @@
       <xs:enumeration value="Zero Spread"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:complexType name="discountRatioType">
     <xs:sequence>
       <xs:element type="discountRatioTypeType" name="Type"/>
@@ -611,7 +625,7 @@
       <xs:enumeration value="Discount Ratio"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:complexType name="discountRatioCurveElement">
     <xs:simpleContent>
       <xs:extension base="xs:string">

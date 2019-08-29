@@ -23,7 +23,6 @@
       <xs:element type="dividendyields" name="DividendYieldCurves" minOccurs="0"/>
       <xs:element type="basecorrelations" name="BaseCorrelations"  minOccurs="0"/>
       <xs:element type="securityspreads" name="SecuritySpreads"  minOccurs="0"/>
-      <xs:element type="commodityspots" name="CommoditySpots" minOccurs="0"/>
       <xs:element type="commodityCurves" name="CommodityCurves"  minOccurs="0"/>
       <xs:element type="commodityvolatilities" name="CommodityVolatilities" minOccurs="0"/>
       <xs:element type="correlationcurves" name="Correlations" minOccurs="0"/>
@@ -160,12 +159,6 @@
   <xs:complexType name="dividendyields">
     <xs:sequence>
       <xs:element type="dividendyield" name="DividendYieldCurve" maxOccurs="unbounded" minOccurs="0"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="commodityspots">
-    <xs:sequence>
-      <xs:element type="commodityspot" name="CommoditySpot" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -475,17 +468,6 @@
       <xs:element type="xs:string" name="ShiftTenors"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="equity" use="required"/>
-  </xs:complexType>
-
-  <xs:complexType name="commodityspot">
-    <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
-      <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
-        <xs:element type="xs:string" name="Shifts"/>
-      </xs:choice>
-    </xs:sequence>
-    <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="commodityCurve">
