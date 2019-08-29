@@ -12,9 +12,19 @@ elements. An example structure of the \lstinline!OptionData! trade component nod
                 <LongShort>Long</LongShort>
                 <OptionType>Call</OptionType>
                 <Style>Bermudan</Style>
+                <NoticePeriod>5D</NoticePeriod>
+                <NoticeCalendar>TARGET</NoticeCalendar>
+                <NoticeConvention>F</NoticePeriod>
                 <Settlement>Cash</Settlement>
                 <SettlementMethod>CollateralizedCashPrice</SettlementMethod>
                 <PayOffAtExpiry>true</PayOffAtExpiry>
+                <ExerciseFees>
+                    <ExerciseFee>20000</ExerciseFee>
+                    <ExerciseFee>25000</ExerciseFee>
+                </ExerciseFees>
+                <ExerciseFeeSettlementPeriod>2D</ExerciseFeeSettlementPeriod>
+                <ExerciseFeeSettlementConvention>F</ExerciseFeeSettlementConvention>
+                <ExerciseFeeSettlementCalendar>TARGET</ExerciseFeeSettlementCalendar>
                 <ExerciseDates>
                     <ExerciseDate>2016-04-20</ExerciseDate>
                     <ExerciseDate>2017-04-20</ExerciseDate>
@@ -62,6 +72,15 @@ FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined
   \emph{European} or \emph{Bermudan}, but not \emph{American}.  FX and Equity options trade can have styles \emph{European}
   or \emph{American}, but not \emph{Bermudan}. 
 
+\item NoticePeriod: The notice period defining the date (relative to the exercise date) on which the exercise decision
+  has to be taken. If not given the notice period defaults to 0D, i.e. the notice date is identical to the exercise date.
+
+\item NoticeCalendar: The calendar used to compute the notice date from the exercise date. Must be given, if the notice
+  period is not 0D.
+
+\item NoticeConvention: The convention used to compute the notice date from the exercise date. Defaults to Following if
+  not given.
+
 \item Settlement: Delivery type. 
 
   Allowable values: \emph{Cash} or \emph{Physical}
@@ -84,6 +103,18 @@ FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined
 
 Allowable values: \emph{true}, \emph{false} Note that for FxTouchOption, only \emph{true} (payoff at expiry) is supported.
 %TBC: Do not see payoffatexpiry used in either fxoption or swaption build() functions, to be logged as a bug.       
+
+\item ExerciseFees: This node contains child elements of tpye ExerciseFee. If given, there must be exactly as many
+  entries as there are ExerciseDates. The option holder has to pay a positive value (as an absolute amount) if they
+  exercise the option, resp. receive an amount, if the fee is negative.
+
+\item ExerciseFeeSettlementPeriod: The settlement lag for exercise fee payments. Defaults to 0D if not given.
+
+\item ExerciseFeeSettlementCalendar: The calendar used to compute the exercise fee settlement date from the exercise
+  date. Must be given, if the exercise settlement fee period is not 0D.
+
+\item ExerciseFeeSettlementConvention: The convention used to compute the notice date from the exercise date. Defaults
+  to Following if not given.
 
 \item ExerciseDates: This node contains child elements of type
   \lstinline!ExerciseDate!.  Options of style \emph{European} or
