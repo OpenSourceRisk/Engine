@@ -124,24 +124,13 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
     string eqName = eqData->eqName();
     auto eqCurve = *engineFactory->market()->equityCurve(eqName, configuration);
 
-    string eqCurrency;
-    if (eqData->eqCurrency() != "") {
-        // Check currency provided matches what we have in the equity curve
-        QL_REQUIRE(eqCurve->currency() == parseCurrency(eqData->eqCurrency()),
-            "Equity Currency provided does not match reference currency");
-        eqCurrency = eqData->eqCurrency();
-    } else {
-        eqCurrency = eqCurve->currency().code();
-    }
-
     boost::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
-
     // if equity currency differs from the leg currency we need an FxIndex
-    if (eqCurrency != data.currency()) {
+    if (eqData->eqCurrency() != "" && eqData->eqCurrency() != data.currency()) {
         QL_REQUIRE(eqData->fxIndex() != "", 
             "No FxIndex - if equity currency differs from leg currency an FxIndex must be provided");
 
-        fxIndex = buildFxIndex(eqData->fxIndex(), data.currency(), eqCurrency, engineFactory->market(), 
+        fxIndex = buildFxIndex(eqData->fxIndex(), data.currency(), eqData->eqCurrency(), engineFactory->market(),
             configuration, eqData->fxIndexCalendar(), eqData->fxIndexFixingDays());
     }
 

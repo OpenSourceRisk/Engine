@@ -345,7 +345,6 @@ void EquityLegData::fromXML(XMLNode* node) {
     else
         dividendFactor_ = 1.0;
     eqName_ = XMLUtils::getChildValue(node, "Name");
-    eqCurrency_ = XMLUtils::getChildValue(node, "UnderlyingCurrency");
     indices_.insert("EQ-" + eqName_);
     if (XMLUtils::getChildNode(node, "InitialPrice"))
         initialPrice_ = XMLUtils::getChildValueAsDouble(node, "InitialPrice");
@@ -359,8 +358,14 @@ void EquityLegData::fromXML(XMLNode* node) {
         notionalReset_ = XMLUtils::getChildValueAsBool(node, "NotionalReset");
     else
         notionalReset_ = false;
-    fxIndex_ = XMLUtils::getChildValue(node, "FXIndex");
-    fxIndexFixingDays_ = XMLUtils::getChildValueAsInt(node, "FXIndexFixingDays");
+
+    XMLNode* fxt = XMLUtils::getChildNode(node, "FXTerms");
+    if (fxt) {
+        eqCurrency_ = XMLUtils::getChildValue(node, "EquityCurrency", true);
+        fxIndex_ = XMLUtils::getChildValue(node, "FXIndex", true);
+        fxIndexFixingDays_ = XMLUtils::getChildValueAsInt(node, "FXIndexFixingDays");
+        fxIndexCalendar_ = XMLUtils::getChildValueAsInt(node, "FXIndexCalendar");
+    }
 }
 
 XMLNode* EquityLegData::toXML(XMLDocument& doc) {
@@ -370,8 +375,6 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "DividendFactor", dividendFactor_);
     }
     XMLUtils::addChild(doc, node, "Name", eqName_);
-    if (eqCurrency_ != "")
-        XMLUtils::addChild(doc, node, "UnderlyingCurrency", eqCurrency_);
     if (initialPrice_)
         XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
     XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
@@ -384,10 +387,16 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "FixingDays", static_cast<Integer>(fixingDays_));
     }
 
-    if (fxIndex_ != "")
-        XMLUtils::addChild(doc, node, "FXIndex", fxIndex_);
-    if (fxIndexFixingDays_)
-        XMLUtils::addChild(doc, node, "FXIndexFixingDays", static_cast<Integer>(fxIndexFixingDays_));
+    if (fxIndex_ != "") {
+        XMLNode* fxNode = doc.allocNode("FXTerms");
+        XMLUtils::addChild(doc, fxNode, "EquityCurrency", eqCurrency_);
+        XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);
+        if (fxIndexFixingDays_)
+            XMLUtils::addChild(doc, fxNode, "FXIndexFixingDays", static_cast<Integer>(fxIndexFixingDays_));
+        if (fxIndexCalendar_ != "")
+            XMLUtils::addChild(doc, fxNode, "FXIndexCalendar", fxIndexCalendar_);
+        XMLUtils::appendNode(node, fxNode);
+    }
     return node;
 }
 
