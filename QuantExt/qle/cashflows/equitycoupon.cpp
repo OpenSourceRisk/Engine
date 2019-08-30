@@ -191,8 +191,15 @@ EquityLeg::operator Leg() const {
 
     Size numPeriods = schedule_.size() - 1;
     Real quantity = Real();
-    if (initialPrice_ && notionalReset_)
-        quantity = notionals_.front() / initialPrice_;
+    if (notionalReset_) {
+        // Calculate the initial quantity - only needed if resetting notional trade
+        Date fixingStartDate = valuationSchedule_.size() > 0 ? valuationSchedule_.date(0) : 
+            equityCurve_->fixingCalendar().advance(schedule_.date(0), -static_cast<Integer>(fixingDays_), Days, Preceding);
+        Real initialPrice = initialPrice_ ? initialPrice_ : equityCurve_->fixing(fixingStartDate, false, false);
+        // Notional in leg currency
+        Real fxRate = fxIndex_ ? fxIndex_->fixing(fixingStartDate) : 1.0;
+        quantity = notionals_.front() / (initialPrice * fxRate);
+    }
 
     if (valuationSchedule_.size() > 0){
         QL_REQUIRE(valuationSchedule_.size() == schedule_.size(), "Valuation and Payment Schedule sizes do not match");
