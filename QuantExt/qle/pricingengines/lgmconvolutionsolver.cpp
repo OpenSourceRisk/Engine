@@ -63,7 +63,8 @@ LgmConvolutionSolver::LgmConvolutionSolver(const boost::shared_ptr<LinearGaussMa
 }
 
 std::vector<Real> LgmConvolutionSolver::stateGrid(const Real t) const {
-    QL_REQUIRE(t > 0.0, "LgmConvolutionSolver::grid(" << t << "): expected positive time");
+    if (close_enough(t, 0.0))
+        return std::vector<Real>(2 * mx_ + 1, 0.0);
     std::vector<Real> x(2 * mx_ + 1);
     Real dx = std::sqrt(model_->parametrization()->zeta(t)) / static_cast<Real>(nx_);
     for (int k = 0; k <= 2 * mx_; ++k) {

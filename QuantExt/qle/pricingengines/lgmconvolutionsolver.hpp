@@ -44,7 +44,7 @@ public:
     /* get discretised states grid at time t */
     std::vector<Real> stateGrid(const Real t) const;
 
-    /* roll back an deflated NPV array from t1 to t0; if t0 = 0 the result vector will have one element only */
+    /* roll back an deflated NPV array from t1 to t0 */
     template <typename ValueType>
     std::vector<ValueType> rollback(const std::vector<ValueType>& v, const Real t1, const Real t0,
                                     const ValueType zero) const;
@@ -64,11 +64,14 @@ private:
 template <typename ValueType>
 std::vector<ValueType> LgmConvolutionSolver::rollback(const std::vector<ValueType>& v, const Real t1, const Real t0,
                                                       const ValueType zero) const {
+    if (close_enough(t0, t1))
+        return v;
+    QL_REQUIRE(t0 < t1, "LgmConvolutionSolver::rollback(): t0 (" << t0 << ") < t1 (" << t1 << ") required.");
     Real sigma = std::sqrt(model_->parametrization()->zeta(t1));
     Real dx = sigma / static_cast<Real>(nx_);
     if (close_enough(t0, 0.0)) {
         // rollback from t1 to t0 = 0
-        std::vector<ValueType> value(1, zero);
+        ValueType value(zero);
         for (int i = 0; i <= 2 * my_; i++) {
             // Map y index to x index, not integer in general
             Real kp = y_[i] * sigma / dx + mx_;
@@ -76,14 +79,14 @@ std::vector<ValueType> LgmConvolutionSolver::rollback(const std::vector<ValueTyp
             int kk = int(floor(kp));
             // Get value at kp by linear interpolation on
             // kk <= kp <= kk + 1 with flat extrapolation
-            value[0] +=
+            value +=
                 w_[i] *
                 (kk < 0 ? v[0] : (kk + 1 > 2 * mx_ ? v[2 * mx_] : (kp - kk) * v[kk + 1] + (1.0 + kk - kp) * v[kk]));
         }
-        return value;
+        return std::vector<ValueType>(2 * mx_ + 1, value);
     } else {
-        // rollback from t1 to t0 > 0
         std::vector<ValueType> value(2 * mx_ + 1, zero);
+        // rollback from t1 to t0 > 0
         Real std = std::sqrt(model_->parametrization()->zeta(t1) - model_->parametrization()->zeta(t0));
         Real dx2 = std::sqrt(model_->parametrization()->zeta(t0)) / static_cast<Real>(nx_);
         for (int k = 0; k <= 2 * mx_; k++) {
