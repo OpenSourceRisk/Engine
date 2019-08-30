@@ -49,6 +49,8 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
     name_ = tmp.str();
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(name()));
+    registerWith(sourceYts_);
+    registerWith(targetYts_);
 
     // we should register with the exchange rate manager
     // to be notified of changes in the spot exchange rate
@@ -72,10 +74,9 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
     name_ = tmp.str();
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(name()));
-    // we should register with the exchange rate manager
-    // to be notified of changes in the spot exchange rate
-    // however currently exchange rates are not quotes anyway
-    // so this is to be revisited later
+    registerWith(fxQuote_);
+    registerWith(sourceYts_);
+    registerWith(targetYts_);
 }
 
 Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {

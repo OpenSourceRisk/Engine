@@ -99,10 +99,10 @@ protected:
     std::string name_;
     const Handle<Quote> fxQuote_;
     bool useQuote_;
-    bool inverseIndex_;
 
 private:
     Calendar fixingCalendar_;
+    bool inverseIndex_;
 };
 
 // inline definitions

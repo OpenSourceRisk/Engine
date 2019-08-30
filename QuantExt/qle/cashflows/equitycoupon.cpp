@@ -53,6 +53,7 @@ EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& st
         fixingEndDate_ = refPeriodEnd;
 
     registerWith(equityCurve_);
+    registerWith(fxIndex_);
     registerWith(Settings::instance().evaluationDate());
 }
 
@@ -214,7 +215,7 @@ EquityLeg::operator Leg() const {
         boost::shared_ptr<EquityCoupon> cashflow(
             new EquityCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
                              fixingDays_, equityCurve_, paymentDayCounter_, isTotalReturn_, dividendFactor_, 
-                             notionalReset_, initialPrice, quantity, refStartDate, refEndDate));
+                             notionalReset_, initialPrice, quantity, refStartDate, refEndDate, Date(), fxIndex_));
 
         boost::shared_ptr<EquityCouponPricer> pricer(new EquityCouponPricer);
         cashflow->setPricer(pricer);

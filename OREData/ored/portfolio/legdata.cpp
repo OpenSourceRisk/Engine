@@ -361,10 +361,10 @@ void EquityLegData::fromXML(XMLNode* node) {
 
     XMLNode* fxt = XMLUtils::getChildNode(node, "FXTerms");
     if (fxt) {
-        eqCurrency_ = XMLUtils::getChildValue(node, "EquityCurrency", true);
-        fxIndex_ = XMLUtils::getChildValue(node, "FXIndex", true);
-        fxIndexFixingDays_ = XMLUtils::getChildValueAsInt(node, "FXIndexFixingDays");
-        fxIndexCalendar_ = XMLUtils::getChildValueAsInt(node, "FXIndexCalendar");
+        eqCurrency_ = XMLUtils::getChildValue(fxt, "EquityCurrency", true);
+        fxIndex_ = XMLUtils::getChildValue(fxt, "FXIndex", true);
+        fxIndexFixingDays_ = XMLUtils::getChildValueAsInt(fxt, "FXIndexFixingDays");
+        fxIndexCalendar_ = XMLUtils::getChildValue(fxt, "FXIndexCalendar");
     }
 }
 
