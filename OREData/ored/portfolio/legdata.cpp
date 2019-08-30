@@ -58,6 +58,8 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
+LegDataRegister<CashflowData> CashflowData::reg_("Cashflow");
+
 void CashflowData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     amounts_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Cashflow", "Amount", "Date", dates_);
@@ -68,6 +70,9 @@ XMLNode* CashflowData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Cashflow", "Amount", amounts_, "Date", dates_);
     return node;
 }
+
+LegDataRegister<FixedLegData> FixedLegData::reg_("Fixed");
+
 void FixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_, true);
@@ -78,6 +83,8 @@ XMLNode* FixedLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
     return node;
 }
+
+LegDataRegister<ZeroCouponFixedLegData> ZeroCouponFixedLegData::reg_("ZeroCouponFixed");
 
 void ZeroCouponFixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -96,6 +103,8 @@ XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Compounding", compounding_);
     return node;
 }
+
+LegDataRegister<FloatingLegData> FloatingLegData::reg_("Floating");
 
 void FloatingLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -145,6 +154,8 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+LegDataRegister<CPILegData> CPILegData::reg_("CPI");
+
 void CPILegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     index_ = XMLUtils::getChildValue(node, "Index", true);
@@ -170,6 +181,8 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "SubtractInflationNotional", subtractInflationNominal_);
     return node;
 }
+
+LegDataRegister<YoYLegData> YoYLegData::reg_("YY");
 
 void YoYLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -217,6 +230,8 @@ XMLNode* CMSLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+LegDataRegister<CMSLegData> CMSLegData::reg_("CMS");
+
 void CMSLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     swapIndex_ = XMLUtils::getChildValue(node, "Index", true);
@@ -258,6 +273,8 @@ XMLNode* CMSSpreadLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
+
+LegDataRegister<CMSSpreadLegData> CMSSpreadLegData::reg_("CMSSpread");
 
 void CMSSpreadLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -308,6 +325,8 @@ XMLNode* DigitalCMSSpreadLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+LegDataRegister<DigitalCMSSpreadLegData> DigitalCMSSpreadLegData::reg_("DigitalCMSSpread");
+
 void DigitalCMSSpreadLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
 
@@ -336,6 +355,8 @@ void DigitalCMSSpreadLegData::fromXML(XMLNode* node) {
                                                                      putPayoffDates_, false);
     }
 }
+
+LegDataRegister<EquityLegData> EquityLegData::reg_("Equity");
 
 void EquityLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -404,6 +425,8 @@ XMLNode* AmortizationData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Underflow", underflow_);
     return node;
 }
+
+LegDataFactory LegData::legDataFactory_;
 
 LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bool isPayer, const string& currency,
                  const ScheduleData& scheduleData, const string& dayCounter, const std::vector<double>& notionals,
@@ -482,29 +505,9 @@ void LegData::fromXML(XMLNode* node) {
 }
 
 boost::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(const string& legType) {
-    if (legType == "Fixed") {
-        return boost::make_shared<FixedLegData>();
-    } else if (legType == "ZeroCouponFixed") {
-        return boost::make_shared<ZeroCouponFixedLegData>();
-    } else if (legType == "Floating") {
-        return boost::make_shared<FloatingLegData>();
-    } else if (legType == "Cashflow") {
-        return boost::make_shared<CashflowData>();
-    } else if (legType == "CPI") {
-        return boost::make_shared<CPILegData>();
-    } else if (legType == "YY") {
-        return boost::make_shared<YoYLegData>();
-    } else if (legType == "CMS") {
-        return boost::make_shared<CMSLegData>();
-    } else if (legType == "CMSSpread") {
-        return boost::make_shared<CMSSpreadLegData>();
-    } else if (legType == "DigitalCMSSpread") {
-        return boost::make_shared<DigitalCMSSpreadLegData>();
-    } else if (legType == "Equity") {
-        return boost::make_shared<EquityLegData>();
-    } else {
-        QL_FAIL("Unkown leg type " << legType);
-    }
+    auto legData = legDataFactory_.build(legType);
+    QL_REQUIRE(legData, "Leg type " << legType << " has not been registered with the leg data factory.");
+    return legData;
 }
 
 XMLNode* LegData::toXML(XMLDocument& doc) {

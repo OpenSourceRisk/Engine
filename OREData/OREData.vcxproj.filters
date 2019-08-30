@@ -450,6 +450,9 @@
     <ClInclude Include="ored\portfolio\structuredtradeerror.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\legdatafactory.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -792,6 +795,9 @@
       <Filter>portfolio</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\vanillaoption.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\legdatafactory.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>
