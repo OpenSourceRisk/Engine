@@ -45,9 +45,9 @@ public:
     std::vector<Real> stateGrid(const Real t) const;
 
     /* roll back an deflated NPV array from t1 to t0 */
-    template <typename ValueType>
+    template <typename ValueType = Real>
     std::vector<ValueType> rollback(const std::vector<ValueType>& v, const Real t1, const Real t0,
-                                    const ValueType zero) const;
+                                    const ValueType zero = ValueType(0.0)) const;
 
     /* the underlying model */
     const boost::shared_ptr<LinearGaussMarkovModel>& model() const { return model_; }

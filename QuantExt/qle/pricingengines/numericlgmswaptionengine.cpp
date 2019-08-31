@@ -65,7 +65,7 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
     for (int j = options - 1; j > 0; --j) {
         Real t_to =
             model()->parametrization()->termStructure()->timeFromReference(exercise_->dates()[minIdxAlive + j - 1]);
-        v = rollback(v, t, t_to, 0.0);
+        v = rollback(v, t, t_to);
         x = stateGrid(t_to);
         for (Size k = 0; k < x.size(); ++k) {
             QL_REQUIRE(v[k] > 0 || close_enough(v[k], 0.0), "negative value in rollback");
@@ -74,7 +74,7 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
         }
         t = t_to;
     }
-    v = rollback(v, t, 0.0, 0.0);
+    v = rollback(v, t, 0.0);
     return v[0];
 
 } // NumericLgmSwaptionEngineBase::calculate
