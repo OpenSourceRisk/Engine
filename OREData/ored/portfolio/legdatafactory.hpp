@@ -27,6 +27,7 @@
 #pragma once
 
 #include <ored/utilities/log.hpp>
+#include <ql/patterns/singleton.hpp>
 #include <boost/make_shared.hpp>
 #include <functional>
 #include <map>
@@ -62,7 +63,9 @@ boost::shared_ptr<LegAdditionalData> createLegData() { return boost::make_shared
     
     \ingroup portfolio
 */
-class LegDataFactory {
+class LegDataFactory : public QuantLib::Singleton<LegDataFactory> {
+    
+    friend class QuantLib::Singleton<LegDataFactory>;
 
 public:
     /*! The container type used to store the leg data type key and the function that will be used to build a default
@@ -76,22 +79,20 @@ public:
         \warning If the \p legType has not been added to the factory then a call to this method for that \p legType 
                  will return a \c nullptr
     */
-    static boost::shared_ptr<LegAdditionalData> build(const std::string& legType);
+    boost::shared_ptr<LegAdditionalData> build(const std::string& legType);
 
-protected:
-    /*! Return the single instance of the map container with the leg type keys and their corresponding builder 
-        functions.
+    /*! Add a builder function \p builder for a given \p legType
     */
-    static boost::shared_ptr<map_type> getBuilders();
+    void addBuilder(const std::string& legType, std::function<boost::shared_ptr<LegAdditionalData>()> builder);
 
 private:
-    static boost::shared_ptr<map_type> map_;
+    map_type map_;
 };
 
 /*! Leg data registration class
 
     This class is used in any class derived from \c LegAdditionalData to register itself with the \c LegDataFactory so
-    that it can be built via a call to <code>LegDataFactory::build(const std::string& legType)</code>
+    that it can be built via a call to <code>LegDataFactory::instance().build(const std::string& legType)</code>
 
     As a concrete example, a \c FixedLegData class derived from \c LegAdditionalData should have the following form 
     in order to register it with the \c LegDataFactory:
@@ -113,11 +114,10 @@ private:
     \ingroup portfolio
 */
 template<class T>
-struct LegDataRegister : LegDataFactory {
+struct LegDataRegister {
 public:
     LegDataRegister(const std::string& legType) {
-        DLOG("Registering leg type " << legType << " with the leg data factory");
-        getBuilders()->insert(std::make_pair(legType, &createLegData<T>));
+        LegDataFactory::instance().addBuilder(legType, &createLegData<T>);
     }
 };
 

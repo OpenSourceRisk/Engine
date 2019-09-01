@@ -700,9 +700,6 @@ private:
     string fixingCalendar_;
     std::vector<AmortizationData> amortizationData_;
     int paymentLag_;
-
-    // Leg data factory to build concrete leg data instances
-    static LegDataFactory legDataFactory_;
 };
 
 //! \name Utilities for building QuantLib Legs

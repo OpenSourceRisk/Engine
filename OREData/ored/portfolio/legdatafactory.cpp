@@ -19,24 +19,20 @@
 #include <ored/portfolio/legdatafactory.hpp>
 
 using std::string;
+using std::function;
 
 namespace ore {
 namespace data {
 
-boost::shared_ptr<LegDataFactory::map_type> LegDataFactory::map_;
-
 boost::shared_ptr<LegAdditionalData> LegDataFactory::build(const string& legType) {
-    auto it = getBuilders()->find(legType);
-    if (it == getBuilders()->end())
+    auto it = map_.find(legType);
+    if (it == map_.end())
         return nullptr;
     return it->second();
 }
 
-boost::shared_ptr<LegDataFactory::map_type> LegDataFactory::getBuilders() {
-    if (!map_) {
-        map_ = boost::make_shared<map_type>();
-    }
-    return map_;
+void LegDataFactory::addBuilder(const string& legType, function<boost::shared_ptr<LegAdditionalData>()> builder) {
+    map_[legType] = builder;
 }
 
 }

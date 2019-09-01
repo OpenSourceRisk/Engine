@@ -426,8 +426,6 @@ XMLNode* AmortizationData::toXML(XMLDocument& doc) {
     return node;
 }
 
-LegDataFactory LegData::legDataFactory_;
-
 LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bool isPayer, const string& currency,
                  const ScheduleData& scheduleData, const string& dayCounter, const std::vector<double>& notionals,
                  const std::vector<string>& notionalDates, const string& paymentConvention,
@@ -505,7 +503,7 @@ void LegData::fromXML(XMLNode* node) {
 }
 
 boost::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(const string& legType) {
-    auto legData = legDataFactory_.build(legType);
+    auto legData = LegDataFactory::instance().build(legType);
     QL_REQUIRE(legData, "Leg type " << legType << " has not been registered with the leg data factory.");
     return legData;
 }
