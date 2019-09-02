@@ -33,33 +33,34 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-
 //! Black volatility surface based on forward moneyness
 //! \ingroup termstructures
-    class BlackVarianceSurfaceStdDevs : public BlackVarianceSurfaceMoneyness {
-    public:
+class BlackVarianceSurfaceStdDevs : public BlackVarianceSurfaceMoneyness {
+public:
 
-        BlackVarianceSurfaceStdDevs(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
-            const std::vector<Real>& stdDevs,
-            const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-            const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
-            const Handle<YieldTermStructure>& domTS, bool stickyStrike = false, bool flatExtrapMoneyness = false);
+    BlackVarianceSurfaceStdDevs(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
+        const std::vector<Real>& stdDevs,
+        const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
+        const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
+        const Handle<YieldTermStructure>& domTS, bool stickyStrike = false, bool flatExtrapMoneyness = false);
 
-        static void populateVolMatrix(const QuantLib::Handle<QuantLib::BlackVolTermStructure>& termStructre,
-            std::vector<std::vector<Handle<QuantLib::Quote>>>& quotesToPopulate, const std::vector<QuantLib::Period>& expiries, const std::vector<Real>& stdDevPoints, 
-            const QuantLib::Interpolation& forwardCurve, const QuantLib::Interpolation atmVolCurve);
+    // RUAN: Commment - what does this method do? what are the inputs and outputs, etc.
+    static void populateVolMatrix(const QuantLib::Handle<QuantLib::BlackVolTermStructure>& termStructre,
+        std::vector<std::vector<Handle<QuantLib::Quote>>>& quotesToPopulate,
+        const std::vector<QuantLib::Period>& expiries, const std::vector<Real>& stdDevPoints, 
+        const QuantLib::Interpolation& forwardCurve, const QuantLib::Interpolation atmVolCurve);
 
-    private:
-        virtual Real moneyness(Time t, Real strike) const;
-        Handle<YieldTermStructure> forTS_; // calculates fwd if StickyStrike==false
-        Handle<YieldTermStructure> domTS_;
-        std::vector<Real> forwards_; // cache fwd values if StickyStrike==true
-        Interpolation forwardCurve_;
-        Interpolation atmVarCurve_;
-        std::vector<Time> atmTimes_;
-        std::vector<Real> atmVariances_;
-        bool flatExtrapolateMoneyness_; // flatly extraplate on moneyness axis
-    };
+private:
+    virtual Real moneyness(Time t, Real strike) const;
+    Handle<YieldTermStructure> forTS_; // calculates fwd if StickyStrike==false
+    Handle<YieldTermStructure> domTS_;
+    std::vector<Real> forwards_; // cache fwd values if StickyStrike==true
+    Interpolation forwardCurve_;
+    Interpolation atmVarCurve_;
+    std::vector<Time> atmTimes_;
+    std::vector<Real> atmVariances_;
+    bool flatExtrapolateMoneyness_; // flatly extraplate on moneyness axis
+};
 
 
 } // namespace QuantExt
