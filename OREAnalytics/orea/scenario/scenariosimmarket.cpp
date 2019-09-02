@@ -1443,21 +1443,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                 }
                 break;
 
-            case RiskFactorKey::KeyType::CommoditySpot:
-                for (const auto& name : param.second.second) {
-                    try {
-                        Real spot = initMarket->commoditySpot(name, configuration)->value();
-                        DLOG("adding " << name << " commodity spot price");
-                        boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(spot);
-                        commoditySpots_.emplace(piecewise_construct, forward_as_tuple(Market::defaultConfiguration, name),
-                                                forward_as_tuple(q));
-                        simDataTmp.emplace(piecewise_construct, forward_as_tuple(param.first, name), forward_as_tuple(q));
-                    } catch (const std::exception& e) {
-                        processException(continueOnError, e);
-                    }
-                }
-                break;
-
             case RiskFactorKey::KeyType::CommodityCurve:
                 for (const auto& name : param.second.second) {
                     try {
@@ -1471,12 +1456,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // Get prices at specified simulation tenors from time 0 market curve and place in quotes
                         vector<Period> simulationTenors = parameters->commodityCurveTenors(name);
                         DayCounter commodityCurveDayCounter = parseDayCounter(parameters->commodityCurveDayCounter(name));
-                        vector<Time> times(simulationTenors.size());
                         vector<Handle<Quote>> quotes(simulationTenors.size());
 
                         for (Size i = 0; i < simulationTenors.size(); i++) {
-                            times[i] = commodityCurveDayCounter.yearFraction(asof_, asof_ + simulationTenors[i]);
-                            Real price = initialCommodityCurve->price(times[i], allowsExtrapolation);
+                            Date d = asof_ + simulationTenors[i];
+                            Real price = initialCommodityCurve->price(d, allowsExtrapolation);
                             boost::shared_ptr<SimpleQuote> quote = boost::make_shared<SimpleQuote>(price);
                             quotes[i] = Handle<Quote>(quote);
 
@@ -1490,7 +1474,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // Create a commodity price curve with simulation tenors as pillars and store
                         // Hard-coded linear interpolation here - may need to make this more dynamic
                         Handle<PriceTermStructure> simCommodityCurve(
-                            boost::make_shared<InterpolatedPriceCurve<Linear>>(times, quotes, commodityCurveDayCounter));
+                            boost::make_shared<InterpolatedPriceCurve<Linear>>(simulationTenors, quotes, commodityCurveDayCounter));
                         simCommodityCurve->enableExtrapolation(allowsExtrapolation);
 
                         commodityCurves_.emplace(piecewise_construct, forward_as_tuple(Market::defaultConfiguration, name),
@@ -1509,7 +1493,8 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         Handle<BlackVolTermStructure> newVol;
                         if (param.second.first) {
-                            Handle<Quote> spot = commoditySpot(name, configuration);
+                            Handle<Quote> spot(boost::make_shared<SimpleQuote>(
+                                initMarket->commodityPriceCurve(name, configuration)->price(0)));
                             const vector<Real>& moneyness = parameters->commodityVolMoneyness(name);
                             QL_REQUIRE(!moneyness.empty(), "Commodity volatility moneyness for "
                                                                << name << " should have at least one element");

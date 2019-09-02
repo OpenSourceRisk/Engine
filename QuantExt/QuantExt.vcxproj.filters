@@ -756,6 +756,9 @@
     <ClInclude Include="qle\termstructures\blackmonotonevarvoltermstructure.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\crosscurrencypricetermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1277,6 +1280,9 @@
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\blackvariancesurfacestddevs.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\crosscurrencypricetermstructure.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

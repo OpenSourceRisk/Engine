@@ -29,19 +29,6 @@
 #include <ql/math/rounding.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
-namespace {
-
-class closeDouble : public std::binary_function<double,double,bool>
-{
-public:
-    bool operator()(const double &left, const double &right) const
-    {
-        return left < right && !QuantLib::close_enough(left, right);
-    }
-};
-
-}
-
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -108,6 +95,16 @@ protected:
 private:
     Handle<BlackVolTermStructure> vol_;
     std::vector<Time> timePoints_;
+
+    class closeDouble : public std::binary_function<double,double,bool>
+    {
+    public:
+        bool operator()(const double &left, const double &right) const
+        {
+            return left < right && !QuantLib::close_enough(left, right);
+        }
+    };
+
     mutable std::map<Real, std::vector<Real>, closeDouble> monoVars_;
 };
 

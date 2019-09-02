@@ -250,7 +250,7 @@ const string& ScenarioSimMarketParameters::baseCorrelationDayCounter(const strin
 }
 
 vector<string> ScenarioSimMarketParameters::commodityNames() const {
-    return paramsLookup(RiskFactorKey::KeyType::CommoditySpot);
+    return paramsLookup(RiskFactorKey::KeyType::CommodityCurve);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::commodityCurveTenors(const string& commodityName) const {
@@ -456,7 +456,6 @@ void ScenarioSimMarketParameters::setCapFloorVolDayCounters(const string& key, c
 }
 
 void ScenarioSimMarketParameters::setCommodityNames(vector<string> names) {
-    addParamsName(RiskFactorKey::KeyType::CommoditySpot, names);
     setCommodityCurves(names);
 }
 

@@ -66,7 +66,6 @@ public:
         ZeroInflationCapFloorVolatility,
         YoYInflationCurve,
         YoYInflationCapFloorVolatility,
-        CommoditySpot,
         CommodityCurve,
         CommodityVolatility,
         SecuritySpread,
