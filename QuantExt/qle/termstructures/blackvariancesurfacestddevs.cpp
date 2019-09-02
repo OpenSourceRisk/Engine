@@ -49,8 +49,7 @@ namespace QuantExt {
             QL_REQUIRE(!domTS_.empty(), "domestic discount curve required for atmf surface");
             registerWith(forTS_);
             registerWith(domTS_);
-        }
-        else {
+        } else {
             for (Size i = 0; i < times_.size(); i++) {
                 Time t = times_[i];
                 Real fwd = spot_->value() * forTS_->discount(t) / domTS_->discount(t);
@@ -66,14 +65,13 @@ namespace QuantExt {
         Real atmVolAtT;
         if (t == 0) {
             atmVolAtT = 0;
-        }
-        else {
+        } else {
             atmVolAtT = sqrt(atmVarCurve_(t, true) / t);
         }
 
-        if (strike == Null<Real>() || strike == 0)
+        if (strike == Null<Real>() || strike == 0) {
             return 0.0;
-        else {
+        } else {
             if (stickyStrike_)
                 fwd = forwardCurve_(t, true);
             else
@@ -93,9 +91,6 @@ namespace QuantExt {
             return reqD;
         }
     }
-
-    //void BlackVarianceSurfaceStdDevs::populateVolMatrix(const QuantLib::Handle<QuantLib::BlackVolTermStructure>& termStructre, vector<vector<Handle<Quote>>>& quotesToPopulate,
-    //    const std::vector<QuantLib::Period>& expiries, const std::vector<Real>& stdDevPoints, const QuantLib::Interpolation & forwardCurve, const QuantLib::Interpolation atmVolCurve) {
 
     void BlackVarianceSurfaceStdDevs::populateVolMatrix(const QuantLib::Handle<QuantLib::BlackVolTermStructure>& termStructre,
         vector<vector<Handle<Quote>>>& quotesToPopulate, const std::vector<QuantLib::Period>& expiries, const std::vector<Real>& stdDevPoints,

@@ -50,8 +50,8 @@ libTermStructures_la_SOURCES = \
 	flatcorrelation.cpp \
 	capfloortermvolsurface.cpp \
 	capfloorhelper.cpp \
-    blackvariancesurfacesparse.cpp \
-    blackvariancesurfacestddevs.cpp \
+	blackvariancesurfacesparse.cpp \
+	blackvariancesurfacestddevs.cpp \
 	crosscurrencypricetermstructure.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -126,7 +126,7 @@ this_include_HEADERS = \
 	capfloorhelper.hpp \
 	piecewiseoptionletstripper.hpp \
 	blackvariancesurfacesparse.hpp \
-    blackvariancesurfacestddevs.hpp \
+	blackvariancesurfacestddevs.hpp \
 	strippedoptionletadapter.hpp \
 	optionletstripperwithatm.hpp \
 	iterativebootstrap.hpp \

@@ -871,8 +871,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             Size m;
                             if (parameters->useMoneyness(name)) {
                                 m = parameters->fxVolMoneyness(name).size();
-                            }
-                            else {
+                            } else {
                                 m = parameters->fxVolStdDevs(name).size();
                             }
                             vector<vector<Handle<Quote>>> quotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
@@ -941,15 +940,16 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 Interpolation atmVolCurve = Linear().interpolate(times.begin(), times.end(), atmVols.begin());
 
                                 // populate quotes
-                                BlackVarianceSurfaceStdDevs::populateVolMatrix(wrapper, quotes, parameters->fxVolExpiries(), parameters->fxVolStdDevs(name), forwardCurve, atmVolCurve);
+                                BlackVarianceSurfaceStdDevs::populateVolMatrix (wrapper, quotes,
+                                    parameters->fxVolExpiries(), parameters->fxVolStdDevs(name), forwardCurve, atmVolCurve);
 
                                 // sort out simDataTemp
                                 for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
                                     for (Size j = 0; j < parameters->fxVolStdDevs(name).size(); j++) {
                                         Size idx = j * n + i;
-                                        boost::shared_ptr<Quote> q = *(quotes[j][i]);
+                                        boost::shared_ptr<Quote> q = quotes[j][i]->currentLink();
                                         boost::shared_ptr<SimpleQuote> sq = boost::dynamic_pointer_cast<SimpleQuote>(q);
-                                        QL_REQUIRE(sq, "no, problem");
+                                        QL_REQUIRE(sq, "Quote is not a SimpleQuote"); // why do we need this?
                                         simDataTmp.emplace(std::piecewise_construct,
                                             std::forward_as_tuple(param.first, name, idx),
                                             std::forward_as_tuple(sq)); 
