@@ -27,6 +27,7 @@
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/swaption.hpp>
+#include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/position.hpp>
 #include <ql/time/businessdayconvention.hpp>
@@ -221,6 +222,20 @@ AmortizationType parseAmortizationType(const std::string& s);
 \ingroup utilities
 */
 QuantExt::SequenceType parseSequenceType(const std::string& s);
+
+//! Convert string to fdm scheme desc
+/*!
+\ingroup utilities
+*/
+QuantLib::FdmSchemeDesc parseFdmSchemeDesc(const std::string& s);
+
+enum class AssetClass { EQ, FX, COM, IR, INF, CR };
+
+//! Convert text to ore::data::AssetClass
+/*!
+\ingroup utilities
+*/
+AssetClass parseAssetClass(const std::string& s);
 
 } // namespace data
 } // namespace ore

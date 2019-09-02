@@ -63,7 +63,8 @@ public:
         SwapIndex,
         InflationSwap,
         SecuritySpread,
-        CMSSpreadOption
+        CMSSpreadOption,
+        Commodity
     };
 
     //! Default destructor
@@ -1060,5 +1061,59 @@ private:
     string strDayCounter_;
     string strRollConvention_;
 };
+
+/*! Container for storing Commodity quote conventions
+    \ingroup marketdata
+ */
+class CommodityConvention : public Convention {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    CommodityConvention() {}
+    
+    //! Detailed constructor
+    CommodityConvention(
+        const string& id,
+        const string& spotDays = "",
+        const string& pointsFactor = "",
+        const string& advanceCalendar = "",
+        const string& spotRelative = "",
+        BusinessDayConvention bdc = Following,
+        bool outright = true);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    Natural spotDays() const { return spotDays_; }
+    Real pointsFactor() const { return pointsFactor_; }
+    const Calendar& advanceCalendar() const { return advanceCalendar_; }
+    bool spotRelative() const { return spotRelative_; }
+    BusinessDayConvention bdc() const { return bdc_; }
+    bool outright() const { return outright_; }
+    //@}
+
+    //! \name Serialisation
+    //
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void build();
+    //@}
+
+private:
+    Natural spotDays_;
+    Real pointsFactor_;
+    Calendar advanceCalendar_;
+    bool spotRelative_;
+    BusinessDayConvention bdc_;
+    bool outright_;
+
+    // Strings to store the inputs
+    string strSpotDays_;
+    string strPointsFactor_;
+    string strAdvanceCalendar_;
+    string strSpotRelative_;
+};
+
 } // namespace data
 } // namespace ore

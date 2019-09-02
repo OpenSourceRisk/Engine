@@ -29,6 +29,11 @@ using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
 
+using ore::data::CommoditySpotQuote;
+using ore::data::CommodityForwardQuote;
+using ore::data::MarketDatum;
+using ore::data::parseMarketDatum;
+
 namespace {
 
 struct test_daycounter_data {
@@ -354,6 +359,115 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "CORRELATION/PRICE/INDEX1/INDEX2/6X/0.1", value),
                           QuantLib::Error);
     }
+
+    BOOST_TEST_MESSAGE("Testing commodity spot market datum parsing...");
+
+    // test normal parsing
+    {
+        Date d(29, Jul, 2019);
+        Real value = 1418.1;
+
+        string input = "COMMODITY/PRICE/PM:XAUUSD/USD";
+
+        boost::shared_ptr<MarketDatum> datum = parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == MarketDatum::InstrumentType::COMMODITY_SPOT);
+        BOOST_CHECK(datum->quoteType() == MarketDatum::QuoteType::PRICE);
+
+        boost::shared_ptr<CommoditySpotQuote> q = boost::dynamic_pointer_cast<CommoditySpotQuote>(datum);
+
+        BOOST_CHECK(q->commodityName() == "PM:XAUUSD");
+        BOOST_CHECK(q->quoteCurrency() == "USD");
+    }
+
+    // test possible exceptions
+    {
+        Date d(29, Jul, 2019);
+        Real value = 1418.1;
+
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_SPOT/PRICE/PM:XAUUSD/USD", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY/RATE/PM:XAUUSD/USD", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY/PRICE/USD", value), Error);
+    }
+
+    BOOST_TEST_MESSAGE("Testing commodity forward market datum parsing...");
+
+    // test normal parsing
+    {
+        Date d(29, Jul, 2019);
+        Real value = 300.16535;
+
+        // Tenor based quote
+        string input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/1M";
+        boost::shared_ptr<MarketDatum> datum = parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == MarketDatum::InstrumentType::COMMODITY_FWD);
+        BOOST_CHECK(datum->quoteType() == MarketDatum::QuoteType::PRICE);
+
+        boost::shared_ptr<CommodityForwardQuote> q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->commodityName() == "PM:XAUUSD");
+        BOOST_CHECK(q->quoteCurrency() == "USD");
+        BOOST_CHECK(q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date());
+        BOOST_CHECK(q->tenor() == 1 * Months);
+        BOOST_CHECK(q->startTenor() == boost::none);
+
+        // Date based quote
+        input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2019-08-30";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->commodityName() == "PM:XAUUSD");
+        BOOST_CHECK(q->quoteCurrency() == "USD");
+        BOOST_CHECK(!q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date(30, Aug, 2019));
+        BOOST_CHECK(q->tenor() == Period());
+        BOOST_CHECK(q->startTenor() == boost::none);
+
+        // Special tenor based quotes
+
+        // Overnight
+        input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/ON";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date());
+        BOOST_CHECK(q->tenor() == 1 * Days);
+        BOOST_CHECK(q->startTenor() == 0 * Days);
+
+        // Tom-next
+        input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/TN";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date());
+        BOOST_CHECK(q->tenor() == 1 * Days);
+        BOOST_CHECK(q->startTenor() == 1 * Days);
+
+        // Spot-next
+        input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/SN";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date());
+        BOOST_CHECK(q->tenor() == 1 * Days);
+        BOOST_CHECK(q->startTenor() == boost::none);
+    }
+
+    // test possible exceptions
+    {
+        Date d(29, Jul, 2019);
+        Real value = 300.16535;
+
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_FORWARD/PRICE/PM:XAUUSD/USD/1M", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_FWD/RATE/PM:XAUUSD/USD/1M", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_FWD/PRICE/USD/1M", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2019-12", value), Error);
+    }
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

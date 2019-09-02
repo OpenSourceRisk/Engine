@@ -111,8 +111,6 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
         return equityVolShiftData().at(name);
     case RFType::DividendYield:
         return *dividendYieldShiftData().at(name);
-    case RFType::CommoditySpot:
-        return commodityShiftData().at(name);
     case RFType::CommodityCurve:
         return *commodityCurveShiftData().at(name);
     case RFType::CommodityVolatility:
@@ -349,18 +347,6 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             VolShiftData data;
             volShiftDataFromXML(child, data);
             yoyInflationCapFloorVolShiftData_[index] = data;
-        }
-    }
-
-    LOG("Get commodity spot sensitivity parameters");
-    XMLNode* csNode = XMLUtils::getChildNode(node, "CommoditySpots");
-    if (csNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(csNode, "CommoditySpot"); child;
-             child = XMLUtils::getNextSibling(child)) {
-            string name = XMLUtils::getAttribute(child, "name");
-            SpotShiftData data;
-            shiftDataFromXML(child, data);
-            commodityShiftData_[name] = data;
         }
     }
 
@@ -601,16 +587,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "YYInflationIndexCurve");
             XMLUtils::addAttribute(doc, node, "index", kv.first);
             curveShiftDataToXML(doc, node, *kv.second);
-        }
-    }
-
-    if (!commodityShiftData_.empty()) {
-        LOG("toXML for CommoditySpots");
-        XMLNode* parent = XMLUtils::addChild(doc, root, "CommoditySpots");
-        for (const auto& kv : commodityShiftData_) {
-            XMLNode* node = XMLUtils::addChild(doc, parent, "CommoditySpot");
-            XMLUtils::addAttribute(doc, node, "name", kv.first);
-            shiftDataToXML(doc, node, kv.second);
         }
     }
 

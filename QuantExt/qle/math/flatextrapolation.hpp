@@ -26,6 +26,7 @@
 
 #include <ql/math/interpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/interpolations/cubicinterpolation.hpp>
 
 #include <boost/make_shared.hpp>
@@ -97,6 +98,16 @@ class LinearFlat {
 public:
     template <class I1, class I2> Interpolation interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin) const {
         return FlatExtrapolation(boost::make_shared<LinearInterpolation>(xBegin, xEnd, yBegin));
+    }
+    static const bool global = false;
+    static const Size requiredPoints = 2;
+};
+
+//! %Linear-interpolation and flat extrapolation factory and traits
+class LogLinearFlat {
+public:
+    template <class I1, class I2> Interpolation interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin) const {
+        return FlatExtrapolation(boost::make_shared<LogLinearInterpolation>(xBegin, xEnd, yBegin));
     }
     static const bool global = false;
     static const Size requiredPoints = 2;

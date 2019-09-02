@@ -128,7 +128,7 @@
       <xs:element type="xs:string" name="SettlementDays" maxOccurs="unbounded" minOccurs="1"/>
       <xs:element type="xs:string" name="Calendar" maxOccurs="unbounded" minOccurs="1"/>
       <xs:element type="xs:string" name="IssueDate" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

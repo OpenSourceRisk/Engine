@@ -39,6 +39,8 @@ namespace data {
 class CSVLoader : public Loader {
 public:
     //! Constructor
+    CSVLoader() {}
+
     CSVLoader( //! Quote file name
         const string& marketFilename,
         //! Fixing file name
@@ -50,6 +52,24 @@ public:
         const vector<string>& marketFiles,
         //! Fixing file name
         const vector<string>& fixingFiles,
+        //! Enable/disable implying today's fixings
+        bool implyTodaysFixings = false);
+
+    CSVLoader( //! Quote file name
+        const string& marketFilename,
+        //! Fixing file name
+        const string& fixingFilename,
+        //! Dividend file name
+        const string& dividendFilename,
+        //! Enable/disable implying today's fixings
+        bool implyTodaysFixings = false);
+
+    CSVLoader( //! Quote file name
+        const vector<string>& marketFiles,
+        //! Fixing file name
+        const vector<string>& fixingFiles,
+        //! Dividend file name
+        const vector<string>& dividendFiles,
         //! Enable/disable implying today's fixings
         bool implyTodaysFixings = false);
 
@@ -68,7 +88,12 @@ public:
     //@}
 
 private:
-    void loadFile(const string&, bool);
+    enum class DataType {
+        Market,
+        Fixing,
+        Dividend
+    };
+    void loadFile(const string&, DataType);
 
     bool implyTodaysFixings_;
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;

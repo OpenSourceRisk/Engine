@@ -148,6 +148,10 @@ void ScenarioSimMarketParameters::setDefaults() {
     correlationDayCounters_[std::make_pair("", "")] = "A365";
     // Default calendars
     defaultCurveCalendars_[""] = "TARGET";
+    // Default fxVol params
+    fxVolIsSurface_[""] = false;
+    fxMoneyness_[""] = {0.0};
+    hasFxPairWithSurface_ = false;
 }
 
 void ScenarioSimMarketParameters::reset() {
@@ -244,7 +248,7 @@ const string& ScenarioSimMarketParameters::baseCorrelationDayCounter(const strin
 }
 
 vector<string> ScenarioSimMarketParameters::commodityNames() const {
-    return paramsLookup(RiskFactorKey::KeyType::CommoditySpot);
+    return paramsLookup(RiskFactorKey::KeyType::CommodityCurve);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::commodityCurveTenors(const string& commodityName) const {
@@ -261,6 +265,22 @@ const string& ScenarioSimMarketParameters::commodityCurveDayCounter(const string
 
 const vector<Period>& ScenarioSimMarketParameters::commodityVolExpiries(const string& commodityName) const {
     return lookup(commodityVolExpiries_, commodityName);
+}
+
+const vector<Real>& ScenarioSimMarketParameters::fxVolMoneyness(const string& ccypair) const {
+    return lookup(fxMoneyness_, ccypair);
+}
+
+const vector<Real>& ScenarioSimMarketParameters::fxVolMoneyness() const {
+    return fxVolMoneyness("");
+}
+
+bool ScenarioSimMarketParameters::fxVolIsSurface(const string& ccypair) const {
+    return lookup(fxVolIsSurface_, ccypair);
+}
+
+bool ScenarioSimMarketParameters::fxVolIsSurface() const {
+    return fxVolIsSurface("");
 }
 
 const vector<Real>& ScenarioSimMarketParameters::commodityVolMoneyness(const string& commodityName) const {
@@ -353,6 +373,34 @@ void ScenarioSimMarketParameters::setFxVolDayCounters(const string& key, const s
     fxVolDayCounters_[key] = s;
 }
 
+void ScenarioSimMarketParameters::setFxVolIsSurface(const string& key, bool val) { 
+    fxVolIsSurface_[key] = val; 
+}
+
+void ScenarioSimMarketParameters::setFxVolIsSurface(bool val) { 
+    fxVolIsSurface_[""] = val; 
+}
+
+void ScenarioSimMarketParameters::setHasFxPairWithSurface(bool val) { 
+    hasFxPairWithSurface_ = val; 
+}
+
+void ScenarioSimMarketParameters::setFxVolExpiries(const vector<Period>& expiries) { 
+    fxVolExpiries_ = expiries; 
+}
+
+void ScenarioSimMarketParameters::setFxVolDecayMode(const string& val) { 
+    fxVolDecayMode_ = val; 
+}
+
+void ScenarioSimMarketParameters::setFxVolMoneyness(const string& ccypair, const vector<Real>& moneyness) {
+    fxMoneyness_[ccypair] = moneyness;
+}
+
+void ScenarioSimMarketParameters::setFxVolMoneyness(const vector<Real>& moneyness) { 
+    fxMoneyness_[""] = moneyness; 
+}
+
 void ScenarioSimMarketParameters::setSwapVolDayCounters(const string& key, const string& s) {
     swapVolDayCounters_[key] = s;
 }
@@ -374,7 +422,6 @@ void ScenarioSimMarketParameters::setCapFloorVolDayCounters(const string& key, c
 }
 
 void ScenarioSimMarketParameters::setCommodityNames(vector<string> names) {
-    addParamsName(RiskFactorKey::KeyType::CommoditySpot, names);
     setCommodityCurves(names);
 }
 
@@ -976,11 +1023,13 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         setFxVolCcyPairs(XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true));
         XMLNode* fxSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
         if (fxSurfaceNode) {
-            fxVolIsSurface_ = true;
-            fxMoneyness_ = XMLUtils::getChildrenValuesAsDoublesCompact(fxSurfaceNode, "Moneyness", true);
-        } else {
-            fxVolIsSurface_ = false;
-            fxMoneyness_ = {0.0};
+            hasFxPairWithSurface_ = true;
+            for (XMLNode* child = XMLUtils::getChildNode(fxSurfaceNode, "Moneyness"); child;
+                 child = XMLUtils::getNextSibling(child)) {
+                string label = XMLUtils::getAttribute(child, "ccyPair"); // will be "" if no attr
+                fxMoneyness_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
+                fxVolIsSurface_[label] = true;
+            }
         }
         XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
         if (dc) {
@@ -1356,9 +1405,20 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, fxVolatilitiesNode, "ReactionToTimeDecay", fxVolDecayMode_);
         XMLUtils::addChildren(doc, fxVolatilitiesNode, "CurrencyPairs", "CurrencyPair", fxVolCcyPairs());
         XMLUtils::addGenericChildAsList(doc, fxVolatilitiesNode, "Expiries", fxVolExpiries_);
-        if (fxVolIsSurface_) {
+        if (hasFxPairWithSurface_) {
             XMLNode* surfaceNode = XMLUtils::addChild(doc, fxVolatilitiesNode, "Surface");
-            XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_);
+            map<string, vector<Real>>::const_iterator it;
+            for (it = fxMoneyness_.begin(); it != fxMoneyness_.end(); it++) {
+                if (it->first == "") {
+                    // only print default moneyness if it's not ATM
+                    if (fxMoneyness_[""].size() > 1 || !(close(fxMoneyness_[""][0], 0.0) || close(fxMoneyness_[""][0], 1.0))) {
+                        XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first]); // default not atm
+                    }
+                } else {
+                    XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first], "ccyPair",
+                                                    it->first);
+                }
+            }
         }
         if (fxVolDayCounters_.size() > 0) {
             XMLNode* node = XMLUtils::addChild(doc, fxVolatilitiesNode, "DayCounters");

@@ -67,6 +67,7 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
+
 private:
     string maturityDate_;
     string boughtCurrency_;

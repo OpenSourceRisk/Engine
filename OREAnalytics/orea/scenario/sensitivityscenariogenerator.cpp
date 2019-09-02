@@ -727,17 +727,18 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
     }
 
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
-    Size n_fxvol_strikes = simMarketData_->fxVolMoneyness().size();
-    vector<Real> vol_strikes = simMarketData_->fxVolMoneyness();
-    vector<vector<Real>> values(n_fxvol_exp, vector<Real>(n_fxvol_strikes, 0.0));
     std::vector<Real> times(n_fxvol_exp);
-
-    // buffer for shifted zero curves
-    vector<vector<Real>> shiftedValues(n_fxvol_exp, vector<Real>(n_fxvol_strikes, 0.0));
 
     for (auto f : sensitivityData_->fxVolShiftData()) {
         string ccyPair = f.first;
         QL_REQUIRE(ccyPair.length() == 6, "invalid ccy pair length");
+
+        Size n_fxvol_strikes = simMarketData_->fxVolMoneyness(ccyPair).size();
+        vector<Real> vol_strikes = simMarketData_->fxVolMoneyness(ccyPair);
+        vector<vector<Real>> values(n_fxvol_exp, vector<Real>(n_fxvol_strikes, 0.0));
+
+        // buffer for shifted zero curves
+        vector<vector<Real>> shiftedValues(n_fxvol_exp, vector<Real>(n_fxvol_strikes, 0.0));
 
         SensitivityScenarioData::VolShiftData data = f.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
@@ -1701,48 +1702,6 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
     LOG("Base correlation scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateCommodityScenarios(bool up) {
-
-    // Log an ALERT if some commodity curves in simulation market are not in the list
-    for (const string& name : simMarketData_->commodityNames()) {
-        if (sensitivityData_->commodityShiftData().find(name) == sensitivityData_->commodityShiftData().end()) {
-            ALOG("Commodity " << name
-                              << " in simulation market is not "
-                                 "included in commodity sensitivity analysis");
-        }
-    }
-
-    // Create the commodity spot shift for each name
-    Date asof = baseScenario_->asof();
-    for (auto c : sensitivityData_->commodityShiftData()) {
-        string name = c.first;
-        SensitivityScenarioData::SpotShiftData data = c.second;
-        ShiftType type = parseShiftType(data.shiftType);
-        Real shift = up ? data.shiftSize : -data.shiftSize;
-        boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
-        scenarioDescriptions_.push_back(commodityScenarioDescription(name, up));
-        RiskFactorKey key(RiskFactorKey::KeyType::CommoditySpot, name);
-        Real spot;
-        if (!tryGetBaseScenarioValue(baseScenario_, key, spot, continueOnError_))
-            continue;
-        Real shiftedSpot = type == ShiftType::Relative ? spot * (1.0 + shift) : (spot + shift);
-        scenario->add(key, shiftedSpot);
-
-        // Store absolute shift size
-        if (up)
-            shiftSizes_[key] = shiftedSpot - spot;
-
-        // Give the scenario a label
-        scenario->label(to_string(scenarioDescriptions_.back()));
-
-        scenarios_.push_back(scenario);
-
-        DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
-                                       << " created: " << shiftedSpot);
-    }
-    LOG("Commodity spot scenarios done");
-}
-
 void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
 
     Date asof = baseScenario_->asof();
@@ -2419,17 +2378,6 @@ SensitivityScenarioGenerator::baseCorrelationScenarioDescription(string indexNam
         shiftSizes_[key] = 0.0;
 
     return desc;
-}
-
-SensitivityScenarioGenerator::ScenarioDescription
-SensitivityScenarioGenerator::commodityScenarioDescription(const string& commodityName, bool up) {
-    RiskFactorKey key(RiskFactorKey::KeyType::CommoditySpot, commodityName);
-    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
-
-    if (up)
-        shiftSizes_[key] = 0.0;
-
-    return ScenarioDescription(type, key, "spot");
 }
 
 SensitivityScenarioGenerator::ScenarioDescription
