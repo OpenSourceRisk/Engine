@@ -37,7 +37,11 @@ void OptionData::fromXML(XMLNode* node) {
     premium_ = XMLUtils::getChildValueAsDouble(node, "PremiumAmount", false);
     premiumCcy_ = XMLUtils::getChildValue(node, "PremiumCurrency", false);
     premiumPayDate_ = XMLUtils::getChildValue(node, "PremiumPayDate", false);
-    exerciseFees_ = XMLUtils::getChildrenValuesAsDoubles(node, "ExerciseFees", "ExerciseFee", false);
+    vector<std::reference_wrapper<vector<string>>> attrs;
+    attrs.push_back(exerciseFeeTypes_);
+    attrs.push_back(exerciseFeeDates_);
+    exerciseFees_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "ExerciseFees", "ExerciseFee",
+                                                                       {"type", "startDate"}, attrs, false);
     exerciseFeeSettlementPeriod_ = XMLUtils::getChildValue(node, "ExerciseFeeSettlementPeriod", false);
     exerciseFeeSettlementCalendar_ = XMLUtils::getChildValue(node, "ExerciseFeeSettlementCalendar", false);
     exerciseFeeSettlementConvention_ = XMLUtils::getChildValue(node, "ExerciseFeeSettlementConvention", false);
@@ -66,7 +70,8 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "PremiumAmount", premium_);
     XMLUtils::addChild(doc, node, "PremiumCurrency", premiumCcy_);
     XMLUtils::addChild(doc, node, "PremiumPayDate", premiumPayDate_);
-    XMLUtils::addChildren(doc, node, "ExerciseFees", "ExerciseFee", exerciseFees_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "ExerciseFees", "ExerciseFee", exerciseFees_,
+                                                {"type", "startDate"}, {exerciseFeeTypes_, exerciseFeeDates_});
     if (exerciseFeeSettlementPeriod_ != "")
         XMLUtils::addChild(doc, node, "ExerciseFeeSettlementPeriod", exerciseFeeSettlementPeriod_);
     if (exerciseFeeSettlementCalendar_ != "")

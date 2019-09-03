@@ -63,6 +63,8 @@ public:
     const string& premiumCcy() const { return premiumCcy_; }
     const string& premiumPayDate() const { return premiumPayDate_; }
     const vector<double>& exerciseFees() const { return exerciseFees_; }
+    const vector<string>& exerciseFeeDates() const { return exerciseFeeDates_; }
+    const vector<string>& exerciseFeeTypes() const { return exerciseFeeTypes_; }
     const string& exerciseFeeSettlementPeriod() const { return exerciseFeeSettlementPeriod_; }
     const string& exerciseFeeSettlementCalendar() const { return exerciseFeeSettlementCalendar_; }
     const string& exerciseFeeSettlementConvention() const { return exerciseFeeSettlementConvention_; }
@@ -90,6 +92,8 @@ private:
     string premiumCcy_;
     string premiumPayDate_;
     vector<double> exerciseFees_;
+    vector<string> exerciseFeeDates_;
+    vector<string> exerciseFeeTypes_;
     string exerciseFeeSettlementPeriod_;
     string exerciseFeeSettlementCalendar_;
     string exerciseFeeSettlementConvention_;
