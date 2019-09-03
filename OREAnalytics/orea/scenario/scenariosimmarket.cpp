@@ -947,7 +947,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
                                     for (Size j = 0; j < parameters->fxVolStdDevs(name).size(); j++) {
                                         Size idx = j * n + i;
-                                        boost::shared_ptr<Quote> q = quotes[j][i]->currentLink();
+                                        boost::shared_ptr<Quote> q = quotes[j][i].currentLink();
                                         boost::shared_ptr<SimpleQuote> sq = boost::dynamic_pointer_cast<SimpleQuote>(q);
                                         QL_REQUIRE(sq, "Quote is not a SimpleQuote"); // why do we need this?
                                         simDataTmp.emplace(std::piecewise_construct,
