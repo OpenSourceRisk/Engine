@@ -55,12 +55,17 @@ public:
     const bool& payoffAtExpiry() const { return payoffAtExpiry_; }
     const vector<string>& exerciseDates() const { return exerciseDates_; }
     const string& noticePeriod() const { return noticePeriod_; }
+    const string& noticeCalendar() const { return noticeCalendar_; }
+    const string& noticeConvention() const { return noticeConvention_; }
     const string& settlement() const { return settlement_; }
     const string& settlementMethod() const { return settlementMethod_; }
     double premium() const { return premium_; }
     const string& premiumCcy() const { return premiumCcy_; }
     const string& premiumPayDate() const { return premiumPayDate_; }
     const vector<double>& exerciseFees() const { return exerciseFees_; }
+    const string& exerciseFeeSettlementPeriod() const { return exerciseFeeSettlementPeriod_; }
+    const string& exerciseFeeSettlementCalendar() const { return exerciseFeeSettlementCalendar_; }
+    const string& exerciseFeeSettlementConvention() const { return exerciseFeeSettlementConvention_; }
     const vector<double>& exercisePrices() const { return exercisePrices_; }
     //@}
 
@@ -77,12 +82,17 @@ private:
     bool payoffAtExpiry_; // Y or N
     vector<string> exerciseDates_;
     string noticePeriod_;
+    string noticeCalendar_;
+    string noticeConvention_;
     string settlement_;       // Cash or Physical, default Cash.
     string settlementMethod_; // QuantLib::Settlement::Method, default empty
     double premium_;
     string premiumCcy_;
     string premiumPayDate_;
     vector<double> exerciseFees_;
+    string exerciseFeeSettlementPeriod_;
+    string exerciseFeeSettlementCalendar_;
+    string exerciseFeeSettlementConvention_;
     vector<double> exercisePrices_;
 };
 } // namespace data
