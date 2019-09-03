@@ -40,8 +40,8 @@ public:
                                const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes,
                                const std::vector<QuantLib::Volatility>& volatilities,
                                const QuantLib::DayCounter& dayCounter,
-                               const bool& lowerStrikeConstExtrap = true,
-                               const bool& upperStrikeExtrap = true);
+                               bool lowerStrikeConstExtrap = true,
+                               bool upperStrikeConstExtrap = true);
 
     //! \name TermStructure interface
     //@{

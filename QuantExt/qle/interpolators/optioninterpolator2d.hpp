@@ -44,8 +44,8 @@ class OptionInterpolator2d {
 public:
     //! OptionInterpolator2d Constructor
     OptionInterpolator2d(const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dayCounter,
-                         const bool& lowerStrikeConstExtrap = true,
-                         const bool& upperStrikeConstExtrap = true,
+                         bool lowerStrikeConstExtrap = true,
+                         bool upperStrikeConstExtrap = true,
                          const InterpolatorStrike& interpolatorStrike = InterpolatorStrike(),
                          const InterpolatorExpiry& interpolatorExpiry = InterpolatorExpiry())
         : referenceDate_(referenceDate), dayCounter_(dayCounter), lowerStrikeConstExtrap_(lowerStrikeConstExtrap),
@@ -55,8 +55,8 @@ public:
     OptionInterpolator2d(const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dayCounter,
                          const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes,
                          const std::vector<QuantLib::Real>& values,
-                         const bool& lowerStrikeConstExtrap = true,
-                         const bool& upperStrikeConstExtrap = true,
+                         bool lowerStrikeConstExtrap = true,
+                         bool upperStrikeConstExtrap = true,
                          const InterpolatorStrike& interpolatorStrike = InterpolatorStrike(),
                          const InterpolatorExpiry& interpolatorExpiry = InterpolatorExpiry());
 
@@ -102,8 +102,8 @@ OptionInterpolator2d<InterpolatorStrike, InterpolatorExpiry>::OptionInterpolator
     const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dayCounter,
     const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes, 
     const std::vector<QuantLib::Real>& values,
-    const bool& lowerStrikeConstExtrap, 
-    const bool& upperStrikeConstExtrap,
+    bool lowerStrikeConstExtrap, 
+    bool upperStrikeConstExtrap,
     const InterpolatorStrike& interpolatorStrike,
     const InterpolatorExpiry& interpolatorExpiry) :
     referenceDate_(referenceDate), dayCounter_(dayCounter), lowerStrikeConstExtrap_(lowerStrikeConstExtrap), upperStrikeConstExtrap_(upperStrikeConstExtrap), interpolatorStrike_(interpolatorStrike),
