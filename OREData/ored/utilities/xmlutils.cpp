@@ -221,7 +221,9 @@ void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, c
                                                   const vector<vector<string>>& attrs) {
     QL_REQUIRE(attrNames.size() == attrs.size(),
                "attrNames size (" << attrNames.size() << ") must match attrs size (" << attrs.size() << ")");
-    if (attrs.empty())
+    for(auto const& attr: attrs)
+        QL_REQUIRE(attr.empty() == attrs.front().empty(), "all attributes must be empty or non-empty at the same time");
+    if (attrs.empty() || attrs.front().empty())
         XMLUtils::addChildren(doc, n, names, name, values);
     else
         XMLUtils::addChildrenWithAttributes(doc, n, names, name, values, attrNames, attrs);
