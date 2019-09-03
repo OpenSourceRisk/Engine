@@ -144,9 +144,9 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
                     Period ePeriod;
                     bool isDate;
                     parseDateOrPeriod(q->expiry(), eDate, ePeriod, isDate);
-                    if (!isDate) {
+                    if (!isDate){
                         eDate = calendar.adjust(asof + ePeriod);
-                     }
+                    }
                     if (eDate > asof) {
                         addQuote = true;
                     }
@@ -356,7 +356,7 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
                                                      dayCounter, lowerStrikeExtrap, upperStrikeExtrap);
     } else {
         bool lowerConstStrikeExtrap = lowerStrikeExtrap == BlackVarianceSurface::Extrapolation::ConstantExtrapolation;
-        bool upperConstStrikeExtrap = lowerStrikeExtrap == BlackVarianceSurface::Extrapolation::ConstantExtrapolation;
+        bool upperConstStrikeExtrap = upperStrikeExtrap == BlackVarianceSurface::Extrapolation::ConstantExtrapolation;
       
         volatility_ =
             boost::make_shared<BlackVarianceSurfaceSparse>(asof, calendar, expiries, strikes, vols,
