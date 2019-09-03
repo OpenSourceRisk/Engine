@@ -25,6 +25,7 @@
 
 #include <ql/math/comparison.hpp>
 #include <ql/termstructure.hpp>
+#include <ql/quote.hpp>
 
 namespace QuantExt {
 
@@ -73,6 +74,28 @@ protected:
     //! Extra time range check for minimum time, then calls TermStructure::checkRange
     void checkRange(QuantLib::Time t, bool extrapolate) const;
 };
+
+//! Helper class so that the spot price can be pulled from the price curve each time the spot price is requested.
+class DerivedPriceQuote : public QuantLib::Quote, public QuantLib::Observer {
+
+public:
+    DerivedPriceQuote(const QuantLib::Handle<PriceTermStructure>& priceTs);
+
+    //! \name Quote interface
+    //@{
+    QuantLib::Real value() const;
+    bool isValid() const;
+    //@}
+
+    //! \name Observer interface
+    //@{
+    void update();
+    //@}
+
+private:
+    QuantLib::Handle<PriceTermStructure> priceTs_;
+};
+
 } // namespace QuantExt
 
 #endif
