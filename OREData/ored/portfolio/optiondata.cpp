@@ -58,7 +58,7 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "OptionType", callPut_);
     if (style_ != "")
         XMLUtils::addChild(doc, node, "Style", style_);
-    if (noticePeriod_ != "")
+    // if (noticePeriod_ != "")
         XMLUtils::addChild(doc, node, "NoticePeriod", noticePeriod_);
     if (noticeCalendar_ != "")
         XMLUtils::addChild(doc, node, "NoticeCalendar", noticeCalendar_);
