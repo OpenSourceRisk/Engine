@@ -46,6 +46,7 @@ QLE_TESTS = \
 	piecewiseoptionletstripper.cpp \
 	capfloortermvolcurve.cpp \
 	blackvariancesurfacesparse.cpp \
+	blackvariancesurfacestddevs.cpp \
 	piecewiseatmoptionletcurve.cpp
 
 dist-hook:
