@@ -38,13 +38,12 @@ elements. An example structure of the \lstinline!OptionData! trade component nod
 The meanings and allowable values of the elements in the \lstinline!OptionData! node follow below.
 
 \begin{itemize}
-\item LongShort: Specifies whether the option position is long  or
-  short.  
+\item LongShort: Specifies whether the option position is \emph{long}  or \emph{short}.  Note that for Swaptions and Callable Swaps, setting \lstinline!LongShort! to \emph{short} makes the \lstinline!Payer! indicator on the underlying swap to be set from the perspective of the Counterparty. 
 
 Allowable values: \emph{Long, LONG, long, L} or \emph{Short, SHORT,
   short, S}
 
-\item OptionType: Specifies whether it is a call or a put option. 
+\item OptionType: Specifies whether it is a call or a put option. Optional for trade types Swaption and CallableSwap.
 
 Allowable values: \emph{Call} or \emph{Put} 
 
@@ -54,10 +53,10 @@ The meaning of Call and Put values depend on the asset class of the option, see 
 \centering
 \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
     \hline
-      \bfseries{Asset Class}  & \bfseries{Call / Put Specifications} \\  \hline
+      \bfseries{Asset Class and Trade Type}  & \bfseries{Call / Put Specifications} \\  \hline
 Equity/ Commodity Option & \emph{Call}: The right to buy the underlying equity/commodity at the strike price.
 \newline \emph{Put}: The right to sell the underlying equity/commodity at the strike price. \\  \hline
- IR Swaption, Callable Swap&  \emph{Call/Put} values are ignored. Payer/Receiver swaption is determined in the Leg Data nodes of the underlying swap. \\ \hline
+ IR Swaption, CallableSwap&  \emph{Call/Put} values are ignored, and the OptionType field is optional. Payer/Receiver swaption is determined in the Leg Data nodes of the underlying swap. \\ \hline
 FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the trade data node. 
 \newline \emph{Put}: Bought and Sold currencies/amounts are switched compared to the trade data node.  \\ \hline
   \end{tabu}
@@ -68,7 +67,7 @@ FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined
 
 \item Style: The exercise style of the option. 
 
-  Allowable values: \emph{European} or \emph{American} or \emph{Bermudan}. Note that trade type Swaption can have style
+  Allowable values: \emph{European} or \emph{American} or \emph{Bermudan}. Note that trade types Swaption and CallableSwap can have style
   \emph{European} or \emph{Bermudan}, but not \emph{American}.  FX and Equity options trade can have styles \emph{European}
   or \emph{American}, but not \emph{Bermudan}. 
 
@@ -99,7 +98,7 @@ FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined
 \item PayOffAtExpiry [Optional]: Relevant for options with early
   exercise, i.e. the exercise occurs before expiry; \emph{true}
   indicates payoff at expiry, whereas \emph{false}  indicates payoff
-  at exercise. Defaults to \emph{false}  if left blank or omitted. 
+  at exercise. Defaults to \emph{true}  if left blank or omitted. 
 
 Allowable values: \emph{true}, \emph{false} Note that for FxTouchOption, only \emph{true} (payoff at expiry) is supported.
 %TBC: Do not see payoffatexpiry used in either fxoption or swaption build() functions, to be logged as a bug.       
