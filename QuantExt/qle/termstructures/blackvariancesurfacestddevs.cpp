@@ -101,11 +101,6 @@ void BlackVarianceSurfaceStdDevs::populateVolMatrix(
     const QuantLib::Interpolation& forwardCurve,
     const QuantLib::Interpolation atmVolCurve) {
     
-
-    //RUAN : What is this??
-    //
-    (stdDevPoints.size(), vector<Handle<Quote>>(expiries.size(), Handle<Quote>()));
-
     for (int j = 0; j < expiries.size(); j++) {
         Date tmpDate = termStructre->referenceDate() + expiries[j]; // todo: is the reference date of this termstructure as the asof date
         Time tmpTime = termStructre->timeFromReference(tmpDate);
