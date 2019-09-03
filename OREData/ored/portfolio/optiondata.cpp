@@ -37,6 +37,8 @@ void OptionData::fromXML(XMLNode* node) {
     premium_ = XMLUtils::getChildValueAsDouble(node, "PremiumAmount", false);
     premiumCcy_ = XMLUtils::getChildValue(node, "PremiumCurrency", false);
     premiumPayDate_ = XMLUtils::getChildValue(node, "PremiumPayDate", false);
+    exerciseFeeTypes_.clear();
+    exerciseFeeDates_.clear();
     vector<std::reference_wrapper<vector<string>>> attrs;
     attrs.push_back(exerciseFeeTypes_);
     attrs.push_back(exerciseFeeDates_);
