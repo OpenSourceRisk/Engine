@@ -3,6 +3,7 @@
 set(QuantExt-Test_SRC analyticlgmswaptionengine.cpp
 blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
+blackvariancesurfacestddevs.cpp
 bonds.cpp
 cashflow.cpp
 capfloortermvolcurve.cpp

@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(testPricing) {
     prices[0] = 1346.0;
     prices[1] = 1384.0;
     Handle<PriceTermStructure> priceCurve(
-        boost::make_shared<InterpolatedPriceCurve<Linear> >(InterpolatedPriceCurve<Linear>(dates, prices, dayCounter)));
+        boost::make_shared<InterpolatedPriceCurve<Linear> >(asof, dates, prices, dayCounter));
 
     // Create the engine
     boost::shared_ptr<DiscountingCommodityForwardEngine> engine =

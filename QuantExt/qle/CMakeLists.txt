@@ -8,6 +8,7 @@ calendars/netherlands.cpp
 calendars/peru.cpp
 calendars/philippines.cpp
 calendars/thailand.cpp
+calendars/switzerland.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
 cashflows/brlcdicouponpricer.cpp
@@ -112,6 +113,7 @@ termstructures/basistwoswaphelper.cpp
 termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvariancesurfacesparse.cpp
+termstructures/blackvariancesurfacestddevs.cpp
 termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
@@ -120,6 +122,7 @@ termstructures/correlationtermstructure.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
 termstructures/crossccyfixfloatswaphelper.cpp
+termstructures/crosscurrencypricetermstructure.cpp
 termstructures/datedstrippedoptionlet.cpp
 termstructures/datedstrippedoptionletadapter.cpp
 termstructures/defaultprobabilityhelpers.cpp
@@ -166,6 +169,7 @@ calendars/netherlands.hpp
 calendars/peru.hpp
 calendars/philippines.hpp
 calendars/thailand.hpp
+calendars/switzerland.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
 cashflows/brlcdicouponpricer.hpp
@@ -326,9 +330,11 @@ quotes/logquote.hpp
 termstructures/averageoisratehelper.hpp
 termstructures/basistwoswaphelper.hpp
 termstructures/blackinvertedvoltermstructure.hpp
+termstructures/blackmonotonevarvoltermstructure.hpp
 termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvariancesurfacesparse.hpp
+termstructures/blackvariancesurfacestddevs.hpp
 termstructures/blackvolsurfacewithatm.hpp
 termstructures/brlcdiratehelper.hpp
 termstructures/capfloorhelper.hpp
@@ -338,6 +344,7 @@ termstructures/correlationtermstructure.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
 termstructures/crossccybasisswaphelper.hpp
 termstructures/crossccyfixfloatswaphelper.hpp
+termstructures/crosscurrencypricetermstructure.hpp
 termstructures/datedstrippedoptionlet.hpp
 termstructures/datedstrippedoptionletadapter.hpp
 termstructures/datedstrippedoptionletbase.hpp

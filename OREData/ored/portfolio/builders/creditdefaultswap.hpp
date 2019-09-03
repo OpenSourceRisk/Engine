@@ -36,27 +36,35 @@ namespace data {
 
 /*! This class provides a key with which we will cache the CDS engine builders
 
-    In general, the CDS engine builders will be cached by the credit curve Id of the reference entity. If we are 
-    caching by credit curve Id only, the recovery rate member should be \c Null<Real>().
+    In general, the CDS engine builders will be cached by the credit curve Id of the reference entity and the currency
+    of the trade that needs to be priced. If we are caching by credit curve Id and currency only, the recovery rate 
+    member should be \c Null<Real>().
     
     In some cases, for fixed recovery CDS trades for example, we need to cache the CDS engine builder not only by 
-    credit curve Id but also with an exogenous recovery rate that we wish to use instead of the market supplied 
-    recovery rate.
+    credit curve Id and currency but also with an exogenous recovery rate that we wish to use instead of the market 
+    supplied recovery rate.
 */
 class CDSEngineKey {
 public:
-    //! Constructor that takes a credit curve Id, \p creditCurveId, and optionally a recovery rate, \p recoveryRate.
-    CDSEngineKey(const std::string& creditCurveId, QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>())
-        : creditCurveId_(creditCurveId), recoveryRate_(recoveryRate) {}
+    /*! Constructor that takes a credit curve Id, \p creditCurveId, a currency, \p ccy, and optionally a recovery 
+        rate, \p recoveryRate.
+    */
+    CDSEngineKey(const std::string& creditCurveId, const QuantLib::Currency& ccy,
+        QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>())
+        : creditCurveId_(creditCurveId), ccy_(ccy), recoveryRate_(recoveryRate) {}
 
     //! Return the credit curve Id
     const std::string& creditCurveId() const { return creditCurveId_; }
+
+    //! Return the currency
+    const QuantLib::Currency& currency() const { return ccy_; }
 
     //! Return the recovery rate if it is set, otherwise \c Null<Real>()
     QuantLib::Real recoveryRate() const { return recoveryRate_; }
 
 private:
     std::string creditCurveId_;
+    QuantLib::Currency ccy_;
     QuantLib::Real recoveryRate_;
 };
 
@@ -64,6 +72,10 @@ inline bool operator==(const CDSEngineKey& lhs, const CDSEngineKey& rhs) {
     
     // Check the credit curve IDs first
     if (lhs.creditCurveId() != rhs.creditCurveId())
+        return false;
+
+    // Check the currencies
+    if (lhs.currency() != rhs.currency())
         return false;
 
     // Now check recovery rates.
@@ -89,6 +101,10 @@ inline bool operator<(const CDSEngineKey& lhs, const CDSEngineKey& rhs) {
     if (lhs.creditCurveId() != rhs.creditCurveId())
         return lhs.creditCurveId() < rhs.creditCurveId();
 
+    // Now check currencies.
+    if (lhs.currency() != rhs.currency())
+        return lhs.currency().name() < rhs.currency().name();
+
     // Now use the recovery rates
     return lhs.recoveryRate() < rhs.recoveryRate();
 }
@@ -109,9 +125,9 @@ protected:
     CreditDefaultSwapEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"CreditDefaultSwap"}) {}
 
-    CDSEngineKey keyImpl(QuantLib::Currency, std::string creditCurveId,
+    CDSEngineKey keyImpl(QuantLib::Currency ccy, std::string creditCurveId,
         QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>()) override { 
-        return CDSEngineKey(creditCurveId, recoveryRate);
+        return CDSEngineKey(creditCurveId, ccy, recoveryRate);
     }
 };
 

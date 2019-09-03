@@ -111,8 +111,6 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
         return equityVolShiftData().at(name);
     case RFType::DividendYield:
         return *dividendYieldShiftData().at(name);
-    case RFType::CommoditySpot:
-        return commodityShiftData().at(name);
     case RFType::CommodityCurve:
         return *commodityCurveShiftData().at(name);
     case RFType::CommodityVolatility:
@@ -352,18 +350,6 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get commodity spot sensitivity parameters");
-    XMLNode* csNode = XMLUtils::getChildNode(node, "CommoditySpots");
-    if (csNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(csNode, "CommoditySpot"); child;
-             child = XMLUtils::getNextSibling(child)) {
-            string name = XMLUtils::getAttribute(child, "name");
-            SpotShiftData data;
-            shiftDataFromXML(child, data);
-            commodityShiftData_[name] = data;
-        }
-    }
-
     LOG("Get commodity curve sensitivity parameters");
     XMLNode* ccNode = XMLUtils::getChildNode(node, "CommodityCurves");
     if (ccNode) {
@@ -422,14 +408,18 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get cross gamma parameters");
-    vector<string> filter = XMLUtils::getChildrenValues(node, "CrossGammaFilter", "Pair", true);
-    for (Size i = 0; i < filter.size(); ++i) {
-        vector<string> tokens;
-        boost::split(tokens, filter[i], boost::is_any_of(","));
-        QL_REQUIRE(tokens.size() == 2, "expected 2 tokens, found " << tokens.size() << " in " << filter[i]);
-        crossGammaFilter_.push_back(pair<string, string>(tokens[0], tokens[1]));
+    XMLNode* CGF = XMLUtils::getChildNode(node, "CrossGammaFilter");
+    if (CGF) {
+        LOG("Get cross gamma parameters");
+        vector<string> filter = XMLUtils::getChildrenValues(node, "CrossGammaFilter", "Pair", true);
+        for (Size i = 0; i < filter.size(); ++i) {
+            vector<string> tokens;
+            boost::split(tokens, filter[i], boost::is_any_of(","));
+            QL_REQUIRE(tokens.size() == 2, "expected 2 tokens, found " << tokens.size() << " in " << filter[i]);
+            crossGammaFilter_.push_back(pair<string, string>(tokens[0], tokens[1]));
+        }
     }
+    
 }
 
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
@@ -601,16 +591,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "YYInflationIndexCurve");
             XMLUtils::addAttribute(doc, node, "index", kv.first);
             curveShiftDataToXML(doc, node, *kv.second);
-        }
-    }
-
-    if (!commodityShiftData_.empty()) {
-        LOG("toXML for CommoditySpots");
-        XMLNode* parent = XMLUtils::addChild(doc, root, "CommoditySpots");
-        for (const auto& kv : commodityShiftData_) {
-            XMLNode* node = XMLUtils::addChild(doc, parent, "CommoditySpot");
-            XMLUtils::addAttribute(doc, node, "name", kv.first);
-            shiftDataToXML(doc, node, kv.second);
         }
     }
 

@@ -21,6 +21,7 @@
       <xs:element type="swapIndexType" name="SwapIndex"/>
       <xs:element type="inflationswapType" name="InflationSwap"/>
       <xs:element type="cmsSpreadOptionType" name="CmsSpreadOption"/>
+      <xs:element type="commodityType" name="Commodity"/>
     </xs:choice>
   </xs:complexType>
 
@@ -236,6 +237,18 @@
       <xs:element type="xs:string" name="Calendar" minOccurs="1" maxOccurs="1"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="RollConvention" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="commodityType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="SpotDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:decimal" name="PointsFactor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="AdvanceCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="SpotRelative" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="Outright" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

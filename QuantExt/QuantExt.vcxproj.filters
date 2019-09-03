@@ -552,6 +552,9 @@
     <ClInclude Include="qle\calendars\thailand.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\switzerland.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
     <ClInclude Include="qle\cashflows\equitycoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
@@ -746,6 +749,15 @@
     </ClInclude>
     <ClInclude Include="qle\pricingengines\baroneadesiwhaleyengine.hpp">
       <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvariancesurfacestddevs.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blackmonotonevarvoltermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\crosscurrencypricetermstructure.hpp">
+      <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1153,6 +1165,9 @@
     <ClCompile Include="qle\calendars\thailand.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
+    <ClCompile Include="qle\calendars\switzerland.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
     <ClCompile Include="qle\cashflows\equitycoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
@@ -1263,6 +1278,12 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\baroneadesiwhaleyengine.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvariancesurfacestddevs.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\crosscurrencypricetermstructure.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

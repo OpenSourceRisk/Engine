@@ -924,8 +924,9 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
-    simMarketConfig->fxVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
-    simMarketConfig->fxVolDecayMode() = "ForwardVariance";
+    simMarketConfig->setFxVolExpiries(
+        vector<Period>{6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
+    simMarketConfig->setFxVolDecayMode(string("ForwardVariance"));
     simMarketConfig->setFxVolCcyPairs({"USDEUR"});
     simMarketConfig->setFxVolDayCounters("", "ACT/ACT");
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
