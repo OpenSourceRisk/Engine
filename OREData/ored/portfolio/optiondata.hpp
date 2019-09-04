@@ -38,14 +38,20 @@ public:
     OptionData() : payoffAtExpiry_(true), premium_(0.0) {}
     //! Constructor
     OptionData(string longShort, string callPut, string style, bool payoffAtExpiry, vector<string> exerciseDates,
-               // notice days ?
                string settlement = "Cash", string settlementMethod = "", double premium = 0, string premiumCcy = "",
                string premiumPayDate = "", vector<double> exerciseFees = vector<Real>(),
-               vector<double> exercisePrices = vector<Real>())
+               vector<double> exercisePrices = vector<Real>(), string noticePeriod = "", string noticeCalendar = "",
+               string noticeConvention = "", const vector<string>& exerciseFeeDates = vector<string>(),
+               const vector<string>& exerciseFeeTypes = vector<string>(), string exerciseFeeSettlementPeriod = "",
+               string exerciseFeeSettlementCalendar = "", string exerciseFeeSettlementConvention = "")
         : longShort_(longShort), callPut_(callPut), style_(style), payoffAtExpiry_(payoffAtExpiry),
-          exerciseDates_(exerciseDates), noticePeriod_("0D"), // FIXME ?
-          settlement_(settlement), premium_(premium), premiumCcy_(premiumCcy), premiumPayDate_(premiumPayDate),
-          exerciseFees_(exerciseFees), exercisePrices_(exercisePrices) {}
+          exerciseDates_(exerciseDates), noticePeriod_(noticePeriod), noticeCalendar_(noticeCalendar),
+          noticeConvention_(noticeConvention), settlement_(settlement), settlementMethod_(settlementMethod),
+          premium_(premium), premiumCcy_(premiumCcy), premiumPayDate_(premiumPayDate), exerciseFees_(exerciseFees),
+          exerciseFeeDates_(exerciseFeeDates), exerciseFeeTypes_(exerciseFeeTypes),
+          exerciseFeeSettlementPeriod_(exerciseFeeSettlementPeriod),
+          exerciseFeeSettlementCalendar_(exerciseFeeSettlementCalendar),
+          exerciseFeeSettlementConvention_(exerciseFeeSettlementConvention), exercisePrices_(exercisePrices) {}
 
     //! \name Inspectors
     //@{
