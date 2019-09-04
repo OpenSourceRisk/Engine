@@ -311,7 +311,7 @@ boost::shared_ptr<CrossCcyBasisMtMResetSwap> makeTestSwap(Rate spotFx, Spread GB
     // Create swap
     return boost::shared_ptr<CrossCcyBasisMtMResetSwap>(
         new CrossCcyBasisMtMResetSwap(GBPNominal, GBPCurrency(), schedule, GBPindex, GBPSpread, USDCurrency(), schedule,
-                                      USDindex, 0.0, fxIndex, false));
+                                      USDindex, 0.0, fxIndex));
 }
 } // namespace
 
