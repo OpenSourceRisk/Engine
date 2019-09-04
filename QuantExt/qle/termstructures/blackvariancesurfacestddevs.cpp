@@ -39,7 +39,7 @@ BlackVarianceSurfaceStdDevs::BlackVarianceSurfaceStdDevs(
     atmVariances_.push_back(Real(0.0));
     atmTimes_.push_back(0.0);
     int atmIndex = distance(stdDevs.begin(), it);
-    for (int i = 0; i < times.size(); i++) {
+    for (Size i = 0; i < times.size(); i++) {
         atmVariances_.push_back(blackVolMatrix[atmIndex][i]->value() * blackVolMatrix[atmIndex][i]->value() * times[i]);
         atmTimes_.push_back(times[i]);
     }
@@ -101,10 +101,10 @@ void BlackVarianceSurfaceStdDevs::populateVolMatrix(
     const QuantLib::Interpolation& forwardCurve,
     const QuantLib::Interpolation atmVolCurve) {
     
-    for (int j = 0; j < expiries.size(); j++) {
+    for (Size j = 0; j < expiries.size(); j++) {
         Date tmpDate = termStructre->referenceDate() + expiries[j]; // todo: is the reference date of this termstructure as the asof date
         Time tmpTime = termStructre->timeFromReference(tmpDate);
-        for (int i = 0; i < stdDevPoints.size(); i++) {
+        for (Size i = 0; i < stdDevPoints.size(); i++) {
             Real tmpStrike = forwardCurve(tmpTime) * exp(atmVolCurve(tmpTime)*sqrt(tmpTime)*stdDevPoints[i]);
             Volatility vol = termStructre->blackVol(tmpDate, tmpStrike, true);
             boost::shared_ptr<QuantLib::SimpleQuote> q(new SimpleQuote(vol));
