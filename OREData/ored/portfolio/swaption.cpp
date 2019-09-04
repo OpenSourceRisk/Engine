@@ -19,6 +19,7 @@
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/exercise.hpp>
+#include <ql/rebatedexercise.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/nonstandardswaption.hpp>
 #include <ql/instruments/swaption.hpp>
@@ -60,9 +61,16 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // check at least one exercise date is given
     QL_REQUIRE(!option_.exerciseDates().empty(), "No exercise dates given");
 
-    // check if all exercise dates are in the past and if so, build an expired instrument
+    // check if all exercise dates (adjusted by the notice period) are in the past and if so, build an expired instrument
+    Period noticePeriod = option_.noticePeriod().empty() ? 0 * Days : parsePeriod(option_.noticePeriod());
+    Calendar noticeCal = option_.noticeCalendar().empty() ? NullCalendar() : parseCalendar(option_.noticeCalendar());
+    BusinessDayConvention noticeBdc =
+        option_.noticeConvention().empty() ? Unadjusted : parseBusinessDayConvention(option_.noticeConvention());
     std::vector<Date> exerciseDates(option_.exerciseDates().size());
-    std::transform(option_.exerciseDates().begin(), option_.exerciseDates().end(), exerciseDates.begin(), parseDate);
+    for (Size i = 0; i < option_.exerciseDates().size(); ++i) {
+        exerciseDates.push_back(noticeCal.advance(parseDate(option_.exerciseDates()[i]), -noticePeriod, noticeBdc));
+    }
+
     Date latestExerciseDate = *std::max_element(exerciseDates.begin(), exerciseDates.end());
     if (QuantLib::detail::simple_event(latestExerciseDate).hasOccurred()) {
         exercise_ = boost::make_shared<BermudanExercise>(exerciseDates); // needed in fixings()
@@ -90,15 +98,15 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
          floatingLegData->gearings().size() > 1 || fixedLegData->rates().size() > 1);
 
     Exercise::Type exerciseType = parseExerciseType(option_.style());
-    // QL_REQUIRE(!(isNonStandard && exerciseType == Exercise::European),
-    //            "nonstandard European Swaptions not implemented");
-    // treat non standard europeans as bermudans
-    if (exerciseType == Exercise::Bermudan || (isNonStandard && exerciseType == Exercise::European))
+
+    // treat non standard europeans as bermudans, also if exercise fees are present
+    QL_REQUIRE(exerciseType == Exercise::Bermudan || exerciseType == Exercise::European,
+               "Exercise type " << option_.style() << " not implemented for Swaptions");
+    if (exerciseType == Exercise::Bermudan || (isNonStandard && exerciseType == Exercise::European) ||
+        !option_.exerciseFees().empty())
         buildBermudan(engineFactory);
-    else if (exerciseType == Exercise::European)
-        buildEuropean(engineFactory);
     else
-        QL_FAIL("Exercise type " << option_.style() << " not implemented for Swaptions");
+        buildEuropean(engineFactory);
 }
 
 map<string, set<Date>> Swaption::fixings(const Date& settlementDate) const {
@@ -157,7 +165,12 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
                                           ? defaultMethod(settleType)
                                           : parseSettlementMethod(option_.settlementMethod());
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Only one exercise date expected for European Option");
-    Date exDate = parseDate(option_.exerciseDates().front());
+
+    Period noticePeriod = option_.noticePeriod().empty() ? 0 * Days : parsePeriod(option_.noticePeriod());
+    Calendar noticeCal = option_.noticeCalendar().empty() ? NullCalendar() : parseCalendar(option_.noticeCalendar());
+    BusinessDayConvention noticeBdc =
+        option_.noticeConvention().empty() ? Unadjusted : parseBusinessDayConvention(option_.noticeConvention());
+    Date exDate = noticeCal.advance(parseDate(option_.exerciseDates().front()), -noticePeriod, noticeBdc);
     QL_REQUIRE(exDate >= Settings::instance().evaluationDate(), "Exercise date expected in the future.");
 
     boost::shared_ptr<VanillaSwap> swap = buildVanillaSwap(engineFactory, exDate);
@@ -263,11 +276,18 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
                 lastAccrualStartDate = std::max(lastAccrualStartDate, cpn->accrualStartDate());
         }
     }
+    Period noticePeriod = option_.noticePeriod().empty() ? 0 * Days : parsePeriod(option_.noticePeriod());
+    Calendar noticeCal = option_.noticeCalendar().empty() ? NullCalendar() : parseCalendar(option_.noticeCalendar());
+    BusinessDayConvention noticeBdc =
+        option_.noticeConvention().empty() ? Unadjusted : parseBusinessDayConvention(option_.noticeConvention());
     std::vector<QuantLib::Date> exDates;
     for (Size i = 0; i < option_.exerciseDates().size(); i++) {
-        Date exDate = ore::data::parseDate(option_.exerciseDates()[i]);
-        if (exDate > Settings::instance().evaluationDate() && exDate <= lastAccrualStartDate)
+        Date exDate = noticeCal.advance(ore::data::parseDate(option_.exerciseDates()[i]), -noticePeriod, noticeBdc);
+        if (exDate > Settings::instance().evaluationDate() && exDate <= lastAccrualStartDate) {
             exDates.push_back(exDate);
+            DLOG("Got exercise date " << QuantLib::io::iso_date(exDate) << " using notice period " << noticePeriod
+                 << ", convention " << noticeBdc << ", calendar " << noticeCal.name());
+        }
         if (exDate > lastAccrualStartDate)
             WLOG("Remove exercise date " << ore::data::to_string(exDate) << " after last accrual start date "
                                          << ore ::data::to_string(lastAccrualStartDate));
@@ -276,6 +296,51 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     std::sort(exDates.begin(), exDates.end());
     maturity_ = exDates.back();
     exercise_ = boost::make_shared<BermudanExercise>(exDates);
+
+    // check for exercise fees, if present build a rebated exercise with rebates = -fee
+    if (!option_.exerciseFees().empty()) {
+        // build an exercise date "schedule" by adding the maximum possible date at the end
+        std::vector<Date> exDatesPlusInf(exDates);
+        exDatesPlusInf.push_back(Date::maxDate());
+        vector<double> rebates =
+            buildScheduledVectorNormalised(option_.exerciseFees(), option_.exerciseFeeDates(), exDatesPlusInf, 0.0);
+        // flip the sign of the fee to get a rebate
+        for (auto& r : rebates)
+            r = -r;
+        vector<string> feeType = buildScheduledVectorNormalised<string>(
+            option_.exerciseFeeTypes(), option_.exerciseFeeDates(), exDatesPlusInf, "Absolute");
+        // convert relative to absolute fees if required
+        for (Size i = 0; i < rebates.size(); ++i) {
+            if (feeType[i] == "Percentage") {
+                // get next float coupon after exercise to determine relevant notional
+                Real feeNotional = Null<Real>();
+                for (auto const c : swap->leg(1)) {
+                    if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c))
+                        if (feeNotional == Null<Real>() && cpn->accrualStartDate() >= exDates[i])
+                            feeNotional = cpn->nominal();
+                }
+                if (feeNotional == Null<Real>())
+                    rebates[i] = 0.0; // notional is zero
+                else
+                    rebates[i] *= feeNotional; // multiply percentage fee by relevant notional
+            } else {
+                QL_REQUIRE(feeType[i] == "Absolute", "fee type must be Absolute or Relative");
+            }
+            DLOG("Got rebate " << rebates[i] << " for exercise date " << QuantLib::io::iso_date(exDates[i]));
+        }
+        Period feeSettlPeriod = option_.exerciseFeeSettlementPeriod().empty()
+                                    ? 0 * Days
+                                    : parsePeriod(option_.exerciseFeeSettlementPeriod());
+        Calendar feeSettlCal = option_.exerciseFeeSettlementCalendar().empty()
+                                   ? NullCalendar()
+                                   : parseCalendar(option_.exerciseFeeSettlementCalendar());
+        BusinessDayConvention feeSettlBdc = option_.exerciseFeeSettlementConvention().empty()
+                                                ? Unadjusted
+                                                : parseBusinessDayConvention(option_.exerciseFeeSettlementConvention());
+        QL_REQUIRE(feeSettlPeriod.units() == Days, "fee settlement period must be Days");
+        exercise_ = boost::make_shared<QuantLib::RebatedExercise>(*exercise_, rebates, feeSettlPeriod.length(),
+                                                                  feeSettlCal, feeSettlBdc);
+    }
 
     Settlement::Type delivery = parseSettlementType(option_.settlement());
     Settlement::Method deliveryMethod =
