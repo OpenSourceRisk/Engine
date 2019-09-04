@@ -709,16 +709,17 @@ Real currentNotional(const Leg& leg);
 //! Build a full vector of values from the given node.
 //  For use with Notionals, Rates, Spreads, Gearing, Caps and Floor rates.
 //  In all cases we can expand the vector to take the given schedule into account
-vector<double> buildScheduledVector(const vector<double>& values, const vector<string>& dates,
-                                    const Schedule& schedule);
+template <typename T>
+vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule);
 
 // extend values to schedule size (if values is empty, the default value is used)
-vector<double> normaliseToSchedule(const vector<double>& values, const Schedule& schedule,
-                                   const Real defaultValue = Null<Real>());
+template <typename T>
+vector<T> normaliseToSchedule(const vector<T>& values, const Schedule& schedule, const T& defaultValue);
 
 // normaliseToSchedule concat buildScheduledVector
-vector<double> buildScheduledVectorNormalised(const vector<double>& values, const vector<string>& dates,
-                                              const Schedule& schedule, const Real defaultValue = Null<Real>());
+template <typename T>
+vector<T> buildScheduledVectorNormalised(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
+                                         const T& defaultValue);
 
 // notional vector derived from a fixed amortisation amount
 vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notionals, const Schedule& schedule,
@@ -742,6 +743,74 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
 // apply amortisation to given notionals
 void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
                        const bool annuityAllowed = false, const std::vector<Real>& rates = std::vector<Real>()); 
+
+// template implementations
+
+template <typename T>
+vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule) {
+    if (values.size() < 2 || dates.size() == 0)
+        return values;
+
+    QL_REQUIRE(values.size() == dates.size(), "Value / Date size mismatch in buildScheduledVector."
+                                                  << "Value:" << values.size() << ", Dates:" << dates.size());
+
+    // Need to use schedule logic
+    // Length of data will be 1 less than schedule
+    //
+    // Notional 100
+    // Notional {startDate 2015-01-01} 200
+    // Notional {startDate 2016-01-01} 300
+    //
+    // Given schedule June, Dec from 2014 to 2016 (6 dates, 5 coupons)
+    // we return 100, 100, 200, 200, 300
+
+    // The first node must not have a date.
+    // If the second one has a date, all the rest must have, and we process
+    // If the second one does not have a date, none of them must have one
+    // and we return the vector uneffected.
+    QL_REQUIRE(dates[0] == "", "Invalid date " << dates[0] << " for first node");
+    if (dates[1] == "") {
+        // They must all be empty and then we return values
+        for (Size i = 2; i < dates.size(); i++) {
+            QL_REQUIRE(dates[i] == "", "Invalid date " << dates[i] << " for node " << i
+                                                       << ". Cannot mix dates and non-dates attributes");
+        }
+        return values;
+    }
+
+    // We have nodes with date attributes now
+    Size len = schedule.size() - 1;
+    vector<T> data(len);
+    Size j = 0, max_j = dates.size() - 1; // j is the index of date/value vector. 0 to max_j
+    Date d = parseDate(dates[j + 1]);     // The first start date
+    for (Size i = 0; i < len; i++) {      // loop over data vector and populate it.
+        // If j == max_j we just fall through and take the final value
+        while (schedule[i] >= d && j < max_j) {
+            j++;
+            if (j < max_j) {
+                QL_REQUIRE(dates[j + 1] != "", "Cannot have empty date attribute for node " << j + 1);
+                d = parseDate(dates[j + 1]);
+            }
+        }
+        data[i] = values[j];
+    }
+
+    return data;
+}
+
+template <typename T>
+vector<T> normaliseToSchedule(const vector<T>& values, const Schedule& schedule, const T& defaultValue) {
+    vector<T> res = values;
+    if (res.size() < schedule.size() - 1)
+        res.resize(schedule.size() - 1, res.size() == 0 ? defaultValue : res.back());
+    return res;
+}
+
+template <typename T>
+vector<T> buildScheduledVectorNormalised(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
+                                         const T& defaultValue) {
+    return normaliseToSchedule(buildScheduledVector(values, dates, schedule), schedule, defaultValue);
+}
 
 } // namespace data
 } // namespace ore

@@ -492,14 +492,15 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
     Currency currency = parseCurrency(ccy);
     Schedule fixedSchedule = makeSchedule(swap_[fixedLegIndex].schedule());
     Schedule floatingSchedule = makeSchedule(swap_[floatingLegIndex].schedule());
-    vector<Real> fixedNominal = buildScheduledVectorNormalised(swap_[fixedLegIndex].notionals(),
-                                                               swap_[fixedLegIndex].notionalDates(), fixedSchedule);
-    vector<Real> floatNominal = buildScheduledVectorNormalised(
-        swap_[floatingLegIndex].notionals(), swap_[floatingLegIndex].notionalDates(), floatingSchedule);
-    vector<Real> fixedRate =
-        buildScheduledVectorNormalised(fixedLegData->rates(), fixedLegData->rateDates(), fixedSchedule);
-    vector<Real> spreads =
-        buildScheduledVectorNormalised(floatingLegData->spreads(), floatingLegData->spreadDates(), floatingSchedule);
+    vector<Real> fixedNominal = buildScheduledVectorNormalised(
+        swap_[fixedLegIndex].notionals(), swap_[fixedLegIndex].notionalDates(), fixedSchedule, (Real)Null<Real>());
+    vector<Real> floatNominal =
+        buildScheduledVectorNormalised(swap_[floatingLegIndex].notionals(), swap_[floatingLegIndex].notionalDates(),
+                                       floatingSchedule, (Real)Null<Real>());
+    vector<Real> fixedRate = buildScheduledVectorNormalised(fixedLegData->rates(), fixedLegData->rateDates(),
+                                                            fixedSchedule, (Real)Null<Real>());
+    vector<Real> spreads = buildScheduledVectorNormalised(floatingLegData->spreads(), floatingLegData->spreadDates(),
+                                                          floatingSchedule, (Real)Null<Real>());
     // gearings are optional, i.e. may be empty
     vector<Real> gearings = buildScheduledVectorNormalised(floatingLegData->gearings(), floatingLegData->gearingDates(),
                                                            floatingSchedule, 1.0);
