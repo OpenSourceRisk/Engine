@@ -100,9 +100,9 @@ public:
 };
 
 // build an FX Index needed by legbuilders
-boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, string domestic, string foreign,
-    const boost::shared_ptr<Market> market, const string& configuration, const string& calendar, 
-    Size fixingDays = 0);
+boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, 
+    const string& foreign, const boost::shared_ptr<Market>& market, const string& configuration, 
+    const string& calendar, Size fixingDays = 0);
 
 } // namespace data
 } // namespace ore

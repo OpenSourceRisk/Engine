@@ -138,9 +138,9 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
 }
 
 
-boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, string domestic, string foreign, 
-    const boost::shared_ptr<Market> market, const string& configuration, const string& calendar, 
-    Size fixingDays) {
+boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, 
+    const string& foreign, const boost::shared_ptr<Market>& market, const string& configuration, 
+    const string& calendar, Size fixingDays) {
     // 1. Parse the index we have with no term structures
     boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
 
