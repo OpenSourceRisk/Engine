@@ -45,7 +45,9 @@ QLE_TESTS = \
 	piecewiseoptionletcurve.cpp \
 	piecewiseoptionletstripper.cpp \
 	capfloortermvolcurve.cpp \
-	piecewiseatmoptionletcurve.hpp
+	blackvariancesurfacesparse.cpp \
+	blackvariancesurfacestddevs.cpp \
+	piecewiseatmoptionletcurve.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
