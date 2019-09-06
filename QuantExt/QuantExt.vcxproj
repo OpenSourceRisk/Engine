@@ -647,6 +647,7 @@
     <ClInclude Include="qle\pricingengines\discountingfxforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp" />
+    <ClInclude Include="qle\pricingengines\lgmconvolutionsolver.hpp" />
     <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp" />
     <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp" />
@@ -839,6 +840,7 @@
     <ClCompile Include="qle\pricingengines\discountingfxforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp" />
+    <ClCompile Include="qle\pricingengines\lgmconvolutionsolver.cpp" />
     <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp" />
     <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\oiccbasisswapengine.cpp" />
