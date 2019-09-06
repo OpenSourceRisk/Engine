@@ -9,6 +9,7 @@ calendars/peru.cpp
 calendars/philippines.cpp
 calendars/thailand.cpp
 calendars/switzerland.cpp
+calendars/wmr.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
 cashflows/brlcdicouponpricer.cpp
@@ -171,6 +172,7 @@ calendars/peru.hpp
 calendars/philippines.hpp
 calendars/thailand.hpp
 calendars/switzerland.hpp
+calendars/wmr.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
 cashflows/brlcdicouponpricer.hpp
