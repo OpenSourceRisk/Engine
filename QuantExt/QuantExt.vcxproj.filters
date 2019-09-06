@@ -759,6 +759,9 @@
     <ClInclude Include="qle\termstructures\crosscurrencypricetermstructure.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\pricingengines\lgmconvolutionsolver.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1284,6 +1287,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\crosscurrencypricetermstructure.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\lgmconvolutionsolver.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
