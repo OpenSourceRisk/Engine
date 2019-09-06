@@ -380,11 +380,11 @@ private:
     bool extrapolate_;
 
     bool swapVolIsCube_;
-    bool swapVolSimulateATMOnly_;
-    vector<Period> swapVolTerms_;
+    map<string, bool> swapVolSimulateATMOnly_;
+    map<string, vector<Period>> swapVolTerms_;
     map<string, string> swapVolDayCounters_;
-    vector<Period> swapVolExpiries_;
-    vector<Real> swapVolStrikeSpreads_;
+    map<string, vector<Period>> swapVolExpiries_;
+    map<string, vector<Real>> swapVolStrikeSpreads_;
     string swapVolDecayMode_;
 
     vector<Period> yieldVolTerms_;

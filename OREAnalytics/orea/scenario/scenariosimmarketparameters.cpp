@@ -794,10 +794,48 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         XMLNode* swapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
         if (swapVolSimNode)
             setSimulateSwapVols(ore::data::parseBool(XMLUtils::getNodeValue(swapVolSimNode)));
-        swapVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
-        swapVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
-        setSwapVolCcys(XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true));
         swapVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        setSwapVolCcys(XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true));
+
+        set<string> currencies = params_.find(RiskFactorKey::KeyType::SwaptionVolatility)->second.second;
+        QL_REQUIRE(currencies.size() > 0, "SwaptionVolatilities needs at least one currency");
+
+        // Get the configured expiries. They are of the form:
+        // - <Expiries ccy="CCY">t_1,...,t_n</Expiries> for currency specific expiries
+        // - <Expiries>t_1,...,t_n</Expiries> or <Expiries ccy="">t_1,...,t_n</Expiries> for default set of expiries
+        // Only need a default expiry set if every currency has not been given an expiry set explicitly
+        vector<XMLNode*> expiryNodes = XMLUtils::getChildrenNodes(nodeChild, "Expiries");
+        set<string> currenciesCheck = currencies;
+        bool defaultProvided = false;
+        for (XMLNode* expiryNode : expiryNodes) {
+            // If there is no "ccy" attribute, getAttribute returns "" which is what we want in any case
+            string ccy = XMLUtils::getAttribute(expiryNode, "ccy");
+            vector<Period> expiries = parseListOfValues<Period>(XMLUtils::getNodeValue(expiryNode), &parsePeriod);
+            QL_REQUIRE(swapVolExpiries_.insert(make_pair(ccy, expiries)).second,
+                "SwaptionVolatilities has duplicate expiries for key '" << ccy << "'");
+            currenciesCheck.erase(ccy);
+            defaultProvided = ccy == "";
+        }
+        QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "SwaptionVolatilities has no expiries for " <<
+            "currencies '" << join(currenciesCheck, ",") << "' and no default expiry set has been given");
+
+        // Get the configured terms, similar to expiries above
+        vector<XMLNode*> termNodes = XMLUtils::getChildrenNodes(nodeChild, "Terms");
+        set<string> currenciesCheck = currencies;
+        bool defaultProvided = false;
+        for (XMLNode* termNode : termNodes) {
+            // If there is no "ccy" attribute, getAttribute returns "" which is what we want in any case
+            string ccy = XMLUtils::getAttribute(termNode, "ccy");
+            vector<Period> terms = parseListOfValues<Period>(XMLUtils::getNodeValue(termNode), &parsePeriod);
+            QL_REQUIRE(swapVolTerms_.insert(make_pair(ccy, terms)).second,
+                "SwaptionVolatilities has duplicate terms for key '" << ccy << "'");
+            currenciesCheck.erase(ccy);
+            defaultProvided = ccy == "";
+        }
+        QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "SwaptionVolatilities has no terms for " <<
+            "currencies '" << join(currenciesCheck, ",") << "' and no default term set has been given");
+
+        // Look for cube and get configured strike spreads
         XMLNode* cubeNode = XMLUtils::getChildNode(nodeChild, "Cube");
         if (cubeNode) {
             swapVolIsCube_ = true;
