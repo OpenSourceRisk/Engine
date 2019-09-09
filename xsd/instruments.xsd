@@ -123,8 +123,6 @@
                 </xs:simpleContent>
               </xs:complexType>
             </xs:element>
-            <xs:element type="fxreset" name="FXReset" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element type="exchanges" name="Exchanges" minOccurs="0" maxOccurs="1"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
