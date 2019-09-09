@@ -39,11 +39,12 @@ public:
     FxSwap()
         : Trade("FxSwap"), nearBoughtAmount_(0.0), nearSoldAmount_(0.0), farBoughtAmount_(0.0), farSoldAmount_(0.0) {}
     //! Constructor
-    FxSwap(Envelope& env, string nearDate, string farDate, string nearBoughtCurrency, double nearBoughtAmount,
-           string nearSoldCurrency, double nearSoldAmount, double farBoughtAmount, double farSoldAmount)
+    FxSwap(Envelope& env, const string& nearDate, const string& farDate, const string& nearBoughtCurrency,
+           double nearBoughtAmount, const string& nearSoldCurrency, double nearSoldAmount, double farBoughtAmount,
+           double farSoldAmount, const string& settlement = "Physical")
         : Trade("FxSwap", env), nearDate_(nearDate), farDate_(farDate), nearBoughtCurrency_(nearBoughtCurrency),
           nearBoughtAmount_(nearBoughtAmount), nearSoldCurrency_(nearSoldCurrency), nearSoldAmount_(nearSoldAmount),
-          farBoughtAmount_(farBoughtAmount), farSoldAmount_(farSoldAmount) {}
+          farBoughtAmount_(farBoughtAmount), farSoldAmount_(farSoldAmount), settlement_(settlement) {}
     /*! Constructs a composite pricing engine of two FX forward pricing engines.
     One with the near amounts as notionals, the other with the far amounts.
     NPV is the total npv of these trades.
@@ -60,14 +61,16 @@ public:
 
     //! \name Inspectors
     //@{
-    string nearDate() { return nearDate_; }
-    string farDate() { return farDate_; }
-    string nearBoughtCurrency() { return nearBoughtCurrency_; }
-    double nearBoughtAmount() { return nearBoughtAmount_; }
-    string nearSoldCurrency() { return nearSoldCurrency_; }
-    double nearSoldAmount() { return nearSoldAmount_; }
-    double farBoughtAmount() { return farBoughtAmount_; }
-    double farSoldAmount() { return farSoldAmount_; }
+    const string& nearDate() const { return nearDate_; }
+    const string& farDate() const { return farDate_; }
+    const string& nearBoughtCurrency() const { return nearBoughtCurrency_; }
+    double nearBoughtAmount() const { return nearBoughtAmount_; }
+    const string& nearSoldCurrency() const { return nearSoldCurrency_; }
+    double nearSoldAmount() const { return nearSoldAmount_; }
+    double farBoughtAmount() const { return farBoughtAmount_; }
+    double farSoldAmount() const { return farSoldAmount_; }
+    //! Settlement Type can be set to "Cash" for NDF. Default value is "Physical"
+    const string& settlement() const { return settlement_; }
     //@}
 
     //! \name Serialisation
@@ -84,6 +87,7 @@ private:
     double nearSoldAmount_;
     double farBoughtAmount_;
     double farSoldAmount_;
+    string settlement_;
 };
 } // namespace data
 } // namespace ore
