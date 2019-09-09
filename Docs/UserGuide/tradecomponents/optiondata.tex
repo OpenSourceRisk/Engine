@@ -19,8 +19,8 @@ elements. An example structure of the \lstinline!OptionData! trade component nod
                 <SettlementMethod>CollateralizedCashPrice</SettlementMethod>
                 <PayOffAtExpiry>true</PayOffAtExpiry>
                 <ExerciseFees>
-                    <ExerciseFee>20000</ExerciseFee>
-                    <ExerciseFee>25000</ExerciseFee>
+                    <ExerciseFee type="Percentage">0.0020</ExerciseFee>
+                    <ExerciseFee type="Absolute" startDate="2017-04-20">25000</ExerciseFee>
                 </ExerciseFees>
                 <ExerciseFeeSettlementPeriod>2D</ExerciseFeeSettlementPeriod>
                 <ExerciseFeeSettlementConvention>F</ExerciseFeeSettlementConvention>
@@ -71,14 +71,15 @@ FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined
   \emph{European} or \emph{Bermudan}, but not \emph{American}.  FX and Equity options trade can have styles \emph{European}
   or \emph{American}, but not \emph{Bermudan}. 
 
-\item NoticePeriod: The notice period defining the date (relative to the exercise date) on which the exercise decision
-  has to be taken. If not given the notice period defaults to 0D, i.e. the notice date is identical to the exercise date.
+\item NoticePeriod [Optional]: The notice period defining the date (relative to the exercise date) on which the exercise
+  decision has to be taken. If not given the notice period defaults to 0D, i.e. the notice date is identical to the
+  exercise date. Only supported for Swaptions and Callable Swaps currently.
 
-\item NoticeCalendar: The calendar used to compute the notice date from the exercise date. Must be given, if the notice
-  period is not 0D.
+\item NoticeCalendar [Optional]: The calendar used to compute the notice date from the exercise date. If not given
+  defaults to the null calendar (no holidays, weekends are no holidays either).
 
-\item NoticeConvention: The convention used to compute the notice date from the exercise date. Defaults to Following if
-  not given.
+\item NoticeConvention [Optional]: The convention used to compute the notice date from the exercise date. Defaults to
+  Unadjusted if not given.
 
 \item Settlement: Delivery type. 
 
@@ -103,17 +104,33 @@ FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined
 Allowable values: \emph{true}, \emph{false} Note that for FxTouchOption, only \emph{true} (payoff at expiry) is supported.
 %TBC: Do not see payoffatexpiry used in either fxoption or swaption build() functions, to be logged as a bug.       
 
-\item ExerciseFees: This node contains child elements of tpye ExerciseFee. If given, there must be exactly as many
-  entries as there are ExerciseDates. The option holder has to pay a positive value (as an absolute amount) if they
-  exercise the option, resp. receive an amount, if the fee is negative.
+\item ExerciseFees [Optional]: This node contains child elements of tpye ExerciseFee. Similar to a list of notionals
+  (see \ref{ss:leg_data}) the fees can be given either
 
-\item ExerciseFeeSettlementPeriod: The settlement lag for exercise fee payments. Defaults to 0D if not given.
+  \begin{itemize}
+  \item as a list where each entry corresponds to an exercise date and the last entry is used for all remaining exercise
+    dates if there are more exercise dates than exercise fee entries, or
+  \item using the \verb+startDate+ attribute to specify a change in a fee from a certain day on (w.r.t. the exercise
+    date schedule)
+  \end{itemize}
 
-\item ExerciseFeeSettlementCalendar: The calendar used to compute the exercise fee settlement date from the exercise
-  date. Must be given, if the exercise settlement fee period is not 0D.
+  Fees can either be given as an absolute amount or relative to the current notional of the period immediately following
+  the exercise date using the \verb+type+ attribute together with specifiers \verb+Absolute+ resp. \verb+Percentage+. If
+  not given, the type defaults to \verb+Absolute+.
 
-\item ExerciseFeeSettlementConvention: The convention used to compute the notice date from the exercise date. Defaults
-  to Following if not given.
+  If a fee is given as a positive number the option holder has to pay a corresponding amount if they exercise the
+  option. If the fee is negative on the other hand, the option holder receives an amount on the option exercise.
+
+  Only supported for Swaptions and Callable Swaps currently.
+
+\item ExerciseFeeSettlementPeriod [Optional]: The settlement lag for exercise fee payments. Defaults to 0D if not
+  given. This lag is relative to the exercise date (as opposed to the notice date).
+
+\item ExerciseFeeSettlementCalendar [Optional]: The calendar used to compute the exercise fee settlement date from the
+  exercise date. If not given defaults to the null calendar (no holidays, weekends are no holidays either).
+
+\item ExerciseFeeSettlementConvention [Optional]: The convention used to compute the exercise fee settlement date from
+  the exercise date. Defaults to Unadjusted if not given.
 
 \item ExerciseDates: This node contains child elements of type
   \lstinline!ExerciseDate!.  Options of style \emph{European} or
