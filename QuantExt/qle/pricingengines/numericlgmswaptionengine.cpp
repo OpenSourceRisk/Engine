@@ -18,7 +18,7 @@
 
 #include <qle/pricingengines/numericlgmswaptionengine.hpp>
 
-#include <ql/exercise.hpp>
+#include <ql/rebatedexercise.hpp>
 #include <ql/payoff.hpp>
 
 using std::vector;
@@ -29,6 +29,20 @@ NumericLgmSwaptionEngineBase::NumericLgmSwaptionEngineBase(const boost::shared_p
                                                            const Real sy, const Size ny, const Real sx, const Size nx,
                                                            const Handle<YieldTermStructure>& discountCurve)
     : LgmConvolutionSolver(model, sy, ny, sx, nx) {}
+
+Real NumericLgmSwaptionEngineBase::rebatePv(const Real t, const Real x, const Size exerciseIndex) const {
+    boost::shared_ptr<RebatedExercise> rebatedExercise = boost::dynamic_pointer_cast<RebatedExercise>(exercise_);
+    if (rebatedExercise) {
+        return rebatedExercise->rebate(exerciseIndex) *
+               model()->discountBond(t,
+                                     model()->parametrization()->termStructure()->timeFromReference(
+                                         rebatedExercise->rebatePaymentDate(exerciseIndex)),
+                                     x) /
+               model()->numeraire(t, x);
+    } else {
+        return 0.0;
+    }
+}
 
 Real NumericLgmSwaptionEngineBase::calculate() const {
 
@@ -50,6 +64,7 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
 
     int options = idx - minIdxAlive + 1;
 
+
     // terminal payoff
 
     Real t =
@@ -57,7 +72,9 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
     std::vector<Real> x = stateGrid(t);
     std::vector<Real> v(x.size());
     for (Size k = 0; k < x.size(); ++k) {
-        v[k] = std::max(conditionalSwapValue(x[k], t, exercise_->dates()[minIdxAlive + options - 1]), 0.0);
+        v[k] = std::max(conditionalSwapValue(x[k], t, exercise_->dates()[minIdxAlive + options - 1]) +
+                        rebatePv(t,x[k],minIdxAlive + options - 1),
+                        0.0);
     }
 
     // roll back
@@ -70,7 +87,8 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
         for (Size k = 0; k < x.size(); ++k) {
             QL_REQUIRE(v[k] > 0 || close_enough(v[k], 0.0), "negative value in rollback");
             // choose: continue or exercise
-            v[k] = std::max(v[k], conditionalSwapValue(x[k], t_to, exercise_->dates()[minIdxAlive + j - 1]));
+            v[k] = std::max(v[k], conditionalSwapValue(x[k] + rebatePv(t_to, x[k], minIdxAlive + j - 1), t_to,
+                                                       exercise_->dates()[minIdxAlive + j - 1]));
         }
         t = t_to;
     }
