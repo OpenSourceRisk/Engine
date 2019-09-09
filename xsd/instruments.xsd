@@ -101,8 +101,8 @@
       <xs:element type="xs:string" name="OptionType" minOccurs="0"/>
       <xs:element type="xs:string" name="Style" minOccurs="0"/>
       <xs:element type="xs:string" name="NoticePeriod" minOccurs="0"/>
-      <xs:element type="xs:string" name="NoticeCalendar" minOccurs="0">
-      <xs:element type="xs:string" name="NoticeConvention" minOccurs="0">
+      <xs:element type="xs:string" name="NoticeCalendar" minOccurs="0"/>
+      <xs:element type="xs:string" name="NoticeConvention" minOccurs="0"/>
       <xs:element type="settlementType" name="Settlement" minOccurs="0"/>
       <xs:element type="settlementMethod" name="SettlementMethod" minOccurs="0"/>
       <xs:element type="xs:string" name="PayOffAtExpiry" minOccurs="0"/>
@@ -113,7 +113,7 @@
       <xs:element name="ExerciseFees" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="ExerciseFee" maxOccurs="unbounded">
+            <xs:element name="ExerciseFee" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:float">
@@ -127,8 +127,8 @@
         </xs:complexType>
       </xs:element>
       <xs:element type="xs:string" name="ExerciseFeeSettlementPeriod" minOccurs="0"/>
-      <xs:element type="xs:string" name="ExerciseFeeSettlementCalendar" minOccurs="0">
-      <xs:element type="xs:string" name="ExerciseFeeSettlementConvention" minOccurs="0">
+      <xs:element type="xs:string" name="ExerciseFeeSettlementCalendar" minOccurs="0"/>
+      <xs:element type="xs:string" name="ExerciseFeeSettlementConvention" minOccurs="0"/>
       <xs:element name="ExerciseDates">
         <xs:complexType>
           <xs:sequence>
