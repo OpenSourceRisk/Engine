@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,22 +16,32 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/indexes/indexmanager.hpp>
-#include <qle/cashflows/fxlinkedcashflow.hpp>
+/*! \file wmr.hpp
+    \brief WMR calendar - Thomson Reuters QM/Reuters Spot
+*/
+
+#ifndef quantext_wmr_calendar_hpp
+#define quantext_wmr_calendar_hpp
+
+#include <ql/time/calendar.hpp>
 
 namespace QuantExt {
 
-FXLinked::FXLinked(const Date& fxFixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex)
-    : fxFixingDate_(fxFixingDate), foreignAmount_(foreignAmount), fxIndex_(fxIndex) {}
+class Wmr : public QuantLib::Calendar {
+private:
+    class SetImpl : public Calendar::WesternImpl {
+    public:
+        std::string name() const { return "Thomson Reuters QM/Reuters Spot"; }
+        bool isBusinessDay(const QuantLib::Date&) const;
+    };
 
-Real FXLinked::fxRate() const {
-    return fxIndex_->fixing(fxFixingDate_);
-}
-
-FXLinkedCashFlow::FXLinkedCashFlow(const Date& cashFlowDate, const Date& fxFixingDate, Real foreignAmount,
-                                   boost::shared_ptr<FxIndex> fxIndex)
-    : FXLinked(fxFixingDate, foreignAmount, fxIndex), cashFlowDate_(cashFlowDate) {
-    registerWith(FXLinked::fxIndex());
-}
+public:
+    enum Market {
+        Settlement,     //!< generic settlement calendar
+    };
+    Wmr(Market market = Settlement);
+};
 
 } // namespace QuantExt
+
+#endif

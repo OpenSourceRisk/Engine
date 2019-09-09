@@ -358,6 +358,14 @@ void EquityLegData::fromXML(XMLNode* node) {
         notionalReset_ = XMLUtils::getChildValueAsBool(node, "NotionalReset");
     else
         notionalReset_ = false;
+
+    XMLNode* fxt = XMLUtils::getChildNode(node, "FXTerms");
+    if (fxt) {
+        eqCurrency_ = XMLUtils::getChildValue(fxt, "EquityCurrency", true);
+        fxIndex_ = XMLUtils::getChildValue(fxt, "FXIndex", true);
+        fxIndexFixingDays_ = XMLUtils::getChildValueAsInt(fxt, "FXIndexFixingDays");
+        fxIndexCalendar_ = XMLUtils::getChildValue(fxt, "FXIndexCalendar");
+    }
 }
 
 XMLNode* EquityLegData::toXML(XMLDocument& doc) {
@@ -377,6 +385,17 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(node, schedNode);
     } else {
         XMLUtils::addChild(doc, node, "FixingDays", static_cast<Integer>(fixingDays_));
+    }
+
+    if (fxIndex_ != "") {
+        XMLNode* fxNode = doc.allocNode("FXTerms");
+        XMLUtils::addChild(doc, fxNode, "EquityCurrency", eqCurrency_);
+        XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);
+        if (fxIndexFixingDays_)
+            XMLUtils::addChild(doc, fxNode, "FXIndexFixingDays", static_cast<Integer>(fxIndexFixingDays_));
+        if (fxIndexCalendar_ != "")
+            XMLUtils::addChild(doc, fxNode, "FXIndexCalendar", fxIndexCalendar_);
+        XMLUtils::appendNode(node, fxNode);
     }
     return node;
 }
@@ -1228,7 +1247,8 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
     return tmpLeg;
 }
 
-Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equityCurve) {
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equityCurve, 
+                  const boost::shared_ptr<QuantExt::FxIndex>& fxIndex) {
     boost::shared_ptr<EquityLegData> eqLegData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
     QL_REQUIRE(eqLegData, "Wrong LegType, expected Equity, got " << data.legType());
 
@@ -1248,7 +1268,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
 
     applyAmortization(notionals, data, schedule, false);
 
-    Leg leg = EquityLeg(schedule, equityCurve)
+    Leg leg = EquityLeg(schedule, equityCurve, fxIndex)
                   .withNotionals(notionals)
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)

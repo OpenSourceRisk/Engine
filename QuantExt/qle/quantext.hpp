@@ -162,6 +162,7 @@
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
+#include <qle/pricingengines/lgmconvolutionsolver.hpp>
 #include <qle/pricingengines/midpointcdsengine.hpp>
 #include <qle/pricingengines/numericlgmswaptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
@@ -178,6 +179,8 @@
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/brlcdiratehelper.hpp>
+#include <qle/termstructures/capfloorhelper.hpp>
+#include <qle/termstructures/capfloortermvolcurve.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
@@ -209,10 +212,15 @@
 #include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oiccbasisswaphelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
+#include <qle/termstructures/optionletcurve.hpp>
 #include <qle/termstructures/optionletstripper.hpp>
 #include <qle/termstructures/optionletstripper1.hpp>
 #include <qle/termstructures/optionletstripper2.hpp>
+#include <qle/termstructures/optionletstripperwithatm.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
+#include <qle/termstructures/piecewiseatmoptionletcurve.hpp>
+#include <qle/termstructures/piecewiseoptionletcurve.hpp>
+#include <qle/termstructures/piecewiseoptionletstripper.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
@@ -222,6 +230,7 @@
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
+#include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
