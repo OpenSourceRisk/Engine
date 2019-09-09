@@ -31,8 +31,21 @@ using QuantLib::Matrix;
 using QuantLib::SalvagingAlgorithm;
 
 /*! Interface, salvage(m) should return (p,s) with
-    p = the salvaged version of m
-    s = a square root of m, if provided, otherwise an empty Matrix */
+    p = the salvaged (i.e. positive semidefinite) version of m
+    s = a square root of p, if provided, otherwise an empty Matrix
+
+    An implementation of this class represents a method to make a given covariance matrix m positive
+    semidefinite. This includes an implementation  that just returns the input matrix unchanged, e.g. for
+    cases where it is known in advance / for theoretical reasons that the matrix m is positive semidefinite.
+
+    If the method produces a square root of the output matrix as a side product, this should be returned
+    in addition since many use cases that require a salvaged covariance matrix also require a square root
+    of this matrix e.g. for generating correlated normal random variates. A repeated computation of the
+    square root can be avoided this way. The returned square root may but is not required to be the
+    unique symmetric positive semidefinite sqaure root of the salvaged covariance matrix p.
+
+    If the method does not provide a square root, an empty matrix Matrix() should be returned instead,
+    in which case the caller is responsible to compute a square root if required. */
 struct CovarianceSalvage {
     virtual ~CovarianceSalvage() {}
     virtual std::pair<Matrix, Matrix> salvage(const Matrix& m) const = 0;
