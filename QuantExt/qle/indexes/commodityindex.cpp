@@ -33,13 +33,15 @@ CommodityIndex::CommodityIndex(const std::string& underlyingName, const Date& ex
     : underlyingName_(underlyingName), expiryDate_(expiryDate), fixingCalendar_(fixingCalendar), curve_(curve) {
     if (expiryDate_ == Date()) {
         // spot price index
-        name_ = underlyingName_;
+        name_ = "COMM-" + underlyingName_;
         isFuturesIndex_ = false;
     } else {
         // futures price index
         std::ostringstream o;
-        o << underlyingName_ << separator << QuantLib::io::iso_date(expiryDate_);
+        o << "COMM-" << underlyingName_ << separator << QuantLib::io::iso_date(expiryDate_);
         name_ = o.str();
+        // Remove the "-dd" portion from the expiry date
+        name_.erase(name_.length() - 3);
         isFuturesIndex_ = true;
     }
     registerWith(curve_);

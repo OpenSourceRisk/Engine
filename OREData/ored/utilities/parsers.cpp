@@ -53,6 +53,18 @@
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
+using boost::algorithm::to_lower_copy;
+
+namespace {
+
+// Case insensitive comparator for maps
+struct CaseInsensitiveCompare {
+    bool operator() (const string& s1, const string& s2) const {
+        return to_lower_copy(s1) < to_lower_copy(s2);
+    }
+};
+
+}
 
 namespace ore {
 namespace data {
@@ -763,6 +775,70 @@ SobolRsg::DirectionIntegers parseSobolRsgDirectionIntegers(const std::string& s)
         return it->second;
     } else {
         QL_FAIL("SobolRsg direction integers \"" << s << "\" not recognized");
+    }
+}
+
+Weekday parseWeekday(const string& s) {
+
+    static map<string, Weekday, CaseInsensitiveCompare> m = {
+        { "Sunday", Weekday::Sunday },
+        { "Monday", Weekday::Monday },
+        { "Tuesday", Weekday::Tuesday },
+        { "Wednesday", Weekday::Wednesday },
+        { "Thursday", Weekday::Thursday },
+        { "Friday", Weekday::Friday },
+        { "Saturday", Weekday::Saturday },
+        { "Sun", Weekday::Sunday },
+        { "Mon", Weekday::Monday },
+        { "Tue", Weekday::Tuesday },
+        { "Wed", Weekday::Wednesday },
+        { "Thu", Weekday::Thursday },
+        { "Fri", Weekday::Friday },
+        { "Sat", Weekday::Saturday }
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("The string \"" << s << "\" is not recognized as a Weekday");
+    }
+}
+
+Month parseMonth(const string& s) {
+
+    static map<string, Month, CaseInsensitiveCompare> m = {
+        { "January", Month::January },
+        { "February", Month::February },
+        { "March", Month::March },
+        { "April", Month::April },
+        { "May", Month::May },
+        { "June", Month::June },
+        { "July", Month::July },
+        { "August", Month::August },
+        { "September", Month::September },
+        { "October", Month::October },
+        { "November", Month::November },
+        { "December", Month::December },
+        { "Jan", Month::January },
+        { "Feb", Month::February },
+        { "Mar", Month::March },
+        { "Apr", Month::April },
+        { "May", Month::May },
+        { "Jun", Month::June },
+        { "Jul", Month::July },
+        { "Aug", Month::August },
+        { "Sep", Month::September },
+        { "Oct", Month::October },
+        { "Nov", Month::November },
+        { "Dec", Month::December }
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("The string \"" << s << "\" is not recognized as a Month");
     }
 }
 

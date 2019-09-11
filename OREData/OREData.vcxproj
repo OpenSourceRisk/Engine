@@ -164,6 +164,7 @@
     <ClInclude Include="ored\report\inmemoryreport.hpp" />
     <ClInclude Include="ored\report\report.hpp" />
     <ClInclude Include="ored\utilities\calendaradjustmentconfig.hpp" />
+    <ClInclude Include="ored\utilities\conventionsbasedfutureexpiry.hpp" />
     <ClInclude Include="ored\utilities\correlationmatrix.hpp" />
     <ClInclude Include="ored\utilities\csvfilereader.hpp" />
     <ClInclude Include="ored\utilities\currencycheck.hpp" />
@@ -285,6 +286,7 @@
     <ClCompile Include="ored\portfolio\vanillaoption.cpp" />
     <ClCompile Include="ored\report\csvreport.cpp" />
     <ClCompile Include="ored\utilities\calendaradjustmentconfig.cpp" />
+    <ClCompile Include="ored\utilities\conventionsbasedfutureexpiry.cpp" />
     <ClCompile Include="ored\utilities\correlationmatrix.cpp" />
     <ClCompile Include="ored\utilities\csvfilereader.cpp" />
     <ClCompile Include="ored\utilities\currencycheck.cpp" />

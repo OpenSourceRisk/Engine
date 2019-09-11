@@ -759,6 +759,9 @@
     <ClInclude Include="qle\termstructures\crosscurrencypricetermstructure.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\time\futureexpirycalculator.hpp">
+      <Filter>time</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

@@ -99,8 +99,7 @@ void CommodityCurve::populateData(map<Date, Real>& data, const Date& asof,
     if (!config->conventionsId().empty()) {
         QL_REQUIRE(conventions.has(config->conventionsId()), "Commodity conventions " << config->conventionsId()
             << " requested by commodity config " << config->curveID() << " not found");
-        boost::shared_ptr<CommodityConvention> convention = boost::dynamic_pointer_cast<CommodityConvention>(
-            conventions.get(config->conventionsId()));
+        auto convention = boost::dynamic_pointer_cast<CommodityForwardConvention>(conventions.get(config->conventionsId()));
         QL_REQUIRE(convention, "Convention " << config->conventionsId()
             << " not of expected type CommodityConvention");
 

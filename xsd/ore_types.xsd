@@ -376,7 +376,7 @@
       <xs:enumeration value="Constant"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="vannaVolgaApproximation">
     <xs:restriction base="xs:string">
       <xs:enumeration value="VannaVolga1"/>
@@ -390,7 +390,7 @@
       <xs:enumeration value="Generic"/> 
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="correlationQuoteType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="RATE"/>
@@ -453,7 +453,7 @@
     </xs:restriction>
   </xs:simpleType>
 
-   <xs:simpleType name="momentType">
+  <xs:simpleType name="momentType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Variance"/>
       <xs:enumeration value="Volatility"/>
@@ -475,13 +475,61 @@
       <xs:enumeration value="Floor"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="exerciseStyle">
     <xs:restriction base="xs:string">
       <xs:enumeration value="European"/>
       <xs:enumeration value="American"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
+  <xs:simpleType name="weekdayType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Monday"/>
+      <xs:enumeration value="Tuesday"/>
+      <xs:enumeration value="Wednesday"/>
+      <xs:enumeration value="Thursday"/>
+      <xs:enumeration value="Friday"/>
+      <xs:enumeration value="Saturday"/>
+      <xs:enumeration value="Sunday"/>
+      <xs:enumeration value="Mon"/>
+      <xs:enumeration value="Tue"/>
+      <xs:enumeration value="Wed"/>
+      <xs:enumeration value="Thu"/>
+      <xs:enumeration value="Fri"/>
+      <xs:enumeration value="Sat"/>
+      <xs:enumeration value="Sun"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="monthType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="January"/>
+      <xs:enumeration value="February"/>
+      <xs:enumeration value="March"/>
+      <xs:enumeration value="April"/>
+      <xs:enumeration value="May"/>
+      <xs:enumeration value="June"/>
+      <xs:enumeration value="July"/>
+      <xs:enumeration value="August"/>
+      <xs:enumeration value="September"/>
+      <xs:enumeration value="October"/>
+      <xs:enumeration value="November"/>
+      <xs:enumeration value="December"/>
+      <xs:enumeration value="Jan"/>
+      <xs:enumeration value="Feb"/>
+      <xs:enumeration value="Mar"/>
+      <xs:enumeration value="Apr"/>
+      <xs:enumeration value="May"/>
+      <xs:enumeration value="Jun"/>
+      <xs:enumeration value="Jul"/>
+      <xs:enumeration value="Aug"/>
+      <xs:enumeration value="Sep"/>
+      <xs:enumeration value="Oct"/>
+      <xs:enumeration value="Nov"/>
+      <xs:enumeration value="Dec"/>
+    </xs:restriction>
+  </xs:simpleType>
+
 </xs:schema>
 
