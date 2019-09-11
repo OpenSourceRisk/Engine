@@ -555,6 +555,9 @@
     <ClInclude Include="qle\calendars\switzerland.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\wmr.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
     <ClInclude Include="qle\cashflows\equitycoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
@@ -758,6 +761,9 @@
     </ClInclude>
     <ClInclude Include="qle\termstructures\crosscurrencypricetermstructure.hpp">
       <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\lgmconvolutionsolver.hpp">
+      <Filter>pricingengines</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1168,6 +1174,9 @@
     <ClCompile Include="qle\calendars\switzerland.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
+    <ClCompile Include="qle\calendars\wmr.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
     <ClCompile Include="qle\cashflows\equitycoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
@@ -1284,6 +1293,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\crosscurrencypricetermstructure.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\lgmconvolutionsolver.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
