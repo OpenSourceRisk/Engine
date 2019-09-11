@@ -151,7 +151,7 @@
 CCY-INDEX                &
                            \textit{\begin{tabular}[c]{@{}l@{}}
 EUR-EONIA\\ EUR-EURIBOR\\ EUR-LIBOR\\ EUR-CMS\\ 
-USD-FedFunds\\ USD-LIBOR\\ USD-SIFMA\\ USD-CMS\\ 
+USD-FedFunds\\ USD-Prime\\ USD-LIBOR\\ USD-SIFMA\\ USD-CMS\\
 GBP-SONIA\\ GBP-LIBOR\\ GBP-CMS\\ 
 JPY-LIBOR\\ JPY-TIBOR \\ JPY-TONAR \\ JPY-CMS \\
 CHF-LIBOR\\ CHF-SARON\\ 
@@ -183,7 +183,8 @@ TENOR                    & An integer followed by \emph{D, W, M or Y}           
     \hline
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
-    \lstinline!Name!   for equity trades & \begin{tabular}[l]{@{}l@{}}  Any string (provided it is the ID of an equity in the market \\conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: \\  \emph{RIC:.SPX}  (S\&P 500 Index) \\ \emph{RIC:EEM.N}  (iShares MSCI Emerging Markets ETF)    \\  \end{tabular}  \\ \hline
+    \lstinline!Name!   for equity trades & \begin{tabular}[l]{@{}l@{}}  Any string (provided it is the ID of an equity in the market \\
+conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: \\  \emph{RIC:.SPX}  (S\&P 500 Index) \\ \emph{RIC:EEM.N}  (iShares MSCI Emerging Markets ETF)    \\  \end{tabular}  \\ \hline
 %    \lstinline!Name!   for credit trades & \begin{tabular}[l]{@{}l@{}} 
 %\end{tabular}  \\ \hline
   \end{tabu}

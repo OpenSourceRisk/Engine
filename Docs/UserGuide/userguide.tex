@@ -870,6 +870,8 @@ Example & Description \\
 \hline
 29 & Curve Building using Fixed vs. Float Cross Currency Helpers\\
 \hline
+33 & USD-Prime Curve Building via Prime-LIBOR Basis Swap\\
+\hline
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -1001,7 +1003,7 @@ both Swap legs reset, i.e. annually in this case\footnote{Using closed form expr
   prices.}. And if the simulation model has been calibrated to the points on the Swaption surface which are used for
 European Swaption pricing, then we can expect to see that the simulated exposure matches Swaption prices at these annual
 points, as in figure \ref{fig_1}.  In Example\_1 we used co-terminal ATM Swaptions for both model calibration and
-Swaption pricing. Moreover, as the the yield curve is flat in this example, the exposures from both parties'
+Swaption pricing. Moreover, as the yield curve is flat in this example, the exposures from both parties'
 perspectives (EPE and ENE) match not only at the annual resets, but also for the period between annual reset of both
 legs to the point in time when the floating leg resets. Thereafter, between floating leg (only) reset and next joint
 fixed/floating leg reset, we see and expect a deviation of the two exposure profiles.
@@ -1955,6 +1957,27 @@ discount curve using TRY annual fixed vs USD 3M Libor swap quotes.
 The portfolio contains an at-market fixed vs. float cross currency swap that is 
 included in the curve building. The NPV of this swap should be zero when the example is run,
 using {\tt python run.py} or ``directly'' calling {\tt ore[.exe] ore.xml}.
+
+% Missing examples 30, 31, 32
+%--------------------------------------------------------
+\subsection{USD-Prime Curve Building via Prime-LIBOR Basis Swap}% Example 33
+\label{example:33}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_33} demonstrates the implementation of the USD-Prime index in the ORE.
+The USD-Prime yield curve is built from USD-Prime vs USD 3M Libor basis swap quotes.
+The portfolio consists of two fair basis swaps (NPVs equal to 0):
+\begin{itemize}
+\item US Dollar Prime Rate vs 3 Month LIBOR
+\item US Dollar 3 Month LIBOR vs Fed Funds + 0.027
+\end{itemize}
+
+In particular, it is confirmed that the bootstrapped curves USD-FedFunds and USD-Prime follow
+the 3\% rule observed on the market: {\tt U.S. Prime Rate = (The Fed Funds Target Rate + 3)}.
+(See \url{http://www.fedprimerate.com/}.)
+
+Running ORE in directory {\tt Examples/Example\_33} with {\tt python run.py }
+yields the USD-Prime curve in {\tt Examples/Example\_33/Output/curves.csv.}
 
 \clearpage
 %========================================================

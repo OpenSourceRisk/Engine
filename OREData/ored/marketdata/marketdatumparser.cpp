@@ -213,36 +213,38 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::BASIS_SWAP: {
-        //BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/5Y
-        //BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-PRIME/USD/5Y
-        //BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/USD/5Y
+        // BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/5Y
+        // BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-PRIME/USD/5Y
+        // BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/USD/5Y
         QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
         Period flatTerm;
         Period term;
         const string& ccy = tokens[4];
         Period maturity = parsePeriod(tokens[5]);
-        vector<string> split_token_3;
-        vector<string> split_token_4;
-        boost::split(split_token_3, tokens[2], boost::is_any_of("-"));
-        boost::split(split_token_4, tokens[3], boost::is_any_of("-"));
-        QL_REQUIRE(split_token_3.size() == 1 || split_token_3.size() == 2 || split_token_3.size() == 3, "As a third token is expected either Index of the form CCY-INDEX or CCY-INDEX-TERM or its' TERM instead of " << tokens[2] << ".");
-        QL_REQUIRE(split_token_4.size() == 1 || split_token_4.size() == 2 || split_token_4.size() == 3, "As a fourth token is expected either Index of the form CCY-INDEX or CCY-INDEX-TERM or its' TERM instead of " << tokens[3] << ".");
-        string ccy_flatIndex = "";
-        string ccy_index = "";
-        if(split_token_3.size() == 1 && split_token_4.size() == 1){
-            flatTerm = parsePeriod(tokens[2]);
-            term = parsePeriod(tokens[3]);
-        }else if(split_token_3.size() != 1 && split_token_4.size() != 1) {
-            ccy_flatIndex = split_token_3[0];
-            ccy_index = split_token_4[0];
-            QL_REQUIRE(ccy_flatIndex == ccy_index, "Indices " << tokens[2] << " and " << tokens[3] << " should be of the same currency in a "<< tokens[0] << ".");
-            QL_REQUIRE(ccy_flatIndex == ccy, "Indices " << tokens[2] << " and " << tokens[3] << " do not match currency " << tokens[4] << ".");
-            split_token_3.size() == 2 ? flatTerm = parsePeriod("1D") : flatTerm = parsePeriod(split_token_3[2]);
-            split_token_4.size() == 2 ? term = parsePeriod("1D") : term = parsePeriod(split_token_4[2]);
-            QL_REQUIRE(tokens[2] == "USD-LIBOR-3M" && (tokens[3] == "USD-PRIME" || tokens[3] == "USD-FEDFUNDS"), "For now only these two additional cases are implemented:  /USD-LIBOR-3M/USD-PRIME and /USD-LIBOR-3M/USD-FEDFUNDS.");
-        }else{
-            QL_FAIL("Presently either two Indices ot two Tenors are expected as third and fourth token.");
-        }
+
+        // Used to parse the third and fourth tokens. For instance, input "3M" yields the period 3M.
+        // In case of an input of the form "USD-LIBOR-3M", the currency implicit in the string is checked to match
+        // the currency from token 5.
+        auto parseTenorOrIndexGivenCurrency = [ccy](std::string tenor_or_index) {
+            Period term;
+            vector<string> split_tenor_or_index;
+            boost::split(split_tenor_or_index, tenor_or_index, boost::is_any_of("-"));
+            QL_REQUIRE(split_tenor_or_index.size() == 1 || split_tenor_or_index.size() == 2 ||
+                           split_tenor_or_index.size() == 3,
+                       "Expected input of the form CCY-INDEX, CCY-INDEX-TERM, or TERM instead of " << tenor_or_index);
+            if (split_tenor_or_index.size() == 1) {
+                term = parsePeriod(tenor_or_index);
+                return term;
+            } else {
+                auto ccy_index = split_tenor_or_index[0];
+                QL_REQUIRE(ccy_index == ccy, "Currency of Index " << tenor_or_index << " must match " << ccy);
+                split_tenor_or_index.size() == 2 ? term = parsePeriod("1D")
+                                                 : term = parsePeriod(split_tenor_or_index[2]);
+                return term;
+            }
+        };
+        flatTerm = parseTenorOrIndexGivenCurrency(tokens[2]);
+        term = parseTenorOrIndexGivenCurrency(tokens[3]);
         return boost::make_shared<BasisSwapQuote>(value, asof, datumName, quoteType, flatTerm, term, ccy, maturity);
     }
 
