@@ -30,7 +30,6 @@
 
 #include <boost/make_shared.hpp>
 #include <iomanip>
-#include <iostream>
 
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
@@ -108,7 +107,6 @@ BOOST_AUTO_TEST_CASE(testForwardBond1) { // test if bond and forwardbond comp co
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << fwdBond->NPV());
-    std::cout << "after4" << std::endl;
     BOOST_CHECK_CLOSE(fwdBond->NPV() + strikePrice, bond->dirtyPrice(), 0.000001);
 }
 

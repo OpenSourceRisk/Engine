@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(testConstructionQuotes) {
     vector<string> quotes = {"COMMODITY_FWD/PRICE/GOLD/USD/2016-02-29", "COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28"};
 
     // Create configuration
-    CommodityCurveConfig config(curveId, curveDescription, currency, commoditySpotQuote, quotes);
+    CommodityCurveConfig config(curveId, curveDescription, currency, quotes, commoditySpotQuote);
 
     // Check quotes vector from config (none of the other members have logic)
     quotes.insert(quotes.begin(), commoditySpotQuote);

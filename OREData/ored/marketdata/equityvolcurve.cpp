@@ -227,9 +227,9 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
             dVols = Matrix(strikes.size(), atmWcDateMap.size(), -1.0);
             vector<Date> dates(dVols.columns());
 
-            map<Date, Real>::iterator ii = atmWcDateMap.begin();
+            map<Date, Real>::iterator ii;
             int ctr = 0;
-            for (ii; ii != atmWcDateMap.end(); ii++) {
+            for (ii = atmWcDateMap.begin(); ii != atmWcDateMap.end(); ii++) {
                 dates[ctr] = ii->first;
                 dVols[0][ctr] = ii->second;
                 ctr++;

@@ -9,6 +9,7 @@ calendars/peru.cpp
 calendars/philippines.cpp
 calendars/thailand.cpp
 calendars/switzerland.cpp
+calendars/wmr.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
 cashflows/brlcdicouponpricer.cpp
@@ -102,6 +103,7 @@ pricingengines/discountingforwardbondengine.cpp
 pricingengines/discountingfxforwardengine.cpp
 pricingengines/discountingriskybondengine.cpp
 pricingengines/discountingswapenginemulticurve.cpp
+pricingengines/lgmconvolutionsolver.cpp
 pricingengines/midpointcdsengine.cpp
 pricingengines/numericlgmswaptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
@@ -114,6 +116,7 @@ termstructures/basistwoswaphelper.cpp
 termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvariancesurfacesparse.cpp
+termstructures/blackvariancesurfacestddevs.cpp
 termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
@@ -122,6 +125,7 @@ termstructures/correlationtermstructure.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
 termstructures/crossccyfixfloatswaphelper.cpp
+termstructures/crosscurrencypricetermstructure.cpp
 termstructures/datedstrippedoptionlet.cpp
 termstructures/datedstrippedoptionletadapter.cpp
 termstructures/defaultprobabilityhelpers.cpp
@@ -169,6 +173,7 @@ calendars/peru.hpp
 calendars/philippines.hpp
 calendars/thailand.hpp
 calendars/switzerland.hpp
+calendars/wmr.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
 cashflows/brlcdicouponpricer.hpp
@@ -319,6 +324,7 @@ pricingengines/discountingforwardbondengine.hpp
 pricingengines/discountingfxforwardengine.hpp
 pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingswapenginemulticurve.hpp
+pricingengines/lgmconvolutionsolver.hpp
 pricingengines/midpointcdsengine.hpp
 pricingengines/numericlgmswaptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
@@ -334,6 +340,7 @@ termstructures/blackmonotonevarvoltermstructure.hpp
 termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvariancesurfacesparse.hpp
+termstructures/blackvariancesurfacestddevs.hpp
 termstructures/blackvolsurfacewithatm.hpp
 termstructures/brlcdiratehelper.hpp
 termstructures/capfloorhelper.hpp
@@ -343,6 +350,7 @@ termstructures/correlationtermstructure.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
 termstructures/crossccybasisswaphelper.hpp
 termstructures/crossccyfixfloatswaphelper.hpp
+termstructures/crosscurrencypricetermstructure.hpp
 termstructures/datedstrippedoptionlet.hpp
 termstructures/datedstrippedoptionletadapter.hpp
 termstructures/datedstrippedoptionletbase.hpp
