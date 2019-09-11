@@ -7,8 +7,8 @@ calendars/malaysia.cpp
 calendars/netherlands.cpp
 calendars/peru.cpp
 calendars/philippines.cpp
-calendars/thailand.cpp
 calendars/switzerland.cpp
+calendars/thailand.cpp
 calendars/wmr.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
@@ -139,8 +139,6 @@ termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/immfraratehelper.cpp
-termstructures/iterativebootstrap.hpp
-termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/oibasisswaphelper.cpp
 termstructures/oiccbasisswaphelper.cpp
 termstructures/oisratehelper.cpp
@@ -171,8 +169,8 @@ calendars/malaysia.hpp
 calendars/netherlands.hpp
 calendars/peru.hpp
 calendars/philippines.hpp
-calendars/thailand.hpp
 calendars/switzerland.hpp
+calendars/thailand.hpp
 calendars/wmr.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
@@ -227,6 +225,7 @@ indexes/ibor/nzdbkbm.hpp
 indexes/ibor/phpphiref.hpp
 indexes/ibor/plnpolonia.hpp
 indexes/ibor/plnwibor.hpp
+indexes/ibor/primeindex.hpp
 indexes/ibor/rubmosprime.hpp
 indexes/ibor/saibor.hpp
 indexes/ibor/seksior.hpp
@@ -237,7 +236,6 @@ indexes/ibor/skkbribor.hpp
 indexes/ibor/thbbibor.hpp
 indexes/ibor/tonar.hpp
 indexes/ibor/twdtaibor.hpp
-indexes/ibor/primeindex.hpp
 indexes/inflationindexobserver.hpp
 indexes/inflationindexwrapper.hpp
 indexes/region.hpp
@@ -373,6 +371,7 @@ termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolateddiscountcurve.hpp
 termstructures/interpolateddiscountcurve2.hpp
 termstructures/interpolatedyoycapfloortermpricesurface.hpp
+termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/oibasisswaphelper.hpp
 termstructures/oiccbasisswaphelper.hpp
