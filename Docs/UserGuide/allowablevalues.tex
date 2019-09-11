@@ -182,6 +182,7 @@ TENOR                    & An integer followed by \emph{D, W, M or Y}           
 \centering
   \begin{tabu} to 1.0\linewidth {| X[-1.65,l,m] | X[-5.7,l,m] |}
     \hline
+    \multicolumn{2}{|l|}{\tt Equity Name} \\ \hline
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
     \lstinline!Name!   for equity trades & \begin{tabular}[l]{@{}l@{}}  Any string (provided it is the ID of an equity in the market \\
@@ -189,7 +190,7 @@ conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: 
 %    \lstinline!Name!   for credit trades & \begin{tabular}[l]{@{}l@{}} 
 %\end{tabular}  \\ \hline
   \end{tabu}
-  \caption{Allowable values for equity  data.}
+  \caption{Allowable values for equity data.}
   \label{tab:equity_credit_data}
 \end{table}
 
@@ -199,8 +200,10 @@ conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: 
   \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
     \hline
     \multicolumn{2}{|l|}{\tt Commodity Curve Name} \\ \hline
-    \bfseries{Allowable Values} & \bfseries{Resulting Commodity Curve} \\
-    Any string (provided it is the ID of an equity in the market configuration) & The resulting curve\\
+    \bfseries{Trade Data} & \bfseries{Allowable Values} \\
+    \hline
+    \lstinline!Name! for commodity trades & Any string (provided it is the ID of an commodity in the market configuration) \\
+    \hline
   \end{tabu}
   \caption{Allowable values for commodity data.}
   \label{tab:commodity_data}
