@@ -4517,6 +4517,128 @@ Listing \ref{lst:correlation_configuration} shows the configuration of the Corre
 \label{lst:correlation_configuration}
 \end{longlisting}
 
+
+\subsubsection{Commodity Curves}
+
+Commodity Curves are setup as price curves in ORE, meaning that they return a price for a given time $t$ rather than a rate or discount factor, these curves are common in commodities and can be populated with futures prices directly.
+
+Listing \ref{lst:commodity_curve_configuration_1} shows the configuration of Commodity curves built from futures prices, in this example WTI Oil prices, note there is no spot price in this configuration, rather we have a set of futures prices only.
+
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <CommodityCurve>
+      <CurveId>WTI_USD</CurveId>
+      <CurveDescription>WTI USD price curve</CurveDescription>
+      <Currency>USD</Currency>
+      <Quotes>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-07-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-08-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-09-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-10-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-11-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-01-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-02-28</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-03-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-04-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-05-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-07-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-08-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-09-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-10-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-11-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-01-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-02-28</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-03-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-04-30</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <InterpolationMethod>Linear</InterpolationMethod>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+  </CommodityCurves>
+\end{minted}
+\caption{Commodity Curve Configuration for WTI Oil}
+\label{lst:commodity_curve_configuration_1}
+\end{longlisting}
+
+Listing \ref{lst:commodity_curve_configuration_2} shows the configuration for a Precious Metal curve using FX style spot and forward point quotes, note that SpotQuote is used in this case. The different interpretation of the forward quotes is controlled by the conventions.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CommodityCurves>
+    <CommodityCurve>
+      <CurveId>XAU</CurveId>
+      <CurveDescription>Gold USD price curve</CurveDescription>
+      <Currency>USD</Currency>
+      <SpotQuote>COMMODITY/PRICE/XAU/USD</SpotQuote>
+      <Quotes>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/ON</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/TN</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/SN</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/1W</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/1M</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/3M</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/6M</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/9M</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/1Y</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <InterpolationMethod>Linear</InterpolationMethod>
+      <Conventions>XAU</Conventions>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+  </CommodityCurves>
+\end{minted}
+\caption{Commodity Curve Configuration for Gold in USD}
+\label{lst:commodity_curve_configuration_2}
+\end{longlisting}
+
+The meaning of each of the top level elements is given below. If an element is labelled
+as 'Optional', then it may be excluded or included and left blank.
+\begin{itemize}
+\item CurveId: Unique identifier for the curve.
+\item CurveDescription: A description of the curve. This field may be left blank.
+\item Currency: The commodity curve currency.
+\item SpotQuote [Optional]: The spot price quote, if omitted then the spot value will be interpolated.
+\item Quotes: forward price quotes. These can be a futures price or forward points.
+\item DayCounter: The day count basis used internally by the curve to calculate the time between dates.
+\item InterpolationMethod [Optional]: The variable on which the interpolation is performed. The allowable values are
+Linear, LogLinear, Cubic, LinearFlat, LogLinearFlat, CubicFlat. This is different to yield curves above in that Flat versions
+of the standard methods are defined, with each of these if there is no Spot price than any extrapolation between $T_0$ and the
+first future price will be flat (i.e. the first future price will be copied back "Flat" to $T_0$). 
+If the element is omitted or left blank, then it defaults to \emph{Linear}.
+\item Conventions [Optional]: The conventions to use, if omited it is assumed that these quotes are Outright prices.
+\item Extrapolation [Optional]: Set to \emph{True} or \emph{False} to enable or disable extrapolation respectively. If
+the element is omitted or left blank, then it defaults to \emph{True}.
+\end{itemize}
+
+
+Alternatively commodity curves can be set up as a commodity curve times the ratio of two yield curves as shown in listing
+\ref{lst:commodity_curve_configuration_3}. This can be used to setup commodity curves in different currencies, for example Gold in EUR (XAUEUR) can be built from a Gold in USD curve and then the ratio of the EUR and USD discount factors at each pillar. This is akin to crossing FX forward points to get FX forward prices for any pair.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CommodityCurves>
+    <CommodityCurve>
+      <CurveId>XAUEUR</CurveId>
+      <CurveDescription>Gold EUR price curve</CurveDescription>
+      <Currency>EUR</Currency>
+      <BasePriceCurve>XAU</BasePriceCurve>
+      <BaseYieldCurve>USD-FedFunds</BaseYieldCurve>
+      <YieldCurve>EUR-IN-USD</YieldCurve>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+  </CommodityCurves>
+\end{minted}
+\caption{Commodity Curve Configuration for Gold in EUR}
+\label{lst:commodity_curve_configuration_3}
+\end{longlisting}
+
 %--------------------------------------------------------
 %\subsection{Conventions: {\tt conventions.xml}}
 %\label{sec:conventions}
