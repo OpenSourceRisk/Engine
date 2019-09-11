@@ -5,6 +5,7 @@ noinst_LTLIBRARIES = libIborIndexes.la
 
 libIborIndexes_la_SOURCES = \
     brlcdi.cpp
+    primeindex.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
