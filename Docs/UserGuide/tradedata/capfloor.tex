@@ -6,7 +6,7 @@ The \lstinline!CapFloorData! node is the trade data container for the \emph{CapF
 is long or short, and a \lstinline!LegData!  sub-node where the LegType element must be set to \emph{Floating} or \emph{CMS}, plus
 elements for the Cap and Floor rates. An example structure with Cap rates is shown in in Listing
 \ref{lst:capfloor_data}. A \lstinline!CapFloorData! node must have either \lstinline!Caps! or \lstinline!Floors!
-elements, or both.
+elements, or both. Note that the \lstinline!Caps! and \lstinline!Floors! elements must be outside the \lstinline!LegData! sub-node, i.e. a \emph{CapFloor} can't have a capped or floored  \emph{Floating}  or \emph{CMS} leg.
 
 \begin{listing}[H]
 %\hrule\medskip
