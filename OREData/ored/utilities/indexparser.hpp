@@ -122,14 +122,19 @@ parseZeroInflationIndex(const string& s, bool isInterpolated = false,
  */
 boost::shared_ptr<QuantExt::BondIndex> parseBondIndex(const string& s);
 
-//! Convert std::string to QuantExt::ComodityIndex
-/*!
- \ingroup utilities
+/*! Convert std::string to QuantExt::ComodityIndex
+    
+    This function can be used to parse commodity spot \e indices or commodity future \e indices:
+    - for spot \e indices, the \p name is of the form <tt>COMM-EXCHANGE:COMMODITY</tt>
+    - for future \e indices, the \p name is of the form <tt>COMM-EXCHANGE:CONTRACT:YYYY-MM</tt> or 
+      <tt>COMM-EXCHANGE:CONTRACT:YYYY-MM-DD</tt>
+
+    \ingroup utilities
  */
-boost::shared_ptr<QuantExt::CommodityIndex>
-parseCommodityIndex(const string& s,
-		    const Calendar& cal = NullCalendar(),
-                    const Handle<QuantExt::PriceTermStructure>& ts = Handle<QuantExt::PriceTermStructure>());
+boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const std::string& name,
+    const QuantLib::Calendar& cal = QuantLib::NullCalendar(),
+    const QuantLib::Handle<QuantExt::PriceTermStructure>& ts = 
+        QuantLib::Handle<QuantExt::PriceTermStructure>());
 
 //! Convert std::string to QuantLib::Index
 /*!

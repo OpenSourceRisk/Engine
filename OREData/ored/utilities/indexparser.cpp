@@ -410,19 +410,27 @@ boost::shared_ptr<BondIndex> parseBondIndex(const string& s) {
     return boost::make_shared<BondIndex>(tokens[1]);
 }
 
-boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& s, const Calendar& cal,
-                                                                const Handle<QuantExt::PriceTermStructure>& ts) {
-    std::vector<string> tokens;
-    split(tokens, s, boost::is_any_of(":"));
-    // Example: Format is NYMEX:CL respectively NYMEX:CL:YYYY-MM-DD for a futures index with expiry YYYY-MM-DD
-    QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3, "two or three tokens required in " << s << ": COMMODITY");
+boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name,
+    const Calendar& cal, const Handle<PriceTermStructure>& ts) {
+    
+    vector<string> tokens;
+    split(tokens, name, boost::is_any_of("-:"));
+    
+    // for spot indices, the name is of the form COMM-EXCHANGE:COMMODITY
+    // for future indices, the name is of the form COMM-EXCHANGE:CONTRACT:YYYY-MM or COMM-EXCHANGE:CONTRACT:YYYY-MM-DD
+    QL_REQUIRE(tokens.size() == 3 || tokens.size() == 5 || tokens.size() == 6,
+        "Three or five tokens are required in a commodity index");
+    QL_REQUIRE(tokens[0] == "COMM", "A commodity index string must start with 'COMM' but got first token " << tokens[0]);
 
-    if (tokens.size() == 3) {
-        std::string name = tokens[0] + ":" + tokens[1];
-        Date expiry = parseDate(tokens[2]);
-        return boost::make_shared<CommodityFuturesIndex>(name, expiry, cal, ts);
+    // Create the index
+    string commName = tokens[1] + ":" + tokens[2];
+    if (tokens.size() == 5 || tokens.size() == 6) {
+        string strExpiry = tokens.size() == 6 ? tokens[5] : "01";
+        strExpiry = tokens[3] + "-" + tokens[4] + "-" + strExpiry;
+        Date expiry = parseDate(strExpiry);
+        return boost::make_shared<CommodityFuturesIndex>(commName, expiry, cal, ts);
     } else {
-        return boost::make_shared<CommoditySpotIndex>(s, cal, ts);
+        return boost::make_shared<CommoditySpotIndex>(commName, cal, ts);
     }
 }
 
