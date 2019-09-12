@@ -80,7 +80,11 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
         expiry = Date::nthWeekday(conventions.nth(), conventions.weekday(), contractMonth, contractYear);
     }
 
-    // Apply adjustments if necessary
+    // If expiry date is not a good business day, adjust it before applying the offset. We might need another 
+    // flag or element in the conventions to control this but do it now in all cases
+    expiry = conventions.calendar().adjust(expiry, conventions.businessDayConvention());
+
+    // Apply offset adjustments if necessary
     expiry = conventions.calendar().advance(expiry, -static_cast<Integer>(conventions.offsetDays()), 
         Days, conventions.businessDayConvention());
 
