@@ -1135,6 +1135,7 @@ public:
         const std::string& oneContractMonth = "",
         const std::string& offsetDays = "",
         const std::string& bdc = "",
+        bool adjustBeforeOffset = true,
         bool isAveraging = false);
 
     //! N-th weekday based constructor
@@ -1147,6 +1148,7 @@ public:
         const std::string& oneContractMonth = "",
         const std::string& offsetDays = "",
         const std::string& bdc = "",
+        bool adjustBeforeOffset = true,
         bool isAveraging = false);
     //@}
 
@@ -1161,6 +1163,7 @@ public:
     QuantLib::Month oneContractMonth() const { return oneContractMonth_; }
     QuantLib::Natural offsetDays() const { return offsetDays_; }
     QuantLib::BusinessDayConvention businessDayConvention() const { return bdc_; }
+    bool adjustBeforeOffset() const { return adjustBeforeOffset_; }
     bool isAveraging() const { return isAveraging_; }
     bool dayOfMonthBased() const { return dayOfMonthBased_; }
     //@}
@@ -1194,6 +1197,7 @@ private:
     std::string strOneContractMonth_;
     std::string strOffsetDays_;
     std::string strBdc_;
+    bool adjustBeforeOffset_;
     bool isAveraging_;
 };
 

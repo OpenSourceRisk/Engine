@@ -1072,6 +1072,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id,
     const std::string& oneContractMonth,
     const string& offsetDays,
     const string& bdc,
+    bool adjustBeforeOffset,
     bool isAveraging)
     : Convention(id, Type::CommodityFuture),
       strDayOfMonth_(dayOfMonth),
@@ -1081,6 +1082,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id,
       strOneContractMonth_(oneContractMonth),
       strOffsetDays_(offsetDays),
       strBdc_(bdc),
+      adjustBeforeOffset_(adjustBeforeOffset),
       isAveraging_(isAveraging) {
     build();
 }
@@ -1094,6 +1096,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id,
     const std::string& oneContractMonth,
     const string& offsetDays,
     const string& bdc,
+    bool adjustBeforeOffset,
     bool isAveraging)
     : Convention(id, Type::CommodityFuture),
       strNth_(nth),
@@ -1104,6 +1107,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id,
       strOneContractMonth_(oneContractMonth),
       strOffsetDays_(offsetDays),
       strBdc_(bdc),
+      adjustBeforeOffset_(adjustBeforeOffset),
       isAveraging_(isAveraging){
     build();
 }
@@ -1136,6 +1140,11 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
     strOffsetDays_ = XMLUtils::getChildValue(node, "OffsetDays", false);
     strBdc_ = XMLUtils::getChildValue(node, "BusinessDayConvention", false);
     
+    adjustBeforeOffset_ = true;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "AdjustBeforeOffset")) {
+        adjustBeforeOffset_ = parseBool(XMLUtils::getNodeValue(n));
+    }
+
     isAveraging_ = false;
     if (XMLNode* n = XMLUtils::getChildNode(node, "IsAveraging")) {
         isAveraging_ = parseBool(XMLUtils::getNodeValue(n));
@@ -1173,6 +1182,7 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
     if (!strBdc_.empty())
         XMLUtils::addChild(doc, node, "BusinessDayConvention", strBdc_);
 
+    XMLUtils::addChild(doc, node, "AdjustBeforeOffset", adjustBeforeOffset_);
     XMLUtils::addChild(doc, node, "IsAveraging", isAveraging_);
 
     return node;
