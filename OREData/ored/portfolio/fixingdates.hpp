@@ -120,8 +120,11 @@ protected:
     always add the fixing date to the set of fixing dates regardless of
     \c Settings::instance().enforcesTodaysHistoricFixings().
 */
-std::set<QuantLib::Date> fixingDates(const QuantLib::Leg& leg, QuantLib::Date settlementDate = QuantLib::Date(),
-    FixingDateGetter fdg = FixingDateGetter());
+std::set<QuantLib::Date> fixingDates(const QuantLib::Leg& leg,
+    const QuantLib::Date& settlementDate = QuantLib::Date());
+
+std::set<QuantLib::Date> fixingDates(const QuantLib::Leg& leg,
+    const QuantLib::Date& settlementDate, FixingDateGetter& fdg);
 
 /*! Gives back the indices and associated dates for which fixings will be required to price the \p leg assuming a 
     given \p settlementDate. If the \p settlementDate is not provided or is set equal to \c QuantLib::Date(), the 
@@ -136,8 +139,10 @@ std::set<QuantLib::Date> fixingDates(const QuantLib::Leg& leg, QuantLib::Date se
     \c Settings::instance().enforcesTodaysHistoricFixings().
 */
 std::map<std::string, std::set<QuantLib::Date>> fixingDatesIndices(const QuantLib::Leg& leg,
-    QuantLib::Date settlementDate = QuantLib::Date(),
-    FixingDateGetter fdg = FixingDateGetter());
+    const QuantLib::Date& settlementDate = QuantLib::Date());
+
+std::map<std::string, std::set<QuantLib::Date>> fixingDatesIndices(const QuantLib::Leg& leg,
+    const QuantLib::Date& settlementDate, FixingDateGetter& fdg);
 
 /*! Inflation fixings are generally available on a monthly, or coarser, frequency. When a portfolio is asked for its 
     fixings, and it contains inflation fixings, ORE will by convention put the fixing date as the 1st of the 

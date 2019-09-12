@@ -260,10 +260,22 @@ void FixingDateGetter::visit(SubPeriodsCoupon& c) {
     }
 }
 
-set<Date> fixingDates(const Leg& leg, Date settlementDate, FixingDateGetter fdg) {
-
-    map<string, set<Date>> m = fixingDatesIndices(leg, settlementDate, fdg);
+set<Date> fixingDates(const Leg& leg, const Date& settlementDate) {
     
+    // If settlement date is an empty date, update to evaluation date.
+    Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
+    
+    FixingDateGetter fdg(d);
+    return fixingDates(leg, d, fdg);
+}
+
+set<Date> fixingDates(const Leg& leg, const Date& settlementDate, FixingDateGetter& fdg) {
+
+    // If settlement date is an empty date, update to evaluation date.
+    Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
+
+    map<string, set<Date>> m = fixingDatesIndices(leg, d, fdg);
+
     if (m.size() == 0) {
         return set<Date>();
     }
@@ -275,10 +287,22 @@ set<Date> fixingDates(const Leg& leg, Date settlementDate, FixingDateGetter fdg)
     return m.begin()->second;
 }
 
-map<string, set<Date>> fixingDatesIndices(const Leg& leg, Date settlementDate, FixingDateGetter fdg) {
+map<string, set<Date>> fixingDatesIndices(const Leg& leg, const Date& settlementDate) {
+    
+    // If settlement date is an empty date, update to evaluation date.
+    Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
+
+    FixingDateGetter fdg(d);
+    return fixingDatesIndices(leg, d, fdg);
+}
+
+map<string, set<Date>> fixingDatesIndices(const Leg& leg, const Date& settlementDate, FixingDateGetter& fdg) {
+
+    // If settlement date is an empty date, update to evaluation date.
+    Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
 
     // Set the FixingDateGetter's settlement date
-    fdg.today() = settlementDate;
+    fdg.today() = d;
 
     for (const auto& cf : leg) {
         cf->accept(fdg);
