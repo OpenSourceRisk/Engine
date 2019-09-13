@@ -762,6 +762,9 @@
     <ClInclude Include="qle\time\futureexpirycalculator.hpp">
       <Filter>time</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\israel.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1287,6 +1290,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\crosscurrencypricetermstructure.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\israel.cpp">
+      <Filter>time\calendars</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
