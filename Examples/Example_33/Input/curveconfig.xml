@@ -54,43 +54,43 @@
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/5Y</RateQuote>
             </CompositeQuote>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/USD/6Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_FEDFUNDS/6Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/6Y</RateQuote>
             </CompositeQuote>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/USD/7Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_FEDFUNDS/7Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/7Y</RateQuote>
             </CompositeQuote>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/USD/8Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_FEDFUNDS/8Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/8Y</RateQuote>
             </CompositeQuote>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/USD/9Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_FEDFUNDS/9Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/9Y</RateQuote>
             </CompositeQuote>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/USD/10Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_FEDFUNDS/10Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/10Y</RateQuote>
             </CompositeQuote>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/USD/12Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_FEDFUNDS/12Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/12Y</RateQuote>
             </CompositeQuote>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/USD/15Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_FEDFUNDS/15Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/15Y</RateQuote>
             </CompositeQuote>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/USD/20Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_FEDFUNDS/20Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/20Y</RateQuote>
             </CompositeQuote>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/USD/25Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_FEDFUNDS/25Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/25Y</RateQuote>
             </CompositeQuote>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/USD/30Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_FEDFUNDS/30Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/30Y</RateQuote>
             </CompositeQuote>
           </Quotes>
@@ -169,23 +169,23 @@
           <Type>Average OIS</Type>
           <Quotes>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-PRIME/USD/2Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_PRIME/2Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/2Y</RateQuote>
             </CompositeQuote>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-PRIME/USD/3Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_PRIME/3Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/3Y</RateQuote>
             </CompositeQuote>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-PRIME/USD/4Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_PRIME/4Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/4Y</RateQuote>
             </CompositeQuote>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-PRIME/USD/5Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_PRIME/5Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/5Y</RateQuote>
             </CompositeQuote>
             <CompositeQuote>
-              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-PRIME/USD/7Y</SpreadQuote>
+              <SpreadQuote>BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_PRIME/7Y</SpreadQuote>
               <RateQuote>IR_SWAP/RATE/USD/2D/3M/7Y</RateQuote>
             </CompositeQuote>
           </Quotes>

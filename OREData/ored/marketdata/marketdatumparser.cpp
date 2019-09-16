@@ -214,38 +214,22 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::BASIS_SWAP: {
-        // BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/5Y
-        // BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-PRIME/USD/5Y
-        // BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/USD/5Y
-        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
-        Period flatTerm;
-        Period term;
+        QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7, "Either 6 or 7 tokens expected in " << datumName);
+        Period flatTerm = parsePeriod(tokens[2]);
+        Period term = parsePeriod(tokens[3]);
         const string& ccy = tokens[4];
-        Period maturity = parsePeriod(tokens[5]);
-
-        // Used to parse the third and fourth tokens. For instance, input "3M" yields the period 3M.
-        // In case of an input of the form "USD-LIBOR-3M", the currency implicit in the string is checked to match
-        // the currency from token 5.
-        auto parseTenorOrIndexGivenCurrency = [ccy](std::string tenor_or_index) {
-            Period term;
-            vector<string> split_tenor_or_index;
-            boost::split(split_tenor_or_index, tenor_or_index, boost::is_any_of("-"));
-            QL_REQUIRE(split_tenor_or_index.size() == 1 || split_tenor_or_index.size() == 2 ||
-                           split_tenor_or_index.size() == 3,
-                       "Expected input of the form CCY-INDEX, CCY-INDEX-TERM, or TERM instead of " << tenor_or_index);
-            if (split_tenor_or_index.size() == 1) {
-                term = parsePeriod(tenor_or_index);
-                return term;
-            } else {
-                auto ccy_index = split_tenor_or_index[0];
-                QL_REQUIRE(ccy_index == ccy, "Currency of Index " << tenor_or_index << " must match " << ccy);
-                split_tenor_or_index.size() == 2 ? term = parsePeriod("1D")
-                                                 : term = parsePeriod(split_tenor_or_index[2]);
-                return term;
-            }
-        };
-        flatTerm = parseTenorOrIndexGivenCurrency(tokens[2]);
-        term = parseTenorOrIndexGivenCurrency(tokens[3]);
+        Period maturity;
+        // An optional identifier as a penultimate token supports the following two versions:
+        // BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/5Y
+        // BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/foobar/5Y
+        if (tokens.size() == 7) {
+            QL_REQUIRE(
+                tokens[5] == "LIBOR_PRIME" || tokens[5] == "LIBOR_FEDFUNDS",
+                "for now only LIBOR_PRIME or LIBOR_FEDFUNDS as an additional penultimate token allowed.");
+            maturity = parsePeriod(tokens[6]);
+        } else {
+            maturity = parsePeriod(tokens[5]);
+        }
         return boost::make_shared<BasisSwapQuote>(value, asof, datumName, quoteType, flatTerm, term, ccy, maturity);
     }
 

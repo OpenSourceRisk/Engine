@@ -18,13 +18,14 @@ http://www.fedprimerate.com/
    Market data for basis swaps retrieved from Thomson Reuters as of 2016-02-05.
    The quotes for LIBOR-FedFunds basis swap are saved as two alternative notations.
 
-   To avoid a conflict in the quotes, quotes for the US Dollar Prime Rate vs 3 Month LIBOR Basis Swap,
-   used for bootstrapping of the USD-Prime index, are denoted as:
-           BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-PRIME/USD/maturity,
+   To avoid a conflict in the quotes, an optional identifier as a penultimate token is introduced.
+   For the US Dollar Prime Rate vs 3 Month LIBOR Basis Swap quotes, used for bootstrapping of the USD-Prime index,
+   is used the notation:
+           BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_PRIME/maturity,
 
    to distinguish from the quotes for the US Dollar 3 Month LIBOR vs Fed Funds Basis Swap,
    for which a new notation is used:
-           BASIS_SWAP/BASIS_SPREAD/USD-LIBOR-3M/USD-FEDFUNDS/USD/maturity.
+           BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/LIBOR_FEDFUNDS/maturity.
    The former notation:
            BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/maturity,
    is still valid and to show this, it is used, too.
