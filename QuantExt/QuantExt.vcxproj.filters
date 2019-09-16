@@ -765,6 +765,9 @@
     <ClInclude Include="qle\pricingengines\lgmconvolutionsolver.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\israel.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1296,6 +1299,9 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\lgmconvolutionsolver.cpp">
       <Filter>pricingengines</Filter>
+	</ClCompile>
+    <ClCompile Include="qle\calendars\israel.cpp">
+      <Filter>time\calendars</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
