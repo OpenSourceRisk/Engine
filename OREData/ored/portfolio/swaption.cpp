@@ -331,12 +331,15 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
                 }
                 if (feeNotional == Null<Real>())
                     rebates[i] = 0.0; // notional is zero
-                else
+                else {
+                    DLOG("Convert percentage rebate "
+                         << rebates[i] << " to absolute reabte " << rebates[i] * feeNotional << " using nominal "
+                         << feeNotional << " for exercise date " << QuantLib::io::iso_date(exerciseDates[i]));
                     rebates[i] *= feeNotional; // multiply percentage fee by relevant notional
+                }
             } else {
                 QL_REQUIRE(feeType[i] == "Absolute", "fee type must be Absolute or Relative");
             }
-            DLOG("Got rebate " << rebates[i] << " for exercise date " << QuantLib::io::iso_date(exerciseDates[i]));
         }
         Period feeSettlPeriod = option_.exerciseFeeSettlementPeriod().empty()
                                     ? 0 * Days
