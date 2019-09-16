@@ -30,10 +30,7 @@ ConventionsBasedFutureExpiry::ConventionsBasedFutureExpiry(const boost::shared_p
 Date ConventionsBasedFutureExpiry::nextExpiry(const string& contractName, 
     bool includeExpiry, const Date& referenceDate) {
     
-    // Get the future expiry conventions for the given contractName
-    QL_REQUIRE(conventions_->has(contractName), "Need conventions for contract " << contractName << ".");
-    auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions_->get(contractName));
-    QL_REQUIRE(convention, "Expected conventions for contract " << contractName << " to be of type CommodityFuture.");
+    auto convention = getConvention(contractName);
 
     // Set the date relative to which we are calculating the next expiry
     Date today = referenceDate == Date() ? Settings::instance().evaluationDate() : referenceDate;
@@ -56,10 +53,34 @@ Date ConventionsBasedFutureExpiry::nextExpiry(const string& contractName,
     return expiryDate;
 }
 
+Date ConventionsBasedFutureExpiry::expiryDate(const string& contractName, Month contractMonth,
+    Year contractYear, Natural monthOffset) {
+
+    auto convention = getConvention(contractName);
+    return expiry(contractMonth, contractYear, *convention, monthOffset);
+}
+
+boost::shared_ptr<CommodityFutureConvention> ConventionsBasedFutureExpiry::getConvention(
+    const string& contractName) const {
+    
+    // Get the future expiry conventions for the given contractName
+    QL_REQUIRE(conventions_->has(contractName), "Need conventions for contract " << contractName << ".");
+    auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions_->get(contractName));
+    QL_REQUIRE(convention, "Expected conventions for contract " << contractName << " to be of type CommodityFuture.");
+    return convention;
+}
+
 Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear, 
-    const CommodityFutureConvention& conventions) const {
+    const CommodityFutureConvention& conventions, QuantLib::Natural monthOffset) const {
 
     Date expiry;
+
+    // Apply month offset if non-zero
+    if (monthOffset > 0) {
+        Date newDate = Date(15, contractMonth, contractYear) + monthOffset * Months;
+        contractMonth = newDate.month();
+        contractYear = newDate.year();
+    }
 
     // Move to previous month for the expiry if necessary
     if (conventions.expiryInPreviousMonth()) {

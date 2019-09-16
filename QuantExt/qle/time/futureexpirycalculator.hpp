@@ -40,6 +40,13 @@ public:
     */
     virtual QuantLib::Date nextExpiry(const std::string& contractName, bool includeExpiry = true,
         const QuantLib::Date& referenceDate = QuantLib::Date()) = 0;
+
+    /*! Given a future contract's name, \p contractName, the contract's month, \p contractMonth and the contract's 
+        year, \p contractYear, return the expiry date of the future contract that is \p monthOffset number of months 
+        from the future contract. If \p monthOffset is zero, the expiry date of the future contract itself is returned.
+    */
+    virtual QuantLib::Date expiryDate(const std::string& contractName, QuantLib::Month contractMonth,
+        QuantLib::Year contractYear, QuantLib::Natural monthOffset) = 0;
 };
 
 }

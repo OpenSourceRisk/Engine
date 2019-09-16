@@ -40,12 +40,19 @@ public:
     QuantLib::Date nextExpiry(const std::string& contractName, bool includeExpiry = true,
         const QuantLib::Date& referenceDate = QuantLib::Date()) override;
 
+    //! Provide implementation for the base class method
+    QuantLib::Date expiryDate(const std::string& contractName, QuantLib::Month contractMonth,
+        QuantLib::Year contractYear, QuantLib::Natural monthOffset) override;
+
 private:
     boost::shared_ptr<ore::data::Conventions> conventions_;
 
+    //! Get the conventions for the future contract \p contractName
+    boost::shared_ptr<CommodityFutureConvention> getConvention(const std::string& contractName) const;
+
     //! Given a \p contractMonth, a \p contractYear and \p conventions, calculate the contract expiry date
     QuantLib::Date expiry(QuantLib::Month contractMonth, QuantLib::Year contractYear,
-        const CommodityFutureConvention& conventions) const;
+        const CommodityFutureConvention& conventions, QuantLib::Natural monthOffset = 0) const;
 };
 
 }
