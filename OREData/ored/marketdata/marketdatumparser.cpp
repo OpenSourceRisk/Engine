@@ -223,9 +223,6 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         // BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/5Y
         // BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/foobar/5Y
         if (tokens.size() == 7) {
-            QL_REQUIRE(
-                tokens[5] == "LIBOR_PRIME" || tokens[5] == "LIBOR_FEDFUNDS",
-                "for now only LIBOR_PRIME or LIBOR_FEDFUNDS as an additional penultimate token allowed.");
             maturity = parsePeriod(tokens[6]);
         } else {
             maturity = parsePeriod(tokens[5]);
