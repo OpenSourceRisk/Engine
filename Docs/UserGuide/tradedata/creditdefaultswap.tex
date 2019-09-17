@@ -5,7 +5,10 @@ are
 
 \begin{itemize}
 \item IssuerId: An identifier for the reference entity of the CDS. For informational purposes and not used for pricing.
-\item CreditCurveId: Typically the ISIN-code of the reference entity defining the default curve used for pricing. Other identifiers may be used as well, provided they are supported in the market data configuration.
+\item CreditCurveId: The identifier of the reference entity defining the default curve used for pricing.
+
+Allowable values: See \lstinline!Name! for credit trades - single name in Table \ref{tab:equity_credit_data}. \\
+
 \item SettlesAccrual [Optional]: Whether or not the accrued coupon is due in the event of a default. This defaults to \lstinline!true! if not provided.
 \item PaysAtDefaultTime [Optional]: If set to \lstinline!true!, any payments triggered by a default event are due at default time. If set to \lstinline!false!, they are due at the end of the accrual period. This defaults to \lstinline!true! if not provided.
 \item ProtectionStart [Optional]: The first date where a default event will trigger the contract. This defaults to the first date in the schedule if it is not provided.
@@ -21,7 +24,7 @@ A LegData block then defines the cashflow structure of the credit default swap, 
 \begin{minted}[fontsize=\footnotesize]{xml}
     <CreditDefaultSwapData>
       <IssuerId>CPTY_A</IssuerId>
-      <CreditCurveId>ISIN:XS0982710740</CreditCurveId>
+      <CreditCurveId>RED:008CA0|SNRFOR|USD|MR14</CreditCurveId>
       <SettlesAccrual>Y</SettlesAccrual>
       <PaysAtDefaultTime>Y</PaysAtDefaultTime>
       <ProtectionStart>20160206</ProtectionStart>

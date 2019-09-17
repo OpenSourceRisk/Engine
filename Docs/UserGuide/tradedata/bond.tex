@@ -6,7 +6,9 @@ are
 
 \begin{itemize}
 \item IssuerId: A unique identifier for the issuer of the bond.
-\item CreditCurveId: The identifier of the default curve used for pricing, which must match a default curve id in the market data configuration. 
+\item CreditCurveId: The identifier of the default curve used for pricing.
+
+Allowable values: See \lstinline!Name! for credit trades in Table \ref{tab:equity_credit_data}. \\
 
 %via the default curves block in {\tt  todaysmarket.xml}
 % \item LGD (optional): If given, this LGD is used for pricing, overriding the default LGD of the default curve
@@ -24,7 +26,7 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
 \begin{minted}[fontsize=\footnotesize]{xml}
     <BondData>
         <IssuerId>CPTY_C</IssuerId>
-        <CreditCurveId>ISIN:XS0982710740</CreditCurveId>
+        <CreditCurveId>RED:008CA0|SNRFOR|USD|MR14</CreditCurveId>
         <SecurityId>SECURITY_1</SecurityId>
         <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
         <SettlementDays>2</SettlementDays>
