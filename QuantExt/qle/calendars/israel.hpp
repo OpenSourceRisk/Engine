@@ -16,36 +16,44 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ilstelbor.hpp
-    \brief ILS-TELBOR index
-    \ingroup indexes
+/*! \file qle/calendars/israel.hpp
+    \brief Israel calendar extension to cover TELBOR publication days
 */
 
-#ifndef quantext_ilstelbor_hpp
-#define quantext_ilstelbor_hpp
+#ifndef quantext_israel_calendar_hpp
+#define quantext_israel_calendar_hpp
 
-#include <ql/currencies/asia.hpp>
-#include <ql/indexes/iborindex.hpp>
+#include <ql/time/calendar.hpp>
 #include <ql/time/calendars/israel.hpp>
-#include <qle/calendars/israel.hpp>
-#include <ql/time/daycounters/actual360.hpp>
 
 namespace QuantExt {
-using namespace QuantLib;
 
-//! ILS-TELBOR index
-/*! ILS-TELBOR rate overseen by Bank of Israel.
+//! Israel calendar
+/*! Extend Israel calendar to cover TELBOR publication dates as described at:
+    https://www.boi.org.il/en/Markets/TelborMarket/Documents/telbordef_eng.pdf
 
-    See <https://www.boi.org.il/en/Markets/TelborMarket/Pages/telbor.aspx>.
-
-            \ingroup indexes
+    \ingroup calendars
 */
-class ILSTelbor : public IborIndex {
+class Israel : public QuantLib::Israel {
+
+private:
+    class TelborImpl : public Calendar::Impl {
+    public:
+        std::string name() const { return "Israel Telbor Implementation"; }
+        bool isWeekend(QuantLib::Weekday w) const;
+        bool isBusinessDay(const QuantLib::Date& date) const;
+    };
+
 public:
-    ILSTelbor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("ILS-TELBOR", tenor, 2, ILSCurrency(), QuantExt::Israel(QuantExt::Israel::Telbor),
-            ModifiedFollowing, false, Actual360(), h) {}
+    enum MarketExt {
+        Settlement,
+        TASE,
+        Telbor
+    };
+    Israel(MarketExt market = Telbor);
 };
-} // namespace QuantExt
+
+}
+
 
 #endif

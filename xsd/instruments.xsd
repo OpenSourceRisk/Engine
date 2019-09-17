@@ -584,6 +584,7 @@
       <xs:element type="date" name="FarDate"/>
       <xs:element type="xs:float" name="FarBoughtAmount"/>
       <xs:element type="xs:float" name="FarSoldAmount"/>
+      <xs:element type="settlementType" name="Settlement" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 

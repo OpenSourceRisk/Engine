@@ -516,11 +516,11 @@ private:
 */
 class CdsSpreadQuote : public MarketDatum {
 public:
-    //! COnstructor
+    //! Constructor
     CdsSpreadQuote(Real value, Date asofDate, const string& name, const string& underlyingName, const string& seniority,
-                   const string& ccy, Period term)
+                   const string& ccy, Period term, const string& docClause = "")
         : MarketDatum(value, asofDate, name, QuoteType::CREDIT_SPREAD, InstrumentType::CDS),
-          underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy), term_(term) {}
+          underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy), term_(term), docClause_(docClause) {}
 
     //! \name Inspectors
     //@{
@@ -528,12 +528,14 @@ public:
     const string& seniority() const { return seniority_; }
     const string& ccy() const { return ccy_; }
     const string& underlyingName() const { return underlyingName_; }
+    const string& docClause() const { return docClause_; }
     //@}
 private:
     string underlyingName_;
     string seniority_;
     string ccy_;
     Period term_;
+    string docClause_;
 };
 
 //! Hazard rate data class
@@ -547,9 +549,9 @@ class HazardRateQuote : public MarketDatum {
 public:
     //! Constructor
     HazardRateQuote(Real value, Date asofDate, const string& name, const string& underlyingName,
-                    const string& seniority, const string& ccy, Period term)
+                    const string& seniority, const string& ccy, Period term, const string& docClause = "")
         : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::HAZARD_RATE),
-          underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy), term_(term) {}
+          underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy), term_(term), docClause_(docClause) {}
 
     //! \name Inspectors
     //@{
@@ -557,12 +559,14 @@ public:
     const string& seniority() const { return seniority_; }
     const string& ccy() const { return ccy_; }
     const string& underlyingName() const { return underlyingName_; }
+    const string& docClause() const { return docClause_; }
     //@}
 private:
     string underlyingName_;
     string seniority_;
     string ccy_;
     Period term_;
+    string docClause_;
 };
 
 //! Recovery rate data class
@@ -575,20 +579,22 @@ class RecoveryRateQuote : public MarketDatum {
 public:
     //! Constructor
     RecoveryRateQuote(Real value, Date asofDate, const string& name, const string& underlyingName,
-                      const string& seniority, const string& ccy)
+                      const string& seniority, const string& ccy, const string& docClause = "")
         : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::RECOVERY_RATE),
-          underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy) {}
+          underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy), docClause_(docClause) {}
 
     //! \name Inspectors
     //@{
     const string& seniority() const { return seniority_; }
     const string& ccy() const { return ccy_; }
     const string& underlyingName() const { return underlyingName_; }
+    const string& docClause() const { return docClause_; }
     //@}
 private:
     string underlyingName_;
     string seniority_;
     string ccy_;
+    string docClause_;
 };
 
 //! Swaption data class
