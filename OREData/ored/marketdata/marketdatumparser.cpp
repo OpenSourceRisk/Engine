@@ -214,14 +214,14 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::BASIS_SWAP: {
+        // An optional identifier as a penultimate token supports the following two versions:
+        // BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/5Y
+        // BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/foobar/5Y
         QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7, "Either 6 or 7 tokens expected in " << datumName);
         Period flatTerm = parsePeriod(tokens[2]);
         Period term = parsePeriod(tokens[3]);
         const string& ccy = tokens[4];
         Period maturity;
-        // An optional identifier as a penultimate token supports the following two versions:
-        // BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/5Y
-        // BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/foobar/5Y
         if (tokens.size() == 7) {
             maturity = parsePeriod(tokens[6]);
         } else {
