@@ -553,6 +553,7 @@
     <ClInclude Include="qle\indexes\ibor\nzdbkbm.hpp" />
     <ClInclude Include="qle\indexes\ibor\phpphiref.hpp" />
     <ClInclude Include="qle\indexes\ibor\plnwibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\primeindex.hpp" />
     <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp" />
     <ClInclude Include="qle\indexes\ibor\saibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\seksior.hpp" />
@@ -774,6 +775,7 @@
     <ClCompile Include="qle\indexes\equityindex.cpp" />
     <ClCompile Include="qle\indexes\fxindex.cpp" />
     <ClCompile Include="qle\indexes\ibor\brlcdi.cpp" />
+    <ClCompile Include="qle\indexes\ibor\primeindex.cpp" />
     <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />
     <ClCompile Include="qle\indexes\region.cpp" />
     <ClCompile Include="qle\instruments\averageois.cpp" />

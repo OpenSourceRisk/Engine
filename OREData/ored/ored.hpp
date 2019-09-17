@@ -92,6 +92,7 @@
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/builders/vanillaoption.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/commodityforward.hpp>
@@ -125,6 +126,7 @@
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/tradeactions.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/vanillaoption.hpp>
 #include <ored/report/csvreport.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/report/report.hpp>
