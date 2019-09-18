@@ -348,7 +348,7 @@ void ScenarioSimMarketParameters::setYieldCurveDayCounters(const string& key, co
     yieldCurveDayCounters_[key] = s;
 }
 
-void ScenarioSimMarketParameters::swapVolIsCube(const string& key, bool isCube) {
+void ScenarioSimMarketParameters::setSwapVolIsCube(const string& key, bool isCube) {
     swapVolIsCube_[key] = isCube;
 }
 

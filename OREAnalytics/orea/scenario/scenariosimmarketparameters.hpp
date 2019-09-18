@@ -230,7 +230,7 @@ public:
     void setFxCcyPairs(vector<string> names);
 
     void setSimulateSwapVols(bool simulate);
-    void swapVolIsCube(const string& key, bool isCube);
+    void setSwapVolIsCube(const string& key, bool isCube);
     bool& simulateSwapVolATMOnly() { return swapVolSimulateATMOnly_; }
     void setSwapVolTerms(const string& key, const vector<Period>& p);
     void setSwapVolCcys(vector<string> names);

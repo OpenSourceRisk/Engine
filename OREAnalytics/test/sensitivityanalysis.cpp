@@ -985,8 +985,8 @@ BOOST_AUTO_TEST_CASE(test2dShifts) {
                                                          false);
 
     // cache initial zero rates
-    vector<Period> expiries = simMarketData->swapVolExpiries();
-    vector<Period> terms = simMarketData->swapVolTerms();
+    vector<Period> expiries = simMarketData->swapVolExpiries("");
+    vector<Period> terms = simMarketData->swapVolTerms("");
     vector<vector<Real>> initialData(expiries.size(), vector<Real>(terms.size(), 0.0));
     vector<Real> expiryTimes(expiries.size());
     vector<Real> termTimes(terms.size());
