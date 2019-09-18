@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/instruments/rebatedexercise.hpp>
 #include <qle/pricingengines/numericlgmswaptionengine.hpp>
 
-#include <ql/exercise.hpp>
 #include <ql/payoff.hpp>
 
 using std::vector;
@@ -29,6 +29,21 @@ NumericLgmSwaptionEngineBase::NumericLgmSwaptionEngineBase(const boost::shared_p
                                                            const Real sy, const Size ny, const Real sx, const Size nx,
                                                            const Handle<YieldTermStructure>& discountCurve)
     : LgmConvolutionSolver(model, sy, ny, sx, nx) {}
+
+Real NumericLgmSwaptionEngineBase::rebatePv(const Real x, const Real t, const Size exerciseIndex) const {
+    boost::shared_ptr<QuantExt::RebatedExercise> rebatedExercise =
+        boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_);
+    if (rebatedExercise) {
+        return rebatedExercise->rebate(exerciseIndex) *
+               model()->discountBond(t,
+                                     model()->parametrization()->termStructure()->timeFromReference(
+                                         rebatedExercise->rebatePaymentDate(exerciseIndex)),
+                                     x) /
+               model()->numeraire(t, x);
+    } else {
+        return 0.0;
+    }
+}
 
 Real NumericLgmSwaptionEngineBase::calculate() const {
 
@@ -57,7 +72,9 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
     std::vector<Real> x = stateGrid(t);
     std::vector<Real> v(x.size());
     for (Size k = 0; k < x.size(); ++k) {
-        v[k] = std::max(conditionalSwapValue(x[k], t, exercise_->dates()[minIdxAlive + options - 1]), 0.0);
+        v[k] = std::max(conditionalSwapValue(x[k], t, exercise_->dates()[minIdxAlive + options - 1]) +
+                            rebatePv(x[k], t, minIdxAlive + options - 1),
+                        0.0);
     }
 
     // roll back
@@ -68,9 +85,10 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
         v = rollback(v, t, t_to);
         x = stateGrid(t_to);
         for (Size k = 0; k < x.size(); ++k) {
-            QL_REQUIRE(v[k] > 0 || close_enough(v[k], 0.0), "negative value in rollback");
+            QL_REQUIRE(v[k] > 0 || close_enough(v[k], 0.0), "negative value in rollback: " << v[k]);
             // choose: continue or exercise
-            v[k] = std::max(v[k], conditionalSwapValue(x[k], t_to, exercise_->dates()[minIdxAlive + j - 1]));
+            v[k] = std::max(v[k], conditionalSwapValue(x[k], t_to, exercise_->dates()[minIdxAlive + j - 1]) +
+                                      rebatePv(x[k], t_to, minIdxAlive + j - 1));
         }
         t = t_to;
     }

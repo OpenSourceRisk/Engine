@@ -57,6 +57,7 @@ instruments/makecds.cpp
 instruments/oibasisswap.cpp
 instruments/oiccbasisswap.cpp
 instruments/payment.cpp
+instruments/rebatedexercise.cpp
 instruments/subperiodsswap.cpp
 instruments/tenorbasisswap.cpp
 math/deltagammavar.cpp
@@ -263,6 +264,7 @@ instruments/makecds.hpp
 instruments/oibasisswap.hpp
 instruments/oiccbasisswap.hpp
 instruments/payment.hpp
+instruments/rebatedexercise.hpp
 instruments/subperiodsswap.hpp
 instruments/tenorbasisswap.hpp
 interpolators/optioninterpolator2d.hpp
