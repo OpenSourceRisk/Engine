@@ -487,7 +487,7 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
         boost::dynamic_pointer_cast<FloatingLegData>(swap_[floatingLegIndex].concreteLegData());
 
     QL_REQUIRE(fixedLegData->rates().size() == 1, "Vanilla Swaption: constant rate required");
-    QL_REQUIRE(floatingLegData->spreads().size() == 1, "Vanilla Swaption: constant spread required");
+    QL_REQUIRE(floatingLegData->spreads().size() <= 1, "Vanilla Swaption: constant spread required");
 
     boost::shared_ptr<EngineBuilder> tmp = engineFactory->builder("Swap");
     boost::shared_ptr<SwapEngineBuilderBase> swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(tmp);
@@ -499,7 +499,7 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
     Real nominal = swap_[0].notionals().back();
 
     Real rate = fixedLegData->rates().front();
-    Real spread = floatingLegData->spreads().front();
+    Real spread = floatingLegData->spreads().empty() ? 0.0 : floatingLegData->spreads().front();
     string indexName = floatingLegData->index();
 
     Schedule fixedSchedule = makeSchedule(swap_[fixedLegIndex].schedule());
