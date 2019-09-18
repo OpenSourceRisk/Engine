@@ -4,7 +4,8 @@ AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
 noinst_LTLIBRARIES = libIborIndexes.la
 
 libIborIndexes_la_SOURCES = \
-    brlcdi.cpp
+    brlcdi.cpp \
+    primeindex.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \

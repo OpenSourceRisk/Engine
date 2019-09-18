@@ -493,12 +493,14 @@
     <ClInclude Include="qle\calendars\chile.hpp" />
     <ClInclude Include="qle\calendars\colombia.hpp" />
     <ClInclude Include="qle\calendars\france.hpp" />
+    <ClInclude Include="qle\calendars\israel.hpp" />
     <ClInclude Include="qle\calendars\malaysia.hpp" />
     <ClInclude Include="qle\calendars\netherlands.hpp" />
     <ClInclude Include="qle\calendars\peru.hpp" />
     <ClInclude Include="qle\calendars\philippines.hpp" />
     <ClInclude Include="qle\calendars\thailand.hpp" />
     <ClInclude Include="qle\calendars\switzerland.hpp" />
+    <ClInclude Include="qle\calendars\wmr.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcoupon.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\brlcdicouponpricer.hpp" />
@@ -551,6 +553,7 @@
     <ClInclude Include="qle\indexes\ibor\nzdbkbm.hpp" />
     <ClInclude Include="qle\indexes\ibor\phpphiref.hpp" />
     <ClInclude Include="qle\indexes\ibor\plnwibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\primeindex.hpp" />
     <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp" />
     <ClInclude Include="qle\indexes\ibor\saibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\seksior.hpp" />
@@ -647,6 +650,7 @@
     <ClInclude Include="qle\pricingengines\discountingfxforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp" />
+    <ClInclude Include="qle\pricingengines\lgmconvolutionsolver.hpp" />
     <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp" />
     <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp" />
@@ -741,12 +745,14 @@
     <ClCompile Include="qle\calendars\chile.cpp" />
     <ClCompile Include="qle\calendars\colombia.cpp" />
     <ClCompile Include="qle\calendars\france.cpp" />
+    <ClCompile Include="qle\calendars\israel.cpp" />
     <ClCompile Include="qle\calendars\malaysia.cpp" />
     <ClCompile Include="qle\calendars\netherlands.cpp" />
     <ClCompile Include="qle\calendars\peru.cpp" />
     <ClCompile Include="qle\calendars\philippines.cpp" />
     <ClCompile Include="qle\calendars\thailand.cpp" />
     <ClCompile Include="qle\calendars\switzerland.cpp" />
+    <ClCompile Include="qle\calendars\wmr.cpp" />
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp" />
     <ClCompile Include="qle\cashflows\averageonindexedcouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\brlcdicouponpricer.cpp" />
@@ -769,6 +775,7 @@
     <ClCompile Include="qle\indexes\equityindex.cpp" />
     <ClCompile Include="qle\indexes\fxindex.cpp" />
     <ClCompile Include="qle\indexes\ibor\brlcdi.cpp" />
+    <ClCompile Include="qle\indexes\ibor\primeindex.cpp" />
     <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />
     <ClCompile Include="qle\indexes\region.cpp" />
     <ClCompile Include="qle\instruments\averageois.cpp" />
@@ -839,6 +846,7 @@
     <ClCompile Include="qle\pricingengines\discountingfxforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp" />
+    <ClCompile Include="qle\pricingengines\lgmconvolutionsolver.cpp" />
     <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp" />
     <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\oiccbasisswapengine.cpp" />

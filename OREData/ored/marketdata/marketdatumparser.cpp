@@ -214,11 +214,19 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::BASIS_SWAP: {
-        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        // An optional identifier as a penultimate token supports the following two versions:
+        // BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/5Y
+        // BASIS_SWAP/BASIS_SPREAD/3M/1D/USD/foobar/5Y
+        QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7, "Either 6 or 7 tokens expected in " << datumName);
         Period flatTerm = parsePeriod(tokens[2]);
         Period term = parsePeriod(tokens[3]);
         const string& ccy = tokens[4];
-        Period maturity = parsePeriod(tokens[5]);
+        Period maturity;
+        if (tokens.size() == 7) {
+            maturity = parsePeriod(tokens[6]);
+        } else {
+            maturity = parsePeriod(tokens[5]);
+        }
         return boost::make_shared<BasisSwapQuote>(value, asof, datumName, quoteType, flatTerm, term, ccy, maturity);
     }
 
@@ -254,34 +262,41 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::CDS: {
-        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        // CDS/CREDIT_SPREAD/Name/Seniority/ccy/term
+        // CDS/CREDIT_SPREAD/Name/Seniority/ccy/doc/term
+        QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7, "6 or 7 tokens expected in " << datumName);
         const string& underlyingName = tokens[2];
         const string& seniority = tokens[3];
         const string& ccy = tokens[4];
-        Period term = parsePeriod(tokens[5]);
-        return boost::make_shared<CdsSpreadQuote>(value, asof, datumName, underlyingName, seniority, ccy, term);
+        string docClause = tokens.size() == 7 ? tokens[5] : "";
+        Period term = parsePeriod(tokens.back());
+        return boost::make_shared<CdsSpreadQuote>(value, asof, datumName, underlyingName, seniority, ccy, term, docClause);
     }
 
     case MarketDatum::InstrumentType::HAZARD_RATE: {
-        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7, "6 or 7 tokens expected in " << datumName);
         const string& underlyingName = tokens[2];
         const string& seniority = tokens[3];
         const string& ccy = tokens[4];
-        Period term = parsePeriod(tokens[5]);
-        return boost::make_shared<HazardRateQuote>(value, asof, datumName, underlyingName, seniority, ccy, term);
+        string docClause = tokens.size() == 7 ? tokens[5] : "";
+        Period term = parsePeriod(tokens.back());
+        return boost::make_shared<HazardRateQuote>(value, asof, datumName, underlyingName, seniority, ccy, term, docClause);
     }
 
     case MarketDatum::InstrumentType::RECOVERY_RATE: {
-        QL_REQUIRE(tokens.size() == 3 || tokens.size() == 5, "3 or 5 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() == 3 || tokens.size() == 5 || tokens.size() == 6, "3, 5 or 6 tokens expected in " << datumName);
         const string& underlyingName = tokens[2]; // issuer name for CDS, security ID for bond specific RRs
         string seniority = "";
         string ccy = "";
-        if (tokens.size() == 5) {
+        string docClause = "";
+        if (tokens.size() >= 5) {
             // CDS
             seniority = tokens[3];
             ccy = tokens[4];
+            if (tokens.size() == 6)
+                docClause = tokens[5];
         }
-        return boost::make_shared<RecoveryRateQuote>(value, asof, datumName, underlyingName, seniority, ccy);
+        return boost::make_shared<RecoveryRateQuote>(value, asof, datumName, underlyingName, seniority, ccy, docClause);
     }
 
     case MarketDatum::InstrumentType::CAPFLOOR: {

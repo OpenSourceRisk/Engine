@@ -31,6 +31,16 @@ Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref
 
 \item FixingDays [Optional]: The number of days before payment date for equity valuation. \emph{N.B.} Only used when no valuation schedule present. Defaults to \emph{0}.
 
+\item FXTerms [Optional]: Only present if the currency of the underlying equity is different from the leg: contains the following nodes:
+
+\item EquityCurrency: Currency underlying equity is quoted in. Required if FXTerms present.
+
+\item FXIndex: Name of the index for FX fixings, e.g. FX-TR20H-EUR-USD for Thomson Reuters 20:00 EURUSD FX fixing. Required if FXTerms present.
+
+\item FXIndexFixingDays [Optional]: Number of fixing days for FX Index, defaults to \emph{0}.
+
+\item FXIndexCalendar [Optional]: Calendar for FX Index.
+
 %Allowable values:  Any positive real number.
 \end{itemize} 
 
@@ -84,6 +94,12 @@ Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref
             </Dates>
            </ValuationSchedule>
            <FixingDays>0</FixingDays>
+           <FXTerms>
+             <EquityCurrency>USD</EquityCurrency>
+             <FXIndex>FX-TR20H-EUR-USD</FXIndex>
+             <FXIndexFixingDays>2</FXIndexFixingDays>
+             <FXIndexCalendar>TARGET,USD</FXIndexCalendar>
+           <FXTerms>
         </EquityLegData>
       </LegData>
 \end{minted}

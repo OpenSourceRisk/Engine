@@ -1110,7 +1110,9 @@ void Conventions::fromXML(XMLNode* node) {
         } else if (childName == "Commodity") {
             convention = boost::make_shared<CommodityConvention>();
         } else {
-            QL_FAIL("Convention name, " << childName << ", not recognized.");
+            // No need to QL_FAIL here, just go to the next one
+            WLOG("Convention name, " << childName << ", not recognized.");
+            continue;
         }
 
         string id = XMLUtils::getChildValue(child, "Id", true);

@@ -26,7 +26,9 @@ namespace QuantExt {
 BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate, const Calendar& cal,
                                                        const vector<Date>& dates, const vector<Real>& strikes,
                                                        const vector<Volatility>& volatilities,
-                                                       const DayCounter& dayCounter)
+                                                       const DayCounter& dayCounter,
+                                                       bool lowerStrikeConstExtrap,
+                                                       bool upperStrikeConstExtrap) 
     : BlackVarianceTermStructure(referenceDate, cal), OptionInterpolator2d<Linear, Linear>(referenceDate, dayCounter) {
 
     QL_REQUIRE((strikes.size() == dates.size()) && (dates.size() == volatilities.size()),

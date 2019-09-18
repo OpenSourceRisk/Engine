@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
                            { HUFBubor(pd), "HUF-BUBOR", Hungary().name(), HUFCurrency().name() },
                            { IDRIdrfix(pd), "IDR-IDRFIX", Indonesia().name(), IDRCurrency().name() },
                            { IDRJibor(pd), "IDR-JIBOR", Indonesia().name(), IDRCurrency().name() },
-                           { ILSTelbor(pd), "ILS-TELBOR", Israel().name(), ILSCurrency().name() },
+                           { ILSTelbor(pd), "ILS-TELBOR", QuantExt::Israel(QuantExt::Israel::Telbor).name(), ILSCurrency().name() },
                            { INRMifor(pd), "INR-MIFOR", India().name(), INRCurrency().name() },
                            { MXNTiie(pd), "MXN-TIIE", Mexico().name(), MXNCurrency().name() },
                            { NOKNibor(pd), "NOK-NIBOR", Norway().name(), NOKCurrency().name() },
