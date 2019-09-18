@@ -441,10 +441,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                             wrapper.linkTo(*initMarket->swaptionVol(name, configuration));
                             shortSwapIndexBase = initMarket->shortSwapIndexBase(name, configuration);
                             swapIndexBase = initMarket->swapIndexBase(name, configuration);
-                            isCube = parameters->swapVolIsCube();
-                            optionTenors = parameters->swapVolExpiries();
-                            underlyingTenors = parameters->swapVolTerms();
-                            strikeSpreads = parameters->swapVolStrikeSpreads();
+                            isCube = parameters->swapVolIsCube(name);
+                            optionTenors = parameters->swapVolExpiries(name);
+                            underlyingTenors = parameters->swapVolTerms(name);
+                            strikeSpreads = parameters->swapVolStrikeSpreads(name);
                             atmOnly = parameters->simulateSwapVolATMOnly();
                         } else {
                             LOG("building " << name << " yield volatility curve...");
