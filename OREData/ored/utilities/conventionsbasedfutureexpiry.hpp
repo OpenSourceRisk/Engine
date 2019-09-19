@@ -38,7 +38,7 @@ public:
 
     //! Provide implementation for the base class method
     QuantLib::Date nextExpiry(const std::string& contractName, bool includeExpiry = true,
-        const QuantLib::Date& referenceDate = QuantLib::Date()) override;
+        const QuantLib::Date& referenceDate = QuantLib::Date(), QuantLib::Natural offset = 0) override;
 
     //! Provide implementation for the base class method
     QuantLib::Date expiryDate(const std::string& contractName, QuantLib::Month contractMonth,
@@ -53,6 +53,10 @@ private:
     //! Given a \p contractMonth, a \p contractYear and \p conventions, calculate the contract expiry date
     QuantLib::Date expiry(QuantLib::Month contractMonth, QuantLib::Year contractYear,
         const CommodityFutureConvention& conventions, QuantLib::Natural monthOffset = 0) const;
+
+    //! Do the next expiry work
+    QuantLib::Date nextExpiry(const QuantLib::Date& referenceDate,
+        const CommodityFutureConvention& convention) const;
 };
 
 }

@@ -28,26 +28,25 @@ ConventionsBasedFutureExpiry::ConventionsBasedFutureExpiry(const boost::shared_p
     : conventions_(conventions) {}
 
 Date ConventionsBasedFutureExpiry::nextExpiry(const string& contractName, 
-    bool includeExpiry, const Date& referenceDate) {
+    bool includeExpiry, const Date& referenceDate, Natural offset) {
     
     auto convention = getConvention(contractName);
 
     // Set the date relative to which we are calculating the next expiry
     Date today = referenceDate == Date() ? Settings::instance().evaluationDate() : referenceDate;
 
-    // Get a contract expiry before today and increment until expiryDate is >= today
-    Date guideDate(15, convention->oneContractMonth(), today.year() - 1);
-    Date expiryDate = expiry(convention->oneContractMonth(), today.year() - 1, *convention);
-    QL_REQUIRE(expiryDate < today, "Expected the expiry date in the previous year to be before today");
-    while (expiryDate < today) {
-        guideDate += Period(convention->contractFrequency());
-        expiryDate = expiry(guideDate.month(), guideDate.year(), *convention);
+    // Get the next expiry date relative to referenceDate
+    Date expiryDate = nextExpiry(referenceDate, *convention);
+
+    // If expiry date equals today and we have asked not to include expiry, return next contract's expiry
+    if (expiryDate == today && !includeExpiry && offset == 0) {
+        expiryDate = nextExpiry(expiryDate + 1 * Days, *convention);
     }
 
-    // If expiry date equals today and we have asked not to include expiry, return next contracts expiry
-    if (expiryDate == today && !includeExpiry) {
-        guideDate += Period(convention->contractFrequency());
-        expiryDate = expiry(guideDate.month(), guideDate.year(), *convention);
+    // If offset is greater than 0, keep getting next expiry out
+    while (offset > 0) {
+        expiryDate = nextExpiry(expiryDate + 1 * Days, *convention);
+        offset--;
     }
 
     return expiryDate;
@@ -111,6 +110,21 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
         Days, conventions.businessDayConvention());
 
     return expiry;
+}
+
+Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate,
+    const CommodityFutureConvention& convention) const {
+
+    // Get a contract expiry before today and increment until expiryDate is >= today
+    Date guideDate(15, convention.oneContractMonth(), referenceDate.year() - 1);
+    Date expiryDate = expiry(convention.oneContractMonth(), referenceDate.year() - 1, convention);
+    QL_REQUIRE(expiryDate < referenceDate, "Expected the expiry date in the previous year to be before reference");
+    while (expiryDate < referenceDate) {
+        guideDate += Period(convention.contractFrequency());
+        expiryDate = expiry(guideDate.month(), guideDate.year(), convention);
+    }
+
+    return expiryDate;
 }
 
 }

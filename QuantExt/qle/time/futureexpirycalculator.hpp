@@ -39,7 +39,7 @@ public:
         \c false, the next succeeding contract's expiry is returned.
     */
     virtual QuantLib::Date nextExpiry(const std::string& contractName, bool includeExpiry = true,
-        const QuantLib::Date& referenceDate = QuantLib::Date()) = 0;
+        const QuantLib::Date& referenceDate = QuantLib::Date(), QuantLib::Natural offset = 0) = 0;
 
     /*! Given a future contract's name, \p contractName, the contract's month, \p contractMonth and the contract's 
         year, \p contractYear, return the expiry date of the future contract that is \p monthOffset number of months 

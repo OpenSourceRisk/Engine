@@ -631,7 +631,8 @@ public:
             const string& foreignCurrency = "", const double foreignAmount = 0, const string& fxIndex = "",
             int fixingDays = 0, const string& fixingCalendar = "",
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
-            const int paymentLag = 0, const std::string& paymentCalendar = "");
+            const int paymentLag = 0, const std::string& paymentCalendar = "",
+            const std::vector<std::string>& paymentDates = std::vector<std::string>());
 
     //! \name Serialisation
     //@{
@@ -663,6 +664,7 @@ public:
     const string& legType() const { return concreteLegData_->legType(); }
     boost::shared_ptr<LegAdditionalData> concreteLegData() const { return concreteLegData_; }
     const std::set<std::string>& indices() const { return indices_; }
+    const std::vector<std::string>& paymentDates() const { return paymentDates_; }
     //@}
 
     //! \name modifiers
@@ -702,6 +704,7 @@ private:
     std::vector<AmortizationData> amortizationData_;
     int paymentLag_;
     std::string paymentCalendar_;
+    std::vector<std::string> paymentDates_;
 };
 
 //! \name Utilities for building QuantLib Legs
