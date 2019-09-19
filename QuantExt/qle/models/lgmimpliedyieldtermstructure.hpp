@@ -57,7 +57,7 @@ public:
     void referenceDate(const Date& d);
     void referenceTime(const Time t);
     void state(const Real s);
-    void move(const Date& d, const Real s);
+    virtual void move(const Date& d, const Real s);
     virtual void move(const Time t, const Real s);
 
     virtual void update();
@@ -86,7 +86,7 @@ public:
                                  const Handle<YieldTermStructure> targetCurve, const DayCounter& dc = DayCounter(),
                                  const bool purelyTimeBased = false);
 
-    void update();
+    void move(const Date& d, const Real s);
     void move(const Time t, const Real s);
 protected:
     Real discountImpl(Time t) const;
@@ -158,6 +158,15 @@ inline void LgmImpliedYieldTermStructure::move(const Date& d, const Real s) {
     referenceDate(d);
 }
 
+inline void LgmImpliedYtsFwdFwdCorrected::move(const Date& d, const Real s) {
+    state_ = s;
+    referenceDate(d);
+    
+    dt_ = targetCurve_->discount(relativeTime_);
+    zeta_ = model_->parametrization()->zeta(relativeTime_);
+    Ht_ = model_->parametrization()->H(relativeTime_);
+}
+
 inline void LgmImpliedYieldTermStructure::move(const Time t, const Real s) {
     state_ = s;
     relativeTime_ = t;
@@ -182,17 +191,6 @@ inline void LgmImpliedYieldTermStructure::update() {
         
     }
 
-    notifyObservers();
-}
-
-inline void LgmImpliedYtsFwdFwdCorrected::update() {
-    if (!purelyTimeBased_) {
-        relativeTime_ =
-            dayCounter().yearFraction(model_->parametrization()->termStructure()->referenceDate(), referenceDate_);
-        dt_ = targetCurve_->discount(relativeTime_);
-        zeta_ = model_->parametrization()->zeta(relativeTime_);
-        Ht_ = model_->parametrization()->H(relativeTime_);
-    }
     notifyObservers();
 }
 
