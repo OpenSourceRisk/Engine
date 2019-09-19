@@ -77,6 +77,7 @@
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/secpi.hpp>
+#include <qle/indexes/ibor/primeindex.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -206,14 +207,24 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
 
     // Map from our _unique internal name_ to an overnight index
     static map<string, boost::shared_ptr<OvernightIndex>> onIndices = {
-        {"EUR-EONIA", boost::make_shared<Eonia>()},    {"GBP-SONIA", boost::make_shared<Sonia>()},
-        {"JPY-TONAR", boost::make_shared<Tonar>()},    {"CHF-TOIS", boost::make_shared<CHFTois>()},
-        {"CHF-SARON", boost::make_shared<CHFSaron>()}, {"USD-FedFunds", boost::make_shared<FedFunds>()},
-        {"AUD-AONIA", boost::make_shared<Aonia>()},    {"CAD-CORRA", boost::make_shared<CORRA>()},
-        {"DKK-DKKOIS", boost::make_shared<DKKOis>()},  {"SEK-SIOR", boost::make_shared<SEKSior>()},
-        {"COP-IBR", boost::make_shared<COPIbr>()},     {"BRL-CDI", boost::make_shared<BRLCdi>()},
-        {"NOK-NOWA", boost::make_shared<Nowa>()},      {"CLP-CAMARA", boost::make_shared<CLPCamara>()},
-        {"NZD-OCR", boost::make_shared<Nzocr>()},      {"PLN-POLONIA", boost::make_shared<PLNPolonia>()}};
+        { "EUR-EONIA", boost::make_shared<Eonia>() },
+        { "GBP-SONIA", boost::make_shared<Sonia>() },
+        { "JPY-TONAR", boost::make_shared<Tonar>() },
+        { "CHF-TOIS", boost::make_shared<CHFTois>() },
+        { "CHF-SARON", boost::make_shared<CHFSaron>() },
+        { "USD-FedFunds", boost::make_shared<FedFunds>() },
+        { "USD-Prime", boost::make_shared<PrimeIndex>() },
+        { "AUD-AONIA", boost::make_shared<Aonia>() },
+        { "CAD-CORRA", boost::make_shared<CORRA>() },
+        { "DKK-DKKOIS", boost::make_shared<DKKOis>() },
+        { "SEK-SIOR", boost::make_shared<SEKSior>() },
+        { "COP-IBR", boost::make_shared<COPIbr>() },
+        { "BRL-CDI", boost::make_shared<BRLCdi>() },
+        { "NOK-NOWA", boost::make_shared<Nowa>() },
+        { "CLP-CAMARA", boost::make_shared<CLPCamara>() },
+        { "NZD-OCR", boost::make_shared<Nzocr>() },
+        { "PLN-POLONIA", boost::make_shared<PLNPolonia>() }
+    };
 
     // Map from our _unique internal name_ to an ibor index (the period does not matter here)
     static map<string, boost::shared_ptr<IborIndexParser>> iborIndices = {

@@ -408,14 +408,18 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get cross gamma parameters");
-    vector<string> filter = XMLUtils::getChildrenValues(node, "CrossGammaFilter", "Pair", true);
-    for (Size i = 0; i < filter.size(); ++i) {
-        vector<string> tokens;
-        boost::split(tokens, filter[i], boost::is_any_of(","));
-        QL_REQUIRE(tokens.size() == 2, "expected 2 tokens, found " << tokens.size() << " in " << filter[i]);
-        crossGammaFilter_.push_back(pair<string, string>(tokens[0], tokens[1]));
+    XMLNode* CGF = XMLUtils::getChildNode(node, "CrossGammaFilter");
+    if (CGF) {
+        LOG("Get cross gamma parameters");
+        vector<string> filter = XMLUtils::getChildrenValues(node, "CrossGammaFilter", "Pair", true);
+        for (Size i = 0; i < filter.size(); ++i) {
+            vector<string> tokens;
+            boost::split(tokens, filter[i], boost::is_any_of(","));
+            QL_REQUIRE(tokens.size() == 2, "expected 2 tokens, found " << tokens.size() << " in " << filter[i]);
+            crossGammaFilter_.push_back(pair<string, string>(tokens[0], tokens[1]));
+        }
     }
+    
 }
 
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {

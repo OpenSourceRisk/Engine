@@ -101,14 +101,34 @@
       <xs:element type="xs:string" name="OptionType" minOccurs="0"/>
       <xs:element type="xs:string" name="Style" minOccurs="0"/>
       <xs:element type="xs:string" name="NoticePeriod" minOccurs="0"/>
+      <xs:element type="xs:string" name="NoticeCalendar" minOccurs="0"/>
+      <xs:element type="xs:string" name="NoticeConvention" minOccurs="0"/>
       <xs:element type="settlementType" name="Settlement" minOccurs="0"/>
       <xs:element type="settlementMethod" name="SettlementMethod" minOccurs="0"/>
       <xs:element type="xs:string" name="PayOffAtExpiry" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumAmount" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumCurrency" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumPayDate" minOccurs="0"/>
-      <xs:element type="xs:string" name="ExerciseFees" minOccurs="0"/>
       <xs:element type="xs:string" name="ExercisePrices" minOccurs="0"/>
+      <xs:element name="ExerciseFees" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="ExerciseFee" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:float">
+                    <xs:attribute name="type" type="xs:string" />
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="xs:string" name="ExerciseFeeSettlementPeriod" minOccurs="0"/>
+      <xs:element type="xs:string" name="ExerciseFeeSettlementCalendar" minOccurs="0"/>
+      <xs:element type="xs:string" name="ExerciseFeeSettlementConvention" minOccurs="0"/>
       <xs:element name="ExerciseDates">
         <xs:complexType>
           <xs:sequence>
@@ -350,6 +370,16 @@
         <xs:element type="xs:boolean" name="NotionalReset" minOccurs="0" maxOccurs="1"/>
         <xs:element type="scheduleData" name="ValuationSchedule" minOccurs="0" maxOccurs="1" />
         <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1" />
+		<xs:element name="FXTerms" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:sequence>            
+              <xs:element type="xs:string" name="EquityCurrency" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="xs:string" name="FXIndex" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="xs:integer" name="FXIndexFixingDays" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="xs:string" name="FXIndexCalendar" minOccurs="0" maxOccurs="1"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
       </xs:all>
     </xs:complexType>
   </xs:element>
@@ -564,6 +594,7 @@
       <xs:element type="date" name="FarDate"/>
       <xs:element type="xs:float" name="FarBoughtAmount"/>
       <xs:element type="xs:float" name="FarSoldAmount"/>
+      <xs:element type="settlementType" name="Settlement" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 

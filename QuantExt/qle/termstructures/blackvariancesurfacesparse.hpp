@@ -36,9 +36,12 @@ class BlackVarianceSurfaceSparse : public QuantLib::BlackVarianceTermStructure,
                                    public OptionInterpolator2d<QuantLib::Linear, QuantLib::Linear> {
 
 public:
-    BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal, const std::vector<QuantLib::Date>& dates,
-                               const std::vector<QuantLib::Real>& strikes, const std::vector<QuantLib::Volatility>& volatilities,
-                               const QuantLib::DayCounter& dayCounter);
+    BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal,
+                               const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes,
+                               const std::vector<QuantLib::Volatility>& volatilities,
+                               const QuantLib::DayCounter& dayCounter,
+                               bool lowerStrikeConstExtrap = true,
+                               bool upperStrikeConstExtrap = true);
 
     //! \name TermStructure interface
     //@{

@@ -31,11 +31,11 @@ CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(
     Real foreignNominal, const Currency& foreignCurrency, const Schedule& foreignSchedule,
     const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread, const Currency& domesticCurrency,
     const Schedule& domesticSchedule, const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
-    const boost::shared_ptr<FxIndex>& fxIdx, bool invertFxIdx, bool receiveDomestic)
+    const boost::shared_ptr<FxIndex>& fxIdx, bool receiveDomestic)
     : CrossCcySwap(3), foreignNominal_(foreignNominal), foreignCurrency_(foreignCurrency),
       foreignSchedule_(foreignSchedule), foreignIndex_(foreignIndex), foreignSpread_(foreignSpread),
       domesticCurrency_(domesticCurrency), domesticSchedule_(domesticSchedule), domesticIndex_(domesticIndex),
-      domesticSpread_(domesticSpread), fxIndex_(fxIdx), invertFxIndex_(invertFxIdx), receiveDomestic_(receiveDomestic) {
+      domesticSpread_(domesticSpread), fxIndex_(fxIdx), receiveDomestic_(receiveDomestic) {
 
     registerWith(foreignIndex_);
     registerWith(domesticIndex_);
@@ -70,7 +70,7 @@ void CrossCcyBasisMtMResetSwap::initialize() {
         Date fixingDate = fxIndex_->fixingCalendar().advance(coupon->accrualStartDate(),
                                                              -static_cast<Integer>(fxIndex_->fixingDays()), Days);
         boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon(
-            new FloatingRateFXLinkedNotionalCoupon(fixingDate, foreignNominal_, fxIndex_, invertFxIndex_, coupon));
+            new FloatingRateFXLinkedNotionalCoupon(fixingDate, foreignNominal_, fxIndex_, coupon));
         legs_[1][j] = fxLinkedCoupon;
     }
     // now build a separate leg to store the domestic (resetting) notionals
@@ -84,9 +84,9 @@ void CrossCcyBasisMtMResetSwap::initialize() {
         Date fixingDate = fxIndex_->fixingCalendar().advance(c->accrualStartDate(),
                                                              -static_cast<Integer>(fxIndex_->fixingDays()), Days);
         legs_[2].push_back(boost::shared_ptr<CashFlow>(
-            new FXLinkedCashFlow(c->accrualStartDate(), fixingDate, -foreignNominal_, fxIndex_, invertFxIndex_)));
+            new FXLinkedCashFlow(c->accrualStartDate(), fixingDate, -foreignNominal_, fxIndex_)));
         legs_[2].push_back(boost::shared_ptr<CashFlow>(
-            new FXLinkedCashFlow(c->accrualEndDate(), fixingDate, foreignNominal_, fxIndex_, invertFxIndex_)));
+            new FXLinkedCashFlow(c->accrualEndDate(), fixingDate, foreignNominal_, fxIndex_)));
     }
 
     // Register the instrument with all cashflows on each leg.

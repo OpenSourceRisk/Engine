@@ -19,6 +19,7 @@
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
@@ -75,37 +76,11 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         legPayers_[i] = legData_[i].isPayer();
 
         boost::shared_ptr<FxIndex> fxIndex;
-        bool invertFxIndex = false;
         if (legData_[i].fxIndex() != "") {
             // We have an FX Index to setup
-
-            // 1. Parse the index we have with no term structures
-            boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(legData_[i].fxIndex());
-
-            // get market data objects - we set up the index using source/target, fixing days
-            // and calendar from legData_[i].fxIndex()
-            string source = fxIndexBase->sourceCurrency().code();
-            string target = fxIndexBase->targetCurrency().code();
-            Handle<YieldTermStructure> sorTS = market->discountCurve(source, configuration);
-            Handle<YieldTermStructure> tarTS = market->discountCurve(target, configuration);
-            Handle<Quote> spot = market->fxSpot(source + target);
-            Calendar cal = parseCalendar(legData_[i].fixingCalendar());
-            fxIndex = boost::make_shared<FxIndex>(fxIndexBase->familyName(), legData_[i].fixingDays(),
-                                                  fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(), cal,
-                                                  spot, sorTS, tarTS);
-            QL_REQUIRE(fxIndex, "Resetting XCCY - fxIndex failed to build");
-
-            // Now check the ccy and foreignCcy from the legdata, work out if we need to invert or not
-            string domestic = legData_[i].currency();
-            string foreign = legData_[i].foreignCurrency();
-            if (domestic == target && foreign == source) {
-                invertFxIndex = false;
-            } else if (domestic == source && foreign == target) {
-                invertFxIndex = true;
-            } else {
-                QL_FAIL("Cannot combine FX Index " << legData_[i].fxIndex() << " with reset ccy " << domestic
-                                                   << " and reset foreignCurrency " << foreign);
-            }
+            fxIndex = buildFxIndex(legData_[i].fxIndex(), legData_[i].currency(),
+                legData_[i].foreignCurrency(), market, configuration,
+                legData_[i].fixingCalendar(), legData_[i].fixingDays());            
         }
 
         // build the leg
@@ -162,7 +137,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                                         -static_cast<Integer>(fxIndex->fixingDays()), Days);
                     boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
                         boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, legData_[i].foreignAmount(),
-                                                                               fxIndex, invertFxIndex, coupon);
+                                                                               fxIndex, coupon);
                     // set the same pricer
                     fxLinkedCoupon->setPricer(coupon->pricer());
                     legs_[i][j] = fxLinkedCoupon;
@@ -198,10 +173,10 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                         Date fixingDate = fxIndex->fixingDate(c->accrualStartDate());
                         if (legData_[i].notionalInitialExchange()) {
                             outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate,
-                                -foreignNotional, fxIndex, invertFxIndex);
+                                -foreignNotional, fxIndex);
                         }
                         inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate,
-                            foreignNotional, fxIndex, invertFxIndex);
+                            foreignNotional, fxIndex);
                     } else {
                         if (legData_[i].notionalInitialExchange()) {
                             outCf = boost::make_shared<SimpleCashFlow>(-c->nominal(), c->accrualStartDate());
@@ -211,11 +186,11 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 } else {
                     Date fixingDate = fxIndex->fixingDate(c->accrualStartDate());
                     outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate,
-                        -foreignNotional, fxIndex, invertFxIndex);
+                        -foreignNotional, fxIndex);
                     // we don't want a final one, unless there is notional exchange
                     if (j < legs_[i].size() - 1 || legData_[i].notionalFinalExchange()) {
                         inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate,
-                            foreignNotional, fxIndex, invertFxIndex);
+                            foreignNotional, fxIndex);
                     }
                 }
 

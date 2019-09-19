@@ -602,7 +602,7 @@
             <xs:element type="xs:string" name="Expiries"/>
             <xs:element name="Surface" maxOccurs="1" minOccurs="0">
               <xs:complexType>
-                <xs:sequence>
+                <xs:choice>
                   <xs:element name="Moneyness" maxOccurs="unbounded" minOccurs="0">
                     <xs:complexType>
                       <xs:simpleContent>
@@ -612,7 +612,16 @@
                       </xs:simpleContent>
                     </xs:complexType>
                   </xs:element>
-                </xs:sequence>
+                  <xs:element name="StandardDeviations" maxOccurs="unbounded" minOccurs="0">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="ccyPair" type="xs:string" use="optional"/>
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:choice>
               </xs:complexType>
             </xs:element>
             <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">

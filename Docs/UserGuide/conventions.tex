@@ -543,3 +543,44 @@ The meaning of the elements is as follows:
 \item DayCounter: The day counter for the CMS Spread leg.
 \item RollConvention: The rolling convention for the CMS Spread Leg.
 \end{itemize}
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Commodity Curve Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+A node with name \emph{Commodity} is used to store conventions for commodity price quotes. The
+structure of this node is shown in Listing \ref{lst:commodity_conventions}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Commodity>
+  <Id>XAU</Id>
+  <SpotDays>2</SpotDays>
+  <PointsFactor>100</PointsFactor>
+  <AdvanceCalendar>USD</AdvanceCalendar>
+  <SpotRelative>true</SpotRelative>
+  <BusinessDayConvention>ModifiedFollowing</BusinessDayConvention>
+  <Outright>false</Outright>
+</Commodity>
+\end{minted}
+\caption{Commodity price conventions}
+\label{lst:commodity_conventions}
+\end{listing}
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+\item SpotDays: The number of business days to spot for the currency pair.
+\item PointsFactor: The number by which a points quote for the currency pair should be divided before adding it to the
+spot quote to obtain the forward rate.
+\item AdvanceCalendar [Optional]: The business day calendar(s) used for advancing dates for both spot and forwards. If
+not provided, it defaults to a calendar with no holidays.
+\item SpotRelative [Optional]: \emph{True} if the forward tenor is to be interpreted as being relative to the spot date.
+\emph{False} if the forward tenor is to be interpreted as being relative to the valuation date. If not provided, it
+defaults to \emph{True}.
+\item BusinessDayConvention: The Business Day Conventions.
+\item Outright: \emph{True} if the forward quotes are to be interpreted as outright prices (e.g. Futures prices),
+\emph{False} if they are infact forward points which must be added to the spot price to get the outright.
+\end{itemize}
+
+

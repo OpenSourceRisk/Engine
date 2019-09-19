@@ -12,6 +12,7 @@ libCalendars_la_SOURCES = \
 	netherlands.cpp \
 	chile.cpp \
 	switzerland.cpp \
+	wmr.cpp \
 	israel.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -26,6 +27,7 @@ this_include_HEADERS = \
 	netherlands.hpp \
 	chile.hpp \
 	switzerland.hpp \
+	wmr.hpp \
 	israel.hpp
 
 all.hpp: Makefile.am

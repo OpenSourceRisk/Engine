@@ -42,6 +42,7 @@
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/thailand.hpp>
+#include <qle/calendars/wmr.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
@@ -390,6 +391,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"UK settlement", UnitedKingdom()},
                                       {"US settlement", UnitedStates(UnitedStates::Settlement)},
                                       {"US with Libor impact", UnitedStates(UnitedStates::LiborImpact)},
+                                      {"WMR", Wmr()},
                                       {"ZUB", QuantExt::Switzerland()},
 
                                       // Simple calendars
