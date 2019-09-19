@@ -28,7 +28,6 @@
 
 #include <ql/termstructures/yieldtermstructure.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -54,11 +53,11 @@ public:
 
     const Date& referenceDate() const;
 
-    void referenceDate(const Date& d);
-    void referenceTime(const Time t);
+    virtual void referenceDate(const Date& d);
+    virtual void referenceTime(const Time t);
     void state(const Real s);
-    virtual void move(const Date& d, const Real s);
-    virtual void move(const Time t, const Real s);
+    void move(const Date& d, const Real s);
+    void move(const Time t, const Real s);
 
     virtual void update();
 
@@ -86,8 +85,9 @@ public:
                                  const Handle<YieldTermStructure> targetCurve, const DayCounter& dc = DayCounter(),
                                  const bool purelyTimeBased = false);
 
-    void move(const Date& d, const Real s);
-    void move(const Time t, const Real s);
+    void referenceDate(const Date& d);
+    void referenceTime(const Time t);
+
 protected:
     Real discountImpl(Time t) const;
 
@@ -141,10 +141,30 @@ inline void LgmImpliedYieldTermStructure::referenceDate(const Date& d) {
     update();
 }
 
+inline void LgmImpliedYtsFwdFwdCorrected::referenceDate(const Date& d) {
+    QL_REQUIRE(!purelyTimeBased_, "reference date not available for purely "
+                                  "time based term structure");
+    referenceDate_ = d;
+    update();
+    dt_ = targetCurve_->discount(relativeTime_);
+    zeta_ = model_->parametrization()->zeta(relativeTime_);
+    Ht_ = model_->parametrization()->H(relativeTime_);
+}
+
 inline void LgmImpliedYieldTermStructure::referenceTime(const Time t) {
     QL_REQUIRE(purelyTimeBased_, "reference time can only be set for purely "
                                  "time based term structure");
     relativeTime_ = t;
+    notifyObservers();
+}
+
+inline void LgmImpliedYtsFwdFwdCorrected::referenceTime(const Time t) {
+    QL_REQUIRE(purelyTimeBased_, "reference time can only be set for purely "
+                                 "time based term structure");
+    relativeTime_ = t;
+    dt_ = targetCurve_->discount(relativeTime_);
+    zeta_ = model_->parametrization()->zeta(relativeTime_);
+    Ht_ = model_->parametrization()->H(relativeTime_);
     notifyObservers();
 }
 
@@ -154,32 +174,14 @@ inline void LgmImpliedYieldTermStructure::state(const Real s) {
 }
 
 inline void LgmImpliedYieldTermStructure::move(const Date& d, const Real s) {
-    state_ = s;
-    referenceDate(d);
-}
 
-inline void LgmImpliedYtsFwdFwdCorrected::move(const Date& d, const Real s) {
     state_ = s;
     referenceDate(d);
-    
-    dt_ = targetCurve_->discount(relativeTime_);
-    zeta_ = model_->parametrization()->zeta(relativeTime_);
-    Ht_ = model_->parametrization()->H(relativeTime_);
 }
 
 inline void LgmImpliedYieldTermStructure::move(const Time t, const Real s) {
     state_ = s;
-    relativeTime_ = t;
-    
-    notifyObservers();
-}
-
-inline void LgmImpliedYtsFwdFwdCorrected::move(const Time t, const Real s) {
-    state_ = s;
-    relativeTime_ = t;
-    dt_ = targetCurve_->discount(relativeTime_);
-    zeta_ = model_->parametrization()->zeta(relativeTime_);
-    Ht_ = model_->parametrization()->H(relativeTime_);
+    referenceTime(t);
     
     notifyObservers();
 }
@@ -202,7 +204,15 @@ inline Real LgmImpliedYieldTermStructure::discountImpl(Time t) const {
 inline Real LgmImpliedYtsFwdFwdCorrected::discountImpl(Time t) const {
     QL_REQUIRE(t >= 0.0, "negative time (" << t << ") given");
     Real HT = model_->parametrization()->H(relativeTime_ + t);
-    return std::exp(-(HT - Ht_) * state_ - 0.5 * (HT * HT - Ht_ * Ht_) * zeta_) * targetCurve_->discount(relativeTime_ + t) / dt_;
+    //if t and relativTime_ are close enough the discountBond value is takne to be ~1
+    if (close_enough(t, relativeTime_ + t)) {
+        return targetCurve_->discount(relativeTime_ + t) /
+           targetCurve_->discount(relativeTime_) * model_->parametrization()->termStructure()->discount(relativeTime_) /
+           model_->parametrization()->termStructure()->discount(relativeTime_ + t);
+    } else {
+        return std::exp(-(HT - Ht_) * state_ - 0.5 * (HT * HT - Ht_ * Ht_) * zeta_) * targetCurve_->discount(relativeTime_ + t) / dt_;
+    }
+        
 }
 
 inline Real LgmImpliedYtsSpotCorrected::discountImpl(Time t) const {
