@@ -48,7 +48,7 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : extrapolate_(false), swapVolIsCube_({ {"", false} }), swapVolSimulateATMOnly_(false), swapVolStrikeSpreads_({ {"", {0.0}} }),
+        : extrapolate_(false), swapVolIsCube_({ {"", false} }), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({ {"", {0.0}} }),
           equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), cprSimulate_(false),
           correlationIsSurface_(false), correlationStrikes_({0.0}) {
         setDefaults();

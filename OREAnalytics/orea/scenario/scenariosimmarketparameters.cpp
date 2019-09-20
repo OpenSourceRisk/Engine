@@ -881,16 +881,15 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 vector<Rate> strikes;
                 string strStrike = XMLUtils::getNodeValue(spreadNode);
                 if (strStrike == "ATM" || strStrike == "0" || strStrike == "0.0") {
-                    QL_REQUIRE(swapVolIsCube_.insert(make_pair(ccy, false)).second,
-                        "SwaptionVolatilities has duplicate strike spreads for key '" << ccy << "'");
+                    setSwapVolIsCube(ccy, false);
+                    // Add a '0' to the srike spreads
+                    strikes = { 0.0 };
                 } else {
                     QL_REQUIRE(!swapVolSimulateATMOnly_, "Invalid SrikeSpreads for simulate ATM only");
-                    QL_REQUIRE(swapVolIsCube_.insert(make_pair(ccy, true)).second,
-                        "SwaptionVolatilities has duplicate strike spreads for key '" << ccy << "'");
+                    setSwapVolIsCube(ccy, true);
                     strikes = parseListOfValues<Rate>(strStrike, &parseReal);
                 }
-                QL_REQUIRE(swapVolStrikeSpreads_.insert(make_pair(ccy, strikes)).second,
-                    "SwaptionVolatilities has duplicate strikes for key '" << ccy << "'");
+                setSwapVolStrikeSpreads(ccy, strikes);
                 currenciesCheck.erase(ccy);
                 defaultProvided = ccy == "";
             }
