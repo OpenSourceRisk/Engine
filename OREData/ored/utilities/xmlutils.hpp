@@ -154,10 +154,16 @@ public:
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, const vector<Real>& values);
     static void addChildrenWithAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
                                           const vector<Real>& values, const string& attrName,
-                                          const vector<string>& attrs);
+                                          const vector<string>& attrs); // one attribute (convenience function)
+    static void addChildrenWithAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
+                                          const vector<Real>& values, const vector<string>& attrNames,
+                                          const vector<vector<string>>& attrs); // n attributes
     static void addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
                                                   const vector<Real>& values, const string& attrName,
-                                                  const vector<string>& attrs);
+                                                  const vector<string>& attrs); // one attribute (convenience function)
+    static void addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
+                                                  const vector<Real>& values, const vector<string>& attrNames,
+                                                  const vector<vector<string>>& attrs); // n attributes
 
     static void addChildren(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
                             const string& firstName, const string& secondName, const map<string, string>& values);
@@ -173,9 +179,15 @@ public:
     static vector<Real> getChildrenValuesAsDoubles(XMLNode* node, const string& names, const string& name,
                                                    bool mandatory = false);
     static vector<Real> getChildrenValuesAsDoublesCompact(XMLNode* node, const string& name, bool mandatory = false);
-    static vector<Real> getChildrenValuesAsDoublesWithAttributes(XMLNode* node, const string& names, const string& name,
-                                                                 const string& attrName, vector<string>& attrs,
-                                                                 bool mandatory = false);
+    static vector<Real>
+    getChildrenValuesAsDoublesWithAttributes(XMLNode* node, const string& names, const string& name,
+                                             const string& attrName, vector<string>& attrs,
+                                             bool mandatory = false); // one attribute (convenience function)
+    static vector<Real>
+    getChildrenValuesAsDoublesWithAttributes(XMLNode* node, const string& names, const string& name,
+                                             const vector<string>& attrNames,
+                                             const vector<std::reference_wrapper<vector<string>>>& attrs,
+                                             bool mandatory = false); // n attributes
 
     static vector<Period> getChildrenValuesAsPeriods(XMLNode* node, const string& name, bool mandatory = false);
     static vector<string> getChildrenValuesAsStrings(XMLNode* node, const string& name, bool mandatory = false);

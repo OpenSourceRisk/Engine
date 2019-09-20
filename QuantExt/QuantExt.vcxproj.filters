@@ -765,6 +765,13 @@
     <ClInclude Include="qle\pricingengines\lgmconvolutionsolver.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\israel.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\primeindex.hpp" />
+    <ClInclude Include="qle\instruments\rebatedexercise.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1296,6 +1303,13 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\lgmconvolutionsolver.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\israel.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\ibor\primeindex.cpp" />
+    <ClCompile Include="qle\instruments\rebatedexercise.cpp">
+      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

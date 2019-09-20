@@ -1298,75 +1298,10 @@ Real currentNotional(const Leg& leg) {
     return 0;
 }
 
-// e.g. node is Notionals, get all the children Notional
-vector<double> buildScheduledVector(const vector<double>& values, const vector<string>& dates,
-                                    const Schedule& schedule) {
-    if (values.size() < 2 || dates.size() == 0)
-        return values;
-
-    QL_REQUIRE(values.size() == dates.size(), "Value / Date size mismatch in buildScheduledVector."
-                                                  << "Value:" << values.size() << ", Dates:" << dates.size());
-
-    // Need to use schedule logic
-    // Length of data will be 1 less than schedule
-    //
-    // Notional 100
-    // Notional {startDate 2015-01-01} 200
-    // Notional {startDate 2016-01-01} 300
-    //
-    // Given schedule June, Dec from 2014 to 2016 (6 dates, 5 coupons)
-    // we return 100, 100, 200, 200, 300
-
-    // The first node must not have a date.
-    // If the second one has a date, all the rest must have, and we process
-    // If the second one does not have a date, none of them must have one
-    // and we return the vector uneffected.
-    QL_REQUIRE(dates[0] == "", "Invalid date " << dates[0] << " for first node");
-    if (dates[1] == "") {
-        // They must all be empty and then we return values
-        for (Size i = 2; i < dates.size(); i++) {
-            QL_REQUIRE(dates[i] == "", "Invalid date " << dates[i] << " for node " << i
-                                                       << ". Cannot mix dates and non-dates attributes");
-        }
-        return values;
-    }
-
-    // We have nodes with date attributes now
-    Size len = schedule.size() - 1;
-    vector<double> data(len);
-    Size j = 0, max_j = dates.size() - 1; // j is the index of date/value vector. 0 to max_j
-    Date d = parseDate(dates[j + 1]);     // The first start date
-    for (Size i = 0; i < len; i++) {      // loop over data vector and populate it.
-        // If j == max_j we just fall through and take the final value
-        while (schedule[i] >= d && j < max_j) {
-            j++;
-            if (j < max_j) {
-                QL_REQUIRE(dates[j + 1] != "", "Cannot have empty date attribute for node " << j + 1);
-                d = parseDate(dates[j + 1]);
-            }
-        }
-        data[i] = values[j];
-    }
-
-    return data;
-}
-
-vector<double> normaliseToSchedule(const vector<double>& values, const Schedule& schedule, const Real defaultValue) {
-    vector<double> res = values;
-    if (res.size() < schedule.size() - 1)
-        res.resize(schedule.size() - 1, res.size() == 0 ? defaultValue : res.back());
-    return res;
-}
-
-vector<double> buildScheduledVectorNormalised(const vector<double>& values, const vector<string>& dates,
-                                              const Schedule& schedule, const Real defaultValue) {
-    return normaliseToSchedule(buildScheduledVector(values, dates, schedule), schedule, defaultValue);
-}
-
 vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notionals, const Schedule& schedule,
                                                     const AmortizationData& data) {
     LOG("Build fixed amortization notional schedule");
-    vector<double> nominals = normaliseToSchedule(notionals, schedule);
+    vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
     Date startDate = parseDate(data.startDate());
     Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
     bool underflow = data.underflow();
@@ -1392,7 +1327,7 @@ vector<double> buildAmortizationScheduleRelativeToInitialNotional(const vector<d
                                                                   const Schedule& schedule,
                                                                   const AmortizationData& data) {
     LOG("Build notional schedule with amortizations expressed as percentages of initial notional");
-    vector<double> nominals = normaliseToSchedule(notionals, schedule);
+    vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
     Date startDate = parseDate(data.startDate());
     Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
     bool underflow = data.underflow();
@@ -1421,7 +1356,7 @@ vector<double> buildAmortizationScheduleRelativeToPreviousNotional(const vector<
                                                                    const Schedule& schedule,
                                                                    const AmortizationData& data) {
     LOG("Build notional schedule with amortizations expressed as percentages of previous notionals");
-    vector<double> nominals = normaliseToSchedule(notionals, schedule);
+    vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
     Date startDate = parseDate(data.startDate());
     Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
     Period amortPeriod = parsePeriod(data.frequency());
@@ -1444,7 +1379,7 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
                                                      const Schedule& schedule, const AmortizationData& data,
                                                      const DayCounter& dc) {
     LOG("Build fixed annuity notional schedule");
-    vector<double> nominals = normaliseToSchedule(notionals, schedule);
+    vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
     Date startDate = parseDate(data.startDate());
     Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
     bool underflow = data.underflow();

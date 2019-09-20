@@ -3,12 +3,13 @@
 set(QuantExt_SRC calendars/chile.cpp
 calendars/colombia.cpp
 calendars/france.cpp
+calendars/israel.cpp
 calendars/malaysia.cpp
 calendars/netherlands.cpp
 calendars/peru.cpp
 calendars/philippines.cpp
-calendars/thailand.cpp
 calendars/switzerland.cpp
+calendars/thailand.cpp
 calendars/wmr.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
@@ -32,6 +33,7 @@ indexes/bondindex.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
 indexes/ibor/brlcdi.cpp
+indexes/ibor/primeindex.cpp
 indexes/inflationindexwrapper.cpp
 indexes/region.cpp
 instruments/averageois.cpp
@@ -55,6 +57,7 @@ instruments/makecds.cpp
 instruments/oibasisswap.cpp
 instruments/oiccbasisswap.cpp
 instruments/payment.cpp
+instruments/rebatedexercise.cpp
 instruments/subperiodsswap.cpp
 instruments/tenorbasisswap.cpp
 math/deltagammavar.cpp
@@ -138,8 +141,6 @@ termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/immfraratehelper.cpp
-termstructures/iterativebootstrap.hpp
-termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/oibasisswaphelper.cpp
 termstructures/oiccbasisswaphelper.cpp
 termstructures/oisratehelper.cpp
@@ -166,12 +167,13 @@ set(QuantExt_HDR auto_link.hpp
 calendars/chile.hpp
 calendars/colombia.hpp
 calendars/france.hpp
+calendars/israel.hpp
 calendars/malaysia.hpp
 calendars/netherlands.hpp
 calendars/peru.hpp
 calendars/philippines.hpp
-calendars/thailand.hpp
 calendars/switzerland.hpp
+calendars/thailand.hpp
 calendars/wmr.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
@@ -226,6 +228,7 @@ indexes/ibor/nzdbkbm.hpp
 indexes/ibor/phpphiref.hpp
 indexes/ibor/plnpolonia.hpp
 indexes/ibor/plnwibor.hpp
+indexes/ibor/primeindex.hpp
 indexes/ibor/rubmosprime.hpp
 indexes/ibor/saibor.hpp
 indexes/ibor/seksior.hpp
@@ -261,6 +264,7 @@ instruments/makecds.hpp
 instruments/oibasisswap.hpp
 instruments/oiccbasisswap.hpp
 instruments/payment.hpp
+instruments/rebatedexercise.hpp
 instruments/subperiodsswap.hpp
 instruments/tenorbasisswap.hpp
 interpolators/optioninterpolator2d.hpp
@@ -371,6 +375,7 @@ termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolateddiscountcurve.hpp
 termstructures/interpolateddiscountcurve2.hpp
 termstructures/interpolatedyoycapfloortermpricesurface.hpp
+termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/oibasisswaphelper.hpp
 termstructures/oiccbasisswaphelper.hpp

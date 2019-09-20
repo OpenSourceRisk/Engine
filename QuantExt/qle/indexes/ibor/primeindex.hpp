@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,36 +16,30 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ilstelbor.hpp
-    \brief ILS-TELBOR index
+/*! \file primeindex.hpp
+    \brief USD-Prime index
     \ingroup indexes
 */
 
-#ifndef quantext_ilstelbor_hpp
-#define quantext_ilstelbor_hpp
+#ifndef quantext_primeindex_hpp
+#define quantext_primeindex_hpp
 
-#include <ql/currencies/asia.hpp>
+#include <ql/currencies/america.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <ql/time/calendars/israel.hpp>
-#include <qle/calendars/israel.hpp>
+#include <ql/time/calendars/unitedstates.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
 
-//! ILS-TELBOR index
-/*! ILS-TELBOR rate overseen by Bank of Israel.
+namespace QuantExt {
 
-    See <https://www.boi.org.il/en/Markets/TelborMarket/Pages/telbor.aspx>.
+//! USD-Prime index
 
-            \ingroup indexes
-*/
-class ILSTelbor : public IborIndex {
+class PrimeIndex : public QuantLib::OvernightIndex {
 public:
-    ILSTelbor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("ILS-TELBOR", tenor, 2, ILSCurrency(), QuantExt::Israel(QuantExt::Israel::Telbor),
-            ModifiedFollowing, false, Actual360(), h) {}
+    explicit PrimeIndex(const QuantLib::Handle<YieldTermStructure>& h = QuantLib::Handle<YieldTermStructure>());
 };
+
 } // namespace QuantExt
 
 #endif
