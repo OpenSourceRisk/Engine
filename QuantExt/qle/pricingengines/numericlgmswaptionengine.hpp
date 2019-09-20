@@ -65,6 +65,8 @@ protected:
 
     virtual Real conditionalSwapValue(Real x, Real t, const Date expiry0) const = 0;
 
+    Real rebatePv(const Real x, const Real t, const Size exerciseIndex) const;
+
     mutable boost::shared_ptr<Exercise> exercise_;
     mutable boost::shared_ptr<IborIndex> iborIndex_, iborIndexCorrected_;
     mutable boost::shared_ptr<LgmImpliedYieldTermStructure> iborModelCurve_;

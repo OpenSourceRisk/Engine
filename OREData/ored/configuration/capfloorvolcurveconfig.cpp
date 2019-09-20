@@ -175,7 +175,8 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     atmTenors_ = XMLUtils::getChildrenValuesAsStrings(node, "AtmTenors", false);
     QL_REQUIRE(!tenors_.empty() || !atmTenors_.empty(), "Tenors and AtmTenors cannot both be empty");
     if (includeAtm_ && atmTenors_.empty()) {
-        atmTenors_ = tenors_;
+        // swap so tenors_ is empty
+        atmTenors_.swap(tenors_);
     }
 
     // Accuracy for the bootstrap
