@@ -142,5 +142,11 @@ bool isOvernightIndex(const std::string& indexName);
 */
 std::string internalIndexName(const std::string& indexName);
 
+/*! Check if index is an fx index */
+bool isFxIndex(const std::string& indexName);
+
+/*! Invert an fx index */
+std::string inverseFxIndex(const std::string& indexName);
+
 } // namespace data
 } // namespace ore
