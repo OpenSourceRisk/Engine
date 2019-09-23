@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/utilities/futureexpirycalculator.hpp
+/*! \file ored/utilities/conventionsbasedfutureexpiry.hpp
     \brief Base class for classes that perform date calculations for future contracts
     \ingroup utilities
 */
