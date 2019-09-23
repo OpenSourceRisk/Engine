@@ -435,7 +435,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         vector<Period> optionTenors, underlyingTenors;
                         vector<Real> strikeSpreads;
                         string shortSwapIndexBase = "", swapIndexBase = "";
-                        bool isCube, atmOnly;
+                        bool isCube, isAtm, simulateAtmOnly;
                         if (param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
                             LOG("building " << name << " swaption volatility curve...");
                             wrapper.linkTo(*initMarket->swaptionVol(name, configuration));
@@ -445,7 +445,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             optionTenors = parameters->swapVolExpiries(name);
                             underlyingTenors = parameters->swapVolTerms(name);
                             strikeSpreads = parameters->swapVolStrikeSpreads(name);
-                            atmOnly = parameters->simulateSwapVolATMOnly();
+                            simulateAtmOnly = parameters->simulateSwapVolATMOnly();
                         } else {
                             LOG("building " << name << " yield volatility curve...");
                             wrapper.linkTo(*initMarket->yieldVol(name, configuration));
@@ -453,16 +453,19 @@ ScenarioSimMarket::ScenarioSimMarket(
                             optionTenors = parameters->yieldVolExpiries();
                             underlyingTenors = parameters->yieldVolTerms();
                             strikeSpreads = {0.0};
-                            atmOnly = true;
+                            simulateAtmOnly = true;
                         }
                         LOG("Initial market " << name << " yield volatility type = " << wrapper->volatilityType());
 
+                        // Check is underlying market surface is atm or smile
+                        isAtm = boost::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr ? true : false;
+                        
                         // If volatility type is not Normal and we have swaptions, convert to Normal for the simulation
                         // Notice that this is not possible for yield volatilities, since the ATM level is not known
                         if (wrapper->volatilityType() != Normal &&
                             param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
                             // FIXME we can not convert constant swaption vol structures yet
-                            if (boost::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr) {
+                            if (isAtm) {
                                 ALOG("Constant swaption volatility found in configuration "
                                      << configuration << " for currency " << name
                                      << " will not be converted to normal");
@@ -483,9 +486,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<SwaptionVolatilityStructure> svp;
                         if (param.second.first) {
                             LOG("Simulating (" << wrapper->volatilityType() << ") yield vols for ccy " << name);
-                            DLOG("YieldVol atmOnly : " << (atmOnly ? "True" : "False"));
+                            DLOG("YieldVol isAtm : " << (isAtm ? "True" : "False"));
                             DLOG("YieldVol isCube : " << (isCube ? "True" : "False"));
-                            if (atmOnly) {
+                            if (simulateAtmOnly || isAtm) {
                                 QL_REQUIRE(strikeSpreads.size() == 1 && close_enough(strikeSpreads[0], 0),
                                            "for atmOnly strikeSpreads must be {0.0}");
                             } else {
@@ -513,7 +516,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 for (Size i = 0; i < optionTenors.size(); ++i) {
                                     for (Size j = 0; j < underlyingTenors.size(); ++j) {
                                         Real strike = Null<Real>();
-                                        if (!atmOnly && cube)
+                                        if (!isAtm && cube)
                                             strike = cube->atmStrike(optionTenors[i], underlyingTenors[j]) +
                                                      strikeSpreads[k];
                                         Real vol =
@@ -543,19 +546,17 @@ ScenarioSimMarket::ScenarioSimMarket(
                             Handle<SwaptionVolatilityStructure> atm(boost::make_shared<SwaptionVolatilityMatrix>(
                                 wrapper->calendar(), wrapper->businessDayConvention(), optionTenors, underlyingTenors,
                                 atmQuotes, dc, flatExtrapolation, volType, shift));
-                            if (atmOnly) {
+                            if (isAtm) {
+                                svp = atm;
+                            } else if (simulateAtmOnly && !isAtm) {
                                 // floating reference date matrix in sim market
                                 // if we have a cube, we keep the vol spreads constant under scenarios
                                 // notice that cube is from todaysmarket, so it has a fixed reference date, which means
                                 // that we keep the smiles constant in terms of vol spreads when moving forward in time;
                                 // notice also that the volatility will be "sticky strike", i.e. it will not react to
                                 // changes in the ATM level
-                                if (isCube) {
-                                    svp = Handle<SwaptionVolatilityStructure>(
-                                        boost::make_shared<SwaptionVolatilityConstantSpread>(atm, wrapper));
-                                } else {
-                                    svp = atm;
-                                }
+                                svp = Handle<SwaptionVolatilityStructure>(
+                                    boost::make_shared<SwaptionVolatilityConstantSpread>(atm, wrapper));
                             } else {
                                 QL_REQUIRE(isCube, "Only atmOnly simulation supported for yield vol surfaces");
                                 boost::shared_ptr<SwaptionVolatilityCube> tmp(new QuantExt::SwaptionVolCube2(
@@ -566,7 +567,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 svp = Handle<SwaptionVolatilityStructure>(
                                     boost::make_shared<SwaptionVolCubeWithATM>(tmp));
                             }
-
+                                                        
                         } else {
                             string decayModeString = parameters->swapVolDecayMode();
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);

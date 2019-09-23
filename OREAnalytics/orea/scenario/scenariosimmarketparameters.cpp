@@ -871,30 +871,32 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         if (atmOnlyNode)
             swapVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(nodeChild, "SimulateATMOnly", true);
 
-        vector<XMLNode*> spreadNodes = XMLUtils::getChildrenNodes(nodeChild, "StrikeSpreads");
-        if (spreadNodes.size() > 0) {
-            currenciesCheck = currencies;
-            defaultProvided = false;
-            for (XMLNode* spreadNode : spreadNodes) {
-                // If there is no "ccy" attribute, getAttribute returns "" which is what we want in any case
-                string ccy = XMLUtils::getAttribute(spreadNode, "ccy");
-                vector<Rate> strikes;
-                string strStrike = XMLUtils::getNodeValue(spreadNode);
-                if (strStrike == "ATM" || strStrike == "0" || strStrike == "0.0") {
-                    setSwapVolIsCube(ccy, false);
-                    // Add a '0' to the srike spreads
-                    strikes = { 0.0 };
-                } else {
-                    QL_REQUIRE(!swapVolSimulateATMOnly_, "Invalid SrikeSpreads for simulate ATM only");
-                    setSwapVolIsCube(ccy, true);
-                    strikes = parseListOfValues<Rate>(strStrike, &parseReal);
+        // if simulate ATM only we 
+        if (!swapVolSimulateATMOnly_) {
+            vector<XMLNode*> spreadNodes = XMLUtils::getChildrenNodes(nodeChild, "StrikeSpreads");
+            if (spreadNodes.size() > 0) {
+                currenciesCheck = currencies;
+                defaultProvided = false;
+                for (XMLNode* spreadNode : spreadNodes) {
+                    // If there is no "ccy" attribute, getAttribute returns "" which is what we want in any case
+                    string ccy = XMLUtils::getAttribute(spreadNode, "ccy");
+                    vector<Rate> strikes;
+                    string strStrike = XMLUtils::getNodeValue(spreadNode);
+                    if (strStrike == "ATM" || strStrike == "0" || strStrike == "0.0") {
+                        setSwapVolIsCube(ccy, false);
+                        // Add a '0' to the srike spreads
+                        strikes = { 0.0 };
+                    } else {
+                        setSwapVolIsCube(ccy, true);
+                        strikes = parseListOfValues<Rate>(strStrike, &parseReal);
+                    }
+                    setSwapVolStrikeSpreads(ccy, strikes);
+                    currenciesCheck.erase(ccy);
+                    defaultProvided = ccy == "";
                 }
-                setSwapVolStrikeSpreads(ccy, strikes);
-                currenciesCheck.erase(ccy);
-                defaultProvided = ccy == "";
+                QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "SwaptionVolatilities has no strike spreads for "
+                    << "currencies '" << join(currenciesCheck, ",") << "' and no default strike spreads set has been given");
             }
-            QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "SwaptionVolatilities has no strike spreads for "
-                << "currencies '" << join(currenciesCheck, ",") << "' and no default strike spreads set has been given");
         }
 
         XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
