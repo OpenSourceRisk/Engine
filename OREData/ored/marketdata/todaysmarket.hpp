@@ -27,6 +27,7 @@
 #include <map>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/curvebuilderfactory.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketimpl.hpp>
@@ -66,7 +67,9 @@ public:
         //! Continue even if build errors occur
         const bool continueOnError = false,
         //! Optional Load Fixings
-        bool loadFixings = true);
+        bool loadFixings = true,
+        //! Curve builder factory
+        const CurveBuilderFactory& curveBuilderFactory = CurveBuilderFactory());
 };
 } // namespace data
 } // namespace ore

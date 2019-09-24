@@ -63,7 +63,7 @@ namespace data {
 
 TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& params, const Loader& loader,
                            const CurveConfigurations& curveConfigs, const Conventions& conventions,
-                           const bool continueOnError, bool loadFixings)
+                           const bool continueOnError, bool loadFixings, const CurveBuilderFactory& curveBuilderFactory)
     : MarketImpl(conventions) {
 
     // Fixings
@@ -723,7 +723,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         // build the curve
                         LOG("Building Securities for asof " << asof);
                         boost::shared_ptr<Security> security =
-                            boost::make_shared<Security>(asof, *securityspec, loader, curveConfigs);
+                            curveBuilderFactory.security(asof, *securityspec, loader, curveConfigs);
                         itr = requiredSecurities.insert(make_pair(securityspec->securityID(), security)).first;
                     }
 
