@@ -449,7 +449,7 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
     }
 
     // Check for form NAME-YYYY-MM if NAME-YYYY-MM-DD failed
-    if (expiry != Date() && nameWoPrefix.size() > 7) {
+    if (expiry == Date() && nameWoPrefix.size() > 7) {
         string test = nameWoPrefix.substr(nameWoPrefix.size() - 7);
         if (regex_match(test, regex("\\d{4}-\\d{2}"))) {
             expiry = parseDate(test + "-01");
