@@ -485,13 +485,6 @@
 
   <xs:simpleType name="weekdayType">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="Monday"/>
-      <xs:enumeration value="Tuesday"/>
-      <xs:enumeration value="Wednesday"/>
-      <xs:enumeration value="Thursday"/>
-      <xs:enumeration value="Friday"/>
-      <xs:enumeration value="Saturday"/>
-      <xs:enumeration value="Sunday"/>
       <xs:enumeration value="Mon"/>
       <xs:enumeration value="Tue"/>
       <xs:enumeration value="Wed"/>
@@ -504,18 +497,6 @@
 
   <xs:simpleType name="monthType">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="January"/>
-      <xs:enumeration value="February"/>
-      <xs:enumeration value="March"/>
-      <xs:enumeration value="April"/>
-      <xs:enumeration value="May"/>
-      <xs:enumeration value="June"/>
-      <xs:enumeration value="July"/>
-      <xs:enumeration value="August"/>
-      <xs:enumeration value="September"/>
-      <xs:enumeration value="October"/>
-      <xs:enumeration value="November"/>
-      <xs:enumeration value="December"/>
       <xs:enumeration value="Jan"/>
       <xs:enumeration value="Feb"/>
       <xs:enumeration value="Mar"/>

@@ -56,17 +56,6 @@ using namespace QuantExt;
 using namespace std;
 using boost::algorithm::to_lower_copy;
 
-namespace {
-
-// Case insensitive comparator for maps
-struct CaseInsensitiveCompare {
-    bool operator() (const string& s1, const string& s2) const {
-        return to_lower_copy(s1) < to_lower_copy(s2);
-    }
-};
-
-}
-
 namespace ore {
 namespace data {
 
@@ -782,14 +771,7 @@ SobolRsg::DirectionIntegers parseSobolRsgDirectionIntegers(const std::string& s)
 
 Weekday parseWeekday(const string& s) {
 
-    static map<string, Weekday, CaseInsensitiveCompare> m = {
-        { "Sunday", Weekday::Sunday },
-        { "Monday", Weekday::Monday },
-        { "Tuesday", Weekday::Tuesday },
-        { "Wednesday", Weekday::Wednesday },
-        { "Thursday", Weekday::Thursday },
-        { "Friday", Weekday::Friday },
-        { "Saturday", Weekday::Saturday },
+    static map<string, Weekday> m = {
         { "Sun", Weekday::Sunday },
         { "Mon", Weekday::Monday },
         { "Tue", Weekday::Tuesday },
@@ -809,19 +791,7 @@ Weekday parseWeekday(const string& s) {
 
 Month parseMonth(const string& s) {
 
-    static map<string, Month, CaseInsensitiveCompare> m = {
-        { "January", Month::January },
-        { "February", Month::February },
-        { "March", Month::March },
-        { "April", Month::April },
-        { "May", Month::May },
-        { "June", Month::June },
-        { "July", Month::July },
-        { "August", Month::August },
-        { "September", Month::September },
-        { "October", Month::October },
-        { "November", Month::November },
-        { "December", Month::December },
+    static map<string, Month> m = {
         { "Jan", Month::January },
         { "Feb", Month::February },
         { "Mar", Month::March },
