@@ -78,11 +78,14 @@
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/secpi.hpp>
 #include <qle/indexes/ibor/primeindex.hpp>
+#include <regex>
 
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
 using ore::data::Convention;
+using std::regex_match;
+using std::regex;
 
 namespace ore {
 namespace data {
@@ -424,21 +427,38 @@ boost::shared_ptr<BondIndex> parseBondIndex(const string& s) {
 boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name,
     const Calendar& cal, const Handle<PriceTermStructure>& ts) {
     
-    vector<string> tokens;
-    split(tokens, name, boost::is_any_of("-:"));
-    
-    // for spot indices, the name is of the form COMM-EXCHANGE:COMMODITY
-    // for future indices, the name is of the form COMM-EXCHANGE:CONTRACT:YYYY-MM or COMM-EXCHANGE:CONTRACT:YYYY-MM-DD
-    QL_REQUIRE(tokens.size() == 3 || tokens.size() == 5 || tokens.size() == 6,
-        "Three or five tokens are required in a commodity index");
-    QL_REQUIRE(tokens[0] == "COMM", "A commodity index string must start with 'COMM' but got first token " << tokens[0]);
+    // Make sure the prefix is correct
+    string prefix = name.substr(0, 5);
+    QL_REQUIRE(prefix == "COMM-", "A commodity index string must start with 'COMM-' but got " << prefix);
 
-    // Create the index
-    string commName = tokens[1] + ":" + tokens[2];
-    if (tokens.size() == 5 || tokens.size() == 6) {
-        string strExpiry = tokens.size() == 6 ? tokens[5] : "01";
-        strExpiry = tokens[3] + "-" + tokens[4] + "-" + strExpiry;
-        Date expiry = parseDate(strExpiry);
+    // Now take the remainder of the string
+    // for spot indices, this should just be the commodity name (possibly containing hyphens)
+    // for future indices, this is of the form NAME-YYYY-MM or NAME-YYYY-MM-DD where NAME is the commodity name 
+    // (possibly containing hyphens) and YYYY-MM(-DD) is the expiry date of the futures contract
+    Date expiry;
+    string nameWoPrefix = name.substr(5);
+    string commName = nameWoPrefix;
+
+    // Check for form NAME-YYYY-MM-DD
+    if (nameWoPrefix.size() > 10) {
+        string test = nameWoPrefix.substr(nameWoPrefix.size() - 10);
+        if (regex_match(test, regex("\\d{4}-\\d{2}-\\d{2}"))) {
+            expiry = parseDate(test);
+            commName = nameWoPrefix.substr(0, nameWoPrefix.size() - test.size() - 1);
+        }
+    }
+
+    // Check for form NAME-YYYY-MM if NAME-YYYY-MM-DD failed
+    if (expiry != Date() && nameWoPrefix.size() > 7) {
+        string test = nameWoPrefix.substr(nameWoPrefix.size() - 7);
+        if (regex_match(test, regex("\\d{4}-\\d{2}"))) {
+            expiry = parseDate(test + "-01");
+            commName = nameWoPrefix.substr(0, nameWoPrefix.size() - test.size() - 1);
+        }
+    }
+
+    // Create and return the required future index
+    if (expiry != Date()) {
         return boost::make_shared<CommodityFuturesIndex>(commName, expiry, cal, ts);
     } else {
         return boost::make_shared<CommoditySpotIndex>(commName, cal, ts);

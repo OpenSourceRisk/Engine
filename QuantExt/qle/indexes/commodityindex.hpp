@@ -42,7 +42,7 @@ using namespace QuantLib;
     If it is spot index, the index name() is set to the underlying name passed to the constructor 
     prefixed by "COMM-".
 
-    If it is a futures index, we set the name() to "COMM-" + underlyingName + ":" + "yyyy-mm", where "yyyy" 
+    If it is a futures index, we set the name() to "COMM-" + underlyingName + "-" + "yyyy-mm", where "yyyy" 
     is the expiry date's year and "mm" is the expiry date's month. The index forecast for fixing Date 
     yields the price curve's forecast to the futures expiry instead which is beyond the fixing date.
 
@@ -52,8 +52,7 @@ class CommodityIndex : public Index, public Observer {
 public:
     /*! spot quote is interpreted as of today */
     CommodityIndex(const std::string& underlyingName, const QuantLib::Date& expiryDate, const Calendar& fixingCalendar,
-                   const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>(),
-                   const std::string& separator = ":");
+                   const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>());
     //! \name Index interface
     //@{
     std::string name() const { return name_; }
@@ -90,9 +89,8 @@ class CommoditySpotIndex : public CommodityIndex {
 public:
     /*! spot quote is interpreted as of today */
     CommoditySpotIndex(const std::string& underlyingName, const Calendar& fixingCalendar,
-                       const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>(),
-                       const std::string& separator = ":")
-        : CommodityIndex(underlyingName, Date(), fixingCalendar, priceCurve, separator) {
+                       const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>())
+        : CommodityIndex(underlyingName, Date(), fixingCalendar, priceCurve) {
         QL_REQUIRE(expiryDate_ == Date(), "empty expiry date expected in CommoditySpotIndex");
         isFuturesIndex_ = false;
     }
@@ -103,16 +101,14 @@ public:
     /*! spot quote is interpreted as of today */
     CommodityFuturesIndex(
         const std::string& underlyingName, const Date& expiryDate, const Calendar& fixingCalendar,
-        const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>(),
-        const std::string& separator = ":")
-        : CommodityIndex(underlyingName, expiryDate, fixingCalendar, priceCurve, separator) {
+        const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>())
+        : CommodityIndex(underlyingName, expiryDate, fixingCalendar, priceCurve) {
         QL_REQUIRE(expiryDate_ != Date(), "non-empty expiry date expected CommodityFuturesIndex");
         isFuturesIndex_ = true;
     }
 
-    CommodityFuturesIndex(const boost::shared_ptr<CommodityIndex>& index, const Date& expiryDate,
-                          const std::string& separator = ":")
-        : CommodityIndex(index->underlyingName(), expiryDate, index->fixingCalendar(), index->priceCurve(), separator) {
+    CommodityFuturesIndex(const boost::shared_ptr<CommodityIndex>& index, const Date& expiryDate)
+        : CommodityIndex(index->underlyingName(), expiryDate, index->fixingCalendar(), index->priceCurve()) {
         QL_REQUIRE(expiryDate_ != Date(), "non-empty expiry date expected CommodityFuturesIndex");
         isFuturesIndex_ = true;
     }

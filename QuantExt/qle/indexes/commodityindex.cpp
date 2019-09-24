@@ -28,8 +28,7 @@
 namespace QuantExt {
 
 CommodityIndex::CommodityIndex(const std::string& underlyingName, const Date& expiryDate,
-                               const Calendar& fixingCalendar, const Handle<QuantExt::PriceTermStructure>& curve,
-                               const std::string& separator)
+                               const Calendar& fixingCalendar, const Handle<QuantExt::PriceTermStructure>& curve)
     : underlyingName_(underlyingName), expiryDate_(expiryDate), fixingCalendar_(fixingCalendar), curve_(curve) {
     if (expiryDate_ == Date()) {
         // spot price index
@@ -38,7 +37,7 @@ CommodityIndex::CommodityIndex(const std::string& underlyingName, const Date& ex
     } else {
         // futures price index
         std::ostringstream o;
-        o << "COMM-" << underlyingName_ << separator << QuantLib::io::iso_date(expiryDate_);
+        o << "COMM-" << underlyingName_ << "-" << QuantLib::io::iso_date(expiryDate_);
         name_ = o.str();
         // Remove the "-dd" portion from the expiry date
         name_.erase(name_.length() - 3);
