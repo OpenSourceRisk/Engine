@@ -78,14 +78,12 @@
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/secpi.hpp>
 #include <qle/indexes/ibor/primeindex.hpp>
-#include <regex>
+#include <boost/regex.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
 using ore::data::Convention;
-using std::regex_match;
-using std::regex;
 
 namespace ore {
 namespace data {
@@ -442,7 +440,7 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
     // Check for form NAME-YYYY-MM-DD
     if (nameWoPrefix.size() > 10) {
         string test = nameWoPrefix.substr(nameWoPrefix.size() - 10);
-        if (regex_match(test, regex("\\d{4}-\\d{2}-\\d{2}"))) {
+        if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}-\\d{2}"))) {
             expiry = parseDate(test);
             commName = nameWoPrefix.substr(0, nameWoPrefix.size() - test.size() - 1);
         }
@@ -451,7 +449,7 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
     // Check for form NAME-YYYY-MM if NAME-YYYY-MM-DD failed
     if (expiry == Date() && nameWoPrefix.size() > 7) {
         string test = nameWoPrefix.substr(nameWoPrefix.size() - 7);
-        if (regex_match(test, regex("\\d{4}-\\d{2}"))) {
+        if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}"))) {
             expiry = parseDate(test + "-01");
             commName = nameWoPrefix.substr(0, nameWoPrefix.size() - test.size() - 1);
         }
