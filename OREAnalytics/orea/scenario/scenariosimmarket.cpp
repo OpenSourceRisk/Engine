@@ -456,16 +456,16 @@ ScenarioSimMarket::ScenarioSimMarket(
                             simulateAtmOnly = true;
                         }
                         LOG("Initial market " << name << " yield volatility type = " << wrapper->volatilityType());
-
+                        
                         // Check is underlying market surface is atm or smile
-                        isAtm = boost::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr ? true : false;
+                        isAtm = boost::dynamic_pointer_cast<SwaptionVolatilityMatrix>(*wrapper) != nullptr ? true : false;
                         
                         // If volatility type is not Normal and we have swaptions, convert to Normal for the simulation
                         // Notice that this is not possible for yield volatilities, since the ATM level is not known
                         if (wrapper->volatilityType() != Normal &&
                             param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
                             // FIXME we can not convert constant swaption vol structures yet
-                            if (isAtm) {
+                            if (boost::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr) {
                                 ALOG("Constant swaption volatility found in configuration "
                                      << configuration << " for currency " << name
                                      << " will not be converted to normal");
