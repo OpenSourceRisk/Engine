@@ -141,13 +141,16 @@
 
   <xs:complexType name="bondData">
     <xs:sequence>
-      <xs:element type="xs:string" name="IssuerId" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="xs:string" name="CreditCurveId" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="xs:string" name="IssuerId" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="xs:string" name="CreditCurveId" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="xs:string" name="SecurityId" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="xs:string" name="ReferenceCurveId" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="xs:string" name="SettlementDays" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="xs:string" name="Calendar" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="xs:string" name="IssueDate" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="xs:string" name="ReferenceCurveId" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="xs:string" name="VolatilityCurveId" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="xs:string" name="SettlementDays" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="xs:string" name="Calendar" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="xs:string" name="IssueDate" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="xs:string" name="Quantity" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="xs:string" name="Payer" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
