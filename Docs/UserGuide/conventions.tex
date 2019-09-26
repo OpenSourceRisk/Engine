@@ -546,41 +546,34 @@ The meaning of the elements is as follows:
 
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsubsection{Commodity Curve Conventions}
+\subsubsection{Commodity Forward Conventions}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-A node with name \emph{Commodity} is used to store conventions for commodity price quotes. The
-structure of this node is shown in Listing \ref{lst:commodity_conventions}.
+A node with name \lstinline!CommodityForward! is used to store conventions for commodity forward price quotes. The
+structure of this node is shown in Listing \ref{lst:commodity_forward_conventions}.
 
 \begin{listing}[H]
-%\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Commodity>
-  <Id>XAU</Id>
-  <SpotDays>2</SpotDays>
-  <PointsFactor>100</PointsFactor>
-  <AdvanceCalendar>USD</AdvanceCalendar>
-  <SpotRelative>true</SpotRelative>
-  <BusinessDayConvention>ModifiedFollowing</BusinessDayConvention>
-  <Outright>false</Outright>
-</Commodity>
+<CommodityForward>
+  <Id>...</Id>
+  <SpotDays>...</SpotDays>
+  <PointsFactor>...</PointsFactor>
+  <AdvanceCalendar>...</AdvanceCalendar>
+  <SpotRelative>...</SpotRelative>
+  <BusinessDayConvention>...</BusinessDayConvention>
+  <Outright>...</Outright>
+</CommodityForward>
 \end{minted}
-\caption{Commodity price conventions}
-\label{lst:commodity_conventions}
+\caption{Commodity forward conventions}
+\label{lst:commodity_forward_conventions}
 \end{listing}
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
-\item SpotDays: The number of business days to spot for the currency pair.
-\item PointsFactor: The number by which a points quote for the currency pair should be divided before adding it to the
-spot quote to obtain the forward rate.
-\item AdvanceCalendar [Optional]: The business day calendar(s) used for advancing dates for both spot and forwards. If
-not provided, it defaults to a calendar with no holidays.
-\item SpotRelative [Optional]: \emph{True} if the forward tenor is to be interpreted as being relative to the spot date.
-\emph{False} if the forward tenor is to be interpreted as being relative to the valuation date. If not provided, it
-defaults to \emph{True}.
-\item BusinessDayConvention: The Business Day Conventions.
-\item Outright: \emph{True} if the forward quotes are to be interpreted as outright prices (e.g. Futures prices),
-\emph{False} if they are infact forward points which must be added to the spot price to get the outright.
+\item \lstinline!Id!: The identifier for the commodity forward convention. The identifier here should match the \lstinline!Name! that would be provided for the commodity in the trade XML.
+\item \lstinline!SpotDays! [Optional]: The number of business days to spot for the commodity. Any non-negative integer is allowed here. If omitted, this takes a default value of 2.
+\item \lstinline!PointsFactor! [Optional]: This is only used if \lstinline!Outright! is \lstinline!false!. Any positive real number is allowed here. When \lstinline!Outright! is \lstinline!false!, the commodity forward quotes are provided as points i.e. a number that should be added to the commodity spot to give the outright commodity forward rate. The \lstinline!PointsFactor! is the number by which the points quote should be divided before adding it to the spot quote to obtain the forward price. If omitted, this takes a default value of 1.
+\item \lstinline!AdvanceCalendar! [Optional]: The business day calendar(s) used for advancing dates for both spot and forwards. The allowable values are given in Table \ref{tab:calendar}. If omitted, it defaults to \lstinline!NullCalendar! i.e. a calendar where all days are considered good business days.
+\item \lstinline!SpotRelative! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. If \lstinline!true!, the forward tenor is interpreted as being relative to the spot date. If \lstinline!false!, the forward tenor is interpreted as being relative to the valuation date. If omitted, it defaults to \lstinline!True!.
+\item \lstinline!BusinessDayConvention! [Optional]: The business day roll convention used to adjust dates when getting from the valuation date to the spot date and the forward maturity date. The allowable values are given in Table \ref{tab:allow_stand_data}. If omitted, it defaults to \lstinline!Following!.
+\item \lstinline!Outright! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. If \lstinline!true!, the forward quotes are interpreted as outright forward prices. If \lstinline!false!, the forward quotes are interpreted as points i.e. as a number that must be added to the spot price to get the outright forward price.
 \end{itemize}
-
-

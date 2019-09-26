@@ -14,7 +14,14 @@
 \usepackage{epstopdf}
 \usepackage{longtable}
 \usepackage{floatrow}
+
+% Use \setminted here to get horizontal line above and below listings
 \usepackage{minted}
+\setminted{
+   frame=lines,
+   framesep=2mm
+}
+
 \usepackage{textcomp}
 \usepackage{color,soul}
 \usepackage[font={small,it}]{caption}
@@ -43,7 +50,9 @@
   belowskip=2\medskipamount
 }
 
-%\usepackage{float}
+% All listings have a left aligned caption. This looks better as the listings themselves are left aligned.
+\captionsetup[listing]{justification=justified,singlelinecheck=false}
+
 \usepackage{tabu}
 \tabulinesep=1.0mm
 \restylefloat{table}
