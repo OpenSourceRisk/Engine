@@ -30,6 +30,7 @@ currencies/america.cpp
 currencies/asia.cpp
 currencies/metals.cpp
 indexes/bondindex.cpp
+indexes/commodityindex.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
 indexes/ibor/brlcdi.cpp
@@ -159,6 +160,7 @@ termstructures/swaptionvolatilityconverter.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
+time/futureexpirycalculator.hpp
 time/yearcounter.cpp)
 
 # hpp files, this list is maintained manually
@@ -197,6 +199,7 @@ currencies/metals.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
 indexes/cacpi.hpp
+indexes/commodityindex.hpp
 indexes/dkcpi.hpp
 indexes/equityindex.hpp
 indexes/fxindex.hpp

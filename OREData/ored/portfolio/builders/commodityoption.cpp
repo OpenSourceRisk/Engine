@@ -43,6 +43,7 @@ boost::shared_ptr<QuantLib::PricingEngine> CommodityOptionEngineBuilder::engineI
 
     Handle<YieldTermStructure> yield = Handle<YieldTermStructure>(
         boost::make_shared<PriceTermStructureAdapter>(*priceCurve, *discountCurve));
+    yield->enableExtrapolation();
 
     // Create the option engine
     boost::shared_ptr<GeneralizedBlackScholesProcess> process = boost::make_shared<GeneralizedBlackScholesProcess>(

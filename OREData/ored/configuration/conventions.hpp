@@ -64,7 +64,8 @@ public:
         InflationSwap,
         SecuritySpread,
         CMSSpreadOption,
-        Commodity
+        CommodityForward,
+        CommodityFuture
     };
 
     //! Default destructor
@@ -1062,18 +1063,18 @@ private:
     string strRollConvention_;
 };
 
-/*! Container for storing Commodity quote conventions
+/*! Container for storing Commodity forward quote conventions
     \ingroup marketdata
  */
-class CommodityConvention : public Convention {
+class CommodityForwardConvention : public Convention {
 public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CommodityConvention() {}
+    CommodityForwardConvention() {}
     
     //! Detailed constructor
-    CommodityConvention(
+    CommodityForwardConvention(
         const string& id,
         const string& spotDays = "",
         const string& pointsFactor = "",
@@ -1113,6 +1114,91 @@ private:
     string strPointsFactor_;
     string strAdvanceCalendar_;
     string strSpotRelative_;
+};
+
+/*! Container for storing commodity future conventions
+    \ingroup marketdata
+ */
+class CommodityFutureConvention : public Convention {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    CommodityFutureConvention() {}
+    
+    //! Day of month based constructor
+    CommodityFutureConvention(const std::string& id,
+        const std::string& dayOfMonth,
+        const std::string& contractFrequency,
+        const std::string& calendar,
+        bool expiryInPreviousMonth = false,
+        const std::string& oneContractMonth = "",
+        const std::string& offsetDays = "",
+        const std::string& bdc = "",
+        bool adjustBeforeOffset = true,
+        bool isAveraging = false);
+
+    //! N-th weekday based constructor
+    CommodityFutureConvention(const std::string& id,
+        const std::string& nth,
+        const std::string& weekday,
+        const std::string& contractFrequency,
+        const std::string& calendar,
+        bool expiryInPreviousMonth = false,
+        const std::string& oneContractMonth = "",
+        const std::string& offsetDays = "",
+        const std::string& bdc = "",
+        bool adjustBeforeOffset = true,
+        bool isAveraging = false);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    QuantLib::Natural dayOfMonth() const { return dayOfMonth_; }
+    QuantLib::Natural nth() const { return nth_; }
+    QuantLib::Weekday weekday() const { return weekday_; }
+    QuantLib::Frequency contractFrequency() const { return contractFrequency_; }
+    QuantLib::Calendar calendar() const { return calendar_; }
+    bool expiryInPreviousMonth() const { return expiryInPreviousMonth_; }
+    QuantLib::Month oneContractMonth() const { return oneContractMonth_; }
+    QuantLib::Natural offsetDays() const { return offsetDays_; }
+    QuantLib::BusinessDayConvention businessDayConvention() const { return bdc_; }
+    bool adjustBeforeOffset() const { return adjustBeforeOffset_; }
+    bool isAveraging() const { return isAveraging_; }
+    bool dayOfMonthBased() const { return dayOfMonthBased_; }
+    //@}
+
+    //! Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+
+    //! Implementation
+    void build() override;
+
+private:
+    QuantLib::Natural dayOfMonth_;
+    QuantLib::Natural nth_;
+    QuantLib::Weekday weekday_;
+    QuantLib::Frequency contractFrequency_;
+    QuantLib::Calendar calendar_;
+    QuantLib::Month oneContractMonth_;
+    QuantLib::Natural offsetDays_;
+    QuantLib::BusinessDayConvention bdc_;
+    bool dayOfMonthBased_;
+
+    std::string strDayOfMonth_;
+    std::string strNth_;
+    std::string strWeekday_;
+    std::string strContractFrequency_;
+    std::string strCalendar_;
+    bool expiryInPreviousMonth_;
+    std::string strOneContractMonth_;
+    std::string strOffsetDays_;
+    std::string strBdc_;
+    bool adjustBeforeOffset_;
+    bool isAveraging_;
 };
 
 } // namespace data

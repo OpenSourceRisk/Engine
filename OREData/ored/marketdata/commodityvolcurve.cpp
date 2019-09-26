@@ -306,6 +306,7 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
                     // strike + vol
                     strikes.push_back(parseReal(q->strike()));
                     vols.push_back(q->quote()->value());
+                    expiries.push_back(eDate);
                     quotesAdded++;
                 }
             }

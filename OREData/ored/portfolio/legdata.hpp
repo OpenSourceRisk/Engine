@@ -25,6 +25,7 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -96,6 +97,8 @@ public:
 private:
     vector<double> amounts_;
     vector<string> dates_;
+
+    static LegDataRegister<CashflowData> reg_;
 };
 
 //! Serializable Fixed Leg Data
@@ -124,6 +127,8 @@ public:
 private:
     vector<double> rates_;
     vector<string> rateDates_;
+
+    static LegDataRegister<FixedLegData> reg_;
 };
 
 //! Serializable Fixed Leg Data
@@ -154,6 +159,8 @@ private:
     vector<double> rates_;
     vector<string> rateDates_;
     string compounding_;
+
+    static LegDataRegister<ZeroCouponFixedLegData> reg_;
 };
 
 //! Serializable Floating Leg Data
@@ -219,6 +226,8 @@ private:
     vector<double> gearings_;
     vector<string> gearingDates_;
     bool nakedOption_;
+
+    static LegDataRegister<FloatingLegData> reg_;
 };
 
 //! Serializable CPI Leg Data
@@ -263,6 +272,8 @@ private:
     vector<double> rates_;
     vector<string> rateDates_;
     bool subtractInflationNominal_;
+
+    static LegDataRegister<CPILegData> reg_;
 };
 
 //! Serializable YoY Leg Data
@@ -326,6 +337,8 @@ private:
     vector<double> floors_;
     vector<string> floorDates_;
     bool nakedOption_;
+
+    static LegDataRegister<YoYLegData> reg_;
 };
 
 //! Serializable CMS Leg Data
@@ -382,6 +395,8 @@ private:
     vector<double> gearings_;
     vector<string> gearingDates_;
     bool nakedOption_;
+
+    static LegDataRegister<CMSLegData> reg_;
 };
 
 //! Serializable CMS Spread Leg Data
@@ -444,6 +459,8 @@ private:
     vector<double> gearings_;
     vector<string> gearingDates_;
     bool nakedOption_;
+
+    static LegDataRegister<CMSSpreadLegData> reg_;
 };
 
 //! Serializable CMS Spread Leg Data
@@ -511,6 +528,8 @@ private:
     vector<string> putStrikeDates_;
     vector<double> putPayoffs_;
     vector<string> putPayoffDates_;
+
+    static LegDataRegister<DigitalCMSSpreadLegData> reg_;
 };
 
 //! Serializable Fixed Leg Data
@@ -564,6 +583,8 @@ private:
     string fxIndex_ = "";
     Natural fxIndexFixingDays_ = 2;
     string fxIndexCalendar_ = "";
+
+    static LegDataRegister<EquityLegData> reg_;
 };
 
 //! Serializable object holding amortization rules
@@ -620,7 +641,8 @@ public:
             const string& foreignCurrency = "", const double foreignAmount = 0, const string& fxIndex = "",
             int fixingDays = 0, const string& fixingCalendar = "",
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
-            const int paymentLag = 0);
+            const int paymentLag = 0, const std::string& paymentCalendar = "",
+            const std::vector<std::string>& paymentDates = std::vector<std::string>());
 
     //! \name Serialisation
     //@{
@@ -648,9 +670,11 @@ public:
     const string& fixingCalendar() const { return fixingCalendar_; }
     const int paymentLag() const { return paymentLag_; }
     const std::vector<AmortizationData>& amortizationData() const { return amortizationData_; }
+    const std::string& paymentCalendar() const { return paymentCalendar_; }
     const string& legType() const { return concreteLegData_->legType(); }
     boost::shared_ptr<LegAdditionalData> concreteLegData() const { return concreteLegData_; }
     const std::set<std::string>& indices() const { return indices_; }
+    const std::vector<std::string>& paymentDates() const { return paymentDates_; }
     //@}
 
     //! \name modifiers
@@ -689,6 +713,8 @@ private:
     string fixingCalendar_;
     std::vector<AmortizationData> amortizationData_;
     int paymentLag_;
+    std::string paymentCalendar_;
+    std::vector<std::string> paymentDates_;
 };
 
 //! \name Utilities for building QuantLib Legs

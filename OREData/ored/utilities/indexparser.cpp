@@ -26,6 +26,7 @@
 #include <map>
 #include <ored/configuration/conventions.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
@@ -33,6 +34,7 @@
 #include <ql/time/daycounters/all.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/cacpi.hpp>
+#include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -61,8 +63,8 @@
 #include <qle/indexes/ibor/noknibor.hpp>
 #include <qle/indexes/ibor/nowa.hpp>
 #include <qle/indexes/ibor/nzdbkbm.hpp>
-#include <qle/indexes/ibor/plnpolonia.hpp>
 #include <qle/indexes/ibor/phpphiref.hpp>
+#include <qle/indexes/ibor/plnpolonia.hpp>
 #include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/rubmosprime.hpp>
 #include <qle/indexes/ibor/saibor.hpp>
@@ -76,6 +78,7 @@
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/secpi.hpp>
 #include <qle/indexes/ibor/primeindex.hpp>
+#include <boost/regex.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -85,7 +88,8 @@ using ore::data::Convention;
 namespace ore {
 namespace data {
 
-// Helper base class to build an IborIndex with a specific period and term structure given an instance of the same IborIndex
+// Helper base class to build an IborIndex with a specific period and term structure given an instance of the same
+// IborIndex
 class IborIndexParser {
 public:
     virtual ~IborIndexParser() {}
@@ -94,22 +98,18 @@ public:
 };
 
 // General case
-template <class T>
-class IborIndexParserWithPeriod : public IborIndexParser {
+template <class T> class IborIndexParserWithPeriod : public IborIndexParser {
 public:
     boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
         return boost::make_shared<T>(p, h);
     }
-    string family() const override {
-        return T(3 * Months).familyName();
-    }
+    string family() const override { return T(3 * Months).familyName(); }
 };
 
 // MXN TIIE
 // If tenor equates to 28 Days, i.e. tenor is 4W or 28D, ensure that the index is created
 // with a tenor of 4W under the hood. Things work better this way especially cap floor stripping.
-template <>
-class IborIndexParserWithPeriod<MXNTiie> : public IborIndexParser {
+template <> class IborIndexParserWithPeriod<MXNTiie> : public IborIndexParser {
 public:
     boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
         if (p.units() == Days && p.length() == 28) {
@@ -119,15 +119,12 @@ public:
         }
     }
 
-    string family() const override {
-        return MXNTiie(4 * Weeks).familyName();
-    }
+    string family() const override { return MXNTiie(4 * Weeks).familyName(); }
 };
 
 // KRW CD
 // If tenor equates to 91 Days, ensure that the index is created with a tenor of 3M under the hood.
-template <>
-class IborIndexParserWithPeriod<KRWCd> : public IborIndexParser {
+template <> class IborIndexParserWithPeriod<KRWCd> : public IborIndexParser {
 public:
     boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
         if (p.units() == Days && p.length() == 91) {
@@ -137,14 +134,12 @@ public:
         }
     }
 
-    string family() const override {
-        return KRWCd(3 * Months).familyName();
-    }
+    string family() const override { return KRWCd(3 * Months).familyName(); }
 };
 
 // Helper function to check that index name to index object is a one-to-one mapping
-void checkOneToOne(const map<string, boost::shared_ptr<OvernightIndex>>& onIndices, 
-    const map<string, boost::shared_ptr<IborIndexParser>>& iborIndices) {
+void checkOneToOne(const map<string, boost::shared_ptr<OvernightIndex>>& onIndices,
+                   const map<string, boost::shared_ptr<IborIndexParser>>& iborIndices) {
 
     // Should not attempt to add the same family name to the set if the provided mappings are one to one
     set<string> familyNames;
@@ -201,8 +196,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
     QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3,
-        "Two or three tokens required in " << s << ": CCY-INDEX or CCY-INDEX-TERM");
-    
+               "Two or three tokens required in " << s << ": CCY-INDEX or CCY-INDEX-TERM");
+
     // Variables used below
     string indexStem = tokens[0] + "-" + tokens[1];
     if (tokens.size() == 3) {
@@ -234,48 +229,47 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
 
     // Map from our _unique internal name_ to an ibor index (the period does not matter here)
     static map<string, boost::shared_ptr<IborIndexParser>> iborIndices = {
-        { "AUD-BBSW", boost::make_shared<IborIndexParserWithPeriod<AUDbbsw>>() },
-        { "AUD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<AUDLibor>>() },
-        { "EUR-EURIBOR", boost::make_shared<IborIndexParserWithPeriod<Euribor>>() },
-        { "CAD-CDOR", boost::make_shared<IborIndexParserWithPeriod<Cdor>>() },
-        { "CNY-SHIBOR", boost::make_shared<IborIndexParserWithPeriod<Shibor>>() },
-        { "CZK-PRIBOR", boost::make_shared<IborIndexParserWithPeriod<CZKPribor>>() },
-        { "EUR-LIBOR", boost::make_shared<IborIndexParserWithPeriod<EURLibor>>() },
-        { "USD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<USDLibor>>() },
-        { "GBP-LIBOR", boost::make_shared<IborIndexParserWithPeriod<GBPLibor>>() },
-        { "JPY-LIBOR", boost::make_shared<IborIndexParserWithPeriod<JPYLibor>>() },
-        { "JPY-TIBOR", boost::make_shared<IborIndexParserWithPeriod<Tibor>>() },
-        { "CAD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<CADLibor>>() },
-        { "CHF-LIBOR", boost::make_shared<IborIndexParserWithPeriod<CHFLibor>>() },
-        { "SEK-LIBOR", boost::make_shared<IborIndexParserWithPeriod<SEKLibor>>() },
-        { "SEK-STIBOR", boost::make_shared<IborIndexParserWithPeriod<SEKStibor>>() },
-        { "NOK-NIBOR", boost::make_shared<IborIndexParserWithPeriod<NOKNibor>>() },
-        { "HKD-HIBOR", boost::make_shared<IborIndexParserWithPeriod<HKDHibor>>() },
-        { "SAR-SAIBOR", boost::make_shared<IborIndexParserWithPeriod<SAibor>>() },
-        { "SGD-SIBOR", boost::make_shared<IborIndexParserWithPeriod<SGDSibor>>() },
-        { "SGD-SOR", boost::make_shared<IborIndexParserWithPeriod<SGDSor>>() },
-        { "DKK-CIBOR", boost::make_shared<IborIndexParserWithPeriod<DKKCibor>>() },
-        { "DKK-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DKKLibor>>() },
-        { "HUF-BUBOR", boost::make_shared<IborIndexParserWithPeriod<HUFBubor>>() },
-        { "IDR-IDRFIX", boost::make_shared<IborIndexParserWithPeriod<IDRIdrfix>>() },
-        { "IDR-JIBOR", boost::make_shared<IborIndexParserWithPeriod<IDRJibor>>() },
-        { "ILS-TELBOR", boost::make_shared<IborIndexParserWithPeriod<ILSTelbor>>() },
-        { "INR-MIFOR", boost::make_shared<IborIndexParserWithPeriod<INRMifor>>() },
-        { "MXN-TIIE", boost::make_shared<IborIndexParserWithPeriod<MXNTiie>>() },
-        { "PLN-WIBOR", boost::make_shared<IborIndexParserWithPeriod<PLNWibor>>() },
-        { "SKK-BRIBOR", boost::make_shared<IborIndexParserWithPeriod<SKKBribor>>() },
-        { "NZD-BKBM", boost::make_shared<IborIndexParserWithPeriod<NZDBKBM>>() },
-        { "TRY-TRLIBOR", boost::make_shared<IborIndexParserWithPeriod<TRLibor>>() },
-        { "TWD-TAIBOR", boost::make_shared<IborIndexParserWithPeriod<TWDTaibor>>() },
-        { "MYR-KLIBOR", boost::make_shared<IborIndexParserWithPeriod<MYRKlibor>>() },
-        { "KRW-CD", boost::make_shared<IborIndexParserWithPeriod<KRWCd>>() },
-        { "KRW-KORIBOR", boost::make_shared<IborIndexParserWithPeriod<KRWKoribor>>() },
-        { "ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>() },
-        { "RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>() },
-        { "THB-BIBOR", boost::make_shared<IborIndexParserWithPeriod<THBBibor>>() },
-        { "PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>() },
-        { "DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>() }
-    };
+        {"AUD-BBSW", boost::make_shared<IborIndexParserWithPeriod<AUDbbsw>>()},
+        {"AUD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<AUDLibor>>()},
+        {"EUR-EURIBOR", boost::make_shared<IborIndexParserWithPeriod<Euribor>>()},
+        {"CAD-CDOR", boost::make_shared<IborIndexParserWithPeriod<Cdor>>()},
+        {"CNY-SHIBOR", boost::make_shared<IborIndexParserWithPeriod<Shibor>>()},
+        {"CZK-PRIBOR", boost::make_shared<IborIndexParserWithPeriod<CZKPribor>>()},
+        {"EUR-LIBOR", boost::make_shared<IborIndexParserWithPeriod<EURLibor>>()},
+        {"USD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<USDLibor>>()},
+        {"GBP-LIBOR", boost::make_shared<IborIndexParserWithPeriod<GBPLibor>>()},
+        {"JPY-LIBOR", boost::make_shared<IborIndexParserWithPeriod<JPYLibor>>()},
+        {"JPY-TIBOR", boost::make_shared<IborIndexParserWithPeriod<Tibor>>()},
+        {"CAD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<CADLibor>>()},
+        {"CHF-LIBOR", boost::make_shared<IborIndexParserWithPeriod<CHFLibor>>()},
+        {"SEK-LIBOR", boost::make_shared<IborIndexParserWithPeriod<SEKLibor>>()},
+        {"SEK-STIBOR", boost::make_shared<IborIndexParserWithPeriod<SEKStibor>>()},
+        {"NOK-NIBOR", boost::make_shared<IborIndexParserWithPeriod<NOKNibor>>()},
+        {"HKD-HIBOR", boost::make_shared<IborIndexParserWithPeriod<HKDHibor>>()},
+        {"SAR-SAIBOR", boost::make_shared<IborIndexParserWithPeriod<SAibor>>()},
+        {"SGD-SIBOR", boost::make_shared<IborIndexParserWithPeriod<SGDSibor>>()},
+        {"SGD-SOR", boost::make_shared<IborIndexParserWithPeriod<SGDSor>>()},
+        {"DKK-CIBOR", boost::make_shared<IborIndexParserWithPeriod<DKKCibor>>()},
+        {"DKK-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DKKLibor>>()},
+        {"HUF-BUBOR", boost::make_shared<IborIndexParserWithPeriod<HUFBubor>>()},
+        {"IDR-IDRFIX", boost::make_shared<IborIndexParserWithPeriod<IDRIdrfix>>()},
+        {"IDR-JIBOR", boost::make_shared<IborIndexParserWithPeriod<IDRJibor>>()},
+        {"ILS-TELBOR", boost::make_shared<IborIndexParserWithPeriod<ILSTelbor>>()},
+        {"INR-MIFOR", boost::make_shared<IborIndexParserWithPeriod<INRMifor>>()},
+        {"MXN-TIIE", boost::make_shared<IborIndexParserWithPeriod<MXNTiie>>()},
+        {"PLN-WIBOR", boost::make_shared<IborIndexParserWithPeriod<PLNWibor>>()},
+        {"SKK-BRIBOR", boost::make_shared<IborIndexParserWithPeriod<SKKBribor>>()},
+        {"NZD-BKBM", boost::make_shared<IborIndexParserWithPeriod<NZDBKBM>>()},
+        {"TRY-TRLIBOR", boost::make_shared<IborIndexParserWithPeriod<TRLibor>>()},
+        {"TWD-TAIBOR", boost::make_shared<IborIndexParserWithPeriod<TWDTaibor>>()},
+        {"MYR-KLIBOR", boost::make_shared<IborIndexParserWithPeriod<MYRKlibor>>()},
+        {"KRW-CD", boost::make_shared<IborIndexParserWithPeriod<KRWCd>>()},
+        {"KRW-KORIBOR", boost::make_shared<IborIndexParserWithPeriod<KRWKoribor>>()},
+        {"ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>()},
+        {"RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>()},
+        {"THB-BIBOR", boost::make_shared<IborIndexParserWithPeriod<THBBibor>>()},
+        {"PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>()},
+        {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()}};
 
     // Check (once) that we have a one-to-one mapping
     static bool checked = false;
@@ -293,7 +287,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     // Overnight indices
     auto onIt = onIndices.find(indexStem);
     if (onIt != onIndices.end()) {
-        QL_REQUIRE(tenor.empty(), "A tenor is not allowed with the overnight index " << indexStem << " as it is implied");
+        QL_REQUIRE(tenor.empty(),
+                   "A tenor is not allowed with the overnight index " << indexStem << " as it is implied");
         return onIt->second->clone(h);
     }
 
@@ -314,9 +309,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     QL_FAIL("parseIborIndex \"" << s << "\" not recognized");
 }
 
-bool isGenericIndex(const string& indexName) { 
-    return indexName.find("-GENERIC-") != string::npos;
-}
+bool isGenericIndex(const string& indexName) { return indexName.find("-GENERIC-") != string::npos; }
 
 bool isInflationIndex(const string& indexName) {
     try {
@@ -429,6 +422,47 @@ boost::shared_ptr<BondIndex> parseBondIndex(const string& s) {
     return boost::make_shared<BondIndex>(tokens[1]);
 }
 
+boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name,
+    const Calendar& cal, const Handle<PriceTermStructure>& ts) {
+    
+    // Make sure the prefix is correct
+    string prefix = name.substr(0, 5);
+    QL_REQUIRE(prefix == "COMM-", "A commodity index string must start with 'COMM-' but got " << prefix);
+
+    // Now take the remainder of the string
+    // for spot indices, this should just be the commodity name (possibly containing hyphens)
+    // for future indices, this is of the form NAME-YYYY-MM or NAME-YYYY-MM-DD where NAME is the commodity name 
+    // (possibly containing hyphens) and YYYY-MM(-DD) is the expiry date of the futures contract
+    Date expiry;
+    string nameWoPrefix = name.substr(5);
+    string commName = nameWoPrefix;
+
+    // Check for form NAME-YYYY-MM-DD
+    if (nameWoPrefix.size() > 10) {
+        string test = nameWoPrefix.substr(nameWoPrefix.size() - 10);
+        if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}-\\d{2}"))) {
+            expiry = parseDate(test);
+            commName = nameWoPrefix.substr(0, nameWoPrefix.size() - test.size() - 1);
+        }
+    }
+
+    // Check for form NAME-YYYY-MM if NAME-YYYY-MM-DD failed
+    if (expiry == Date() && nameWoPrefix.size() > 7) {
+        string test = nameWoPrefix.substr(nameWoPrefix.size() - 7);
+        if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}"))) {
+            expiry = parseDate(test + "-01");
+            commName = nameWoPrefix.substr(0, nameWoPrefix.size() - test.size() - 1);
+        }
+    }
+
+    // Create and return the required future index
+    if (expiry != Date()) {
+        return boost::make_shared<CommodityFuturesIndex>(commName, expiry, cal, ts);
+    } else {
+        return boost::make_shared<CommoditySpotIndex>(commName, cal, ts);
+    }
+}
+
 boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& conventions) {
     boost::shared_ptr<QuantLib::Index> ret_idx;
     try {
@@ -469,6 +503,12 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
         } catch (...) {
         }
     }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseCommodityIndex(s);
+        } catch (...) {
+        }
+    }
     QL_REQUIRE(ret_idx, "parseIndex \"" << s << "\" not recognized");
     return ret_idx;
 }
@@ -486,20 +526,16 @@ bool isOvernightIndex(const string& indexName) {
 }
 
 string internalIndexName(const string& indexName) {
-    
+
     // Check that the indexName string is of the required form
     vector<string> tokens;
     split(tokens, indexName, boost::is_any_of("-"));
     QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3,
-        "Two or three tokens required in " << indexName << ": CCY-INDEX or CCY-INDEX-TERM");
+               "Two or three tokens required in " << indexName << ": CCY-INDEX or CCY-INDEX-TERM");
 
     // Static map of allowable alternative external names to our unique internal name
-    static map<string, string> m = {
-        { "DKK-TNR", "DKK-DKKOIS" },
-        { "EUR-EURIB", "EUR-EURIBOR" },
-        { "CAD-BA", "CAD-CDOR" }
-    };
-    
+    static map<string, string> m = {{"DKK-TNR", "DKK-DKKOIS"}, {"EUR-EURIB", "EUR-EURIBOR"}, {"CAD-BA", "CAD-CDOR"}};
+
     // Is start of indexName covered by the map? If so, update it.
     string tmpName = tokens[0] + "-" + tokens[1];
     if (m.count(tmpName) == 1) {
@@ -515,7 +551,8 @@ string internalIndexName(const string& indexName) {
     // This covers cases like USD-FedFunds-1D and returns USD-FedFunds
     if (isOvernightIndex(tmpName)) {
         Period p = parsePeriod(tokens[2]);
-        QL_REQUIRE(p == 1 * Days, "The period " << tokens[2] << " is not compatible with the overnight index " << tmpName);
+        QL_REQUIRE(p == 1 * Days,
+                   "The period " << tokens[2] << " is not compatible with the overnight index " << tmpName);
         return tmpName;
     }
 
