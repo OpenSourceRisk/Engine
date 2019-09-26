@@ -422,7 +422,7 @@
           <xs:element type="xs:string" name="YieldCurve"/>
         </xs:sequence>
         <xs:sequence>
-          <xs:element type="xs:string" name="SpotQuote"/>
+          <xs:element type="xs:string" name="SpotQuote" minOccurs="0" maxOccurs="1"/>
           <xs:element type="quoteType" name="Quotes"/>
           <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
           <xs:element name="InterpolationMethod" minOccurs="0" maxOccurs="1">

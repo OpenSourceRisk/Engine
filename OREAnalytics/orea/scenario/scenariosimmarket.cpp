@@ -937,6 +937,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
                                     fwds.push_back(spot->value() * forTS->discount(times[i]) / domTS->discount(times[i]));
                                     atmVols.push_back(wrapper->blackVol(dates[i], spot->value()));
+                                    DLOG("atmVol(s) is " << atmVols.back() << " on date "<< dates[i]);
                                 }
 
                                 // interpolations

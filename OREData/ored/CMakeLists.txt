@@ -88,6 +88,7 @@ portfolio/fxoption.cpp
 portfolio/fxswap.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
+portfolio/legdatafactory.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetmanager.cpp
 portfolio/optiondata.cpp
@@ -227,6 +228,7 @@ portfolio/fxswap.hpp
 portfolio/instrumentwrapper.hpp
 portfolio/legbuilders.hpp
 portfolio/legdata.hpp
+portfolio/legdatafactory.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetmanager.hpp
 portfolio/optiondata.hpp
