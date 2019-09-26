@@ -114,7 +114,7 @@ void orderCommodity(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, vector<boo
 
     // Remove the commodity curve specs from the curveSpecs for ordering
     vector<boost::shared_ptr<CurveSpec>> commCurveSpecs(firstCommIt, lastCommIt);
-    curveSpecs.erase(firstCommIt, lastCommIt);
+    firstCommIt = curveSpecs.erase(firstCommIt, lastCommIt);
 
     // Order the commodity curve specs in commCurveSpecs
     vector<boost::shared_ptr<CurveSpec>> orderedCommCurveSpecs;

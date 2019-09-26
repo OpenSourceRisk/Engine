@@ -753,6 +753,12 @@
     <ClInclude Include="qle\pricingengines\baroneadesiwhaleyengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\commodityindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\primeindex.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\blackvariancesurfacestddevs.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -762,11 +768,17 @@
     <ClInclude Include="qle\termstructures\crosscurrencypricetermstructure.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\time\futureexpirycalculator.hpp">
+      <Filter>time</Filter>
+    </ClInclude>
     <ClInclude Include="qle\pricingengines\lgmconvolutionsolver.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
     <ClInclude Include="qle\calendars\israel.hpp">
       <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\rebatedexercise.hpp">
+      <Filter>instruments</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1255,6 +1267,9 @@
     <ClCompile Include="qle\indexes\ibor\brlcdi.cpp">
       <Filter>indexes\ibor</Filter>
     </ClCompile>
+    <ClCompile Include="qle\indexes\ibor\primeindex.cpp">
+      <Filter>indexes\ibor</Filter>
+    </ClCompile>
     <ClCompile Include="qle\time\yearcounter.cpp">
       <Filter>time</Filter>
     </ClCompile>
@@ -1291,17 +1306,26 @@
     <ClCompile Include="qle\pricingengines\baroneadesiwhaleyengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
+    <ClCompile Include="qle\indexes\commodityindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
     <ClCompile Include="qle\termstructures\blackvariancesurfacestddevs.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\crosscurrencypricetermstructure.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\pricingengines\lgmconvolutionsolver.cpp">
-      <Filter>pricingengines</Filter>
-	</ClCompile>
     <ClCompile Include="qle\calendars\israel.cpp">
       <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\lgmconvolutionsolver.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\israel.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\rebatedexercise.cpp">
+      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

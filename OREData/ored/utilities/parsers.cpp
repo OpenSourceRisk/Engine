@@ -54,6 +54,7 @@
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
+using boost::algorithm::to_lower_copy;
 
 namespace ore {
 namespace data {
@@ -765,6 +766,51 @@ SobolRsg::DirectionIntegers parseSobolRsgDirectionIntegers(const std::string& s)
         return it->second;
     } else {
         QL_FAIL("SobolRsg direction integers \"" << s << "\" not recognized");
+    }
+}
+
+Weekday parseWeekday(const string& s) {
+
+    static map<string, Weekday> m = {
+        { "Sun", Weekday::Sunday },
+        { "Mon", Weekday::Monday },
+        { "Tue", Weekday::Tuesday },
+        { "Wed", Weekday::Wednesday },
+        { "Thu", Weekday::Thursday },
+        { "Fri", Weekday::Friday },
+        { "Sat", Weekday::Saturday }
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("The string \"" << s << "\" is not recognized as a Weekday");
+    }
+}
+
+Month parseMonth(const string& s) {
+
+    static map<string, Month> m = {
+        { "Jan", Month::January },
+        { "Feb", Month::February },
+        { "Mar", Month::March },
+        { "Apr", Month::April },
+        { "May", Month::May },
+        { "Jun", Month::June },
+        { "Jul", Month::July },
+        { "Aug", Month::August },
+        { "Sep", Month::September },
+        { "Oct", Month::October },
+        { "Nov", Month::November },
+        { "Dec", Month::December }
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("The string \"" << s << "\" is not recognized as a Month");
     }
 }
 
