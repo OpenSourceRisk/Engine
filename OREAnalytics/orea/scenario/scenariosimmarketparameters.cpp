@@ -361,6 +361,7 @@ void ScenarioSimMarketParameters::setSwapVolExpiries(const string& key, const ve
 }
 
 void ScenarioSimMarketParameters::setSwapVolStrikeSpreads(const std::string& key, const std::vector<QuantLib::Rate>& strikes) {
+    setSwapVolIsCube(key, strikes.size() > 1);
     swapVolStrikeSpreads_[key] = strikes;
 }
 
@@ -883,11 +884,9 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                     vector<Rate> strikes;
                     string strStrike = XMLUtils::getNodeValue(spreadNode);
                     if (strStrike == "ATM" || strStrike == "0" || strStrike == "0.0") {
-                        setSwapVolIsCube(ccy, false);
                         // Add a '0' to the srike spreads
                         strikes = { 0.0 };
                     } else {
-                        setSwapVolIsCube(ccy, true);
                         strikes = parseListOfValues<Rate>(strStrike, &parseReal);
                     }
                     setSwapVolStrikeSpreads(ccy, strikes);

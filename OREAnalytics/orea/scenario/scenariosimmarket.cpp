@@ -559,7 +559,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 }
                             } else {
                                 if (isCube) {
-                                    QL_REQUIRE(isCube, "Only atmOnly simulation supported for yield vol surfaces");
                                     boost::shared_ptr<SwaptionVolatilityCube> tmp(new QuantExt::SwaptionVolCube2(
                                         atm, optionTenors, underlyingTenors, strikeSpreads, quotes,
                                         *initMarket->swapIndex(swapIndexBase, configuration),
