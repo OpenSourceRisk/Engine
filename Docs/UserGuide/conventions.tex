@@ -546,41 +546,108 @@ The meaning of the elements is as follows:
 
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsubsection{Commodity Curve Conventions}
+\subsubsection{Commodity Forward Conventions}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-A node with name \emph{Commodity} is used to store conventions for commodity price quotes. The
-structure of this node is shown in Listing \ref{lst:commodity_conventions}.
+A node with name \lstinline!CommodityForward! is used to store conventions for commodity forward price quotes. The
+structure of this node is shown in Listing \ref{lst:commodity_forward_conventions}.
 
 \begin{listing}[H]
-%\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Commodity>
-  <Id>XAU</Id>
-  <SpotDays>2</SpotDays>
-  <PointsFactor>100</PointsFactor>
-  <AdvanceCalendar>USD</AdvanceCalendar>
-  <SpotRelative>true</SpotRelative>
-  <BusinessDayConvention>ModifiedFollowing</BusinessDayConvention>
-  <Outright>false</Outright>
-</Commodity>
+<CommodityForward>
+  <Id>...</Id>
+  <SpotDays>...</SpotDays>
+  <PointsFactor>...</PointsFactor>
+  <AdvanceCalendar>...</AdvanceCalendar>
+  <SpotRelative>...</SpotRelative>
+  <BusinessDayConvention>...</BusinessDayConvention>
+  <Outright>...</Outright>
+</CommodityForward>
 \end{minted}
-\caption{Commodity price conventions}
-\label{lst:commodity_conventions}
+\caption{Commodity forward conventions}
+\label{lst:commodity_forward_conventions}
 \end{listing}
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
-\item SpotDays: The number of business days to spot for the currency pair.
-\item PointsFactor: The number by which a points quote for the currency pair should be divided before adding it to the
-spot quote to obtain the forward rate.
-\item AdvanceCalendar [Optional]: The business day calendar(s) used for advancing dates for both spot and forwards. If
-not provided, it defaults to a calendar with no holidays.
-\item SpotRelative [Optional]: \emph{True} if the forward tenor is to be interpreted as being relative to the spot date.
-\emph{False} if the forward tenor is to be interpreted as being relative to the valuation date. If not provided, it
-defaults to \emph{True}.
-\item BusinessDayConvention: The Business Day Conventions.
-\item Outright: \emph{True} if the forward quotes are to be interpreted as outright prices (e.g. Futures prices),
-\emph{False} if they are infact forward points which must be added to the spot price to get the outright.
+\item \lstinline!Id!: The identifier for the commodity forward convention. The identifier here should match the \lstinline!Name! that would be provided for the commodity in the trade XML as described in Table \ref{tab:commodity_data}.
+\item \lstinline!SpotDays! [Optional]: The number of business days to spot for the commodity. Any non-negative integer is allowed here. If omitted, this takes a default value of 2.
+\item \lstinline!PointsFactor! [Optional]: This is only used if \lstinline!Outright! is \lstinline!false!. Any positive real number is allowed here. When \lstinline!Outright! is \lstinline!false!, the commodity forward quotes are provided as points i.e. a number that should be added to the commodity spot to give the outright commodity forward rate. The \lstinline!PointsFactor! is the number by which the points quote should be divided before adding it to the spot quote to obtain the forward price. If omitted, this takes a default value of 1.
+\item \lstinline!AdvanceCalendar! [Optional]: The business day calendar(s) used for advancing dates for both spot and forwards. The allowable values are given in Table \ref{tab:calendar}. If omitted, it defaults to \lstinline!NullCalendar! i.e. a calendar where all days are considered good business days.
+\item \lstinline!SpotRelative! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. If \lstinline!true!, the forward tenor is interpreted as being relative to the spot date. If \lstinline!false!, the forward tenor is interpreted as being relative to the valuation date. If omitted, it defaults to \lstinline!True!.
+\item \lstinline!BusinessDayConvention! [Optional]: The business day roll convention used to adjust dates when getting from the valuation date to the spot date and the forward maturity date. The allowable values are given in Table \ref{tab:allow_stand_data}. If omitted, it defaults to \lstinline!Following!.
+\item \lstinline!Outright! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. If \lstinline!true!, the forward quotes are interpreted as outright forward prices. If \lstinline!false!, the forward quotes are interpreted as points i.e. as a number that must be added to the spot price to get the outright forward price. If omitted, it defaults to \lstinline!true!.
 \end{itemize}
 
+\subsubsection{Commodity Future Conventions}
+A node with name \lstinline!CommodityFuture! is used to store conventions for commodity future contracts. These conventions are used in commodity derivative trades to calculate contract expiry dates. The structure of this node is shown in Listing \ref{lst:commodity_future_conventions}.
 
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityFuture>
+  <Id>...</Id>
+  <AnchorDay>
+    ...
+  </AnchorDay>
+  <ContractFrequency>...</ContractFrequency>
+  <Calendar>...</Calendar>
+  <ExpiryInPreviousMonth>...</ExpiryInPreviousMonth>
+  <OneContractMonth>...</OneContractMonth>
+  <OffsetDays>...</OffsetDays>
+  <BusinessDayConvention>...</BusinessDayConvention>
+  <AdjustBeforeOffset>...</AdjustBeforeOffset>
+  <IsAveraging>...</IsAveraging>
+</CommodityFuture>
+\end{minted}
+\caption{Commodity future conventions}
+\label{lst:commodity_future_conventions}
+\end{listing}
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+\item \lstinline!Id!: The identifier for the commodity future convention. The identifier here should match the \lstinline!Name! that would be provided for the commodity in the trade XML as described in Table \ref{tab:commodity_data}.
+\item \lstinline!AnchorDay!: This node is used to give a date in the future contract month to use as a base date for calculating the expiry date. It can contain a \lstinline!DayOfMonth! node or an \lstinline!NthWeekday! node:
+\begin{itemize}
+\item The \lstinline!DayOfMonth! This node can contain any integer in the range $1,\ldots,31$ indicating the day of the month. A value of 31 will guarantee that the last day in the month is used a base date.
+\item The \lstinline!NthWeekday! This node has the elements shown in Listing \ref{lst:nth_weekday_node}. This node is used to indicate a date in a given month in the form of the n-th named weekday of that month e.g. 3rd Wednesday. The allowable values for \lstinline!Nth! are ${1,2,3,4}$. The \lstinline!Weekday! node takes a weekday in the form of the first three characters of the weekday with the first character capitalised.
+\end{itemize}
+\item \lstinline!ContractFrequency!: This node indicates the frequency of the commodity future contracts. The value here is usually \lstinline!Monthly! or \lstinline!Quarterly!.
+\item \lstinline!Calendar!: The business day calendar(s) applicable for the commodity future contract.
+\item \lstinline!ExpiryInPreviousMonth! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. If \lstinline!true!, the commodity future contract expires in the month prior to the contract month. If \lstinline!false!, the commodity future contract expiry date is in the contract month. If omitted, it defaults to \lstinline!false!.
+\item \lstinline!OneContractMonth! [Optional]: This node takes a calendar month in the form of the first three characters of the month with the first character capitalised. The month provided should be an arbitrary valid future contract month. It is used in cases where the \lstinline!ContractFrequency! is not \lstinline!Monthly! in order to determine the valid contract months. If omitted, it defaults to January.
+\item \lstinline!OffsetDays! [Optional]: The number of business days that the expiry date is before the base date where the base date is implied by the \lstinline!AnchorDay! node above. Any non-negative integer is allowed here. If omitted, this takes a default value of zero.
+\item \lstinline!BusinessDayConvention! [Optional]: The business day roll convention used to adjust the expiry date. The allowable values are given in Table \ref{tab:allow_stand_data}. If omitted, it defaults to \lstinline!Preceding!.
+\item \lstinline!AdjustBeforeOffset! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. If \lstinline!true!, if the base date implied by the \lstinline!AnchorDay! node above is not a good business day according to the calendar provided in the \lstinline!Calendar! node, this date is adjusted before the offset specified in the \lstinline!OffsetDays! is applied. If \lstinline!false!, this adjustment does not happen. If omitted, it defaults to \lstinline!true!. 
+\item \lstinline!IsAveraging! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. This node indicates if the future contract is based on the average commodity price of the contract period. If omitted, it defaults to \lstinline!false!.
+\end{itemize}
+
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<NthWeekday>
+  <Nth>...</Nth>
+  <Weekday>...</Weekday>
+</NthWeekday>
+\end{minted}
+\caption{\textnormal{\lstinline!NthWeekday!} node outline}
+\label{lst:nth_weekday_node}
+\end{listing}
+
+An example \lstinline!CommodityFuture! node for the NYMEX WTI future contract, specified \href{https://www.cmegroup.com/trading/energy/crude-oil/light-sweet-crude_contract_specifications.html}{here}, is provided in Listing \ref{lst:ex_wti_comm_future_convention}.
+
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityFuture>
+  <Id>NYMEX:CL</Id>
+  <AnchorDay>
+    <DayOfMonth>25</DayOfMonth>
+  </AnchorDay>
+  <ContractFrequency>Monthly</ContractFrequency>
+  <Calendar>US-NYSE</Calendar>
+  <ExpiryInPreviousMonth>true</ExpiryInPreviousMonth>
+  <OffsetDays>3</OffsetDays>
+  <BusinessDayConvention>Preceding</BusinessDayConvention>
+  <IsAveraging>false</IsAveraging>
+</CommodityFuture>
+\end{minted}
+\caption{NYMEX WTI \textnormal{\lstinline!CommodityFuture!} node}
+\label{lst:ex_wti_comm_future_convention}
+\end{listing}
