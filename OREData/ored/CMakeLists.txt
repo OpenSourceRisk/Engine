@@ -103,6 +103,7 @@ portfolio/tradefactory.cpp
 portfolio/vanillaoption.cpp
 report/csvreport.cpp
 utilities/calendaradjustmentconfig.cpp
+utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
 utilities/currencycheck.cpp
@@ -246,6 +247,7 @@ report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
 utilities/calendaradjustmentconfig.hpp
+utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
 utilities/currencycheck.hpp
