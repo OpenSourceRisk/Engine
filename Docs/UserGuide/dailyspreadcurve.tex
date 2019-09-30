@@ -45,14 +45,18 @@ Version & Date & Author & Comment \\
 
 
 %-------------------------------------------------------------------------------
-\section*{Introduction}
+\section{Introduction}
 
 This document describes the setup of a rate curve in ORE with daily forward rates that are computed as a spread over the
 daily forward rates of a reference yield curve. The main use case is to build an Ester curve from an Eonia curve using
 the (constant) Ester-Eonia spread defined by the ECB (-8.5 bp), see \cite{ECB_EsterSpread}, for asof dates where Eonia
 swaps are still liquid and no liquid Ester derivative market has developed yet.
 
-\section*{Derivation of an equivalent zero spread}
+\section{Derivation of an equivalent zero spread}
+
+In the following derivation we will assume that the daily forward rates are compounding on calendar days which is an
+approximation to reality where the comopounding is linear over holidays. The error introduced by this is analysed in
+section \ref{approx_error}.
 
 We write the discount factors of the reference curve in terms of simply compounded daily forwards $f_i$, i.e.
 
@@ -71,7 +75,7 @@ P^s(0,d) = \prod_{i=0}^{n-1} \frac{1}{1+\tau_i (f_i + s)}
 \end{equation}
 
 where $s$ denotes the spread. For an efficient implementation is it desirable to avoid the explicit computation of
-\ref{spread_df} and write $P^s(0,d)$ as a simple function of $P(0,d)$ and $s$. We have
+formula \ref{spread_df} and write $P^s(0,d)$ as a simple function of $P(0,d)$ and $s$. We have
 
 \begin{eqnarray*}
   \frac{1}{1+\tau_i (f_i + s)} = \frac{1+\tau_i f_i}{1+\tau_i (f_i + s)} \frac{1}{1+\tau_i f_i}
@@ -90,7 +94,7 @@ so that
   P^s(0,d) \approx \prod_{i=0}^{n-1} \frac{1}{1+\tau_i f_i} \frac{1}{1+\tau_i s} = P(0,d) \prod_{i=0}^{n-1} \frac{1}{1+\tau_i s}
 \end{equation}
 
-which reduces the calculation of the discount factor on the spreaded curve to the right factor of the RHS in
+which reduces the calculation of the discount factor on the spreaded curve to the right factor of the RHS in formula
 \ref{spread_df_approx} and the discount factor of the reference curve. The former factor can easily be computed in
 closed form if $\tau_i = \tau$ independent of $i$, which is the case for the important case Actual/360, but also for
 Actual/365 (Fixed).\footnote{For Actual/Actual (ISDA) the product can be split into products covering one year and
@@ -124,10 +128,10 @@ which yields
  s_c = \frac{\ln (1+\tau s)}{\tau'}
 \end{equation}
 
-\section*{Ester Spread Curve Setup}
+\section{Ester Spread Curve Setup}
 
 Assuming a rate curve day counter Actual/365 (Fixed) for the Eonia curve and a simply compounded Actual/360 spread
-$s = -0.0085$ between Eonia and Ester we compute $s_c = -0.0008618$ using \ref{cont_spread}. Given the Eonia curve as
+$s = -0.0085$ between Eonia and Ester we compute $s_c = -0.0008618$ using formula \ref{cont_spread}. Given the Eonia curve as
 
 \begin{minted}[fontsize=\footnotesize]{xml}
 <YieldCurve>
@@ -185,10 +189,10 @@ YYYYMMDD ZERO/YIELD_SPREAD/EUR/Ester_Eonia_Spread/A365/1Y -0.0008618
 YYYYMMDD ZERO/YIELD_SPREAD/EUR/Ester_Eonia_Spread/A365/2Y -0.0008618
 \end{minted}
 
-\section*{Approximation error analysis}
+\section{Approximation error analysis}\label{approx_error}
 
-We continue with an analysis of the approximation error in \ref{spread_df_approx}. For this we focus on the case where
-$\tau_i$ is independent of $i$. Write
+We continue with an analysis of the approximation error in formula \ref{spread_df_approx}. For this we focus on the case
+where $\tau_i$ is independent of $i$. Write
 
 \begin{equation}
   g(x) = \frac{1+\tau x}{1+\tau (x + s)}
@@ -247,9 +251,11 @@ which is bounded by
   \frac{1}{\tau} \ln \left( 1 + \frac{\tau^2 \max(|s_0|, |s_1|)}{1+\tau(f_0+s_0)} \max(|f_0|, |f_1|)  ( 1+\tau s_1 ) \right)
 \end{equation}
 
-The error bound for some choices of $f_0, f_1$ and $s_0, s_1$ is summarised in table \ref{sample_error_bounds}.
+The error bound for some choices of $f_0, f_1$ and $s_0, s_1$ is summarised in table \ref{sample_error_bounds}. In the
+Ester use case the error is bounded by around $0.01$ basis points.
 
 \begin{table}[!htbp]
+  \centering
   \begin{tabular}{l | l | r}
     $[f_0, f_1]$ & $[s_0, s_1]$ & max error (bp) \\ \hline
     $[-0.1, 0.1]$ & $[-0.1, 0.1]$ &  0.278 \\
@@ -260,6 +266,30 @@ The error bound for some choices of $f_0, f_1$ and $s_0, s_1$ is summarised in t
   \caption{Error bounds for the zero rate depending on prescribed ranges for the daily forwards and the spread.}
   \label{sample_error_bounds}
 \end{table}
+
+There is another source of approximation error introduced by the assumption that the daily compounding takes place on
+each calendar day while in reality the compounding is linear over holidays, which are typically the 3 day periods over
+weekends. The effective error introduced by this for the daily fixings on Fridays are displayed for some rate levels in
+table \ref{sample_error_weekends}. Notice that they should be weighted by $1/5$ since they only occur on $1$ out of $5$
+days. Also notice that since we use the {\em exact} discount factor in our approximation for $P^s$ in formula
+\ref{spread_df_approx} the error only applies to the spread part of the forward rate. In any case the error lies in the
+same order of magnitude as the error listed in table \ref{sample_error_bounds}.
+
+\begin{table}[!htbp]
+  \centering
+  \begin{tabular}{l | r}
+    $f$ & error (bp) \\ \hline
+    -0.1 & 0.278 \\
+    -0.05 & 0.069 \\
+    -0.0085 & 0.002 \\
+    0.05 & 0.069 \\
+    0.1 & 0.278 \\
+  \end{tabular}
+  \caption{Error bounds for daily forwards originating from linear vs. daily compounding over weekends.}
+  \label{sample_error_weekends}
+\end{table}
+
+\pagebreak
 
 \begin{thebibliography}{*}
 \bibitem{ECB_EsterSpread} \url{https://www.ecb.europa.eu/press/pr/date/2019/html/ecb.pr190531~a3788de8f8.en.html}
