@@ -47,9 +47,6 @@ public:
     /*! First leg holds the pay currency cashflows and the second leg
         holds the receive currency cashflows.
     */
-	//*******************************************************************************************
-	//DERISCOPE added payGearing, recGearing
-	//*******************************************************************************************
     CrossCcyBasisSwap(Real payNominal, const Currency& payCurrency, const Schedule& paySchedule,
                       const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real payGearing, Real recNominal,
                       const Currency& recCurrency, const Schedule& recSchedule,
