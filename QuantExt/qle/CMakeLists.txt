@@ -160,7 +160,6 @@ termstructures/swaptionvolatilityconverter.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
-time/futureexpirycalculator.hpp
 time/yearcounter.cpp)
 
 # hpp files, this list is maintained manually
@@ -417,6 +416,7 @@ termstructures/yoyinflationoptionletvolstripper.hpp
 termstructures/yoyoptionletvolatilitysurface.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp
+time/futureexpirycalculator.hpp
 time/yearcounter.hpp
 version.hpp)
 
