@@ -1,0 +1,268 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{supertabular}
+\usepackage{hyperref}
+
+\usepackage{minted}
+\setminted{
+   frame=lines,
+   framesep=2mm
+}
+
+\addtolength{\textwidth}{0.8in}
+\addtolength{\oddsidemargin}{-.4in}
+\addtolength{\evensidemargin}{-.4in}
+\addtolength{\textheight}{1.6in}
+\addtolength{\topmargin}{-.8in}
+
+
+\begin{document}
+
+\title{Ester / Daily Spread Curve Setup in ORE}
+\date{\today}
+\maketitle
+
+\newpage
+
+%-------------------------------------------------------------------------------
+\section*{Document History}
+
+\begin{center} 
+\begin{supertabular}{|l|l|l|p{7cm}|}
+\hline
+Version & Date & Author & Comment \\ 
+\hline 
+0.1 & 30 September & Peter Caspers & initial version\\
+\hline
+\end{supertabular}
+\end{center}
+
+\vspace{3cm}
+
+\newpage
+%\tableofcontents
+%\newpage
+
+
+%-------------------------------------------------------------------------------
+\section*{Introduction}
+
+This document describes the setup of a rate curve in ORE with daily forward rates that are computed as a spread over the
+daily forward rates of a reference yield curve. The main use case is to build an Ester curve from an Eonia curve using
+the (constant) Ester-Eonia spread defined by the ECB (-8.5 bp), see \cite{ECB_EsterSpread}, for asof dates where Eonia
+swaps are still liquid and no liquid Ester derivative market has developed yet.
+
+\section*{Derivation of an equivalent zero spread}
+
+We write the discount factors of the reference curve in terms of simply compounded daily forwards $f_i$, i.e.
+
+\begin{equation}
+P(0,d) = \prod_{i=0}^{n-1} \frac{1}{1+\tau_i f_i}
+\end{equation}
+
+where $d$ is a future date, $i$ is the number of calendar days between the asof date and $d$ and $\tau_i$ is the year
+fraction between $d$ and the next calendar day. A typical choice for the day count convnention is Actual/360 in which
+case $\tau_i = \tau = 1 / 360$ is independent of $i$. The corresponding discount factor on the spreaded curve can be
+written as
+
+\begin{equation}
+\label{spread_df}
+P^s(0,d) = \prod_{i=0}^{n-1} \frac{1}{1+\tau_i (f_i + s)}
+\end{equation}
+
+where $s$ denotes the spread. For an efficient implementation is it desirable to avoid the explicit computation of
+\ref{spread_df} and write $P^s(0,d)$ as a simple function of $P(0,d)$ and $s$. We have
+
+\begin{eqnarray*}
+  \frac{1}{1+\tau_i (f_i + s)} = \frac{1+\tau_i f_i}{1+\tau_i (f_i + s)} \frac{1}{1+\tau_i f_i}
+\end{eqnarray*}
+
+A first order approximation of the first factor around $f_i=0$ is given by
+
+\begin{eqnarray*}
+  \frac{1+\tau_i f_i}{1+\tau_i (f_i + s)} \approx \frac{1}{1+\tau_i s}
+\end{eqnarray*}
+
+so that
+
+\begin{equation}
+ \label{spread_df_approx}
+  P^s(0,d) \approx \prod_{i=0}^{n-1} \frac{1}{1+\tau_i f_i} \frac{1}{1+\tau_i s} = P(0,d) \prod_{i=0}^{n-1} \frac{1}{1+\tau_i s}
+\end{equation}
+
+which reduces the calculation of the discount factor on the spreaded curve to the right factor of the RHS in
+\ref{spread_df_approx} and the discount factor of the reference curve. The former factor can easily be computed in
+closed form if $\tau_i = \tau$ independent of $i$, which is the case for the important case Actual/360, but also for
+Actual/365 (Fixed).\footnote{For Actual/Actual (ISDA) the product can be split into products covering one year and
+  within each year $\tau_i$ is constant. For other day counters the product can be evaluated explicitly or one can
+  approximate $\tau_i \approx T / n$ where $T$ is the year fraction between the asof date and T.}
+
+Assuming $\tau_i = \tau$ independent of $i$ we have
+
+\begin{equation}
+  P^s(0,d) \approx P(0,d) \left( \frac{1}{1+\tau s} \right)^n
+\end{equation}
+
+Now assume that the time on the reference curve is measured using a day count convention that yields daily year
+fractions $\tau'_i = \tau'$ independent of $i$ but possibly different from the day count convention associated to the
+daily forward rate above. A typical choice for rate curve day counter is Actual/365 (Fixed). The number $n$ of calendar
+dates between the asof date and $d$ is then given by $n = t / \tau'$, so that
+
+\begin{equation}
+  P^s(0,t) \approx P(0,t) \left( \frac{1}{1+\tau s} \right)^{t / \tau'}
+\end{equation}
+
+From this we can easily back out a continuously compounded spread $s_c$ w.r.t. the curve day counter by equating
+
+\begin{equation}
+  P(0,t) \left( \frac{1}{1+\tau s} \right)^{t / \tau'} = P(0,t) e^{-s_c t} 
+\end{equation}
+
+which yields
+
+\begin{equation}\label{cont_spread}
+ s_c = \frac{\ln (1+\tau s)}{\tau'}
+\end{equation}
+
+\section*{Ester Spread Curve Setup}
+
+Assuming a rate curve day counter Actual/365 (Fixed) for the Eonia curve and a simply compounded Actual/360 spread
+$s = -0.0085$ between Eonia and Ester we compute $s_c = -0.0008618$ using \ref{cont_spread}. Given the Eonia curve as
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<YieldCurve>
+  <CurveId>EUR-EONIA</CurveId>
+  <CurveDescription>EUR curve bootstrapped from OIS swap rates</CurveDescription>
+  <Currency>EUR</Currency>
+  ...
+  <YieldCurveDayCounter>A365</YieldCurveDayCounter>
+</YieldCurve>
+\end{minted}
+
+We can therefore setup the Ester curve in ORE as
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<YieldCurve>
+  <CurveId>EUR-Ester</CurveId>
+  <CurveDescription>Ester curve as spread over Eonia</CurveDescription>
+  <Currency>EUR</Currency>
+  <DiscountCurve/>
+  <Segments>
+    <ZeroSpread>
+      <Type>Zero Spread</Type>
+      <Quotes>
+        <Quote>ZERO/YIELD_SPREAD/EUR/Ester_Eonia_Spread/A365/1Y</Quote>
+        <Quote>ZERO/YIELD_SPREAD/EUR/Ester_Eonia_Spread/A365/2Y</Quote>
+      </Quotes>
+      <Conventions>EUR-ZERO-TENOR-BASED</Conventions>
+      <ReferenceCurve>EUR-EONIA</ReferenceCurve>
+    </ZeroSpread>
+  </Segments>
+</YieldCurve>
+\end{minted}
+
+with conventions
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Zero>
+  <Id>EUR-ZERO-TENOR-BASED</Id>
+  <TenorBased>true</TenorBased>
+  <DayCounter>A365</DayCounter>
+  <Compounding>Continuous</Compounding>
+  <CompoundingFrequency>Daily</CompoundingFrequency>
+  <TenorCalendar>TARGET</TenorCalendar>
+  <SpotLag>2</SpotLag>
+  <SpotCalendar>TARGET</SpotCalendar>
+  <RollConvention>Following</RollConvention>
+  <EOM>false</EOM>
+</Zero>
+\end{minted}
+
+and (fixed) market data
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+YYYYMMDD ZERO/YIELD_SPREAD/EUR/Ester_Eonia_Spread/A365/1Y -0.0008618
+YYYYMMDD ZERO/YIELD_SPREAD/EUR/Ester_Eonia_Spread/A365/2Y -0.0008618
+\end{minted}
+
+\section*{Approximation error analysis}
+
+We continue with an analysis of the approximation error in \ref{spread_df_approx}. For this we focus on the case where
+$\tau_i$ is independent of $i$. Write
+
+\begin{equation}
+  g(x) = \frac{1+\tau x}{1+\tau (x + s)}
+\end{equation}
+
+Expanding $g$ around $x=0$ to the first order using a Langrange error term we get
+
+\begin{equation}
+  g(x) = g(0) + g'(\xi) x
+\end{equation}
+
+with $\xi$ between $0$ and $x$. We have
+
+\begin{equation}
+  g'(x) = \frac{\tau^2s}{(1+\tau(x+s))^2}
+\end{equation}
+
+To bound the approximation error $\alpha := g(x) - g(0)$ we assume that the the forward rate $x$ lies in $[f_0, f_1]$
+and $s$ lies in $[s_0, s_1]$, such that $1+\tau f_0 + s_0) > 0$. The latter restriction is of no practical relevance of
+course.
+
+The approximation error is then bounded by
+
+\begin{equation}
+  | \alpha | =| g(x) - g(0) | \leq \frac{\tau^2 \max(|s_0|, |s_1|)}{1+\tau(f_0+s_0)} \max(|f_0|, |f_1|)
+\end{equation}
+
+If $r(d)$ is the continuous compounded zero rate for a date $d$ we have
+
+\begin{equation}
+ r(d) = - \frac{\ln P(0,d)}{t}
+\end{equation}
+
+with $t$ the yearfraction between the asof date and $d$ using the day count convention used to compute $\tau$. We have
+
+\begin{equation}
+P^s(0,d) = P(0,d) \prod_{i=0}^{n-1} (g(0) + \alpha) = P(0,d) \prod_{i=0}^{n-1} g(0) \left( 1 + \frac{\alpha}{g(0)} \right)
+\end{equation}
+
+Since $P(0,d) \prod_{i=0}^{n-1} g(0)$ is our approximation for $P^s(0,d)$, the approxaimation error in the zero rate
+$r(d)$ is
+
+\begin{equation}
+-\frac{\ln \prod_{i=0}^{n-1}  \left( 1 + \frac{\alpha}{g(0)} \right)}{t}
+\end{equation}
+
+and since $t = n \tau$ and $g(0) = 1 / ( 1 + \tau s )$
+
+\begin{equation}
+ -\frac{ \ln ( 1 + \alpha ( 1+\tau s ))} { \tau }
+\end{equation}
+
+which is bounded by
+
+\begin{equation}\label{error_bound}
+  \frac{1}{\tau} \ln \left( 1 + \frac{\tau^2 \max(|s_0|, |s_1|)}{1+\tau(f_0+s_0)} \max(|f_0|, |f_1|)  ( 1+\tau s_1 ) \right)
+\end{equation}
+
+The error bound for some choices of $f_0, f_1$ and $s_0, s_1$ is summarised in table \ref{sample_error_bounds}.
+
+\begin{table}[!htbp]
+  \begin{tabular}{l | l | r}
+    $[f_0, f_1]$ & $[s_0, s_1]$ & max error (bp) \\ \hline
+    $[-0.1, 0.1]$ & $[-0.1, 0.1]$ &  0.278 \\
+    $[-0.1, 0.1]$ & $[-0.01, 0.01]$ &  0.028 \\
+    $[-0.05, 0.05]$ & $[-0.01, 0.01]$ &  0.014 \\
+    $[-0.05, 0.05]$ & $[-0.0085, -0.0085]$ &  0.012 \\
+  \end{tabular}
+  \caption{Error bounds for the zero rate depending on prescribed ranges for the daily forwards and the spread.}
+  \label{sample_error_bounds}
+\end{table}
+
+\begin{thebibliography}{*}
+\bibitem{ECB_EsterSpread} \url{https://www.ecb.europa.eu/press/pr/date/2019/html/ecb.pr190531~a3788de8f8.en.html}
+\end{thebibliography}
+  
+\end{document}
