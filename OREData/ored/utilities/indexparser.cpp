@@ -50,6 +50,7 @@
 #include <qle/indexes/ibor/demlibor.hpp>
 #include <qle/indexes/ibor/dkkcibor.hpp>
 #include <qle/indexes/ibor/dkkois.hpp>
+#include <qle/indexes/ibor/ester.hpp>
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
 #include <qle/indexes/ibor/idridrfix.hpp>
@@ -72,6 +73,7 @@
 #include <qle/indexes/ibor/sekstibor.hpp>
 #include <qle/indexes/ibor/sgdsibor.hpp>
 #include <qle/indexes/ibor/sgdsor.hpp>
+#include <qle/indexes/ibor/sofr.hpp>
 #include <qle/indexes/ibor/skkbribor.hpp>
 #include <qle/indexes/ibor/thbbibor.hpp>
 #include <qle/indexes/ibor/tonar.hpp>
@@ -209,11 +211,13 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     // Map from our _unique internal name_ to an overnight index
     static map<string, boost::shared_ptr<OvernightIndex>> onIndices = {
         { "EUR-EONIA", boost::make_shared<Eonia>() },
+        { "EUR-ESTER", boost::make_shared<Ester>() },
         { "GBP-SONIA", boost::make_shared<Sonia>() },
         { "JPY-TONAR", boost::make_shared<Tonar>() },
         { "CHF-TOIS", boost::make_shared<CHFTois>() },
         { "CHF-SARON", boost::make_shared<CHFSaron>() },
         { "USD-FedFunds", boost::make_shared<FedFunds>() },
+        { "USD-SOFR", boost::make_shared<Sofr>() },
         { "USD-Prime", boost::make_shared<PrimeIndex>() },
         { "AUD-AONIA", boost::make_shared<Aonia>() },
         { "CAD-CORRA", boost::make_shared<CORRA>() },

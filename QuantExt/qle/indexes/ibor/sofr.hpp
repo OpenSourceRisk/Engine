@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2018 Quaternion Risk Management Ltd
+ Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,27 +16,22 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file primeindex.hpp
-    \brief USD-Prime index
-    \ingroup indexes
+/*! \file sofr.hpp
+    \brief %SOFR index, straight copy from QuantLib 1.16
 */
 
-#ifndef quantext_primeindex_hpp
-#define quantext_primeindex_hpp
+#ifndef quantext_sofr_hpp
+#define quantext_sofr_hpp
 
-#include <ql/currencies/america.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <ql/time/calendars/unitedstates.hpp>
-#include <ql/time/daycounters/actual360.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
-//! USD-Prime index
-
-class PrimeIndex : public QuantLib::OvernightIndex {
+//! %Sofr (Secured Overnight Financing Rate) index.
+class Sofr : public OvernightIndex {
 public:
-    explicit PrimeIndex(const QuantLib::Handle<YieldTermStructure>& h = QuantLib::Handle<YieldTermStructure>());
+    explicit Sofr(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
 };
 
 } // namespace QuantExt

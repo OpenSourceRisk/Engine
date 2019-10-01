@@ -780,6 +780,12 @@
     <ClInclude Include="qle\instruments\rebatedexercise.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\ester.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\sofr.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1326,6 +1332,12 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\rebatedexercise.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\ibor\ester.cpp">
+      <Filter>indexes\ibor</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\ibor\sofr.cpp">
+      <Filter>indexes\ibor</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
