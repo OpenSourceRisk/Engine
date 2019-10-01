@@ -20,6 +20,8 @@
 #include <boost/test/unit_test.hpp>
 #include <ql/currency.hpp>
 #include <ql/index.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/calendars/unitedstates.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/indexes/ibor/chfsaron.hpp>
@@ -31,6 +33,7 @@
 #include <qle/indexes/ibor/demlibor.hpp>
 #include <qle/indexes/ibor/dkkcibor.hpp>
 #include <qle/indexes/ibor/dkkois.hpp>
+#include <qle/indexes/ibor/ester.hpp>
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
 #include <qle/indexes/ibor/idridrfix.hpp>
@@ -51,6 +54,7 @@
 #include <qle/indexes/ibor/sgdsibor.hpp>
 #include <qle/indexes/ibor/sgdsor.hpp>
 #include <qle/indexes/ibor/skkbribor.hpp>
+#include <qle/indexes/ibor/sofr.hpp>
 #include <qle/indexes/ibor/thbbibor.hpp>
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
@@ -106,7 +110,10 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
                            { KRWCd(pd), "KRW-CD", SouthKorea(SouthKorea::Settlement).name(), KRWCurrency().name() },
                            { KRWKoribor(pd), "KRW-KORIBOR", SouthKorea(SouthKorea::Settlement).name(), KRWCurrency().name() },
                            { MYRKlibor(pd), "MYR-KLIBOR", Malaysia().name(), MYRCurrency().name() },
-                           { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() } };
+                           { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() },
+                           { Ester(), "Ester", TARGET().name(), EURCurrency().name() },
+                           { Sofr(), "SOFR", UnitedStates(UnitedStates::GovernmentBond).name(), USDCurrency().name() },
+    };
 
     Size size = sizeof(data) / sizeof(data[0]);
 
