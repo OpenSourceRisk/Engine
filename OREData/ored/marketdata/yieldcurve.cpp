@@ -41,6 +41,7 @@
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
+#include <qle/termstructures/iterativebootstrap.hpp>
 
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -250,8 +251,12 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
                                                                                         zeroDayCounter_, accuracy_));
             break;
         case InterpolationMethod::LogLinear:
-            yieldts.reset(new PiecewiseYieldCurve<QuantLib::Discount, QuantLib::LogLinear>(asofDate_, instruments,
-                                                                                           zeroDayCounter_, accuracy_));
+            // See comment here: https://github.com/lballabio/QuantLib/pull/679#issuecomment-525208897
+            // to explain the typedefs. Waiting on a pull request from QuantLib here.
+            typedef PiecewiseYieldCurve<Discount, LogLinear, QuantExt::IterativeBootstrap> my_curve;
+            typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy_,
+                LogLinear(), QuantExt::IterativeBootstrap<my_curve>(accuracy_, false, true, 5));
             break;
         case InterpolationMethod::NaturalCubic:
             yieldts.reset(new PiecewiseYieldCurve<QuantLib::Discount, Cubic>(

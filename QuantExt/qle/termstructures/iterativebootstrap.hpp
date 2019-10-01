@@ -51,12 +51,18 @@ public:
                                     result
         \param dontThrowUsePrevious If \p dontThrow is set to \c true, this determines what value to use if the 
                                     bootstrap fails on a pillar. If \p dontThrowUsePrevious is set to \c true, use 
-                                    the previous pillar's value else use the min value as defined in the Traits. 
+                                    the previous pillar's value else use the min value as defined in the Traits.
+        \param maxAttempts          Number of attempts on each iteration. A number greater than implies retries.
+        \param maxFactor            Factor for max value retry on each iteration if there is a failure.
+        \param minFactor            Factor for min value retry on each iteration if there is a failure.
     */
     IterativeBootstrap(
         QuantLib::Real globalAccuracy = 1e-10,
         bool dontThrow = false,
-        bool dontThrowUsePrevious = true);
+        bool dontThrowUsePrevious = true,
+        QuantLib::Size maxAttempts = 1,
+        QuantLib::Real maxFactor = 2.0,
+        QuantLib::Real minFactor = 2.0);
     
     void setup(Curve* ts);
     void calculate() const;
@@ -73,13 +79,18 @@ private:
     QuantLib::Real globalAccuracy_;
     bool dontThrow_;
     bool dontThrowUsePrevious_;
+    QuantLib::Size maxAttempts_;
+    QuantLib::Real maxFactor_;
+    QuantLib::Real minFactor_;
 };
 
 
 template <class Curve>
-IterativeBootstrap<Curve>::IterativeBootstrap(QuantLib::Real globalAccuracy, bool dontThrow, bool dontThrowUsePrevious)
+IterativeBootstrap<Curve>::IterativeBootstrap(QuantLib::Real globalAccuracy, bool dontThrow, bool dontThrowUsePrevious,
+    QuantLib::Size maxAttempts, QuantLib::Real maxFactor, QuantLib::Real minFactor)
     : ts_(0), initialized_(false), validCurve_(false), loopRequired_(Interpolator::global), 
-      globalAccuracy_(globalAccuracy), dontThrow_(dontThrow), dontThrowUsePrevious_(dontThrowUsePrevious){}
+      globalAccuracy_(globalAccuracy), dontThrow_(dontThrow), dontThrowUsePrevious_(dontThrowUsePrevious),
+      maxAttempts_(maxAttempts), maxFactor_(maxFactor), minFactor_(minFactor) {}
 
 template <class Curve>
 void IterativeBootstrap<Curve>::setup(Curve* ts) {
@@ -198,18 +209,32 @@ void IterativeBootstrap<Curve>::calculate() const {
     for (QuantLib::Size iteration = 0; ; ++iteration) {
         previousData_ = ts_->data_;
 
+        std::vector<QuantLib::Real> minValues(alive_, QuantLib::Null<QuantLib::Real>());
+        std::vector<QuantLib::Real> maxValues(alive_, QuantLib::Null<QuantLib::Real>());
+        std::vector<QuantLib::Size> attempts(alive_, 1);
+
         for (QuantLib::Size i = 1; i <= alive_; ++i) {
 
             // bracket root and calculate guess
-            QuantLib::Real min = Traits::minValueAfter(i, ts_, validData, firstAliveHelper_);
-            QuantLib::Real max = Traits::maxValueAfter(i, ts_, validData, firstAliveHelper_);
+            if (minValues[i - 1] == QuantLib::Null<QuantLib::Real>()) {
+                minValues[i - 1] = Traits::minValueAfter(i, ts_, validData, firstAliveHelper_);
+            } else {
+                minValues[i - 1] = minValues[i - 1] < 0.0 ? 
+                    minFactor_ * minValues[i - 1] : minValues[i - 1] / minFactor_;
+            }
+            if (maxValues[i - 1] == QuantLib::Null<QuantLib::Real>()) {
+                maxValues[i - 1] = Traits::maxValueAfter(i, ts_, validData, firstAliveHelper_);
+            } else {
+                maxValues[i - 1] = maxValues[i - 1] > 0.0 ?
+                    maxFactor_ * maxValues[i - 1] : maxValues[i - 1] / maxFactor_;
+            }
             QuantLib::Real guess = Traits::guess(i, ts_, validData, firstAliveHelper_);
             
             // adjust guess if needed
-            if (guess>=max)
-                guess = max - (max-min)/5.0;
-            else if (guess<=min)
-                guess = min + (max-min)/5.0;
+            if (guess >= maxValues[i - 1])
+                guess = maxValues[i - 1] - (maxValues[i - 1] - minValues[i - 1]) / 5.0;
+            else if (guess <= minValues[i - 1])
+                guess = minValues[i - 1] + (maxValues[i - 1] - minValues[i - 1]) / 5.0;
 
             // extend interpolation if needed
             if (!validData) {
@@ -231,9 +256,9 @@ void IterativeBootstrap<Curve>::calculate() const {
 
             try {
                 if (validData)
-                    solver_.solve(*errors_[i], accuracy, guess, min, max);
+                    solver_.solve(*errors_[i], accuracy, guess, minValues[i - 1], maxValues[i - 1]);
                 else
-                    firstSolver_.solve(*errors_[i], accuracy,guess,min,max);
+                    firstSolver_.solve(*errors_[i], accuracy, guess, minValues[i - 1], maxValues[i - 1]);
             } catch (std::exception &e) {
                 if (validCurve_) {
                     // the previous curve state might have been a
@@ -247,11 +272,19 @@ void IterativeBootstrap<Curve>::calculate() const {
                     return;
                 }
 
+                // If we have more attempts left on this iteration, try again. Note that the max and min 
+                // bounds will be widened on the retry.
+                if (attempts[i-1] < maxAttempts_) {
+                    attempts[i - 1]++;
+                    i--;
+                    continue;
+                }
+
                 if (dontThrow_) {
                     if (dontThrowUsePrevious_) {
                         ts_->data_[i] = ts_->data_[i - 1];
                     } else {
-                        ts_->data_[i] = min;
+                        ts_->data_[i] = minValues[i - 1];
                     }
                 } else {
                     QL_FAIL(QuantLib::io::ordinal(iteration + 1) << " iteration: failed "
