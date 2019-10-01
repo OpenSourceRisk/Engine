@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2018 Quaternion Risk Management Ltd
+ Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,29 +16,24 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file primeindex.hpp
-    \brief USD-Prime index
-    \ingroup indexes
-*/
+#include <ored/portfolio/legdatafactory.hpp>
 
-#ifndef quantext_primeindex_hpp
-#define quantext_primeindex_hpp
+using std::string;
+using std::function;
 
-#include <ql/currencies/america.hpp>
-#include <ql/indexes/iborindex.hpp>
-#include <ql/time/calendars/unitedstates.hpp>
-#include <ql/time/daycounters/actual360.hpp>
+namespace ore {
+namespace data {
 
-namespace QuantExt {
-using namespace QuantLib;
+boost::shared_ptr<LegAdditionalData> LegDataFactory::build(const string& legType) {
+    auto it = map_.find(legType);
+    if (it == map_.end())
+        return nullptr;
+    return it->second();
+}
 
-//! USD-Prime index
+void LegDataFactory::addBuilder(const string& legType, function<boost::shared_ptr<LegAdditionalData>()> builder) {
+    map_[legType] = builder;
+}
 
-class PrimeIndex : public QuantLib::OvernightIndex {
-public:
-    explicit PrimeIndex(const QuantLib::Handle<YieldTermStructure>& h = QuantLib::Handle<YieldTermStructure>());
-};
-
-} // namespace QuantExt
-
-#endif
+}
+}

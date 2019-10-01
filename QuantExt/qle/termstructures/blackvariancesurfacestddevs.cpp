@@ -38,7 +38,7 @@ BlackVarianceSurfaceStdDevs::BlackVarianceSurfaceStdDevs(
     QL_REQUIRE(it != stdDevs.end(), "atm D is required."); // this might fail
     atmVariances_.push_back(Real(0.0));
     atmTimes_.push_back(0.0);
-    int atmIndex = distance(stdDevs.begin(), it);
+    Size atmIndex = distance(stdDevs.begin(), it);
     for (Size i = 0; i < times.size(); i++) {
         atmVariances_.push_back(blackVolMatrix[atmIndex][i]->value() * blackVolMatrix[atmIndex][i]->value() * times[i]);
         atmTimes_.push_back(times[i]);

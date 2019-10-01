@@ -188,6 +188,16 @@ QuantLib::SobolBrownianGenerator::Ordering parseSobolBrownianGeneratorOrdering(c
 */
 QuantLib::SobolRsg::DirectionIntegers parseSobolRsgDirectionIntegers(const std::string& s);
 
+/*! Convert text to QuantLib::Weekday
+    \ingroup utilities
+*/
+QuantLib::Weekday parseWeekday(const std::string& s);
+
+/*! Convert text to QuantLib::Month
+    \ingroup utilities
+*/
+QuantLib::Month parseMonth(const std::string& s);
+
 //! Convert comma separated list of values to vector of values
 /*!
 \ingroup utilities
