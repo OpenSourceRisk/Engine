@@ -370,7 +370,7 @@
         <xs:element type="xs:boolean" name="NotionalReset" minOccurs="0" maxOccurs="1"/>
         <xs:element type="scheduleData" name="ValuationSchedule" minOccurs="0" maxOccurs="1" />
         <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1" />
-		<xs:element name="FXTerms" minOccurs="0" maxOccurs="1">
+        <xs:element name="FXTerms" minOccurs="0" maxOccurs="1">
           <xs:complexType>
             <xs:sequence>            
               <xs:element type="xs:string" name="EquityCurrency" minOccurs="0" maxOccurs="1"/>
@@ -689,8 +689,9 @@
 
   <xs:complexType name="creditDefaultSwapData">
     <xs:all>
-      <xs:element type="xs:string" name="IssuerId"/>
-      <xs:element type="xs:string" name="CreditCurveId"/>
+      <xs:element type="xs:string" name="IssuerId" minOccurs="0"/>
+      <xs:element ref="creditCurveIdType"/>
+      <xs:element type="xs:string" name="ReferenceObligation" minOccurs="0"/>
       <xs:element type="bool" name="SettlesAccrual" minOccurs="0"/>
       <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0"/>
       <xs:element type="date" name="ProtectionStart" minOccurs="0"/>
@@ -700,6 +701,19 @@
       <xs:element type="legData" name="LegData" maxOccurs="1" minOccurs="1"/>
     </xs:all>
   </xs:complexType>
+
+  <xs:element name="creditCurveIdType" abstract="true"/>
+  <xs:element type="xs:string" name="CreditCurveId" substitutionGroup="creditCurveIdType"/>
+  <xs:element name="ReferenceInformation" substitutionGroup="creditCurveIdType">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element type="xs:string" name="ReferenceEntityId"/>
+        <xs:element type="cdsTierType" name="Tier"/>
+        <xs:element type="currencyCode" name="Currency"/>
+        <xs:element type="cdsDocClauseType" name="DocClause"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
 
   <xs:simpleType name="tradeActionType">
     <xs:restriction base="xs:string">
