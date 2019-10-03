@@ -71,8 +71,7 @@ public:
         const std::vector<std::string>& atmTenors = {},
         QuantLib::Real accuracy = 1.0e-12,
         QuantLib::Real globalAccuracy = 1.0e-10,
-        bool dontThrow = false,
-        bool dontThrowUsePrevious = true);
+        bool dontThrow = false);
 
     //! \name XMLSerializable interface
     //@{
@@ -102,7 +101,6 @@ public:
     QuantLib::Real accuracy() const { return accuracy_; }
     QuantLib::Real globalAccuracy() const { return globalAccuracy_; }
     bool dontThrow() const { return dontThrow_; }
-    bool dontThrowUsePrevious() const { return dontThrowUsePrevious_; }
     Type type() const { return type_; }
     //@}
 
@@ -130,7 +128,6 @@ private:
     QuantLib::Real accuracy_;
     QuantLib::Real globalAccuracy_;
     bool dontThrow_;
-    bool dontThrowUsePrevious_;
     Type type_;
     std::string extrapolation_;
     

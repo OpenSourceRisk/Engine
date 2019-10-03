@@ -76,8 +76,7 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const vector<string>& atmTenors,
     Real accuracy,
     Real globalAccuracy,
-    bool dontThrow,
-    bool dontThrowUsePrevious)
+    bool dontThrow)
     : CurveConfig(curveID, curveDescription),
       volatilityType_(volatilityType),
       extrapolate_(extrapolate),
@@ -98,8 +97,7 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
       atmTenors_(atmTenors),
       accuracy_(accuracy),
       globalAccuracy_(globalAccuracy),
-      dontThrow_(dontThrow),
-      dontThrowUsePrevious_(dontThrowUsePrevious) {
+      dontThrow_(dontThrow) {
     
     // Set extrapolation string. "Linear" just means extrapolation allowed and non-flat.
     extrapolation_ = !extrapolate_ ? "None" : (flatExtrapolation_ ? "Flat" : "Linear");
@@ -197,12 +195,6 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         dontThrow_ = parseBool(XMLUtils::getNodeValue(n));
     }
 
-    // If the bootstrap shouldn't throw, what fallback value to use: the previous value or min value
-    dontThrowUsePrevious_ = false;
-    if (XMLNode* n = XMLUtils::getChildNode(node, "DontThrowUsePrevious")) {
-        dontThrowUsePrevious_ = parseBool(XMLUtils::getNodeValue(n));
-    }
-
     // Set type_
     configureType();
 
@@ -238,7 +230,6 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Accuracy", accuracy_);
     XMLUtils::addChild(doc, node, "GlobalAccuracy", globalAccuracy_);
     XMLUtils::addChild(doc, node, "DontThrow", dontThrow_);
-    XMLUtils::addChild(doc, node, "DontThrowUsePrevious", dontThrowUsePrevious_);
 
     return node;
 }

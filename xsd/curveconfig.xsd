@@ -201,7 +201,6 @@
       <xs:element type="xs:decimal" name="Accuracy" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="GlobalAccuracy" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:boolean" name="DontThrow" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:boolean" name="DontThrowUsePrevious" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

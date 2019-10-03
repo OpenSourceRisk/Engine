@@ -49,9 +49,6 @@ public:
         \param globalAccuracy       Accuracy for the global bootstrap stopping criterion 
         \param dontThrow            If set to \c true, the bootstrap doesn't throw and returns a <em>fall back</em> 
                                     result
-        \param dontThrowUsePrevious If \p dontThrow is set to \c true, this determines what value to use if the 
-                                    bootstrap fails on a pillar. If \p dontThrowUsePrevious is set to \c true, use 
-                                    the previous pillar's value else use the min value as defined in the Traits.
         \param maxAttempts          Number of attempts on each iteration. A number greater than implies retries.
         \param maxFactor            Factor for max value retry on each iteration if there is a failure.
         \param minFactor            Factor for min value retry on each iteration if there is a failure.
@@ -59,7 +56,6 @@ public:
     IterativeBootstrap(
         QuantLib::Real globalAccuracy = 1e-10,
         bool dontThrow = false,
-        bool dontThrowUsePrevious = true,
         QuantLib::Size maxAttempts = 1,
         QuantLib::Real maxFactor = 2.0,
         QuantLib::Real minFactor = 2.0);
@@ -78,7 +74,6 @@ private:
     mutable std::vector<boost::shared_ptr<QuantLib::BootstrapError<Curve> > > errors_;
     QuantLib::Real globalAccuracy_;
     bool dontThrow_;
-    bool dontThrowUsePrevious_;
     QuantLib::Size maxAttempts_;
     QuantLib::Real maxFactor_;
     QuantLib::Real minFactor_;
@@ -86,10 +81,10 @@ private:
 
 
 template <class Curve>
-IterativeBootstrap<Curve>::IterativeBootstrap(QuantLib::Real globalAccuracy, bool dontThrow, bool dontThrowUsePrevious,
+IterativeBootstrap<Curve>::IterativeBootstrap(QuantLib::Real globalAccuracy, bool dontThrow,
     QuantLib::Size maxAttempts, QuantLib::Real maxFactor, QuantLib::Real minFactor)
     : ts_(0), initialized_(false), validCurve_(false), loopRequired_(Interpolator::global), 
-      globalAccuracy_(globalAccuracy), dontThrow_(dontThrow), dontThrowUsePrevious_(dontThrowUsePrevious),
+      globalAccuracy_(globalAccuracy), dontThrow_(dontThrow),
       maxAttempts_(maxAttempts), maxFactor_(maxFactor), minFactor_(minFactor) {}
 
 template <class Curve>
@@ -281,11 +276,8 @@ void IterativeBootstrap<Curve>::calculate() const {
                 }
 
                 if (dontThrow_) {
-                    if (dontThrowUsePrevious_) {
-                        ts_->data_[i] = ts_->data_[i - 1];
-                    } else {
-                        ts_->data_[i] = minValues[i - 1];
-                    }
+                    // Use previous value
+                    ts_->data_[i] = ts_->data_[i - 1];
                 } else {
                     QL_FAIL(QuantLib::io::ordinal(iteration + 1) << " iteration: failed "
                         "at " << QuantLib::io::ordinal(i) << " alive instrument, "
