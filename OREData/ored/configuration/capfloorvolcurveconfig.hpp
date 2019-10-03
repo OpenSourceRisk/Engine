@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/bootstrapconfig.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <ql/time/calendar.hpp>
@@ -69,9 +70,7 @@ public:
         const std::string& timeInterpolation = "LinearFlat",
         const std::string& strikeInterpolation = "LinearFlat",
         const std::vector<std::string>& atmTenors = {},
-        QuantLib::Real accuracy = 1.0e-12,
-        QuantLib::Real globalAccuracy = 1.0e-10,
-        bool dontThrow = false);
+        const BootstrapConfig& bootstrapConfig = BootstrapConfig());
 
     //! \name XMLSerializable interface
     //@{
@@ -98,9 +97,7 @@ public:
     const std::string& timeInterpolation() const { return timeInterpolation_; }
     const std::string& strikeInterpolation() const { return strikeInterpolation_; }
     const std::vector<std::string>& atmTenors() const { return atmTenors_; }
-    QuantLib::Real accuracy() const { return accuracy_; }
-    QuantLib::Real globalAccuracy() const { return globalAccuracy_; }
-    bool dontThrow() const { return dontThrow_; }
+    const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
     Type type() const { return type_; }
     //@}
 
@@ -125,9 +122,7 @@ private:
     std::string timeInterpolation_;
     std::string strikeInterpolation_;
     std::vector<std::string> atmTenors_;
-    QuantLib::Real accuracy_;
-    QuantLib::Real globalAccuracy_;
-    bool dontThrow_;
+    BootstrapConfig bootstrapConfig_;
     Type type_;
     std::string extrapolation_;
     
