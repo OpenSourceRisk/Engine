@@ -63,6 +63,7 @@ struct CommonVars : public qle::test::TopLevelFixture {
           bdc(Following),
           dayCounter(Actual365Fixed()),
           accuracy(1.0e-12),
+          globalAccuracy(1.0e-10),
           tolerance(1.0e-10) {
         
         // Reference date
@@ -83,6 +84,9 @@ struct CommonVars : public qle::test::TopLevelFixture {
 
     // Accuracy for optionlet stripping
     Real accuracy;
+
+    // Global accuracy for optionlet stripping
+    Real globalAccuracy;
 
     // Test tolerance for comparing the NPVs
     Real tolerance;
@@ -392,22 +396,30 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using Cubic interpolation with a moving reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<Cubic> >(
-                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
+                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
+                    flatFirstPeriod, accuracy, Cubic(), QuantExt::IterativeBootstrap<PiecewiseOptionletCurve<
+                    Cubic, QuantExt::IterativeBootstrap>::this_curve>(globalAccuracy)));
             } else {
                 BOOST_TEST_MESSAGE("Using Cubic interpolation with a fixed reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<Cubic> >(
-                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
+                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
+                    flatFirstPeriod, accuracy, Cubic(), QuantExt::IterativeBootstrap<PiecewiseOptionletCurve<
+                    Cubic, QuantExt::IterativeBootstrap>::this_curve>(globalAccuracy)));
             }
             break;
         case 4:
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a moving reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<CubicFlat> >(
-                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
+                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
+                    flatFirstPeriod, accuracy, CubicFlat(), QuantExt::IterativeBootstrap<PiecewiseOptionletCurve<
+                    CubicFlat, QuantExt::IterativeBootstrap>::this_curve>(globalAccuracy)));
             } else {
                 BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a fixed reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<CubicFlat> >(
-                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
+                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
+                    flatFirstPeriod, accuracy, CubicFlat(), QuantExt::IterativeBootstrap<PiecewiseOptionletCurve<
+                    CubicFlat, QuantExt::IterativeBootstrap>::this_curve>(globalAccuracy)));
             }
             break;
         default:
