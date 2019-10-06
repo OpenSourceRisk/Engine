@@ -199,7 +199,7 @@ Handle<OptionletVolatilityStructure> createOvs(VolatilityType volatilityType,
     boost::shared_ptr<QuantExt::OptionletStripper> pwos = boost::make_shared<PiecewiseOptionletStripper<TI> >(
         cfts, vars.iborIndex, vars.testYieldCurves.discountEonia, vars.accuracy, flatFirstPeriod, 
         volatilityType, displacement, ovType, 0.0, interpOnOptionlet, TI(), QuantExt::IterativeBootstrap<
-        PiecewiseOptionletStripper<TI, QuantExt::IterativeBootstrap>::optionlet_curve>(vars.globalAccuracy));
+        typename PiecewiseOptionletStripper<TI, QuantExt::IterativeBootstrap>::optionlet_curve>(vars.globalAccuracy));
 
     // If true, we overlay ATM volatilities
     vector<Handle<Quote> > atmVolquotes(vars.testVols.atmTenors.size());
