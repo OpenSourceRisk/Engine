@@ -66,6 +66,7 @@ struct CommonVars : public qle::test::TopLevelFixture {
           bdc(Following),
           dayCounter(Actual365Fixed()),
           accuracy(1.0e-12),
+          globalAccuracy(1.0e-10),
           tolerance(1.0e-10) {
         
         // Reference date
@@ -86,6 +87,9 @@ struct CommonVars : public qle::test::TopLevelFixture {
 
     // Accuracy for optionlet stripping
     Real accuracy;
+
+    // Global accuracy for optionlet stripping
+    Real globalAccuracy;
 
     // Test tolerance for comparing the NPVs
     Real tolerance;
@@ -194,7 +198,8 @@ Handle<OptionletVolatilityStructure> createOvs(VolatilityType volatilityType,
     VolatilityType ovType = Normal;
     boost::shared_ptr<QuantExt::OptionletStripper> pwos = boost::make_shared<PiecewiseOptionletStripper<TI> >(
         cfts, vars.iborIndex, vars.testYieldCurves.discountEonia, vars.accuracy, flatFirstPeriod, 
-        volatilityType, displacement, ovType, 0.0, interpOnOptionlet);
+        volatilityType, displacement, ovType, 0.0, interpOnOptionlet, TI(), QuantExt::IterativeBootstrap<
+        PiecewiseOptionletStripper<TI, QuantExt::IterativeBootstrap>::optionlet_curve>(vars.globalAccuracy));
 
     // If true, we overlay ATM volatilities
     vector<Handle<Quote> > atmVolquotes(vars.testVols.atmTenors.size());
