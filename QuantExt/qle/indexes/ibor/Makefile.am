@@ -5,7 +5,9 @@ noinst_LTLIBRARIES = libIborIndexes.la
 
 libIborIndexes_la_SOURCES = \
     brlcdi.cpp \
-    primeindex.cpp
+	ester.cpp \
+    primeindex.cpp \
+	sofr.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
@@ -15,6 +17,7 @@ this_include_HEADERS = \
 	corra.hpp \
 	czkpribor.hpp \
     dkkcibor.hpp \
+	ester.hpp \
     hkdhibor.hpp \
 	hufbubor.hpp \
 	idridrfix.hpp \
@@ -37,6 +40,7 @@ this_include_HEADERS = \
 	chfsaron.hpp \
 	dkkois.hpp \
 	seksior.hpp \
+	sofr.hpp \
 	thbbibor.hpp \
 	copibr.hpp \
 	clpcamara.hpp \

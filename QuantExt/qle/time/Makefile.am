@@ -4,7 +4,8 @@ AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
     all.hpp \
-    yearcounter.hpp
+    yearcounter.hpp \
+	futureexpirycalculator.hpp
 
 libTime_la_SOURCES = \
 	yearcounter.cpp

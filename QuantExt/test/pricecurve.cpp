@@ -411,27 +411,6 @@ BOOST_AUTO_TEST_CASE(testNegativeTimeRequestThrows) {
     BOOST_CHECK_THROW(priceCurve.price(today, td.extrapolate), QuantLib::Error);
 }
 
-BOOST_AUTO_TEST_CASE(testNegativePriceThrows) {
-
-    BOOST_TEST_MESSAGE("Test that attempting to return a negative price gives an error");
-
-    CommonData td;
-
-    // Look at the first test date
-    Date today = td.testDates[0];
-    Settings::instance().evaluationDate() = today;
-
-    // Replace the last quote with a quote that will give a negative extrapolated price
-    td.pQuotes[5]->setValue(1.0);
-
-    // Create the price curve
-    InterpolatedPriceCurve<Linear> priceCurve(td.curveTenors, td.quotes, td.curveDayCounter);
-
-    // Asking for extrapolated price should give an error
-    Date d = td.dates(0).back() + 1 * Years;
-    BOOST_CHECK_THROW(priceCurve.price(d, td.extrapolate), QuantLib::Error);
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -177,7 +177,9 @@ Handle<BlackVolTermStructure> MarketImpl::fxVol(const string& ccypair, const str
         if (it != fxVols_.end()) {
             Handle<BlackVolTermStructure> h(boost::make_shared<QuantExt::BlackInvertedVolTermStructure>(it->second));
             h->enableExtrapolation();
-            fxVols_[make_pair(configuration, ccypairInverted)] = h;
+            // we have found a surface for the inverted pair.
+            // so we can invert the surface and store that under the original pair.
+            fxVols_[make_pair(configuration, ccypair)] = h;
             return h;
         } else {
             if (configuration == Market::defaultConfiguration)
