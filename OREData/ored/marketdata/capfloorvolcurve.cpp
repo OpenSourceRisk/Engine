@@ -274,7 +274,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
         if (config.timeInterpolation() == "Linear") {
             optionletStripper = boost::make_shared<PiecewiseOptionletStripper<Linear>>(cftvs, iborIndex,
                 discountCurve, accuracy, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,
-                Linear(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<Linear,
+                Linear(), QuantExt::IterativeBootstrap<PiecewiseOptionletStripper<Linear,
                 QuantExt::IterativeBootstrap>::optionlet_curve>(globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
@@ -311,7 +311,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
         } else if (config.timeInterpolation() == "LinearFlat") {
             optionletStripper = boost::make_shared<PiecewiseOptionletStripper<LinearFlat>>(cftvs, iborIndex,
                 discountCurve, accuracy, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,
-                LinearFlat(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<LinearFlat,
+                LinearFlat(), QuantExt::IterativeBootstrap<PiecewiseOptionletStripper<LinearFlat,
                 QuantExt::IterativeBootstrap>::optionlet_curve>(globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
@@ -348,7 +348,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
         } else if (config.timeInterpolation() == "BackwardFlat") {
             optionletStripper = boost::make_shared<PiecewiseOptionletStripper<BackwardFlat>>(cftvs, iborIndex,
                 discountCurve, accuracy, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,
-                BackwardFlat(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<BackwardFlat,
+                BackwardFlat(), QuantExt::IterativeBootstrap<PiecewiseOptionletStripper<BackwardFlat,
                 QuantExt::IterativeBootstrap>::optionlet_curve>(globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
@@ -385,7 +385,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
         } else if (config.timeInterpolation() == "Cubic") {
             optionletStripper = boost::make_shared<PiecewiseOptionletStripper<Cubic>>(cftvs, iborIndex,
                 discountCurve, accuracy, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,
-                Cubic(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<Cubic,
+                Cubic(), QuantExt::IterativeBootstrap<PiecewiseOptionletStripper<Cubic,
                 QuantExt::IterativeBootstrap>::optionlet_curve>(globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
@@ -422,7 +422,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
         } else if (config.timeInterpolation() == "CubicFlat") {
             optionletStripper = boost::make_shared<PiecewiseOptionletStripper<CubicFlat>>(cftvs, iborIndex,
                 discountCurve, accuracy, flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt,
-                CubicFlat(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<CubicFlat,
+                CubicFlat(), QuantExt::IterativeBootstrap<PiecewiseOptionletStripper<CubicFlat,
                 QuantExt::IterativeBootstrap>::optionlet_curve>(globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
@@ -467,7 +467,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
             if (config.flatExtrapolation()) {
                 optionletStripper = boost::make_shared<PiecewiseOptionletStripper<CubicFlat>>(cftvs, iborIndex,
                     discountCurve, accuracy, flatFirstPeriod, volType, shift, optVolType, optDisplacement,
-                    onOpt, CubicFlat(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<CubicFlat,
+                    onOpt, CubicFlat(), QuantExt::IterativeBootstrap<PiecewiseOptionletStripper<CubicFlat,
                     QuantExt::IterativeBootstrap>::optionlet_curve>(globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<CubicFlat, CubicFlat>>(
@@ -478,7 +478,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
             } else {
                 optionletStripper = boost::make_shared<PiecewiseOptionletStripper<Cubic>>(cftvs, iborIndex,
                     discountCurve, accuracy, flatFirstPeriod, volType, shift, optVolType, optDisplacement,
-                    onOpt, Cubic(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<Cubic,
+                    onOpt, Cubic(), QuantExt::IterativeBootstrap<PiecewiseOptionletStripper<Cubic,
                     QuantExt::IterativeBootstrap>::optionlet_curve>(globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<Cubic, Cubic>>(
@@ -491,7 +491,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
             if (config.flatExtrapolation()) {
                 optionletStripper = boost::make_shared<PiecewiseOptionletStripper<LinearFlat>>(cftvs, iborIndex,
                     discountCurve, accuracy, flatFirstPeriod, volType, shift, optVolType, optDisplacement,
-                    onOpt, LinearFlat(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<LinearFlat,
+                    onOpt, LinearFlat(), QuantExt::IterativeBootstrap<PiecewiseOptionletStripper<LinearFlat,
                     QuantExt::IterativeBootstrap>::optionlet_curve>(globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<LinearFlat, LinearFlat>>(
@@ -502,7 +502,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
             } else {
                 optionletStripper = boost::make_shared<PiecewiseOptionletStripper<Linear>>(cftvs, iborIndex,
                     discountCurve, accuracy, flatFirstPeriod, volType,shift, optVolType, optDisplacement,
-                    onOpt, Linear(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<Linear,
+                    onOpt, Linear(), QuantExt::IterativeBootstrap<PiecewiseOptionletStripper<Linear,
                     QuantExt::IterativeBootstrap>::optionlet_curve>(globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<Linear, Linear>>(
