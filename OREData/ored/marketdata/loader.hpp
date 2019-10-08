@@ -87,6 +87,13 @@ public:
         static std::vector<Fixing> noFixings;
         return noFixings;
     }
+
+    //! add additional market datum
+    virtual void add(QuantLib::Date date, const string& name, QuantLib::Real value) = 0;
+    //! add additional fixing
+    virtual void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) = 0;
+    //! add additional dividend
+    virtual void addDividend(QuantLib::Date date, const string& name, QuantLib::Real value) = 0;
 };
 } // namespace data
 } // namespace ore

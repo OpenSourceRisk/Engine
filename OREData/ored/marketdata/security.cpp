@@ -33,11 +33,10 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
     try {
         const boost::shared_ptr<SecurityConfig>& config = curveConfigs.securityConfig(spec.securityID());
 
-        // get spread quote
+        // get spread quote, this may be specified but not existent in loader, because it is implied from
+        // a liquid price and added to the loader in a subsequent step
         string spreadQuote = config->spreadQuote();
-        if (spreadQuote != "") {
-            QL_REQUIRE(loader.has(spreadQuote, asof),
-                       "required spread quote " << spreadQuote << " not found for " << spec);
+        if (spreadQuote != "" && loader.has(spreadQuote, asof)) {
             boost::shared_ptr<SecuritySpreadQuote> q =
                 boost::dynamic_pointer_cast<SecuritySpreadQuote>(loader.get(spreadQuote, asof));
             QL_REQUIRE(q, "Failed to cast " << spreadQuote << " to SecuritySpreadQuote");
@@ -57,7 +56,8 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
 
         // get cpr quote
         string cprQuote = config->cprQuote();
-        if (cprQuote != "" && (loader.has(cprQuote, asof))) {
+        if (cprQuote != "") {
+            QL_REQUIRE(loader.has(cprQuote, asof), "required cpr quote " << cprQuote << " not found for " << spec);
             boost::shared_ptr<CPRQuote> q = boost::dynamic_pointer_cast<CPRQuote>(loader.get(cprQuote, asof));
             QL_REQUIRE(q, "Failed to cast " << cprQuote << " to CPRQuote");
             cpr_ = q->quote();
@@ -65,8 +65,11 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
 
         // get price quote
         string priceQuote = config->priceQuote();
-        if (priceQuote != "" && (loader.has(priceQuote, asof))) {
-            boost::shared_ptr<BondPriceQuote> q = boost::dynamic_pointer_cast<BondPriceQuote>(loader.get(priceQuote, asof));
+        if (priceQuote != "") {
+            QL_REQUIRE(loader.has(priceQuote, asof),
+                       "required price quote " << priceQuote << " not found for " << spec);
+            boost::shared_ptr<BondPriceQuote> q =
+                boost::dynamic_pointer_cast<BondPriceQuote>(loader.get(priceQuote, asof));
             QL_REQUIRE(q, "Failed to cast " << priceQuote << " to BondPriceQuote");
             price_ = q->quote();
         }

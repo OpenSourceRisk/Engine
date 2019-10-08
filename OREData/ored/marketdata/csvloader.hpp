@@ -25,6 +25,7 @@
 
 #include <map>
 #include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
 
 namespace ore {
 namespace data {
@@ -86,6 +87,24 @@ public:
     //! Load dividends
     const std::vector<Fixing>& loadDividends() const { return dividends_; }
     //@}
+
+    //! Add market datum
+    void add(QuantLib::Date date, const string& name, QuantLib::Real value) {
+        try {
+            data_[date].push_back(parseMarketDatum(date, name, value));
+            TLOG("Added MarketDatum " << data_[date].back()->name());
+        } catch (std::exception& e) {
+            WLOG("Failed to parse MarketDatum " << name << ": " << e.what());
+        }
+    }
+    //! add additional fixing
+    void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {
+        fixings_.emplace_back(Fixing(date, name, value));
+    }
+    //! add additional dividend
+    void addDividend(Date date, const string& name, Real value)  {
+        dividends_.emplace_back(Fixing(date, name, value));
+    }
 
 private:
     enum class DataType {
