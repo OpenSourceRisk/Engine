@@ -281,6 +281,9 @@ void IterativeBootstrap<Curve>::calculate() const {
                 if (dontThrow_) {
                     // Use previous value
                     ts_->data_[i] = ts_->data_[i - 1];
+                    // Remember to update the interpolation. If we don't and we are on the last "i", we will still 
+                    // have the last attempted value in the solver being used in ts_->interpolation_.
+                    ts_->interpolation_.update();
                 } else {
                     QL_FAIL(QuantLib::io::ordinal(iteration + 1) << " iteration: failed "
                         "at " << QuantLib::io::ordinal(i) << " alive instrument, "
