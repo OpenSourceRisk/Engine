@@ -30,13 +30,15 @@ BootstrapConfig::BootstrapConfig(
     bool dontThrow,
     Size maxAttempts,
     Real maxFactor,
-    Real minFactor)
+    Real minFactor,
+    Size dontThrowSteps)
     : accuracy_(accuracy),
       globalAccuracy_(globalAccuracy == Null<Real>() ? accuracy_ : globalAccuracy),
       dontThrow_(dontThrow),
       maxAttempts_(maxAttempts),
       maxFactor_(maxFactor),
-      minFactor_(minFactor) {}
+      minFactor_(minFactor),
+      dontThrowSteps_(dontThrowSteps) {}
 
 void BootstrapConfig::fromXML(XMLNode* node) {
     
@@ -75,6 +77,13 @@ void BootstrapConfig::fromXML(XMLNode* node) {
     if (XMLNode* n = XMLUtils::getChildNode(node, "MinFactor")) {
         minFactor_ = parseReal(XMLUtils::getNodeValue(n));
     }
+
+    dontThrowSteps_ = 10;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "DontThrowSteps")) {
+        Integer dontThrowSteps = parseInteger(XMLUtils::getNodeValue(n));
+        QL_REQUIRE(dontThrowSteps > 0, "DontThrowSteps (" << dontThrowSteps << ") must be a positive integer");
+        dontThrowSteps_ = static_cast<Size>(dontThrowSteps);
+    }
 }
 
 XMLNode* BootstrapConfig::toXML(XMLDocument& doc) {
@@ -86,6 +95,7 @@ XMLNode* BootstrapConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "MaxAttempts", static_cast<int>(maxAttempts_));
     XMLUtils::addChild(doc, node, "MaxFactor", maxFactor_);
     XMLUtils::addChild(doc, node, "MinFactor", minFactor_);
+    XMLUtils::addChild(doc, node, "DontThrowSteps", static_cast<int>(dontThrowSteps_));
 
     return node;
 }

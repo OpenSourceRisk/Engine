@@ -41,7 +41,8 @@ public:
         bool dontThrow = false,
         QuantLib::Size maxAttempts = 5,
         QuantLib::Real maxFactor = 2.0,
-        QuantLib::Real minFactor = 2.0);
+        QuantLib::Real minFactor = 2.0,
+        QuantLib::Size dontThrowSteps = 10);
 
     //! \name XMLSerializable interface
     //@{
@@ -57,6 +58,7 @@ public:
     QuantLib::Size maxAttempts() const { return maxAttempts_; }
     QuantLib::Real maxFactor() const { return maxFactor_; }
     QuantLib::Real minFactor() const { return minFactor_; }
+    QuantLib::Size dontThrowSteps() const { return dontThrowSteps_; }
     //@}
 
 private:
@@ -66,6 +68,7 @@ private:
     QuantLib::Size maxAttempts_;
     QuantLib::Real maxFactor_;
     QuantLib::Real minFactor_;
+    QuantLib::Size dontThrowSteps_;
 };
 
 }
