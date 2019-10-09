@@ -543,7 +543,7 @@ BOOST_FIXTURE_TEST_CASE(testAtmStrippingExceptions, CommonVars) {
     volQuotes[2]->setValue(2 * volQuotes[2]->value());
     BOOST_CHECK_THROW(ovCurve->volatility(fiveYears, 0.01, true), Error);
 
-    // Rebuild ovCurve with dontThrow set to true and using previous value
+    // Rebuild ovCurve with dontThrow set to true
     dontThrow = true;
     ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(settlementDays, cftvc, iborIndex,
         testYieldCurves.discountEonia, accuracy, true, type, displacement, curveVolatilityType, curveDisplacement,
@@ -553,7 +553,6 @@ BOOST_FIXTURE_TEST_CASE(testAtmStrippingExceptions, CommonVars) {
     // Check bootstrap passes and check the values.
     // - the 1Y optionlet volatility should not have been affected
     // - the 5Y optionlet volatility should have increased
-    // - the 8Y optionlet volatility is between time 6.5 (7Y cap) and 9.5 (10Y cap)
     Volatility testVol = 0.0;
     BOOST_CHECK_NO_THROW(testVol = ovCurve->volatility(oneYear, 0.01, true));
     BOOST_CHECK_SMALL(fabs(testVol - oneYearVol), tolerance);
@@ -561,8 +560,6 @@ BOOST_FIXTURE_TEST_CASE(testAtmStrippingExceptions, CommonVars) {
     BOOST_CHECK_NO_THROW(testVol = ovCurve->volatility(fiveYears, 0.01, true));
     BOOST_CHECK_GT(testVol, fiveYearVol);
     BOOST_TEST_MESSAGE("5Y vol after bump using previous: " << testVol);
-    BOOST_CHECK_SMALL(fabs(testVol - ovCurve->volatility(eightYears, 0.01, true)), tolerance);
-    BOOST_TEST_MESSAGE("8Y vol after bump using previous: " << ovCurve->volatility(eightYears, 0.01, true));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
