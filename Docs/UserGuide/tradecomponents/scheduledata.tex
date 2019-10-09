@@ -103,11 +103,13 @@ Allowable values and descriptions: See Table \ref{tab:rule} Rule. Defaults to \e
 
 Allowable values: \emph{True, False}. Defaults to \emph{False} if left blank or omitted. Must be set to \emph{False} or omitted if the date generation Rule is set to \emph{CDS} or \emph{CDS2015}.
 
-\item FirstDate [Optional]: Date for initial stub period.
+\item FirstDate [Optional]: Date for initial stub period. For date generation rules \emph{CDS} and \emph{CDS2015}, if given, this
+  overwrites the first date of the schedule that is otherwise built from IMM dates.
 
-Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. Incompatible with date generation Rule  \emph{CDS} and \emph{CDS2015}.
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
-\item LastDate [Optional]: Date for final stub period.
+\item LastDate [Optional]: Date for final stub period. For date generation rules \emph{CDS} and \emph{CDS2015}, if given, this
+  overwrites the last date of the schedule that is otherwise built from IMM dates.
 
 Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 \end{itemize}
