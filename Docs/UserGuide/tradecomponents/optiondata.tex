@@ -56,7 +56,7 @@ The meaning of Call and Put values depend on the asset class of the option, see 
       \bfseries{Asset Class and Trade Type}  & \bfseries{Call / Put Specifications} \\  \hline
 Equity/ Commodity Option & \emph{Call}: The right to buy the underlying equity/commodity at the strike price.
 \newline \emph{Put}: The right to sell the underlying equity/commodity at the strike price. \\  \hline
- IR Swaption, CallableSwap&  \emph{Call/Put} values are ignored, and the OptionType field is optional. Payer/Receiver swaption is determined in the Leg Data nodes of the underlying swap. \\ \hline
+ IR Swaption, CallableSwap, Commodity Swap&  \emph{Call/Put} values are ignored, and the OptionType field is optional. Payer/Receiver swaption is determined in the Leg Data nodes of the underlying swap. \\ \hline
 FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the trade data node. 
 \newline \emph{Put}: Bought and Sold currencies/amounts are switched compared to the trade data node.  \\ \hline
   \end{tabu}
@@ -67,9 +67,9 @@ FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined
 
 \item Style: The exercise style of the option. 
 
-  Allowable values: \emph{European} or \emph{American} or \emph{Bermudan}. Note that trade types Swaption and CallableSwap can have style
+  Allowable values: \emph{European} or \emph{American} or \emph{Bermudan}. Note that trade types IR Swaption and CallableSwap can have style
   \emph{European} or \emph{Bermudan}, but not \emph{American}.  FX and Equity options trade can have styles \emph{European}
-  or \emph{American}, but not \emph{Bermudan}. 
+  or \emph{American}, but not \emph{Bermudan}. Commodity Option, Commodity Swaption and Commodity Average Price Option must have style  \emph{European}. 
 
 \item NoticePeriod [Optional]: The notice period defining the date (relative to the exercise date) on which the exercise
   decision has to be taken. If not given the notice period defaults to 0D, i.e. the notice date is identical to the
