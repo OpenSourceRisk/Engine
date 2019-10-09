@@ -151,8 +151,12 @@ Schedule makeSchedule(const ScheduleRules& data) {
                    "got empty CDS or CDS2015 schedule, startDate = " << startDate << ", endDate = " << endDate);
         if (firstDate != Date())
             dates.front() = firstDate;
-        if (lastDate != Date())
-            dates.back() = lastDate;
+        if (lastDate != Date()) {
+            // insert last date and remove all dates > lastDate, if any are present
+            auto it = std::upper_bound(dates.begin(), dates.end(), lastDate - 1);
+            it = dates.insert(it, lastDate);
+            dates.erase(it + 1, dates.end());
+        }
         return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth);
     } else {
         return Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate, lastDate);
