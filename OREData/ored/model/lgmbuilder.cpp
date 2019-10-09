@@ -209,6 +209,8 @@ void LgmBuilder::buildSwaptionBasket() const {
     QL_REQUIRE(data_->optionExpiries().size() == data_->optionTerms().size(), "swaption vector size mismatch");
     QL_REQUIRE(data_->optionExpiries().size() == data_->optionStrikes().size(), "swaption vector size mismatch");
 
+    static constexpr Real minMarketValue = 1.0E-8; // minimum allowed market value of helper before switching to PriceError
+
     std::vector<Time> expiryTimes(data_->optionExpiries().size());
     std::vector<Time> maturityTimes(data_->optionTerms().size());
     swaptionBasket_.clear();
@@ -251,6 +253,7 @@ void LgmBuilder::buildSwaptionBasket() const {
                                                                   : shortSwapIndex_->iborIndex()->dayCounter();
         if (expiryDateBased && termDateBased) {
             vol = Handle<Quote>(boost::make_shared<SimpleQuote>(svts_->volatility(expiryDb, termT, strikeValue)));
+            std::cerr << "vol for " << expiryDb << " " << termT << " " << strikeValue << " = " << vol->value() << std::endl;
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryDb, termT) : 0.0;
             helper = boost::make_shared<SwaptionHelper>(expiryDb, termDb, vol, iborIndex, fixedLegTenor,
                                                         fixedDayCounter, floatDayCounter, yts, calibrationErrorType_,
@@ -258,6 +261,14 @@ void LgmBuilder::buildSwaptionBasket() const {
             LOG("Added Date / Date based SwaptionHelper " << data_->ccy() << " " << expiryDb << ", " << termDb << ", "
                                                           << strike << " : " << vol->value() << " "
                                                           << svts_->volatilityType());
+            if (std::abs(helper->marketValue()) < minMarketValue &&
+                (calibrationErrorType_ == BlackCalibrationHelper::RelativePriceError ||
+                 calibrationErrorType_ == BlackCalibrationHelper::ImpliedVolError)) {
+                WLOG("Set calibration error type to PriceError because the market value is close to zero (" << helper->marketValue() << ")");
+                helper = boost::make_shared<SwaptionHelper>(
+                    expiryDb, termDb, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter, yts,
+                    BlackCalibrationHelper::PriceError, strikeValue, 1.0, svts_->volatilityType(), shift);
+            }
         }
         if (expiryDateBased && !termDateBased) {
             vol = Handle<Quote>(boost::make_shared<SimpleQuote>(svts_->volatility(expiryDb, termPb, strikeValue)));
@@ -268,6 +279,14 @@ void LgmBuilder::buildSwaptionBasket() const {
             LOG("Added Date / Period based SwaptionHelper " << data_->ccy() << " " << expiryDb << ", " << termPb << ", "
                                                             << strike << " : " << vol->value() << " "
                                                             << svts_->volatilityType());
+            if (std::abs(helper->marketValue()) < minMarketValue &&
+                (calibrationErrorType_ == BlackCalibrationHelper::RelativePriceError ||
+                 calibrationErrorType_ == BlackCalibrationHelper::ImpliedVolError)) {
+                WLOG("Set calibration error type to PriceError because the market value is close to zero (" << helper->marketValue() << ")");
+                helper = boost::make_shared<SwaptionHelper>(
+                    expiryDb, termPb, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter, yts,
+                    BlackCalibrationHelper::PriceError, strikeValue, 1.0, svts_->volatilityType(), shift);
+            }
         }
         if (!expiryDateBased && termDateBased) {
             Date expiry = svts_->optionDateFromTenor(expiryPb);
@@ -279,6 +298,14 @@ void LgmBuilder::buildSwaptionBasket() const {
             LOG("Added Period / Date based SwaptionHelper " << data_->ccy() << " " << expiryPb << ", " << termDb << ", "
                                                             << strike << " : " << vol->value() << " "
                                                             << svts_->volatilityType());
+            if (std::abs(helper->marketValue()) < minMarketValue &&
+                (calibrationErrorType_ == BlackCalibrationHelper::RelativePriceError ||
+                 calibrationErrorType_ == BlackCalibrationHelper::ImpliedVolError)) {
+                WLOG("Set calibration error type to PriceError because the market value is close to zero (" << helper->marketValue() << ")");
+                helper = boost::make_shared<SwaptionHelper>(
+                    expiry, termDb, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter, yts,
+                    BlackCalibrationHelper::PriceError, strikeValue, 1.0, svts_->volatilityType(), shift);
+            }
         }
         if (!expiryDateBased && !termDateBased) {
             vol = Handle<Quote>(boost::make_shared<SimpleQuote>(svts_->volatility(expiryPb, termPb, strikeValue)));
@@ -289,6 +316,14 @@ void LgmBuilder::buildSwaptionBasket() const {
             LOG("Added Period / Period based SwaptionHelper " << data_->ccy() << " " << expiryPb << ", " << termPb
                                                               << ", " << strike << " : " << vol->value() << " "
                                                               << svts_->volatilityType());
+            if (std::abs(helper->marketValue()) < minMarketValue &&
+                (calibrationErrorType_ == BlackCalibrationHelper::RelativePriceError ||
+                 calibrationErrorType_ == BlackCalibrationHelper::ImpliedVolError)) {
+                WLOG("Set calibration error type to PriceError because the market value is close to zero (" << helper->marketValue() << ")");
+                helper = boost::make_shared<SwaptionHelper>(
+                    expiryPb, termPb, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter, yts,
+                    BlackCalibrationHelper::PriceError, strikeValue, 1.0, svts_->volatilityType(), shift);
+            }
         }
         swaptionBasket_.push_back(helper);
         expiryTimes[j] = yts->timeFromReference(helper->swaption()->exercise()->date(0));
