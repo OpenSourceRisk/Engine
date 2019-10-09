@@ -220,6 +220,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
     Size maxAttempts = curveConfig_->bootstrapConfig().maxAttempts();
     Real maxFactor = curveConfig_->bootstrapConfig().maxFactor();
     Real minFactor = curveConfig_->bootstrapConfig().minFactor();
+    Size dontThrowSteps = curveConfig_->bootstrapConfig().dontThrowSteps();
 
     // See comment here: https://github.com/lballabio/QuantLib/pull/679#issuecomment-525208897
     // to explain all the typedefs below. Waiting on a pull request from QuantLib here.
@@ -232,7 +233,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 Linear(), QuantExt::IterativeBootstrap<my_curve>(
-                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         case InterpolationMethod::LogLinear: {
@@ -240,7 +241,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 LogLinear(), QuantExt::IterativeBootstrap<my_curve>(
-                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         case InterpolationMethod::NaturalCubic: {
@@ -248,7 +249,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 Cubic(CubicInterpolation::Kruger, true), QuantExt::IterativeBootstrap<my_curve>(
-                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         case InterpolationMethod::FinancialCubic: {
@@ -257,7 +258,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
                     CubicInterpolation::FirstDerivative), QuantExt::IterativeBootstrap<my_curve>(
-                        globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                        globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         case InterpolationMethod::ConvexMonotone: {
@@ -265,7 +266,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 ConvexMonotone(), QuantExt::IterativeBootstrap<my_curve>(
-                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         default:
@@ -279,7 +280,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 Linear(), QuantExt::IterativeBootstrap<my_curve>(
-                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         case InterpolationMethod::LogLinear: {
@@ -287,7 +288,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 LogLinear(), QuantExt::IterativeBootstrap<my_curve>(
-                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         case InterpolationMethod::NaturalCubic: {
@@ -295,7 +296,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 Cubic(CubicInterpolation::Kruger, true), QuantExt::IterativeBootstrap<my_curve>(
-                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         case InterpolationMethod::FinancialCubic: {
@@ -304,7 +305,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
                     CubicInterpolation::FirstDerivative), QuantExt::IterativeBootstrap<my_curve>(
-                        globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                        globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         case InterpolationMethod::ConvexMonotone: {
@@ -312,7 +313,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 ConvexMonotone(), QuantExt::IterativeBootstrap<my_curve>(
-                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         default:
@@ -326,7 +327,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 Linear(), QuantExt::IterativeBootstrap<my_curve>(
-                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         case InterpolationMethod::LogLinear: {
@@ -334,7 +335,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 LogLinear(), QuantExt::IterativeBootstrap<my_curve>(
-                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         case InterpolationMethod::NaturalCubic: {
@@ -342,7 +343,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 Cubic(CubicInterpolation::Kruger, true), QuantExt::IterativeBootstrap<my_curve>(
-                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         case InterpolationMethod::FinancialCubic: {
@@ -351,7 +352,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
                     CubicInterpolation::FirstDerivative), QuantExt::IterativeBootstrap<my_curve>(
-                        globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                        globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         case InterpolationMethod::ConvexMonotone: {
@@ -359,7 +360,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 ConvexMonotone(), QuantExt::IterativeBootstrap<my_curve>(
-                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor));
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
             }
             break;
         default:

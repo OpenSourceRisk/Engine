@@ -32,6 +32,43 @@
 
 namespace QuantExt {
 
+namespace detail {
+
+/*! If \c dontThrow is \c true in QuantExt::IterativeBootstrap and on a given pillar the bootstrap fails when 
+    searching for a helper root between \c xMin and \c xMax, we use this function to return the value that gives
+    the minimum absolute helper error in the interval between \c xMin and \c xMax inclusive.
+*/
+template <class Curve>
+QuantLib::Real dontThrowFallback(const QuantLib::BootstrapError<Curve>& error,
+    QuantLib::Real xMin, QuantLib::Real xMax, QuantLib::Size steps) {
+
+    QL_REQUIRE(xMin < xMax, "Expected xMin to be less than xMax");
+    
+    // Set the initial value of the result to xMin and store the absolute bootstrap error at xMin
+    QuantLib::Real result = xMin;
+    QuantLib::Real absError = std::abs(error(xMin));
+    QuantLib::Real minError = absError;
+    
+    // Step out to xMax
+    QuantLib::Real stepSize = (xMax - xMin) / steps;
+    for (QuantLib::Size i = 0; i < steps; i++) {
+        
+        // Get absolute bootstrap error at updated x value
+        xMin += stepSize;
+        absError = std::abs(error(xMin));
+        
+        // If this absolute bootstrap error is less than the minimum, update result and minError
+        if (absError < minError) {
+            result = xMin;
+            minError = absError;
+        }
+    }
+
+    return result;
+}
+
+}
+
 /*! Straight copy of QuantLib::IterativeBootstrap with the following modifications
     - addition of a \c globalAccuracy parameter to allow the global bootstrap accuracy to be different than the 
       \c accuracy specified in the \c Curve. In particular, allows for the \c globalAccuracy to be greater than the 
@@ -46,20 +83,23 @@ class IterativeBootstrap {
 
 public:
     /*! Constructor
-        \param globalAccuracy       Accuracy for the global bootstrap stopping criterion. If it is set to 
-                                    \c Null<Real>(), its value is taken from the termstructure's accuracy.
-        \param dontThrow            If set to \c true, the bootstrap doesn't throw and returns a <em>fall back</em> 
-                                    result
-        \param maxAttempts          Number of attempts on each iteration. A number greater than implies retries.
-        \param maxFactor            Factor for max value retry on each iteration if there is a failure.
-        \param minFactor            Factor for min value retry on each iteration if there is a failure.
+        \param globalAccuracy Accuracy for the global bootstrap stopping criterion. If it is set to 
+                              \c Null<Real>(), its value is taken from the termstructure's accuracy.
+        \param dontThrow      If set to \c true, the bootstrap doesn't throw and returns a <em>fall back</em> 
+                              result
+        \param maxAttempts    Number of attempts on each iteration. A number greater than implies retries.
+        \param maxFactor      Factor for max value retry on each iteration if there is a failure.
+        \param minFactor      Factor for min value retry on each iteration if there is a failure.
+        \param dontThrowSteps If \p dontThrow is \c true, this gives the number of steps to use when searching 
+                              for a fallback curve pillar value that gives the minimum bootstrap helper error. 
     */
     IterativeBootstrap(
         QuantLib::Real globalAccuracy = QuantLib::Null<QuantLib::Real>(),
         bool dontThrow = false,
         QuantLib::Size maxAttempts = 1,
         QuantLib::Real maxFactor = 2.0,
-        QuantLib::Real minFactor = 2.0);
+        QuantLib::Real minFactor = 2.0,
+        QuantLib::Size dontThrowSteps = 10);
     
     void setup(Curve* ts);
     void calculate() const;
@@ -78,15 +118,15 @@ private:
     QuantLib::Size maxAttempts_;
     QuantLib::Real maxFactor_;
     QuantLib::Real minFactor_;
+    QuantLib::Size dontThrowSteps_;
 };
-
 
 template <class Curve>
 IterativeBootstrap<Curve>::IterativeBootstrap(QuantLib::Real globalAccuracy, bool dontThrow,
-    QuantLib::Size maxAttempts, QuantLib::Real maxFactor, QuantLib::Real minFactor)
+    QuantLib::Size maxAttempts, QuantLib::Real maxFactor, QuantLib::Real minFactor, QuantLib::Size dontThrowSteps)
     : ts_(0), initialized_(false), validCurve_(false), loopRequired_(Interpolator::global), 
-      globalAccuracy_(globalAccuracy), dontThrow_(dontThrow),
-      maxAttempts_(maxAttempts), maxFactor_(maxFactor), minFactor_(minFactor) {}
+      globalAccuracy_(globalAccuracy), dontThrow_(dontThrow), maxAttempts_(maxAttempts),
+      maxFactor_(maxFactor), minFactor_(minFactor), dontThrowSteps_(dontThrowSteps) {}
 
 template <class Curve>
 void IterativeBootstrap<Curve>::setup(Curve* ts) {
@@ -279,8 +319,10 @@ void IterativeBootstrap<Curve>::calculate() const {
                 }
 
                 if (dontThrow_) {
-                    // Use previous value
-                    ts_->data_[i] = ts_->data_[i - 1];
+                    // Use the fallback value
+                    ts_->data_[i] = detail::dontThrowFallback(*errors_[i], minValues[i - 1],
+                        maxValues[i - 1], dontThrowSteps_);
+                    
                     // Remember to update the interpolation. If we don't and we are on the last "i", we will still 
                     // have the last attempted value in the solver being used in ts_->interpolation_.
                     ts_->interpolation_.update();
