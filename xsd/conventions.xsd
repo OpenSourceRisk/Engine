@@ -255,7 +255,14 @@
 
   <xs:complexType name="nthWeekdayType">
     <xs:sequence>
-      <xs:element type="xs:string" name="Nth" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="Nth" minOccurs="1" maxOccurs="1">
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:minInclusive value="1"/>
+            <xs:maxInclusive value="4"/>
+          </xs:restriction> 
+        </xs:simpleType>
+      </xs:element>
       <xs:element type="weekdayType" name="Weekday" minOccurs="1" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
@@ -267,7 +274,14 @@
         <xs:complexType>
           <xs:choice>
             <xs:element type="nthWeekdayType" name="NthWeekday"/>
-            <xs:element type="xs:string" name="DayOfMonth"/>
+            <xs:element name="DayOfMonth">
+              <xs:simpleType>
+                <xs:restriction base="xs:integer">
+                  <xs:minInclusive value="1"/>
+                  <xs:maxInclusive value="31"/>
+                </xs:restriction> 
+              </xs:simpleType>
+            </xs:element>
           </xs:choice>
         </xs:complexType>
       </xs:element>

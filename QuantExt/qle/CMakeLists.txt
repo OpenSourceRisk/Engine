@@ -34,7 +34,9 @@ indexes/commodityindex.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
 indexes/ibor/brlcdi.cpp
+indexes/ibor/ester.cpp
 indexes/ibor/primeindex.cpp
+indexes/ibor/sofr.cpp
 indexes/inflationindexwrapper.cpp
 indexes/region.cpp
 instruments/averageois.cpp
@@ -160,7 +162,6 @@ termstructures/swaptionvolatilityconverter.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
-time/futureexpirycalculator.hpp
 time/yearcounter.cpp)
 
 # hpp files, this list is maintained manually
@@ -215,6 +216,7 @@ indexes/ibor/czkpribor.hpp
 indexes/ibor/demlibor.hpp
 indexes/ibor/dkkcibor.hpp
 indexes/ibor/dkkois.hpp
+indexes/ibor/ester.hpp
 indexes/ibor/hkdhibor.hpp
 indexes/ibor/hufbubor.hpp
 indexes/ibor/idridrfix.hpp
@@ -239,6 +241,7 @@ indexes/ibor/sekstibor.hpp
 indexes/ibor/sgdsibor.hpp
 indexes/ibor/sgdsor.hpp
 indexes/ibor/skkbribor.hpp
+indexes/ibor/sofr.hpp
 indexes/ibor/thbbibor.hpp
 indexes/ibor/tonar.hpp
 indexes/ibor/twdtaibor.hpp
@@ -417,6 +420,7 @@ termstructures/yoyinflationoptionletvolstripper.hpp
 termstructures/yoyoptionletvolatilitysurface.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp
+time/futureexpirycalculator.hpp
 time/yearcounter.hpp
 version.hpp)
 
