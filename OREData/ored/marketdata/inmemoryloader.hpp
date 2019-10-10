@@ -52,7 +52,7 @@ public:
     const std::vector<Fixing>& loadDividends() const override { return dividends_; }
 
     // add a market datum
-    void add(QuantLib::Date date, const string& name, QuantLib::Real value) override {
+    virtual void add(QuantLib::Date date, const string& name, QuantLib::Real value) {
         try {
             data_[date].push_back(parseMarketDatum(date, name, value));
             TLOG("Added MarketDatum " << data_[date].back()->name());
@@ -62,13 +62,13 @@ public:
     }
 
     // add a fixing
-    void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) override {
+    virtual void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {
         // Don't check against today's date here
         fixings_.emplace_back(Fixing(date, name, value));
     }
 
     // add a dividend
-    void addDividend(Date date, const string& name, Real value) override {
+    virtual void addDividend(Date date, const string& name, Real value) {
         // Don't check against today's date here
         dividends_.emplace_back(Fixing(date, name, value));
     }
