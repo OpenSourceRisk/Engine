@@ -253,7 +253,6 @@ void LgmBuilder::buildSwaptionBasket() const {
                                                                   : shortSwapIndex_->iborIndex()->dayCounter();
         if (expiryDateBased && termDateBased) {
             vol = Handle<Quote>(boost::make_shared<SimpleQuote>(svts_->volatility(expiryDb, termT, strikeValue)));
-            std::cerr << "vol for " << expiryDb << " " << termT << " " << strikeValue << " = " << vol->value() << std::endl;
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryDb, termT) : 0.0;
             helper = boost::make_shared<SwaptionHelper>(expiryDb, termDb, vol, iborIndex, fixedLegTenor,
                                                         fixedDayCounter, floatDayCounter, yts, calibrationErrorType_,
