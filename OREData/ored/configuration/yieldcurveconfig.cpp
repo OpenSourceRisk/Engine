@@ -162,11 +162,12 @@ YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDes
                                    const string& discountCurveID,
                                    const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments,
                                    const string& interpolationVariable, const string& interpolationMethod,
-                                   const string& zeroDayCounter, bool extrapolation, Real tolerance)
+                                   const string& zeroDayCounter, bool extrapolation,
+                                   const BootstrapConfig& bootstrapConfig)
     : CurveConfig(curveID, curveDescription), currency_(currency), discountCurveID_(discountCurveID),
       curveSegments_(curveSegments), interpolationVariable_(interpolationVariable),
       interpolationMethod_(interpolationMethod), zeroDayCounter_(zeroDayCounter), extrapolation_(extrapolation),
-      tolerance_(tolerance) {
+      bootstrapConfig_(bootstrapConfig) {
     populateRequiredYieldCurveIDs();
 }
 
@@ -263,11 +264,18 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
     } else {
         extrapolation_ = true;
     }
-    nodeToTest = XMLUtils::getChildNode(node, "Tolerance");
-    if (nodeToTest) {
-        tolerance_ = XMLUtils::getChildValueAsDouble(node, "Tolerance", false);
-    } else {
-        tolerance_ = 1.0e-12;
+
+    // Optional bootstrap configuration
+    if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
+        bootstrapConfig_.fromXML(n);
+    }
+
+    // Tolerance is deprecated in favour of Accuracy in BootstrapConfig. However, if it is 
+    // still provided, use it as the accuracy and global accuracy in the bootstrap.
+    if (XMLNode* n = XMLUtils::getChildNode(node, "Tolerance")) {
+        Real accuracy = XMLUtils::getChildValueAsDouble(node, "Tolerance", false);
+        bootstrapConfig_ = BootstrapConfig(accuracy, accuracy, bootstrapConfig_.dontThrow(),
+            bootstrapConfig_.maxAttempts(), bootstrapConfig_.maxFactor(), bootstrapConfig_.minFactor());
     }
 
     populateRequiredYieldCurveIDs();
@@ -294,8 +302,9 @@ XMLNode* YieldCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "InterpolationVariable", interpolationVariable_);
     XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
     XMLUtils::addChild(doc, node, "YieldCurveDayCounter", zeroDayCounter_);
-    XMLUtils::addChild(doc, node, "Tolerance", tolerance_);
+    XMLUtils::addChild(doc, node, "Tolerance", bootstrapConfig_.accuracy());
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
+    XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
 
     return node;
 }
