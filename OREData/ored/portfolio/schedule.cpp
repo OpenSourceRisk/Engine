@@ -139,7 +139,24 @@ Schedule makeSchedule(const ScheduleRules& data) {
     if (!data.endOfMonth().empty())
         endOfMonth = parseBool(data.endOfMonth());
 
-    return Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate, lastDate);
+    if ((rule == DateGeneration::CDS || rule == DateGeneration::CDS2015) &&
+        (firstDate != Null<Date>() || lastDate != Null<Date>())) {
+        // Special handling of first date and last date in combination with CDS and CDS2015 rules:
+        // To be able to construct CDS schedules with front or back stub periods, we overwrite the
+        // first (last) date of the schedule built in QL with a given first (last) date
+        // The schedule builder in QL itself is not capable of doing this, it just throws an exception
+        // if a first (last) date is given in combination with a CDS / CDS2015 date generation rule.
+        std::vector<Date> dates = Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth).dates();
+        QL_REQUIRE(!dates.empty(),
+                   "got empty CDS or CDS2015 schedule, startDate = " << startDate << ", endDate = " << endDate);
+        if (firstDate != Date())
+            dates.front() = firstDate;
+        if (lastDate != Date())
+            dates.back() = lastDate;
+        return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth);
+    } else {
+        return Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate, lastDate);
+    }
 }
 
 namespace {

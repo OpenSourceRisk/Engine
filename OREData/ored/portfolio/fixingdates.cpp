@@ -149,7 +149,10 @@ void FixingDateGetter::visit(CashFlow& c) {
 }
 
 void FixingDateGetter::visit(FloatingRateCoupon& c) {
-    if (!c.hasOccurred(today_)) {
+    // Some pricing engines in QL (e.g CapFloor) don't respect
+    // hasOccurred() and ask for the fixing regarless, so we
+    // are conservative here and ask for a fixing if it is today.
+    if (!c.hasOccurred(today_) || c.date() == today_) {
         Date fixingDate = c.fixingDate();
         if (fixingDate <= today_) {
             indicesDates_[c.index()->name()].insert(fixingDate);

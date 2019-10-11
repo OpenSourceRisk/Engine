@@ -170,6 +170,20 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
     }
 }
 
+void XMLUtils::addChildAsCdata(XMLDocument& doc, XMLNode* n, const string& name, const string& value) {
+    if (value.size() == 0) {
+        addChild(doc, n, name);
+    } else {
+        QL_REQUIRE(n, "XML Node is NULL (adding " << name << ")");
+        XMLNode* node = doc.allocNode(name);
+        n->insert_node(0, node);
+        XMLNode* cdata_node = doc.doc()->allocate_node(node_cdata);
+        cdata_node->value(doc.allocString(value));
+        QL_REQUIRE(cdata_node, "Failed to allocate cdata node for " << name);
+        node->insert_node(0, cdata_node);
+    }
+}
+
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value, const string& attrName, const string& attr) {
     XMLNode* node;
     if (value.size() == 0) {

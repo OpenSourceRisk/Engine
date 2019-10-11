@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/bootstrapconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
@@ -57,7 +58,8 @@ public:
                        bool extrapolation = true, const string& benchmarkCurveID = "", const string& sourceCurveID = "",
                        const std::vector<string>& pillars = std::vector<string>(),
                        const Calendar& calendar = Calendar(), const Size spotLag = 0,
-                       const QuantLib::Date& startDate = QuantLib::Date());
+                       const QuantLib::Date& startDate = QuantLib::Date(),
+                       const BootstrapConfig& bootstrapConfig = BootstrapConfig());
     //! Default constructor
     DefaultCurveConfig() {}
     //@}
@@ -84,7 +86,7 @@ public:
     bool extrapolation() const { return extrapolation_; }
     const std::vector<std::pair<std::string, bool>>& cdsQuotes() { return cdsQuotes_; }
     const QuantLib::Date& startDate() const { return startDate_; }
-
+    const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
     //@}
 
     //! \name Setters
@@ -102,6 +104,7 @@ public:
     Size spotLag() { return spotLag_; }
     bool& extrapolation() { return extrapolation_; }
     QuantLib::Date& startDate() { return startDate_; }
+    void setBootstrapConfig(const BootstrapConfig& bootstrapConfig) { bootstrapConfig_ = bootstrapConfig; }
     //@}
 
 private:
@@ -120,6 +123,7 @@ private:
     Calendar calendar_;
     Size spotLag_;
     QuantLib::Date startDate_;
+    BootstrapConfig bootstrapConfig_;
 };
 } // namespace data
 } // namespace ore
