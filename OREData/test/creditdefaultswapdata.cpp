@@ -81,14 +81,100 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(CreditDefaultSwapDataTests)
 
-BOOST_AUTO_TEST_CASE(testExplicitCreditCurveId) {
+BOOST_AUTO_TEST_CASE(testConstructionWithExplicitCreditCurveId) {
 
     // Construct with explicit credit curve ID
     string cdsCurveId = "RED:2H6677|SNRFOR|EUR|MM14";
     CreditDefaultSwapData cdsData("DB", cdsCurveId, premiumLegData());
 
     // Perform some checks
+    BOOST_CHECK_EQUAL(cdsData.issuerId(), "DB");
+    BOOST_CHECK(cdsData.settlesAccrual());
+    BOOST_CHECK(cdsData.paysAtDefaultTime());
+    BOOST_CHECK_EQUAL(cdsData.protectionStart(), Date());
+    BOOST_CHECK_EQUAL(cdsData.upfrontDate(), Date());
+    BOOST_CHECK_EQUAL(cdsData.upfrontFee(), Null<Real>());
+    BOOST_CHECK_EQUAL(cdsData.recoveryRate(), Null<Real>());
+    BOOST_CHECK(cdsData.referenceObligation().empty());
 
+    // Check the credit curve Id and reference information are as expected
+    BOOST_CHECK_EQUAL(cdsData.creditCurveId(), cdsCurveId);
+    BOOST_CHECK(!cdsData.referenceInformation());
+
+    // Use toXml to serialise to string
+    string xmlStr = cdsData.toXMLString();
+
+    // Use fromXml to populate empty CreditDefaultSwapData object
+    CreditDefaultSwapData xmlCdsData;
+    xmlCdsData.fromXMLString(xmlStr);
+
+    // Check that the CreditDefaultSwapData object from XML is the same as the explicitly created one
+    BOOST_CHECK_EQUAL(cdsData.issuerId(), xmlCdsData.issuerId());
+    BOOST_CHECK_EQUAL(cdsData.settlesAccrual(), xmlCdsData.settlesAccrual());
+    BOOST_CHECK_EQUAL(cdsData.paysAtDefaultTime(), xmlCdsData.paysAtDefaultTime());
+    BOOST_CHECK_EQUAL(cdsData.protectionStart(), xmlCdsData.protectionStart());
+    BOOST_CHECK_EQUAL(cdsData.upfrontDate(), xmlCdsData.upfrontDate());
+    BOOST_CHECK_EQUAL(cdsData.upfrontFee(), xmlCdsData.upfrontFee());
+    BOOST_CHECK_EQUAL(cdsData.recoveryRate(), xmlCdsData.recoveryRate());
+    BOOST_CHECK_EQUAL(cdsData.referenceObligation(), xmlCdsData.referenceObligation());
+    BOOST_CHECK_EQUAL(cdsData.creditCurveId(), xmlCdsData.creditCurveId());
+    BOOST_CHECK(!xmlCdsData.referenceInformation());
+}
+
+BOOST_AUTO_TEST_CASE(testConstructionWithCdsReferenceInformation) {
+
+    // CdsReferenceInformation object
+    string referenceEntityId = "RED:2H6677";
+    CdsTier tier = CdsTier::SNRFOR;
+    Currency currency = EURCurrency();
+    CdsDocClause docClause = CdsDocClause::MM14;
+    CdsReferenceInformation referenceInfo(referenceEntityId, tier, currency, docClause);
+
+    // Construct with CDS reference information
+    CreditDefaultSwapData cdsData("DB", referenceInfo, premiumLegData());
+
+    // Perform some checks
+    BOOST_CHECK_EQUAL(cdsData.issuerId(), "DB");
+    BOOST_CHECK(cdsData.settlesAccrual());
+    BOOST_CHECK(cdsData.paysAtDefaultTime());
+    BOOST_CHECK_EQUAL(cdsData.protectionStart(), Date());
+    BOOST_CHECK_EQUAL(cdsData.upfrontDate(), Date());
+    BOOST_CHECK_EQUAL(cdsData.upfrontFee(), Null<Real>());
+    BOOST_CHECK_EQUAL(cdsData.recoveryRate(), Null<Real>());
+    BOOST_CHECK(cdsData.referenceObligation().empty());
+
+    // Check the credit curve Id and reference information are as expected
+    BOOST_CHECK_EQUAL(cdsData.creditCurveId(), referenceInfo.id());
+    BOOST_CHECK(cdsData.referenceInformation());
+    BOOST_CHECK_EQUAL(referenceInfo.referenceEntityId(), cdsData.referenceInformation()->referenceEntityId());
+    BOOST_CHECK_EQUAL(referenceInfo.tier(), cdsData.referenceInformation()->tier());
+    BOOST_CHECK_EQUAL(referenceInfo.currency(), cdsData.referenceInformation()->currency());
+    BOOST_CHECK_EQUAL(referenceInfo.docClause(), cdsData.referenceInformation()->docClause());
+    BOOST_CHECK_EQUAL(referenceInfo.id(), cdsData.referenceInformation()->id());
+
+    // Use toXml to serialise to string
+    string xmlStr = cdsData.toXMLString();
+
+    // Use fromXml to populate empty CreditDefaultSwapData object
+    CreditDefaultSwapData xmlCdsData;
+    xmlCdsData.fromXMLString(xmlStr);
+
+    // Check that the CreditDefaultSwapData object from XML is the same as the explicitly created one
+    BOOST_CHECK_EQUAL(cdsData.issuerId(), xmlCdsData.issuerId());
+    BOOST_CHECK_EQUAL(cdsData.settlesAccrual(), xmlCdsData.settlesAccrual());
+    BOOST_CHECK_EQUAL(cdsData.paysAtDefaultTime(), xmlCdsData.paysAtDefaultTime());
+    BOOST_CHECK_EQUAL(cdsData.protectionStart(), xmlCdsData.protectionStart());
+    BOOST_CHECK_EQUAL(cdsData.upfrontDate(), xmlCdsData.upfrontDate());
+    BOOST_CHECK_EQUAL(cdsData.upfrontFee(), xmlCdsData.upfrontFee());
+    BOOST_CHECK_EQUAL(cdsData.recoveryRate(), xmlCdsData.recoveryRate());
+    BOOST_CHECK_EQUAL(cdsData.referenceObligation(), xmlCdsData.referenceObligation());
+    BOOST_CHECK_EQUAL(cdsData.creditCurveId(), xmlCdsData.creditCurveId());
+    BOOST_CHECK(xmlCdsData.referenceInformation());
+    BOOST_CHECK_EQUAL(referenceInfo.referenceEntityId(), xmlCdsData.referenceInformation()->referenceEntityId());
+    BOOST_CHECK_EQUAL(referenceInfo.tier(), xmlCdsData.referenceInformation()->tier());
+    BOOST_CHECK_EQUAL(referenceInfo.currency(), xmlCdsData.referenceInformation()->currency());
+    BOOST_CHECK_EQUAL(referenceInfo.docClause(), xmlCdsData.referenceInformation()->docClause());
+    BOOST_CHECK_EQUAL(referenceInfo.id(), xmlCdsData.referenceInformation()->id());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
