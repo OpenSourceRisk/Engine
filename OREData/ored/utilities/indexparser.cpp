@@ -568,5 +568,18 @@ string internalIndexName(const string& indexName) {
     return tmpName + "-" + tokens[2];
 }
 
+bool isFxIndex(const std::string& indexName) {
+    std::vector<string> tokens;
+    split(tokens, indexName, boost::is_any_of("-"));
+    return tokens.size() ==4 && tokens[0] == "FX";
+}
+
+std::string inverseFxIndex(const std::string& indexName) {
+    std::vector<string> tokens;
+    split(tokens, indexName, boost::is_any_of("-"));
+    QL_REQUIRE(tokens.size() == 4 && tokens[0] == "FX", "no fx index given (" << indexName << ")");
+    return "FX-" + tokens[1] + "-" + tokens[3] + "-" + tokens[2];
+}
+
 } // namespace data
 } // namespace ore

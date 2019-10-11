@@ -198,10 +198,7 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element type="xs:decimal" name="Accuracy" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:decimal" name="GlobalAccuracy" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:boolean" name="DontThrow" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:boolean" name="DontThrowUsePrevious" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -251,6 +248,7 @@
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -365,6 +363,7 @@
       <xs:element type="dayCounter" name="YieldCurveDayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="Tolerance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -671,6 +670,18 @@
     <xs:sequence>
       <xs:element type="interpolationVariableType" name="InterpolationVariable" minOccurs="0" maxOccurs="1"/>
       <xs:element type="interpolationMethodType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="bootstrapConfigType">
+    <xs:sequence>
+      <xs:element type="positiveDecimal" name="Accuracy" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="positiveDecimal" name="GlobalAccuracy" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:boolean" name="DontThrow" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:positiveInteger" name="MaxAttempts" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:decimal" name="MaxFactor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:decimal" name="MinFactor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:positiveInteger" name="DontThrowSteps" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
