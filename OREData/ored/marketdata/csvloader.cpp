@@ -102,6 +102,7 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
     while (!file.eof()) {
         string line;
         getline(file, line);
+        boost::trim(line);
         // skip blank and comment lines
         if (line.size() > 0 && line[0] != '#') {
 
