@@ -192,15 +192,16 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
         upfrontDate_ = Date();
 
     // zero if empty or missing
-    upfrontFee_ = 0.0;
+    upfrontFee_ = Null<Real>();
     string strUpfrontFee = XMLUtils::getChildValue(node, "UpfrontFee", false);
     if (!strUpfrontFee.empty()) {
         upfrontFee_ = parseReal(strUpfrontFee);
     }
 
     if (upfrontDate_ == Date()) {
-        QL_REQUIRE(close_enough(upfrontFee_, 0.0), "CreditDefaultSwapData::fromXML(): UpfronFee not zero ("
-                                                       << upfrontFee_ << "), but no upfront date given");
+        QL_REQUIRE(close_enough(upfrontFee_, 0.0) || upfrontFee_ == Null<Real>(),
+            "CreditDefaultSwapData::fromXML(): UpfronFee (" << upfrontFee_ <<
+            ") must be empty or zero if no upfront date is given");
         upfrontFee_ = Null<Real>();
     }
 
