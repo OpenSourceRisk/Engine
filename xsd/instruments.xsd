@@ -423,6 +423,7 @@
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="0"/>
       <xs:element type="xs:integer" name="PaymentLag" minOccurs="0"/>
+      <xs:element type="xs:string" name="PaymentCalendar" minOccurs="0"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
       <xs:element name="Amortizations" minOccurs="0" maxOccurs="1">
         <xs:complexType>
@@ -449,6 +450,13 @@
         </xs:complexType>
       </xs:element>
       <xs:element type="scheduleData" name="ScheduleData" minOccurs="0">
+      </xs:element>
+      <xs:element name="PaymentDates" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="date" name="PaymentDate" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
       </xs:element>
       <xs:element ref="legDataType"/>
     </xs:all>
@@ -484,7 +492,7 @@
             <xs:element type="date" name="StartDate"/>
             <xs:element type="date" name="EndDate"/>
             <xs:element type="xs:string" name="Tenor"/>
-            <xs:element type="calendar" name="Calendar"/>
+            <xs:element type="calendar" name="Calendar" minOccurs="0"/>
             <xs:element type="businessDayConvention" name="Convention"/>
             <xs:element type="businessDayConvention" name="TermConvention"/>
             <xs:element type="dateRule" name="Rule" minOccurs="0"/>
@@ -548,6 +556,8 @@
       <xs:enumeration value="Equity"/>
       <xs:enumeration value="FormulaBased"/>
       <xs:enumeration value="ZeroCouponFixed"/>
+      <xs:enumeration value="CommodityFixed"/>
+      <xs:enumeration value="CommodityFloating"/>
     </xs:restriction>
   </xs:simpleType>
 

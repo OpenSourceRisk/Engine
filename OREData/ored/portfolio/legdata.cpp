@@ -58,6 +58,8 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
+LegDataRegister<CashflowData> CashflowData::reg_("Cashflow");
+
 void CashflowData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     amounts_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Cashflow", "Amount", "Date", dates_);
@@ -68,6 +70,9 @@ XMLNode* CashflowData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Cashflow", "Amount", amounts_, "Date", dates_);
     return node;
 }
+
+LegDataRegister<FixedLegData> FixedLegData::reg_("Fixed");
+
 void FixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_, true);
@@ -78,6 +83,8 @@ XMLNode* FixedLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
     return node;
 }
+
+LegDataRegister<ZeroCouponFixedLegData> ZeroCouponFixedLegData::reg_("ZeroCouponFixed");
 
 void ZeroCouponFixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -96,6 +103,8 @@ XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Compounding", compounding_);
     return node;
 }
+
+LegDataRegister<FloatingLegData> FloatingLegData::reg_("Floating");
 
 void FloatingLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -145,6 +154,8 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+LegDataRegister<CPILegData> CPILegData::reg_("CPI");
+
 void CPILegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     index_ = XMLUtils::getChildValue(node, "Index", true);
@@ -170,6 +181,8 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "SubtractInflationNotional", subtractInflationNominal_);
     return node;
 }
+
+LegDataRegister<YoYLegData> YoYLegData::reg_("YY");
 
 void YoYLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -217,6 +230,8 @@ XMLNode* CMSLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+LegDataRegister<CMSLegData> CMSLegData::reg_("CMS");
+
 void CMSLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     swapIndex_ = XMLUtils::getChildValue(node, "Index", true);
@@ -258,6 +273,8 @@ XMLNode* CMSSpreadLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
+
+LegDataRegister<CMSSpreadLegData> CMSSpreadLegData::reg_("CMSSpread");
 
 void CMSSpreadLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -308,6 +325,8 @@ XMLNode* DigitalCMSSpreadLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+LegDataRegister<DigitalCMSSpreadLegData> DigitalCMSSpreadLegData::reg_("DigitalCMSSpread");
+
 void DigitalCMSSpreadLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
 
@@ -336,6 +355,8 @@ void DigitalCMSSpreadLegData::fromXML(XMLNode* node) {
                                                                      putPayoffDates_, false);
     }
 }
+
+LegDataRegister<EquityLegData> EquityLegData::reg_("Equity");
 
 void EquityLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -430,14 +451,15 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
                  const bool notionalInitialExchange, const bool notionalFinalExchange,
                  const bool notionalAmortizingExchange, const bool isNotResetXCCY, const string& foreignCurrency,
                  const double foreignAmount, const string& fxIndex, int fixingDays, const string& fixingCalendar,
-                 const std::vector<AmortizationData>& amortizationData, const int paymentLag)
+                 const std::vector<AmortizationData>& amortizationData, const int paymentLag,
+                 const string& paymentCalendar, const vector<string>& paymentDates)
     : concreteLegData_(concreteLegData), isPayer_(isPayer), currency_(currency), schedule_(scheduleData),
       dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
       paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
       notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
       isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
       fxIndex_(fxIndex), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar), amortizationData_(amortizationData),
-      paymentLag_(paymentLag) {
+      paymentLag_(paymentLag), paymentCalendar_(paymentCalendar), paymentDates_(paymentDates) {
     
     indices_ = concreteLegData_->indices();
     if (!fxIndex_.empty())
@@ -452,6 +474,7 @@ void LegData::fromXML(XMLNode* node) {
     dayCounter_ = XMLUtils::getChildValue(node, "DayCounter"); // optional
     paymentConvention_ = XMLUtils::getChildValue(node, "PaymentConvention");
     paymentLag_ = XMLUtils::getChildValueAsInt(node, "PaymentLag");
+    paymentCalendar_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
     // if not given, default of getChildValueAsBool is true, which fits our needs here
     notionals_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Notionals", "Notional", "startDate", notionalDates_);
@@ -494,6 +517,8 @@ void LegData::fromXML(XMLNode* node) {
     if (tmp)
         schedule_.fromXML(tmp);
 
+    paymentDates_ = XMLUtils::getChildrenValues(node, "PaymentDates", "PaymentDate", false);
+
     concreteLegData_ = initialiseConcreteLegData(legType);
     concreteLegData_->fromXML(XMLUtils::getChildNode(node, concreteLegData_->legNodeName()));
 
@@ -501,29 +526,9 @@ void LegData::fromXML(XMLNode* node) {
 }
 
 boost::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(const string& legType) {
-    if (legType == "Fixed") {
-        return boost::make_shared<FixedLegData>();
-    } else if (legType == "ZeroCouponFixed") {
-        return boost::make_shared<ZeroCouponFixedLegData>();
-    } else if (legType == "Floating") {
-        return boost::make_shared<FloatingLegData>();
-    } else if (legType == "Cashflow") {
-        return boost::make_shared<CashflowData>();
-    } else if (legType == "CPI") {
-        return boost::make_shared<CPILegData>();
-    } else if (legType == "YY") {
-        return boost::make_shared<YoYLegData>();
-    } else if (legType == "CMS") {
-        return boost::make_shared<CMSLegData>();
-    } else if (legType == "CMSSpread") {
-        return boost::make_shared<CMSSpreadLegData>();
-    } else if (legType == "DigitalCMSSpread") {
-        return boost::make_shared<DigitalCMSSpreadLegData>();
-    } else if (legType == "Equity") {
-        return boost::make_shared<EquityLegData>();
-    } else {
-        QL_FAIL("Unkown leg type " << legType);
-    }
+    auto legData = LegDataFactory::instance().build(legType);
+    QL_REQUIRE(legData, "Leg type " << legType << " has not been registered with the leg data factory.");
+    return legData;
 }
 
 XMLNode* LegData::toXML(XMLDocument& doc) {
@@ -536,6 +541,8 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
     if (paymentLag_ != 0)
         XMLUtils::addChild(doc, node, "PaymentLag", paymentLag_);
+    if (!paymentCalendar_.empty())
+        XMLUtils::addChild(doc, node, "PaymentCalendar", paymentCalendar_);
     if (dayCounter_ != "")
         XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Notionals", "Notional", notionals_, "startDate",
@@ -559,6 +566,9 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(notionalsNodePtr, exchangeNode);
 
     XMLUtils::appendNode(node, schedule_.toXML(doc));
+
+    if (!paymentDates_.empty())
+        XMLUtils::addChildren(doc, node, "PaymentDates", "PaymentDate", paymentDates_);
 
     if (!amortizationData_.empty()) {
         XMLNode* amortisationsParentNode = doc.allocNode("Amortizations");

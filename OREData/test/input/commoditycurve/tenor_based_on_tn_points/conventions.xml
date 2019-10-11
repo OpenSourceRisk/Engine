@@ -1,5 +1,5 @@
 <Conventions>
-  <Commodity>
+  <CommodityForward>
     <Id>PM:XAUUSD</Id>
     <SpotDays>2</SpotDays>
     <PointsFactor>100</PointsFactor>
@@ -7,5 +7,5 @@
     <SpotRelative>true</SpotRelative>
     <BusinessDayConvention>ModifiedFollowing</BusinessDayConvention>
     <Outright>false</Outright>
-  </Commodity>
+  </CommodityForward>
 </Conventions>

@@ -277,7 +277,7 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
 
     // both FX, compare CCY1 then CCY2 alphabetical
     if (s1 == 2) {
-        return (tokens1[2] + "-" + tokens1[3]) < (tokens2[2] + "-" + tokens1[3]);
+        return (tokens1[2] + "-" + tokens1[3]) < (tokens2[2] + "-" + tokens2[3]);
     }
 
     QL_FAIL("indexNameLessThan(): internal error");
