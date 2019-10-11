@@ -61,6 +61,25 @@ private:
     DefaultCurveSpec spec_;
     boost::shared_ptr<DefaultProbabilityTermStructure> curve_;
     Real recoveryRate_;
+
+    //! Build a default curve from CDS spread quotes
+    void buildCdsCurve(DefaultCurveConfig& config, const QuantLib::Date& asof, const DefaultCurveSpec& spec,
+        const Loader& loader, const Conventions& conventions,
+        std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+
+    //! Build a default curve from hazard rate quotes
+    void buildHazardRateCurve(DefaultCurveConfig& config, const QuantLib::Date& asof, const DefaultCurveSpec& spec,
+        const Loader& loader, const Conventions& conventions);
+
+    //! Build a default curve implied from a spread over a benchmark curve
+    void buildBenchmarkCurve(DefaultCurveConfig& config, const QuantLib::Date& asof, const DefaultCurveSpec& spec,
+        const Loader& loader, const Conventions& conventions,
+        std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+
+    //! Get the quotes configured for a cds or hazard rate curve
+    std::map<QuantLib::Period, QuantLib::Real> getConfiguredQuotes(DefaultCurveConfig& config,
+        const QuantLib::Date& asof, const Loader& loader) const;
 };
+
 } // namespace data
 } // namespace ore
