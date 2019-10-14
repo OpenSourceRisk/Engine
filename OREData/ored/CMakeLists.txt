@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
 set(OREData_SRC configuration/basecorrelationcurveconfig.cpp
+configuration/bootstrapconfig.cpp
 configuration/capfloorvolcurveconfig.cpp
 configuration/cdsvolcurveconfig.cpp
 configuration/commoditycurveconfig.cpp
@@ -103,6 +104,7 @@ portfolio/tradefactory.cpp
 portfolio/vanillaoption.cpp
 report/csvreport.cpp
 utilities/calendaradjustmentconfig.cpp
+utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
 utilities/currencycheck.cpp
@@ -120,6 +122,7 @@ utilities/xmlutils.cpp)
 
 set(OREData_HDR auto_link.hpp
 configuration/basecorrelationcurveconfig.hpp
+configuration/bootstrapconfig.hpp
 configuration/capfloorvolcurveconfig.hpp
 configuration/cdsvolcurveconfig.hpp
 configuration/commoditycurveconfig.hpp
@@ -246,6 +249,7 @@ report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
 utilities/calendaradjustmentconfig.hpp
+utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
 utilities/currencycheck.hpp

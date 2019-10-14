@@ -97,10 +97,12 @@ struct test_data {
 static struct test_data index_data[] = {
     // parsing string,     index name,                     tenor
     {"EUR-EONIA-1D", "EoniaON Actual/360", 1 * Days},
+    {"EUR-ESTER", "EsterON Actual/360", 1 * Days},
     {"GBP-SONIA-1D", "SoniaON Actual/365 (Fixed)", 1 * Days},
     {"JPY-TONAR-1D", "TONARON Actual/365 (Fixed)", 1 * Days},
     {"CHF-TOIS", "CHF-TOISTN Actual/360", 1 * Days},
     {"USD-FedFunds", "FedFundsON Actual/360", 1 * Days},
+    {"USD-SOFR", "SOFRON Actual/360", 1 * Days},
     {"CHF-SARON", "CHF-SARONON Actual/360", 1 * Days},
     {"DKK-DKKOIS", "DKK-DKKOISTN Actual/360", 1 * Days},
     {"SEK-SIOR", "SEK-SIORTN Actual/360", 1 * Days},
