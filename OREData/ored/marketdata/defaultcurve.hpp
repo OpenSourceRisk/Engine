@@ -79,6 +79,21 @@ private:
     //! Get the quotes configured for a cds or hazard rate curve
     std::map<QuantLib::Period, QuantLib::Real> getConfiguredQuotes(DefaultCurveConfig& config,
         const QuantLib::Date& asof, const Loader& loader) const;
+
+    //! Get all quotes matching the given regex string, \p strRegex
+    std::map<QuantLib::Period, QuantLib::Real> getRegexQuotes(std::string strRegex,
+        const std::string& configId, DefaultCurveConfig::Type type,
+        const QuantLib::Date& asof, const Loader& loader) const;
+
+    //! Get the explicit \p quotes
+    std::map<QuantLib::Period, QuantLib::Real> getExplicitQuotes(
+        const std::vector<std::pair<std::string, bool> >& quotes,
+        const std::string& configId, DefaultCurveConfig::Type type,
+        const QuantLib::Date& asof, const Loader& loader) const;
+
+    //! Add \p tenor and \p marketDatum value to \p quotes with check for duplicate tenors
+    void addQuote(std::map<QuantLib::Period, QuantLib::Real>& quotes, const QuantLib::Period& tenor,
+        const MarketDatum& marketDatum, const std::string& configId) const;
 };
 
 } // namespace data

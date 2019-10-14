@@ -27,6 +27,7 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 #include <algorithm>
+#include <regex>
 
 using namespace QuantLib;
 using namespace std;
@@ -75,6 +76,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
 void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof,
     const DefaultCurveSpec& spec, const Loader& loader, const Conventions& conventions,
     map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
+
+    LOG("Start building default curve of type SpreadCDS for curve " << config.curveID());
 
     QL_REQUIRE(config.type() == DefaultCurveConfig::Type::SpreadCDS,
         "DefaultCurve::buildCdsCurve expected a default curve configuration with type SpreadCDS");
@@ -133,10 +136,14 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof,
 
     // Force bootstrap so that errors are thrown during the build, not later
     curve_->survivalProbability(QL_EPSILON);
+
+    LOG("Finished building default curve of type SpreadCDS for curve " << config.curveID());
 }
 
 void DefaultCurve::buildHazardRateCurve(DefaultCurveConfig& config, const Date& asof,
     const DefaultCurveSpec& spec, const Loader& loader, const Conventions& conventions) {
+
+    LOG("Start building default curve of type HazardRate for curve " << config.curveID());
 
     QL_REQUIRE(config.type() == DefaultCurveConfig::Type::HazardRate,
         "DefaultCurve::buildHazardRateCurve expected a default curve configuration with type HazardRate");
@@ -183,11 +190,15 @@ void DefaultCurve::buildHazardRateCurve(DefaultCurveConfig& config, const Date& 
 
     // Force bootstrap so that errors are thrown during the build, not later
     curve_->survivalProbability(QL_EPSILON);
+
+    LOG("Finished building default curve of type HazardRate for curve " << config.curveID());
 }
 
 void DefaultCurve::buildBenchmarkCurve(DefaultCurveConfig& config, const Date& asof, const DefaultCurveSpec& spec,
     const Loader& loader, const Conventions& conventions,
     map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
+
+    LOG("Start building default curve of type Benchmark for curve " << config.curveID());
 
     QL_REQUIRE(config.type() == DefaultCurveConfig::Type::Benchmark,
         "DefaultCurve::buildBenchmarkCurve expected a default curve configuration with type Benchmark");
@@ -241,6 +252,8 @@ void DefaultCurve::buildBenchmarkCurve(DefaultCurveConfig& config, const Date& a
 
     // Force bootstrap so that errors are thrown during the build, not later
     curve_->survivalProbability(QL_EPSILON);
+
+    LOG("Finished building default curve of type Benchmark for curve " << config.curveID());
 }
 
 map<Period, Real> DefaultCurve::getConfiguredQuotes(DefaultCurveConfig& config,
@@ -249,29 +262,103 @@ map<Period, Real> DefaultCurve::getConfiguredQuotes(DefaultCurveConfig& config,
     QL_REQUIRE(config.type() == DefaultCurveConfig::Type::SpreadCDS ||
         config.type() == DefaultCurveConfig::Type::HazardRate,
         "DefaultCurve::getConfiguredQuotes expected a default curve configuration with type SpreadCDS or HazardRate");
+    QL_REQUIRE(!config.cdsQuotes().empty(), "No quotes configured for curve " << config.curveID());
 
+    // Populate with quotes
     map<Period, Real> result;
-    for (const auto& p : config.cdsQuotes()) {
+
+    // We may have a _single_ regex quote or a list of explicit quotes. Check if we have single regex quote.
+    bool haveRegexQuote = config.cdsQuotes()[0].first.find("*") != string::npos;
+
+    if (haveRegexQuote) {
+        QL_REQUIRE(config.cdsQuotes().size() == 1, "Wild card specified in " <<
+            config.curveID() << " so only one quote should be provided.");
+        return getRegexQuotes(config.cdsQuotes()[0].first, config.curveID(), config.type(), asof, loader);
+    } else {
+        return getExplicitQuotes(config.cdsQuotes(), config.curveID(), config.type(), asof, loader);
+    }
+}
+
+map<Period, Real> DefaultCurve::getRegexQuotes(string strRegex, const string& configId,
+    DefaultCurveConfig::Type type, const Date& asof, const Loader& loader) const {
+
+    LOG("Loading regex quotes for default curve " << configId);
+
+    // "*" is used as wildcard in strRegex in our quotes. Need to replace with ".*" here for regex to work.
+    boost::replace_all(strRegex, "*", ".*");
+
+    // Create the regular expression
+    regex expression(strRegex);
+
+    // Loop over the available market data and pick out quotes that match the expression
+    map<Period, Real> result;
+    for (const auto& md : loader.loadQuotes(asof)) {
+        
+        // Go to next quote if the market data point's date does not equal our asof
+        if (md->asofDate() != asof)
+            continue;
+
+        // If we have a CDS spread or hazard rate quote, check it and populate tenor and value if it matches
+        if (type == DefaultCurveConfig::Type::SpreadCDS && (
+            md->instrumentType() == MarketDatum::InstrumentType::CDS && 
+            md->quoteType() == MarketDatum::QuoteType::CREDIT_SPREAD)) {
+            
+            auto q = boost::dynamic_pointer_cast<CdsSpreadQuote>(md);
+            if (regex_match(q->name(), expression)) {
+                addQuote(result, q->term(), *md, configId);
+            }
+
+        } else if (type == DefaultCurveConfig::Type::HazardRate && (
+            md->instrumentType() == MarketDatum::InstrumentType::HAZARD_RATE &&
+            md->quoteType() == MarketDatum::QuoteType::RATE)) {
+
+            auto q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
+            if (regex_match(q->name(), expression)) {
+                addQuote(result, q->term(), *md, configId);
+            }
+
+        }
+    }
+
+    QL_REQUIRE(!result.empty(), "No market points found for curve config " << configId);
+    LOG("DefaultCurve " << configId << " loaded and using " << result.size() << " quotes.");
+
+    return result;
+}
+
+map<Period, Real> DefaultCurve::getExplicitQuotes(const vector<pair<string, bool> >& quotes,
+    const string& configId, DefaultCurveConfig::Type type, const Date& asof, const Loader& loader) const {
+
+    LOG("Loading explicit quotes for default curve " << configId);
+    
+    map<Period, Real> result;
+    for (const auto& p : quotes) {
         if (boost::shared_ptr<MarketDatum> md = loader.get(p, asof)) {
             Period tenor;
-            if (config.type() == DefaultCurveConfig::Type::SpreadCDS) {
+            if (type == DefaultCurveConfig::Type::SpreadCDS) {
                 tenor = boost::dynamic_pointer_cast<CdsSpreadQuote>(md)->term();
             } else {
                 tenor = boost::dynamic_pointer_cast<HazardRateQuote>(md)->term();
             }
-
-            // Add to quotes, with a check that we have no duplicate tenors
-            auto r = result.insert(make_pair(tenor, md->quote()->value()));
-            QL_REQUIRE(r.second, "duplicate term in quotes found ("
-                << tenor << ") while loading default curve " << config.curveID());
+            addQuote(result, tenor, *md, configId);
         }
     }
 
-    QL_REQUIRE(!result.empty(), "No market points found for curve config " << config.curveID());
-    LOG("DefaultCurve: using " << result.size() << " default quotes of " <<
-        config.cdsQuotes().size() << " requested quotes.");
+    QL_REQUIRE(!result.empty(), "No market points found for curve config " << configId);
+    LOG("DefaultCurve " << configId << " using " << result.size() <<
+        " default quotes of " << quotes.size() << " requested quotes.");
 
     return result;
+}
+
+void DefaultCurve::addQuote(map<Period, Real>& quotes, const Period& tenor,
+    const MarketDatum& marketDatum, const string& configId) const {
+
+    // Add to quotes, with a check that we have no duplicate tenors
+    auto r = quotes.insert(make_pair(tenor, marketDatum.quote()->value()));
+    QL_REQUIRE(r.second, "duplicate term in quotes found ("
+        << tenor << ") while loading default curve " << configId);
+    TLOG("Loaded quote " << marketDatum.name() << " for default curve " << configId);
 }
 
 } // namespace data
