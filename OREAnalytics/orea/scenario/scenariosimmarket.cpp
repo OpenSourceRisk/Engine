@@ -458,34 +458,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                         LOG("Initial market " << name << " yield volatility type = " << wrapper->volatilityType());
                         
                         // Check is underlying market surface is atm or smile
-                        isAtm = boost::dynamic_pointer_cast<SwaptionVolatilityMatrix>(*wrapper) != nullptr ? true : false;
+                        isAtm = boost::dynamic_pointer_cast<SwaptionVolatilityMatrix>(*wrapper) != nullptr;
                         
-                        // If volatility type is not Normal and we have swaptions, convert to Normal for the simulation
-                        // Notice that this is not possible for yield volatilities, since the ATM level is not known
-                        if (wrapper->volatilityType() != Normal &&
-                            param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
-                            // FIXME we can not convert constant swaption vol structures yet
-                            if (boost::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr) {
-                                ALOG("Constant swaption volatility found in configuration "
-                                     << configuration << " for currency " << name
-                                     << " will not be converted to normal");
-                            } else {
-                                // Get swap index associated with this volatility structure
-                                Handle<SwapIndex> swapIndex = initMarket->swapIndex(swapIndexBase, configuration);
-                                Handle<SwapIndex> shortSwapIndex =
-                                    initMarket->swapIndex(shortSwapIndexBase, configuration);
-                                // Set up swaption volatility converter
-                                SwaptionVolatilityConverter converter(asof_, *wrapper, *swapIndex, *shortSwapIndex,
-                                                                      Normal);
-                                wrapper.linkTo(converter.convert());
-                                LOG("Converting swaption volatilities in configuration "
-                                    << configuration << " with currency " << name
-                                    << " to normal swaption volatilities");
-                            }
-                        }
                         Handle<SwaptionVolatilityStructure> svp;
                         if (param.second.first) {
-                            LOG("Simulating (" << wrapper->volatilityType() << ") yield vols for ccy " << name);
+                            LOG("Simulating yield vols for ccy " << name);
                             DLOG("YieldVol isAtm : " << (isAtm ? "True" : "False"));
                             DLOG("YieldVol isCube : " << (isCube ? "True" : "False"));
                             if (simulateAtmOnly) {
@@ -510,15 +487,35 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             strikeSpreads.begin();
                             QL_REQUIRE(atmSlice < strikeSpreads.size(),
                                        "could not find atm slice (strikeSpreads do not contain 0.0)");
+
+                            // Set up a vol converter, and create if vol type is not normal
+                            SwaptionVolatilityConverter* converter;
+                            if (wrapper->volatilityType() != Normal &&
+                                param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
+
+                                Handle<SwapIndex> swapIndex = initMarket->swapIndex(swapIndexBase, configuration);
+                                Handle<SwapIndex> shortSwapIndex =
+                                    initMarket->swapIndex(shortSwapIndexBase, configuration);
+                                converter = &SwaptionVolatilityConverter(asof_, *wrapper, *swapIndex, *shortSwapIndex, Normal);
+                            }
+
                             for (Size k = 0; k < strikeSpreads.size(); ++k) {
                                 for (Size i = 0; i < optionTenors.size(); ++i) {
                                     for (Size j = 0; j < underlyingTenors.size(); ++j) {
                                         Real strike = Null<Real>();
-                                        if (!isAtm && cube)
+                                        if (!simulateAtmOnly && cube)
                                             strike = cube->atmStrike(optionTenors[i], underlyingTenors[j]) +
                                                      strikeSpreads[k];
-                                        Real vol =
-                                            wrapper->volatility(optionTenors[i], underlyingTenors[j], strike, true);
+                                        Real vol;
+                                        if (wrapper->volatilityType() != Normal &&
+                                            param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
+                                            // if not a normal volatility use the converted to convert to normal at given point
+                                            vol = converter->convert(wrapper->optionDateFromTenor(optionTenors[i]), underlyingTenors[i], 
+                                                strikeSpreads[k], wrapper->dayCounter(), Normal );                                            
+                                        } else {
+                                            vol =
+                                                wrapper->volatility(optionTenors[i], underlyingTenors[j], strike, true);
+                                        }
                                         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
 
                                         Size index = i * underlyingTenors.size() * strikeSpreads.size() +
