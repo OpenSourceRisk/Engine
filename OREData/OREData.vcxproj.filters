@@ -456,6 +456,9 @@
     <ClInclude Include="ored\utilities\conventionsbasedfutureexpiry.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
+    <ClInclude Include="ored\configuration\bootstrapconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -805,6 +808,9 @@
     </ClCompile>
     <ClCompile Include="ored\utilities\conventionsbasedfutureexpiry.cpp">
       <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\configuration\bootstrapconfig.cpp">
+      <Filter>configuration</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

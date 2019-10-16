@@ -37,6 +37,7 @@
   <ItemGroup>
     <ClInclude Include="ored\auto_link.hpp" />
     <ClInclude Include="ored\configuration\basecorrelationcurveconfig.hpp" />
+    <ClInclude Include="ored\configuration\bootstrapconfig.hpp" />
     <ClInclude Include="ored\configuration\capfloorvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\cdsvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\commoditycurveconfig.hpp" />
@@ -184,6 +185,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\basecorrelationcurveconfig.cpp" />
+    <ClCompile Include="ored\configuration\bootstrapconfig.cpp" />
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\cdsvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\commoditycurveconfig.cpp" />

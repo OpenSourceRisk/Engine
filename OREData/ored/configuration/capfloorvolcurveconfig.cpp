@@ -74,10 +74,7 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const string& timeInterpolation,
     const string& strikeInterpolation,
     const vector<string>& atmTenors,
-    Real accuracy,
-    Real globalAccuracy,
-    bool dontThrow,
-    bool dontThrowUsePrevious)
+    const BootstrapConfig& bootstrapConfig)
     : CurveConfig(curveID, curveDescription),
       volatilityType_(volatilityType),
       extrapolate_(extrapolate),
@@ -96,10 +93,7 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
       timeInterpolation_(timeInterpolation),
       strikeInterpolation_(strikeInterpolation),
       atmTenors_(atmTenors),
-      accuracy_(accuracy),
-      globalAccuracy_(globalAccuracy),
-      dontThrow_(dontThrow),
-      dontThrowUsePrevious_(dontThrowUsePrevious) {
+      bootstrapConfig_(bootstrapConfig) {
     
     // Set extrapolation string. "Linear" just means extrapolation allowed and non-flat.
     extrapolation_ = !extrapolate_ ? "None" : (flatExtrapolation_ ? "Flat" : "Linear");
@@ -179,28 +173,9 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         atmTenors_.swap(tenors_);
     }
 
-    // Accuracy for the bootstrap
-    accuracy_ = 1e-12;
-    if (XMLNode* n = XMLUtils::getChildNode(node, "Accuracy")) {
-        accuracy_ = parseReal(XMLUtils::getNodeValue(n));
-    }
-
-    // Global accuracy for the bootstrap if it is global e.g. cubic spline
-    accuracy_ = 1e-10;
-    if (XMLNode* n = XMLUtils::getChildNode(node, "GlobalAccuracy")) {
-        globalAccuracy_ = parseReal(XMLUtils::getNodeValue(n));
-    }
-
-    // If you want the bootstrap not to throw
-    dontThrow_ = false;
-    if (XMLNode* n = XMLUtils::getChildNode(node, "DontThrow")) {
-        dontThrow_ = parseBool(XMLUtils::getNodeValue(n));
-    }
-
-    // If the bootstrap shouldn't throw, what fallback value to use: the previous value or min value
-    dontThrowUsePrevious_ = false;
-    if (XMLNode* n = XMLUtils::getChildNode(node, "DontThrowUsePrevious")) {
-        dontThrowUsePrevious_ = parseBool(XMLUtils::getNodeValue(n));
+    // Optional bootstrap configuration
+    if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
+        bootstrapConfig_.fromXML(n);
     }
 
     // Set type_
@@ -235,10 +210,7 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "InterpolateOn", interpolateOn_);
     XMLUtils::addChild(doc, node, "TimeInterpolation", timeInterpolation_);
     XMLUtils::addChild(doc, node, "StrikeInterpolation", strikeInterpolation_);
-    XMLUtils::addChild(doc, node, "Accuracy", accuracy_);
-    XMLUtils::addChild(doc, node, "GlobalAccuracy", globalAccuracy_);
-    XMLUtils::addChild(doc, node, "DontThrow", dontThrow_);
-    XMLUtils::addChild(doc, node, "DontThrowUsePrevious", dontThrowUsePrevious_);
+    XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
 
     return node;
 }

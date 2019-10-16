@@ -88,10 +88,8 @@ private:
     Currency currency_;
     YieldCurveSpec curveSpec_;
     DayCounter zeroDayCounter_;
-    Real accuracy_;
     bool extrapolation_;
     boost::shared_ptr<YieldCurve> discountCurve_;
-
 
     // TODO: const refs for now, only used during ctor
     const Loader& loader_;

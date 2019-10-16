@@ -70,6 +70,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
         for (auto& p : config->quotes()) {
             // optional, because we do not require all spread quotes; we check below that we have all atm quotes
             boost::shared_ptr<MarketDatum> md = loader.get(std::make_pair(p, true), asof);
+            if(md == nullptr)
+                continue;
             Period expiry, term;
             if (md->quoteType() == volatilityType && matchAtmQuote(md, expiry, term)) {
                 quotesRead++;

@@ -62,20 +62,58 @@ A lookup(const B& map, const C& key, const YieldCurveType y, const string& confi
     return it->second;
 }
 
-template <class A, class B, class C>
-A lookup(const B& map, const C& key1, const C& key2, const string& configuration, const string& type) {
+Handle<QuantExt::CorrelationTermStructure>
+lookup(const map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>>& map,
+       const std::string& key1, const std::string& key2, const string& configuration) {
+    // straight pair
     auto it = map.find(make_tuple(configuration, key1, key2));
-    if (it == map.end()) {
-        // fall back to default configuration
-        it = map.find(make_tuple(Market::defaultConfiguration, key1, key2));
-        QL_REQUIRE(it != map.end(), "did not find object " << key1 << "/" << key2 << " of type " << type
-                                                           << " under configuration " << configuration
-                                                           << " in CorrelationCurves");
+    if (it != map.end())
+        return it->second;
+    // inverse pair
+    it = map.find(make_tuple(configuration, key2, key1));
+    if (it != map.end())
+        return it->second;
+    // inverse fx index1
+    if (isFxIndex(key1)) {
+        it = map.find(make_tuple(configuration, inverseFxIndex(key1), key2));
+        if (it != map.end())
+            return Handle<QuantExt::CorrelationTermStructure>(
+                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
+        it = map.find(make_tuple(configuration, key2, inverseFxIndex(key1)));
+        if (it != map.end())
+            return Handle<QuantExt::CorrelationTermStructure>(
+                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
     }
-    return it->second;
+    // inverse fx index2
+    if (isFxIndex(key2)) {
+        it = map.find(make_tuple(configuration, key1, inverseFxIndex(key2)));
+        if (it != map.end())
+            return Handle<QuantExt::CorrelationTermStructure>(
+                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
+        it = map.find(make_tuple(configuration, inverseFxIndex(key2), key1));
+        if (it != map.end())
+            return Handle<QuantExt::CorrelationTermStructure>(
+                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
+    }
+    // both fx indices inverted
+    if (isFxIndex(key1) && isFxIndex(key2)) {
+        it = map.find(make_tuple(configuration, inverseFxIndex(key1), inverseFxIndex(key2)));
+        if (it != map.end())
+            return it->second;
+        it = map.find(make_tuple(configuration, inverseFxIndex(key2), inverseFxIndex(key1)));
+        if (it != map.end())
+            return it->second;
+    }
+    // if not found, fall back to default configuration
+    if (configuration == Market::defaultConfiguration) {
+        QL_FAIL("did not find object " << key1 << "/" << key2 << " in CorrelationCurves");
+    } else {
+        return lookup(map, key1, key2, Market::defaultConfiguration);
+    }
 }
 
 } // anonymous namespace
+
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, const string& key,
                                                   const string& configuration) const {
     return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, type, configuration, "yield curve");
@@ -247,8 +285,7 @@ Handle<BlackVolTermStructure> MarketImpl::commodityVolatility(const string& comm
 
 Handle<QuantExt::CorrelationTermStructure> MarketImpl::correlationCurve(const string& index1, const string& index2,
                                                                         const string& configuration) const {
-    return lookup<Handle<QuantExt::CorrelationTermStructure>>(correlationCurves_, index1, index2, configuration,
-                                                              "correlation curve");
+    return lookup(correlationCurves_, index1, index2, configuration);
 }
 
 Handle<Quote> MarketImpl::cpr(const string& securityID, const string& configuration) const {

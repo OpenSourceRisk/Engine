@@ -16,6 +16,9 @@ The top level XML elements for each \lstinline!YieldCurve! node are shown in Lis
   <ZeroDayCounter> </ZeroDayCounter>
   <Tolerance> </Tolerance>
   <Extrapolation> </Extrapolation>
+  <BootstrapConfig>
+    ...
+  </BootstrapConfig>
 </YieldCurve>
 \end{minted}
 \caption{Top level yield curve node}
@@ -40,10 +43,19 @@ given in Table \ref{tab:allow_interp_variables}. If the element is omitted or le
 \item ZeroDayCounter [Optional]: The day count basis used internally by the yield curve to calculate the time between
 dates. In particular, if the curve is queried for a zero rate without specifying the day count basis, the zero rate that
 is returned has this basis. If the element is omitted or left blank, then it defaults to \emph{A365}.
-\item Tolerance [Optional]: The tolerance used by the root finding procedure in the bootstrapping algorithm. If the
-element is omitted or left blank, then it defaults to \num[scientific-notation=true]{1.0e-12}.
+
+\item \lstinline!Tolerance! [Optional]: The tolerance used by the root finding procedure in the bootstrapping algorithm. If the
+element is omitted or left blank, then it defaults to \num[scientific-notation=true]{1.0e-12}. It is preferable to use the 
+\lstinline!Accuracy! node in the \lstinline!BootstrapConfig! node below for specifying this value. However, if this node is 
+explicitly supplied, it takes precedence for backwards compatibility purposes.
+
 \item Extrapolation [Optional]: Set to \emph{True} or \emph{False} to enable or disable extrapolation respectively. If
 the element is omitted or left blank, then it defaults to \emph{True}.
+
+\item \lstinline!BootstrapConfig! [Optional]: this node holds configuration details for the iterative bootstrap 
+that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described 
+in section \ref{sec:bootstrap_config} are used.
+
 \end{itemize}
 
 \begin{table}[h]
