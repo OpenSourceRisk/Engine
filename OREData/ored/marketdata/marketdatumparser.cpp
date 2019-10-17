@@ -485,11 +485,14 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::INDEX_CDS_OPTION: {
-        QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() == 4 || tokens.size() == 5, "4 or 5 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Invalid quote type for " << datumName);
         const string& indexName = tokens[2];
         const string& expiry = tokens[3];
-        return boost::make_shared<IndexCDSOptionQuote>(value, asof, datumName, indexName, expiry);
+        Real strike = 0.0; // ATM
+        if (tokens.size() == 5)
+            strike = parseReal(tokens[4]);
+        return boost::make_shared<IndexCDSOptionQuote>(value, asof, datumName, indexName, expiry, strike);
     }
 
     case MarketDatum::InstrumentType::COMMODITY_SPOT: {
