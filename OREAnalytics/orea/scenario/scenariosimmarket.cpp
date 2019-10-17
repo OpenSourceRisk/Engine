@@ -489,19 +489,20 @@ ScenarioSimMarket::ScenarioSimMarket(
                                        "could not find atm slice (strikeSpreads do not contain 0.0)");
 
                             // Set up a vol converter, and create if vol type is not normal
-                            SwaptionVolatilityConverter* converter;
+                            SwaptionVolatilityConverter* converter = nullptr;
                             if (wrapper->volatilityType() != Normal &&
                                 param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
 
                                 Handle<SwapIndex> swapIndex = initMarket->swapIndex(swapIndexBase, configuration);
                                 Handle<SwapIndex> shortSwapIndex =
                                     initMarket->swapIndex(shortSwapIndexBase, configuration);
-                                converter = &SwaptionVolatilityConverter(asof_, *wrapper, *swapIndex, *shortSwapIndex, Normal);
+                                converter = new SwaptionVolatilityConverter(asof_, *wrapper, *swapIndex, *shortSwapIndex, Normal);
                             }
 
                             for (Size k = 0; k < strikeSpreads.size(); ++k) {
                                 for (Size i = 0; i < optionTenors.size(); ++i) {
                                     for (Size j = 0; j < underlyingTenors.size(); ++j) {
+                                        LOG("k = " << k << "; i = " << i << "; j = " << j << ";");
                                         Real strike = Null<Real>();
                                         if (!simulateAtmOnly && cube)
                                             strike = cube->atmStrike(optionTenors[i], underlyingTenors[j]) +
@@ -510,7 +511,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         if (wrapper->volatilityType() != Normal &&
                                             param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
                                             // if not a normal volatility use the converted to convert to normal at given point
-                                            vol = converter->convert(wrapper->optionDateFromTenor(optionTenors[i]), underlyingTenors[i], 
+                                            vol = converter->convert(wrapper->optionDateFromTenor(optionTenors[i]), underlyingTenors[j], 
                                                 strikeSpreads[k], wrapper->dayCounter(), Normal );                                            
                                         } else {
                                             vol =
