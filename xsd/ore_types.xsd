@@ -511,6 +511,30 @@
       <xs:enumeration value="Dec"/>
     </xs:restriction>
   </xs:simpleType>
+  
+  <xs:simpleType name="cdsTierType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="SNRFOR"/>
+      <xs:enumeration value="SUBLT2"/>
+      <xs:enumeration value="SNRLAC"/>
+      <xs:enumeration value="SECDOM"/>
+      <xs:enumeration value="JRSUBUT2"/>
+      <xs:enumeration value="PREFT1"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="cdsDocClauseType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="CR"/>
+      <xs:enumeration value="MM"/>
+      <xs:enumeration value="MR"/>
+      <xs:enumeration value="XR"/>
+      <xs:enumeration value="CR14"/>
+      <xs:enumeration value="MM14"/>
+      <xs:enumeration value="MR14"/>
+      <xs:enumeration value="XR14"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:simpleType name="positiveDecimal">
     <xs:restriction base="xs:decimal">
