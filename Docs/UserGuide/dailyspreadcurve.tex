@@ -211,13 +211,13 @@ with $\xi$ between $0$ and $x$. We have
 \end{equation}
 
 To bound the approximation error $\alpha := g(x) - g(0)$ we assume that the the forward rate $x$ lies in $[f_0, f_1]$
-and $s$ lies in $[s_0, s_1]$, such that $1+\tau f_0 + s_0) > 0$. The latter restriction is of no practical relevance of
+and $s$ lies in $[s_0, s_1]$, such that $1+\tau (f_0 + s_0) > 0$. The latter restriction is of no practical relevance of
 course.
 
 The approximation error is then bounded by
 
 \begin{equation}
-  | \alpha | =| g(x) - g(0) | \leq \frac{\tau^2 \max(|s_0|, |s_1|)}{1+\tau(f_0+s_0)} \max(|f_0|, |f_1|)
+  | \alpha | =| g(x) - g(0) | \leq \frac{\tau^2 \max(|s_0|, |s_1|)}{(1+\tau(f_0+s_0))^2} \max(|f_0|, |f_1|)
 \end{equation}
 
 If $r(d)$ is the continuous compounded zero rate for a date $d$ we have
@@ -248,7 +248,7 @@ and since $t = n \tau$ and $g(0) = 1 / ( 1 + \tau s )$
 which is bounded by
 
 \begin{equation}\label{error_bound}
-  \frac{1}{\tau} \ln \left( 1 + \frac{\tau^2 \max(|s_0|, |s_1|)}{1+\tau(f_0+s_0)} \max(|f_0|, |f_1|)  ( 1+\tau s_1 ) \right)
+  \frac{1}{\tau} \ln \left( 1 + \frac{\tau^2 \max(|s_0|, |s_1|)}{(1+\tau(f_0+s_0))^2} \max(|f_0|, |f_1|)  ( 1+\tau s_1 ) \right)
 \end{equation}
 
 The error bound for some choices of $f_0, f_1$ and $s_0, s_1$ is summarised in table \ref{sample_error_bounds}. In the
