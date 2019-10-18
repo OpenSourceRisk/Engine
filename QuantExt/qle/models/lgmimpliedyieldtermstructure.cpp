@@ -23,9 +23,9 @@ namespace QuantExt {
 LgmImpliedYieldTermStructure::LgmImpliedYieldTermStructure(const boost::shared_ptr<LinearGaussMarkovModel>& model,
                                                            const DayCounter& dc, const bool purelyTimeBased, const bool cacheValues)
     : YieldTermStructure(dc == DayCounter() ? model->parametrization()->termStructure()->dayCounter() : dc),
-      model_(model), purelyTimeBased_(purelyTimeBased),
+      cacheValues_(cacheValues), model_(model), purelyTimeBased_(purelyTimeBased),
       referenceDate_(purelyTimeBased ? Null<Date>() : model_->parametrization()->termStructure()->referenceDate()),
-      state_(0.0), cacheValues_(cacheValues) {
+      state_(0.0) {
     registerWith(model_);
     update();
 }
