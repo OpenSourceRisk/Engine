@@ -35,18 +35,67 @@ OIBSHelper::OIBSHelper(Natural settlementDays,
                        const boost::shared_ptr<IborIndex>& iborIndex, const Handle<YieldTermStructure>& discount)
     : RelativeDateRateHelper(oisSpread), settlementDays_(settlementDays), tenor_(tenor),
       overnightIndex_(overnightIndex), iborIndex_(iborIndex), discount_(discount) {
+
+    /* depending on the given curves we proceed as outlined in the following table
+
+       x = curve is given
+       . = curve is missing
+
+       Case | OIS | Ibor | Discount | Action
+       =========================================
+         0  |  .  |   .  |    .     | throw exception
+         1  |  .  |   .  |    x     | throw exception
+         2  |  .  |   x  |    .     | imply OIS = Discount
+         3  |  .  |   x  |    x     | imply OIS
+         4  |  x  |   .  |    .     | imply Ibor, set Discount = OIS
+         5  |  x  |   .  |    x     | imply Ibor
+         6  |  x  |   x  |    .     | imply Discount
+         7  |  x  |   x  |    x     | throw exception
+
+    */
+
+    Size whichCase = (overnightIndex_->forwardingTermStructure().empty() ? 0 : 4) +
+                     (iborIndex_->forwardingTermStructure().empty() ? 0 : 2) + (discount_.empty() ? 0 : 1);
+
+    switch (whichCase) {
+    case 0:
+        QL_FAIL("no curve given");
+    case 1:
+        QL_FAIL("neither OIS nor Ibor curve is given");
+    case 2:
+        overnightIndex_ = boost::static_pointer_cast<OvernightIndex>(overnightIndex_->clone(termStructureHandle_));
+        overnightIndex_->unregisterWith(termStructureHandle_);
+        discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
+        break;
+    case 3:
+        overnightIndex_ = boost::static_pointer_cast<OvernightIndex>(overnightIndex_->clone(termStructureHandle_));
+        overnightIndex_->unregisterWith(termStructureHandle_);
+        break;
+    case 4:
+        iborIndex_ = iborIndex_->clone(termStructureHandle_);
+        iborIndex_->unregisterWith(termStructureHandle_);
+        discountRelinkableHandle_.linkTo(*overnightIndex_->forwardingTermStructure());
+        break;
+    case 5:
+        iborIndex_ = iborIndex_->clone(termStructureHandle_);
+        iborIndex_->unregisterWith(termStructureHandle_);
+        break;
+    case 6:
+        discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
+        break;
+    case 7:
+        QL_FAIL("OIS, Ibor and Discount curves are all given");
+    default:
+        QL_FAIL("unexpected case (" << whichCase << ")");
+    }
+
     registerWith(overnightIndex_);
     registerWith(iborIndex_);
-    if (!discount_.empty())
-        registerWith(discount_);
+    registerWith(discount_);
     initializeDates();
 }
 
 void OIBSHelper::initializeDates() {
-
-    boost::shared_ptr<IborIndex> clonedIborIndex = iborIndex_->clone(termStructureHandle_);
-    // avoid notifications
-    iborIndex_->unregisterWith(termStructureHandle_);
 
     Date asof = Settings::instance().evaluationDate();
     // if the evaluation date is not a business day
@@ -71,9 +120,9 @@ void OIBSHelper::initializeDates() {
     swap_ = boost::shared_ptr<OvernightIndexedBasisSwap>(new OvernightIndexedBasisSwap(OvernightIndexedBasisSwap::Payer,
                                                                                        10000.0, // arbitrary
                                                                                        oisSchedule, overnightIndex_,
-                                                                                       iborSchedule, clonedIborIndex));
+                                                                                       iborSchedule, iborIndex_));
     boost::shared_ptr<PricingEngine> engine(
-        new DiscountingSwapEngine(discount_.empty() ? overnightIndex_->forwardingTermStructure() : discount_));
+        new DiscountingSwapEngine(discount_.empty() ? discountRelinkableHandle_ : discount_));
     swap_->setPricingEngine(engine);
 
     earliestDate_ = swap_->startDate();
