@@ -650,6 +650,7 @@
     <ClCompile Include="conventions.cpp" />
     <ClCompile Include="correlationcurveconfig.cpp" />
     <ClCompile Include="cpiswap.cpp" />
+    <ClCompile Include="creditdefaultswapdata.cpp" />
     <ClCompile Include="crossassetmodeldata.cpp" />
     <ClCompile Include="curveconfig.cpp" />
     <ClCompile Include="digitalcms.cpp" />

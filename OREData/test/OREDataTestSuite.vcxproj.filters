@@ -115,5 +115,8 @@
     <ClCompile Include="calendaradjustment.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="creditdefaultswapdata.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

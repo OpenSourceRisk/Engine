@@ -163,6 +163,7 @@ struct TodaysMarketArguments {
     TodaysMarketArguments(const string& inputDir, const string& curveConfigFile) {
         
         asof = Date(25, Sep, 2019);
+        Settings::instance().evaluationDate() = asof;
 
         string filename = inputDir + "/conventions.xml";
         conventions.fromFile(TEST_INPUT_FILE(filename));

@@ -1195,24 +1195,27 @@ This class holds single market points of type
 Specific data comprise
 - index name
 - option expiry (either a date or a period)
+- strike (optional, default is ATM)
 
 \ingroup marketdata
 */
 class IndexCDSOptionQuote : public MarketDatum {
 public:
     //! Constructor
-    IndexCDSOptionQuote(Real value, Date asofDate, const string& name, const string& indexName, const string& expiry)
+    IndexCDSOptionQuote(Real value, Date asofDate, const string& name, const string& indexName, const string& expiry, Real strike = 0.0)
         : MarketDatum(value, asofDate, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION),
-          indexName_(indexName), expiry_(expiry) {}
+          indexName_(indexName), expiry_(expiry), strike_(strike) {}
 
     //! \name Inspectors
     //@{
     const string& indexName() const { return indexName_; }
     const string& expiry() const { return expiry_; }
+    Real strike() const { return strike_; }
     //@}
 private:
     string indexName_;
     string expiry_;
+    Real strike_;
 };
 
 //! Commodity spot quote class

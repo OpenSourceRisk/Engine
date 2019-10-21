@@ -71,6 +71,9 @@
 \newenvironment{longlisting}{\captionsetup{type=listing}}{}
 %\usepackage[colorlinks=true]{hyperref}
 
+% Inline code fragments can run over the page boundary without ragged right.
+\AtBeginDocument{\raggedright}
+
 \renewcommand\P{\ensuremath{\mathbb{P}}}
 \newcommand\E{\ensuremath{\mathbb{E}}}
 \newcommand\Q{\ensuremath{\mathbb{Q}}}
@@ -4786,6 +4789,7 @@ This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning
 \input{../../Docs/UserGuide/tradecomponents/cpileg}
 \input{../../Docs/UserGuide/tradecomponents/yyleg}
 \input{../../Docs/UserGuide/tradecomponents/zerocouponleg}
+\input{../../Docs/UserGuide/tradecomponents/cdsreferenceinformation}
 
 
 \include{allowablevalues}
