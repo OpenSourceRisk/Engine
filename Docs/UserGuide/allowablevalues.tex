@@ -210,5 +210,56 @@ conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: 
   \label{tab:commodity_data}
 \end{table}
 
+\begin{table}[H]
+\centering
+  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+    \hline
+    \multicolumn{2}{|l|}{\lstinline!Tier!} \\
+    \hline
+    \textbf{Value} & \textbf{Description} \\
+    \hline
+    \lstinline!SNRFOR! & Senior unsecured for corporates or foreign debt for sovereigns \\
+    \hline
+    \lstinline!SUBLT2! & Subordinated or lower Tier 2 debt for banks \\
+    \hline
+    \lstinline!SNRLAC! & Senior loss absorbing capacity \\
+    \hline
+    \lstinline!SECDOM! & Secured for corporates or domestic debt for sovereigns \\
+    \hline
+    \lstinline!JRSUBUT2! & Junior subordinated or upper Tier 2 debt for banks \\
+    \hline
+    \lstinline!PREFT1! & Preference shares or Tier 1 capital for banks \\
+    \hline
+  \end{tabu}
+  \caption{Allowable values for \lstinline!Tier!}
+  \label{tab:allowable_values_tier}
+\end{table}
 
-
+\begin{table}[H]
+\centering
+  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+    \hline
+    \multicolumn{2}{|l|}{\lstinline!DocClause!} \\
+    \hline
+    \textbf{Value} & \textbf{Description} \\
+    \hline
+    \lstinline!CR! & Full or old restructuring referencing the 2003 ISDA Definitions \\
+    \hline
+    \lstinline!MM! & Modified modified restructuring referencing the 2003 ISDA Definitions \\
+    \hline
+    \lstinline!MR! & Modified restructuring referencing the 2003 ISDA Definitions \\
+    \hline
+    \lstinline!XR! & No restructuring referencing the 2003 ISDA Definitions \\
+    \hline
+	\lstinline!CR14! & Full or old restructuring referencing the 2014 ISDA Definitions \\
+    \hline
+    \lstinline!MM14! & Modified modified restructuring referencing the 2014 ISDA Definitions \\
+    \hline
+    \lstinline!MR14! & Modified restructuring referencing the 2014 ISDA Definitions \\
+    \hline
+    \lstinline!XR14! & No restructuring referencing the 2014 ISDA Definitions \\
+    \hline
+  \end{tabu}
+  \caption{Allowable values for \lstinline!DocClause!}
+  \label{tab:allowable_values_doc_clause}
+\end{table}
