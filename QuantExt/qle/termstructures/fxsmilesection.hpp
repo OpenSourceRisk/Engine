@@ -33,8 +33,8 @@ using namespace QuantLib;
 //! \ingroup termstructures
 class FxSmileSection {
 public:
-    FxSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr25d, Volatility bf25d)
-        : spot_(spot), rd_(rd), rf_(rf), t_(t), atmVol_(atmVol), rr25d_(rr25d), bf25d_(bf25d) {}
+    FxSmileSection(Real spot, Real rd, Real rf, Time t)
+        : spot_(spot), rd_(rd), rf_(rf), t_(t) {}
     virtual ~FxSmileSection(){};
 
     virtual Volatility volatility(Real strike) const = 0;
@@ -44,9 +44,6 @@ protected:
     Real rd_;
     Real rf_;
     Time t_;
-    Volatility atmVol_;
-    Volatility rr25d_;
-    Volatility bf25d_;
 };
 
 } // namespace QuantExt
