@@ -502,7 +502,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                             for (Size k = 0; k < strikeSpreads.size(); ++k) {
                                 for (Size i = 0; i < optionTenors.size(); ++i) {
                                     for (Size j = 0; j < underlyingTenors.size(); ++j) {
-                                        LOG("k = " << k << "; i = " << i << "; j = " << j << ";");
                                         Real strike = Null<Real>();
                                         if (!simulateAtmOnly && cube)
                                             strike = cube->atmStrike(optionTenors[i], underlyingTenors[j]) +
