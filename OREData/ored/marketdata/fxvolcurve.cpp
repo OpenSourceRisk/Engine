@@ -93,7 +93,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         const boost::shared_ptr<FXVolatilityCurveConfig>& config = curveConfigs.fxVolCurveConfig(spec.curveConfigID());
 
         QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATM ||
-                       config->dimension() == FXVolatilityCurveConfig::Dimension::Smile,
+                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileVannaVolga,
                    "Unkown FX curve building dimension");
 
         bool isATM = config->dimension() == FXVolatilityCurveConfig::Dimension::ATM;
