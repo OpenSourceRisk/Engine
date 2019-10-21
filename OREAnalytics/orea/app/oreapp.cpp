@@ -330,7 +330,9 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
 }
 
 boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() const {
-    return boost::make_shared<TradeFactory>(getExtraTradeBuilders());
+    boost::shared_ptr<TradeFactory> tf = boost::make_shared<TradeFactory>();
+    tf->addExtraBuilders(getExtraTradeBuilders(tf));
+    return tf;
 }
 
 boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
@@ -468,7 +470,7 @@ boost::shared_ptr<ReportWriter> OREApp::getReportWriter() const {
 }
 
 boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() {
-    return boost::make_shared<SensitivityRunner>(params_, getExtraTradeBuilders(), getExtraEngineBuilders(),
+    return boost::make_shared<SensitivityRunner>(params_, buildTradeFactory(), getExtraEngineBuilders(),
                                                  getExtraLegBuilders(), continueOnError_);
 }
 

@@ -168,11 +168,12 @@ protected:
     //! Add extra leg builders
     virtual std::vector<boost::shared_ptr<LegBuilder>> getExtraLegBuilders() const { return {}; };
     //! Add extra trade builders
-    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> getExtraTradeBuilders() const { return {}; };
+    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>>
+    getExtraTradeBuilders(const boost::shared_ptr<TradeFactory>& = {}) const {
+        return {};
+    };
     //! Get fixing manager
-    virtual boost::shared_ptr<FixingManager> getFixingManager() {
-        return boost::make_shared<FixingManager>(asof_);
-    }
+    virtual boost::shared_ptr<FixingManager> getFixingManager() { return boost::make_shared<FixingManager>(asof_); }
     //! Get parametric var calculator
     virtual boost::shared_ptr<ParametricVarCalculator>
     buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
