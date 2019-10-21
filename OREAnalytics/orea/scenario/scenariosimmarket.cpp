@@ -514,7 +514,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 for (Size i = 0; i < optionTenors.size(); ++i) {
                                     for (Size j = 0; j < underlyingTenors.size(); ++j) {
                                         Real strike = Null<Real>();
-                                        if (!isAtm && cube)
+                                        if (!simulateAtmOnly && cube)
                                             strike = cube->atmStrike(optionTenors[i], underlyingTenors[j]) +
                                                      strikeSpreads[k];
                                         Real vol =
