@@ -47,7 +47,7 @@ Real NumericLgmSwaptionEngineBase::rebatePv(const Real x, const Real t, const Si
 
 Real NumericLgmSwaptionEngineBase::calculate() const {
 
-    iborModelCurve_ = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model(), iborIndex_->forwardingTermStructure());
+    iborModelCurve_ = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model(), iborIndex_->forwardingTermStructure(), DayCounter(), false, true);
 
     iborIndexCorrected_ = iborIndex_->clone(Handle<YieldTermStructure>(iborModelCurve_));
 
