@@ -59,6 +59,7 @@ void ScheduleDates::fromXML(XMLNode* node) {
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
     convention_ = XMLUtils::getChildValue(node, "Convention");
     tenor_ = XMLUtils::getChildValue(node, "Tenor");
+    endOfMonth_ = XMLUtils::getChildValue(node, "EndOfMonth");
     dates_ = XMLUtils::getChildrenValues(node, "Dates", "Date");
 }
 
@@ -68,6 +69,8 @@ XMLNode* ScheduleDates::toXML(XMLDocument& doc) {
         if (convention_ != "")
     XMLUtils::addChild(doc, node, "Convention", convention_);
     XMLUtils::addChild(doc, node, "Tenor", tenor_);
+    if(endOfMonth_ != "")
+        XMLUtils::addChild(doc, node, "EndOfMonth", endOfMonth_);
     XMLUtils::addChildren(doc, node, "Dates", "Date", dates_);
     return node;
 }
@@ -101,10 +104,13 @@ Schedule makeSchedule(const ScheduleDates& data) {
     boost::optional<Period> tenor = boost::none;
     if (data.tenor() != "")
         tenor = parsePeriod(data.tenor());
+    bool endOfMonth = false;
+    if (data.endOfMonth() != "")
+        endOfMonth = parseBool(data.endOfMonth());
     vector<Date> scheduleDates(data.dates().size());
     for (Size i = 0; i < data.dates().size(); i++)
         scheduleDates[i] = calendar.adjust(parseDate(data.dates()[i]), convention);
-    return Schedule(scheduleDates, calendar, convention, boost::none, tenor);
+    return Schedule(scheduleDates, calendar, convention, boost::none, tenor, boost::none, endOfMonth);
 }
 
 Schedule makeSchedule(const ScheduleRules& data) {

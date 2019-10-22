@@ -34,6 +34,7 @@ respectively dates are shown in Listing \ref{lst:schedule_data_true} and Listing
                  <Calendar>NYB</Calendar>
                  <Convention>Following</Convention>
                  <Tenor>3M</Tenor>
+                 <EndOfMonth>false</EndOfMonth>
                     <Dates>
                         <Date>2012-01-06</Date>
                         <Date>2012-04-10</Date>
@@ -137,6 +138,11 @@ M or Y.  The characters before that must be a positive integer. \\D
 $=$ Day, W $=$ Week, M $=$ Month, Y $=$ Year
 
 Defaults to \emph{null} if omitted.
+
+\item EndOfMonth [Optional]: Specifies whether the end of month convention is applied when calculating reference periods
+  for irregular periods when the day count convention is ActActICMA and the schedule is dates based.
+
+Allowable values: \emph{True, False}. Defaults to \emph{False} if left blank or omitted.
 
 \item Dates: This is a sub-sub-node and contains child elements of type
   \lstinline!Date!. In this case the schedule dates are determined
