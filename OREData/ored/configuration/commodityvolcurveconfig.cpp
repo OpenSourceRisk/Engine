@@ -163,7 +163,7 @@ CommodityVolatilityCurveConfig::Type CommodityVolatilityCurveConfig::stringToTyp
     } else if (type == "Surface") {
         return Type::Surface;
     } else {
-        QL_FAIL("Cannot convert string '" << type << "' to commodity volatility type");
+        QL_FAIL("Cannot convert string \"" << type << "\" to commodity volatility type");
     }
 }
 

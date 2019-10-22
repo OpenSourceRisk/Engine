@@ -80,7 +80,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
     if (it != b.end()) {
         return it->second;
     } else {
-        QL_FAIL("Cannot convert " << s << " to InstrumentType");
+        QL_FAIL("Cannot convert \"" << s << "\" to InstrumentType");
     }
 }
 
@@ -107,7 +107,7 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
     if (it != b.end()) {
         return it->second;
     } else {
-        QL_FAIL("Cannot convert " << s << " to QuoteType");
+        QL_FAIL("Cannot convert \"" << s << "\" to QuoteType");
     }
 }
 
