@@ -48,7 +48,7 @@ CrossAssetStateProcess::discretization parseDiscretization(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Cannot convert " << s << " to QuantExt::CrossAssetStateProcess::discretization");
+        QL_FAIL("Cannot convert \"" << s << "\" to QuantExt::CrossAssetStateProcess::discretization");
     }
 }
 
