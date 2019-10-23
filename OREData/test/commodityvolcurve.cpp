@@ -44,6 +44,9 @@ public:
     const boost::shared_ptr<MarketDatum>& get(const string& name, const Date&) const { return dummyDatum_; }
     const vector<Fixing>& loadFixings() const { return dummyFixings_; }
     const vector<Fixing>& loadDividends() const { return dummyDividends_; }
+    void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addDividend(Date date, const string& name, Real value) {}
 
 private:
     vector<boost::shared_ptr<MarketDatum>> data_;

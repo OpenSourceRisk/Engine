@@ -1391,5 +1391,25 @@ private:
     string securityID_;
 };
 
+//! Bond Price Quote
+/*!
+This class holds single market points of type
+- Price
+\ingroup marketdata
+*/
+class BondPriceQuote : public MarketDatum {
+public:
+    //! Constructor
+    BondPriceQuote(Real value, Date asofDate, const string& name, const string& securityId)
+        : MarketDatum(value, asofDate, name, QuoteType::PRICE, InstrumentType::BOND), securityID_(securityId) {}
+
+    //! \name Inspectors
+    //@{
+    const string& securityID() const { return securityID_; }
+    //@}
+private:
+    string securityID_;
+};
+
 } // namespace data
 } // namespace ore

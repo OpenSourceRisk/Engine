@@ -134,6 +134,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         }
         try {
             const vector<Leg>& legs = trades[k]->legs();
+            const Real multiplier = trades[k]->instrument()->multiplier();
             for (size_t i = 0; i < legs.size(); i++) {
                 const QuantLib::Leg& leg = legs[i];
                 bool payer = trades[k]->legPayers()[i];
@@ -213,13 +214,13 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             .add(i)
                             .add(payDate)
                             .add(flowType)
-                            .add(amount)
+                            .add(amount * (amount == Null<Real>() ? 1.0 : multiplier))
                             .add(ccy)
                             .add(coupon)
                             .add(accrual)
                             .add(fixingDate)
                             .add(fixingValue)
-                            .add(notional);
+                            .add(notional * (notional == Null<Real>() ? 1.0 : multiplier));
 
                         if (write_discount_factor) {
                             Real discountFactor = discountCurve->discount(payDate);

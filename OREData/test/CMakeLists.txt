@@ -14,6 +14,7 @@ commodityvolcurveconfig.cpp
 conventions.cpp
 correlationcurveconfig.cpp
 cpiswap.cpp
+creditdefaultswapdata.cpp
 crossassetmodeldata.cpp
 curveconfig.cpp
 digitalcms.cpp
