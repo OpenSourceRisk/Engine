@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file blackvariancesurfacedelta.hpp
+/*! \file blackvolsurfacedelta.hpp
  \brief Black volatility surface based on delta
  \ingroup termstructures
  */
