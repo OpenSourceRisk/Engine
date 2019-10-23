@@ -45,14 +45,13 @@ using std::vector;
 class FXVolatilityCurveConfig : public CurveConfig {
 public:
     //! supported volatility structure types
-    /*! For ATM we will only load ATM quotes, for Smile we load ATM, 25RR, 25BF
-     *  TODO: Add more options (e.g. Delta)
+    /*! For ATM we will only load ATM quotes, for Smile we load ATM, 25RR, 25BF or Deltas
      *  SmileInterpolation - currently suports which of the 2 Vanna Volga approximations,
      *  as per  Castagna& Mercurio(2006), to use. The second approximation is more accurate
      *  but can ask for the square root of a negative number under unusual circumstances.
      */
-    enum class Dimension { ATM, Smile };   
-    enum class SmileInterpolation { VannaVolga1, VannaVolga2 }; // Vanna Volga first/second approximation respectively
+    enum class Dimension { ATM, SmileVannaVolga, SmileDelta};   
+    enum class SmileInterpolation { VannaVolga1, VannaVolga2, Linear, Cubic }; // Vanna Volga first/second approximation respectively
 
     //! \name Constructors/Destructors
     //@{
@@ -60,7 +59,7 @@ public:
     FXVolatilityCurveConfig() {}
     //! Detailed constructor
     FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
-                            const vector<string>& expiries, const string& fxSpotID = "",
+                            const vector<string>& expiries, const vector<string>& deltas = vector<string>(), const string& fxSpotID = "",
                             const string& fxForeignCurveID = "", const string& fxDomesticCurveID = "",
                             const DayCounter& dayCounter = QuantLib::Actual365Fixed(),
                             const Calendar& calendar = QuantLib::TARGET(),
@@ -78,6 +77,7 @@ public:
     //@{
     const Dimension& dimension() const { return dimension_; }
     const vector<string>& expiries() const { return expiries_; }
+    const vector<string>& deltas() const { return deltas_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const Calendar& calendar() const { return calendar_; }
     // only required for Smile
@@ -92,7 +92,7 @@ public:
     //@{
     Dimension& dimension() { return dimension_; }
     SmileInterpolation& smileInterpolation() { return smileInterpolation_; }
-    vector<string>& expiries() { return expiries_; }
+    vector<string>& deltas() { return deltas_; }
     DayCounter& dayCounter() { return dayCounter_; }
     Calendar& calendar() { return calendar_; }
     string& fxSpotID() { return fxSpotID_; }
@@ -107,6 +107,7 @@ private:
 
     Dimension dimension_;
     vector<string> expiries_;
+    vector<string> deltas_;
     DayCounter dayCounter_;
     Calendar calendar_;
     string fxSpotID_;

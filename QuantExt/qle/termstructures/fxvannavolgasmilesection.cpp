@@ -25,7 +25,7 @@ namespace QuantExt {
 
 VannaVolgaSmileSection::VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr25d,
                                                Volatility bf25d, bool firstApprox)
-    : FxSmileSection(spot, rd, rf, t, atmVol, rr25d, bf25d), firstApprox_(firstApprox) {
+    : FxSmileSection(spot, rd, rf, t), atmVol_(atmVol), rr25d_(rr25d), bf25d_(bf25d), firstApprox_(firstApprox) {
 
     // Consistent Pricing of FX Options
     // Castagna & Mercurio (2006)

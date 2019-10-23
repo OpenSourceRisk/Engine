@@ -58,6 +58,7 @@ private:
     Real d2(Real x) const;
 
     Real k_atm_, k_25c_, k_25p_;
+    Volatility atmVol_, rr25d_, bf25d_;
     Volatility vol_25c_, vol_25p_;
     bool firstApprox_;
 };
