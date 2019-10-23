@@ -904,35 +904,37 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
 
     // set parameters for swaption resp. yield vol scenarios
 
-    Size n_term, n_expiry;
-    std::vector<Real> volStrikes;
     bool atmOnly;
-    std::map<string, SensitivityScenarioData::GenericYieldVolShiftData> shiftData;
-    std::vector<Period> volExpiries, volTerms;
-    std::function<string(string)> getDayCounter;
-    std::function<ScenarioDescription(string,Size,Size,Size,bool)> getScenarioDescription;
+    map<string, SensitivityScenarioData::GenericYieldVolShiftData> shiftData;
+    function<Size(string)> get_n_term;
+    function<Size(string)> get_n_expiry;
+    function<vector<Real>(string)> getVolStrikes;
+    function<vector<Period>(string)> getVolExpiries;
+    function<vector<Period>(string)> getVolTerms;
+    function<string(string)> getDayCounter;
+    function<ScenarioDescription(string,Size,Size,Size,bool)> getScenarioDescription;
 
     if (rfType == RFType::SwaptionVolatility) {
-        n_term = simMarketData_->swapVolTerms().size();
-        n_expiry = simMarketData_->swapVolExpiries().size();
         atmOnly = simMarketData_->simulateSwapVolATMOnly();
-        volStrikes = simMarketData_->swapVolStrikeSpreads();
         shiftData = sensitivityData_->swaptionVolShiftData();
-        volExpiries = simMarketData_->swapVolExpiries();
-        volTerms = simMarketData_->swapVolTerms();
+        get_n_term = [this](const string& k) { return simMarketData_->swapVolTerms(k).size(); };
+        get_n_expiry = [this](const string& k) { return simMarketData_->swapVolExpiries(k).size(); };
+        getVolStrikes = [this](const string& k) { return simMarketData_->swapVolStrikeSpreads(k); };
+        getVolExpiries = [this](const string& k) { return simMarketData_->swapVolExpiries(k); };
+        getVolTerms = [this](const string& k) { return simMarketData_->swapVolTerms(k); };
         getDayCounter = [this](const string& k) { return simMarketData_->swapVolDayCounter(k); };
         getScenarioDescription = [this](string q, Size n, Size m, Size k, bool up) {
             return swaptionVolScenarioDescription(q, n, m, k, up);
         };
     } else if (rfType == RFType::YieldVolatility) {
-        n_term = simMarketData_->yieldVolTerms().size();
-        n_expiry = simMarketData_->yieldVolExpiries().size();
         atmOnly = true;
-        volStrikes = {0.0};
         shiftData = sensitivityData_->yieldVolShiftData();
+        get_n_term = [this](const string& k) { return simMarketData_->yieldVolTerms().size(); };
+        get_n_expiry = [this](const string& k) { return simMarketData_->yieldVolExpiries().size(); };
+        getVolStrikes = [this](const string& k) { return vector<Real>({ 0.0 }); };
+        getVolExpiries = [this](const string& k) { return simMarketData_->yieldVolExpiries(); };
+        getVolTerms = [this](const string& k) { return simMarketData_->yieldVolTerms(); };
         getDayCounter = [this](const string& k) { return simMarketData_->yieldVolDayCounter(k); };
-        volExpiries = simMarketData_->yieldVolExpiries();
-        volTerms = simMarketData_->yieldVolTerms();
         getScenarioDescription = [this](string q, Size n, Size m, Size k, bool up) {
             return yieldVolScenarioDescription(q, n, m, up);
         };
@@ -943,18 +945,22 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
 
     // generate scenarios
 
-    vector<Real> volExpiryTimes(n_expiry, 0.0);
-    vector<Real> volTermTimes(n_term, 0.0);
     vector<vector<vector<Real>>> volData;
     vector<vector<vector<Real>>> shiftedVolData;
-
-    Size n_strike = volStrikes.size();
-
-    volData.resize(n_strike, vector<vector<Real>>(n_expiry, vector<Real>(n_term, 0.0)));
-    shiftedVolData.resize(n_strike, vector<vector<Real>>(n_expiry, vector<Real>(n_term, 0.0)));
-
+   
     for (auto s : shiftData) {
         std::string qualifier = s.first;
+
+        Size n_term = get_n_term(qualifier);
+        Size n_expiry = get_n_expiry(qualifier);
+
+        vector<Real> volExpiryTimes(n_expiry, 0.0);
+        vector<Real> volTermTimes(n_term, 0.0);
+        Size n_strike = getVolStrikes(qualifier).size();
+
+        volData.resize(n_strike, vector<vector<Real>>(n_expiry, vector<Real>(n_term, 0.0)));
+        shiftedVolData.resize(n_strike, vector<vector<Real>>(n_expiry, vector<Real>(n_term, 0.0)));
+
         SensitivityScenarioData::GenericYieldVolShiftData data = s.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;
@@ -975,11 +981,11 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
 
         // cache original vol data
         for (Size j = 0; j < n_expiry; ++j) {
-            Date expiry = asof + volExpiries[j];
+            Date expiry = asof + getVolExpiries(qualifier)[j];
             volExpiryTimes[j] = dc.yearFraction(asof, expiry);
         }
         for (Size j = 0; j < n_term; ++j) {
-            Date term = asof + volTerms[j];
+            Date term = asof + getVolTerms(qualifier)[j];
             volTermTimes[j] = dc.yearFraction(asof, term);
         }
 
@@ -1005,7 +1011,7 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
         // Can we store a valid shift size?
         bool validShiftSize = vectorEqual(volExpiryTimes, shiftExpiryTimes);
         validShiftSize = validShiftSize && vectorEqual(volTermTimes, shiftTermTimes);
-        validShiftSize = validShiftSize && vectorEqual(volStrikes, shiftStrikes);
+        validShiftSize = validShiftSize && vectorEqual(getVolStrikes(qualifier), shiftStrikes);
 
         // loop over shift expiries, terms and strikes
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
@@ -2418,7 +2424,7 @@ SensitivityScenarioGenerator::commodityVolScenarioDescription(const string& comm
     Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
     RiskFactorKey key(RiskFactorKey::KeyType::CommodityVolatility, commodityName, index);
     ostringstream o;
-    if (data.shiftStrikes.size() == 0 || close_enough(data.shiftStrikes[strikeBucket], 0)) {
+    if (data.shiftStrikes.size() == 0 || close_enough(data.shiftStrikes[strikeBucket], 1.0)) {
         o << data.shiftExpiries[expiryBucket] << "/ATM";
     } else {
         QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");

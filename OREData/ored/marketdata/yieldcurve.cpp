@@ -41,6 +41,7 @@
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
+#include <qle/termstructures/iterativebootstrap.hpp>
 
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -50,6 +51,14 @@
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
+
+// Temporary workaround to silence warnings on g++ until QL 1.17 is released with the
+// pull request: https://github.com/lballabio/QuantLib/pull/679
+#ifdef BOOST_MSVC
+#define ATTR_UNUSED
+#else
+#define ATTR_UNUSED __attribute__((unused))
+#endif
 
 namespace {
 /* Helper function to return the key required to look up the map in the YieldCurve ctor */
@@ -171,7 +180,6 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
         interpolationMethod_ = parseYieldCurveInterpolationMethod(curveConfig_->interpolationMethod());
         interpolationVariable_ = parseYieldCurveInterpolationVariable(curveConfig_->interpolationVariable());
         zeroDayCounter_ = parseDayCounter(curveConfig_->zeroDayCounter());
-        accuracy_ = curveConfig_->tolerance();
         extrapolation_ = curveConfig_->extrapolation();
 
         if (curveSegments_[0]->type() == YieldCurveSegment::Type::Discount) {
@@ -213,31 +221,61 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
 boost::shared_ptr<YieldTermStructure>
 YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instruments) {
 
+    // Get configuration values for bootstrap
+    Real accuracy = curveConfig_->bootstrapConfig().accuracy();
+    Real globalAccuracy = curveConfig_->bootstrapConfig().globalAccuracy();
+    bool dontThrow = curveConfig_->bootstrapConfig().dontThrow();
+    Size maxAttempts = curveConfig_->bootstrapConfig().maxAttempts();
+    Real maxFactor = curveConfig_->bootstrapConfig().maxFactor();
+    Real minFactor = curveConfig_->bootstrapConfig().minFactor();
+    Size dontThrowSteps = curveConfig_->bootstrapConfig().dontThrowSteps();
+
+    // See comment here: https://github.com/lballabio/QuantLib/pull/679#issuecomment-525208897
+    // to explain all the typedefs below. Waiting on a pull request from QuantLib here.
     boost::shared_ptr<YieldTermStructure> yieldts;
     switch (interpolationVariable_) {
     case InterpolationVariable::Zero:
         switch (interpolationMethod_) {
-        case InterpolationMethod::Linear:
-            yieldts.reset(new PiecewiseYieldCurve<ZeroYield, QuantLib::Linear>(asofDate_, instruments, zeroDayCounter_,
-                                                                               accuracy_));
+        case InterpolationMethod::Linear: {
+            typedef PiecewiseYieldCurve<ZeroYield, Linear, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
+                Linear(), QuantExt::IterativeBootstrap<my_curve>(
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
-        case InterpolationMethod::LogLinear:
-            yieldts.reset(new PiecewiseYieldCurve<ZeroYield, QuantLib::LogLinear>(asofDate_, instruments,
-                                                                                  zeroDayCounter_, accuracy_));
+        case InterpolationMethod::LogLinear: {
+            typedef PiecewiseYieldCurve<ZeroYield, LogLinear, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
+                LogLinear(), QuantExt::IterativeBootstrap<my_curve>(
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
-        case InterpolationMethod::NaturalCubic:
-            yieldts.reset(new PiecewiseYieldCurve<ZeroYield, Cubic>(asofDate_, instruments, zeroDayCounter_, accuracy_,
-                                                                    Cubic(CubicInterpolation::Kruger, true)));
+        case InterpolationMethod::NaturalCubic: {
+            typedef PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
+                Cubic(CubicInterpolation::Kruger, true), QuantExt::IterativeBootstrap<my_curve>(
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
-        case InterpolationMethod::FinancialCubic:
-            yieldts.reset(new PiecewiseYieldCurve<ZeroYield, Cubic>(asofDate_, instruments, zeroDayCounter_, accuracy_,
-                                                                    Cubic(CubicInterpolation::Kruger, true,
-                                                                          CubicInterpolation::SecondDerivative, 0.0,
-                                                                          CubicInterpolation::FirstDerivative)));
+        case InterpolationMethod::FinancialCubic: {
+            typedef PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
+                Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                    CubicInterpolation::FirstDerivative), QuantExt::IterativeBootstrap<my_curve>(
+                        globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
-        case InterpolationMethod::ConvexMonotone:
-            yieldts.reset(
-                new PiecewiseYieldCurve<ZeroYield, ConvexMonotone>(asofDate_, instruments, zeroDayCounter_, accuracy_));
+        case InterpolationMethod::ConvexMonotone: {
+            typedef PiecewiseYieldCurve<ZeroYield, ConvexMonotone, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
+                ConvexMonotone(), QuantExt::IterativeBootstrap<my_curve>(
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
         default:
             QL_FAIL("Interpolation method not recognised.");
@@ -245,27 +283,46 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
         break;
     case InterpolationVariable::Discount:
         switch (interpolationMethod_) {
-        case InterpolationMethod::Linear:
-            yieldts.reset(new PiecewiseYieldCurve<QuantLib::Discount, QuantLib::Linear>(asofDate_, instruments,
-                                                                                        zeroDayCounter_, accuracy_));
+        case InterpolationMethod::Linear: {
+            typedef PiecewiseYieldCurve<Discount, Linear, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
+                Linear(), QuantExt::IterativeBootstrap<my_curve>(
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
-        case InterpolationMethod::LogLinear:
-            yieldts.reset(new PiecewiseYieldCurve<QuantLib::Discount, QuantLib::LogLinear>(asofDate_, instruments,
-                                                                                           zeroDayCounter_, accuracy_));
+        case InterpolationMethod::LogLinear: {
+            typedef PiecewiseYieldCurve<Discount, LogLinear, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
+                LogLinear(), QuantExt::IterativeBootstrap<my_curve>(
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
-        case InterpolationMethod::NaturalCubic:
-            yieldts.reset(new PiecewiseYieldCurve<QuantLib::Discount, Cubic>(
-                asofDate_, instruments, zeroDayCounter_, accuracy_, Cubic(CubicInterpolation::Kruger, true)));
+        case InterpolationMethod::NaturalCubic: {
+            typedef PiecewiseYieldCurve<Discount, Cubic, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
+                Cubic(CubicInterpolation::Kruger, true), QuantExt::IterativeBootstrap<my_curve>(
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
-        case InterpolationMethod::FinancialCubic:
-            yieldts.reset(new PiecewiseYieldCurve<QuantLib::Discount, Cubic>(
-                asofDate_, instruments, zeroDayCounter_, accuracy_,
+        case InterpolationMethod::FinancialCubic: {
+            typedef PiecewiseYieldCurve<Discount, Cubic, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                      CubicInterpolation::FirstDerivative)));
+                    CubicInterpolation::FirstDerivative), QuantExt::IterativeBootstrap<my_curve>(
+                        globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
-        case InterpolationMethod::ConvexMonotone:
-            yieldts.reset(new PiecewiseYieldCurve<QuantLib::Discount, ConvexMonotone>(asofDate_, instruments,
-                                                                                      zeroDayCounter_, accuracy_));
+        case InterpolationMethod::ConvexMonotone: {
+            typedef PiecewiseYieldCurve<Discount, ConvexMonotone, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
+                ConvexMonotone(), QuantExt::IterativeBootstrap<my_curve>(
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
         default:
             QL_FAIL("Interpolation method not recognised.");
@@ -273,27 +330,46 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
         break;
     case InterpolationVariable::Forward:
         switch (interpolationMethod_) {
-        case InterpolationMethod::Linear:
-            yieldts.reset(new PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::Linear>(asofDate_, instruments,
-                                                                                           zeroDayCounter_, accuracy_));
+        case InterpolationMethod::Linear: {
+            typedef PiecewiseYieldCurve<ForwardRate, Linear, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
+                Linear(), QuantExt::IterativeBootstrap<my_curve>(
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
-        case InterpolationMethod::LogLinear:
-            yieldts.reset(new PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::LogLinear>(
-                asofDate_, instruments, zeroDayCounter_, accuracy_));
+        case InterpolationMethod::LogLinear: {
+            typedef PiecewiseYieldCurve<ForwardRate, LogLinear, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
+                LogLinear(), QuantExt::IterativeBootstrap<my_curve>(
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
-        case InterpolationMethod::NaturalCubic:
-            yieldts.reset(new PiecewiseYieldCurve<QuantLib::ForwardRate, Cubic>(
-                asofDate_, instruments, zeroDayCounter_, accuracy_, Cubic(CubicInterpolation::Kruger, true)));
+        case InterpolationMethod::NaturalCubic: {
+            typedef PiecewiseYieldCurve<ForwardRate, Cubic, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
+                Cubic(CubicInterpolation::Kruger, true), QuantExt::IterativeBootstrap<my_curve>(
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
-        case InterpolationMethod::FinancialCubic:
-            yieldts.reset(new PiecewiseYieldCurve<QuantLib::ForwardRate, Cubic>(
-                asofDate_, instruments, zeroDayCounter_, accuracy_,
+        case InterpolationMethod::FinancialCubic: {
+            typedef PiecewiseYieldCurve<ForwardRate, Cubic, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
                 Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                      CubicInterpolation::FirstDerivative)));
+                    CubicInterpolation::FirstDerivative), QuantExt::IterativeBootstrap<my_curve>(
+                        globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
-        case InterpolationMethod::ConvexMonotone:
-            yieldts.reset(new PiecewiseYieldCurve<QuantLib::ForwardRate, ConvexMonotone>(asofDate_, instruments,
-                                                                                         zeroDayCounter_, accuracy_));
+        case InterpolationMethod::ConvexMonotone: {
+            typedef PiecewiseYieldCurve<ForwardRate, ConvexMonotone, QuantExt::IterativeBootstrap> my_curve;
+            ATTR_UNUSED typedef my_curve::traits_type dummy;
+            yieldts = boost::make_shared<my_curve>(asofDate_, instruments, zeroDayCounter_, accuracy,
+                ConvexMonotone(), QuantExt::IterativeBootstrap<my_curve>(
+                    globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps));
+            }
             break;
         default:
             QL_FAIL("Interpolation method not recognised.");
@@ -1652,18 +1728,18 @@ vector<Date> pillarDates(const Handle<YieldTermStructure>& h) {
     getPillarDates<InterpolatedZeroCurve<QuantLib::LogLinear>>(p, d);
     getPillarDates<InterpolatedZeroCurve<QuantLib::Cubic>>(p, d);
     getPillarDates<InterpolatedZeroCurve<QuantLib::ConvexMonotone>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<ZeroYield, QuantLib::Linear>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<ZeroYield, QuantLib::LogLinear>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<ZeroYield, Cubic>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<ZeroYield, ConvexMonotone>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, QuantLib::Linear>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, QuantLib::LogLinear>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, Cubic>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, ConvexMonotone>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::Linear>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::LogLinear>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, Cubic>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, ConvexMonotone>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<ZeroYield, QuantLib::Linear, QuantExt::IterativeBootstrap>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<ZeroYield, QuantLib::LogLinear, QuantExt::IterativeBootstrap>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<ZeroYield, ConvexMonotone, QuantExt::IterativeBootstrap>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, QuantLib::Linear, QuantExt::IterativeBootstrap>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, QuantLib::LogLinear, QuantExt::IterativeBootstrap>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, Cubic, QuantExt::IterativeBootstrap>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, ConvexMonotone, QuantExt::IterativeBootstrap>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::Linear, QuantExt::IterativeBootstrap>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::LogLinear, QuantExt::IterativeBootstrap>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, Cubic, QuantExt::IterativeBootstrap>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, ConvexMonotone, QuantExt::IterativeBootstrap>>(p, d);
 
     return d;
 }

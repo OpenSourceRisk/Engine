@@ -54,6 +54,7 @@
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
+using boost::algorithm::to_lower_copy;
 
 namespace ore {
 namespace data {
@@ -67,7 +68,7 @@ Date parseDate(const string& s) {
     // guess formats from token number and sizes
     // check permissible lengths
     QL_REQUIRE((s.size() >= 3 && s.size() <= 6) || s.size() == 8 || s.size() == 10,
-               "invalid date format of " << s << ", date string length 8 or 10 or between 3 and 6 required");
+               "invalid date format of \"" << s << "\", date string length 8 or 10 or between 3 and 6 required");
 
     vector<string> tokens;
     boost::split(tokens, s, boost::is_any_of("-/.:"));
@@ -153,7 +154,7 @@ bool parseBool(const string& s) {
     if (it != b.end()) {
         return it->second;
     } else {
-        QL_FAIL("Cannot convert " << s << " to bool");
+        QL_FAIL("Cannot convert \"" << s << "\" to bool");
     }
 }
 
@@ -433,9 +434,9 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
             try {
                 calendars.push_back(parseCalendar(calendarNames[i], adjustCalendar));
             } catch (std::exception& e) {
-                QL_FAIL("Cannot convert " << s << " to Calendar [exception:" << e.what() << "]");
+                QL_FAIL("Cannot convert \"" << s << "\" to Calendar [exception:" << e.what() << "]");
             } catch (...) {
-                QL_FAIL("Cannot convert " << s << " to Calendar [unhandled exception]");
+                QL_FAIL("Cannot convert \"" << s << "\" to Calendar [unhandled exception]");
             }
         }
 
@@ -447,7 +448,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
         case 4:
             return JointCalendar(calendars[0], calendars[1], calendars[2], calendars[3]);
         default:
-            QL_FAIL("Cannot convert " << s << " to Calendar");
+            QL_FAIL("Cannot convert \"" << s << "\" to Calendar");
         }
     }
 }
@@ -481,7 +482,7 @@ BusinessDayConvention parseBusinessDayConvention(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Cannot convert " << s << " to BusinessDayConvention");
+        QL_FAIL("Cannot convert \"" << s << "\" to BusinessDayConvention");
     }
 }
 
@@ -537,7 +538,7 @@ DayCounter parseDayCounter(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("DayCounter " << s << " not recognized");
+        QL_FAIL("DayCounter \"" << s << "\" not recognized");
     }
 }
 
@@ -566,7 +567,7 @@ Currency parseCurrency(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Currency " << s << " not recognized");
+        QL_FAIL("Currency \"" << s << "\" not recognized");
     }
 }
 
@@ -585,7 +586,7 @@ DateGeneration::Rule parseDateGenerationRule(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Date Generation Rule " << s << " not recognized");
+        QL_FAIL("Date Generation Rule \"" << s << "\" not recognized");
     }
 }
 
@@ -765,6 +766,51 @@ SobolRsg::DirectionIntegers parseSobolRsgDirectionIntegers(const std::string& s)
         return it->second;
     } else {
         QL_FAIL("SobolRsg direction integers \"" << s << "\" not recognized");
+    }
+}
+
+Weekday parseWeekday(const string& s) {
+
+    static map<string, Weekday> m = {
+        { "Sun", Weekday::Sunday },
+        { "Mon", Weekday::Monday },
+        { "Tue", Weekday::Tuesday },
+        { "Wed", Weekday::Wednesday },
+        { "Thu", Weekday::Thursday },
+        { "Fri", Weekday::Friday },
+        { "Sat", Weekday::Saturday }
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("The string \"" << s << "\" is not recognized as a Weekday");
+    }
+}
+
+Month parseMonth(const string& s) {
+
+    static map<string, Month> m = {
+        { "Jan", Month::January },
+        { "Feb", Month::February },
+        { "Mar", Month::March },
+        { "Apr", Month::April },
+        { "May", Month::May },
+        { "Jun", Month::June },
+        { "Jul", Month::July },
+        { "Aug", Month::August },
+        { "Sep", Month::September },
+        { "Oct", Month::October },
+        { "Nov", Month::November },
+        { "Dec", Month::December }
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("The string \"" << s << "\" is not recognized as a Month");
     }
 }
 

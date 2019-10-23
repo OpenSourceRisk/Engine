@@ -56,7 +56,7 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
     if (it != b.end()) {
         return it->second;
     } else {
-        QL_FAIL("Cannot convert " << s << " to CurveSpecType");
+        QL_FAIL("Cannot convert \"" << s << "\" to CurveSpecType");
     }
 }
 

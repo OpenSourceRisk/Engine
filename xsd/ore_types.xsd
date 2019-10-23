@@ -376,7 +376,7 @@
       <xs:enumeration value="Constant"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="vannaVolgaApproximation">
     <xs:restriction base="xs:string">
       <xs:enumeration value="VannaVolga1"/>
@@ -390,7 +390,7 @@
       <xs:enumeration value="Generic"/> 
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="correlationQuoteType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="RATE"/>
@@ -453,7 +453,7 @@
     </xs:restriction>
   </xs:simpleType>
 
-   <xs:simpleType name="momentType">
+  <xs:simpleType name="momentType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Variance"/>
       <xs:enumeration value="Volatility"/>
@@ -475,13 +475,72 @@
       <xs:enumeration value="Floor"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="exerciseStyle">
     <xs:restriction base="xs:string">
       <xs:enumeration value="European"/>
       <xs:enumeration value="American"/>
     </xs:restriction>
   </xs:simpleType>
+
+  <xs:simpleType name="weekdayType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Mon"/>
+      <xs:enumeration value="Tue"/>
+      <xs:enumeration value="Wed"/>
+      <xs:enumeration value="Thu"/>
+      <xs:enumeration value="Fri"/>
+      <xs:enumeration value="Sat"/>
+      <xs:enumeration value="Sun"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="monthType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Jan"/>
+      <xs:enumeration value="Feb"/>
+      <xs:enumeration value="Mar"/>
+      <xs:enumeration value="Apr"/>
+      <xs:enumeration value="May"/>
+      <xs:enumeration value="Jun"/>
+      <xs:enumeration value="Jul"/>
+      <xs:enumeration value="Aug"/>
+      <xs:enumeration value="Sep"/>
+      <xs:enumeration value="Oct"/>
+      <xs:enumeration value="Nov"/>
+      <xs:enumeration value="Dec"/>
+    </xs:restriction>
+  </xs:simpleType>
   
+  <xs:simpleType name="cdsTierType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="SNRFOR"/>
+      <xs:enumeration value="SUBLT2"/>
+      <xs:enumeration value="SNRLAC"/>
+      <xs:enumeration value="SECDOM"/>
+      <xs:enumeration value="JRSUBUT2"/>
+      <xs:enumeration value="PREFT1"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="cdsDocClauseType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="CR"/>
+      <xs:enumeration value="MM"/>
+      <xs:enumeration value="MR"/>
+      <xs:enumeration value="XR"/>
+      <xs:enumeration value="CR14"/>
+      <xs:enumeration value="MM14"/>
+      <xs:enumeration value="MR14"/>
+      <xs:enumeration value="XR14"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="positiveDecimal">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+
 </xs:schema>
 

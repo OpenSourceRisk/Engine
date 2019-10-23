@@ -373,7 +373,7 @@
         <xs:element type="xs:boolean" name="NotionalReset" minOccurs="0" maxOccurs="1"/>
         <xs:element type="scheduleData" name="ValuationSchedule" minOccurs="0" maxOccurs="1" />
         <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1" />
-		<xs:element name="FXTerms" minOccurs="0" maxOccurs="1">
+        <xs:element name="FXTerms" minOccurs="0" maxOccurs="1">
           <xs:complexType>
             <xs:sequence>            
               <xs:element type="xs:string" name="EquityCurrency" minOccurs="0" maxOccurs="1"/>
@@ -426,6 +426,7 @@
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="0"/>
       <xs:element type="xs:integer" name="PaymentLag" minOccurs="0"/>
+      <xs:element type="xs:string" name="PaymentCalendar" minOccurs="0"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
       <xs:element name="Amortizations" minOccurs="0" maxOccurs="1">
         <xs:complexType>
@@ -452,6 +453,13 @@
         </xs:complexType>
       </xs:element>
       <xs:element type="scheduleData" name="ScheduleData" minOccurs="0">
+      </xs:element>
+      <xs:element name="PaymentDates" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="date" name="PaymentDate" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
       </xs:element>
       <xs:element ref="legDataType"/>
     </xs:all>
@@ -487,7 +495,7 @@
             <xs:element type="date" name="StartDate"/>
             <xs:element type="date" name="EndDate"/>
             <xs:element type="xs:string" name="Tenor"/>
-            <xs:element type="calendar" name="Calendar"/>
+            <xs:element type="calendar" name="Calendar" minOccurs="0"/>
             <xs:element type="businessDayConvention" name="Convention"/>
             <xs:element type="businessDayConvention" name="TermConvention"/>
             <xs:element type="dateRule" name="Rule" minOccurs="0"/>
@@ -503,6 +511,7 @@
             <xs:element type="calendar" name="Calendar" minOccurs="0"/>
             <xs:element type="businessDayConvention" name="Convention" minOccurs="0"/>
             <xs:element type="xs:string" name="Tenor" minOccurs="0"/>
+            <xs:element type="bool" name="EndOfMonth" minOccurs="0"/>
             <xs:element name="Dates">
               <xs:complexType>
                 <xs:sequence>
@@ -551,6 +560,8 @@
       <xs:enumeration value="Equity"/>
       <xs:enumeration value="FormulaBased"/>
       <xs:enumeration value="ZeroCouponFixed"/>
+      <xs:enumeration value="CommodityFixed"/>
+      <xs:enumeration value="CommodityFloating"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -679,11 +690,25 @@
       <xs:element type="xs:float" name="Quantity"/>
     </xs:sequence>
   </xs:complexType>
+  
+  <xs:element name="creditCurveIdType" abstract="true"/>
+  <xs:element type="xs:string" name="CreditCurveId" substitutionGroup="creditCurveIdType"/>
+  <xs:element name="ReferenceInformation" substitutionGroup="creditCurveIdType">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element type="xs:string" name="ReferenceEntityId"/>
+        <xs:element type="cdsTierType" name="Tier"/>
+        <xs:element type="currencyCode" name="Currency"/>
+        <xs:element type="cdsDocClauseType" name="DocClause"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
 
   <xs:complexType name="creditDefaultSwapData">
     <xs:all>
-      <xs:element type="xs:string" name="IssuerId"/>
-      <xs:element type="xs:string" name="CreditCurveId"/>
+      <xs:element type="xs:string" name="IssuerId" minOccurs="0"/>
+      <xs:element ref="creditCurveIdType"/>
+      <xs:element type="xs:string" name="ReferenceObligation" minOccurs="0"/>
       <xs:element type="bool" name="SettlesAccrual" minOccurs="0"/>
       <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0"/>
       <xs:element type="date" name="ProtectionStart" minOccurs="0"/>

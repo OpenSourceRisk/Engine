@@ -47,7 +47,8 @@ QLE_TESTS = \
 	capfloortermvolcurve.cpp \
 	blackvariancesurfacesparse.cpp \
 	blackvariancesurfacestddevs.cpp \
-	piecewiseatmoptionletcurve.cpp
+	piecewiseatmoptionletcurve.cpp \
+	blackvolsurfacedelta.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

@@ -1,6 +1,15 @@
 \documentclass[12pt, a4paper]{article}
 
-\usepackage[urlcolor=blue]{hyperref}
+% Use \hypersetup here to get rid of the ugly boxes around links
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue
+}
+
+% For nicer paragraph spacing
+\usepackage{parskip}
 
 \usepackage[disable]{todonotes}
 %\usepackage{todonotes}
@@ -14,7 +23,14 @@
 \usepackage{epstopdf}
 \usepackage{longtable}
 \usepackage{floatrow}
+
+% Use \setminted here to get horizontal line above and below listings
 \usepackage{minted}
+\setminted{
+   frame=lines,
+   framesep=2mm
+}
+
 \usepackage{textcomp}
 \usepackage{color,soul}
 \usepackage[font={small,it}]{caption}
@@ -43,7 +59,9 @@
   belowskip=2\medskipamount
 }
 
-%\usepackage{float}
+% All listings have a left aligned caption. This looks better as the listings themselves are left aligned.
+\captionsetup[listing]{justification=justified,singlelinecheck=false}
+
 \usepackage{tabu}
 \tabulinesep=1.0mm
 \restylefloat{table}
@@ -52,6 +70,9 @@
 
 \newenvironment{longlisting}{\captionsetup{type=listing}}{}
 %\usepackage[colorlinks=true]{hyperref}
+
+% Inline code fragments can run over the page boundary without ragged right.
+\AtBeginDocument{\raggedright}
 
 \renewcommand\P{\ensuremath{\mathbb{P}}}
 \newcommand\E{\ensuremath{\mathbb{E}}}
@@ -4047,7 +4068,10 @@ for the construction of a market.
 \subsubsection{Default Curves}
 
 Listing \ref{lst:defaultcurve_configuration} shows the configuration of Default curves built from CDS spread
-quotes. Alternatively default curves can be set up as a difference curve of two yield curves as shown in listing
+quotes. The \lstinline!BootstrapConfig! node is optional and holds configuration details for the iterative bootstrap 
+that are described in section \ref{sec:bootstrap_config}.
+
+Alternatively default curves can be set up as a difference curve of two yield curves as shown in listing
 \ref{lst:defaultcurve_configuration_2}. If $P_B(0,t)$ and $P_S(0,t)$ denote the discount factors of the given benchmark
 and source curve respectively the resulting default term structures has survival probabilities
 
@@ -4077,6 +4101,9 @@ on the given pillars, and w.r.t. a a zero recovery rate. The interpolation is ba
       <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/10Y</Quote>
     </Quotes>
     <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+    <BootstrapConfig>
+      ...
+    </BootstrapConfig>
   </DefaultCurve>
   <DefaultCurve>
   ...
@@ -4153,6 +4180,10 @@ Listing \ref{lst:swaptionvol_configuration} shows the configuration of Swaption 
 
 Listing \ref{lst:capfloorvol_configuration} shows the configuration of Cap/Floor volatility structures.
 
+The \lstinline!BootstrapConfig! node is optional and holds configuration details for the iterative bootstrap 
+that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described 
+in section \ref{sec:bootstrap_config} are used.
+
 \begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -4175,6 +4206,9 @@ Listing \ref{lst:capfloorvol_configuration} shows the configuration of Cap/Floor
       <Strikes>-0.01,0.0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1</Strikes>
       <IborIndex>EUR-EURIBOR-6M</IborIndex>
       <DiscountCurve>Yield/EUR/EUR1D</DiscountCurve>
+      <BootstrapConfig>
+        ...
+      </BootstrapConfig>
     </CapFloorVolatility>
     ...
   </CapFloorVolatilities>
@@ -4662,6 +4696,52 @@ Alternatively commodity curves can be set up as a commodity curve times the rati
 \label{lst:commodity_curve_configuration_3}
 \end{longlisting}
 
+\subsubsection{Bootstrap Configuration}
+\label{sec:bootstrap_config}
+The The \lstinline!BootstrapConfig! node, outlined in listing \ref{lst:bootstrap_config_outline}, can be added to curve configurations that use a bootstrap algorithm to alter the default behaviour of the bootstrap algorithm.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BootstrapConfig>
+  <Accuracy>...</Accuracy>
+  <GlobalAccuracy>...</GlobalAccuracy>
+  <DontThrow>...</DontThrow>
+  <MaxAttempts>...</MaxAttempts>
+  <MaxFactor>...</MaxFactor>
+  <MinFactor>...</MinFactor>
+  <DontThrowSteps>...</DontThrowSteps>
+</BootstrapConfig>
+\end{minted}
+\caption{\lstinline!BootstrapConfig! node outline}
+\label{lst:bootstrap_config_outline}
+\end{longlisting}
+
+The meaning of each of the elements is:
+\begin{itemize}
+\item \lstinline!Accuracy! [Optional]:
+The accuracy with which the implied quote must match the market quote for each instrument in the curve bootstrap. This node should hold a positive real number. If omitted, the default value is \num[scientific-notation=true]{1.0e-12}.
+
+\item \lstinline!GlobalAccuracy! [Optional]:
+If the interpolation method in the bootstrap is global, e.g. cubic spline, the bootstrap routine needs to perform multiple iterative bootstraps of the curve to converge. After each such bootstrap of the full curve, the absolute value of the change between the current bootstrap and previous bootstrap for the curve value at each pillar is calculated. The global bootstrap is deemed to have converged if the maximum of these changes is less than the global accuracy or the accuracy from the \lstinline!Accuracy! node. This node should hold a positive real number. If omitted, the global accuracy is set equal to the accuracy from the \lstinline!Accuracy! node. This node is useful in some cases where a slightly less restrictive accuracy, than that given by the \lstinline!Accuracy! node, is needed for the global bootstrap.
+
+\item \lstinline!DontThrow! [Optional]:
+If this node is set to \lstinline!true!, the curve bootstrap does not throw an error when the bootstrap fails at a pillar. Instead, a curve value is sought at the failing pillar that minimises the absolute value of the difference between the implied quote and the market quote at that pillar. The minimum is sought between the minimum and maximum curve value that was used in the root finding routine that failed at the pillar. The number of steps used in this search is given by the \lstinline!DontThrowSteps! node below. This node should hold a boolean value. If omitted, the default value is \lstinline!false! i.e. the bootstrap throws an exception at the first pillar where the bootstrap fails.
+
+\item \lstinline!MaxAttempts! [Optional]:
+At each pillar, the bootstrap routine searches between a minimum curve value and a maximum curve value for a curve value that gives an implied quote that matches the market quote at that pillar. In some cases, the minimum curve value and maximum curve value are too restrictive and the bootstrap fails at a pillar. This node determines how many times the bootstrap should be attempted at each pillar. For example, if the node is set to 1, the bootstrap uses the minimum curve value and maximum curve value implied in the code and fails if a root is not found. If this node is set to 2 and the first attempt fails, the minimum curve value is reduced by a factor specified in the node \lstinline!MinFactor!, the maximum curve value is increased by a factor specified in the node \lstinline!MaxFactor! and a second attempt is made to find a root between the enlarged bounds. If no root is found, the bootstrap then fails at this pillar. This node should hold a positive integer. If omitted, the default value is 5.
+
+\item \lstinline!MaxFactor! [Optional]:
+This node is used only if \lstinline!MaxAttempts! is greater than 1. The meaning of this node is given in the description of the \lstinline!MaxAttempts! node. This node should hold a positive real number. If omitted, the default value is 2.0.
+
+\item \lstinline!MinFactor! [Optional]:
+This node is used only if \lstinline!MaxAttempts! is greater than 1. The meaning of this node is given in the description of the \lstinline!MaxAttempts! node. This node should hold a positive real number. If omitted, the default value is 2.0.
+
+\item \lstinline!DontThrowSteps! [Optional]:
+This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning of this node is given in the description of the \lstinline!DontThrow! node. This node should hold a positive integer. If omitted, the default value is 10.
+
+\end{itemize}
+
+
 %--------------------------------------------------------
 %\subsection{Conventions: {\tt conventions.xml}}
 %\label{sec:conventions}
@@ -4709,6 +4789,7 @@ Alternatively commodity curves can be set up as a commodity curve times the rati
 \input{../../Docs/UserGuide/tradecomponents/cpileg}
 \input{../../Docs/UserGuide/tradecomponents/yyleg}
 \input{../../Docs/UserGuide/tradecomponents/zerocouponleg}
+\input{../../Docs/UserGuide/tradecomponents/cdsreferenceinformation}
 
 
 \include{allowablevalues}

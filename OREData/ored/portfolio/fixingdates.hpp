@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/fixingdates.hpp
+/*! \file ored/portfolio/fixingdates.hpp
     \brief Logic for calculating required fixing dates on legs
 */
 
@@ -38,25 +38,12 @@
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 
+#include <map>
 #include <set>
+#include <string>
 
 namespace ore {
 namespace data {
-
-/*! Gives back the dates for which fixings will be required to price the \p leg assuming a given \p settlementDate. If 
-    the \p settlementDate is not provided or is set equal to \c QuantLib::Date(), the settlement date in the 
-    implementation is assumed to be the \c Settings::instance().evaluationDate().
-
-    If a cashflow payment is deemed to have already occured relative to the settlement date, then no fixing is needed.
-    The determination of whether a cashflow has or has not occurred will in general rely on a call to 
-    \c CashFlow::hasOccurred which is important in cases where the cash flow payment date falls on the settlement date.
-
-    Another important case is where a cash flow fixing date occurs on the settlement date. In this case, we should 
-    always add the fixing date to the set of fixing dates regardless of 
-    \c Settings::instance().enforcesTodaysHistoricFixings().
-*/
-std::set<QuantLib::Date> fixingDates(const QuantLib::Leg& leg, 
-    QuantLib::Date settlementDate = QuantLib::Date());
 
 /*! Class that gets relevant fixing dates from coupons
     
@@ -77,6 +64,7 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
     public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon>,
     public QuantLib::Visitor<QuantExt::FXLinkedCashFlow>,
     public QuantLib::Visitor<QuantExt::SubPeriodsCoupon> {
+
 public:
     //! Constructor
     FixingDateGetter(const QuantLib::Date& settlementDate = QuantLib::Date());
@@ -101,15 +89,60 @@ public:
     void visit(QuantExt::SubPeriodsCoupon& c);
     //@}
 
-    //! Return the retrieved fixing dates
-    std::set<QuantLib::Date> fixingDates() const { return fixingDates_; }
+    //! Get the settlement date
+    const QuantLib::Date& today() const { return today_; }
 
-private:
+    //! Set the settlement date
+    QuantLib::Date& today() { return today_; }
+
+    //! Return the retrieved fixing dates and the corresponding index name.
+    std::map<std::string, std::set<QuantLib::Date>> fixingDatesIndices() const { return indicesDates_; }
+
+protected:
     //! If \p settlementDate provided in the ctor, takes its value. If not, set to current evaluation date
     QuantLib::Date today_;
-    //! Stores the retrieved fixing dates
-    std::set<QuantLib::Date> fixingDates_;
+
+    /*! Stores the retrieved fixing dates and the corresponding index name. Useful in cases where a coupon may 
+        reference multiple indices. The key is the index name and the value is the set of fixing dates for that index.
+    */
+    std::map<std::string, std::set<QuantLib::Date>> indicesDates_;
 };
+
+/*! Gives back the dates for which fixings will be required to price the \p leg assuming a given \p settlementDate. If
+    the \p settlementDate is not provided or is set equal to \c QuantLib::Date(), the settlement date in the
+    implementation is assumed to be the \c Settings::instance().evaluationDate().
+
+    If a cashflow payment is deemed to have already occured relative to the settlement date, then no fixing is needed.
+    The determination of whether a cashflow has or has not occurred will in general rely on a call to
+    \c CashFlow::hasOccurred which is important in cases where the cash flow payment date falls on the settlement date.
+
+    Another important case is where a cash flow fixing date occurs on the settlement date. In this case, we should
+    always add the fixing date to the set of fixing dates regardless of
+    \c Settings::instance().enforcesTodaysHistoricFixings().
+*/
+std::set<QuantLib::Date> fixingDates(const QuantLib::Leg& leg,
+    const QuantLib::Date& settlementDate = QuantLib::Date());
+
+std::set<QuantLib::Date> fixingDates(const QuantLib::Leg& leg,
+    const QuantLib::Date& settlementDate, FixingDateGetter& fdg);
+
+/*! Gives back the indices and associated dates for which fixings will be required to price the \p leg assuming a 
+    given \p settlementDate. If the \p settlementDate is not provided or is set equal to \c QuantLib::Date(), the 
+    settlement date in the implementation is assumed to be the \c Settings::instance().evaluationDate().
+
+    If a cashflow payment is deemed to have already occured relative to the settlement date, then no fixing is needed.
+    The determination of whether a cashflow has or has not occurred will in general rely on a call to
+    \c CashFlow::hasOccurred which is important in cases where the cash flow payment date falls on the settlement date.
+
+    Another important case is where a cash flow fixing date occurs on the settlement date. In this case, we should
+    always add the fixing date to the set of fixing dates regardless of
+    \c Settings::instance().enforcesTodaysHistoricFixings().
+*/
+std::map<std::string, std::set<QuantLib::Date>> fixingDatesIndices(const QuantLib::Leg& leg,
+    const QuantLib::Date& settlementDate = QuantLib::Date());
+
+std::map<std::string, std::set<QuantLib::Date>> fixingDatesIndices(const QuantLib::Leg& leg,
+    const QuantLib::Date& settlementDate, FixingDateGetter& fdg);
 
 /*! Inflation fixings are generally available on a monthly, or coarser, frequency. When a portfolio is asked for its 
     fixings, and it contains inflation fixings, ORE will by convention put the fixing date as the 1st of the 
