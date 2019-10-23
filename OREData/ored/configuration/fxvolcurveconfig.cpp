@@ -52,8 +52,7 @@ const vector<string>& FXVolatilityCurveConfig::quotes() {
                 quotes_.push_back(base + e + "/25BF");
             } else if (dimension_ == Dimension::SmileDelta) {
                 for (auto d : deltas_) {
-                    quotes_.push_back(base + e + "/" + d + "C");
-                    quotes_.push_back(base + e + "/" + d + "P");
+                    quotes_.push_back(base + e + "/" + d);
                 }
             }
         }
@@ -108,6 +107,15 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
                 QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
             }
             deltas_ = XMLUtils::getChildrenValuesAsStrings(node, "Deltas", true);
+
+            //check that these are valid deltas
+            for (auto d : deltas_) {
+                QL_REQUIRE( d == "ATM" || d.back() == 'P' || d.back() == 'C', "this is not a valid value for delta, " << d);
+                if (d != "ATM") {
+                    parseReal(d.substr(0, d.size()-1));
+                }
+            }
+
         }
     } else {
         QL_FAIL("Dimension " << dim << " not supported yet");

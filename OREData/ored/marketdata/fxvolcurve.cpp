@@ -26,6 +26,7 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
+#include <string.h>
 
 using namespace QuantLib;
 using namespace std;
@@ -92,54 +93,41 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     vector<Period> expiries = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
     vector<Period> unsortedExp = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
     std::sort(expiries.begin(), expiries.end());
-    vector<Real> deltas = parseVectorOfValues<Real>(config->deltas(), &parseReal);
+    
+    vector<string> deltas = config->deltas();
     vector<Real> putDeltas;
     vector<Real> callDeltas;
-    for (auto d : deltas) {
-        putDeltas.push_back(-1*d/100);
-        callDeltas.insert(callDeltas.begin(), d/100);
-    }
-    vector<Real> unsortedDeltas = parseVectorOfValues<Real>(config->deltas(), &parseReal);
-    std::sort(deltas.begin(), deltas.end());
-    
     vector<Date> dates;
-    for (auto e : expiries) {
-        dates.push_back(asof + e);
-    }
+    Matrix blackVolMatrix(expiries.size(), config->deltas().size());
 
-    Matrix blackVolMatrix(expiries.size(), 2 * deltas.size() + 1);
     vector<string> tokens;
     boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
     string base = "FX_OPTION/RATE_LNVOL/" + tokens[1] + "/" + tokens[2] + "/";
+    bool hasATM = false;
     for (Size i = 0; i < expiries.size(); i++) {
         Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries[i]) - unsortedExp.begin();
         string e = config->expiries()[idx];
+        dates.push_back(asof + expiries[i]);
         Size j = 0;
+       
         for (auto d : deltas) {
-            idx = std::find(unsortedDeltas.begin(), unsortedDeltas.end(), d) - unsortedDeltas.begin();
-            string quoteId = base + e + "/" + config->deltas()[idx] + "P";
-            boost::shared_ptr<MarketDatum> md = loader.get(quoteId, asof);
+            string qs = base + e + "/" + d;
+            boost::shared_ptr<MarketDatum> md = loader.get(qs, asof);
             boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+            QL_REQUIRE(q, "quote not found, " << qs);
             blackVolMatrix[i][j] = q->quote()->value();
             j++;
-        }
-        {
-            string quoteId = base + e + "/ATM";
-            boost::shared_ptr<MarketDatum> md = loader.get(quoteId, asof);
-            boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
-            blackVolMatrix[i][j] = q->quote()->value();
-            j++;
-
-        }
-        for (int k = deltas.size() - 1; k >= 0; k--) {
-            Real d = deltas[k];
-            idx = std::find(unsortedDeltas.begin(), unsortedDeltas.end(), d) - unsortedDeltas.begin();
-            string quoteId = base + e + "/" + config->deltas()[idx] + "C";
-            boost::shared_ptr<MarketDatum> md = loader.get(quoteId, asof);
-            boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
-
-            blackVolMatrix[i][j] = q->quote()->value();
-            j++;
+            if (i == 0) {
+                vector<string> tokens2;
+                boost::split(tokens2, qs, boost::is_any_of("/"));
+                string delta = tokens2.back();
+                if( delta == "ATM")
+                    hasATM = true;
+                if (delta.back() == 'P') 
+                    putDeltas.push_back(-1 * parseReal(delta.substr(0, delta.size()-1))/100);
+                if (delta.back() == 'C') 
+                    callDeltas.push_back(parseReal(delta.substr(0, delta.size()-1))/100);
+            }
         }
     }
 
@@ -151,7 +139,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     auto domYTS = getHandle<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
     auto forYTS = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
     vol_ = boost::shared_ptr<BlackVolTermStructure>(new QuantExt::BlackVolatilitySurfaceDelta(
-                asof, dates, putDeltas, callDeltas, true, blackVolMatrix, dc, cal, fxSpot, domYTS, forYTS));
+                asof, dates, putDeltas, callDeltas, hasATM, blackVolMatrix, dc, cal, fxSpot, domYTS, forYTS));
 
     vol_->enableExtrapolation();
 }
