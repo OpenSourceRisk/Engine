@@ -36,6 +36,19 @@ namespace ore {
 namespace data {
 using namespace QuantLib;
 
+class LgmObserver : public Observer, public Observable {
+public:
+    LgmObserver() : updated_(true) {};
+
+    void addObserver(boost::shared_ptr<Observable> observable);
+    void update();
+    bool hasUpdated();
+
+private:
+    bool updated_;
+
+};
+
 //! Builder for a Linear Gauss Markov model component
 /*!
   This class is a utility that turns a Linear Gauss Markov
@@ -74,6 +87,8 @@ public:
 private:
     void performCalculations() const override;
     void buildSwaptionBasket() const;
+    // updates the swaption vol cache, and returns a bool - true if cache changed
+    bool updateSwaptionVolCache() const;
 
     boost::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
@@ -96,6 +111,12 @@ private:
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
     BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
+
+    // Cache the swation volatilities
+    mutable std::vector<QuantLib::Real> swaptionVolCache_;
+
+    // LGM Oberver
+    boost::shared_ptr<LgmObserver> lgmObserver_;
 };
 } // namespace data
 } // namespace ore
