@@ -105,7 +105,7 @@ private:
     std::vector<Real> putDeltas_;
     std::vector<Real> callDeltas_;
     bool hasAtm_;
-    std::vector<BlackVarianceCurve> interpolators_;
+    std::vector<boost::shared_ptr<BlackVarianceCurve>> interpolators_;
 
     Handle<Quote> spot_;
     Handle<YieldTermStructure> domesticTS_;
@@ -119,6 +119,7 @@ private:
 
     // calculate forward for time $t$
     Real forward(Time t) const;
+    
 };
 
 // inline definitions

@@ -71,7 +71,6 @@ BlackVolatilitySurfaceDelta::BlackVolatilitySurfaceDelta(
       flatExtrapolation_(flatExtrapolation) {
 
     QL_REQUIRE(dates.size() > 1, "at least 1 date required");
-
     // this has already been done for dates
     for (Size i = 0; i < dates.size(); i++) {
         QL_REQUIRE(referenceDate < dates[i], "Dates must be greater than reference date");
@@ -94,10 +93,12 @@ BlackVolatilitySurfaceDelta::BlackVolatilitySurfaceDelta(
     bool forceMonotoneVariance = false;
     for (Size i = 0; i < n; i++) {
         vector<Volatility> vols(dates.size());
-        for (Size j = 0; j < dates.size(); j++)
-            vols[j] = blackVolMatrix[i][j];
+        for (Size j = 0; j < dates.size(); j++) {
+            vols[j] = blackVolMatrix[j][i];
+        }
+        
         // BlackVarianceCurve will make a local copy of vols and dates
-        interpolators_.push_back(BlackVarianceCurve(referenceDate, dates, vols, dayCounter, forceMonotoneVariance));
+        interpolators_.push_back(boost::make_shared<BlackVarianceCurve>(referenceDate, dates, vols, dayCounter, forceMonotoneVariance));
     }
 
     // register
@@ -116,8 +117,9 @@ boost::shared_ptr<FxSmileSection> BlackVolatilitySurfaceDelta::blackVolSmile(Tim
 
     // get vols
     vector<Real> vols;
-    for (const auto& interp : interpolators_)
-        vols.push_back(interp.blackVol(t, Null<Real>(), true));
+    for (const auto& interp : interpolators_) {
+        vols.push_back(interp->blackVol(t, 1, true));
+    }
 
     // get strikes - need to handle the 3 groups
     // store them in a vector of pairs for now for easy sorting
@@ -151,7 +153,7 @@ boost::shared_ptr<FxSmileSection> BlackVolatilitySurfaceDelta::blackVolSmile(Tim
 }
 
 Real BlackVolatilitySurfaceDelta::forward(Time t) const {
-    return spot_->value(); // TODO
+    return spot_->value()* foreignTS_->discount(t) / domesticTS_->discount(t); // TODO
 }
 
 Volatility BlackVolatilitySurfaceDelta::blackVolImpl(Time t, Real strike) const {
@@ -159,7 +161,7 @@ Volatility BlackVolatilitySurfaceDelta::blackVolImpl(Time t, Real strike) const 
     if (strike == 0 || strike == Null<Real>()) {
         if (hasAtm_) {
             // ask the ATM interpolator directly
-            return interpolators_[putDeltas_.size()].blackVol(t, Null<Real>(), true);
+            return interpolators_[putDeltas_.size()]->blackVol(t, Null<Real>(), true);
         } else {
             // set strike to be fwd and we will return ATMF
             strike = forward(t);
