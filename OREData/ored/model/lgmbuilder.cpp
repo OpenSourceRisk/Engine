@@ -228,6 +228,8 @@ void LgmBuilder::performCalculations() const {
             LOG("Apply scaling " << data_->scaling() << " to the " << data_->ccy() << " LGM model");
             parametrization_->scaling() = data_->scaling();
         }
+    } else {
+        DLOG("Skipping calibration as nothing has changed");
     }
 }
 
