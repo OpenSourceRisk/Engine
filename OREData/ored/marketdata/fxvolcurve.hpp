@@ -75,6 +75,14 @@ private:
 
     void init(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
               const FXLookup& fxSpots, const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+
+    void buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
+                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+    
+    void buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
+                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
 };
 } // namespace data
 } // namespace ore

@@ -52,6 +52,7 @@ libTermStructures_la_SOURCES = \
 	capfloorhelper.cpp \
 	blackvariancesurfacesparse.cpp \
 	blackvariancesurfacestddevs.cpp \
+	blackvolsurfacedelta.cpp \
 	crosscurrencypricetermstructure.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -134,6 +135,7 @@ this_include_HEADERS = \
 	piecewiseatmoptionletcurve.hpp \
 	piecewiseoptionletcurve.hpp \
 	blackmonotonevarvoltermstructure.hpp \
+	blackvolsurfacedelta.hpp \
 	crosscurrencypricetermstructure.hpp
 
 all.hpp: Makefile.am

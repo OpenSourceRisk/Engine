@@ -33,6 +33,12 @@ Strike parseStrike(const std::string& s) {
     boost::regex m3("^(\\+|\\-)?([0-9]+[.]?[0-9]*)");
     boost::regex m4("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(d|D)");
     boost::regex m4b("(d|D)");
+    boost::regex m5("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(c|C)");
+    boost::regex m5b("^(c|C)");
+    boost::regex m6("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(p|P)");
+    boost::regex m6b("^(p|P)");
+    boost::regex m7("^(25bf|25BF)");
+    boost::regex m8("^(25rr|25RR)");
     Strike result;
     if (boost::regex_match(s, m1)) {
         result.type = Strike::Type::ATM;
@@ -57,6 +63,26 @@ Strike parseStrike(const std::string& s) {
     if (boost::regex_match(s, m4)) {
         result.type = Strike::Type::Delta;
         result.value = parseReal(regex_replace(s, m4b, std::string("")));
+        return result;
+    }
+    if (boost::regex_match(s, m5)) {
+        result.type = Strike::Type::DeltaCall;
+        result.value = parseReal(regex_replace(s, m5b, std::string("")));
+        return result;
+    }
+    if (boost::regex_match(s, m6)) {
+        result.type = Strike::Type::DeltaPut;
+        result.value = parseReal(regex_replace(s, m6b, std::string("")));
+        return result;
+    }
+    if (boost::regex_match(s, m7)) {
+        result.type = Strike::Type::BF;
+        result.value = 25;
+        return result;
+    }
+    if (boost::regex_match(s, m8)) {
+        result.type = Strike::Type::RR;
+        result.value = 25;
         return result;
     }
     QL_FAIL("could not parse strike given by " << s);

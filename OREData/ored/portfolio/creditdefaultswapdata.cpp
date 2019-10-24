@@ -44,7 +44,7 @@ CdsTier parseCdsTier(const string& s) {
     } else if (s == "PREFT1") {
         return CdsTier::PREFT1;
     } else {
-        QL_FAIL("Could not parse " << s << " to CdsTier");
+        QL_FAIL("Could not parse \"" << s << "\" to CdsTier");
     }
 }
 
@@ -85,7 +85,7 @@ CdsDocClause parseCdsDocClause(const string& s) {
     } else if (s == "XR14") {
         return CdsDocClause::XR14;
     } else {
-        QL_FAIL("Could not parse " << s << " to CdsDocClause");
+        QL_FAIL("Could not parse \"" << s << "\" to CdsDocClause");
     }
 }
 
@@ -137,6 +137,7 @@ XMLNode* CdsReferenceInformation::toXML(XMLDocument& doc) {
 }
 
 void CdsReferenceInformation::populateId() {
+    // TODO: make the format here configurable
     id_ = referenceEntityId_ + "|" + to_string(tier_) + "|" + currency_.code() + "|" + to_string(docClause_);
 }
 

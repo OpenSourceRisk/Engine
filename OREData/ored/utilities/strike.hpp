@@ -31,7 +31,7 @@ namespace ore {
 namespace data {
 
 struct Strike {
-    enum class Type { ATM, ATMF, ATM_Offset, Absolute, Delta };
+    enum class Type { ATM, ATMF, ATM_Offset, Absolute, Delta, DeltaCall, DeltaPut, BF, RR};
     Type type;
     QuantLib::Real value;
 };

@@ -25,12 +25,26 @@
 using namespace std;
 using namespace ore::data;
 
+namespace {
+
+vector<string> getFilenames(const string& fileString, const string& path) {
+    vector<string> fileNames;
+    boost::split(fileNames, fileString, boost::is_any_of(",;"), boost::token_compress_on);
+    for (auto it = fileNames.begin(); it < fileNames.end(); it++) {
+        boost::trim(*it);
+        *it = path + "/" + *it;
+    }
+    return fileNames;
+}
+
+} // anonymous namespace
+
 namespace ore {
 namespace analytics {
 
-
 void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market, Conventions& conventions,
-    const CurveConfigurations& curveConfigs, const TodaysMarketParameters& todaysMarketParams) {
+                                               const CurveConfigurations& curveConfigs,
+                                               const TodaysMarketParameters& todaysMarketParams) {
 
     MEM_LOG;
     LOG("Running sensitivity analysis");
@@ -79,9 +93,12 @@ void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarket
     engineData->fromFile(sensiPricingEnginesFile);
 
     LOG("Get Portfolio");
-    string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
+    string portfoliosString = params_->get("setup", "portfolioFile");
+    vector<string> portfolioFiles = getFilenames(portfoliosString, inputPath);
     // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
-    sensiPortfolio->load(portfolioFile, boost::make_shared<TradeFactory>(extraTradeBuilders_));
+    for (auto portfolioFile : portfolioFiles) {
+        sensiPortfolio->load(portfolioFile, tradeFactory_);
+    }
 
     DLOG("sensiInputInitialize done");
 }

@@ -122,6 +122,7 @@ termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvariancesurfacesparse.cpp
 termstructures/blackvariancesurfacestddevs.cpp
+termstructures/blackvolsurfacedelta.cpp
 termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
@@ -349,6 +350,7 @@ termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvariancesurfacesparse.hpp
 termstructures/blackvariancesurfacestddevs.hpp
+termstructures/blackvolsurfacedelta.hpp
 termstructures/blackvolsurfacewithatm.hpp
 termstructures/brlcdiratehelper.hpp
 termstructures/capfloorhelper.hpp
