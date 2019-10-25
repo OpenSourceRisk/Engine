@@ -160,8 +160,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     LOG("Calling engine for forward bond " << id() << " with credit curve: " << creditCurveId_
                                            << " with reference curve:" << referenceCurveId_
                                            << " with income curve: " << incomeCurveId_);
-
-    fwdBond->setPricingEngine(fwdBondBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_,
+    fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, creditCurveId_, securityId_, referenceCurveId_,
                                                      incomeCurveId_, adjustmentSpread_));
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0)); // long or short is regulated via the payoff class
 }

@@ -377,10 +377,19 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType name="vannaVolgaApproximation">
+  <xs:simpleType name="smileType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="VannaVolga"/>
+      <xs:enumeration value="Delta"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="fxVolInterpolation">
     <xs:restriction base="xs:string">
       <xs:enumeration value="VannaVolga1"/>
       <xs:enumeration value="VannaVolga2"/>
+      <xs:enumeration value="Linear"/>
+      <xs:enumeration value="Cubic"/>
     </xs:restriction>
   </xs:simpleType>
 

@@ -29,6 +29,7 @@
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/types.hpp>
+#include <ored/utilities/strike.hpp>
 #include <string>
 #include <boost/optional.hpp>
 
@@ -858,8 +859,8 @@ private:
   - unit currency
   - currency
   - expiry
-  - "strike" (25 delta butterfly "25BF", 25 delta risk reversal "25RR", atm straddle ATM)
-  we do not yet support ATMF or individual delta put/call quotes.
+  - "strike" (25 delta butterfly "25BF", 25 delta risk reversal "25RR", atm straddle ATM, or individual delta put/call quotes)
+  we do not yet support ATMF.
 
   \ingroup marketdata
 */
@@ -870,8 +871,10 @@ public:
                   Period expiry, string strike)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_OPTION), unitCcy_(unitCcy), ccy_(ccy),
           expiry_(expiry), strike_(strike) {
-        QL_REQUIRE(strike == "ATM" || strike == "25BF" || strike == "25RR",
-                   "Invalid FXOptionQuote strike (" << strike << ")");
+
+        Strike s = parseStrike(strike);
+        QL_REQUIRE(s.type == Strike::Type::DeltaCall || s.type == Strike::Type::DeltaPut 
+                || s.type == Strike::Type::ATM || s.type == Strike::Type::BF || s.type == Strike::Type::RR, "Unsupported FXOptionQuote strike (" << strike << ")");
     }
 
     //! \name Inspectors
@@ -1379,6 +1382,26 @@ public:
     //! Constructor
     CPRQuote(Real value, Date asofDate, const string& name, const string& securityId)
         : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::CPR), securityID_(securityId) {}
+
+    //! \name Inspectors
+    //@{
+    const string& securityID() const { return securityID_; }
+    //@}
+private:
+    string securityID_;
+};
+
+//! Bond Price Quote
+/*!
+This class holds single market points of type
+- Price
+\ingroup marketdata
+*/
+class BondPriceQuote : public MarketDatum {
+public:
+    //! Constructor
+    BondPriceQuote(Real value, Date asofDate, const string& name, const string& securityId)
+        : MarketDatum(value, asofDate, name, QuoteType::PRICE, InstrumentType::BOND), securityID_(securityId) {}
 
     //! \name Inspectors
     //@{

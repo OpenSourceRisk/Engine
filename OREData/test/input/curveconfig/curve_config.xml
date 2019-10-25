@@ -390,6 +390,17 @@
       <FXDomesticCurveID>Yield/USD/USD-FedFunds</FXDomesticCurveID>
     </FXVolatility>
     <FXVolatility>
+      <CurveId>EURUSD_SMILE_DELTA</CurveId>
+      <CurveDescription/>
+      <Dimension>Smile</Dimension>
+      <SmileType>Delta</SmileType>
+      <Deltas>10C,20C,ATM,10P,20P</Deltas>
+      <Expiries>6M,1Y</Expiries>
+      <FXSpotID>FX/EUR/USD</FXSpotID>
+      <FXForeignCurveID>Yield/EUR/EUR-IN-USD</FXForeignCurveID>
+      <FXDomesticCurveID>Yield/USD/USD-FedFunds</FXDomesticCurveID>
+    </FXVolatility>
+    <FXVolatility>
       <CurveId>EURUSD_ATM</CurveId>
       <CurveDescription/>
       <Dimension>ATM</Dimension>
@@ -407,6 +418,17 @@
       <CurveId>GBPUSD_SMILE</CurveId>
       <CurveDescription/>
       <Dimension>Smile</Dimension>
+      <Expiries>6M,1Y</Expiries>
+      <FXSpotID>FX/GBP/USD</FXSpotID>
+      <FXForeignCurveID>Yield/GBP/GBP-IN-USD</FXForeignCurveID>
+      <FXDomesticCurveID>Yield/USD/USD-FedFunds</FXDomesticCurveID>
+    </FXVolatility>
+    <FXVolatility>
+      <CurveId>GBPUSD_SMILE_DELTA</CurveId>
+      <CurveDescription/>
+      <Dimension>Smile</Dimension>
+      <SmileType>Delta</SmileType>
+      <Deltas>10C,20C,ATM,10P,20P</Deltas>
       <Expiries>6M,1Y</Expiries>
       <FXSpotID>FX/GBP/USD</FXSpotID>
       <FXForeignCurveID>Yield/GBP/GBP-IN-USD</FXForeignCurveID>
