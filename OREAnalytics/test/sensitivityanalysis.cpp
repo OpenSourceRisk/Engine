@@ -210,12 +210,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     portfolio->build(factory);
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
-
-    vector<pair<string, Real>> t0Npvs;
-    for (auto t : portfolio->trades()) {
-        t0Npvs.push_back(std::make_pair(t->id(), t->instrument()->NPV()));
-    }
-
+    
     // build the scenario valuation engine
     boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>(
         "1,0W"); // TODO - extend the DateGrid interface so that it can actually take a vector of dates as input

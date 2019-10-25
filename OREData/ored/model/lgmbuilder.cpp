@@ -160,17 +160,16 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
 void LgmBuilder::performCalculations() const {
 
     DLOG("Recalibrate LGM model for currency " << data_->ccy());
-    
-    parametrization_->shift() = 0.0;
-    parametrization_->scaling() = 1.0;
 
     // Check if the Swaption vol surface has update
     bool volSurfaceChanged = false;
     if (data_->calibrateA() || data_->calibrateH())
         volSurfaceChanged = updateSwaptionVolCache();
 
-
     if (volSurfaceChanged || lgmObserver_->hasUpdated()) {
+
+        parametrization_->shift() = 0.0;
+        parametrization_->scaling() = 1.0;
 
         if (data_->calibrateA() || data_->calibrateH())
             buildSwaptionBasket();
