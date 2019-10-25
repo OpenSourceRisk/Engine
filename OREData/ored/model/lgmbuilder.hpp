@@ -36,15 +36,28 @@ namespace ore {
 namespace data {
 using namespace QuantLib;
 
+
+//! Observer class for LgmBuilder
+/*! 
+  This class holds all observables, except the swaption vol surface,
+  for an LgmBuilder, and contains an update flag to indicate any 
+  changes since it was last called
+
+  \ingroup models
+*/
 class LgmObserver : public Observer, public Observable {
 public:
     LgmObserver() : updated_(true) {};
 
+    //! Add an observable
     void addObserver(boost::shared_ptr<Observable> observable);
+    //! Observer interface
     void update();
+    //! Returns true if has been updated since the last call
     bool hasUpdated();
 
 private:
+    //! Flag to indicate if updated since last call
     bool updated_;
 
 };
