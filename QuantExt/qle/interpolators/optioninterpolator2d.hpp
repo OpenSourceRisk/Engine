@@ -71,6 +71,7 @@ public:
     std::vector<QuantLib::Time> times() const;
     std::vector<QuantLib::Date> expiries() const;
     std::vector<std::vector<QuantLib::Real> > strikes() const;
+    std::vector<std::vector<QuantLib::Real> > values() const;
     QuantLib::Real getValue(QuantLib::Time t, QuantLib::Real strike) const;
     QuantLib::Real getValue(QuantLib::Date d, QuantLib::Real strike) const;
     //@}
@@ -290,6 +291,12 @@ template <class IS, class IE>
 std::vector<std::vector<QuantLib::Real> > OptionInterpolator2d<IS, IE>::strikes() const {
     QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
     return strikes_;
+}
+
+template <class IS, class IE>
+std::vector<std::vector<QuantLib::Real> > OptionInterpolator2d<IS, IE>::values() const {
+    QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
+    return values_;
 }
 
 } //namespace QuantExt
