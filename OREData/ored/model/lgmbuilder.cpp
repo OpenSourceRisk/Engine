@@ -166,7 +166,7 @@ void LgmBuilder::performCalculations() const {
     if (data_->calibrateA() || data_->calibrateH())
         volSurfaceChanged = updateSwaptionVolCache();
 
-    if (volSurfaceChanged || lgmObserver_->hasUpdated()) {
+    if (volSurfaceChanged || lgmObserver_->hasUpdated() || !ObservableSettings::instance().updatesEnabled()) {
 
         parametrization_->shift() = 0.0;
         parametrization_->scaling() = 1.0;
