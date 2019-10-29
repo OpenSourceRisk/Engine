@@ -23,27 +23,32 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-VannaVolgaSmileSection::VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr25d,
-                                               Volatility bf25d, bool firstApprox)
-    : FxSmileSection(spot, rd, rf, t), atmVol_(atmVol), rr25d_(rr25d), bf25d_(bf25d), firstApprox_(firstApprox) {
+VannaVolgaSmileSection::VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr,
+                                               Volatility bf, bool firstApprox,
+                                               const DeltaVolQuote::AtmType& atmType,
+                                               const DeltaVolQuote::DeltaType& deltaType,
+                                               const Real delta)
+    : FxSmileSection(spot, rd, rf, t), atmVol_(atmVol), rr_(rr), bf_(bf), firstApprox_(firstApprox) {
 
     // Consistent Pricing of FX Options
     // Castagna & Mercurio (2006)
-
-    // eq(1). Assumes Delta is unadjusted spot delta which is probably wrong
-    k_atm_ = spot * exp((rd - rf + 0.5 * atmVol * atmVol) * t);
-
     // eq(4) + (5).
-    vol_25c_ = atmVol + bf25d + 0.5 * rr25d;
-    vol_25p_ = atmVol + bf25d - 0.5 * rr25d;
+    vol_c_ = atmVol + bf_ + 0.5 * rr_;
+    vol_p_ = atmVol + bf_ - 0.5 * rr_;
 
-    // eq(6) + (7)
-    Real tmp = 0.25 * exp(rf * t);
-    QL_REQUIRE(tmp > 0 && tmp < 1, "Invalid rate (" << rf << ") and time (" << t << ")in VannaVolgaSmileSection");
-    Real alpha = -InverseCumulativeNormal::standard_value(tmp);
-
-    k_25p_ = spot * exp((-alpha * vol_25p_ * sqrt(t)) + (rd - rf + 0.5 * vol_25p_ * vol_25p_) * t);
-    k_25c_ = spot * exp((alpha * vol_25c_ * sqrt(t)) + (rd - rf + 0.5 * vol_25c_ * vol_25c_) * t);
+    // infer strikes from delta and vol quote 
+    BlackDeltaCalculator a(Option::Type::Call, deltaType, spot, 
+                           domesticDiscount(), foreignDiscount(), 
+                           sqrt(t)*atmVol); 
+    BlackDeltaCalculator c(Option::Type::Call, deltaType, spot, 
+                           domesticDiscount(), foreignDiscount(), 
+                           sqrt(t)*vol_c_); 
+    BlackDeltaCalculator p(Option::Type::Put, deltaType, spot, 
+                           domesticDiscount(), foreignDiscount(), 
+                           sqrt(t)*vol_p_); 
+    k_atm_ = a.atmStrike(atmType); 
+    k_c_ = c.strikeFromDelta(delta); 
+    k_p_ = p.strikeFromDelta(-delta); 
 }
 
 Real VannaVolgaSmileSection::d1(Real x) const {
@@ -58,16 +63,16 @@ Volatility VannaVolgaSmileSection::volatility(Real k) const {
     QL_REQUIRE(k >= 0, "Non-positive strike (" << k << ")");
 
     // eq(14). Note sigma = sigma_ATM here.
-    Real k1 = k_25p_;
+    Real k1 = k_p_;
     Real k2 = k_atm_;
-    Real k3 = k_25c_;
+    Real k3 = k_c_;
 
     // TODO: Cache the (constant) denominator
     Real r1 = log(k2 / k) * log(k3 / k) / (log(k2 / k1) * log(k3 / k1));
     Real r2 = log(k / k1) * log(k3 / k) / (log(k2 / k1) * log(k3 / k2));
     Real r3 = log(k / k1) * log(k / k2) / (log(k3 / k1) * log(k3 / k2));
 
-    Real sigma1_k = r1 * vol_25p_ + r2 * atmVol_ + r3 * vol_25c_;
+    Real sigma1_k = r1 * vol_p_ + r2 * atmVol_ + r3 * vol_c_;
     if (firstApprox_) {
         return std::max(sigma1_k, Real(0.0001));    // for extreme ends: cannot return negative impl vols
     }
@@ -75,8 +80,8 @@ Volatility VannaVolgaSmileSection::volatility(Real k) const {
     Real D1 = sigma1_k - atmVol_;
 
     // No middle term as sigma = sigma_atm
-    Real D2 = r1 * d1(k1) * d2(k1) * (vol_25p_ - atmVol_) * (vol_25p_ - atmVol_) +
-              r3 * d1(k3) * d2(k3) * (vol_25c_ - atmVol_) * (vol_25c_ - atmVol_);
+    Real D2 = r1 * d1(k1) * d2(k1) * (vol_p_ - atmVol_) * (vol_p_ - atmVol_) +
+              r3 * d1(k3) * d2(k3) * (vol_c_ - atmVol_) * (vol_c_ - atmVol_);
 
     Real d1d2k = d1(k) * d2(k);
 

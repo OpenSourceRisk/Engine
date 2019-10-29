@@ -26,6 +26,7 @@
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
+#include <ql/experimental/fx/deltavolquote.hpp> 
 #include <ql/instruments/swaption.hpp>
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
@@ -247,5 +248,17 @@ enum class AssetClass { EQ, FX, COM, IR, INF, CR };
 */
 AssetClass parseAssetClass(const std::string& s);
 
+//! Convert text to QuantLib::DeltaVolQuote::AtmType 
+/*! 
+\ingroup utilities 
+*/ 
+QuantLib::DeltaVolQuote::AtmType parseAtmType(const std::string& s); 
+ 
+//! Convert text to QuantLib::DeltaVolQuote::DeltaType 
+/*! 
+\ingroup utilities 
+*/ 
+QuantLib::DeltaVolQuote::DeltaType parseDeltaType(const std::string& s); 
+ 
 } // namespace data
 } // namespace ore

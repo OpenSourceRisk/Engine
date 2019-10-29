@@ -891,5 +891,38 @@ AssetClass parseAssetClass(const std::string& s) {
     }
 }
 
+DeltaVolQuote::AtmType parseAtmType(const std::string& s) { 
+    static map<string, DeltaVolQuote::AtmType> m = { 
+        {"AtmNull", DeltaVolQuote::AtmNull}, 
+        {"AtmSpot", DeltaVolQuote::AtmSpot}, 
+        {"AtmFwd", DeltaVolQuote::AtmFwd}, 
+        {"AtmDeltaNeutral", DeltaVolQuote::AtmDeltaNeutral}, 
+        {"AtmVegaMax", DeltaVolQuote::AtmVegaMax}, 
+        {"AtmGammaMax", DeltaVolQuote::AtmGammaMax}, 
+        {"AtmPutCall50", DeltaVolQuote::AtmPutCall50} 
+    }; 
+ 
+    auto it = m.find(s); 
+    if (it != m.end()) { 
+        return it->second; 
+    } else { 
+        QL_FAIL("ATM type \"" << s << "\" not recognized"); 
+    } 
+} 
+ 
+DeltaVolQuote::DeltaType parseDeltaType(const std::string& s) { 
+    static map<string, DeltaVolQuote::DeltaType> m = {{"Spot", DeltaVolQuote::Spot}, 
+                                                      {"Fwd", DeltaVolQuote::Fwd}, 
+                                                      {"PaSpot", DeltaVolQuote::PaSpot}, 
+                                                      {"PaFwd", DeltaVolQuote::PaFwd}}; 
+ 
+    auto it = m.find(s); 
+    if (it != m.end()) { 
+        return it->second; 
+    } else { 
+        QL_FAIL("Delta type \"" << s << "\" not recognized"); 
+    } 
+} 
+ 
 } // namespace data
 } // namespace ore

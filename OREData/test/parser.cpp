@@ -507,6 +507,14 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         BOOST_CHECK(q->expiry() == Period(2, Months));
         BOOST_CHECK(q->strike() == "25BF");
 
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/10BF";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "10BF");
+        
         //Risk Reversal quote
         input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/25RR";
         datum = parseMarketDatum(d, input, value);
@@ -516,6 +524,14 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         BOOST_CHECK(q->expiry() == Period(2, Months));
         BOOST_CHECK(q->strike() == "25RR");
 
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/10RR";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "10RR");
+        
         //Strike based quote
         input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/10C";
         datum = parseMarketDatum(d, input, value);
@@ -539,6 +555,10 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
             Real value = 300.16535;
             
             BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/ATMF", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/BBFF", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/15BF", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/1LRR", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/12RR", value), Error);
             BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/10D", value), Error);
             BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M", value), Error);
             BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/2019-12", value), Error);

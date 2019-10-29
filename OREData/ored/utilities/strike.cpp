@@ -37,8 +37,10 @@ Strike parseStrike(const std::string& s) {
     boost::regex m5b("^(c|C)");
     boost::regex m6("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(p|P)");
     boost::regex m6b("^(p|P)");
-    boost::regex m7("^(25bf|25BF)");
-    boost::regex m8("^(25rr|25RR)");
+    boost::regex m7("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(bf|BF)");
+    boost::regex m7b("^(bf|BF)");
+    boost::regex m8("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(rr|RR)");
+    boost::regex m8b("^(rr|RR)");
     Strike result;
     if (boost::regex_match(s, m1)) {
         result.type = Strike::Type::ATM;
@@ -77,12 +79,14 @@ Strike parseStrike(const std::string& s) {
     }
     if (boost::regex_match(s, m7)) {
         result.type = Strike::Type::BF;
-        result.value = 25;
+        result.value = parseReal(regex_replace(s, m7b, std::string("")));;
+        QL_REQUIRE(result.value == 10 || result.value == 25, result.value << " is not a supported BF quote");
         return result;
     }
     if (boost::regex_match(s, m8)) {
         result.type = Strike::Type::RR;
-        result.value = 25;
+        result.value = parseReal(regex_replace(s, m8b, std::string("")));;
+        QL_REQUIRE(result.value == 10 || result.value == 25, result.value << " is not a supported RR quote");
         return result;
     }
     QL_FAIL("could not parse strike given by " << s);
