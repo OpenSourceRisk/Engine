@@ -165,8 +165,8 @@ void LgmBuilder::performCalculations() const {
     bool volSurfaceChanged = false;
     if (data_->calibrateA() || data_->calibrateH())
         volSurfaceChanged = updateSwaptionVolCache();
-
-    if (volSurfaceChanged || lgmObserver_->hasUpdated() || !ObservableSettings::instance().updatesEnabled()) {
+    
+    if (volSurfaceChanged || lgmObserver_->hasUpdated() || forceCalibration_) {
 
         parametrization_->shift() = 0.0;
         parametrization_->scaling() = 1.0;
@@ -427,5 +427,12 @@ void LgmBuilder::buildSwaptionBasket() const {
     for (Size j = 0; j < maturityTimes.size(); j++)
         swaptionMaturities_[j] = maturityTimes[j];
 }
+
+void LgmBuilder::forceRecalculate() {
+    forceCalibration_ = true;
+    ModelBuilder::forceRecalculate();
+    forceCalibration_ = false;
+}
+
 } // namespace data
 } // namespace ore

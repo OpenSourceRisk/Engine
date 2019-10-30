@@ -96,6 +96,9 @@ public:
         calculate();
         return swaptionBasket_;
     }
+
+
+    void forceRecalculate();
     //@}
 private:
     void performCalculations() const override;
@@ -127,6 +130,8 @@ private:
 
     // Cache the swation volatilities
     mutable std::vector<QuantLib::Real> swaptionVolCache_;
+
+    bool forceCalibration_ = false;
 
     // LGM Oberver
     boost::shared_ptr<LgmObserver> lgmObserver_;

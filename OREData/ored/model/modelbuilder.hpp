@@ -31,6 +31,7 @@ namespace data {
 class ModelBuilder : public QuantLib::LazyObject {
 public:
     void recalibrate() { calculate(); }
+    virtual void forceRecalculate() { recalculate(); }
 };
 
 } // namespace data
