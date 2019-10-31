@@ -2,7 +2,7 @@
 QLE_TESTS = \
 	testsuite.cpp \
 	analyticlgmswaptionengine.cpp \
-	staticallycorrectedyieldtermstructure.cpp \
+    staticallycorrectedyieldtermstructure.cpp \
 	crossassetmodel.cpp \
 	crossassetmodel2.cpp \
 	crossassetmodelparametrizations.cpp \
@@ -10,7 +10,8 @@ QLE_TESTS = \
 	discountcurve.cpp \
 	dynamicblackvoltermstructure.cpp \
 	dynamicswaptionvolmatrix.cpp \
-	fillemptymatrix.cpp \
+	equityforwardcurvestripper.cpp \
+    fillemptymatrix.cpp \
 	index.cpp \
 	blackvariancecurve.cpp \
 	logquote.cpp \
