@@ -5,7 +5,7 @@ OREDATA_TESTS = \
 	calendars.cpp \
 	calendaradjustment.cpp \
 	creditdefaultswapdata.cpp \
-    fxoption.cpp \
+	fxoption.cpp \
 	ccyswapwithresets.cpp \
 	cpiswap.cpp \
 	cms.cpp \
