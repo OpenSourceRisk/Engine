@@ -664,6 +664,7 @@
     <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="equityforwardcurvestripper.cpp" />
     <ClCompile Include="fillemptymatrix.cpp" />
+    <ClCompile Include="forwardbond.cpp" />
     <ClCompile Include="fxvolsmile.cpp" />
     <ClCompile Include="index.cpp" />
     <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp" />
@@ -689,6 +690,7 @@
   <ItemGroup>
     <ClInclude Include="capfloormarketdata.hpp" />
     <ClInclude Include="swaptionmarketdata.hpp" />
+    <ClInclude Include="toplevelfixture.hpp" />
     <ClInclude Include="utilities.hpp" />
     <ClInclude Include="yieldcurvemarketdata.hpp" />
   </ItemGroup>
