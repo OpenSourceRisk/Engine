@@ -39,6 +39,7 @@
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
+#include <qle/termstructures/overnightindexfutureratehelper.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
@@ -826,18 +827,35 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
 
         // Check that we have a valid future quote
         if (marketQuote) {
-            boost::shared_ptr<MMFutureQuote> futureQuote;
-            QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::MM_FUTURE,
-                       "Market quote not of type Future.");
-            futureQuote = boost::dynamic_pointer_cast<MMFutureQuote>(marketQuote);
+            if (auto on = boost::dynamic_pointer_cast<OvernightIndex>(futureConvention->index())) {
+                // Overnight Index Future
+                boost::shared_ptr<OIFutureQuote> futureQuote;
+                QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::OI_FUTURE,
+                           "Market quote not of type Overnight Index Future.");
+                futureQuote = boost::dynamic_pointer_cast<OIFutureQuote>(marketQuote);
 
-            // Create a future helper if we do.
-            Date refDate(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
-            Date immDate = IMM::nextDate(refDate, false);
-            boost::shared_ptr<RateHelper> futureHelper(
-                new FuturesRateHelper(futureQuote->quote(), immDate, futureConvention->index()));
+                // Create a Overnight index future helper
+                Date startDate = IMM::nextDate(Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear()));
+                Date endDateTmp = startDate + futureQuote->tenor();
+                Date endDate = IMM::nextDate(Date(1, endDateTmp.month(), endDateTmp.year()));
+                boost::shared_ptr<RateHelper> futureHelper(
+                    new OvernightIndexFutureRateHelper(futureQuote->quote(), startDate, endDate, on));
+                instruments.push_back(futureHelper);
+            } else {
+                // MM Future
+                boost::shared_ptr<MMFutureQuote> futureQuote;
+                QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::MM_FUTURE,
+                           "Market quote not of type Money Market Future.");
+                futureQuote = boost::dynamic_pointer_cast<MMFutureQuote>(marketQuote);
 
-            instruments.push_back(futureHelper);
+                // Create a MM future helper
+                Date refDate(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
+                Date immDate = IMM::nextDate(refDate, false);
+                boost::shared_ptr<RateHelper> futureHelper(
+                    new FuturesRateHelper(futureQuote->quote(), immDate, futureConvention->index()));
+
+                instruments.push_back(futureHelper);
+            }
         }
     }
 }

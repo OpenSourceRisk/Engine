@@ -38,10 +38,11 @@ EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& na
     parseDateOrPeriod(expiry, tmpDate, tmpPeriod, tmpBool);
 }
 
-Natural MMFutureQuote::expiryYear() const {
-    QL_REQUIRE(expiry_.length() == 7, "The expiry string must be of "
+namespace {
+Natural yearFromExpiryString(const std::string& expiry) {
+    QL_REQUIRE(expiry.length() == 7, "The expiry string must be of "
                                       "the form YYYY-MM");
-    string strExpiryYear = expiry_.substr(0, 4);
+    string strExpiryYear = expiry.substr(0, 4);
     Natural expiryYear;
     try {
         expiryYear = lexical_cast<Natural>(strExpiryYear);
@@ -51,10 +52,10 @@ Natural MMFutureQuote::expiryYear() const {
     return expiryYear;
 }
 
-Month MMFutureQuote::expiryMonth() const {
-    QL_REQUIRE(expiry_.length() == 7, "The expiry string must be of "
+Month monthFromExpiryString(const std::string& expiry) {
+    QL_REQUIRE(expiry.length() == 7, "The expiry string must be of "
                                       "the form YYYY-MM");
-    string strExpiryMonth = expiry_.substr(5);
+    string strExpiryMonth = expiry.substr(5);
     Natural expiryMonth;
     try {
         expiryMonth = lexical_cast<Natural>(strExpiryMonth);
@@ -62,6 +63,23 @@ Month MMFutureQuote::expiryMonth() const {
         QL_FAIL("Could not convert month string, " << strExpiryMonth << ", to number.");
     }
     return static_cast<Month>(expiryMonth);
+}
+} // namespace
+
+Natural MMFutureQuote::expiryYear() const {
+    return yearFromExpiryString(expiry_);
+}
+
+Month MMFutureQuote::expiryMonth() const {
+    return monthFromExpiryString(expiry_);
+}
+
+Natural OIFutureQuote::expiryYear() const {
+    return yearFromExpiryString(expiry_);
+}
+
+Month OIFutureQuote::expiryMonth() const {
+    return monthFromExpiryString(expiry_);
 }
 
 QuantLib::Size SeasonalityQuote::applyMonth() const {

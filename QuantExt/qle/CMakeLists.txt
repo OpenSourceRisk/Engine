@@ -59,6 +59,7 @@ instruments/makeaverageois.cpp
 instruments/makecds.cpp
 instruments/oibasisswap.cpp
 instruments/oiccbasisswap.cpp
+instruments/overnightindexfuture.cpp
 instruments/payment.cpp
 instruments/rebatedexercise.cpp
 instruments/subperiodsswap.cpp
@@ -151,6 +152,7 @@ termstructures/oisratehelper.cpp
 termstructures/optionletstripper.cpp
 termstructures/optionletstripper1.cpp
 termstructures/optionletstripper2.cpp
+termstructures/overnightindexfutureratehelper.cpp
 termstructures/pricetermstructure.cpp
 termstructures/pricetermstructureadapter.cpp
 termstructures/spreadedoptionletvolatility.cpp
@@ -270,6 +272,7 @@ instruments/makeaverageois.hpp
 instruments/makecds.hpp
 instruments/oibasisswap.hpp
 instruments/oiccbasisswap.hpp
+instruments/overnightindexfuture.hpp
 instruments/payment.hpp
 instruments/rebatedexercise.hpp
 instruments/subperiodsswap.hpp
@@ -394,6 +397,7 @@ termstructures/optionletstripper1.hpp
 termstructures/optionletstripper2.hpp
 termstructures/optionletstripperwithatm.hpp
 termstructures/optionpricesurface.hpp
+termstructures/overnightindexfutureratehelper.hpp
 termstructures/piecewiseatmoptionletcurve.hpp
 termstructures/piecewiseoptionletcurve.hpp
 termstructures/piecewiseoptionletstripper.hpp
