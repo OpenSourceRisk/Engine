@@ -470,7 +470,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                            "for atmOnly strikeSpreads must be {0.0}");
                             }
                             boost::shared_ptr<QuantLib::SwaptionVolatilityCube> cube;
-                            if (isCube) {
+                            if (isCube && !isAtm) {
                                 boost::shared_ptr<SwaptionVolCubeWithATM> tmp =
                                     boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*wrapper);
                                 QL_REQUIRE(tmp, "swaption cube missing")
