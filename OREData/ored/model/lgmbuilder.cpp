@@ -273,7 +273,8 @@ bool LgmBuilder::updateSwaptionVolCache() const {
             vol = svts_->volatility(expiryDb, termPb, strikeValue);
         } else if (!expiryDateBased && termDateBased) {
             vol = svts_->volatility(expiryPb, termT, strikeValue);
-        } else if (!expiryDateBased && !termDateBased) {
+        } else {
+            // !expiryDateBased && !termDateBased
             vol = svts_->volatility(expiryPb, termPb, strikeValue);
         }
 
