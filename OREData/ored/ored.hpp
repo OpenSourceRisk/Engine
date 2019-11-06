@@ -6,7 +6,6 @@
 #endif
 
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
-#include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
 #include <ored/configuration/commoditycurveconfig.hpp>

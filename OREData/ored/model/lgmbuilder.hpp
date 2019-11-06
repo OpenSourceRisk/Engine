@@ -98,7 +98,7 @@ public:
     }
 
 
-    void forceRecalculate() override;
+    void forceRecalculate();
     //@}
 private:
     void performCalculations() const override;
