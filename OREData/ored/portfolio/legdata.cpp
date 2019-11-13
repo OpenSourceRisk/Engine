@@ -34,7 +34,6 @@
 #include <ql/cashflows/digitalcoupon.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
-#include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/errors.hpp>
 #include <ql/experimental/coupons/cmsspreadcoupon.hpp>
@@ -46,6 +45,7 @@
 #include <qle/cashflows/brlcdicouponpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
@@ -842,14 +842,15 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
 
     } else {
 
-        Leg leg = OvernightLeg(schedule, index)
+        Leg leg = QuantExt::OvernightLeg(schedule, index)
                                .withNotionals(notionals)
                                .withSpreads(spreads)
                                .withPaymentDayCounter(dc)
                                .withPaymentAdjustment(bdc)
                                .withPaymentCalendar(paymentCalendar)
                                .withPaymentLag(paymentLag)
-                               .withGearings(gearings);
+                               .withGearings(gearings)
+                               .includeSpread(floatData->includeSpread());
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(index);

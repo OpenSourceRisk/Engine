@@ -21,6 +21,7 @@ cashflows/floatingannuitycoupon.cpp
 cashflows/floatingannuitynominal.cpp
 cashflows/fxlinkedcashflow.cpp
 cashflows/lognormalcmsspreadpricer.cpp
+cashflows/overnightindexedcoupon.cpp
 cashflows/quantocouponpricer.cpp
 cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/subperiodscoupon.cpp
@@ -190,6 +191,7 @@ cashflows/floatingannuitynominal.hpp
 cashflows/floatingratefxlinkednotionalcoupon.hpp
 cashflows/fxlinkedcashflow.hpp
 cashflows/lognormalcmsspreadpricer.hpp
+cashflows/overnightindexedcoupon.hpp
 cashflows/quantocouponpricer.hpp
 cashflows/strippedcapflooredyoyinflationcoupon.hpp
 cashflows/subperiodscoupon.hpp
