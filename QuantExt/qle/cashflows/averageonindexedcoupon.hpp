@@ -96,6 +96,7 @@ public:
     AverageONLeg& withSpreads(const std::vector<Spread>& spreads);
     AverageONLeg& withRateCutoff(Natural rateCutoff);
     AverageONLeg& withPaymentCalendar(const Calendar& calendar);
+    AverageONLeg& withPaymentLag(Natural lag);
     AverageONLeg& withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
     operator Leg() const;
 
@@ -105,6 +106,7 @@ private:
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     BusinessDayConvention paymentAdjustment_;
+    Natural paymentLag_;
     std::vector<Real> gearings_;
     std::vector<Spread> spreads_;
     Calendar paymentCalendar_;

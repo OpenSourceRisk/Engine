@@ -93,7 +93,7 @@ void AverageONIndexedCoupon::accept(AcyclicVisitor& v) {
 
 AverageONLeg::AverageONLeg(const Schedule& schedule, const boost::shared_ptr<OvernightIndex>& i)
     : schedule_(schedule), overnightIndex_(i), paymentAdjustment_(Following), paymentCalendar_(Calendar()),
-      rateCutoff_(0) {}
+      paymentLag_(0), rateCutoff_(0) {}
 
 AverageONLeg& AverageONLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -145,6 +145,11 @@ AverageONLeg& AverageONLeg::withPaymentCalendar(const Calendar& calendar) {
     return *this;
 }
 
+AverageONLeg& AverageONLeg::withPaymentLag(Natural lag) {
+    paymentLag_ = lag;
+    return *this;
+}
+
 AverageONLeg&
 AverageONLeg::withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer) {
     couponPricer_ = couponPricer;
@@ -171,7 +176,7 @@ AverageONLeg::operator Leg() const {
     for (Size i = 0; i < numPeriods; ++i) {
         startDate = schedule_.date(i);
         endDate = schedule_.date(i + 1);
-        paymentDate = calendar.adjust(endDate, paymentAdjustment_);
+        paymentDate = paymentCalendar_.advance(endDate, paymentLag_, Days, paymentAdjustment_);
 
         boost::shared_ptr<AverageONIndexedCoupon> cashflow(new AverageONIndexedCoupon(
             paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate, overnightIndex_,

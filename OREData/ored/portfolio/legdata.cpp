@@ -836,6 +836,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                                          .withPaymentDayCounter(dc)
                                          .withPaymentAdjustment(bdc)
                                          .withRateCutoff(2)
+                                         .withPaymentLag(paymentLag)
                                          .withAverageONIndexedCouponPricer(couponPricer);
 
         return leg;
