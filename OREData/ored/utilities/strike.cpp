@@ -79,14 +79,12 @@ Strike parseStrike(const std::string& s) {
     }
     if (boost::regex_match(s, m7)) {
         result.type = Strike::Type::BF;
-        result.value = parseReal(regex_replace(s, m7b, std::string("")));;
-        QL_REQUIRE(result.value == 10 || result.value == 25, result.value << " is not a supported BF quote");
+        result.value = parseReal(regex_replace(s, m7b, std::string("")));
         return result;
     }
     if (boost::regex_match(s, m8)) {
         result.type = Strike::Type::RR;
-        result.value = parseReal(regex_replace(s, m8b, std::string("")));;
-        QL_REQUIRE(result.value == 10 || result.value == 25, result.value << " is not a supported RR quote");
+        result.value = parseReal(regex_replace(s, m8b, std::string("")));
         return result;
     }
     QL_FAIL("could not parse strike given by " << s);
