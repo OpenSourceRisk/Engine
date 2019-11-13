@@ -19,6 +19,7 @@ example structure of a \lstinline!LegData! node of \lstinline!LegType!
                 <LegType>Floating</LegType>
                 <Currency>EUR</Currency>
                 <PaymentConvention>Following</PaymentConvention>
+                <PaymentLag>0</PaymentLag>
                 <DayCounter>30/360</DayCounter>
                 <Notionals>
                     <Notional>1000000</Notional>
@@ -57,7 +58,8 @@ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 
 Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
 
-\item PaymentLag [optional]: The payment lag given as as number business days, applies to fixed, Ibor and OIS legs.
+\item PaymentLag [optional]: The payment lag given as as number business days, applies to fixed, Ibor and averaged /
+  compounded OIS legs.
 
 Allowable values: A non-negative whole number, if not given it defaults to zero.
 

@@ -12,6 +12,9 @@ An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:fl
                 <FloatingLegData>
                     <Index>USD-LIBOR-3M</Index>
                     <IsInArrears>false</IsInArrears>
+                    <IsAveraged>false</IsAveraged>
+                    <HasSubPeriods>false</HasSubPeriods>
+                    <IncludeSpread>false</IncludeSpread>
                     <FixingDays>2</FixingDays>
                     <Spreads>
                         <Spread>0.005</Spread>
@@ -54,8 +57,8 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
 
 Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 
-\item IncludeSpread [Optional]: Only applies to Sub Periods Coupons. If \emph{true} the spread is included in the
-  compounding, otherwise it is excluded.
+\item IncludeSpread [Optional]: Only applies to Sub Periods and (compounded) OIS Coupons. If \emph{true} the spread is
+  included in the compounding, otherwise it is excluded.
 
 Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 
