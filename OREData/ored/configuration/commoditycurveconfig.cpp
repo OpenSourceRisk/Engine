@@ -63,10 +63,13 @@ void CommodityCurveConfig::fromXML(XMLNode* node) {
     } else {
         type_ = Type::Direct;
         dayCountId_ = XMLUtils::getChildValue(node, "DayCounter", false);
+        
         commoditySpotQuoteId_ = XMLUtils::getChildValue(node, "SpotQuote", false);
         fwdQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote");
         quotes_ = fwdQuotes_;
-        quotes_.insert(quotes_.begin(), commoditySpotQuoteId_);
+        if (commoditySpotQuoteId_ != "")
+            quotes_.insert(quotes_.begin(), commoditySpotQuoteId_);
+        
         interpolationMethod_ = XMLUtils::getChildValue(node, "InterpolationMethod", false);
         conventionsId_ = XMLUtils::getChildValue(node, "Conventions", false);
     }
