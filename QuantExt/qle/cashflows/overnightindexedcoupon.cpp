@@ -156,15 +156,24 @@ namespace QuantExt {
                     const Date& refPeriodEnd,
                     const DayCounter& dayCounter,
                     bool telescopicValueDates,
-                    bool includeSpread)
+                    bool includeSpread,
+                    const Period& lookback)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate,
                          overnightIndex->fixingDays(), overnightIndex,
                          gearing, spread,
                          refPeriodStart, refPeriodEnd,
-                         dayCounter, false) {
+                         dayCounter, false), includeSpread_(includeSpread),
+                         lookback_(lookback) {
+
+        Date valueStart = startDate;
+        Date valueEnd = endDate;
+        if (lookback != 0 * Days) {
+            valueStart = overnightIndex->fixingCalendar().advance(valueStart, -lookback);
+            valueEnd = overnightIndex->fixingCalendar().advance(valueStart, -lookback);
+        }
 
         // value dates
-        Date tmpEndDate = endDate;
+        Date tmpEndDate = valueEnd;
 
         /* For the coupon's valuation only the first and last future valuation
            dates matter, therefore we can avoid to construct the whole series
@@ -176,16 +185,16 @@ namespace QuantExt {
 
         if (telescopicValueDates) {
             // build optimised value dates schedule: front stub goes
-            // from start date to max(evalDate,startDate) + 7bd
+            // from start date to max(evalDate,valueStart) + 7bd
             Date evalDate = Settings::instance().evaluationDate();
             tmpEndDate = overnightIndex->fixingCalendar().advance(
-                std::max(startDate, evalDate), 7, Days, Following);
-            tmpEndDate = std::min(tmpEndDate, endDate);
+                std::max(valueStart, evalDate), 7, Days, Following);
+            tmpEndDate = std::min(tmpEndDate, valueEnd);
         }
         Schedule sch =
             MakeSchedule()
-                .from(startDate)
-                // .to(endDate)
+                .from(valueStart)
+                // .to(valueEnd)
                 .to(tmpEndDate)
                 .withTenor(1 * Days)
                 .withCalendar(overnightIndex->fixingCalendar())
@@ -197,11 +206,11 @@ namespace QuantExt {
             // build optimised value dates schedule: back stub
             // contains at least two dates
             Date tmp = overnightIndex->fixingCalendar().advance(
-                endDate, -1, Days, Preceding);
+                valueEnd, -1, Days, Preceding);
             if (tmp != valueDates_.back())
                 valueDates_.push_back(tmp);
             tmp = overnightIndex->fixingCalendar().adjust(
-                endDate, overnightIndex->businessDayConvention());
+                valueEnd, overnightIndex->businessDayConvention());
             if (tmp != valueDates_.back())
                 valueDates_.push_back(tmp);
         }
@@ -250,7 +259,7 @@ namespace QuantExt {
                                const ext::shared_ptr<OvernightIndex>& i)
     : schedule_(schedule), overnightIndex_(i), paymentCalendar_(schedule.calendar()),
       paymentAdjustment_(Following), paymentLag_(0), telescopicValueDates_(false),
-      includeSpread_(false) {}
+      includeSpread_(false), lookback_(0 * Days) {}
 
     OvernightLeg& OvernightLeg::withNotionals(Real notional) {
         notionals_ = vector<Real>(1, notional);
@@ -313,6 +322,11 @@ namespace QuantExt {
         return *this;
     }
 
+    OvernightLeg& OvernightLeg::withLookback(const Period& lookback) {
+        lookback_ = lookback;
+        return *this;
+    }
+
     OvernightLeg::operator Leg() const {
 
         QL_REQUIRE(!notionals_.empty(), "no notional given");
@@ -349,7 +363,8 @@ namespace QuantExt {
                                        refStart, refEnd,
                                        paymentDayCounter_,
                                        telescopicValueDates_,
-                                       includeSpread_)));
+                                       includeSpread_,
+                                       lookback_)));
         }
         return cashflows;
     }

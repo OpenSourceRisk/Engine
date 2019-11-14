@@ -75,6 +75,11 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
 
 Allowable values:  Positive integers.  Defaults to the index's fixing days if blank or omitted.
 
+\item Lookback [Optional]: A period by which the fixing schedule of (averaged, compounded) OIS legs is shifted into the
+  past.
+
+Allowable values: any valid period, e.g. 2D, 3M, 1Y
+
 \item Spreads [Optional]: This node contains child elements of type
   \lstinline!Spread!. If the spread is constant over the life of the
   floating leg, only one spread value should be entered. If two or more

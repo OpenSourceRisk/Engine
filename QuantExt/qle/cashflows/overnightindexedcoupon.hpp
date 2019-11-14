@@ -78,7 +78,8 @@ namespace QuantExt {
                     const Date& refPeriodEnd = Date(),
                     const DayCounter& dayCounter = DayCounter(),
                     bool telescopicValueDates = false,
-                    bool includeSpread = false);
+                    bool includeSpread = false,
+                    const Period& lookback = 0 * Days);
         //! \name Inspectors
         //@{
         //! fixing dates for the rates to be compounded
@@ -107,6 +108,7 @@ namespace QuantExt {
         Size n_;
         std::vector<Time> dt_;
         bool includeSpread_;
+        Period lookback_;
     };
 
 
@@ -127,6 +129,7 @@ namespace QuantExt {
         OvernightLeg& withSpreads(const std::vector<Spread>& spreads);
         OvernightLeg& withTelescopicValueDates(bool telescopicValueDates);
         OvernightLeg& includeSpread(bool includeSpread);
+        OvernightLeg& withLookback(const Period& lookback);
         operator Leg() const;
       private:
         Schedule schedule_;
@@ -140,6 +143,7 @@ namespace QuantExt {
         std::vector<Spread> spreads_;
         bool telescopicValueDates_;
         bool includeSpread_;
+        Period lookback_;
     };
 
 }

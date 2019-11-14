@@ -126,6 +126,10 @@ void FloatingLegData::fromXML(XMLNode* node) {
         fixingDays_ = parseInteger(XMLUtils::getNodeValue(n));
     else
         fixingDays_ = Null<Size>();
+    if(auto n = XMLUtils::getChildNode(node, "Lookback"))
+        lookback_ = parsePeriod(XMLUtils::getNodeValue(n));
+    else
+        lookback_ = 0 * Days;
     caps_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Caps", "Cap", "startDate", capDates_);
     floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
     gearings_ =
@@ -145,6 +149,8 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "IncludeSpread", includeSpread_);
     if(fixingDays_ != Null<Size>())
         XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
+    if (lookback_ != 0 * Days)
+        XMLUtils::addChild(doc, node, "Lookback", ore::data::to_string(lookback_));
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
@@ -837,6 +843,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                                          .withPaymentAdjustment(bdc)
                                          .withRateCutoff(2)
                                          .withPaymentLag(paymentLag)
+                                         .withLookback(floatData->lookback())
                                          .withAverageONIndexedCouponPricer(couponPricer);
 
         return leg;
@@ -851,7 +858,8 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                                .withPaymentCalendar(paymentCalendar)
                                .withPaymentLag(paymentLag)
                                .withGearings(gearings)
-                               .includeSpread(floatData->includeSpread());
+                               .includeSpread(floatData->includeSpread())
+                               .withLookback(floatData->lookback());
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(index);

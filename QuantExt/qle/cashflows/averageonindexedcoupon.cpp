@@ -30,15 +30,23 @@ namespace QuantExt {
 AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nominal, const Date& startDate,
                                                const Date& endDate,
                                                const boost::shared_ptr<OvernightIndex>& overnightIndex, Real gearing,
-                                               Spread spread, Natural rateCutoff, const DayCounter& dayCounter)
+                                               Spread spread, Natural rateCutoff, const DayCounter& dayCounter,
+                                               const Period& lookback)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, overnightIndex->fixingDays(), overnightIndex,
                          gearing, spread, Date(), Date(), dayCounter, false),
-      rateCutoff_(rateCutoff) {
+      rateCutoff_(rateCutoff), lookback_(lookback) {
+
+    Date valueStart = startDate;
+    Date valueEnd = endDate;
+    if (lookback != 0 * Days) {
+        valueStart = overnightIndex->fixingCalendar().advance(valueStart, -lookback);
+        valueEnd = overnightIndex->fixingCalendar().advance(valueStart, -lookback);
+    }
 
     // Populate the value dates.
     Schedule sch = MakeSchedule()
-                       .from(startDate)
-                       .to(endDate)
+                       .from(valueStart)
+                       .to(valueEnd)
                        .withTenor(1 * Days)
                        .withCalendar(overnightIndex->fixingCalendar())
                        .withConvention(overnightIndex->businessDayConvention())
@@ -92,8 +100,8 @@ void AverageONIndexedCoupon::accept(AcyclicVisitor& v) {
 }
 
 AverageONLeg::AverageONLeg(const Schedule& schedule, const boost::shared_ptr<OvernightIndex>& i)
-    : schedule_(schedule), overnightIndex_(i), paymentAdjustment_(Following), paymentCalendar_(Calendar()),
-      paymentLag_(0), rateCutoff_(0) {}
+    : schedule_(schedule), overnightIndex_(i), paymentAdjustment_(Following), paymentLag_(0),
+      paymentCalendar_(Calendar()), rateCutoff_(0), lookback_(0 * Days) {}
 
 AverageONLeg& AverageONLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -150,6 +158,11 @@ AverageONLeg& AverageONLeg::withPaymentLag(Natural lag) {
     return *this;
 }
 
+AverageONLeg& AverageONLeg::withLookback(const Period& lookback) {
+    lookback_ = lookback;
+    return *this;
+}
+
 AverageONLeg&
 AverageONLeg::withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer) {
     couponPricer_ = couponPricer;
@@ -180,7 +193,7 @@ AverageONLeg::operator Leg() const {
 
         boost::shared_ptr<AverageONIndexedCoupon> cashflow(new AverageONIndexedCoupon(
             paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate, overnightIndex_,
-            detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), rateCutoff_, paymentDayCounter_));
+            detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), rateCutoff_, paymentDayCounter_, lookback_));
 
         if (couponPricer_) {
             cashflow->setPricer(couponPricer_);
