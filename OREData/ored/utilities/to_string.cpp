@@ -35,7 +35,7 @@ namespace ore {
 namespace data {
 
 std::string to_string(const QuantLib::Date& date) {
-    if (date == Date())
+    if (date == QuantLib::Date())
         return "1900-01-01";
 
     char buf[11];
