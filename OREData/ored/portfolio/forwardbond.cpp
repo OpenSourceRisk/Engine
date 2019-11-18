@@ -246,13 +246,13 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, fwdBondNode, "LongInForward", longInBond_);
 
     XMLNode* fwdSettlmentNode = doc.allocNode("SettlementData");
-    XMLUtils::appendNode(fwdSettlmentNode, fwdBondNode);
+    XMLUtils::appendNode(fwdBondNode, fwdSettlmentNode);
     XMLUtils::addChild(doc, fwdSettlmentNode, "ForwardMaturityDate", fwdMaturityDate_);
     XMLUtils::addChild(doc, fwdSettlmentNode, "Amount", payOff_);
     XMLUtils::addChild(doc, fwdSettlmentNode, "SettlementDirty", settlementDirty_);
 
     XMLNode* fwdPremiumNode = doc.allocNode("PremiumData");
-    XMLUtils::appendNode(fwdPremiumNode, fwdBondNode);
+    XMLUtils::appendNode(fwdBondNode, fwdPremiumNode);
     XMLUtils::addChild(doc, fwdPremiumNode, "Amount", compensationPayment_);
     XMLUtils::addChild(doc, fwdPremiumNode, "Date", compensationPaymentDate_);
 
