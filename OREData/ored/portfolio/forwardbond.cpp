@@ -233,17 +233,14 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(fwdBondNode, bondNode);
     XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
     XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
-    XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
     XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
+    XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
     XMLUtils::addChild(doc, bondNode, "SettlementDays", settlementDays_);
     XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
     XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
 
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
-
-    XMLUtils::addChild(doc, fwdBondNode, "IncomeCurveId", incomeCurveId_);
-    XMLUtils::addChild(doc, fwdBondNode, "LongInForward", longInBond_);
 
     XMLNode* fwdSettlmentNode = doc.allocNode("SettlementData");
     XMLUtils::appendNode(fwdBondNode, fwdSettlmentNode);
@@ -255,6 +252,9 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(fwdBondNode, fwdPremiumNode);
     XMLUtils::addChild(doc, fwdPremiumNode, "Amount", compensationPayment_);
     XMLUtils::addChild(doc, fwdPremiumNode, "Date", compensationPaymentDate_);
+
+    XMLUtils::addChild(doc, fwdBondNode, "LongInForward", longInBond_);
+    XMLUtils::addChild(doc, fwdBondNode, "IncomeCurveId", incomeCurveId_);
 
     return node;
 }
