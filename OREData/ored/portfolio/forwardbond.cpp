@@ -98,9 +98,9 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // FIXME: zero bonds are always long (firstLegIsPayer = false, mult = 1.0)
     bool firstLegIsPayer = (coupons_.size() == 0) ? false : coupons_[0].isPayer();
     QL_REQUIRE(firstLegIsPayer == false,
-               "Require long position in bond. Specify long/short position of forward in longInBond");
+               "The zero bond position must be Long. Specify long/short position of the forward using 'longInBond'");
     QL_REQUIRE(compensationPayment >= 0,
-               "Require long position in bond. Specify long/short position of forward in longInBond");
+               "Negative compensation payments are not supported");
 
     boost::shared_ptr<Payoff> payoff =
         longInBond ? boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, payOff)
