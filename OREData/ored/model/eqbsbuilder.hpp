@@ -29,6 +29,9 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/eqbsdata.hpp>
+#include <ored/model/marketobserver.hpp>
+#include <ored/model/modelbuilder.hpp>
+
 #include <qle/models/crossassetmodel.hpp>
 
 namespace ore {
@@ -43,7 +46,7 @@ using namespace QuantLib;
 
   \ingroup models
  */
-class EqBsBuilder {
+class EqBsBuilder : public ModelBuilder {
 public:
     //! Constructor
     EqBsBuilder( //! Market object
@@ -55,29 +58,55 @@ public:
         //! Market configuration to use
         const std::string& configuration = Market::defaultConfiguration);
 
-    //! Re-calibrate model component
-    void update();
-
     //! Return calibration error
-    Real error() { return error_; }
+    Real error() const;
 
     //! \name Inspectors
     //@{
     std::string eqName() { return data_->eqName(); }
-    boost::shared_ptr<QuantExt::EqBsParametrization>& parametrization() { return parametrization_; }
-    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket() { return optionBasket_; }
+    boost::shared_ptr<QuantExt::EqBsParametrization> parametrization() const;
+    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
     //@}
-private:
-    void buildOptionBasket();
 
-    boost::shared_ptr<ore::data::Market> market_;
+    //! \name ModelBuilder interface
+    //@{
+    void forceRecalculate() override;
+    bool requiresRecalibration() const override;
+    //@}
+
+private:
+    void performCalculations() const override;
+    Real optionStrike(const Size j) const;
+    Date optionExpiry(const Size j) const;
+    void buildOptionBasket() const;
+    // checks whether fx vols have changed compared to cache and updates the cache if requested
+    bool volSurfaceChanged(const bool updateCache) const;
+
+    // input data
+    const boost::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
-    boost::shared_ptr<EqBsData> data_;
-    QuantLib::Currency baseCcy_;
+    const boost::shared_ptr<EqBsData> data_;
+    const QuantLib::Currency baseCcy_;
+
+    // computed
     Real error_;
-    boost::shared_ptr<QuantExt::EqBsParametrization> parametrization_;
-    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
-    Array optionExpiries_;
+    mutable boost::shared_ptr<QuantExt::EqBsParametrization> parametrization_;
+    mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
+    mutable Array optionExpiries_;
+
+    // relevant market data
+    Handle<Quote> eqSpot_, fxSpot_;
+    Handle<YieldTermStructure> ytsRate_, ytsDiv_;
+    Handle<BlackVolTermStructure> eqVol_;
+
+    // Cache the fx volatilities
+    mutable std::vector<QuantLib::Real> eqVolCache_;
+
+    // helper flag to process forRecalculate()
+    bool forceCalibration_ = false;
+
+    // market observer
+    boost::shared_ptr<MarketObserver> marketObserver_;
 };
 } // namespace data
 } // namespace ore

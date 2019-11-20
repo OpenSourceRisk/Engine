@@ -27,6 +27,7 @@
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
 #include <ored/model/lgmbuilder.hpp>
+#include <ored/model/marketobserver.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -37,24 +38,7 @@ using namespace QuantExt;
 using namespace std;
 
 namespace ore {
-using namespace data;
 namespace data {
-
-void LgmObserver::addObserver(boost::shared_ptr<Observable> observable) {
-    registerWith(observable);
-    updated_ = true;
-}
-
-void LgmObserver::update() { 
-    updated_ = true; 
-    notifyObservers(); 
-};
-
-bool LgmObserver::hasUpdated() {
-    bool upd = updated_;
-    updated_ = false;
-    return upd;
-}
 
 LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
                        const std::string& configuration, Real bootstrapTolerance)
@@ -62,8 +46,8 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)),
       calibrationErrorType_(BlackCalibrationHelper::RelativePriceError){
-     
-    lgmObserver_ = boost::make_shared<LgmObserver>();
+
+    marketObserver_ = boost::make_shared<MarketObserver>();
     QuantLib::Currency ccy = parseCurrency(data_->ccy());
     LOG("LgmCalibration for ccy " << ccy << ", configuration is " << configuration_);
 
@@ -145,28 +129,54 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
 
     if (data_->calibrateA() || data_->calibrateH()) {
         registerWith(svts_);
-        lgmObserver_->addObserver(swapIndex_->forwardingTermStructure());
-        lgmObserver_->addObserver(swapIndex_->discountingTermStructure());
-        lgmObserver_->addObserver(shortSwapIndex_->forwardingTermStructure());
-        lgmObserver_->addObserver(shortSwapIndex_->discountingTermStructure());
+        marketObserver_->addObservable(swapIndex_->forwardingTermStructure());
+        marketObserver_->addObservable(swapIndex_->discountingTermStructure());
+        marketObserver_->addObservable(shortSwapIndex_->forwardingTermStructure());
+        marketObserver_->addObservable(shortSwapIndex_->discountingTermStructure());
     }
-    lgmObserver_->addObserver(discountCurve_);
-    registerWith(lgmObserver_);
+    marketObserver_->addObservable(discountCurve_);
+    registerWith(marketObserver_);
 
     for (Size j = 0; j < swaptionBasket_.size(); j++)
         swaptionBasket_[j]->setPricingEngine(swaptionEngine_);
+}
+
+Real LgmBuilder::error() const {
+    calculate();
+    return error_;
+}
+
+boost::shared_ptr<QuantExt::LGM> LgmBuilder::model() const {
+    calculate();
+    return model_;
+}
+
+boost::shared_ptr<QuantExt::IrLgm1fParametrization> LgmBuilder::parametrization() const {
+    calculate();
+    return parametrization_;
+}
+
+std::vector<boost::shared_ptr<BlackCalibrationHelper>> LgmBuilder::swaptionBasket() const {
+    calculate();
+    return swaptionBasket_;
+}
+
+bool LgmBuilder::requiresRecalibration() const {
+    return ((data_->calibrateA() || data_->calibrateH()) && volSurfaceChanged(false)) ||
+           marketObserver_->hasUpdated(false) || forceCalibration_;
 }
 
 void LgmBuilder::performCalculations() const {
 
     DLOG("Recalibrate LGM model for currency " << data_->ccy());
 
-    // Check if the Swaption vol surface has update
-    bool volSurfaceChanged = false;
-    if (data_->calibrateA() || data_->calibrateH())
-        volSurfaceChanged = updateSwaptionVolCache();
-    
-    if (volSurfaceChanged || lgmObserver_->hasUpdated() || forceCalibration_) {
+    if(requiresRecalibration()) {
+
+        // update swaption vol cache
+        volSurfaceChanged(true);
+
+        // reset lgm observer's updated flag
+        marketObserver_->hasUpdated(true);
 
         parametrization_->shift() = 0.0;
         parametrization_->scaling() = 1.0;
@@ -232,11 +242,11 @@ void LgmBuilder::performCalculations() const {
     }
 }
 
-bool LgmBuilder::updateSwaptionVolCache() const {
+bool LgmBuilder::volSurfaceChanged(const bool updateCache) const {
     bool hasUpdated = false;
 
-    // if cache doesn't exist resize vector
-    if (swaptionVolCache_.size() == 0)
+    // create cache if not equal to required size
+    if (swaptionVolCache_.size() != data_->optionExpiries().size())
         swaptionVolCache_ = vector<Real>(data_->optionExpiries().size(), Null<Real>());
 
     for (Size j = 0; j < data_->optionExpiries().size(); j++) {
@@ -279,7 +289,8 @@ bool LgmBuilder::updateSwaptionVolCache() const {
         }
 
         if (!close_enough(volCache, vol)) {
-            swaptionVolCache_[j] = vol;
+            if(updateCache)
+                swaptionVolCache_[j] = vol;
             hasUpdated = true;
         }
     }
@@ -293,7 +304,7 @@ void LgmBuilder::buildSwaptionBasket() const {
 
     // Populate swaption vol cache if necessary
     if (swaptionVolCache_.size() == 0)
-        updateSwaptionVolCache();
+        volSurfaceChanged(true);
 
     static constexpr Real minMarketValue = 1.0E-8; // minimum allowed market value of helper before switching to PriceError
 
