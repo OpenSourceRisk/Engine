@@ -65,7 +65,7 @@ DerivedPriceQuote::DerivedPriceQuote(const QuantLib::Handle<PriceTermStructure>&
 
 Real DerivedPriceQuote::value() const {
     QL_REQUIRE(isValid(), "Invalid DerivedPriceQuote");
-    return priceTs_->price(0);
+    return priceTs_->price(priceTs_->minTime());
 }
 
 bool DerivedPriceQuote::isValid() const {
