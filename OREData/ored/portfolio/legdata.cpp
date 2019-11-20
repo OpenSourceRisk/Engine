@@ -497,6 +497,7 @@ void LegData::fromXML(XMLNode* node) {
         }
         XMLNode* exchangeNode = XMLUtils::getChildNode(tmp, "Exchanges");
         if (exchangeNode) {
+            
             notionalInitialExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalInitialExchange");
             notionalFinalExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalFinalExchange");
             if (XMLUtils::getChildNode(exchangeNode, "NotionalAmortizingExchange"))
@@ -896,6 +897,7 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 
     // Initial Flow Amount
     if (initNomFlow) {
+        QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[0]), "makeNotionalLeg does not support non-coupon legs");
         double initFlowAmt = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[0])->nominal();
         Date initDate = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[0])->accrualStartDate();
         if (initFlowAmt != 0)
@@ -905,6 +907,7 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
     // Amortization Flows
     if (amortNomFlow) {
         for (Size i = 1; i < refLeg.size(); i++) {
+            QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i]), "makeNotionalLeg does not support non-coupon legs");
             Date flowDate = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i])->accrualStartDate();
             Real initNom = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i - 1])->nominal();
             Real newNom = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i])->nominal();
@@ -916,6 +919,7 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 
     // Final Nominal Return at Maturity
     if (finalNomFlow) {
+        QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back()), "makeNotionalLeg does not support non-coupon legs");
         double finalNomFlow = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back())->nominal();
         Date finalDate = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back())->date();
         if (finalNomFlow != 0)
