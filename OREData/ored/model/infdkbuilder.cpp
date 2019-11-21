@@ -55,6 +55,9 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     // register the builder with the market observer
     registerWith(marketObserver_);
 
+    // notify observers of all market data changes, not only when not calculated
+    alwaysForwardNotifications();
+
     // build option basket and derive parametrization from it
     if (data_->calibrateA() || data_->calibrateH())
         buildCapFloorBasket();
@@ -149,8 +152,8 @@ std::vector<boost::shared_ptr<BlackCalibrationHelper>> InfDkBuilder::optionBaske
 }
 
 bool InfDkBuilder::requiresRecalibration() const {
-    return ((data_->calibrateA() || data_->calibrateH()) && volSurfaceChanged(false)) ||
-           marketObserver_->hasUpdated(false) || forceCalibration_;
+    return (data_->calibrateA() || data_->calibrateH()) &&
+           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
 }
 
 void InfDkBuilder::performCalculations() const {

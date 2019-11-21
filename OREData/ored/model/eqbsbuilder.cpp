@@ -61,6 +61,9 @@ EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
     // register the builder with the market observer
     registerWith(marketObserver_);
 
+    // notify observers of all market data changes, not only when not calculated
+    alwaysForwardNotifications();
+
     // build option basket and derive parametrization from it
     if (data->calibrateSigma())
         buildOptionBasket();
@@ -111,8 +114,8 @@ std::vector<boost::shared_ptr<BlackCalibrationHelper>> EqBsBuilder::optionBasket
 }
 
 bool EqBsBuilder::requiresRecalibration() const {
-    return (data_->calibrateSigma() && volSurfaceChanged(false)) || marketObserver_->hasUpdated(false) ||
-           forceCalibration_;
+    return data_->calibrateSigma() &&
+           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
 }
 
 void EqBsBuilder::performCalculations() const {
