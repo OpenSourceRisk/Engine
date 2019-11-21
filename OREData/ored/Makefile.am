@@ -23,7 +23,8 @@ libOREData_la_SOURCES = \
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	ored.hpp \
-	version.hpp
+	version.hpp \
+	marketobserver.hpp
 
 EXTRA_DIST = auto_link.hpp
 
