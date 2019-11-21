@@ -136,6 +136,8 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     }
     marketObserver_->addObservable(discountCurve_);
     registerWith(marketObserver_);
+    // notify observers of all market data changes, not only when not calculated
+    alwaysForwardNotifications();
 
     for (Size j = 0; j < swaptionBasket_.size(); j++)
         swaptionBasket_[j]->setPricingEngine(swaptionEngine_);
@@ -162,8 +164,8 @@ std::vector<boost::shared_ptr<BlackCalibrationHelper>> LgmBuilder::swaptionBaske
 }
 
 bool LgmBuilder::requiresRecalibration() const {
-    return ((data_->calibrateA() || data_->calibrateH()) && volSurfaceChanged(false)) ||
-           marketObserver_->hasUpdated(false) || forceCalibration_;
+    return (data_->calibrateA() || data_->calibrateH()) &&
+           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
 }
 
 void LgmBuilder::performCalculations() const {
