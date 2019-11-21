@@ -286,9 +286,11 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
         sortedExerciseDates.push_back(parseDate(d));
     std::sort(sortedExerciseDates.begin(), sortedExerciseDates.end());
     std::vector<QuantLib::Date> noticeDates, exerciseDates;
+    std::vector<bool> isExerciseDateAlive(sortedExerciseDates.size(), false);
     for (Size i = 0; i < sortedExerciseDates.size(); i++) {
         Date noticeDate = noticeCal.advance(sortedExerciseDates[i], -noticePeriod, noticeBdc);
         if (noticeDate > Settings::instance().evaluationDate() && noticeDate <= lastAccrualStartDate) {
+            isExerciseDateAlive[i] = true;
             noticeDates.push_back(noticeDate);
             exerciseDates.push_back(sortedExerciseDates[i]);
             DLOG("Got notice date " << QuantLib::io::iso_date(noticeDate) << " using notice period " << noticePeriod
@@ -306,10 +308,16 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     // check for exercise fees, if present build a rebated exercise with rebates = -fee
     if (!option_.exerciseFees().empty()) {
         // build an exercise date "schedule" by adding the maximum possible date at the end
-        std::vector<Date> exDatesPlusInf(exerciseDates);
+        std::vector<Date> exDatesPlusInf(sortedExerciseDates);
         exDatesPlusInf.push_back(Date::maxDate());
-        vector<double> rebates =
+        vector<double> allRebates =
             buildScheduledVectorNormalised(option_.exerciseFees(), option_.exerciseFeeDates(), exDatesPlusInf, 0.0);
+        // filter on alive rebates, so that we can a vector of rebates corresponding to the exerciseDates vector
+        vector<double> rebates;
+        for (Size i = 0; i < sortedExerciseDates.size(); ++i) {
+            if (isExerciseDateAlive[i])
+                rebates.push_back(allRebates[i]);
+        }
         // flip the sign of the fee to get a rebate
         for (auto& r : rebates)
             r = -r;
