@@ -835,9 +835,10 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
                 futureQuote = boost::dynamic_pointer_cast<OIFutureQuote>(marketQuote);
 
                 // Create a Overnight index future helper
-                Date startDate = IMM::nextDate(Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear()));
-                Date endDateTmp = startDate + futureQuote->tenor();
-                Date endDate = IMM::nextDate(Date(1, endDateTmp.month(), endDateTmp.year()));
+                Date refEnd = Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
+                Date refStart = refEnd - futureQuote->tenor();
+                Date startDate = IMM::nextDate(refStart);
+                Date endDate = IMM::nextDate(refEnd);
                 boost::shared_ptr<RateHelper> futureHelper(
                     new OvernightIndexFutureRateHelper(futureQuote->quote(), startDate, endDate, on));
                 instruments.push_back(futureHelper);
