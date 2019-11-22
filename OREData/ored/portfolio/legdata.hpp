@@ -35,6 +35,7 @@
 #include <ql/indexes/iborindex.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <ql/position.hpp>
 
 #include <vector>
 
