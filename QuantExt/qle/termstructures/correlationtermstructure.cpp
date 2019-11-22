@@ -67,4 +67,18 @@ Real NegativeCorrelationTermStructure::correlationImpl(Time t, Real strike) cons
     return -c_->correlation(t, strike);
 }
 
+CorrelationValue::CorrelationValue(const Handle<CorrelationTermStructure>& correlation, const Time t, const Real strike)
+    : correlation_(correlation), t_(t), strike_(strike) {
+    registerWith(correlation_);
+}
+
+Real CorrelationValue::value() const {
+    QL_REQUIRE(correlation_.empty(), "no source correlation term structure given");
+    return correlation_->correlation(t_, strike_);
+}
+
+bool CorrelationValue::isValid() const { return !correlation_.empty(); }
+
+void CorrelationValue::update() { notifyObservers(); }
+
 } // namespace QuantExt
