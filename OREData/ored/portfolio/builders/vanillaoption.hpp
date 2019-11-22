@@ -39,18 +39,61 @@
 namespace ore {
 namespace data {
 
+template <class T, typename... Args> 
+class CachingOptionEngineBuilder : public CachingPricingEngineBuilder<T, Args...> {
+public:
+    CachingOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes, const AssetClass& assetClass)
+        : CachingEngineBuilder(model, engine, tradeTypes), assetClass_(assetClass) {}
+
+protected:
+    boost::shared_ptr<GeneralizedBlackScholesProcess> getBlackScholesProcess(const string& assetName,
+        const Currency& ccy,
+        const AssetClass& assetClassUnderlying,
+        const std::vector<Time>& timePoints = {}) {
+        if (assetClassUnderlying == AssetClass::EQ) {
+            Handle<BlackVolTermStructure> vol = market_->equityVol(assetName, configuration(ore::data::MarketContext::pricing));
+            if (!timePoints.empty()) {
+                vol = Handle<BlackVolTermStructure>(
+                    boost::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
+                vol->enableExtrapolation();
+            }
+            return boost::make_shared<GeneralizedBlackScholesProcess>(
+                market_->equitySpot(assetName, configuration(ore::data::MarketContext::pricing)),
+                market_->equityDividendCurve(assetName, configuration(ore::data::MarketContext::pricing)),
+                market_->equityForecastCurve(assetName, configuration(ore::data::MarketContext::pricing)),
+                vol);
+
+        } else if (assetClassUnderlying == AssetClass::FX) {
+            const string& ccyPairCode = assetName + ccy.code();
+            Handle<BlackVolTermStructure> vol = market_->fxVol(ccyPairCode, configuration(ore::data::MarketContext::pricing));
+            if (!timePoints.empty()) {
+                vol = Handle<BlackVolTermStructure>(
+                    boost::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
+                vol->enableExtrapolation();
+            }
+            return boost::make_shared<GeneralizedBlackScholesProcess>(
+                market_->fxSpot(ccyPairCode, configuration(ore::data::MarketContext::pricing)),
+                market_->discountCurve(assetName, configuration(ore::data::MarketContext::pricing)),
+                market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing)),
+                vol);
+        } else {
+            QL_FAIL("Asset class of " << (int)assetClassUnderlying << " not recognized.");
+        }
+    }
+    AssetClass assetClass_;
+};
+
 //! Abstract Engine Builder for Vanilla Options
 /*! Pricing engines are cached by asset/currency
 
     \ingroup builders
  */
-class VanillaOptionEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&,
-                                                                              const AssetClass&, const Date&> {
+class VanillaOptionEngineBuilder : public CachingOptionEngineBuilder<string, const string&, const Currency&,
+                                                                     const AssetClass&, const Date&> {
 public:
     VanillaOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes,
         const AssetClass& assetClass, const Date& expiryDate)
-        : CachingEngineBuilder(model, engine, tradeTypes),
-          assetClass_(assetClass), expiryDate_(expiryDate) {}
+        : CachingOptionEngineBuilder(model, engine, tradeTypes, assetClass), expiryDate_(expiryDate) {}
 
     boost::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& ccy, const Date& expiryDate) {
         return CachingPricingEngineBuilder<string, const string&, const Currency&,
@@ -67,42 +110,7 @@ protected:
                            const AssetClass& assetClassUnderlying, const Date& expiryDate) override {
         return assetName + "/" + ccy.code() + "/" + to_string(expiryDate);
     }
-
-    boost::shared_ptr<GeneralizedBlackScholesProcess> getBlackScholesProcess(const string& assetName,
-                                                                             const Currency& ccy,
-                                                                             const AssetClass& assetClassUnderlying,
-                                                                             const std::vector<Time>& timePoints = {}) {
-        if (assetClassUnderlying == AssetClass::EQ) {
-            Handle<BlackVolTermStructure> vol = market_->equityVol(assetName, configuration(ore::data::MarketContext::pricing));
-            if(!timePoints.empty()) {
-                vol = Handle<BlackVolTermStructure>(
-                    boost::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
-                vol->enableExtrapolation();
-            }
-            return boost::make_shared<GeneralizedBlackScholesProcess>(
-                market_->equitySpot(assetName, configuration(ore::data::MarketContext::pricing)),
-                market_->equityDividendCurve(assetName, configuration(ore::data::MarketContext::pricing)),
-                market_->equityForecastCurve(assetName, configuration(ore::data::MarketContext::pricing)),
-                vol);
-
-        } else if (assetClassUnderlying == AssetClass::FX) {
-            const string& ccyPairCode = assetName + ccy.code();
-            Handle<BlackVolTermStructure> vol = market_->fxVol(ccyPairCode, configuration(ore::data::MarketContext::pricing));
-            if(!timePoints.empty()) {
-                vol = Handle<BlackVolTermStructure>(
-                    boost::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
-                vol->enableExtrapolation();
-            }
-            return boost::make_shared<GeneralizedBlackScholesProcess>(
-                market_->fxSpot(ccyPairCode, configuration(ore::data::MarketContext::pricing)),
-                market_->discountCurve(assetName, configuration(ore::data::MarketContext::pricing)),
-                market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing)),
-                vol);
-        } else {
-            QL_FAIL("Asset class of " << (int)assetClassUnderlying << " not recognized.");
-        }
-    }
-    AssetClass assetClass_;
+        
     Date expiryDate_;
 };
 
