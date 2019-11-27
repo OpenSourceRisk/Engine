@@ -43,7 +43,7 @@ template <class T, typename... Args>
 class CachingOptionEngineBuilder : public CachingPricingEngineBuilder<T, Args...> {
 public:
     CachingOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : CachingEngineBuilder(model, engine, tradeTypes), assetClass_(assetClass) {}
+        : CachingPricingEngineBuilder<T, Args...>(model, engine, tradeTypes), assetClass_(assetClass) {}
 
 protected:
     boost::shared_ptr<GeneralizedBlackScholesProcess> getBlackScholesProcess(const string& assetName,
@@ -51,30 +51,30 @@ protected:
         const AssetClass& assetClassUnderlying,
         const std::vector<Time>& timePoints = {}) {
         if (assetClassUnderlying == AssetClass::EQ) {
-            Handle<BlackVolTermStructure> vol = market_->equityVol(assetName, configuration(ore::data::MarketContext::pricing));
+            Handle<BlackVolTermStructure> vol = this->market_->equityVol(assetName, configuration(ore::data::MarketContext::pricing));
             if (!timePoints.empty()) {
                 vol = Handle<BlackVolTermStructure>(
                     boost::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
                 vol->enableExtrapolation();
             }
             return boost::make_shared<GeneralizedBlackScholesProcess>(
-                market_->equitySpot(assetName, configuration(ore::data::MarketContext::pricing)),
-                market_->equityDividendCurve(assetName, configuration(ore::data::MarketContext::pricing)),
-                market_->equityForecastCurve(assetName, configuration(ore::data::MarketContext::pricing)),
+                this->market_->equitySpot(assetName, configuration(ore::data::MarketContext::pricing)),
+                this->market_->equityDividendCurve(assetName, configuration(ore::data::MarketContext::pricing)),
+                this->market_->equityForecastCurve(assetName, configuration(ore::data::MarketContext::pricing)),
                 vol);
 
         } else if (assetClassUnderlying == AssetClass::FX) {
             const string& ccyPairCode = assetName + ccy.code();
-            Handle<BlackVolTermStructure> vol = market_->fxVol(ccyPairCode, configuration(ore::data::MarketContext::pricing));
+            Handle<BlackVolTermStructure> vol = this->market_->fxVol(ccyPairCode, configuration(ore::data::MarketContext::pricing));
             if (!timePoints.empty()) {
                 vol = Handle<BlackVolTermStructure>(
                     boost::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
                 vol->enableExtrapolation();
             }
             return boost::make_shared<GeneralizedBlackScholesProcess>(
-                market_->fxSpot(ccyPairCode, configuration(ore::data::MarketContext::pricing)),
-                market_->discountCurve(assetName, configuration(ore::data::MarketContext::pricing)),
-                market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing)),
+                this->market_->fxSpot(ccyPairCode, configuration(ore::data::MarketContext::pricing)),
+                this->market_->discountCurve(assetName, configuration(ore::data::MarketContext::pricing)),
+                this->market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing)),
                 vol);
         } else {
             QL_FAIL("Asset class of " << (int)assetClassUnderlying << " not recognized.");
