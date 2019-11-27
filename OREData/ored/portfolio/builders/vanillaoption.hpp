@@ -51,30 +51,30 @@ protected:
         const AssetClass& assetClassUnderlying,
         const std::vector<Time>& timePoints = {}) {
         if (assetClassUnderlying == AssetClass::EQ) {
-            Handle<BlackVolTermStructure> vol = this->market_->equityVol(assetName, configuration(ore::data::MarketContext::pricing));
+            Handle<BlackVolTermStructure> vol = this->market_->equityVol(assetName, this->configuration(ore::data::MarketContext::pricing));
             if (!timePoints.empty()) {
                 vol = Handle<BlackVolTermStructure>(
                     boost::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
                 vol->enableExtrapolation();
             }
             return boost::make_shared<GeneralizedBlackScholesProcess>(
-                this->market_->equitySpot(assetName, configuration(ore::data::MarketContext::pricing)),
-                this->market_->equityDividendCurve(assetName, configuration(ore::data::MarketContext::pricing)),
-                this->market_->equityForecastCurve(assetName, configuration(ore::data::MarketContext::pricing)),
+                this->market_->equitySpot(assetName, this->configuration(ore::data::MarketContext::pricing)),
+                this->market_->equityDividendCurve(assetName, this->configuration(ore::data::MarketContext::pricing)),
+                this->market_->equityForecastCurve(assetName, this->configuration(ore::data::MarketContext::pricing)),
                 vol);
 
         } else if (assetClassUnderlying == AssetClass::FX) {
             const string& ccyPairCode = assetName + ccy.code();
-            Handle<BlackVolTermStructure> vol = this->market_->fxVol(ccyPairCode, configuration(ore::data::MarketContext::pricing));
+            Handle<BlackVolTermStructure> vol = this->market_->fxVol(ccyPairCode, this->configuration(ore::data::MarketContext::pricing));
             if (!timePoints.empty()) {
                 vol = Handle<BlackVolTermStructure>(
                     boost::make_shared<QuantExt::BlackMonotoneVarVolTermStructure>(vol, timePoints));
                 vol->enableExtrapolation();
             }
             return boost::make_shared<GeneralizedBlackScholesProcess>(
-                this->market_->fxSpot(ccyPairCode, configuration(ore::data::MarketContext::pricing)),
-                this->market_->discountCurve(assetName, configuration(ore::data::MarketContext::pricing)),
-                this->market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing)),
+                this->market_->fxSpot(ccyPairCode, this->configuration(ore::data::MarketContext::pricing)),
+                this->market_->discountCurve(assetName, this->configuration(ore::data::MarketContext::pricing)),
+                this->market_->discountCurve(ccy.code(), this->configuration(ore::data::MarketContext::pricing)),
                 vol);
         } else {
             QL_FAIL("Asset class of " << (int)assetClassUnderlying << " not recognized.");
