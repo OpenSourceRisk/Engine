@@ -45,7 +45,7 @@ using std::vector;
 class FXVolatilityCurveConfig : public CurveConfig {
 public:
     //! supported volatility structure types
-    /*! For ATM we will only load ATM quotes, for Smile we load ATM, 25RR, 25BF or Deltas
+    /*! For ATM we will only load ATM quotes, for Smile we load ATM, RR, BF or Deltas
      *  SmileInterpolation - currently suports which of the 2 Vanna Volga approximations,
      *  as per  Castagna& Mercurio(2006), to use. The second approximation is more accurate
      *  but can ask for the square root of a negative number under unusual circumstances.
@@ -63,7 +63,8 @@ public:
                             const string& fxForeignCurveID = "", const string& fxDomesticCurveID = "",
                             const DayCounter& dayCounter = QuantLib::Actual365Fixed(),
                             const Calendar& calendar = QuantLib::TARGET(),
-                            const SmileInterpolation& interp = SmileInterpolation::VannaVolga2);
+                            const SmileInterpolation& interp = SmileInterpolation::VannaVolga2, 
+                            const string& conventionsID = "", const QuantLib::Natural& smileDelta = 25);
 
     //@}
 
@@ -85,6 +86,8 @@ public:
     const string& fxForeignYieldCurveID() const { return fxForeignYieldCurveID_; }
     const string& fxDomesticYieldCurveID() const { return fxDomesticYieldCurveID_; }
     const SmileInterpolation& smileInterpolation() const { return smileInterpolation_; }
+    const string& conventionsID() const { return conventionsID_; } 
+    const QuantLib::Natural& smileDelta() const { return smileDelta_; } 
     const vector<string>& quotes() override;
     //@}
 
@@ -98,6 +101,8 @@ public:
     string& fxSpotID() { return fxSpotID_; }
     string& fxForeignYieldCurveID() { return fxForeignYieldCurveID_; }
     string& fxDomesticYieldCurveID() { return fxDomesticYieldCurveID_; }
+    string conventionsID() { return conventionsID_; } 
+    QuantLib::Natural& smileDelta() { return smileDelta_; } 
     const std::set<string>& requiredYieldCurveIDs() const {
         return requiredYieldCurveIDs_;
     };
@@ -113,6 +118,8 @@ private:
     string fxSpotID_;
     string fxForeignYieldCurveID_;
     string fxDomesticYieldCurveID_;
+    string conventionsID_; 
+    QuantLib::Natural smileDelta_; 
     std::set<string> requiredYieldCurveIDs_;
     SmileInterpolation smileInterpolation_;
 };

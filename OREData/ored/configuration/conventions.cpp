@@ -1212,6 +1212,38 @@ void CommodityFutureConvention::build() {
     bdc_ = strBdc_.empty() ? Preceding : parseBusinessDayConvention(strBdc_);
 }
 
+FxOptionConvention::FxOptionConvention(const string& id, const string& atmType, const string& deltaType) 
+    : Convention(id, Type::FxOption), strAtmType_(atmType), strDeltaType_(deltaType) { 
+    build(); 
+} 
+ 
+void FxOptionConvention::build() { 
+    atmType_ = parseAtmType(strAtmType_); 
+    deltaType_ = parseDeltaType(strDeltaType_); 
+} 
+ 
+void FxOptionConvention::fromXML(XMLNode* node) { 
+ 
+    XMLUtils::checkNode(node, "FxOption"); 
+    type_ = Type::FxOption; 
+    id_ = XMLUtils::getChildValue(node, "Id", true); 
+ 
+    // Get string values from xml 
+    strAtmType_ = XMLUtils::getChildValue(node, "AtmType", true); 
+    strDeltaType_ = XMLUtils::getChildValue(node, "DeltaType", true); 
+    build(); 
+} 
+ 
+XMLNode* FxOptionConvention::toXML(XMLDocument& doc) { 
+ 
+    XMLNode* node = doc.allocNode("FxOption"); 
+    XMLUtils::addChild(doc, node, "Id", id_); 
+    XMLUtils::addChild(doc, node, "AtmType", strAtmType_); 
+    XMLUtils::addChild(doc, node, "DeltaType", strDeltaType_); 
+ 
+    return node; 
+} 
+ 
 void Conventions::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "Conventions");
@@ -1259,6 +1291,8 @@ void Conventions::fromXML(XMLNode* node) {
             convention = boost::make_shared<CommodityForwardConvention>();
         } else if (childName == "CommodityFuture") {
             convention = boost::make_shared<CommodityFutureConvention>();
+        } else if (childName == "FxOption") { 
+            convention = boost::make_shared<FxOptionConvention>(); 
         } else {
             // No need to QL_FAIL here, just go to the next one
             WLOG("Convention name, " << childName << ", not recognized.");
