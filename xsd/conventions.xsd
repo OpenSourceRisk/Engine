@@ -299,9 +299,9 @@
   
   <xs:complexType name="fxOption">
     <xs:sequence>
-      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="AtmType" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="DeltaType" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Id"/>
+      <xs:element type="xs:string" name="AtmType"/>
+      <xs:element type="xs:string" name="DeltaType"/>
     </xs:sequence>
   </xs:complexType>
 
