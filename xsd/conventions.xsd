@@ -23,6 +23,7 @@
       <xs:element type="cmsSpreadOptionType" name="CmsSpreadOption"/>
       <xs:element type="commodityForwardType" name="CommodityForward"/>
       <xs:element type="commodityFutureType" name="CommodityFuture"/>
+      <xs:element type="fxOption" name="FxOption"/>
     </xs:choice>
   </xs:complexType>
 
@@ -295,6 +296,13 @@
       <xs:element type="bool" name="IsAveraging" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
+  
+  <xs:complexType name="fxOption">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="AtmType" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="DeltaType" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
 
 </xs:schema>
-
