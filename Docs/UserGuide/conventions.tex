@@ -544,6 +544,33 @@ The meaning of the elements is as follows:
 \item RollConvention: The rolling convention for the CMS Spread Leg.
 \end{itemize}
 
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsubsection{FX Option Conventions} 
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+A node with name \emph{FxOption} is used to store conventions for FX option quotes for a given currency pair. The 
+structure of this node is shown in Listing \ref{lst:fx_option_conventions}. 
+ 
+\begin{listing}[H] 
+%\hrule\medskip 
+\begin{minted}[fontsize=\footnotesize]{xml} 
+<FxOption> 
+  <Id> </Id> 
+  <AtmType> </AtmType> 
+  <DeltaType> </DeltaType> 
+</FxOption> 
+\end{minted} 
+\caption{FX option conventions} 
+\label{lst:fx_option_conventions} 
+\end{listing} 
+ 
+ 
+The meanings of the various elements in this node are as follows: 
+\begin{itemize} 
+\item AtmType: Convention of ATM option quote (Choices are {\em AtmNull, AtmSpot, AtmFwd, 
+AtmDeltaNeutral, AtmVegaMax, AtmGammaMax, AtmPutCall50}). 
+\item DeltaType: Convention of Delta option quote (Choices are {\em Spot, Fwd, PaSpot, 
+PaFwd}). 
+\end{itemize} 
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{Commodity Forward Conventions}
