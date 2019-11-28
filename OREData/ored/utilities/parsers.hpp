@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ored/utilities/log.hpp>
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
@@ -246,6 +247,27 @@ enum class AssetClass { EQ, FX, COM, IR, INF, CR };
 \ingroup utilities
 */
 AssetClass parseAssetClass(const std::string& s);
+
+/*! Attempt to parse string \p str to \p obj of type \c T using \p parser
+    \param[in]  str    The string we wish to parse.
+    \param[out] obj    The resulting object if the parsing was successful.
+    \param[in]  parser The function to use to attempt to parse \p str. This function may throw.
+
+    \return \c true if the parsing was successful and \c false if not.
+
+    \ingroup utilities
+*/
+template <class T>
+bool tryParse(const std::string& str, T& obj, std::function<T(std::string)> parser) {
+    DLOG("tryParse: attempting to parse " << str);
+    try {
+        obj = parser(str);
+    } catch (...) {
+        TLOG("String " << str << " could not be parsed");
+        return false;
+    }
+    return true;
+}
 
 } // namespace data
 } // namespace ore
