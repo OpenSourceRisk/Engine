@@ -23,7 +23,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <map>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ql/currencies/all.hpp>

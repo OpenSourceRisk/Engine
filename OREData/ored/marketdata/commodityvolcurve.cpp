@@ -277,6 +277,12 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
                 }
                 // some wild card
             } else {
+
+                // Don't bother if commodity name and currency do not match
+                if (config.curveID() != q->commodityName() || config.currency() != q->quoteCurrency()) {
+                    continue;
+                }
+
                 if (!expWc) {
                     // strike only wild card
                     it = find(config.expiries().begin(), config.expiries().end(), q->expiry());

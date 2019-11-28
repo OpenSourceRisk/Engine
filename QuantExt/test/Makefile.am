@@ -10,6 +10,7 @@ QLE_TESTS = \
 	discountcurve.cpp \
 	dynamicblackvoltermstructure.cpp \
 	dynamicswaptionvolmatrix.cpp \
+	equityforwardcurvestripper.cpp \
 	fillemptymatrix.cpp \
 	index.cpp \
 	blackvariancecurve.cpp \

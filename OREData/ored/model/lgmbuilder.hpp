@@ -36,6 +36,32 @@ namespace ore {
 namespace data {
 using namespace QuantLib;
 
+
+//! Observer class for LgmBuilder
+/*! 
+  This class holds all observables, except the swaption vol surface,
+  for an LgmBuilder, and contains an update flag to indicate any 
+  changes since it was last called
+
+  \ingroup models
+*/
+class LgmObserver : public Observer, public Observable {
+public:
+    LgmObserver() : updated_(true) {};
+
+    //! Add an observable
+    void addObserver(boost::shared_ptr<Observable> observable);
+    //! Observer interface
+    void update();
+    //! Returns true if has been updated since the last call
+    bool hasUpdated();
+
+private:
+    //! Flag to indicate if updated since last call
+    bool updated_;
+
+};
+
 //! Builder for a Linear Gauss Markov model component
 /*!
   This class is a utility that turns a Linear Gauss Markov
@@ -70,10 +96,15 @@ public:
         calculate();
         return swaptionBasket_;
     }
+
+
+    void forceRecalculate() override;
     //@}
 private:
     void performCalculations() const override;
     void buildSwaptionBasket() const;
+    // updates the swaption vol cache, and returns a bool - true if cache changed
+    bool updateSwaptionVolCache() const;
 
     boost::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
@@ -96,6 +127,14 @@ private:
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
     BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
+
+    // Cache the swation volatilities
+    mutable std::vector<QuantLib::Real> swaptionVolCache_;
+
+    bool forceCalibration_ = false;
+
+    // LGM Oberver
+    boost::shared_ptr<LgmObserver> lgmObserver_;
 };
 } // namespace data
 } // namespace ore
