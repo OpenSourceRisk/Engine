@@ -32,6 +32,7 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
+#include <qle/calendars/austria.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
@@ -158,6 +159,9 @@ Calendar parseCalendar(const string& s) {
     static map<string, Calendar> m = {{"TGT", TARGET()},
                                       {"TARGET", TARGET()},
                                       {"EUR", TARGET()},
+                                      {"AT", Austria()},
+                                      {"ATS", Austria()},
+                                      {"Austria", Austria()},
                                       {"FR", France()},
                                       {"FRF", France()},
                                       {"IT", Italy()},

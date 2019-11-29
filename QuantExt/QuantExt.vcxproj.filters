@@ -675,6 +675,9 @@
     <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\austria.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1164,6 +1167,9 @@
     </ClCompile>
     <ClCompile Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.cpp">
       <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\austria.cpp">
+      <Filter>time\calendars</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
