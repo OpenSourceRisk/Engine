@@ -54,39 +54,40 @@ OIBSHelper::OIBSHelper(Natural settlementDays,
 
     */
 
-    Size whichCase = (overnightIndex_->forwardingTermStructure().empty() ? 0 : 4) +
-                     (iborIndex_->forwardingTermStructure().empty() ? 0 : 2) + (discount_.empty() ? 0 : 1);
+    bool oisGiven = !overnightIndex_->forwardingTermStructure().empty();
+    bool iborGiven = !iborIndex_->forwardingTermStructure().empty();
+    bool discountGiven = !discount_.empty();
 
-    switch (whichCase) {
-    case 0:
+    if (!oisGiven && !iborGiven && !discountGiven) {
+        // case 0
         QL_FAIL("no curve given");
-    case 1:
+    } else if (!oisGiven && !iborGiven && discountGiven) {
+        // case 1
         QL_FAIL("neither OIS nor Ibor curve is given");
-    case 2:
+    } else if (!oisGiven && iborGiven && !discountGiven) {
+        // case 2
         overnightIndex_ = boost::static_pointer_cast<OvernightIndex>(overnightIndex_->clone(termStructureHandle_));
         overnightIndex_->unregisterWith(termStructureHandle_);
         discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
-        break;
-    case 3:
+    } else if (!oisGiven && iborGiven && discountGiven) {
+        // case 3
         overnightIndex_ = boost::static_pointer_cast<OvernightIndex>(overnightIndex_->clone(termStructureHandle_));
         overnightIndex_->unregisterWith(termStructureHandle_);
-        break;
-    case 4:
+    } else if (oisGiven && !iborGiven && !discountGiven) {
+        // case 4
         iborIndex_ = iborIndex_->clone(termStructureHandle_);
         iborIndex_->unregisterWith(termStructureHandle_);
         discountRelinkableHandle_.linkTo(*overnightIndex_->forwardingTermStructure());
-        break;
-    case 5:
+    } else if (oisGiven && !iborGiven && discountGiven) {
+        // case 5
         iborIndex_ = iborIndex_->clone(termStructureHandle_);
         iborIndex_->unregisterWith(termStructureHandle_);
-        break;
-    case 6:
+    } else if (oisGiven && iborGiven && !discountGiven) {
+        // case 6
         discountRelinkableHandle_.linkTo(*termStructureHandle_, false);
-        break;
-    case 7:
+    } else if (oisGiven && iborGiven && discountGiven) {
+        // case 7
         QL_FAIL("OIS, Ibor and Discount curves are all given");
-    default:
-        QL_FAIL("unexpected case (" << whichCase << ")");
     }
 
     registerWith(overnightIndex_);
