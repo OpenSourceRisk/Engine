@@ -66,8 +66,10 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(const boost::shared_ptr<ore::data
     registerWithSubBuilders();
     // register market observer with correlations
     marketObserver_ = boost::make_shared<MarketObserver>();
-    for(auto const& c: config->correlations())
+    for (auto const& c : config->correlations())
         marketObserver_->addObservable(c.second);
+    // reset market observer's updated flag
+    marketObserver_->hasUpdated(true);
 }
 
 Handle<QuantExt::CrossAssetModel> CrossAssetModelBuilder::model() const {
