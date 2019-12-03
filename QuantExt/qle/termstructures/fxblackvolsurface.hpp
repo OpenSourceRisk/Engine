@@ -122,6 +122,7 @@ protected:
 
     virtual boost::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,
                                                                 Volatility rr, Volatility bf) const {
+        QL_REQUIRE(t > 0, "FxBlackVannaVolgaVolatilitySurface::blackVolSmileImpl(): positive expiry time expected");
         return boost::shared_ptr<FxSmileSection>(new VannaVolgaSmileSection(spot, rd, rf, t, atm, rr, bf, firstApprox_,
                                                                             atmType_, deltaType_, delta_));
     }
