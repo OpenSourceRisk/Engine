@@ -106,6 +106,7 @@
       <xs:enumeration value="PHP"/>
       <xs:enumeration value="NGN"/>
       <xs:enumeration value="MAD"/>
+      <xs:enumeration value="UYU"/>
     </xs:restriction>
   </xs:simpleType>
 

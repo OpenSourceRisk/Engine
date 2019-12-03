@@ -47,6 +47,7 @@ static CcyTestData currencyData[] = {
     // American currencies
     { MXVCurrency(), "Mexican Unidad de Inversion", "MXV", 979 },
     { CLFCurrency(), "Unidad de Fomento (funds code)", "CLF", 990 },
+    { UYUCurrency(), "Uruguayan peso", "UYU", 858 },
     // Asian currencies
     { KZTCurrency(), "Kazakhstani tenge", "KZT", 398 },
     { QARCurrency(), "Qatari riyal", "QAR", 634 },
