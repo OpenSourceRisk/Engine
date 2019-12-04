@@ -552,5 +552,12 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="optionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Call"/>
+      <xs:enumeration value="Put"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
 </xs:schema>
 
