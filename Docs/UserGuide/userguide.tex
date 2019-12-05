@@ -4069,7 +4069,16 @@ for the construction of a market.
 
 Listing \ref{lst:defaultcurve_configuration} shows the configuration of Default curves built from CDS spread
 quotes. The \lstinline!BootstrapConfig! node is optional and holds configuration details for the iterative bootstrap 
-that are described in section \ref{sec:bootstrap_config}.
+that are described in section \ref{sec:bootstrap_config}. Also note - if the \lstinline!Type! is not \lstinline!Benchmark!
+then \lstinline!Quote! elements within the \lstinline!Quotes! node may have an \lstinline!optional! attribute, indicating
+whether or not the quote is optional. Example:
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Quotes>
+  <Quote optional="true">CDS/CREDIT_SPREAD/BANK/SR/USD/1Y</Quote>
+</Quotes>
+\end{minted}
+%\hrule
 
 Alternatively default curves can be set up as a difference curve of two yield curves as shown in listing
 \ref{lst:defaultcurve_configuration_2}. If $P_B(0,t)$ and $P_S(0,t)$ denote the discount factors of the given benchmark
