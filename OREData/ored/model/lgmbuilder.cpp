@@ -244,7 +244,7 @@ void LgmBuilder::getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb
         // otherwise QL might throw "non-positive swap length (0)  given" from the black swaption engine
         // during calibration helper pricing
         termDb = std::max(termDb, tmpExpiry + 1 * Months);
-        termT = svts_->dayCounter().yearFraction(tmpExpiry, termDb); // FIXME should be swapLength(tmpExpiry, termDb)
+        termT = svts_->swapLength(tmpExpiry, termDb);
     } else {
         termT = svts_->swapLength(termPb);
         // same as above, make sure the underlying term is at least >= 1 Month, but since Period::operator<
@@ -333,7 +333,7 @@ void LgmBuilder::buildSwaptionBasket() const {
 
         // rounded to whole years, only used to distinguish between short and long
         // swap tenors, which in practice always are multiples of whole years
-        Period termTmp = expiryDateBased ? static_cast<Size>(termT + 0.5) * Years : 0*Days; // FIXME
+        Period termTmp = static_cast<Size>(termT + 0.5) * Years;
         auto iborIndex = termTmp > shortSwapIndex_->tenor() ? swapIndex_->iborIndex() : shortSwapIndex_->iborIndex();
         auto fixedLegTenor =
             termTmp > shortSwapIndex_->tenor() ? swapIndex_->fixedLegTenor() : shortSwapIndex_->fixedLegTenor();
