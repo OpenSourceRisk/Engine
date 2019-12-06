@@ -332,15 +332,15 @@ void CrossAssetModelBuilder::buildModel() const {
             else
                 model_->calibrateBsVolatilitiesGlobal(CrossAssetModelTypes::FX, i, fxOptionBaskets_[i],
                                                       *optimizationMethod_, endCriteria_);
-        }
 
-        LOG("FX " << fx->foreignCcy() << " calibration errors:");
-        fxOptionCalibrationErrors_[i] =
-            logCalibrationErrors(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]);
-        if (fx->calibrationType() == CalibrationType::Bootstrap) {
-            QL_REQUIRE(fabs(fxOptionCalibrationErrors_[i]) < config_->bootstrapTolerance(),
-                       "calibration error " << fxOptionCalibrationErrors_[i] << " exceeds tolerance "
-                                            << config_->bootstrapTolerance());
+            LOG("FX " << fx->foreignCcy() << " calibration errors:");
+            fxOptionCalibrationErrors_[i] =
+                logCalibrationErrors(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]);
+            if (fx->calibrationType() == CalibrationType::Bootstrap) {
+                QL_REQUIRE(fabs(fxOptionCalibrationErrors_[i]) < config_->bootstrapTolerance(),
+                           "calibration error " << fxOptionCalibrationErrors_[i] << " exceeds tolerance "
+                                                << config_->bootstrapTolerance());
+            }
         }
     }
 
@@ -381,15 +381,14 @@ void CrossAssetModelBuilder::buildModel() const {
             else
                 model_->calibrateBsVolatilitiesGlobal(CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i],
                                                       *optimizationMethod_, endCriteria_);
-        }
-
-        LOG("EQ " << eq->eqName() << " calibration errors:");
-        eqOptionCalibrationErrors_[i] =
-            logCalibrationErrors(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]);
-        if (eq->calibrationType() == CalibrationType::Bootstrap) {
-            QL_REQUIRE(fabs(eqOptionCalibrationErrors_[i]) < config_->bootstrapTolerance(),
-                       "calibration error " << eqOptionCalibrationErrors_[i] << " exceeds tolerance "
-                                            << config_->bootstrapTolerance());
+            LOG("EQ " << eq->eqName() << " calibration errors:");
+            eqOptionCalibrationErrors_[i] =
+                logCalibrationErrors(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]);
+            if (eq->calibrationType() == CalibrationType::Bootstrap) {
+                QL_REQUIRE(fabs(eqOptionCalibrationErrors_[i]) < config_->bootstrapTolerance(),
+                           "calibration error " << eqOptionCalibrationErrors_[i] << " exceeds tolerance "
+                                                << config_->bootstrapTolerance());
+            }
         }
     }
 

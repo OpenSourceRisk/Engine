@@ -48,6 +48,7 @@ public:
     //! \name TermStructure interface
     //@{
     Date maxDate() const { return Date::maxDate(); } // flat extrapolation
+    Time maxTime() const { return QL_MAX_REAL; }
     //@}
     //! \name Observer interface
     //@{

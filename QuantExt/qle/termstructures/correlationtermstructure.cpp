@@ -73,7 +73,7 @@ CorrelationValue::CorrelationValue(const Handle<CorrelationTermStructure>& corre
 }
 
 Real CorrelationValue::value() const {
-    QL_REQUIRE(correlation_.empty(), "no source correlation term structure given");
+    QL_REQUIRE(!correlation_.empty(), "no source correlation term structure given");
     return correlation_->correlation(t_, strike_);
 }
 
