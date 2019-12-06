@@ -49,17 +49,15 @@
 namespace ore {
 namespace data {
 
-CrossAssetModelBuilder::CrossAssetModelBuilder(const boost::shared_ptr<ore::data::Market>& market,
-                                               const boost::shared_ptr<CrossAssetModelData>& config,
-                                               const std::string& configurationLgmCalibration,
-                                               const std::string& configurationFxCalibration,
-                                               const std::string& configurationEqCalibration,
-                                               const std::string& configurationInfCalibration,
-                                               const std::string& configurationFinalModel, const DayCounter& dayCounter)
+CrossAssetModelBuilder::CrossAssetModelBuilder(
+    const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<CrossAssetModelData>& config,
+    const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
+    const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
+    const std::string& configurationFinalModel, const DayCounter& dayCounter, const bool dontCalibrate)
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration), configurationFinalModel_(configurationFinalModel),
-      dayCounter_(dayCounter),
+      dayCounter_(dayCounter), dontCalibrate_(dontCalibrate),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
     buildModel();
@@ -131,6 +129,9 @@ void CrossAssetModelBuilder::buildModel() const {
         << configurationLgmCalibration_ << ", FxCalibration " << configurationFxCalibration_ << ", EqCalibration "
         << configurationEqCalibration_ << ", InfCalibration " << configurationInfCalibration_ << ", FinalModel "
         << configurationFinalModel_);
+    if (dontCalibrate_) {
+        LOG("Calibration of the model is disabled.");
+    }
 
     QL_REQUIRE(config_->irConfigs().size() > 0, "missing IR configurations");
     QL_REQUIRE(config_->irConfigs().size() == config_->fxConfigs().size() + 1,
@@ -166,6 +167,8 @@ void CrossAssetModelBuilder::buildModel() const {
         LOG("IR Parametrization " << i << " ccy " << ir->ccy());
         boost::shared_ptr<LgmBuilder> builder =
             boost::make_shared<LgmBuilder>(market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance());
+        if (dontCalibrate_)
+            builder->freeze();
         irBuilder.push_back(builder);
         boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization = builder->parametrization();
         swaptionBaskets_[i] = builder->swaptionBasket();
@@ -321,12 +324,15 @@ void CrossAssetModelBuilder::buildModel() const {
         for (Size j = 0; j < fxOptionBaskets_[i].size(); j++)
             fxOptionBaskets_[i][j]->setPricingEngine(engine);
 
-        if (fx->calibrationType() == CalibrationType::Bootstrap && fx->sigmaParamType() == ParamType::Piecewise)
-            model_->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::FX, i, fxOptionBaskets_[i],
-                                                     *optimizationMethod_, endCriteria_);
-        else
-            model_->calibrateBsVolatilitiesGlobal(CrossAssetModelTypes::FX, i, fxOptionBaskets_[i],
-                                                  *optimizationMethod_, endCriteria_);
+        if (!dontCalibrate_) {
+
+            if (fx->calibrationType() == CalibrationType::Bootstrap && fx->sigmaParamType() == ParamType::Piecewise)
+                model_->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::FX, i, fxOptionBaskets_[i],
+                                                         *optimizationMethod_, endCriteria_);
+            else
+                model_->calibrateBsVolatilitiesGlobal(CrossAssetModelTypes::FX, i, fxOptionBaskets_[i],
+                                                      *optimizationMethod_, endCriteria_);
+        }
 
         LOG("FX " << fx->foreignCcy() << " calibration errors:");
         fxOptionCalibrationErrors_[i] =
@@ -367,12 +373,15 @@ void CrossAssetModelBuilder::buildModel() const {
         for (Size j = 0; j < eqOptionBaskets_[i].size(); j++)
             eqOptionBaskets_[i][j]->setPricingEngine(engine);
 
-        if (eq->calibrationType() == CalibrationType::Bootstrap && eq->sigmaParamType() == ParamType::Piecewise)
-            model_->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i],
-                                                     *optimizationMethod_, endCriteria_);
-        else
-            model_->calibrateBsVolatilitiesGlobal(CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i],
-                                                  *optimizationMethod_, endCriteria_);
+        if (!dontCalibrate_) {
+
+            if (eq->calibrationType() == CalibrationType::Bootstrap && eq->sigmaParamType() == ParamType::Piecewise)
+                model_->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i],
+                                                         *optimizationMethod_, endCriteria_);
+            else
+                model_->calibrateBsVolatilitiesGlobal(CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i],
+                                                      *optimizationMethod_, endCriteria_);
+        }
 
         LOG("EQ " << eq->eqName() << " calibration errors:");
         eqOptionCalibrationErrors_[i] =
@@ -417,31 +426,36 @@ void CrossAssetModelBuilder::buildModel() const {
         for (Size j = 0; j < infCapFloorBaskets_[i].size(); j++)
             infCapFloorBaskets_[i][j]->setPricingEngine(engine);
 
-        if (inf->calibrateA() && !inf->calibrateH()) {
-            if (inf->calibrationType() == CalibrationType::Bootstrap && inf->aParamType() == ParamType::Piecewise) {
-                model_->calibrateInfDkVolatilitiesIterative(i, infCapFloorBaskets_[i], *optimizationMethod_,
-                                                            endCriteria_);
-            } else {
-                model_->calibrateInfDkVolatilitiesGlobal(i, infCapFloorBaskets_[i], *optimizationMethod_, endCriteria_);
-            }
-        } else if (!inf->calibrateA() && inf->calibrateH()) {
-            if (inf->calibrationType() == CalibrationType::Bootstrap && inf->hParamType() == ParamType::Piecewise) {
-                model_->calibrateInfDkReversionsIterative(i, infCapFloorBaskets_[i], *optimizationMethod_,
-                                                          endCriteria_);
-            } else {
-                model_->calibrateInfDkReversionsGlobal(i, infCapFloorBaskets_[i], *optimizationMethod_, endCriteria_);
-            }
-        } else {
-            model_->calibrate(infCapFloorBaskets_[i], *optimizationMethod_, endCriteria_);
-        }
+        if (!dontCalibrate_) {
 
-        LOG("INF " << inf->infIndex() << " calibration errors:");
-        infCapFloorCalibrationErrors_[i] =
-            logCalibrationErrors(infCapFloorBaskets_[i], infParametrizations[i], irParametrizations[0]);
-        if (inf->calibrationType() == CalibrationType::Bootstrap) {
-            QL_REQUIRE(fabs(infCapFloorCalibrationErrors_[i]) < config_->bootstrapTolerance(),
-                       "calibration error " << infCapFloorCalibrationErrors_[i] << " exceeds tolerance "
-                                            << config_->bootstrapTolerance());
+            if (inf->calibrateA() && !inf->calibrateH()) {
+                if (inf->calibrationType() == CalibrationType::Bootstrap && inf->aParamType() == ParamType::Piecewise) {
+                    model_->calibrateInfDkVolatilitiesIterative(i, infCapFloorBaskets_[i], *optimizationMethod_,
+                                                                endCriteria_);
+                } else {
+                    model_->calibrateInfDkVolatilitiesGlobal(i, infCapFloorBaskets_[i], *optimizationMethod_,
+                                                             endCriteria_);
+                }
+            } else if (!inf->calibrateA() && inf->calibrateH()) {
+                if (inf->calibrationType() == CalibrationType::Bootstrap && inf->hParamType() == ParamType::Piecewise) {
+                    model_->calibrateInfDkReversionsIterative(i, infCapFloorBaskets_[i], *optimizationMethod_,
+                                                              endCriteria_);
+                } else {
+                    model_->calibrateInfDkReversionsGlobal(i, infCapFloorBaskets_[i], *optimizationMethod_,
+                                                           endCriteria_);
+                }
+            } else {
+                model_->calibrate(infCapFloorBaskets_[i], *optimizationMethod_, endCriteria_);
+            }
+
+            LOG("INF " << inf->infIndex() << " calibration errors:");
+            infCapFloorCalibrationErrors_[i] =
+                logCalibrationErrors(infCapFloorBaskets_[i], infParametrizations[i], irParametrizations[0]);
+            if (inf->calibrationType() == CalibrationType::Bootstrap) {
+                QL_REQUIRE(fabs(infCapFloorCalibrationErrors_[i]) < config_->bootstrapTolerance(),
+                           "calibration error " << infCapFloorCalibrationErrors_[i] << " exceeds tolerance "
+                                                << config_->bootstrapTolerance());
+            }
         }
     }
 
