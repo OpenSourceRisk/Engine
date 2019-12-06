@@ -70,7 +70,9 @@ public:
         //! Market configuration for simulation
         const std::string& configurationFinalModel = Market::defaultConfiguration,
         //! Daycounter for date/time conversions
-        const DayCounter& dayCounter = ActualActual());
+        const DayCounter& dayCounter = ActualActual(),
+        //! calibrate the model?
+        const bool dontCalibrate = false);
 
     //! Default destructor
     ~CrossAssetModelBuilder() {}
@@ -118,6 +120,7 @@ private:
     const std::string configurationLgmCalibration_, configurationFxCalibration_, configurationEqCalibration_,
         configurationInfCalibration_, configurationFinalModel_;
     const DayCounter dayCounter_;
+    const bool dontCalibrate_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;
