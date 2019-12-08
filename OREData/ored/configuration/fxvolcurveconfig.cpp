@@ -37,8 +37,8 @@ FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const st
 
     : CurveConfig(curveID, curveDescription), dimension_(dimension), expiries_(expiries), dayCounter_(dayCounter),
       calendar_(calendar), fxSpotID_(fxSpotID), fxForeignYieldCurveID_(fxForeignCurveID),
-      fxDomesticYieldCurveID_(fxDomesticCurveID), smileInterpolation_(interp), 
-      conventionsID_(conventionsID), smileDelta_(smileDelta) {
+      fxDomesticYieldCurveID_(fxDomesticCurveID), conventionsID_(conventionsID), 
+      smileDelta_(smileDelta), smileInterpolation_(interp) {
     populateRequiredYieldCurveIDs();
 }
 
