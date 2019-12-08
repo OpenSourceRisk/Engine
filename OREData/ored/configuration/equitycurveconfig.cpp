@@ -54,7 +54,8 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     dayCountID_ = XMLUtils::getChildValue(node, "DayCounter", false);
     fwdQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote");
     quotes_ = fwdQuotes_;
-    quotes_.insert(quotes_.begin(), equitySpotQuoteID_);
+    if (equitySpotQuoteID_ != "")
+        quotes_.insert(quotes_.begin(), equitySpotQuoteID_);
 
     XMLNode* divInterpNode = XMLUtils::getChildNode(node, "DividendInterpolation");
     if (divInterpNode) {
