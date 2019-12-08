@@ -236,6 +236,7 @@ template <class Interpolator> void InterpolatedPriceCurve<Interpolator>::initial
     }
 
     QL_REQUIRE(this->data_.size() == this->times_.size(), "Number of times must equal number of prices");
+    QL_REQUIRE(*std::min_element(this->data_.begin(), this->data_.end()) >= 0.0, "Prices must be positive");
 
     QuantLib::InterpolatedCurve<Interpolator>::setupInterpolation();
     this->interpolation_.update();

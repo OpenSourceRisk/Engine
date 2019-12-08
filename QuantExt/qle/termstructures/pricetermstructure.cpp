@@ -35,6 +35,7 @@ Real PriceTermStructure::price(Time t, bool extrapolate) const {
 
     // Fail if price is negative
     Real price = priceImpl(t);
+    QL_REQUIRE(price >= 0.0, "Price returned from PriceTermStructure cannot be negative (" << price << ")");
 
     return price;
 }
