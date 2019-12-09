@@ -1300,13 +1300,40 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 
         vector<string> commodityNames = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
         setCommodityNames(commodityNames);
-        commodityCurveTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
 
-        // If present, override DayCounter for _all_ commodity price curves
-        XMLNode* commodityDayCounterNode = XMLUtils::getChildNode(nodeChild, "DayCounter");
-        if (commodityDayCounterNode) {
-            commodityCurveDayCounters_[""] = XMLUtils::getNodeValue(commodityDayCounterNode);
+        set<string> names = params_.find(RiskFactorKey::KeyType::CommodityCurve)->second.second;
+        QL_REQUIRE(names.size() > 0, "Commodities needs at least one name");
+
+        // Get the configured tenors. They are of the form:
+        // - <Tenors name="NAME">t_1,...,t_n</Tenors> for commodity name specific tenors
+        // - <Tenors>t_1,...,t_n</Tenors> or <Tenors name="">t_1,...,t_n</Tenors> for a default set of tenors
+        // Only need a default tenor set if every commodity name has not been given a tenor set explicitly
+        vector<XMLNode*> tenorNodes = XMLUtils::getChildrenNodes(nodeChild, "Tenors");
+        QL_REQUIRE(tenorNodes.size() > 0, "Commodities needs at least one Tenors node");
+        set<string> namesCheck = names;
+        bool defaultProvided = false;
+        for (XMLNode* tenorNode : tenorNodes) {
+            // If there is no "name" attribute, getAttribute returns "" which is what we want in any case
+            string name = XMLUtils::getAttribute(tenorNode, "name");
+            vector<Period> tenors = parseListOfValues<Period>(XMLUtils::getNodeValue(tenorNode), &parsePeriod);
+            QL_REQUIRE(commodityCurveTenors_.insert(make_pair(name, tenors)).second,
+                "Commodities has duplicate expiries for key '" << name << "'");
+            namesCheck.erase(name);
+            defaultProvided = name == "";
         }
+        QL_REQUIRE(defaultProvided || namesCheck.size() == 0, "Commodities has no tenors for " <<
+            "names '" << join(namesCheck, ",") << "' and no default tenor set has been given");
+
+        // Populate the day counters for each commodity curve allowing for overrides
+        if (XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters")) {
+            for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
+                child = XMLUtils::getNextSibling(child)) {
+                string name = XMLUtils::getAttribute(child, "name");
+                commodityCurveDayCounters_[name] = XMLUtils::getNodeValue(child);
+            }
+        }
+        QL_REQUIRE(commodityCurveDayCounters_.find("") != commodityCurveDayCounters_.end(),
+            "The default daycounter is not set for Commodities");
     }
 
     DLOG("Loading commodity volatility data");
@@ -1674,8 +1701,24 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLNode* commodityPriceNode = XMLUtils::addChild(doc, marketNode, "Commodities");
         XMLUtils::addChild(doc, commodityPriceNode, "Simulate", commodityCurveSimulate());
         XMLUtils::addChildren(doc, commodityPriceNode, "Names", "Name", commodityNames());
-        XMLUtils::addGenericChildAsList(doc, commodityPriceNode, "Tenors", commodityCurveTenors_.at(""));
-        XMLUtils::addChild(doc, commodityPriceNode, "DayCounter", commodityCurveDayCounters_.at(""));
+
+        // Write out tenors node for each commodity name
+        for (auto kv : commodityCurveTenors_) {
+            string nodeValue = join(kv.second | transformed([](Period p) { return ore::data::to_string(p); }), ",");
+            XMLNode* tenorsNode = doc.allocNode("Tenors", nodeValue);
+            XMLUtils::addAttribute(doc, tenorsNode, "name", kv.first);
+            XMLUtils::appendNode(commodityPriceNode, tenorsNode);
+        }
+
+        // Write out day counters node for each commodity name
+        if (commodityCurveDayCounters_.size() > 0) {
+            XMLNode* node = XMLUtils::addChild(doc, commodityPriceNode, "DayCounters");
+            for (auto dc : commodityCurveDayCounters_) {
+                XMLNode* c = doc.allocNode("DayCounter", dc.second);
+                XMLUtils::addAttribute(doc, c, "name", dc.first);
+                XMLUtils::appendNode(node, c);
+            }
+        }
     }
 
     // Commodity volatilities
