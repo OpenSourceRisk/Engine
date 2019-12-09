@@ -1315,7 +1315,15 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         for (XMLNode* tenorNode : tenorNodes) {
             // If there is no "name" attribute, getAttribute returns "" which is what we want in any case
             string name = XMLUtils::getAttribute(tenorNode, "name");
-            vector<Period> tenors = parseListOfValues<Period>(XMLUtils::getNodeValue(tenorNode), &parsePeriod);
+            
+            // An empty tenor list here means that the scenario simulation market should be set up on the
+            // same pillars as the initial t_0 market from which it is sampling its values
+            vector<Period> tenors;
+            string strTenorList = XMLUtils::getNodeValue(tenorNode);
+            if (!strTenorList.empty()) {
+                tenors = parseListOfValues<Period>(XMLUtils::getNodeValue(tenorNode), &parsePeriod);
+            }
+
             QL_REQUIRE(commodityCurveTenors_.insert(make_pair(name, tenors)).second,
                 "Commodities has duplicate expiries for key '" << name << "'");
             namesCheck.erase(name);
