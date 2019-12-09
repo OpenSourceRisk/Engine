@@ -58,7 +58,8 @@ EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
     marketObserver_->registerWith(ytsRate_);
     marketObserver_->registerWith(ytsDiv_);
 
-    // register the builder with the market observer
+    // register the builder with the vol and the market observer
+    registerWith(eqVol_);
     registerWith(marketObserver_);
 
     // notify observers of all market data changes, not only when not calculated
@@ -114,6 +115,8 @@ std::vector<boost::shared_ptr<BlackCalibrationHelper>> EqBsBuilder::optionBasket
 }
 
 bool EqBsBuilder::requiresRecalibration() const {
+    bool res = data_->calibrateSigma() &&
+        (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
     return data_->calibrateSigma() &&
            (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
 }

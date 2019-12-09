@@ -56,7 +56,8 @@ FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
     marketObserver_->addObservable(market_->discountCurve(domesticCcy.code()));
     marketObserver_->addObservable(market_->discountCurve(ccy.code()));
 
-    // register the builder with the market observer
+    // register the builder with the vol and the market observer
+    registerWith(fxVol_);
     registerWith(marketObserver_);
 
     // notify observers of all market data changes, not only when not calculated
