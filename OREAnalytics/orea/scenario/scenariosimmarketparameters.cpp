@@ -129,7 +129,6 @@ void ScenarioSimMarketParameters::setDefaults() {
     equityDividendTenors_[""] = vector<Period>();
     zeroInflationTenors_[""] = vector<Period>();
     yoyInflationTenors_[""] = vector<Period>();
-    commodityCurveTenors_[""] = vector<Period>();
     // Default day counters
     yieldCurveDayCounters_[""] = "A365";
     swapVolDayCounters_[""] = "A365";
