@@ -106,6 +106,7 @@
       <xs:enumeration value="PHP"/>
       <xs:enumeration value="NGN"/>
       <xs:enumeration value="MAD"/>
+      <xs:enumeration value="UYU"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -551,5 +552,12 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="optionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Call"/>
+      <xs:enumeration value="Put"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
 </xs:schema>
 

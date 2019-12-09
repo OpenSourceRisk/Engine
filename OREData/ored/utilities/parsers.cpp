@@ -341,6 +341,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"OMR", TARGET()},
                                       {"PKR", TARGET()},
                                       {"QAR", TARGET()},
+                                      {"UYU", TARGET()},
                                       {"TND", TARGET()},
                                       {"VND", TARGET()},
 
@@ -559,8 +560,8 @@ Currency parseCurrency(const string& s) {
         {"UAH", UAHCurrency()}, {"KZT", KZTCurrency()}, {"QAR", QARCurrency()}, {"MXV", MXVCurrency()},
         {"CLF", CLFCurrency()}, {"EGP", EGPCurrency()}, {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()},
         {"VND", VNDCurrency()}, {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()},
-        {"MAD", MADCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()}, {"XPD", XPDCurrency()},
-        {"XPT", XPTCurrency()}};
+        {"MAD", MADCurrency()}, {"UYU", UYUCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()},
+        {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
