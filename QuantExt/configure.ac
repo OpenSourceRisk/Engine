@@ -44,7 +44,7 @@ AC_PROG_AWK
 AC_PROG_INSTALL
 
 # Default compilation variables
-AC_SUBST([CXXFLAGS],[${CXXFLAGS='-g -O2 -Wall -std=c++11'}])
+AC_SUBST([CXXFLAGS],[${CXXFLAGS='-g -O2 -Wall -std=c++11 -DBOOST_ENABLE_ASSERT_HANDLER'}])
 
 # Help the compiler find external software
 
