@@ -1487,9 +1487,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
 
                         // Create a commodity price curve with simulation tenors as pillars and store
-                        // Hard-coded linear interpolation here - may need to make this more dynamic
+                        // Hard-coded linear flat interpolation here - may need to make this more dynamic
                         Handle<PriceTermStructure> simCommodityCurve(
-                            boost::make_shared<InterpolatedPriceCurve<Linear>>(simulationTenors, quotes, commodityCurveDayCounter));
+                            boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(simulationTenors, quotes, commodityCurveDayCounter));
                         simCommodityCurve->enableExtrapolation(allowsExtrapolation);
 
                         commodityCurves_.emplace(piecewise_construct, forward_as_tuple(Market::defaultConfiguration, name),
