@@ -162,7 +162,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const Conventions& conventions) {
     
     bool isATM = config->dimension() == FXVolatilityCurveConfig::Dimension::ATM;
-    Natural smileDelta; 
+    Natural smileDelta = 0; 
     std::string deltaRr; 
     std::string deltaBf; 
     if (!isATM) { 
