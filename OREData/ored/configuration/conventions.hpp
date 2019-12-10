@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+#include <ql/experimental/fx/deltavolquote.hpp> 
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
@@ -65,7 +66,8 @@ public:
         SecuritySpread,
         CMSSpreadOption,
         CommodityForward,
-        CommodityFuture
+        CommodityFuture,
+        FxOption
     };
 
     //! Default destructor
@@ -1201,5 +1203,38 @@ private:
     bool isAveraging_;
 };
 
+//! Container for storing FX Option conventions 
+/*! 
+\ingroup marketdata 
+*/ 
+class FxOptionConvention : public Convention { 
+public: 
+    //! \name Constructors 
+    //@{ 
+    FxOptionConvention() {} 
+    FxOptionConvention(const string& id, const string& atmType, const string& deltaType); 
+    //@} 
+ 
+    //! \name Inspectors 
+    //@{ 
+    const DeltaVolQuote::AtmType& atmType() const { return atmType_; } 
+    const DeltaVolQuote::DeltaType& deltaType() const { return deltaType_; } 
+    //@} 
+ 
+    //! \name Serialisation 
+    //@{ 
+    virtual void fromXML(XMLNode* node); 
+    virtual XMLNode* toXML(XMLDocument& doc); 
+    virtual void build(); 
+    //@} 
+private: 
+    DeltaVolQuote::AtmType atmType_; 
+    DeltaVolQuote::DeltaType deltaType_; 
+ 
+    // Strings to store the inputs 
+    string strAtmType_; 
+    string strDeltaType_; 
+}; 
+ 
 } // namespace data
 } // namespace ore

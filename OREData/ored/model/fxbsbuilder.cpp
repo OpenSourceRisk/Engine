@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ql/experimental/fx/blackdeltacalculator.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/quotes/simplequote.hpp>
 
@@ -93,7 +94,6 @@ FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
         parametrization_ = boost::make_shared<QuantExt::FxBsConstantParametrization>(ccy, fxSpot_, sigma[0]);
     else
         QL_FAIL("interpolation type not supported for FX");
-
 }
 
 Real FxBsBuilder::error() const {
@@ -125,15 +125,21 @@ void FxBsBuilder::performCalculations() const {
 }
 
 Real FxBsBuilder::optionStrike(const Size j) const {
+    Date expiryDate = optionExpiry(j);
     ore::data::Strike strike = ore::data::parseStrike(data_->optionStrikes()[j]);
     Real strikeValue;
+    BlackDeltaCalculator bdc(Option::Type::Call, DeltaVolQuote::DeltaType::Spot, fxSpot_->value(),
+                             ytsDom_->discount(expiryDate), ytsFor_->discount(expiryDate),
+                             fxVol_->blackVol(expiryDate, Null<Real>()) * sqrt(fxVol_->timeFromReference(expiryDate)));
+
     // TODO: Extend strike type coverage
     if (strike.type == ore::data::Strike::Type::ATMF)
-        strikeValue = Null<Real>();
+        strikeValue = bdc.atmStrike(DeltaVolQuote::AtmFwd);
     else if (strike.type == ore::data::Strike::Type::Absolute)
         strikeValue = strike.value;
     else
         QL_FAIL("strike type ATMF or Absolute expected");
+    Handle<Quote> quote(boost::make_shared<SimpleQuote>(fxVol_->blackVol(expiryDate, strikeValue)));
     return strikeValue;
 }
 

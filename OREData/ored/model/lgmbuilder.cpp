@@ -244,6 +244,43 @@ void LgmBuilder::performCalculations() const {
     }
 }
 
+void LgmBuilder::getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb, Date& expiryDb, Date& termDb,
+                                  Real& termT, bool& expiryDateBased, bool& termDateBased) const {
+    std::string expiryString = data_->optionExpiries()[j];
+    std::string termString = data_->optionTerms()[j];
+    parseDateOrPeriod(expiryString, expiryDb, expiryPb, expiryDateBased);
+    parseDateOrPeriod(termString, termDb, termPb, termDateBased);
+    if(termDateBased) {
+        Date tmpExpiry = expiryDateBased ? expiryDb : svts_->optionDateFromTenor(expiryPb);
+        // ensure that we have a term >= 1 Month
+        // otherwise QL might throw "non-positive swap length (0)  given" from the black swaption engine
+        // during calibration helper pricing
+        termDb = std::max(termDb, tmpExpiry + 1 * Months);
+        termT = svts_->swapLength(tmpExpiry, termDb);
+    } else {
+        termT = svts_->swapLength(termPb);
+        // same as above, make sure the underlying term is at least >= 1 Month, but since Period::operator<
+        // throws in certain circumstances, we do the comparison based on termT here:
+        if(termT < 1.0 / 12.0) {
+            termT = 1.0 / 12.0;
+            termPb = 1 * Months;
+        }
+    }
+}
+
+Real LgmBuilder::getStrike(const Size j) const {
+    Strike strike = parseStrike(data_->optionStrikes()[j]);
+    Real strikeValue;
+    // TODO: Extend strike type coverage
+    if (strike.type == Strike::Type::ATM)
+        strikeValue = Null<Real>();
+    else if (strike.type == Strike::Type::Absolute)
+        strikeValue = strike.value;
+    else
+        QL_FAIL("strike type ATM or Absolute expected");
+    return strikeValue;
+}
+
 bool LgmBuilder::volSurfaceChanged(const bool updateCache) const {
     bool hasUpdated = false;
 
@@ -255,30 +292,15 @@ bool LgmBuilder::volSurfaceChanged(const bool updateCache) const {
 
         Real volCache = swaptionVolCache_.at(j);
 
-        std::string expiryString = data_->optionExpiries()[j];
-        std::string termString = data_->optionTerms()[j];
         bool expiryDateBased, termDateBased;
         Period expiryPb, termPb;
         Date expiryDb, termDb;
-        parseDateOrPeriod(expiryString, expiryDb, expiryPb, expiryDateBased);
-        parseDateOrPeriod(termString, termDb, termPb, termDateBased);
-        Strike strike = parseStrike(data_->optionStrikes()[j]);
-        Real strikeValue;
-        // TODO: Extend strike type coverage
-        if (strike.type == Strike::Type::ATM)
-            strikeValue = Null<Real>();
-        else if (strike.type == Strike::Type::Absolute)
-            strikeValue = strike.value;
-        else
-            QL_FAIL("strike type ATM or Absolute expected");
+        Real termT;
+
+        getExpiryAndTerm(j, expiryPb, termPb, expiryDb, termDb, termT, expiryDateBased, termDateBased);
+        Real strikeValue = getStrike(j);
 
         Real vol;
-        Real termT = Null<Real>();
-        Period termTmp;
-        if (termDateBased) {
-            Date tmpExpiry = expiryDateBased ? expiryDb : svts_->optionDateFromTenor(expiryPb);
-            termT = svts_->dayCounter().yearFraction(tmpExpiry, termDb);
-        }
         if (expiryDateBased && termDateBased) {
             vol = svts_->volatility(expiryDb, termT, strikeValue);
         } else if (expiryDateBased && !termDateBased) {
@@ -314,35 +336,17 @@ void LgmBuilder::buildSwaptionBasket() const {
     std::vector<Time> maturityTimes(data_->optionTerms().size());
     swaptionBasket_.clear();
     for (Size j = 0; j < data_->optionExpiries().size(); j++) {
-        std::string expiryString = data_->optionExpiries()[j];
-        std::string termString = data_->optionTerms()[j];
         bool expiryDateBased, termDateBased;
         Period expiryPb, termPb;
         Date expiryDb, termDb;
-        parseDateOrPeriod(expiryString, expiryDb, expiryPb, expiryDateBased);
-        parseDateOrPeriod(termString, termDb, termPb, termDateBased);
-        Strike strike = parseStrike(data_->optionStrikes()[j]);
-        Real strikeValue;
-        // TODO: Extend strike type coverage
-        if (strike.type == Strike::Type::ATM)
-            strikeValue = Null<Real>();
-        else if (strike.type == Strike::Type::Absolute)
-            strikeValue = strike.value;
-        else
-            QL_FAIL("strike type ATM or Absolute expected");
-
-        Handle<Quote> vol;
-        Handle<YieldTermStructure> yts = market_->discountCurve(data_->ccy(), configuration_);
-        boost::shared_ptr<SwaptionHelper> helper;
         Real termT = Null<Real>();
-        Period termTmp;
-        if (termDateBased) {
-            Date tmpExpiry = expiryDateBased ? expiryDb : svts_->optionDateFromTenor(expiryPb);
-            termT = svts_->dayCounter().yearFraction(tmpExpiry, termDb);
-            // rounded to whole years, only used to distinguish between short and long
-            // swap tenors, which in practice always are multiples of whole years
-            termTmp = static_cast<Size>(termT + 0.5) * Years;
-        }
+
+        getExpiryAndTerm(j, expiryPb, termPb, expiryDb, termDb, termT, expiryDateBased, termDateBased);
+        Real strikeValue = getStrike(j);
+
+        // rounded to whole years, only used to distinguish between short and long
+        // swap tenors, which in practice always are multiples of whole years
+        Period termTmp = static_cast<Size>(termT + 0.5) * Years;
         auto iborIndex = termTmp > shortSwapIndex_->tenor() ? swapIndex_->iborIndex() : shortSwapIndex_->iborIndex();
         auto fixedLegTenor =
             termTmp > shortSwapIndex_->tenor() ? swapIndex_->fixedLegTenor() : shortSwapIndex_->fixedLegTenor();
@@ -350,14 +354,18 @@ void LgmBuilder::buildSwaptionBasket() const {
             termTmp > shortSwapIndex_->tenor() ? swapIndex_->dayCounter() : shortSwapIndex_->dayCounter();
         auto floatDayCounter = termTmp > shortSwapIndex_->tenor() ? swapIndex_->iborIndex()->dayCounter()
                                                                   : shortSwapIndex_->iborIndex()->dayCounter();
-        vol = Handle<Quote>(boost::make_shared<SimpleQuote>(swaptionVolCache_.at(j)));
+
+        Handle<Quote> vol = Handle<Quote>(boost::make_shared<SimpleQuote>(swaptionVolCache_.at(j)));
+        Handle<YieldTermStructure> yts = market_->discountCurve(data_->ccy(), configuration_);
+        boost::shared_ptr<SwaptionHelper> helper;
+
         if (expiryDateBased && termDateBased) {
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryDb, termT) : 0.0;
             helper = boost::make_shared<SwaptionHelper>(expiryDb, termDb, vol, iborIndex, fixedLegTenor,
                                                         fixedDayCounter, floatDayCounter, yts, calibrationErrorType_,
                                                         strikeValue, 1.0, svts_->volatilityType(), shift);
             LOG("Added Date / Date based SwaptionHelper " << data_->ccy() << " " << expiryDb << ", " << termDb << ", "
-                                                          << strike << " : " << vol->value() << " "
+                                                          << data_->optionStrikes()[j] << " : " << vol->value() << " "
                                                           << svts_->volatilityType());
             if (std::abs(helper->marketValue()) < minMarketValue &&
                 (calibrationErrorType_ == BlackCalibrationHelper::RelativePriceError ||
@@ -374,7 +382,7 @@ void LgmBuilder::buildSwaptionBasket() const {
                                                         fixedDayCounter, floatDayCounter, yts, calibrationErrorType_,
                                                         strikeValue, 1.0, svts_->volatilityType(), shift);
             LOG("Added Date / Period based SwaptionHelper " << data_->ccy() << " " << expiryDb << ", " << termPb << ", "
-                                                            << strike << " : " << vol->value() << " "
+                                                            << data_->optionStrikes()[j] << " : " << vol->value() << " "
                                                             << svts_->volatilityType());
             if (std::abs(helper->marketValue()) < minMarketValue &&
                 (calibrationErrorType_ == BlackCalibrationHelper::RelativePriceError ||
@@ -392,7 +400,7 @@ void LgmBuilder::buildSwaptionBasket() const {
                                                         floatDayCounter, yts, calibrationErrorType_, strikeValue, 1.0,
                                                         svts_->volatilityType(), shift);
             LOG("Added Period / Date based SwaptionHelper " << data_->ccy() << " " << expiryPb << ", " << termDb << ", "
-                                                            << strike << " : " << vol->value() << " "
+                                                            << data_->optionStrikes()[j] << " : " << vol->value() << " "
                                                             << svts_->volatilityType());
             if (std::abs(helper->marketValue()) < minMarketValue &&
                 (calibrationErrorType_ == BlackCalibrationHelper::RelativePriceError ||
@@ -409,7 +417,7 @@ void LgmBuilder::buildSwaptionBasket() const {
                                                         fixedDayCounter, floatDayCounter, yts, calibrationErrorType_,
                                                         strikeValue, 1.0, svts_->volatilityType(), shift);
             LOG("Added Period / Period based SwaptionHelper " << data_->ccy() << " " << expiryPb << ", " << termPb
-                                                              << ", " << strike << " : " << vol->value() << " "
+                                                              << ", " << data_->optionStrikes()[j] << " : " << vol->value() << " "
                                                               << svts_->volatilityType());
             if (std::abs(helper->marketValue()) < minMarketValue &&
                 (calibrationErrorType_ == BlackCalibrationHelper::RelativePriceError ||

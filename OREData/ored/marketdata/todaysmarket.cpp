@@ -230,7 +230,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         // build the curve
                         LOG("Building FXVolatility for asof " << asof);
                         boost::shared_ptr<FXVolCurve> fxVolCurve = boost::make_shared<FXVolCurve>(
-                            asof, *fxvolspec, loader, curveConfigs, fxT, requiredYieldCurves);
+                            asof, *fxvolspec, loader, curveConfigs, fxT, requiredYieldCurves, conventions);
                         itr = requiredFxVolCurves.insert(make_pair(fxvolspec->name(), fxVolCurve)).first;
                     }
 

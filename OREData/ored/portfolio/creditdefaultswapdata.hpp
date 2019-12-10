@@ -100,6 +100,20 @@ private:
     void populateId();
 };
 
+/*! Attempt to parse string to CdsReferenceInformation
+    \param[in]  strInfo The string we wish to convert to CdsReferenceInformation
+    \param[out] cdsInfo The resulting CdsReferenceInformation if the parsing was successful.
+
+    \return \c true if the parsing was successful and \c false if not.
+
+    If the function receives a \p strInfo of the form `ID|TIER|CCY|DOCCLAUSE` with `CCY` being a valid ISO currency
+    code, `TIER` being a valid CDS debt tier and `DOCCLAUSE` being a valid CDS documentation clause, the parsing
+    should be successful.
+
+    \ingroup utilities
+*/
+bool tryParseCdsInformation(const std::string& strInfo, CdsReferenceInformation& cdsInfo);
+
 /*! Serializable credit default swap data
     \ingroup tradedata
 */

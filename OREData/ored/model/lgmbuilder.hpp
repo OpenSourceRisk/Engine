@@ -77,6 +77,11 @@ private:
     void buildSwaptionBasket() const;
     // checks whether swaption vols have changed compared to cache and updates the cache if requested
     bool volSurfaceChanged(const bool updateCache) const;
+    // populate expiry and term
+    void getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb, Date& expiryDb, Date& termDb, Real& termT,
+                          bool& expiryDateBased, bool& termDateBased) const;
+    // get strike for jth option (or Null<Real>() if ATM)
+    Real getStrike(const Size j) const;
 
     boost::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
