@@ -1711,6 +1711,8 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
 
         // Write out tenors node for each commodity name
         for (auto kv : commodityCurveTenors_) {
+            // Single bar here is a boost range adaptor. Documented here:
+            // https://www.boost.org/doc/libs/1_71_0/libs/range/doc/html/range/reference/adaptors/introduction.html
             string nodeValue = join(kv.second | transformed([](Period p) { return ore::data::to_string(p); }), ",");
             XMLNode* tenorsNode = doc.allocNode("Tenors", nodeValue);
             XMLUtils::addAttribute(doc, tenorsNode, "name", kv.first);
