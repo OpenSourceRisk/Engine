@@ -128,7 +128,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
     for (Size k = 0; k < trades.size(); k++) {
-        if (trades[k]->tradeType() == "Swaption" || trades[k]->tradeType() == "CapFloor") {
+        if (!trades[k]->hasCashflows()) {
             WLOG("cashflow for " << trades[k]->tradeType() << " " << trades[k]->id() << " skipped");
             continue;
         }
