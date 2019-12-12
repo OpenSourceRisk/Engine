@@ -62,6 +62,12 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
+
+    //! \name Trade
+    //@{
+    bool hasCashflows() const override { return false; }
+    //@}
+
 private:
     OptionData option_;
     vector<LegData> swap_;
