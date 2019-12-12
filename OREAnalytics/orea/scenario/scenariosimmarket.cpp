@@ -1454,11 +1454,25 @@ ScenarioSimMarket::ScenarioSimMarket(
                             initMarket->commodityPriceCurve(name, configuration);
                         bool allowsExtrapolation = initialCommodityCurve->allowsExtrapolation();
 
-                        // Get prices at specified simulation tenors from time 0 market curve and place in quotes
+                        // Get the configured simulation tenors. Simulation tenors being empty at this point means 
+                        // that we wish to use the pillar date points from the t_0 market PriceTermStructure.
                         vector<Period> simulationTenors = parameters->commodityCurveTenors(name);
                         DayCounter commodityCurveDayCounter = parseDayCounter(parameters->commodityCurveDayCounter(name));
-                        vector<Handle<Quote>> quotes(simulationTenors.size());
+                        if (simulationTenors.empty()) {
+                            simulationTenors.reserve(initialCommodityCurve->pillarDates().size());
+                            for (const Date& d : initialCommodityCurve->pillarDates()) {
+                                QL_REQUIRE(d >= asof_, "Commodity curve pillar date (" << io::iso_date(d) <<
+                                    ") must be after as of (" << io::iso_date(asof_) << ").");
+                                simulationTenors.push_back(Period(d - asof_, Days));
+                            }
+                            
+                            // It isn't great to be updating parameters here. However, actual tenors are requested 
+                            // downstream from parameters and they need to be populated.
+                            parameters->setCommodityCurveTenors(name, simulationTenors);
+                        }
 
+                        // Get prices at specified simulation times from time 0 market curve and place in quotes
+                        vector<Handle<Quote>> quotes(simulationTenors.size());
                         for (Size i = 0; i < simulationTenors.size(); i++) {
                             Date d = asof_ + simulationTenors[i];
                             Real price = initialCommodityCurve->price(d, allowsExtrapolation);
@@ -1473,9 +1487,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
 
                         // Create a commodity price curve with simulation tenors as pillars and store
-                        // Hard-coded linear interpolation here - may need to make this more dynamic
+                        // Hard-coded linear flat interpolation here - may need to make this more dynamic
                         Handle<PriceTermStructure> simCommodityCurve(
-                            boost::make_shared<InterpolatedPriceCurve<Linear>>(simulationTenors, quotes, commodityCurveDayCounter));
+                            boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(simulationTenors, quotes, commodityCurveDayCounter));
                         simCommodityCurve->enableExtrapolation(allowsExtrapolation);
 
                         commodityCurves_.emplace(piecewise_construct, forward_as_tuple(Market::defaultConfiguration, name),

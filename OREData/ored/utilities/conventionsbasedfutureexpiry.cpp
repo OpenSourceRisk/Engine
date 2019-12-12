@@ -81,9 +81,9 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
         contractYear = newDate.year();
     }
 
-    // Move to previous month for the expiry if necessary
-    if (conventions.expiryInPreviousMonth()) {
-        Date newDate = Date(15, contractMonth, contractYear) - 1 * Months;
+    // Move n months previously for the expiry if necessary
+    if (conventions.expiryMonthLag() > 0) {
+        Date newDate = Date(15, contractMonth, contractYear) - conventions.expiryMonthLag() * Months;
         contractMonth = newDate.month();
         contractYear = newDate.year();
     }

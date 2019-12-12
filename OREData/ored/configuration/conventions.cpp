@@ -1068,7 +1068,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id,
     const string& dayOfMonth,
     const string& contractFrequency,
     const string& calendar,
-    bool expiryInPreviousMonth,
+    Natural expiryMonthLag,
     const std::string& oneContractMonth,
     const string& offsetDays,
     const string& bdc,
@@ -1078,7 +1078,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id,
       strDayOfMonth_(dayOfMonth),
       strContractFrequency_(contractFrequency),
       strCalendar_(calendar),
-      expiryInPreviousMonth_(expiryInPreviousMonth),
+      expiryMonthLag_(expiryMonthLag),
       strOneContractMonth_(oneContractMonth),
       strOffsetDays_(offsetDays),
       strBdc_(bdc),
@@ -1092,7 +1092,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id,
     const string& weekday,
     const string& contractFrequency,
     const string& calendar,
-    bool expiryInPreviousMonth,
+    Natural expiryMonthLag,
     const std::string& oneContractMonth,
     const string& offsetDays,
     const string& bdc,
@@ -1103,7 +1103,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id,
       strWeekday_(weekday),
       strContractFrequency_(contractFrequency),
       strCalendar_(calendar),
-      expiryInPreviousMonth_(expiryInPreviousMonth),
+      expiryMonthLag_(expiryMonthLag),
       strOneContractMonth_(oneContractMonth),
       strOffsetDays_(offsetDays),
       strBdc_(bdc),
@@ -1131,9 +1131,9 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
     strContractFrequency_ = XMLUtils::getChildValue(node, "ContractFrequency", true);
     strCalendar_ = XMLUtils::getChildValue(node, "Calendar", true);
 
-    expiryInPreviousMonth_ = false;
-    if (XMLNode* n = XMLUtils::getChildNode(node, "ExpiryInPreviousMonth")) {
-        expiryInPreviousMonth_ = parseBool(XMLUtils::getNodeValue(n));
+    expiryMonthLag_ = 0;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "ExpiryMonthLag")) {
+        expiryMonthLag_ = parseInteger(XMLUtils::getNodeValue(n));
     }
     
     strOneContractMonth_ = XMLUtils::getChildValue(node, "OneContractMonth", false);
@@ -1171,7 +1171,7 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "ContractFrequency", strContractFrequency_);
     XMLUtils::addChild(doc, node, "Calendar", strCalendar_);
-    XMLUtils::addChild(doc, node, "ExpiryInPreviousMonth", expiryInPreviousMonth_);
+    XMLUtils::addChild(doc, node, "ExpiryMonthLag", static_cast<int>(expiryMonthLag_));
 
     if (!strOneContractMonth_.empty())
         XMLUtils::addChild(doc, node, "OneContractMonth", strOneContractMonth_);

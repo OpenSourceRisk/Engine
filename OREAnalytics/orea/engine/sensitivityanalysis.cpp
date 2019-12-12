@@ -41,7 +41,6 @@
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
-#include <math.h>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -444,8 +443,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             Period p = it->second->shiftTenors[key.index];
             Handle<PriceTermStructure> priceCurve = simMarket->commodityPriceCurve(keylabel, marketConfiguration);
             Time t = priceCurve->dayCounter().yearFraction(asof, asof + p);
-            // Commodity curve can contain negative values in certain cases e.g. a price basis curve
-            shiftMult = fabs(priceCurve->price(t));
+            shiftMult = priceCurve->price(t);
         }
     } break;
     case RiskFactorKey::KeyType::CommodityVolatility: {

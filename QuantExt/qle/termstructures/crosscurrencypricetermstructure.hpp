@@ -76,6 +76,7 @@ public:
     //! \name PriceTermStructure interface
     //@{
     QuantLib::Time minTime() const;
+    std::vector<QuantLib::Date> pillarDates() const;
     //@}
 
     //! \name Inspectors

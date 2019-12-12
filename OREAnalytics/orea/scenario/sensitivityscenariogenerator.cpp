@@ -1754,22 +1754,17 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         Real shiftSize = data.shiftSize;
 
         // Get the times at which we want to apply the shifts
-        vector<Period> shiftTenors =
-            overrideTenors_ && simMarketData_->hasCommodityCurveTenors(name) ? simMarketTenors : data.shiftTenors;
-
-        QL_REQUIRE(!shiftTenors.empty(), "Commodity curve shift tenors have not been given");
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Commodity Curve " + name);
-
-        vector<Time> shiftTimes(shiftTenors.size());
-        for (Size j = 0; j < shiftTenors.size(); ++j) {
-            shiftTimes[j] = curveDayCounter.yearFraction(asof, asof + shiftTenors[j]);
+        QL_REQUIRE(!data.shiftTenors.empty(), "Commodity curve shift tenors have not been given");
+        vector<Time> shiftTimes(data.shiftTenors.size());
+        for (Size j = 0; j < data.shiftTenors.size(); ++j) {
+            shiftTimes[j] = curveDayCounter.yearFraction(asof, asof + data.shiftTenors[j]);
         }
 
         // Can we store a valid shift size?
         bool validShiftSize = vectorEqual(times, shiftTimes);
 
         // Generate the scenarios for each shift
-        for (Size j = 0; j < shiftTenors.size(); ++j) {
+        for (Size j = 0; j < data.shiftTenors.size(); ++j) {
 
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
             scenarioDescriptions_.push_back(commodityCurveScenarioDescription(name, j, up));

@@ -123,7 +123,9 @@ and an amortising exchange can be specified using an \lstinline!Exchanges! child
 \lstinline!NotionalAmortizingExchange! as subelements, see Listing
 \ref{lst:notional_exchange}.
 
-Allowable values for \lstinline!NotionalInitialExchange!,  \lstinline!NotionalFinalExchange! and \lstinline!NotionalAmortizingExchange!:   \emph{true, false}. Defaults to  \emph{false} if omitted, or if the entire \lstinline!Exchanges! block is omitted.
+Allowable values for \lstinline!NotionalInitialExchange!,  \lstinline!NotionalFinalExchange! and \lstinline!NotionalAmortizingExchange!:   \emph{true, false}. 
+If the  \lstinline!Exchanges! node is omitted then all values default to \emph{false}, but if it is included \lstinline!NotionalInitialExchange! and \lstinline!NotionalFinalExchange! default to \emph{true}.
+It is recommended that all values are explicitly set.
 
 \begin{listing}[H]
 %\hrule\medskip
