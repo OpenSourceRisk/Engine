@@ -1583,8 +1583,17 @@ ScenarioSimMarket::ScenarioSimMarket(
                     try {
                         LOG("Adding correlations for " << name << " from configuration " << configuration);
 
+                        // Look for '&' first
+                        // see todaysmarket.cpp for similar logic
+                        string delim;
+                        if (name.find('&') != std::string::npos)
+                            delim = "&";
+                        else
+                            // otherwise fall back on old behavior
+                            delim = ":";
+
                         vector<string> tokens;
-                        boost::split(tokens, name, boost::is_any_of(":"));
+                        boost::split(tokens, name, boost::is_any_of(delim));
                         QL_REQUIRE(tokens.size() == 2, "not a valid correlation pair: " << name);
                         pair<string, string> pair = std::make_pair(tokens[0], tokens[1]);
 
