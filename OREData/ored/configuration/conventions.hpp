@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+#include <ql/experimental/fx/deltavolquote.hpp> 
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
@@ -65,7 +66,8 @@ public:
         SecuritySpread,
         CMSSpreadOption,
         CommodityForward,
-        CommodityFuture
+        CommodityFuture,
+        FxOption
     };
 
     //! Default destructor
@@ -1131,7 +1133,7 @@ public:
         const std::string& dayOfMonth,
         const std::string& contractFrequency,
         const std::string& calendar,
-        bool expiryInPreviousMonth = false,
+        QuantLib::Natural expiryMonthLag = 0,
         const std::string& oneContractMonth = "",
         const std::string& offsetDays = "",
         const std::string& bdc = "",
@@ -1144,7 +1146,7 @@ public:
         const std::string& weekday,
         const std::string& contractFrequency,
         const std::string& calendar,
-        bool expiryInPreviousMonth = false,
+        QuantLib::Natural expiryMonthLag = 0,
         const std::string& oneContractMonth = "",
         const std::string& offsetDays = "",
         const std::string& bdc = "",
@@ -1159,7 +1161,7 @@ public:
     QuantLib::Weekday weekday() const { return weekday_; }
     QuantLib::Frequency contractFrequency() const { return contractFrequency_; }
     QuantLib::Calendar calendar() const { return calendar_; }
-    bool expiryInPreviousMonth() const { return expiryInPreviousMonth_; }
+    QuantLib::Natural expiryMonthLag() const { return expiryMonthLag_; }
     QuantLib::Month oneContractMonth() const { return oneContractMonth_; }
     QuantLib::Natural offsetDays() const { return offsetDays_; }
     QuantLib::BusinessDayConvention businessDayConvention() const { return bdc_; }
@@ -1193,7 +1195,7 @@ private:
     std::string strWeekday_;
     std::string strContractFrequency_;
     std::string strCalendar_;
-    bool expiryInPreviousMonth_;
+    QuantLib::Natural expiryMonthLag_;
     std::string strOneContractMonth_;
     std::string strOffsetDays_;
     std::string strBdc_;
@@ -1201,5 +1203,38 @@ private:
     bool isAveraging_;
 };
 
+//! Container for storing FX Option conventions 
+/*! 
+\ingroup marketdata 
+*/ 
+class FxOptionConvention : public Convention { 
+public: 
+    //! \name Constructors 
+    //@{ 
+    FxOptionConvention() {} 
+    FxOptionConvention(const string& id, const string& atmType, const string& deltaType); 
+    //@} 
+ 
+    //! \name Inspectors 
+    //@{ 
+    const DeltaVolQuote::AtmType& atmType() const { return atmType_; } 
+    const DeltaVolQuote::DeltaType& deltaType() const { return deltaType_; } 
+    //@} 
+ 
+    //! \name Serialisation 
+    //@{ 
+    virtual void fromXML(XMLNode* node); 
+    virtual XMLNode* toXML(XMLDocument& doc); 
+    virtual void build(); 
+    //@} 
+private: 
+    DeltaVolQuote::AtmType atmType_; 
+    DeltaVolQuote::DeltaType deltaType_; 
+ 
+    // Strings to store the inputs 
+    string strAtmType_; 
+    string strDeltaType_; 
+}; 
+ 
 } // namespace data
 } // namespace ore

@@ -90,6 +90,7 @@ public:
     //! \name PriceTermStructure interface
     //@{
     QuantLib::Time minTime() const;
+    std::vector<QuantLib::Date> pillarDates() const;
     //@}
 
     //! \name Inspectors
@@ -218,6 +219,11 @@ template <class Interpolator> QuantLib::Time InterpolatedPriceCurve<Interpolator
 template <class Interpolator> QuantLib::Time InterpolatedPriceCurve<Interpolator>::minTime() const {
     calculate();
     return this->times_.front();
+}
+
+template <class Interpolator> std::vector<QuantLib::Date> InterpolatedPriceCurve<Interpolator>::pillarDates() const {
+    calculate();
+    return dates_;
 }
 
 template <class Interpolator> QuantLib::Real InterpolatedPriceCurve<Interpolator>::priceImpl(QuantLib::Time t) const {

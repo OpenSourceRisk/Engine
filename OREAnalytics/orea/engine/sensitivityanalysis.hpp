@@ -127,7 +127,7 @@ protected:
     virtual void initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact = {});
 
     //! build valuation calculators for valuation engine
-    std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
+    virtual std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
 
     boost::shared_ptr<ore::data::Market> market_;
     std::string marketConfiguration_;

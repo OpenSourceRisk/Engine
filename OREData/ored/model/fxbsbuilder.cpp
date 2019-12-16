@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ql/experimental/fx/blackdeltacalculator.hpp> 
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/quotes/simplequote.hpp>
 
@@ -104,10 +105,17 @@ void FxBsBuilder::buildOptionBasket() {
         parseDateOrPeriod(expiryString, expiryDb, expiryPb, expiryDateBased);
         Date expiryDate = expiryDateBased ? expiryDb : today + expiryPb;
         ore::data::Strike strike = ore::data::parseStrike(data_->optionStrikes()[j]);
+         
+        BlackDeltaCalculator bdc(Option::Type::Call, DeltaVolQuote::DeltaType::Spot, 
+                                 fxSpot->value(), ytsDom->discount(expiryDate), 
+                                 ytsFor->discount(expiryDate), 
+                                 fxVol->blackVol(expiryDate, Null<Real>())*sqrt(fxVol->timeFromReference(expiryDate))); 
+ 
+
         Real strikeValue;
         // TODO: Extend strike type coverage
         if (strike.type == ore::data::Strike::Type::ATMF)
-            strikeValue = Null<Real>();
+            strikeValue = bdc.atmStrike(DeltaVolQuote::AtmFwd);
         else if (strike.type == ore::data::Strike::Type::Absolute)
             strikeValue = strike.value;
         else

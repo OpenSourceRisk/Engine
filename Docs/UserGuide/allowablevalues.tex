@@ -15,7 +15,7 @@
       INR, ISK, JPY, KRW, LUF, NLG, NOK, NZD, PLN, PTE, RON, SEK, SGD,
       THB, TRY, TWD, USD, ZAR, ARS, CLP, COP, IDR, ILS, KWD, PEN, MXN,
     SAR, RUB, TND, MYR, UAH, KZT, QAR, MXV, CLF, EGP, BHD, OMR, VND,
-    AED, PHP, NGN, MAD},  Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
+    AED, PHP, NGN, MAD, UYU},  Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
     %\lstinline!DayCount!  \lstinline!Convention! & \begin{tabular}[l]{@{}l@{}}\indent Actual 360 can be expressed by:\\ \emph{A360, Actual/360, ACT/360}\\ \indent Actual 365 Fixed can be expressed by: \\ \emph{A365, A365F, Actual/365, Actual/365 (fixed)} \\ \indent Thirty 360 (US) can be expressed by: \\ \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT} \\ \indent Thirty 360 (European) can be expressed by: \\ \emph{30E/360, 30E/360 (Eurobond Basis)}\\ \indent Thirty 360 (Italian) is expressed by: \\ \emph{30/360 (Italian)}  \\ \indent Actual Actual (ISDA) can be expressed by: \\ \emph{ActActISDA, ActualActual (ISDA), ACT/ACT, ACT} \\ \indent Actual Actual (ISMA) can be expressed by: \\ \emph{ActActISMA, ActualActual (ISMA)} \\ \indent Actual Actual (AFB) can be expressed by:\\ \emph{ActActAFB, Actual/Actual (AFB)} \end{tabular}  \\ \hline
     \lstinline!Roll Convention! & \begin{tabular}[l]{@{}l@{}} 
 \emph{F,  Following, FOLLOWING}\\ 
@@ -177,6 +177,24 @@ TENOR                    & An integer followed by \emph{D, W, M or Y}           
   \label{tab:indices}
 \end{table}
 
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{10cm}|}
+\hline
+%\multicolumn{2}{|l|}{\lstinline!Index!}   \\ \hline
+\multicolumn{2}{|l|}{\tt FX Index}   \\ \hline
+\textbf{Index Format} &\textbf{Allowable Values}     \\ \hline
+FX-SOURCE-CCY1-CCY2    &    
+SOURCE is ECB (European Central Bank) for EUR pairs or TR20H (Thomson
+Reuters 20H) for USD pairs. For ECB CCY1 should always be EUR, and for
+TR20H CCY1 should always be USD, except for FX-TR20H-GBP-USD,
+FX-TR20H-AUD-USD and FX-TR20H-NZD-USD. Note that the FX- part of the
+string stays constant for all currency pairs. For the USD-EUR pair, ECB is used
+(FX-ECB-EUR-USD).\\ \hline
+\end{tabular}
+  \caption{Allowable values for FX index fixings.}
+  \label{tab:fxindex_data}
+\end{table}
 
 \begin{table}[H]
 \centering
@@ -232,7 +250,7 @@ conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: 
     \hline
   \end{tabu}
   \caption{Allowable values for \lstinline!Tier!}
-  \label{tab:allowable_values_tier}
+  \label{tab:tier_data}
 \end{table}
 
 \begin{table}[H]
@@ -261,5 +279,5 @@ conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: 
     \hline
   \end{tabu}
   \caption{Allowable values for \lstinline!DocClause!}
-  \label{tab:allowable_values_doc_clause}
+  \label{tab:docclause_data}
 \end{table}
