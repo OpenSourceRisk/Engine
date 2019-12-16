@@ -1133,7 +1133,7 @@ public:
         const std::string& dayOfMonth,
         const std::string& contractFrequency,
         const std::string& calendar,
-        bool expiryInPreviousMonth = false,
+        QuantLib::Natural expiryMonthLag = 0,
         const std::string& oneContractMonth = "",
         const std::string& offsetDays = "",
         const std::string& bdc = "",
@@ -1146,7 +1146,7 @@ public:
         const std::string& weekday,
         const std::string& contractFrequency,
         const std::string& calendar,
-        bool expiryInPreviousMonth = false,
+        QuantLib::Natural expiryMonthLag = 0,
         const std::string& oneContractMonth = "",
         const std::string& offsetDays = "",
         const std::string& bdc = "",
@@ -1161,7 +1161,7 @@ public:
     QuantLib::Weekday weekday() const { return weekday_; }
     QuantLib::Frequency contractFrequency() const { return contractFrequency_; }
     QuantLib::Calendar calendar() const { return calendar_; }
-    bool expiryInPreviousMonth() const { return expiryInPreviousMonth_; }
+    QuantLib::Natural expiryMonthLag() const { return expiryMonthLag_; }
     QuantLib::Month oneContractMonth() const { return oneContractMonth_; }
     QuantLib::Natural offsetDays() const { return offsetDays_; }
     QuantLib::BusinessDayConvention businessDayConvention() const { return bdc_; }
@@ -1195,7 +1195,7 @@ private:
     std::string strWeekday_;
     std::string strContractFrequency_;
     std::string strCalendar_;
-    bool expiryInPreviousMonth_;
+    QuantLib::Natural expiryMonthLag_;
     std::string strOneContractMonth_;
     std::string strOffsetDays_;
     std::string strBdc_;

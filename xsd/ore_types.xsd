@@ -107,6 +107,11 @@
       <xs:enumeration value="NGN"/>
       <xs:enumeration value="MAD"/>
       <xs:enumeration value="UYU"/>
+      <!-- valid as currency too -->
+      <xs:enumeration value="XAU"/>
+      <xs:enumeration value="XAG"/>
+      <xs:enumeration value="XPT"/>
+      <xs:enumeration value="XPD"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -548,7 +553,7 @@
 
   <xs:simpleType name="positiveDecimal">
     <xs:restriction base="xs:decimal">
-      <xs:minInclusive value="0"/>
+      <xs:minExclusive value="0"/>
     </xs:restriction>
   </xs:simpleType>
 

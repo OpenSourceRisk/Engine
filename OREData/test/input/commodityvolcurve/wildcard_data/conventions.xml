@@ -24,7 +24,7 @@
     </AnchorDay>
     <ContractFrequency>Monthly</ContractFrequency>
     <Calendar>US-NYSE</Calendar>
-    <ExpiryInPreviousMonth>true</ExpiryInPreviousMonth>
+    <ExpiryMonthLag>1</ExpiryMonthLag>
     <OffsetDays>3</OffsetDays>
     <BusinessDayConvention>Preceding</BusinessDayConvention>
     <IsAveraging>false</IsAveraging>

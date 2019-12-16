@@ -60,6 +60,9 @@ public:
     //! The minimum time for which the curve can return values
     virtual QuantLib::Time minTime() const;
 
+    //! The pillar dates for the PriceTermStructure
+    virtual std::vector<QuantLib::Date> pillarDates() const = 0;
+
 protected:
     /*! \name Calculations
 
