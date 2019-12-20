@@ -177,7 +177,7 @@ CreditDefaultSwapData::CreditDefaultSwapData(const string& issuerId,
     const CdsReferenceInformation& referenceInformation,
     const LegData& leg,
     bool settlesAccrual,
-    bool paysAtDefaultTime,
+    const QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime,
     const Date& protectionStart,
     const Date& upfrontDate,
     Real upfrontFee,
@@ -186,7 +186,7 @@ CreditDefaultSwapData::CreditDefaultSwapData(const string& issuerId,
     : issuerId_(issuerId),
       leg_(leg),
       settlesAccrual_(settlesAccrual),
-      paysAtDefaultTime_(paysAtDefaultTime),
+      protectionPaymentTime_(protectionPaymentTime),
       protectionStart_(protectionStart),
       upfrontDate_(upfrontDate),
       upfrontFee_(upfrontFee),
@@ -230,7 +230,7 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
                                                 << "' not known, expected atDefault, atPeriodEnd, atMaturity");
         }
     }
-    XMLNode* tmp = XMLUtils::getChildNode(node, "ProtectionStart");
+    tmp = XMLUtils::getChildNode(node, "ProtectionStart");
     if (tmp)
         protectionStart_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty or missing
     else

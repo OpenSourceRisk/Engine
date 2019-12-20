@@ -142,7 +142,8 @@ public:
         const CdsReferenceInformation& referenceInformation,
         const LegData& leg,
         bool settlesAccrual = true,
-        bool paysAtDefaultTime = true,
+        const QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
+            QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault,
         const QuantLib::Date& protectionStart = QuantLib::Date(),
         const QuantLib::Date& upfrontDate = QuantLib::Date(),
         QuantLib::Real upfrontFee = QuantLib::Null<QuantLib::Real>(),
