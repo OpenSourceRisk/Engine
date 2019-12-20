@@ -68,13 +68,13 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     if (swap_.upfrontDate() == Null<Date>())
         cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
             prot, swap_.leg().notionals().front(), fixedData->rates().front(), schedule, payConvention, dc,
-            swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart(), 
+            swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(),
             boost::shared_ptr<Claim>(), lastPeriodDayCounter);
     else {
         QL_REQUIRE(swap_.upfrontFee() != Null<Real>(), "CreditDefaultSwap: upfront date given, but no upfront fee");
         cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
             prot, notional_, swap_.upfrontFee(), fixedData->rates().front(), schedule, payConvention, dc,
-            swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart(), swap_.upfrontDate(),
+            swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), swap_.upfrontDate(),
             boost::shared_ptr<Claim>(), lastPeriodDayCounter);
     }
 
