@@ -789,6 +789,9 @@
     <ClInclude Include="qle\termstructures\blackvolsurfacedelta.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\ice.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1344,6 +1347,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\blackvolsurfacedelta.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\ice.cpp">
+      <Filter>time\calendars</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

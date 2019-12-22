@@ -3,6 +3,7 @@
 set(QuantExt_SRC calendars/chile.cpp
 calendars/colombia.cpp
 calendars/france.cpp
+calendars/ice.cpp
 calendars/israel.cpp
 calendars/malaysia.cpp
 calendars/netherlands.cpp
@@ -171,6 +172,7 @@ set(QuantExt_HDR auto_link.hpp
 calendars/chile.hpp
 calendars/colombia.hpp
 calendars/france.hpp
+calendars/ice.hpp
 calendars/israel.hpp
 calendars/malaysia.hpp
 calendars/netherlands.hpp
