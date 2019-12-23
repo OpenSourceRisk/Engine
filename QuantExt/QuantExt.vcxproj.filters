@@ -792,6 +792,9 @@
     <ClInclude Include="qle\calendars\ice.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\cme.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1349,6 +1352,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\calendars\ice.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\cme.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
   </ItemGroup>

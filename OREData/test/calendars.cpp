@@ -30,6 +30,7 @@
 #include <qle/calendars/thailand.hpp>
 #include <qle/calendars/wmr.hpp>
 #include <qle/calendars/ice.hpp>
+#include <qle/calendars/cme.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -126,6 +127,8 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             { "ICE_SwapTradeUS", ICE(ICE::SwapTradeUS) },
                             { "ICE_SwapTradeUK", ICE(ICE::SwapTradeUK) },
                             { "ICE_FuturesSingapore", ICE(ICE::FuturesSingapore) },
+                            // CME exchange calendar
+                            { "CME", CME() },
                             // joint calendars
                             {"US,TARGET", JointCalendar(UnitedStates(), TARGET())},
                             {"NYB,TGT", JointCalendar(UnitedStates(), TARGET())},

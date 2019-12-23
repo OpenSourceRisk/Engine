@@ -27,6 +27,9 @@
 
 namespace QuantExt {
 
+/*! Various ICE calendars outlined on the website at:
+    https://www.theice.com/holiday-hours
+*/
 class ICE : public QuantLib::Calendar {
 
 private:
@@ -91,9 +94,6 @@ private:
     };
 
 public:
-    /*! Various ICE calendars outlined on the website at:
-        https://www.theice.com/holiday-hours
-    */
     enum Market {
         FuturesUS,        /*!< ICE Futures U.S. Currency, Stock and Credit Index, 
                                Metal, Nat Gas, Power, Oil and Environmental */

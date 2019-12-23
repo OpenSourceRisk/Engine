@@ -43,6 +43,7 @@
 #include <qle/calendars/thailand.hpp>
 #include <qle/calendars/wmr.hpp>
 #include <qle/calendars/ice.hpp>
+#include <qle/calendars/cme.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
@@ -395,6 +396,8 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       { "ICE_SwapTradeUS", ICE(ICE::SwapTradeUS) },
                                       { "ICE_SwapTradeUK", ICE(ICE::SwapTradeUK) },
                                       { "ICE_FuturesSingapore", ICE(ICE::FuturesSingapore) },
+                                      // CME exchange calendar
+                                      { "CME", CME() },
                                       
                                       // Simple calendars
                                       {"WeekendsOnly", WeekendsOnly()},
