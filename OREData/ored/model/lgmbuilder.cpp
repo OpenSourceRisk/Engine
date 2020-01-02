@@ -198,7 +198,7 @@ void LgmBuilder::performCalculations() const {
                     model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
                 }
             }
-            LOG("LGM " << data_->ccy() << " calibration errors:");
+            TLOG("LGM " << data_->ccy() << " calibration errors:");
             error_ = logCalibrationErrors(swaptionBasket_, parametrization_);
             if (data_->calibrationType() == CalibrationType::Bootstrap && (data_->calibrateA() || data_->calibrateH())) {
                 QL_REQUIRE(fabs(error_) < bootstrapTolerance_,
