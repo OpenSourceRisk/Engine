@@ -1138,7 +1138,8 @@ public:
         const std::string& offsetDays = "",
         const std::string& bdc = "",
         bool adjustBeforeOffset = true,
-        bool isAveraging = false);
+        bool isAveraging = false,
+        const std::vector<std::string>& prohibitedExpiries = {});
 
     //! N-th weekday based constructor
     CommodityFutureConvention(const std::string& id,
@@ -1151,7 +1152,8 @@ public:
         const std::string& offsetDays = "",
         const std::string& bdc = "",
         bool adjustBeforeOffset = true,
-        bool isAveraging = false);
+        bool isAveraging = false,
+        const std::vector<std::string>& prohibitedExpiries = {});
     //@}
 
     //! \name Inspectors
@@ -1160,7 +1162,7 @@ public:
     QuantLib::Natural nth() const { return nth_; }
     QuantLib::Weekday weekday() const { return weekday_; }
     QuantLib::Frequency contractFrequency() const { return contractFrequency_; }
-    QuantLib::Calendar calendar() const { return calendar_; }
+    const QuantLib::Calendar& calendar() const { return calendar_; }
     QuantLib::Natural expiryMonthLag() const { return expiryMonthLag_; }
     QuantLib::Month oneContractMonth() const { return oneContractMonth_; }
     QuantLib::Natural offsetDays() const { return offsetDays_; }
@@ -1168,6 +1170,7 @@ public:
     bool adjustBeforeOffset() const { return adjustBeforeOffset_; }
     bool isAveraging() const { return isAveraging_; }
     bool dayOfMonthBased() const { return dayOfMonthBased_; }
+    const std::set<QuantLib::Date>& prohibitedExpiries() const { return prohibitedExpiries_; }
     //@}
 
     //! Serialisation
@@ -1189,6 +1192,7 @@ private:
     QuantLib::Natural offsetDays_;
     QuantLib::BusinessDayConvention bdc_;
     bool dayOfMonthBased_;
+    std::set<QuantLib::Date> prohibitedExpiries_;
 
     std::string strDayOfMonth_;
     std::string strNth_;
@@ -1201,6 +1205,7 @@ private:
     std::string strBdc_;
     bool adjustBeforeOffset_;
     bool isAveraging_;
+    std::vector<std::string> strProhibitedExpiries_;
 };
 
 //! Container for storing FX Option conventions 

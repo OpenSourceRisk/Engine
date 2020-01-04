@@ -1069,11 +1069,12 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id,
     const string& contractFrequency,
     const string& calendar,
     Natural expiryMonthLag,
-    const std::string& oneContractMonth,
+    const string& oneContractMonth,
     const string& offsetDays,
     const string& bdc,
     bool adjustBeforeOffset,
-    bool isAveraging)
+    bool isAveraging,
+    const vector<string>& prohibitedExpiries)
     : Convention(id, Type::CommodityFuture),
       strDayOfMonth_(dayOfMonth),
       strContractFrequency_(contractFrequency),
@@ -1083,7 +1084,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id,
       strOffsetDays_(offsetDays),
       strBdc_(bdc),
       adjustBeforeOffset_(adjustBeforeOffset),
-      isAveraging_(isAveraging) {
+      isAveraging_(isAveraging),
+      strProhibitedExpiries_(prohibitedExpiries) {
     build();
 }
 
@@ -1093,11 +1095,12 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id,
     const string& contractFrequency,
     const string& calendar,
     Natural expiryMonthLag,
-    const std::string& oneContractMonth,
+    const string& oneContractMonth,
     const string& offsetDays,
     const string& bdc,
     bool adjustBeforeOffset,
-    bool isAveraging)
+    bool isAveraging,
+    const vector<string>& prohibitedExpiries)
     : Convention(id, Type::CommodityFuture),
       strNth_(nth),
       strWeekday_(weekday),
@@ -1108,7 +1111,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id,
       strOffsetDays_(offsetDays),
       strBdc_(bdc),
       adjustBeforeOffset_(adjustBeforeOffset),
-      isAveraging_(isAveraging){
+      isAveraging_(isAveraging),
+      strProhibitedExpiries_(prohibitedExpiries) {
     build();
 }
 
@@ -1150,6 +1154,10 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
         isAveraging_ = parseBool(XMLUtils::getNodeValue(n));
     }
 
+    if (XMLNode* n = XMLUtils::getChildNode(node, "ProhibitedExpiries")) {
+        strProhibitedExpiries_ = XMLUtils::getChildrenValues(n, "Dates", "Date");
+    }
+
     build();
 }
 
@@ -1185,6 +1193,12 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "AdjustBeforeOffset", adjustBeforeOffset_);
     XMLUtils::addChild(doc, node, "IsAveraging", isAveraging_);
 
+    if (!strProhibitedExpiries_.empty()) {
+        XMLNode* prohibitedExpiriesNode = doc.allocNode("ProhibitedExpiries");
+        XMLUtils::addChildren(doc, prohibitedExpiriesNode, "Dates", "Date", strProhibitedExpiries_);
+        XMLUtils::appendNode(node, prohibitedExpiriesNode);
+    }
+
     return node;
 }
 
@@ -1210,6 +1224,9 @@ void CommodityFutureConvention::build() {
     oneContractMonth_ = strOneContractMonth_.empty() ? Month::Jan : parseMonth(strOneContractMonth_);
     offsetDays_ = strOffsetDays_.empty() ? 0 : lexical_cast<Natural>(strOffsetDays_);
     bdc_ = strBdc_.empty() ? Preceding : parseBusinessDayConvention(strBdc_);
+    for (const string& strDate : strProhibitedExpiries_) {
+        prohibitedExpiries_.insert(parseDate(strDate));
+    }
 }
 
 FxOptionConvention::FxOptionConvention(const string& id, const string& atmType, const string& deltaType) 
