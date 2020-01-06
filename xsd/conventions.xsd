@@ -269,13 +269,15 @@
   </xs:complexType>
 
   <xs:complexType name="prohibitedExpiriesType">
-    <xs:element name="Dates">
-      <xs:complexType>
-        <xs:sequence>
-          <xs:element type="date" name="Date" minOccurs="1" maxOccurs="unbounded"/>
-        </xs:sequence>
-      </xs:complexType>
-    </xs:element>
+    <xs:sequence>
+      <xs:element name="Dates">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="date" name="Date" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="commodityFutureType">
