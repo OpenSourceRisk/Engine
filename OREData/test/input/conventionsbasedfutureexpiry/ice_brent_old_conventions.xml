@@ -1,14 +1,16 @@
 <Conventions>
   <CommodityFuture>
-    <Id>nymex_cl</Id>
+    <Id>ice_brent_old</Id>
     <AnchorDay>
-      <DayOfMonth>25</DayOfMonth>
+      <CalendarDaysBefore>15</CalendarDaysBefore>
     </AnchorDay>
     <ContractFrequency>Monthly</ContractFrequency>
-    <Calendar>CME</Calendar>
-    <ExpiryMonthLag>1</ExpiryMonthLag>
-    <OffsetDays>3</OffsetDays>
+    <Calendar>ICE_FuturesEU</Calendar>
+    <ExpiryCalendar>UK</ExpiryCalendar>
+    <ExpiryMonthLag>0</ExpiryMonthLag>
+    <OffsetDays>1</OffsetDays>
     <BusinessDayConvention>Preceding</BusinessDayConvention>
+    <AdjustBeforeOffset>true</AdjustBeforeOffset>
     <IsAveraging>false</IsAveraging>
     <OptionExpiryOffset>3</OptionExpiryOffset>
   </CommodityFuture>

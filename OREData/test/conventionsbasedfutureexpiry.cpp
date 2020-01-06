@@ -37,6 +37,7 @@ namespace {
 // List of commodity names for data test case below
 vector<string> commodityNames = {
     "ice_brent",
+    "ice_brent_old",
     "nymex_cl"
 };
 
@@ -61,7 +62,7 @@ BOOST_DATA_TEST_CASE(testExpiryDates, bdata::make(commodityNames), commodityName
     // Read in the contract months and expected expiry dates
     filename = commodityName + "_expiries.csv";
     CSVFileReader reader(TEST_INPUT_FILE(filename), true, ",");
-    BOOST_REQUIRE_EQUAL(reader.numberOfColumns(), 2);
+    BOOST_REQUIRE_EQUAL(reader.numberOfColumns(), 3);
     
     while (reader.next()) {
         
@@ -74,6 +75,19 @@ BOOST_DATA_TEST_CASE(testExpiryDates, bdata::make(commodityNames), commodityName
 
         // Check that the calculated expiry equals the expected expiry date
         BOOST_CHECK_EQUAL(expExpiryDate, expiryDate);
+
+        // If there is an expected option expiry date, test that also
+        string strExpOptionExpiry = reader.get(2);
+        if (!strExpOptionExpiry.empty()) {
+
+            // Expected option expiry date
+            Date expOptionExpiry = parseDate(strExpOptionExpiry);
+
+            // Calculate the option expiry date using the future expiry calculator
+            Date optionExpiry = cbfe.expiryDate(commodityName, contractDate.month(), contractDate.year(), 0, true);
+
+            BOOST_CHECK_EQUAL(expOptionExpiry, optionExpiry);
+        }
     }
 
 }

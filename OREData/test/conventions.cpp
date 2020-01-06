@@ -155,22 +155,25 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionConstruction) {
     // Check construction raises no errors
     vector<string> prohibitedExpiries{ "2020-12-31", "2021-12-31", "2022-12-30" };
     boost::shared_ptr<CommodityFutureConvention> convention;
+    CommodityFutureConvention::DayOfMonth dayOfMonth("31");
     BOOST_CHECK_NO_THROW(
-        convention = boost::make_shared<CommodityFutureConvention>("ICE:B", "31", "Monthly", "ICE_FuturesEU", 2, 
-            "Jan", "0", "Preceding", true, false, prohibitedExpiries));
+        convention = boost::make_shared<CommodityFutureConvention>("ICE:B", dayOfMonth, "Monthly", "ICE_FuturesEU",
+            "UK", 2, "Jan", "0", "Preceding", true, false, "3", prohibitedExpiries));
 
     // Check object
     BOOST_CHECK_EQUAL(convention->id(), "ICE:B");
-    BOOST_CHECK(convention->dayOfMonthBased());
+    BOOST_CHECK(convention->anchorType() == CommodityFutureConvention::AnchorType::DayOfMonth);
     BOOST_CHECK_EQUAL(convention->dayOfMonth(), 31);
     BOOST_CHECK_EQUAL(convention->contractFrequency(), Monthly);
     BOOST_CHECK_EQUAL(convention->calendar(), ICE(ICE::FuturesEU));
+    BOOST_CHECK_EQUAL(convention->expiryCalendar(), UnitedKingdom());
     BOOST_CHECK_EQUAL(convention->expiryMonthLag(), 2);
     BOOST_CHECK_EQUAL(convention->oneContractMonth(), Jan);
     BOOST_CHECK_EQUAL(convention->offsetDays(), 0);
     BOOST_CHECK_EQUAL(convention->businessDayConvention(), Preceding);
     BOOST_CHECK(convention->adjustBeforeOffset());
     BOOST_CHECK(!convention->isAveraging());
+    BOOST_CHECK_EQUAL(convention->optionExpiryOffset(), 3);
 
     set<Date> expExpiries{ Date(31, Dec, 2020), Date(31, Dec, 2021), Date(30, Dec, 2022) };
     BOOST_CHECK_EQUAL_COLLECTIONS(convention->prohibitedExpiries().begin(), convention->prohibitedExpiries().end(),
@@ -190,8 +193,10 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionFromXml) {
     xml.append("  </AnchorDay>");
     xml.append("  <ContractFrequency>Monthly</ContractFrequency>");
     xml.append("  <Calendar>ICE_FuturesEU</Calendar>");
+    xml.append("  <ExpiryCalendar>UK</ExpiryCalendar>");
     xml.append("  <ExpiryMonthLag>2</ExpiryMonthLag>");
     xml.append("  <IsAveraging>false</IsAveraging>");
+    xml.append("  <OptionExpiryOffset>3</OptionExpiryOffset>");
     xml.append("  <ProhibitedExpiries>");
     xml.append("    <Dates>");
     xml.append("      <Date>2020-12-31</Date>");
@@ -207,16 +212,18 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionFromXml) {
 
     // Check parsed object
     BOOST_CHECK_EQUAL(convention->id(), "ICE:B");
-    BOOST_CHECK(convention->dayOfMonthBased());
+    BOOST_CHECK(convention->anchorType() == CommodityFutureConvention::AnchorType::DayOfMonth);
     BOOST_CHECK_EQUAL(convention->dayOfMonth(), 31);
     BOOST_CHECK_EQUAL(convention->contractFrequency(), Monthly);
     BOOST_CHECK_EQUAL(convention->calendar(), ICE(ICE::FuturesEU));
+    BOOST_CHECK_EQUAL(convention->expiryCalendar(), UnitedKingdom());
     BOOST_CHECK_EQUAL(convention->expiryMonthLag(), 2);
     BOOST_CHECK_EQUAL(convention->oneContractMonth(), Jan);
     BOOST_CHECK_EQUAL(convention->offsetDays(), 0);
     BOOST_CHECK_EQUAL(convention->businessDayConvention(), Preceding);
     BOOST_CHECK(convention->adjustBeforeOffset());
     BOOST_CHECK(!convention->isAveraging());
+    BOOST_CHECK_EQUAL(convention->optionExpiryOffset(), 3);
 
     set<Date> expExpiries{ Date(31, Dec, 2020), Date(31, Dec, 2021), Date(30, Dec, 2022) };
     BOOST_CHECK_EQUAL_COLLECTIONS(convention->prohibitedExpiries().begin(), convention->prohibitedExpiries().end(),
@@ -230,9 +237,10 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionToXml) {
     // Construct the convention
     vector<string> prohibitedExpiries{ "2020-12-31", "2021-12-31", "2022-12-30" };
     boost::shared_ptr<CommodityFutureConvention> convention;
+    CommodityFutureConvention::DayOfMonth dayOfMonth("31");
     BOOST_CHECK_NO_THROW(
-        convention = boost::make_shared<CommodityFutureConvention>("ICE:B", "31", "Monthly", "ICE_FuturesEU", 2,
-            "Jan", "0", "Preceding", true, false, prohibitedExpiries));
+        convention = boost::make_shared<CommodityFutureConvention>("ICE:B", dayOfMonth, "Monthly", "ICE_FuturesEU",
+            "UK", 2, "Jan", "0", "Preceding", true, false, "3", prohibitedExpiries));
 
     // Write the convention to a string
     string xml = convention->toXMLString();
@@ -243,7 +251,7 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionToXml) {
 
     // The read convention should equal the original convention
     BOOST_CHECK_EQUAL(convention->id(), readConvention->id());
-    BOOST_CHECK_EQUAL(convention->dayOfMonthBased(), readConvention->dayOfMonthBased());
+    BOOST_CHECK(convention->anchorType() == readConvention->anchorType());
     BOOST_CHECK_EQUAL(convention->dayOfMonth(), readConvention->dayOfMonth());
     BOOST_CHECK_EQUAL(convention->contractFrequency(), readConvention->contractFrequency());
     BOOST_CHECK_EQUAL(convention->calendar(), readConvention->calendar());
