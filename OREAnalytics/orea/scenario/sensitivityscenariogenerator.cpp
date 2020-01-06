@@ -234,7 +234,7 @@ void SensitivityScenarioGenerator::generateScenarios() {
     }
 
     // fill keyToFactor and factorToKey maps from scenario descriptions
-    LOG("Fill maps linking factors with RiskFactorKeys");
+    DLOG("Fill maps linking factors with RiskFactorKeys");
     keyToFactor_.clear();
     factorToKey_.clear();
     for (Size i = 0; i < scenarioDescriptions_.size(); ++i) {
@@ -242,7 +242,7 @@ void SensitivityScenarioGenerator::generateScenarios() {
         string factor = scenarioDescriptions_[i].factor1();
         keyToFactor_[key] = factor;
         factorToKey_[factor] = key;
-        LOG("KeyToFactor map: " << key << " to " << factor);
+        DLOG("KeyToFactor map: " << key << " to " << factor);
     }
 
     LOG("sensitivity scenario generator initialised");
