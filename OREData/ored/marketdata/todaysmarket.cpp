@@ -427,7 +427,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     // add the handle to the Market Map (possible lots of times for proxies)
                     for (const auto& it : params.mapping(MarketObject::BaseCorrelation, configuration.first)) {
                         if (it.second == spec->name()) {
-                            LOG("Adding Base Correlatin (" << it.first << ") with spec " << *baseCorrelationSpec
+                            LOG("Adding Base Correlation (" << it.first << ") with spec " << *baseCorrelationSpec
                                                            << " to configuration " << configuration.first);
                             baseCorrelations_[make_pair(configuration.first, it.first)] =
                                 Handle<BaseCorrelationTermStructure<BilinearInterpolation>>(
@@ -835,8 +835,16 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             LOG("Adding CorrelationCurve (" << it.first << ") with spec " << *corrspec
                                                             << " to configuration " << configuration.first);
 
+                            // Look for & first as it avoids collisions with : which can be used in an index name
+                            // if it is not there we fall back on the old behaviour
+                            string delim;
+                            if (it.first.find('&') != std::string::npos)
+                                delim = "&";
+                            else
+                                delim = "/:";
                             vector<string> tokens;
-                            boost::split(tokens, it.first, boost::is_any_of("/:"));
+                            boost::split(tokens, it.first, boost::is_any_of(delim));
+                            QL_REQUIRE(tokens.size() == 2, "Invalid correlation spec " << it.first);
                             correlationCurves_[make_tuple(configuration.first, tokens[0], tokens[1])] =
                                 Handle<QuantExt::CorrelationTermStructure>(itr->second->corrTermStructure());
                         }

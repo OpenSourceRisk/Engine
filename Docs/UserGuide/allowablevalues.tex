@@ -177,6 +177,24 @@ TENOR                    & An integer followed by \emph{D, W, M or Y}           
   \label{tab:indices}
 \end{table}
 
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{10cm}|}
+\hline
+%\multicolumn{2}{|l|}{\lstinline!Index!}   \\ \hline
+\multicolumn{2}{|l|}{\tt FX Index}   \\ \hline
+\textbf{Index Format} &\textbf{Allowable Values}     \\ \hline
+FX-SOURCE-CCY1-CCY2    &    
+SOURCE is ECB (European Central Bank) for EUR pairs or TR20H (Thomson
+Reuters 20H) for USD pairs. For ECB CCY1 should always be EUR, and for
+TR20H CCY1 should always be USD, except for FX-TR20H-GBP-USD,
+FX-TR20H-AUD-USD and FX-TR20H-NZD-USD. Note that the FX- part of the
+string stays constant for all currency pairs. For the USD-EUR pair, ECB is used
+(FX-ECB-EUR-USD).\\ \hline
+\end{tabular}
+  \caption{Allowable values for FX index fixings.}
+  \label{tab:fxindex_data}
+\end{table}
 
 \begin{table}[H]
 \centering
@@ -232,7 +250,7 @@ conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: 
     \hline
   \end{tabu}
   \caption{Allowable values for \lstinline!Tier!}
-  \label{tab:allowable_values_tier}
+  \label{tab:tier_data}
 \end{table}
 
 \begin{table}[H]
@@ -261,5 +279,5 @@ conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: 
     \hline
   \end{tabu}
   \caption{Allowable values for \lstinline!DocClause!}
-  \label{tab:allowable_values_doc_clause}
+  \label{tab:docclause_data}
 \end{table}

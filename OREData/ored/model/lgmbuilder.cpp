@@ -72,7 +72,7 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     } else if (data_->aParamType() == ParamType::Piecewise) {
         if (data_->calibrateA() && data_->calibrationType() == CalibrationType::Bootstrap) { // override
             if (data_->aTimes().size() > 0) {
-                LOG("overriding alpha time grid with swaption expiries");
+                DLOG("overriding alpha time grid with swaption expiries");
             }
             QL_REQUIRE(swaptionExpiries_.size() > 0, "empty swaptionExpiries");
             aTimes = Array(swaptionExpiries_.begin(), swaptionExpiries_.end() - 1);
@@ -89,7 +89,7 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     } else if (data_->hParamType() == ParamType::Piecewise) {
         if (data_->calibrateH()) { // override
             if (data_->hTimes().size() > 0) {
-                LOG("overriding h time grid with swaption underlying maturities");
+                DLOG("overriding h time grid with swaption underlying maturities");
             }
             hTimes = swaptionMaturities_;
             h = Array(hTimes.size() + 1, data_->hValues()[0]); // constant array
@@ -99,29 +99,29 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     } else
         QL_FAIL("H type case not covered");
 
-    LOG("before calibration: alpha times = " << aTimes << " values = " << alpha);
-    LOG("before calibration:     h times = " << hTimes << " values = " << h);
+    DLOG("before calibration: alpha times = " << aTimes << " values = " << alpha);
+    DLOG("before calibration:     h times = " << hTimes << " values = " << h);
 
     if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
         data_->volatilityType() == LgmData::VolatilityType::HullWhite) {
-        LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstantHullWhiteAdaptor");
+        DLOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstantHullWhiteAdaptor");
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
             ccy, discountCurve_, aTimes, alpha, hTimes, h);
     } else if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
                data_->volatilityType() == LgmData::VolatilityType::Hagan) {
-        LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstant");
+        DLOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstant");
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantParametrization>(
             ccy, discountCurve_, aTimes, alpha, hTimes, h);
     } else if (data_->reversionType() == LgmData::ReversionType::Hagan &&
                data_->volatilityType() == LgmData::VolatilityType::Hagan) {
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseLinearParametrization>(
             ccy, discountCurve_, aTimes, alpha, hTimes, h);
-        LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseLinear");
+        DLOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseLinear");
     } else {
         QL_FAIL("Reversion type Hagan and volatility type HullWhite not covered");
     }
-    LOG("alpha times size: " << aTimes.size());
-    LOG("lambda times size: " << hTimes.size());
+    DLOG("alpha times size: " << aTimes.size());
+    DLOG("lambda times size: " << hTimes.size());
 
     model_ = boost::make_shared<QuantExt::LGM>(parametrization_);
     params_ = model_->params();
@@ -196,31 +196,31 @@ void LgmBuilder::performCalculations() const {
         if (data_->calibrationType() != CalibrationType::None) {
             if (data_->calibrateA() && !data_->calibrateH()) {
                 if (data_->aParamType() == ParamType::Piecewise && data_->calibrationType() == CalibrationType::Bootstrap) {
-                    LOG("call calibrateVolatilitiesIterative for alpha calibration");
+                    DLOG("call calibrateVolatilitiesIterative for alpha calibration");
                     model_->calibrateVolatilitiesIterative(swaptionBasket_, *optimizationMethod_, endCriteria_);
                 } else {
-                    LOG("call calibrateGlobal for alpha calibration");
+                    DLOG("call calibrateGlobal for alpha calibration");
                     model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
                 }
             } else {
                 if (!data_->calibrateA() && !data_->calibrateH()) {
-                    LOG("skip LGM calibration (both calibrate volatility and reversion are false)");
+                    DLOG("skip LGM calibration (both calibrate volatility and reversion are false)");
                 } else {
-                    LOG("call calibrateGlobal");
+                    DLOG("call calibrateGlobal");
                     model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
                 }
             }
-            LOG("LGM " << data_->ccy() << " calibration errors:");
+            TLOG("LGM " << data_->ccy() << " calibration errors:");
             error_ = logCalibrationErrors(swaptionBasket_, parametrization_);
             if (data_->calibrationType() == CalibrationType::Bootstrap && (data_->calibrateA() || data_->calibrateH())) {
                 QL_REQUIRE(fabs(error_) < bootstrapTolerance_,
                     "calibration error " << error_ << " exceeds tolerance " << bootstrapTolerance_);
             }
         } else {
-            LOG("skip LGM calibration (calibration type is none)");
+            DLOG("skip LGM calibration (calibration type is none)");
         }
 
-        LOG("Apply shift horizon and scale (if not 0.0 and 1.0 respectively)");
+        DLOG("Apply shift horizon and scale (if not 0.0 and 1.0 respectively)");
 
         QL_REQUIRE(data_->shiftHorizon() >= 0.0, "shift horizon must be non negative");
         QL_REQUIRE(data_->scaling() > 0.0, "scaling must be positive");
@@ -230,13 +230,13 @@ void LgmBuilder::performCalculations() const {
 
         if (data_->shiftHorizon() > 0.0) {
             Real value = -parametrization_->H(data_->shiftHorizon());
-            LOG("Apply shift horizon " << data_->shiftHorizon() << " (C=" << value << ") to the " << data_->ccy()
+            DLOG("Apply shift horizon " << data_->shiftHorizon() << " (C=" << value << ") to the " << data_->ccy()
                 << " LGM model");
             parametrization_->shift() = value;
         }
 
         if (data_->scaling() != 1.0) {
-            LOG("Apply scaling " << data_->scaling() << " to the " << data_->ccy() << " LGM model");
+            DLOG("Apply scaling " << data_->scaling() << " to the " << data_->ccy() << " LGM model");
             parametrization_->scaling() = data_->scaling();
         }
     } else {
@@ -364,7 +364,7 @@ void LgmBuilder::buildSwaptionBasket() const {
             helper = boost::make_shared<SwaptionHelper>(expiryDb, termDb, vol, iborIndex, fixedLegTenor,
                                                         fixedDayCounter, floatDayCounter, yts, calibrationErrorType_,
                                                         strikeValue, 1.0, svts_->volatilityType(), shift);
-            LOG("Added Date / Date based SwaptionHelper " << data_->ccy() << " " << expiryDb << ", " << termDb << ", "
+            DLOG("Added Date / Date based SwaptionHelper " << data_->ccy() << " " << expiryDb << ", " << termDb << ", "
                                                           << data_->optionStrikes()[j] << " : " << vol->value() << " "
                                                           << svts_->volatilityType());
             if (std::abs(helper->marketValue()) < minMarketValue &&
@@ -381,7 +381,7 @@ void LgmBuilder::buildSwaptionBasket() const {
             helper = boost::make_shared<SwaptionHelper>(expiryDb, termPb, vol, iborIndex, fixedLegTenor,
                                                         fixedDayCounter, floatDayCounter, yts, calibrationErrorType_,
                                                         strikeValue, 1.0, svts_->volatilityType(), shift);
-            LOG("Added Date / Period based SwaptionHelper " << data_->ccy() << " " << expiryDb << ", " << termPb << ", "
+            DLOG("Added Date / Period based SwaptionHelper " << data_->ccy() << " " << expiryDb << ", " << termPb << ", "
                                                             << data_->optionStrikes()[j] << " : " << vol->value() << " "
                                                             << svts_->volatilityType());
             if (std::abs(helper->marketValue()) < minMarketValue &&
@@ -399,7 +399,7 @@ void LgmBuilder::buildSwaptionBasket() const {
             helper = boost::make_shared<SwaptionHelper>(expiry, termDb, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                         floatDayCounter, yts, calibrationErrorType_, strikeValue, 1.0,
                                                         svts_->volatilityType(), shift);
-            LOG("Added Period / Date based SwaptionHelper " << data_->ccy() << " " << expiryPb << ", " << termDb << ", "
+            DLOG("Added Period / Date based SwaptionHelper " << data_->ccy() << " " << expiryPb << ", " << termDb << ", "
                                                             << data_->optionStrikes()[j] << " : " << vol->value() << " "
                                                             << svts_->volatilityType());
             if (std::abs(helper->marketValue()) < minMarketValue &&
@@ -416,7 +416,7 @@ void LgmBuilder::buildSwaptionBasket() const {
             helper = boost::make_shared<SwaptionHelper>(expiryPb, termPb, vol, iborIndex, fixedLegTenor,
                                                         fixedDayCounter, floatDayCounter, yts, calibrationErrorType_,
                                                         strikeValue, 1.0, svts_->volatilityType(), shift);
-            LOG("Added Period / Period based SwaptionHelper " << data_->ccy() << " " << expiryPb << ", " << termPb
+            DLOG("Added Period / Period based SwaptionHelper " << data_->ccy() << " " << expiryPb << ", " << termPb
                                                               << ", " << data_->optionStrikes()[j] << " : " << vol->value() << " "
                                                               << svts_->volatilityType());
             if (std::abs(helper->marketValue()) < minMarketValue &&

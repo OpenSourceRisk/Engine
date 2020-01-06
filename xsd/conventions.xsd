@@ -288,7 +288,7 @@
       </xs:element>
       <xs:element type="frequencyType" name="ContractFrequency" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Calendar" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="bool" name="ExpiryInPreviousMonth" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="ExpiryMonthLag" minOccurs="0" maxOccurs="1"/>
       <xs:element type="monthType" name="OneContractMonth" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:integer" name="OffsetDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0" maxOccurs="1"/>
