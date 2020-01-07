@@ -268,6 +268,18 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="prohibitedExpiriesType">
+    <xs:sequence>
+      <xs:element name="Dates">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="date" name="Date" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="commodityFutureType">
     <xs:sequence>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
@@ -283,20 +295,24 @@
                 </xs:restriction> 
               </xs:simpleType>
             </xs:element>
+            <xs:element type="xs:nonNegativeInteger" name="CalendarDaysBefore" />
           </xs:choice>
         </xs:complexType>
       </xs:element>
       <xs:element type="frequencyType" name="ContractFrequency" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Calendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ExpiryCalendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="ExpiryMonthLag" minOccurs="0" maxOccurs="1"/>
       <xs:element type="monthType" name="OneContractMonth" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:integer" name="OffsetDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="OffsetDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="AdjustBeforeOffset" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="IsAveraging" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="OptionExpiryOffset" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="prohibitedExpiriesType" name="ProhibitedExpiries" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="fxOption">
     <xs:sequence>
       <xs:element type="xs:string" name="Id"/>

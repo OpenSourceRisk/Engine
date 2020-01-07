@@ -42,6 +42,8 @@
 #include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/thailand.hpp>
 #include <qle/calendars/wmr.hpp>
+#include <qle/calendars/ice.hpp>
+#include <qle/calendars/cme.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
@@ -382,7 +384,21 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"US with Libor impact", UnitedStates(UnitedStates::LiborImpact)},
                                       {"WMR", Wmr()},
                                       {"ZUB", QuantExt::Switzerland()},
-
+                                      
+                                      // ICE exchange calendars
+                                      { "ICE_FuturesUS", ICE(ICE::FuturesUS) },
+                                      { "ICE_FuturesUS_1", ICE(ICE::FuturesUS_1) },
+                                      { "ICE_FuturesUS_2", ICE(ICE::FuturesUS_2) },
+                                      { "ICE_FuturesEU", ICE(ICE::FuturesEU) },
+                                      { "ICE_FuturesEU_1", ICE(ICE::FuturesEU_1) },
+                                      { "ICE_EndexEnergy", ICE(ICE::EndexEnergy) },
+                                      { "ICE_EndexEquities", ICE(ICE::EndexEquities) },
+                                      { "ICE_SwapTradeUS", ICE(ICE::SwapTradeUS) },
+                                      { "ICE_SwapTradeUK", ICE(ICE::SwapTradeUK) },
+                                      { "ICE_FuturesSingapore", ICE(ICE::FuturesSingapore) },
+                                      // CME exchange calendar
+                                      { "CME", CME() },
+                                      
                                       // Simple calendars
                                       {"WeekendsOnly", WeekendsOnly()},
                                       {"UNMAPPED", WeekendsOnly()},

@@ -121,5 +121,8 @@
     <ClCompile Include="zerocouponswap.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="conventionsbasedfutureexpiry.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
