@@ -528,13 +528,13 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
         auto it1 = std::lower_bound(fixDates.begin(), fixDates.end(), firstExerciseDate);
         fixDates.erase(fixDates.begin(), it1);
         // check we have at least 1 to stop set fault on vector(fixDates.size() - 1, true) but maybe check should be 2
-        QL_REQUIRE(fixDates.size() > 0, "No schedule dates are left in Swaption fixed leg (check exercise dates)");
+        QL_REQUIRE(fixDates.size() >= 2, "Not enough schedule dates are left in Swaption fixed leg (check exercise dates)");
         fixedSchedule = Schedule(fixDates, fixedSchedule.calendar(), Unadjusted, boost::none, boost::none, boost::none,
                                  boost::none, std::vector<bool>(fixDates.size() - 1, true));
         std::vector<Date> floatingDates = floatingSchedule.dates();
         auto it2 = std::lower_bound(floatingDates.begin(), floatingDates.end(), firstExerciseDate);
         floatingDates.erase(floatingDates.begin(), it2);
-        QL_REQUIRE(floatingDates.size() > 0, "No schedule dates are left in Swaption floating leg (check exercise dates)");
+        QL_REQUIRE(floatingDates.size() >= 2, "Not enough schedule dates are left in Swaption floating leg (check exercise dates)");
         floatingSchedule = Schedule(floatingDates, floatingSchedule.calendar(), Unadjusted, boost::none, boost::none,
                                     boost::none, boost::none, std::vector<bool>(floatingDates.size() - 1, true));
     }
