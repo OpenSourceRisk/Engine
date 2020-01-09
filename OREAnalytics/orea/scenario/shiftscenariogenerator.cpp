@@ -21,7 +21,6 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <math.h>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -148,7 +147,7 @@ ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Cannot convert shift type " << s << " to ShiftScenarioGenerator::ShiftType");
+        QL_FAIL("Cannot convert shift type \"" << s << "\" to ShiftScenarioGenerator::ShiftType");
     }
 }
 
@@ -219,7 +218,7 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
-                shiftedValues[k] += w * shiftSize * fabs(shiftedValues[k]);
+                shiftedValues[k] *= (1.0 + w * shiftSize);
         }
     } else if (j == 0) { // first shift tenor, flat extrapolation to the left
         Time t2 = tenors[j + 1];
@@ -234,7 +233,7 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
-                shiftedValues[k] += w * shiftSize * fabs(shiftedValues[k]);
+                shiftedValues[k] *= (1.0 + w * shiftSize);
         }
     } else if (j == tenors.size() - 1) { // last shift tenor, flat extrapolation to the right
         Time t0 = tenors[j - 1];
@@ -249,7 +248,7 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
-                shiftedValues[k] += w * shiftSize * fabs(shiftedValues[k]);
+                shiftedValues[k] *= (1.0 + w * shiftSize);
         }
     } else { // intermediate shift tenor
         Time t0 = tenors[j - 1];
@@ -265,7 +264,7 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
-                shiftedValues[k] += w * shiftSize * fabs(shiftedValues[k]);
+                shiftedValues[k] *= (1.0 + w * shiftSize);
         }
     }
 }

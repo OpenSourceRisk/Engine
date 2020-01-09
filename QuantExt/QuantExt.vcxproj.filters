@@ -786,6 +786,15 @@
     <ClInclude Include="qle\indexes\ibor\sofr.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvolsurfacedelta.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\ice.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\cme.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1338,6 +1347,15 @@
     </ClCompile>
     <ClCompile Include="qle\indexes\ibor\sofr.cpp">
       <Filter>indexes\ibor</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvolsurfacedelta.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\ice.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\cme.cpp">
+      <Filter>time\calendars</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

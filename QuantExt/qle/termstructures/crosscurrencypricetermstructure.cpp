@@ -27,6 +27,7 @@ using QuantLib::Time;
 using QuantLib::YieldTermStructure;
 using std::max;
 using std::min;
+using std::vector;
 
 namespace QuantExt {
 
@@ -62,6 +63,10 @@ Time CrossCurrencyPriceTermStructure::maxTime() const {
 
 Time CrossCurrencyPriceTermStructure::minTime() const {
     return basePriceTs_->minTime();
+}
+
+vector<Date> CrossCurrencyPriceTermStructure::pillarDates() const {
+    return basePriceTs_->pillarDates();
 }
 
 QuantLib::Real CrossCurrencyPriceTermStructure::priceImpl(QuantLib::Time t) const {

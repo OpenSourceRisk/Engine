@@ -1,7 +1,7 @@
 \subsubsection{Schedule Data (Rules and Dates)}\label{ss:schedule_data}
 
-The \lstinline!ScheduleData! trade component node is used within the \lstinline!LegData! trade component. The Schedule can both be
-rules based (at least one sub-node Rules exists) and dates based (at least one \lstinline!Dates! sub-node exists,
+The \lstinline!ScheduleData! trade component node is used within the \lstinline!LegData! trade component. The Schedule can either be
+rules based (at least one sub-node Rules exists) or dates based (at least one \lstinline!Dates! sub-node exists,
 where the schedule is determined directly by \lstinline!Date! child elements). In rules based schedules, the schedule dates are generated from a
 set of rules based on the entries of the sub-node Rules, having the elements StartDate, EndDate, Tenor, Calendar, Convention, TermConvention, and Rule.
 Example structures of \lstinline!ScheduleData! nodes based on rules
@@ -34,6 +34,7 @@ respectively dates are shown in Listing \ref{lst:schedule_data_true} and Listing
                  <Calendar>NYB</Calendar>
                  <Convention>Following</Convention>
                  <Tenor>3M</Tenor>
+                 <EndOfMonth>false</EndOfMonth>
                     <Dates>
                         <Date>2012-01-06</Date>
                         <Date>2012-04-10</Date>
@@ -99,9 +100,9 @@ Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_
 
 Allowable values and descriptions: See Table \ref{tab:rule} Rule. Defaults to \emph{Forward} if left blank or omitted.
 
-\item EndOfMonth [Optional]: Specifies whether the date generation rule is different for end of month. 
+\item EndOfMonth [Optional]: Specifies whether the date generation rule is different for end of month, so that the last date of each month is generated, regardless of number of days in the month.
 
-Allowable values: \emph{True, False}. Defaults to \emph{False} if left blank or omitted. Must be set to \emph{False} or omitted if the date generation Rule is set to \emph{CDS} or \emph{CDS2015}.
+Allowable values: \emph{true, false}. Defaults to \emph{false} if left blank or omitted. Must be set to \emph{false} or omitted if the date generation Rule is set to \emph{CDS} or \emph{CDS2015}.
 
 \item FirstDate [Optional]: Date for initial stub period. For date generation rules \emph{CDS} and \emph{CDS2015}, if given, this
   overwrites the first date of the schedule that is otherwise built from IMM dates.
@@ -125,7 +126,7 @@ The meanings and allowable values of the elements in a {\tt <Dates>} based secti
 
 Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to \emph{NullCalendar} if omitted, i.e. no holidays at all, not even on weekends.
 
-\item Convention [Optional]: Convention used to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based.
+\item Convention [Optional]: Roll Convention to determine payment dates, and also used to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based.
 
 Allowable values: See \lstinline!Roll Convention! in Table
 \ref{tab:allow_stand_data}. Defaults to \emph{Unadjusted} if omitted.
@@ -138,10 +139,15 @@ $=$ Day, W $=$ Week, M $=$ Month, Y $=$ Year
 
 Defaults to \emph{null} if omitted.
 
+\item EndOfMonth [Optional]: Specifies whether the end of month convention is applied when calculating reference periods
+  for irregular periods when the day count convention is ActActICMA and the schedule is dates based.
+
+Allowable values: \emph{True, False}. Defaults to \emph{False} if left blank or omitted.
+
 \item Dates: This is a sub-sub-node and contains child elements of type
   \lstinline!Date!. In this case the schedule dates are determined
   directly by the \lstinline!Date! child elements.  At least two
-  \lstinline!Date! child elements must be provided.     
+  \lstinline!Date! child elements must be provided. Note that if no calendar and roll convention is given, the specified dates must be given as adjusted dates.    
 
   Allowable values: Each \lstinline!Date!  child element can take the allowable values listed in \lstinline!Date! in
   Table \ref{tab:allow_stand_data}.

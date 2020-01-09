@@ -12,8 +12,10 @@ commodityoption.cpp
 commodityvolcurve.cpp
 commodityvolcurveconfig.cpp
 conventions.cpp
+conventionsbasedfutureexpiry.cpp
 correlationcurveconfig.cpp
 cpiswap.cpp
+creditdefaultswapdata.cpp
 crossassetmodeldata.cpp
 curveconfig.cpp
 digitalcms.cpp

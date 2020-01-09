@@ -94,7 +94,16 @@ in section \ref{sec:bootstrap_config} are used.
 The \lstinline!Segments! node gives the zero rates, discount factors and instruments that comprise the yield curve. This
 node consists of a number of child nodes where the node name depends on the segment being described. Each node has a
 \lstinline!Type! that determines its structure. The following sections describe the type of child nodes that are
-available.
+available. Note that for all segment types below, with the exception of \lstinline!DiscountRatio! and \lstinline!AverageOIS!, the 
+\lstinline!Quote! elements within the \lstinline!Quotes! node may have an \lstinline!optional! attribute indicating whether or
+not the quote is optional. Example:
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Quotes>
+  <Quote optional="true"></Quote>
+</Quotes>
+\end{minted}
+%\hrule
 
 \subsubsection*{Direct Segment}
 When the node name is \lstinline!Direct!, the \lstinline!Type! node has the value \emph{Zero} or \emph{Discount} and the

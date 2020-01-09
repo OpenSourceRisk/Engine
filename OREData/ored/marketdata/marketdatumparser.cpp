@@ -80,7 +80,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
     if (it != b.end()) {
         return it->second;
     } else {
-        QL_FAIL("Cannot convert " << s << " to InstrumentType");
+        QL_FAIL("Cannot convert \"" << s << "\" to InstrumentType");
     }
 }
 
@@ -107,7 +107,7 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
     if (it != b.end()) {
         return it->second;
     } else {
-        QL_FAIL("Cannot convert " << s << " to QuoteType");
+        QL_FAIL("Cannot convert \"" << s << "\" to QuoteType");
     }
 }
 
@@ -471,7 +471,10 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     case MarketDatum::InstrumentType::BOND: {
         QL_REQUIRE(tokens.size() == 3, "3 tokens expected in " << datumName);
         const string& securityID = tokens[2];
-        return boost::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
+        if(quoteType == MarketDatum::QuoteType::YIELD_SPREAD)
+            return boost::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
+        else if(quoteType == MarketDatum::QuoteType::PRICE)
+            return boost::make_shared<BondPriceQuote>(value, asof, datumName, securityID);
     }
 
     case MarketDatum::InstrumentType::CDS_INDEX: {

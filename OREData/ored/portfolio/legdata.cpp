@@ -497,6 +497,7 @@ void LegData::fromXML(XMLNode* node) {
         }
         XMLNode* exchangeNode = XMLUtils::getChildNode(tmp, "Exchanges");
         if (exchangeNode) {
+            
             notionalInitialExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalInitialExchange");
             notionalFinalExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalFinalExchange");
             if (XMLUtils::getChildNode(exchangeNode, "NotionalAmortizingExchange"))
@@ -896,8 +897,10 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 
     // Initial Flow Amount
     if (initNomFlow) {
-        double initFlowAmt = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[0])->nominal();
-        Date initDate = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[0])->accrualStartDate();
+        auto coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[0]);
+        QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
+        double initFlowAmt = coupon->nominal();
+        Date initDate = coupon->accrualStartDate();
         if (initFlowAmt != 0)
             leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(-initFlowAmt, initDate)));
     }
@@ -905,9 +908,13 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
     // Amortization Flows
     if (amortNomFlow) {
         for (Size i = 1; i < refLeg.size(); i++) {
-            Date flowDate = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i])->accrualStartDate();
-            Real initNom = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i - 1])->nominal();
-            Real newNom = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i])->nominal();
+            auto coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i]);
+            QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
+            auto coupon2 = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i-1]);
+            QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
+            Date flowDate = coupon->accrualStartDate();
+            Real initNom = coupon2->nominal();
+            Real newNom = coupon->nominal();
             Real flow = initNom - newNom;
             if (flow != 0)
                 leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(flow, flowDate)));
@@ -916,8 +923,10 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 
     // Final Nominal Return at Maturity
     if (finalNomFlow) {
-        double finalNomFlow = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back())->nominal();
-        Date finalDate = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back())->date();
+        auto coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back());
+        QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
+        double finalNomFlow = coupon->nominal();
+        Date finalDate = coupon->date();
         if (finalNomFlow != 0)
             leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(finalNomFlow, finalDate)));
     }

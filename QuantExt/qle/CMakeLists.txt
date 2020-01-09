@@ -1,8 +1,10 @@
 # cpp files, this list is maintained manually
 
 set(QuantExt_SRC calendars/chile.cpp
+calendars/cme.cpp
 calendars/colombia.cpp
 calendars/france.cpp
+calendars/ice.cpp
 calendars/israel.cpp
 calendars/malaysia.cpp
 calendars/netherlands.cpp
@@ -122,6 +124,7 @@ termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvariancesurfacesparse.cpp
 termstructures/blackvariancesurfacestddevs.cpp
+termstructures/blackvolsurfacedelta.cpp
 termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
@@ -168,8 +171,10 @@ time/yearcounter.cpp)
 
 set(QuantExt_HDR auto_link.hpp
 calendars/chile.hpp
+calendars/cme.hpp
 calendars/colombia.hpp
 calendars/france.hpp
+calendars/ice.hpp
 calendars/israel.hpp
 calendars/malaysia.hpp
 calendars/netherlands.hpp
@@ -274,6 +279,7 @@ instruments/rebatedexercise.hpp
 instruments/subperiodsswap.hpp
 instruments/tenorbasisswap.hpp
 interpolators/optioninterpolator2d.hpp
+math/covariancesalvage.hpp
 math/deltagammavar.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
@@ -349,6 +355,7 @@ termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvariancesurfacesparse.hpp
 termstructures/blackvariancesurfacestddevs.hpp
+termstructures/blackvolsurfacedelta.hpp
 termstructures/blackvolsurfacewithatm.hpp
 termstructures/brlcdiratehelper.hpp
 termstructures/capfloorhelper.hpp

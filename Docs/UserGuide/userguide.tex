@@ -71,6 +71,9 @@
 \newenvironment{longlisting}{\captionsetup{type=listing}}{}
 %\usepackage[colorlinks=true]{hyperref}
 
+% Inline code fragments can run over the page boundary without ragged right.
+\AtBeginDocument{\raggedright}
+
 \renewcommand\P{\ensuremath{\mathbb{P}}}
 \newcommand\E{\ensuremath{\mathbb{E}}}
 \newcommand\Q{\ensuremath{\mathbb{Q}}}
@@ -4066,7 +4069,16 @@ for the construction of a market.
 
 Listing \ref{lst:defaultcurve_configuration} shows the configuration of Default curves built from CDS spread
 quotes. The \lstinline!BootstrapConfig! node is optional and holds configuration details for the iterative bootstrap 
-that are described in section \ref{sec:bootstrap_config}.
+that are described in section \ref{sec:bootstrap_config}. Also note - if the \lstinline!Type! is not \lstinline!Benchmark!
+then \lstinline!Quote! elements within the \lstinline!Quotes! node may have an \lstinline!optional! attribute, indicating
+whether or not the quote is optional. Example:
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Quotes>
+  <Quote optional="true">CDS/CREDIT_SPREAD/BANK/SR/USD/1Y</Quote>
+</Quotes>
+\end{minted}
+%\hrule
 
 Alternatively default curves can be set up as a difference curve of two yield curves as shown in listing
 \ref{lst:defaultcurve_configuration_2}. If $P_B(0,t)$ and $P_S(0,t)$ denote the discount factors of the given benchmark
@@ -4226,12 +4238,25 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
     <CurveId>EURUSD</CurveId>
     <CurveDescription />
     <Dimension>ATM</Dimension> <!-- ATM, Smile -->
-    <SmileInterpolation>VannaVolga1</SmileInterpolation> <!-- VannaVolga1,VannaVolga2 -->
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <FXSpotID>FX/EUR/USD</FXSpotID>
     <FXForeignCurveID>Yield/USD/USD1D</FXForeignCurveID>
     <FXDomesticCurveID>Yield/EUR/EUR1D</FXDomesticCurveID>
   </FXVolatility>
+    <FXVolatility>
+    <CurveId>USDJPY</CurveId>
+    <CurveDescription />
+    <Dimension>Smile</Dimension> <!-- ATM, Smile -->
+    <SmileType>Delta</SmileType> <!--VannaVolga, Delta -->
+    <SmileInterpolation>Linear</SmileInterpolation> <!-- VannaVolga1,VannaVolga2, Linear, Cubic -->
+    <Conventions>FX-USD-JPY-OPTION-CONVENTIONS</Conventions>
+    <Deltas>10P,20P,ATM,10C,20C</Deltas>
+    <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
+    <FXSpotID>FX/USD/JPY</FXSpotID>
+    <FXForeignCurveID>Yield/JPY/JPY1D</FXForeignCurveID>
+    <FXDomesticCurveID>Yield/USD/USD1D</FXDomesticCurveID>
+  </FXVolatility>
+
   <FXVolatility>
     ...
   </FXVolatility>
@@ -4241,11 +4266,11 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
 \label{lst:fxoptionvol_configuration}
 \end{longlisting}
 
-The \lstinline!SmileInterpolation! is optional and only used when the \lstinline!Dimension! is set to \emph{Smile}. If  \lstinline!Dimension! is set to \emph{Smile}, 
-Vanna Volga is used as per (Castagna \& Mercurio - 2006). \lstinline!SmileInterpolation! specifies which approximation to use
-for implied volatilities; \emph{VannaVolga1} or \emph{VannaVolga2} for (eq. 13) or (eq. 14)  respectively. The first approximation
-is less accurate for far OTM but is always defined. The second approximation is defined in most practical applications. 
-\lstinline!SmileInterpolation! defaults to second approximation.
+The \lstinline!SmileInterpolation! is optional and only used when the \lstinline!Dimension! is set to \emph{Smile}. If  \lstinline!Dimension! is set to \emph{Smile} 
+and the  \lstinline!SmileType! is set to \emph{VannaVolga}, then Vanna Volga is used as per (Castagna \& Mercurio - 2006). \lstinline!SmileInterpolation! specifies which approximation to use for implied volatilities; \emph{VannaVolga1} or \emph{VannaVolga2} for (eq. 13) or (eq. 14)  respectively. The first approximation
+is less accurate for far OTM but is always defined. The second approximation is defined in most practical applications. \lstinline!SmileInterpolation! defaults to second approximation.
+
+If  \lstinline!Dimension! is set to \emph{Smile}  and the  \lstinline!SmileType! is set to \emph{Delta}, then Delta quotes are used to build a full surface using the deltas specified in \emph{Deltas} and the expiries in \emph{Expiries}. \lstinline!SmileInterpolation! specifies which interpolation method to use for implied volatilities; \emph{Linear} or \emph{Cubic}.
 
 \subsubsection{Equity Curve Structures}
 
@@ -4767,6 +4792,7 @@ This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning
 \input{tradedata/cpiswap}
 \input{tradedata/yyswap}
 \input{tradedata/bond}
+\input{tradedata/forwardbond}
 \input{tradedata/creditdefaultswap}
 \input{tradedata/commodityoption}
 \input{tradedata/commodityforward}
@@ -4786,6 +4812,7 @@ This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning
 \input{../../Docs/UserGuide/tradecomponents/cpileg}
 \input{../../Docs/UserGuide/tradecomponents/yyleg}
 \input{../../Docs/UserGuide/tradecomponents/zerocouponleg}
+\input{../../Docs/UserGuide/tradecomponents/cdsreferenceinformation}
 
 
 \include{allowablevalues}

@@ -10,6 +10,7 @@ QLE_TESTS = \
 	discountcurve.cpp \
 	dynamicblackvoltermstructure.cpp \
 	dynamicswaptionvolmatrix.cpp \
+	equityforwardcurvestripper.cpp \
 	fillemptymatrix.cpp \
 	index.cpp \
 	blackvariancecurve.cpp \
@@ -47,7 +48,8 @@ QLE_TESTS = \
 	capfloortermvolcurve.cpp \
 	blackvariancesurfacesparse.cpp \
 	blackvariancesurfacestddevs.cpp \
-	piecewiseatmoptionletcurve.cpp
+	piecewiseatmoptionletcurve.cpp \
+	blackvolsurfacedelta.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

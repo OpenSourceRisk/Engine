@@ -30,6 +30,7 @@ using namespace boost::unit_test_framework;
 using namespace std;
 
 using ore::data::CommoditySpotQuote;
+using ore::data::FXOptionQuote;
 using ore::data::CommodityForwardQuote;
 using ore::data::MarketDatum;
 using ore::data::parseMarketDatum;
@@ -226,7 +227,14 @@ BOOST_AUTO_TEST_CASE(testStrikeParsing) {
     checkStrikeParser("+10.0D", ore::data::Strike::Type::Delta, 10.0);
     checkStrikeParser("-25D", ore::data::Strike::Type::Delta, -25.0);
     checkStrikeParser("-25.0D", ore::data::Strike::Type::Delta, -25.0);
-
+    checkStrikeParser("10C", ore::data::Strike::Type::DeltaCall, 10.0);
+    checkStrikeParser("10c", ore::data::Strike::Type::DeltaCall, 10.0);
+    checkStrikeParser("20P", ore::data::Strike::Type::DeltaPut, 20.0);
+    checkStrikeParser("20p", ore::data::Strike::Type::DeltaPut, 20.0);
+    checkStrikeParser("25BF", ore::data::Strike::Type::BF, 25.0);
+    checkStrikeParser("25bf", ore::data::Strike::Type::BF, 25.0);
+    checkStrikeParser("25RR", ore::data::Strike::Type::RR, 25.0);
+    checkStrikeParser("25rr", ore::data::Strike::Type::RR, 25.0);
     BOOST_CHECK(true);
 }
 
@@ -468,6 +476,92 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2019-12", value), Error);
     }
 
+    BOOST_TEST_MESSAGE("Testing fx option market datum parsing...");
+
+    // test normal parsing
+    {
+        Date d(29, Jul, 2019);
+        Real value = 1.234;
+        
+        // ATM quote
+        string input = "FX_OPTION/RATE_LNVOL/EUR/USD/1M/ATM";
+        boost::shared_ptr<MarketDatum> datum = parseMarketDatum(d, input, value);
+        
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == MarketDatum::InstrumentType::FX_OPTION);
+        BOOST_CHECK(datum->quoteType() == MarketDatum::QuoteType::RATE_LNVOL);
+        
+        boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(1, Months));
+        BOOST_CHECK(q->strike() == "ATM");
+        
+        //Butterfly quote
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/25BF";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "25BF");
+
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/10BF";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "10BF");
+        
+        //Risk Reversal quote
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/25RR";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "25RR");
+
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/10RR";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "10RR");
+        
+        //Strike based quote
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/10C";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "10C");
+        
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/20P";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "20P");
+        
+        // test possible exceptions
+        {
+            Date d(29, Jul, 2019);
+            Real value = 300.16535;
+            
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/ATMF", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/BBFF", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/1LRR", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/10D", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/2019-12", value), Error);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
