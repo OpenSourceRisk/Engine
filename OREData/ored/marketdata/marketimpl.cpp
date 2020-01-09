@@ -116,6 +116,12 @@ lookup(const map<tuple<string, string, string>, Handle<QuantExt::CorrelationTerm
 
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, const string& key,
                                                   const string& configuration) const {
+    // we allow for ibor index names as keys and return the index forward curve in case of a match
+    boost::shared_ptr<IborIndex> notUsed;
+    if (tryParseIborIndex(key, notUsed)) {
+        return iborIndex(key, configuration)->forwardingTermStructure();
+    }
+    // no ibor index found under key => look for a genuine yield curve
     return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, type, configuration, "yield curve");
 }
 
@@ -125,7 +131,7 @@ Handle<YieldTermStructure> MarketImpl::discountCurve(const string& key, const st
 }
 
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const string& key, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::Yield, configuration, "yield curve");
+    return yieldCurve(YieldCurveType::Yield, key, configuration);
 }
 
 Handle<IborIndex> MarketImpl::iborIndex(const string& key, const string& configuration) const {
