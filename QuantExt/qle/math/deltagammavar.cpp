@@ -70,21 +70,23 @@ void moments(const Matrix& omega, const Array& delta, const Matrix& gamma, Real&
 }
 } // namespace
 
-Real deltaVar(const Matrix& omega, const Array& delta, const Real p) {
+Real deltaVar(const Matrix& omega, const Array& delta, const Real p, const CovarianceSalvage& sal) {
     detail::check(p);
     detail::check(omega, delta);
     Real num = detail::absMax(delta);
     if (close_enough(num, 0.0))
         return 0.0;
     Array tmpDelta = delta / num;
-    return std::sqrt(DotProduct(tmpDelta, omega * tmpDelta)) * QuantLib::InverseCumulativeNormal()(p) * num;
+    return std::sqrt(DotProduct(tmpDelta, sal.salvage(omega).first * tmpDelta)) *
+           QuantLib::InverseCumulativeNormal()(p) * num;
 } // deltaVar
 
-Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p) {
+Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p,
+                         const CovarianceSalvage& sal) {
     detail::check(p);
     Real s = QuantLib::InverseCumulativeNormal()(p);
     Real num = 0.0, mu = 0.0, variance = 0.0;
-    moments(omega, delta, gamma, num, mu, variance);
+    moments(sal.salvage(omega).first, delta, gamma, num, mu, variance);
     if (close_enough(num, 0.0) || close_enough(variance, 0.0))
         return 0.0;
     return (std::sqrt(variance) * s + mu) * num;

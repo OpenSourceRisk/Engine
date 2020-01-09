@@ -14,7 +14,8 @@ this_include_HEADERS = \
 	stabilisedglls.hpp \
 	deltagammavar.hpp \
 	trace.hpp \
-	fillemptymatrix.hpp
+	fillemptymatrix.hpp \
+	covariancesalvage.hpp
 
 noinst_LTLIBRARIES = libMath.la
 
