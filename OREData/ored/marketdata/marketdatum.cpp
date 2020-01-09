@@ -27,9 +27,9 @@ namespace ore {
 namespace data {
 
 EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
-                                     string equityName, string ccy, string expiry, string strike)
+                                     string equityName, string ccy, string expiry, string strike, bool isCall)
     : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_OPTION), eqName_(equityName), ccy_(ccy),
-      expiry_(expiry), strike_(strike) {
+      expiry_(expiry), strike_(strike), isCall_(isCall) {
 
     // we will call a parser on the expiry string, to ensure it is a correctly-formatted date or tenor
     Date tmpDate;

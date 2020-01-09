@@ -87,19 +87,19 @@ public:
         curveTenors[0] = 0 * Days;
         prices[0] = 14.5;
         shiftedPrices[0] = 16.6;
-        curveTenors[1] = 6 * Months;
+        curveTenors[1] = 181 * Days;
         prices[1] = 16.7;
         shiftedPrices[1] = 19.9;
-        curveTenors[2] = 1 * Years;
+        curveTenors[2] = 365 * Days;
         prices[2] = 19.9;
         shiftedPrices[2] = 24.4;
-        curveTenors[3] = 18 * Months;
+        curveTenors[3] = 546 * Days;
         prices[3] = 24.5;
         shiftedPrices[3] = 31.3;
-        curveTenors[4] = 2 * Years;
+        curveTenors[4] = 730 * Days;
         prices[4] = 28.5;
         shiftedPrices[4] = 38.1;
-        curveTenors[5] = 5 * Years;
+        curveTenors[5] = 1826 * Days;
         prices[5] = 38.8;
         shiftedPrices[5] = 54.5;
 
@@ -148,16 +148,6 @@ public:
         return result;
     }
 
-    // Give curve times for one of the two test dates
-    vector<Time> times(Size testDatesIdx) const {
-        vector<Time> result(curveTenors.size());
-        for (Size i = 0; i < result.size(); i++) {
-            Date maturity = testDates[testDatesIdx] + curveTenors[i];
-            result[i] = curveDayCounter.yearFraction(testDates[testDatesIdx], maturity);
-        }
-        return result;
-    }
-
     // Update quotes with new shifted prices
     void updateQuotes() const {
         for (Size i = 0; i < quotes.size(); i++) {
@@ -169,11 +159,6 @@ public:
 // Perform some common curve checks on the first test date
 template <class I> void commonChecks(CommonData& td, InterpolatedPriceCurve<I>& priceCurve, bool isLogLinear = false) {
     BOOST_TEST_MESSAGE("Performing common curve checks");
-
-    // Check the prices at the pillar times
-    for (Size i = 0; i < td.times(0).size(); i++) {
-        BOOST_CHECK_CLOSE(td.prices[i], priceCurve.price(td.times(0)[i], td.extrapolate), td.tolerance);
-    }
 
     // Check the prices at the pillar dates
     for (Size i = 0; i < td.dates(0).size(); i++) {
@@ -195,9 +180,9 @@ BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(PriceCurveTest)
 
-BOOST_AUTO_TEST_CASE(testTimesAndPricesCurve) {
+BOOST_AUTO_TEST_CASE(testPeriodsAndPricesCurve) {
 
-    BOOST_TEST_MESSAGE("Testing interpolated price curve built from times and prices");
+    BOOST_TEST_MESSAGE("Testing interpolated price curve built from periods and prices");
 
     CommonData td;
 
@@ -205,14 +190,13 @@ BOOST_AUTO_TEST_CASE(testTimesAndPricesCurve) {
     Settings::instance().evaluationDate() = td.testDates[0];
 
     // Create a linearly interpolated price curve
-    vector<Time> times = td.times(0);
-    InterpolatedPriceCurve<Linear> priceCurve(times, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<Linear> priceCurve(td.curveTenors, td.prices, td.curveDayCounter);
 
     // Common checks on curve
     commonChecks(td, priceCurve, false);
 
     // Create a loglinearly interpolated price curve
-    InterpolatedPriceCurve<LogLinear> logPriceCurve(times, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<LogLinear> logPriceCurve(td.curveTenors, td.prices, td.curveDayCounter);
 
     // Common checks on curve
     commonChecks(td, logPriceCurve, true);
@@ -233,9 +217,9 @@ BOOST_AUTO_TEST_CASE(testTimesAndPricesCurve) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(testTimesAndQuotesCurve) {
+BOOST_AUTO_TEST_CASE(testPeriodsAndQuotesCurve) {
 
-    BOOST_TEST_MESSAGE("Testing interpolated price curve built from times and quotes");
+    BOOST_TEST_MESSAGE("Testing interpolated price curve built from periods and quotes");
 
     CommonData td;
 
@@ -243,14 +227,13 @@ BOOST_AUTO_TEST_CASE(testTimesAndQuotesCurve) {
     Settings::instance().evaluationDate() = td.testDates[0];
 
     // Create a linearly interpolated price curve
-    vector<Time> times = td.times(0);
-    InterpolatedPriceCurve<Linear> priceCurve(times, td.quotes, td.curveDayCounter);
+    InterpolatedPriceCurve<Linear> priceCurve(td.curveTenors, td.quotes, td.curveDayCounter);
 
     // Common checks on curve
     commonChecks(td, priceCurve, false);
 
     // Create a loglinearly interpolated price curve
-    InterpolatedPriceCurve<LogLinear> logPriceCurve(times, td.quotes, td.curveDayCounter);
+    InterpolatedPriceCurve<LogLinear> logPriceCurve(td.curveTenors, td.quotes, td.curveDayCounter);
 
     // Common checks on curve
     commonChecks(td, logPriceCurve, true);
@@ -302,13 +285,13 @@ BOOST_AUTO_TEST_CASE(testDatesAndPricesCurve) {
 
     // Create a linearly interpolated price curve
     vector<Date> dates = td.dates(0);
-    InterpolatedPriceCurve<Linear> priceCurve(dates, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<Linear> priceCurve(dates[0], dates, td.prices, td.curveDayCounter);
 
     // Common checks on curve
     commonChecks(td, priceCurve, false);
 
     // Create a loglinearly interpolated price curve
-    InterpolatedPriceCurve<LogLinear> logPriceCurve(dates, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<LogLinear> logPriceCurve(dates[0], dates, td.prices, td.curveDayCounter);
 
     // Common checks on curve
     commonChecks(td, logPriceCurve, true);
@@ -340,13 +323,13 @@ BOOST_AUTO_TEST_CASE(testDatesAndQuotesCurve) {
 
     // Create a linearly interpolated price curve
     vector<Date> dates = td.dates(0);
-    InterpolatedPriceCurve<Linear> priceCurve(dates, td.quotes, td.curveDayCounter);
+    InterpolatedPriceCurve<Linear> priceCurve(dates[0], dates, td.quotes, td.curveDayCounter);
 
     // Common checks on curve
     commonChecks(td, priceCurve, false);
 
     // Create a loglinearly interpolated price curve
-    InterpolatedPriceCurve<LogLinear> logPriceCurve(dates, td.quotes, td.curveDayCounter);
+    InterpolatedPriceCurve<LogLinear> logPriceCurve(dates[0], dates, td.quotes, td.curveDayCounter);
 
     // Common checks on curve
     commonChecks(td, logPriceCurve, true);
@@ -378,7 +361,7 @@ BOOST_AUTO_TEST_CASE(testDatesAndQuotesCurve) {
 
 BOOST_AUTO_TEST_CASE(testNoTimeZeroWorks) {
 
-    BOOST_TEST_MESSAGE("Test building with times without a time 0 works with extrapolation on");
+    BOOST_TEST_MESSAGE("Test building with periods without a time 0 works with extrapolation on");
 
     CommonData td;
 
@@ -386,17 +369,17 @@ BOOST_AUTO_TEST_CASE(testNoTimeZeroWorks) {
     Settings::instance().evaluationDate() = td.testDates[0];
 
     // Create the price curve after removing the time 0 pillar
-    vector<Time> times = td.times(0);
-    times.erase(times.begin());
+    vector<Period> tenors = td.curveTenors;
+    tenors.erase(tenors.begin());
     td.prices.erase(td.prices.begin());
-    InterpolatedPriceCurve<Linear> priceCurve(times, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<Linear> priceCurve(tenors, td.prices, td.curveDayCounter);
 
     // Check requests for prices between first curve time ~0.5 and 0
     BOOST_CHECK_CLOSE(15.1391304347826, priceCurve.price(0.25, td.extrapolate), td.tolerance);
     BOOST_CHECK_CLOSE(13.5521739130435, priceCurve.price(0.0, td.extrapolate), td.tolerance);
 
     // Test log-linear interpolation also
-    InterpolatedPriceCurve<LogLinear> logPriceCurve(times, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<LogLinear> logPriceCurve(tenors, td.prices, td.curveDayCounter);
     BOOST_CHECK_CLOSE(15.331307232214800, logPriceCurve.price(0.25, td.extrapolate), td.tolerance);
     BOOST_CHECK_CLOSE(14.054688467053400, logPriceCurve.price(0.0, td.extrapolate), td.tolerance);
 
@@ -415,8 +398,7 @@ BOOST_AUTO_TEST_CASE(testNegativeTimeRequestThrows) {
     Settings::instance().evaluationDate() = today;
 
     // Create the price curve
-    vector<Time> times = td.times(0);
-    InterpolatedPriceCurve<Linear> priceCurve(times, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<Linear> priceCurve(td.curveTenors, td.prices, td.curveDayCounter);
 
     // Check requests for prices at times < 0
     Time t = -0.5;
@@ -427,30 +409,6 @@ BOOST_AUTO_TEST_CASE(testNegativeTimeRequestThrows) {
     // Update evaluation date and request on today should throw similarly
     Settings::instance().evaluationDate() = today + 1 * Weeks;
     BOOST_CHECK_THROW(priceCurve.price(today, td.extrapolate), QuantLib::Error);
-}
-
-BOOST_AUTO_TEST_CASE(testNegativePriceThrows) {
-
-    BOOST_TEST_MESSAGE("Test that attempting to return a negative price gives an error");
-
-    CommonData td;
-
-    // Look at the first test date
-    Date today = td.testDates[0];
-    Settings::instance().evaluationDate() = today;
-
-    // Replace the last quote with a quote that will give a negative extrapolated price
-    td.pQuotes[5]->setValue(1.0);
-
-    // Create the price curve
-    vector<Time> times = td.times(0);
-    InterpolatedPriceCurve<Linear> priceCurve(times, td.quotes, td.curveDayCounter);
-
-    // Asking for extrapolated price should give an error
-    Time t = times.back() + 1.0;
-    Date d = td.dates(0).back() + 1 * Years;
-    BOOST_CHECK_THROW(priceCurve.price(t, td.extrapolate), QuantLib::Error);
-    BOOST_CHECK_THROW(priceCurve.price(d, td.extrapolate), QuantLib::Error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

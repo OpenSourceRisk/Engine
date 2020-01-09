@@ -37,12 +37,20 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     QL_REQUIRE(swap_.leg().legType() == "Fixed", "CreditDefaultSwap requires Fixed leg");
     Schedule schedule = makeSchedule(swap_.leg().schedule());
-    Calendar calendar = parseCalendar(swap_.leg().schedule().rules().front().calendar());
-    BusinessDayConvention payConvention = parseBusinessDayConvention(swap_.leg().paymentConvention());
+    
+    BusinessDayConvention payConvention = Following;
+    if (!swap_.leg().paymentConvention().empty()) {
+        payConvention = parseBusinessDayConvention(swap_.leg().paymentConvention());
+    }
+
     Protection::Side prot = swap_.leg().isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
     QL_REQUIRE(swap_.leg().notionals().size() == 1, "CreditDefaultSwap requires single notional");
     notional_ = swap_.leg().notionals().front();
-    DayCounter dc = parseDayCounter(swap_.leg().dayCounter());
+
+    DayCounter dc = Actual360(true);
+    if (!swap_.leg().dayCounter().empty()) {
+        dc = parseDayCounter(swap_.leg().dayCounter());
+    }
 
     // In general for CDS and CDS index trades, the standard day counter is Actual/360 and the final
     // period coupon accrual includes the maturity date.

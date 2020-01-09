@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="qle\quantext.hpp" />
@@ -552,6 +552,12 @@
     <ClInclude Include="qle\calendars\thailand.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\switzerland.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\wmr.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
     <ClInclude Include="qle\cashflows\equitycoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
@@ -648,12 +654,6 @@
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\strippedyoyinflationoptionletvol.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
     <ClInclude Include="qle\math\fillemptymatrix.hpp">
       <Filter>math</Filter>
     </ClInclude>
@@ -672,23 +672,128 @@
     <ClInclude Include="qle\math\fillemptymatrix.hpp">
       <Filter>math</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\optionletcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\capfloorhelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\piecewiseoptionletcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\piecewiseoptionletstripper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\blackvariancesurfacesparse.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\krwcd.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\strippedoptionletadapter.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\optionletstripperwithatm.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
-    <ClInclude Include="qle\indexes\bondindex.hpp">
-      <Filter>indexes</Filter>
+    <ClInclude Include="qle\termstructures\equityforwardcurvestripper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\interpolators\optioninterpolator2d.hpp">
+      <Filter>interpolators</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\optionpricesurface.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\strippedyoyinflationoptionletvol.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\strippedcpivolatilitystructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp">
+      <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\pricingengines\discountingforwardbondengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\bondindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
     <ClInclude Include="qle\instruments\forwardbond.hpp">
       <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\iterativebootstrap.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\ilstelbor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\idrjibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\kinterpolatedyoyoptionletvolatilitysurface.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\cacpi.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\capfloortermvolcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\piecewiseatmoptionletcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\baroneadesiwhaleyengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\commodityindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\primeindex.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvariancesurfacestddevs.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blackmonotonevarvoltermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\crosscurrencypricetermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\time\futureexpirycalculator.hpp">
+      <Filter>time</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\lgmconvolutionsolver.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\israel.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\rebatedexercise.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\ester.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\sofr.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvolsurfacedelta.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\ice.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\cme.hpp">
+      <Filter>time\calendars</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -736,6 +841,9 @@
     </Filter>
     <Filter Include="time\calendars">
       <UniqueIdentifier>{127ebe18-cbb6-4387-b8ac-95cae7669e94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="interpolators">
+      <UniqueIdentifier>{5afe79b0-37bd-4c42-a9f7-5df8719d365c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1093,6 +1201,12 @@
     <ClCompile Include="qle\calendars\thailand.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
+    <ClCompile Include="qle\calendars\switzerland.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\wmr.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
     <ClCompile Include="qle\cashflows\equitycoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
@@ -1153,12 +1267,6 @@
     <ClCompile Include="qle\termstructures\flatcorrelation.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\strippedyoyinflationoptionletvol.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
     <ClCompile Include="qle\math\fillemptymatrix.cpp">
       <Filter>math</Filter>
     </ClCompile>
@@ -1174,26 +1282,80 @@
     <ClCompile Include="qle\indexes\ibor\brlcdi.cpp">
       <Filter>indexes\ibor</Filter>
     </ClCompile>
+    <ClCompile Include="qle\indexes\ibor\primeindex.cpp">
+      <Filter>indexes\ibor</Filter>
+    </ClCompile>
     <ClCompile Include="qle\time\yearcounter.cpp">
       <Filter>time</Filter>
     </ClCompile>
     <ClCompile Include="qle\math\fillemptymatrix.cpp">
       <Filter>math</Filter>
     </ClCompile>
+    <ClCompile Include="qle\termstructures\capfloorhelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
     <ClCompile Include="qle\termstructures\blackvariancesurfacesparse.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.cpp">
-      <Filter>cashflows</Filter>
+    <ClCompile Include="qle\termstructures\equityforwardcurvestripper.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\indexes\bondindex.cpp">
-      <Filter>indexes</Filter>
+    <ClCompile Include="qle\termstructures\strippedyoyinflationoptionletvol.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\discountingforwardbondengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
+    <ClCompile Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\bondindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
     <ClCompile Include="qle\instruments\forwardbond.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\baroneadesiwhaleyengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\commodityindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvariancesurfacestddevs.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\crosscurrencypricetermstructure.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\israel.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\lgmconvolutionsolver.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\israel.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\rebatedexercise.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\ibor\ester.cpp">
+      <Filter>indexes\ibor</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\ibor\sofr.cpp">
+      <Filter>indexes\ibor</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvolsurfacedelta.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\ice.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\cme.cpp">
+      <Filter>time\calendars</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -65,6 +65,11 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
+    //! \name Trade
+    //@{
+    bool hasCashflows() const override { return false; }
+    //@}
+
 private:
     OptionData optionData_;
     std::string commodityName_;

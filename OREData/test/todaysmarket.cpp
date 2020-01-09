@@ -54,6 +54,9 @@ public:
     const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const;
     const std::vector<Fixing>& loadFixings() const { return fixings_; }
     const std::vector<Fixing>& loadDividends() const { return dividends_; }
+    void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addDividend(QuantLib::Date date, const string& name, QuantLib::Real value) {}
 
 private:
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
@@ -357,34 +360,34 @@ MarketDataLoader::MarketDataLoader() {
         ("20160226 SWAPTION/RATE_LNVOL/USD/25Y/9Y/ATM 0.278568")
         // USD lognormal capfloor quotes
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.015 0.44451")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.01 0.447381")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.010 0.447381")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.025 0.452925")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.02 0.450945")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.03 0.447381")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.020 0.450945")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.030 0.447381")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.005 0.570834")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.015 0.484806")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.01 0.51695")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.010 0.51695")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.025 0.459228")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.02 0.468832")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.03 0.440804")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.020 0.468832")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.030 0.440804")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.005 0.661108")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.015 0.5928")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.01 0.670605")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.010 0.670605")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.025 0.50559")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.02 0.54302")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.03 0.472055")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.020 0.54302")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.030 0.472055")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.005 0.87571")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.015 0.584226")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.01 0.686805")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.010 0.686805")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.025 0.470394")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.02 0.518661")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.03 0.431055")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.020 0.518661")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.030 0.431055")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.005 0.931953")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.015 0.54423")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.01 0.65691")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.010 0.65691")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.025 0.423")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.02 0.47358")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.03 0.38394")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.020 0.47358")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.030 0.38394")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.005 0.91791")
         // equity
         ("20160226 EQUITY/PRICE/SP5/USD 1500.00")
@@ -716,7 +719,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // USD Lognormal capfloor volatility "curve" configuration
     configs->capFloorVolCurveConfig("USD_CF_LN") = boost::make_shared<CapFloorVolatilityCurveConfig>(
         "USD_CF_LN", "USD Lognormal capfloor volatilities", CapFloorVolatilityCurveConfig::VolatilityType::Lognormal,
-        extrapolate, false, false, capTenors, strikes, dayCounter, 2, UnitedStates(), bdc, "USD-LIBOR-3M",
+        extrapolate, false, false, capTenors, strikes, dayCounter, 0, UnitedStates(), bdc, "USD-LIBOR-3M",
         "Yield/USD/USD1D");
 
     vector<string> optionTenors2{"1Y"};
@@ -763,7 +766,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // clang-format on
 
     configs->commodityCurveConfig("GOLD_USD") =
-        boost::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", "COMMODITY/PRICE/GOLD/USD", commodityQuotes);
+        boost::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", commodityQuotes, "COMMODITY/PRICE/GOLD/USD");
 
     return configs;
 }
@@ -841,11 +844,11 @@ BOOST_AUTO_TEST_CASE(testNormalOptionletVolatility) {
     vector<Rate> strikes{0.005, 0.010, 0.015, 0.020, 0.025, 0.030};
     // clang-format off
     vector<vector<Real>> cachedValues{
-        {0.004336062, 0.004790687, 0.005541127, 0.006411979, 0.007242633, 0.007889790},
-        {0.005898069, 0.006473308, 0.006925258, 0.007481662, 0.008133596, 0.008559820},
-        {0.008870795, 0.009369768, 0.009720950, 0.010012715, 0.010239636, 0.010488415},
-        {0.008517429, 0.008700688, 0.008661620, 0.008631937, 0.008657445, 0.008690870},
-        {0.007641227, 0.007821399, 0.007889659, 0.007980691, 0.008075815, 0.008235815}
+        { 0.004336061, 0.004790686, 0.005541127, 0.006411979, 0.007242633, 0.007889790 },
+        { 0.005904299, 0.006478381, 0.006929551, 0.007486301, 0.008139029, 0.008566001 },
+        { 0.008871166, 0.009370956, 0.009723190, 0.010015776, 0.010243227, 0.010492463 },
+        { 0.008517407, 0.008700672, 0.008661611, 0.008631934, 0.008657444, 0.008690871 },
+        { 0.007641226, 0.007821393, 0.007889650, 0.007980682, 0.008075806, 0.008235808 }
     };
     // clang-format on
 

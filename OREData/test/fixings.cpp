@@ -29,6 +29,7 @@
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/fixings.hpp>
 #include <ored/utilities/csvfilereader.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <oret/datapaths.hpp>
@@ -141,7 +142,8 @@ public:
 
         string marketFile = TEST_INPUT_FILE("market/market.txt");
         string fixingsFile = TEST_INPUT_FILE("market/fixings_for_bootstrap.txt");
-        CSVLoader loader(marketFile, fixingsFile, false);
+        string dividendsFile = TEST_INPUT_FILE("market/dividends.txt");
+        CSVLoader loader(marketFile, fixingsFile, dividendsFile, false);
 
         bool continueOnError = false;
         boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
@@ -376,6 +378,29 @@ BOOST_FIXTURE_TEST_CASE(testFxNotionalResettingSwapFirstCoupon, F) {
 
     // Trade should now not throw when we try to price it
     BOOST_CHECK_NO_THROW(p.trades()[0]->instrument()->NPV());
+}
+
+BOOST_FIXTURE_TEST_CASE(testDividends, F) {
+
+    const string equityName = "RIC:DMIWO00000GUS";
+
+    auto eq = parseEquityIndex("EQ-" + equityName);
+    BOOST_REQUIRE_MESSAGE(eq, "Could not parse equity index EQ-" + equityName);
+
+    BOOST_REQUIRE_MESSAGE(IndexManager::instance().hasHistory(eq->dividendName()),
+        "Could not find index " << eq->dividendName() << " in IndexManager");
+    const TimeSeries<Real>& dividends = eq->dividendFixings();
+
+    // Expected results
+    map<Date, Real> exp = {
+        { Date(1, Nov, 2018), 25.313 },
+        { Date(1, Dec, 2018), 15.957 }
+    };
+
+    BOOST_CHECK_EQUAL(dividends.size(), exp.size());
+    for (const auto& kv : exp) {
+        BOOST_CHECK_EQUAL(dividends[kv.first], kv.second);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

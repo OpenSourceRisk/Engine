@@ -3,6 +3,8 @@ OREDATA_TESTS = \
 	testsuite.cpp \
 	bond.cpp \
 	calendars.cpp \
+	calendaradjustment.cpp \
+	creditdefaultswapdata.cpp \
 	fxoption.cpp \
 	ccyswapwithresets.cpp \
 	cpiswap.cpp \
@@ -36,7 +38,8 @@ OREDATA_TESTS = \
     digitalcms.cpp \
 	fixings.cpp \
     zerocouponswap.cpp \
-	mxnircurves.cpp
+	mxnircurves.cpp \
+	conventionsbasedfutureexpiry.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

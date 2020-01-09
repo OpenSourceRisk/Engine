@@ -15,7 +15,7 @@
       INR, ISK, JPY, KRW, LUF, NLG, NOK, NZD, PLN, PTE, RON, SEK, SGD,
       THB, TRY, TWD, USD, ZAR, ARS, CLP, COP, IDR, ILS, KWD, PEN, MXN,
     SAR, RUB, TND, MYR, UAH, KZT, QAR, MXV, CLF, EGP, BHD, OMR, VND,
-    AED, PHP, NGN, MAD},  Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
+    AED, PHP, NGN, MAD, UYU},  Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
     %\lstinline!DayCount!  \lstinline!Convention! & \begin{tabular}[l]{@{}l@{}}\indent Actual 360 can be expressed by:\\ \emph{A360, Actual/360, ACT/360}\\ \indent Actual 365 Fixed can be expressed by: \\ \emph{A365, A365F, Actual/365, Actual/365 (fixed)} \\ \indent Thirty 360 (US) can be expressed by: \\ \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT} \\ \indent Thirty 360 (European) can be expressed by: \\ \emph{30E/360, 30E/360 (Eurobond Basis)}\\ \indent Thirty 360 (Italian) is expressed by: \\ \emph{30/360 (Italian)}  \\ \indent Actual Actual (ISDA) can be expressed by: \\ \emph{ActActISDA, ActualActual (ISDA), ACT/ACT, ACT} \\ \indent Actual Actual (ISMA) can be expressed by: \\ \emph{ActActISMA, ActualActual (ISMA)} \\ \indent Actual Actual (AFB) can be expressed by:\\ \emph{ActActAFB, Actual/Actual (AFB)} \end{tabular}  \\ \hline
     \lstinline!Roll Convention! & \begin{tabular}[l]{@{}l@{}} 
 \emph{F,  Following, FOLLOWING}\\ 
@@ -28,51 +28,90 @@
   \label{tab:allow_stand_data}
 \end{table}
 
-\begin{table}[H]
-  \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+\begin{longtable}{| p{.30\textwidth} | p{.70\textwidth} |}
     \hline
-%    \multicolumn{2}{|l|} {\lstinline{Calendar} } \\ \hline
     \multicolumn{2}{|l|} {\tt Calendar}  \\ \hline
     \bfseries{Allowable Values} & \bfseries{Resulting Calendar} \\
     \hline
     \emph{TARGET, TGT, EUR} & Target Calendar  \\ \hline
-    \emph{CA,TRB, CAD} & Canada Calendar \\ \hline
-    \emph{TKB, JP, JPY} & Japan Calendar \\ \hline
-    \emph{ZUB, CHF} & Switzerland Calendar \\ \hline
-    \emph{GB, LNB, UK} & UK Calendar \\ \hline
+    \emph{CA, CAN, CAD, TRB} & Canada Calendar \\ \hline
+    \emph{JP, JPN, JPY, TKB} & Japan Calendar \\ \hline
+    \emph{CH, CHE, CHF, ZUB} & Switzerland Calendar \\ \hline
+    \emph{GB, GBR, GBP, LNB, UK} & UK Calendar \\ \hline
     \emph{London stock exchange} & London Stock Exchange Calendar \\ \hline
-    \emph{US, NYB, USD} & US Calendar \\ \hline
+    \emph{US, USA, USD, NYB} & US Calendar \\ \hline
     \emph{US-SET} & US Settlement Calendar \\ \hline
     \emph{US-GOV} & US Government Bond Calendar \\ \hline    
     \emph{US-NYSE, New York stock exchange} & US NYSE Calendar \\ \hline
     \emph{US with Libor impact} & US Calendar for Libor fixings \\ \hline
     \emph{US-NERC} & US NERC Calendar \\ \hline  
-    \emph{AU, AUD} & Australia Calendar \\ \hline
-    \emph{SA, ZAR} & South Africa Calendar \\ \hline
-    \emph{SS, SEK} & Sweden Calendar \\ \hline
-    \emph{ARS} & Argentina Calendar \\ \hline
-    \emph{BRL} & Brazil Calendar \\ \hline
-    \emph{CNY} & China Calendar \\ \hline
-    \emph{CZK} & Czech Republic Calendar \\ \hline
-    \emph{DEN, DKK} & Denmark Calendar \\ \hline
-    \emph{FIN} & Finland Calendar \\ \hline
-    \emph{HKD} & HongKong Calendar \\ \hline
-    \emph{ISK} & Iceland Calendar \\ \hline
-    \emph{INR} & India Calendar \\ \hline
-    \emph{IDR} & Indonesia Calendar \\ \hline
-    \emph{MXN} & Mexico Calendar \\ \hline
-    \emph{NZD} & New Zealand Calendar\\ \hline
-    \emph{NOK} & Norway Calendar \\ \hline
-    \emph{PLN} & Poland Calendar \\ \hline
-    \emph{RUB} & Russia Calendar \\ \hline
-    \emph{SAR} & Saudi Arabia \\ \hline
-    \emph{SGD} & Singapore Calendar \\ \hline
-    \emph{KRW} & South Korea Calendar \\ \hline
-    \emph{TWD} & Taiwan Calendar \\ \hline
-    \emph{TRY} & Turkey Calendar \\ \hline
-    \emph{UAH} & Ukraine Calendar \\ \hline
+    \emph{AU, AUD, AUS} & Australia Calendar \\ \hline
+    \emph{ZA, ZAF, ZAR, SA} & South Africa Calendar \\ \hline
+    \emph{SE, SWE, SEK, SS} & Sweden Calendar \\ \hline
+    \emph{AR, ARG, ARS} & Argentina Calendar \\ \hline
+    \emph{BW, BWA, BWP} & Botswana Calendar \\ \hline
+    \emph{BR, BRA, BRL} & Brazil Calendar \\ \hline
+    \emph{CL, CHL, CLP} & Chile Calendar \\ \hline
+    \emph{CN, CHN, CNH, CNY} & China Calendar \\ \hline
+    \emph{CO, COL, COP} & Colombia Calendar \\ \hline
+    \emph{CZ, CZE, CZK} & Czech Republic Calendar \\ \hline
+    \emph{DK, DNK, DKK, DEN} & Denmark Calendar \\ \hline
+    \emph{FI, FIN} & Finland Calendar \\ \hline
+    \emph{FR, FRF} & France Calendar \\ \hline
+    \emph{DE, DEU} & Germany Calendar \\ \hline
+    \emph{HK, HKG, HKD} & Hong Kong Calendar \\ \hline
+    \emph{HU, HUN, HUF} & Hungary Calendar \\ \hline
+    \emph{IS, ISL, ISK} & Iceland Calendar \\ \hline
+    \emph{IN, IND, INR} & India Calendar \\ \hline
+    \emph{ID, IDN, IDR} & Indonesia Calendar \\ \hline
+    \emph{IL, ISR, ILS} & Israel Calendar \\ \hline
+    \emph{IT, ITA} & Italy Calendar \\ \hline
+    \emph{MX, MEX, MXN} & Mexico Calendar \\ \hline
+    \emph{MY, MYS, MYR} & Malaysia Calendar \\ \hline
+    \emph{NL, NLD, NZD} & New Zealand Calendar\\ \hline
+    \emph{NO, NOR, NOK} & Norway Calendar \\ \hline
+    \emph{PE, PER, PEN} & Peru Calendar \\ \hline
+    \emph{PH, PHL, PHP} & Philippines Calendar \\ \hline
+    \emph{PO, POL, PLN} & Poland Calendar \\ \hline
+    \emph{RO, ROU, RON} & Romania Calendar \\ \hline
+    \emph{RU, RUS, RUB} & Russia Calendar \\ \hline
+    \emph{SAU, SAR} & Saudi Arabia \\ \hline
+    \emph{SG, SGP, SGD} & Singapore Calendar \\ \hline
+    \emph{KR, KOR, KRW} & South Korea Calendar \\ \hline
+    \emph{TW, TWN, TWD} & Taiwan Calendar \\ \hline
+    \emph{TH, THA, THB} & Thailand Calendar \\ \hline
+    \emph{TR, TUR, TRY} & Turkey Calendar \\ \hline
+    \emph{UA, UKR, UAH} & Ukraine Calendar \\ \hline
+    \emph{BVMF} & Brazil Bovespa Calendar \\ \hline
+    \emph{XTSE} & Canada Toronto Stock Exchange Calendar \\ \hline
+    \emph{XSHG} & China Shanghai Stock Exchange Calendar \\ \hline
+    \emph{XFRA} & Germany Frankfurt Stock Exchange \\ \hline
+    \emph{XETR} & Germany XETRA Calendar \\ \hline
+    \emph{ECAG} & Germany EUREX Calendar \\ \hline
+    \emph{EUWA} & Germany EUWAX Calendar \\ \hline
+    \emph{XJKT} & Indonesia Jakarta Stock Exchange (now IDX) Calendar \\ \hline
+    \emph{XIDX} & Indonesia Indonesia Stock Exchange Calendar \\ \hline
+    \emph{XTAE} & Israel Tel Aviv Stock Exchange Calendar \\ \hline
+    \emph{XMIL} & Italy Italian Stock Exchange Calendar \\ \hline
+    \emph{MISX} & Russia Moscow Exchange Calendar \\ \hline
+    \emph{XKRX} & Korea Exchange Calendar \\ \hline
+    \emph{XSWX} & Switzerland SIX Swiss Exchange Calendar \\ \hline
+    \emph{XLON} & UK London Stock Exchange \\ \hline
+    \emph{XLME} & UK London Metal Exchange \\ \hline
+    \emph{XNYS} & US New York Stock Exchange Calendar \\ \hline
+    \emph{WMR} & Thomson Reuters QM/Reuters Spot \\ \hline
     \emph{WeekendsOnly} & Weekends Only Calendar \\ \hline
+    \emph{ICE_FuturesUS} & ICE Futures U.S. Currency, Stock and Credit Index, Metal, Nat Gas, Power, Oil and Environmental \\ \hline
+    \emph{ICE_FuturesUS_1} & ICE Futures U.S. Sugar, Cocoa, Coffee, Cotton and FCOJ \\ \hline
+    \emph{ICE_FuturesUS_2} & ICE Futures U.S. Canola \\ \hline
+    \emph{ICE_FuturesEU} & ICE Futures Europe \\ \hline
+    \emph{ICE_FuturesEU_1} & ICE Futures Europe for contracts where 26 Dec is a holiday \\ \hline
+    \emph{ICE_EndexEnergy} & ICE Endex European power and natural gas products \\ \hline
+    \emph{ICE_EndexEquities} & ICE Endex European equities \\ \hline
+    \emph{ICE_SwapTradeUS} & ICE Swap Trade U.S. \\ \hline
+    \emph{ICE_SwapTradeUK} & ICE Swap Trade U.K. \\ \hline
+    \emph{ICE_FuturesSingapore} & ICE futures Singapore \\ \hline
+    \emph{CME} & CME group exchange calendar \\ \hline
     % \emph{US+TARGET, NYB\_TGT, TGT\_NYB} & US and Target Calendar \\ \hline  
     % \emph{NYB\_LNB, LNB\_NYB} & US and UK Calendar \\ \hline    
     % \emph{LNB\_ZUB, ZUB\_LNB} & Switzerland and UK Calendar \\ \hline   
@@ -85,11 +124,10 @@
     % \emph{LNB\_NYB\_TRB} & UK, US and Canada Calendar \\ \hline 
     % \emph{LNB\_NYB\_TKB} & UK, US and Japan Calendar \\ \hline   
     % \emph{NullCalendar} & Null Calendar, i.e. all days are business days \\ \hline                 
-  \end{tabu}
   \caption{Allowable Values for Calendar. Combinations of up to four
     calendars can be provided using comma separated calendar names.}
   \label{tab:calendar}
-\end{table}
+\end{longtable}
 
 \begin{table}[H]
 \centering
@@ -106,6 +144,7 @@
     \emph{30/360 (Italian)} & Thirty 360 (Italian) \\ \hline
     \emph{ActActISDA, ActualActual (ISDA), ACT/ACT, ACT} & Actual Actual (ISDA) \\ \hline
     \emph{ActActISMA, ActualActual (ISMA)} & Actual Actual (ISMA) \\ \hline
+    \emph{ActActICMA, ActualActual (ICMA)} & Actual Actual (ICMA) \\ \hline
     \emph{ActActAFB, Actual/Actual (AFB)} & Actual Actual (AFB) \\ \hline           
   \end{tabu}
   \caption{Allowable Values for DayCount Convention}
@@ -123,8 +162,8 @@
 \textbf{Index Component} & \textbf{Allowable Values}                                                                                                                                                                                                                                                           \\ \hline
 CCY-INDEX                &
                            \textit{\begin{tabular}[c]{@{}l@{}}
-EUR-EONIA\\ EUR-EURIBOR\\ EUR-LIBOR\\ EUR-CMS\\ 
-USD-FedFunds\\ USD-LIBOR\\ USD-SIFMA\\ USD-CMS\\ 
+EUR-EONIA\\ EUR-ESTER \\ EUR-EURIBOR\\ EUR-LIBOR\\ EUR-CMS\\
+USD-FedFunds\\ USD-SOFR \\ USD-Prime\\ USD-LIBOR\\ USD-SIFMA\\ USD-CMS\\
 GBP-SONIA\\ GBP-LIBOR\\ GBP-CMS\\ 
 JPY-LIBOR\\ JPY-TIBOR \\ JPY-TONAR \\ JPY-CMS \\
 CHF-LIBOR\\ CHF-SARON\\ 
@@ -147,4 +186,109 @@ TENOR                    & An integer followed by \emph{D, W, M or Y}           
 \end{tabular}
   \caption{Allowable values for Index.}
   \label{tab:indices}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{10cm}|}
+\hline
+%\multicolumn{2}{|l|}{\lstinline!Index!}   \\ \hline
+\multicolumn{2}{|l|}{\tt FX Index}   \\ \hline
+\textbf{Index Format} &\textbf{Allowable Values}     \\ \hline
+FX-SOURCE-CCY1-CCY2    &    
+SOURCE is ECB (European Central Bank) for EUR pairs or TR20H (Thomson
+Reuters 20H) for USD pairs. For ECB CCY1 should always be EUR, and for
+TR20H CCY1 should always be USD, except for FX-TR20H-GBP-USD,
+FX-TR20H-AUD-USD and FX-TR20H-NZD-USD. Note that the FX- part of the
+string stays constant for all currency pairs. For the USD-EUR pair, ECB is used
+(FX-ECB-EUR-USD).\\ \hline
+\end{tabular}
+  \caption{Allowable values for FX index fixings.}
+  \label{tab:fxindex_data}
+\end{table}
+
+\begin{table}[H]
+\centering
+  \begin{tabu} to 1.0\linewidth {| X[-1.65,l,m] | X[-5.7,l,m] |}
+    \hline
+    \multicolumn{2}{|l|}{\tt Equity and Credit Name} \\ \hline
+    \bfseries{Trade Data} & \bfseries{Allowable Values} \\
+    \hline
+    \lstinline!Name!   for equity trades & \begin{tabular}[l]{@{}l@{}}  Any string (provided it is the ID of an equity in the market \\
+conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: \\  \emph{RIC:.SPX}  (S\&P 500 Index) \\ \emph{RIC:EEM.N}  (iShares MSCI Emerging Markets ETF)    \\  \end{tabular}  \\ \hline
+    \lstinline!Name!   for credit trades - single name and index & \begin{tabular}[l]{@{}l@{}} Any string (provided it is the ID of a single name or index \\ reference entity in the market 
+conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: \\  \emph{RED:2I65BRHH6}  (CDX N.A. High Yield, Series 13, Version 1) \\ \emph{RED:008CA0\textbar{}SNRFOR\textbar{}USD\textbar{}MR14}  (Agilent Tech Senior USD)
+\end{tabular}  \\ \hline
+  \end{tabu}
+  \caption{Allowable values for equity data.}
+  \label{tab:equity_credit_data}
+\end{table}
+
+
+\begin{table}[H]
+\centering
+  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+    \hline
+    \multicolumn{2}{|l|}{\tt Commodity Curve Name} \\ \hline
+    \bfseries{Trade Data} & \bfseries{Allowable Values} \\
+    \hline
+    \lstinline!Name! for commodity trades & Any string (provided it is the ID of an commodity in the market configuration) \\
+    \hline
+  \end{tabu}
+  \caption{Allowable values for commodity data.}
+  \label{tab:commodity_data}
+\end{table}
+
+\begin{table}[H]
+\centering
+  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+    \hline
+    \multicolumn{2}{|l|}{\lstinline!Tier!} \\
+    \hline
+    \textbf{Value} & \textbf{Description} \\
+    \hline
+    \lstinline!SNRFOR! & Senior unsecured for corporates or foreign debt for sovereigns \\
+    \hline
+    \lstinline!SUBLT2! & Subordinated or lower Tier 2 debt for banks \\
+    \hline
+    \lstinline!SNRLAC! & Senior loss absorbing capacity \\
+    \hline
+    \lstinline!SECDOM! & Secured for corporates or domestic debt for sovereigns \\
+    \hline
+    \lstinline!JRSUBUT2! & Junior subordinated or upper Tier 2 debt for banks \\
+    \hline
+    \lstinline!PREFT1! & Preference shares or Tier 1 capital for banks \\
+    \hline
+  \end{tabu}
+  \caption{Allowable values for \lstinline!Tier!}
+  \label{tab:tier_data}
+\end{table}
+
+\begin{table}[H]
+\centering
+  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+    \hline
+    \multicolumn{2}{|l|}{\lstinline!DocClause!} \\
+    \hline
+    \textbf{Value} & \textbf{Description} \\
+    \hline
+    \lstinline!CR! & Full or old restructuring referencing the 2003 ISDA Definitions \\
+    \hline
+    \lstinline!MM! & Modified modified restructuring referencing the 2003 ISDA Definitions \\
+    \hline
+    \lstinline!MR! & Modified restructuring referencing the 2003 ISDA Definitions \\
+    \hline
+    \lstinline!XR! & No restructuring referencing the 2003 ISDA Definitions \\
+    \hline
+	\lstinline!CR14! & Full or old restructuring referencing the 2014 ISDA Definitions \\
+    \hline
+    \lstinline!MM14! & Modified modified restructuring referencing the 2014 ISDA Definitions \\
+    \hline
+    \lstinline!MR14! & Modified restructuring referencing the 2014 ISDA Definitions \\
+    \hline
+    \lstinline!XR14! & No restructuring referencing the 2014 ISDA Definitions \\
+    \hline
+  \end{tabu}
+  \caption{Allowable values for \lstinline!DocClause!}
+  \label{tab:docclause_data}
 \end{table}

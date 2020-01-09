@@ -58,4 +58,13 @@ void CorrelationTermStructure::checkRange(Time t, bool extrapolate) const {
     TermStructure::checkRange(t, extrapolate);
 }
 
+NegativeCorrelationTermStructure::NegativeCorrelationTermStructure(const Handle<CorrelationTermStructure>& c)
+    : CorrelationTermStructure(c->dayCounter()), c_(c) {
+    registerWith(c_);
+}
+
+Real NegativeCorrelationTermStructure::correlationImpl(Time t, Real strike) const {
+    return -c_->correlation(t, strike);
+}
+
 } // namespace QuantExt

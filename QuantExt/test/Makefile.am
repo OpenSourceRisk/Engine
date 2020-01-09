@@ -10,6 +10,7 @@ QLE_TESTS = \
 	discountcurve.cpp \
 	dynamicblackvoltermstructure.cpp \
 	dynamicswaptionvolmatrix.cpp \
+	equityforwardcurvestripper.cpp \
 	fillemptymatrix.cpp \
 	index.cpp \
 	blackvariancecurve.cpp \
@@ -38,10 +39,17 @@ QLE_TESTS = \
 	crossccyfixfloatswaphelper.cpp \
 	crossccybasismtmresetswap.cpp \
 	crossccybasismtmresetswaphelper.cpp \
-	cpicapfloor.cpp 
 	correlationtermstructure.cpp \
 	cpicapfloor.cpp \
-	strippedoptionletadapter.cpp
+	strippedoptionletadapter.cpp \
+	strippedoptionletadapter2.cpp \
+	piecewiseoptionletcurve.cpp \
+	piecewiseoptionletstripper.cpp \
+	capfloortermvolcurve.cpp \
+	blackvariancesurfacesparse.cpp \
+	blackvariancesurfacestddevs.cpp \
+	piecewiseatmoptionletcurve.cpp \
+	blackvolsurfacedelta.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

@@ -35,6 +35,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="oreatoplevelfixture.hpp" />
     <ClInclude Include="testmarket.hpp" />
     <ClInclude Include="testportfolio.hpp" />
   </ItemGroup>
@@ -54,11 +55,6 @@
     <ClCompile Include="testmarket.cpp" />
     <ClCompile Include="testportfolio.cpp" />
     <ClCompile Include="testsuite.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\OREAnalytics.vcxproj">
-      <Project>{69b19b76-a089-4f8e-a10b-58f607a96214}</Project>
-    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>OREAnalyticsTestSuite</ProjectName>

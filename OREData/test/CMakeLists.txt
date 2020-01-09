@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
 set(OREData-Test_SRC bond.cpp
+calendaradjustment.cpp
 calendars.cpp
 ccyswapwithresets.cpp
 cds.cpp
@@ -11,8 +12,10 @@ commodityoption.cpp
 commodityvolcurve.cpp
 commodityvolcurveconfig.cpp
 conventions.cpp
+conventionsbasedfutureexpiry.cpp
 correlationcurveconfig.cpp
 cpiswap.cpp
+creditdefaultswapdata.cpp
 crossassetmodeldata.cpp
 curveconfig.cpp
 digitalcms.cpp

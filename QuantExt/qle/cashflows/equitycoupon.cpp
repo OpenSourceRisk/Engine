@@ -30,11 +30,11 @@ EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& st
                            const DayCounter& dayCounter, bool isTotalReturn, Real dividendFactor, 
                            bool notionalReset, Real initialPrice, Real quantity,
                            const Date& refPeriodStart, const Date& refPeriodEnd,
-                           const Date& exCouponDate)
+                           const Date& exCouponDate, const boost::shared_ptr<FxIndex>& fxIndex)
     : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart, refPeriodEnd, exCouponDate),
       fixingDays_(fixingDays), equityCurve_(equityCurve), dayCounter_(dayCounter),
       isTotalReturn_(isTotalReturn), dividendFactor_(dividendFactor), notionalReset_(notionalReset), 
-      initialPrice_(initialPrice), quantity_(quantity) {
+      initialPrice_(initialPrice), quantity_(quantity), fxIndex_(fxIndex) {
     QL_REQUIRE(dividendFactor_ > 0.0, "Dividend factor should not be negative. It is expected to be between 0 and 1.");
     QL_REQUIRE(equityCurve_, "Equity underlying an equity swap coupon cannot be empty.");
 
@@ -53,6 +53,7 @@ EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& st
         fixingEndDate_ = refPeriodEnd;
 
     registerWith(equityCurve_);
+    registerWith(fxIndex_);
     registerWith(Settings::instance().evaluationDate());
 }
 
@@ -67,10 +68,13 @@ void EquityCoupon::setPricer(const boost::shared_ptr<EquityCouponPricer>& pricer
 }
 
 Real EquityCoupon::nominal() const {
-    if (notionalReset_) 
-        return initialPrice() * quantity();
-    else
+    if (notionalReset_) {
+        // fxRate applied if equity underlying currency differs from leg
+        Real fxRate = fxIndex_ ? fxIndex_->fixing(fixingStartDate_) : 1.0;
+        return initialPrice() * fxRate * quantity();
+    } else {
         return nominal_;
+    }
 }
 
 Real EquityCoupon::initialPrice() const {
@@ -108,9 +112,10 @@ std::vector<Date> EquityCoupon::fixingDates() const {
     return fixingDates;
 };
 
-EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve)
-    : schedule_(schedule), equityCurve_(equityCurve), paymentAdjustment_(Following), paymentCalendar_(Calendar()),
-      dividendFactor_(1.0), fixingDays_(0) {}
+EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
+                     const boost::shared_ptr<FxIndex>& fxIndex)
+    : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentAdjustment_(Following), 
+      paymentCalendar_(Calendar()), dividendFactor_(1.0), fixingDays_(0) {}
 
 EquityLeg& EquityLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -186,8 +191,15 @@ EquityLeg::operator Leg() const {
 
     Size numPeriods = schedule_.size() - 1;
     Real quantity = Real();
-    if (initialPrice_ && notionalReset_)
-        quantity = notionals_.front() / initialPrice_;
+    if (notionalReset_) {
+        // Calculate the initial quantity - only needed if resetting notional trade
+        Date fixingStartDate = valuationSchedule_.size() > 0 ? valuationSchedule_.date(0) : 
+            equityCurve_->fixingCalendar().advance(schedule_.date(0), -static_cast<Integer>(fixingDays_), Days, Preceding);
+        Real initialPrice = initialPrice_ ? initialPrice_ : equityCurve_->fixing(fixingStartDate, false, false);
+        // Notional in leg currency
+        Real fxRate = fxIndex_ ? fxIndex_->fixing(fixingStartDate) : 1.0;
+        quantity = notionals_.front() / (initialPrice * fxRate);
+    }
 
     if (valuationSchedule_.size() > 0){
         QL_REQUIRE(valuationSchedule_.size() == schedule_.size(), "Valuation and Payment Schedule sizes do not match");
@@ -210,7 +222,7 @@ EquityLeg::operator Leg() const {
         boost::shared_ptr<EquityCoupon> cashflow(
             new EquityCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
                              fixingDays_, equityCurve_, paymentDayCounter_, isTotalReturn_, dividendFactor_, 
-                             notionalReset_, initialPrice, quantity, refStartDate, refEndDate));
+                             notionalReset_, initialPrice, quantity, refStartDate, refEndDate, Date(), fxIndex_));
 
         boost::shared_ptr<EquityCouponPricer> pricer(new EquityCouponPricer);
         cashflow->setPricer(pricer);

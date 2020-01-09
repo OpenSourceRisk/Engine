@@ -639,7 +639,10 @@
     <ClCompile Include="analyticlgmswaptionengine.cpp" />
     <ClCompile Include="blackvariancecurve.cpp" />
     <ClCompile Include="blackvariancesurfacesparse.cpp" />
+    <ClCompile Include="blackvariancesurfacestddevs.cpp" />
+    <ClCompile Include="blackvolsurfacedelta.cpp" />
     <ClCompile Include="bonds.cpp" />
+    <ClCompile Include="capfloortermvolcurve.cpp" />
     <ClCompile Include="cashflow.cpp" />
     <ClCompile Include="commodityforward.cpp" />
     <ClCompile Include="correlationtermstructure.cpp" />
@@ -659,13 +662,18 @@
     <ClCompile Include="discountratiomodifiedcurve.cpp" />
     <ClCompile Include="dynamicblackvoltermstructure.cpp" />
     <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
+    <ClCompile Include="equityforwardcurvestripper.cpp" />
     <ClCompile Include="fillemptymatrix.cpp" />
+    <ClCompile Include="forwardbond.cpp" />
     <ClCompile Include="fxvolsmile.cpp" />
     <ClCompile Include="index.cpp" />
     <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp" />
     <ClCompile Include="logquote.cpp" />
     <ClCompile Include="optionletstripper.cpp" />
     <ClCompile Include="payment.cpp" />
+    <ClCompile Include="piecewiseatmoptionletcurve.cpp" />
+    <ClCompile Include="piecewiseoptionletcurve.cpp" />
+    <ClCompile Include="piecewiseoptionletstripper.cpp" />
     <ClCompile Include="pricecurve.cpp" />
     <ClCompile Include="pricetermstructureadapter.cpp" />
     <ClCompile Include="qle_calendars.cpp" />
@@ -673,6 +681,7 @@
     <ClCompile Include="stabilisedglls.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
     <ClCompile Include="strippedoptionletadapter.cpp" />
+    <ClCompile Include="strippedoptionletadapter2.cpp" />
     <ClCompile Include="survivalprobabilitycurve.cpp" />
     <ClCompile Include="swaptionvolatilityconverter.cpp" />
     <ClCompile Include="swaptionvolconstantspread.cpp" />
@@ -681,14 +690,9 @@
   <ItemGroup>
     <ClInclude Include="capfloormarketdata.hpp" />
     <ClInclude Include="swaptionmarketdata.hpp" />
+    <ClInclude Include="toplevelfixture.hpp" />
     <ClInclude Include="utilities.hpp" />
     <ClInclude Include="yieldcurvemarketdata.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\QuantExt.vcxproj">
-      <Project>{ad0a27da-91da-46a2-acbd-296c419ed3aa}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
