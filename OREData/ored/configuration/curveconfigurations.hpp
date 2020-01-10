@@ -178,6 +178,11 @@ public:
 
     std::set<string> conventions(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams, const std::set<std::string>& configurations = {""}) const;
     std::set<string> conventions() const;
+
+
+    /*! Return the Yields curves available */
+    std::set<string> yieldCurveConfigIds();
+
     //@}
 
     //! \name Serialisation

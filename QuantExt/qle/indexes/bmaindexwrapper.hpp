@@ -50,7 +50,7 @@ public:
 
     // overwrite all the virtual methods
     std::string name() const { return "BMA"; }
-    bool isValidFixingDate(const Date& date) const { return bma_->isValidFixingDate(date); }
+    bool isValidFixingDate(const Date& date) const { return fixingCalendar().isBusinessDay(date); }
     Handle<YieldTermStructure> forwardingTermStructure() const { return bma_->forwardingTermStructure(); }
     Date maturityDate(const Date& valueDate) const { return bma_->maturityDate(valueDate); }
     Schedule fixingSchedule(const Date& start, const Date& end) { return bma_->fixingSchedule(start, end); }

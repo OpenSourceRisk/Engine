@@ -147,7 +147,7 @@ ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Cannot convert shift type " << s << " to ShiftScenarioGenerator::ShiftType");
+        QL_FAIL("Cannot convert shift type \"" << s << "\" to ShiftScenarioGenerator::ShiftType");
     }
 }
 

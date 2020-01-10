@@ -390,6 +390,17 @@
       <FXDomesticCurveID>Yield/USD/USD-FedFunds</FXDomesticCurveID>
     </FXVolatility>
     <FXVolatility>
+      <CurveId>EURUSD_SMILE_DELTA</CurveId>
+      <CurveDescription/>
+      <Dimension>Smile</Dimension>
+      <SmileType>Delta</SmileType>
+      <Deltas>10C,20C,ATM,10P,20P</Deltas>
+      <Expiries>6M,1Y</Expiries>
+      <FXSpotID>FX/EUR/USD</FXSpotID>
+      <FXForeignCurveID>Yield/EUR/EUR-IN-USD</FXForeignCurveID>
+      <FXDomesticCurveID>Yield/USD/USD-FedFunds</FXDomesticCurveID>
+    </FXVolatility>
+    <FXVolatility>
       <CurveId>EURUSD_ATM</CurveId>
       <CurveDescription/>
       <Dimension>ATM</Dimension>
@@ -407,6 +418,17 @@
       <CurveId>GBPUSD_SMILE</CurveId>
       <CurveDescription/>
       <Dimension>Smile</Dimension>
+      <Expiries>6M,1Y</Expiries>
+      <FXSpotID>FX/GBP/USD</FXSpotID>
+      <FXForeignCurveID>Yield/GBP/GBP-IN-USD</FXForeignCurveID>
+      <FXDomesticCurveID>Yield/USD/USD-FedFunds</FXDomesticCurveID>
+    </FXVolatility>
+    <FXVolatility>
+      <CurveId>GBPUSD_SMILE_DELTA</CurveId>
+      <CurveDescription/>
+      <Dimension>Smile</Dimension>
+      <SmileType>Delta</SmileType>
+      <Deltas>10C,20C,ATM,10P,20P</Deltas>
       <Expiries>6M,1Y</Expiries>
       <FXSpotID>FX/GBP/USD</FXSpotID>
       <FXForeignCurveID>Yield/GBP/GBP-IN-USD</FXForeignCurveID>
@@ -487,4 +509,67 @@
       <Index2/>
     </Correlation>
   </Correlations>
+  <EquityCurves>
+    <EquityCurve>
+      <CurveId>EQUITY_A</CurveId>
+      <CurveDescription/>
+      <Currency>EUR</Currency>
+      <ForecastingCurve>EUR-EONIA</ForecastingCurve>
+      <Type>NoDividends</Type>
+      <SpotQuote>EQUITY/PRICE/EQUITY_A/EUR</SpotQuote>
+      <DayCounter>A365</DayCounter>
+    </EquityCurve>
+    <EquityCurve>
+      <CurveId>EQUITY_B</CurveId>
+      <CurveDescription/>
+      <Currency>EUR</Currency>
+      <ForecastingCurve>EUR-EONIA</ForecastingCurve>
+      <Type>DividendYield</Type>
+      <SpotQuote>EQUITY/PRICE/EQUITY_B/EUR</SpotQuote>	  
+	  <Quotes>
+        <Quote>EQUITY_DIVIDEND/RATE/EQUITY_B/EUR/1Y</Quote>
+	  </Quotes>
+      <DayCounter>A365</DayCounter>
+    </EquityCurve>
+    <EquityCurve>
+      <CurveId>EQUITY_C</CurveId>
+      <CurveDescription/>
+      <Currency>EUR</Currency>
+      <ForecastingCurve>EUR-EONIA</ForecastingCurve>
+      <Type>ForwardPrice</Type>
+      <SpotQuote>EQUITY/PRICE/EQUITY_C/EUR</SpotQuote>
+	  <Quotes>
+        <Quote>EQUITY_FWD/PRICE/EQUITY_C/EUR/1Y</Quote>
+	  </Quotes>
+      <DayCounter>A365</DayCounter>
+    </EquityCurve>
+    <EquityCurve>
+      <CurveId>EQUITY_D</CurveId>
+      <CurveDescription/>
+      <Currency>EUR</Currency>
+      <ForecastingCurve>EUR-EONIA</ForecastingCurve>
+      <Type>OptionPremium</Type>
+	  <ExerciseStyle>European</ExerciseStyle>
+      <SpotQuote>EQUITY/PRICE/EQUITY_D/EUR</SpotQuote>
+	  <Quotes>
+        <Quote>EQUITY_OPTION/PRICE/EQUITY_D/EUR/1Y/1000/C</Quote>
+        <Quote>EQUITY_OPTION/PRICE/EQUITY_D/EUR/1Y/1000/P</Quote>
+	  </Quotes>
+      <DayCounter>A365</DayCounter>
+    </EquityCurve>
+    <EquityCurve>
+      <CurveId>EQUITY_E</CurveId>
+      <CurveDescription/>
+      <Currency>EUR</Currency>
+      <ForecastingCurve>EUR-EONIA</ForecastingCurve>
+      <Type>OptionPremium</Type>
+	  <ExerciseStyle>American</ExerciseStyle>
+      <SpotQuote>EQUITY/PRICE/EQUITY_E/EUR</SpotQuote>
+	  <Quotes>
+        <Quote>EQUITY_OPTION/PRICE/EQUITY_E/EUR/1Y/1000/C</Quote>
+        <Quote>EQUITY_OPTION/PRICE/EQUITY_E/EUR/1Y/1000/P</Quote>
+	  </Quotes>
+      <DayCounter>A365</DayCounter>
+    </EquityCurve>
+  </EquityCurves>	
 </CurveConfiguration>

@@ -25,9 +25,14 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
+#include <qle/termstructures/blackvariancesurfacesparse.hpp>
+
+#include <regex>
 
 using namespace std;
 using namespace QuantLib;
+using namespace QuantExt;
 
 namespace ore {
 namespace data {
@@ -96,8 +101,32 @@ void CommodityVolCurve::buildConstantVolatility(const Date& asof, CommodityVolat
 void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatilityCurveConfig& config,
                                              const Loader& loader) {
 
-    // Loop over all market datums and find the quotes in the config
+    // Loop over all market datums and find the quotes *in* the config
     // Return error if there are duplicate quotes (this is why we do not use loader.get() method)
+
+    QL_REQUIRE(config.quotes().size() > 0, "No quotes specified in config " << config.curveID());
+
+    bool foundRegex = false;
+    regex reg1;
+
+    // check for regex string in config
+    for (Size i = 0; i < config.quotes().size(); i++) {
+        foundRegex |= config.quotes()[i].find("*") != string::npos;
+        if (foundRegex) {
+            break;
+        }
+    }
+
+    if (foundRegex) {
+        QL_REQUIRE(config.quotes().size() == 1,
+                   "Wild card specified in config " << config.curveID() << " but more quotes also specified.");
+
+        // build regex string
+        string regexstr = config.quotes()[0];
+        boost::replace_all(regexstr, "*", ".*");
+        reg1 = regex(regexstr);
+    }
+
     map<Date, Real> curveData;
     Calendar calendar = parseCalendar(config.calendar());
     for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
@@ -105,16 +134,39 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
 
             boost::shared_ptr<CommodityOptionQuote> q = boost::dynamic_pointer_cast<CommodityOptionQuote>(md);
 
-            vector<string>::const_iterator it = find(config.quotes().begin(), config.quotes().end(), q->name());
-            if (it != config.quotes().end()) {
-                // The quote expiry is a string that may be a period or a date
-                // Convert it to a date here
+            // relevant quote?
+            bool addQuote = false;
+            vector<string>::const_iterator it;  // if not wild-card -> find quote.
+            if (foundRegex) {
+                if (regex_match(q->name(), reg1)) {
+                    // quote only valid of expiry date is > asof
+                    Date eDate;
+                    Period ePeriod;
+                    bool isDate;
+                    parseDateOrPeriod(q->expiry(), eDate, ePeriod, isDate);
+                    if (!isDate){
+                        eDate = calendar.adjust(asof + ePeriod);
+                    }
+                    if (eDate > asof) {
+                        addQuote = true;
+                    }
+                }
+            } else {
+                it = find(config.quotes().begin(), config.quotes().end(), q->name()); // find in config
+                if (it != config.quotes().end()) {
+                    addQuote = true;
+                }
+            }
+
+            // add quote if relevant
+            if (addQuote) {
+                // Convert expiry to a date if necessary
                 Date aDate;
                 Period aPeriod;
                 bool isDate;
                 parseDateOrPeriod(q->expiry(), aDate, aPeriod, isDate);
                 if (isDate) {
-                    QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << *it << "' is for a past date ("
+                    QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << q->name() << "' has expiry in the past ("
                                                                             << io::iso_date(aDate) << ")");
                 } else {
                     aDate = calendar.adjust(asof + aPeriod);
@@ -129,14 +181,17 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
     }
     LOG("CommodityVolatilityCurve: read " << curveData.size() << " quotes.");
 
-    QL_REQUIRE(curveData.size() == config.quotes().size(),
-               "Found " << curveData.size() << " quotes, but " << config.quotes().size() << " quotes given in config.");
+    if (foundRegex) {
+        QL_REQUIRE(curveData.size() > 0, "No quotes found matching " << config.quotes()[0]);
+    } else {
+        QL_REQUIRE(curveData.size() == config.quotes().size(), "Found " << curveData.size() << " quotes, but "
+                                                                        << config.quotes().size()
+                                                                        << " quotes given in config.");
+    }
 
     // Create the dates and volatility vector
     vector<Date> dates;
-    dates.reserve(curveData.size());
     vector<Volatility> volatilities;
-    volatilities.reserve(curveData.size());
     for (const auto& datum : curveData) {
         dates.push_back(datum.first);
         volatilities.push_back(datum.second);
@@ -151,80 +206,134 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
 void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolatilityCurveConfig& config,
                                                const Loader& loader) {
 
-    // To hold dates x strike surface volatilities
-    // dates will be sorted since map key
-    map<Date, vector<Real>> surfaceData;
+    map<Date, vector<Real>> surfaceData; // implicit order is assumed here for known stirkes and expiries from config.
+    vector<Real> strikes;       // wild card case
+    vector<Date> expiries;      // wild card case
+    vector<Volatility> vols;    // wild card case
 
     // Assume the config has required strike strings to be sorted by value
     const vector<string>& configStrikes = config.strikes();
 
+    // wild cards?
+    vector<string>::iterator exprWcIt = find(config.expiries().begin(), config.expiries().end(), "*");
+    vector<string>::iterator strkWcIt = find(config.strikes().begin(), config.strikes().end(), "*");
+    bool expWc = exprWcIt != config.expiries().end();
+    bool strkWc = strkWcIt != config.strikes().end();
+    bool wildCard = expWc || strkWc;
+    if (expWc) {
+        QL_REQUIRE(config.expiries().size() == 1, "Wild card expiry specified but more expiries also specified.");
+    }
+    if (strkWc) {
+        QL_REQUIRE(config.strikes().size() == 1, "Wild card strike specified but more strikes also specified.");
+    }
+
     // Loop over all market datums and find the quotes in the config
     // Return error if there are duplicate quotes (this is why we do not use loader.get() method)
+    bool relevantQuote = false;
+    bool strikeRelevant = strkWc;
+    bool expiryRelevant = expWc;
     Size quotesAdded = 0;
     Calendar calendar = parseCalendar(config.calendar());
+    DayCounter dayCounter = parseDayCounter(config.dayCounter());
     for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
         if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::COMMODITY_OPTION) {
-
             boost::shared_ptr<CommodityOptionQuote> q = boost::dynamic_pointer_cast<CommodityOptionQuote>(md);
+            relevantQuote = false;
+            vector<string>::const_iterator it;
 
-            vector<string>::const_iterator it = find(config.quotes().begin(), config.quotes().end(), q->name());
-            if (it != config.quotes().end()) {
-                // The quote expiry is a string that may be a period or a date
-                // Convert it to a date here
-                Date aDate;
-                Period aPeriod;
-                bool isDate;
-                parseDateOrPeriod(q->expiry(), aDate, aPeriod, isDate);
-                if (isDate) {
-                    QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << *it << "' is for a past date ("
-                                                                            << io::iso_date(aDate) << ")");
-                } else {
-                    aDate = calendar.adjust(asof + aPeriod);
+            // no wild cards
+            if (!wildCard) {
+                it = find(config.quotes().begin(), config.quotes().end(), q->name());
+                relevantQuote = it != config.quotes().end();
+                if (relevantQuote) {
+                    // Convert expiry to date if necessary
+                    Date aDate;
+                    Period aPeriod;
+                    bool isDate;
+                    parseDateOrPeriod(q->expiry(), aDate, aPeriod, isDate);
+                    if (isDate) {
+                        QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << q->name() << "' has expiry in past ("
+                                                                                << io::iso_date(aDate) << ")");
+                    } else {
+                        aDate = calendar.adjust(asof + aPeriod);
+                    }
+
+                    // Position of quote in vector
+                    Size pos =
+                        distance(configStrikes.begin(), find(configStrikes.begin(), configStrikes.end(), q->strike()));
+                    QL_REQUIRE(pos < configStrikes.size(), "The quote '"
+                                                               << q->name()
+                                                               << "' is in the list of configured quotes "
+                                                                  "but does not match any of the configured strikes");
+
+                    // Add quote to surface
+                    if (surfaceData.count(aDate) == 0)
+                        surfaceData[aDate] = vector<Real>(configStrikes.size(), Null<Real>());
+                    QL_REQUIRE(surfaceData[aDate][pos] == Null<Real>(),
+                               "Quote " << q->name() << " provides a duplicate quote for the date "
+                                        << io::iso_date(aDate) << " and the strike " << configStrikes[pos]);
+                    surfaceData[aDate][pos] = q->quote()->value();
+                    quotesAdded++;
+                }
+                // some wild card
+            } else {
+
+                // Don't bother if commodity name and currency do not match
+                if (config.curveID() != q->commodityName() || config.currency() != q->quoteCurrency()) {
+                    continue;
                 }
 
-                // Position of quote in vector
-                Size pos =
-                    distance(configStrikes.begin(), find(configStrikes.begin(), configStrikes.end(), q->strike()));
-                QL_REQUIRE(pos < configStrikes.size(), "The quote '"
-                                                           << *it
-                                                           << "' is in the list of configured quotes "
-                                                              "but does not match any of the configured strikes");
+                if (!expWc) {
+                    // strike only wild card
+                    it = find(config.expiries().begin(), config.expiries().end(), q->expiry());
+                    expiryRelevant = it != config.expiries().end();
+                } else {
+                    expiryRelevant = true;
+                }
+                if (!strkWc) {
+                    // expiry only wild card
+                    it = find(config.strikes().begin(), config.strikes().end(), q->strike());
+                    strikeRelevant = it != config.strikes().end();
+                } else {
+                    // for now we ignore ATMF quotes
+                    strikeRelevant = q->strike() != "ATMF";
+                }
+                relevantQuote = strikeRelevant && expiryRelevant;
 
-                // Add quote to surface
-                if (surfaceData.count(aDate) == 0)
-                    surfaceData[aDate] = vector<Real>(configStrikes.size(), Null<Real>());
-                QL_REQUIRE(surfaceData[aDate][pos] == Null<Real>(),
-                           "Quote " << *it << " provides a duplicate quote for the date " << io::iso_date(aDate)
-                                    << " and the strike " << configStrikes[pos]);
-                surfaceData[aDate][pos] = q->quote()->value();
-                quotesAdded++;
+                if (relevantQuote) {
+                    //expiry (may be tenor or date)
+                    Date eDate;
+                    Period ePeriod;
+                    bool isDate;
+                    parseDateOrPeriod(q->expiry(), eDate, ePeriod,isDate);
+                    if (!isDate) {
+                        eDate = calendar.adjust(asof + ePeriod);
+                    }
+                    // strike + vol
+                    strikes.push_back(parseReal(q->strike()));
+                    vols.push_back(q->quote()->value());
+                    expiries.push_back(eDate);
+                    quotesAdded++;
+                }
             }
         }
     }
     LOG("CommodityVolatilityCurve: read " << quotesAdded << " quotes.");
 
-    QL_REQUIRE(config.quotes().size() == quotesAdded,
-               "Found " << quotesAdded << " quotes, but " << config.quotes().size() << " quotes required by config.");
-
-    // Create the volatility matrix (rows are strikes, columns are dates)
-    Matrix volatilities(configStrikes.size(), surfaceData.size());
-    vector<Date> dates;
-    dates.reserve(surfaceData.size());
-    vector<Real> strikes;
-    strikes.reserve(configStrikes.size());
-    Size counter = 0;
-    for (const auto& datum : surfaceData) {
-        dates.push_back(datum.first);
-        for (Size i = 0; i < configStrikes.size(); i++) {
-            if (counter == 0)
-                strikes.push_back(parseReal(configStrikes[i]));
-            volatilities[i][counter] = datum.second[i];
-        }
-        counter++;
+    // check loaded quotes
+    if (!wildCard) {
+        QL_REQUIRE(config.quotes().size() == quotesAdded, "Found " << quotesAdded << " quotes, but "
+                                                                   << config.quotes().size()
+                                                                   << " quotes required by config.");
+    } else {
+        QL_REQUIRE(quotesAdded > 0, "No quotes loaded for" << config.curveID());
+        QL_REQUIRE(strikes.size() == vols.size() && vols.size() == expiries.size(),
+                   "Quotes loaded don't produce strike,vol,expiry vectors of equal length.");
     }
 
     // Build the volatility surface
-    DayCounter dayCounter = parseDayCounter(config.dayCounter());
+    tuple<vector<Real>, vector<Date>> sAndE;
+    Matrix volatilities;
     BlackVarianceSurface::Extrapolation lowerStrikeExtrap =
         config.lowerStrikeConstantExtrapolation()
             ? BlackVarianceSurface::Extrapolation::ConstantExtrapolation
@@ -233,10 +342,33 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
         config.upperStrikeConstantExtrapolation()
             ? BlackVarianceSurface::Extrapolation::ConstantExtrapolation
             : BlackVarianceSurface::Extrapolation::InterpolatorDefaultExtrapolation;
-
-    LOG("CommodityVolatilityCurve: Building BlackVarianceSurface term structure");
-    volatility_ = boost::make_shared<BlackVarianceSurface>(asof, calendar, dates, strikes, volatilities, dayCounter,
-                                                           lowerStrikeExtrap, upperStrikeExtrap);
+    if (!wildCard) {
+        // Vol matrix (strikes, dates), date & expiry vectors
+        volatilities = Matrix(configStrikes.size(), surfaceData.size());
+        get<1>(sAndE).reserve(surfaceData.size());
+        get<0>(sAndE).reserve(configStrikes.size());
+        Size counter = 0;
+        for (const auto& datum : surfaceData) {
+            get<1>(sAndE).push_back(datum.first);
+            for (Size i = 0; i < configStrikes.size(); i++) {
+                if (counter == 0)
+                    get<0>(sAndE).push_back(parseReal(configStrikes[i]));
+                volatilities[i][counter] = datum.second[i];
+            }
+            counter++;
+        }
+        LOG("CommodityVolatilityCurve: Building BlackVarianceSurface term structure");
+        volatility_ =
+            boost::make_shared<BlackVarianceSurface>(asof, calendar, get<1>(sAndE), get<0>(sAndE), volatilities,
+                                                     dayCounter, lowerStrikeExtrap, upperStrikeExtrap);
+    } else {
+        bool lowerConstStrikeExtrap = lowerStrikeExtrap == BlackVarianceSurface::Extrapolation::ConstantExtrapolation;
+        bool upperConstStrikeExtrap = upperStrikeExtrap == BlackVarianceSurface::Extrapolation::ConstantExtrapolation;
+      
+        volatility_ =
+            boost::make_shared<BlackVarianceSurfaceSparse>(asof, calendar, expiries, strikes, vols,
+                                                     dayCounter, lowerConstStrikeExtrap, upperConstStrikeExtrap); // Flat extraoplate strikes always good
+    }
 }
 
 } // namespace data

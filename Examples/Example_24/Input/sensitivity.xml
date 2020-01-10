@@ -39,16 +39,6 @@
       <ShiftStrikes/>
     </EquityVolatility>
   </EquityVolatilities>
-  <CommoditySpots>
-    <CommoditySpot name="COMDTY_GOLD_USD">
-      <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-    </CommoditySpot>
-    <CommoditySpot name="COMDTY_WTI_USD">
-      <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-    </CommoditySpot>
-  </CommoditySpots>
   <CommodityCurves>
     <CommodityCurve name="COMDTY_GOLD_USD">
       <Currency>USD</Currency>

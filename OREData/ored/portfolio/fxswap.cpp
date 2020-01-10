@@ -72,6 +72,7 @@ void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         throw;
     }
     // Set up Legs
+    legs_.clear();
     legs_.resize(4);
     legCurrencies_.resize(4);
     legPayers_.resize(4);
@@ -107,6 +108,9 @@ void FxSwap::fromXML(XMLNode* node) {
     nearSoldAmount_ = XMLUtils::getChildValueAsDouble(fxNode, "NearSoldAmount", true);
     farBoughtAmount_ = XMLUtils::getChildValueAsDouble(fxNode, "FarBoughtAmount", true);
     farSoldAmount_ = XMLUtils::getChildValueAsDouble(fxNode, "FarSoldAmount", true);
+    settlement_ = XMLUtils::getChildValue(fxNode, "Settlement", false);
+    if (settlement_ == "")
+        settlement_ = "Physical";
 }
 
 XMLNode* FxSwap::toXML(XMLDocument& doc) {
@@ -121,6 +125,7 @@ XMLNode* FxSwap::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, fxNode, "NearSoldAmount", nearSoldAmount_);
     XMLUtils::addChild(doc, fxNode, "FarBoughtAmount", farBoughtAmount_);
     XMLUtils::addChild(doc, fxNode, "FarSoldAmount", farSoldAmount_);
+    XMLUtils::addChild(doc, fxNode, "Settlement", settlement_);
 
     return node;
 }

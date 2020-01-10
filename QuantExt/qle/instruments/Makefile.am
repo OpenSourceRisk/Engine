@@ -13,6 +13,7 @@ libInstruments_la_SOURCES = \
 	currencyswap.cpp \
 	deposit.cpp \
 	equityforward.cpp \
+	forwardbond.cpp \
 	fxforward.cpp \
 	makeaverageois.cpp \
 	oibasisswap.cpp \
@@ -26,7 +27,8 @@ libInstruments_la_SOURCES = \
 	commodityforward.cpp \
 	impliedbondspread.cpp \
     fixedbmaswap.cpp \
-	crossccyfixfloatswap.cpp
+	crossccyfixfloatswap.cpp \
+	rebatedexercise.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
@@ -39,6 +41,7 @@ this_include_HEADERS = \
 	currencyswap.hpp \
 	deposit.hpp \
 	equityforward.hpp \
+	forwardbond.hpp \
 	fxforward.hpp \
 	makeaverageois.hpp \
 	oibasisswap.hpp \
@@ -52,7 +55,8 @@ this_include_HEADERS = \
 	commodityforward.hpp \
 	impliedbondspread.hpp \
     fixedbmaswap.hpp \
-	crossccyfixfloatswap.hpp
+	crossccyfixfloatswap.hpp \
+	rebatedexercise.hpp
 
 noinst_LTLIBRARIES = libInstruments.la
 

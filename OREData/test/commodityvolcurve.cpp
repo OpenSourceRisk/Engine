@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <oret/datapaths.hpp>
 #include <oret/toplevelfixture.hpp>
 
 #include <boost/make_shared.hpp>
@@ -25,6 +26,11 @@
 #include <ored/marketdata/commodityvolcurve.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/todaysmarket.hpp>
+#include <ored/marketdata/csvloader.hpp>
+#include <qle/termstructures/blackvolsurfacewithatm.hpp>
+#include <qle/termstructures/blackvariancesurfacesparse.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 
 using namespace std;
 using namespace boost::unit_test_framework;
@@ -44,6 +50,9 @@ public:
     const boost::shared_ptr<MarketDatum>& get(const string& name, const Date&) const { return dummyDatum_; }
     const vector<Fixing>& loadFixings() const { return dummyFixings_; }
     const vector<Fixing>& loadDividends() const { return dummyDividends_; }
+    void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addDividend(Date date, const string& name, Real value) {}
 
 private:
     vector<boost::shared_ptr<MarketDatum>> data_;
@@ -74,6 +83,54 @@ MockLoader::MockLoader() {
         boost::make_shared<CommodityOptionQuote>(0.095, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/5Y/1190",
                                                  MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "5Y", "1190")};
 }
+
+boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof,
+    const string& inputDir, const string& curveConfigFile) {
+
+    Conventions conventions;
+    conventions.fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
+    
+    CurveConfigurations curveConfigs;
+    curveConfigs.fromFile(TEST_INPUT_FILE(string(inputDir + "/" + curveConfigFile)));
+    
+    TodaysMarketParameters todaysMarketParameters;
+    todaysMarketParameters.fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
+
+    CSVLoader loader(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
+        TEST_INPUT_FILE(string(inputDir + "/fixings.txt")), false);
+
+    return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs, conventions);
+}
+
+// clang-format off
+// NYMEX input volatility data that is provided in the input market data file
+struct NymexVolatilityData {
+
+    vector<Date> expiries;
+    map<Date, vector<Real>> strikes;
+    map<Date, vector<Real>> volatilities;
+    map<Date, Real> atmVolatilities;
+
+    NymexVolatilityData() {
+        expiries = { Date(17, Oct, 2019), Date(16, Dec, 2019), Date(17, Mar, 2020) };
+        strikes = {
+            { Date(17, Oct, 2019), { 60, 61, 62 } },
+            { Date(16, Dec, 2019), { 59, 60, 61 } },
+            { Date(17, Mar, 2020), { 57, 58, 59 } }
+        };
+        volatilities = {
+            { Date(17, Oct, 2019), { 0.4516, 0.4558, 0.4598 } },
+            { Date(16, Dec, 2019), { 0.4050, 0.4043, 0.4041 } },
+            { Date(17, Mar, 2020), { 0.3599, 0.3573, 0.3545 } }
+        };
+        atmVolatilities = {
+            { Date(17, Oct, 2019), 0.4678 },
+            { Date(16, Dec, 2019), 0.4353 },
+            { Date(17, Mar, 2020), 0.3293 }
+        };
+    }
+};
+// clang-format on
 
 } // namespace
 
@@ -219,6 +276,191 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeSurface) {
     BOOST_CHECK_CLOSE(volatility->blackVol(asof + 2 * Years, 1190.0), 0.105, testTolerance);
     BOOST_CHECK_CLOSE(volatility->blackVol(asof + 5 * Years, 1150.0), 0.085, testTolerance);
     BOOST_CHECK_CLOSE(volatility->blackVol(asof + 5 * Years, 1190.0), 0.095, testTolerance);
+}
+
+BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceWildcardExpiriesWildcardStrikes) {
+
+    // Testing commodity volatility curve building wildcard expiries and strikes in configuration and more than one 
+    // set of commodity volatility quotes in the market data. In particular, the market data in the wildcard_data 
+    // folder has commodity volatility data for two surfaces NYMEX:CL and ICE:B. Check here that the commodity 
+    // volatility curve building for NYMEX:CL uses only the 9 NYMEX:CL quotes - 3 tenors, each with 3 strikes.
+    BOOST_TEST_MESSAGE("Testing commodity volatility curve building wildcard expiries and strikes in configuration");
+
+    auto todaysMarket = createTodaysMarket(Date(16, Sep, 2019), "wildcard_data",
+        "curveconfig_surface_wc_expiries_wc_strikes.xml");
+
+    auto vts = todaysMarket->commodityVolatility("NYMEX:CL");
+
+    // Wildcards in configuration so we know that a BlackVarianceSurfaceSparse has been created and fed to a 
+    // BlackVolatilityWithATM surface in TodaysMarket
+    auto tmSurface = boost::dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
+    BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket" <<
+        " to be of type BlackVolatilityWithATM");
+    auto surface = boost::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(tmSurface->surface());
+    BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket to contain" <<
+        " a surface of type BlackVarianceSurfaceSparse");
+
+    // The expected NYMEX CL volatility data
+    NymexVolatilityData expData;
+
+    // Check what is loaded against expected data as provided in market data file for NYMEX:CL.
+    // Note: the BlackVarianceSurfaceSparse adds a dummy expiry slice at time zero
+    BOOST_REQUIRE_EQUAL(surface->expiries().size() - 1, expData.expiries.size());
+    for (Size i = 0; i < expData.strikes.size(); i++) {
+        BOOST_CHECK_EQUAL(surface->expiries()[i + 1], expData.expiries[i]);
+    }
+    
+    BOOST_REQUIRE_EQUAL(surface->strikes().size() - 1, expData.strikes.size());
+    for (Size i = 0; i < expData.strikes.size(); i++) {
+
+        // Check the strikes against the input
+        Date e = expData.expiries[i];
+        BOOST_REQUIRE_EQUAL(surface->strikes()[i + 1].size(), expData.strikes[e].size());
+        for (Size j = 0; j < surface->strikes()[i + 1].size(); j++) {
+            BOOST_CHECK_CLOSE(expData.strikes[e][j], surface->strikes()[i + 1][j], 1e-12);
+        }
+        
+        // Check the volatilities against the input
+        BOOST_REQUIRE_EQUAL(surface->values()[i + 1].size(), expData.volatilities[e].size());
+        for (Size j = 0; j < surface->values()[i + 1].size(); j++) {
+            BOOST_CHECK_CLOSE(expData.volatilities[e][j], surface->blackVol(e, surface->strikes()[i + 1][j]), 1e-12);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceWildcardExpiriesExplicitStrikes) {
+
+    BOOST_TEST_MESSAGE("Testing commodity volatility curve building wildcard expiries and explicit strikes in configuration");
+
+    auto todaysMarket = createTodaysMarket(Date(16, Sep, 2019), "wildcard_data",
+        "curveconfig_surface_wc_expiries_explicit_strikes.xml");
+
+    auto vts = todaysMarket->commodityVolatility("NYMEX:CL");
+
+    // Wildcards in configuration so we know that a BlackVarianceSurfaceSparse has been created and fed to a 
+    // BlackVolatilityWithATM surface in TodaysMarket
+    auto tmSurface = boost::dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
+    BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket" <<
+        " to be of type BlackVolatilityWithATM");
+    auto surface = boost::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(tmSurface->surface());
+    BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket to contain" <<
+        " a surface of type BlackVarianceSurfaceSparse");
+
+    // The expected NYMEX CL volatility data
+    NymexVolatilityData expData;
+
+    // Check what is loaded against expected data as provided in market data file for NYMEX:CL. The explicit strikes
+    // that we have chosen lead have only two corresponding expiries i.e. 2019-10-17 and 2019-12-16
+    // Note: the BlackVarianceSurfaceSparse adds a dummy expiry slice at time zero
+    vector<Date> expExpiries{ Date(17, Oct, 2019), Date(16, Dec, 2019) };
+    BOOST_REQUIRE_EQUAL(surface->expiries().size() - 1, expExpiries.size());
+    for (Size i = 0; i < expExpiries.size(); i++) {
+        BOOST_CHECK_EQUAL(surface->expiries()[i + 1], expExpiries[i]);
+    }
+
+    // The explicit strikes in the config are 60 and 61
+    vector<Real> expStrikes{ 60, 61 };
+    BOOST_REQUIRE_EQUAL(surface->strikes().size() - 1, expExpiries.size());
+    for (Size i = 0; i < expExpiries.size(); i++) {
+
+        // Check the strikes against the expected explicit strikes
+        BOOST_REQUIRE_EQUAL(surface->strikes()[i + 1].size(), expStrikes.size());
+        for (Size j = 0; j < surface->strikes()[i + 1].size(); j++) {
+            BOOST_CHECK_CLOSE(expStrikes[j], surface->strikes()[i + 1][j], 1e-12);
+        }
+
+        // Check the volatilities against the input
+        Date e = expExpiries[i];
+        BOOST_REQUIRE_EQUAL(surface->values()[i + 1].size(), expStrikes.size());
+        for (Size j = 0; j < surface->values()[i + 1].size(); j++) {
+            // Find the index of the explicit strike in the input data
+            Real expStrike = expStrikes[j];
+            auto it = find_if(expData.strikes[e].begin(), expData.strikes[e].end(),
+                [expStrike](Real s) { return close(expStrike, s); });
+            BOOST_REQUIRE_MESSAGE(it != expData.strikes[e].end(), "Strike not found in input strikes");
+            auto idx = distance(expData.strikes[e].begin(), it);
+
+            BOOST_CHECK_CLOSE(expData.volatilities[e][idx], surface->blackVol(e, surface->strikes()[i + 1][j]), 1e-12);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceExplicitExpiriesWildcardStrikes) {
+
+    BOOST_TEST_MESSAGE("Testing commodity volatility curve building explicit expiries and wildcard strikes in configuration");
+
+    auto todaysMarket = createTodaysMarket(Date(16, Sep, 2019), "wildcard_data",
+        "curveconfig_surface_explicit_expiries_wc_strikes.xml");
+
+    auto vts = todaysMarket->commodityVolatility("NYMEX:CL");
+
+    // Wildcards in configuration so we know that a BlackVarianceSurfaceSparse has been created and fed to a 
+    // BlackVolatilityWithATM surface in TodaysMarket
+    auto tmSurface = boost::dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
+    BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket" <<
+        " to be of type BlackVolatilityWithATM");
+    auto surface = boost::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(tmSurface->surface());
+    BOOST_REQUIRE_MESSAGE(tmSurface, "Expected the commodity vol structure in TodaysMarket to contain" <<
+        " a surface of type BlackVarianceSurfaceSparse");
+
+    // The expected NYMEX CL volatility data
+    NymexVolatilityData expData;
+
+    // Check what is loaded against expected data as provided in market data file for NYMEX:CL.
+    // We have chosen the explicit expiries 2019-10-17 and 2019-12-16
+    // Note: the BlackVarianceSurfaceSparse adds a dummy expiry slice at time zero
+    vector<Date> expExpiries{ Date(17, Oct, 2019), Date(16, Dec, 2019) };
+    BOOST_REQUIRE_EQUAL(surface->expiries().size() - 1, expExpiries.size());
+    for (Size i = 0; i < expExpiries.size(); i++) {
+        BOOST_CHECK_EQUAL(surface->expiries()[i + 1], expExpiries[i]);
+    }
+
+    BOOST_REQUIRE_EQUAL(surface->strikes().size() - 1, expExpiries.size());
+    for (Size i = 0; i < expExpiries.size(); i++) {
+
+        // Check the strikes against the input
+        Date e = expExpiries[i];
+        BOOST_REQUIRE_EQUAL(surface->strikes()[i + 1].size(), expData.strikes[e].size());
+        for (Size j = 0; j < surface->strikes()[i + 1].size(); j++) {
+            BOOST_CHECK_CLOSE(expData.strikes[e][j], surface->strikes()[i + 1][j], 1e-12);
+        }
+
+        // Check the volatilities against the input
+        BOOST_REQUIRE_EQUAL(surface->values()[i + 1].size(), expData.volatilities[e].size());
+        for (Size j = 0; j < surface->values()[i + 1].size(); j++) {
+            BOOST_CHECK_CLOSE(expData.volatilities[e][j], surface->blackVol(e, surface->strikes()[i + 1][j]), 1e-12);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceExplicitExpiriesExplicitStrikes) {
+
+    BOOST_TEST_MESSAGE("Testing commodity volatility curve building explicit expiries and explicit strikes in configuration");
+
+    auto todaysMarket = createTodaysMarket(Date(16, Sep, 2019), "wildcard_data",
+        "curveconfig_surface_explicit_expiries_explicit_strikes.xml");
+
+    auto vts = todaysMarket->commodityVolatility("NYMEX:CL");
+
+    // The expected NYMEX CL volatility data
+    NymexVolatilityData expData;
+
+    // We have provided two explicit expiries, 2019-10-17 and 2019-12-16, and two explicit strikes, 60 and 61.
+    // We check the volatility term structure at these 4 points against the input data
+    vector<Date> expExpiries{ Date(17, Oct, 2019), Date(16, Dec, 2019) };
+    vector<Real> expStrikes{ 60, 61 };
+    for (const Date& e : expExpiries) {
+        for (Real s : expStrikes) {
+            // Find the index of the explicit strike in the input data
+            auto it = find_if(expData.strikes[e].begin(), expData.strikes[e].end(),
+                [s](Real strike) { return close(strike, s); });
+            BOOST_REQUIRE_MESSAGE(it != expData.strikes[e].end(), "Strike not found in input strikes");
+            auto idx = distance(expData.strikes[e].begin(), it);
+
+            Real inputVol = expData.volatilities[e][idx];
+            BOOST_CHECK_CLOSE(inputVol, vts->blackVol(e, s), 1e-12);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

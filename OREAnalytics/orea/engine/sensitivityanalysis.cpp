@@ -416,6 +416,25 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             shiftMult = yoyRate;
         }
     } break;
+    case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility: {
+        string name = keylabel;
+        auto itr = sensiParams.yoyInflationCapFloorVolShiftData().find(name);
+        QL_REQUIRE(itr != sensiParams.yoyInflationCapFloorVolShiftData().end(), "shiftData not found for " << name);
+        shiftSize = itr->second.shiftSize;
+        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            vector<Real> strikes = itr->second.shiftStrikes;
+            vector<Period> expiries = itr->second.shiftExpiries;
+            QL_REQUIRE(strikes.size() > 0, "Only strike yoy inflation capfloor vols supported");
+            Size keyIdx = key.index;
+            Size expIdx = keyIdx / strikes.size();
+            Period p_exp = expiries[expIdx];
+            Size strIdx = keyIdx % strikes.size();
+            Real strike = strikes[strIdx];
+            Handle<QuantExt::YoYOptionletVolatilitySurface> vts = simMarket->yoyCapFloorVol(name, marketConfiguration);
+            Real vol = vts->volatility(p_exp, strike, vts->observationLag());
+            shiftMult = vol;
+        }
+    } break;
     case RiskFactorKey::KeyType::CommodityCurve: {
         auto it = sensiParams.commodityCurveShiftData().find(keylabel);
         QL_REQUIRE(it != sensiParams.commodityCurveShiftData().end(), "shiftData not found for " << keylabel);
@@ -437,7 +456,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             Size expiryIndex = key.index % it->second.shiftExpiries.size();
             Real moneyness = it->second.shiftStrikes[moneynessIndex];
             Period expiry = it->second.shiftExpiries[expiryIndex];
-            Real spotValue = simMarket->commoditySpot(keylabel, marketConfiguration)->value();
+            Real spotValue = simMarket->commodityPriceCurve(keylabel, marketConfiguration)->price(0);
             Handle<BlackVolTermStructure> vts = simMarket->commodityVolatility(keylabel, marketConfiguration);
             Time t = vts->dayCounter().yearFraction(asof, asof + expiry);
             Real vol = vts->blackVol(t, moneyness * spotValue);

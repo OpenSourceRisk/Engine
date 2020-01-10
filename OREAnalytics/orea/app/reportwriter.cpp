@@ -128,12 +128,13 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
     for (Size k = 0; k < trades.size(); k++) {
-        if (trades[k]->tradeType() == "Swaption" || trades[k]->tradeType() == "CapFloor") {
+        if (!trades[k]->hasCashflows()) {
             WLOG("cashflow for " << trades[k]->tradeType() << " " << trades[k]->id() << " skipped");
             continue;
         }
         try {
             const vector<Leg>& legs = trades[k]->legs();
+            const Real multiplier = trades[k]->instrument()->multiplier();
             for (size_t i = 0; i < legs.size(); i++) {
                 const QuantLib::Leg& leg = legs[i];
                 bool payer = trades[k]->legPayers()[i];
@@ -144,7 +145,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                 for (size_t j = 0; j < leg.size(); j++) {
                     boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
                     Date payDate = ptrFlow->date();
-                    if (payDate >= asof) {
+                    if (!ptrFlow->hasOccurred(asof)) {
                         Real amount = ptrFlow->amount();
                         string flowType = "";
                         if (payer)
@@ -206,6 +207,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             fixingDate = Null<Date>();
                             fixingValue = Null<Real>();
                         }
+                        Real effectiveAmount = amount * (amount == Null<Real>() ? 1.0 : multiplier);
                         report.next()
                             .add(trades[k]->id())
                             .add(trades[k]->tradeType())
@@ -213,23 +215,71 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             .add(i)
                             .add(payDate)
                             .add(flowType)
-                            .add(amount)
+                            .add(effectiveAmount)
                             .add(ccy)
                             .add(coupon)
                             .add(accrual)
                             .add(fixingDate)
                             .add(fixingValue)
-                            .add(notional);
+                            .add(notional * (notional == Null<Real>() ? 1.0 : multiplier));
 
                         if (write_discount_factor) {
                             Real discountFactor = discountCurve->discount(payDate);
                             report.add(discountFactor);
-                            Real presentValue = discountFactor * amount;
+                            Real presentValue = discountFactor * effectiveAmount;
                             report.add(presentValue);
                         }
                     }
                 }
             }
+
+            // write conditional cashflows that might be provided as additional results
+            // we assume fixed labels and types for these results, otherwise we don't
+            // write out any conditional flows
+            auto qlInstr = trades[k]->instrument()->qlInstrument();
+            auto condCfAmounts = qlInstr->additionalResults().find("cashflowAmounts");
+            auto condCfDates = qlInstr->additionalResults().find("cashflowDates");
+            auto condCfCurrencies = qlInstr->additionalResults().find("cashflowCurrencies");
+            if (condCfAmounts != qlInstr->additionalResults().end() &&
+                condCfDates != qlInstr->additionalResults().end() &&
+                condCfCurrencies != qlInstr->additionalResults().end()) {
+                QL_REQUIRE(condCfAmounts->second.type() == typeid(std::vector<Real>),
+                           "cashflowAmounts type not handled");
+                QL_REQUIRE(condCfAmounts->second.type() == typeid(std::vector<Real>), "cashflowDates type not handled");
+                QL_REQUIRE(condCfAmounts->second.type() == typeid(std::vector<Real>),
+                           "cashflowCurrencies type not handled");
+                std::vector<Real> condCfAmountsVec = boost::any_cast<std::vector<Real>>(condCfAmounts->second);
+                std::vector<Date> condCfDatesVec = boost::any_cast<std::vector<Date>>(condCfDates->second);
+                std::vector<string> condCfCurrenciesVec =
+                    boost::any_cast<std::vector<string>>(condCfCurrencies->second);
+                QL_REQUIRE(condCfAmountsVec.size() == condCfDatesVec.size(),
+                           "cashflowAmounts and cashflowDates size mismatch");
+                QL_REQUIRE(condCfAmountsVec.size() == condCfCurrenciesVec.size(),
+                           "cashflowAmounts and cashflowCurrencies size mismatch");
+                for (Size i = 0; i < condCfAmountsVec.size(); ++i) {
+                    Real effectiveAmount = condCfAmountsVec[i] * (condCfAmountsVec[i] == Null<Real>() ? 1.0 : multiplier);
+                    report.next()
+                        .add(trades[k]->id())
+                        .add(trades[k]->tradeType())
+                        .add(i + 1)
+                        .add(i)
+                        .add(condCfDatesVec[i])
+                        .add("")
+                        .add(effectiveAmount)
+                        .add(condCfCurrenciesVec[i])
+                        .add(Null<Real>())
+                        .add(Null<Real>())
+                        .add(Null<Date>())
+                        .add(Null<Real>())
+                        .add(Null<Real>());
+                    if (write_discount_factor) {
+                        Handle<YieldTermStructure> discountCurve = market->discountCurve(condCfCurrenciesVec[i]);
+                        Real discountFactor = discountCurve->discount(condCfDatesVec[i]);
+                        report.add(discountFactor).add(discountFactor * effectiveAmount);
+                    }
+                }
+            }
+
         } catch (std::exception& e) {
             LOG("Exception writing cashflow report : " << e.what());
         } catch (...) {
@@ -590,7 +640,7 @@ void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const
     report.end();
 }
 
-void ReportWriter::writeScenarioReport(Report& report, const boost::shared_ptr<SensitivityCube>& sensitivityCube,
+void ReportWriter::writeScenarioReport(ore::data::Report& report, const boost::shared_ptr<SensitivityCube>& sensitivityCube,
                                        Real outputThreshold) {
 
     LOG("Writing Scenario report");
@@ -602,12 +652,18 @@ void ReportWriter::writeScenarioReport(Report& report, const boost::shared_ptr<S
     report.addColumn("Scenario NPV", double(), 2);
     report.addColumn("Difference", double(), 2);
 
-    for (const auto& tradeId : sensitivityCube->tradeIds()) {
-        Real baseNpv = sensitivityCube->npv(tradeId);
+    auto scenarioDescriptions = sensitivityCube->scenarioDescriptions();
+    auto tradeIds = sensitivityCube->tradeIds();
+    auto npvCube = sensitivityCube->npvCube();
 
-        for (const auto& scenarioDescription : sensitivityCube->scenarioDescriptions()) {
+    for (Size i = 0; i < tradeIds.size(); i++) {
+        Real baseNpv = npvCube->getT0(i);
+        auto tradeId = tradeIds[i];
 
-            Real scenarioNpv = sensitivityCube->npv(tradeId, scenarioDescription);
+        for (Size j = 0; j < scenarioDescriptions.size(); j++) {
+            auto scenarioDescription = scenarioDescriptions[j];
+
+            Real scenarioNpv = npvCube->get(i, j);
             Real difference = scenarioNpv - baseNpv;
 
             if (fabs(difference) > outputThreshold) {
@@ -618,10 +674,11 @@ void ReportWriter::writeScenarioReport(Report& report, const boost::shared_ptr<S
                 report.add(baseNpv);
                 report.add(scenarioNpv);
                 report.add(difference);
-            } else if (!std::isfinite(difference)) {
+            }
+            else if (!std::isfinite(difference)) {
                 // TODO: is this needed?
                 ALOG("sensitivity scenario for trade " << tradeId << ", factor " << scenarioDescription.factors()
-                                                       << " is not finite (" << difference << ")");
+                    << " is not finite (" << difference << ")");
             }
         }
     }

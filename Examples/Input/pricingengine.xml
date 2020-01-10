@@ -24,6 +24,17 @@
     <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="FxOptionAmerican">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
+      <Parameter name="XGrid">100</Parameter>
+      <Parameter name="DampingSteps">0</Parameter>
+    </EngineParameters>
+  </Product>
   <Product type="EuropeanSwaption">
     <Model>BlackBachelier</Model>
     <!-- depends on input vol -->
@@ -64,6 +75,12 @@
     <Engine>YYCapEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="CapFlooredYYLeg">
+    <Model>CapFlooredYYModel</Model>
+    <ModelParameters/>
+    <Engine>CapFlooredYYCouponPricer</Engine>
+    <EngineParameters/>
+  </Product>
   <Product type="CapFlooredIborLeg">
     <Model>BlackOrBachelier</Model>
     <ModelParameters/>
@@ -87,10 +104,29 @@
     <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="EquityOptionAmerican">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
+      <Parameter name="XGrid">100</Parameter>
+      <Parameter name="DampingSteps">0</Parameter>
+    </EngineParameters>
+  </Product>
   <Product type="Bond">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
     <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="ForwardBond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingForwardBondEngine</Engine>
     <EngineParameters>
       <Parameter name="TimestepPeriod">6M</Parameter>
     </EngineParameters>
@@ -170,11 +206,11 @@
     <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters/>
   </Product>
-    <Product type="CPICapFloor">
+  <Product type="CPICapFloor">
     <Model>CPICapFloorModel</Model>
     <ModelParameters/>
     <!--<Engine>CPICapFloorEngine</Engine>-->
     <Engine>CPIBlackCapFloorEngine</Engine>
-    <EngineParameters/> 
+    <EngineParameters/>
   </Product>
 </PricingEngines>

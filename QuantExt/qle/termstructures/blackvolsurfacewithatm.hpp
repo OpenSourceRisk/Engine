@@ -61,10 +61,20 @@ public:
     const Date& referenceDate() const { return surface_->referenceDate(); }
     Calendar calendar() const { return surface_->calendar(); }
     Natural settlementDays() const { return surface_->settlementDays(); }
+    //@}
+
     //! \name VolatilityTermStructure interface
     //@{
     Rate minStrike() const { return surface_->minStrike(); }
     Rate maxStrike() const { return surface_->maxStrike(); }
+    //@}
+
+    //! \name Inspectors
+    //@{
+    boost::shared_ptr<BlackVolTermStructure> surface() const { return surface_; }
+    Handle<Quote> spot() const { return spot_; }
+    Handle<YieldTermStructure> yield1() const { return yield1_; }
+    Handle<YieldTermStructure> yield2() const { return yield2_; }
     //@}
 
 protected:

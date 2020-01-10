@@ -36,6 +36,7 @@ using QuantExt::AverageONIndexedCoupon;
 using QuantExt::EquityCoupon;
 using QuantExt::FloatingRateFXLinkedNotionalCoupon;
 using QuantExt::FXLinkedCashFlow;
+using QuantExt::SubPeriodsCoupon;
 using QuantLib::Leg;
 using QuantLib::Settings;
 using QuantLib::ZeroInflationIndex;
@@ -56,21 +57,21 @@ namespace {
 
 // Add fixing dates on coupons with fxFixingDate method i.e. FX fixings
 template <class Coupon>
-void addFxFixings(const Coupon& c, set<Date>& dates, const Date& today, bool ethf) {
+void addFxFixings(const Coupon& c, set<Date>& dates, const Date& today) {
     Date fxFixingDate = c.fxFixingDate();
-    if (fxFixingDate < today || (fxFixingDate == today && ethf)) {
+    if (fxFixingDate <= today) {
         dates.insert(fxFixingDate);
     }
 }
 
 // Add fixing dates on coupons with fixingDates method i.e. multiple fixings
 template <class Coupon>
-void addMultipleFixings(const Coupon& c, set<Date>& dates, const Date& today, bool ethf) {
+void addMultipleFixings(const Coupon& c, set<Date>& dates, const Date& today) {
     // Assume that I get sorted fixing dates here
     vector<Date> fixingDates = c.fixingDates();
     if (fixingDates.front() <= today) {
         for (const auto& fixingDate : fixingDates) {
-            if (fixingDate < today || (fixingDate == today && ethf)) {
+            if (fixingDate <= today) {
                 dates.insert(fixingDate);
             }
         }
@@ -136,17 +137,6 @@ void addZeroInflationDates(set<Date>& dates, const Date& fixingDate, const Date&
 namespace ore {
 namespace data {
 
-set<Date> fixingDates(const Leg& leg, Date settlementDate) {
-    
-    FixingDateGetter fdg(settlementDate);
-    
-    for (const auto& cf: leg) {
-        cf->accept(fdg);
-    }
-    
-    return fdg.fixingDates();
-}
-
 FixingDateGetter::FixingDateGetter(const Date& settlementDate) {
 
     today_ = settlementDate;
@@ -159,11 +149,13 @@ void FixingDateGetter::visit(CashFlow& c) {
 }
 
 void FixingDateGetter::visit(FloatingRateCoupon& c) {
-    if (!c.hasOccurred(today_)) {
+    // Some pricing engines in QL (e.g CapFloor) don't respect
+    // hasOccurred() and ask for the fixing regarless, so we
+    // are conservative here and ask for a fixing if it is today.
+    if (!c.hasOccurred(today_) || c.date() == today_) {
         Date fixingDate = c.fixingDate();
-        if (fixingDate < today_ || (fixingDate == today_ &&
-            Settings::instance().enforcesTodaysHistoricFixings())) {
-            fixingDates_.insert(fixingDate);
+        if (fixingDate <= today_) {
+            indicesDates_[c.index()->name()].insert(fixingDate);
         }
     }
 }
@@ -184,7 +176,8 @@ void FixingDateGetter::visit(CPICashFlow& c) {
         QL_REQUIRE(zeroInflationIndex, "Expected CPICashFlow to have an index of type ZeroInflationIndex");
         
         // Mimic the logic in QuantLib::CPICashFlow::amount() to arrive at the fixing date(s) needed
-        addZeroInflationDates(fixingDates_, fixingDate, today_, zeroInflationIndex, c.interpolation(), c.frequency());
+        string name = zeroInflationIndex->name();
+        addZeroInflationDates(indicesDates_[name], fixingDate, today_, zeroInflationIndex, c.interpolation(), c.frequency());
     }
 }
 
@@ -198,7 +191,8 @@ void FixingDateGetter::visit(CPICoupon& c) {
         QL_REQUIRE(zeroInflationIndex, "Expected CPICashFlow to have an index of type ZeroInflationIndex");
 
         // Mimic the logic in QuantLib::CPICoupon::indexFixing() to arrive at the fixing date(s) needed
-        addZeroInflationDates(fixingDates_, fixingDate, today_, zeroInflationIndex, c.observationInterpolation(), zeroInflationIndex->frequency());
+        string name = zeroInflationIndex->name();
+        addZeroInflationDates(indicesDates_[name], fixingDate, today_, zeroInflationIndex, c.observationInterpolation(), zeroInflationIndex->frequency());
     }
 }
 
@@ -211,51 +205,113 @@ void FixingDateGetter::visit(YoYInflationCoupon& c) {
         QL_REQUIRE(yoyInflationIndex, "Expected YoYInflationCoupon to have an index of type YoYInflationIndex");
 
         // Get necessary fixing date(s). May be empty
+        string name = yoyInflationIndex->name();
         auto fixingDates = needsForecast(fixingDate, today_, yoyInflationIndex->interpolated(), 
             yoyInflationIndex->frequency(), yoyInflationIndex->availabilityLag());
-        fixingDates_.insert(fixingDates.begin(), fixingDates.end());
+        indicesDates_[name].insert(fixingDates.begin(), fixingDates.end());
 
         // Add the previous year's date(s) also if any.
         for (const auto d : fixingDates) {
-            fixingDates_.insert(d - 1 * Years);
+            indicesDates_[name].insert(d - 1 * Years);
         }
     }
 }
 
 void FixingDateGetter::visit(OvernightIndexedCoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addMultipleFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
+        addMultipleFixings(c, indicesDates_[c.index()->name()], today_);
     }
 }
 
 void FixingDateGetter::visit(AverageBMACoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addMultipleFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
+        addMultipleFixings(c, indicesDates_[c.index()->name()], today_);
     }
 }
 
 void FixingDateGetter::visit(AverageONIndexedCoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addMultipleFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
+        addMultipleFixings(c, indicesDates_[c.index()->name()], today_);
     }
 }
 
 void FixingDateGetter::visit(EquityCoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addMultipleFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
+        addMultipleFixings(c, indicesDates_[c.equityCurve()->name()], today_);
     }
 }
 
 void FixingDateGetter::visit(FloatingRateFXLinkedNotionalCoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addFxFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
+        addFxFixings(c, indicesDates_[c.fxIndex()->name()], today_);
     }
 }
 
 void FixingDateGetter::visit(FXLinkedCashFlow& c) {
     if (!c.hasOccurred(today_)) {
-        addFxFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
+        addFxFixings(c, indicesDates_[c.fxIndex()->name()], today_);
     }
+}
+
+void FixingDateGetter::visit(SubPeriodsCoupon& c) {
+    if (!c.hasOccurred(today_)) {
+        for (auto const& fixingDate : c.fixingDates()) {
+            if (fixingDate <= today_) {
+                indicesDates_[c.index()->name()].insert(fixingDate);
+            }
+        }
+    }
+}
+
+set<Date> fixingDates(const Leg& leg, const Date& settlementDate) {
+    
+    // If settlement date is an empty date, update to evaluation date.
+    Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
+    
+    FixingDateGetter fdg(d);
+    return fixingDates(leg, d, fdg);
+}
+
+set<Date> fixingDates(const Leg& leg, const Date& settlementDate, FixingDateGetter& fdg) {
+
+    // If settlement date is an empty date, update to evaluation date.
+    Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
+
+    map<string, set<Date>> m = fixingDatesIndices(leg, d, fdg);
+
+    if (m.size() == 0) {
+        return set<Date>();
+    }
+
+    if (m.size() > 1) {
+        WLOG("The leg has fixing dates for multiple indices but we are just returning those for the first index");
+    }
+
+    return m.begin()->second;
+}
+
+map<string, set<Date>> fixingDatesIndices(const Leg& leg, const Date& settlementDate) {
+    
+    // If settlement date is an empty date, update to evaluation date.
+    Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
+
+    FixingDateGetter fdg(d);
+    return fixingDatesIndices(leg, d, fdg);
+}
+
+map<string, set<Date>> fixingDatesIndices(const Leg& leg, const Date& settlementDate, FixingDateGetter& fdg) {
+
+    // If settlement date is an empty date, update to evaluation date.
+    Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
+
+    // Set the FixingDateGetter's settlement date
+    fdg.today() = d;
+
+    for (const auto& cf : leg) {
+        cf->accept(fdg);
+    }
+
+    return fdg.fixingDatesIndices();
 }
 
 void amendInflationFixingDates(map<string, set<Date>>& fixings) {

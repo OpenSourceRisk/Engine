@@ -110,7 +110,7 @@ public:
 
     //! YoY Inflation CapFloor volatilities
     Handle<QuantExt::YoYOptionletVolatilitySurface>
-    yoyCapFloorVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const;
+    yoyCapFloorVol(const string& name, const string& configuration = Market::defaultConfiguration) const;
 
     //! Inflation Indexes
     virtual Handle<ZeroInflationIndex>
@@ -158,9 +158,6 @@ public:
                                                       const string& configuration = Market::defaultConfiguration) const;
 
     //! Commodity curves
-    QuantLib::Handle<QuantLib::Quote> commoditySpot(const string& commodityName,
-                                                    const string& configuration = Market::defaultConfiguration) const;
-
     QuantLib::Handle<QuantExt::PriceTermStructure>
     commodityPriceCurve(const string& commodityName, const string& configuration = Market::defaultConfiguration) const;
 
@@ -214,7 +211,6 @@ protected:
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
     map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
     map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>> correlationCurves_;
-    map<pair<string, string>, QuantLib::Handle<QuantLib::Quote>> commoditySpots_;
     map<pair<string, string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
     map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;

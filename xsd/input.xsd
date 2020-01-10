@@ -11,5 +11,6 @@
   <xs:include schemaLocation="sensitivity.xsd"/>
   <xs:include schemaLocation="stress.xsd"/>
   <xs:include schemaLocation="ore.xsd"/>
+  <xs:include schemaLocation="calendaradjustment.xsd"/>
 
 </xs:schema>

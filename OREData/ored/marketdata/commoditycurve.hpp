@@ -28,6 +28,7 @@
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 
@@ -42,21 +43,53 @@ public:
     CommodityCurve() {}
 
     //! Detailed constructor
-    CommodityCurve(const QuantLib::Date& asof, const CommodityCurveSpec& spec, const Loader& loader,
-                   const CurveConfigurations& curveConfigs, const Conventions& conventions);
+    CommodityCurve(const QuantLib::Date& asof,
+        const CommodityCurveSpec& spec,
+        const Loader& loader,
+        const CurveConfigurations& curveConfigs,
+        const Conventions& conventions,
+        const FXTriangulation& fxSpots = FXTriangulation(),
+        const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves = {},
+        const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves = {});
     //@}
 
     //! \name Inspectors
     //@{
     const CommodityCurveSpec& spec() const { return spec_; }
     boost::shared_ptr<QuantExt::PriceTermStructure> commodityPriceCurve() const { return commodityPriceCurve_; }
-    QuantLib::Real commoditySpot() const { return commoditySpot_; }
     //@}
 
 private:
     CommodityCurveSpec spec_;
     boost::shared_ptr<QuantExt::PriceTermStructure> commodityPriceCurve_;
+
+    //! Store the commodity spot value with \c Null<Real>() indicating that none has been provided.
     QuantLib::Real commoditySpot_;
+
+    //! Store the overnight value if any
+    QuantLib::Real onValue_;
+
+    //! Store the tomorrow next value if any
+    QuantLib::Real tnValue_;
+
+    //! Populate \p data with dates and prices from the loader
+    void populateData(std::map<QuantLib::Date, QuantLib::Real>& data, const QuantLib::Date& asof, 
+        const boost::shared_ptr<CommodityCurveConfig>& config, const Loader& loader, const Conventions& conventions);
+
+    //! Add node to price curve \p data with check for duplicate expiry dates
+    void add(const QuantLib::Date& asof, const QuantLib::Date& expiry, QuantLib::Real value,
+        std::map<QuantLib::Date, QuantLib::Real>& data, bool outright, QuantLib::Real pointsFactor = 1.0);
+
+    //! Build price curve using the curve \p data
+    void buildCurve(const QuantLib::Date& asof, const std::map<QuantLib::Date, QuantLib::Real>& data,
+        const boost::shared_ptr<CommodityCurveConfig>& config);
+
+    //! Build cross currency commodity price curve
+    void buildCrossCurrencyPriceCurve(const QuantLib::Date& asof,
+        const boost::shared_ptr<CommodityCurveConfig>& config, 
+        const boost::shared_ptr<CommodityCurveConfig>& baseConfig, const FXTriangulation& fxSpots,
+        const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+        const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves);
 };
 } // namespace data
 } // namespace ore

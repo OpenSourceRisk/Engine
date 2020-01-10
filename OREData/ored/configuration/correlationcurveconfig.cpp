@@ -63,7 +63,7 @@ std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t)
 CorrelationCurveConfig::CorrelationCurveConfig(const string& curveID, const string& curveDescription,
                                                const Dimension& dimension, const CorrelationType& corrType,
                                                const string& convention, const QuoteType& quoteType,
-                                               const bool extrapolate, const vector<Period>& optionTenors,
+                                               const bool extrapolate, const vector<string>& optionTenors,
                                                const DayCounter& dayCounter, const Calendar& calendar,
                                                const BusinessDayConvention& businessDayConvention, const string& index1,
                                                const string& index2, const string& currency, const string& swaptionVol,
@@ -91,7 +91,7 @@ const vector<string>& CorrelationCurveConfig::quotes() {
 
         for (auto o : optionTenors_) {
             std::stringstream ss;
-            ss << base << "/" << to_string(o) << "/ATM";
+            ss << base << "/" << o << "/ATM";
             quotes_.push_back(ss.str());
         }
     }
@@ -114,11 +114,13 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     }
 
     string quoteType = XMLUtils::getChildValue(node, "QuoteType", true);
-    if (quoteType == "RATE") {
+    // For QuoteType, we use an insensitive compare because we previously used "Rate" here
+    // But now we want to be consistent with the market datum name
+    if (boost::iequals(quoteType, "RATE")) {
         quoteType_ = QuoteType::Rate;
-    } else if (quoteType == "PRICE") {
+    } else if (boost::iequals(quoteType, "PRICE")) {
         quoteType_ = QuoteType::Price;
-    } else if (quoteType == "NULL") {
+    } else if (boost::iequals(quoteType, "NULL")) {
         quoteType_ = QuoteType::Null;
     } else {
         QL_FAIL("Quote type " << quoteType << " not recognized");
@@ -132,15 +134,14 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
 
         dc = XMLUtils::getChildValue(node, "DayCounter", false);
         dc == "" ? dayCounter_ = QuantLib::ActualActual() : dayCounter_ = parseDayCounter(dc);
-    } else // Compulsory information for Rate and Price QuoteTypes
-    {
+    } else { // Compulsory information for Rate and Price QuoteTypes
         cal = XMLUtils::getChildValue(node, "Calendar", true);
         calendar_ = parseCalendar(cal);
 
         dc = XMLUtils::getChildValue(node, "DayCounter", true);
         dayCounter_ = parseDayCounter(dc);
 
-        optionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "OptionTenors", true);
+        optionTenors_ = XMLUtils::getChildrenValuesAsStrings(node, "OptionTenors", true);
         QL_REQUIRE(optionTenors_.size() > 0, "no option tenors supplied");
 
         string dim = XMLUtils::getChildValue(node, "Dimension", true);
@@ -202,7 +203,6 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "QuoteType", to_string(quoteType_));
 
-
     if (quoteType_ != QuoteType::Null) {
 
         XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
@@ -222,5 +222,66 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
 
     return node;
 }
+
+bool indexNameLessThan(const std::string& index1, const std::string& index2) {
+    vector<string> tokens1;
+    boost::split(tokens1, index1, boost::is_any_of("-"));
+    vector<string> tokens2;
+    boost::split(tokens2, index2, boost::is_any_of("-"));
+
+    QL_REQUIRE(tokens1.size() >= 2, "at least two tokens expected in " << index1);
+    QL_REQUIRE(tokens2.size() >= 2, "at least two tokens expected in " << index2);
+
+    Size s1, s2;
+
+    if (tokens1[0] == "CMS")
+        s1 = 4;
+    else if (tokens1[0] == "FX")
+        s1 = 2;
+    else if (tokens1[0] == "EQ")
+        s1 = 1;
+    else if (tokens1[0] == "COMM")
+        s1 = 0;
+    else
+        s1 = 3; // assume Ibor
+
+    if (tokens2[0] == "CMS")
+        s2 = 4;
+    else if (tokens2[0] == "FX")
+        s2 = 2;
+    else if (tokens2[0] == "EQ")
+        s2 = 1;
+    else if (tokens2[0] == "COMM")
+        s2 = 0;
+    else
+        s2 = 3; // assume Ibor
+
+    if (s1 < s2)
+        return true;
+    else if (s2 < s1)
+        return false;
+
+    // both EQ or both COM
+    if (s1 == 0 || s1 == 1)
+        return tokens1[1] < tokens2[1];
+
+    QL_REQUIRE(tokens1.size() >= 3, "at least three tokens expected in " << index1)
+    QL_REQUIRE(tokens2.size() >= 3, "at least three tokens expected in " << index2)
+
+    // both CMS or both Ibor
+    if (s1 == 3 || s1 == 4)
+        return parsePeriod(tokens1[2]) < parsePeriod(tokens2[2]);
+
+    QL_REQUIRE(tokens1.size() >= 4, "at least four tokens expected in " << index1)
+    QL_REQUIRE(tokens2.size() >= 4, "at least four tokens expected in " << index2)
+
+    // both FX, compare CCY1 then CCY2 alphabetical
+    if (s1 == 2) {
+        return (tokens1[2] + "-" + tokens1[3]) < (tokens2[2] + "-" + tokens2[3]);
+    }
+
+    QL_FAIL("indexNameLessThan(): internal error");
+}
+
 } // namespace data
 } // namespace ore

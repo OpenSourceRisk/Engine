@@ -61,7 +61,7 @@ public:
     //! Detailed constructor
     CorrelationCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
                            const CorrelationType& corrType, const string& conventions, const QuoteType& quoteType,
-                           const bool extrapolate, const vector<Period>& optionTenors, const DayCounter& dayCounter,
+                           const bool extrapolate, const vector<string>& optionTenors, const DayCounter& dayCounter,
                            const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
                            const string& index1, const string& index2, const string& currency,
                            const string& swaptionVol = "", const string& discountCurve = "");
@@ -80,7 +80,7 @@ public:
     const Dimension& dimension() const { return dimension_; }
     const QuoteType& quoteType() const { return quoteType_; }
     const bool& extrapolate() const { return extrapolate_; }
-    const vector<Period>& optionTenors() const { return optionTenors_; }
+    const vector<string>& optionTenors() const { return optionTenors_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const Calendar& calendar() const { return calendar_; }
     const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
@@ -100,7 +100,7 @@ public:
     Dimension& dimension() { return dimension_; }
     QuoteType& quoteType() { return quoteType_; }
     bool& extrapolate() { return extrapolate_; }
-    vector<Period>& optionTenors() { return optionTenors_; }
+    vector<string>& optionTenors() { return optionTenors_; }
     DayCounter& dayCounter() { return dayCounter_; }
     Calendar& calendar() { return calendar_; }
     string& index1() { return index1_; }
@@ -117,7 +117,7 @@ private:
     string conventions_;
     QuoteType quoteType_;
     bool extrapolate_;
-    vector<Period> optionTenors_;
+    vector<string> optionTenors_;
     DayCounter dayCounter_;
     Calendar calendar_;
     BusinessDayConvention businessDayConvention_;
@@ -128,5 +128,15 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t);
+
+// Correlation pairs ordering, by convention we use pairs Index1:Index2 with
+// Index2 < Index1, where the ordering on index names is defined via
+// 1) CMS > Ibor > FX > EQ > COM
+// 2) Tenor
+// 3) currency / name (alphabetical)
+// Eg. EUR-CMS-10Y:GBP-LIBOR-6M, GBP-LIBOR-6M:FX-ECB-EUR-USD,
+// EUR-CMS-10Y:EUR-CMS-2Y, GBP-CMS-10Y:EUR-CMS-2Y
+bool indexNameLessThan(const std::string& index1, const std::string& index2);
+
 } // namespace data
 } // namespace ore

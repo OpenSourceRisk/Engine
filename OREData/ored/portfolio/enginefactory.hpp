@@ -187,7 +187,8 @@ public:
     const boost::shared_ptr<Market>& market() const { return market_; };
     //! Return the market configurations used by this EngineFactory
     const map<MarketContext, string>& configurations() const { return configurations_; };
-
+    //! Return the EngineData parameters
+    const boost::shared_ptr<EngineData> engineData() const { return engineData_; };
     //! Register a builder with the factory
     void registerBuilder(const boost::shared_ptr<EngineBuilder>& builder);
 

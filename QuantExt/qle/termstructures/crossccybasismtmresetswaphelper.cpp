@@ -38,13 +38,17 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     const Handle<YieldTermStructure>& foreignCcyDiscountCurve,
     const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
     const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve,
-    const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve, bool eom, bool spreadOnForeignCcy, bool invertFxIndex)
+    const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve, 
+    bool eom, bool spreadOnForeignCcy, bool invertFxIndex,
+    boost::optional<Period> foreignTenor, boost::optional<Period> domesticTenor)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       foreignCcyIndex_(foreignCcyIndex), domesticCcyIndex_(domesticCcyIndex),
       foreignCcyDiscountCurve_(foreignCcyDiscountCurve), domesticCcyDiscountCurve_(domesticCcyDiscountCurve),
       foreignCcyFxFwdRateCurve_(foreignCcyFxFwdRateCurve), domesticCcyFxFwdRateCurve_(domesticCcyFxFwdRateCurve),
-      eom_(eom), spreadOnForeignCcy_(spreadOnForeignCcy), invertFxIndex_(invertFxIndex) {
+      eom_(eom), spreadOnForeignCcy_(spreadOnForeignCcy), invertFxIndex_(invertFxIndex),
+      foreignTenor_(foreignTenor ? *foreignTenor : foreignCcyIndex_->tenor()),
+      domesticTenor_(domesticTenor ? *domesticTenor : domesticCcyIndex_->tenor()) {
 
     foreignCurrency_ = foreignCcyIndex_->currency();
     domesticCurrency_ = domesticCcyIndex_->currency();
@@ -108,20 +112,18 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
     Date settlementDate = settlementCalendar_.advance(refDate, settlementDays_, Days);
     Date maturityDate = settlementDate + swapTenor_;
 
-    Period foreignLegTenor = foreignCcyIndex_->tenor();
     Schedule foreignLegSchedule = MakeSchedule()
                                       .from(settlementDate)
                                       .to(maturityDate)
-                                      .withTenor(foreignLegTenor)
+                                      .withTenor(foreignTenor_)
                                       .withCalendar(settlementCalendar_)
                                       .withConvention(rollConvention_)
                                       .endOfMonth(eom_);
 
-    Period domesticLegTenor = domesticCcyIndex_->tenor();
     Schedule domesticLegSchedule = MakeSchedule()
                                        .from(settlementDate)
                                        .to(maturityDate)
-                                       .withTenor(domesticLegTenor)
+                                       .withTenor(domesticTenor_)
                                        .withCalendar(settlementCalendar_)
                                        .withConvention(rollConvention_)
                                        .endOfMonth(eom_);
@@ -130,11 +132,11 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
     // build an FX index for forward rate projection (TODO - review settlement and calendar)
     boost::shared_ptr<FxIndex> fxIdx =
         boost::make_shared<FxIndex>("dummy", settlementDays_, foreignCurrency_, domesticCurrency_, settlementCalendar_,
-                                    spotFX_, foreignCcyFxFwdRateCurveRLH_, domesticCcyFxFwdRateCurveRLH_);
+                                    spotFX_, foreignCcyFxFwdRateCurveRLH_, domesticCcyFxFwdRateCurveRLH_, invertFxIndex_);
 
     swap_ = boost::shared_ptr<CrossCcyBasisMtMResetSwap>(new CrossCcyBasisMtMResetSwap(
         foreignNominal, foreignCurrency_, foreignLegSchedule, foreignCcyIndex_, 0.0, domesticCurrency_,
-        domesticLegSchedule, domesticCcyIndex_, 0.0, fxIdx, invertFxIndex_));
+        domesticLegSchedule, domesticCcyIndex_, 0.0, fxIdx));
 
     boost::shared_ptr<PricingEngine> engine;
     if (invertFxIndex_) {

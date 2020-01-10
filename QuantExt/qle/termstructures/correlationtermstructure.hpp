@@ -67,6 +67,21 @@ protected:
     //! Extra time range check for minimum time, then calls TermStructure::checkRange
     void checkRange(Time t, bool extrapolate) const;
 };
+
+//! Wrapper class that inverts the correlation
+class NegativeCorrelationTermStructure : public CorrelationTermStructure {
+public:
+    NegativeCorrelationTermStructure(const Handle<CorrelationTermStructure>& c);
+    Date maxDate() const override { return c_->maxDate(); }
+    const Date& referenceDate() const override { return c_->referenceDate(); }
+    Calendar calendar() const override { return c_->calendar(); }
+    Natural settlementDays() const override { return c_->settlementDays(); }
+
+private:
+    virtual Real correlationImpl(Time t, Real strike) const override;
+    Handle<CorrelationTermStructure> c_;
+};
+
 } // namespace QuantExt
 
 #endif

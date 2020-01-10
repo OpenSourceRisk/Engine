@@ -24,6 +24,7 @@
 #ifndef quantext_fx_black_vol_surface_hpp
 #define quantext_fx_black_vol_surface_hpp
 
+#include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/math/interpolation.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
@@ -40,10 +41,13 @@ using namespace QuantLib;
 class FxBlackVolatilitySurface : public BlackVolatilityTermStructure {
 public:
     FxBlackVolatilitySurface(const Date& referenceDate, const std::vector<Date>& dates,
-                             const std::vector<Volatility>& atmVols, const std::vector<Volatility>& rr25d,
-                             const std::vector<Volatility>& bf25d, const DayCounter& dayCounter, const Calendar& cal,
+                             const std::vector<Volatility>& atmVols, const std::vector<Volatility>& rr,
+                             const std::vector<Volatility>& bf, const DayCounter& dayCounter, const Calendar& cal,
                              const Handle<Quote>& fxSpot, const Handle<YieldTermStructure>& domesticTS,
-                             const Handle<YieldTermStructure>& foreignTS, bool requireMonotoneVariance = true);
+                             const Handle<YieldTermStructure>& foreignTS, bool requireMonotoneVariance = true,
+                             const DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral,
+                             const DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot,
+                             const Real delta = 0.25);
     //! \name TermStructure interface
     //@{
     DayCounter dayCounter() const { return dayCounter_; }
@@ -71,18 +75,20 @@ protected:
     virtual boost::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,
                                                                 Volatility rr, Volatility bf) const = 0;
 
-private:
     std::vector<Time> times_;
     DayCounter dayCounter_;
-    Date maxDate_;
     Handle<Quote> fxSpot_;
     Handle<YieldTermStructure> domesticTS_;
     Handle<YieldTermStructure> foreignTS_;
     BlackVarianceCurve atmCurve_;
-    std::vector<Volatility> rr25d_;
-    std::vector<Volatility> bf25d_;
+    std::vector<Volatility> rr_;
+    std::vector<Volatility> bf_;
+    DeltaVolQuote::AtmType atmType_;
+    DeltaVolQuote::DeltaType deltaType_;
+    Real delta_;
     Interpolation rrCurve_;
     Interpolation bfCurve_;
+    Date maxDate_;
 };
 
 // inline definitions
@@ -101,20 +107,26 @@ inline void FxBlackVolatilitySurface::accept(AcyclicVisitor& v) {
 class FxBlackVannaVolgaVolatilitySurface : public FxBlackVolatilitySurface {
 public:
     FxBlackVannaVolgaVolatilitySurface(const Date& refDate, const std::vector<Date>& dates,
-                                       const std::vector<Volatility>& atmVols, const std::vector<Volatility>& rr25d,
-                                       const std::vector<Volatility>& bf25d, const DayCounter& dc, const Calendar& cal,
+                                       const std::vector<Volatility>& atmVols, const std::vector<Volatility>& rr,
+                                       const std::vector<Volatility>& bf, const DayCounter& dc, const Calendar& cal,
                                        const Handle<Quote>& fx, const Handle<YieldTermStructure>& dom,
-                                       const Handle<YieldTermStructure>& fore, bool requireMonotoneVariance = true)
-        : FxBlackVolatilitySurface(refDate, dates, atmVols, rr25d, bf25d, dc, cal, fx, dom, fore,
-                                   requireMonotoneVariance) {}
+                                       const Handle<YieldTermStructure>& fore, bool requireMonotoneVariance = true, const bool firstApprox = false,
+                                       const DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral,
+                                       const DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot,
+                                       const Real delta = 0.25)
+        : FxBlackVolatilitySurface(refDate, dates, atmVols, rr, bf, dc, cal, fx, dom, fore,
+                                   requireMonotoneVariance, atmType, deltaType, delta), firstApprox_(firstApprox) {}
 
 protected:
+    bool firstApprox_;
+
     virtual boost::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,
                                                                 Volatility rr, Volatility bf) const {
-        return boost::shared_ptr<FxSmileSection>(new VannaVolgaSmileSection(spot, rd, rf, t, atm, rr, bf));
+        QL_REQUIRE(t > 0, "FxBlackVannaVolgaVolatilitySurface::blackVolSmileImpl(): positive expiry time expected");
+        return boost::shared_ptr<FxSmileSection>(new VannaVolgaSmileSection(spot, rd, rf, t, atm, rr, bf, firstApprox_,
+                                                                            atmType_, deltaType_, delta_));
     }
 };
-
 } // namespace QuantExt
 
 #endif

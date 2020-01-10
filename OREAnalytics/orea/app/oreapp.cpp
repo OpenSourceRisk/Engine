@@ -34,6 +34,7 @@
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
+#include <ored/utilities/calendaradjustmentconfig.hpp>
 
 #include <orea/app/oreapp.hpp>
 
@@ -238,7 +239,14 @@ void OREApp::readSetup() {
         ObservationMode::instance().setMode(om);
         LOG("Observation Mode is " << om);
     }
-
+    if (params_->has("setup", "calendarAdjustment") && params_->get("setup", "calendarAdjustment") != "") {
+        CalendarAdjustmentConfig calendarAdjustments;
+        string calendarAdjustmentFile = inputPath_ + "/" + params_->get("setup", "calendarAdjustment");
+        LOG("Load calendarAdjustment from file" << calendarAdjustmentFile);
+        calendarAdjustments.fromFile(calendarAdjustmentFile);
+        CalendarAdjustments::instance().setConfig(calendarAdjustments);
+    }
+   
     writeInitialReports_ = true;
     simulate_ = (params_->hasGroup("simulation") && params_->get("simulation", "active") == "Y") ? true : false;
     buildSimMarket_ = true;
@@ -322,7 +330,9 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
 }
 
 boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() const {
-    return boost::make_shared<TradeFactory>(getExtraTradeBuilders());
+    boost::shared_ptr<TradeFactory> tf = boost::make_shared<TradeFactory>();
+    tf->addExtraBuilders(getExtraTradeBuilders(tf));
+    return tf;
 }
 
 boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
@@ -460,7 +470,7 @@ boost::shared_ptr<ReportWriter> OREApp::getReportWriter() const {
 }
 
 boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() {
-    return boost::make_shared<SensitivityRunner>(params_, getExtraTradeBuilders(), getExtraEngineBuilders(),
+    return boost::make_shared<SensitivityRunner>(params_, buildTradeFactory(), getExtraEngineBuilders(),
                                                  getExtraLegBuilders(), continueOnError_);
 }
 
@@ -953,7 +963,12 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
             vector<string> marketFiles = getFilenames(marketFileString, inputPath_);
             string fixingFileString = params_->get("setup", "fixingDataFile");
             vector<string> fixingFiles = getFilenames(fixingFileString, inputPath_);
-            CSVLoader loader(marketFiles, fixingFiles, implyTodaysFixings);
+            vector<string> dividendFiles = {};
+            if (params_->has("setup", "dividendDataFile")) {
+                string dividendFileString = params_->get("setup", "dividendDataFile");
+                dividendFiles = getFilenames(dividendFileString, inputPath_);
+            }
+            CSVLoader loader(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings);
             out_ << "OK" << endl;
             market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs_, conventions_, continueOnError_);
         } else {

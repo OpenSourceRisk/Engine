@@ -57,11 +57,13 @@ private:
     std::string currency_;
 
     //! Iterator to risk factor keys in the cube
-    std::set<RiskFactorKey>::iterator itRiskFactor_;
+    boost::bimap<RiskFactorKey, ore::analytics::SensitivityCube::FactorData>::const_iterator upRiskFactor_;
+    std::map<RiskFactorKey, ore::analytics::SensitivityCube::FactorData>::const_iterator downRiskFactor_;
     //! Iterator to cross factors in the cube
-    std::set<SensitivityCube::crossPair>::iterator itCrossPair_;
+    std::map<ore::analytics::SensitivityCube::crossPair, std::tuple<ore::analytics::SensitivityCube::FactorData, 
+        ore::analytics::SensitivityCube::FactorData, QuantLib::Size>>::const_iterator itCrossPair_;
     //! Index of current trade Id in the cube
-    QuantLib::Size tradeIdx_;
+    std::map<std::string, QuantLib::Size>::const_iterator tradeIdx_;
 };
 
 } // namespace analytics
