@@ -123,7 +123,7 @@ namespace QuantExt {
                         Real tau = coupon_->dayCounter().yearFraction(dates[i], dates[n]) / (dates[n] - dates[i]);
                         // now use formula (4) from the paper
                         compoundFactor *=
-                            std::pow(1.0 + tau * coupon_->spread(), -static_cast<int>(dates[n] - dates[i]));
+                            std::pow(1.0 + tau * coupon_->spread(), static_cast<int>(dates[n] - dates[i]));
                     }
                 }
 
