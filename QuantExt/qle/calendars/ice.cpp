@@ -140,7 +140,7 @@ bool ICE::FuturesUSImpl_2::isBusinessDay(const Date& date) const {
         // Second Monday of October (Thanksgiving Day Canada)
         || (d > 7 && d <= 14 && w == Monday && m == October)
         // Boxing Day Canada (Monday if Sunday, Tuesday if Monday i.e. xmas day is Sunday)
-        || ((d == 26 || (d == 27 && w == Monday ||  w == Tuesday)) && m == December)
+        || ((d == 26 || (d == 27 && (w == Monday ||  w == Tuesday))) && m == December)
         ) return false;
 
     return true;
@@ -262,9 +262,9 @@ bool ICE::SwapTradeUSImpl::isBusinessDay(const Date& date) const {
         // Labor Day (first Monday in September)
         || (d <= 7 && w == Monday && m == September)
         // Columbus Day
-        || (d >= 8 && d <= 14) && w == Monday && m == October && y >= 1971
+        || ((d >= 8 && d <= 14) && w == Monday && m == October && y >= 1971)
         // Veteran's Day: November 11th, adjusted
-        || (d == 11 || (d == 12 && w == Monday) || (d == 10 && w == Friday)) && m == November
+        || ((d == 11 || (d == 12 && w == Monday) || (d == 10 && w == Friday)) && m == November)
         // Thanksgiving Day (fourth Thursday in November)
         || ((d >= 22 && d <= 28) && w == Thursday && m == November)
         // Christmas (Monday if Sunday)
