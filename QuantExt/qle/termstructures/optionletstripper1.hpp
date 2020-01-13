@@ -30,7 +30,6 @@
 
 #include <boost/optional.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 using boost::optional;
@@ -45,8 +44,9 @@ typedef std::vector<std::vector<boost::shared_ptr<CapFloor> > > CapFloorMatrix;
 class OptionletStripper1 : public QuantExt::OptionletStripper {
 public:
     // If dontThrow is set to true than any vols that would throw are set to dontThrowMinVol (default is 0.0)
-    OptionletStripper1(const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>&, const boost::shared_ptr<IborIndex>& index,
-                       Rate switchStrikes = Null<Rate>(), Real accuracy = 1.0e-6, Natural maxIter = 100,
+    OptionletStripper1(const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>&,
+                       const boost::shared_ptr<IborIndex>& index, Rate switchStrikes = Null<Rate>(),
+                       Real accuracy = 1.0e-6, Natural maxIter = 100,
                        const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>(),
                        const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0,
                        bool dontThrow = false, const optional<VolatilityType> targetVolatilityType = boost::none,
@@ -64,6 +64,8 @@ public:
     void performCalculations() const;
     //@}
 private:
+    bool stripOptionlets(std::vector<Real>&, CapFloor::Type, Size, const Handle<YieldTermStructure>&, Real) const;
+
     mutable Matrix capFloorPrices_, optionletPrices_;
     mutable Matrix capFloorVols_;
     mutable Matrix optionletStDevs_, capletVols_;

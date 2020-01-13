@@ -35,7 +35,6 @@
 #include <ored/model/lgmdata.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace QuantLib;
@@ -75,10 +74,8 @@ public:
     void fromXML(XMLNode* node);
     XMLNode* toXML(XMLDocument& doc);
     //@}
-    void clear() {
-        LgmData::clear();        
-    }
-    void reset() { 
+    void clear() { LgmData::clear(); }
+    void reset() {
         LgmData::reset();
         ccy_ = "";
     }

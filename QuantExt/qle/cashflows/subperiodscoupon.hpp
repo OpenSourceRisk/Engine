@@ -28,7 +28,6 @@
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/schedule.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 //! Sub-periods pricer

@@ -16,16 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+#include <oret/datapaths.hpp>
+#include <oret/toplevelfixture.hpp>
 
-#include <ql/time/daycounters/actualactual.hpp>
+#include <ql/math/comparison.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
+#include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
 
@@ -35,34 +39,84 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace ore::data;
 
+namespace bdata = boost::unit_test::data;
+
 namespace {
 
-// testTolerance for Real comparison
-Real testTolerance = 1e-10;
-
-class MockLoader : public Loader {
-public:
-    MockLoader();
-    const vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const Date&) const { return data_; }
-    const boost::shared_ptr<MarketDatum>& get(const string& name, const Date&) const { return dummyDatum_; }
-    const vector<Fixing>& loadFixings() const { return dummyFixings_; }
-    const vector<Fixing>& loadDividends() const { return dummyDividends_; }
-
-private:
-    vector<boost::shared_ptr<MarketDatum>> data_;
-    boost::shared_ptr<MarketDatum> dummyDatum_;
-    vector<Fixing> dummyFixings_;
-    vector<Fixing> dummyDividends_;
+// List of curve configuration file names for data test case below
+vector<string> curveConfigFiles = {
+    "curveconfig_linear.xml",
+    "curveconfig_linear_flat.xml",
+    "curveconfig_loglinear.xml",
+    "curveconfig_loglinear_flat.xml",
+    "curveconfig_cubic.xml",
+    "curveconfig_cubic_flat.xml"
 };
 
-MockLoader::MockLoader() {
-    Date asof(5, Feb, 2016);
-    data_ = {
-        boost::make_shared<CommoditySpotQuote>(1155.593, asof, "COMMODITY/PRICE/GOLD/USD", MarketDatum::QuoteType::PRICE, "GOLD", "USD"), 
-        boost::make_shared<CommodityForwardQuote>(1157.8, asof, "COMMODITY_FWD/PRICE/GOLD/USD/2016-02-29", MarketDatum::QuoteType::PRICE, "GOLD", "USD", Date(29, Feb, 2016)),
-        boost::make_shared<CommodityForwardQuote>(1160.9, asof, "COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28", MarketDatum::QuoteType::PRICE, "GOLD", "USD", Date(28, Feb, 2017)),
-        boost::make_shared<CommodityForwardQuote>(1189.5, asof, "COMMODITY_FWD/PRICE/GOLD/USD/2020-06-30", MarketDatum::QuoteType::PRICE, "GOLD", "USD", Date(30, Jun, 2020))
-    };
+// The expected commodity curve
+map<Date, Real> expectedCurve = {
+    { Date(29, Jul, 2019), 1417.8998900 },
+    { Date(30, Jul, 2019), 1417.9999450 },
+    { Date(31, Jul, 2019), 1418.1000000 },
+    { Date( 1, Aug, 2019), 1418.2000550 },
+    { Date(30, Aug, 2019), 1421.1016535 },
+    { Date(30, Sep, 2019), 1424.1312750 }
+};
+
+// Pillars for interpolated curve tests (purposely leave out elements below spot to test interpolation there)
+map<Date, Real> expectedInterpCurvePillars = {
+    { Date(31, Jul, 2019), 1418.1000000 },
+    { Date( 1, Aug, 2019), 1418.2000550 },
+    { Date(30, Aug, 2019), 1421.1016535 },
+    { Date(30, Sep, 2019), 1424.1312750 }
+};
+
+// Expected results for extrapolation below spot, interpolation and extrapolation beyond max date for the 
+// various interpolation methods
+vector<Date> offPillarDates = { Date(29, Jul, 2019), Date(15, Sep, 2019), Date(1, Nov, 2019) };
+
+map<string, vector<Real>> expectedInterpCurveOffPillars = {
+    { "curveconfig_linear.xml", { 1417.89989, 1422.6653291129, 1427.2586262258 } },
+    { "curveconfig_linear_flat.xml", { 1418.1, 1422.6653291129, 1424.131275 } },
+    { "curveconfig_loglinear.xml", { 1417.89991117635, 1422.66452345277, 1427.26540106042 } },
+    { "curveconfig_loglinear_flat.xml", { 1418.1, 1422.66452345277, 1424.131275 } },
+    { "curveconfig_cubic.xml", { 1417.89988981896, 1422.67192914531, 1427.25983144911 } },
+    { "curveconfig_cubic_flat.xml", { 1418.1, 1422.67192914531, 1424.131275 } }
+};
+
+
+boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir, 
+    const string& curveConfigFile = "curveconfig.xml") {
+    
+    // As of date
+    Date asof(29, Jul, 2019);
+
+    Conventions conventions;
+    string filename = inputDir + "/conventions.xml";
+    conventions.fromFile(TEST_INPUT_FILE(filename));
+    CurveConfigurations curveConfigs;
+    filename = inputDir + "/" + curveConfigFile;
+    curveConfigs.fromFile(TEST_INPUT_FILE(filename));
+    filename = inputDir + "/market.txt";
+    CSVLoader loader(TEST_INPUT_FILE(filename), TEST_INPUT_FILE("fixings.txt"), false);
+
+    // Commodity curve spec
+    CommodityCurveSpec curveSpec("USD", "PM:XAUUSD");
+
+    // Check commodity curve construction works
+    boost::shared_ptr<CommodityCurve> curve;
+    BOOST_REQUIRE_NO_THROW(curve = boost::make_shared<CommodityCurve>(
+        asof, curveSpec, loader, curveConfigs, conventions));
+
+    return curve;
+}
+
+void checkCurve(const boost::shared_ptr<PriceTermStructure>& priceCurve, const map<Date, Real>& expectedValues) {
+
+    for (const auto& kv : expectedValues) {
+        Real price = priceCurve->price(kv.first);
+        BOOST_CHECK_CLOSE(price, kv.second, 1e-12);
+    }
 }
 
 }
@@ -71,65 +125,36 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CommodityCurveTests)
 
-BOOST_AUTO_TEST_CASE(testCommodityCurveConstruction) {
+BOOST_AUTO_TEST_CASE(testCommodityCurveTenorBasedOnTnPoints) {
+    
+    BOOST_TEST_MESSAGE("Testing commodity curve building with tenor based points quotes including ON and TN");
+    
+    boost::shared_ptr<CommodityCurve> curve = createCurve("tenor_based_on_tn_points");
+    checkCurve(curve->commodityPriceCurve(), expectedCurve);
+}
 
-    BOOST_TEST_MESSAGE("Testing commodity curve building");
+BOOST_AUTO_TEST_CASE(testCommodityCurveFixedDatePoints) {
 
-    // As of date
-    Date asof(5, Feb, 2016);
+    BOOST_TEST_MESSAGE("Testing commodity curve building with fixed date quotes");
 
-    // Commodity curve configuration
-    vector<string> quotes = {
-        "COMMODITY_FWD/PRICE/GOLD/USD/2016-02-29", 
-        "COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28", 
-        "COMMODITY_FWD/PRICE/GOLD/USD/2020-06-30"
-    };
-    boost::shared_ptr<CommodityCurveConfig> curveConfig = boost::make_shared<CommodityCurveConfig>(
-        "GOLD_USD", "", "USD", "COMMODITY/PRICE/GOLD/USD", quotes, "A365", "Linear", true);
+    boost::shared_ptr<CommodityCurve> curve = createCurve("fixed_date_points");
+    checkCurve(curve->commodityPriceCurve(), expectedCurve);
+}
 
-    // Curve configurations
-    CurveConfigurations curveConfigs;
-    curveConfigs.commodityCurveConfig("GOLD_USD") = curveConfig;
+// Testing various interpolation methods
+BOOST_DATA_TEST_CASE(testCommodityInterpolations, bdata::make(curveConfigFiles), curveConfigFile) {
 
-    // Commodity curve spec
-    CommodityCurveSpec curveSpec("USD", "GOLD_USD");
+    BOOST_TEST_MESSAGE("Testing with configuration file: " << curveConfigFile);
 
-    // Market data loader
-    MockLoader loader;
+    boost::shared_ptr<CommodityCurve> curve = createCurve("different_interpolations", curveConfigFile);
+    checkCurve(curve->commodityPriceCurve(), expectedInterpCurvePillars);
 
-    // Check commodity curve construction works
-    boost::shared_ptr<CommodityCurve> curve;
-    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityCurve>(asof, curveSpec, loader, curveConfigs, Conventions()));
-
-    // Check a few prices
-    boost::shared_ptr<PriceTermStructure> priceCurve = curve->commodityPriceCurve();
-
-    // Check a few prices
-    BOOST_CHECK_CLOSE(priceCurve->price(asof), 1155.593, testTolerance);
-    BOOST_CHECK_CLOSE(priceCurve->price(Date(29, Feb, 2016)), 1157.8, testTolerance);
-    BOOST_CHECK_CLOSE(priceCurve->price(Date(28, Feb, 2017)), 1160.9, testTolerance);
-    BOOST_CHECK_CLOSE(priceCurve->price(Date(30, Jun, 2020)), 1189.5, testTolerance);
-
-    // Will use this to check the interpolation on the price curve via a dynamic cast
-    boost::shared_ptr<PriceTermStructure> checkCurveInterpolation;
-
-    // Check that variables were picked up from the config
-    BOOST_CHECK_EQUAL(priceCurve->dayCounter(), Actual365Fixed());
-    BOOST_CHECK_EQUAL(priceCurve->allowsExtrapolation(), true);
-    checkCurveInterpolation = boost::dynamic_pointer_cast<InterpolatedPriceCurve<Linear>>(priceCurve);
-    BOOST_CHECK(checkCurveInterpolation);
-
-    // Change the config and check that the variables again
-    curveConfig = boost::make_shared<CommodityCurveConfig>(
-        "GOLD_USD", "", "USD", "COMMODITY/PRICE/GOLD/USD", quotes, "ACT/ACT", "LogLinear", false);
-    curveConfigs.commodityCurveConfig("GOLD_USD") = curveConfig;
-
-    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityCurve>(asof, curveSpec, loader, curveConfigs, Conventions()));
-    priceCurve = curve->commodityPriceCurve();
-    BOOST_CHECK_EQUAL(priceCurve->dayCounter(), ActualActual());
-    BOOST_CHECK_EQUAL(priceCurve->allowsExtrapolation(), false);
-    checkCurveInterpolation = boost::dynamic_pointer_cast<InterpolatedPriceCurve<LogLinear>>(priceCurve);
-    BOOST_CHECK(checkCurveInterpolation);
+    BOOST_REQUIRE(expectedInterpCurveOffPillars.count(curveConfigFile) == 1);
+    for (Size i = 0; i < offPillarDates.size(); i++) {
+        Real price = curve->commodityPriceCurve()->price(offPillarDates[i]);
+        Real expPrice = expectedInterpCurveOffPillars.at(curveConfigFile)[i];
+        BOOST_CHECK_CLOSE(price, expPrice, 1e-12);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

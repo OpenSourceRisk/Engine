@@ -28,7 +28,6 @@
     \ingroup math
 */
 
-
 namespace QuantExt {
 using QuantLib::Real;
 using QuantLib::Size;

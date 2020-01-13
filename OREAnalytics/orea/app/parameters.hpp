@@ -28,7 +28,6 @@
 
 #include <ored/utilities/xmlutils.hpp>
 
-
 namespace ore {
 namespace analytics {
 using namespace ore::data;

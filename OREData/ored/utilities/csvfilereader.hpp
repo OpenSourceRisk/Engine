@@ -28,7 +28,6 @@
 #include <fstream>
 #include <vector>
 
-
 namespace ore {
 namespace data {
 using QuantLib::Size;

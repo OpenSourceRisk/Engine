@@ -17,21 +17,25 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
+#include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/thailand.hpp>
+#include <qle/calendars/wmr.hpp>
+#include <qle/calendars/ice.hpp>
+#include <qle/calendars/cme.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
-using namespace std; 
+using namespace std;
 
 namespace bdata = boost::unit_test::data;
 
@@ -49,82 +53,101 @@ ostream& operator<<(ostream& os, const TestDatum& testDatum) {
     return os << "[" << testDatum.calendarName << "," << testDatum.calendar.name() << "]";
 }
 
-TestDatum calendarData[] = {
-    {"TGT", TARGET()},
-    {"EUR", TARGET()},
-    {"CHF", Switzerland()},
-    {"USD", UnitedStates()},
-    {"GBP", UnitedKingdom()},
-    {"CAD", Canada()},
-    {"AUD", Australia()},
-    {"JPY", Japan()},
-    {"ZAR", SouthAfrica()},
-    {"SEK", Sweden()},
-    {"ARS", Argentina()},
-    {"BRL", Brazil()},
-    {"CNH", China()},
-    {"CNY", China()},
-    {"CZK", CzechRepublic()},
-    {"DKK", Denmark()},
-    {"FIN", Finland()},
-    {"HKD", HongKong()},
-    {"ISK", Iceland()},
-    {"INR", India()},
-    {"IDR", Indonesia()},
-    {"MXN", Mexico()},
-    {"NZD", NewZealand()},
-    {"NOK", Norway()},
-    {"PLN", Poland()},
-    {"RUB", Russia()},
-    {"SAR", SaudiArabia()},
-    {"SGD", Singapore()},
-    {"KRW", SouthKorea()},
-    {"TWD", Taiwan()},
-    {"TRY", Turkey()},
-    {"UAH", Ukraine()},
-    {"HUF", Hungary()},
-    // Emerging currencies that default to TARGET
-    {"AED", TARGET()},
-    {"BHD", TARGET()},
-    {"CLF", TARGET()},
-    {"CLP", Chile()},
-    {"COP", Colombia()},
-    {"EGP", TARGET()},
-    {"ILS", TARGET()},
-    {"KWD", TARGET()},
-    {"KZT", TARGET()},
-    {"MAD", TARGET()},
-    {"MXV", TARGET()},
-    {"MYR", Malaysia()},
-    {"NGN", TARGET()},
-    {"OMR", TARGET()},
-    {"PEN", Peru()},
-    {"PHP", Philippines()},
-    {"QAR", TARGET()},
-    {"RON", TARGET()},
-    {"THB", QuantExt::Thailand()},
-    {"TND", TARGET()},
-    {"VND", TARGET()},
-    // joint calendars
-    {"US,TARGET", JointCalendar(UnitedStates(), TARGET())},
-    {"NYB,TGT", JointCalendar(UnitedStates(), TARGET())},
-    {"NYB,LNB", JointCalendar(UnitedStates(), UnitedKingdom())},
-    {"LNB,ZUB", JointCalendar(UnitedKingdom(), Switzerland())},
-    {"LNB,NYB,TGT", JointCalendar(UnitedKingdom(), UnitedStates(), TARGET())},
-    {"NYB,ZUB,LNB", JointCalendar(UnitedStates(), Switzerland(), UnitedKingdom())},
-    {"NYB,TRB,LNB", JointCalendar(UnitedStates(), Canada(), UnitedKingdom())},
-    {"TKB,USD,LNB", JointCalendar(Japan(), UnitedStates(), UnitedKingdom())},
-    {"NYB,SYB", JointCalendar(UnitedStates(), Australia())}
-};
+TestDatum calendarData[] = {{"TGT", TARGET()},
+                            {"EUR", TARGET()},
+                            {"CHF", QuantExt::Switzerland()},
+                            {"USD", UnitedStates()},
+                            {"GBP", UnitedKingdom()},
+                            {"CAD", Canada()},
+                            {"AUD", Australia()},
+                            {"JPY", Japan()},
+                            {"ZAR", SouthAfrica()},
+                            {"SEK", Sweden()},
+                            {"ARS", Argentina()},
+                            {"BWP", Botswana()},
+                            {"BRL", Brazil()},
+                            {"CNH", China()},
+                            {"CNY", China()},
+                            {"CZK", CzechRepublic()},
+                            {"DKK", Denmark()},
+                            {"FIN", Finland()},
+                            {"HKD", HongKong()},
+                            {"ISK", Iceland()},
+                            {"INR", India()},
+                            {"IDR", Indonesia()},
+                            {"MXN", Mexico()},
+                            {"NZD", NewZealand()},
+                            {"NOK", Norway()},
+                            {"PLN", Poland()},
+                            {"RUB", Russia()},
+                            {"SAR", SaudiArabia()},
+                            {"SGD", Singapore()},
+                            {"KRW", SouthKorea(SouthKorea::Settlement)},
+                            {"TWD", Taiwan()},
+                            {"TRY", Turkey()},
+                            {"UAH", Ukraine()},
+                            {"HUF", Hungary()},
+                            // Emerging currencies that default to TARGET
+                            {"AED", TARGET()},
+                            {"BHD", TARGET()},
+                            {"CLF", TARGET()},
+                            {"CLP", Chile()},
+                            {"COP", Colombia()},
+                            {"EGP", TARGET()},
+                            {"ILS", Israel()},
+                            {"KWD", TARGET()},
+                            {"KZT", TARGET()},
+                            {"MAD", TARGET()},
+                            {"MXV", TARGET()},
+                            {"MYR", Malaysia()},
+                            {"NGN", TARGET()},
+                            {"OMR", TARGET()},
+                            {"PEN", Peru()},
+                            {"PHP", Philippines()},
+                            {"QAR", TARGET()},
+                            {"RON", Romania()},
+                            {"THB", QuantExt::Thailand()},
+                            {"TND", TARGET()},
+                            {"UYU", TARGET()},
+                            {"VND", TARGET()},
+                            {"CHF", QuantExt::Switzerland()},
+                            {"ZA", SouthAfrica()},
+                            {"MISX", Russia(Russia::MOEX)},
+                            {"XSWX", QuantExt::Switzerland(QuantExt::Switzerland::SIX)},
+                            {"XLON", UnitedKingdom(UnitedKingdom::Exchange)},
+                            {"WMR", Wmr()},
+                            // ICE exchange calendars
+                            { "ICE_FuturesUS", ICE(ICE::FuturesUS) },
+                            { "ICE_FuturesUS_1", ICE(ICE::FuturesUS_1) },
+                            { "ICE_FuturesUS_2", ICE(ICE::FuturesUS_2) },
+                            { "ICE_FuturesEU", ICE(ICE::FuturesEU) },
+                            { "ICE_FuturesEU_1", ICE(ICE::FuturesEU_1) },
+                            { "ICE_EndexEnergy", ICE(ICE::EndexEnergy) },
+                            { "ICE_EndexEquities", ICE(ICE::EndexEquities) },
+                            { "ICE_SwapTradeUS", ICE(ICE::SwapTradeUS) },
+                            { "ICE_SwapTradeUK", ICE(ICE::SwapTradeUK) },
+                            { "ICE_FuturesSingapore", ICE(ICE::FuturesSingapore) },
+                            // CME exchange calendar
+                            { "CME", CME() },
+                            // joint calendars
+                            {"US,TARGET", JointCalendar(UnitedStates(), TARGET())},
+                            {"NYB,TGT", JointCalendar(UnitedStates(), TARGET())},
+                            {"NYB,LNB", JointCalendar(UnitedStates(), UnitedKingdom())},
+                            {"LNB,ZUB", JointCalendar(UnitedKingdom(), QuantExt::Switzerland())},
+                            {"LNB,NYB,TGT", JointCalendar(UnitedKingdom(), UnitedStates(), TARGET())},
+                            {"NYB,ZUB,LNB", JointCalendar(UnitedStates(), QuantExt::Switzerland(), UnitedKingdom())},
+                            {"NYB,TRB,LNB", JointCalendar(UnitedStates(), Canada(), UnitedKingdom())},
+                            {"TKB,USD,LNB", JointCalendar(Japan(), UnitedStates(), UnitedKingdom())},
+                            {"NYB,SYB", JointCalendar(UnitedStates(), Australia())}};
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CalendarTests)
 
 BOOST_DATA_TEST_CASE(testCalendarNameParsing, bdata::make(calendarData), calendarDatum) {
-    
+
     Calendar calendar;
     BOOST_REQUIRE_NO_THROW(calendar = ore::data::parseCalendar(calendarDatum.calendarName));
     BOOST_REQUIRE(!calendar.empty());

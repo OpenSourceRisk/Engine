@@ -42,15 +42,14 @@ simulation/simmarket.cpp)
 
 # hpp files, this list is maintained manually
 
-set(OREAnalytics_HDR auto_link.hpp
-version.hpp
-aggregation/collateralaccount.hpp
+set(OREAnalytics_HDR aggregation/collateralaccount.hpp
 aggregation/collatexposurehelper.hpp
 aggregation/postprocess.hpp
 app/oreapp.hpp
 app/parameters.hpp
 app/reportwriter.hpp
 app/sensitivityrunner.hpp
+auto_link.hpp
 cube/cubewriter.hpp
 cube/inmemorycube.hpp
 cube/npvcube.hpp
@@ -92,7 +91,8 @@ scenario/stressscenariodata.hpp
 scenario/stressscenariogenerator.hpp
 simulation/dategrid.hpp
 simulation/fixingmanager.hpp
-simulation/simmarket.hpp)
+simulation/simmarket.hpp
+version.hpp)
 
 writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
 add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC})
@@ -100,3 +100,12 @@ target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${Boost_LIBRARIES})
+
+install(DIRECTORY . DESTINATION include/orea
+        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+
+install(TARGETS ${OREA_LIB_NAME}
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )

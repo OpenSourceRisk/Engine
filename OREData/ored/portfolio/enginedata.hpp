@@ -27,7 +27,6 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
-
 namespace ore {
 namespace data {
 using std::vector;
@@ -42,7 +41,7 @@ using ore::data::XMLUtils;
 class EngineData : public XMLSerializable {
 public:
     //! Default constructor
-    EngineData(){};
+    EngineData() {}
 
     //! \name Inspectors
     //@{
@@ -53,6 +52,8 @@ public:
     const map<string, string>& engineParameters(const string& productName) const {
         return engineParams_.at(productName);
     }
+    const std::map<std::string, std::string>& globalParameters() const { return globalParams_; }
+    
     //! Return all products
     vector<string> products() const;
     //@}
@@ -63,6 +64,7 @@ public:
     map<string, string>& modelParameters(const string& productName) { return modelParams_[productName]; }
     string& engine(const string& productName) { return engine_[productName]; }
     map<string, string>& engineParameters(const string& productName) { return engineParams_[productName]; }
+    std::map<std::string, std::string>& globalParameters() { return globalParams_; }
     //@}
 
     //! Clear all data
@@ -79,6 +81,7 @@ private:
     map<string, map<string, string>> modelParams_;
     map<string, string> engine_;
     map<string, map<string, string>> engineParams_;
+    std::map<std::string, std::string> globalParams_;
 };
 
 bool operator==(const EngineData& lhs, const EngineData& rhs);

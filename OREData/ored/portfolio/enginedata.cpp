@@ -30,11 +30,19 @@ void EngineData::clear() {
     model_.clear();
     engine_.clear();
     engineParams_.clear();
+    globalParams_.clear();
 }
 
 void EngineData::fromXML(XMLNode* root) {
     clear();
     XMLUtils::checkNode(root, "PricingEngines");
+
+    // Get global parameters if there are any
+    if (XMLNode* node = XMLUtils::getChildNode(root, "GlobalParameters")) {
+        DLOG("Processing the GlobalParameters node");
+        globalParams_ = XMLUtils::getChildrenAttributesAndValues(node, "Parameter", "name", false);
+    }
+
     for (XMLNode* node = XMLUtils::getChildNode(root, "Product"); node;
          node = XMLUtils::getNextSibling(node, "Product")) {
         std::string productName = XMLUtils::getAttribute(node, "type");
@@ -73,6 +81,15 @@ XMLNode* EngineData::toXML(XMLDocument& doc) {
 
     XMLNode* pricingEnginesNode = doc.allocNode("PricingEngines");
 
+    // Add global parameters to XML
+    XMLNode* globalParamsNode = XMLUtils::addChild(doc, pricingEnginesNode, "GlobalParameters");
+    for (const auto& kv : globalParams_) {
+        XMLNode* n = doc.allocNode("Parameter", kv.second);
+        XMLUtils::addAttribute(doc, n, "name", kv.first);
+        XMLUtils::appendNode(globalParamsNode, n);
+        TLOG("Added pair [" << kv.first << "," << kv.second << "] to the GlobalParameters node");
+    }
+
     for (auto modelIterator = model_.begin(); modelIterator != model_.end(); modelIterator++) {
 
         XMLNode* productNode = XMLUtils::addChild(doc, pricingEnginesNode, "Product");
@@ -99,9 +116,7 @@ XMLNode* EngineData::toXML(XMLDocument& doc) {
 }
 
 // we assume all the maps have the same keys
-bool EngineData::hasProduct(const std::string& productName) {
-    return (model_.find(productName) != model_.end());
-}
+bool EngineData::hasProduct(const std::string& productName) { return (model_.find(productName) != model_.end()); }
 
 vector<string> EngineData::products() const {
     vector<string> res;
@@ -117,8 +132,7 @@ bool operator==(const EngineData& lhs, const EngineData& rhs) {
         return false;
     // now loop over the products and check everything
     for (auto product : products) {
-        if (lhs.model(product) != rhs.model(product) ||
-            lhs.modelParameters(product) != rhs.modelParameters(product) ||
+        if (lhs.model(product) != rhs.model(product) || lhs.modelParameters(product) != rhs.modelParameters(product) ||
             lhs.engine(product) != rhs.engine(product) ||
             lhs.engineParameters(product) != rhs.engineParameters(product))
             return false;
@@ -126,9 +140,7 @@ bool operator==(const EngineData& lhs, const EngineData& rhs) {
     return true;
 }
 
-bool operator!=(const EngineData& lhs, const EngineData& rhs) {
-    return !(lhs==rhs);
-}
+bool operator!=(const EngineData& lhs, const EngineData& rhs) { return !(lhs == rhs); }
 
 } // namespace data
 } // namespace ore

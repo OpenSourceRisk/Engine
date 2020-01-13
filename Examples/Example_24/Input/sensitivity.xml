@@ -18,14 +18,7 @@
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
   </IndexCurves>
-  <YieldCurves>
-    <YieldCurve name="Lufthansa">
-      <CurveType>EquityForecast</CurveType>
-      <ShiftType>Absolute</ShiftType>
-      <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</ShiftTenors>
-    </YieldCurve>
-  </YieldCurves>
+  <YieldCurves/>
   <FxSpots>
     <FxSpot ccypair="EURUSD">
       <ShiftType>Relative</ShiftType>
@@ -46,16 +39,6 @@
       <ShiftStrikes/>
     </EquityVolatility>
   </EquityVolatilities>
-  <CommoditySpots>
-    <CommoditySpot name="COMDTY_GOLD_USD">
-      <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-    </CommoditySpot>
-    <CommoditySpot name="COMDTY_WTI_USD">
-      <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-    </CommoditySpot>
-  </CommoditySpots>
   <CommodityCurves>
     <CommodityCurve name="COMDTY_GOLD_USD">
       <Currency>USD</Currency>

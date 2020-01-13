@@ -9,6 +9,7 @@ noinst_LTLIBRARIES = libCashflows.la
 libCashflows_la_SOURCES = \
 	averageonindexedcoupon.cpp \
 	averageonindexedcouponpricer.cpp \
+	brlcdicouponpricer.cpp \
 	couponpricer.cpp \
 	subperiodscoupon.cpp \
 	subperiodscouponpricer.cpp \
@@ -18,6 +19,7 @@ libCashflows_la_SOURCES = \
 	quantocouponpricer.cpp \
 	equitycouponpricer.cpp \
 	equitycoupon.cpp \
+	strippedcapflooredyoyinflationcoupon.cpp \
 	lognormalcmsspreadpricer.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -25,6 +27,7 @@ this_include_HEADERS =  \
 	all.hpp \
 	averageonindexedcoupon.hpp \
 	averageonindexedcouponpricer.hpp \
+	brlcdicouponpricer.hpp \
 	couponpricer.hpp \
 	subperiodscoupon.hpp \
 	subperiodscouponpricer.hpp \
@@ -35,6 +38,7 @@ this_include_HEADERS =  \
 	quantocouponpricer.hpp \
 	equitycouponpricer.hpp \
 	equitycoupon.hpp \
+	strippedcapflooredyoyinflationcoupon.hpp \
 	lognormalcmsspreadpricer.hpp
 
 all.hpp: Makefile.am

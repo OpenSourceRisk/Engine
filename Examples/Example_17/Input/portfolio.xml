@@ -9,16 +9,34 @@
     </Envelope>
     <SwapData>
       <LegData>
-        <LegType>Cashflow</LegType>
+        <LegType>ZeroCouponFixed</LegType>
         <Payer>true</Payer>
         <Currency>GBP</Currency>
-        <DayCounter>ACT/ACT</DayCounter>
+        <DayCounter>Year</DayCounter>
         <PaymentConvention>Unadjusted</PaymentConvention>
-        <CashflowData>
-		  <Cashflow>
-            <Amount Date="2036-02-05">20000000</Amount>
-          </Cashflow>
-        </CashflowData>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-05</StartDate>
+            <EndDate>2036-02-05</EndDate>
+            <Tenor>20Y</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Zero</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+        <ZeroCouponFixedLegData>
+		  <Rates>
+            <Rate>0.056467309</Rate>
+          </Rates>
+          <Compounding>Compounded</Compounding>
+        </ZeroCouponFixedLegData>
 	  </LegData>
       <LegData>
         <LegType>CPI</LegType>
@@ -191,7 +209,6 @@
           <Index>EUHICPXT</Index>
           <FixingDays>2</FixingDays>
           <ObservationLag>2M</ObservationLag>
-          <Interpolated>true</Interpolated>
         </YYLegData>
       </LegData>
     </SwapData>

@@ -17,9 +17,9 @@
 */
 
 #include <ored/configuration/defaultcurveconfig.hpp>
+#include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
 
 using QuantLib::Date;
@@ -32,14 +32,14 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curv
                                        const DayCounter& dayCounter, const string& conventionID,
                                        const std::vector<std::pair<std::string, bool>>& cdsQuotes, bool extrapolation,
                                        const string& benchmarkCurveID, const string& sourceCurveID,
-                                       const std::vector<Period>& pillars, const Calendar& calendar, 
-                                       const Size spotLag, const Date& startDate)
+                                       const std::vector<string>& pillars, const Calendar& calendar, const Size spotLag,
+                                       const Date& startDate, const BootstrapConfig& bootstrapConfig)
     : CurveConfig(curveID, curveDescription), cdsQuotes_(cdsQuotes), currency_(currency), type_(type),
       discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
       conventionID_(conventionID), extrapolation_(extrapolation), benchmarkCurveID_(benchmarkCurveID),
-      sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar), 
-      spotLag_(spotLag), startDate_(startDate) {
-    
+      sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar), spotLag_(spotLag),
+      startDate_(startDate), bootstrapConfig_(bootstrapConfig) {
+
     for (const auto& kv : cdsQuotes) {
         quotes_.push_back(kv.first);
     }
@@ -79,7 +79,7 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
     if (type_ == Type::Benchmark) {
         benchmarkCurveID_ = XMLUtils::getChildValue(node, "BenchmarkCurve", true);
         sourceCurveID_ = XMLUtils::getChildValue(node, "SourceCurve", true);
-        pillars_ = XMLUtils::getChildrenValuesAsPeriods(node, "Pillars", true);
+        pillars_ = XMLUtils::getChildrenValuesAsStrings(node, "Pillars", true);
         spotLag_ = parseInteger(XMLUtils::getChildValue(node, "SpotLag", true));
         calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
         discountCurveID_ = conventionID_ = recoveryRateQuote_ = "";
@@ -113,6 +113,11 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
                 WLOG("'StartDate' is only used when type is 'SpreadCDS'");
             }
         }
+
+        // Optional bootstrap configuration
+        if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
+            bootstrapConfig_.fromXML(n);
+        }
     }
 }
 
@@ -126,6 +131,7 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
     if (type_ == Type::SpreadCDS || type_ == Type::HazardRate) {
         XMLUtils::addChild(doc, node, "Type", type_ == Type::SpreadCDS ? "SpreadCDS" : "HazardRate");
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
+        XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
         XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
         XMLNode* quotesNode = XMLUtils::addChild(doc, node, "Quotes");
         for (auto q : cdsQuotes_) {
@@ -134,9 +140,9 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
                 XMLUtils::addAttribute(doc, qNode, "optional", "true");
             XMLUtils::appendNode(quotesNode, qNode);
         }
-        XMLUtils::addChild(doc, node, "Conventions", conventionID_);
     } else if (type_ == Type::Benchmark) {
         XMLUtils::addChild(doc, node, "Type", "Benchmark");
+        XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
         XMLUtils::addChild(doc, node, "BenchmarkCurve", benchmarkCurveID_);
         XMLUtils::addChild(doc, node, "SourceCurve", sourceCurveID_);
         XMLUtils::addGenericChildAsList(doc, node, "Pillars", pillars_);
@@ -145,10 +151,13 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
     } else {
         QL_FAIL("Unkown type in DefaultCurveConfig::toXML()");
     }
-    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+    XMLUtils::addChild(doc, node, "Conventions", conventionID_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
 
-    if (startDate_ != Date()) XMLUtils::addChild(doc, node, "StartDate", to_string(startDate_));
+    if (startDate_ != Date())
+        XMLUtils::addChild(doc, node, "StartDate", to_string(startDate_));
+
+    XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
 
     return node;
 }

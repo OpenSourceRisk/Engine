@@ -23,24 +23,19 @@
 
 #pragma once
 
-#include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
-#include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/loader.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
-
+#include <ored/marketdata/genericyieldvolcurve.hpp>
 
 namespace ore {
 namespace data {
-using QuantLib::Date;
-using QuantLib::SwaptionVolatilityMatrix;
 using ore::data::CurveConfigurations;
+using QuantLib::Date;
 
 //! Wrapper class for building Swaption volatility structures
 /*!
   \ingroup curves
 */
-class SwaptionVolCurve {
+class SwaptionVolCurve : public GenericYieldVolCurve {
 public:
     //! \name Constructors
     //@{
@@ -56,12 +51,10 @@ public:
     //! \name Inspectors
     //@{
     const SwaptionVolatilityCurveSpec& spec() const { return spec_; }
-
-    const boost::shared_ptr<SwaptionVolatilityStructure>& volTermStructure() { return vol_; }
     //@}
+
 private:
     SwaptionVolatilityCurveSpec spec_;
-    boost::shared_ptr<SwaptionVolatilityStructure> vol_;
 };
 } // namespace data
 } // namespace ore

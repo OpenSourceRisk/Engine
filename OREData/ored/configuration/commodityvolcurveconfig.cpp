@@ -23,32 +23,36 @@
 namespace ore {
 namespace data {
 
-CommodityVolatilityCurveConfig::CommodityVolatilityCurveConfig(const string& curveId, const string& curveDescription, 
-    const std::string& currency, const string& quote, const string& dayCounter, const string& calendar)
-    : CurveConfig(curveId, curveDescription), currency_(currency), 
-      type_(Type::Constant), dayCounter_(dayCounter), calendar_(calendar), extrapolate_(true),
-      lowerStrikeConstantExtrapolation_(false), upperStrikeConstantExtrapolation_(false) {
+CommodityVolatilityCurveConfig::CommodityVolatilityCurveConfig(const string& curveId, const string& curveDescription,
+                                                               const std::string& currency, const string& quote,
+                                                               const string& dayCounter, const string& calendar)
+    : CurveConfig(curveId, curveDescription), currency_(currency), type_(Type::Constant), dayCounter_(dayCounter),
+      calendar_(calendar), extrapolate_(true), lowerStrikeConstantExtrapolation_(false),
+      upperStrikeConstantExtrapolation_(false) {
 
     quotes_ = {quote};
 }
 
 CommodityVolatilityCurveConfig::CommodityVolatilityCurveConfig(const string& curveId, const string& curveDescription,
-    const std::string& currency, const vector<string>& quotes, 
-    const string& dayCounter, const string& calendar, bool extrapolate)
-    : CurveConfig(curveId, curveDescription), currency_(currency),
-      type_(Type::Curve), dayCounter_(dayCounter), calendar_(calendar), extrapolate_(extrapolate), 
-      lowerStrikeConstantExtrapolation_(false), upperStrikeConstantExtrapolation_(false) {
+                                                               const std::string& currency,
+                                                               const vector<string>& quotes, const string& dayCounter,
+                                                               const string& calendar, bool extrapolate)
+    : CurveConfig(curveId, curveDescription), currency_(currency), type_(Type::Curve), dayCounter_(dayCounter),
+      calendar_(calendar), extrapolate_(extrapolate), lowerStrikeConstantExtrapolation_(false),
+      upperStrikeConstantExtrapolation_(false) {
 
     quotes_ = quotes;
 }
 
-CommodityVolatilityCurveConfig::CommodityVolatilityCurveConfig(const string& curveId, const string& curveDescription, 
-    const string& currency, const vector<string>& expiries, const vector<string>& strikes, 
-    const string & dayCounter, const string& calendar, bool extrapolate, 
-    bool lowerStrikeConstantExtrapolation, bool upperStrikeConstantExtrapolation)
-    : CurveConfig(curveId, curveDescription), currency_(currency), type_(Type::Surface), 
-      expiries_(expiries), strikes_(strikes), dayCounter_(dayCounter), calendar_(calendar), extrapolate_(extrapolate),
-      lowerStrikeConstantExtrapolation_(lowerStrikeConstantExtrapolation), 
+CommodityVolatilityCurveConfig::CommodityVolatilityCurveConfig(const string& curveId, const string& curveDescription,
+                                                               const string& currency, const vector<string>& expiries,
+                                                               const vector<string>& strikes, const string& dayCounter,
+                                                               const string& calendar, bool extrapolate,
+                                                               bool lowerStrikeConstantExtrapolation,
+                                                               bool upperStrikeConstantExtrapolation)
+    : CurveConfig(curveId, curveDescription), currency_(currency), type_(Type::Surface), expiries_(expiries),
+      strikes_(strikes), dayCounter_(dayCounter), calendar_(calendar), extrapolate_(extrapolate),
+      lowerStrikeConstantExtrapolation_(lowerStrikeConstantExtrapolation),
       upperStrikeConstantExtrapolation_(upperStrikeConstantExtrapolation) {
 
     // Populate the quotes_ member
@@ -56,7 +60,7 @@ CommodityVolatilityCurveConfig::CommodityVolatilityCurveConfig(const string& cur
 }
 
 void CommodityVolatilityCurveConfig::fromXML(XMLNode* node) {
-    
+
     XMLUtils::checkNode(node, "CommodityVolatility");
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
@@ -67,7 +71,7 @@ void CommodityVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     if (type_ == Type::Constant) {
         // If type is Constant, we expect a single Quote node
-        quotes_ = { XMLUtils::getChildValue(node, "Quote", true) };
+        quotes_ = {XMLUtils::getChildValue(node, "Quote", true)};
     } else if (type_ == Type::Curve) {
         // If type is Curve, we expect a Quotes node with one or more Quote nodes
         quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
@@ -83,21 +87,23 @@ void CommodityVolatilityCurveConfig::fromXML(XMLNode* node) {
     // Should I set defaults here?
     // It is cleaner but it means toXML will return additional nodes possibly.
     dayCounter_ = XMLUtils::getChildValue(node, "DayCounter", false);
-    if (dayCounter_ == "") dayCounter_ = "A365";
+    if (dayCounter_ == "")
+        dayCounter_ = "A365";
     calendar_ = XMLUtils::getChildValue(node, "Calendar", false);
-    if (calendar_ == "") calendar_ = "NullCalendar";
+    if (calendar_ == "")
+        calendar_ = "NullCalendar";
     XMLNode* testNode = XMLUtils::getChildNode(node, "Extrapolation");
     extrapolate_ = testNode ? XMLUtils::getChildValueAsBool(node, "Extrapolation") : true;
     testNode = XMLUtils::getChildNode(node, "LowerStrikeConstantExtrapolation");
-    lowerStrikeConstantExtrapolation_ = testNode ? 
-        XMLUtils::getChildValueAsBool(node, "LowerStrikeConstantExtrapolation") : false;
+    lowerStrikeConstantExtrapolation_ =
+        testNode ? XMLUtils::getChildValueAsBool(node, "LowerStrikeConstantExtrapolation") : false;
     testNode = XMLUtils::getChildNode(node, "UpperStrikeConstantExtrapolation");
-    upperStrikeConstantExtrapolation_ = testNode ?
-        XMLUtils::getChildValueAsBool(node, "UpperStrikeConstantExtrapolation") : false;
+    upperStrikeConstantExtrapolation_ =
+        testNode ? XMLUtils::getChildValueAsBool(node, "UpperStrikeConstantExtrapolation") : false;
 }
 
 XMLNode* CommodityVolatilityCurveConfig::toXML(XMLDocument& doc) {
-    
+
     XMLNode* node = doc.allocNode("CommodityVolatility");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
@@ -157,9 +163,9 @@ CommodityVolatilityCurveConfig::Type CommodityVolatilityCurveConfig::stringToTyp
     } else if (type == "Surface") {
         return Type::Surface;
     } else {
-        QL_FAIL("Cannot convert string '" << type << "' to commodity volatility type");
+        QL_FAIL("Cannot convert string \"" << type << "\" to commodity volatility type");
     }
 }
 
-}
-}
+} // namespace data
+} // namespace ore

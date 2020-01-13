@@ -31,7 +31,6 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -74,13 +73,13 @@ protected:
     bool stickyStrike_;
     Handle<Quote> spot_;
     std::vector<Time> times_;
+    std::vector<Real> moneyness_;
 
 private:
     Real blackVarianceMoneyness(Time t, Real moneyness) const;
     virtual Real blackVarianceImpl(Time t, Real strike) const;
     DayCounter dayCounter_;
     Date maxDate_;
-    std::vector<Real> moneyness_;
     std::vector<std::vector<Handle<Quote> > > quotes_;
     mutable Matrix variances_;
     mutable Interpolation2D varianceSurface_;
@@ -120,7 +119,7 @@ public:
                                          const std::vector<Real>& moneyness,
                                          const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                          const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
-                                         const Handle<YieldTermStructure>& domTS, bool stickyStrike = false);
+                                         const Handle<YieldTermStructure>& domTS, bool stickyStrike = false, bool flatExtrapMoneyness = false);
 
 private:
     virtual Real moneyness(Time t, Real strike) const;
@@ -128,6 +127,7 @@ private:
     Handle<YieldTermStructure> domTS_;
     std::vector<Real> forwards_; // cache fwd values if StickyStrike==true
     Interpolation forwardCurve_;
+    bool flatExtrapolateMoneyness_; // flatly extraplate on moneyness axis
 };
 
 } // namespace QuantExt

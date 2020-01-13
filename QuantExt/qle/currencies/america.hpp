@@ -29,7 +29,6 @@
 
 #include <ql/currency.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -53,6 +52,17 @@ public:
 class CLFCurrency : public Currency {
 public:
     CLFCurrency();
+};
+
+//! Uruguayan peso
+/*! The ISO three-letter code is UYU; the numeric code is 858.
+ A unit of account used in Uruguay.
+
+ \ingroup currencies
+ */
+class UYUCurrency : public Currency {
+public:
+    UYUCurrency();
 };
 } // namespace QuantExt
 #endif

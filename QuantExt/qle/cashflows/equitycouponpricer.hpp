@@ -27,15 +27,13 @@
 #include <ql/cashflows/couponpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
 //! Pricer for equity coupons
 /*! \ingroup cashflows
-*/
-class EquityCouponPricer : public virtual Observer,
-                           public virtual Observable {
+ */
+class EquityCouponPricer : public virtual Observer, public virtual Observable {
 public:
     virtual ~EquityCouponPricer() {}
     //! \name Interface
@@ -51,6 +49,7 @@ public:
 protected:
     const EquityCoupon* coupon_;
     boost::shared_ptr<EquityIndex> equityCurve_;
+    boost::shared_ptr<FxIndex> fxIndex_;
     bool isTotalReturn_;
     Real dividendFactor_;
 };

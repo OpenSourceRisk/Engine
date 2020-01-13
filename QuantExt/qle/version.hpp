@@ -24,14 +24,15 @@
 #define quantext_version_hpp
 
 // Boost Version
-// Boost 1.55 has been tested on Linux and 1.57 on Windows.
+// Boost 1.63 has been tested on Linux
 // Any boost version above 1.46 might work (we use boost filesystem 3 which is the default
 // from 1.46 - so some modification will be needed for pre 1.46).
+// The unit tests require 1.61 or higher
 //
 // Note that for MSVC 2013 the boost config file needs 1.57 (but this can be modified).
 // Note that for MSVC 2015 the boost config file needs 1.58 (but this can be modified).
 #include <boost/version.hpp>
-#if BOOST_VERSION < 105500
+#if BOOST_VERSION < 106300
 #error using an old version of Boost, please update.
 #endif
 
@@ -42,9 +43,9 @@
 #endif
 
 //! Version string
-#define OPEN_SOURCE_RISK_VERSION "1.8.3.0"
+#define OPEN_SOURCE_RISK_VERSION "1.8.4.1"
 
 //! Version number
-#define OPEN_SOURCE_RISK_VERSION_NUM 1080300
+#define OPEN_SOURCE_RISK_VERSION_NUM 1080401
 
 #endif

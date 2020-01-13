@@ -41,18 +41,20 @@ std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConf
 }
 
 InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
-    const string& curveID, const string& curveDescription, const Type type, const VolatilityType& volatilityType, 
-    const bool extrapolate, const vector<Period>& tenors, const vector<double>& strikes, const DayCounter& dayCounter,
+    const string& curveID, const string& curveDescription, const Type type, const VolatilityType& volatilityType,
+    const bool extrapolate, const vector<string>& tenors, const vector<string>& strikes, const DayCounter& dayCounter,
     Natural settleDays, const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
     const string& index, const string& indexCurve, const string& yieldTermStructure)
     : CurveConfig(curveID, curveDescription), type_(type), volatilityType_(volatilityType), extrapolate_(extrapolate),
-    tenors_(tenors), strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays),
-    calendar_(calendar), businessDayConvention_(businessDayConvention), index_(index), indexCurve_(indexCurve),
-    yieldTermStructure_(yieldTermStructure) {}
+      tenors_(tenors), strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
+      businessDayConvention_(businessDayConvention), index_(index), indexCurve_(indexCurve),
+      yieldTermStructure_(yieldTermStructure) {}
 
 const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
-        boost::shared_ptr<IborIndex> index = parseIborIndex(index_);
+        QL_REQUIRE(isInflationIndex(index_), "Index '" << index_ << "' for InflationCapFloorVolatilityCurveConfig '" <<
+            curveID_ << "' should be an inflation index");
+        boost::shared_ptr<InflationIndex> index = parseZeroInflationIndex(index_);
         Currency ccy = index->currency();
 
         string type;
@@ -68,14 +70,14 @@ const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
         // TODO: how to tell if atmFlag or relative flag should be true
         for (auto t : tenors_) {
             for (auto s : strikes_) {
-                quotes_.push_back(base + to_string(t) + "/F/" + to_string(s));
+                quotes_.push_back(base + t + "/F/" + s);
             }
         }
 
         if (volatilityType_ == VolatilityType::ShiftedLognormal) {
             for (auto t : tenors_) {
                 std::stringstream ss;
-                quotes_.push_back(type + "_INFLATIONCAPFLOOR/SHIFT/" + index_ + "/" + to_string(t));
+                quotes_.push_back(type + "_INFLATIONCAPFLOOR/SHIFT/" + index_ + "/" + t);
             }
         }
     }
@@ -91,33 +93,28 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     string type = XMLUtils::getChildValue(node, "Type", true);
     if (type == "ZC") {
         type_ = Type::ZC;
-    }
-    else if (type == "YY") {
+    } else if (type == "YY") {
         type_ = Type::YY;
-    }
-    else
+    } else
         QL_FAIL("Type " << type << " not recognized");
 
     // We are requiring explicit strikes so there should be at least one strike
-    strikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "Strikes", true);
+    strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", true);
     QL_REQUIRE(!strikes_.empty(), "Strikes node should not be empty");
 
     // Get the volatility type
     string volType = XMLUtils::getChildValue(node, "VolatilityType", true);
     if (volType == "Normal") {
         volatilityType_ = VolatilityType::Normal;
-    }
-    else if (volType == "Lognormal") {
+    } else if (volType == "Lognormal") {
         volatilityType_ = VolatilityType::Lognormal;
-    }
-    else if (volType == "ShiftedLognormal") {
+    } else if (volType == "ShiftedLognormal") {
         volatilityType_ = VolatilityType::ShiftedLognormal;
-    }
-    else {
+    } else {
         QL_FAIL("Volatility type, " << volType << ", not recognized");
     }
     extrapolate_ = XMLUtils::getChildValueAsBool(node, "Extrapolation", true);
-    tenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "Tenors", true);
+    tenors_ = XMLUtils::getChildrenValuesAsStrings(node, "Tenors", true);
     calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
     dayCounter_ = parseDayCounter(XMLUtils::getChildValue(node, "DayCounter", true));
     businessDayConvention_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));
@@ -135,29 +132,24 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
 
     if (type_ == Type::ZC) {
         XMLUtils::addChild(doc, node, "Type", "ZC");
-    }
-    else if (type_ == Type::YY) {
+    } else if (type_ == Type::YY) {
         XMLUtils::addChild(doc, node, "Type", "YY");
-    }
-    else
+    } else
         QL_FAIL("Unknown Type in InflationCapFloorPriceSurfaceConfig::toXML()");
 
     if (volatilityType_ == VolatilityType::Normal) {
         XMLUtils::addChild(doc, node, "VolatilityType", "Normal");
-    }
-    else if (volatilityType_ == VolatilityType::Lognormal) {
+    } else if (volatilityType_ == VolatilityType::Lognormal) {
         XMLUtils::addChild(doc, node, "VolatilityType", "Lognormal");
-    }
-    else if (volatilityType_ == VolatilityType::ShiftedLognormal) {
+    } else if (volatilityType_ == VolatilityType::ShiftedLognormal) {
         XMLUtils::addChild(doc, node, "VolatilityType", "ShiftedLognormal");
-    }
-    else {
+    } else {
         QL_FAIL("Unknown VolatilityType in InflationCapFloorVolatilityCurveConfig::toXML()");
     }
 
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
     XMLUtils::addGenericChildAsList(doc, node, "Tenors", tenors_);
-    XMLUtils::addChild(doc, node, "Strikes", strikes_);
+    XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));

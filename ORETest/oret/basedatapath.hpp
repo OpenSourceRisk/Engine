@@ -25,6 +25,7 @@
 #include <ql/errors.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 #include <string>
 
 using boost::filesystem::path;
@@ -41,14 +42,6 @@ using std::string;
 
 namespace ore {
 namespace test {
-
-// Default value for base data path used in function below
-#ifdef BOOST_MSVC
-string initialPath = "..";
-#else
-string initialPath = ".";
-#endif
-
 
 /*! Gets passed the command line arguments from a unit test suite
     and checks if a base data path has been provided

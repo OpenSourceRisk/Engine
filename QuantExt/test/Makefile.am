@@ -10,6 +10,8 @@ QLE_TESTS = \
 	discountcurve.cpp \
 	dynamicblackvoltermstructure.cpp \
 	dynamicswaptionvolmatrix.cpp \
+	equityforwardcurvestripper.cpp \
+	fillemptymatrix.cpp \
 	index.cpp \
 	blackvariancecurve.cpp \
 	logquote.cpp \
@@ -29,6 +31,7 @@ QLE_TESTS = \
 	discountingcommodityforwardengine.cpp \
 	pricetermstructureadapter.cpp \
 	bonds.cpp \
+	forwardbond.cpp \
 	interpolatedyoycapfloortermpricesurface.cpp \
 	qle_calendars.cpp \
 	discountratiomodifiedcurve.cpp \
@@ -36,7 +39,17 @@ QLE_TESTS = \
 	crossccyfixfloatswaphelper.cpp \
 	crossccybasismtmresetswap.cpp \
 	crossccybasismtmresetswaphelper.cpp \
-	cpicapfloor.cpp
+	correlationtermstructure.cpp \
+	cpicapfloor.cpp \
+	strippedoptionletadapter.cpp \
+	strippedoptionletadapter2.cpp \
+	piecewiseoptionletcurve.cpp \
+	piecewiseoptionletstripper.cpp \
+	capfloortermvolcurve.cpp \
+	blackvariancesurfacesparse.cpp \
+	blackvariancesurfacestddevs.cpp \
+	piecewiseatmoptionletcurve.cpp \
+	blackvolsurfacedelta.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
@@ -50,9 +63,9 @@ bin_PROGRAMS = quantext-test-suite
 quantext_test_suite_SOURCES = ${QLE_TESTS}
 quantext_test_suite_LDADD =
 quantext_test_suite_LDFLAGS = \
-    -lQuantLib \
-    -L../qle -lQuantExt \
-    -lboost_unit_test_framework
+	-lQuantLib \
+	-L../qle -lQuantExt \
+	-lboost_unit_test_framework
 
 TESTS = quantext-test-suite$(EXEEXT)
 TESTS_ENVIRONMENT = BOOST_TEST_LOG_LEVEL=message

@@ -28,7 +28,6 @@
 #include <ql/cashflows/inflationcouponpricer.hpp>
 #include <ql/indexes/inflationindex.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -81,9 +80,9 @@ private:
 */
 class YoYInflationCouponPricer2 : public YoYInflationCouponPricer {
 public:
-    YoYInflationCouponPricer2(
-        const Handle<YieldTermStructure>& nominalTs,
-        const Handle<QuantLib::YoYOptionletVolatilitySurface>& capletVol = Handle<QuantLib::YoYOptionletVolatilitySurface>())
+    YoYInflationCouponPricer2(const Handle<YieldTermStructure>& nominalTs,
+                              const Handle<QuantLib::YoYOptionletVolatilitySurface>& capletVol =
+                                  Handle<QuantLib::YoYOptionletVolatilitySurface>())
         : YoYInflationCouponPricer(capletVol), nominalTs_(nominalTs) {}
     //! \name InflationCouponPricer interface
     //@{

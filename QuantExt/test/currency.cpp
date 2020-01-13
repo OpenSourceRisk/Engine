@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ql/currency.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
@@ -47,6 +47,7 @@ static CcyTestData currencyData[] = {
     // American currencies
     { MXVCurrency(), "Mexican Unidad de Inversion", "MXV", 979 },
     { CLFCurrency(), "Unidad de Fomento (funds code)", "CLF", 990 },
+    { UYUCurrency(), "Uruguayan peso", "UYU", 858 },
     // Asian currencies
     { KZTCurrency(), "Kazakhstani tenge", "KZT", 398 },
     { QARCurrency(), "Qatari riyal", "QAR", 634 },
@@ -61,7 +62,7 @@ static CcyTestData currencyData[] = {
 };
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CurrencyTest)
 

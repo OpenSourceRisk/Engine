@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/portfolio/enginefactory.hpp>
+#include <qle/indexes/fxindex.hpp>
 
 namespace ore {
 namespace data {
@@ -84,12 +85,24 @@ public:
                  const string& configuration) const override;
 };
 
+class DigitalCMSSpreadLegBuilder : public LegBuilder {
+public:
+    DigitalCMSSpreadLegBuilder() : LegBuilder("DigitalCMSSpread") {}
+    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                 const string& configuration) const override;
+};
+
 class EquityLegBuilder : public LegBuilder {
 public:
     EquityLegBuilder() : LegBuilder("Equity") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-        const string& configuration) const override;
+                 const string& configuration) const override;
 };
+
+// build an FX Index needed by legbuilders
+boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, 
+    const string& foreign, const boost::shared_ptr<Market>& market, const string& configuration, 
+    const string& calendar, Size fixingDays = 0);
 
 } // namespace data
 } // namespace ore

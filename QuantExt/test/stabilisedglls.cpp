@@ -16,23 +16,22 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/math/stabilisedglls.hpp>
-#include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ql/math/functional.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/types.hpp>
+#include <qle/math/stabilisedglls.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
 using namespace QuantExt;
 
-
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(StabilisedGLLSTest)
- 
+
 BOOST_AUTO_TEST_CASE(testBigInputNumbers) {
 
     BOOST_TEST_MESSAGE("Testing QuantExt::StablizedGLLS with big input numbers (1D)");
@@ -1126,7 +1125,11 @@ BOOST_AUTO_TEST_CASE(test2DRegression) {
         y.push_back(yt);
     }
 
+#if QL_HEX_VERSION > 0x01150000
+    std::vector<ext::function<Real(Array)> > basis =
+#else // QL 1.14 and below
     std::vector<boost::function1<Real, Array> > basis =
+#endif
         LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
 
     StabilisedGLLS m(x, y, basis, StabilisedGLLS::MaxAbs);

@@ -519,14 +519,15 @@ Example:
 
 \begin{table}[H]
 \centering
-  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \begin{tabular}{|p{3.4cm}|p{3.8cm}|p{6.3cm}|}
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
     Instrument Type & \emph{BASIS\_SWAP} & \\ \hline
     Quote Type & \emph{BASIS\_SPREAD} & \\ \hline
     Flat tenor & An integer followed by D, W, M or Y & Zero spread leg's index tenor\\ \hline
     Tenor & An integer followed by D, W, M or Y & Non-zero spread leg's index tenor\\ \hline
-    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the basis swap spread\\ \hline
+    Currency & See \lstinline!Currency! in Table~\ref{tab:allow_stand_data}& Currency of the basis swap spread\\ \hline
+    Optional Identifier & String & Basis swap name\\ \hline
     Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\ \hline
   \end{tabular}
   \caption{Basis Swap Spread}
@@ -535,9 +536,12 @@ Example:
 
 
 \medskip
-Example:
+Examples:
 \begin{itemize}
 \item {BASIS\_SWAP/BASIS\_SPREAD/6M/3M/CHF/10Y}
+\item {BASIS\_SWAP/BASIS\_SPREAD/3M/1D/USD/2Y}
+\item {BASIS\_SWAP/BASIS\_SPREAD/3M/1D/USD/LIBOR\_PRIME/2Y}
+\item {BASIS\_SWAP/BASIS\_SPREAD/3M/1D/USD/LIBOR\_FEDFUNDS/2Y}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1092,6 +1096,33 @@ Examples:
 	\item BOND/YIELD\_SPREAD/SECURITY\_1
 \end{itemize}
 
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Correlations}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{Correlation} & \\ \hline
+    Quote Type & \emph{RATE or PRICE} & \\ \hline
+    Index1 & String & Identifying name of the first index \\ \hline
+    Index2 & String & Identifying name of the second index \\ \hline
+  \end{tabular}
+  \caption{Correlation quotes}
+  \label{tab:correlation_quote}
+\end{table}
+
+This quote either provides the correlation between two indices, in which case Quote Type is RATE,
+or a premium that can be used to bootstrap the correlations, in which case Quote Type is Price.
+Currently only CMS Spread correlations are supported, in this case the Price quote is the price of a CMS Spread Cap.
+
+\medskip
+Examples:
+\begin{itemize}
+	\item CORRELATION/RATE/INDEX1/INDEX2/1Y/ATM
+\end{itemize}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Conditional Prepayment Rates}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

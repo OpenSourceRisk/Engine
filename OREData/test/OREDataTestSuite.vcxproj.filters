@@ -100,5 +100,29 @@
     <ClCompile Include="yieldcurve.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="correlationcurveconfig.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="digitalcms.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="fixings.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="mxnircurves.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="calendaradjustment.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="creditdefaultswapdata.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="zerocouponswap.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="conventionsbasedfutureexpiry.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

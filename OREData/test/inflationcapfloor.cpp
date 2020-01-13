@@ -16,25 +16,25 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/marketimpl.hpp>
-#include <ored/portfolio/enginedata.hpp>
-#include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/enginedata.hpp>
+#include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <ql/termstructures/inflation/inflationhelpers.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/termstructures/yield/discountcurve.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/instruments/inflationcapfloor.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/indexes/inflation/euhicp.hpp>
-#include <qle/indexes/inflationindexwrapper.hpp>
-#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
+#include <ql/instruments/inflationcapfloor.hpp>
 #include <ql/pricingengines/inflation/inflationcapfloorengines.hpp>
+#include <ql/termstructures/inflation/inflationhelpers.hpp>
+#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
+#include <ql/termstructures/yield/discountcurve.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <qle/indexes/inflationindexwrapper.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -53,52 +53,48 @@ public:
 
         // Add EUR notional curve
         Handle<YieldTermStructure> nominalTs(boost::make_shared<FlatForward>(0, cal, 0.005, dc));
-        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] =
-            nominalTs;
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = nominalTs;
 
         // Add EUHICPXT YoY Inflation Curve
-        boost::shared_ptr<ZeroInflationIndex> zcindex = boost::shared_ptr<EUHICPXT>(new EUHICPXT(false));;
+        boost::shared_ptr<ZeroInflationIndex> zcindex = boost::shared_ptr<EUHICPXT>(new EUHICPXT(false));
+        ;
         boost::shared_ptr<YoYInflationIndex> index =
             boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex, zcindex->interpolated());
 
-        std::vector<Date> datesZCII = { asof + 1 * Years, asof + 2 * Years, asof + 5 * Years, 
-            asof + 10 * Years, asof + 20 * Years };
-        std::vector<Rate> ratesZCII = { 1.1625, 1.23211, 1.36019, 1.51199, 1.74773};
+        std::vector<Date> datesZCII = {asof + 1 * Years, asof + 2 * Years, asof + 5 * Years, asof + 10 * Years,
+                                       asof + 20 * Years};
+        std::vector<Rate> ratesZCII = {1.1625, 1.23211, 1.36019, 1.51199, 1.74773};
 
         std::vector<boost::shared_ptr<YoYInflationTraits::helper>> instruments;
         for (Size i = 0; i < datesZCII.size(); i++) {
-            Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i]/100)));
+            Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100)));
             boost::shared_ptr<YoYInflationTraits::helper> anInstrument =
-                boost::make_shared<YearOnYearInflationSwapHelper>(
-                    quote, Period(3, Months), datesZCII[i], cal, bdc, dc, index);
+                boost::make_shared<YearOnYearInflationSwapHelper>(quote, Period(3, Months), datesZCII[i], cal, bdc, dc,
+                                                                  index);
             instruments.push_back(anInstrument);
         };
-        boost::shared_ptr<YoYInflationTermStructure> yoyTs =
-            boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
-            asof, TARGET(), Actual365Fixed(), Period(3, Months), Monthly, index->interpolated(),
-            ratesZCII[0]/100, nominalTs, instruments));
+        boost::shared_ptr<YoYInflationTermStructure> yoyTs = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(
+            new PiecewiseYoYInflationCurve<Linear>(asof, TARGET(), Actual365Fixed(), Period(3, Months), Monthly,
+                                                   index->interpolated(), ratesZCII[0] / 100, nominalTs, instruments));
 
         yoyInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
             Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                parseZeroInflationIndex("EUHICPXT", false), false,
-                Handle<YoYInflationTermStructure>(yoyTs)));
+                parseZeroInflationIndex("EUHICPXT", false), false, Handle<YoYInflationTermStructure>(yoyTs)));
 
         // Add EUHICPXT yoy volatility term structure
-        boost::shared_ptr<QuantLib::ConstantYoYOptionletVolatility> volSurface = 
-            boost::make_shared<QuantLib::ConstantYoYOptionletVolatility>(0.01, 0, cal, bdc, dc, 
-                Period(3, Months), Monthly, index->interpolated());
+        boost::shared_ptr<QuantLib::ConstantYoYOptionletVolatility> volSurface =
+            boost::make_shared<QuantLib::ConstantYoYOptionletVolatility>(0.01, 0, cal, bdc, dc, Period(3, Months),
+                                                                         Monthly, index->interpolated());
 
         yoyCapFloorVolSurfaces_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
-          Handle<QuantExt::YoYOptionletVolatilitySurface>(
-              boost::make_shared<QuantExt::YoYOptionletVolatilitySurface>(volSurface, VolatilityType::Normal));
-        
+            Handle<QuantExt::YoYOptionletVolatilitySurface>(
+                boost::make_shared<QuantExt::YoYOptionletVolatilitySurface>(volSurface, VolatilityType::Normal));
     }
 
     BusinessDayConvention bdc;
     DayCounter dc;
     Calendar cal;
 };
-
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
@@ -147,10 +143,8 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
     bool isPayerYY = false;
     string indexYY = "EUHICPXT";
     string lag = "3M";
-    bool interpolated = false;
-    LegData legYY(boost::make_shared<YoYLegData>(indexYY, lag, interpolated, 0), isPayerYY,
+    LegData legYY(boost::make_shared<YoYLegData>(indexYY, lag, 0), isPayerYY,
         "EUR", scheduleYY, dc, notional, vector<string>(), paymentConvention, false, true);
-
 
     std::vector<double> caps(1, 0.009);
     // Build capfloor trades
@@ -171,23 +165,20 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
     portfolio->build(engineFactory);
 
     // check YoY cap NPV against pure QL pricing
-    Schedule schedule(startDate, endDate, 1 * Years, TARGET(), Following, Following,
-        DateGeneration::Forward, false);
-    Leg yyLeg = yoyInflationLeg(schedule, TARGET(), market->yoyInflationIndex("EUHICPXT").currentLink(), Period(3, Months))
-        .withNotionals(10000000)
-        .withPaymentDayCounter(ActualActual())
-        .withPaymentAdjustment(Following);
+    Schedule schedule(startDate, endDate, 1 * Years, TARGET(), Following, Following, DateGeneration::Forward, false);
+    Leg yyLeg =
+        yoyInflationLeg(schedule, TARGET(), market->yoyInflationIndex("EUHICPXT").currentLink(), Period(3, Months))
+            .withNotionals(10000000)
+            .withPaymentDayCounter(ActualActual())
+            .withPaymentAdjustment(Following);
 
-    boost::shared_ptr<YoYInflationCapFloor> qlCap(
-        new YoYInflationCap(yyLeg, caps));
+    boost::shared_ptr<YoYInflationCapFloor> qlCap(new YoYInflationCap(yyLeg, caps));
 
-    Handle<QuantLib::YoYOptionletVolatilitySurface> 
-        hovs(market->yoyCapFloorVol("EUHICPXT")->yoyVolSurface());
+    Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(market->yoyCapFloorVol("EUHICPXT")->yoyVolSurface());
     auto dscEngine = boost::make_shared<YoYInflationBachelierCapFloorEngine>(
         market->yoyInflationIndex("EUHICPXT").currentLink(), hovs);
     qlCap->setPricingEngine(dscEngine);
     BOOST_CHECK_CLOSE(yyCap->instrument()->NPV(), qlCap->NPV(), 1E-8); // this is 1E-10 rel diff
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

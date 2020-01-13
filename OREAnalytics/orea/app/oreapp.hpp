@@ -39,7 +39,6 @@
 #include <ored/ored.hpp>
 #include <ored/portfolio/tradefactory.hpp>
 
-
 namespace ore {
 namespace analytics {
 using namespace ore::data;
@@ -58,19 +57,19 @@ public:
 
     //! Load curve configurations from xml file, build t0 market using market data provided.
     //! If any of the passed vectors are empty fall back on OREApp::buildMarket() and use market/fixing data files
-    void buildMarket(const std::string& todaysMarketXML = "",
-        const std::string& curveConfigXML = "",
-        const std::string& conventionsXML = "",
-        const std::vector<std::string>& marketData = std::vector<std::string>(),
-        const std::vector<std::string>& fixingData = std::vector<std::string>());
+    void buildMarket(const std::string& todaysMarketXML = "", const std::string& curveConfigXML = "",
+                     const std::string& conventionsXML = "",
+                     const std::vector<std::string>& marketData = std::vector<std::string>(),
+                     const std::vector<std::string>& fixingData = std::vector<std::string>());
 
     //! Get the t0 market
     // TODO: This should return a market, not market impl
     boost::shared_ptr<ore::data::MarketImpl> getMarket() const;
 
     //! build engine factory for a given market from an XML String
-    boost::shared_ptr<ore::data::EngineFactory> buildEngineFactoryFromXMLString(const boost::shared_ptr<ore::data::Market>& market,
-        const std::string& pricingEngineXML);
+    boost::shared_ptr<ore::data::EngineFactory>
+    buildEngineFactoryFromXMLString(const boost::shared_ptr<ore::data::Market>& market,
+                                    const std::string& pricingEngineXML);
 
 protected:
     //! read setup from params_
@@ -137,11 +136,11 @@ protected:
     boost::shared_ptr<NettingSetManager> initNettingSetManager();
 
     //! Get report writer
-    /*! This calls the private method getReportWriterImpl() which returns the 
-        actual ReportWriter implementation. The private method is virtual and 
-        can be overridden in derived classes to provide a dervied ReportWriter 
-        instance. This method is not virtual and can be hidden in derived 
-        classes by a method with the same name. This method can then return a 
+    /*! This calls the private method getReportWriterImpl() which returns the
+        actual ReportWriter implementation. The private method is virtual and
+        can be overridden in derived classes to provide a dervied ReportWriter
+        instance. This method is not virtual and can be hidden in derived
+        classes by a method with the same name. This method can then return a
         shared pointer to the derived ReportWriter class.
 
         For example, we can have the following in a derived class:
@@ -158,7 +157,7 @@ protected:
             }
         };
         \endcode
-        where we have our own special report writer class MyReportWriter that 
+        where we have our own special report writer class MyReportWriter that
         derives from ReportWriter or any class in its hierarchy.
     */
     boost::shared_ptr<ReportWriter> getReportWriter() const;
@@ -169,8 +168,12 @@ protected:
     //! Add extra leg builders
     virtual std::vector<boost::shared_ptr<LegBuilder>> getExtraLegBuilders() const { return {}; };
     //! Add extra trade builders
-    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> getExtraTradeBuilders() const { return {}; };
-
+    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>>
+    getExtraTradeBuilders(const boost::shared_ptr<TradeFactory>& = {}) const {
+        return {};
+    };
+    //! Get fixing manager
+    virtual boost::shared_ptr<FixingManager> getFixingManager() { return boost::make_shared<FixingManager>(asof_); }
     //! Get parametric var calculator
     virtual boost::shared_ptr<ParametricVarCalculator>
     buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
@@ -194,6 +197,7 @@ protected:
     bool stress_;
     bool parametricVar_;
     bool writeBaseScenario_;
+    bool continueOnError_;
     std::string inputPath_;
     std::string outputPath_;
 
@@ -214,10 +218,10 @@ protected:
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
 
+    ore::data::CurveConfigurations curveConfigs_;
+
 private:
-    virtual ReportWriter* getReportWriterImpl() const {
-        return new ReportWriter();
-    }
+    virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }
 };
 } // namespace analytics
 } // namespace ore

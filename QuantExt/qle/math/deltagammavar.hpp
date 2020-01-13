@@ -24,9 +24,12 @@
 #ifndef quantext_deltagammavar_hpp
 #define quantext_deltagammavar_hpp
 
+#include <qle/math/covariancesalvage.hpp>
+
 #include <ql/math/array.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/matrixutilities/choleskydecomposition.hpp>
+#include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/math/randomnumbers/rngtraits.hpp>
 #include <ql/utilities/disposable.hpp>
 
@@ -35,10 +38,9 @@
 #include <boost/serialization/array_wrapper.hpp>
 #endif
 #include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/tail_quantile.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/tail_quantile.hpp>
 #include <boost/foreach.hpp>
-
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -46,13 +48,15 @@ using namespace QuantLib;
 //! function that computes a delta VaR
 /*! For a given covariance matrix and a delta vector this function computes a parametric var w.r.t. a given
  * confidence level for multivariate normal risk factors. */
-Real deltaVar(const Matrix& omega, const Array& delta, const Real p);
+Real deltaVar(const Matrix& omega, const Array& delta, const Real p,
+              const CovarianceSalvage& sal = NoCovarianceSalvage());
 
 //! function that computes a delta-gamma normal VaR
 /*! For a given a covariance matrix, a delta vector and a gamma matrix this function computes a parametric var
  * w.r.t. a given confidence level. The gamma matrix is taken into account when computing the variance of the PL
  * distirbution, but the PL distribution is still assumed to be normal. */
-Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p);
+Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p,
+                         const CovarianceSalvage& sal = NoCovarianceSalvage());
 
 //! function that computes a delta-gamma VaR using Monte Carlo (single quantile)
 /*! For a given a covariance matrix, a delta vector and a gamma matrix this function computes a parametric var
@@ -60,7 +64,7 @@ Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& 
  * sensitivity based PL. */
 template <class RNG>
 Real deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p, const Size paths,
-                     const Size seed);
+                     const Size seed, const CovarianceSalvage& sal = NoCovarianceSalvage());
 
 //! function that computes a delta-gamma VaR using Monte Carlo (multiple quantiles)
 /*! For a given a covariance matrix, a delta vector and a gamma matrix this function computes a parametric var
@@ -68,7 +72,8 @@ Real deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamm
  * order sensitivity based PL. */
 template <class RNG>
 Disposable<std::vector<Real> > deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamma,
-                                               const std::vector<Real>& p, const Size paths, const Size seed);
+                                               const std::vector<Real>& p, const Size paths, const Size seed,
+                                               const CovarianceSalvage& sal = NoCovarianceSalvage());
 
 namespace detail {
 void check(const Real p);
@@ -88,7 +93,8 @@ template <typename A> Real absMax(const A& a) {
 
 template <class RNG>
 Disposable<std::vector<Real> > deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamma,
-                                               const std::vector<Real>& p, const Size paths, const Size seed) {
+                                               const std::vector<Real>& p, const Size paths, const Size seed,
+                                               const CovarianceSalvage& sal) {
     BOOST_FOREACH (Real q, p) { detail::check(q); }
     detail::check(omega, delta, gamma);
 
@@ -98,7 +104,10 @@ Disposable<std::vector<Real> > deltaGammaVarMc(const Matrix& omega, const Array&
         return res;
     }
 
-    Matrix L = CholeskyDecomposition(omega, true);
+    Matrix L = sal.salvage(omega).second;
+    if (L.rows() == 0) {
+        L = CholeskyDecomposition(omega, true);
+    }
 
     Real pmin = QL_MAX_REAL;
     BOOST_FOREACH (Real q, p) { pmin = std::min(pmin, q); }
@@ -127,10 +136,10 @@ Disposable<std::vector<Real> > deltaGammaVarMc(const Matrix& omega, const Array&
 
 template <class RNG>
 Real deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p, const Size paths,
-                     const Size seed) {
+                     const Size seed, const CovarianceSalvage& sal) {
 
     std::vector<Real> pv(1, p);
-    return deltaGammaVarMc<RNG>(omega, delta, gamma, pv, paths, seed).front();
+    return deltaGammaVarMc<RNG>(omega, delta, gamma, pv, paths, seed, sal).front();
 }
 
 } // namespace QuantExt

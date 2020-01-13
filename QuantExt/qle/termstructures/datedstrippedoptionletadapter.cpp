@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/datedstrippedoptionletadapter.hpp>
 #include <qle/math/flatextrapolation.hpp>
+#include <qle/termstructures/datedstrippedoptionletadapter.hpp>
 
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/termstructures/volatility/interpolatedsmilesection.hpp>
@@ -39,7 +39,7 @@ DatedStrippedOptionletAdapter::DatedStrippedOptionletAdapter(const boost::shared
 }
 
 boost::shared_ptr<SmileSection> DatedStrippedOptionletAdapter::smileSectionImpl(Time t) const {
-    QL_FAIL("Smile section not yet implemented for DatedStrippedOptionletAdapter");
+    
     // Arbitrarily choose the first row of strikes for the smile section independent variable
     // Generally a reasonable choice since:
     // 1) OptionletStripper1: all strike rows are the same
@@ -55,8 +55,9 @@ boost::shared_ptr<SmileSection> DatedStrippedOptionletAdapter::smileSectionImpl(
     // Use a linear interpolated smile section.
     // TODO: possibly make this configurable?
     if (flatExtrapolation_)
-        return boost::make_shared<InterpolatedSmileSection<LinearFlat> >(
-            t, optionletStrikes, stdDevs, Null<Real>(), LinearFlat(), Actual365Fixed(), volatilityType(), displacement());
+        return boost::make_shared<InterpolatedSmileSection<LinearFlat> >(t, optionletStrikes, stdDevs, Null<Real>(),
+                                                                         LinearFlat(), Actual365Fixed(),
+                                                                         volatilityType(), displacement());
     else
         return boost::make_shared<InterpolatedSmileSection<Linear> >(
             t, optionletStrikes, stdDevs, Null<Real>(), Linear(), Actual365Fixed(), volatilityType(), displacement());
@@ -72,9 +73,9 @@ Volatility DatedStrippedOptionletAdapter::volatilityImpl(Time length, Rate strik
     const vector<Time>& optionletTimes = optionletStripper_->optionletFixingTimes();
     boost::shared_ptr<LinearInterpolation> timeInterpolator =
         boost::make_shared<LinearInterpolation>(optionletTimes.begin(), optionletTimes.end(), vol.begin());
-    Real lengthEff = flatExtrapolation_ ? 
-        std::max(std::min(length, optionletStripper_->optionletFixingTimes().back()), optionletStripper_->optionletFixingTimes().front())
-        : length;
+    Real lengthEff = flatExtrapolation_ ? std::max(std::min(length, optionletStripper_->optionletFixingTimes().back()),
+                                                   optionletStripper_->optionletFixingTimes().front())
+                                        : length;
     return timeInterpolator->operator()(lengthEff, true);
 }
 
@@ -84,7 +85,7 @@ void DatedStrippedOptionletAdapter::performCalculations() const {
         const vector<Volatility>& optionletVolatilities = optionletStripper_->optionletVolatilities(i);
         boost::shared_ptr<Interpolation> tmp = boost::make_shared<LinearInterpolation>(
             optionletStrikes.begin(), optionletStrikes.end(), optionletVolatilities.begin());
-        if(flatExtrapolation_)
+        if (flatExtrapolation_)
             strikeInterpolations_[i] = boost::make_shared<FlatExtrapolation>(tmp);
         else
             strikeInterpolations_[i] = tmp;

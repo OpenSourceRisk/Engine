@@ -16,9 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/enginedata.hpp>
@@ -26,6 +25,7 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/cpicouponpricer.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
@@ -177,7 +177,7 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 BOOST_AUTO_TEST_SUITE(CPISwapTests)
 
 BOOST_AUTO_TEST_CASE(testCPISwapPrice) {
-    
+
     BOOST_TEST_MESSAGE("Testing CPI Swap Price...");
 
     // build market

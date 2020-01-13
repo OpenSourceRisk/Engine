@@ -50,7 +50,7 @@ public:
     bool has(const string& id);
 
     /*! Get a Trade with the given \p id from the portfolio
-        
+
         \remark returns a `nullptr` if no trade found with the given \p id
     */
     boost::shared_ptr<Trade> get(const std::string& id) const;
@@ -74,12 +74,15 @@ public:
 
     //! Load from XML Node
     void fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
-    
+
     //! Save portfolio to an XML file
     void save(const std::string& fileName) const;
 
     //! Remove specified trade from the portfolio
     bool remove(const std::string& tradeID);
+
+    //! Remove matured trades from portfolio for a given date, each removal is logged with an Alert
+    void removeMatured(const QuantLib::Date& asof);
 
     //! Call build on all trades in the portfolio
     void build(const boost::shared_ptr<EngineFactory>&);
@@ -98,6 +101,14 @@ public:
 
     //! Compute set of portfolios
     std::set<std::string> portfolioIds() const;
+
+    /*! Return the fixings that will be requested in order to price every Trade in this Portfolio given 
+        the \p settlementDate. The map key is the ORE name of the index and the map value is the set of fixing dates.
+
+        \warning This method will return an empty map if the Portfolio has not been built.
+    */
+    std::map<std::string, std::set<QuantLib::Date>> fixings(
+        const QuantLib::Date& settlementDate = QuantLib::Date()) const;
 
 private:
     std::vector<boost::shared_ptr<Trade>> trades_;

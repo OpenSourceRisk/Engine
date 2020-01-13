@@ -57,7 +57,7 @@ InterpolatingCPICapFloorEngine::InterpolatingCPICapFloorEngine(const Handle<CPIC
 void InterpolatingCPICapFloorEngine::calculate() const {
     Real npv = 0.0;
 
-    // RL change, adjusted strike, this is shared code between cpiblackcapfloorengine and this engine 
+    // RL change, adjusted strike, this is shared code between cpiblackcapfloorengine and this engine
     Handle<ZeroInflationIndex> zii = arguments_.infIndex;
     Handle<ZeroInflationTermStructure> zits = zii->zeroInflationTermStructure();
     Date baseDate = zits->baseDate();

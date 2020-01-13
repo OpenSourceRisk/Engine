@@ -36,15 +36,20 @@ class ForwardRateAgreement : public Trade {
 public:
     ForwardRateAgreement() : Trade("ForwardRateAgreement") {}
     ForwardRateAgreement(Envelope& env, string longShort, string currency, string startDate, string endDate,
-                         string index, double strike, double notional)
+                         string index, double strike, double amount)
         : Trade("ForwardRateAgreement", env), longShort_(longShort), currency_(currency), startDate_(startDate),
-          endDate_(endDate), index_(index), strike_(strike) {
-        notional_ = notional;
+          endDate_(endDate), index_(index), strike_(strike), amount_(amount) {
     }
-    void build(const boost::shared_ptr<EngineFactory>& engineFactory);
+    void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
 
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    //! Return no fixings for a ForwardRateAgreement
+    std::map<std::string, std::set<QuantLib::Date>> fixings(
+        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
+        return {};
+    }
+
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
 
 private:
     string longShort_;
@@ -53,7 +58,7 @@ private:
     string endDate_;
     string index_;
     double strike_;
-
+    double amount_;
 };
 } // namespace data
 } // namespace ore

@@ -31,22 +31,24 @@ namespace data {
 
 //! Commodity option trade representation
 /*! \ingroup tradedata
-*/
+ */
 class CommodityOption : public Trade {
 public:
     //! Default constructor
     CommodityOption() : Trade("CommodityOption"), strike_(0.0), quantity_(0.0) {}
 
     //! Constructor
-    CommodityOption(const Envelope& env,
-        const OptionData& optionData,
-        const std::string& commodityName,
-        const std::string& currency,
-        QuantLib::Real strike,
-        QuantLib::Real quantity);
+    CommodityOption(const Envelope& env, const OptionData& optionData, const std::string& commodityName,
+                    const std::string& currency, QuantLib::Real strike, QuantLib::Real quantity);
 
     //! Build underlying instrument and link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>& engineFactory);
+    void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
+
+    //! Return no fixings for a CommodityOption
+    std::map<std::string, std::set<QuantLib::Date>> fixings(
+        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
+        return {};
+    }
 
     //! \name Inspectors
     //@{
@@ -59,8 +61,13 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+
+    //! \name Trade
+    //@{
+    bool hasCashflows() const override { return false; }
     //@}
 
 private:
@@ -71,5 +78,5 @@ private:
     QuantLib::Real quantity_;
 };
 
-}
-}
+} // namespace data
+} // namespace ore

@@ -48,22 +48,22 @@ namespace QuantExt {
     by the invertFxIndex flag. The settlement date of the spot is
     assumed to be equal to the settlement date of the swap itself.
 
-            \ingroup termstructures
+    \ingroup termstructures
 */
 class CrossCcyBasisMtMResetSwapHelper : public RelativeDateRateHelper {
 public:
-    CrossCcyBasisMtMResetSwapHelper(const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX, Natural settlementDays,
-                            const Calendar& settlementCalendar, const Period& swapTenor,
-                            BusinessDayConvention rollConvention,
-                            const boost::shared_ptr<QuantLib::IborIndex>& foreignCcyIndex,
-                            const boost::shared_ptr<QuantLib::IborIndex>& domesticCcyIndex,
-                            const Handle<YieldTermStructure>& foreignCcyDiscountCurve,
-                            const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
-                            const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
-                            const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
-                            bool eom = false,
-                            bool spreadOnForeignCcy = true,
-                            bool invertFxIndex = false);
+    CrossCcyBasisMtMResetSwapHelper(
+        const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX, Natural settlementDays,
+        const Calendar& settlementCalendar, const Period& swapTenor, BusinessDayConvention rollConvention,
+        const boost::shared_ptr<QuantLib::IborIndex>& foreignCcyIndex,
+        const boost::shared_ptr<QuantLib::IborIndex>& domesticCcyIndex,
+        const Handle<YieldTermStructure>& foreignCcyDiscountCurve,
+        const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
+        const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
+        const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve = Handle<YieldTermStructure>(), bool eom = false,
+        bool spreadOnForeignCcy = true, bool invertFxIndex = false,
+        boost::optional<QuantLib::Period> foreignTenor = boost::none,
+        boost::optional<QuantLib::Period> domesticTenor = boost::none);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const;
@@ -93,6 +93,8 @@ protected:
     Handle<YieldTermStructure> foreignCcyFxFwdRateCurve_;
     Handle<YieldTermStructure> domesticCcyFxFwdRateCurve_;
     bool eom_, spreadOnForeignCcy_, invertFxIndex_;
+    QuantLib::Period foreignTenor_;
+    QuantLib::Period domesticTenor_;
 
     Currency foreignCurrency_;
     Currency domesticCurrency_;

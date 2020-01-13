@@ -27,7 +27,6 @@
 #include <ql/time/date.hpp>
 #include <vector>
 
-
 namespace ore {
 namespace data {
 using QuantLib::Real;
@@ -91,6 +90,10 @@ public:
     boost::shared_ptr<QuantLib::Instrument> qlInstrument() const { return instrument_; }
     /*! The multiplier */
     const Real& multiplier() const { return multiplier_; }
+    /*! additional instruments */
+    const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments() const { return additionalInstruments_; }
+    /*! mutlipliers for additional instruments */
+    const std::vector<Real>& additionalMultipliers() const { return additionalMultipliers_; }
     //@}
 
 protected:

@@ -32,7 +32,6 @@
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 using namespace QuantExt;

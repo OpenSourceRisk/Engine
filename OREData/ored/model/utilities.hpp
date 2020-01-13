@@ -31,7 +31,6 @@
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace QuantExt;

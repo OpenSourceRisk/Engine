@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/strippedoptionletadapter2.hpp>
 #include <qle/math/flatextrapolation.hpp>
+#include <qle/termstructures/strippedoptionletadapter2.hpp>
 
 #include <ql/math/interpolations/cubicinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
@@ -27,6 +27,9 @@
 #include <ql/termstructures/volatility/optionlet/optionletstripper.hpp>
 
 using namespace QuantLib;
+using std::min;
+using std::max;
+using std::vector;
 
 namespace QuantExt {
 
@@ -49,25 +52,31 @@ boost::shared_ptr<SmileSection> StrippedOptionletAdapter2::smileSectionImpl(Time
     // Use a linear interpolated smile section.
     // TODO: possibly make this configurable?
     if (flatExtrapolation_)
-        return boost::make_shared<InterpolatedSmileSection<LinearFlat> >(
-            t, optionletStrikes, stddevs, Null<Real>(), LinearFlat(), Actual365Fixed(), volatilityType(), displacement());
+        return boost::make_shared<InterpolatedSmileSection<LinearFlat> >(t, optionletStrikes, stddevs, Null<Real>(),
+                                                                         LinearFlat(), Actual365Fixed(),
+                                                                         volatilityType(), displacement());
     else
         return boost::make_shared<InterpolatedSmileSection<Linear> >(
             t, optionletStrikes, stddevs, Null<Real>(), Linear(), Actual365Fixed(), volatilityType(), displacement());
 }
 
 Volatility StrippedOptionletAdapter2::volatilityImpl(Time length, Rate strike) const {
+    
     calculate();
 
-    std::vector<Volatility> vol(nInterpolations_);
+    vector<Volatility> vol(nInterpolations_);
     for (Size i = 0; i < nInterpolations_; ++i)
         vol[i] = strikeInterpolations_[i]->operator()(strike, true);
 
-    const std::vector<Time>& optionletTimes = optionletStripper_->optionletFixingTimes();
-    boost::shared_ptr<LinearInterpolation> timeInterpolator(
-        new LinearInterpolation(optionletTimes.begin(), optionletTimes.end(), vol.begin()));
-    Real lengthEff = flatExtrapolation_ ? std::min(length, optionletStripper_->optionletFixingTimes().back()) : length;
-    return timeInterpolator->operator()(lengthEff, true);
+    vector<Time> optionletTimes = optionletStripper_->optionletFixingTimes();
+    LinearInterpolation timeInterpolator(optionletTimes.begin(), optionletTimes.end(), vol.begin());
+
+    // If flat extrapolation is turned on, extrapolate flat after last expiry _and_ before first expiry
+    if (flatExtrapolation_) {
+        length = max(min(length, optionletTimes.back()), optionletTimes.front());
+    }
+
+    return timeInterpolator(length, true);
 }
 
 void StrippedOptionletAdapter2::performCalculations() const {
@@ -97,7 +106,7 @@ void StrippedOptionletAdapter2::performCalculations() const {
         //                              ));
         boost::shared_ptr<Interpolation> tmp = boost::shared_ptr<LinearInterpolation>(
             new LinearInterpolation(optionletStrikes.begin(), optionletStrikes.end(), optionletVolatilities.begin()));
-        if(flatExtrapolation_)
+        if (flatExtrapolation_)
             strikeInterpolations_[i] = boost::make_shared<FlatExtrapolation>(tmp);
         else
             strikeInterpolations_[i] = tmp;

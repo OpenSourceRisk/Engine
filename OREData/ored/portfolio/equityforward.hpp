@@ -26,7 +26,6 @@
 #include <ored/portfolio/optiondata.hpp>
 #include <ored/portfolio/trade.hpp>
 
-
 namespace ore {
 namespace data {
 using std::string;
@@ -43,7 +42,13 @@ public:
         : Trade("EquityForward", env), longShort_(longShort), eqName_(name), currency_(currency), quantity_(quantity),
           maturityDate_(maturityDate), strike_(strike) {}
 
-    void build(const boost::shared_ptr<EngineFactory>&);
+    void build(const boost::shared_ptr<EngineFactory>&) override;
+
+    //! Return no fixings for an EquityForward.
+    std::map<std::string, std::set<QuantLib::Date>> fixings(
+        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
+        return {};
+    }
 
     string longShort() { return longShort_; }
     string eqName() { return eqName_; }
@@ -52,8 +57,8 @@ public:
     string maturityDate() { return maturityDate_; }
     double strike() { return strike_; }
 
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
 
 private:
     string longShort_;

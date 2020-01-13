@@ -16,19 +16,38 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
 #include <orea/engine/sensitivitycubestream.hpp>
-#include <orea/app/reportwriter.hpp>
 #include <ored/report/csvreport.hpp>
+#include <ored/utilities/log.hpp>
 
 using namespace std;
 using namespace ore::data;
 
+namespace {
+
+vector<string> getFilenames(const string& fileString, const string& path) {
+    vector<string> fileNames;
+    boost::split(fileNames, fileString, boost::is_any_of(",;"), boost::token_compress_on);
+    for (auto it = fileNames.begin(); it < fileNames.end(); it++) {
+        boost::trim(*it);
+        *it = path + "/" + *it;
+    }
+    return fileNames;
+}
+
+} // anonymous namespace
+
 namespace ore {
 namespace analytics {
 
-void SensitivityRunner::runSensitivityAnalysis(
-    boost::shared_ptr<Market> market, Conventions& conventions) {
+void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market, Conventions& conventions,
+                                               const CurveConfigurations& curveConfigs,
+                                               const TodaysMarketParameters& todaysMarketParams) {
+
+    MEM_LOG;
+    LOG("Running sensitivity analysis");
 
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
@@ -41,12 +60,16 @@ void SensitivityRunner::runSensitivityAnalysis(
     bool recalibrateModels =
         params_->has("sensitivity", "recalibrateModels") && parseBool(params_->get("sensitivity", "recalibrateModels"));
 
-    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis =
-        boost::make_shared<SensitivityAnalysis>(sensiPortfolio, market, marketConfiguration, engineData, simMarketData,
-                                                sensiData, conventions, recalibrateModels);
+    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
+        sensiPortfolio, market, marketConfiguration, engineData, simMarketData, sensiData, conventions,
+        recalibrateModels, curveConfigs, todaysMarketParams, false, extraEngineBuilders_, extraLegBuilders_,
+        continueOnError_);
     sensiAnalysis->generateSensitivities();
 
     sensiOutputReports(sensiAnalysis);
+
+    LOG("Sensitivity analysis completed");
+    MEM_LOG;
 }
 
 void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
@@ -70,9 +93,12 @@ void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarket
     engineData->fromFile(sensiPricingEnginesFile);
 
     LOG("Get Portfolio");
-    string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
+    string portfoliosString = params_->get("setup", "portfolioFile");
+    vector<string> portfolioFiles = getFilenames(portfoliosString, inputPath);
     // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
-    sensiPortfolio->load(portfolioFile, boost::make_shared<TradeFactory>(extraTradeBuilders_));
+    for (auto portfolioFile : portfolioFiles) {
+        sensiPortfolio->load(portfolioFile, tradeFactory_);
+    }
 
     DLOG("sensiInputInitialize done");
 }

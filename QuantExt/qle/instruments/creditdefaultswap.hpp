@@ -49,7 +49,6 @@
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/time/schedule.hpp>
 
-
 namespace QuantLib {
 class YieldTermStructure;
 class Claim;
@@ -97,11 +96,15 @@ public:
                                   the accrual period.
         @param protectionStart  The first date where a default
                                 event will trigger the contract.
+        @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to 
+                                     allow for possibility of including maturity date in the last 
+                                     period's coupon accrual which is standard.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
                       bool paysAtDefaultTime = true, const Date& protectionStart = Date(),
-                      const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>());
+                      const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
+                      const DayCounter& lastPeriodDayCounter = DayCounter());
     //! CDS quoted as upfront and running spread
     /*! @param side  Whether the protection is bought or sold.
         @param notional  Notional value
@@ -121,11 +124,15 @@ public:
         @param protectionStart The first date where a default
                                event will trigger the contract.
         @param upfrontDate Settlement date for the upfront payment.
+        @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to
+                                     allow for possibility of including maturity date in the last
+                                     period's coupon accrual which is standard.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate upfront, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
                       bool paysAtDefaultTime = true, const Date& protectionStart = Date(),
-                      const Date& upfrontDate = Date(), const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>());
+                      const Date& upfrontDate = Date(), const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
+                      const DayCounter& lastPeriodDayCounter = DayCounter());
     //@}
     //! \name Instrument interface
     //@{
@@ -250,6 +257,11 @@ protected:
     mutable Real couponLegBPS_, couponLegNPV_;
     mutable Real upfrontBPS_, upfrontNPV_;
     mutable Real defaultLegNPV_, accrualRebateNPV_;
+    //! \name Additional interface
+    //@{
+    virtual boost::shared_ptr<PricingEngine> buildPricingEngine(const Handle<DefaultProbabilityTermStructure>& p,
+                                                                Real r, const Handle<YieldTermStructure>& d) const;
+    //@}
 };
 
 //! \ingroup instruments

@@ -27,7 +27,6 @@
 #include <ql/cashflow.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

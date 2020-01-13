@@ -637,6 +637,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bond.cpp" />
+    <ClCompile Include="calendaradjustment.cpp" />
     <ClCompile Include="calendars.cpp" />
     <ClCompile Include="ccyswapwithresets.cpp" />
     <ClCompile Include="cds.cpp" />
@@ -647,18 +648,24 @@
     <ClCompile Include="commodityvolcurve.cpp" />
     <ClCompile Include="commodityvolcurveconfig.cpp" />
     <ClCompile Include="conventions.cpp" />
+    <ClCompile Include="conventionsbasedfutureexpiry.cpp" />
+    <ClCompile Include="correlationcurveconfig.cpp" />
     <ClCompile Include="cpiswap.cpp" />
+    <ClCompile Include="creditdefaultswapdata.cpp" />
     <ClCompile Include="crossassetmodeldata.cpp" />
     <ClCompile Include="curveconfig.cpp" />
+    <ClCompile Include="digitalcms.cpp" />
     <ClCompile Include="equitymarketdata.cpp" />
     <ClCompile Include="equityswap.cpp" />
     <ClCompile Include="equitytrades.cpp" />
+    <ClCompile Include="fixings.cpp" />
     <ClCompile Include="fxoption.cpp" />
     <ClCompile Include="fxswap.cpp" />
     <ClCompile Include="fxtriangulation.cpp" />
     <ClCompile Include="indices.cpp" />
     <ClCompile Include="inflationcapfloor.cpp" />
     <ClCompile Include="legdata.cpp" />
+    <ClCompile Include="mxnircurves.cpp" />
     <ClCompile Include="ored_commodityforward.cpp" />
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="portfolio.cpp" />
@@ -668,11 +675,7 @@
     <ClCompile Include="todaysmarket.cpp" />
     <ClCompile Include="xmlmanipulation.cpp" />
     <ClCompile Include="yieldcurve.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\OREData.vcxproj">
-      <Project>{ad0a27da-91da-46a2-acbd-296c419ed3aa}</Project>
-    </ProjectReference>
+    <ClCompile Include="zerocouponswap.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

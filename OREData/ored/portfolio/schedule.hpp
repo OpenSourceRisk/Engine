@@ -61,8 +61,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 private:
     string startDate_;
@@ -86,26 +86,29 @@ public:
     //! Default constructor
     ScheduleDates() {}
     //! Constructor
-    ScheduleDates(const string& calendar, const string& convention, const string& tenor, const vector<string>& dates)
-        : calendar_(calendar), convention_(convention), tenor_(tenor), dates_(dates) {}
+    ScheduleDates(const string& calendar, const string& convention, const string& tenor, const vector<string>& dates,
+                  const string& endOfMonth = "")
+        : calendar_(calendar), convention_(convention), tenor_(tenor), endOfMonth_(endOfMonth), dates_(dates) {}
 
     //! \name Inspectors
     //@{
     const string& calendar() const { return calendar_; }
     const string& convention() const { return convention_; }
     const string& tenor() const { return tenor_; }
+    const string& endOfMonth() const { return endOfMonth_; }
     const vector<string>& dates() const { return dates_; }
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 private:
     string calendar_;
     string convention_;
     string tenor_;
+    string endOfMonth_;
     vector<string> dates_;
 };
 
@@ -126,6 +129,8 @@ public:
     void addDates(const ScheduleDates& dates) { dates_.emplace_back(dates); }
     //! Add rules
     void addRules(const ScheduleRules& rules) { rules_.emplace_back(rules); }
+    //! Check if has any dates/rules
+    bool hasData() { return dates_.size() > 0 || rules_.size() > 0; }
 
     //! \name Inspectors
     //@{
@@ -135,8 +140,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 private:
     vector<ScheduleDates> dates_;

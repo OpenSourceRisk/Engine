@@ -1,26 +1,29 @@
 # cpp files, this list is maintained manually
 
 set(OREData_SRC configuration/basecorrelationcurveconfig.cpp
+configuration/bootstrapconfig.cpp
 configuration/capfloorvolcurveconfig.cpp
 configuration/cdsvolcurveconfig.cpp
 configuration/commoditycurveconfig.cpp
 configuration/commodityvolcurveconfig.cpp
 configuration/conventions.cpp
+configuration/correlationcurveconfig.cpp
 configuration/curveconfigurations.cpp
 configuration/defaultcurveconfig.cpp
 configuration/equitycurveconfig.cpp
 configuration/equityvolcurveconfig.cpp
 configuration/fxvolcurveconfig.cpp
+configuration/genericyieldvolcurveconfig.cpp
 configuration/inflationcapfloorpricesurfaceconfig.cpp
 configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
-configuration/swaptionvolcurveconfig.cpp
 configuration/yieldcurveconfig.cpp
 marketdata/basecorrelationcurve.cpp
 marketdata/capfloorvolcurve.cpp
 marketdata/cdsvolcurve.cpp
 marketdata/commoditycurve.cpp
 marketdata/commodityvolcurve.cpp
+marketdata/correlationcurve.cpp
 marketdata/csvloader.cpp
 marketdata/curveloader.cpp
 marketdata/curvespec.cpp
@@ -32,6 +35,7 @@ marketdata/fixings.cpp
 marketdata/fxspot.cpp
 marketdata/fxtriangulation.cpp
 marketdata/fxvolcurve.cpp
+marketdata/genericyieldvolcurve.cpp
 marketdata/inflationcapfloorpricesurface.cpp
 marketdata/inflationcapfloorvolcurve.cpp
 marketdata/inflationcurve.cpp
@@ -45,6 +49,7 @@ marketdata/swaptionvolcurve.cpp
 marketdata/todaysmarket.cpp
 marketdata/todaysmarketparameters.cpp
 marketdata/yieldcurve.cpp
+marketdata/yieldvolcurve.cpp
 model/crossassetmodelbuilder.cpp
 model/crossassetmodeldata.cpp
 model/eqbsbuilder.cpp
@@ -58,10 +63,16 @@ model/lgmbuilder.cpp
 model/lgmdata.cpp
 model/utilities.cpp
 portfolio/bond.cpp
+portfolio/builders/capfloor.cpp
+portfolio/builders/capfloorediborleg.cpp
+portfolio/builders/cms.cpp
+portfolio/builders/cmsspread.cpp
+portfolio/builders/commodityoption.cpp
+portfolio/builders/swaption.cpp
+portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
 portfolio/commodityforward.cpp
 portfolio/commodityoption.cpp
-portfolio/cpicapfloor.cpp
 portfolio/creditdefaultswap.cpp
 portfolio/creditdefaultswapdata.cpp
 portfolio/enginedata.cpp
@@ -70,12 +81,15 @@ portfolio/envelope.cpp
 portfolio/equityforward.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
+portfolio/fixingdates.cpp
+portfolio/forwardbond.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
 portfolio/fxswap.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
+portfolio/legdatafactory.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetmanager.cpp
 portfolio/optiondata.cpp
@@ -87,15 +101,10 @@ portfolio/swaption.cpp
 portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradefactory.cpp
-portfolio/builders/capfloor.cpp
-portfolio/builders/capfloorediborleg.cpp
-portfolio/builders/cms.cpp
-portfolio/builders/cmsspread.cpp
-portfolio/builders/commodityoption.cpp
-portfolio/builders/cpicapfloor.cpp
-portfolio/builders/swaption.cpp
-portfolio/builders/yoycapfloor.cpp
+portfolio/vanillaoption.cpp
 report/csvreport.cpp
+utilities/calendaradjustmentconfig.cpp
+utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
 utilities/currencycheck.cpp
@@ -112,13 +121,14 @@ utilities/xmlutils.cpp)
 # hpp files, this list is maintained manually
 
 set(OREData_HDR auto_link.hpp
-version.hpp
 configuration/basecorrelationcurveconfig.hpp
+configuration/bootstrapconfig.hpp
 configuration/capfloorvolcurveconfig.hpp
 configuration/cdsvolcurveconfig.hpp
 configuration/commoditycurveconfig.hpp
 configuration/commodityvolcurveconfig.hpp
 configuration/conventions.hpp
+configuration/correlationcurveconfig.hpp
 configuration/curveconfig.hpp
 configuration/curveconfigurations.hpp
 configuration/defaultcurveconfig.hpp
@@ -126,17 +136,20 @@ configuration/equitycurveconfig.hpp
 configuration/equityvolcurveconfig.hpp
 configuration/fxspotconfig.hpp
 configuration/fxvolcurveconfig.hpp
+configuration/genericyieldvolcurveconfig.hpp
 configuration/inflationcapfloorpricesurfaceconfig.hpp
 configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
 configuration/securityconfig.hpp
 configuration/swaptionvolcurveconfig.hpp
 configuration/yieldcurveconfig.hpp
+configuration/yieldvolcurveconfig.hpp
 marketdata/basecorrelationcurve.hpp
 marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
 marketdata/commoditycurve.hpp
 marketdata/commodityvolcurve.hpp
+marketdata/correlationcurve.hpp
 marketdata/csvloader.hpp
 marketdata/curveloader.hpp
 marketdata/curvespec.hpp
@@ -148,6 +161,7 @@ marketdata/fixings.hpp
 marketdata/fxspot.hpp
 marketdata/fxtriangulation.hpp
 marketdata/fxvolcurve.hpp
+marketdata/genericyieldvolcurve.hpp
 marketdata/inflationcapfloorpricesurface.hpp
 marketdata/inflationcapfloorvolcurve.hpp
 marketdata/inflationcurve.hpp
@@ -158,10 +172,12 @@ marketdata/marketdatum.hpp
 marketdata/marketdatumparser.hpp
 marketdata/marketimpl.hpp
 marketdata/security.hpp
+marketdata/structuredcurveerror.hpp
 marketdata/swaptionvolcurve.hpp
 marketdata/todaysmarket.hpp
 marketdata/todaysmarketparameters.hpp
 marketdata/yieldcurve.hpp
+marketdata/yieldvolcurve.hpp
 model/crossassetmodelbuilder.hpp
 model/crossassetmodeldata.hpp
 model/eqbsbuilder.hpp
@@ -176,10 +192,28 @@ model/lgmdata.hpp
 model/modelbuilder.hpp
 model/utilities.hpp
 portfolio/bond.hpp
+portfolio/builders/bond.hpp
+portfolio/builders/cachingenginebuilder.hpp
+portfolio/builders/capfloor.hpp
+portfolio/builders/capfloorediborleg.hpp
+portfolio/builders/capflooredyoyleg.hpp
+portfolio/builders/cms.hpp
+portfolio/builders/cmsspread.hpp
+portfolio/builders/commodityforward.hpp
+portfolio/builders/commodityoption.hpp
+portfolio/builders/creditdefaultswap.hpp
+portfolio/builders/equityforward.hpp
+portfolio/builders/equityoption.hpp
+portfolio/builders/forwardbond.hpp
+portfolio/builders/fxforward.hpp
+portfolio/builders/fxoption.hpp
+portfolio/builders/swap.hpp
+portfolio/builders/swaption.hpp
+portfolio/builders/vanillaoption.hpp
+portfolio/builders/yoycapfloor.hpp
 portfolio/capfloor.hpp
 portfolio/commodityforward.hpp
 portfolio/commodityoption.hpp
-portfolio/cpicapfloor.hpp
 portfolio/creditdefaultswap.hpp
 portfolio/creditdefaultswapdata.hpp
 portfolio/enginedata.hpp
@@ -188,6 +222,8 @@ portfolio/envelope.hpp
 portfolio/equityforward.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
+portfolio/fixingdates.hpp
+portfolio/forwardbond.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxforward.hpp
 portfolio/fxoption.hpp
@@ -195,37 +231,25 @@ portfolio/fxswap.hpp
 portfolio/instrumentwrapper.hpp
 portfolio/legbuilders.hpp
 portfolio/legdata.hpp
+portfolio/legdatafactory.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetmanager.hpp
 portfolio/optiondata.hpp
 portfolio/optionwrapper.hpp
 portfolio/portfolio.hpp
 portfolio/schedule.hpp
+portfolio/structuredtradeerror.hpp
 portfolio/swap.hpp
 portfolio/swaption.hpp
 portfolio/trade.hpp
 portfolio/tradeactions.hpp
 portfolio/tradefactory.hpp
-portfolio/builders/bond.hpp
-portfolio/builders/cachingenginebuilder.hpp
-portfolio/builders/capfloor.hpp
-portfolio/builders/capfloorediborleg.hpp
-portfolio/builders/cms.hpp
-portfolio/builders/cmsspread.hpp
-portfolio/builders/commodityforward.hpp
-portfolio/builders/commodityoption.hpp
-portfolio/builders/cpicapfloor.hpp
-portfolio/builders/creditdefaultswap.hpp
-portfolio/builders/equityforward.hpp
-portfolio/builders/equityoption.hpp
-portfolio/builders/fxforward.hpp
-portfolio/builders/fxoption.hpp
-portfolio/builders/swap.hpp
-portfolio/builders/swaption.hpp
-portfolio/builders/yoycapfloor.hpp
+portfolio/vanillaoption.hpp
 report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
+utilities/calendaradjustmentconfig.hpp
+utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
 utilities/currencycheck.hpp
@@ -240,10 +264,22 @@ utilities/strike.hpp
 utilities/timeperiod.hpp
 utilities/to_string.hpp
 utilities/vectorutils.hpp
-utilities/xmlutils.hpp)
+utilities/xmlutils.hpp
+version.hpp)
 
 writeAll("ored" "ored.hpp" "auto_link.hpp" "${OREData_HDR}")
 add_library(${ORED_LIB_NAME} ${OREData_SRC})
 target_link_libraries(${ORED_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${ORED_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${ORED_LIB_NAME} ${Boost_LIBRARIES})
+
+
+install(DIRECTORY . DESTINATION include/ored
+        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+
+install(TARGETS ${ORED_LIB_NAME}
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )
+

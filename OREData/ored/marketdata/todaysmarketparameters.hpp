@@ -28,7 +28,6 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-
 namespace ore {
 namespace data {
 using std::vector;
@@ -73,7 +72,9 @@ enum class MarketObject {
     EquityVol = 18,
     Security = 19,
     CommodityCurve = 20,
-    CommodityVolatility = 21
+    CommodityVolatility = 21,
+    Correlation = 22,
+    YieldVol = 23
 };
 
 std::ostream& operator<<(std::ostream& out, const MarketObject& o);
@@ -184,14 +185,6 @@ inline const map<string, string>& TodaysMarketParameters::mapping(const MarketOb
 
 inline void TodaysMarketParameters::addConfiguration(const string& id, const MarketConfiguration& configuration) {
     configurations_[id] = configuration;
-}
-
-inline void TodaysMarketParameters::addMarketObject(const MarketObject o, const string& id,
-                                                    const map<string, string>& assignments) {
-    marketObjects_[o][id] = assignments;
-    for (auto s : assignments)
-        DLOG("TodaysMarketParameters, add market objects of type " << o << ": " << id << " " << s.first << " "
-                                                                   << s.second);
 }
 
 } // namespace data

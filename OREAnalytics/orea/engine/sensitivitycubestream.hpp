@@ -22,33 +22,32 @@
 
 #pragma once
 
-#include <orea/engine/sensitivitystream.hpp>
 #include <orea/cube/sensitivitycube.hpp>
+#include <orea/engine/sensitivitystream.hpp>
 
-#include <string>
 #include <map>
 #include <set>
+#include <string>
 
 namespace ore {
 namespace analytics {
 
 /*! Class for streaming SensitivityRecords from a SensitivityCube
-*/
+ */
 class SensitivityCubeStream : public SensitivityStream {
 public:
-    /*! Constructor providing the sensitivity \p cube and currency of the 
+    /*! Constructor providing the sensitivity \p cube and currency of the
         sensitivities
     */
-    SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, 
-        const std::string& currency);
-    
+    SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, const std::string& currency);
+
     /*! Returns the next SensitivityRecord in the stream
 
         \warning the cube must not change during successive calls to next()!
     */
     SensitivityRecord next() override;
-    
-    //! Resets the stream so that SensitivityRecord objects can be streamed again 
+
+    //! Resets the stream so that SensitivityRecord objects can be streamed again
     void reset() override;
 
 private:
@@ -58,12 +57,14 @@ private:
     std::string currency_;
 
     //! Iterator to risk factor keys in the cube
-    std::set<RiskFactorKey>::iterator itRiskFactor_;
+    boost::bimap<RiskFactorKey, ore::analytics::SensitivityCube::FactorData>::const_iterator upRiskFactor_;
+    std::map<RiskFactorKey, ore::analytics::SensitivityCube::FactorData>::const_iterator downRiskFactor_;
     //! Iterator to cross factors in the cube
-    std::set<SensitivityCube::crossPair>::iterator itCrossPair_;
+    std::map<ore::analytics::SensitivityCube::crossPair, std::tuple<ore::analytics::SensitivityCube::FactorData, 
+        ore::analytics::SensitivityCube::FactorData, QuantLib::Size>>::const_iterator itCrossPair_;
     //! Index of current trade Id in the cube
-    QuantLib::Size tradeIdx_;
+    std::map<std::string, QuantLib::Size>::const_iterator tradeIdx_;
 };
 
-}
-}
+} // namespace analytics
+} // namespace ore

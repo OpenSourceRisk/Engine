@@ -26,9 +26,8 @@
 
 #include <ql/currencies/asia.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <qle/calendars/philippines.hpp>
 #include <ql/time/daycounters/actual360.hpp>
-
+#include <qle/calendars/philippines.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -43,7 +42,7 @@ No PHP Calendar in QuantLib
 class PHPPhiref : public IborIndex {
 public:
     PHPPhiref(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("PHP-PHIREF", tenor, 2, PHPCurrency(), Philippines(), ModifiedFollowing, false, Actual360(), h) {}
+        : IborIndex("PHP-PHIREF", tenor, 1, PHPCurrency(), Philippines(), ModifiedFollowing, false, Actual360(), h) {}
 };
 } // namespace QuantExt
 

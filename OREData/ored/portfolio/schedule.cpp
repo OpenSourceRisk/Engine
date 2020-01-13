@@ -59,14 +59,18 @@ void ScheduleDates::fromXML(XMLNode* node) {
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
     convention_ = XMLUtils::getChildValue(node, "Convention");
     tenor_ = XMLUtils::getChildValue(node, "Tenor");
+    endOfMonth_ = XMLUtils::getChildValue(node, "EndOfMonth");
     dates_ = XMLUtils::getChildrenValues(node, "Dates", "Date");
 }
 
 XMLNode* ScheduleDates::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Dates");
     XMLUtils::addChild(doc, node, "Calendar", calendar_);
+        if (convention_ != "")
     XMLUtils::addChild(doc, node, "Convention", convention_);
     XMLUtils::addChild(doc, node, "Tenor", tenor_);
+    if(endOfMonth_ != "")
+        XMLUtils::addChild(doc, node, "EndOfMonth", endOfMonth_);
     XMLUtils::addChildren(doc, node, "Dates", "Date", dates_);
     return node;
 }
@@ -100,10 +104,13 @@ Schedule makeSchedule(const ScheduleDates& data) {
     boost::optional<Period> tenor = boost::none;
     if (data.tenor() != "")
         tenor = parsePeriod(data.tenor());
+    bool endOfMonth = false;
+    if (data.endOfMonth() != "")
+        endOfMonth = parseBool(data.endOfMonth());
     vector<Date> scheduleDates(data.dates().size());
     for (Size i = 0; i < data.dates().size(); i++)
         scheduleDates[i] = calendar.adjust(parseDate(data.dates()[i]), convention);
-    return Schedule(scheduleDates, calendar, convention, boost::none, tenor);
+    return Schedule(scheduleDates, calendar, convention, boost::none, tenor, boost::none, endOfMonth);
 }
 
 Schedule makeSchedule(const ScheduleRules& data) {
@@ -138,7 +145,24 @@ Schedule makeSchedule(const ScheduleRules& data) {
     if (!data.endOfMonth().empty())
         endOfMonth = parseBool(data.endOfMonth());
 
-    return Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate, lastDate);
+    if ((rule == DateGeneration::CDS || rule == DateGeneration::CDS2015) &&
+        (firstDate != Null<Date>() || lastDate != Null<Date>())) {
+        // Special handling of first date and last date in combination with CDS and CDS2015 rules:
+        // To be able to construct CDS schedules with front or back stub periods, we overwrite the
+        // first (last) date of the schedule built in QL with a given first (last) date
+        // The schedule builder in QL itself is not capable of doing this, it just throws an exception
+        // if a first (last) date is given in combination with a CDS / CDS2015 date generation rule.
+        std::vector<Date> dates = Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth).dates();
+        QL_REQUIRE(!dates.empty(),
+                   "got empty CDS or CDS2015 schedule, startDate = " << startDate << ", endDate = " << endDate);
+        if (firstDate != Date())
+            dates.front() = firstDate;
+        if (lastDate != Date())
+            dates.back() = lastDate;
+        return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth);
+    } else {
+        return Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate, lastDate);
+    }
 }
 
 namespace {
@@ -154,6 +178,10 @@ void updateData(const std::string& s, T& t, bool& hasT, bool& hasConsistentT, co
             hasT = true;
         }
     }
+}
+//local wrapper function to get around optional parameter in parseCalendar
+Calendar parseCalendarTemp(const string& s){
+    return parseCalendar(s);
 }
 } // namespace
 
@@ -177,7 +205,8 @@ Schedule makeSchedule(const ScheduleData& data) {
 
         // 2) check if meta data is present, and if yes if it is consistent across schedules;
         //    the only exception is the term date convention, this is taken from the last schedule always
-        BusinessDayConvention convention = Null<BusinessDayConvention>(), termConvention = Unadjusted; // initialization prevents gcc warning
+        BusinessDayConvention convention = Null<BusinessDayConvention>(),
+                              termConvention = Unadjusted; // initialization prevents gcc warning
         Calendar calendar;
         Period tenor;
         DateGeneration::Rule rule = DateGeneration::Zero; // initialization prevents gcc warning
@@ -186,13 +215,13 @@ Schedule makeSchedule(const ScheduleData& data) {
              hasEndOfMonth = false, hasConsistentCalendar = true, hasConsistentConvention = true,
              hasConsistentTenor = true, hasConsistentRule = true, hasConsistentEndOfMonth = true;
         for (auto& d : data.dates()) {
-            updateData<Calendar>(d.calendar(), calendar, hasCalendar, hasConsistentCalendar, parseCalendar);
+            updateData<Calendar>(d.calendar(), calendar, hasCalendar, hasConsistentCalendar, parseCalendarTemp);
             updateData<BusinessDayConvention>(d.convention(), convention, hasConvention, hasConsistentConvention,
                                               parseBusinessDayConvention);
             updateData<Period>(d.tenor(), tenor, hasTenor, hasConsistentTenor, parsePeriod);
         }
         for (auto& d : data.rules()) {
-            updateData<Calendar>(d.calendar(), calendar, hasCalendar, hasConsistentCalendar, parseCalendar);
+            updateData<Calendar>(d.calendar(), calendar, hasCalendar, hasConsistentCalendar, parseCalendarTemp);
             updateData<BusinessDayConvention>(d.convention(), convention, hasConvention, hasConsistentConvention,
                                               parseBusinessDayConvention);
             updateData<Period>(d.tenor(), tenor, hasTenor, hasConsistentTenor, parsePeriod);
@@ -235,13 +264,13 @@ Schedule makeSchedule(const ScheduleData& data) {
         }
 
         // 4) Build schedule
-        return Schedule(
-            dates, hasCalendar && hasConsistentCalendar ? calendar : NullCalendar(),
-            hasConvention && hasConsistentConvention ? convention : Unadjusted,
-            hasTermConvention ? boost::optional<BusinessDayConvention>(termConvention) : boost::none,
-            hasTenor && hasConsistentTenor ? boost::optional<Period>(tenor) : boost::none,
-            hasRule && hasConsistentRule ? boost::optional<DateGeneration::Rule>(rule) : boost::none,
-            hasEndOfMonth && hasConsistentEndOfMonth ? boost::optional<bool>(endOfMonth) : boost::none, isRegular);
+        return Schedule(dates, hasCalendar && hasConsistentCalendar ? calendar : NullCalendar(),
+                        hasConvention && hasConsistentConvention ? convention : Unadjusted,
+                        hasTermConvention ? boost::optional<BusinessDayConvention>(termConvention) : boost::none,
+                        hasTenor && hasConsistentTenor ? boost::optional<Period>(tenor) : boost::none,
+                        hasRule && hasConsistentRule ? boost::optional<DateGeneration::Rule>(rule) : boost::none,
+                        hasEndOfMonth && hasConsistentEndOfMonth ? boost::optional<bool>(endOfMonth) : boost::none,
+                        isRegular);
     }
 }
 } // namespace data

@@ -16,11 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <oret/toplevelfixture.hpp>
 
 using namespace ore::analytics;
 using namespace boost::unit_test_framework;
@@ -107,7 +107,7 @@ template <class T> void testCubeFileIO(NPVCube& cube, const std::string& cubeNam
     // All done
     delete cube2;
 }
-	
+
 void testCubeGetSetbyDateID(NPVCube& cube, Real tolerance) {
     vector<string> ids = cube.ids();
     vector<Date> dates = cube.dates();
@@ -132,10 +132,10 @@ void testCubeGetSetbyDateID(NPVCube& cube, Real tolerance) {
 
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CubeTest)
-		
+
 BOOST_AUTO_TEST_CASE(testSinglePrecisionInMemoryCube) {
     // trades, dates, samples
     vector<string> ids(100, string("id")); // the overlap doesn't matter
@@ -193,9 +193,8 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileNIO) {
 BOOST_AUTO_TEST_CASE(testInMemoryCubeGetSetbyDateID) {
     vector<string> ids = {"id1", "id2", "id3"}; // the overlap doesn't matter
     Date today = Date::todaysDate();
-    vector<Date> dates = { today + QuantLib::Period(1, QuantLib::Days),
-                           today + QuantLib::Period(2, QuantLib::Days),
-                           today + QuantLib::Period(3, QuantLib::Days) };
+    vector<Date> dates = {today + QuantLib::Period(1, QuantLib::Days), today + QuantLib::Period(2, QuantLib::Days),
+                          today + QuantLib::Period(3, QuantLib::Days)};
     Size samples = 1;
     DoublePrecisionInMemoryCube cube(Date(), ids, dates, samples);
     testCubeGetSetbyDateID(cube, 1e-14);

@@ -30,7 +30,6 @@
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/lgm.hpp>
 
-
 namespace ore {
 namespace analytics {
 using namespace QuantLib;

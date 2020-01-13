@@ -28,7 +28,6 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/date.hpp>
 
-
 namespace ore {
 namespace analytics {
 using namespace QuantLib;

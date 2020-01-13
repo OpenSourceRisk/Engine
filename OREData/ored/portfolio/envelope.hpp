@@ -27,8 +27,6 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <set>
 
-
-
 namespace ore {
 namespace data {
 using std::string;
@@ -68,8 +66,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -79,6 +77,13 @@ public:
     const set<string>& portfolioIds() const { return portfolioIds_; }
     const map<string, string>& additionalFields() const { return additionalFields_; }
     //@}
+
+    //! \name Utility
+    //@{
+    //! Check if the envelope has been populated
+    bool empty() const { return counterparty_ == ""; };
+    //@}
+
 private:
     string counterparty_;
     string nettingSetId_;

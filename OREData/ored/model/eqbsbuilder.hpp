@@ -31,7 +31,6 @@
 #include <ored/model/eqbsdata.hpp>
 #include <qle/models/crossassetmodel.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace QuantLib;
@@ -40,7 +39,7 @@ using namespace QuantLib;
 /*!
   This class is a utility to turn an EQ model component's description
   into an EQ model parametrization which can be used to ultimately
-  instanciate a CrossAssetModel.
+  instantiate a CrossAssetModel.
 
   \ingroup models
  */

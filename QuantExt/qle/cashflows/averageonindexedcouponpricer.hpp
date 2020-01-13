@@ -29,7 +29,6 @@
 
 #include <ql/cashflows/couponpricer.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

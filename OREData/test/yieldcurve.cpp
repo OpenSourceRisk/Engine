@@ -17,11 +17,15 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <boost/test/data/test_case.hpp>
+#include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
+#include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <oret/toplevelfixture.hpp>
+#include <oret/datapaths.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
@@ -33,6 +37,8 @@ using namespace std;
 using namespace ore;
 using namespace ore::data;
 
+namespace bdata = boost::unit_test::data;
+
 namespace {
 
 class MarketDataLoader : public Loader {
@@ -42,6 +48,9 @@ public:
     const boost::shared_ptr<MarketDatum>& get(const string& name, const Date&) const;
     const vector<Fixing>& loadFixings() const { return fixings_; }
     const vector<Fixing>& loadDividends() const { return dividends_; }
+    void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addDividend(QuantLib::Date date, const string& name, QuantLib::Real value) {}
 
 private:
     map<Date, vector<boost::shared_ptr<MarketDatum>>> data_;
@@ -79,7 +88,7 @@ MarketDataLoader::MarketDataLoader() {
         data_[date].push_back(parseMarketDatum(date, key, value));
     }
 }
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
@@ -130,6 +139,97 @@ BOOST_AUTO_TEST_CASE(testBootstrapAndFixings) {
     IndexManager::instance().setHistory("JPYLibor6M Actual/360", fixingHistory);
 
     BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader, conventions));
+}
+
+namespace {
+
+// List of curve configuration files that set up an ARS-IN-USD curve with various interpolation methods and variables.
+// We have a set of files under ars_in_usd/failing and a set under ars_in_usd/passing:
+// - failing: has the old QuantLib::IterativeBootstrap parameters i.e. 1 attempt with hard bounds
+// - passing: has the default QuantExt::IterativeBootstrap parameters i.e. 5 attempts with widening bounds
+vector<string> curveConfigFiles = {
+    "discount_linear.xml",
+    "discount_loglinear.xml",
+    "discount_natural_cubic.xml",
+    "discount_financial_cubic.xml",
+    "zero_linear.xml",
+    "zero_natural_cubic.xml",
+    "zero_financial_cubic.xml",
+    "forward_linear.xml",
+    "forward_natural_cubic.xml",
+    "forward_financial_cubic.xml",
+    "forward_convex_monotone.xml"
+};
+
+// Construct and hold the arguments needed to construct a TodaysMarket.
+struct TodaysMarketArguments {
+    TodaysMarketArguments(const string& inputDir, const string& curveConfigFile) {
+        
+        asof = Date(25, Sep, 2019);
+        Settings::instance().evaluationDate() = asof;
+
+        string filename = inputDir + "/conventions.xml";
+        conventions.fromFile(TEST_INPUT_FILE(filename));
+
+        filename = inputDir + "/" + curveConfigFile;
+        curveConfigs.fromFile(TEST_INPUT_FILE(filename));
+
+        filename = inputDir + "/todaysmarket.xml";
+        todaysMarketParameters.fromFile(TEST_INPUT_FILE(filename));
+
+        filename = inputDir + "/market.txt";
+        string fixingsFilename = inputDir + "/fixings.txt";
+        loader = CSVLoader(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename), false);
+    }
+
+    Date asof;
+    Conventions conventions;
+    CurveConfigurations curveConfigs;
+    TodaysMarketParameters todaysMarketParameters;
+    CSVLoader loader;
+};
+
+// Used to check that the exception message contains the expected message string, expMsg. 
+struct ExpErrorPred {
+    
+    ExpErrorPred(const string& msg) : expMsg(msg) {}
+
+    bool operator()(const Error& ex) {
+        string errMsg(ex.what());
+        return errMsg.find(expMsg) != string::npos;
+    }
+
+    string expMsg;
+};
+
+}
+
+// Test ARS-IN-USD failures using the old QuantLib::IterativeBootstrap parameters
+BOOST_DATA_TEST_CASE(testBootstrapARSinUSDFailures, bdata::make(curveConfigFiles), curveConfigFile) {
+
+    BOOST_TEST_MESSAGE("Testing ARS-IN-USD fails with configuration file: failing/" << curveConfigFile);
+
+    TodaysMarketArguments tma("ars_in_usd", "failing/" + curveConfigFile);
+
+    boost::shared_ptr<TodaysMarket> todaysMarket;
+    BOOST_CHECK_EXCEPTION(todaysMarket = boost::make_shared<TodaysMarket>(tma.asof,
+        tma.todaysMarketParameters, tma.loader, tma.curveConfigs, tma.conventions, false, false), Error,
+        ExpErrorPred("yield curve building failed for curve ARS-IN-USD"));
+}
+
+// Test ARS-IN-USD passes using the new QuantExt::IterativeBootstrap parameters
+BOOST_DATA_TEST_CASE(testBootstrapARSinUSDPasses, bdata::make(curveConfigFiles), curveConfigFile) {
+
+    BOOST_TEST_MESSAGE("Testing ARS-IN-USD passes with configuration file: passing/" << curveConfigFile);
+
+    TodaysMarketArguments tma("ars_in_usd", "passing/" + curveConfigFile);
+
+    boost::shared_ptr<TodaysMarket> todaysMarket;
+    BOOST_REQUIRE_NO_THROW(todaysMarket = boost::make_shared<TodaysMarket>(tma.asof,
+        tma.todaysMarketParameters, tma.loader, tma.curveConfigs, tma.conventions, false, false));
+    
+    Handle<YieldTermStructure> yts = todaysMarket->discountCurve("ARS");
+    BOOST_TEST_MESSAGE("Discount: " << std::fixed << std::setprecision(14) << yts->discount(1.0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

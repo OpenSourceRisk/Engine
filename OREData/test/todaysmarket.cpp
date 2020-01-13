@@ -17,13 +17,19 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
+#include <ored/portfolio/builders/cms.hpp>
+#include <ored/portfolio/builders/cmsspread.hpp>
+#include <ored/portfolio/builders/swap.hpp>
+#include <ored/portfolio/legbuilders.hpp>
+#include <ored/portfolio/swap.hpp>
 #include <ored/utilities/parsers.hpp>
-
+#include <ored/utilities/to_string.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/time/calendars/all.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 #include <ql/utilities/dataformatters.hpp>
 
 #include <boost/algorithm/string.hpp>
@@ -48,6 +54,9 @@ public:
     const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const;
     const std::vector<Fixing>& loadFixings() const { return fixings_; }
     const std::vector<Fixing>& loadDividends() const { return dividends_; }
+    void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addDividend(QuantLib::Date date, const string& name, QuantLib::Real value) {}
 
 private:
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
@@ -351,34 +360,34 @@ MarketDataLoader::MarketDataLoader() {
         ("20160226 SWAPTION/RATE_LNVOL/USD/25Y/9Y/ATM 0.278568")
         // USD lognormal capfloor quotes
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.015 0.44451")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.01 0.447381")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.010 0.447381")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.025 0.452925")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.02 0.450945")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.03 0.447381")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.020 0.450945")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.030 0.447381")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/1Y/3M/0/0/0.005 0.570834")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.015 0.484806")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.01 0.51695")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.010 0.51695")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.025 0.459228")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.02 0.468832")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.03 0.440804")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.020 0.468832")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.030 0.440804")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/2Y/3M/0/0/0.005 0.661108")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.015 0.5928")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.01 0.670605")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.010 0.670605")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.025 0.50559")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.02 0.54302")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.03 0.472055")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.020 0.54302")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.030 0.472055")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/5Y/3M/0/0/0.005 0.87571")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.015 0.584226")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.01 0.686805")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.010 0.686805")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.025 0.470394")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.02 0.518661")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.03 0.431055")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.020 0.518661")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.030 0.431055")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/7Y/3M/0/0/0.005 0.931953")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.015 0.54423")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.01 0.65691")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.010 0.65691")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.025 0.423")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.02 0.47358")
-        ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.03 0.38394")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.020 0.47358")
+        ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.030 0.38394")
         ("20160226 CAPFLOOR/RATE_LNVOL/USD/10Y/3M/0/0/0.005 0.91791")
         // equity
         ("20160226 EQUITY/PRICE/SP5/USD 1500.00")
@@ -395,7 +404,12 @@ MarketDataLoader::MarketDataLoader() {
         ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2017-08-31 1163.4")
         ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2017-12-29 1165.3")
         ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2018-12-31 1172.9")
-        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2021-12-31 1223");
+        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2021-12-31 1223")
+        // correlation quotes
+        ("20160226 CORRELATION/RATE/EUR-CMS-10Y/EUR-CMS-2Y/1Y/ATM 0.1")
+        ("20160226 CORRELATION/RATE/EUR-CMS-10Y/EUR-CMS-2Y/2Y/ATM 0.2")
+        ("20160226 CORRELATION/PRICE/USD-CMS-10Y/USD-CMS-2Y/1Y/ATM 0.0038614")
+        ("20160226 CORRELATION/PRICE/USD-CMS-10Y/USD-CMS-2Y/2Y/ATM 0.0105279");
     // clang-format on
 
     for (auto s : data) {
@@ -412,7 +426,7 @@ MarketDataLoader::MarketDataLoader() {
 }
 
 boost::shared_ptr<TodaysMarketParameters> marketParameters() {
-    
+
     boost::shared_ptr<TodaysMarketParameters> parameters = boost::make_shared<TodaysMarketParameters>();
 
     // define three curves
@@ -430,7 +444,10 @@ boost::shared_ptr<TodaysMarketParameters> marketParameters() {
     parameters->addMarketObject(MarketObject::SwaptionVol, "ois", {{"USD", "SwaptionVolatility/USD/USD_SW_LN"}});
     parameters->addMarketObject(MarketObject::CapFloorVol, "ois", {{"USD", "CapFloorVolatility/USD/USD_CF_LN"}});
 
-    map<string, string> swapIndexMap = {{"USD-CMS-1Y", "USD-FedFunds"}, {"USD-CMS-30Y", "USD-LIBOR-3M"}};
+    map<string, string> swapIndexMap = {{"USD-CMS-1Y", "USD-FedFunds"},
+                                        {"USD-CMS-30Y", "USD-LIBOR-3M"},
+                                        {"USD-CMS-2Y", "USD-LIBOR-3M"},
+                                        {"USD-CMS-10Y", "USD-LIBOR-3M"}};
     parameters->addMarketObject(MarketObject::SwapIndexCurve, "ois", swapIndexMap);
 
     map<string, string> equityMap = {{"SP5", "Equity/USD/SP5"}};
@@ -440,6 +457,10 @@ boost::shared_ptr<TodaysMarketParameters> marketParameters() {
     parameters->addMarketObject(MarketObject::EquityVol, "ois", equityVolMap);
 
     parameters->addMarketObject(MarketObject::CommodityCurve, "ois", {{"COMDTY_GOLD_USD", "Commodity/USD/GOLD_USD"}});
+
+    map<string, string> correlationMap = {{"EUR-CMS-10Y/EUR-CMS-2Y", "Correlation/EUR-CORR"},
+                                          {"USD-CMS-10Y/USD-CMS-2Y", "Correlation/USD-CORR"}};
+    parameters->addMarketObject(MarketObject::Correlation, "ois", correlationMap);
 
     // all others empty so far
     map<string, string> emptyMap;
@@ -461,6 +482,7 @@ boost::shared_ptr<TodaysMarketParameters> marketParameters() {
     config.setId(MarketObject::EquityCurve, "ois");
     config.setId(MarketObject::EquityVol, "ois");
     config.setId(MarketObject::CommodityCurve, "ois");
+    config.setId(MarketObject::Correlation, "ois");
 
     parameters->addConfiguration("default", config);
 
@@ -470,16 +492,16 @@ boost::shared_ptr<TodaysMarketParameters> marketParameters() {
 boost::shared_ptr<Conventions> conventions() {
     boost::shared_ptr<Conventions> conventions(new Conventions());
 
-    boost::shared_ptr<Convention> zeroConv(new ZeroRateConvention("EUR-ZERO-CONVENTIONS-TENOR-BASED",
-                                                                              "A365", "TARGET", "Continuous", "Daily",
-                                                                              "2", "TARGET", "Following", "false"));
+    boost::shared_ptr<Convention> zeroConv(new ZeroRateConvention("EUR-ZERO-CONVENTIONS-TENOR-BASED", "A365", "TARGET",
+                                                                  "Continuous", "Daily", "2", "TARGET", "Following",
+                                                                  "false"));
     conventions->add(zeroConv);
 
     boost::shared_ptr<Convention> depositConv(new DepositConvention("EUR-EONIA-CONVENTIONS", "EUR-EONIA"));
     conventions->add(depositConv);
 
-    boost::shared_ptr<Convention> oisConv(new OisConvention(
-        "EUR-OIS-CONVENTIONS", "2", "EUR-EONIA", "A360", "1", "false", "Annual", "Following", "Following", "Backward"));
+    boost::shared_ptr<Convention> oisConv(new OisConvention("EUR-OIS-CONVENTIONS", "2", "EUR-EONIA", "A360", "1",
+                                                            "false", "Annual", "Following", "Following", "Backward"));
     conventions->add(oisConv);
 
     // USD Fed Funds curve conventions
@@ -496,6 +518,13 @@ boost::shared_ptr<Conventions> conventions() {
     // USD swap index conventions
     conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-1Y", "USD-3M-SWAP-CONVENTIONS"));
     conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-30Y", "USD-3M-SWAP-CONVENTIONS"));
+    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-2Y", "USD-3M-SWAP-CONVENTIONS"));
+    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-10Y", "USD-3M-SWAP-CONVENTIONS"));
+
+    // USD CMS spread option conventions
+
+    conventions->add(boost::make_shared<CmsSpreadOptionConvention>("USD-CMS-10Y-2Y-CONVENTION", "0M", "2D", "3M", "2",
+                                                                   "TARGET", "A360", "MF"));
 
     return conventions;
 }
@@ -645,35 +674,35 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
 
     // Swaption volatility structure option and swap tenors
     // clang-format off
-    vector<Period> optionTenors{
-        Period(1, Months),
-        Period(3, Months),
-        Period(6, Months),
-        Period(1, Years),
-        Period(2, Years),
-        Period(3, Years),
-        Period(4, Years),
-        Period(5, Years),
-        Period(7, Years),
-        Period(10, Years),
-        Period(15, Years),
-        Period(20, Years),
-        Period(25, Years),
-        Period(30, Years)
+    vector<string> optionTenors{
+        "1M",
+        "3M",
+        "6M",
+        "1Y",
+        "2Y",
+        "3Y",
+        "4Y",
+        "5Y",
+        "7Y",
+        "10Y",
+        "15Y",
+        "20Y",
+        "25Y",
+        "30Y"
     };
 
-    vector<Period> swapTenors{
-        Period(1, Years),
-        Period(2, Years),
-        Period(3, Years),
-        Period(4, Years),
-        Period(5, Years),
-        Period(7, Years),
-        Period(10, Years),
-        Period(15, Years),
-        Period(20, Years),
-        Period(25, Years),
-        Period(30, Years)
+    vector<string> swapTenors{
+        "1Y",
+        "2Y",
+        "3Y",
+        "4Y",
+        "5Y",
+        "7Y",
+        "10Y",
+        "15Y",
+        "20Y",
+        "25Y",
+        "30Y"
     };
     // clang-format on
 
@@ -684,14 +713,29 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
         swapTenors, dayCounter, UnitedStates(), bdc, "USD-CMS-1Y", "USD-CMS-30Y");
 
     // Capfloor volatility structure tenors and strikes
-    vector<Period> capTenors{1 * Years, 2 * Years, 5 * Years, 7 * Years, 10 * Years};
-    vector<Rate> strikes{0.005, 0.010, 0.015, 0.020, 0.025, 0.030};
+    vector<string> capTenors{"1Y", "2Y", "5Y", "7Y", "10Y"};
+    vector<string> strikes{"0.005", "0.010", "0.015", "0.020", "0.025", "0.030"};
 
     // USD Lognormal capfloor volatility "curve" configuration
     configs->capFloorVolCurveConfig("USD_CF_LN") = boost::make_shared<CapFloorVolatilityCurveConfig>(
         "USD_CF_LN", "USD Lognormal capfloor volatilities", CapFloorVolatilityCurveConfig::VolatilityType::Lognormal,
-        extrapolate, false, false, capTenors, strikes, dayCounter, 2, UnitedStates(), bdc, "USD-LIBOR-3M",
+        extrapolate, false, false, capTenors, strikes, dayCounter, 0, UnitedStates(), bdc, "USD-LIBOR-3M",
         "Yield/USD/USD1D");
+
+    vector<string> optionTenors2{"1Y"};
+
+    vector<string> optionTenors3{"1Y", "2Y"};
+    // Correlation curve
+    configs->correlationCurveConfig("EUR-CORR") = boost::make_shared<CorrelationCurveConfig>(
+        "EUR-CORR", "EUR CMS Correlations", CorrelationCurveConfig::Dimension::Constant,
+        CorrelationCurveConfig::CorrelationType::CMSSpread, "EUR-CMS-1Y-10Y-CONVENTION",
+        CorrelationCurveConfig::QuoteType::Rate, extrapolate, optionTenors2, dayCounter, UnitedStates(), bdc,
+        "EUR-CMS-10Y", "EUR-CMS-2Y", "EUR");
+    configs->correlationCurveConfig("USD-CORR") = boost::make_shared<CorrelationCurveConfig>(
+        "USD-CORR", "USD CMS Correlations", CorrelationCurveConfig::Dimension::ATM,
+        CorrelationCurveConfig::CorrelationType::CMSSpread, "USD-CMS-10Y-2Y-CONVENTION",
+        CorrelationCurveConfig::QuoteType::Price, extrapolate, optionTenors3, Actual360(), TARGET(), ModifiedFollowing,
+        "USD-CMS-10Y", "USD-CMS-2Y", "USD", "USD_SW_LN", "USD1D");
 
     // clang-format off
     vector<string> eqFwdQuotes{
@@ -721,8 +765,8 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     };
     // clang-format on
 
-    configs->commodityCurveConfig("GOLD_USD") = boost::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", 
-        "COMMODITY/PRICE/GOLD/USD", commodityQuotes);
+    configs->commodityCurveConfig("GOLD_USD") =
+        boost::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", commodityQuotes, "COMMODITY/PRICE/GOLD/USD");
 
     return configs;
 }
@@ -730,7 +774,6 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
 // Fixture to use for this test suite
 class F : public TopLevelFixture {
 public:
-
     boost::shared_ptr<TodaysMarket> market;
 
     F() {
@@ -752,7 +795,7 @@ public:
     }
 };
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 
@@ -801,11 +844,11 @@ BOOST_AUTO_TEST_CASE(testNormalOptionletVolatility) {
     vector<Rate> strikes{0.005, 0.010, 0.015, 0.020, 0.025, 0.030};
     // clang-format off
     vector<vector<Real>> cachedValues{
-        {0.004336062, 0.004790687, 0.005541127, 0.006411979, 0.007242633, 0.007889790},
-        {0.005898069, 0.006473308, 0.006925258, 0.007481662, 0.008133596, 0.008559820},
-        {0.008870795, 0.009369768, 0.009720950, 0.010012715, 0.010239636, 0.010488415},
-        {0.008517429, 0.008700688, 0.008661620, 0.008631937, 0.008657445, 0.008690870},
-        {0.007641227, 0.007821399, 0.007889659, 0.007980691, 0.008075815, 0.008235815}
+        { 0.004336061, 0.004790686, 0.005541127, 0.006411979, 0.007242633, 0.007889790 },
+        { 0.005904299, 0.006478381, 0.006929551, 0.007486301, 0.008139029, 0.008566001 },
+        { 0.008871166, 0.009370956, 0.009723190, 0.010015776, 0.010243227, 0.010492463 },
+        { 0.008517407, 0.008700672, 0.008661611, 0.008631934, 0.008657444, 0.008690871 },
+        { 0.007641226, 0.007821393, 0.007889650, 0.007980682, 0.008075806, 0.008235808 }
     };
     // clang-format on
 
@@ -888,12 +931,113 @@ BOOST_AUTO_TEST_CASE(testEquityVolCurve) {
 }
 
 BOOST_AUTO_TEST_CASE(testCommodityCurve) {
-    
+
     BOOST_TEST_MESSAGE("Testing commodity price curve");
 
     // Just test that the building suceeded - the curve itself has been tested elsewhere
     Handle<PriceTermStructure> commodityCurve = market->commodityPriceCurve("COMDTY_GOLD_USD");
     BOOST_CHECK(*commodityCurve);
+}
+
+BOOST_AUTO_TEST_CASE(testCorrelationCurve) {
+
+    BOOST_TEST_MESSAGE("Testing correlation curve");
+
+    // Just test that the building suceeded - the curve itself has been tested elsewhere
+    Handle<QuantExt::CorrelationTermStructure> correlationCurve1 =
+        market->correlationCurve("EUR-CMS-10Y", "EUR-CMS-2Y");
+    Handle<QuantExt::CorrelationTermStructure> correlationCurve2 =
+        market->correlationCurve("USD-CMS-10Y", "USD-CMS-2Y");
+    BOOST_CHECK(*correlationCurve1);
+    BOOST_CHECK(*correlationCurve2);
+
+    Calendar calendar = TARGET();
+    Date qlStartDate = calendar.advance(calendar.advance(market->asofDate(), 2 * Days), 0 * Months);
+    Date qlEndDate1Y = calendar.advance(qlStartDate, 1 * Years, ModifiedFollowing);
+    Date qlEndDate2Y = calendar.advance(qlStartDate, 2 * Years, ModifiedFollowing);
+    string startDate = ore::data::to_string(qlStartDate);
+    string endDate1Y = ore::data::to_string(qlEndDate1Y);
+    string endDate2Y = ore::data::to_string(qlEndDate2Y);
+
+    BOOST_TEST_MESSAGE(startDate);
+    BOOST_TEST_MESSAGE(endDate1Y);
+    BOOST_TEST_MESSAGE(endDate2Y);
+
+    ScheduleData cms1YSchedule(ScheduleRules(startDate, endDate1Y, "3M", "TARGET", "MF", "MF", "Forward", "N"));
+    ScheduleData cms2YSchedule(ScheduleRules(startDate, endDate2Y, "3M", "TARGET", "MF", "MF", "Forward", "N"));
+
+    Real fairSpread1Y = 0.00752401;
+    Real fairSpread2Y = 0.00755509;
+
+    LegData cms1YLeg(boost::make_shared<CMSSpreadLegData>(
+                         "USD-CMS-10Y", "USD-CMS-2Y", 2, true, std::vector<Real>(1, 0.0), vector<string>(),
+                         std::vector<Real>(1, fairSpread1Y), vector<string>(), vector<double>(), vector<string>(),
+                         vector<double>(), vector<string>(), true),
+                     false, "USD", cms1YSchedule, "A360", std::vector<Real>(1, 1));
+    vector<LegData> legs1Y;
+    legs1Y.push_back(cms1YLeg);
+
+    LegData cms2YLeg(boost::make_shared<CMSSpreadLegData>(
+                         "USD-CMS-10Y", "USD-CMS-2Y", 2, true, std::vector<Real>(1, 0.0), vector<string>(),
+                         std::vector<Real>(1, fairSpread2Y), vector<string>(), vector<double>(), vector<string>(),
+                         vector<double>(), vector<string>(), true),
+                     false, "USD", cms2YSchedule, "A360", std::vector<Real>(1, 1));
+    vector<LegData> legs2Y;
+    legs2Y.push_back(cms2YLeg);
+
+    Envelope env("CP1");
+
+    ore::data::Swap cmsSpread1YCap(env, legs1Y);
+    ore::data::Swap cmsSpread2YCap(env, legs2Y);
+
+    Real expectedNpv1Y = 0.0038614;
+    Real expectedNpv2Y = 0.0105279;
+
+    // Build and price
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    engineData->model("CMS") = "LinearTSR";
+    engineData->engine("CMS") = "LinearTSRPricer";
+
+    map<string, string> engineparams1;
+    engineparams1["MeanReversion"] = "0.0";
+    engineparams1["Policy"] = "RateBound";
+    engineparams1["LowerRateBoundLogNormal"] = "0.0001";
+    engineparams1["UpperRateBoundLogNormal"] = "2";
+    engineparams1["LowerRateBoundNormal"] = "-2";
+    engineparams1["UpperRateBoundNormal"] = "2";
+    engineparams1["VegaRatio"] = "0.01";
+    engineparams1["PriceThreshold"] = "0.0000001";
+    engineparams1["BsStdDev"] = "3";
+    engineData->engineParameters("CMS") = engineparams1;
+
+    engineData->model("CMSSpread") = "BrigoMercurio";
+    engineData->engine("CMSSpread") = "Analytic";
+    map<string, string> engineparams2;
+    engineparams2["IntegrationPoints"] = "16";
+    engineData->engineParameters("CMSSpread") = engineparams2;
+
+    engineData->model("Swap") = "DiscountedCashflows";
+    engineData->engine("Swap") = "DiscountingSwapEngine";
+
+    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    engineFactory->registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
+    engineFactory->registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
+    engineFactory->registerLegBuilder(boost::make_shared<CMSSpreadLegBuilder>());
+    engineFactory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
+
+    cmsSpread1YCap.build(engineFactory);
+    cmsSpread2YCap.build(engineFactory);
+
+    Real npvCash = cmsSpread1YCap.instrument()->NPV();
+
+    BOOST_TEST_MESSAGE("NPV Cash 1Y             = " << npvCash);
+    BOOST_CHECK_SMALL(npvCash - expectedNpv1Y, 0.000001);
+
+    npvCash = cmsSpread2YCap.instrument()->NPV();
+
+    BOOST_TEST_MESSAGE("NPV Cash 2Y             = " << npvCash);
+
+    BOOST_CHECK_SMALL(npvCash - expectedNpv2Y, 0.000001);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

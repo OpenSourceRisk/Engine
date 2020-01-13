@@ -68,17 +68,15 @@ void applyDividends(const vector<Fixing>& dividends) {
         try {
             auto it = cache.find(f.name);
             if (it == cache.end()) {
-                index = boost::make_shared<EquityIndex>(f.name, NullCalendar());
+                index = boost::make_shared<EquityIndex>(f.name, NullCalendar(), Currency());
                 cache[f.name] = index;
-            }
-            else {
+            } else {
                 index = it->second;
             }
             index->addDividend(f.date, f.fixing, true);
             TLOG("Added dividend for " << f.name << " (" << io::iso_date(f.date) << ") value:" << f.fixing);
             count++;
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             WLOG("Error during adding dividend for " << f.name << ": " << e.what());
         }
     }

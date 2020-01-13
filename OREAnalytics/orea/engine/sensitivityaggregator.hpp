@@ -25,56 +25,56 @@
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 
+#include <functional>
 #include <map>
 #include <set>
 #include <string>
-#include <functional>
 
 namespace ore {
 namespace analytics {
 
-/*! Class for aggregating SensitivityRecords. 
-    
+/*! Class for aggregating SensitivityRecords.
+
     The SensitivityRecords are aggregated according to categories of predefined trade IDs.
 */
 class SensitivityAggregator {
 public:
-    /*! Constructor that uses sets of trades to define the aggregation categories. 
-        
-        The \p categories map has a string key that defines the name of the category and a value 
+    /*! Constructor that uses sets of trades to define the aggregation categories.
+
+        The \p categories map has a string key that defines the name of the category and a value
         that defines the set of trade IDs in that category.
     */
-    SensitivityAggregator(const std::map<std::string, std::set<std::string>>& categories);
+    SensitivityAggregator(const std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>>& categories);
 
-    /*! Constructor that uses fuctions to define the aggregation categories. 
-        
-        The \p categories map has a string key that defines the name of the category. The map value 
-        is a function that when given a trade ID, returns a bool indicating if the trade ID is in the 
+    /*! Constructor that uses fuctions to define the aggregation categories.
+
+        The \p categories map has a string key that defines the name of the category. The map value
+        is a function that when given a trade ID, returns a bool indicating if the trade ID is in the
         category.
     */
     SensitivityAggregator(const std::map<std::string, std::function<bool(std::string)>>& categories);
 
-    /*! Update the aggregator with SensitivityRecords from the stream \p ss after applying the 
+    /*! Update the aggregator with SensitivityRecords from the stream \p ss after applying the
         optional filter. If no filter is specified, all risk factors are aggregated.
-        
-        \warning No checks are performed for duplicate records from the stream. It is the stream's 
+
+        \warning No checks are performed for duplicate records from the stream. It is the stream's
                  responsibility to guard against duplicates if it needs to.
     */
-    void aggregate(SensitivityStream& ss, const boost::shared_ptr<ore::analytics::ScenarioFilter>& filter 
-        = boost::make_shared<ore::analytics::ScenarioFilter>());
+    void aggregate(SensitivityStream& ss, const boost::shared_ptr<ore::analytics::ScenarioFilter>& filter =
+                                              boost::make_shared<ore::analytics::ScenarioFilter>());
 
     //! Reset the aggregator to it's initial state by clearing all aggregations
     void reset();
 
     /*! Return the set of aggregated sensitivities for the given \p category
-    */
+     */
     const std::set<SensitivityRecord>& sensitivities(const std::string& category) const;
 
 private:
-    /*! Container for category names and their definition via sets. This will be 
+    /*! Container for category names and their definition via sets. This will be
         empty if constructor is provided functions directly.
     */
-    std::map<std::string, std::set<std::string>> setCategories_;
+    std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>> setCategories_;
     //! Container for category names and their definition via functions
     std::map<std::string, std::function<bool(std::string)>> categories_;
     //! Sensitivity records aggregated according to <code>categories_</code>
@@ -88,5 +88,5 @@ private:
     bool inCategory(const std::string& tradeId, const std::string& category) const;
 };
 
-}
-}
+} // namespace analytics
+} // namespace ore

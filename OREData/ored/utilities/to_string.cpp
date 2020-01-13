@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/utilities/tos_tring.cpp
+/*! \file ored/utilities/to_string.cpp
     \brief
     \ingroup utilities
 */
@@ -35,6 +35,9 @@ namespace ore {
 namespace data {
 
 std::string to_string(const QuantLib::Date& date) {
+    if (date == QuantLib::Date())
+        return "1900-01-01";
+
     char buf[11];
     int y = date.year();
     int m = static_cast<int>(date.month());
@@ -45,9 +48,7 @@ std::string to_string(const QuantLib::Date& date) {
     return std::string(buf);
 }
 
-string to_string(bool aBool) {
-    return aBool ? "true" : "false";
-}
+string to_string(bool aBool) { return aBool ? "true" : "false"; }
 
 } // namespace data
 } // namespace ore

@@ -31,6 +31,7 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/termstructures/flatcorrelation.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;
@@ -79,6 +80,11 @@ private:
             new QuantLib::ConstantOptionletVolatility(Settings::instance().evaluationDate(), NullCalendar(),
                                                       ModifiedFollowing, vol, ActualActual(), type, shift));
         return Handle<OptionletVolatilityStructure>(ts);
+    }
+    Handle<QuantExt::CorrelationTermStructure> flatCorrelation(Real correlation = 0.0) {
+        boost::shared_ptr<QuantExt::CorrelationTermStructure> ts(
+            new QuantExt::FlatCorrelation(Settings::instance().evaluationDate(), correlation, ActualActual()));
+        return Handle<QuantExt::CorrelationTermStructure>(ts);
     }
     Handle<CPICapFloorTermPriceSurface> flatRateCps(Handle<ZeroInflationIndex> infIndex,
                                                     const std::vector<Rate> cStrikes, std::vector<Rate> fStrikes,

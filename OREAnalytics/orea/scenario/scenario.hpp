@@ -31,7 +31,6 @@
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 
-
 namespace ore {
 namespace analytics {
 using QuantLib::Real;
@@ -51,11 +50,11 @@ public:
         YieldCurve,
         IndexCurve,
         SwaptionVolatility,
+        YieldVolatility,
         OptionletVolatility,
         FXSpot,
         FXVolatility,
         EquitySpot,
-        EquityForecastCurve,
         EquityVolatility,
         DividendYield,
         SurvivalProbability,
@@ -67,10 +66,10 @@ public:
         ZeroInflationCapFloorVolatility,
         YoYInflationCurve,
         YoYInflationCapFloorVolatility,
-        CommoditySpot,
         CommodityCurve,
         CommodityVolatility,
         SecuritySpread,
+        Correlation,
         CPR
     };
 

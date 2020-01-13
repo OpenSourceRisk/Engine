@@ -30,54 +30,67 @@ namespace analytics {
 
 using crossPair = SensitivityCube::crossPair;
 
-SensitivityCubeStream::SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, 
-    const string& currency) 
-    : cube_(cube), currency_(currency), itRiskFactor_(cube_->factors().begin()), 
-      itCrossPair_(cube_->crossFactors().begin()), tradeIdx_(0) {}
+SensitivityCubeStream::SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, const string& currency)
+    : cube_(cube), currency_(currency), upRiskFactor_(cube_->upFactors().begin()), downRiskFactor_(cube_->downFactors().begin()),
+      itCrossPair_(cube_->crossFactors().begin()), tradeIdx_(cube_->tradeIdx().begin()) {}
 
 SensitivityRecord SensitivityCubeStream::next() {
-    
+
     SensitivityRecord sr;
 
     // If exhausted deltas, gammas AND cross gammas, update to next trade and reset iterators
-    if (itRiskFactor_ == cube_->factors().end() && itCrossPair_ == cube_->crossFactors().end()) {
+    if (upRiskFactor_ == cube_->upFactors().end() && itCrossPair_ == cube_->crossFactors().end()) {
         tradeIdx_++;
-        itRiskFactor_ = cube_->factors().begin();
+        upRiskFactor_ = cube_->upFactors().begin();
+        downRiskFactor_ = cube_->downFactors().begin();
         itCrossPair_ = cube_->crossFactors().begin();
     }
 
     // Give back next record if we have a valid trade index
-    if (tradeIdx_ < cube_->tradeIds().size()) {
-        sr.tradeId = cube_->tradeIds()[tradeIdx_];
+    if (tradeIdx_ != cube_->tradeIdx().end()) {
+        Size tradeIdx = tradeIdx_->second;
+        sr.tradeId = tradeIdx_->first;
         sr.isPar = false;
         sr.currency = currency_;
-        sr.baseNpv = cube_->npv(sr.tradeId);
-        
+        sr.baseNpv = cube_->npv(tradeIdx);
+
         // Are there more deltas and gammas for current trade ID
-        if (itRiskFactor_ != cube_->factors().end()) {
-            sr.key_1 = *itRiskFactor_;
-            sr.desc_1 = deconstructFactor(cube_->factorDescription(sr.key_1)).second;
-            sr.shift_1 = cube_->shiftSize(sr.key_1);
-            sr.delta = cube_->delta(sr.tradeId, sr.key_1);
-            sr.gamma = cube_->gamma(sr.tradeId, sr.key_1);
-            
-            itRiskFactor_++;
+        if (upRiskFactor_ != cube_->upFactors().end()) {
+            Size usrx = upRiskFactor_->right.index;
+            sr.key_1 = upRiskFactor_->left;
+            sr.desc_1 = upRiskFactor_->right.factorDesc;
+            sr.shift_1 = upRiskFactor_->right.shiftSize;
+            sr.delta = cube_->delta(tradeIdx, usrx);
+            if(downRiskFactor_ != cube_->downFactors().end()) {
+                Size dsrx = downRiskFactor_->second.index;
+                sr.gamma = cube_->gamma(tradeIdx, usrx, dsrx);
+                downRiskFactor_++;
+            } else {
+                sr.gamma = Null<Real>(); // marks na result
+            }
+
+            upRiskFactor_++;
 
             TLOG("Next record is: " << sr);
             return sr;
         }
-        
+
         // Are there more cross pairs for current trade ID
         if (itCrossPair_ != cube_->crossFactors().end()) {
-            sr.key_1 = itCrossPair_->first;
-            sr.desc_1 = deconstructFactor(cube_->factorDescription(sr.key_1)).second;
-            sr.shift_1 = cube_->shiftSize(sr.key_1);
-            
-            sr.key_2 = itCrossPair_->second;
-            sr.desc_2 = deconstructFactor(cube_->factorDescription(sr.key_2)).second;
-            sr.shift_2 = cube_->shiftSize(sr.key_2);
+            sr.key_1 = itCrossPair_->first.first;
+            sr.desc_1 = std::get<0>(itCrossPair_->second).factorDesc;
+            sr.shift_1 = std::get<0>(itCrossPair_->second).shiftSize;
 
-            sr.gamma = cube_->crossGamma(sr.tradeId, *itCrossPair_);
+            sr.key_2 = itCrossPair_->first.second;
+            sr.desc_2 = std::get<1>(itCrossPair_->second).factorDesc;
+            sr.shift_2 = std::get<1>(itCrossPair_->second).shiftSize;
+
+            Size id_1, id_2, id_x;
+            id_1 = std::get<0>(itCrossPair_->second).index;
+            id_2 = std::get<1>(itCrossPair_->second).index;
+            id_x = std::get<2>(itCrossPair_->second);
+
+            sr.gamma = cube_->crossGamma(tradeIdx, id_1, id_2, id_x);
 
             itCrossPair_++;
 
@@ -93,10 +106,11 @@ SensitivityRecord SensitivityCubeStream::next() {
 
 void SensitivityCubeStream::reset() {
     // Reset indices and iterators
-    tradeIdx_ = 0;
-    itRiskFactor_ = cube_->factors().begin();
+    tradeIdx_ = cube_->tradeIdx().begin();
+    upRiskFactor_ = cube_->upFactors().begin();
+    downRiskFactor_ = cube_->downFactors().begin();
     itCrossPair_ = cube_->crossFactors().begin();
 }
 
-}
-}
+} // namespace analytics
+} // namespace ore

@@ -20,6 +20,10 @@
       <xs:element type="crossCurrencyFixFloatType" name="CrossCurrencyFixFloat"/>
       <xs:element type="swapIndexType" name="SwapIndex"/>
       <xs:element type="inflationswapType" name="InflationSwap"/>
+      <xs:element type="cmsSpreadOptionType" name="CmsSpreadOption"/>
+      <xs:element type="commodityForwardType" name="CommodityForward"/>
+      <xs:element type="commodityFutureType" name="CommodityFuture"/>
+      <xs:element type="fxOption" name="FxOption"/>
     </xs:choice>
   </xs:complexType>
 
@@ -183,9 +187,11 @@
       <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="IsResettable" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="FlatIndexIsResettable" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FlatTenor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SpreadTenor" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="crossCurrencyFixFloatType">
     <xs:sequence>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
@@ -223,5 +229,96 @@
     </xs:sequence>
   </xs:complexType>
 
-</xs:schema>
+  <xs:complexType name="cmsSpreadOptionType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ForwardStart" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SpotDays" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SwapTenor" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="FixingDays" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Calendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="RollConvention" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
 
+  <xs:complexType name="commodityForwardType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="SpotDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:decimal" name="PointsFactor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="AdvanceCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="SpotRelative" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="Outright" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="nthWeekdayType">
+    <xs:sequence>
+      <xs:element name="Nth" minOccurs="1" maxOccurs="1">
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:minInclusive value="1"/>
+            <xs:maxInclusive value="4"/>
+          </xs:restriction> 
+        </xs:simpleType>
+      </xs:element>
+      <xs:element type="weekdayType" name="Weekday" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="prohibitedExpiriesType">
+    <xs:sequence>
+      <xs:element name="Dates">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="date" name="Date" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="commodityFutureType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="AnchorDay" minOccurs="1" maxOccurs="1">
+        <xs:complexType>
+          <xs:choice>
+            <xs:element type="nthWeekdayType" name="NthWeekday"/>
+            <xs:element name="DayOfMonth">
+              <xs:simpleType>
+                <xs:restriction base="xs:integer">
+                  <xs:minInclusive value="1"/>
+                  <xs:maxInclusive value="31"/>
+                </xs:restriction> 
+              </xs:simpleType>
+            </xs:element>
+            <xs:element type="xs:nonNegativeInteger" name="CalendarDaysBefore" />
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="frequencyType" name="ContractFrequency" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Calendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ExpiryCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="ExpiryMonthLag" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="monthType" name="OneContractMonth" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="OffsetDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="AdjustBeforeOffset" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="IsAveraging" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="OptionExpiryOffset" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="prohibitedExpiriesType" name="ProhibitedExpiries" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="fxOption">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id"/>
+      <xs:element type="xs:string" name="AtmType"/>
+      <xs:element type="xs:string" name="DeltaType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

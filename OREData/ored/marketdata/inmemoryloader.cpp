@@ -16,11 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
 #include <ored/marketdata/inmemoryloader.hpp>
-#include <boost/algorithm/string.hpp> 
-#include <ored/marketdata/marketdatumparser.hpp> 
-#include <ored/utilities/log.hpp> 
-#include <ored/utilities/parsers.hpp> 
+#include <ored/marketdata/marketdatumparser.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -28,51 +28,49 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void load(InMemoryLoader& loader, const vector<string>& data, bool isMarket, bool implyTodaysFixings) { 
-    LOG("MemoryLoader started"); 
- 
-    Date today = QuantLib::Settings::instance().evaluationDate(); 
+void load(InMemoryLoader& loader, const vector<string>& data, bool isMarket, bool implyTodaysFixings) {
+    LOG("MemoryLoader started");
 
-    for (Size i = 0; i < data.size(); ++i) { 
-        string line = data[i]; 
-        // skip blank and comment lines 
-        if (line.size() > 0 && line[0] != '#') { 
-            vector<string> tokens; 
-            boost::trim(line); 
-            boost::split(tokens, line, boost::is_any_of(",;\t "), boost::token_compress_on); 
- 
-            // TODO: should we try, catch and log any invalid lines? 
-            QL_REQUIRE(tokens.size() == 3, "Invalid MemoryLoader line, 3 tokens expected " << line); 
-            Date date = parseDate(tokens[0]); 
-            const string& key = tokens[1]; 
-            Real value = parseReal(tokens[2]); 
- 
-            if (isMarket) { 
-                // process market 
-                // build market datum and add to map 
-                try { 
+    Date today = QuantLib::Settings::instance().evaluationDate();
+
+    for (Size i = 0; i < data.size(); ++i) {
+        string line = data[i];
+        // skip blank and comment lines
+        if (line.size() > 0 && line[0] != '#') {
+            vector<string> tokens;
+            boost::trim(line);
+            boost::split(tokens, line, boost::is_any_of(",;\t "), boost::token_compress_on);
+
+            // TODO: should we try, catch and log any invalid lines?
+            QL_REQUIRE(tokens.size() == 3, "Invalid MemoryLoader line, 3 tokens expected " << line);
+            Date date = parseDate(tokens[0]);
+            const string& key = tokens[1];
+            Real value = parseReal(tokens[2]);
+
+            if (isMarket) {
+                // process market
+                // build market datum and add to map
+                try {
                     loader.add(date, key, value);
                     TLOG("Added MarketDatum " << key);
-                } catch (std::exception& e) { 
-                    WLOG("Failed to parse MarketDatum " << key << ": " << e.what()); 
-                } 
-            } else { 
-                // process fixings 
-                if (date < today || (date == today && !implyTodaysFixings)) 
-                    loader.addFixing(date, key, value); 
-            } 
-        } 
-    } 
-    LOG("MemoryLoader completed"); 
-
+                } catch (std::exception& e) {
+                    WLOG("Failed to parse MarketDatum " << key << ": " << e.what());
+                }
+            } else {
+                // process fixings
+                if (date < today || (date == today && !implyTodaysFixings))
+                    loader.addFixing(date, key, value);
+            }
+        }
+    }
+    LOG("MemoryLoader completed");
 }
 
 void loadDataFromBuffers(InMemoryLoader& loader, const std::vector<std::string>& marketData,
                          const std::vector<std::string>& fixingData, bool implyTodaysFixings) {
     load(loader, marketData, true, implyTodaysFixings);
-    load(loader, marketData, false, implyTodaysFixings);
-
+    load(loader, fixingData, false, implyTodaysFixings);
 }
 
-}
-}
+} // namespace data
+} // namespace ore

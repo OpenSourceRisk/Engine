@@ -34,7 +34,6 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace QuantLib;

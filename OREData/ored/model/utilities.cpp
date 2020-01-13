@@ -30,7 +30,7 @@ namespace data {
 
 Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                           const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
-    LOG("# time   modelVol marketVol (diff) modelValue marketValue (diff) irlgm1fAlpha irlgm1fKappa irlgm1fHwSigma");
+    TLOG("# time   modelVol marketVol (diff) modelValue marketValue (diff) irlgm1fAlpha irlgm1fKappa irlgm1fHwSigma");
     Real rmse = 0;
     Real t = 0.0, modelAlpha = 0.0, modelKappa = 0.0, modelHwSigma = 0.0;
     for (Size j = 0; j < basket.size(); j++) {
@@ -61,7 +61,7 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHe
             LOG("error implying model vol for instrument " << j);
         }
         rmse += volDiff * volDiff;
-        LOG(std::setw(2) << j << "  " << std::setprecision(6) << t << " " << modelVol << " " << marketVol << " ("
+        TLOG(std::setw(2) << j << "  " << std::setprecision(6) << t << " " << modelVol << " " << marketVol << " ("
                          << std::setw(8) << volDiff << ")  " << modelValue << " " << marketValue << " (" << std::setw(8)
                          << valueDiff << ")  " << modelAlpha << " " << modelKappa << " " << modelHwSigma);
     }
@@ -72,17 +72,17 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHe
         modelKappa = parametrization->kappa(t);
         modelHwSigma = parametrization->hullWhiteSigma(t);
     }
-    LOG("t >= " << t << ": irlgm1fAlpha = " << modelAlpha << " irlgm1fKappa = " << modelKappa
+    TLOG("t >= " << t << ": irlgm1fAlpha = " << modelAlpha << " irlgm1fKappa = " << modelKappa
                 << " irlgm1fHwSigma = " << modelHwSigma);
     rmse = sqrt(rmse / basket.size());
-    LOG("rmse = " << rmse);
+    TLOG("rmse = " << rmse);
     return rmse;
 }
 
 Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                           const boost::shared_ptr<FxBsParametrization>& parametrization,
                           const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
-    LOG("# time    modelVol marketVol (diff) modelValue marketValue (diff) fxbsSigma");
+    TLOG("# time    modelVol marketVol (diff) modelValue marketValue (diff) fxbsSigma");
     Real rmse = 0;
     Real t = 0.0, modelSigma = 0.0;
     for (Size j = 0; j < basket.size(); j++) {
@@ -108,7 +108,7 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHe
             LOG("error implying model vol for instrument " << j);
         }
         rmse += volDiff * volDiff;
-        LOG(std::setw(2) << j << " " << t << "  " << std::setprecision(6) << modelVol << " " << marketVol << " ("
+        TLOG(std::setw(2) << j << " " << t << "  " << std::setprecision(6) << modelVol << " " << marketVol << " ("
                          << std::setw(8) << volDiff << ")  " << modelValue << " " << marketValue << " (" << std::setw(8)
                          << valueDiff << ")  " << modelSigma);
     }
@@ -117,16 +117,16 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHe
         t += 2 * 1E-4;
         modelSigma = parametrization->sigma(t);
     }
-    LOG("t >= " << t << ": fxbsSigma = " << modelSigma);
+    TLOG("t >= " << t << ": fxbsSigma = " << modelSigma);
     rmse = sqrt(rmse / basket.size());
-    LOG("rmse = " << rmse);
+    TLOG("rmse = " << rmse);
     return rmse;
 }
 
 Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                           const boost::shared_ptr<EqBsParametrization>& parametrization,
                           const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
-    LOG("# modelVol marketVol (diff) modelValue marketValue (diff) eqbsSigma");
+    TLOG("# modelVol marketVol (diff) modelValue marketValue (diff) eqbsSigma");
     Real rmse = 0;
     Real t = 0.0, modelSigma = 0.0;
     for (Size j = 0; j < basket.size(); j++) {
@@ -151,7 +151,7 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHe
             LOG("error implying model vol for instrument " << j);
         }
         rmse += volDiff * volDiff;
-        LOG(std::setw(2) << j << "  " << std::setprecision(6) << modelVol << " " << marketVol << " (" << std::setw(8)
+        TLOG(std::setw(2) << j << "  " << std::setprecision(6) << modelVol << " " << marketVol << " (" << std::setw(8)
                          << volDiff << ")  " << modelValue << " " << marketValue << " (" << std::setw(8) << valueDiff
                          << ")  " << modelSigma);
     }
@@ -159,16 +159,16 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHe
         t += 2 * 1E-4;
         modelSigma = parametrization->sigma(t);
     }
-    LOG("t >= " << t << ": eqbsSigma = " << modelSigma);
+    TLOG("t >= " << t << ": eqbsSigma = " << modelSigma);
     rmse = sqrt(rmse / basket.size());
-    LOG("rmse = " << rmse);
+    TLOG("rmse = " << rmse);
     return rmse;
 }
 
 Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                           const boost::shared_ptr<InfDkParametrization>& parametrization,
                           const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
-    LOG("# modelValue marketValue (diff) infdkAlpha infdkH");
+    TLOG("# modelValue marketValue (diff) infdkAlpha infdkH");
     Real rmse = 0;
     Real t = 0.0, modelAlpha = 0.0, modelH = 0.0;
     for (Size j = 0; j < basket.size(); j++) {
@@ -189,7 +189,7 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHe
         }
         // TODO handle other calibration helpers, too (capfloor)
         rmse += valueDiff * valueDiff;
-        LOG(std::setw(2) << j << "  " << std::setprecision(6) << modelValue << " " << marketValue << " ("
+        TLOG(std::setw(2) << j << "  " << std::setprecision(6) << modelValue << " " << marketValue << " ("
                          << std::setw(8) << valueDiff << ")  " << modelAlpha << " " << modelH);
     }
     if (parametrization != nullptr) {
@@ -198,10 +198,10 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHe
         modelAlpha = parametrization->alpha(t);
         modelH = parametrization->H(t);
     }
-    LOG("t >= " << t << ": infDkAlpha = " << modelAlpha << " infDkH = " << modelH);
+    TLOG("t >= " << t << ": infDkAlpha = " << modelAlpha << " infDkH = " << modelH);
     rmse = sqrt(rmse / basket.size());
     ;
-    LOG("rmse = " << rmse);
+    TLOG("rmse = " << rmse);
     return rmse;
 }
 

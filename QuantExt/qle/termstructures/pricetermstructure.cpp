@@ -22,34 +22,24 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-PriceTermStructure::PriceTermStructure(const DayCounter& dc)
-    : TermStructure(dc) {}
+PriceTermStructure::PriceTermStructure(const DayCounter& dc) : TermStructure(dc) {}
 
-PriceTermStructure::PriceTermStructure(const Date& referenceDate,
-    const Calendar& cal, const DayCounter& dc)
+PriceTermStructure::PriceTermStructure(const Date& referenceDate, const Calendar& cal, const DayCounter& dc)
     : TermStructure(referenceDate, cal, dc) {}
 
-PriceTermStructure::PriceTermStructure(Natural settlementDays,
-    const Calendar& cal, const DayCounter& dc)
+PriceTermStructure::PriceTermStructure(Natural settlementDays, const Calendar& cal, const DayCounter& dc)
     : TermStructure(settlementDays, cal, dc) {}
 
 Real PriceTermStructure::price(Time t, bool extrapolate) const {
     checkRange(t, extrapolate);
-
-    // Fail if price is negative
-    Real price = priceImpl(t);
-    QL_REQUIRE(price >= 0.0, "Price returned from PriceTermStructure cannot be negative (" << price << ")");
-
-    return price;
+    return priceImpl(t);
 }
 
 Real PriceTermStructure::price(const Date& d, bool extrapolate) const {
     return price(timeFromReference(d), extrapolate);
 }
 
-void PriceTermStructure::update() {
-    TermStructure::update();
-}
+void PriceTermStructure::update() { TermStructure::update(); }
 
 Time PriceTermStructure::minTime() const {
     // Default implementation
@@ -57,12 +47,29 @@ Time PriceTermStructure::minTime() const {
 }
 
 void PriceTermStructure::checkRange(Time t, bool extrapolate) const {
-    QL_REQUIRE(extrapolate || allowsExtrapolation()
-        || t >= minTime() || close_enough(t, minTime()),
-        "time (" << t << ") is before min curve time (" << minTime() << ")");
+    QL_REQUIRE(extrapolate || allowsExtrapolation() || t >= minTime() || close_enough(t, minTime()),
+               "time (" << t << ") is before min curve time (" << minTime() << ")");
 
     // Now, do the usual TermStructure checks
     TermStructure::checkRange(t, extrapolate);
 }
 
+DerivedPriceQuote::DerivedPriceQuote(const QuantLib::Handle<PriceTermStructure>& priceTs)
+    : priceTs_(priceTs) {
+    registerWith(priceTs_);
 }
+
+Real DerivedPriceQuote::value() const {
+    QL_REQUIRE(isValid(), "Invalid DerivedPriceQuote");
+    return priceTs_->price(0, true);
+}
+
+bool DerivedPriceQuote::isValid() const {
+    return !priceTs_.empty();
+}
+
+void DerivedPriceQuote::update() {
+    notifyObservers();
+}
+
+} // namespace QuantExt

@@ -26,21 +26,22 @@
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/experimental/inflation/yoycapfloortermpricesurface.hpp>
-#include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp> 
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/date.hpp>
 
+#include <qle/indexes/equityindex.hpp>
+#include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
-#include <qle/indexes/equityindex.hpp>
 
 namespace ore {
 namespace data {
@@ -52,8 +53,7 @@ typedef BaseCorrelationTermStructure<BilinearInterpolation> BilinearBaseCorrelat
 enum class YieldCurveType {
     Discount = 0, // Chosen to match MarketObject::DiscountCurve
     Yield = 1,    // Chosen to match MarketObject::YieldCurve
-    EquityDividend = 2,
-    EquityForecast = 3
+    EquityDividend = 2
 };
 
 //! Market
@@ -93,6 +93,12 @@ public:
                                             const string& configuration = Market::defaultConfiguration) const = 0;
     virtual const string swapIndexBase(const string& ccy,
                                        const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Yield volatilities
+    //@{
+    virtual Handle<SwaptionVolatilityStructure>
+        yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Foreign Exchange
@@ -146,19 +152,16 @@ public:
     cpiInflationCapFloorPriceSurface(const string& indexName,
                                      const string& configuration = Market::defaultConfiguration) const = 0;
 
-    //! Inflation Cap Floor Volatility Surfaces 
-    virtual Handle<CPIVolatilitySurface> 
-    cpiInflationCapVolatilitySurface(const string& indexName, 
-				     const string& configuration = Market::defaultConfiguration) const = 0; 
-    virtual Handle<CPIVolatilitySurface> 
-    cpiInflationFloorVolatilitySurface(const string& indexName, 
-				       const string& configuration = Market::defaultConfiguration) const = 0; 
+    //! Inflation Cap Floor Volatility Surfaces
+    virtual Handle<CPIVolatilitySurface>
+    cpiInflationCapFloorVolatilitySurface(const string& indexName,
+                                          const string& configuration = Market::defaultConfiguration) const = 0;
 
     //! Inflation Cap Floor Price Surfaces
     virtual Handle<YoYCapFloorTermPriceSurface>
     yoyInflationCapFloorPriceSurface(const string& indexName,
                                      const string& configuration = Market::defaultConfiguration) const = 0;
-    
+
     //! \name Equity curves
     //@{
     virtual Handle<Quote> equitySpot(const string& eqName,
@@ -166,7 +169,7 @@ public:
     virtual Handle<YieldTermStructure>
     equityDividendCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YieldTermStructure>
-    equityForecastCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0; 
+    equityForecastCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<QuantExt::EquityIndex>
     equityCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
@@ -191,19 +194,24 @@ public:
 
     //! \name Commodity price curves
     //@{
-    virtual QuantLib::Handle<QuantLib::Quote> commoditySpot(const std::string& commodityName,
-        const std::string& configuration = Market::defaultConfiguration) const = 0;
-
-    virtual QuantLib::Handle<QuantExt::PriceTermStructure> commodityPriceCurve(
-        const std::string& commodityName, const std::string& configuration = Market::defaultConfiguration) const = 0;
+    virtual QuantLib::Handle<QuantExt::PriceTermStructure>
+    commodityPriceCurve(const std::string& commodityName,
+                        const std::string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Commodity volatility
     //@{
-    virtual QuantLib::Handle<QuantLib::BlackVolTermStructure> commodityVolatility(
-        const std::string& commodityName, const std::string& configuration = Market::defaultConfiguration) const = 0;
+    virtual QuantLib::Handle<QuantLib::BlackVolTermStructure>
+    commodityVolatility(const std::string& commodityName,
+                        const std::string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
+    //! \name Correlation
+    //@{
+    virtual QuantLib::Handle<QuantExt::CorrelationTermStructure>
+    correlationCurve(const std::string& index1, const std::string& index2,
+                     const std::string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
     //! \name Conditional Prepayment Rates
     //@{
     virtual Handle<Quote> cpr(const string& securityID,
