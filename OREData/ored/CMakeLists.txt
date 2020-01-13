@@ -45,6 +45,7 @@ marketdata/marketdatum.cpp
 marketdata/marketdatumparser.cpp
 marketdata/marketimpl.cpp
 marketdata/security.cpp
+marketdata/strike.cpp
 marketdata/swaptionvolcurve.cpp
 marketdata/todaysmarket.cpp
 marketdata/todaysmarketparameters.cpp
@@ -172,6 +173,7 @@ marketdata/marketdatum.hpp
 marketdata/marketdatumparser.hpp
 marketdata/marketimpl.hpp
 marketdata/security.hpp
+marketdata/strike.hpp
 marketdata/structuredcurveerror.hpp
 marketdata/swaptionvolcurve.hpp
 marketdata/todaysmarket.hpp

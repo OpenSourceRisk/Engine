@@ -124,5 +124,8 @@
     <ClCompile Include="conventionsbasedfutureexpiry.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="strike.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

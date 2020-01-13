@@ -459,6 +459,9 @@
     <ClInclude Include="ored\configuration\bootstrapconfig.hpp">
       <Filter>configuration</Filter>
     </ClInclude>
+    <ClInclude Include="ored\marketdata\strike.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -811,6 +814,9 @@
     </ClCompile>
     <ClCompile Include="ored\configuration\bootstrapconfig.cpp">
       <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\strike.cpp">
+      <Filter>marketdata</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

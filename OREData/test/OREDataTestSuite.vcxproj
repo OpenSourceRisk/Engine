@@ -670,6 +670,7 @@
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="portfolio.cpp" />
     <ClCompile Include="schedule.cpp" />
+    <ClCompile Include="strike.cpp" />
     <ClCompile Include="swaption.cpp" />
     <ClCompile Include="testsuite.cpp" />
     <ClCompile Include="todaysmarket.cpp" />

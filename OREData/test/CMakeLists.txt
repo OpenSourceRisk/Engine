@@ -34,6 +34,7 @@ ored_commodityforward.cpp
 parser.cpp
 portfolio.cpp
 schedule.cpp
+strike.cpp
 swaption.cpp
 testsuite.cpp
 todaysmarket.cpp
