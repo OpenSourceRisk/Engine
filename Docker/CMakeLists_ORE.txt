@@ -6,6 +6,8 @@ include(CTest)
 
 include("cmake/commonSettings.cmake")
 
+add_link_directory_if_exists("${QUANTLIB_SOURCE_DIR}/build/ql")
+
 add_subdirectory("QuantExt")
 add_subdirectory("OREData")
 add_subdirectory("OREAnalytics")
