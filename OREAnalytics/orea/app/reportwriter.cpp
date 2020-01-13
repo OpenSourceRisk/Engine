@@ -706,7 +706,7 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     // Make sure that we are starting from the start
     ss->reset();
     while (SensitivityRecord sr = ss->next()) {
-        if (fabs(sr.delta) > outputThreshold || fabs(sr.gamma) > outputThreshold) {
+        if (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold)) {
             report.next();
             report.add(sr.tradeId);
             report.add(to_string(sr.isPar));

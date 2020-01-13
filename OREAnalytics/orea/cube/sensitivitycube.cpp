@@ -153,12 +153,13 @@ void SensitivityCube::initialise() {
         crossFactors_[cf.first] = make_tuple(id_1, id_2, cf.second);
     }
 
-    // Check that up factors and down factors align
-    QL_REQUIRE(upFactors_.size() == downFactors_.size(),
+    // Check that up factors and down factors align (if down factors are given)
+    QL_REQUIRE(downFactors_.empty() || upFactors_.size() == downFactors_.size(),
                "The number 'Up' shifts should equal the number of 'Down' shifts");
 
     auto pred = [](decltype(*upFactors_.left.begin()) a, pair<RiskFactorKey, FactorData> b) { return a.first == b.first; };
-    QL_REQUIRE(equal(upFactors_.left.begin(), upFactors_.left.end(), downFactors_.begin(), pred),
+    QL_REQUIRE(downFactors_.empty() ||
+                   equal(upFactors_.left.begin(), upFactors_.left.end(), downFactors_.begin(), pred),
                "The set of risk factor keys with an 'Up' shift and 'Down' shift should match");
 
     // Log warnings if each factor does not have a shift size entry and that it is not a Null<Real>()
