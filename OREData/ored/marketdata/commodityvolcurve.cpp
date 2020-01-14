@@ -134,22 +134,18 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
 
             boost::shared_ptr<CommodityOptionQuote> q = boost::dynamic_pointer_cast<CommodityOptionQuote>(md);
 
-            // relevant quote?
             bool addQuote = false;
             vector<string>::const_iterator it;  // if not wild-card -> find quote.
             if (foundRegex) {
                 if (regex_match(q->name(), reg1)) {
-                    // quote only valid of expiry date is > asof
+                    // quote only valid if expiry date is > asof and the quote expiry is a date or period.
                     Date eDate;
-                    Period ePeriod;
-                    bool isDate;
-                    parseDateOrPeriod(q->expiry(), eDate, ePeriod, isDate);
-                    if (!isDate){
-                        eDate = calendar.adjust(asof + ePeriod);
+                    if (auto expiryDate = boost::dynamic_pointer_cast<ExpiryDate>(q->expiry())) {
+                        eDate = expiryDate->expiryDate();
+                    } else if (auto expiryPeriod = boost::dynamic_pointer_cast<ExpiryPeriod>(q->expiry())) {
+                        eDate = calendar.adjust(asof + expiryPeriod->expiryPeriod());
                     }
-                    if (eDate > asof) {
-                        addQuote = true;
-                    }
+                    addQuote = eDate != Date() && eDate > asof;
                 }
             } else {
                 it = find(config.quotes().begin(), config.quotes().end(), q->name()); // find in config
@@ -162,19 +158,17 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
             if (addQuote) {
                 // Convert expiry to a date if necessary
                 Date aDate;
-                Period aPeriod;
-                bool isDate;
-                parseDateOrPeriod(q->expiry(), aDate, aPeriod, isDate);
-                if (isDate) {
-                    QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << q->name() << "' has expiry in the past ("
-                                                                            << io::iso_date(aDate) << ")");
-                } else {
-                    aDate = calendar.adjust(asof + aPeriod);
+                if (auto expiryDate = boost::dynamic_pointer_cast<ExpiryDate>(q->expiry())) {
+                    aDate = expiryDate->expiryDate();
+                } else if (auto expiryPeriod = boost::dynamic_pointer_cast<ExpiryPeriod>(q->expiry())) {
+                    aDate = calendar.adjust(asof + expiryPeriod->expiryPeriod());
                 }
+                QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << q->name() << "' has expiry in the past ("
+                    << io::iso_date(aDate) << ")");
 
                 // Add the quote to the curve data
-                QL_REQUIRE(curveData.count(aDate) == 0,
-                           "Quote " << *it << " provides a duplicate quote for the date " << io::iso_date(aDate));
+                QL_REQUIRE(curveData.count(aDate) == 0, "Duplicate quote for the date " << io::iso_date(aDate) << 
+                    " provided by commodity volatility config " << config.curveID());
                 curveData[aDate] = q->quote()->value();
             }
         }
@@ -206,13 +200,10 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
 void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolatilityCurveConfig& config,
                                                const Loader& loader) {
 
-    map<Date, vector<Real>> surfaceData; // implicit order is assumed here for known stirkes and expiries from config.
+    map<Date, vector<Real>> surfaceData; // implicit order is assumed here for known strikes and expiries from config.
     vector<Real> strikes;       // wild card case
     vector<Date> expiries;      // wild card case
     vector<Volatility> vols;    // wild card case
-
-    // Assume the config has required strike strings to be sorted by value
-    const vector<string>& configStrikes = config.strikes();
 
     // wild cards?
     vector<string>::iterator exprWcIt = find(config.expiries().begin(), config.expiries().end(), "*");
@@ -225,6 +216,34 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
     }
     if (strkWc) {
         QL_REQUIRE(config.strikes().size() == 1, "Wild card strike specified but more strikes also specified.");
+    }
+
+    // If we do not have a strike wild card, we expect a list of absolute strike values
+    vector<Real> configuredStrikes;
+    if (!strkWc) {
+        // Parse the list of absolute strikes
+        configuredStrikes = parseVectorOfValues<Real>(config.strikes(), &parseReal);
+        sort(configuredStrikes.begin(), configuredStrikes.end());
+        QL_REQUIRE(adjacent_find(configuredStrikes.begin(), configuredStrikes.end())
+            == configuredStrikes.end(), "The configured strikes contain duplicates");
+    }
+
+    // If we do not have an expiry wild card, the configured expiries must be either a date or a period
+    set<Date> configuredExpiryDates;
+    set<Period> configuredExpiryPeriods;
+    if (!expWc) {
+        // Parse the list of expiry strings.
+        for (const string& strExpiry : config.expiries()) {
+            Date date;
+            Period period;
+            bool isDate;
+            parseDateOrPeriod(strExpiry, date, period, isDate);
+            if (isDate) {
+                configuredExpiryDates.insert(date);
+            } else {
+                configuredExpiryPeriods.insert(period);
+            }
+        }
     }
 
     // Loop over all market datums and find the quotes in the config
@@ -241,41 +260,43 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
             relevantQuote = false;
             vector<string>::const_iterator it;
 
+            // Only read absolute strike quotes for now.
+            auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
+            if (!strike)
+                continue;
+
             // no wild cards
             if (!wildCard) {
+
                 it = find(config.quotes().begin(), config.quotes().end(), q->name());
                 relevantQuote = it != config.quotes().end();
                 if (relevantQuote) {
                     // Convert expiry to date if necessary
                     Date aDate;
-                    Period aPeriod;
-                    bool isDate;
-                    parseDateOrPeriod(q->expiry(), aDate, aPeriod, isDate);
-                    if (isDate) {
-                        QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << q->name() << "' has expiry in past ("
-                                                                                << io::iso_date(aDate) << ")");
-                    } else {
-                        aDate = calendar.adjust(asof + aPeriod);
+                    if (auto expiryDate = boost::dynamic_pointer_cast<ExpiryDate>(q->expiry())) {
+                        aDate = expiryDate->expiryDate();
+                        QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << q->name() << 
+                            "' has expiry in past (" << io::iso_date(aDate) << ")");
+                    } else if (auto expiryPeriod = boost::dynamic_pointer_cast<ExpiryPeriod>(q->expiry())) {
+                        aDate = calendar.adjust(asof + expiryPeriod->expiryPeriod());
                     }
 
                     // Position of quote in vector
-                    Size pos =
-                        distance(configStrikes.begin(), find(configStrikes.begin(), configStrikes.end(), q->strike()));
-                    QL_REQUIRE(pos < configStrikes.size(), "The quote '"
-                                                               << q->name()
-                                                               << "' is in the list of configured quotes "
-                                                                  "but does not match any of the configured strikes");
+                    auto strikeIt = find_if(configuredStrikes.begin(), configuredStrikes.end(), 
+                        [&strike](Real s) { return close(s, strike->strike()); });
+                    Size pos = distance(configuredStrikes.begin(), strikeIt);
+                    QL_REQUIRE(pos < configuredStrikes.size(), "The quote '" << q->name() << 
+                        "' is in the list of configured quotes but does not match any of the configured strikes");
 
                     // Add quote to surface
                     if (surfaceData.count(aDate) == 0)
-                        surfaceData[aDate] = vector<Real>(configStrikes.size(), Null<Real>());
-                    QL_REQUIRE(surfaceData[aDate][pos] == Null<Real>(),
-                               "Quote " << q->name() << " provides a duplicate quote for the date "
-                                        << io::iso_date(aDate) << " and the strike " << configStrikes[pos]);
+                        surfaceData[aDate] = vector<Real>(configuredStrikes.size(), Null<Real>());
+                    QL_REQUIRE(surfaceData[aDate][pos] == Null<Real>(), "Quote " << q->name() << 
+                        " provides a duplicate quote for the date " << io::iso_date(aDate) << 
+                        " and the strike " << configuredStrikes[pos]);
                     surfaceData[aDate][pos] = q->quote()->value();
                     quotesAdded++;
                 }
-                // some wild card
             } else {
 
                 // Don't bother if commodity name and currency do not match
@@ -284,33 +305,38 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
                 }
 
                 if (!expWc) {
-                    // strike only wild card
-                    it = find(config.expiries().begin(), config.expiries().end(), q->expiry());
-                    expiryRelevant = it != config.expiries().end();
+                    // Is the quote's expiry in the list of configured expiries.
+                    if (auto expiryDate = boost::dynamic_pointer_cast<ExpiryDate>(q->expiry())) {
+                        expiryRelevant = configuredExpiryDates.find(expiryDate->expiryDate()) 
+                            != configuredExpiryDates.end();
+                    } else if (auto expiryPeriod = boost::dynamic_pointer_cast<ExpiryPeriod>(q->expiry())) {
+                        expiryRelevant = configuredExpiryPeriods.find(expiryPeriod->expiryPeriod())
+                            != configuredExpiryPeriods.end();
+                    }
                 } else {
                     expiryRelevant = true;
                 }
                 if (!strkWc) {
                     // expiry only wild card
-                    it = find(config.strikes().begin(), config.strikes().end(), q->strike());
-                    strikeRelevant = it != config.strikes().end();
+                    auto strikeIt = find_if(configuredStrikes.begin(), configuredStrikes.end(),
+                        [&strike](Real s) { return close(s, strike->strike()); });
+                    strikeRelevant = strikeIt != configuredStrikes.end();
                 } else {
-                    // for now we ignore ATMF quotes
-                    strikeRelevant = q->strike() != "ATMF";
+                    strikeRelevant = true;
                 }
                 relevantQuote = strikeRelevant && expiryRelevant;
 
                 if (relevantQuote) {
-                    //expiry (may be tenor or date)
+                    // expiry (may be tenor or date)
                     Date eDate;
-                    Period ePeriod;
-                    bool isDate;
-                    parseDateOrPeriod(q->expiry(), eDate, ePeriod,isDate);
-                    if (!isDate) {
-                        eDate = calendar.adjust(asof + ePeriod);
+                    if (auto expiryDate = boost::dynamic_pointer_cast<ExpiryDate>(q->expiry())) {
+                        eDate = expiryDate->expiryDate();
+                    } else if (auto expiryPeriod = boost::dynamic_pointer_cast<ExpiryPeriod>(q->expiry())) {
+                        eDate = calendar.adjust(asof + expiryPeriod->expiryPeriod());
                     }
+
                     // strike + vol
-                    strikes.push_back(parseReal(q->strike()));
+                    strikes.push_back(strike->strike());
                     vols.push_back(q->quote()->value());
                     expiries.push_back(eDate);
                     quotesAdded++;
@@ -342,17 +368,18 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
         config.upperStrikeConstantExtrapolation()
             ? BlackVarianceSurface::Extrapolation::ConstantExtrapolation
             : BlackVarianceSurface::Extrapolation::InterpolatorDefaultExtrapolation;
+    
     if (!wildCard) {
         // Vol matrix (strikes, dates), date & expiry vectors
-        volatilities = Matrix(configStrikes.size(), surfaceData.size());
+        volatilities = Matrix(configuredStrikes.size(), surfaceData.size());
         get<1>(sAndE).reserve(surfaceData.size());
-        get<0>(sAndE).reserve(configStrikes.size());
+        get<0>(sAndE).reserve(configuredStrikes.size());
         Size counter = 0;
         for (const auto& datum : surfaceData) {
             get<1>(sAndE).push_back(datum.first);
-            for (Size i = 0; i < configStrikes.size(); i++) {
+            for (Size i = 0; i < configuredStrikes.size(); i++) {
                 if (counter == 0)
-                    get<0>(sAndE).push_back(parseReal(configStrikes[i]));
+                    get<0>(sAndE).push_back(configuredStrikes[i]);
                 volatilities[i][counter] = datum.second[i];
             }
             counter++;
@@ -367,9 +394,9 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
       
         volatility_ =
             boost::make_shared<BlackVarianceSurfaceSparse>(asof, calendar, expiries, strikes, vols,
-                                                     dayCounter, lowerConstStrikeExtrap, upperConstStrikeExtrap); // Flat extraoplate strikes always good
+                                                     dayCounter, lowerConstStrikeExtrap, upperConstStrikeExtrap);
     }
 }
 
-} // namespace data
-} // namespace ore
+}
+}

@@ -64,24 +64,33 @@ private:
 MockLoader::MockLoader() {
     Date asof(5, Feb, 2016);
     data_ = {
-        boost::make_shared<CommodityOptionQuote>(0.11, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF",
-                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "1Y", "ATMF"),
-        boost::make_shared<CommodityOptionQuote>(0.10, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATMF",
-                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "2Y", "ATMF"),
-        boost::make_shared<CommodityOptionQuote>(0.09, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATMF",
-                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "5Y", "ATMF"),
+        boost::make_shared<CommodityOptionQuote>(0.11, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATM/AtmFwd",
+            MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", boost::make_shared<ExpiryPeriod>(1 * Years), 
+            boost::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd)),
+        boost::make_shared<CommodityOptionQuote>(0.10, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATM/AtmFwd",
+            MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", boost::make_shared<ExpiryPeriod>(2 * Years),
+            boost::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd)),
+        boost::make_shared<CommodityOptionQuote>(0.09, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATM/AtmFwd",
+            MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", boost::make_shared<ExpiryPeriod>(5 * Years),
+            boost::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd)),
         boost::make_shared<CommodityOptionQuote>(0.105, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/1Y/1150",
-                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "1Y", "1150"),
+            MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", boost::make_shared<ExpiryPeriod>(1 * Years),
+            boost::make_shared<AbsoluteStrike>(1150)),
         boost::make_shared<CommodityOptionQuote>(0.115, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/1Y/1190",
-                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "1Y", "1190"),
+            MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", boost::make_shared<ExpiryPeriod>(1 * Years),
+            boost::make_shared<AbsoluteStrike>(1190)),
         boost::make_shared<CommodityOptionQuote>(0.095, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/2Y/1150",
-                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "2Y", "1150"),
+            MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", boost::make_shared<ExpiryPeriod>(2 * Years),
+            boost::make_shared<AbsoluteStrike>(1150)),
         boost::make_shared<CommodityOptionQuote>(0.105, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/2Y/1190",
-                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "2Y", "1190"),
+            MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", boost::make_shared<ExpiryPeriod>(2 * Years),
+            boost::make_shared<AbsoluteStrike>(1190)),
         boost::make_shared<CommodityOptionQuote>(0.085, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/5Y/1150",
-                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "5Y", "1150"),
+            MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", boost::make_shared<ExpiryPeriod>(5 * Years),
+            boost::make_shared<AbsoluteStrike>(1150)),
         boost::make_shared<CommodityOptionQuote>(0.095, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/5Y/1190",
-                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "5Y", "1190")};
+            MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", boost::make_shared<ExpiryPeriod>(5 * Years),
+            boost::make_shared<AbsoluteStrike>(1190))};
 }
 
 boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof,
@@ -147,7 +156,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeConstant) {
 
     // Volatility configuration with a single quote
     boost::shared_ptr<CommodityVolatilityCurveConfig> curveConfig = boost::make_shared<CommodityVolatilityCurveConfig>(
-        "GOLD_USD_VOLS", "", "USD", "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATMF", "A365", "NullCalendar");
+        "GOLD_USD_VOLS", "", "USD", "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATM/AtmFwd", "A365", "NullCalendar");
 
     // Curve configurations
     CurveConfigurations curveConfigs;
@@ -185,9 +194,9 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeCurve) {
 
     // Volatility configuration with time dependent volatilities
     bool extrapolate = true;
-    vector<string> quotes{"COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF",
-                          "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATMF",
-                          "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATMF"};
+    vector<string> quotes{"COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATM/AtmFwd",
+                          "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATM/AtmFwd",
+                          "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATM/AtmFwd"};
     boost::shared_ptr<CommodityVolatilityCurveConfig> curveConfig = boost::make_shared<CommodityVolatilityCurveConfig>(
         "GOLD_USD_VOLS", "", "USD", quotes, "A365", "NullCalendar", extrapolate);
 
