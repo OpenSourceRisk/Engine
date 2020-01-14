@@ -237,7 +237,7 @@ MoneynessStrike::Type parseMoneynessType(const string& type) {
     }
 }
 
-boost::shared_ptr<BaseStrike> parseStrike(const string& strStrike) {
+boost::shared_ptr<BaseStrike> parseBaseStrike(const string& strStrike) {
     
     boost::shared_ptr<BaseStrike> strike;
 

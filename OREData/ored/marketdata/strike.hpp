@@ -225,7 +225,7 @@ std::ostream& operator<<(std::ostream& os, MoneynessStrike::Type type);
 MoneynessStrike::Type parseMoneynessType(const std::string& type);
 
 //! Parse a Strike from its string representation, \p strStrike.
-boost::shared_ptr<BaseStrike> parseStrike(const std::string& strStrike);
+boost::shared_ptr<BaseStrike> parseBaseStrike(const std::string& strStrike);
 
 }
 }

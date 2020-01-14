@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(testAbsoluteStrike) {
 
     // Parse AbsoluteStrike from string
     boost::shared_ptr<BaseStrike> parsedStrike;
-    BOOST_REQUIRE_NO_THROW(parsedStrike = parseStrike(strStrike));
+    BOOST_REQUIRE_NO_THROW(parsedStrike = parseBaseStrike(strStrike));
 
     // Check that we get back an AbsoluteStrike
     boost::shared_ptr<AbsoluteStrike> castStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(parsedStrike);
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(testDeltaStrike) {
 
     // Parse DeltaStrike from string
     boost::shared_ptr<BaseStrike> parsedStrike;
-    BOOST_REQUIRE_NO_THROW(parsedStrike = parseStrike(strStrike));
+    BOOST_REQUIRE_NO_THROW(parsedStrike = parseBaseStrike(strStrike));
 
     // Check that we get back a DeltaStrike
     boost::shared_ptr<DeltaStrike> castStrike = boost::dynamic_pointer_cast<DeltaStrike>(parsedStrike);
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(testAtmStrikeNoDelta) {
 
     // Parse AtmStrike from string
     boost::shared_ptr<BaseStrike> parsedStrike;
-    BOOST_REQUIRE_NO_THROW(parsedStrike = parseStrike(strStrike));
+    BOOST_REQUIRE_NO_THROW(parsedStrike = parseBaseStrike(strStrike));
 
     // Check that we get back an AtmStrike
     boost::shared_ptr<AtmStrike> castStrike = boost::dynamic_pointer_cast<AtmStrike>(parsedStrike);
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(testAtmStrikeWithDelta) {
 
     // Parse AtmStrike from string
     boost::shared_ptr<BaseStrike> parsedStrike;
-    BOOST_REQUIRE_NO_THROW(parsedStrike = parseStrike(strStrike));
+    BOOST_REQUIRE_NO_THROW(parsedStrike = parseBaseStrike(strStrike));
 
     // Check that we get back an AtmStrike
     boost::shared_ptr<AtmStrike> castStrike = boost::dynamic_pointer_cast<AtmStrike>(parsedStrike);
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(testMoneynessStrike) {
 
     // Parse MoneynessStrike from string
     boost::shared_ptr<BaseStrike> parsedStrike;
-    BOOST_REQUIRE_NO_THROW(parsedStrike = parseStrike(strStrike));
+    BOOST_REQUIRE_NO_THROW(parsedStrike = parseBaseStrike(strStrike));
 
     // Check that we get back an MoneynessStrike
     boost::shared_ptr<MoneynessStrike> castStrike = boost::dynamic_pointer_cast<MoneynessStrike>(parsedStrike);
