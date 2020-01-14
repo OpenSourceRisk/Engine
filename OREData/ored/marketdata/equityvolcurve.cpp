@@ -238,6 +238,7 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                             LOG("BlackVarianceSurface only uses linear extrapolation for the time direction");
                             break;
                         case EquityVolatilityCurveConfig::Extrapolation::UseInterpolator:
+                            break;
                         default:
                             QL_FAIL("unsupported time extrapolation type");
                     }
@@ -269,8 +270,10 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         } else {
             bool strikeExtrapolation = true; //this is the default and refers to flat extrapolation
             switch (config->strikeExtrapolation()) {
-                case EquityVolatilityCurveConfig::Extrapolation::None:
+                case EquityVolatilityCurveConfig::Extrapolation::Flat:
                     LOG("No extrapolation not supported, using flat");
+                case EquityVolatilityCurveConfig::Extrapolation::None:
+                    break;
                 case EquityVolatilityCurveConfig::Extrapolation::UseInterpolator:
                     strikeExtrapolation = false;
                     break;
@@ -286,6 +289,7 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                     break;
                 case EquityVolatilityCurveConfig::Extrapolation::Flat:
                     timeFlatExtrapolation = true;
+                    break;
                 default:
                     QL_FAIL("unsupported time extrapolation type");
             }
