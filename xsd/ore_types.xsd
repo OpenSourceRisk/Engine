@@ -563,6 +563,14 @@
       <xs:enumeration value="Put"/>
     </xs:restriction>
   </xs:simpleType>
-  
+ 
+  <xs:simpleType name="extrapolationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="None"/>
+      <xs:enumeration value="UseInterpolator"/>
+      <xs:enumeration value="Flat"/>
+    </xs:restriction>
+  </xs:simpleType>
+
 </xs:schema>
 

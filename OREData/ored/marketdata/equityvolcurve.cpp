@@ -268,11 +268,12 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
             vol_->enableExtrapolation();
 
         } else {
-            bool strikeExtrapolation = true; //this is the default and refers to flat extrapolation
+            bool strikeExtrapolation;
             switch (config->strikeExtrapolation()) {
-                case EquityVolatilityCurveConfig::Extrapolation::Flat:
-                    LOG("No extrapolation not supported, using flat");
                 case EquityVolatilityCurveConfig::Extrapolation::None:
+                    LOG("No extrapolation not supported, using flat");
+                case EquityVolatilityCurveConfig::Extrapolation::Flat:
+                    strikeExtrapolation = true;
                     break;
                 case EquityVolatilityCurveConfig::Extrapolation::UseInterpolator:
                     strikeExtrapolation = false;

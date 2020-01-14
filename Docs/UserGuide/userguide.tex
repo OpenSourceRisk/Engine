@@ -3703,6 +3703,9 @@ If no day counter is specified for a given riskfactor then the default Actual365
         <SimulateATMOnly>false</SimulateATMOnly><!-- false -->
         <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness><!-- omitted if SimulateATMOnly true -->
       </Surface>
+      <TimeExtrapolation>Flat</TimeExtrapolation>
+      <StrikeExtrapolation>Flat</StrikeExtrapolation>
+
   </EquityVolatilities>
   ...
   <BenchmarkCurves>
@@ -4327,6 +4330,8 @@ Listing \ref{lst:eqoptionvol_configuration} shows the configuration of equity vo
     <Expiries>1M,5Y,10Y</Expiries>
     <!-- If Dimension is Smile: -->
     <Strikes>1932.8,2147.56,2254.939</Strikes>
+    <TimeExtrapolation>Flat</TimeExtrapolation>
+    <StrikeExtrapolation>Flat</StrikeExtrapolation>
   </EquityVolatility>
   <EquityVolatility>
     ...
@@ -4336,6 +4341,11 @@ Listing \ref{lst:eqoptionvol_configuration} shows the configuration of equity vo
 \caption{Equity option volatility configuration}
 \label{lst:eqoptionvol_configuration}
 \end{longlisting}
+
+\begin{itemize}
+\item {\tt TimeExtrapolation}: Defaults to Flat if omitted. The method used for Extrapolation in the time direction. May take any of the values: Flat or UseInterpolator. For Surfaces built without wildcards this value is not configurable, all curves will have  UseInterpolator extrapolation.
+\item {\tt StrikeExtrapolation}: Defaults to Flat if omitted. The method used for Extrapolation in the strike direction. The values Flat or UseInterpolator are accepted.
+\end{itemize}
 
 \subsubsection{Inflation Curves}
 
