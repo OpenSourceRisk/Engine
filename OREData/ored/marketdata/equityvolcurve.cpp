@@ -216,8 +216,34 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
 
                     Calendar cal = NullCalendar(); // why do we need this?
 
+                    BlackVarianceSurface::Extrapolation strikeExtrapolation;
+                    switch (config->strikeExtrapolation()) {
+                        case EquityVolatilityCurveConfig::Extrapolation::None:
+                            LOG("No extrapolation not supported, using flat");
+                        case EquityVolatilityCurveConfig::Extrapolation::Flat:
+                            strikeExtrapolation = BlackVarianceSurface::Extrapolation::ConstantExtrapolation;
+                            break;
+                        case EquityVolatilityCurveConfig::Extrapolation::UseInterpolator:
+                            strikeExtrapolation = BlackVarianceSurface::Extrapolation::InterpolatorDefaultExtrapolation;
+                            break;
+                        default:
+                            QL_FAIL("unsupported strike extrapolation type");
+                    }
+                    
+                    //only linear extrapolation is available for BlackVarianceSurface
+                    //we log if another is requested
+                    switch (config->timeExtrapolation()) {
+                        case EquityVolatilityCurveConfig::Extrapolation::None:
+                        case EquityVolatilityCurveConfig::Extrapolation::Flat:
+                            LOG("BlackVarianceSurface only uses linear extrapolation for the time direction");
+                            break;
+                        case EquityVolatilityCurveConfig::Extrapolation::UseInterpolator:
+                        default:
+                            QL_FAIL("unsupported time extrapolation type");
+                    }
+
                     // This can get wrapped in a QuantExt::BlackVolatilityWithATM later on
-                    vol_ = boost::make_shared<BlackVarianceSurface>(asof, cal, dates, strikesReal, dVols, dc);
+                    vol_ = boost::make_shared<BlackVarianceSurface>(asof, cal, dates, strikesReal, dVols, dc, strikeExtrapolation, strikeExtrapolation);
                 }
             }
             vol_->enableExtrapolation();
@@ -241,9 +267,32 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
             vol_->enableExtrapolation();
 
         } else {
+            bool strikeExtrapolation = true; //this is the default and refers to flat extrapolation
+            switch (config->strikeExtrapolation()) {
+                case EquityVolatilityCurveConfig::Extrapolation::None:
+                    LOG("No extrapolation not supported, using flat");
+                case EquityVolatilityCurveConfig::Extrapolation::UseInterpolator:
+                    strikeExtrapolation = false;
+                    break;
+                default:
+                    QL_FAIL("unsupported strike extrapolation type");
+            }
+
+            bool timeFlatExtrapolation = false;
+            switch (config->timeExtrapolation()) {
+                case EquityVolatilityCurveConfig::Extrapolation::None:
+                    LOG("No extrapolation not supported, using linear interpolation");
+                case EquityVolatilityCurveConfig::Extrapolation::UseInterpolator:
+                    break;
+                case EquityVolatilityCurveConfig::Extrapolation::Flat:
+                    timeFlatExtrapolation = true;
+                default:
+                    QL_FAIL("unsupported time extrapolation type");
+            }
+
             // some wild card
-            Calendar cal = NullCalendar(); 
-            vol_ = boost::make_shared<BlackVarianceSurfaceSparse>(asof, cal, sExpiries, sStrikes, sVols, dc);
+            Calendar cal = NullCalendar();
+            vol_ = boost::make_shared<BlackVarianceSurfaceSparse>(asof, cal, sExpiries, sStrikes, sVols, dc, strikeExtrapolation, strikeExtrapolation, timeFlatExtrapolation);
         }
 
     } catch (std::exception& e) {

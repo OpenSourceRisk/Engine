@@ -43,6 +43,7 @@ class EquityVolatilityCurveConfig : public CurveConfig {
 public:
     //! supported volatility structure types
     enum class Dimension { ATM, Smile };
+    enum class Extrapolation {None, UseInterpolator, Flat};
 
     //! \name Constructors/Destructors
     //@{
@@ -72,6 +73,8 @@ public:
     } // Really these should be Reals, but we want to match the type of
       // The equity option market datum (which is string for "ATMF"
     const vector<string>& quotes() override;
+    const Extrapolation& timeExtrapolation() const { return timeExtrapolation_; }
+    const Extrapolation& strikeExtrapolation() const { return strikeExtrapolation_; }
     //@}
 
     //! \name Setters
@@ -81,10 +84,18 @@ public:
     vector<string>& expiries() { return expiries_; }
     DayCounter& dayCounter() { return dayCounter_; }
     vector<string>& strikes() { return strikes_; }
+    Extrapolation& timeExtrapolation() { return timeExtrapolation_; }
+    Extrapolation& strikeExtrapolation() { return strikeExtrapolation_; }
     //@}
 private:
+
+    std::string extrapolationToString(const Extrapolation& type) const;
+    Extrapolation stringToExtrapolation(const std::string& type) const;
+
     string ccy_;
     Dimension dimension_;
+    Extrapolation strikeExtrapolation_;
+    Extrapolation timeExtrapolation_;
     vector<string> expiries_;
     DayCounter dayCounter_;
     vector<string> strikes_;
