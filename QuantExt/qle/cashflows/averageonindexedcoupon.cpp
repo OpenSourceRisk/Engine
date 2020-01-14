@@ -40,7 +40,7 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
     Date valueEnd = endDate;
     if (lookback != 0 * Days) {
         valueStart = overnightIndex->fixingCalendar().advance(valueStart, -lookback);
-        valueEnd = overnightIndex->fixingCalendar().advance(valueStart, -lookback);
+        valueEnd = overnightIndex->fixingCalendar().advance(valueEnd, -lookback);
     }
 
     // Populate the value dates.

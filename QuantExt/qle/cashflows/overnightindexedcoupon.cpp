@@ -169,7 +169,7 @@ namespace QuantExt {
         Date valueEnd = endDate;
         if (lookback != 0 * Days) {
             valueStart = overnightIndex->fixingCalendar().advance(valueStart, -lookback);
-            valueEnd = overnightIndex->fixingCalendar().advance(valueStart, -lookback);
+            valueEnd = overnightIndex->fixingCalendar().advance(valueEnd, -lookback);
         }
 
         // value dates
