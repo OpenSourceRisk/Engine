@@ -31,6 +31,7 @@ marketdata/curvespecparser.cpp
 marketdata/defaultcurve.cpp
 marketdata/equitycurve.cpp
 marketdata/equityvolcurve.cpp
+marketdata/expiry.cpp
 marketdata/fixings.cpp
 marketdata/fxspot.cpp
 marketdata/fxtriangulation.cpp
@@ -158,6 +159,7 @@ marketdata/curvespecparser.hpp
 marketdata/defaultcurve.hpp
 marketdata/equitycurve.hpp
 marketdata/equityvolcurve.hpp
+marketdata/expiry.hpp
 marketdata/fixings.hpp
 marketdata/fxspot.hpp
 marketdata/fxtriangulation.hpp

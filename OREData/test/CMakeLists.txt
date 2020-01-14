@@ -22,6 +22,7 @@ digitalcms.cpp
 equitymarketdata.cpp
 equityswap.cpp
 equitytrades.cpp
+expiry.cpp
 fixings.cpp
 fxoption.cpp
 fxswap.cpp

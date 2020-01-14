@@ -40,7 +40,8 @@ OREDATA_TESTS = \
     zerocouponswap.cpp \
 	mxnircurves.cpp \
 	conventionsbasedfutureexpiry.cpp \
-	strike.cpp
+	strike.cpp \
+	expiry.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
