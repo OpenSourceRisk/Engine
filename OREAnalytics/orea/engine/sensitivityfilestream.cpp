@@ -107,7 +107,7 @@ SensitivityRecord SensitivityFileStream::processRecord(const vector<string>& ent
     sr.currency = entries[6];
     sr.baseNpv = parseReal(entries[7]);
     sr.delta = parseReal(entries[8]);
-    sr.gamma = parseReal(entries[9]);
+    tryParseReal(entries[9], sr.gamma); // might be #N/A, if not computed
 
     return sr;
 }

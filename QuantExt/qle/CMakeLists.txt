@@ -279,6 +279,7 @@ instruments/rebatedexercise.hpp
 instruments/subperiodsswap.hpp
 instruments/tenorbasisswap.hpp
 interpolators/optioninterpolator2d.hpp
+math/covariancesalvage.hpp
 math/deltagammavar.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp

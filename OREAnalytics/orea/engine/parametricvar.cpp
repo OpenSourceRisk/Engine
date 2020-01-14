@@ -142,12 +142,11 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
     }
 
     // make covariance matrix positive semi-definite
-    Matrix omegaFinal;
+    boost::shared_ptr<QuantExt::CovarianceSalvage> covarianceSalvage;
     LOG("Covariance matrix has dimension " << sensiKeys.size() << " x " << sensiKeys.size());
     if (salvageCovarianceMatrix_) {
         LOG("Make covariance matrix positive semi-definite using spectral method");
-        QuantLib::Matrix covSqrt = pseudoSqrt(omega, SalvagingAlgorithm::Spectral);
-        omegaFinal = covSqrt * transpose(covSqrt);
+        covarianceSalvage = boost::make_shared<QuantExt::SpectralCovarianceSalvage>();
     } else {
         LOG("Covariance matrix is no salvaged, check for positive semi-definiteness");
         SymmetricSchurDecomposition ssd(omega);
@@ -156,7 +155,7 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
                    "ParametricVar: input covariance matrix is not positive semi-definite, smallest eigenvalue is "
                        << evMin);
         LOG("Smallest eigenvalue is " << evMin);
-        omegaFinal = omega;
+        covarianceSalvage = boost::make_shared<QuantExt::NoCovarianceSalvage>();
     }
     LOG("Done.");
 
@@ -218,8 +217,9 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
                 bool zeroSensis = close_enough(QuantExt::detail::absMax(deltaFiltered), 0.0) &&
                                   close_enough(QuantExt::detail::absMax(gammaFiltered), 0.0);
                 // compute var and write to report
-                std::vector<Real> var = zeroSensis ? std::vector<Real>(p_.size(), 0.0)
-                                                   : computeVar(omegaFinal, deltaFiltered, gammaFiltered, p_);
+                std::vector<Real> var = zeroSensis
+                                            ? std::vector<Real>(p_.size(), 0.0)
+                                            : computeVar(omega, deltaFiltered, gammaFiltered, p_, *covarianceSalvage);
                 if (!close_enough(QuantExt::detail::absMax(var), 0.0)) {
                     report.next();
                     report.add(portfolioName);
@@ -237,17 +237,18 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
 } // calculate
 
 std::vector<Real> ParametricVarCalculator::computeVar(const Matrix& omega, const Array& delta, const Matrix& gamma,
-                                                      const std::vector<Real>& p) {
+                                                      const std::vector<Real>& p,
+                                                      const QuantExt::CovarianceSalvage& covarianceSalvage) {
     if (method_ == "Delta") {
         std::vector<Real> res(p.size());
         for (Size i = 0; i < p.size(); ++i) {
-            res[i] = QuantExt::deltaVar(omega, delta, p[i]);
+            res[i] = QuantExt::deltaVar(omega, delta, p[i], covarianceSalvage);
         }
         return res;
     } else if (method_ == "DeltaGammaNormal") {
         std::vector<Real> res(p.size());
         for (Size i = 0; i < p.size(); ++i) {
-            res[i] = QuantExt::deltaGammaVarNormal(omega, delta, gamma, p[i]);
+            res[i] = QuantExt::deltaGammaVarNormal(omega, delta, gamma, p[i], covarianceSalvage);
         }
         return res;
     } else if (method_ == "MonteCarlo") {
@@ -255,7 +256,7 @@ std::vector<Real> ParametricVarCalculator::computeVar(const Matrix& omega, const
                    "ParametricVarCalculator::computeVar(): method MonteCarlo requires mcSamples");
         QL_REQUIRE(mcSeed_ != Null<Size>(),
                    "ParametricVarCalculator::computeVar(): method MonteCarlo requires mcSamples");
-        return QuantExt::deltaGammaVarMc<PseudoRandom>(omega, delta, gamma, p, mcSamples_, mcSeed_);
+        return QuantExt::deltaGammaVarMc<PseudoRandom>(omega, delta, gamma, p, mcSamples_, mcSeed_, covarianceSalvage);
     } else {
         QL_FAIL("ParametricVarCalculator::computeVar(): method " << method_ << " not known.");
     }

@@ -187,13 +187,5 @@ inline void TodaysMarketParameters::addConfiguration(const string& id, const Mar
     configurations_[id] = configuration;
 }
 
-inline void TodaysMarketParameters::addMarketObject(const MarketObject o, const string& id,
-                                                    const map<string, string>& assignments) {
-    marketObjects_[o][id] = assignments;
-    for (auto s : assignments)
-        DLOG("TodaysMarketParameters, add market objects of type " << o << ": " << id << " " << s.first << " "
-                                                                   << s.second);
-}
-
 } // namespace data
 } // namespace ore

@@ -86,7 +86,7 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData(){};
+    SensitivityScenarioData() : computeGamma_(true){};
 
     //! \name Inspectors
     //@{
@@ -125,6 +125,7 @@ public:
     const map<string, SpotShiftData>& securityShiftData() const { return securityShiftData_; }
 
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
+    const bool computeGamma() const { return computeGamma_; }
 
     //! Give back the shift data for the given risk factor type, \p keyType, with the given \p name
     const ShiftData& shiftData(const ore::analytics::RiskFactorKey::KeyType& keyType, const std::string& name) const;
@@ -159,6 +160,7 @@ public:
     map<string, SpotShiftData>& securityShiftData() { return securityShiftData_; }
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
+    bool& computeGamma() { return computeGamma_; }
 
     //@}
 
@@ -216,6 +218,7 @@ protected:
     map<string, SpotShiftData> securityShiftData_; // key: security name
 
     vector<pair<string, string>> crossGammaFilter_;
+    bool computeGamma_;
 };
 } // namespace analytics
 } // namespace ore
