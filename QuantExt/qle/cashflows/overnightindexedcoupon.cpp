@@ -105,6 +105,7 @@ namespace QuantExt {
 
                 // forward part using telescopic property in order
                 // to avoid the evaluation of multiple forward fixings
+                const vector<Date>& dates = coupon_->valueDates();
                 if (i<n) {
                     Handle<YieldTermStructure> curve =
                         index->forwardingTermStructure();
@@ -112,22 +113,26 @@ namespace QuantExt {
                                "null term structure set to this instance of "<<
                                index->name());
 
-                    const vector<Date>& dates = coupon_->valueDates();
                     DiscountFactor startDiscount = curve->discount(dates[i]);
                     DiscountFactor endDiscount = curve->discount(dates[n]);
 
                     compoundFactor *= startDiscount/endDiscount;
+
                     if(coupon_->includeSpread()) {
                         // this is an approximation, see "Ester / Daily Spread Curve Setup in ORE":
                         // set tau to an average value
-                        Real tau = coupon_->dayCounter().yearFraction(dates[i], dates[n]) / (dates[n] - dates[i]);
+                        Real tau =
+                            coupon_->dayCounter().yearFraction(dates[i], dates.back()) / (dates.back() - dates[i]);
                         // now use formula (4) from the paper
                         compoundFactor *=
-                            std::pow(1.0 + tau * coupon_->spread(), static_cast<int>(dates[n] - dates[i]));
+                            std::pow(1.0 + tau * coupon_->spread(), static_cast<int>(dates.back() - dates[i]));
                     }
                 }
 
-                Rate rate = (compoundFactor - 1.0) / coupon_->accrualPeriod();
+                Rate tau = coupon_->lookback() == 0 * Days
+                               ? coupon_->accrualPeriod()
+                               : coupon_->dayCounter().yearFraction(dates.front(), dates.back());
+                Rate rate = (compoundFactor - 1.0) / tau;
                 Rate result = coupon_->gearing() * rate;
                 if(!coupon_->includeSpread())
                     result += coupon_->spread();
@@ -168,8 +173,9 @@ namespace QuantExt {
         Date valueStart = startDate;
         Date valueEnd = endDate;
         if (lookback != 0 * Days) {
-            valueStart = overnightIndex->fixingCalendar().advance(valueStart, -lookback);
-            valueEnd = overnightIndex->fixingCalendar().advance(valueEnd, -lookback);
+            BusinessDayConvention bdc = lookback.length() > 0 ? Preceding : Following;
+            valueStart = overnightIndex->fixingCalendar().advance(valueStart, -lookback, bdc);
+            valueEnd = overnightIndex->fixingCalendar().advance(valueEnd, -lookback, bdc);
         }
 
         // value dates

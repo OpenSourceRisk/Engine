@@ -63,6 +63,8 @@ public:
     const std::vector<Date>& valueDates() const { return valueDates_; }
     //! rate cutoff associated with the coupon
     Natural rateCutoff() const { return rateCutoff_; }
+    //! lookback period
+    const Period& lookback() const { return lookback_; }
     //@}
     //! \name FloatingRateCoupon interface
     //@{

@@ -92,6 +92,8 @@ namespace QuantExt {
         const std::vector<Date>& valueDates() const { return valueDates_; }
         //! include spread in compounding?
         bool includeSpread() const { return includeSpread_; }
+        //! lookback period
+        const Period& lookback() const { return lookback_; }
         //@}
         //! \name FloatingRateCoupon interface
         //@{

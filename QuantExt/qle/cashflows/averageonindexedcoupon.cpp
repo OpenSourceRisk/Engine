@@ -39,8 +39,9 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
     Date valueStart = startDate;
     Date valueEnd = endDate;
     if (lookback != 0 * Days) {
-        valueStart = overnightIndex->fixingCalendar().advance(valueStart, -lookback);
-        valueEnd = overnightIndex->fixingCalendar().advance(valueEnd, -lookback);
+        BusinessDayConvention bdc = lookback.length() > 0 ? Preceding : Following;
+        valueStart = overnightIndex->fixingCalendar().advance(valueStart, -lookback, bdc);
+        valueEnd = overnightIndex->fixingCalendar().advance(valueEnd, -lookback, bdc);
     }
 
     // Populate the value dates.
@@ -189,7 +190,7 @@ AverageONLeg::operator Leg() const {
     for (Size i = 0; i < numPeriods; ++i) {
         startDate = schedule_.date(i);
         endDate = schedule_.date(i + 1);
-        paymentDate = paymentCalendar_.advance(endDate, paymentLag_, Days, paymentAdjustment_);
+        paymentDate = calendar.advance(endDate, paymentLag_, Days, paymentAdjustment_);
 
         boost::shared_ptr<AverageONIndexedCoupon> cashflow(new AverageONIndexedCoupon(
             paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate, overnightIndex_,
