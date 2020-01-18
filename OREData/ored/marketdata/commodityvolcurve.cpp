@@ -368,20 +368,34 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     QL_REQUIRE(quotesAdded > 0, "No quotes loaded for" << vc.curveID());
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
-    // BlackVarianceSurfaceSparse time extrapolation is hard-coded to the interpolator currently.
     bool flatStrikeExtrap = true;
+    bool flatTimeExtrap = true;
     if (vssc.extrapolation()) {
+        
         auto strikeExtrapType = parseExtrapolation(vssc.strikeExtrapolation());
         if (strikeExtrapType == Extrapolation::UseInterpolator) {
             DLOG("Strike extrapolation switched to using interpolator.");
             flatStrikeExtrap = false;
         } else if (strikeExtrapType == Extrapolation::None) {
             DLOG("Strike extrapolation cannot be turned off on its own so defaulting to flat.");
+        } else if (strikeExtrapType == Extrapolation::Flat) {
+            DLOG("Strike extrapolation has been set to flat.");
+        } else {
+            DLOG("Strike extrapolation " << strikeExtrapType << " not expected so default to flat.");
         }
+
         auto timeExtrapType = parseExtrapolation(vssc.timeExtrapolation());
-        if (timeExtrapType != Extrapolation::UseInterpolator) {
-            DLOG("BlackVarianceSurfaceSparse only supports extrapolation using interpolator in the time direction");
+        if (timeExtrapType == Extrapolation::UseInterpolator) {
+            DLOG("Time extrapolation switched to using interpolator.");
+            flatTimeExtrap = false;
+        } else if (timeExtrapType == Extrapolation::None) {
+            DLOG("Time extrapolation cannot be turned off on its own so defaulting to flat.");
+        } else if (timeExtrapType == Extrapolation::Flat) {
+            DLOG("Time extrapolation has been set to flat.");
+        } else {
+            DLOG("Time extrapolation " << timeExtrapType << " not expected so default to flat.");
         }
+
     } else {
         DLOG("Extrapolation is turned off for the whole surface so the time and" <<
             " strike extrapolation settings are ignored");
@@ -389,7 +403,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
     DLOG("Creating the BlackVarianceSurfaceSparse object");
     volatility_ = boost::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, expiries, strikes,
-        vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap);
+        vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap);
 
     DLOG("Setting BlackVarianceSurfaceSparse extrapolation to " << to_string(vssc.extrapolation()));
     volatility_->enableExtrapolation(vssc.extrapolation());
@@ -488,13 +502,19 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
     // BlackVarianceSurface time extrapolation is hard-coded to constant in volatility.
     BlackVarianceSurface::Extrapolation strikeExtrap = BlackVarianceSurface::ConstantExtrapolation;
     if (vssc.extrapolation()) {
+        
         auto strikeExtrapType = parseExtrapolation(vssc.strikeExtrapolation());
         if (strikeExtrapType == Extrapolation::UseInterpolator) {
             DLOG("Strike extrapolation switched to using interpolator.");
             strikeExtrap = BlackVarianceSurface::InterpolatorDefaultExtrapolation;
         } else if (strikeExtrapType == Extrapolation::None) {
             DLOG("Strike extrapolation cannot be turned off on its own so defaulting to flat.");
+        } else if (strikeExtrapType == Extrapolation::Flat) {
+            DLOG("Strike extrapolation has been set to flat.");
+        } else {
+            DLOG("Strike extrapolation " << strikeExtrapType << " not expected so default to flat.");
         }
+
         auto timeExtrapType = parseExtrapolation(vssc.timeExtrapolation());
         if (timeExtrapType != Extrapolation::Flat) {
             DLOG("BlackVarianceSurface only supports flat volatility extrapolation in the time direction");
