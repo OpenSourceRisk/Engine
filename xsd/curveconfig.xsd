@@ -132,6 +132,8 @@
       <xs:element type="xs:string" name="Expiries"/>
       <xs:element type="xs:string" name="Strikes" minOccurs="0" />
       <xs:element type="xs:string" name="DayCounter" minOccurs="0" />
+      <xs:element type="extrapolationType" name="TimeExtrapolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="extrapolationType" name="StrikeExtrapolation" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

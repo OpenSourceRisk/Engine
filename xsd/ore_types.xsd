@@ -426,8 +426,8 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Linear"/>
       <xs:enumeration value="Flat"/>
-      <xs:enumeration value="None"/>
       <xs:enumeration value="UseInterpolator"/>
+      <xs:enumeration value="None"/>
     </xs:restriction>
   </xs:simpleType>
 
