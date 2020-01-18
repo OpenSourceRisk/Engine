@@ -24,8 +24,10 @@
 #pragma once
 
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
+#include <qle/time/futureexpirycalculator.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
 namespace ore {
@@ -42,8 +44,12 @@ public:
     CommodityVolCurve() {}
 
     //! Detailed constructor
-    CommodityVolCurve(const QuantLib::Date& asof, const CommodityVolatilityCurveSpec& spec, const Loader& loader,
-                      const CurveConfigurations& curveConfigs);
+    CommodityVolCurve(
+        const QuantLib::Date& asof,
+        const CommodityVolatilityCurveSpec& spec,
+        const Loader& loader,
+        const CurveConfigurations& curveConfigs,
+        const Conventions& conventions);
     //@}
 
     //! \name Inspectors
@@ -53,15 +59,49 @@ public:
     //@}
 
 private:
-    void buildConstantVolatility(const QuantLib::Date& asof, CommodityVolatilityCurveConfig& config,
-                                 const Loader& loader);
-    void buildVolatilityCurve(const QuantLib::Date& asof, CommodityVolatilityCurveConfig& config, const Loader& loader);
-    void buildVolatilitySurface(const QuantLib::Date& asof, CommodityVolatilityCurveConfig& config,
-                                const Loader& loader);
-
     CommodityVolatilityCurveSpec spec_;
     boost::shared_ptr<QuantLib::BlackVolTermStructure> volatility_;
+    boost::shared_ptr<QuantExt::FutureExpiryCalculator> expCalc_;
+    QuantLib::Calendar calendar_;
+    QuantLib::DayCounter dayCounter_;
+
+    //! Build a volatility structure from a single constant volatlity quote
+    void buildVolatility(
+        const QuantLib::Date& asof,
+        const CommodityVolatilityConfig& vc,
+        const ConstantVolatilityConfig& cvc,
+        const Loader& loader);
+
+    //! Build a volatility curve from a 1-D curve of volatlity quotes
+    void buildVolatility(
+        const QuantLib::Date& asof,
+        const CommodityVolatilityConfig& vc,
+        const VolatilityCurveConfig& vcc,
+        const Loader& loader);
+
+    //! Build a volatility surface from a collection of expiry and absolute strike pairs.
+    void buildVolatility(
+        const QuantLib::Date& asof,
+        CommodityVolatilityConfig& vc,
+        const VolatilityStrikeSurfaceConfig& vssc,
+        const Loader& loader);
+
+    /*! Build a volatility surface from a collection of expiry and absolute strike pairs where the strikes and 
+        expiries are both explicitly configured i.e. where wild cards are not used for either the strikes or 
+        the expiries.
+    */
+    void buildVolatilityExplicit(
+        const QuantLib::Date& asof,
+        CommodityVolatilityConfig& vc,
+        const VolatilityStrikeSurfaceConfig& vssc,
+        const Loader& loader,
+        const std::vector<QuantLib::Real>& configuredStrikes,
+        const std::vector<boost::shared_ptr<Expiry>>& configuredExpiries);
+
+    //! Get an explicit expiry date from a commodity option quote's Expiry
+    QuantLib::Date getExpiry(const QuantLib::Date& asof, const boost::shared_ptr<Expiry>& expiry,
+        const std::string& name, QuantLib::Natural rollDays) const;
 };
 
-} // namespace data
-} // namespace ore
+}
+}

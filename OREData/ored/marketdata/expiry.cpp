@@ -26,6 +26,10 @@ using std::string;
 namespace ore {
 namespace data {
 
+bool operator==(const Expiry& lhs, const Expiry& rhs) {
+    return lhs.equal_to(rhs);
+}
+
 ExpiryDate::ExpiryDate() {}
 
 ExpiryDate::ExpiryDate(const Date& expiryDate) : expiryDate_(expiryDate) {}
@@ -40,6 +44,14 @@ void ExpiryDate::fromString(const string& strExpiryDate) {
 
 string ExpiryDate::toString() const {
     return to_string(expiryDate_);
+}
+
+bool ExpiryDate::equal_to(const Expiry& other) const {
+    if (const ExpiryDate* p = dynamic_cast<const ExpiryDate*>(&other)) {
+        return expiryDate_ == p->expiryDate();
+    } else {
+        return false;
+    }
 }
 
 ExpiryPeriod::ExpiryPeriod() {}
@@ -58,6 +70,14 @@ string ExpiryPeriod::toString() const {
     return to_string(expiryPeriod_);
 }
 
+bool ExpiryPeriod::equal_to(const Expiry& other) const {
+    if (const ExpiryPeriod* p = dynamic_cast<const ExpiryPeriod*>(&other)) {
+        return expiryPeriod_ == p->expiryPeriod();
+    } else {
+        return false;
+    }
+}
+
 FutureContinuationExpiry::FutureContinuationExpiry(QuantLib::Natural expiryIndex) : expiryIndex_(expiryIndex) {}
 
 QuantLib::Natural FutureContinuationExpiry::expiryIndex() const {
@@ -72,6 +92,14 @@ void FutureContinuationExpiry::fromString(const string& strIndex) {
 
 string FutureContinuationExpiry::toString() const {
     return "c" + to_string(expiryIndex_);
+}
+
+bool FutureContinuationExpiry::equal_to(const Expiry& other) const {
+    if (const FutureContinuationExpiry* p = dynamic_cast<const FutureContinuationExpiry*>(&other)) {
+        return expiryIndex_ == p->expiryIndex();
+    } else {
+        return false;
+    }
 }
 
 boost::shared_ptr<Expiry> parseExpiry(const string& strExpiry) {

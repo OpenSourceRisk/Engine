@@ -3164,30 +3164,33 @@
       <CurveId>GOLD_USD_VOLS</CurveId>
       <CurveDescription/>
       <Currency>USD</Currency>
-      <Type>Curve</Type>
-      <Quotes>
-        <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF</Quote>
-        <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATMF</Quote>
-        <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/10Y/ATMF</Quote>
-      </Quotes>
+      <Curve>
+        <Quotes>
+          <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATM/AtmFwd</Quote>
+          <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATM/AtmFwd</Quote>
+          <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/10Y/ATM/AtmFwd</Quote>
+        </Quotes>
+        <Interpolation>Linear</Interpolation>
+        <Extrapolation>Flat</Extrapolation>
+      </Curve>
       <DayCounter>A365</DayCounter>
       <Calendar>USD</Calendar>
-      <Extrapolation>true</Extrapolation>
     </CommodityVolatility>
     <CommodityVolatility>
       <CurveId>WTI_USD_VOLS</CurveId>
       <CurveDescription/>
       <Currency>USD</Currency>
-      <Type>Surface</Type>
-      <Surface>
-        <Expiries>1Y,5Y,10Y</Expiries>
+      <StrikeSurface>
         <Strikes>30.0,35.0,40.0,45.0,50.0,55.0,60.0</Strikes>
-      </Surface>
+        <Expiries>1Y,5Y,10Y</Expiries>
+        <TimeInterpolation>Linear</TimeInterpolation>
+        <StrikeInterpolation>Linear</StrikeInterpolation>
+        <Extrapolation>true</Extrapolation>
+        <TimeExtrapolation>Flat</TimeExtrapolation>
+        <StrikeExtrapolation>Flat</StrikeExtrapolation>
+      </StrikeSurface>
       <DayCounter>A365</DayCounter>
       <Calendar>USD</Calendar>
-      <Extrapolation>true</Extrapolation>
-      <LowerStrikeConstantExtrapolation>false</LowerStrikeConstantExtrapolation>
-      <UpperStrikeConstantExtrapolation>false</UpperStrikeConstantExtrapolation>
     </CommodityVolatility>
   </CommodityVolatilities>
   <Correlations>

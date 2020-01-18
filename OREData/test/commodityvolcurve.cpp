@@ -154,13 +154,16 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeConstant) {
     // As of date
     Date asof(5, Feb, 2016);
 
+    // Constant volatility config
+    auto cvc = boost::make_shared<ConstantVolatilityConfig>("COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATM/AtmFwd");
+
     // Volatility configuration with a single quote
-    boost::shared_ptr<CommodityVolatilityCurveConfig> curveConfig = boost::make_shared<CommodityVolatilityCurveConfig>(
-        "GOLD_USD_VOLS", "", "USD", "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATM/AtmFwd", "A365", "NullCalendar");
+    boost::shared_ptr<CommodityVolatilityConfig> curveConfig = boost::make_shared<CommodityVolatilityConfig>(
+        "GOLD_USD_VOLS", "", "USD", cvc, "A365", "NullCalendar");
 
     // Curve configurations
     CurveConfigurations curveConfigs;
-    curveConfigs.commodityVolatilityCurveConfig("GOLD_USD_VOLS") = curveConfig;
+    curveConfigs.commodityVolatilityConfig("GOLD_USD_VOLS") = curveConfig;
 
     // Commodity curve spec
     CommodityVolatilityCurveSpec curveSpec("USD", "GOLD_USD_VOLS");
@@ -168,9 +171,13 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeConstant) {
     // Market data loader
     MockLoader loader;
 
+    // Empty Conventions
+    Conventions conventions;
+
     // Check commodity volatility construction works
     boost::shared_ptr<CommodityVolCurve> curve;
-    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs));
+    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityVolCurve>(
+        asof, curveSpec, loader, curveConfigs, conventions));
 
     // Check volatilities are all equal to the configured volatility regardless of strike and expiry
     Real configuredVolatility = 0.10;
@@ -192,17 +199,23 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeCurve) {
     // As of date
     Date asof(5, Feb, 2016);
 
-    // Volatility configuration with time dependent volatilities
-    bool extrapolate = true;
-    vector<string> quotes{"COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATM/AtmFwd",
-                          "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATM/AtmFwd",
-                          "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATM/AtmFwd"};
-    boost::shared_ptr<CommodityVolatilityCurveConfig> curveConfig = boost::make_shared<CommodityVolatilityCurveConfig>(
-        "GOLD_USD_VOLS", "", "USD", quotes, "A365", "NullCalendar", extrapolate);
+    // Quotes for the volatility curve
+    vector<string> quotes{
+        "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATM/AtmFwd",
+        "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATM/AtmFwd",
+        "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATM/AtmFwd"
+    };
+
+    // Volatility curve config with linear interpolation and flat extrapolation.
+    auto vcc = boost::make_shared<VolatilityCurveConfig>(quotes, "Linear", "Flat");
+
+    // Commodity volatility configuration with time dependent volatilities
+    boost::shared_ptr<CommodityVolatilityConfig> curveConfig = boost::make_shared<CommodityVolatilityConfig>(
+        "GOLD_USD_VOLS", "", "USD", vcc, "A365", "NullCalendar");
 
     // Curve configurations
     CurveConfigurations curveConfigs;
-    curveConfigs.commodityVolatilityCurveConfig("GOLD_USD_VOLS") = curveConfig;
+    curveConfigs.commodityVolatilityConfig("GOLD_USD_VOLS") = curveConfig;
 
     // Commodity curve spec
     CommodityVolatilityCurveSpec curveSpec("USD", "GOLD_USD_VOLS");
@@ -210,9 +223,13 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeCurve) {
     // Market data loader
     MockLoader loader;
 
+    // Empty Conventions
+    Conventions conventions;
+
     // Check commodity volatility construction works
     boost::shared_ptr<CommodityVolCurve> curve;
-    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs));
+    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityVolCurve>(
+        asof, curveSpec, loader, curveConfigs, conventions));
 
     // Check time depending volatilities are as expected
     boost::shared_ptr<BlackVolTermStructure> volatility = curve->volatility();
@@ -254,16 +271,20 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeSurface) {
     // As of date
     Date asof(5, Feb, 2016);
 
-    // Volatility configuration with time dependent volatilities
-    bool extrapolate = true;
-    vector<string> expiries{"1Y", "2Y", "5Y"};
-    vector<string> strikes{"1150", "1190"};
-    boost::shared_ptr<CommodityVolatilityCurveConfig> curveConfig = boost::make_shared<CommodityVolatilityCurveConfig>(
-        "GOLD_USD_VOLS", "", "USD", expiries, strikes, "A365", "NullCalendar", extrapolate);
+    // Volatility configuration with expiry period vs. absolute strike matrix. Bilinear interpolation and flat 
+    // extrapolation.
+    vector<string> strikes{ "1150", "1190" };
+    vector<string> expiries{ "1Y", "2Y", "5Y" };
+    auto vssc = boost::make_shared<VolatilityStrikeSurfaceConfig>(
+        strikes, expiries, "Linear", "Linear", true, "Flat", "Flat");
+
+    // Commodity volatility configuration
+    boost::shared_ptr<CommodityVolatilityConfig> curveConfig = boost::make_shared<CommodityVolatilityConfig>(
+        "GOLD_USD_VOLS", "", "USD", vssc, "A365", "NullCalendar");
 
     // Curve configurations
     CurveConfigurations curveConfigs;
-    curveConfigs.commodityVolatilityCurveConfig("GOLD_USD_VOLS") = curveConfig;
+    curveConfigs.commodityVolatilityConfig("GOLD_USD_VOLS") = curveConfig;
 
     // Commodity curve spec
     CommodityVolatilityCurveSpec curveSpec("USD", "GOLD_USD_VOLS");
@@ -271,9 +292,13 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeSurface) {
     // Market data loader
     MockLoader loader;
 
+    // Empty Conventions
+    Conventions conventions;
+
     // Check commodity volatility construction works
     boost::shared_ptr<CommodityVolCurve> curve;
-    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs));
+    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityVolCurve>(
+        asof, curveSpec, loader, curveConfigs, conventions));
 
     // Check time and strike depending volatilities are as expected
     boost::shared_ptr<BlackVolTermStructure> volatility = curve->volatility();

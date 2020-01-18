@@ -42,6 +42,13 @@ public:
 
     //! Write the Expiry object to string
     virtual std::string toString() const = 0;
+
+    //! Will be used for Expiry comparison.
+    friend bool operator==(const Expiry& lhs, const Expiry& rhs);
+
+protected:
+    //! Override in derived classes to compare specific expiries.
+    virtual bool equal_to(const Expiry& other) const = 0;
 };
 
 /*! Expiry consisting of an explicit expiry date
@@ -66,6 +73,9 @@ public:
         the expiry date.
     */
     std::string toString() const override;
+
+protected:
+    bool equal_to(const Expiry& other) const override;
 
 private:
     QuantLib::Date expiryDate_;
@@ -94,6 +104,9 @@ public:
     */
     std::string toString() const override;
 
+protected:
+    bool equal_to(const Expiry& other) const override;
+
 private:
     QuantLib::Period expiryPeriod_;
 };
@@ -117,6 +130,9 @@ public:
         the future continuation index i.e. a string of the form \c c<Index>.
     */
     std::string toString() const override;
+
+protected:
+    bool equal_to(const Expiry& other) const override;
 
 private:
     QuantLib::Natural expiryIndex_;
