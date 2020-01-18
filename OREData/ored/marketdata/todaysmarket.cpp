@@ -785,7 +785,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
 
                         boost::shared_ptr<CommodityVolCurve> commodityVolCurve =
                             boost::make_shared<CommodityVolCurve>(asof, *commodityVolSpec, loader,
-                                curveConfigs, conventions);
+                                curveConfigs, conventions, requiredYieldCurves, requiredCommodityCurves);
                         itr = requiredCommodityVolCurves.insert(make_pair(commodityVolSpec->name(), commodityVolCurve))
                                   .first;
                     }

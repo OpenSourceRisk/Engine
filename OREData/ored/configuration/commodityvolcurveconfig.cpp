@@ -36,14 +36,18 @@ CommodityVolatilityConfig::CommodityVolatilityConfig(
     const string& dayCounter,
     const string& calendar,
     const std::string& futureConventionsId,
-    QuantLib::Natural optionExpiryRollDays)
+    QuantLib::Natural optionExpiryRollDays,
+    const std::string& priceCurveId,
+    const std::string& yieldCurveId)
     : CurveConfig(curveId, curveDescription),
       currency_(currency),
       volatilityConfig_(volatilityConfig),
       dayCounter_(dayCounter),
       calendar_(calendar),
       futureConventionsId_(futureConventionsId),
-      optionExpiryRollDays_(optionExpiryRollDays) {
+      optionExpiryRollDays_(optionExpiryRollDays),
+      priceCurveId_(priceCurveId),
+      yieldCurveId_(yieldCurveId) {
     populateQuotes();
 }
 
@@ -60,6 +64,10 @@ const string& CommodityVolatilityConfig::calendar() const { return calendar_; }
 const string& CommodityVolatilityConfig::futureConventionsId() const { return futureConventionsId_; }
 
 Natural CommodityVolatilityConfig::optionExpiryRollDays() const { return optionExpiryRollDays_; }
+
+const string& CommodityVolatilityConfig::priceCurveId() const { return priceCurveId_; }
+
+const string& CommodityVolatilityConfig::yieldCurveId() const { return yieldCurveId_; }
 
 void CommodityVolatilityConfig::fromXML(XMLNode* node) {
 
@@ -100,6 +108,9 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
     if (n = XMLUtils::getChildNode(node, "OptionExpiryRollDays"))
         optionExpiryRollDays_ = parseInteger(XMLUtils::getNodeValue(n));
 
+    priceCurveId_ = XMLUtils::getChildValue(node, "PriceCurveId", false);
+    yieldCurveId_ = XMLUtils::getChildValue(node, "YieldCurveId", false);
+
     populateQuotes();
 }
 
@@ -119,7 +130,11 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
     if (!futureConventionsId_.empty())
         XMLUtils::addChild(doc, node, "FutureConventions", futureConventionsId_);
     XMLUtils::addChild(doc, node, "OptionExpiryRollDays", static_cast<int>(optionExpiryRollDays_));
-
+    if (!priceCurveId_.empty())
+        XMLUtils::addChild(doc, node, "PriceCurveId", futureConventionsId_);
+    if (!yieldCurveId_.empty())
+        XMLUtils::addChild(doc, node, "YieldCurveId", futureConventionsId_);
+    
     return node;
 }
 

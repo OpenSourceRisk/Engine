@@ -194,7 +194,8 @@ public:
     VolatilityDeltaSurfaceConfig(
         const std::string& deltaType,
         const std::string& atmType,
-        const std::vector<std::string>& deltas,
+        const std::vector<std::string>& putDeltas,
+        const std::vector<std::string>& callDeltas,
         const std::vector<std::string>& expiries,
         const std::string& timeInterpolation,
         const std::string& strikeInterpolation,
@@ -207,7 +208,8 @@ public:
     //@{
     const std::string& deltaType() const;
     const std::string& atmType() const;
-    const std::vector<std::string>& deltas() const;
+    const std::vector<std::string>& putDeltas() const;
+    const std::vector<std::string>& callDeltas() const;
     const std::string& atmDeltaType() const;
     //@}
 
@@ -225,7 +227,8 @@ public:
 private:
     std::string deltaType_;
     std::string atmType_;
-    std::vector<std::string> deltas_;
+    std::vector<std::string> putDeltas_;
+    std::vector<std::string> callDeltas_;
     std::string atmDeltaType_;
 };
 

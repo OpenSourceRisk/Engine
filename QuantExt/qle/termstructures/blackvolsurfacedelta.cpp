@@ -64,11 +64,17 @@ BlackVolatilitySurfaceDelta::BlackVolatilitySurfaceDelta(
     bool hasAtm, const Matrix& blackVolMatrix, const DayCounter& dayCounter, const Calendar& cal,
     const Handle<Quote>& spot, const Handle<YieldTermStructure>& domesticTS,
     const Handle<YieldTermStructure>& foreignTS, DeltaVolQuote::DeltaType dt,
-    DeltaVolQuote::AtmType at, InterpolatedSmileSection::InterpolationMethod im, bool flatExtrapolation)
+    DeltaVolQuote::AtmType at,
+    boost::optional<DeltaVolQuote::DeltaType> atmDeltaType,
+    InterpolatedSmileSection::InterpolationMethod im, bool flatExtrapolation)
     : BlackVolatilityTermStructure(referenceDate, cal, Following, dayCounter),
       dates_(dates), times_(dates.size(), 0), putDeltas_(putDeltas), callDeltas_(callDeltas), hasAtm_(hasAtm),
-      spot_(spot), domesticTS_(domesticTS), foreignTS_(foreignTS), dt_(dt), at_(at), interpolationMethod_(im),
-      flatExtrapolation_(flatExtrapolation) {
+      spot_(spot), domesticTS_(domesticTS), foreignTS_(foreignTS), dt_(dt), at_(at),
+      atmDeltaType_(atmDeltaType), interpolationMethod_(im), flatExtrapolation_(flatExtrapolation) {
+
+    // If ATM delta type is not given, set it to dt
+    if (!atmDeltaType_)
+        atmDeltaType_ = dt_;
 
     QL_REQUIRE(dates.size() > 1, "at least 1 date required");
     // this has already been done for dates
@@ -131,7 +137,7 @@ boost::shared_ptr<FxSmileSection> BlackVolatilitySurfaceDelta::blackVolSmile(Tim
         i++;
     }
     if (hasAtm_) {
-        BlackDeltaCalculator bdc(Option::Put, dt_, spot, dDiscount, fDiscount, vols[i]);
+        BlackDeltaCalculator bdc(Option::Put, *atmDeltaType_, spot, dDiscount, fDiscount, vols[i]);
         tmp.push_back(make_pair(vols[i], bdc.atmStrike(at_)));
         i++;
     }

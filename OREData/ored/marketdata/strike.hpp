@@ -44,6 +44,13 @@ public:
 
     //! Write the Strike object to string
     virtual std::string toString() const = 0;
+
+    //! Will be used for Strike comparison.
+    friend bool operator==(const BaseStrike& lhs, const BaseStrike& rhs);
+
+protected:
+    //! Override in derived classes to compare specific Strikes.
+    virtual bool equal_to(const BaseStrike& other) const = 0;
 };
 
 /*! Strike implementation where the strike is described by a single number that represents the absolute strike level.
@@ -68,6 +75,9 @@ public:
         the absolute strike number.
     */
     std::string toString() const override;
+
+protected:
+    bool equal_to(const BaseStrike& other) const override;
 
 private:
     QuantLib::Real strike_;
@@ -108,6 +118,9 @@ public:
         `DEL / Spot|Fwd|PaSpot|PaFwd / Call|Put / DELTA_VALUE`.
     */
     std::string toString() const override;
+
+protected:
+    bool equal_to(const BaseStrike& other) const override;
 
 private:
     QuantLib::DeltaVolQuote::DeltaType deltaType_;
@@ -156,6 +169,9 @@ public:
         `/ DEL / Spot|Fwd|PaSpot|PaFwd` if the delta type has been populated.
     */
     std::string toString() const override;
+
+protected:
+    bool equal_to(const BaseStrike& other) const override;
 
 private:
     QuantLib::DeltaVolQuote::AtmType atmType_;
@@ -207,10 +223,16 @@ public:
     */
     std::string toString() const override;
 
+protected:
+    bool equal_to(const BaseStrike& other) const override;
+
 private:
     Type type_;
     QuantLib::Real moneyness_;
 };
+
+//! Write \p strike to stream.
+std::ostream& operator<<(std::ostream& os, const BaseStrike& strike);
 
 //! Write \p deltaType to stream. Not provided in QuantLib so add it here.
 std::ostream& operator<<(std::ostream& os, QuantLib::DeltaVolQuote::DeltaType type);

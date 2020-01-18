@@ -166,7 +166,8 @@ VolatilityDeltaSurfaceConfig::VolatilityDeltaSurfaceConfig() {}
 VolatilityDeltaSurfaceConfig::VolatilityDeltaSurfaceConfig(
     const string& deltaType,
     const string& atmType,
-    const vector<string>& deltas,
+    const vector<string>& putDeltas,
+    const vector<string>& callDeltas,
     const vector<string>& expiries,
     const string& timeInterpolation,
     const string& strikeInterpolation,
@@ -175,15 +176,17 @@ VolatilityDeltaSurfaceConfig::VolatilityDeltaSurfaceConfig(
     const string& strikeExtrapolation,
     const std::string& atmDeltaType)
     : VolatilitySurfaceConfig(expiries, timeInterpolation, strikeInterpolation, extrapolation,
-        timeExtrapolation, strikeExtrapolation), deltaType_(deltaType), atmType_(atmType), deltas_(deltas),
-        atmDeltaType_(atmDeltaType) {
+        timeExtrapolation, strikeExtrapolation), deltaType_(deltaType), atmType_(atmType),
+        putDeltas_(putDeltas), callDeltas_(callDeltas), atmDeltaType_(atmDeltaType) {
 }
 
 const string& VolatilityDeltaSurfaceConfig::deltaType() const { return deltaType_; }
 
 const string& VolatilityDeltaSurfaceConfig::atmType() const { return atmType_; }
 
-const vector<string>& VolatilityDeltaSurfaceConfig::deltas() const { return deltas_; }
+const vector<string>& VolatilityDeltaSurfaceConfig::putDeltas() const { return putDeltas_; }
+
+const vector<string>& VolatilityDeltaSurfaceConfig::callDeltas() const { return callDeltas_; }
 
 const string& VolatilityDeltaSurfaceConfig::atmDeltaType() const { return atmDeltaType_; }
 
@@ -201,9 +204,11 @@ vector<pair<string, string>> VolatilityDeltaSurfaceConfig::quotes() const {
 
     for (const string& e : expiries()) {
         result.push_back(make_pair(e, atmString));
-        for (const string& d : deltas_) {
-            result.push_back(make_pair(e, stem + "Call/" + d));
+        for (const string& d : putDeltas_) {
             result.push_back(make_pair(e, stem + "Put/" + d));
+        }
+        for (const string& d : callDeltas_) {
+            result.push_back(make_pair(e, stem + "Call/" + d));
         }
     }
 
@@ -215,7 +220,8 @@ void VolatilityDeltaSurfaceConfig::fromXML(XMLNode* node) {
     deltaType_ = XMLUtils::getChildValue(node, "DeltaType", true);
     atmType_ = XMLUtils::getChildValue(node, "AtmType", true);
     atmDeltaType_ = XMLUtils::getChildValue(node, "AtmDeltaType", false);
-    deltas_ = XMLUtils::getChildrenValuesAsStrings(node, "Deltas", true);
+    putDeltas_ = XMLUtils::getChildrenValuesAsStrings(node, "PutDeltas", true);
+    callDeltas_ = XMLUtils::getChildrenValuesAsStrings(node, "CallDeltas", true);
     fromNode(node);
 }
 
@@ -225,7 +231,8 @@ XMLNode* VolatilityDeltaSurfaceConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "AtmType", atmType_);
     if (!atmDeltaType_.empty())
         XMLUtils::addChild(doc, node, "AtmDeltaType", atmDeltaType_);
-    XMLUtils::addGenericChildAsList(doc, node, "Deltas", deltas_);
+    XMLUtils::addGenericChildAsList(doc, node, "PutDeltas", putDeltas_);
+    XMLUtils::addGenericChildAsList(doc, node, "CallDeltas", callDeltas_);
     addNodes(doc, node);
     return node;
 }

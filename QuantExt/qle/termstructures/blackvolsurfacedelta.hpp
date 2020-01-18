@@ -68,6 +68,7 @@ public:
                                 const Handle<YieldTermStructure>& foreignTS,
                                 DeltaVolQuote::DeltaType dt = DeltaVolQuote::DeltaType::Spot,
                                 DeltaVolQuote::AtmType at = DeltaVolQuote::AtmType::AtmDeltaNeutral,
+                                boost::optional<QuantLib::DeltaVolQuote::DeltaType> atmDeltaType = boost::none,
                                 InterpolatedSmileSection::InterpolationMethod interpolationMethod
                                     = InterpolatedSmileSection::InterpolationMethod::Linear,
                                 bool flatExtrapolation = true);
@@ -113,6 +114,7 @@ private:
 
     DeltaVolQuote::DeltaType dt_;
     DeltaVolQuote::AtmType at_;
+    boost::optional<QuantLib::DeltaVolQuote::DeltaType> atmDeltaType_;
 
     InterpolatedSmileSection::InterpolationMethod interpolationMethod_;
     bool flatExtrapolation_;

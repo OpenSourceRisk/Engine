@@ -58,7 +58,8 @@
       <xs:element type="strikeDeltaType" name="DeltaType"/>
       <xs:element type="strikeAtmType" name="AtmType"/>
       <xs:element type="strikeDeltaType" name="AtmDeltaType" minOccurs="0"/>
-      <xs:element type="xs:string" name="Deltas"/>
+      <xs:element type="xs:string" name="PutDeltas"/>
+      <xs:element type="xs:string" name="CallDeltas"/>
       <xs:element type="xs:string" name="Expiries"/>
       <xs:element type="interpolationMethodType" name="TimeInterpolation"/>
       <xs:element type="interpolationMethodType" name="StrikeInterpolation"/>
@@ -526,6 +527,8 @@
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="FutureConventions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="OptionExpiryRollDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="PriceCurveId" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="YieldCurveId" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

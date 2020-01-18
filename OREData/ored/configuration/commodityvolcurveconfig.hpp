@@ -47,7 +47,9 @@ public:
         const std::string& dayCounter = "A365",
         const std::string& calendar = "NullCalendar",
         const std::string& futureConventionsId = "",
-        QuantLib::Natural optionExpiryRollDays = 0);
+        QuantLib::Natural optionExpiryRollDays = 0,
+        const std::string& priceCurveId = "",
+        const std::string& yieldCurveId = "");
 
     //! \name Inspectors
     //@{
@@ -57,6 +59,8 @@ public:
     const std::string& calendar() const;
     const std::string& futureConventionsId() const;
     QuantLib::Natural optionExpiryRollDays() const;
+    const std::string& priceCurveId() const;
+    const std::string& yieldCurveId() const;
     //@}
 
     //! \name Serialisation
@@ -72,6 +76,8 @@ private:
     std::string calendar_;
     std::string futureConventionsId_;
     QuantLib::Natural optionExpiryRollDays_;
+    std::string priceCurveId_;
+    std::string yieldCurveId_;
 
     //! Populate CurveConfig::quotes_ with the required quotes.
     void populateQuotes();

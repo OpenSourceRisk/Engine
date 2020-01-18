@@ -30,6 +30,10 @@ using std::vector;
 namespace ore {
 namespace data {
 
+bool operator==(const BaseStrike& lhs, const BaseStrike& rhs) {
+    return lhs.equal_to(rhs);
+}
+
 AbsoluteStrike::AbsoluteStrike() {}
 
 AbsoluteStrike::AbsoluteStrike(Real strike) : strike_(strike) {}
@@ -44,6 +48,14 @@ void AbsoluteStrike::fromString(const string& strStrike) {
 
 string AbsoluteStrike::toString() const {
     return to_string(strike_);
+}
+
+bool AbsoluteStrike::equal_to(const BaseStrike& other) const {
+    if (const AbsoluteStrike* p = dynamic_cast<const AbsoluteStrike*>(&other)) {
+        return close(strike_, p->strike());
+    } else {
+        return false;
+    }
 }
 
 DeltaStrike::DeltaStrike() : deltaType_(DeltaVolQuote::Spot), optionType_(Option::Call) {}
@@ -82,6 +94,14 @@ string DeltaStrike::toString() const {
     ostringstream oss;
     oss << "DEL/" << deltaType_ << "/" << optionType_ << "/" << to_string(delta_);
     return oss.str();
+}
+
+bool DeltaStrike::equal_to(const BaseStrike& other) const {
+    if (const DeltaStrike* p = dynamic_cast<const DeltaStrike*>(&other)) {
+        return deltaType_ == p->deltaType() && optionType_ == p->optionType() && close(delta_, p->delta());
+    } else {
+        return false;
+    }
 }
 
 AtmStrike::AtmStrike() : atmType_(DeltaVolQuote::AtmSpot) {}
@@ -135,6 +155,17 @@ string AtmStrike::toString() const {
     return oss.str();
 }
 
+bool AtmStrike::equal_to(const BaseStrike& other) const {
+    if (const AtmStrike* p = dynamic_cast<const AtmStrike*>(&other)) {
+        return !(atmType_ != p->atmType() ||
+            (deltaType_ && !p->deltaType()) ||
+            (!deltaType_ && p->deltaType()) ||
+            *deltaType_ != *p->deltaType());
+    } else {
+        return false;
+    }
+}
+
 void AtmStrike::check() const {
     QL_REQUIRE(atmType_ != DeltaVolQuote::AtmNull, "AtmStrike type must not be AtmNull.");
     if (atmType_ == DeltaVolQuote::AtmDeltaNeutral) {
@@ -178,6 +209,18 @@ string MoneynessStrike::toString() const {
     ostringstream oss;
     oss << "MNY/" << type_ << "/" << to_string(moneyness_);
     return oss.str();
+}
+
+bool MoneynessStrike::equal_to(const BaseStrike& other) const {
+    if (const MoneynessStrike* p = dynamic_cast<const MoneynessStrike*>(&other)) {
+        return type_ == p->type() && close(moneyness_, p->moneyness());
+    } else {
+        return false;
+    }
+}
+
+ostream& operator<<(ostream& os, const BaseStrike& strike) {
+    return os << strike.toString();
 }
 
 ostream& operator<<(ostream& os, DeltaVolQuote::DeltaType type) {

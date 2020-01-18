@@ -26,7 +26,9 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/commoditycurve.hpp>
 #include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/yieldcurve.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
@@ -49,7 +51,9 @@ public:
         const CommodityVolatilityCurveSpec& spec,
         const Loader& loader,
         const CurveConfigurations& curveConfigs,
-        const Conventions& conventions);
+        const Conventions& conventions,
+        const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves = {},
+        const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves = {});
     //@}
 
     //! \name Inspectors
@@ -95,8 +99,18 @@ private:
         CommodityVolatilityConfig& vc,
         const VolatilityStrikeSurfaceConfig& vssc,
         const Loader& loader,
-        const std::vector<QuantLib::Real>& configuredStrikes,
-        const std::vector<boost::shared_ptr<Expiry>>& configuredExpiries);
+        const std::vector<QuantLib::Real>& configuredStrikes);
+
+    /*! Build a volatility surface from a collection of expiry and strike pairs where the strikes are defined in 
+        terms of option delta and ATM values.
+    */
+    void buildVolatility(
+        const QuantLib::Date& asof,
+        CommodityVolatilityConfig& vc,
+        const VolatilityDeltaSurfaceConfig& vdsc,
+        const Loader& loader,
+        const QuantLib::Handle<QuantExt::PriceTermStructure>& pts,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& yts);
 
     //! Get an explicit expiry date from a commodity option quote's Expiry
     QuantLib::Date getExpiry(const QuantLib::Date& asof, const boost::shared_ptr<Expiry>& expiry,
