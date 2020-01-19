@@ -112,6 +112,19 @@ private:
         const QuantLib::Handle<QuantExt::PriceTermStructure>& pts,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& yts);
 
+    /*! Assume that the input price curve \p pts is a future price curve giving the price of a sequence of future 
+        contracts at the contract expiry. Create a copy of this input curve with additional pillar points at 
+        the future option contract expiries. The price returned when this curve is queried at the option contract 
+        expiry or the future contract expiry is the expected future contract price i.e. the quoted future price. We 
+        need this to allow option surface creation with our current infrastructure for options on futures in 
+        particular where the surface creation relies on knowing the "forward" price.
+    */
+    QuantLib::Handle<QuantExt::PriceTermStructure> correctFuturePriceCurve(
+        const QuantLib::Date& asof,
+        const std::string& contractName,
+        const boost::shared_ptr<QuantExt::PriceTermStructure>& pts,
+        const std::vector<QuantLib::Date>& optionExpiries) const;
+
     //! Get an explicit expiry date from a commodity option quote's Expiry
     QuantLib::Date getExpiry(const QuantLib::Date& asof, const boost::shared_ptr<Expiry>& expiry,
         const std::string& name, QuantLib::Natural rollDays) const;

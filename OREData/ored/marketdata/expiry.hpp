@@ -138,6 +138,9 @@ private:
     QuantLib::Natural expiryIndex_;
 };
 
+//! Write \p strike to stream.
+std::ostream& operator<<(std::ostream& os, const Expiry& expiry);
+
 //! Parse an Expiry from its string representation, \p strExpiry.
 boost::shared_ptr<Expiry> parseExpiry(const std::string& strExpiry);
 

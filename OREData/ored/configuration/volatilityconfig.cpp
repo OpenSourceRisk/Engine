@@ -174,10 +174,12 @@ VolatilityDeltaSurfaceConfig::VolatilityDeltaSurfaceConfig(
     bool extrapolation,
     const string& timeExtrapolation,
     const string& strikeExtrapolation,
-    const std::string& atmDeltaType)
+    const std::string& atmDeltaType,
+    bool futurePriceCorrection)
     : VolatilitySurfaceConfig(expiries, timeInterpolation, strikeInterpolation, extrapolation,
         timeExtrapolation, strikeExtrapolation), deltaType_(deltaType), atmType_(atmType),
-        putDeltas_(putDeltas), callDeltas_(callDeltas), atmDeltaType_(atmDeltaType) {
+        putDeltas_(putDeltas), callDeltas_(callDeltas), atmDeltaType_(atmDeltaType),
+        futurePriceCorrection_(futurePriceCorrection) {
 }
 
 const string& VolatilityDeltaSurfaceConfig::deltaType() const { return deltaType_; }
@@ -189,6 +191,8 @@ const vector<string>& VolatilityDeltaSurfaceConfig::putDeltas() const { return p
 const vector<string>& VolatilityDeltaSurfaceConfig::callDeltas() const { return callDeltas_; }
 
 const string& VolatilityDeltaSurfaceConfig::atmDeltaType() const { return atmDeltaType_; }
+
+bool VolatilityDeltaSurfaceConfig::futurePriceCorrection() const { return futurePriceCorrection_; }
 
 vector<pair<string, string>> VolatilityDeltaSurfaceConfig::quotes() const {
 
@@ -222,6 +226,9 @@ void VolatilityDeltaSurfaceConfig::fromXML(XMLNode* node) {
     atmDeltaType_ = XMLUtils::getChildValue(node, "AtmDeltaType", false);
     putDeltas_ = XMLUtils::getChildrenValuesAsStrings(node, "PutDeltas", true);
     callDeltas_ = XMLUtils::getChildrenValuesAsStrings(node, "CallDeltas", true);
+    futurePriceCorrection_ = true;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "FuturePriceCorrection"))
+        futurePriceCorrection_ = parseBool(XMLUtils::getNodeValue(n));
     fromNode(node);
 }
 
@@ -234,6 +241,7 @@ XMLNode* VolatilityDeltaSurfaceConfig::toXML(XMLDocument& doc) {
     XMLUtils::addGenericChildAsList(doc, node, "PutDeltas", putDeltas_);
     XMLUtils::addGenericChildAsList(doc, node, "CallDeltas", callDeltas_);
     addNodes(doc, node);
+    XMLUtils::addChild(doc, node, "FuturePriceCorrection", futurePriceCorrection_);
     return node;
 }
 

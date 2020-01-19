@@ -202,7 +202,8 @@ public:
         bool extrapolation,
         const std::string& timeExtrapolation,
         const std::string& strikeExtrapolation,
-        const std::string& atmDeltaType = "");
+        const std::string& atmDeltaType = "",
+        bool futurePriceCorrection = true);
 
     //! \name Inspectors
     //@{
@@ -211,6 +212,7 @@ public:
     const std::vector<std::string>& putDeltas() const;
     const std::vector<std::string>& callDeltas() const;
     const std::string& atmDeltaType() const;
+    bool futurePriceCorrection() const;
     //@}
 
     //! \name VolatilitySurfaceConfig
@@ -230,6 +232,7 @@ private:
     std::vector<std::string> putDeltas_;
     std::vector<std::string> callDeltas_;
     std::string atmDeltaType_;
+    bool futurePriceCorrection_;
 };
 
 /*! Volatility configuration for a 2-D moneyness volatility surface

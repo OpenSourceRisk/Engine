@@ -21,6 +21,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <qle/math/flatextrapolation.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
@@ -605,12 +606,6 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         DLOG("Have expiry wildcard pattern " << vdsc.expiries()[0]);
     }
 
-    // Need to construct a dummy spot and foreign yts such that fwd = spot * DF_for / DF
-    Handle<Quote> spot(boost::make_shared<DerivedPriceQuote>(pts));
-    Handle<YieldTermStructure> pyts = Handle<YieldTermStructure>(
-        boost::make_shared<PriceTermStructureAdapter>(*pts, *yts));
-    pyts->enableExtrapolation();
-
     // Map to hold the rows of the commodity volatility matrix. The keys are the expiry dates and the values are the 
     // vectors of volatilities, one for each configured delta.
     map<Date, vector<Real>> surfaceData;
@@ -778,12 +773,110 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
             "' so setting it to linear.");
     }
 
+    // Apply correction to future price term structure if requested and we have a valid expiry calculator
+    Handle<PriceTermStructure> cpts = pts;
+    if (vdsc.futurePriceCorrection() && expCalc_)
+        cpts = correctFuturePriceCurve(asof, vc.futureConventionsId(), *pts, expiryDates);
+
+    // Need to construct a dummy spot and foreign yts such that fwd = spot * DF_for / DF
+    Handle<Quote> spot(boost::make_shared<DerivedPriceQuote>(cpts));
+    Handle<YieldTermStructure> pyts = Handle<YieldTermStructure>(
+        boost::make_shared<PriceTermStructureAdapter>(*cpts, *yts));
+    pyts->enableExtrapolation();
+
     DLOG("Creating BlackVolatilitySurfaceDelta object");
     bool hasAtm = true;
     volatility_ = boost::make_shared<BlackVolatilitySurfaceDelta>(asof, expiryDates, putDeltas, callDeltas, hasAtm,
         vols, dayCounter_, calendar_, spot, yts, pyts, deltaType, atmType, atmDeltaType, im, flatExtrapolation);
 
     LOG("CommodityVolCurve: finished building 2-D volatility delta strike surface");
+}
+
+Handle<PriceTermStructure> CommodityVolCurve::correctFuturePriceCurve(const Date& asof, const string& contractName,
+    const boost::shared_ptr<PriceTermStructure>& pts, const vector<Date>& optionExpiries) const {
+
+    LOG("CommodityVolCurve: start adding future price correction at option expiry.");
+
+    // Gather curve dates and prices
+    map<Date, Real> curveData;
+
+    // Get existing curve dates and prices. Messy but can't think of another way.
+    vector<Date> ptsDates;
+    if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<Linear>>(pts)) {
+        ptsDates = ipc->pillarDates();
+    } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<LogLinear>>(pts)) {
+        ptsDates = ipc->pillarDates();
+    } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<Cubic>>(pts)) {
+        ptsDates = ipc->pillarDates();
+    } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<LinearFlat>>(pts)) {
+        ptsDates = ipc->pillarDates();
+    } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<LogLinearFlat>>(pts)) {
+        ptsDates = ipc->pillarDates();
+    } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<CubicFlat>>(pts)) {
+        ptsDates = ipc->pillarDates();
+    } else {
+        DLOG("Could not cast the price term structure so do not have its pillar dates.");
+    }
+
+    // Add existing dates and prices to data.
+    DLOG("Got " << ptsDates.size() << " pillar dates from the price curve.");
+    for (const Date& d : ptsDates) {
+        curveData[d] = pts->price(d);
+        TLOG("Added (" << io::iso_date(d) << "," << fixed << setprecision(9) << curveData.at(d) << ").");
+    }
+
+    // Add future price at option expiry to the curve i.e. override any interpolation between future option
+    // expiry (oed) and future expiry (fed).
+    for (const Date& oed : optionExpiries) {
+        Date fed = expCalc_->nextExpiry(contractName, true, oed, 0, false);
+        // In general, expect that the future expiry date will already be in curveData but maybe not.
+        auto it = curveData.find(fed);
+        if (it != curveData.end()) {
+            curveData[oed] = it->second;
+            TLOG("Found future expiry in existing data. (Option Expiry,Future Expiry,Future Price) is (" <<
+                io::iso_date(oed) << "," << io::iso_date(fed) << "," << fixed << setprecision(9) <<
+                curveData.at(oed) << ").");
+        } else {
+            curveData[oed] = pts->price(fed);
+            curveData[fed] = pts->price(fed);
+            TLOG("Future expiry not found in existing data. (Option Expiry,Future Expiry,Future Price) is (" <<
+                io::iso_date(oed) << "," << io::iso_date(fed) << "," << fixed << setprecision(9) <<
+                curveData.at(oed) << ").");
+        }
+    }
+
+    // Gather data for building the "corrected" curve.
+    vector<Date> curveDates;
+    vector<Real> curvePrices;
+    for (const auto& kv : curveData) {
+        curveDates.push_back(kv.first);
+        curvePrices.push_back(kv.second);
+    }
+    DayCounter dc = pts->dayCounter();
+
+    // Create the "corrected" curve. Again messy but can't think of another way.
+    boost::shared_ptr<PriceTermStructure> cpts;
+    if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<Linear>>(pts)) {
+        cpts = boost::make_shared<InterpolatedPriceCurve<Linear>>(asof, curveDates, curvePrices, dc);
+    } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<LogLinear>>(pts)) {
+        cpts = boost::make_shared<InterpolatedPriceCurve<LogLinear>>(asof, curveDates, curvePrices, dc);
+    } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<Cubic>>(pts)) {
+        cpts = boost::make_shared<InterpolatedPriceCurve<Cubic>>(asof, curveDates, curvePrices, dc);
+    } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<LinearFlat>>(pts)) {
+        cpts = boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(asof, curveDates, curvePrices, dc);
+    } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<LogLinearFlat>>(pts)) {
+        cpts = boost::make_shared<InterpolatedPriceCurve<LogLinearFlat>>(asof, curveDates, curvePrices, dc);
+    } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<CubicFlat>>(pts)) {
+        cpts = boost::make_shared<InterpolatedPriceCurve<CubicFlat>>(asof, curveDates, curvePrices, dc);
+    } else {
+        DLOG("Could not cast the price term structure so corrected curve is a linear InterpolatedPriceCurve.");
+        cpts = boost::make_shared<InterpolatedPriceCurve<Linear>>(asof, curveDates, curvePrices, dc);
+    }
+    cpts->enableExtrapolation(pts->allowsExtrapolation());
+
+    LOG("CommodityVolCurve: finished adding future price correction at option expiry.");
+
+    return Handle<PriceTermStructure>(cpts);
 }
 
 Date CommodityVolCurve::getExpiry(const Date& asof, const boost::shared_ptr<Expiry>& expiry,
@@ -799,25 +892,34 @@ Date CommodityVolCurve::getExpiry(const Date& asof, const boost::shared_ptr<Expi
     } else if (auto fcExpiry = boost::dynamic_pointer_cast<FutureContinuationExpiry>(expiry)) {
         
         QL_REQUIRE(expCalc_, "CommodityVolCurve::getExpiry: need a future expiry calculator for continuation quotes.");
+        DLOG("Future option continuation expiry is " << *fcExpiry);
 
         // Get the c1 expiry first. All subsequent expiries are relative to this.
 
         // Get the next option expiry on or after the asof date
         result = expCalc_->nextExpiry(name, true, asof, 0, true);
+        TLOG("CommodityVolCurve::getExpiry: next option expiry relative to " <<
+            io::iso_date(asof) << " is " << io::iso_date(result) << ".");
 
         // Market quotes may be delivered with a given number of roll days.
         if (rollDays > 0) {
             Date roll;
             roll = calendar_.advance(result, -static_cast<Integer>(rollDays), Days);
+            TLOG("CommodityVolCurve::getExpiry: roll days is " << rollDays <<
+                " giving a roll date " << io::iso_date(roll) << ".");
             // Take the next option expiry if the roll days means the roll date is before asof.
             if (roll < asof) {
                 result = expCalc_->nextExpiry(name, true, asof, 1, true);
                 roll = calendar_.advance(result, -static_cast<Integer>(rollDays), Days);
                 QL_REQUIRE(roll > asof, "CommodityVolCurve::getExpiry: expected roll to be greater than asof.");
+                TLOG("CommodityVolCurve::getExpiry: roll date " << io::iso_date(roll) << " is less than asof " <<
+                    io::iso_date(asof) << " so take next option expiry " << io::iso_date(result));
             }
         }
 
         // At this stage, result should hold the c1 expiry.
+        TLOG("CommodityVolCurve::getExpiry: c1 option expiry is " << io::iso_date(result) << ".");
+
         // If the continuation index is greater than 1 get the corresponding expiry.
         Natural fcIndex = fcExpiry->expiryIndex();
         if (fcIndex > 1) {
@@ -825,10 +927,13 @@ Date CommodityVolCurve::getExpiry(const Date& asof, const boost::shared_ptr<Expi
             result = expCalc_->nextExpiry(name, true, result, fcIndex - 2, true);
         }
 
+        DLOG("Expiry date corresponding to continuation expiry, " << *fcExpiry <<
+            ", is " << io::iso_date(result) << ".");
+
     } else {
         QL_FAIL("CommodityVolCurve::getExpiry: cannot determine expiry type.");
     }
-    
+
     return result;
 }
 

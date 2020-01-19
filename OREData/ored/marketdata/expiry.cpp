@@ -21,6 +21,7 @@
 #include <ored/utilities/to_string.hpp>
 
 using namespace QuantLib;
+using std::ostream;
 using std::string;
 
 namespace ore {
@@ -100,6 +101,10 @@ bool FutureContinuationExpiry::equal_to(const Expiry& other) const {
     } else {
         return false;
     }
+}
+
+ostream& operator<<(ostream& os, const Expiry& expiry) {
+    return os << expiry.toString();
 }
 
 boost::shared_ptr<Expiry> parseExpiry(const string& strExpiry) {
