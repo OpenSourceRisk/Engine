@@ -59,13 +59,13 @@ SensitivityAnalysis::SensitivityAnalysis(
     const TodaysMarketParameters& todaysMarketParams, const bool nonShiftedBaseCurrencyConversion,
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders, const bool continueOnError,
-    const bool includeXccyDiscounts)
+    const bool xccyDiscounting)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
       recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
       extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders), continueOnError_(continueOnError),
-      engineData_(engineData), portfolio_(portfolio), includeXccyDiscounts_(includeXccyDiscounts), initialized_(false),
+      engineData_(engineData), portfolio_(portfolio), xccyDiscounting_(xccyDiscounting), initialized_(false),
       computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
@@ -123,7 +123,7 @@ void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory>
     LOG("Initialise sim market for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
         << ")");
     simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_, curveConfigs_, todaysMarketParams_, 
-        continueOnError_, includeXccyDiscounts_);
+        continueOnError_);
 
     LOG("Sim market initialised for sensitivity analysis");
 

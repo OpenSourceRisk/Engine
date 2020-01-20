@@ -113,7 +113,13 @@ protected:
         std::vector<Handle<YieldTermStructure>> discountCurves;
         std::vector<Handle<Quote>> fxQuotes;
         for (Size i = 0; i < ccys.size(); ++i) {
-            discountCurves.push_back(market_->discountXccyCurve(ccys[i].code(), configuration(MarketContext::pricing)));
+
+            Handle<YieldTermStructure> discount;
+            if (ccys[i] == base)
+                discount = market_->discountCurve(ccys[i].code(), configuration(MarketContext::pricing));
+            else
+                discount = market_->discountXccyCurve(ccys[i].code(), configuration(MarketContext::pricing));
+            discountCurves.push_back(discount);
             string pair = ccys[i].code() + base.code();
             fxQuotes.push_back(market_->fxSpot(pair, configuration(MarketContext::pricing)));
         }

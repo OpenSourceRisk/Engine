@@ -47,6 +47,7 @@ public:
     enum class KeyType {
         None,
         DiscountCurve,
+        DiscountXccyCurve,
         YieldCurve,
         IndexCurve,
         SwaptionVolatility,
@@ -70,8 +71,7 @@ public:
         CommodityVolatility,
         SecuritySpread,
         Correlation,
-        CPR,
-        DiscountXccyCurve
+        CPR
     };
 
     //! Constructor

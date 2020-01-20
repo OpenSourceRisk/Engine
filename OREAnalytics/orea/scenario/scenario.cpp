@@ -32,7 +32,7 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
     case RiskFactorKey::KeyType::DiscountCurve:
         return out << "DiscountCurve";
     case RiskFactorKey::KeyType::DiscountXccyCurve:
-        return out << "DiscountXccyCurve";
+        return out << "DiscountCurve";
     case RiskFactorKey::KeyType::YieldCurve:
         return out << "YieldCurve";
     case RiskFactorKey::KeyType::IndexCurve:

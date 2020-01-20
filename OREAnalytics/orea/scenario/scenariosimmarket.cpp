@@ -87,18 +87,6 @@ void processException(bool continueOnError, const std::exception& e) {
     }
 }
 
-template <class A, class B, class C>
-A lookup(const B& map, const C& key, const YieldCurveType y, const string& configuration, const string& type) {
-    auto it = map.find(make_tuple(configuration, y, key));
-    if (it == map.end()) {
-        // fall back to default configuration
-        it = map.find(make_tuple(Market::defaultConfiguration, y, key));
-        QL_REQUIRE(it != map.end(), "did not find object " << key << " of type " << type << " under configuration "
-            << configuration << " in YieldCurves");
-    }
-    return it->second;
-}
-
 } // namespace
 
 namespace ore {
@@ -212,18 +200,17 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                                      const Conventions& conventions, const std::string& configuration,
                                      const CurveConfigurations& curveConfigs,
-                                     const TodaysMarketParameters& todaysMarketParams, const bool continueOnError, 
-                                     const bool includeXccyDiscounts)
+                                     const TodaysMarketParameters& todaysMarketParams, const bool continueOnError)
     : ScenarioSimMarket(initMarket, parameters, conventions, boost::make_shared<FixingManager>(initMarket->asofDate()),
-                        configuration, curveConfigs, todaysMarketParams, continueOnError, includeXccyDiscounts) {}
+                        configuration, curveConfigs, todaysMarketParams, continueOnError) {}
 
 ScenarioSimMarket::ScenarioSimMarket(
     const boost::shared_ptr<Market>& initMarket, const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
     const Conventions& conventions, const boost::shared_ptr<FixingManager>& fixingManager,
     const std::string& configuration, const ore::data::CurveConfigurations& curveConfigs,
-    const ore::data::TodaysMarketParameters& todaysMarketParams, const bool continueOnError, const bool includeXccyDiscounts)
+    const ore::data::TodaysMarketParameters& todaysMarketParams, const bool continueOnError)
     : SimMarket(conventions), parameters_(parameters), fixingManager_(fixingManager),
-      filter_(boost::make_shared<ScenarioFilter>()), includeXccyDiscounts_(includeXccyDiscounts){
+      filter_(boost::make_shared<ScenarioFilter>()){
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
@@ -266,9 +253,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                         vector<Period> tenors = parameters->yieldCurveTenors(name);
                         addYieldCurve(initMarket, configuration, param.first, name, tenors,
                                       parameters->yieldCurveDayCounter(name), param.second.first);
-                        if (includeXccyDiscounts && param.first == RiskFactorKey::KeyType::DiscountCurve)
-                            addYieldCurve(initMarket, configuration, RiskFactorKey::KeyType::DiscountXccyCurve, name, tenors,
-                                parameters->yieldCurveDayCounter(name), param.second.first);
                         LOG("building " << name << " yield curve done");
                     } catch (const std::exception& e) {
                         processException(continueOnError, e);
@@ -2061,14 +2045,5 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const string& yieldS
     return Handle<YieldTermStructure>();
 }
 
-Handle<YieldTermStructure> ScenarioSimMarket::discountXccyCurve(const string& key, const string& configuration) const {
-    if (includeXccyDiscounts_) {
-        return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::DiscountXccy, configuration,
-            "discount xccy curve");
-    } else {
-        return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::Discount, configuration,
-            "discount xccy curve");
-    }
-}
 } // namespace analytics
 } // namespace ore

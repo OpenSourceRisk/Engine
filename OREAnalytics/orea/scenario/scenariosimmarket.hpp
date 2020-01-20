@@ -117,7 +117,7 @@ public:
                       const std::string& configuration = Market::defaultConfiguration, 
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-                      const bool continueOnError = false, const bool includeXccyDiscounts = false);
+                      const bool continueOnError = false);
 
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
@@ -125,7 +125,7 @@ public:
                       const std::string& configuration = Market::defaultConfiguration,
 		              const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-                      const bool continueOnError = false, const bool includeXccyDiscounts = false);
+                      const bool continueOnError = false);
 
     //! Set scenario generator
     boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
@@ -156,11 +156,7 @@ public:
 
     //! is risk factor key simulated by this sim market instance?
     bool isSimulated(const RiskFactorKey::KeyType& factor) const;
-
-    //! Override discountXccy curve to look up Xccy discount curves when running that configuration
-    Handle<YieldTermStructure> discountXccyCurve(const string& ccy,
-        const string& configuration = Market::defaultConfiguration) const;
-
+    
 protected:
     virtual void applyScenario(const boost::shared_ptr<Scenario>& scenario);
     void addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
@@ -183,7 +179,6 @@ protected:
 
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simData_;
     boost::shared_ptr<Scenario> baseScenario_;
-    bool includeXccyDiscounts_;
 
     std::set<RiskFactorKey::KeyType> nonSimulatedFactors_;
 };
