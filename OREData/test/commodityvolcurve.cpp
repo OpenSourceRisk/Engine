@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/toplevelfixture.hpp>
 
@@ -28,15 +29,22 @@
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/csvloader.hpp>
+#include <ored/utilities/csvfilereader.hpp>
+#include <ored/utilities/to_string.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
+#include <cmath>
 
 using namespace std;
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace ore::data;
+
+namespace bdata = boost::unit_test::data;
 
 namespace {
 
@@ -93,8 +101,8 @@ MockLoader::MockLoader() {
             boost::make_shared<AbsoluteStrike>(1190))};
 }
 
-boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof,
-    const string& inputDir, const string& curveConfigFile) {
+boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir,
+    const string& curveConfigFile, const string& marketFile = "market.txt") {
 
     Conventions conventions;
     conventions.fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
@@ -105,7 +113,7 @@ boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof,
     TodaysMarketParameters todaysMarketParameters;
     todaysMarketParameters.fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
 
-    CSVLoader loader(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
+    CSVLoader loader(TEST_INPUT_FILE(string(inputDir + "/" + marketFile)),
         TEST_INPUT_FILE(string(inputDir + "/fixings.txt")), false);
 
     return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs, conventions);
@@ -495,6 +503,107 @@ BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceExplicitExpiriesExplicitStrikes) {
             BOOST_CHECK_CLOSE(inputVol, vts->blackVol(e, s), 1e-12);
         }
     }
+}
+
+// As of dates for delta surface building below.
+// 15 Jan is when c1 contract rolls from NYMEX WTI Feb option contract to NYMEX WTI Mar option contract
+vector<Date> asofDates {
+    Date(13, Jan, 2020),
+    Date(15, Jan, 2020)
+};
+
+// Different curve configurations for the surface building below.
+vector<string> curveConfigs {
+    "curveconfig_explicit_expiries.xml",
+    "curveconfig_wildcard_expiries.xml"
+};
+
+BOOST_DATA_TEST_CASE(testCommodityVolDeltaSurface, bdata::make(asofDates) * bdata::make(curveConfigs),
+    asof, curveConfig) {
+
+    BOOST_TEST_MESSAGE("Testing commodity volatility delta surface building");
+
+    auto todaysMarket = createTodaysMarket(asof, "delta_surface", curveConfig, "market.txt");
+
+    // Get the built commodity volatility surface
+    auto vts = todaysMarket->commodityVolatility("NYMEX:CL");
+
+    // Cast to expected type and check that it succeeds
+    // For some reason, todaysmarket wraps the surface built in CommodityVolCurve in a BlackVolatilityWithATM.
+    auto bvwa = dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
+    BOOST_REQUIRE(bvwa);
+    auto bvsd = boost::dynamic_pointer_cast<BlackVolatilitySurfaceDelta>(bvwa->surface());
+    BOOST_REQUIRE(bvsd);
+
+    // Tolerance for float comparison
+    Real tol = 1e-12;
+
+    // Read in the expected on-grid results for the given date.
+    string filename = "delta_surface/expected_grid_" + to_string(io::iso_date(asof)) + ".csv";
+    CSVFileReader reader(TEST_INPUT_FILE(filename), true, ",");
+    BOOST_REQUIRE_EQUAL(reader.numberOfColumns(), 3);
+    
+    while (reader.next()) {
+
+        // Get the expected expiry date, strike and volatility grid point
+        Date expiryDate = parseDate(reader.get(0));
+        Real strike = parseReal(reader.get(1));
+        Real volatility = parseReal(reader.get(2));
+
+        // Check that the expected grid expiry date is one of the surface dates
+        auto itExpiry = find(bvsd->dates().begin(), bvsd->dates().end(), expiryDate);
+        BOOST_REQUIRE(itExpiry != bvsd->dates().end());
+
+        // Get the smile section, cast to expected type and check cast succeeds.
+        auto fxss = bvsd->blackVolSmile(expiryDate);
+        auto iss = boost::dynamic_pointer_cast<InterpolatedSmileSection>(fxss);
+        BOOST_REQUIRE(iss);
+
+        // Check that the expected grid strike is one of the smile section strikes.
+        auto itStrike = find_if(iss->strikes().begin(), iss->strikes().end(),
+            [&](Real s) { return abs(s - strike) < tol; });
+        BOOST_REQUIRE(itStrike != iss->strikes().end());
+
+        // Check that the expected volatility is equal to that at the grid strike
+        auto pos = distance(iss->strikes().begin(), itStrike);
+        BOOST_CHECK_SMALL(volatility - iss->volatilities()[pos], tol);
+    }
+
+    // Check flat time extrapolation
+    Date extrapDate = bvsd->dates().back() + 1 * Years;
+    
+    auto fxss = bvsd->blackVolSmile(bvsd->dates().back());
+    auto iss = boost::dynamic_pointer_cast<InterpolatedSmileSection>(fxss);
+    BOOST_REQUIRE(iss);
+    vector<Real> lastVolatilities = iss->volatilities();
+
+    fxss = bvsd->blackVolSmile(bvsd->dates().back() + 1 * Years);
+    iss = boost::dynamic_pointer_cast<InterpolatedSmileSection>(fxss);
+    BOOST_REQUIRE(iss);
+    vector<Real> extrapVolatilities = iss->volatilities();
+
+    BOOST_REQUIRE_EQUAL(lastVolatilities.size(), extrapVolatilities.size());
+    for (Size i = 0; i < lastVolatilities.size(); i++) {
+        BOOST_CHECK_SMALL(lastVolatilities[i] - extrapVolatilities[i], tol);
+    }
+
+    // Check flat strike extrapolation.
+    Date testDate = asof + 1 * Years;
+
+    fxss = bvsd->blackVolSmile(testDate);
+    iss = boost::dynamic_pointer_cast<InterpolatedSmileSection>(fxss);
+    BOOST_REQUIRE(iss);
+
+    Volatility volAtMinStrike = iss->volatilities().front();
+    Real minStrike = iss->strikes().front();
+    Real extrapStrike = minStrike / 2.0;
+    BOOST_CHECK_SMALL(volAtMinStrike - bvsd->blackVol(testDate, extrapStrike), tol);
+
+    Volatility volAtMaxStrike = iss->volatilities().back();
+    Real maxStrike = iss->strikes().back();
+    extrapStrike = maxStrike * 2.0;
+    BOOST_CHECK_SMALL(volAtMaxStrike - bvsd->blackVol(testDate, extrapStrike), tol);
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

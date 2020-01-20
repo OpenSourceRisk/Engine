@@ -201,7 +201,7 @@ vector<pair<string, string>> VolatilityDeltaSurfaceConfig::quotes() const {
     // ATM strike string
     string atmString = "ATM/" + atmType_;
     if (!atmDeltaType_.empty())
-        atmString += "/" + atmDeltaType_;
+        atmString += "/DEL/" + atmDeltaType_;
 
     // Delta stem
     string stem = "DEL/" + deltaType_ + "/";
