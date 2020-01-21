@@ -511,7 +511,7 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
     TLOG("Explicit strike surface grid points:");
     TLOG("expiry,strike,volatility");
     for (Size i = 0; i < volatilities.rows(); i++) {
-        for (Size j = 0; j < volatilities.rows(); j++) {
+        for (Size j = 0; j < volatilities.columns(); j++) {
             TLOG(io::iso_date(expiryDates[j]) << "," << fixed << setprecision(9) <<
                 configuredStrikes[i] << "," << volatilities[i][j]);
         }
