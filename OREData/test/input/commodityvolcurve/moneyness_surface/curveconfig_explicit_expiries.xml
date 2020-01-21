@@ -102,20 +102,17 @@
       <CurveId>NYMEX:CL</CurveId>
       <CurveDescription>NYMEX WTI option surface</CurveDescription>
       <Currency>USD</Currency>
-      <DeltaSurface>
-        <DeltaType>Fwd</DeltaType>
-        <AtmType>AtmDeltaNeutral</AtmType>
-        <AtmDeltaType>Fwd</AtmDeltaType>
-        <PutDeltas>0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45</PutDeltas>
-        <CallDeltas>0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45</CallDeltas>
-        <Expiries>*</Expiries>
+      <MoneynessSurface>
+        <MoneynessType>Fwd</MoneynessType>
+        <MoneynessLevels>0.50,0.60,0.70,0.75,0.80,0.85,0.90,0.95,1.00,1.05,1.10,1.15,1.20,1.25,1.30,1.40,1.50</MoneynessLevels>
+        <Expiries>c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15,c16,c17,c18,c19,c20,c21,c22,c23,c24,c25,c26,c27</Expiries>
         <TimeInterpolation>Linear</TimeInterpolation>
         <StrikeInterpolation>Linear</StrikeInterpolation>
         <Extrapolation>true</Extrapolation>
         <TimeExtrapolation>Flat</TimeExtrapolation>
         <StrikeExtrapolation>Flat</StrikeExtrapolation>
         <FuturePriceCorrection>true</FuturePriceCorrection>
-      </DeltaSurface>
+      </MoneynessSurface>
       <DayCounter>A365</DayCounter>
       <Calendar>CME</Calendar>
       <FutureConventions>NYMEX:CL</FutureConventions>

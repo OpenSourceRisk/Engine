@@ -147,6 +147,7 @@ struct NymexVolatilityData {
         };
     }
 };
+
 // clang-format on
 
 } // namespace
@@ -603,6 +604,73 @@ BOOST_DATA_TEST_CASE(testCommodityVolDeltaSurface, bdata::make(asofDates) * bdat
     Real maxStrike = iss->strikes().back();
     extrapStrike = maxStrike * 2.0;
     BOOST_CHECK_SMALL(volAtMaxStrike - bvsd->blackVol(testDate, extrapStrike), tol);
+
+}
+
+BOOST_DATA_TEST_CASE(testCommodityVolMoneynessSurface, bdata::make(asofDates) * bdata::make(curveConfigs), asof, curveConfig) {
+
+    BOOST_TEST_MESSAGE("Testing commodity volatility forward moneyness surface building");
+
+    Settings::instance().evaluationDate() = asof;
+    auto todaysMarket = createTodaysMarket(asof, "moneyness_surface", curveConfig, "market.txt");
+
+    // Get the built commodity volatility surface
+    auto vts = todaysMarket->commodityVolatility("NYMEX:CL");
+
+    // Tolerance for float comparison
+    Real tol = 1e-12;
+
+    // Read in the expected on-grid results for the given date.
+    string filename = "moneyness_surface/expected_grid_" + to_string(io::iso_date(asof)) + ".csv";
+    CSVFileReader reader(TEST_INPUT_FILE(filename), true, ",");
+    BOOST_REQUIRE_EQUAL(reader.numberOfColumns(), 3);
+
+    while (reader.next()) {
+
+        // Get the expected expiry date, strike and volatility grid point
+        Date expiryDate = parseDate(reader.get(0));
+        Real strike = parseReal(reader.get(1));
+        Real volatility = parseReal(reader.get(2));
+
+        // Check the surface on the grid point.
+        BOOST_CHECK_SMALL(volatility - vts->blackVol(expiryDate, strike), tol);
+        
+    }
+
+    // Price term structure
+    auto pts = todaysMarket->commodityPriceCurve("NYMEX:CL");
+
+    // Pick two future expiries beyond max vol surface time and get their prices
+    // This should correspond to moneyness 1.0 and we should see flat vol extrapolation.
+    // This only passes because we have set sticky strike to false in CommodityVolCurve.
+    Date extrapDate_1(20, Mar, 2024);
+    Date extrapDate_2(22, Apr, 2024);
+    Real strike_1 = pts->price(extrapDate_1);
+    Real strike_2 = pts->price(extrapDate_2);
+    Volatility vol_1 = vts->blackVol(extrapDate_1, strike_1);
+    Volatility vol_2 = vts->blackVol(extrapDate_2, strike_2);
+    BOOST_TEST_MESSAGE("The two time extrapolated volatilities are: " <<
+        fixed << setprecision(12) << vol_1 << "," << vol_2 << ".");
+    BOOST_CHECK_SMALL(vol_1 - vol_2, tol);
+
+    // Test flat strike extrapolation at lower and upper strikes i.e. at 50% and 150% forward moneyness.
+    Date optionExpiry(14, Jan, 2021);
+    Date futureExpiry(20, Jan, 2021);
+    Real futurePrice = pts->price(futureExpiry);
+    
+    Real lowerStrike = 0.5 * futurePrice;
+    Volatility volLowerStrike = vts->blackVol(optionExpiry, lowerStrike);
+    Volatility volLowerExtrapStrike = vts->blackVol(optionExpiry, lowerStrike / 2.0);
+    BOOST_TEST_MESSAGE("The two lower strike extrapolated volatilities are: " <<
+        fixed << setprecision(12) << volLowerStrike << "," << volLowerExtrapStrike << ".");
+    BOOST_CHECK_SMALL(volLowerStrike - volLowerExtrapStrike, tol);
+
+    Real upperStrike = 1.5 * futurePrice;
+    Volatility volUpperStrike = vts->blackVol(optionExpiry, upperStrike);
+    Volatility volUpperExtrapStrike = vts->blackVol(optionExpiry, upperStrike * 2.0);
+    BOOST_TEST_MESSAGE("The two upper strike extrapolated volatilities are: " <<
+        fixed << setprecision(12) << volUpperStrike << "," << volUpperExtrapStrike << ".");
+    BOOST_CHECK_SMALL(volUpperStrike - volUpperExtrapStrike, tol);
 
 }
 

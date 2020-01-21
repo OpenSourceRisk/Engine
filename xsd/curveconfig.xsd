@@ -80,6 +80,7 @@
       <xs:element type="bool" name="Extrapolation"/>
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
+      <xs:element type="bool" name="FuturePriceCorrection" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

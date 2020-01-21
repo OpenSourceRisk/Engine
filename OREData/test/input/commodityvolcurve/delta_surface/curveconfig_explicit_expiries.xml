@@ -117,7 +117,7 @@
         <FuturePriceCorrection>true</FuturePriceCorrection>
       </DeltaSurface>
       <DayCounter>A365</DayCounter>
-      <Calendar>USD</Calendar>
+      <Calendar>CME</Calendar>
       <FutureConventions>NYMEX:CL</FutureConventions>
       <OptionExpiryRollDays>1</OptionExpiryRollDays>
       <PriceCurveId>Commodity/USD/NYMEX:CL</PriceCurveId>

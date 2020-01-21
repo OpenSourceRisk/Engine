@@ -252,12 +252,14 @@ public:
         const std::string& strikeInterpolation,
         bool extrapolation,
         const std::string& timeExtrapolation,
-        const std::string& strikeExtrapolation);
+        const std::string& strikeExtrapolation,
+        bool futurePriceCorrection = true);
 
     //! \name Inspectors
     //@{
     const std::string& moneynessType() const;
     const std::vector<std::string>& moneynessLevels() const;
+    bool futurePriceCorrection() const;
     //@}
 
     //! \name VolatilitySurfaceConfig
@@ -274,6 +276,7 @@ public:
 private:
     std::string moneynessType_;
     std::vector<std::string> moneynessLevels_;
+    bool futurePriceCorrection_;
 };
 
 }

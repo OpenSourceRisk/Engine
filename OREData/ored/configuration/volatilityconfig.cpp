@@ -242,6 +242,7 @@ XMLNode* VolatilityDeltaSurfaceConfig::toXML(XMLDocument& doc) {
     XMLUtils::addGenericChildAsList(doc, node, "CallDeltas", callDeltas_);
     addNodes(doc, node);
     XMLUtils::addChild(doc, node, "FuturePriceCorrection", futurePriceCorrection_);
+
     return node;
 }
 
@@ -255,14 +256,18 @@ VolatilityMoneynessSurfaceConfig::VolatilityMoneynessSurfaceConfig(
     const string& strikeInterpolation,
     bool extrapolation,
     const string& timeExtrapolation,
-    const string& strikeExtrapolation)
+    const string& strikeExtrapolation,
+    bool futurePriceCorrection)
     : VolatilitySurfaceConfig(expiries, timeInterpolation, strikeInterpolation, extrapolation,
-        timeExtrapolation, strikeExtrapolation), moneynessType_(moneynessType), moneynessLevels_(moneynessLevels) {
+        timeExtrapolation, strikeExtrapolation), moneynessType_(moneynessType),
+        moneynessLevels_(moneynessLevels), futurePriceCorrection_(futurePriceCorrection) {
 }
 
 const string& VolatilityMoneynessSurfaceConfig::moneynessType() const { return moneynessType_; }
 
 const vector<string>& VolatilityMoneynessSurfaceConfig::moneynessLevels() const { return moneynessLevels_; }
+
+bool VolatilityMoneynessSurfaceConfig::futurePriceCorrection() const { return futurePriceCorrection_; }
 
 vector<pair<string, string>> VolatilityMoneynessSurfaceConfig::quotes() const {
 
@@ -284,6 +289,9 @@ void VolatilityMoneynessSurfaceConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "MoneynessSurface");
     moneynessType_ = XMLUtils::getChildValue(node, "MoneynessType", true);
     moneynessLevels_ = XMLUtils::getChildrenValuesAsStrings(node, "MoneynessLevels", true);
+    futurePriceCorrection_ = true;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "FuturePriceCorrection"))
+        futurePriceCorrection_ = parseBool(XMLUtils::getNodeValue(n));
     fromNode(node);
 }
 
@@ -292,6 +300,8 @@ XMLNode* VolatilityMoneynessSurfaceConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "MoneynessType", moneynessType_);
     XMLUtils::addGenericChildAsList(doc, node, "MoneynessLevels", moneynessLevels_);
     addNodes(doc, node);
+    XMLUtils::addChild(doc, node, "FuturePriceCorrection", futurePriceCorrection_);
+
     return node;
 }
 

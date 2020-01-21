@@ -69,6 +69,10 @@ private:
     QuantLib::Calendar calendar_;
     QuantLib::DayCounter dayCounter_;
 
+    // Populated for delta and moneyness surfaces and left empty for others
+    QuantLib::Handle<QuantExt::PriceTermStructure> pts_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> yts_;
+
     //! Build a volatility structure from a single constant volatlity quote
     void buildVolatility(
         const QuantLib::Date& asof,
@@ -108,9 +112,16 @@ private:
         const QuantLib::Date& asof,
         CommodityVolatilityConfig& vc,
         const VolatilityDeltaSurfaceConfig& vdsc,
-        const Loader& loader,
-        const QuantLib::Handle<QuantExt::PriceTermStructure>& pts,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& yts);
+        const Loader& loader);
+
+    /*! Build a volatility surface from a collection of expiry and strike pairs where the strikes are defined in
+        terms of option delta and ATM values.
+    */
+    void buildVolatility(
+        const QuantLib::Date& asof,
+        CommodityVolatilityConfig& vc,
+        const VolatilityMoneynessSurfaceConfig& vmsc,
+        const Loader& loader);
 
     /*! Assume that the input price curve \p pts is a future price curve giving the price of a sequence of future 
         contracts at the contract expiry. Create a copy of this input curve with additional pillar points at 
@@ -128,6 +139,12 @@ private:
     //! Get an explicit expiry date from a commodity option quote's Expiry
     QuantLib::Date getExpiry(const QuantLib::Date& asof, const boost::shared_ptr<Expiry>& expiry,
         const std::string& name, QuantLib::Natural rollDays) const;
+
+    //! Populate price curve, \p pts_, and yield curve, \p yts_.
+    void populateCurves(const CommodityVolatilityConfig& config,
+        const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+        const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
+        bool deltaOrFwdMoneyness);
 };
 
 }
