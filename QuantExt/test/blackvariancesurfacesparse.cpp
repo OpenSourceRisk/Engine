@@ -310,6 +310,50 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceAxisInterp) {
     BOOST_CHECK_CLOSE(e5, surface->blackVol(t2, s3), 1e-12);
 }
 
+BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceFlatExtrapolation) {
+
+    BOOST_TEST_MESSAGE("Testing QuantExt::BlackVarianceSurfaceSparse flat extrapolation");
+
+    SavedSettings backup;
+
+    Settings::instance().evaluationDate() = Date(1, Mar, 2010);
+    Date today = Settings::instance().evaluationDate();
+
+    // the 3 vectors we pass into the vol term structure
+    // We setup a 4 X 4 grid with different vols everywhere.
+    vector<Date> dates = { Date(1, Mar, 2011), Date(1, Mar, 2011), Date(1, Mar, 2012), Date(1, Mar, 2012) };
+    vector<Real> strikes = { 2000, 3000, 2000, 3000 };
+    vector<Volatility> vols = { 0.105, 0.12, 0.17, 0.15 };
+
+    Calendar cal = TARGET();
+    DayCounter dc = ActualActual();
+
+    auto surface = boost::make_shared<QuantExt::BlackVarianceSurfaceSparse>(today, cal, dates, strikes, vols, dc, true, true, true);
+
+    Real s1 = 2000;                                           // on first strike
+    Real s2 = 2500;                                           // between 2 strikes
+    Real s3 = 3000;                                           // on last strike
+
+    Time tb = surface->times().back();
+    Real edgeVol1 = surface->blackVol(tb, s1);
+    Real edgeVol2 = surface->blackVol(tb, s2);
+    Real edgeVol3 = surface->blackVol(tb, s3);
+
+    Real edgeVar1 = surface->blackVariance(tb, s1);
+    Real edgeVar2 = surface->blackVariance(tb, s2);
+    Real edgeVar3 = surface->blackVariance(tb, s3);
+
+    for (Real t = 1; t < 10; t++) {
+        BOOST_CHECK_CLOSE(edgeVol1, surface->blackVol(tb + t, s1), 1e-12);
+        BOOST_CHECK_CLOSE(edgeVol2, surface->blackVol(tb + t, s2), 1e-12);
+        BOOST_CHECK_CLOSE(edgeVol3, surface->blackVol(tb + t, s3), 1e-12);
+
+        BOOST_CHECK_CLOSE(edgeVar1, surface->blackVariance(tb + t, s1) * tb /(tb + t), 1e-12);
+        BOOST_CHECK_CLOSE(edgeVar2, surface->blackVariance(tb + t, s2) * tb /(tb + t), 1e-12);
+        BOOST_CHECK_CLOSE(edgeVar3, surface->blackVariance(tb + t, s3) * tb /(tb + t), 1e-12);
+
+    }
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

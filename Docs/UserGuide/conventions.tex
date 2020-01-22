@@ -511,8 +511,7 @@ The meaning of the elements is as follows:
 \subsubsection{CMS Spread Option Conventions}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-A node with name \emph{InflationSwap} is used to store conventions for zero or year on year inflation swap quotes. The
-structure of this node is shown in Listing \ref{lst:inflation_conventions}
+A node with name \emph{CmsSpreadOption} is used to store the conventions.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -529,7 +528,7 @@ structure of this node is shown in Listing \ref{lst:inflation_conventions}
   </CmsSpreadOption>
 \end{minted}
 \caption{Inflation swap conventions}
-\label{lst:inflation_conventions}
+\label{lst:cms_spread_option_conventions}
 \end{listing}
 
 The meaning of the elements is as follows:
@@ -606,7 +605,7 @@ The meanings of the various elements in this node are as follows:
 \end{itemize}
 
 \subsubsection{Commodity Future Conventions}
-A node with name \lstinline!CommodityFuture! is used to store conventions for commodity future contracts. These conventions are used in commodity derivative trades to calculate contract expiry dates. The structure of this node is shown in Listing \ref{lst:commodity_future_conventions}.
+A node with name \lstinline!CommodityFuture! is used to store conventions for commodity future contracts and options on them. These conventions are used in commodity derivative trades and commodity curve construction to calculate contract expiry dates. The structure of this node is shown in Listing \ref{lst:commodity_future_conventions}.
 
 \begin{listing}[h!]
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -617,12 +616,20 @@ A node with name \lstinline!CommodityFuture! is used to store conventions for co
   </AnchorDay>
   <ContractFrequency>...</ContractFrequency>
   <Calendar>...</Calendar>
+  <ExpiryCalendar>...</ExpiryCalendar>
   <ExpiryMonthLag>...</ExpiryMonthLag>
   <OneContractMonth>...</OneContractMonth>
   <OffsetDays>...</OffsetDays>
   <BusinessDayConvention>...</BusinessDayConvention>
   <AdjustBeforeOffset>...</AdjustBeforeOffset>
   <IsAveraging>...</IsAveraging>
+  <OptionExpiryOffset>...</OptionExpiryOffset>
+  <ProhibitedExpiries>
+    <Dates>
+      <Date>...</Date>
+        ...
+    </Dates>
+  </ProhibitedExpiries>
 </CommodityFuture>
 \end{minted}
 \caption{Commodity future conventions}
@@ -632,19 +639,23 @@ A node with name \lstinline!CommodityFuture! is used to store conventions for co
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
 \item \lstinline!Id!: The identifier for the commodity future convention. The identifier here should match the \lstinline!Name! that would be provided for the commodity in the trade XML as described in Table \ref{tab:commodity_data}.
-\item \lstinline!AnchorDay!: This node is used to give a date in the future contract month to use as a base date for calculating the expiry date. It can contain a \lstinline!DayOfMonth! node or an \lstinline!NthWeekday! node:
+\item \lstinline!AnchorDay!: This node is used to give a date in the future contract month to use as a base date for calculating the expiry date. It can contain a \lstinline!DayOfMonth! node, a \lstinline!CalendarDaysBefore! node or an \lstinline!NthWeekday! node:
 \begin{itemize}
 \item The \lstinline!DayOfMonth! This node can contain any integer in the range $1,\ldots,31$ indicating the day of the month. A value of 31 will guarantee that the last day in the month is used a base date.
+\item The \lstinline!CalendarDaysBefore! This node can contain any non-negative integer. The contract expiry date is this number of calendar days before the first calendar day of the contract month.
 \item The \lstinline!NthWeekday! This node has the elements shown in Listing \ref{lst:nth_weekday_node}. This node is used to indicate a date in a given month in the form of the n-th named weekday of that month e.g. 3rd Wednesday. The allowable values for \lstinline!Nth! are ${1,2,3,4}$. The \lstinline!Weekday! node takes a weekday in the form of the first three characters of the weekday with the first character capitalised.
 \end{itemize}
 \item \lstinline!ContractFrequency!: This node indicates the frequency of the commodity future contracts. The value here is usually \lstinline!Monthly! or \lstinline!Quarterly!.
-\item \lstinline!Calendar!: The business day calendar(s) applicable for the commodity future contract.
+\item \lstinline!Calendar!: The business day trading calendar(s) applicable for the commodity future contract.
+\item \lstinline!ExpiryCalendar! [Optional]: The business day expiry calendar(s) applicable for the commodity future contract. This calendar is used when deriving expiry dates. If omitted, this defaults to the trading day calendar specified in the \lstinline!Calendar! node.
 \item \lstinline!ExpiryMonthLag! [Optional]: The allowable values are any non-negative integer. This value indicates the number of months from the month containing the expiry date to the contract month. If 0, the commodity future contract expiry date is in the contract month. If the value of \lstinline!ExpiryMonthLag! is $n > 0$, the commodity future contract expires in the $n$-th month prior to the contract month. The value of \lstinline!ExpiryMonthLag! is generally 0, 1 or 2. For example, \lstinline!NYMEX:CL! has an \lstinline!ExpiryMonthLag! of 1 and \lstinline!ICE:B! has an \lstinline!ExpiryMonthLag! of 2. If omitted, it defaults to 0.
 \item \lstinline!OneContractMonth! [Optional]: This node takes a calendar month in the form of the first three characters of the month with the first character capitalised. The month provided should be an arbitrary valid future contract month. It is used in cases where the \lstinline!ContractFrequency! is not \lstinline!Monthly! in order to determine the valid contract months. If omitted, it defaults to January.
 \item \lstinline!OffsetDays! [Optional]: The number of business days that the expiry date is before the base date where the base date is implied by the \lstinline!AnchorDay! node above. Any non-negative integer is allowed here. If omitted, this takes a default value of zero.
 \item \lstinline!BusinessDayConvention! [Optional]: The business day roll convention used to adjust the expiry date. The allowable values are given in Table \ref{tab:allow_stand_data}. If omitted, it defaults to \lstinline!Preceding!.
 \item \lstinline!AdjustBeforeOffset! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. If \lstinline!true!, if the base date implied by the \lstinline!AnchorDay! node above is not a good business day according to the calendar provided in the \lstinline!Calendar! node, this date is adjusted before the offset specified in the \lstinline!OffsetDays! is applied. If \lstinline!false!, this adjustment does not happen. If omitted, it defaults to \lstinline!true!. 
 \item \lstinline!IsAveraging! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. This node indicates if the future contract is based on the average commodity price of the contract period. If omitted, it defaults to \lstinline!false!.
+\item \lstinline!OptionExpiryOffset! [Optional]: The number of business days that the option expiry date is before the future expiry date. Any non-negative integer is allowed here. If omitted, this takes a default value of zero and the expiry date of an option on the future contract is assumed to equal the expiry date of the future contract.
+\item \lstinline!ProhibitedExpiries! [Optional]: This node can be used to specify explicit dates which are not allowed as future contract expiry dates or as option expiry dates. A useful example of this is the ICE Brent contract which has the following constraint on expiry dates: \emph{If the day on which trading is due to cease would be either: (i) the Business Day preceding Christmas Day, or (ii) the Business Day preceding New Year’s Day, then trading shall cease on the next preceding Business Day}.
 \end{itemize}
 
 \begin{listing}[h!]

@@ -38,7 +38,10 @@ OREDATA_TESTS = \
     digitalcms.cpp \
 	fixings.cpp \
     zerocouponswap.cpp \
-	mxnircurves.cpp
+	mxnircurves.cpp \
+	conventionsbasedfutureexpiry.cpp \
+	strike.cpp \
+	expiry.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
