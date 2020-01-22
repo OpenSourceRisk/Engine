@@ -414,14 +414,6 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType name="commodityVolatilityType">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="Constant"/>
-      <xs:enumeration value="Curve"/>
-      <xs:enumeration value="Surface"/>
-    </xs:restriction>
-  </xs:simpleType>
-
   <xs:simpleType name="volatilityType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Normal"/>
@@ -564,6 +556,33 @@
       <xs:enumeration value="Put"/>
     </xs:restriction>
   </xs:simpleType>
- 
+  
+  <xs:simpleType name="strikeDeltaType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Spot"/>
+      <xs:enumeration value="Fwd"/>
+      <xs:enumeration value="PaSpot"/>
+      <xs:enumeration value="PaFwd"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="strikeAtmType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="AtmSpot"/>
+      <xs:enumeration value="AtmFwd"/>
+      <xs:enumeration value="AtmDeltaNeutral"/>
+      <xs:enumeration value="AtmVegaMax"/>
+      <xs:enumeration value="AtmGammaMax"/>
+      <xs:enumeration value="AtmPutCall50"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="strikeMoneynessType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Spot"/>
+      <xs:enumeration value="Fwd"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
 </xs:schema>
 

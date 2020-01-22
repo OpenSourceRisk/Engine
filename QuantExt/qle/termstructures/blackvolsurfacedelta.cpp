@@ -64,11 +64,17 @@ BlackVolatilitySurfaceDelta::BlackVolatilitySurfaceDelta(
     bool hasAtm, const Matrix& blackVolMatrix, const DayCounter& dayCounter, const Calendar& cal,
     const Handle<Quote>& spot, const Handle<YieldTermStructure>& domesticTS,
     const Handle<YieldTermStructure>& foreignTS, DeltaVolQuote::DeltaType dt,
-    DeltaVolQuote::AtmType at, InterpolatedSmileSection::InterpolationMethod im, bool flatExtrapolation)
+    DeltaVolQuote::AtmType at,
+    boost::optional<DeltaVolQuote::DeltaType> atmDeltaType,
+    InterpolatedSmileSection::InterpolationMethod im, bool flatExtrapolation)
     : BlackVolatilityTermStructure(referenceDate, cal, Following, dayCounter),
       dates_(dates), times_(dates.size(), 0), putDeltas_(putDeltas), callDeltas_(callDeltas), hasAtm_(hasAtm),
-      spot_(spot), domesticTS_(domesticTS), foreignTS_(foreignTS), dt_(dt), at_(at), interpolationMethod_(im),
-      flatExtrapolation_(flatExtrapolation) {
+      spot_(spot), domesticTS_(domesticTS), foreignTS_(foreignTS), dt_(dt), at_(at),
+      atmDeltaType_(atmDeltaType), interpolationMethod_(im), flatExtrapolation_(flatExtrapolation) {
+
+    // If ATM delta type is not given, set it to dt
+    if (!atmDeltaType_)
+        atmDeltaType_ = dt_;
 
     QL_REQUIRE(dates.size() > 1, "at least 1 date required");
     // this has already been done for dates
@@ -113,43 +119,50 @@ boost::shared_ptr<FxSmileSection> BlackVolatilitySurfaceDelta::blackVolSmile(Tim
     DiscountFactor dDiscount = domesticTS_->discount(t);
     DiscountFactor fDiscount = foreignTS_->discount(t);
 
-    // we interpolate on all the curves
-
-    // get vols
-    vector<Real> vols;
-    for (const auto& interp : interpolators_) {
-        vols.push_back(interp->blackVol(t, 1, true));
-    }
-
-    // get strikes - need to handle the 3 groups
-    // store them in a vector of pairs for now for easy sorting
-    vector<pair<Real, Real>> tmp;
+    // Store smile section in map. Use strikes as key and vols as values for automatic sorting by strike.
+    // If we have already have a strike from a previous delta, we do not overwrite it.
+    auto comp = [](Real a, Real b) { return !close(a, b) && a < b; };
+    map<Real, Real, decltype(comp)> smileSection(comp);
     Size i = 0;
     for (Real delta : putDeltas_) {
-        BlackDeltaCalculator bdc(Option::Put, dt_, spot, dDiscount, fDiscount, vols[i]);
-        tmp.push_back(make_pair(vols[i], bdc.strikeFromDelta(delta)));
+        Real vol = interpolators_.at(i)->blackVol(t, 1, true);
+        BlackDeltaCalculator bdc(Option::Put, dt_, spot, dDiscount, fDiscount, vol * sqrt(t));
+        Real strike = bdc.strikeFromDelta(delta);
+        if (smileSection.count(strike) == 0)
+            smileSection[strike] = vol;
         i++;
     }
     if (hasAtm_) {
-        BlackDeltaCalculator bdc(Option::Put, dt_, spot, dDiscount, fDiscount, vols[i]);
-        tmp.push_back(make_pair(vols[i], bdc.atmStrike(at_)));
+        Real vol = interpolators_.at(i)->blackVol(t, 1, true);
+        BlackDeltaCalculator bdc(Option::Put, *atmDeltaType_, spot, dDiscount, fDiscount, vol * sqrt(t));
+        Real strike = bdc.atmStrike(at_);
+        if (smileSection.count(strike) == 0)
+            smileSection[strike] = vol;
         i++;
     }
     for (Real delta : callDeltas_) {
-        BlackDeltaCalculator bdc(Option::Call, dt_, spot, dDiscount, fDiscount, vols[i]);
-        tmp.push_back(make_pair(vols[i], bdc.strikeFromDelta(delta)));
+        Real vol = interpolators_.at(i)->blackVol(t, 1, true);
+        BlackDeltaCalculator bdc(Option::Call, dt_, spot, dDiscount, fDiscount, vol * sqrt(t));
+        Real strike = bdc.strikeFromDelta(delta);
+        if (smileSection.count(strike) == 0)
+            smileSection[strike] = vol;
         i++;
     }
+
     // sort and extract to vectors
-    std::sort(tmp.begin(), tmp.end());
-    vector<Real> strikes (vols.size(), 0.0);
-    for (Size i = 0; i < tmp.size(); i++) {
-        vols[i] = tmp[i].first;
-        strikes[i] = tmp[i].second;
+    vector<Real> strikes; strikes.reserve(smileSection.size());
+    vector<Real> vols; vols.reserve(smileSection.size());
+    for (const auto& kv : smileSection) {
+        strikes.push_back(kv.first);
+        vols.push_back(kv.second);
     }
 
     // now build smile from strikes and vols
     return boost::make_shared<InterpolatedSmileSection>(spot, dDiscount, fDiscount, t, strikes, vols, interpolationMethod_, flatExtrapolation_);
+}
+
+boost::shared_ptr<FxSmileSection> BlackVolatilitySurfaceDelta::blackVolSmile(const Date& d) const {
+    return blackVolSmile(timeFromReference(d));
 }
 
 Real BlackVolatilitySurfaceDelta::forward(Time t) const {

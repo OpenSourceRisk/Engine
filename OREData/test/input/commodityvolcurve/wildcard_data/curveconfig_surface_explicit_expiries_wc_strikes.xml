@@ -58,16 +58,17 @@
       <CurveId>NYMEX:CL</CurveId>
       <CurveDescription>NYMEX WTI option surface</CurveDescription>
       <Currency>USD</Currency>
-      <Type>Surface</Type>
-      <Surface>
-        <Expiries>2019-10-17,2019-12-16</Expiries>
+      <StrikeSurface>
         <Strikes>*</Strikes>
-      </Surface>
+        <Expiries>2019-10-17,2019-12-16</Expiries>
+        <TimeInterpolation>Linear</TimeInterpolation>
+        <StrikeInterpolation>Linear</StrikeInterpolation>
+        <Extrapolation>true</Extrapolation>
+        <TimeExtrapolation>Flat</TimeExtrapolation>
+        <StrikeExtrapolation>Flat</StrikeExtrapolation>
+      </StrikeSurface>
       <DayCounter>A365</DayCounter>
       <Calendar>USD</Calendar>
-      <Extrapolation>true</Extrapolation>
-      <LowerStrikeConstantExtrapolation>true</LowerStrikeConstantExtrapolation>
-      <UpperStrikeConstantExtrapolation>true</UpperStrikeConstantExtrapolation>
     </CommodityVolatility>
   </CommodityVolatilities>
   <Correlations/>
