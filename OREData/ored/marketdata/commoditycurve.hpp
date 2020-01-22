@@ -40,7 +40,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CommodityCurve() {}
+    CommodityCurve() : regexQuotes_(false) {}
 
     //! Detailed constructor
     CommodityCurve(const QuantLib::Date& asof,
@@ -72,6 +72,9 @@ private:
     //! Store the tomorrow next value if any
     QuantLib::Real tnValue_;
 
+    //! Populated with \c true if the quotes are configured via a wildcard
+    bool regexQuotes_;
+
     //! Populate \p data with dates and prices from the loader
     void populateData(std::map<QuantLib::Date, QuantLib::Real>& data, const QuantLib::Date& asof, 
         const boost::shared_ptr<CommodityCurveConfig>& config, const Loader& loader, const Conventions& conventions);
@@ -90,6 +93,17 @@ private:
         const boost::shared_ptr<CommodityCurveConfig>& baseConfig, const FXTriangulation& fxSpots,
         const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves,
         const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves);
+
+    //! Build commodity basis price curve
+    void buildBasisPriceCurve(const QuantLib::Date& asof,
+        const CommodityCurveConfig& config,
+        const Conventions& conventions,
+        const QuantLib::Handle<QuantExt::PriceTermStructure>& basePts,
+        const Loader& loader);
+
+    //! Get the configured quotes
+    std::vector<boost::shared_ptr<CommodityForwardQuote>> getQuotes(const QuantLib::Date& asof,
+        const CommodityCurveConfig& config, const Loader& loader);
 };
 } // namespace data
 } // namespace ore
