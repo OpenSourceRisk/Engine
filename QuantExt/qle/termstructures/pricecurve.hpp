@@ -82,7 +82,6 @@ public:
 
     //! \name TermStructure interface
     //@{
-    //! This is not used by this class and returns the maximum date
     QuantLib::Date maxDate() const;
     QuantLib::Time maxTime() const;
     //@}
