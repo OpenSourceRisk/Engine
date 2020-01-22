@@ -37,8 +37,9 @@ public:
     /*! The type of commodity curve that has been configured:
          - Direct: if the commodity price curve is built from commodity forward quotes
          - CrossCurrency: if the commodity price curve is implied from a price curve in a different currency
+         - Basis: if the commodity price curve is built from basis quotes
     */
-    enum class Type { Direct, CrossCurrency };
+    enum class Type { Direct, CrossCurrency, Basis };
 
     //! \name Constructors/Destructors
     //@{
@@ -55,6 +56,19 @@ public:
     CommodityCurveConfig(const std::string& curveId, const std::string& curveDescription, const std::string& currency,
         const std::string& basePriceCurveId, const std::string& baseYieldCurveId,
         const std::string& yieldCurveId, bool extrapolation = true);
+
+    //! Detailed constructor for Basis commodity curve configuration
+    CommodityCurveConfig(const std::string& curveId,
+        const std::string& curveDescription,
+        const std::string& currency,
+        const std::string& basePriceCurveId,
+        const std::string& baseConventionsId,
+        const std::vector<std::string>& basisQuotes,
+        const std::string& basisConventionsId,
+        const std::string& dayCountId = "A365",
+        const std::string& interpolationMethod = "Linear",
+        bool extrapolation = true,
+        bool addBasis = true);
     //@}
 
     //! \name Serialisation
@@ -76,6 +90,8 @@ public:
     bool extrapolation() const { return extrapolation_; }
     const vector<string>& fwdQuotes() const { return fwdQuotes_; }
     const std::string& conventionsId() const { return conventionsId_; }
+    const std::string& baseConventionsId() const { return baseConventionsId_; }
+    bool addBasis() const { return addBasis_; }
     //@}
 
     //! \name Setters
@@ -90,6 +106,8 @@ public:
     std::string& yieldCurveId() { return yieldCurveId_; }
     bool& extrapolation() { return extrapolation_; }
     std::string& conventionsId() { return conventionsId_; }
+    std::string& baseConventionsId() { return baseConventionsId_; }
+    bool& addBasis() { return addBasis_; }
     //@}
 
 private:
@@ -104,6 +122,8 @@ private:
     std::string yieldCurveId_;
     bool extrapolation_;
     std::string conventionsId_;
+    std::string baseConventionsId_;
+    bool addBasis_;
 };
 
 } // namespace data
