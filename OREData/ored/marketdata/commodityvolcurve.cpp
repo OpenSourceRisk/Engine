@@ -60,7 +60,11 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
         if (!config.futureConventionsId().empty()) {
             QL_REQUIRE(conventions.has(config.futureConventionsId()), "Conventions, " << 
                 config.futureConventionsId() << " for config " << config.curveID() << " not found.");
-            expCalc_ = boost::make_shared<ConventionsBasedFutureExpiry>(boost::make_shared<Conventions>(conventions));
+            auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(
+                conventions.get(config.futureConventionsId()));
+            QL_REQUIRE(convention, "Convention with ID '" << config.futureConventionsId() <<
+                "' should be of type CommodityFutureConvention");
+            expCalc_ = boost::make_shared<ConventionsBasedFutureExpiry>(*convention);
         }
 
         calendar_ = parseCalendar(config.calendar());
@@ -1043,7 +1047,7 @@ Handle<PriceTermStructure> CommodityVolCurve::correctFuturePriceCurve(const Date
     // Add future price at option expiry to the curve i.e. override any interpolation between future option
     // expiry (oed) and future expiry (fed).
     for (const Date& oed : optionExpiries) {
-        Date fed = expCalc_->nextExpiry(contractName, true, oed, 0, false);
+        Date fed = expCalc_->nextExpiry(true, oed, 0, false);
         // In general, expect that the future expiry date will already be in curveData but maybe not.
         auto it = curveData.find(fed);
         if (it != curveData.end()) {
@@ -1112,7 +1116,7 @@ Date CommodityVolCurve::getExpiry(const Date& asof, const boost::shared_ptr<Expi
         // Get the c1 expiry first. All subsequent expiries are relative to this.
 
         // Get the next option expiry on or after the asof date
-        result = expCalc_->nextExpiry(name, true, asof, 0, true);
+        result = expCalc_->nextExpiry(true, asof, 0, true);
         TLOG("CommodityVolCurve::getExpiry: next option expiry relative to " <<
             io::iso_date(asof) << " is " << io::iso_date(result) << ".");
 
@@ -1124,7 +1128,7 @@ Date CommodityVolCurve::getExpiry(const Date& asof, const boost::shared_ptr<Expi
                 " giving a roll date " << io::iso_date(roll) << ".");
             // Take the next option expiry if the roll days means the roll date is before asof.
             if (roll < asof) {
-                result = expCalc_->nextExpiry(name, true, asof, 1, true);
+                result = expCalc_->nextExpiry(true, asof, 1, true);
                 roll = calendar_.advance(result, -static_cast<Integer>(rollDays), Days);
                 QL_REQUIRE(roll > asof, "CommodityVolCurve::getExpiry: expected roll to be greater than asof.");
                 TLOG("CommodityVolCurve::getExpiry: roll date " << io::iso_date(roll) << " is less than asof " <<
@@ -1139,7 +1143,7 @@ Date CommodityVolCurve::getExpiry(const Date& asof, const boost::shared_ptr<Expi
         Natural fcIndex = fcExpiry->expiryIndex();
         if (fcIndex > 1) {
             result += 1 * Days;
-            result = expCalc_->nextExpiry(name, true, result, fcIndex - 2, true);
+            result = expCalc_->nextExpiry(true, result, fcIndex - 2, true);
         }
 
         DLOG("Expiry date corresponding to continuation expiry, " << *fcExpiry <<
