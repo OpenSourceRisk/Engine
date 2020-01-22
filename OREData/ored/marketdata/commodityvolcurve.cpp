@@ -137,7 +137,7 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
     // contain exactly one element.
     bool isRegex = false;
     for (Size i = 0; i < vcc.quotes().size(); i++) {
-        if (isRegex = vcc.quotes()[i].find("*") != string::npos) {
+        if (isRegex = (vcc.quotes()[i].find("*") != string::npos)) {
             QL_REQUIRE(i == 0 && vcc.quotes().size() == 1, "Wild card config, " << 
                 vc.curveID() << ", should have exactly one quote.");
             break;
@@ -677,7 +677,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         }
 
         // Position of quote in vector of strikes
-        Size pos = distance(strikes.begin(), strikeIt);
+        Size pos = std::distance(strikes.begin(), strikeIt);
 
         // Process the quote
         Date eDate = getExpiry(asof, q->expiry(), vc.futureConventionsId(), vc.optionExpiryRollDays());
@@ -882,7 +882,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         }
 
         // Position of quote in vector of strikes
-        Size pos = distance(strikes.begin(), strikeIt);
+        Size pos = std::distance(strikes.begin(), strikeIt);
 
         // Process the quote
         Date eDate = getExpiry(asof, q->expiry(), vc.futureConventionsId(), vc.optionExpiryRollDays());
