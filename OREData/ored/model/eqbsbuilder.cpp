@@ -115,8 +115,6 @@ std::vector<boost::shared_ptr<BlackCalibrationHelper>> EqBsBuilder::optionBasket
 }
 
 bool EqBsBuilder::requiresRecalibration() const {
-    bool res = data_->calibrateSigma() &&
-        (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
     return data_->calibrateSigma() &&
            (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
 }
