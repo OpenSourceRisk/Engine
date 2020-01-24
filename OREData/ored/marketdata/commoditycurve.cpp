@@ -17,17 +17,18 @@
 */
 
 #include <ored/marketdata/commoditycurve.hpp>
+#include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/log.hpp>
+#include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/crosscurrencypricetermstructure.hpp>
-#include <qle/math/flatextrapolation.hpp>
-#include <ql/math/interpolations/linearinterpolation.hpp>
-#include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <boost/algorithm/string.hpp>
 #include <algorithm>
 #include <regex>
 
+using QuantExt::CommoditySpotIndex;
+using QuantExt::CommodityAverageBasisPriceCurve;
 using QuantExt::InterpolatedPriceCurve;
 using QuantExt::CrossCurrencyPriceTermStructure;
 using QuantExt::PriceTermStructure;
@@ -54,6 +55,9 @@ CommodityCurve::CommodityCurve(const Date& asof,
     try {
 
         boost::shared_ptr<CommodityCurveConfig> config = curveConfigs.commodityCurveConfig(spec_.curveConfigID());
+
+        dayCounter_ = config->dayCountId() == "" ? Actual365Fixed() : parseDayCounter(config->dayCountId());
+        interpolationMethod_ = config->interpolationMethod() == "" ? "Linear" : config->interpolationMethod();
 
         if (config->type() == CommodityCurveConfig::Type::Direct) {
             
@@ -214,27 +218,8 @@ void CommodityCurve::buildCurve(const Date& asof,
         curvePrices.push_back(datum.second);
     }
 
-    DayCounter dc = config->dayCountId() == "" ? Actual365Fixed() : parseDayCounter(config->dayCountId());
-    string interpolationMethod = config->interpolationMethod() == "" ? "Linear" : config->interpolationMethod();
-    boost::algorithm::to_upper(interpolationMethod);
-
-    if (interpolationMethod == "LINEAR") {
-        commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<Linear>>(asof, curveDates, curvePrices, dc);
-    } else if (interpolationMethod == "LOGLINEAR") {
-        commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<LogLinear>>(asof, curveDates, curvePrices, dc);
-    } else if (interpolationMethod == "CUBIC") {
-        commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<Cubic>>(asof, curveDates, curvePrices, dc);
-    } else if (interpolationMethod == "LINEARFLAT") {
-        commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(asof, curveDates, curvePrices, dc);
-    } else if (interpolationMethod == "LOGLINEARFLAT") {
-        commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<LogLinearFlat>>(asof, curveDates, curvePrices, dc);
-    } else if (interpolationMethod == "CUBICFLAT") {
-        commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<CubicFlat>>(asof, curveDates, curvePrices, dc);
-    } else {
-        QL_FAIL("The interpolation method, " << interpolationMethod <<
-            ", is not supported. Needs to be Linear or LogLinear");
-    }
-
+    // Build the curve using the data
+    populateCurve<InterpolatedPriceCurve>(asof, curveDates, curvePrices, dayCounter_);
 }
 
 void CommodityCurve::buildCrossCurrencyPriceCurve(const Date& asof,
@@ -286,6 +271,7 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof,
         conventions.get(config.conventionsId()));
     QL_REQUIRE(basisConvention, "Convention " << config.conventionsId() <<
         " not of expected type CommodityFutureConvention");
+    auto basisFec = boost::make_shared<ConventionsBasedFutureExpiry>(*basisConvention);
 
     QL_REQUIRE(conventions.has(config.baseConventionsId()), "Commodity conventions " << config.baseConventionsId()
         << " requested by commodity config " << config.curveID() << " not found");
@@ -293,13 +279,48 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof,
         conventions.get(config.baseConventionsId()));
     QL_REQUIRE(baseConvention, "Convention " << config.baseConventionsId() <<
         " not of expected type CommodityFutureConvention");
+    auto baseFec = boost::make_shared<ConventionsBasedFutureExpiry>(*baseConvention);
 
-    // Get the vector of configured commodity basis quotes
-    auto quotes = getQuotes(asof, config, loader);
+    // Construct the commodity "spot index". We pass this to merely indicate the commodity. It is replaced with a 
+    // commodity future index during curve construction in QuantExt.
+    auto index = boost::make_shared<CommoditySpotIndex>(baseConvention->id(), baseConvention->calendar(), basePts);
 
     // Sort the configured quotes on expiry dates
     // Ignore tenor based quotes i.e. we expect an explicit expiry date and log a warning if the expiry date does not 
     // match our own calculated expiry date based on the basis conventions.
+    map<Date, Handle<Quote>> basisData;
+    for (auto& q : getQuotes(asof, config, loader)) {
+        
+        if (q->tenorBased()) {
+            TLOG("Skipping tenor based quote, " << q->name() << ".");
+            continue;
+        }
+
+        if (q->expiryDate() < asof) {
+            TLOG("Skipping quote because its expiry date, " << io::iso_date(q->expiryDate()) <<
+                ", is before the market date " << io::iso_date(asof));
+            continue;
+        }
+
+        QL_REQUIRE(basisData.find(q->expiryDate()) == basisData.end(), "Found duplicate quote, " << q->name() <<
+            ", for expiry date " << io::iso_date(q->expiryDate()) << ".");
+
+        basisData[q->expiryDate()] = q->quote();
+        TLOG("Using quote " << q->name() << " in commodity basis curve.");
+        
+        // We expect the expiry date in the quotes to match our calculated expiry date. The code will work if it does
+        // not but we log a warning in this case.
+        Date calcExpiry = basisFec->nextExpiry(true, q->expiryDate());
+        if (calcExpiry != q->expiryDate()) {
+            WLOG("Calculated expiry date, " << io::iso_date(calcExpiry) <<
+                ", does not equal quote's expiry date " << io::iso_date(q->expiryDate()) << ".");
+        }
+    }
+
+    if (basisConvention->isAveraging() && !baseConvention->isAveraging()) {
+        DLOG("Creating a commodity basis curve with non-averaging base curve and averaging basis.");
+        populateCurve<CommodityAverageBasisPriceCurve>(asof, basisData, basisFec, index, basePts, baseFec, config.addBasis());
+    }
 
     LOG("CommodityCurve: finished building commodity basis curve.");
 }

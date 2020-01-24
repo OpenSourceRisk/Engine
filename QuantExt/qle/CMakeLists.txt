@@ -365,6 +365,7 @@ termstructures/brlcdiratehelper.hpp
 termstructures/capfloorhelper.hpp
 termstructures/capfloortermvolcurve.hpp
 termstructures/capfloortermvolsurface.hpp
+termstructures/commodityaveragebasispricecurve.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
 termstructures/crossccybasisswaphelper.hpp
