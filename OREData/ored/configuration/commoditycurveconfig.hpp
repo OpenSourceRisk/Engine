@@ -68,7 +68,8 @@ public:
         const std::string& dayCountId = "A365",
         const std::string& interpolationMethod = "Linear",
         bool extrapolation = true,
-        bool addBasis = true);
+        bool addBasis = true,
+        QuantLib::Natural monthOffset = 0);
     //@}
 
     //! \name Serialisation
@@ -92,6 +93,7 @@ public:
     const std::string& conventionsId() const { return conventionsId_; }
     const std::string& baseConventionsId() const { return baseConventionsId_; }
     bool addBasis() const { return addBasis_; }
+    QuantLib::Natural monthOffset() const { return monthOffset_; }
     //@}
 
     //! \name Setters
@@ -108,6 +110,7 @@ public:
     std::string& conventionsId() { return conventionsId_; }
     std::string& baseConventionsId() { return baseConventionsId_; }
     bool& addBasis() { return addBasis_; }
+    QuantLib::Natural& monthOffset() { return monthOffset_; }
     //@}
 
 private:
@@ -124,6 +127,7 @@ private:
     std::string conventionsId_;
     std::string baseConventionsId_;
     bool addBasis_;
+    QuantLib::Natural monthOffset_;
 };
 
 } // namespace data

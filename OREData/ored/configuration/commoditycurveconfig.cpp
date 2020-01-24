@@ -56,7 +56,8 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId,
     const string& dayCountId,
     const string& interpolationMethod,
     bool extrapolation,
-    bool addBasis)
+    bool addBasis,
+    QuantLib::Natural monthOffset)
     : CurveConfig(curveId, curveDescription),
       type_(Type::Basis),
       fwdQuotes_(basisQuotes),
@@ -67,7 +68,8 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId,
       extrapolation_(extrapolation),
       conventionsId_(basisConventionsId),
       baseConventionsId_(baseConventionsId),
-      addBasis_(addBasis) {}
+      addBasis_(addBasis),
+      monthOffset_(monthOffset) {}
 
 void CommodityCurveConfig::fromXML(XMLNode* node) {
     
@@ -86,7 +88,8 @@ void CommodityCurveConfig::fromXML(XMLNode* node) {
         conventionsId_ = XMLUtils::getChildValue(n, "BasisConventions", true);
         dayCountId_ = XMLUtils::getChildValue(n, "DayCounter", false);
         interpolationMethod_ = XMLUtils::getChildValue(n, "InterpolationMethod", false);
-        addBasis_ = XMLUtils::getChildValueAsBool(n, "AddBasis");
+        addBasis_ = XMLUtils::getChildValueAsBool(n, "AddBasis", false);
+        monthOffset_ = XMLUtils::getChildValueAsInt(n, "MonthOffset", false);
 
     } else if (XMLNode* n = XMLUtils::getChildNode(node, "BasePriceCurve")) {
         
@@ -130,6 +133,7 @@ XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "DayCounter", dayCountId_);
         XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
         XMLUtils::addChild(doc, node, "AddBasis", addBasis_);
+        XMLUtils::addChild(doc, node, "MonthOffset", static_cast<int>(monthOffset_));
 
     } else if (type_ == Type::CrossCurrency) {
 

@@ -804,6 +804,9 @@
     <ClInclude Include="qle\termstructures\commodityaveragebasispricecurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\commoditybasispricecurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

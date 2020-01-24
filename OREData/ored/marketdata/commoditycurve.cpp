@@ -20,6 +20,7 @@
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/log.hpp>
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
+#include <qle/termstructures/commoditybasispricecurve.hpp>
 #include <qle/termstructures/crosscurrencypricetermstructure.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
@@ -29,6 +30,7 @@
 
 using QuantExt::CommoditySpotIndex;
 using QuantExt::CommodityAverageBasisPriceCurve;
+using QuantExt::CommodityBasisPriceCurve;
 using QuantExt::InterpolatedPriceCurve;
 using QuantExt::CrossCurrencyPriceTermStructure;
 using QuantExt::PriceTermStructure;
@@ -318,8 +320,16 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof,
     }
 
     if (basisConvention->isAveraging() && !baseConvention->isAveraging()) {
-        DLOG("Creating a commodity basis curve with non-averaging base curve and averaging basis.");
-        populateCurve<CommodityAverageBasisPriceCurve>(asof, basisData, basisFec, index, basePts, baseFec, config.addBasis());
+        DLOG("Creating a CommodityAverageBasisPriceCurve.");
+        populateCurve<CommodityAverageBasisPriceCurve>(asof, basisData, basisFec, index,
+            basePts, baseFec, config.addBasis());
+    } else if ((basisConvention->isAveraging() && baseConvention->isAveraging()) ||
+        (!basisConvention->isAveraging() && !baseConvention->isAveraging())) {
+        DLOG("Creating a CommodityBasisPriceCurve.");
+        populateCurve<CommodityBasisPriceCurve>(asof, basisData, basisFec, index,
+            basePts, baseFec, config.addBasis(), config.monthOffset());
+    } else {
+        QL_FAIL("A commodity basis curve with non-averaging basis and averaging base is not valid.");
     }
 
     LOG("CommodityCurve: finished building commodity basis curve.");

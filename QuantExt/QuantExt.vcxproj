@@ -683,6 +683,7 @@
     <ClInclude Include="qle\termstructures\capfloortermvolcurve.hpp" />
     <ClInclude Include="qle\termstructures\capfloortermvolsurface.hpp" />
     <ClInclude Include="qle\termstructures\commodityaveragebasispricecurve.hpp" />
+    <ClInclude Include="qle\termstructures\commoditybasispricecurve.hpp" />
     <ClInclude Include="qle\termstructures\correlationtermstructure.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasismtmresetswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\crossccyfixfloatswaphelper.hpp" />

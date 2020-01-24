@@ -20,10 +20,10 @@
     \brief A commodity price curve created from an averaged base curve and a collection of basis quotes.
 */
 
-#ifndef quantext_commodity_average_basis_price_curve_hpp
-#define quantext_commodity_average_basis_price_curve_hpp
+#ifndef quantext_commodity_basis_price_curve_hpp
+#define quantext_commodity_basis_price_curve_hpp
 
-#include <qle/cashflows/commodityindexedaveragecashflow.hpp>
+#include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 #include <ql/math/comparison.hpp>
@@ -35,28 +35,33 @@
 
 namespace QuantExt {
 
-//! Commodity average basis price curve.
+//! Commodity basis price curve.
 /*! Class representing an outright commodity price curve created from a base price curve and a collection of basis 
     quotes that are added to or subtracted from the base curve. This class is intended to be used only for commodity 
-    future basis price curves. The base curve is averaged over the period defined the basis quote.
+    future basis price curves.
+    
+    There is an assumption in the curve construction that the frequency of the base future contract is the same as 
+    the frequency of the basis future contract. In other words, if the base future contract is monthly then the basis 
+    future contract is monthly for example.
 
     \ingroup termstructures
 */
 template <class Interpolator>
-class CommodityAverageBasisPriceCurve : public PriceTermStructure,
-                                        public QuantLib::LazyObject,
-                                        protected QuantLib::InterpolatedCurve<Interpolator> {
+class CommodityBasisPriceCurve : public PriceTermStructure,
+                                 public QuantLib::LazyObject,
+                                 protected QuantLib::InterpolatedCurve<Interpolator> {
 public:
     //! \name Constructors
     //@{
     //! Curve constructed from dates and quotes
-    CommodityAverageBasisPriceCurve(const QuantLib::Date& referenceDate,
+    CommodityBasisPriceCurve(const QuantLib::Date& referenceDate,
         const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
         const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
         const boost::shared_ptr<CommoditySpotIndex>& spotIndex,
         const QuantLib::Handle<PriceTermStructure>& basePts,
         const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
         bool addBasis = true,
+        QuantLib::Size monthOffset = 0,
         const Interpolator& interpolator = Interpolator());
     //@}
 
@@ -101,7 +106,8 @@ private:
     QuantLib::Handle<PriceTermStructure> basePts_;
     boost::shared_ptr<FutureExpiryCalculator> baseFec_;
     bool addBasis_;
-    
+    QuantLib::Size monthOffset_;
+
     std::vector<QuantLib::Date> dates_;
 
     /*! Interpolator used for interpolating the basis if needed. Basis interpolation uses the same interpolator as 
@@ -111,20 +117,28 @@ private:
     mutable std::vector<Real> basisValues_;
     mutable Interpolation basisInterpolation_;
 
-    //! The averaging cashflows will give the base curve prices.
-    QuantLib::Leg baseLeg_;
+    //! The commodity cashflows will give the base curve prices.
+    std::map<QuantLib::Date, boost::shared_ptr<CommodityIndexedCashFlow>> baseLeg_;
 
     /*! Map where the key is the index of a time in the times_ vector and the value is the index of the 
         cashflow in the baseLeg_ to associate with that time.
     */
     std::map<QuantLib::Size, QuantLib::Size> legIndexMap_;
 
-    //! Get the first basis contract expiry strictly prior to the curve reference date.
+    //! Get the first basis contract expiry date on or after the curve reference date.
     QuantLib::Date firstExpiry() const;
+
+    //! Get the contract month and year from an expiry
+    QuantLib::Date getContractDate(const QuantLib::Date& expiry,
+        const boost::shared_ptr<FutureExpiryCalculator>& fec) const;
+
+    //! Make a commodity indexed cashflow
+    boost::shared_ptr<CommodityIndexedCashFlow> makeCashflow(const QuantLib::Date& start,
+        const QuantLib::Date& end) const;
 };
 
 template <class Interpolator>
-CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
+CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     const QuantLib::Date& referenceDate,
     const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
     const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
@@ -132,10 +146,11 @@ CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     const QuantLib::Handle<PriceTermStructure>& basePts,
     const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
     bool addBasis,
+    QuantLib::Size monthOffset,
     const Interpolator& interpolator)
     : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), basePts->dayCounter()),
       QuantLib::InterpolatedCurve<Interpolator>(interpolator), basisData_(basisData), basisFec_(basisFec),
-      spotIndex_(spotIndex), basePts_(basePts), baseFec_(baseFec), addBasis_(addBasis) {
+      spotIndex_(spotIndex), basePts_(basePts), baseFec_(baseFec), addBasis_(addBasis), monthOffset_(monthOffset) {
 
     using QuantLib::Date;
     using QuantLib::io::iso_date;
@@ -143,6 +158,7 @@ CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     using QuantLib::Schedule;
     using std::distance;
     using std::find;
+    using std::min;
     using std::max;
     using std::sort;
     using std::vector;
@@ -173,32 +189,30 @@ CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     // Initialise this curve's times with the basis pillars. We will add more pillars below.
     this->times_ = basisTimes_;
 
-    // Get the first basis contract expiry date strictly prior to the curve reference date.
-    Date start = firstExpiry();
+    // Get the first basis contract expiry date on or after the curve reference date.
+    Date basisExpiry = firstExpiry();
 
     // Get the first basis contract expiry date on or after the max date. Here, max date is defined as the maximum of 
     // 1) last pillar date of base price curve and 2) basis curve data.
     Date maxDate = max(basePts_->maxDate(), basisData_.rbegin()->first);
     Date end = basisFec_->nextExpiry(true, maxDate);
+    
+    // Populate the base cashflows.
+    while (basisExpiry <= end) {
+        
+        Date basisContractDate = getContractDate(basisExpiry, basisFec_);
+        Date periodStart = basisContractDate - monthOffset_ * Months;
+        Date periodEnd = (periodStart + 1 * Months) - 1 * Days;
+        baseLeg_[basisExpiry] = makeCashflow(periodStart, periodEnd);
 
-    // Create the leg schedule using a vector of dates which are the successive basis contract expiry dates
-    QL_REQUIRE(start < end, "Expected that the start date, " << io::iso_date(start) <<
-        ", would be strictly less than the end date, " << io::iso_date(end) << ".");
-    vector<Date> expiries{ start + 1 * Days };
-    vector<Time> scheduleTimes{ 0.0 };
-    while (start < end) {
-        start = basisFec_->nextExpiry(true, start + 1 * Days);
-        expiries.push_back(start);
-        Time t = timeFromReference(start);
         // Only add to this->times_ if it is not already there. We can use dates_ for this check.
-        if (find(dates_.begin(), dates_.end(), start) == dates_.end()) {
-            this->times_.push_back(t);
-            dates_.push_back(start);
+        if (find(dates_.begin(), dates_.end(), basisExpiry) == dates_.end()) {
+            this->times_.push_back(timeFromReference(basisExpiry));
+            dates_.push_back(basisExpiry);
         }
-        scheduleTimes.push_back(t);
+
+        basisExpiry = basisFec_->nextExpiry(true, basisExpiry + 1 * Days);
     }
-    QL_REQUIRE(start == end, "Expected that the start date, " << io::iso_date(start) <<
-        ", to equal the end date, " << io::iso_date(end) << ", after creating the sequence of expiry dates.");
 
     // Sort the times and dates vector and ensure no duplicates in the times vector.
     sort(this->times_.begin(), this->times_.end());
@@ -206,31 +220,13 @@ CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     auto it = unique(this->times_.begin(), this->times_.end(), [](double s, double t) { return close(s, t); });
     QL_REQUIRE(it == this->times_.end(), "Unexpected duplicate time, " << *it << ", in the times vector.");
     this->data_.resize(this->times_.size());
-
-    // Populate the leg of cashflows.
-    baseLeg_ = CommodityIndexedAverageLeg(Schedule(expiries), spotIndex_).withFutureExpiryCalculator(baseFec_);
-    QL_REQUIRE(baseLeg_.size() == scheduleTimes.size() - 1, "Unexpected number of averaging cashflows in the leg: " <<
-        "got " << baseLeg_.size() << " but expected " << scheduleTimes.size() - 1);
-
-    // Populate the legIndexMap_
-    for (Size i = 0; i < this->times_.size(); i++) {
-        for (Size j = 1; j < scheduleTimes.size(); j++) {
-            if (this->times_[i] < scheduleTimes[j] || close(this->times_[i], scheduleTimes[j])) {
-                QL_REQUIRE(legIndexMap_.find(i) == legIndexMap_.end(),
-                    "Should not already have a mapping for the " << ordinal(i) << " time.");
-                legIndexMap_[i] = j - 1;
-                break;
-            }
-            QL_FAIL("Could not map the " << ordinal(i) << " time, " << this->times_[i] << ", to a cashflow.");
-        }
-    }
 }
 
-template <class Interpolator> void CommodityAverageBasisPriceCurve<Interpolator>::update() {
+template <class Interpolator> void CommodityBasisPriceCurve<Interpolator>::update() {
     QuantLib::LazyObject::update();
 }
 
-template <class Interpolator> void CommodityAverageBasisPriceCurve<Interpolator>::performCalculations() const {
+template <class Interpolator> void CommodityBasisPriceCurve<Interpolator>::performCalculations() const {
 
     // Update the basis interpolation object
     Size basisIdx = 0;
@@ -243,7 +239,16 @@ template <class Interpolator> void CommodityAverageBasisPriceCurve<Interpolator>
     // Update this curve's interpolation
     for (Size i = 0; i < this->times_.size(); i++) {
         
-        Real baseValue = baseLeg_[legIndexMap_.at(i)]->amount();
+        Real baseValue = 0.0;
+        auto it = baseLeg_.find(dates_[i]);
+        if (it != baseLeg_.end()) {
+            // If we have associated the basis date with a base cashflow.
+            baseValue = it->second->amount();
+        } else {
+            // If we didn't associate the basis date with a base cashflow, just ask the base pts at t. This will have 
+            // happened if the basis date that was passed in was not a basis contract expiry date wrt basisFec_.
+            baseValue = basePts_->price(times_[i], true);
+        }
         
         // Get the basis with flat extrapolation
         Real basis = 0.0;
@@ -262,33 +267,33 @@ template <class Interpolator> void CommodityAverageBasisPriceCurve<Interpolator>
 }
 
 template <class Interpolator>
-QuantLib::Date CommodityAverageBasisPriceCurve<Interpolator>::maxDate() const {
+QuantLib::Date CommodityBasisPriceCurve<Interpolator>::maxDate() const {
     return dates_.back();
 }
 
 template <class Interpolator>
-QuantLib::Time CommodityAverageBasisPriceCurve<Interpolator>::maxTime() const {
+QuantLib::Time CommodityBasisPriceCurve<Interpolator>::maxTime() const {
     return this->times_.back();
 }
 
 template <class Interpolator>
-QuantLib::Time CommodityAverageBasisPriceCurve<Interpolator>::minTime() const {
+QuantLib::Time CommodityBasisPriceCurve<Interpolator>::minTime() const {
     return this->times_.front();
 }
 
 template <class Interpolator>
-std::vector<QuantLib::Date> CommodityAverageBasisPriceCurve<Interpolator>::pillarDates() const {
+std::vector<QuantLib::Date> CommodityBasisPriceCurve<Interpolator>::pillarDates() const {
     return dates_;
 }
 
 template <class Interpolator>
-QuantLib::Real CommodityAverageBasisPriceCurve<Interpolator>::priceImpl(QuantLib::Time t) const {
+QuantLib::Real CommodityBasisPriceCurve<Interpolator>::priceImpl(QuantLib::Time t) const {
     calculate();
     return this->interpolation_(t, true);
 }
 
 template <class Interpolator>
-QuantLib::Date CommodityAverageBasisPriceCurve<Interpolator>::firstExpiry() const {
+QuantLib::Date CommodityBasisPriceCurve<Interpolator>::firstExpiry() const {
 
     using QuantLib::Date;
     using QuantLib::io::iso_date;
@@ -299,25 +304,60 @@ QuantLib::Date CommodityAverageBasisPriceCurve<Interpolator>::firstExpiry() cons
     // 6 months spaced.
     Size maxAttempts = 40;
     Date nextExpiry = basisFec_->nextExpiry(true, referenceDate()) - 7 * Months;
-    QL_REQUIRE(nextExpiry < referenceDate(), "Expected that nextExpiry, " << io::iso_date(nextExpiry) <<
-        ", would be before curve reference date, " << io::iso_date(referenceDate()) << ".");
+    QL_REQUIRE(nextExpiry < referenceDate(), "Expected that nextExpiry, " << iso_date(nextExpiry) <<
+        ", would be before curve reference date, " << iso_date(referenceDate()) << ".");
     
-    // Loop until nextExpiry is >= today => result will hold the first expiry < today.
-    Date result;
+    // Loop until nextExpiry is >= today.
     while (nextExpiry < referenceDate() && maxAttempts > 0) {
-        result = nextExpiry;
-        nextExpiry = basisFec_->nextExpiry(false, result + 1 * Days);
+        nextExpiry = basisFec_->nextExpiry(false, nextExpiry + 1 * Days);
         maxAttempts--;
     }
 
     // Some post checks
-    QL_REQUIRE(maxAttempts > 0, "Could not find first expiry before reference date " << io::iso_date(referenceDate()));
-    QL_REQUIRE(nextExpiry >= referenceDate(), "Expected that nextExpiry, " << io::iso_date(nextExpiry) <<
-        ", would be on or after the curve reference date, " << io::iso_date(referenceDate()) << ".");
-    QL_REQUIRE(result < referenceDate(), "Expected that result, " << io::iso_date(result) <<
-        ", would be before the curve reference date, " << io::iso_date(referenceDate()) << ".");
+    QL_REQUIRE(maxAttempts > 0, "Could not find first expiry before reference date " << iso_date(referenceDate()));
+    QL_REQUIRE(nextExpiry >= referenceDate(), "Expected that nextExpiry, " << iso_date(nextExpiry) <<
+        ", would be on or after the curve reference date, " << iso_date(referenceDate()) << ".");
+
+    return nextExpiry;
+}
+
+template <class Interpolator>
+QuantLib::Date CommodityBasisPriceCurve<Interpolator>::getContractDate(const QuantLib::Date& expiry,
+    const boost::shared_ptr<FutureExpiryCalculator>& fec) const {
+
+    using QuantLib::Date;
+    using QuantLib::io::iso_date;
+
+    // Try the expiry date's month and year
+    Date result(1, expiry.month(), expiry.year());
+    Date calcExpiry = fec->expiryDate(result.month(), result.year(), 0);
+    if (calcExpiry == expiry) {
+        return result;
+    }
+
+    QL_REQUIRE(calcExpiry < expiry, "Expected the calculated expiry, " << iso_date(calcExpiry) <<
+        ", to be before the expiry, " << iso_date(expiry) << ".");
+
+    // Future contracts should not be spaced more than yearly intervals
+    Size maxIncrement = 12;
+    while (calcExpiry < expiry && maxIncrement > 0) {
+        result += 1 * Months;
+        calcExpiry = fec->expiryDate(result.month(), result.year(), 0);
+        maxIncrement--;
+    }
+
+    QL_REQUIRE(calcExpiry == expiry, "Expected the calculated expiry, " << iso_date(calcExpiry) <<
+        ", to equal the expiry, " << iso_date(expiry) << ".");
 
     return result;
+}
+
+template <class Interpolator>
+boost::shared_ptr<CommodityIndexedCashFlow> CommodityBasisPriceCurve<Interpolator>::makeCashflow(
+    const QuantLib::Date& start, const QuantLib::Date& end) const {
+    
+    return boost::make_shared<CommodityIndexedCashFlow>(1.0, start, end, spotIndex_, 0, QuantLib::NullCalendar(),
+        QuantLib::Unadjusted, 0, QuantLib::NullCalendar(), 0.0, 1.0, false, true, true, true, 0, baseFec_);
 }
 
 }
