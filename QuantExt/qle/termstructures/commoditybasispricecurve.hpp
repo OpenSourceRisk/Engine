@@ -184,7 +184,7 @@ CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     }
 
     // Set up the interpolation to be used on the basis
-    basisInterpolation_ = interpolator_.interpolate(basisTimes_.begin(), basisTimes_.end(), basisValues_.begin());
+    basisInterpolation_ = interpolator.interpolate(basisTimes_.begin(), basisTimes_.end(), basisValues_.begin());
 
     // Initialise this curve's times with the basis pillars. We will add more pillars below.
     this->times_ = basisTimes_;
@@ -247,7 +247,7 @@ template <class Interpolator> void CommodityBasisPriceCurve<Interpolator>::perfo
         } else {
             // If we didn't associate the basis date with a base cashflow, just ask the base pts at t. This will have 
             // happened if the basis date that was passed in was not a basis contract expiry date wrt basisFec_.
-            baseValue = basePts_->price(times_[i], true);
+            baseValue = basePts_->price(this->times_[i], true);
         }
         
         // Get the basis with flat extrapolation

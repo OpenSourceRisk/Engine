@@ -141,7 +141,7 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
     // contain exactly one element.
     bool isRegex = false;
     for (Size i = 0; i < vcc.quotes().size(); i++) {
-        if (isRegex = vcc.quotes()[i].find("*") != string::npos) {
+        if ((isRegex = vcc.quotes()[i].find("*") != string::npos)) {
             QL_REQUIRE(i == 0 && vcc.quotes().size() == 1, "Wild card config, " << 
                 vc.curveID() << ", should have exactly one quote.");
             break;

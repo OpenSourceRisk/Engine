@@ -168,7 +168,7 @@ CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     }
 
     // Set up the interpolation to be used on the basis
-    basisInterpolation_ = interpolator_.interpolate(basisTimes_.begin(), basisTimes_.end(), basisValues_.begin());
+    basisInterpolation_ = interpolator.interpolate(basisTimes_.begin(), basisTimes_.end(), basisValues_.begin());
 
     // Initialise this curve's times with the basis pillars. We will add more pillars below.
     this->times_ = basisTimes_;

@@ -344,7 +344,7 @@ vector<boost::shared_ptr<CommodityForwardQuote>> CommodityCurve::getQuotes(const
     // contain exactly one element.
     regexQuotes_ = false;
     for (Size i = 0; i < config.fwdQuotes().size(); i++) {
-        if (regexQuotes_ = config.fwdQuotes()[i].find("*") != string::npos) {
+        if ((regexQuotes_ = config.fwdQuotes()[i].find("*") != string::npos)) {
             QL_REQUIRE(i == 0 && config.fwdQuotes().size() == 1, "Wild card config, " <<
                 config.curveID() << ", should have exactly one quote.");
             DLOG("Regular expression, '" << config.fwdQuotes()[0] << "', specified for forward quotes" <<
