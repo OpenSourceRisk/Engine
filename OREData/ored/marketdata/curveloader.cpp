@@ -58,26 +58,32 @@ bool canBuild(boost::shared_ptr<CurveSpec>& spec, vector<boost::shared_ptr<Yield
         return true;
     }
 
-    // If it is not direct, we have to check if we can build it
-    // 1. check if we have the base yield curve 
-    auto ycIt = find_if(yieldSpecs.begin(), yieldSpecs.end(), 
-        [&curveConfig](const boost::shared_ptr<YieldCurveSpec>& ycs) {
+    // If it is cross currency type, need to check the two yield curves.
+    if (curveConfig->type() == CommodityCurveConfig::Type::CrossCurrency) {
+
+        // 1. check if we have the base yield curve 
+        auto ycIt = find_if(yieldSpecs.begin(), yieldSpecs.end(),
+            [&curveConfig](const boost::shared_ptr<YieldCurveSpec>& ycs) {
             return ycs->curveConfigID() == curveConfig->baseYieldCurveId(); });
-    if (ycIt == yieldSpecs.end()) {
-        DLOG("Required yield curve " << curveConfig->baseYieldCurveId() << " for " << curveId << " not available");
-        missingDependents[curveId] = curveConfig->baseYieldCurveId();
-        return false;
+        if (ycIt == yieldSpecs.end()) {
+            DLOG("Required yield curve " << curveConfig->baseYieldCurveId() << " for " << curveId << " not available");
+            missingDependents[curveId] = curveConfig->baseYieldCurveId();
+            return false;
+        }
+
+        // 2. check if we have the commodity curve currency yield curve 
+        ycIt = find_if(yieldSpecs.begin(), yieldSpecs.end(),
+            [&curveConfig](const boost::shared_ptr<YieldCurveSpec>& ycs) {
+            return ycs->curveConfigID() == curveConfig->yieldCurveId(); });
+        if (ycIt == yieldSpecs.end()) {
+            DLOG("Required yield curve " << curveConfig->yieldCurveId() << " for " << curveId << " not available");
+            missingDependents[curveId] = curveConfig->yieldCurveId();
+            return false;
+        }
+
     }
-    
-    // 2. check if we have the commodity curve currency yield curve 
-    ycIt = find_if(yieldSpecs.begin(), yieldSpecs.end(),
-        [&curveConfig](const boost::shared_ptr<YieldCurveSpec>& ycs) {
-        return ycs->curveConfigID() == curveConfig->yieldCurveId(); });
-    if (ycIt == yieldSpecs.end()) {
-        DLOG("Required yield curve " << curveConfig->yieldCurveId() << " for " << curveId << " not available");
-        missingDependents[curveId] = curveConfig->yieldCurveId();
-        return false;
-    }
+
+    // If it is cross currency or basis type, need to check the base price curve.
 
     // 3. check if we already have the base commodity curve
     auto it = find_if(commoditySpecs.begin(), commoditySpecs.end(),
