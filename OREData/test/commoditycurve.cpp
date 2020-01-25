@@ -32,6 +32,7 @@
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
+#include <ored/utilities/to_string.hpp>
 
 using namespace std;
 using namespace boost::unit_test_framework;
@@ -85,12 +86,12 @@ map<string, vector<Real>> expectedInterpCurveOffPillars = {
 };
 
 
-boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir, 
-    const string& curveConfigFile = "curveconfig.xml") {
+boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir,
+    const Date& asof,
+    const CommodityCurveSpec& curveSpec,
+    const string& curveConfigFile = "curveconfig.xml",
+    const string& fixingsFile = "fixings.txt") {
     
-    // As of date
-    Date asof(29, Jul, 2019);
-
     Conventions conventions;
     string filename = inputDir + "/conventions.xml";
     conventions.fromFile(TEST_INPUT_FILE(filename));
@@ -98,10 +99,7 @@ boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir,
     filename = inputDir + "/" + curveConfigFile;
     curveConfigs.fromFile(TEST_INPUT_FILE(filename));
     filename = inputDir + "/market.txt";
-    CSVLoader loader(TEST_INPUT_FILE(filename), TEST_INPUT_FILE("fixings.txt"), false);
-
-    // Commodity curve spec
-    CommodityCurveSpec curveSpec("USD", "PM:XAUUSD");
+    CSVLoader loader(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFile), false);
 
     // Check commodity curve construction works
     boost::shared_ptr<CommodityCurve> curve;
@@ -129,7 +127,10 @@ BOOST_AUTO_TEST_CASE(testCommodityCurveTenorBasedOnTnPoints) {
     
     BOOST_TEST_MESSAGE("Testing commodity curve building with tenor based points quotes including ON and TN");
     
-    boost::shared_ptr<CommodityCurve> curve = createCurve("tenor_based_on_tn_points");
+    Date asof(29, Jul, 2019);
+    CommodityCurveSpec curveSpec("USD", "PM:XAUUSD");
+    
+    boost::shared_ptr<CommodityCurve> curve = createCurve("tenor_based_on_tn_points", asof, curveSpec);
     checkCurve(curve->commodityPriceCurve(), expectedCurve);
 }
 
@@ -137,7 +138,10 @@ BOOST_AUTO_TEST_CASE(testCommodityCurveFixedDatePoints) {
 
     BOOST_TEST_MESSAGE("Testing commodity curve building with fixed date quotes");
 
-    boost::shared_ptr<CommodityCurve> curve = createCurve("fixed_date_points");
+    Date asof(29, Jul, 2019);
+    CommodityCurveSpec curveSpec("USD", "PM:XAUUSD");
+
+    boost::shared_ptr<CommodityCurve> curve = createCurve("fixed_date_points", asof, curveSpec);
     checkCurve(curve->commodityPriceCurve(), expectedCurve);
 }
 
@@ -146,7 +150,11 @@ BOOST_DATA_TEST_CASE(testCommodityInterpolations, bdata::make(curveConfigFiles),
 
     BOOST_TEST_MESSAGE("Testing with configuration file: " << curveConfigFile);
 
-    boost::shared_ptr<CommodityCurve> curve = createCurve("different_interpolations", curveConfigFile);
+    Date asof(29, Jul, 2019);
+    CommodityCurveSpec curveSpec("USD", "PM:XAUUSD");
+
+    boost::shared_ptr<CommodityCurve> curve = createCurve("different_interpolations",
+        asof, curveSpec, curveConfigFile);
     checkCurve(curve->commodityPriceCurve(), expectedInterpCurvePillars);
 
     BOOST_REQUIRE(expectedInterpCurveOffPillars.count(curveConfigFile) == 1);
@@ -155,6 +163,19 @@ BOOST_DATA_TEST_CASE(testCommodityInterpolations, bdata::make(curveConfigFiles),
         Real expPrice = expectedInterpCurveOffPillars.at(curveConfigFile)[i];
         BOOST_CHECK_CLOSE(price, expPrice, 1e-12);
     }
+}
+
+BOOST_AUTO_TEST_CASE(testCommodityBasisCurve) {
+
+    BOOST_TEST_MESSAGE("Testing commodity basis curve building...");
+
+    Date asof(30, Sep, 2019);
+    CommodityCurveSpec curveSpec("USD", "NYMEX:FF");
+    string dir = "basis/wti_midland_cm";
+    string fixingsFile = dir + "/fixings_" + to_string(io::iso_date(asof)) + ".txt";
+
+    boost::shared_ptr<CommodityCurve> curve;
+    BOOST_REQUIRE_NO_THROW(curve = createCurve(dir, asof, curveSpec, "curveconfig.xml", fixingsFile));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
