@@ -342,6 +342,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Zero"/>
       <xs:enumeration value="Discount"/>
+      <xs:enumeration value="Forward"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -355,6 +356,7 @@
       <xs:enumeration value="LinearFlat"/>
       <xs:enumeration value="LogLinearFlat"/>
       <xs:enumeration value="CubicFlat"/>
+      <xs:enumeration value="ConvexMonotone"/>
     </xs:restriction>
   </xs:simpleType>
 
