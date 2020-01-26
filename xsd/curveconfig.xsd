@@ -552,7 +552,7 @@
       <xs:element type="xs:string" name="DiscountCurve" minOccurs="0" maxOccurs="1"/>
       <xs:element type="currencyCode" name="Currency" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dimensionType" name="Dimension" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="correlationQuoteType" name="QuoteType"/>
+      <xs:element type="correlationQuoteType" name="QuoteType" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>

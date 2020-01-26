@@ -1,7 +1,7 @@
 
 SUBDIRS = builders
 
-AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt -I${top_builddir}/../QuantExtPlus
+AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt
 
 noinst_LTLIBRARIES = libOREDataPortfolio.la
 
