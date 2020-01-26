@@ -84,7 +84,7 @@ void CommodityCurveConfig::fromXML(XMLNode* node) {
         type_ = Type::Basis;
         basePriceCurveId_ = XMLUtils::getChildValue(n, "BasePriceCurve", true);
         baseConventionsId_ = XMLUtils::getChildValue(n, "BasePriceConventions", true);
-        fwdQuotes_ = XMLUtils::getChildrenValues(n, "BasisQuotes", "Quote");
+        quotes_ = fwdQuotes_ = XMLUtils::getChildrenValues(n, "BasisQuotes", "Quote");
         conventionsId_ = XMLUtils::getChildValue(n, "BasisConventions", true);
         dayCountId_ = XMLUtils::getChildValue(n, "DayCounter", false);
         interpolationMethod_ = XMLUtils::getChildValue(n, "InterpolationMethod", false);
