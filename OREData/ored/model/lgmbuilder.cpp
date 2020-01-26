@@ -245,7 +245,7 @@ void LgmBuilder::getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb
         // the black swaption engine during calibration helper pricing; also notice that we use the swap legnth
         // calculated in the svts (i.e. a length rounded to whole months) to read the volatility from the cube, which is
         // consistent with what is done in BlackSwaptionEngine (although one might ask whether an interpolated volatility
-        // might be more appropriate)
+        // would be more appropriate)
         termDb = std::max(termDb, tmpStart + 1 * Months);
         termT = svts_->swapLength(tmpStart, termDb);
     } else {
