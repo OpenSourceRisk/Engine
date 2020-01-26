@@ -220,6 +220,9 @@ CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     auto it = unique(this->times_.begin(), this->times_.end(), [](double s, double t) { return close(s, t); });
     QL_REQUIRE(it == this->times_.end(), "Unexpected duplicate time, " << *it << ", in the times vector.");
     this->data_.resize(this->times_.size());
+
+    // Set up the underlying interpolation on times_ and data_
+    QuantLib::InterpolatedCurve<Interpolator>::setupInterpolation();
 }
 
 template <class Interpolator> void CommodityBasisPriceCurve<Interpolator>::update() {

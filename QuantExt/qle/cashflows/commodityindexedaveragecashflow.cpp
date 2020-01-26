@@ -176,7 +176,7 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
 CommodityIndexedAverageLeg::CommodityIndexedAverageLeg(const Schedule& schedule,
     const ext::shared_ptr<CommoditySpotIndex>& index)
     : schedule_(schedule), index_(index), paymentLag_(0), paymentCalendar_(NullCalendar()),
-      paymentConvention_(Unadjusted), pricingCalendar_(NullCalendar()), payInAdvance_(false), useFuturePrice_(false), 
+      paymentConvention_(Unadjusted), pricingCalendar_(Calendar()), payInAdvance_(false), useFuturePrice_(false), 
       deliveryDateRoll_(0), futureMonthOffset_(0), payAtMaturity_(false), includeEndDate_(true),
       excludeStartDate_(true), quantityPerDay_(false) {}
 

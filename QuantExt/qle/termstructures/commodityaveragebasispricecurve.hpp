@@ -185,7 +185,7 @@ CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     QL_REQUIRE(start < end, "Expected that the start date, " << io::iso_date(start) <<
         ", would be strictly less than the end date, " << io::iso_date(end) << ".");
     vector<Date> expiries{ start + 1 * Days };
-    vector<Time> scheduleTimes{ 0.0 };
+    vector<Time> scheduleTimes;
     while (start < end) {
         start = basisFec_->nextExpiry(true, start + 1 * Days);
         expiries.push_back(start);
@@ -208,22 +208,32 @@ CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     this->data_.resize(this->times_.size());
 
     // Populate the leg of cashflows.
-    baseLeg_ = CommodityIndexedAverageLeg(Schedule(expiries), spotIndex_).withFutureExpiryCalculator(baseFec_);
-    QL_REQUIRE(baseLeg_.size() == scheduleTimes.size() - 1, "Unexpected number of averaging cashflows in the leg: " <<
-        "got " << baseLeg_.size() << " but expected " << scheduleTimes.size() - 1);
+    baseLeg_ = CommodityIndexedAverageLeg(Schedule(expiries), spotIndex_)
+        .withFutureExpiryCalculator(baseFec_)
+        .useFuturePrice(true)
+        .withQuantities(1.0);
+    QL_REQUIRE(baseLeg_.size() == scheduleTimes.size(), "Unexpected number of averaging cashflows in the leg: " <<
+        "got " << baseLeg_.size() << " but expected " << scheduleTimes.size());
 
     // Populate the legIndexMap_
     for (Size i = 0; i < this->times_.size(); i++) {
-        for (Size j = 1; j < scheduleTimes.size(); j++) {
+        for (Size j = 0; j < scheduleTimes.size(); j++) {
+            
             if (this->times_[i] < scheduleTimes[j] || close(this->times_[i], scheduleTimes[j])) {
                 QL_REQUIRE(legIndexMap_.find(i) == legIndexMap_.end(),
                     "Should not already have a mapping for the " << ordinal(i) << " time.");
-                legIndexMap_[i] = j - 1;
+                legIndexMap_[i] = j;
                 break;
             }
-            QL_FAIL("Could not map the " << ordinal(i) << " time, " << this->times_[i] << ", to a cashflow.");
+
+            if (j == scheduleTimes.size()) {
+                QL_FAIL("Could not map the " << ordinal(i) << " time, " << this->times_[i] << ", to a cashflow.");
+            }
         }
     }
+
+    // Set up the underlying interpolation on times_ and data_
+    QuantLib::InterpolatedCurve<Interpolator>::setupInterpolation();
 }
 
 template <class Interpolator> void CommodityAverageBasisPriceCurve<Interpolator>::update() {

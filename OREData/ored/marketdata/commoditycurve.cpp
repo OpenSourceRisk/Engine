@@ -75,9 +75,12 @@ CommodityCurve::CommodityCurve(const Date& asof,
             // We have a commodity basis configuration
 
             // Look up the required base price curve in the commodityCurves map
-            auto itPts = commodityCurves.find(config->basePriceCurveId());
-            QL_REQUIRE(itPts != commodityCurves.end(), "Can't find price curve with id " << config->basePriceCurveId());
-            auto pts = Handle<PriceTermStructure>(itPts->second->commodityPriceCurve());
+            CommodityCurveSpec ccSpec(config->currency(), config->basePriceCurveId());
+            DLOG("Looking for base price curve with id, " << config->basePriceCurveId() <<
+                ", and spec, " << ccSpec << ".");
+            auto itCc = commodityCurves.find(ccSpec.name());
+            QL_REQUIRE(itCc != commodityCurves.end(), "Can't find price curve with id " << config->basePriceCurveId());
+            auto pts = Handle<PriceTermStructure>(itCc->second->commodityPriceCurve());
 
             buildBasisPriceCurve(asof, *config, conventions, pts, loader);
 
