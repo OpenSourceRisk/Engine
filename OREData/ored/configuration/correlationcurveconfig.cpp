@@ -22,7 +22,8 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
-
+#include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 namespace ore {
 namespace data {
 
@@ -30,17 +31,30 @@ std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::CorrelationT
     switch (t) {
     case CorrelationCurveConfig::CorrelationType::CMSSpread:
         return out << "CMSSpread";
+    case CorrelationCurveConfig::CorrelationType::Generic:
+        return out << "Generic";
     default:
         QL_FAIL("unknown QuoteType(" << Integer(t) << ")");
     }
 }
-
+std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::Dimension t) {
+    switch (t) {
+    case CorrelationCurveConfig::Dimension::ATM:
+        return out << "ATM";
+    case CorrelationCurveConfig::Dimension::Constant:
+        return out << "Constant";
+    default:
+        QL_FAIL("unknown Dimension(" << Integer(t) << ")");
+    }
+}
 std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t) {
     switch (t) {
     case CorrelationCurveConfig::QuoteType::Rate:
         return out << "RATE";
     case CorrelationCurveConfig::QuoteType::Price:
         return out << "PRICE";
+    case CorrelationCurveConfig::QuoteType::Null:
+        return out << "NULL";
     default:
         QL_FAIL("unknown QuoteType(" << Integer(t) << ")");
     }
@@ -49,7 +63,7 @@ std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t)
 CorrelationCurveConfig::CorrelationCurveConfig(const string& curveID, const string& curveDescription,
                                                const Dimension& dimension, const CorrelationType& corrType,
                                                const string& convention, const QuoteType& quoteType,
-                                               const bool extrapolate, const vector<Period>& optionTenors,
+                                               const bool extrapolate, const vector<string>& optionTenors,
                                                const DayCounter& dayCounter, const Calendar& calendar,
                                                const BusinessDayConvention& businessDayConvention, const string& index1,
                                                const string& index2, const string& currency, const string& swaptionVol,
@@ -77,7 +91,7 @@ const vector<string>& CorrelationCurveConfig::quotes() {
 
         for (auto o : optionTenors_) {
             std::stringstream ss;
-            ss << base << "/" << to_string(o) << "/ATM";
+            ss << base << "/" << o << "/ATM";
             quotes_.push_back(ss.str());
         }
     }
@@ -90,106 +104,184 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
 
-    string dim = XMLUtils::getChildValue(node, "Dimension", true);
-
-    QL_REQUIRE(dim == "ATM" || dim == "Constant", "Dimension " << dim << " not recognised");
-
-    optionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "OptionTenors", false);
-    QL_REQUIRE(optionTenors_.size() > 0, "no option tenors supplied");
-
-    if (optionTenors_.size() == 1) {
-        dimension_ = Dimension::Constant;
-    } else {
-        QL_REQUIRE(dim != "Constant", "Only one tenor should be supplied for a constant correlation termstructure");
-        dimension_ = Dimension::ATM;
-    }
-
     string corrType = XMLUtils::getChildValue(node, "CorrelationType", true);
     if (corrType == "CMSSpread") {
         correlationType_ = CorrelationType::CMSSpread;
+    } else if (corrType == "Generic") {
+        correlationType_ = CorrelationType::Generic;
     } else {
         QL_FAIL("Correlation type " << corrType << " not recognized");
     }
 
     string quoteType = XMLUtils::getChildValue(node, "QuoteType", true);
-    if (quoteType == "Rate") {
+    // For QuoteType, we use an insensitive compare because we previously used "Rate" here
+    // But now we want to be consistent with the market datum name
+    if (boost::iequals(quoteType, "RATE")) {
         quoteType_ = QuoteType::Rate;
-    } else if (quoteType == "Price") {
+    } else if (boost::iequals(quoteType, "PRICE")) {
         quoteType_ = QuoteType::Price;
+    } else if (boost::iequals(quoteType, "NULL")) {
+        quoteType_ = QuoteType::Null;
     } else {
         QL_FAIL("Quote type " << quoteType << " not recognized");
     }
 
-    string extr = XMLUtils::getChildValue(node, "Extrapolation", true);
-    extrapolate_ = parseBool(extr);
+    string cal, dc;
+    if (quoteType_ == QuoteType::Null) {
 
-    string cal = XMLUtils::getChildValue(node, "Calendar", true);
-    calendar_ = parseCalendar(cal);
+        cal = XMLUtils::getChildValue(node, "Calendar", false);
+        cal == "" ? calendar_ = QuantLib::NullCalendar() : calendar_ = parseCalendar(cal);
 
-    string dc = XMLUtils::getChildValue(node, "DayCounter", true);
-    dayCounter_ = parseDayCounter(dc);
+        dc = XMLUtils::getChildValue(node, "DayCounter", false);
+        dc == "" ? dayCounter_ = QuantLib::ActualActual() : dayCounter_ = parseDayCounter(dc);
+    } else { // Compulsory information for Rate and Price QuoteTypes
+        cal = XMLUtils::getChildValue(node, "Calendar", true);
+        calendar_ = parseCalendar(cal);
 
-    string bdc = XMLUtils::getChildValue(node, "BusinessDayConvention", true);
-    businessDayConvention_ = parseBusinessDayConvention(bdc);
+        dc = XMLUtils::getChildValue(node, "DayCounter", true);
+        dayCounter_ = parseDayCounter(dc);
 
-    index1_ = XMLUtils::getChildValue(node, "Index1", true);
-    index2_ = XMLUtils::getChildValue(node, "Index2", true);
+        optionTenors_ = XMLUtils::getChildrenValuesAsStrings(node, "OptionTenors", true);
+        QL_REQUIRE(optionTenors_.size() > 0, "no option tenors supplied");
 
-    currency_ = XMLUtils::getChildValue(node, "Currency", true);
+        string dim = XMLUtils::getChildValue(node, "Dimension", true);
+        QL_REQUIRE(dim == "ATM" || dim == "Constant", "Dimension " << dim << " not recognised");
 
-    swaptionVol_ = "";
+        if (optionTenors_.size() == 1) {
+            dimension_ = Dimension::Constant;
+        } else {
+            QL_REQUIRE(dim != "Constant", "Only one tenor should be supplied for a constant correlation termstructure");
+            dimension_ = Dimension::ATM;
+        }
 
-    if (quoteType_ == QuoteType::Price) {
-        conventions_ = XMLUtils::getChildValue(node, "Conventions");
-        swaptionVol_ = XMLUtils::getChildValue(node, "SwaptionVolatility", true);
-        discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
+        if (dimension_ == Dimension::ATM) {
+            string bdc = XMLUtils::getChildValue(node, "BusinessDayConvention", true);
+            businessDayConvention_ = parseBusinessDayConvention(bdc);
+        }
+
+        string extr = XMLUtils::getChildValue(node, "Extrapolation", true);
+        extrapolate_ = parseBool(extr);
+
+        if (correlationType_ == CorrelationType::Generic) {
+            QL_REQUIRE(quoteType_ == QuoteType::Rate, "For CorrelationType::Generic calibration is not supported!");
+        }
+        // needed for Rate and Price QuoteTyope to build the quote string
+        index1_ = XMLUtils::getChildValue(node, "Index1", true);
+        index2_ = XMLUtils::getChildValue(node, "Index2", true);
+
+        swaptionVol_ = "";
+
+        // Index1, Index2, Currency, Conventions, SwaptionVolatility, DiscountCurve are relevant for calibration which
+        // is only supported for
+        // CMSSpread type corrrelation
+        if (correlationType_ == CorrelationType::CMSSpread && quoteType_ == QuoteType::Price) {
+            currency_ = XMLUtils::getChildValue(node, "Currency", true);
+            conventions_ = XMLUtils::getChildValue(node, "Conventions");
+            swaptionVol_ = XMLUtils::getChildValue(node, "SwaptionVolatility", true);
+            discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
+        }
     }
 }
 
 XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Correlation");
-
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-
-    if (dimension_ == Dimension::ATM) {
-        XMLUtils::addChild(doc, node, "Dimension", "ATM");
-    } else if (dimension_ == Dimension::Constant) {
-        XMLUtils::addChild(doc, node, "Dimension", "Constant");
-    } else {
-        QL_FAIL("Unknown Dimension in CorrelationCurveConfig::toXML()");
-    }
-
-    XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
-
-    if (correlationType_ == CorrelationType::CMSSpread) {
-        XMLUtils::addChild(doc, node, "CorrelationType", "CMSSpread");
-    } else {
-        QL_FAIL("Unknown CorrelationType in CorrelationCurveConfig::toXML()");
-    }
-
-    if (quoteType_ == QuoteType::Rate) {
-        XMLUtils::addChild(doc, node, "QuoteType", "Rate");
-    } else if (quoteType_ == QuoteType::Price) {
-        XMLUtils::addChild(doc, node, "QuoteType", "Price");
-    } else {
-        QL_FAIL("Unknown QuoteType in CorrelationCurveConfig::toXML()");
-    }
-
-    XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
-
-    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
-    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
-    XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
+    XMLUtils::addChild(doc, node, "CorrelationType", to_string(correlationType_));
     XMLUtils::addChild(doc, node, "Index1", index1_);
     XMLUtils::addChild(doc, node, "Index2", index2_);
-    XMLUtils::addChild(doc, node, "Currency", currency_);
+    XMLUtils::addChild(doc, node, "Conventions", conventions_);
 
     if (quoteType_ == QuoteType::Price) {
         XMLUtils::addChild(doc, node, "SwaptionVolatility", swaptionVol_);
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
+        XMLUtils::addChild(doc, node, "Currency", currency_);
     }
+    if (quoteType_ != QuoteType::Null) {
+        XMLUtils::addChild(doc, node, "Dimension", to_string(dimension_));
+    }
+
+    XMLUtils::addChild(doc, node, "QuoteType", to_string(quoteType_));
+
+    if (quoteType_ != QuoteType::Null) {
+
+        XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
+        XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+        XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
+
+        if (dimension_ == Dimension::ATM)
+            XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
+
+        XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
+    }
+
+    if (quoteType_ == QuoteType::Null) {
+        XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+        XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
+    }
+
     return node;
 }
+
+bool indexNameLessThan(const std::string& index1, const std::string& index2) {
+    vector<string> tokens1;
+    boost::split(tokens1, index1, boost::is_any_of("-"));
+    vector<string> tokens2;
+    boost::split(tokens2, index2, boost::is_any_of("-"));
+
+    QL_REQUIRE(tokens1.size() >= 2, "at least two tokens expected in " << index1);
+    QL_REQUIRE(tokens2.size() >= 2, "at least two tokens expected in " << index2);
+
+    Size s1, s2;
+
+    if (tokens1[0] == "CMS")
+        s1 = 4;
+    else if (tokens1[0] == "FX")
+        s1 = 2;
+    else if (tokens1[0] == "EQ")
+        s1 = 1;
+    else if (tokens1[0] == "COMM")
+        s1 = 0;
+    else
+        s1 = 3; // assume Ibor
+
+    if (tokens2[0] == "CMS")
+        s2 = 4;
+    else if (tokens2[0] == "FX")
+        s2 = 2;
+    else if (tokens2[0] == "EQ")
+        s2 = 1;
+    else if (tokens2[0] == "COMM")
+        s2 = 0;
+    else
+        s2 = 3; // assume Ibor
+
+    if (s1 < s2)
+        return true;
+    else if (s2 < s1)
+        return false;
+
+    // both EQ or both COM
+    if (s1 == 0 || s1 == 1)
+        return tokens1[1] < tokens2[1];
+
+    QL_REQUIRE(tokens1.size() >= 3, "at least three tokens expected in " << index1)
+    QL_REQUIRE(tokens2.size() >= 3, "at least three tokens expected in " << index2)
+
+    // both CMS or both Ibor
+    if (s1 == 3 || s1 == 4)
+        return parsePeriod(tokens1[2]) < parsePeriod(tokens2[2]);
+
+    QL_REQUIRE(tokens1.size() >= 4, "at least four tokens expected in " << index1)
+    QL_REQUIRE(tokens2.size() >= 4, "at least four tokens expected in " << index2)
+
+    // both FX, compare CCY1 then CCY2 alphabetical
+    if (s1 == 2) {
+        return (tokens1[2] + "-" + tokens1[3]) < (tokens2[2] + "-" + tokens2[3]);
+    }
+
+    QL_FAIL("indexNameLessThan(): internal error");
+}
+
 } // namespace data
 } // namespace ore

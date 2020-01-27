@@ -29,6 +29,7 @@
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/fixings.hpp>
 #include <ored/utilities/csvfilereader.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <oret/datapaths.hpp>
@@ -141,7 +142,8 @@ public:
 
         string marketFile = TEST_INPUT_FILE("market/market.txt");
         string fixingsFile = TEST_INPUT_FILE("market/fixings_for_bootstrap.txt");
-        CSVLoader loader(marketFile, fixingsFile, false);
+        string dividendsFile = TEST_INPUT_FILE("market/dividends.txt");
+        CSVLoader loader(marketFile, fixingsFile, dividendsFile, false);
 
         bool continueOnError = false;
         boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
@@ -327,6 +329,77 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
     for (const auto& kv : expectedFixings) {
         BOOST_CHECK_MESSAGE(fixings.count(kv.first), "Could not find index " << kv.first << " in retrieved fixings");
         BOOST_CHECK_EQUAL_COLLECTIONS(kv.second.begin(), kv.second.end(), fixings.at(kv.first).begin(), fixings.at(kv.first).end());
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(testFxNotionalResettingSwapFirstCoupon, F) {
+
+    // Set the flag determining what happens if fixings are required today
+    Settings::instance().enforcesTodaysHistoricFixings() = true;
+
+    // Set the flag determining what happens when cashflows happen today
+    Settings::instance().includeTodaysCashFlows() = true;
+
+    // Read in the trade
+    Portfolio p;
+    string portfolioFile = "trades/xccy_resetting_swap/simple_case_in_first_coupon.xml";
+    p.load(TEST_INPUT_FILE(portfolioFile));
+    BOOST_REQUIRE_MESSAGE(p.size() == 1, "Expected portfolio to contain a single trade");
+
+    // Ask for fixings before trades are built should return empty set
+    auto m = p.fixings(today);
+    BOOST_CHECK_MESSAGE(m.empty(), "Expected fixings to be empty when trades not built");
+
+    // Build the portfolio and retrieve the fixings
+    p.build(engineFactory);
+    m = p.fixings(today);
+
+    // Expected results
+    map<string, Date> exp = {
+        { "USD-LIBOR-3M", Date(5, Feb, 2019) },
+        { "EUR-EURIBOR-3M", Date(5, Feb, 2019) }
+    };
+
+    // Check the expected results against the actual results
+    BOOST_CHECK_EQUAL(m.size(), exp.size());
+    for (const auto& kv : exp) {
+        BOOST_CHECK_MESSAGE(m.count(kv.first) == 1, "Could not find index " << kv.first << " in retrieved fixings");
+        if (m.count(kv.first) == 1) {
+            BOOST_CHECK_EQUAL(m.at(kv.first).size(), 1);
+            BOOST_CHECK_EQUAL(kv.second, *m.at(kv.first).begin());
+        }
+    }
+
+    // Trade should throw if we ask for NPV and have not added the fixings
+    BOOST_CHECK_THROW(p.trades()[0]->instrument()->NPV(), Error);
+
+    // Add the fixings
+    loadFixings(m, conventions);
+
+    // Trade should now not throw when we try to price it
+    BOOST_CHECK_NO_THROW(p.trades()[0]->instrument()->NPV());
+}
+
+BOOST_FIXTURE_TEST_CASE(testDividends, F) {
+
+    const string equityName = "RIC:DMIWO00000GUS";
+
+    auto eq = parseEquityIndex("EQ-" + equityName);
+    BOOST_REQUIRE_MESSAGE(eq, "Could not parse equity index EQ-" + equityName);
+
+    BOOST_REQUIRE_MESSAGE(IndexManager::instance().hasHistory(eq->dividendName()),
+        "Could not find index " << eq->dividendName() << " in IndexManager");
+    const TimeSeries<Real>& dividends = eq->dividendFixings();
+
+    // Expected results
+    map<Date, Real> exp = {
+        { Date(1, Nov, 2018), 25.313 },
+        { Date(1, Dec, 2018), 15.957 }
+    };
+
+    BOOST_CHECK_EQUAL(dividends.size(), exp.size());
+    for (const auto& kv : exp) {
+        BOOST_CHECK_EQUAL(dividends[kv.first], kv.second);
     }
 }
 

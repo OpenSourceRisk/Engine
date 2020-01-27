@@ -40,10 +40,11 @@ class CurveSpec {
 public:
     //! Supported curve types
     enum class CurveType {
+        FX,
         Yield,
         CapFloorVolatility,
         SwaptionVolatility,
-        FX,
+        YieldVolatility,
         FXVolatility,
         Default,
         CDSVolatility,
@@ -89,6 +90,8 @@ public:
             return "CapFloorVolatility";
         case CurveType::SwaptionVolatility:
             return "SwaptionVolatility";
+        case CurveType::YieldVolatility:
+            return "YieldVolatility";
         case CurveType::FX:
             return "FX";
         case CurveType::FXVolatility:
@@ -250,6 +253,25 @@ public:
     //@}
 private:
     string ccy_;
+};
+
+//! Yield volatility curve description
+/*! \ingroup curves
+*/
+class YieldVolatilityCurveSpec : public CurveSpec {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    YieldVolatilityCurveSpec() {}
+    //! Detailed constructor
+    YieldVolatilityCurveSpec(const string& curveConfigID) : CurveSpec(curveConfigID) {}
+    //@}
+    //! \name Inspectors
+    //@{
+    CurveType baseType() const { return CurveType::YieldVolatility; }
+    string subName() const { return curveConfigID(); }
+    //@}
 };
 
 //! Cap/Floor Volatility curve description
@@ -429,7 +451,7 @@ private:
 //! Security description
 class SecuritySpec : public CurveSpec {
 public:
-    SecuritySpec(const string& securityID) : securityID_(securityID) {}
+    SecuritySpec(const string& securityID) : CurveSpec(securityID), securityID_(securityID) {}
     //! Default constructor
     SecuritySpec() {}
     CurveType baseType() const { return CurveType::Security; }

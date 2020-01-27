@@ -3,7 +3,8 @@ AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
 SUBDIRS =
 
 libMath_la_SOURCES = \
-	deltagammavar.cpp
+	deltagammavar.cpp \
+	fillemptymatrix.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
@@ -12,7 +13,9 @@ this_include_HEADERS = \
 	nadarayawatson.hpp \
 	stabilisedglls.hpp \
 	deltagammavar.hpp \
-	trace.hpp
+	trace.hpp \
+	fillemptymatrix.hpp \
+	covariancesalvage.hpp
 
 noinst_LTLIBRARIES = libMath.la
 

@@ -23,6 +23,7 @@
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
 #include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
+#include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -121,8 +122,8 @@ void YoYInflationOptionletVolStripper::performCalculations() {
     boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
         boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs);
 
-    boost::shared_ptr<KInterpolatedYoYOptionletVolatilitySurface<Linear> > interpVolSurface =
-        boost::make_shared<KInterpolatedYoYOptionletVolatilitySurface<Linear> >(settDays, cal, bdc, dc, obsLag,
+    boost::shared_ptr<QuantExt::StrikeInterpolatedYoYOptionletVolatilitySurface<Linear> > interpVolSurface =
+      boost::make_shared<QuantExt::StrikeInterpolatedYoYOptionletVolatilitySurface<Linear> >(settDays, cal, bdc, dc, obsLag,
                                                                                 yoySurface, cfEngine, yoyStripper, 0);
 
     boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> newSurface =

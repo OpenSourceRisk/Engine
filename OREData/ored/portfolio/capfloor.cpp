@@ -75,8 +75,11 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         // Do not support caps/floors involving overnight indices
         boost::shared_ptr<OvernightIndex> ois = boost::dynamic_pointer_cast<OvernightIndex>(index);
-        QL_REQUIRE(!ois, "CapFloor trade type does not support overnight indices.");
-        legs_.push_back(makeIborLeg(legData_, index, engineFactory));
+        //QL_REQUIRE(!ois, "CapFloor trade type does not support overnight indices.");
+	if (ois)
+	  ALOG("IBOR CapFloor trade " << id() << " built with overnight index");
+	
+	legs_.push_back(makeIborLeg(legData_, index, engineFactory));
 
         // If a vector of cap/floor rates are provided, ensure they align with the number of schedule periods
         if (floors_.size() > 1) {
@@ -162,7 +165,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex.currentLink(), zeroIndex->interpolated()));
         }
 
-        legs_.push_back(makeYoYLeg(legData_, yoyIndex.currentLink()));
+        legs_.push_back(makeYoYLeg(legData_, yoyIndex.currentLink(), engineFactory));
 
         // If a vector of cap/floor rates are provided, ensure they align with the number of schedule periods
         if (floors_.size() > 1) {

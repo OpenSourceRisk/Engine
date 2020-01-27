@@ -1,6 +1,15 @@
 \documentclass[12pt, a4paper]{article}
 
-\usepackage[urlcolor=blue]{hyperref}
+% Use \hypersetup here to get rid of the ugly boxes around links
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue
+}
+
+% For nicer paragraph spacing
+\usepackage{parskip}
 
 \usepackage[disable]{todonotes}
 %\usepackage{todonotes}
@@ -14,7 +23,14 @@
 \usepackage{epstopdf}
 \usepackage{longtable}
 \usepackage{floatrow}
+
+% Use \setminted here to get horizontal line above and below listings
 \usepackage{minted}
+\setminted{
+   frame=lines,
+   framesep=2mm
+}
+
 \usepackage{textcomp}
 \usepackage{color,soul}
 \usepackage[font={small,it}]{caption}
@@ -43,7 +59,9 @@
   belowskip=2\medskipamount
 }
 
-%\usepackage{float}
+% All listings have a left aligned caption. This looks better as the listings themselves are left aligned.
+\captionsetup[listing]{justification=justified,singlelinecheck=false}
+
 \usepackage{tabu}
 \tabulinesep=1.0mm
 \restylefloat{table}
@@ -52,6 +70,9 @@
 
 \newenvironment{longlisting}{\captionsetup{type=listing}}{}
 %\usepackage[colorlinks=true]{hyperref}
+
+% Inline code fragments can run over the page boundary without ragged right.
+\AtBeginDocument{\raggedright}
 
 \renewcommand\P{\ensuremath{\mathbb{P}}}
 \newcommand\E{\ensuremath{\mathbb{E}}}
@@ -75,9 +96,18 @@
 \newcommand{\EE}{\mathit{EE}}
 \newcommand{\EPE}{\mathit{EPE}}
 \newcommand{\ENE}{\mathit{ENE}}
+\newcommand{\EEPE}{\mathit{EEPE}}
+\newcommand{\EEE}{\mathit{EEE}}
+\newcommand{\EAD}{\mathit{EAD}}
+\newcommand{\RC}{\mathit{RC}}
+\newcommand{\RW}{\mathit{RW}}
+\newcommand{\NS}{\mathit{NS}}
 \newcommand{\PD}{\mathit{PD}}
 \newcommand{\LGD}{\mathit{LGD}}
 \newcommand{\DIM}{\mathit{DIM}}
+\newcommand{\DF}{\mathit{DF}}
+\newcommand{\MA}{\mathit{MA}}
+\newcommand{\SCVA}{\mathit{SCVA}}
 \newcommand{\bs}{\textbackslash}
 \newcommand{\REDY}{\color{red}Y}
  
@@ -89,7 +119,8 @@
 %\date{7 October 2016}
 %\date{28 April 2017}
 %\date{7 December 2017}
-\date{13 June 2018}
+%\date{13 June 2018}
+\date{20 March 2018}
 \maketitle
 
 \newpage
@@ -105,7 +136,7 @@ Date & Author & Comment \\
 7 October 2016 & Quaternion & initial release\\
 28 April 2017 & Quaternion  & updates for release 2\\
 7 December 2017 & Quaternion & updates for release 3\\
-13 June 2018 & Quaternion & updates for release 4\\
+20 March 2019 & Quaternion & updates for release 4\\
 \hline
 \end{supertabular}
 \end{center}
@@ -183,7 +214,7 @@ Subsequent ORE releases will also compute {\bf regulatory capital charges} for c
 %releases from Q1 2017 onwards will extend the derivative product and the risk factor range to Inflation, Credit, Equity
 %and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products
 %(loans and bonds) and related portfolio analytics.
-The product coverage of the third release of ORE in December 2017 is sketched in the following table.
+The product coverage of the fourth release of ORE in March 2018 is sketched in the following table.
 \begin{table}[hbt]
 \scriptsize
 \begin{center}
@@ -209,25 +240,32 @@ FX Options & Y & Y & Y & Y\\
 \hline
 Equity Forwards & Y & Y & Y & Y\\
 \hline
+Equity Swaps & Y & Y & Y & N\\
+\hline
 Equity Options & Y & Y & Y & Y \\
+\hline
+Commodity Forwards & Y & Y & N & N\\
+\hline
+Commodity Options & Y & Y & N & N \\
 \hline
 CPI Swaps & Y & Y & N & Y \\
 \hline
 %CPI Caps/Floors & Y & Y & N \\
 %\hline
 Year-on-Year Inflation Swaps & Y & Y & N & Y \\
-\hline
-%Year-on-Year Inflation Caps/Floors & Y & N & N \\
 %\hline
+%Year-on-Year Inflation Caps/Floors & Y & Y & N & N\\
+\hline
 Credit Default Swaps & Y & Y & N & N \\
 \hline
+
 \end{tabular}
 \caption{ORE product coverage.}
 \label{tab_coverage}
 \end{center}
 \end{table}
 
-Future releases will further extend the product and the risk factor range to Commodity, complete the analytics scope indicated in the table above and expand on the market risk analytics, add integrated credit/market risk analytics. 
+Future releases will further extend the product range and analytics coverage indicated in the table above, expand on the market risk analytics, add integrated credit/market risk analytics. 
 
 \medskip The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em
   Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX/INF/EQ risk factor evolution is based on
@@ -240,6 +278,7 @@ and lognormal processes for FX rates and EQ prices, Dodgeson-Kainth models for i
 \item Frequently Asked Questions: \url{http://www.opensourcerisk.org/faqs}
 \item Forum: \url{http://www.opensourcerisk.org/forum}
 \item Source code and releases: \url{https://github.com/opensourcerisk/engine}
+\item Language bindings: \url{https://github.com/opensourcerisk/ore-swig}
 \item Follow ORE on Twitter {\tt @OpenSourceRisk} for updates on releases and events
 \end{itemize}
 %An ORE Book will follow in 2017 that will elaborate on the engine's design and make the connection between methodology
@@ -258,28 +297,79 @@ parametrisation and the structure of trade and market data input.
 \section{Release Notes}\label{sec:releasenotes}
 %========================================================
 
-This section summarises the high level functionality changes between release 2 (05/2017) and 3 (12/2017).
+This section summarises the high level changes between release 3 (December 2017) and 4 (March 2019).
 
-\medskip
+\bigskip
+INSTRMENTS
 \begin{itemize}
-\item Added CMS and CMS Caps/Floors (pricing, sensitivity analysis and simulation)
-\item Added Credit Default Swaps (pricing and sensitivity analysis, no simulation yet)
-\item Added amortisation structures (fixed, percentage relative to initial or previous notional, annuity) to leg data
-\item Extended sensitivity framework (adding inflation, equity and credit) 
-\item Added inflation simulation and XVA, Dodgeson-Kainth simulation model calibrated to CPI Caps/Floors
-\item Added basic parametric Value at Risk (Delta and Delta-Gamma Normal VaR)
-\item Additional unit tests and examples
-\item Curve loader refactoring
-\item User guide updates
+\item Commodity Forward and Option, see example \ref{example:24}
+\item Equity Swap, see extended example \ref{ex:equityderivatives}
+%\item YoY Inflation Cap/Floor trade builders added
+\item CMS Spread Option (Cap/Floor, Digital Cap/Floor), see example \ref{example:25}
 \end{itemize}
 
-%\medskip
-%API changes
-%\begin{itemize}
-%\item 
-%\end{itemize}
+\bigskip
+MARKETS
+\begin{itemize}
+\item New calendars: Chile, Colombia, Malaysia, Peru, Philippines, Thailand 
+\item New IBOR indexes: CHF SARON, CLP CAMARA, COP IBR, DEM LIBOR, DKK OIS, NOWA, PHP PHIREF, RUB MOSPRIME, SEK SIOR, THB BIBOR 
+\item New inflation idexes and regions: DKCPI, SECPI
+\item Equity index added
+\end{itemize}
 
-\todo[inline]{Complete release notes}
+\bigskip
+TERM STRUCTURES
+\begin{itemize}
+\item Cap/Floor smile volatility surface added
+\item Cross currency basis swap helper (with MtM Reset) added 
+\item Cross currency fixed vs. float swap helper added, see example \ref{example:29}
+\item Discount ratio curves added, see example \ref{example:28} 
+%\item Interpolated YoY inflation cap floor term price surface extens QuantLib's implementation to allow the choice of term structure directly from YoY swap quotes or from atm swap quotes stripped from cap/floor price surface
+%\item Optionlet stripper added (copy of the QL class that uses an QuantExt::CapFloorTermVolSurface to support BiLinearInterpolation)
+%\item Price term structure added
+%\item Default probability bootstrap traits added
+%\item YoY Inflation Optionlet (caplet/floorlet) volatility stripper added
+%\item YoY Inflation volatility surface extends QuantLib's implementation to include a volatility type and displacement
+\item Correlation term structure added (to support CMS spread products)
+\end{itemize}
+
+\bigskip
+ANALYTICS
+\begin{itemize}
+\item KVA added (thanks to Roland Kapl)
+\end{itemize}
+
+\bigskip
+UNIT TESTS
+\begin{itemize}
+\item Unit tests suites extended to 429 cases in total 
+\item Data driven tests added in ORE Data
+\item Now using boost's automated test suite creation and registration
+\end{itemize}
+
+\bigskip
+EXAMPLES
+\begin{itemize}
+\item ORE has 29 examples now vs 23 in the previous release
+\end{itemize}
+
+\bigskip
+USER GUIDE
+\begin{itemize}
+\item Extended to 186 pages
+\end{itemize}
+
+\bigskip
+BUILDING ORE
+\begin{itemize}
+\item CMake build system added, see end of section \ref{sec:build_ore}
+\end{itemize}
+
+\bigskip
+LANGUAGE BINDINGS
+\begin{itemize}
+\item ORE SWIG projected added, to support ORE in Python, see \url{https://github.com/OpenSourceRisk/ORE-SWIG}
+\end{itemize}
 
 %========================================================
 \section{ORE Data Flow}\label{sec:process}
@@ -434,8 +524,8 @@ This will create a folder 'ore' in your current directory that contains the code
 \subsubsection{Boost}\label{sec:boost}
 
 QuantLib and ORE depend on the boost C++ libraries. Hence these need to be installed before building QuantLib and
-ORE. With Unix (Linux, OS X), we recommend boost version 1\_55 or higher, with Windows we recommend boost version 1\_57
-or higher. Older versions may work on some platforms and system configurations, but were not tested.
+ORE. On all platforms the minimum required boost version is 1\_63 as of ORE release 4.
+%Older versions may work on some platforms and system configurations, but were not tested.
 
 \subsubsection*{Windows}
 
@@ -789,6 +879,20 @@ Example & Description \\
 \hline
 23 & Forward Rate Agreement and Averaging OIS Exposure\\
 \hline
+24 & Commodity Forward and Option Pricing and Sensitivity\\
+\hline
+25 & CMS Spread with (Digital) Cap/Floor Pricing, Sensitivity and Exposures\\
+\hline
+26 & Bootstrap Consistency\\
+\hline
+27 & BMA Basis Swap Pricing and Sensitivity\\
+\hline
+28 & Discount Ratio Curves\\
+\hline
+29 & Curve Building using Fixed vs. Float Cross Currency Helpers\\
+\hline
+33 & USD-Prime Curve Building via Prime-LIBOR Basis Swap\\
+\hline
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -825,6 +929,7 @@ examples. The particular selection of input files is determined by the 'master' 
   {\tt simulation.xml} & Configuration of simulation model and market\\
   {\tt market.txt} &  Market data snapshot \\
   {\tt fixings.txt} &  Index fixing history \\
+  {\tt dividends.txt} &  Dividends history \\
   {\tt curveconfig.xml} & Curve and term structure composition from individual market instruments\\
   {\tt conventions.xml} & Market conventions for all market data points\\
   {\tt todaysmarket.xml} &  Configuration of the market composition, relevant for the pricing of the given portfolio as
@@ -870,7 +975,7 @@ directory {\tt bin/win32/} respectively {\tt bin/x64/}. Otherwise the examples m
 executables which come with the ORE release.
 
 %--------------------------------------------------------
-\subsection{Interest Rate Swap Exposure}\label{sec:example1}
+\subsection{Interest Rate Swap Exposure, Flat Market}\label{sec:example1}
 %--------------------------------------------------------
 
 We start with a vanilla single currency Swap (currency EUR, maturity 20y, notional 10m, receive fixed 2\% annual, pay
@@ -919,12 +1024,16 @@ both Swap legs reset, i.e. annually in this case\footnote{Using closed form expr
   prices.}. And if the simulation model has been calibrated to the points on the Swaption surface which are used for
 European Swaption pricing, then we can expect to see that the simulated exposure matches Swaption prices at these annual
 points, as in figure \ref{fig_1}.  In Example\_1 we used co-terminal ATM Swaptions for both model calibration and
-Swaption pricing. Moreover, as the the yield curve is flat in this example, the exposures from both parties'
+Swaption pricing. Moreover, as the yield curve is flat in this example, the exposures from both parties'
 perspectives (EPE and ENE) match not only at the annual resets, but also for the period between annual reset of both
 legs to the point in time when the floating leg resets. Thereafter, between floating leg (only) reset and next joint
 fixed/floating leg reset, we see and expect a deviation of the two exposure profiles.
 
-\medskip Moving to {\tt Examples/Example\_2}, we see what changes when using a realistic (non-flat) market
+%--------------------------------------------------------
+\subsection{Interest Rate Swap Exposure, Realistic Market}\label{sec:example2}
+%--------------------------------------------------------
+
+Moving to {\tt Examples/Example\_2}, we see what changes when using a realistic (non-flat) market
 environment. Running the example with
 
 \medskip
@@ -1059,7 +1168,7 @@ directories {\tt Examples/Example\_7/Output/portfolio\_\#}. Note that these dire
 before running the batch with {\tt python run.py}.
 
 %--------------------------------------------------------
-\subsection{FX Forward Exposure}\label{sec:fxfwd}
+\subsection{FX Forward and FX Option Exposure}\label{sec:fxfwd}
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_7} generates the exposure evolution for a EUR / USD FX Forward transaction
@@ -1077,7 +1186,7 @@ trade's value date must match corresponding Vanilla FX Option prices, as shown i
 \end{figure}
 
 %--------------------------------------------------------
-\subsection{FX Option Exposure}\label{sec:fxoption}
+\subsection*{FX Option Exposure}\label{sec:fxoption}
 %--------------------------------------------------------
 
 This example (in folder {\tt Examples/Example\_7}, as the FX Forward example) illustrates the exposure evolution for an
@@ -1104,7 +1213,7 @@ each simulation step on each path.
 %\todo[inline]{Add exposure evolution graph with 'simulated' FX vol}
 
 %--------------------------------------------------------
-\subsection{Cross Currency Swap Exposure and FX Reset}
+\subsection{Cross Currency Swap Exposure, without FX Reset}
 %--------------------------------------------------------
 
 The case in {\tt Examples/Example\_8} is a vanilla cross currency Swap. It shows the typical blend of an Interest Rate
@@ -1118,6 +1227,10 @@ figure \ref{fig_6}.
   quarterly time steps.}
 \label{fig_6}
 \end{figure}
+
+%--------------------------------------------------------
+\subsection{Cross Currency Swap Exposure, with FX Reset}
+%--------------------------------------------------------
 
 The effect of the FX resetting feature, common in Cross Currency Swaps nowadays, is shown in {\tt Examples/Example\_9}.
 The example shows the exposure evolution of a EUR/USD cross currency basis Swap with FX reset at each interest period
@@ -1133,7 +1246,7 @@ the EUR leg's notional is reset to match the USD notional.
 \end{figure}
   
 %--------------------------------------------------------
-\subsection{Netting and Collateral}
+\subsection{Netting Set, Collateral, XVAs, XVA Allocation}
 %--------------------------------------------------------
 
 In this example (see folder {\tt Examples/Example\_10}) we showcase a small netting set consisting of three Swaps in
@@ -1193,7 +1306,7 @@ from the evaluation date.
 \end{figure}
 
 %--------------------------------------------------------
-\subsection{CVA, DVA, FVA, COLVA, MVA, Collateral Floor}
+\subsection*{CVA, DVA, FVA, COLVA, MVA, Collateral Floor}
 %--------------------------------------------------------
 
 We use one of the cases in {\tt Examples/Example\_10} to demonstrate the
@@ -1228,7 +1341,7 @@ incremental contributions to these two VAs through time.
 
 
 %--------------------------------------------------------
-\subsection{Exposure Reports \& XVA Allocation to Trades}
+\subsection*{Exposure Reports \& XVA Allocation to Trades}
 %--------------------------------------------------------
 Using the example in folder {\tt Examples/Example\_10} we illustrate here the layout of an exposure report produced by
 ORE. The report shows the exposure evolution of Swap\_1 without collateral which - after running Example\_10 - is found
@@ -1566,7 +1679,7 @@ Finally, this example demonstrates a parametric VaR calculation based on the sen
 \subsection{Equity Derivatives Exposure}\label{ex:equityderivatives}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_16} demonstrates the computation of NPV, exposures and XVA for a portfolio 
+The example in folder {\tt Examples/Example\_16} demonstrates the computation of NPV, sensitivities, exposures and XVA for a portfolio 
 of OTC equity derivatives. The portfolio used in this example consists of:
 
 \begin{itemize}
@@ -1576,6 +1689,8 @@ of OTC equity derivatives. The portfolio used in this example consists of:
 	\item an equity call option denominated in USD (``SP5'')
 	\item an equity put option denominated in USD (``SP5'')
 	\item an equity forward denominated in USD (``SP5'')
+	\item an equity Swap in USD with return type  ``price'' (``SP5'')
+	\item an equity Swap in USD with return type ``total'' (``SP5'')
 \end{itemize}
 
 The step-by-step procedure for running ORE is identical for equities as for other asset classes; the same market and 
@@ -1607,11 +1722,13 @@ The terms of the three trades are as follows:
 
 \begin{itemize}
 \item CPI Swap 1: Exchanges on 2036-02-05 a fixed amount of 20m GBP for a 10m GBP notional inflated with UKRPI with base CPI 210
-\item CPI Swap 2: Notional 10m GBP, maturity 2021-07-18, exchanging GBP Libor for GBP Libor 6M vs. $2\%$ x CPI-Factor (Act/Act), with
+\item CPI Swap 2: Notional 10m GBP, maturity 2021-07-18, exchanging GBP Libor for GBP Libor 6M vs. $2\%$ x CPI-Factor (Act/Act), inflated with index UKRPI with base CPI 210
 \item YOY Swap: Notional 10m EUR, maturity 2021-02-05, exchanging fixed coupons for EUHICPXT year-on-year inflation coupons
+\item YOY Swap with capped/floored YOY leg: Notional 10m EUR, maturity 2021-02-05, exchanging fixed coupons for EUHICPXT year-on-year inflation coupons, YOY leg capped with 0.03 and floored with 0.005
+\item YOY Swap with scheduled capped/floored YOY leg: Notional 10m EUR, maturity 2021-02-05, exchanging fixed coupons for EUHICPXT year-on-year inflation coupons, YOY leg capped with cap schedule and floored with floor schedule
 \end{itemize}
 
-The example generates cash flows, NPVs, exposure evolutions, XVAs, as well as two exposure graphs for CPI Swap 1 respectively the YOY Swap. Figure \ref{fig_cpi_swap} shows the CPI Swap exposure evolution.
+The example generates cash flows, NPVs, exposure evolutions, XVAs, as well as two exposure graphs for CPI Swap 1 respectively the YOY Swap. For the YOY Swap and the both YOY Swaps with capped/floored YOY leg, the example generates their cash flows, NPVs, exposure evolutions, XVAs and sensitivities. Figure \ref{fig_cpi_swap} shows the CPI Swap exposure evolution.
 
 \begin{figure}[h!]
 	\begin{center}
@@ -1737,6 +1854,152 @@ This example in folder {\tt Examples/Example\_23} demonstrates pricing, cash flo
 using a minimal portfolio of four trades, one FRA and three OIS. The essential results are in {\tt npv.csv}, {\tt flows.csv} and 
 four {\tt exposure\_trade\_*.csv} files.
 
+%--------------------------------------------------------
+\subsection{Commodity Forward and Option}% Example 24
+\label{example:24}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_24} demonstrates pricing and sensitivity analysis for
+\begin{itemize}
+\item Commodity Forwards
+\item European Commodity Options
+\end{itemize}
+using a minimal portfolio of four forwards and two options referencing WTI and Gold. 
+The essential results are in {\tt npv.csv} and {\tt sensitivity.csv}.
+
+%--------------------------------------------------------
+\subsection{CMS Spread with (Digital) Cap/Floor}% Example 25
+\label{example:25}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_25}  demonstrates pricing, sensitivity analysis 
+and exposure simulation for 
+\begin{itemize}
+\item Capped/Floored CMS Spreads
+\item CMS Spreads with Digital Caps/Floors
+\end{itemize}
+
+The example can be run with
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+and results are in {\tt npv.csv}, {\tt sensitivity.csv}, {\tt exposure\_*.csv} 
+and the exposure graphs in {\tt mpl\_cmsspread.pdf}.
+
+%--------------------------------------------------------
+\subsection{Bootstrap Consistency}% Example 26
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_26} confirms that bootstrapped curves 
+correctly reprice the bootstrap instruments (FRAs, Interest Rate Swaps, FX Forwards, Cross
+Currency Basis Swaps) using three pricing setups with
+\begin{itemize}
+\item EUR collateral discounting (configuration xois\_eur)
+\item USD collateral discounting (configuration xois\_usd)
+\item in-currency OIS discounting (configuration collateral\_inccy)
+\end{itemize}
+all defined in {\tt Examples/Input/todaysmarket.xml}.
+
+\medskip
+The required portfolio files need to be generated from market data and conventions in
+{\tt Examples/Input} and trade templates in 
+{\tt Examples/Example\_26/Helpers}, calling
+
+\medskip
+\centerline{\tt python TradeGenerator.py}
+
+\medskip
+This will place three portfolio files {\tt *\_portfolio.xml} in the input folder.
+Thereafter, the three consistency checks can be run calling
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+Results are in three files {\tt *\_npv.csv} and should show zero NPVs for all benchmark instruments.
+
+%--------------------------------------------------------
+\subsection{BMA Basis Swap}% Example 27
+\label{example:27}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_27} demonstrates pricing 
+and sensitivity analysis for a series of USD Libor 3M vs. Averaged BMA (SIFMA) 
+Swaps that correspond to the instruments used to bootstrap the BMA curve. 
+
+The example can be run with
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+and results are in {\tt npv.csv} and {\tt sensitivity.csv}.
+
+%--------------------------------------------------------
+\subsection{Discount Ratio Curves}% Example 28
+\label{example:28}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_28} shows how to use a yield curve 
+built from a DiscountRatio segment. 
+In particular, it builds a GBP collateralized in EUR discount curve by referencing 
+three other discount curves:
+\begin{itemize}
+\item a GBP collateralised in USD curve
+\item a EUR collateralised in USD curve
+\item a EUR OIS curve i.e. a EUR collateralised in EUR curve
+\end{itemize}
+
+The implicit assumption in building the curve this way is that EUR/GBP FX 
+forwards collateralised in EUR have the same fair market rate as EUR/GBP 
+FX forwards collateralised in USD. This assumption is illustrated in the 
+example by the NPV of the two forward instruments in the portfolio returning 
+exactly 0 under both discounting regimes i.e. under USD collateralization with 
+direct curve building and under EUR collateralization with the discount ratio 
+modified ``GBP-IN-EUR'' curve.
+
+Also, in this example, an assumption is made that there are no direct GBP/EUR FX 
+forward or cross currency quotes available which in general is false. The example 
+s merely for illustration.
+
+Both collateralizaton scenarios can be run calling {\tt python run.py}.
+
+%--------------------------------------------------------
+\subsection{Curve Building using Fixed vs. Float Cross Currency Helpers}% Example 29
+\label{example:29}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_29} demonstrates using fixed vs. float 
+cross currency swap helpers. In particular, it builds a TRY collateralised in USD 
+discount curve using TRY annual fixed vs USD 3M Libor swap quotes.
+
+The portfolio contains an at-market fixed vs. float cross currency swap that is 
+included in the curve building. The NPV of this swap should be zero when the example is run,
+using {\tt python run.py} or ``directly'' calling {\tt ore[.exe] ore.xml}.
+
+% Missing examples 30, 31, 32
+%--------------------------------------------------------
+\subsection{USD-Prime Curve Building via Prime-LIBOR Basis Swap}% Example 33
+\label{example:33}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_33} demonstrates the implementation of the USD-Prime index in the ORE.
+The USD-Prime yield curve is built from USD-Prime vs USD 3M Libor basis swap quotes.
+The portfolio consists of two fair basis swaps (NPVs equal to 0):
+\begin{itemize}
+\item US Dollar Prime Rate vs 3 Month LIBOR
+\item US Dollar 3 Month LIBOR vs Fed Funds + 0.027
+\end{itemize}
+
+In particular, it is confirmed that the bootstrapped curves USD-FedFunds and USD-Prime follow
+the 3\% rule observed on the market: {\tt U.S. Prime Rate = (The Fed Funds Target Rate + 3)}.
+(See \url{http://www.fedprimerate.com/}.)
+
+Running ORE in directory {\tt Examples/Example\_33} with {\tt python run.py }
+yields the USD-Prime curve in {\tt Examples/Example\_33/Output/curves.csv.}
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
@@ -1861,12 +2124,14 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="logMask">255</Parameter>
   <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
   <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
+  <Parameter name="dividendDataFile">../../Input/dividends_20160205.txt</Parameter> <!-- Optional -->
   <Parameter name="implyTodaysFixings">Y</Parameter>
   <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
   <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
   <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
   <Parameter name="portfolioFile">portfolio.xml</Parameter>
+  <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
   <!-- None, Unregister, Defer or Disable -->
   <Parameter name="observationModel">Disable</Parameter>
 </Setup>
@@ -1886,13 +2151,13 @@ Parameter {\tt logMask} determines the verbosity of log file output. Log message
 internally labelled as Alert, Critical, Error, Warning, Notice, Debug, associated with logMask values 1, 2, 4, 8, ..., 64. 
 The logMask allows filtering subsets of these categories and controlling the verbosity of log file output\footnote{by bitwise comparison of the the external logMask value with each message's log level}. LogMask 255 ensures maximum verbosity. \\
 
-When ORE starts, it will initialise today's market, i.e. load market data and fixings, and build all term structures as
+When ORE starts, it will initialise today's market, i.e. load market data, fixings and dividends, and build all term structures as
 specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the trades in {\tt portfolio.xml} and link them with
 pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt implyTodaysFixings} is set to Y, today's
 fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as e.g. in
 scenario analysis and stress testing.
 
-\medskip The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
+\medskip Parameter {\tt calendarAdjustment} includes the {\tt calendarAdjustment.xml} which lists out additional holidays and business days to be added to specified calendars. The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
 {\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users
 familiar with the QuantLib design - the parameter controls to which extent {\em QuantLib observer notifications} are
 used when market and fixing data is updated and the evaluation date is shifted:
@@ -2081,6 +2346,7 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="scenarioFile">scenariodata.dat</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="exposureProfiles">Y</Parameter>
+    <Parameter name="exposureProfilesByTrade">Y</Parameter>
     <Parameter name="quantile">0.95</Parameter>
     <Parameter name="calculationType">Symmetric</Parameter>      
     <Parameter name="allocationMethod">None</Parameter>    
@@ -2099,6 +2365,10 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="kvaAlpha">1.4</Parameter>
     <Parameter name="kvaRegAdjustment">12.5</Parameter>
     <Parameter name="kvaCapitalHurdle">0.012</Parameter>
+    <Parameter name="kvaOurPdFloor">0.03</Parameter>
+    <Parameter name="kvaTheirPdFloor">0.03</Parameter>
+    <Parameter name="kvaOurCvaRiskWeight">0.005</Parameter>
+    <Parameter name="kvaTheirCvaRiskWeight">0.05</Parameter>
     <Parameter name="dim">Y</Parameter>
     <Parameter name="mva">Y</Parameter>
     <Parameter name="dimQuantile">0.99</Parameter>
@@ -2132,7 +2402,8 @@ expected to have depth $>$ 1 (e.g. storing NPVs and cumulative flows)
 \item {\tt scenarioFile:} Scenario data previously generated and used in the post-processor (simulated index fixings and
 FX rates)
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures
-\item {\tt exposureProfiles:} Flag to enable/disable exposure output
+\item {\tt exposureProfiles:} Flag to enable/disable exposure output for each netting set
+\item {\tt exposureProfilesByTrade:} Flag to enable/disable stand-alone exposure output for each trade
 \item {\tt quantile} Confidence level for Potential Future Exposure (PFE) reporting
 \item {\tt calculationType} Determines the settlement of margin calls: Symmetric - margin for both counterparties
 settled after the margin period of risk; AsymmetricCVA - margin requested from the counterparty settles with delay,
@@ -2154,7 +2425,7 @@ collateral rates floor to the collateral model file (netting.xml)}
 %collateral rate. 
 %basis point is 0.0001) assuming the day count convention of the collateral rate.
 \item {\tt kva:} Flag to enable setting the kva ccr parameters.
-\item {\tt kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle:} the kva ccr parameters (see \ref{sec:app_kva}.
+\item {\tt kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight:} the kva CCR parameters (see \ref{sec:app_kva} and \ref{sec:app_kva_cva}.
 \item {\tt dimQuantile:} Quantile for Dynamic Initial Margin (DIM) calculation
 \item {\tt dimHorizonCalendarDays:} Horizon for DIM calculation, 14 calendar days for 2 weeks, etc.
 \item {\tt dimRegressionOrder:} Order of the regression polynomial (netting set clean NPV move over the simulation
@@ -2329,6 +2600,7 @@ and {\tt </TodaysMarket>}. The file then contains configuration blocks for
 \item Equity volatility structures
 \item CDS volatility structures
 \item Base correlation structures
+\item Correlation structures
 \item Securities
 \end{itemize}
 
@@ -2684,7 +2956,7 @@ file:
 </InflationCapFloorPriceSurfaces>
 \end{minted}
 \caption{Inflation Cap/Floor Price Surfaces block with ID 'default'}
-\label{lst:yoyinflationindexcurve_spec}
+\label{lst:inflation_cap_floor_surface_spec}
 \end{listing}
 
 This instructs ORE to build a set of zero inflation cap floor price surfaces, which are defined in the curve
@@ -2726,6 +2998,22 @@ Base correlation structures are configured as follows
 
 The composition of the base correlation structure is defined in the curve configuration.
 
+\subsubsection{Correlation Structures}
+
+Correlation structures are configured as follows
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+ <Correlations id="default">
+      <Correlation name="EUR-CMS-10Y:EUR-CMS-1Y">Correlation/EUR-CORR</Correlation>  
+      <Correlation name="USD-CMS-10Y:USD-CMS-1Y">Correlation/USD-CORR</Correlation>
+ </Correlations>
+\end{minted}
+\caption{Correlations block with ID 'default'}
+\label{lst:corr_spec}
+\end{listing}
+
+The composition of the correlation structure is defined in the curve configuration.
 \subsubsection{Market Configurations}
 
 Finally, representatives of each type of block (Discount Curves, Index Curves, Volatility structures, etc, up to
@@ -3415,6 +3703,9 @@ If no day counter is specified for a given riskfactor then the default Actual365
         <SimulateATMOnly>false</SimulateATMOnly><!-- false -->
         <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness><!-- omitted if SimulateATMOnly true -->
       </Surface>
+      <TimeExtrapolation>Flat</TimeExtrapolation>
+      <StrikeExtrapolation>Flat</StrikeExtrapolation>
+
   </EquityVolatilities>
   ...
   <BenchmarkCurves>
@@ -3721,6 +4012,33 @@ and {\tt term}) represents a default value that is used whenever no explicit val
 \label{lst:stress_config}
 \end{longlisting}
 
+%--------------------------------------------------------
+\subsection{Calendar Adjustment: {\tt calendaradjustment.xml}}\label{sec:calenderdjustment}
+%--------------------------------------------------------
+
+\medskip
+ This file {\tt calendaradjustment.xml} list out all additional holidays and business days that are added to a specified calendar in ORE.
+ These dates would originally be missing from the calendar and has to be added.The general structure is shown in listing \ref{lst:calendar_adjustment}.
+In this example, two additional dates had been added to the calendar "Japan", one addtional holiday and one additional business day. If the user is not certain
+wether the date is already included or not, adding it to the {\tt calendaradjustment.xml} to be safe won't raise any errors.
+A sample {\tt calendaradjustment.xml} file can be found in the Global example input directory. However, it is only used in Example\_1.
+
+\begin{longlisting}
+%\hrule\medskip
+  \begin{minted}[fontsize=\scriptsize]{xml}
+<CalendarAdjustments>
+  <Calendar name="Japan">
+    <AdditionalHolidays>
+      <Date>2020-01-01</Date>
+    </AdditionalHolidays>
+    <AdditionalBusinessDays>
+      <Date>2020-01-02</Date>
+    </AdditionalBusinessDays>
+</CalendarAdjustments>
+  \end{minted}
+\caption{Calendar Adjustment}\label{lst:calendar_adjustment}
+\end{longlisting}
+
 
 %--------------------------------------------------------
 \subsection{Curves: {\tt curveconfig.xml}}\label{sec:curveconfig}
@@ -3753,7 +4071,19 @@ for the construction of a market.
 \subsubsection{Default Curves}
 
 Listing \ref{lst:defaultcurve_configuration} shows the configuration of Default curves built from CDS spread
-quotes. Alternatively default curves can be set up as a difference curve of two yield curves as shown in listing
+quotes. The \lstinline!BootstrapConfig! node is optional and holds configuration details for the iterative bootstrap 
+that are described in section \ref{sec:bootstrap_config}. Also note - if the \lstinline!Type! is not \lstinline!Benchmark!
+then \lstinline!Quote! elements within the \lstinline!Quotes! node may have an \lstinline!optional! attribute, indicating
+whether or not the quote is optional. Example:
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Quotes>
+  <Quote optional="true">CDS/CREDIT_SPREAD/BANK/SR/USD/1Y</Quote>
+</Quotes>
+\end{minted}
+%\hrule
+
+Alternatively default curves can be set up as a difference curve of two yield curves as shown in listing
 \ref{lst:defaultcurve_configuration_2}. If $P_B(0,t)$ and $P_S(0,t)$ denote the discount factors of the given benchmark
 and source curve respectively the resulting default term structures has survival probabilities
 
@@ -3783,6 +4113,9 @@ on the given pillars, and w.r.t. a a zero recovery rate. The interpolation is ba
       <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/10Y</Quote>
     </Quotes>
     <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+    <BootstrapConfig>
+      ...
+    </BootstrapConfig>
   </DefaultCurve>
   <DefaultCurve>
   ...
@@ -3859,6 +4192,10 @@ Listing \ref{lst:swaptionvol_configuration} shows the configuration of Swaption 
 
 Listing \ref{lst:capfloorvol_configuration} shows the configuration of Cap/Floor volatility structures.
 
+The \lstinline!BootstrapConfig! node is optional and holds configuration details for the iterative bootstrap 
+that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described 
+in section \ref{sec:bootstrap_config} are used.
+
 \begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -3881,6 +4218,9 @@ Listing \ref{lst:capfloorvol_configuration} shows the configuration of Cap/Floor
       <Strikes>-0.01,0.0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1</Strikes>
       <IborIndex>EUR-EURIBOR-6M</IborIndex>
       <DiscountCurve>Yield/EUR/EUR1D</DiscountCurve>
+      <BootstrapConfig>
+        ...
+      </BootstrapConfig>
     </CapFloorVolatility>
     ...
   </CapFloorVolatilities>
@@ -3906,6 +4246,20 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
     <FXForeignCurveID>Yield/USD/USD1D</FXForeignCurveID>
     <FXDomesticCurveID>Yield/EUR/EUR1D</FXDomesticCurveID>
   </FXVolatility>
+    <FXVolatility>
+    <CurveId>USDJPY</CurveId>
+    <CurveDescription />
+    <Dimension>Smile</Dimension> <!-- ATM, Smile -->
+    <SmileType>Delta</SmileType> <!--VannaVolga, Delta -->
+    <SmileInterpolation>Linear</SmileInterpolation> <!-- VannaVolga1,VannaVolga2, Linear, Cubic -->
+    <Conventions>FX-USD-JPY-OPTION-CONVENTIONS</Conventions>
+    <Deltas>10P,20P,ATM,10C,20C</Deltas>
+    <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
+    <FXSpotID>FX/USD/JPY</FXSpotID>
+    <FXForeignCurveID>Yield/JPY/JPY1D</FXForeignCurveID>
+    <FXDomesticCurveID>Yield/USD/USD1D</FXDomesticCurveID>
+  </FXVolatility>
+
   <FXVolatility>
     ...
   </FXVolatility>
@@ -3914,6 +4268,12 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
 \caption{FX option volatility configuration}
 \label{lst:fxoptionvol_configuration}
 \end{longlisting}
+
+The \lstinline!SmileInterpolation! is optional and only used when the \lstinline!Dimension! is set to \emph{Smile}. If  \lstinline!Dimension! is set to \emph{Smile} 
+and the  \lstinline!SmileType! is set to \emph{VannaVolga}, then Vanna Volga is used as per (Castagna \& Mercurio - 2006). \lstinline!SmileInterpolation! specifies which approximation to use for implied volatilities; \emph{VannaVolga1} or \emph{VannaVolga2} for (eq. 13) or (eq. 14)  respectively. The first approximation
+is less accurate for far OTM but is always defined. The second approximation is defined in most practical applications. \lstinline!SmileInterpolation! defaults to second approximation.
+
+If  \lstinline!Dimension! is set to \emph{Smile}  and the  \lstinline!SmileType! is set to \emph{Delta}, then Delta quotes are used to build a full surface using the deltas specified in \emph{Deltas} and the expiries in \emph{Expiries}. \lstinline!SmileInterpolation! specifies which interpolation method to use for implied volatilities; \emph{Linear} or \emph{Cubic}.
 
 \subsubsection{Equity Curve Structures}
 
@@ -3928,7 +4288,9 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
     <CurveDescription>SP 500 equity price projection curve</CurveDescription>
     <Currency>USD</Currency>
     <ForecastingCurve>EUR1D</ForecastingCurve>
-    <Type>DividendYield</Type> <!-- DividendYield, ForwardPrice -->
+    <Type>DividendYield</Type> <!-- DividendYield, ForwardPrice, OptionPremium -->
+    <!-- Optional node, only used when Type is OptionPremium
+    <ExerciseStyle>American</ExerciseStyle> -->
     <!-- Spot quote from the market data file -->
     <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> 
     <Quotes>
@@ -3968,6 +4330,8 @@ Listing \ref{lst:eqoptionvol_configuration} shows the configuration of equity vo
     <Expiries>1M,5Y,10Y</Expiries>
     <!-- If Dimension is Smile: -->
     <Strikes>1932.8,2147.56,2254.939</Strikes>
+    <TimeExtrapolation>Flat</TimeExtrapolation>
+    <StrikeExtrapolation>Flat</StrikeExtrapolation>
   </EquityVolatility>
   <EquityVolatility>
     ...
@@ -3977,6 +4341,11 @@ Listing \ref{lst:eqoptionvol_configuration} shows the configuration of equity vo
 \caption{Equity option volatility configuration}
 \label{lst:eqoptionvol_configuration}
 \end{longlisting}
+
+\begin{itemize}
+\item {\tt TimeExtrapolation}: Defaults to Flat if omitted. The method used for Extrapolation in the time direction. May take any of the values: Flat or UseInterpolator. For Surfaces built without wildcards this value is not configurable, all curves will have  UseInterpolator extrapolation.
+\item {\tt StrikeExtrapolation}: Defaults to Flat if omitted. The method used for Extrapolation in the strike direction. The values Flat or UseInterpolator are accepted.
+\end{itemize}
 
 \subsubsection{Inflation Curves}
 
@@ -4202,8 +4571,7 @@ a SpreadQuote and a RecoveryRateQuote.
 
 \subsubsection{Correlations}
 
-Listing \ref{lst:correlation_configuration} shows the configuration of the Correlations. Currently only ATM correlation curves or Flat correlation structures are supported.
-Correlation quotes may be loaded directly (by setting QuoteType to Rate) or calibrated from prices (set QuoteType to Price). Currently only CMSSpread correlations can be calibrated. This is done using CMS Spread Options, and requires a CMSSpreadOption convention, SwaptionVolatility and DiscountCurve to be provided.
+Listing \ref{lst:correlation_configuration} shows the configuration of the Correlations. The Correlation type can be either CMSSpread or Generic. The former one is to configure the correlation between two CMS indexes, the latter one is to  generally configure the correlation between two indexes, e.g. between a CMS index and a IBOR index. Currently only ATM correlation curves or Flat correlation structures are supported. Correlation quotes may be loaded directly (by setting QuoteType to RATE) or calibrated from prices (set QuoteType to PRICE).  Moreover a flat zero correlation curve can be loaded (by setting  QuoteType to NULL). In this case market quotes are not needed to be provided. Currently only CMSSpread correlations can be calibrated. This is done using CMS Spread Options, and requires a CMSSpreadOption convention, SwaptionVolatility and DiscountCurve to be provided.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -4212,18 +4580,19 @@ Correlation quotes may be loaded directly (by setting QuoteType to Rate) or cali
     <Correlation>
       <CurveId>EUR-CORR</CurveId>
       <CurveDescription>EUR CMS correlations</CurveDescription>
+      <!--CMSSpread, Generic-->
       <CorrelationType>CMSSpread</CorrelationType>
       <Index1>EUR-CMS-10Y</Index1>
       <Index2>EUR-CMS-2Y</Index2>
-      <!--Conventions, SwaptionVolatility and DiscountCurve only required when QuoteType = Price-->
+      <!--Conventions, SwaptionVolatility and DiscountCurve only required when QuoteType = PRICE-->
       <Conventions>EUR-CMS-10Y-2Y-CONVENTION</Conventions>
       <SwaptionVolatility>EUR</SwaptionVolatility>
       <DiscountCurve>EUR-EONIA</DiscountCurve>
       <Currency>EUR</Currency>
       <!-- ATM, Constant -->
       <Dimension>ATM</Dimension>
-      <!-- Rate, Price -->
-      <QuoteType>Price</QuoteType>
+      <!-- RATE, PRICE, NULL -->
+      <QuoteType>PRICE</QuoteType>
       <Extrapolation>true</Extrapolation>
       <!-- Day counter for date to time conversion -->
       <DayCounter>Actual/365 (Fixed)</DayCounter>
@@ -4237,6 +4606,174 @@ Correlation quotes may be loaded directly (by setting QuoteType to Rate) or cali
 \label{lst:correlation_configuration}
 \end{longlisting}
 
+
+\subsubsection{Commodity Curves}
+
+Commodity Curves are setup as price curves in ORE, meaning that they return a price for a given time $t$ rather than a rate or discount factor, these curves are common in commodities and can be populated with futures prices directly.
+
+Listing \ref{lst:commodity_curve_configuration_1} shows the configuration of Commodity curves built from futures prices, in this example WTI Oil prices, note there is no spot price in this configuration, rather we have a set of futures prices only.
+
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <CommodityCurve>
+      <CurveId>WTI_USD</CurveId>
+      <CurveDescription>WTI USD price curve</CurveDescription>
+      <Currency>USD</Currency>
+      <Quotes>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-07-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-08-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-09-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-10-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-11-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-01-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-02-28</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-03-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-04-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-05-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-07-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-08-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-09-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-10-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-11-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-01-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-02-28</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-03-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-04-30</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <InterpolationMethod>Linear</InterpolationMethod>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+  </CommodityCurves>
+\end{minted}
+\caption{Commodity Curve Configuration for WTI Oil}
+\label{lst:commodity_curve_configuration_1}
+\end{longlisting}
+
+Listing \ref{lst:commodity_curve_configuration_2} shows the configuration for a Precious Metal curve using FX style spot and forward point quotes, note that SpotQuote is used in this case. The different interpretation of the forward quotes is controlled by the conventions.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CommodityCurves>
+    <CommodityCurve>
+      <CurveId>XAU</CurveId>
+      <CurveDescription>Gold USD price curve</CurveDescription>
+      <Currency>USD</Currency>
+      <SpotQuote>COMMODITY/PRICE/XAU/USD</SpotQuote>
+      <Quotes>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/ON</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/TN</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/SN</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/1W</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/1M</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/3M</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/6M</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/9M</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/1Y</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <InterpolationMethod>Linear</InterpolationMethod>
+      <Conventions>XAU</Conventions>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+  </CommodityCurves>
+\end{minted}
+\caption{Commodity Curve Configuration for Gold in USD}
+\label{lst:commodity_curve_configuration_2}
+\end{longlisting}
+
+The meaning of each of the top level elements is given below. If an element is labelled
+as 'Optional', then it may be excluded or included and left blank.
+\begin{itemize}
+\item CurveId: Unique identifier for the curve.
+\item CurveDescription: A description of the curve. This field may be left blank.
+\item Currency: The commodity curve currency.
+\item SpotQuote [Optional]: The spot price quote, if omitted then the spot value will be interpolated.
+\item Quotes: forward price quotes. These can be a futures price or forward points.
+\item DayCounter: The day count basis used internally by the curve to calculate the time between dates.
+\item InterpolationMethod [Optional]: The variable on which the interpolation is performed. The allowable values are
+Linear, LogLinear, Cubic, LinearFlat, LogLinearFlat, CubicFlat. This is different to yield curves above in that Flat versions
+of the standard methods are defined, with each of these if there is no Spot price than any extrapolation between $T_0$ and the
+first future price will be flat (i.e. the first future price will be copied back "Flat" to $T_0$). 
+If the element is omitted or left blank, then it defaults to \emph{Linear}.
+\item Conventions [Optional]: The conventions to use, if omited it is assumed that these quotes are Outright prices.
+\item Extrapolation [Optional]: Set to \emph{True} or \emph{False} to enable or disable extrapolation respectively. If
+the element is omitted or left blank, then it defaults to \emph{True}.
+\end{itemize}
+
+
+Alternatively commodity curves can be set up as a commodity curve times the ratio of two yield curves as shown in listing
+\ref{lst:commodity_curve_configuration_3}. This can be used to setup commodity curves in different currencies, for example Gold in EUR (XAUEUR) can be built from a Gold in USD curve and then the ratio of the EUR and USD discount factors at each pillar. This is akin to crossing FX forward points to get FX forward prices for any pair.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CommodityCurves>
+    <CommodityCurve>
+      <CurveId>XAUEUR</CurveId>
+      <CurveDescription>Gold EUR price curve</CurveDescription>
+      <Currency>EUR</Currency>
+      <BasePriceCurve>XAU</BasePriceCurve>
+      <BaseYieldCurve>USD-FedFunds</BaseYieldCurve>
+      <YieldCurve>EUR-IN-USD</YieldCurve>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+  </CommodityCurves>
+\end{minted}
+\caption{Commodity Curve Configuration for Gold in EUR}
+\label{lst:commodity_curve_configuration_3}
+\end{longlisting}
+
+\subsubsection{Bootstrap Configuration}
+\label{sec:bootstrap_config}
+The The \lstinline!BootstrapConfig! node, outlined in listing \ref{lst:bootstrap_config_outline}, can be added to curve configurations that use a bootstrap algorithm to alter the default behaviour of the bootstrap algorithm.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BootstrapConfig>
+  <Accuracy>...</Accuracy>
+  <GlobalAccuracy>...</GlobalAccuracy>
+  <DontThrow>...</DontThrow>
+  <MaxAttempts>...</MaxAttempts>
+  <MaxFactor>...</MaxFactor>
+  <MinFactor>...</MinFactor>
+  <DontThrowSteps>...</DontThrowSteps>
+</BootstrapConfig>
+\end{minted}
+\caption{\lstinline!BootstrapConfig! node outline}
+\label{lst:bootstrap_config_outline}
+\end{longlisting}
+
+The meaning of each of the elements is:
+\begin{itemize}
+\item \lstinline!Accuracy! [Optional]:
+The accuracy with which the implied quote must match the market quote for each instrument in the curve bootstrap. This node should hold a positive real number. If omitted, the default value is \num[scientific-notation=true]{1.0e-12}.
+
+\item \lstinline!GlobalAccuracy! [Optional]:
+If the interpolation method in the bootstrap is global, e.g. cubic spline, the bootstrap routine needs to perform multiple iterative bootstraps of the curve to converge. After each such bootstrap of the full curve, the absolute value of the change between the current bootstrap and previous bootstrap for the curve value at each pillar is calculated. The global bootstrap is deemed to have converged if the maximum of these changes is less than the global accuracy or the accuracy from the \lstinline!Accuracy! node. This node should hold a positive real number. If omitted, the global accuracy is set equal to the accuracy from the \lstinline!Accuracy! node. This node is useful in some cases where a slightly less restrictive accuracy, than that given by the \lstinline!Accuracy! node, is needed for the global bootstrap.
+
+\item \lstinline!DontThrow! [Optional]:
+If this node is set to \lstinline!true!, the curve bootstrap does not throw an error when the bootstrap fails at a pillar. Instead, a curve value is sought at the failing pillar that minimises the absolute value of the difference between the implied quote and the market quote at that pillar. The minimum is sought between the minimum and maximum curve value that was used in the root finding routine that failed at the pillar. The number of steps used in this search is given by the \lstinline!DontThrowSteps! node below. This node should hold a boolean value. If omitted, the default value is \lstinline!false! i.e. the bootstrap throws an exception at the first pillar where the bootstrap fails.
+
+\item \lstinline!MaxAttempts! [Optional]:
+At each pillar, the bootstrap routine searches between a minimum curve value and a maximum curve value for a curve value that gives an implied quote that matches the market quote at that pillar. In some cases, the minimum curve value and maximum curve value are too restrictive and the bootstrap fails at a pillar. This node determines how many times the bootstrap should be attempted at each pillar. For example, if the node is set to 1, the bootstrap uses the minimum curve value and maximum curve value implied in the code and fails if a root is not found. If this node is set to 2 and the first attempt fails, the minimum curve value is reduced by a factor specified in the node \lstinline!MinFactor!, the maximum curve value is increased by a factor specified in the node \lstinline!MaxFactor! and a second attempt is made to find a root between the enlarged bounds. If no root is found, the bootstrap then fails at this pillar. This node should hold a positive integer. If omitted, the default value is 5.
+
+\item \lstinline!MaxFactor! [Optional]:
+This node is used only if \lstinline!MaxAttempts! is greater than 1. The meaning of this node is given in the description of the \lstinline!MaxAttempts! node. This node should hold a positive real number. If omitted, the default value is 2.0.
+
+\item \lstinline!MinFactor! [Optional]:
+This node is used only if \lstinline!MaxAttempts! is greater than 1. The meaning of this node is given in the description of the \lstinline!MaxAttempts! node. This node should hold a positive real number. If omitted, the default value is 2.0.
+
+\item \lstinline!DontThrowSteps! [Optional]:
+This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning of this node is given in the description of the \lstinline!DontThrow! node. This node should hold a positive integer. If omitted, the default value is 10.
+
+\end{itemize}
+
+
 %--------------------------------------------------------
 %\subsection{Conventions: {\tt conventions.xml}}
 %\label{sec:conventions}
@@ -4247,43 +4784,47 @@ Correlation quotes may be loaded directly (by setting QuoteType to Rate) or cali
 %========================================================
 %\section{Trade Data}\label{sec:portfolio_data}
 %========================================================
-\include{introenvelope}
-
-%\include{tradedata}
-
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Trade Specific Data}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-After the envelope node, trade-specific data for each trade type supported by
-ORE is included. 
-Each trade type has its own trade data container which is defined by an XML node containing a trade-specific
-configuration of individual XML tags - called elements - and trade components. The trade components are defined by XML
-sub-nodes that can be used within multiple trade data containers, i.e.  by multiple trade types.
-
-\vspace{1em}
-
-Details of  trade-specific data for all trade types follow below.
+\input{tradedata/intro}
+\input{tradedata/envelope}
+\input{tradedata/tradespecifics}
 
 \input{tradedata/swap}
-\input{../../Docs/UserGuide/tradedata/capfloor}
-\input{../../Docs/UserGuide/tradedata/forwardrateagreement}
-\input{../../Docs/UserGuide/tradedata/swaption}
-\input{../../Docs/UserGuide/tradedata/fxforward}
-\input{../../Docs/UserGuide/tradedata/fxswap}
-\input{../../Docs/UserGuide/tradedata/fxoption}
-\input{../../Docs/UserGuide/tradedata/equityoption}
-\input{../../Docs/UserGuide/tradedata/equityforward}
-\input{../../Docs/UserGuide/tradedata/equityswap}
-\input{../../Docs/UserGuide/tradedata/cpiswap}
-\input{../../Docs/UserGuide/tradedata/yyswap}
-\input{../../Docs/UserGuide/tradedata/bond}
-\input{../../Docs/UserGuide/tradedata/creditdefaultswap}
-\input{../../Docs/UserGuide/tradedata/commodityoption}
-\input{../../Docs/UserGuide/tradedata/commodityforward}
+\input{tradedata/zerocouponswap}
+\input{tradedata/capfloor}
+\input{tradedata/forwardrateagreement}
+\input{tradedata/swaption}
+\input{tradedata/fxforward}
+\input{tradedata/fxswap}
+\input{tradedata/fxoption}
+\input{tradedata/equityoption}
+\input{tradedata/equityforward}
+\input{tradedata/equityswap}
+\input{tradedata/cpiswap}
+\input{tradedata/yyswap}
+\input{tradedata/bond}
+\input{tradedata/forwardbond}
+\input{tradedata/creditdefaultswap}
+\input{tradedata/commodityoption}
+\input{tradedata/commodityforward}
+
+%\include{tradecomponents}
+\input{../../Docs/UserGuide/tradecomponents/tradecomponentsintro}
+\input{../../Docs/UserGuide/tradecomponents/optiondata}
+\input{../../Docs/UserGuide/tradecomponents/legdatanotionals}
+\input{../../Docs/UserGuide/tradecomponents/scheduledata}
+\input{../../Docs/UserGuide/tradecomponents/fixedlegdatarates}
+\input{../../Docs/UserGuide/tradecomponents/floatinglegdata}
+\input{../../Docs/UserGuide/tradecomponents/legdataamortisation}
+\input{../../Docs/UserGuide/tradecomponents/cmsleg}
+\input{../../Docs/UserGuide/tradecomponents/cmsspreadleg}
+\input{../../Docs/UserGuide/tradecomponents/digitalcmsspreadleg}
+\input{../../Docs/UserGuide/tradecomponents/equityleg}
+\input{../../Docs/UserGuide/tradecomponents/cpileg}
+\input{../../Docs/UserGuide/tradecomponents/yyleg}
+\input{../../Docs/UserGuide/tradecomponents/zerocouponleg}
+\input{../../Docs/UserGuide/tradecomponents/cdsreferenceinformation}
 
 
-\include{tradecomponents}
 \include{allowablevalues}
 
 %========================================================
@@ -4301,6 +4842,12 @@ Details of  trade-specific data for all trade types follow below.
 %========================================================
 \include{fixingdata}
 
+%========================================================
+%\section{Dividend History}
+%========================================================
+\include{dividenddata}
+
+\newpage
 \begin{appendix}
 
 %========================================================
@@ -4804,41 +5351,88 @@ the risk  weight and a capital charge (following the RWA method).
 \medskip Basel II internal rating based (IRB) estimate of worst case
 probability of  default: large homogeneous pool (LHP) approximation of
 Vasicek (1997), KVA regulatory probability of default is the worst
-case  probability of default floored at 0.03:
+case probability of default floored at 0.03 (the latter is valid for 
+corporates and banks, no such floor applies to sovereign counterparties):
 $$
-PD_{99.9\%} = \max(0.03, N (\frac{N^{-1}(PD) + \sqrt{\rho}
-  N^{-1}(0.999)}{\sqrt{1 - \rho}}) - PD)
+\PD_{99.9\%} = \max\left(floor, N \left(\frac{N^{-1}(\PD) + \sqrt{\rho}
+  N^{-1}(0.999)}{\sqrt{1 - \rho}}\right) - \PD\right)
 $$
 $N$ is the cumulative standard normal distribution,
 
 $$
-\rho = 0.12 \frac{1 - e^{-50 PD}}{1 - e^{-50}} + 0.24 (1 - \frac{1 -
-  e^{-50 PD}}{1 - e^{-50}})
+\rho = 0.12 \frac{1 - e^{-50 \PD}}{1 - e^{-50}} + 0.24 \left(1 - \frac{1 -
+  e^{-50 \PD}}{1 - e^{-50}}\right)
 $$
 
 \medskip Maturity adjustment factor for RWA method capped at 5, floored at 1:
-$$MA(PD, M) = \min(5, \max(1, \frac{1 + (M - 2.5) B(PD)}{1 - 1.5 B(PD)}))$$
-\medskip where $B(PD) = (0.11852 - 0.05478 \ln(PD))^2$ and M is the
+$$
+\MA(\PD, M) = \min\left(5, \max\left(1, \frac{1 + (M - 2.5) B(\PD)}{1 - 1.5 B(\PD)}\right)\right)
+$$
+\medskip where $B(\PD) = (0.11852 - 0.05478 \ln(\PD))^2$ and M is the
 effective  maturity of the portfolio (capped at 5):
 
-$$M = \min(5, 1 + \frac{\sum\limits_{t_k > 1yr} EE(t_k)\Delta t_k
-  B(0,t_k)}{\sum\limits_{t_k \leq 1yr} EEE(t_k)\Delta t_k B(0,t_k)})$$
+$$M = \min\left(5, 1 + \frac{\sum\limits_{t_k > 1yr} \EE_B(t_k)\Delta t_k
+  B(0,t_k)}{\sum\limits_{t_k \leq 1yr} \EEE_B(t_k)\Delta t_k B(0,t_k)}\right)
+$$
 
 \medskip where $B(0,t_k)$ is the risk-free discount factor from the
 simulation  date $t_k$ to today, $\Delta t_k$ is the difference
 between time points, 
-$EE(t_k)$ is the expected exposure at time $t_k$ and $EEE(t_k)$ is the
-effective expected exposure.
+$\EE_B(t_k)$ is the expected (Basel) exposure at time $t_k$ and $\EEE_B(t_k)$ is the
+associated effective expected exposure.
 
-\medskip (expected) risk capital at $t_i$:
-$$RC_{t_i} = EAD_{t_i} \times LGD \times PD_{99.9\%} \times MA(PD, M)$$
+\medskip 
+Expected risk capital at $t_i$:
+$$
+\RC(t_i) = EAD(t_i) \times LGD \times \PD_{99.9\%} \times \MA(\PD, M)
+$$
+where
+\begin{itemize}
+\item $\EAD(t_i) = \alpha \times \EEPE(t_i)$
+\item $\EEPE(t_i)$ is estimated as the time average of the running maximum of $\EPE(t)$ over the time interval $t_i\leq t\leq t_i+1$
+\item $\alpha$ is the multiplier resulting from the IRB calculations (Basel II defines a supervisory alpha of 1.4, but gives banks the option to estimate their own $\alpha$,subject to a floor of 1.2).
+\item the maturity adjustment MA is derived from the EPE profile for times $t\geq t_i$
+\end{itemize}
 
-$$EAD_{t_i} = \alpha \times EEPE_{t_i}$$
+\medskip 
+$\KVA_{CCR}$ is the sum of the expected risk capital amount discounted at {\em capital discount rate} $r_{cd}$ and compounded at rate given by the product of {\em capital hurdle} $h$ and {\em regulatory adjustment} $a$:
+$$
+\KVA_{CCR} = \sum_i \RC(t_i) \times \frac{1}{ (1 + r_{cd})^{\delta(t_{i-1}, t_i)}} \times \delta(t_{i-1}, t_i) \times h \times a
+$$
+assuming Actual/Actual day count to compute the year factions $delta$.
 
-\medskip $EEPE_{t_i}$ being approximated by $EPE$ at point $t_i$ and $\alpha$ the multiplier resulting from the IRB calculations (Basel II defines a supervisory alpha of 1.4, but gives banks the option to estimate their own $\alpha$,subject to a floor of 1.2).
+In ORE we compute KVA CCR from both perspectives - ``our'' KVA driven by EPE and the counterparty default risk, and similarly ``their'' KVA driven by ENE and our default risk.
 
-\medskip $KVA_{CCR}$ is the sum of the expected risk capitals discounted at capital discount rate and factored with the capital hurdle and the regulatory adjustment:
-$$KVA_{CCR} = \sum_i RC_{t_i} \frac{1}{ (1 + capDiscRate)^{t_i-t_0}} (t_i - t_{i-1}) \times (capHurdle \times regAdj)$$
+\subsection{KVA (BA-CVA)}\label{sec:app_kva_cva}
+
+This section briefly summarizes the calculation of a capital value adjustment associated with the CVA capital charge (in the basic approach, BA-CVA) as introduced in Basel III \cite{bcbs189, d325, d424}. ORE implements the {\em stand-alone} capital charge $\SCVA$ for a netting set and computes a KVA for it\footnote{In the reduced version of BA-CVA, where hedges are not recognized, the total BA-CVA capital charge across all counterparties $c$ is given by
+$$
+K = \sqrt{\left(\rho \sum_c \SCVA_c\right)^2 +(1-\rho^2)\sum_c \SCVA_c^2}
+$$  
+with supervisory correlation $\rho=0.5$ to reflect that the credit spread risk factors across counterparties are not perfectly correlated. Each counterparty $\SCVA_c$ is given by a sum over all netting sets with this counterparty.}. In the basic approach, the stand-alone capital charge for a netting set is given by
+$$
+\SCVA = \RW_c\cdot M\cdot \EEPE \cdot\DF
+$$
+with 
+\begin{itemize}
+\item supervisory risk weight $\RW_c$ for the counterparty;
+\item effective netting set maturity $M$ as in section \ref{sec:app_kva} (for a bank using IMM to calculate EAD), but without applying a cap of 5;
+\item supervisory discount $\DF$ for the netting set which is equal to one for banks using IMM to calculate $\EEPE$ and $\DF=\left(1-\exp\left(-0.05\,M\right)\right)/(0.05\,M)$ for banks not using IMM to calculate $\EEPE$. 
+\end{itemize}
+
+The associated capital value adjustment is then computed for each netting set's stand-alone CVA charge as above
+$$
+\KVA_{BA-\CVA} = \sum_i \SCVA(t_i) \times \frac{1}{ (1 + r_{cd})^{\delta(t_{i-1}, t_i)}} \times \delta(t_{i-1}, t_i) \times h \times a
+$$
+with 
+$$
+\SCVA(t_i) = \RW_c \cdot M(t_i)\cdot \EEPE(t_i)\cdot\DF
+$$
+where we derive both $M$ and EEPE from the EPE profile for times $t\geq t_i$.
+
+In ORE we compute KVA BA-CVA from both perspectives - ``our'' KVA driven by EPE and the counterparty risk weight, and similarly ``their'' KVA driven by ENE and our risk weight. \\
+
+Note: Banks that use the BA-CVA for calculating CVA capital requirements are allowed to cap the maturity adjustment factor $\MA(\PD,M)$ in section \ref{sec:app_kva} at 1 for netting sets that contribute to CVA capital, if using the IRB approach for CCR capital.
 
 \subsection{Collateral Model}\label{sec:app_collateral}
 
@@ -5142,6 +5736,10 @@ implementation of the inverse cumulative normal distribution to transform $U[0,1
 
 \bibitem{bcbs189} Basel Committee on Banking Supervision, {\em Basel III: A global regulatory framework for more
     resilient banks and banking systems}, \url{http://www.bis.org/publ/bcbs189.pdf}, June 2011
+
+\bibitem{d325} Basel Committee on Banking Supervision, {\em Review of the Credit Valuation Adjustment Risk Framework}, \url{https://www.bis.org/bcbs/publ/d325.pdf}, 2015
+
+\bibitem{d424} Basel Committee on Banking Supervision, {\em Basel III: Finalising post-crisis reforms}, \url{https://www.bis.org/bcbs/publ/d424.pdf}, 2017
 
 \bibitem{BrigoMercurio} Damiano Brigo and Fabio Mercurio, {\em Interest Rate Models: Theory and Practice, 2nd Edition},
   Springer, 2006.

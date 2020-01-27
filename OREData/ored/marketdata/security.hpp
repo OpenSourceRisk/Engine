@@ -43,11 +43,13 @@ public:
 
     //! Inspector
     Handle<Quote> spread() const { return spread_; }
+    Handle<Quote> price() const { return price_; }
     Handle<Quote> recoveryRate() const { return recoveryRate_; }
     Handle<Quote> cpr() const { return cpr_; }
 
 private:
     Handle<Quote> spread_;
+    Handle<Quote> price_;
     Handle<Quote> recoveryRate_;
     Handle<Quote> cpr_;
 };

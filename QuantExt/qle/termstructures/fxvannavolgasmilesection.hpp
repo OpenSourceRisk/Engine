@@ -24,6 +24,8 @@
 #ifndef quantext_fx_vanna_volga_smile_section_hpp
 #define quantext_fx_vanna_volga_smile_section_hpp
 
+#include <ql/experimental/barrieroption/vannavolgainterpolation.hpp> 
+#include <ql/experimental/fx/blackdeltacalculator.hpp> 
 #include <qle/termstructures/fxsmilesection.hpp>
 
 namespace QuantExt {
@@ -38,15 +40,18 @@ using namespace QuantLib;
  */
 class VannaVolgaSmileSection : public FxSmileSection {
 public:
-    VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr25d, Volatility bf25d);
+    VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr, Volatility bf, bool firstApprox = false,
+                const DeltaVolQuote::AtmType& atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral,
+                const DeltaVolQuote::DeltaType& deltaType = DeltaVolQuote::DeltaType::Spot,
+                const Real delta = 0.25);
 
     //! getters for unit test
     Real k_atm() const { return k_atm_; }
-    Real k_25c() const { return k_25c_; }
-    Real k_25p() const { return k_25p_; }
+    Real k_c() const { return k_c_; }
+    Real k_p() const { return k_p_; }
     Volatility vol_atm() const { return atmVol_; }
-    Volatility vol_25c() const { return vol_25c_; }
-    Volatility vol_25p() const { return vol_25p_; }
+    Volatility vol_c() const { return vol_c_; }
+    Volatility vol_p() const { return vol_p_; }
 
     //! \name FxSmileSection interface
     //@{
@@ -57,8 +62,10 @@ private:
     Real d1(Real x) const;
     Real d2(Real x) const;
 
-    Real k_atm_, k_25c_, k_25p_;
-    Volatility vol_25c_, vol_25p_;
+    Real k_atm_, k_c_, k_p_;
+    Volatility atmVol_, rr_, bf_;
+    Volatility vol_c_, vol_p_;
+    bool firstApprox_;
 };
 
 } // namespace QuantExt

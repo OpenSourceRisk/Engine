@@ -97,16 +97,18 @@ struct test_data {
 static struct test_data index_data[] = {
     // parsing string,     index name,                     tenor
     {"EUR-EONIA-1D", "EoniaON Actual/360", 1 * Days},
+    {"EUR-ESTER", "EsterON Actual/360", 1 * Days},
     {"GBP-SONIA-1D", "SoniaON Actual/365 (Fixed)", 1 * Days},
     {"JPY-TONAR-1D", "TONARON Actual/365 (Fixed)", 1 * Days},
     {"CHF-TOIS", "CHF-TOISTN Actual/360", 1 * Days},
     {"USD-FedFunds", "FedFundsON Actual/360", 1 * Days},
+    {"USD-SOFR", "SOFRON Actual/360", 1 * Days},
     {"CHF-SARON", "CHF-SARONON Actual/360", 1 * Days},
     {"DKK-DKKOIS", "DKK-DKKOISTN Actual/360", 1 * Days},
     {"SEK-SIOR", "SEK-SIORTN Actual/360", 1 * Days},
     {"NOK-NOWA", "NowaON Actual/Actual (ISMA)", 1 * Days},
     {"NZD-OCR", "NzocrON Actual/365 (Fixed)", 1 * Days},
-    {"BRL-CDI", "BRL-CDITN Business/252(Brazil)", 1 * Days},
+    {"BRL-CDI", "BRL-CDION Business/252(Brazil)", 1 * Days},
 
     {"AUD-LIBOR-1W", "AUDLibor1W Actual/360", 1 * Weeks},
     {"AUD-LIBOR-1M", "AUDLibor1M Actual/360", 1 * Months},
@@ -165,6 +167,8 @@ static struct test_data index_data[] = {
     {"CAD-BA-12M", "CDOR1Y Actual/365 (Fixed)", 1 * Years},
     {"CAD-BA-1Y", "CDOR1Y Actual/365 (Fixed)", 1 * Years},
 
+    {"CNY-SHIBOR-3M", "Shibor3M Actual/360", 3 * Months},
+  
     {"CZK-PRIBOR-6M", "CZK-PRIBOR6M Actual/360", 6 * Months},
 
     {"USD-LIBOR-1W", "USDLibor1W Actual/360", 1 * Weeks},
@@ -214,6 +218,12 @@ static struct test_data index_data[] = {
     {"CHF-LIBOR-6M", "CHFLibor6M Actual/360", 6 * Months},
     {"CHF-LIBOR-12M", "CHFLibor1Y Actual/360", 1 * Years},
     {"CHF-LIBOR-1Y", "CHFLibor1Y Actual/360", 1 * Years},
+
+    {"SAR-SAIBOR-1W", "SAR-SAIBOR1W Actual/360", 1 * Weeks},
+    {"SAR-SAIBOR-1M", "SAR-SAIBOR1M Actual/360", 1 * Months},
+    {"SAR-SAIBOR-2M", "SAR-SAIBOR2M Actual/360", 2 * Months},
+    {"SAR-SAIBOR-3M", "SAR-SAIBOR3M Actual/360", 3 * Months},
+    {"SAR-SAIBOR-6M", "SAR-SAIBOR6M Actual/360", 6 * Months},
 
     {"SEK-STIBOR-1W", "SEK-STIBOR1W Actual/360", 1 * Weeks},
     {"SEK-STIBOR-1M", "SEK-STIBOR1M Actual/360", 1 * Months},
@@ -303,6 +313,13 @@ static struct test_data index_data[] = {
     {"TWD-TAIBOR-5M", "TWD-TAIBOR5M Actual/365 (Fixed)", 5 * Months},
     {"TWD-TAIBOR-6M", "TWD-TAIBOR6M Actual/365 (Fixed)", 6 * Months},
 
+    {"TRY-TRLIBOR-1M", "TRLibor1M Actual/360", 1 * Months},
+    {"TRY-TRLIBOR-2M", "TRLibor2M Actual/360", 2 * Months},
+    {"TRY-TRLIBOR-3M", "TRLibor3M Actual/360", 3 * Months},
+    {"TRY-TRLIBOR-4M", "TRLibor4M Actual/360", 4 * Months},
+    {"TRY-TRLIBOR-5M", "TRLibor5M Actual/360", 5 * Months},
+    {"TRY-TRLIBOR-6M", "TRLibor6M Actual/360", 6 * Months},
+  
     {"MYR-KLIBOR-1M", "MYR-KLIBOR1M Actual/365 (Fixed)", 1 * Months},
     {"MYR-KLIBOR-2M", "MYR-KLIBOR2M Actual/365 (Fixed)", 2 * Months},
     {"MYR-KLIBOR-3M", "MYR-KLIBOR3M Actual/365 (Fixed)", 3 * Months},
@@ -335,7 +352,7 @@ BOOST_AUTO_TEST_CASE(testIborIndexParsing) {
 
     Size len = sizeof(index_data) / sizeof(index_data[0]);
     for (Size i = 0; i < len; ++i) {
-        string str(index_data[i].str);
+        string str(ore::data::internalIndexName(index_data[i].str));
         string index_name(index_data[i].index_name);
         Period tenor(index_data[i].tenor);
 
@@ -363,7 +380,6 @@ BOOST_AUTO_TEST_CASE(testIborIndexParsingFails) {
 
     // Test invalid strings
     BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-EONIA-1M"), QuantLib::Error);
-    BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-EURIBOR-1D"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-FALSE-6M"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseIborIndex("It's a trap!"), QuantLib::Error);
 }

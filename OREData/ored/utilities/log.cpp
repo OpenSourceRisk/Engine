@@ -182,5 +182,14 @@ LoggerStream::~LoggerStream() {
         }
     }
 }
+
+string StructuredErrorMessage::jsonify (const string& s) const {
+    string str = s;
+    boost::replace_all(str, "\\", "\\\\"); // do this before the below otherwise we get \\"
+    boost::replace_all(str, "\"", "\\\"");
+    boost::replace_all(str, "\r", "\\r");
+    boost::replace_all(str, "\n", "\\n");
+    return str;
+}
 } // namespace data
 } // namespace ore

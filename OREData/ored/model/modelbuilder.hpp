@@ -23,12 +23,15 @@
 
 #pragma once
 
+#include <ql/patterns/lazyobject.hpp>
+
 namespace ore {
 namespace data {
 
-class ModelBuilder : public LazyObject {
+class ModelBuilder : public QuantLib::LazyObject {
 public:
     void recalibrate() { calculate(); }
+    virtual void forceRecalculate() { recalculate(); }
 };
 
 } // namespace data

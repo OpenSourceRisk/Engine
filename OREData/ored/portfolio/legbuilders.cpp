@@ -18,6 +18,9 @@
 
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <qle/indexes/fxindex.hpp>
+
+using namespace QuantExt;
 
 namespace ore {
 namespace data {
@@ -72,7 +75,7 @@ Leg YYLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFa
     QL_REQUIRE(yyData, "Wrong LegType, expected YY");
     string inflationIndexName = yyData->index();
     auto index = *engineFactory->market()->yoyInflationIndex(inflationIndexName, configuration);
-    return makeYoYLeg(data, index);
+    return makeYoYLeg(data, index, engineFactory);
 }
 
 Leg CMSLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -120,7 +123,54 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
     QL_REQUIRE(eqData, "Wrong LegType, expected Equity");
     string eqName = eqData->eqName();
     auto eqCurve = *engineFactory->market()->equityCurve(eqName, configuration);
-    return makeEquityLeg(data, eqCurve);
+
+    boost::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
+    // if equity currency differs from the leg currency we need an FxIndex
+    if (eqData->eqCurrency() != "" && eqData->eqCurrency() != data.currency()) {
+        QL_REQUIRE(eqData->fxIndex() != "", 
+            "No FxIndex - if equity currency differs from leg currency an FxIndex must be provided");
+
+        fxIndex = buildFxIndex(eqData->fxIndex(), data.currency(), eqData->eqCurrency(), engineFactory->market(),
+            configuration, eqData->fxIndexCalendar(), eqData->fxIndexFixingDays());
+    }
+
+    return makeEquityLeg(data, eqCurve, fxIndex);
+}
+
+
+boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, 
+    const string& foreign, const boost::shared_ptr<Market>& market, const string& configuration, 
+    const string& calendar, Size fixingDays) {
+    // 1. Parse the index we have with no term structures
+    boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
+
+    // get market data objects - we set up the index using source/target, fixing days
+    // and calendar from legData_[i].fxIndex()
+    string source = fxIndexBase->sourceCurrency().code();
+    string target = fxIndexBase->targetCurrency().code();
+    Handle<YieldTermStructure> sorTS = market->discountCurve(source, configuration);
+    Handle<YieldTermStructure> tarTS = market->discountCurve(target, configuration);
+    Handle<Quote> spot = market->fxSpot(source + target);
+    Calendar cal = parseCalendar(calendar);
+    
+    // Now check the ccy and foreignCcy from the legdata, work out if we need to invert or not
+    bool invertFxIndex = false;
+    if (domestic == target && foreign == source) {
+        invertFxIndex = false;
+    } else if (domestic == source && foreign == target) {
+        invertFxIndex = true;
+    } else {
+        QL_FAIL("Cannot combine FX Index " << fxIndex << " with reset ccy " << domestic
+            << " and reset foreignCurrency " << foreign);
+    }
+
+    auto fxi = boost::make_shared<FxIndex>(fxIndexBase->familyName(), fixingDays,
+        fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(), cal, spot, sorTS, 
+        tarTS, invertFxIndex);
+
+    QL_REQUIRE(fxi, "Failed to build FXIndex " << fxIndex);
+    
+    return fxi;
 }
 
 } // namespace data

@@ -64,11 +64,11 @@ void EquityForward::fromXML(XMLNode* node) {
     XMLNode* eNode = XMLUtils::getChildNode(node, "EquityForwardData");
 
     longShort_ = XMLUtils::getChildValue(eNode, "LongShort", true);
+    maturityDate_ = XMLUtils::getChildValue(eNode, "Maturity", true);
     eqName_ = XMLUtils::getChildValue(eNode, "Name", true);
     currency_ = XMLUtils::getChildValue(eNode, "Currency", true);
-    quantity_ = XMLUtils::getChildValueAsDouble(eNode, "Quantity", true);
-    maturityDate_ = XMLUtils::getChildValue(eNode, "Maturity", true);
     strike_ = XMLUtils::getChildValueAsDouble(eNode, "Strike", true);
+    quantity_ = XMLUtils::getChildValueAsDouble(eNode, "Quantity", true);
 }
 
 XMLNode* EquityForward::toXML(XMLDocument& doc) {
@@ -77,11 +77,11 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, eNode);
 
     XMLUtils::addChild(doc, eNode, "LongShort", longShort_);
+    XMLUtils::addChild(doc, eNode, "Maturity", maturityDate_);
     XMLUtils::addChild(doc, eNode, "Name", eqName_);
     XMLUtils::addChild(doc, eNode, "Currency", currency_);
-    XMLUtils::addChild(doc, eNode, "Quantity", quantity_);
-    XMLUtils::addChild(doc, eNode, "Maturity", maturityDate_);
     XMLUtils::addChild(doc, eNode, "Strike", strike_);
+    XMLUtils::addChild(doc, eNode, "Quantity", quantity_);
     return node;
 }
 } // namespace data

@@ -1,4 +1,4 @@
-/*
+ /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
@@ -21,32 +21,41 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;
+using boost::algorithm::join;
+using boost::adaptors::transformed;
 using std::set;
 
 namespace ore {
 namespace analytics {
 
 namespace {
-const vector<Period>& returnTenors(const map<string, vector<Period>>& m, const string& k) {
+
+template<typename T>
+const vector<T>& lookup(const map<string, vector<T>>& m, const string& k) {
     if (m.count(k) > 0) {
         return m.at(k);
     } else if (m.count("") > 0) {
         return m.at("");
     } else
-        QL_FAIL("no period vector for key \"" << k << "\" found.");
+        QL_FAIL("no vector for key \"" << k << "\" found.");
 }
-const string& returnDayCounter(const map<string, string>& m, const string& k) {
+
+template<typename T>
+const T& lookup(const map<string, T>& m, const string& k) {
     if (m.count(k) > 0) {
         return m.at(k);
     } else if (m.count("") > 0) {
         return m.at("");
     } else
-        QL_FAIL("no dayCounter for key \"" << k << "\" found.");
+        QL_FAIL("no result for key \"" << k << "\" found.");
 }
 
 } // namespace
@@ -97,10 +106,11 @@ void ScenarioSimMarketParameters::setParamsSimulate(RiskFactorKey::KeyType kt, b
 
 void ScenarioSimMarketParameters::setDefaults() {
     // Set default simulate
-    setSimulateEquityForecastCurve(true);
     setSimulateDividendYield(false);
     setSimulateSwapVols(false);
+    setSimulateYieldVols(false);
     setSimulateCapFloorVols(false);
+    setSimulateYoYInflationCapFloorVols(false);
     setSimulateSurvivalProbabilities(false);
     setSimulateRecoveryRates(false);
     setSimulateCdsVols(false);
@@ -114,20 +124,20 @@ void ScenarioSimMarketParameters::setDefaults() {
     setSimulateCorrelations(false);
 
     // Set default tenors (don't know why but keep it as is)
-    capFloorVolExpiries_[""] = vector<Period>();
+    yoyInflationCapFloorVolExpiries_[""] = vector<Period>();
     defaultTenors_[""] = vector<Period>();
     equityDividendTenors_[""] = vector<Period>();
-    equityForecastTenors_[""] = vector<Period>();
     zeroInflationTenors_[""] = vector<Period>();
     yoyInflationTenors_[""] = vector<Period>();
-    commodityCurveTenors_[""] = vector<Period>();
     // Default day counters
     yieldCurveDayCounters_[""] = "A365";
     swapVolDayCounters_[""] = "A365";
+    yieldVolDayCounters_[""] = "A365";
     fxVolDayCounters_[""] = "A365";
     cdsVolDayCounters_[""] = "A365";
     equityVolDayCounters_[""] = "A365";
     capFloorVolDayCounters_[""] = "A365";
+    yoyInflationCapFloorVolDayCounters_[""] = "A365";
     defaultCurveDayCounters_[""] = "A365";
     baseCorrelationDayCounters_[""] = "A365";
     zeroInflationDayCounters_[""] = "A365";
@@ -137,6 +147,12 @@ void ScenarioSimMarketParameters::setDefaults() {
     correlationDayCounters_[std::make_pair("", "")] = "A365";
     // Default calendars
     defaultCurveCalendars_[""] = "TARGET";
+    // Default fxVol params
+    fxVolIsSurface_[""] = false;
+    fxMoneyness_[""] = {0.0};
+    fxStandardDevs_[""] = { 0.0 };
+    hasFxPairWithSurface_ = false;
+    useMoneyness_[""] = true; // moneyness vs stdDevs - default to moneyness
 }
 
 void ScenarioSimMarketParameters::reset() {
@@ -145,83 +161,115 @@ void ScenarioSimMarketParameters::reset() {
 }
 
 const vector<Period>& ScenarioSimMarketParameters::yieldCurveTenors(const string& key) const {
-    return returnTenors(yieldCurveTenors_, key);
+    return lookup(yieldCurveTenors_, key);
 }
 
 const string& ScenarioSimMarketParameters::yieldCurveDayCounter(const string& key) const {
-    return returnDayCounter(yieldCurveDayCounters_, key);
+    return lookup(yieldCurveDayCounters_, key);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::capFloorVolExpiries(const string& key) const {
-    return returnTenors(capFloorVolExpiries_, key);
+    return lookup(capFloorVolExpiries_, key);
+}
+
+const vector<Rate>& ScenarioSimMarketParameters::capFloorVolStrikes(const string& key) const {
+    return lookup(capFloorVolStrikes_, key);
+}
+
+bool ScenarioSimMarketParameters::capFloorVolIsAtm(const string& key) const {
+    return lookup(capFloorVolIsAtm_, key);
+}
+
+const vector<Period>& ScenarioSimMarketParameters::yoyInflationCapFloorVolExpiries(const string& key) const {
+    return lookup(yoyInflationCapFloorVolExpiries_, key);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::defaultTenors(const string& key) const {
-    return returnTenors(defaultTenors_, key);
+    return lookup(defaultTenors_, key);
 }
 
 const string& ScenarioSimMarketParameters::defaultCurveDayCounter(const string& key) const {
-    return returnDayCounter(defaultCurveDayCounters_, key);
+    return lookup(defaultCurveDayCounters_, key);
 }
 
 const string& ScenarioSimMarketParameters::defaultCurveCalendar(const string& key) const {
-    return returnDayCounter(defaultCurveCalendars_, key);
+    return lookup(defaultCurveCalendars_, key);
+}
+
+bool ScenarioSimMarketParameters::swapVolIsCube(const string& key) const {
+    return lookup(swapVolIsCube_, key);
+}
+
+const vector<Period>& ScenarioSimMarketParameters::swapVolTerms(const string& key) const {
+    return lookup(swapVolTerms_, key);
+}
+
+const vector<Period>& ScenarioSimMarketParameters::swapVolExpiries(const string& key) const {
+    return lookup(swapVolExpiries_, key);
+}
+
+const vector<Real>& ScenarioSimMarketParameters::swapVolStrikeSpreads(const string& key) const {
+    return lookup(swapVolStrikeSpreads_, key);
 }
 
 const string& ScenarioSimMarketParameters::swapVolDayCounter(const string& key) const {
-    return returnDayCounter(swapVolDayCounters_, key);
+    return lookup(swapVolDayCounters_, key);
+}
+
+const string& ScenarioSimMarketParameters::yieldVolDayCounter(const string& key) const {
+    return lookup(yieldVolDayCounters_, key);
 }
 
 const string& ScenarioSimMarketParameters::fxVolDayCounter(const string& key) const {
-    return returnDayCounter(fxVolDayCounters_, key);
+    return lookup(fxVolDayCounters_, key);
 }
 
 const string& ScenarioSimMarketParameters::cdsVolDayCounter(const string& key) const {
-    return returnDayCounter(cdsVolDayCounters_, key);
+    return lookup(cdsVolDayCounters_, key);
 }
 
 const string& ScenarioSimMarketParameters::equityVolDayCounter(const string& key) const {
-    return returnDayCounter(equityVolDayCounters_, key);
+    return lookup(equityVolDayCounters_, key);
 }
 
 const string& ScenarioSimMarketParameters::capFloorVolDayCounter(const string& key) const {
-    return returnDayCounter(capFloorVolDayCounters_, key);
+    return lookup(capFloorVolDayCounters_, key);
+}
+
+const string& ScenarioSimMarketParameters::yoyInflationCapFloorVolDayCounter(const string& key) const {
+    return lookup(yoyInflationCapFloorVolDayCounters_, key);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::equityDividendTenors(const string& key) const {
-    return returnTenors(equityDividendTenors_, key);
-}
-
-const vector<Period>& ScenarioSimMarketParameters::equityForecastTenors(const string& key) const {
-    return returnTenors(equityForecastTenors_, key);
+    return lookup(equityDividendTenors_, key);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::zeroInflationTenors(const string& key) const {
-    return returnTenors(zeroInflationTenors_, key);
+    return lookup(zeroInflationTenors_, key);
 }
 
 const string& ScenarioSimMarketParameters::zeroInflationDayCounter(const string& key) const {
-    return returnDayCounter(zeroInflationDayCounters_, key);
+    return lookup(zeroInflationDayCounters_, key);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::yoyInflationTenors(const string& key) const {
-    return returnTenors(yoyInflationTenors_, key);
+    return lookup(yoyInflationTenors_, key);
 }
 
 const string& ScenarioSimMarketParameters::yoyInflationDayCounter(const string& key) const {
-    return returnDayCounter(yoyInflationDayCounters_, key);
+    return lookup(yoyInflationDayCounters_, key);
 }
 
 const string& ScenarioSimMarketParameters::baseCorrelationDayCounter(const string& key) const {
-    return returnDayCounter(baseCorrelationDayCounters_, key);
+    return lookup(baseCorrelationDayCounters_, key);
 }
 
 vector<string> ScenarioSimMarketParameters::commodityNames() const {
-    return paramsLookup(RiskFactorKey::KeyType::CommoditySpot);
+    return paramsLookup(RiskFactorKey::KeyType::CommodityCurve);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::commodityCurveTenors(const string& commodityName) const {
-    return returnTenors(commodityCurveTenors_, commodityName);
+    return lookup(commodityCurveTenors_, commodityName);
 }
 
 bool ScenarioSimMarketParameters::hasCommodityCurveTenors(const string& commodityName) const {
@@ -229,11 +277,43 @@ bool ScenarioSimMarketParameters::hasCommodityCurveTenors(const string& commodit
 }
 
 const string& ScenarioSimMarketParameters::commodityCurveDayCounter(const string& commodityName) const {
-    return returnDayCounter(commodityCurveDayCounters_, commodityName);
+    return lookup(commodityCurveDayCounters_, commodityName);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::commodityVolExpiries(const string& commodityName) const {
-    return returnTenors(commodityVolExpiries_, commodityName);
+    return lookup(commodityVolExpiries_, commodityName);
+}
+
+const vector<Real>& ScenarioSimMarketParameters::fxVolMoneyness(const string& ccypair) const {
+    return lookup(fxMoneyness_, ccypair);
+}
+
+const vector<Real>& ScenarioSimMarketParameters::fxVolMoneyness() const {
+    return fxVolMoneyness("");
+}
+
+const vector<Real>& ScenarioSimMarketParameters::fxVolStdDevs(const string& ccypair) const {
+    return lookup(fxStandardDevs_, ccypair);
+}
+
+const vector<Real>& ScenarioSimMarketParameters::fxVolStdDevs() const {
+    return fxVolStdDevs("");
+}
+
+bool ScenarioSimMarketParameters::fxVolIsSurface(const string& ccypair) const {
+    return lookup(fxVolIsSurface_, ccypair);
+}
+
+bool ScenarioSimMarketParameters::fxVolIsSurface() const {
+    return fxVolIsSurface("");
+}
+
+bool ScenarioSimMarketParameters::useMoneyness(const string& ccypair) const {
+    return lookup(useMoneyness_, ccypair);
+}
+
+bool ScenarioSimMarketParameters::useMoneyness() const {
+    return useMoneyness("");
 }
 
 const vector<Real>& ScenarioSimMarketParameters::commodityVolMoneyness(const string& commodityName) const {
@@ -256,7 +336,7 @@ const string& ScenarioSimMarketParameters::correlationDayCounter(const string& i
 }
 
 const string& ScenarioSimMarketParameters::commodityVolDayCounter(const string& commodityName) const {
-    return returnDayCounter(commodityVolDayCounters_, commodityName);
+    return lookup(commodityVolDayCounters_, commodityName);
 }
 
 void ScenarioSimMarketParameters::setYieldCurveTenors(const string& key, const std::vector<Period>& p) {
@@ -267,8 +347,40 @@ void ScenarioSimMarketParameters::setYieldCurveDayCounters(const string& key, co
     yieldCurveDayCounters_[key] = s;
 }
 
+void ScenarioSimMarketParameters::setSwapVolIsCube(const string& key, bool isCube) {
+    swapVolIsCube_[key] = isCube;
+}
+
+void ScenarioSimMarketParameters::setSwapVolTerms(const string& key, const vector<Period>& p) {
+    swapVolTerms_[key] = p;
+}
+
+void ScenarioSimMarketParameters::setSwapVolExpiries(const string& key, const vector<Period>& p) {
+    swapVolExpiries_[key] = p;
+}
+
+void ScenarioSimMarketParameters::setSwapVolStrikeSpreads(const std::string& key, const std::vector<QuantLib::Rate>& strikes) {
+    setSwapVolIsCube(key, strikes.size() > 1);
+    swapVolStrikeSpreads_[key] = strikes;
+}
+
 void ScenarioSimMarketParameters::setCapFloorVolExpiries(const string& key, const std::vector<Period>& p) {
     capFloorVolExpiries_[key] = p;
+}
+
+void ScenarioSimMarketParameters::setCapFloorVolStrikes(const string& key, const vector<Rate>& strikes) {
+    // An empty vector of strikes signifies ATM
+    capFloorVolIsAtm_[key] = strikes.empty();
+    capFloorVolStrikes_[key] = strikes;
+}
+
+void ScenarioSimMarketParameters::setCapFloorVolIsAtm(const string& key, bool isAtm) {
+    capFloorVolIsAtm_[key] = isAtm;
+    if (isAtm) {
+        // An empty vector of strikes signifies ATM. If isAtm is false, user is expected to have
+        // provided the strikes by calling setCapFloorVolStrikes.
+        capFloorVolStrikes_[key] = vector<Rate>();
+    }
 }
 
 void ScenarioSimMarketParameters::setDefaultTenors(const string& key, const std::vector<Period>& p) {
@@ -291,10 +403,6 @@ void ScenarioSimMarketParameters::setEquityDividendTenors(const string& key, con
     equityDividendTenors_[key] = p;
 }
 
-void ScenarioSimMarketParameters::setEquityForecastTenors(const string& key, const std::vector<Period>& p) {
-    equityForecastTenors_[key] = p;
-}
-
 void ScenarioSimMarketParameters::setZeroInflationTenors(const string& key, const std::vector<Period>& p) {
     zeroInflationTenors_[key] = p;
 }
@@ -315,8 +423,56 @@ void ScenarioSimMarketParameters::setFxVolDayCounters(const string& key, const s
     fxVolDayCounters_[key] = s;
 }
 
+void ScenarioSimMarketParameters::setFxVolIsSurface(const string& key, bool val) { 
+    fxVolIsSurface_[key] = val; 
+}
+
+void ScenarioSimMarketParameters::setFxVolIsSurface(bool val) { 
+    fxVolIsSurface_[""] = val; 
+}
+
+void ScenarioSimMarketParameters::setHasFxPairWithSurface(bool val) { 
+    hasFxPairWithSurface_ = val; 
+}
+
+void ScenarioSimMarketParameters::setUseMoneyness(const string& key, bool val) {
+    useMoneyness_[key] = val;
+}
+
+void ScenarioSimMarketParameters::setUseMoneyness(bool val) {
+    useMoneyness_[""] = val;
+}
+
+void ScenarioSimMarketParameters::setFxVolExpiries(const vector<Period>& expiries) { 
+    fxVolExpiries_ = expiries; 
+}
+
+void ScenarioSimMarketParameters::setFxVolDecayMode(const string& val) { 
+    fxVolDecayMode_ = val; 
+}
+
+void ScenarioSimMarketParameters::setFxVolMoneyness(const string& ccypair, const vector<Real>& moneyness) {
+    fxMoneyness_[ccypair] = moneyness;
+}
+
+void ScenarioSimMarketParameters::setFxVolMoneyness(const vector<Real>& moneyness) { 
+    fxMoneyness_[""] = moneyness; 
+}
+
+void ScenarioSimMarketParameters::setFxVolStdDevs(const string& ccypair, const vector<Real>& moneyness) {
+    fxStandardDevs_[ccypair] = moneyness;
+}
+
+void ScenarioSimMarketParameters::setFxVolStdDevs(const vector<Real>& moneyness) {
+    fxStandardDevs_[""] = moneyness;
+}
+
 void ScenarioSimMarketParameters::setSwapVolDayCounters(const string& key, const string& s) {
     swapVolDayCounters_[key] = s;
+}
+
+void ScenarioSimMarketParameters::setYieldVolDayCounters(const string& key, const string& s) {
+    yieldVolDayCounters_[key] = s;
 }
 
 void ScenarioSimMarketParameters::setCdsVolDayCounters(const string& key, const string& s) {
@@ -332,7 +488,6 @@ void ScenarioSimMarketParameters::setCapFloorVolDayCounters(const string& key, c
 }
 
 void ScenarioSimMarketParameters::setCommodityNames(vector<string> names) {
-    addParamsName(RiskFactorKey::KeyType::CommoditySpot, names);
     setCommodityCurves(names);
 }
 
@@ -369,8 +524,16 @@ void ScenarioSimMarketParameters::setSwapVolCcys(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::SwaptionVolatility, names);
 }
 
+void ScenarioSimMarketParameters::setYieldVolNames(vector<string> names) {
+    addParamsName(RiskFactorKey::KeyType::YieldVolatility, names);
+}
+
 void ScenarioSimMarketParameters::setCapFloorVolCcys(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::OptionletVolatility, names);
+}
+
+void ScenarioSimMarketParameters::setYoYInflationCapFloorNames(vector<string> names) {
+    addParamsName(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, names);
 }
 
 void ScenarioSimMarketParameters::setDefaultNames(vector<string> names) {
@@ -384,12 +547,7 @@ void ScenarioSimMarketParameters::setCdsVolNames(vector<string> names) {
 
 void ScenarioSimMarketParameters::setEquityNames(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::EquitySpot, names);
-    setEquityForecastCurves(names);
     setEquityDividendCurves(names);
-}
-
-void ScenarioSimMarketParameters::setEquityForecastCurves(vector<string> names) {
-    addParamsName(RiskFactorKey::KeyType::EquityForecastCurve, names);
 }
 
 void ScenarioSimMarketParameters::setEquityDividendCurves(vector<string> names) {
@@ -440,8 +598,8 @@ void ScenarioSimMarketParameters::setCorrelationPairs(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::Correlation, names);
 }
 
-void ScenarioSimMarketParameters::setSimulateEquityForecastCurve(bool simulate) {
-    setParamsSimulate(RiskFactorKey::KeyType::EquityForecastCurve, simulate);
+void ScenarioSimMarketParameters::setCprs(const vector<string>& names) {
+    addParamsName(RiskFactorKey::KeyType::CPR, names);
 }
 
 void ScenarioSimMarketParameters::setSimulateDividendYield(bool simulate) {
@@ -452,8 +610,16 @@ void ScenarioSimMarketParameters::setSimulateSwapVols(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::SwaptionVolatility, simulate);
 }
 
+void ScenarioSimMarketParameters::setSimulateYieldVols(bool simulate) {
+    setParamsSimulate(RiskFactorKey::KeyType::YieldVolatility, simulate);
+}
+
 void ScenarioSimMarketParameters::setSimulateCapFloorVols(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::OptionletVolatility, simulate);
+}
+
+void ScenarioSimMarketParameters::setSimulateYoYInflationCapFloorVols(bool simulate) {
+    setParamsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, simulate);
 }
 
 void ScenarioSimMarketParameters::setSimulateSurvivalProbabilities(bool simulate) {
@@ -500,6 +666,10 @@ void ScenarioSimMarketParameters::setSimulateCorrelations(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::Correlation, simulate);
 }
 
+void ScenarioSimMarketParameters::setSimulateCprs(bool simulate) {
+    setParamsSimulate(RiskFactorKey::KeyType::CPR, simulate);
+}
+
 bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& rhs) {
 
     if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || params_ != rhs.params_ ||
@@ -511,12 +681,13 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         swapVolExpiries_ != rhs.swapVolExpiries_ || swapVolStrikeSpreads_ != rhs.swapVolStrikeSpreads_ ||
         swapVolDecayMode_ != rhs.swapVolDecayMode_ || capFloorVolDayCounters_ != rhs.capFloorVolDayCounters_ ||
         capFloorVolExpiries_ != rhs.capFloorVolExpiries_ || capFloorVolStrikes_ != rhs.capFloorVolStrikes_ ||
-        capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
+        capFloorVolIsAtm_ != rhs.capFloorVolIsAtm_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
         defaultCurveDayCounters_ != rhs.defaultCurveDayCounters_ ||
         defaultCurveCalendars_ != rhs.defaultCurveCalendars_ || defaultTenors_ != rhs.defaultTenors_ ||
         cdsVolExpiries_ != rhs.cdsVolExpiries_ || cdsVolDayCounters_ != rhs.cdsVolDayCounters_ ||
         cdsVolDecayMode_ != rhs.cdsVolDecayMode_ || equityDividendTenors_ != rhs.equityDividendTenors_ ||
-        equityForecastTenors_ != rhs.equityForecastTenors_ || fxVolIsSurface_ != rhs.fxVolIsSurface_ ||
+        fxVolIsSurface_ != rhs.fxVolIsSurface_ ||
+        useMoneyness_ != rhs.useMoneyness_ ||
         fxVolExpiries_ != rhs.fxVolExpiries_ || fxVolDayCounters_ != rhs.fxVolDayCounters_ ||
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || equityVolExpiries_ != rhs.equityVolExpiries_ ||
         equityVolDayCounters_ != rhs.equityVolDayCounters_ || equityVolDecayMode_ != rhs.equityVolDecayMode_ ||
@@ -536,7 +707,9 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         commodityVolDayCounters_ != rhs.commodityVolDayCounters_ ||
         correlationDayCounters_ != rhs.correlationDayCounters_ || correlationIsSurface_ != rhs.correlationIsSurface_ ||
         correlationExpiries_ != rhs.correlationExpiries_ || correlationStrikes_ != rhs.correlationStrikes_ ||
-        cprSimulate_ != rhs.cprSimulate_) {
+        cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_ || yieldVolTerms_ != rhs.yieldVolTerms_ ||
+        yieldVolDayCounters_ != rhs.yieldVolDayCounters_ || yieldVolExpiries_ != rhs.yieldVolExpiries_ ||
+        yieldVolDecayMode_ != rhs.yieldVolDecayMode_) {
         return false;
     } else {
         return true;
@@ -651,37 +824,110 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     nodeChild = XMLUtils::getChildNode(node, "SwaptionVolatilities");
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
         XMLNode* swapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
-        if (swapVolSimNode) {
+        if (swapVolSimNode)
             setSimulateSwapVols(ore::data::parseBool(XMLUtils::getNodeValue(swapVolSimNode)));
-            swapVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
-            swapVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
-            setSwapVolCcys(XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true));
-            swapVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
-            XMLNode* cubeNode = XMLUtils::getChildNode(nodeChild, "Cube");
-            if (cubeNode) {
-                swapVolIsCube_ = true;
-                XMLNode* atmOnlyNode = XMLUtils::getChildNode(cubeNode, "SimulateATMOnly");
-                if (atmOnlyNode) {
-                    swapVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(cubeNode, "SimulateATMOnly", true);
-                } else {
-                    swapVolSimulateATMOnly_ = false;
+        swapVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        setSwapVolCcys(XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true));
+
+        set<string> currencies = params_.find(RiskFactorKey::KeyType::SwaptionVolatility)->second.second;
+        QL_REQUIRE(currencies.size() > 0, "SwaptionVolatilities needs at least one currency");
+
+        // Get the configured expiries. They are of the form:
+        // - <Expiries ccy="CCY">t_1,...,t_n</Expiries> for currency specific expiries
+        // - <Expiries>t_1,...,t_n</Expiries> or <Expiries ccy="">t_1,...,t_n</Expiries> for default set of expiries
+        // Only need a default expiry set if every currency has not been given an expiry set explicitly
+        vector<XMLNode*> expiryNodes = XMLUtils::getChildrenNodes(nodeChild, "Expiries");
+        set<string> currenciesCheck = currencies;
+        bool defaultProvided = false;
+        for (XMLNode* expiryNode : expiryNodes) {
+            // If there is no "ccy" attribute, getAttribute returns "" which is what we want in any case
+            string ccy = XMLUtils::getAttribute(expiryNode, "ccy");
+            vector<Period> expiries = parseListOfValues<Period>(XMLUtils::getNodeValue(expiryNode), &parsePeriod);
+            QL_REQUIRE(swapVolExpiries_.insert(make_pair(ccy, expiries)).second,
+                "SwaptionVolatilities has duplicate expiries for key '" << ccy << "'");
+            currenciesCheck.erase(ccy);
+            defaultProvided = ccy == "";
+        }
+        QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "SwaptionVolatilities has no expiries for " <<
+            "currencies '" << join(currenciesCheck, ",") << "' and no default expiry set has been given");
+
+        // Get the configured terms, similar to expiries above
+        vector<XMLNode*> termNodes = XMLUtils::getChildrenNodes(nodeChild, "Terms");
+        currenciesCheck = currencies;
+        defaultProvided = false;
+        for (XMLNode* termNode : termNodes) {
+            // If there is no "ccy" attribute, getAttribute returns "" which is what we want in any case
+            string ccy = XMLUtils::getAttribute(termNode, "ccy");
+            vector<Period> terms = parseListOfValues<Period>(XMLUtils::getNodeValue(termNode), &parsePeriod);
+            QL_REQUIRE(swapVolTerms_.insert(make_pair(ccy, terms)).second,
+                "SwaptionVolatilities has duplicate terms for key '" << ccy << "'");
+            currenciesCheck.erase(ccy);
+            defaultProvided = ccy == "";
+        }
+        QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "SwaptionVolatilities has no terms for " <<
+            "currencies '" << join(currenciesCheck, ",") << "' and no default term set has been given");
+
+        XMLNode* atmOnlyNode = XMLUtils::getChildNode(nodeChild, "SimulateATMOnly");
+        if (atmOnlyNode)
+            swapVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(nodeChild, "SimulateATMOnly", true);
+
+        if (!swapVolSimulateATMOnly_) {
+            vector<XMLNode*> spreadNodes = XMLUtils::getChildrenNodes(nodeChild, "StrikeSpreads");
+            if (spreadNodes.size() > 0) {
+                currenciesCheck = currencies;
+                defaultProvided = false;
+                for (XMLNode* spreadNode : spreadNodes) {
+                    // If there is no "ccy" attribute, getAttribute returns "" which is what we want in any case
+                    string ccy = XMLUtils::getAttribute(spreadNode, "ccy");
+                    vector<Rate> strikes;
+                    string strStrike = XMLUtils::getNodeValue(spreadNode);
+                    if (strStrike == "ATM" || strStrike == "0" || strStrike == "0.0") {
+                        // Add a '0' to the srike spreads
+                        strikes = { 0.0 };
+                    } else {
+                        strikes = parseListOfValues<Rate>(strStrike, &parseReal);
+                    }
+                    setSwapVolStrikeSpreads(ccy, strikes);
+                    currenciesCheck.erase(ccy);
+                    defaultProvided = ccy == "";
                 }
-                if (!swapVolSimulateATMOnly_)
-                    swapVolStrikeSpreads_ =
-                        XMLUtils::getChildrenValuesAsDoublesCompact(cubeNode, "StrikeSpreads", true);
-            } else {
-                swapVolIsCube_ = false;
+                QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "SwaptionVolatilities has no strike spreads for "
+                    << "currencies '" << join(currenciesCheck, ",") << "' and no default strike spreads set has been given");
             }
+        }
+
+        XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
+        if (dc) {
+            for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
+                 child = XMLUtils::getNextSibling(child)) {
+                string label = XMLUtils::getAttribute(child, "ccy");
+                swapVolDayCounters_[label] = XMLUtils::getNodeValue(child);
+            }
+        }
+        QL_REQUIRE(swapVolDayCounters_.find("") != swapVolDayCounters_.end(),
+                   "default daycounter is not set for swapVolSurfaces");
+    }
+
+    DLOG("Loading YieldVolatilities");
+    nodeChild = XMLUtils::getChildNode(node, "YieldVolatilities");
+    if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
+        XMLNode* yieldVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+        if (yieldVolSimNode) {
+            setSimulateYieldVols(ore::data::parseBool(XMLUtils::getNodeValue(yieldVolSimNode)));
+            yieldVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
+            yieldVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+            setYieldVolNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
+            yieldVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
             XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
             if (dc) {
                 for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
-                     child = XMLUtils::getNextSibling(child)) {
+                    child = XMLUtils::getNextSibling(child)) {
                     string label = XMLUtils::getAttribute(child, "ccy");
-                    swapVolDayCounters_[label] = XMLUtils::getNodeValue(child);
+                    yieldVolDayCounters_[label] = XMLUtils::getNodeValue(child);
                 }
             }
-            QL_REQUIRE(swapVolDayCounters_.find("") != swapVolDayCounters_.end(),
-                       "default daycounter is not set for swapVolSurfaces");
+            QL_REQUIRE(yieldVolDayCounters_.find("") != yieldVolDayCounters_.end(),
+                "default daycounter is not set for yieldVolSurfaces");
         }
     }
 
@@ -729,14 +975,65 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     DLOG("Loading CapFloorVolatilities");
     nodeChild = XMLUtils::getChildNode(node, "CapFloorVolatilities");
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
+        
+        // Are we simulating caps
         setSimulateCapFloorVols(false);
         XMLNode* capVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
         if (capVolSimNode)
             setSimulateCapFloorVols(ore::data::parseBool(XMLUtils::getNodeValue(capVolSimNode)));
-        capFloorVolExpiries_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
-        // TODO read other keys
-        capFloorVolStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Strikes", true);
+
+        // All cap floor currencies
         setCapFloorVolCcys(XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true));
+        set<string> currencies = params_.find(RiskFactorKey::KeyType::OptionletVolatility)->second.second;
+        QL_REQUIRE(currencies.size() > 0, "CapFloorVolatilities needs at least one currency");
+
+        // Get the configured expiries. They are of the form:
+        // - <Expiries ccy="CCY">t_1,...,t_n</Expiries> for currency specific expiries
+        // - <Expiries>t_1,...,t_n</Expiries> or <Expiries ccy="">t_1,...,t_n</Expiries> for default set of expiries
+        // Only need a default expiry set if every currency has not been given an expiry set explicitly
+        vector<XMLNode*> expiryNodes = XMLUtils::getChildrenNodes(nodeChild, "Expiries");
+        QL_REQUIRE(expiryNodes.size() > 0, "CapFloorVolatilities needs at least one Expiries node");
+        set<string> currenciesCheck = currencies;
+        bool defaultProvided = false;
+        for (XMLNode* expiryNode : expiryNodes) {
+            // If there is no "ccy" attribute, getAttribute returns "" which is what we want in any case
+            string ccy = XMLUtils::getAttribute(expiryNode, "ccy");
+            vector<Period> expiries = parseListOfValues<Period>(XMLUtils::getNodeValue(expiryNode), &parsePeriod);
+            QL_REQUIRE(capFloorVolExpiries_.insert(make_pair(ccy, expiries)).second, 
+                "CapFloorVolatilities has duplicate expiries for key '" << ccy << "'");
+            currenciesCheck.erase(ccy);
+            defaultProvided = ccy == "";
+        }
+        QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "CapFloorVolatilities has no expiries for " << 
+            "currencies '" << join(currenciesCheck, ",") << "' and no default expiry set has been given");
+
+        // Get the configured strikes. This has the same set up and logic as the Expiries above.
+        vector<XMLNode*> strikeNodes = XMLUtils::getChildrenNodes(nodeChild, "Strikes");
+        QL_REQUIRE(strikeNodes.size() > 0, "CapFloorVolatilities needs at least one Strikes node");
+        currenciesCheck = currencies;
+        defaultProvided = false;
+        for (XMLNode* strikeNode : strikeNodes) {
+            string ccy = XMLUtils::getAttribute(strikeNode, "ccy");
+            // For the strike value, we allow ATM or a comma separated list of absolute strike values
+            // If ATM, the stored strikes vector is left as an empty vector
+            vector<Rate> strikes;
+            string strStrike = XMLUtils::getNodeValue(strikeNode);
+            if (strStrike == "ATM") {
+                QL_REQUIRE(capFloorVolIsAtm_.insert(make_pair(ccy, true)).second,
+                    "CapFloorVolatilities has duplicate strikes for key '" << ccy << "'");
+            } else {
+                QL_REQUIRE(capFloorVolIsAtm_.insert(make_pair(ccy, false)).second,
+                    "CapFloorVolatilities has duplicate strikes for key '" << ccy << "'");
+                strikes = parseListOfValues<Rate>(strStrike, &parseReal);
+            }
+            QL_REQUIRE(capFloorVolStrikes_.insert(make_pair(ccy, strikes)).second, 
+                "CapFloorVolatilities has duplicate strikes for key '" << ccy << "'");
+            currenciesCheck.erase(ccy);
+            defaultProvided = ccy == "";
+        }
+        QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "CapFloorVolatilities has no strikes for " <<
+            "currencies '" << join(currenciesCheck, ",") << "' and no default strike set has been given");
+
         capFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
         XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
         if (dc) {
@@ -748,6 +1045,19 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         }
         QL_REQUIRE(capFloorVolDayCounters_.find("") != capFloorVolDayCounters_.end(),
                    "default daycounter is not set for capFloorVolSurfaces");
+    }
+
+    DLOG("Loading YYCapFloorVolatilities");
+    nodeChild = XMLUtils::getChildNode(node, "YYCapFloorVolatilities");
+    if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
+        setSimulateYoYInflationCapFloorVols(false);
+        XMLNode* yoyCapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+        if (yoyCapVolSimNode)
+            setSimulateYoYInflationCapFloorVols(ore::data::parseBool(XMLUtils::getNodeValue(yoyCapVolSimNode)));
+        yoyInflationCapFloorVolExpiries_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        yoyInflationCapFloorVolStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Strikes", true);
+        setYoYInflationCapFloorNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
+        yoyInflationCapFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
     }
 
     DLOG("Loading DefaultCurves Rates");
@@ -789,11 +1099,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     DLOG("Loading Equities Rates");
     nodeChild = XMLUtils::getChildNode(node, "Equities");
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
-        XMLNode* equityForecastCurveSimNode = XMLUtils::getChildNode(nodeChild, "SimulateEquityForecastCurve");
-        if (equityForecastCurveSimNode)
-            setSimulateEquityForecastCurve(ore::data::parseBool(XMLUtils::getNodeValue(equityForecastCurveSimNode)));
-        else
-            setSimulateEquityForecastCurve(true);
         XMLNode* dividendYieldSimNode = XMLUtils::getChildNode(nodeChild, "SimulateDividendYield");
         if (dividendYieldSimNode)
             setSimulateDividendYield(ore::data::parseBool(XMLUtils::getNodeValue(dividendYieldSimNode)));
@@ -802,7 +1107,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         vector<string> equityNames = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
         setEquityNames(equityNames);
         equityDividendTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "DividendTenors", true);
-        equityForecastTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "ForecastTenors", true);
     }
 
     DLOG("Loading CDSVolatilities Rates");
@@ -838,11 +1142,21 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         setFxVolCcyPairs(XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true));
         XMLNode* fxSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
         if (fxSurfaceNode) {
-            fxVolIsSurface_ = true;
-            fxMoneyness_ = XMLUtils::getChildrenValuesAsDoublesCompact(fxSurfaceNode, "Moneyness", true);
-        } else {
-            fxVolIsSurface_ = false;
-            fxMoneyness_ = {0.0};
+            hasFxPairWithSurface_ = true;
+            for (XMLNode* child = XMLUtils::getChildNode(fxSurfaceNode, "Moneyness"); child;
+                child = XMLUtils::getNextSibling(child, "Moneyness")) {
+                string label = XMLUtils::getAttribute(child, "ccyPair"); // will be "" if no attr
+                fxMoneyness_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
+                fxVolIsSurface_[label] = true;
+                useMoneyness_[label] = true;
+            }
+            for (XMLNode* child = XMLUtils::getChildNode(fxSurfaceNode, "StandardDeviations"); child;
+                child = XMLUtils::getNextSibling(child, "StandardDeviations")) {
+                string label = XMLUtils::getAttribute(child, "ccyPair"); // will be "" if no attr
+                fxStandardDevs_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
+                fxVolIsSurface_[label] = true;
+                useMoneyness_[label] = false;
+            }
         }
         XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
         if (dc) {
@@ -947,9 +1261,13 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         setSecuritySpreadsSimulate(XMLUtils::getChildValueAsBool(nodeChild, "Simulate", false));
         vector<string> securities = XMLUtils::getChildrenValues(nodeChild, "Names", "Name");
         setSecurities(securities);
-        // if SimulateCPR is not given, we set it to false
-        XMLNode* cprNode = XMLUtils::getChildNode(nodeChild, "SimulateCPR");
-        cprSimulate_ = cprNode ? parseBool(XMLUtils::getNodeValue(cprNode)) : false;
+    }
+
+    DLOG("Loading CPRs");
+    nodeChild = XMLUtils::getChildNode(node, "CPRs");
+    if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
+        setSimulateCprs(XMLUtils::getChildValueAsBool(nodeChild, "Simulate", false));
+        setCprs(XMLUtils::getChildrenValues(nodeChild, "Names", "Name"));
     }
 
     DLOG("Loading BaseCorrelations");
@@ -981,13 +1299,48 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 
         vector<string> commodityNames = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
         setCommodityNames(commodityNames);
-        commodityCurveTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
 
-        // If present, override DayCounter for _all_ commodity price curves
-        XMLNode* commodityDayCounterNode = XMLUtils::getChildNode(nodeChild, "DayCounter");
-        if (commodityDayCounterNode) {
-            commodityCurveDayCounters_[""] = XMLUtils::getNodeValue(commodityDayCounterNode);
+        set<string> names = params_.find(RiskFactorKey::KeyType::CommodityCurve)->second.second;
+        QL_REQUIRE(names.size() > 0, "Commodities needs at least one name");
+
+        // Get the configured tenors. They are of the form:
+        // - <Tenors name="NAME">t_1,...,t_n</Tenors> for commodity name specific tenors
+        // - <Tenors>t_1,...,t_n</Tenors> or <Tenors name="">t_1,...,t_n</Tenors> for a default set of tenors
+        // Only need a default tenor set if every commodity name has not been given a tenor set explicitly
+        vector<XMLNode*> tenorNodes = XMLUtils::getChildrenNodes(nodeChild, "Tenors");
+        QL_REQUIRE(tenorNodes.size() > 0, "Commodities needs at least one Tenors node");
+        set<string> namesCheck = names;
+        bool defaultProvided = false;
+        for (XMLNode* tenorNode : tenorNodes) {
+            // If there is no "name" attribute, getAttribute returns "" which is what we want in any case
+            string name = XMLUtils::getAttribute(tenorNode, "name");
+            
+            // An empty tenor list here means that the scenario simulation market should be set up on the
+            // same pillars as the initial t_0 market from which it is sampling its values
+            vector<Period> tenors;
+            string strTenorList = XMLUtils::getNodeValue(tenorNode);
+            if (!strTenorList.empty()) {
+                tenors = parseListOfValues<Period>(XMLUtils::getNodeValue(tenorNode), &parsePeriod);
+            }
+
+            QL_REQUIRE(commodityCurveTenors_.insert(make_pair(name, tenors)).second,
+                "Commodities has duplicate expiries for key '" << name << "'");
+            namesCheck.erase(name);
+            defaultProvided = name == "";
         }
+        QL_REQUIRE(defaultProvided || namesCheck.size() == 0, "Commodities has no tenors for " <<
+            "names '" << join(namesCheck, ",") << "' and no default tenor set has been given");
+
+        // Populate the day counters for each commodity curve allowing for overrides
+        if (XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters")) {
+            for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
+                child = XMLUtils::getNextSibling(child)) {
+                string name = XMLUtils::getAttribute(child, "name");
+                commodityCurveDayCounters_[name] = XMLUtils::getNodeValue(child);
+            }
+        }
+        QL_REQUIRE(commodityCurveDayCounters_.find("") != commodityCurveDayCounters_.end(),
+            "The default daycounter is not set for Commodities");
     }
 
     DLOG("Loading commodity volatility data");
@@ -1031,15 +1384,6 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, marketNode, "BaseCurrency", baseCcy_);
     XMLUtils::addChildren(doc, marketNode, "Currencies", "Currency", ccys_);
 
-    // benchmark yield curves
-    DLOG("Writing benchmaerk yield curves data");
-    XMLNode* benchmarkCurvesNode = XMLUtils::addChild(doc, marketNode, "BenchmarkCurves");
-    for (Size i = 0; i < yieldCurveNames().size(); ++i) {
-        XMLNode* benchmarkCurveNode = XMLUtils::addChild(doc, benchmarkCurvesNode, "BenchmarkCurve");
-        XMLUtils::addChild(doc, benchmarkCurveNode, "Currency", yieldCurveCurrencies_[yieldCurveNames()[i]]);
-        XMLUtils::addChild(doc, benchmarkCurveNode, "Name", yieldCurveNames()[i]);
-    }
-
     // yield curves
     DLOG("Writing yield curves data");
     XMLNode* yieldCurvesNode = XMLUtils::addChild(doc, marketNode, "YieldCurves");
@@ -1061,35 +1405,46 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         if (yieldCurveTenors_.count(key) > 0) {
             XMLUtils::addGenericChildAsList(doc, configNode, "Tenors", yieldCurveTenors_.at(key));
         }
-        if (yieldCurveDayCounters_.count(key) > 0) {
-            XMLUtils::addChild(doc, configNode, "DayCounter", yieldCurveDayCounters_.at(key));
-        }
         if (key == "") {
             XMLUtils::addChild(doc, configNode, "Interpolation", interpolation_);
             XMLUtils::addChild(doc, configNode, "Extrapolation", extrapolate_);
         }
+        if (yieldCurveDayCounters_.count(key) > 0) {
+            XMLUtils::addChild(doc, configNode, "DayCounter", yieldCurveDayCounters_.at(key));
+        }
         XMLUtils::appendNode(yieldCurvesNode, configNode);
     }
 
+    // fx rates
+    if (fxCcyPairs().size() > 0) {
+        DLOG("Writing FX rates");
+        XMLNode* fxRatesNode = XMLUtils::addChild(doc, marketNode, "FxRates");
+        XMLUtils::addChildren(doc, fxRatesNode, "CurrencyPairs", "CurrencyPair", fxCcyPairs());
+    }
+
     // indices
-    DLOG("Writing libor indices");
-    XMLUtils::addChildren(doc, marketNode, "Indices", "Index", indices());
+    if (indices().size() > 0) {
+        DLOG("Writing libor indices");
+        XMLUtils::addChildren(doc, marketNode, "Indices", "Index", indices());
+    }
 
     // swap indices
-    DLOG("Writing swap indices");
-    XMLNode* swapIndicesNode = XMLUtils::addChild(doc, marketNode, "SwapIndices");
-    for (auto swapIndexInterator : swapIndices_) {
-        XMLNode* swapIndexNode = XMLUtils::addChild(doc, swapIndicesNode, "SwapIndex");
-        XMLUtils::addChild(doc, swapIndexNode, "Name", swapIndexInterator.first);
-        XMLUtils::addChild(doc, swapIndexNode, "DiscountingIndex", swapIndexInterator.second);
+    if (swapIndices_.size() > 0) {
+        DLOG("Writing swap indices");
+        XMLNode* swapIndicesNode = XMLUtils::addChild(doc, marketNode, "SwapIndices");
+        for (auto kv : swapIndices_) {
+            XMLNode* swapIndexNode = XMLUtils::addChild(doc, swapIndicesNode, "SwapIndex");
+            XMLUtils::addChild(doc, swapIndexNode, "Name", kv.first);
+            XMLUtils::addChild(doc, swapIndexNode, "DiscountingIndex", kv.second);
+        }
     }
 
     // default curves
-    DLOG("Writing default curves");
-    XMLNode* defaultCurvesNode = XMLUtils::addChild(doc, marketNode, "DefaultCurves");
     if (!defaultNames().empty()) {
+        DLOG("Writing default curves");
+        XMLNode* defaultCurvesNode = XMLUtils::addChild(doc, marketNode, "DefaultCurves");
         XMLUtils::addChildren(doc, defaultCurvesNode, "Names", "Name", defaultNames());
-        XMLUtils::addGenericChildAsList(doc, defaultCurvesNode, "Tenors", returnTenors(defaultTenors_, ""));
+        XMLUtils::addGenericChildAsList(doc, defaultCurvesNode, "Tenors", lookup(defaultTenors_, ""));
         XMLUtils::addChild(doc, defaultCurvesNode, "SimulateSurvivalProbabilities", simulateSurvivalProbabilities());
         XMLUtils::addChild(doc, defaultCurvesNode, "SimulateRecoveryRates", simulateRecoveryRates());
 
@@ -1113,30 +1468,39 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     }
 
     // equities
-    DLOG("Writing equities");
-    XMLNode* equitiesNode = XMLUtils::addChild(doc, marketNode, "Equities");
     if (!equityNames().empty()) {
-        XMLUtils::addChildren(doc, equitiesNode, "Names", "Name", equityNames());
-        XMLUtils::addGenericChildAsList(doc, equitiesNode, "DividendTenors", returnTenors(equityDividendTenors_, ""));
-        XMLUtils::addGenericChildAsList(doc, equitiesNode, "ForecastTenors", returnTenors(equityForecastTenors_, ""));
-        XMLUtils::addChild(doc, equitiesNode, "SimulateEquityForecastCurve", simulateEquityForecastCurve());
+        DLOG("Writing equities");
+        XMLNode* equitiesNode = XMLUtils::addChild(doc, marketNode, "Equities");
         XMLUtils::addChild(doc, equitiesNode, "SimulateDividendYield", simulateDividendYield());
+        XMLUtils::addChildren(doc, equitiesNode, "Names", "Name", equityNames());
+        XMLUtils::addGenericChildAsList(doc, equitiesNode, "DividendTenors", lookup(equityDividendTenors_, ""));
     }
 
     // swaption volatilities
-    DLOG("Writing swaption volatilities");
-    XMLNode* swaptionVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "SwaptionVolatilities");
     if (!swapVolCcys().empty()) {
+        DLOG("Writing swaption volatilities");
+        XMLNode* swaptionVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "SwaptionVolatilities");
         XMLUtils::addChild(doc, swaptionVolatilitiesNode, "Simulate", simulateSwapVols());
         XMLUtils::addChild(doc, swaptionVolatilitiesNode, "ReactionToTimeDecay", swapVolDecayMode_);
         XMLUtils::addChildren(doc, swaptionVolatilitiesNode, "Currencies", "Currency", swapVolCcys());
-        XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "Expiries", swapVolExpiries_);
-        XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "Terms", swapVolTerms_);
-        if (swapVolIsCube_) {
-            XMLNode* swapVolNode = XMLUtils::addChild(doc, swaptionVolatilitiesNode, "Cube");
-            XMLUtils::addChild(doc, swapVolNode, "SimulateATMOnly", swapVolSimulateATMOnly_);
-            XMLUtils::addGenericChildAsList(doc, swapVolNode, "StrikeSpreads", swapVolStrikeSpreads_);
+        for (auto it = swapVolExpiries_.begin(); it != swapVolExpiries_.end(); it++) {
+            XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "Expiries", swapVolExpiries_[it->first], "ccy",
+                    it->first);
         }
+        for (auto it = swapVolTerms_.begin(); it != swapVolTerms_.end(); it++) {
+            XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "Terms", swapVolTerms_[it->first], "ccy",
+                it->first);
+        }
+
+        if (swapVolSimulateATMOnly_) {
+            XMLUtils::addChild(doc, swaptionVolatilitiesNode, "SimulateATMOnly", swapVolSimulateATMOnly_);
+        } else {
+            for (auto it = swapVolStrikeSpreads_.begin(); it != swapVolStrikeSpreads_.end(); it++) {
+                XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "StrikeSpreads", swapVolStrikeSpreads_[it->first], "ccy",
+                    it->first);
+            }
+        }
+
         if (swapVolDayCounters_.size() > 0) {
             XMLNode* node = XMLUtils::addChild(doc, swaptionVolatilitiesNode, "DayCounters");
             for (auto dc : swapVolDayCounters_) {
@@ -1147,17 +1511,46 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         }
     }
 
+    // yield volatilities
+    if (!yieldVolNames().empty()) {
+        DLOG("Writing yield volatilities");
+        XMLNode* yieldVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "YieldVolatilities");
+        XMLUtils::addChild(doc, yieldVolatilitiesNode, "Simulate", simulateYieldVols());
+        XMLUtils::addChild(doc, yieldVolatilitiesNode, "ReactionToTimeDecay", yieldVolDecayMode_);
+        XMLUtils::addChildren(doc, yieldVolatilitiesNode, "Names", "Name", yieldVolNames());
+        XMLUtils::addGenericChildAsList(doc, yieldVolatilitiesNode, "Expiries", yieldVolExpiries_);
+        XMLUtils::addGenericChildAsList(doc, yieldVolatilitiesNode, "Terms", yieldVolTerms_);
+    }
+
     // cap/floor volatilities
-    DLOG("Writing cap/floor volatilities");
-    XMLNode* capFloorVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CapFloorVolatilities");
     if (!capFloorVolCcys().empty()) {
+        DLOG("Writing cap/floor volatilities");
+        XMLNode* capFloorVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CapFloorVolatilities");
         XMLUtils::addChild(doc, capFloorVolatilitiesNode, "Simulate", simulateCapFloorVols());
         XMLUtils::addChild(doc, capFloorVolatilitiesNode, "ReactionToTimeDecay", capFloorVolDecayMode_);
         XMLUtils::addChildren(doc, capFloorVolatilitiesNode, "Currencies", "Currency", capFloorVolCcys());
-        XMLUtils::addGenericChildAsList(doc, capFloorVolatilitiesNode, "Expiries",
-                                        returnTenors(capFloorVolExpiries_, ""));
-        // TODO write other keys
-        XMLUtils::addGenericChildAsList(doc, capFloorVolatilitiesNode, "Strikes", capFloorVolStrikes_);
+
+        // Write out cap floor expiries node for each currency
+        for (auto kv : capFloorVolExpiries_) {
+            // If strikes vector is empty, the node value is ATM else it is the comma separated list of strikes
+            // No checks here on the string repr of each strike value - dangerous but in lots of places.
+            string nodeValue = join(kv.second | transformed([](Period p) { return ore::data::to_string(p); }), ",");
+            XMLNode* expiriesNode = doc.allocNode("Expiries", nodeValue);
+            XMLUtils::addAttribute(doc, expiriesNode, "ccy", kv.first);
+            XMLUtils::appendNode(capFloorVolatilitiesNode, expiriesNode);
+        }
+
+        // Write out cap floor strikes for each currency
+        for (auto kv : capFloorVolStrikes_) {
+            // If strikes vector is empty, the node value is ATM else it is the comma separated list of strikes
+            // No checks here on the string repr of each strike value - dangerous but in lots of places.
+            string nodeValue = kv.second.empty() ? "ATM" : 
+                join(kv.second | transformed([](Rate s) { return ore::data::to_string(s); }), ",");
+            XMLNode* strikesNode = doc.allocNode("Strikes", nodeValue);
+            XMLUtils::addAttribute(doc, strikesNode, "ccy", kv.first);
+            XMLUtils::appendNode(capFloorVolatilitiesNode, strikesNode);
+        }
+
         if (capFloorVolDayCounters_.size() > 0) {
             XMLNode* node = XMLUtils::addChild(doc, capFloorVolatilitiesNode, "DayCounters");
             for (auto dc : capFloorVolDayCounters_) {
@@ -1168,14 +1561,59 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         }
     }
 
+    if (!cdsVolNames().empty()) {
+        DLOG("Writing CDS volatilities");
+        XMLNode* cdsVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CDSVolatilities");
+        XMLUtils::addChild(doc, cdsVolatilitiesNode, "Simulate", simulateCdsVols());
+        XMLUtils::addChild(doc, cdsVolatilitiesNode, "ReactionToTimeDecay", cdsVolDecayMode_);
+        XMLUtils::addChildren(doc, cdsVolatilitiesNode, "Names", "Name", cdsVolNames());
+        XMLUtils::addGenericChildAsList(doc, cdsVolatilitiesNode, "Expiries", cdsVolExpiries_);
+    }
+
     // fx volatilities
-    DLOG("Writing FX volatilities");
-    XMLNode* fxVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "FxVolatilities");
     if (!fxVolCcyPairs().empty()) {
+        DLOG("Writing FX volatilities");
+        XMLNode* fxVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "FxVolatilities");
         XMLUtils::addChild(doc, fxVolatilitiesNode, "Simulate", simulateFXVols());
         XMLUtils::addChild(doc, fxVolatilitiesNode, "ReactionToTimeDecay", fxVolDecayMode_);
         XMLUtils::addChildren(doc, fxVolatilitiesNode, "CurrencyPairs", "CurrencyPair", fxVolCcyPairs());
         XMLUtils::addGenericChildAsList(doc, fxVolatilitiesNode, "Expiries", fxVolExpiries_);
+        if (hasFxPairWithSurface_) {
+            XMLNode* surfaceNode = XMLUtils::addChild(doc, fxVolatilitiesNode, "Surface");
+
+            map<string, vector<Real>>::const_iterator it;
+            for (it = fxMoneyness_.begin(); it != fxMoneyness_.end(); it++) {
+                if (it->first == "") {
+                    // only print default moneyness if it's not ATM (so it was specifically changed)
+                    if (useMoneyness_[it->first]) {
+                        if (fxMoneyness_[""].size() > 1 || !(close(fxMoneyness_[""][0], 0.0) || close(fxMoneyness_[""][0], 1.0))) {
+                            XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first]); // default not atm
+                        }
+                    }
+                } else {
+                    if (useMoneyness_[it->first]) {
+                        XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first], "ccyPair",
+                            it->first);
+                    }
+                }
+            }
+            for (it = fxStandardDevs_.begin(); it != fxStandardDevs_.end(); it++) {
+                if (it->first == "") {
+                    // only print default standard deviation if it's not ATM (so it was specifically changed)
+                    if (!useMoneyness_[it->first]) {
+                        if (fxStandardDevs_[""].size() > 1 || !close(fxStandardDevs_[""][0], 0.0)) {
+                            XMLUtils::addGenericChildAsList(doc, surfaceNode, "StandardDeviations", fxStandardDevs_[it->first]); // default not atm
+                        }
+                    }
+                }
+                else {
+                    if (!useMoneyness_[it->first]) {
+                        XMLUtils::addGenericChildAsList(doc, surfaceNode, "StandardDeviations", fxStandardDevs_[it->first], "ccyPair",
+                            it->first);
+                    }
+                }
+            }
+        }
         if (fxVolDayCounters_.size() > 0) {
             XMLNode* node = XMLUtils::addChild(doc, fxVolatilitiesNode, "DayCounters");
             for (auto dc : fxVolDayCounters_) {
@@ -1186,15 +1624,10 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         }
     }
 
-    // fx rates
-    DLOG("Writing FX rates");
-    XMLNode* fxRatesNode = XMLUtils::addChild(doc, marketNode, "FxRates");
-    XMLUtils::addChildren(doc, fxRatesNode, "CurrencyPairs", "CurrencyPair", fxCcyPairs());
-
     // eq volatilities
-    DLOG("Writing equity volatilities");
-    XMLNode* eqVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "EquityVolatilities");
     if (!equityVolNames().empty()) {
+        DLOG("Writing equity volatilities");
+        XMLNode* eqVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "EquityVolatilities");
         XMLUtils::addChild(doc, eqVolatilitiesNode, "Simulate", simulateEquityVols());
         XMLUtils::addChild(doc, eqVolatilitiesNode, "ReactionToTimeDecay", equityVolDecayMode_);
         XMLUtils::addChildren(doc, eqVolatilitiesNode, "Names", "Name", equityVolNames());
@@ -1205,32 +1638,133 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         }
     }
 
-    // additional scenario data currencies
-    DLOG("Writing aggregation scenario data currencies");
-    if (!additionalScenarioDataCcys_.empty()) {
-        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataCurrencies", "Currency",
-                              additionalScenarioDataCcys_);
-    }
-
-    // additional scenario data indices
-    DLOG("Writing aggregation scenario data indices");
-    if (!additionalScenarioDataIndices_.empty()) {
-        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataIndices", "Index",
-                              additionalScenarioDataIndices_);
+    // benchmark yield curves
+    XMLNode* benchmarkCurvesNode = XMLUtils::addChild(doc, marketNode, "BenchmarkCurves");
+    for (Size i = 0; i < yieldCurveNames().size(); ++i) {
+        DLOG("Writing benchmark yield curves data");
+        XMLNode* benchmarkCurveNode = XMLUtils::addChild(doc, benchmarkCurvesNode, "BenchmarkCurve");
+        XMLUtils::addChild(doc, benchmarkCurveNode, "Currency", yieldCurveCurrencies_[yieldCurveNames()[i]]);
+        XMLUtils::addChild(doc, benchmarkCurveNode, "Name", yieldCurveNames()[i]);
     }
 
     // securities
-    DLOG("Writing securities");
-    XMLNode* secNode = XMLUtils::addChild(doc, marketNode, "Securities");
     if (!securities().empty()) {
+        DLOG("Writing securities");
+        XMLNode* secNode = XMLUtils::addChild(doc, marketNode, "Securities");
         XMLUtils::addChild(doc, secNode, "Simulate", securitySpreadsSimulate());
         XMLUtils::addChildren(doc, secNode, "Securities", "Security", securities());
     }
 
+    // cprs
+    if (!cprs().empty()) {
+        DLOG("Writing cprs");
+        XMLNode* cprNode = XMLUtils::addChild(doc, marketNode, "CPRs");
+        XMLUtils::addChild(doc, cprNode, "Simulate", simulateCprs());
+        XMLUtils::addChildren(doc, cprNode, "Names", "Name", cprs());
+    }
+
+    // inflation indices
+    if (!cpiIndices().empty()) {
+        DLOG("Writing inflation indices");
+        XMLUtils::addChildren(doc, marketNode, "CpiIndices", "Index", cpiIndices());
+    }
+
+    // zero inflation
+    if (!zeroInflationIndices().empty()) {
+        DLOG("Writing zero inflation");
+        XMLNode* zeroNode = XMLUtils::addChild(doc, marketNode, "ZeroInflationIndexCurves");
+        XMLUtils::addChildren(doc, zeroNode, "Names", "Name", zeroInflationIndices());
+        XMLUtils::addGenericChildAsList(doc, zeroNode, "Tenors", lookup(zeroInflationTenors_, ""));
+        if (zeroInflationDayCounters_.size() > 0) {
+            XMLNode* node = XMLUtils::addChild(doc, zeroNode, "DayCounters");
+            for (auto dc : zeroInflationDayCounters_) {
+                XMLNode* c = doc.allocNode("DayCounter", dc.second);
+                XMLUtils::addAttribute(doc, c, "name", dc.first);
+                XMLUtils::appendNode(node, c);
+            }
+        }
+    }
+
+    // yoy inflation
+    if (!yoyInflationIndices().empty()) {
+        DLOG("Writing year-on-year inflation");
+        XMLNode* yoyNode = XMLUtils::addChild(doc, marketNode, "YYInflationIndexCurves");
+        XMLUtils::addChildren(doc, yoyNode, "Names", "Name", yoyInflationIndices());
+        XMLUtils::addGenericChildAsList(doc, yoyNode, "Tenors", lookup(yoyInflationTenors_, ""));
+
+        if (yoyInflationDayCounters_.size() > 0) {
+            XMLNode* node = XMLUtils::addChild(doc, yoyNode, "DayCounters");
+            for (auto dc : yoyInflationDayCounters_) {
+                XMLNode* c = doc.allocNode("DayCounter", dc.second);
+                XMLUtils::addAttribute(doc, c, "name", dc.first);
+                XMLUtils::appendNode(node, c);
+            }
+        }
+    }
+
+    // Commodity price curves
+    if (!commodityNames().empty()) {
+        DLOG("Writing commodity price curves");
+        XMLNode* commodityPriceNode = XMLUtils::addChild(doc, marketNode, "Commodities");
+        XMLUtils::addChild(doc, commodityPriceNode, "Simulate", commodityCurveSimulate());
+        XMLUtils::addChildren(doc, commodityPriceNode, "Names", "Name", commodityNames());
+
+        // Write out tenors node for each commodity name
+        for (auto kv : commodityCurveTenors_) {
+            // Single bar here is a boost range adaptor. Documented here:
+            // https://www.boost.org/doc/libs/1_71_0/libs/range/doc/html/range/reference/adaptors/introduction.html
+            string nodeValue = join(kv.second | transformed([](Period p) { return ore::data::to_string(p); }), ",");
+            XMLNode* tenorsNode = doc.allocNode("Tenors", nodeValue);
+            XMLUtils::addAttribute(doc, tenorsNode, "name", kv.first);
+            XMLUtils::appendNode(commodityPriceNode, tenorsNode);
+        }
+
+        // Write out day counters node for each commodity name
+        if (commodityCurveDayCounters_.size() > 0) {
+            XMLNode* node = XMLUtils::addChild(doc, commodityPriceNode, "DayCounters");
+            for (auto dc : commodityCurveDayCounters_) {
+                XMLNode* c = doc.allocNode("DayCounter", dc.second);
+                XMLUtils::addAttribute(doc, c, "name", dc.first);
+                XMLUtils::appendNode(node, c);
+            }
+        }
+    }
+
+    // Commodity volatilities
+    if (!commodityVolNames().empty()) {
+        DLOG("Writing commodity volatilities");
+        XMLNode* commodityVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CommodityVolatilities");
+        XMLUtils::addChild(doc, commodityVolatilitiesNode, "Simulate", commodityVolSimulate());
+        XMLUtils::addChild(doc, commodityVolatilitiesNode, "ReactionToTimeDecay", commodityVolDecayMode_);
+        XMLNode* namesNode = XMLUtils::addChild(doc, commodityVolatilitiesNode, "Names");
+        for (const auto& name : commodityVolNames()) {
+            XMLNode* nameNode = doc.allocNode("Name");
+            XMLUtils::addAttribute(doc, nameNode, "id", name);
+            XMLUtils::addGenericChildAsList(doc, nameNode, "Expiries", commodityVolExpiries_[name]);
+            XMLUtils::addGenericChildAsList(doc, nameNode, "Moneyness", commodityVolMoneyness_[name]);
+            XMLUtils::appendNode(namesNode, nameNode);
+        }
+        XMLUtils::addChild(doc, commodityVolatilitiesNode, "DayCounter", commodityVolDayCounters_.at(""));
+    }
+
+    // additional scenario data currencies
+    if (!additionalScenarioDataCcys_.empty()) {
+        DLOG("Writing aggregation scenario data currencies");
+        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataCurrencies", "Currency",
+            additionalScenarioDataCcys_);
+    }
+
+    // additional scenario data indices
+    if (!additionalScenarioDataIndices_.empty()) {
+        DLOG("Writing aggregation scenario data indices");
+        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataIndices", "Index",
+            additionalScenarioDataIndices_);
+    }
+
     // base correlations
-    DLOG("Writing base correlations");
-    XMLNode* bcNode = XMLUtils::addChild(doc, marketNode, "BaseCorrelations");
     if (!baseCorrelationNames().empty()) {
+        DLOG("Writing base correlations");
+        XMLNode* bcNode = XMLUtils::addChild(doc, marketNode, "BaseCorrelations");
         XMLUtils::addChild(doc, bcNode, "Simulate", simulateBaseCorrelations());
         XMLUtils::addChildren(doc, bcNode, "IndexNames", "IndexName", baseCorrelationNames());
         XMLUtils::addGenericChildAsList(doc, bcNode, "Terms", baseCorrelationTerms_);
@@ -1245,77 +1779,10 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         }
     }
 
-    // inflation indices
-    DLOG("Writing inflation indices");
-    XMLNode* cpiNode = XMLUtils::addChild(doc, marketNode, "CpiInflationIndices");
-    if (!cpiIndices().empty()) {
-        XMLUtils::addChildren(doc, cpiNode, "CpiIndices", "Index", cpiIndices());
-    }
-
-    // zero inflation
-    DLOG("Writing zero inflation");
-    XMLNode* zeroNode = XMLUtils::addChild(doc, marketNode, "ZeroInflationIndexCurves");
-    if (!zeroInflationIndices().empty()) {
-        XMLUtils::addChildren(doc, zeroNode, "Names", "Name", zeroInflationIndices());
-        XMLUtils::addGenericChildAsList(doc, zeroNode, "Tenors", returnTenors(zeroInflationTenors_, ""));
-        if (zeroInflationDayCounters_.size() > 0) {
-            XMLNode* node = XMLUtils::addChild(doc, zeroNode, "DayCounters");
-            for (auto dc : zeroInflationDayCounters_) {
-                XMLNode* c = doc.allocNode("DayCounter", dc.second);
-                XMLUtils::addAttribute(doc, c, "name", dc.first);
-                XMLUtils::appendNode(node, c);
-            }
-        }
-    }
-
-    // yoy inflation
-    DLOG("Writing year-on-year inflation");
-    XMLNode* yoyNode = XMLUtils::addChild(doc, marketNode, "YYInflationIndexCurves");
-    if (!yoyInflationIndices().empty()) {
-        XMLUtils::addChildren(doc, yoyNode, "Names", "Name", yoyInflationIndices());
-        XMLUtils::addGenericChildAsList(doc, yoyNode, "Tenors", returnTenors(yoyInflationTenors_, ""));
-
-        if (yoyInflationDayCounters_.size() > 0) {
-            XMLNode* node = XMLUtils::addChild(doc, yoyNode, "DayCounters");
-            for (auto dc : yoyInflationDayCounters_) {
-                XMLNode* c = doc.allocNode("DayCounter", dc.second);
-                XMLUtils::addAttribute(doc, c, "name", dc.first);
-                XMLUtils::appendNode(node, c);
-            }
-        }
-    }
-
-    // Commodity price curves
-    DLOG("Writing commodity price curves");
-    XMLNode* commodityPriceNode = XMLUtils::addChild(doc, marketNode, "Commodities");
-    if (!commodityNames().empty()) {
-        XMLUtils::addChild(doc, commodityPriceNode, "Simulate", commodityCurveSimulate());
-        XMLUtils::addChildren(doc, commodityPriceNode, "Names", "Name", commodityNames());
-        XMLUtils::addGenericChildAsList(doc, commodityPriceNode, "Tenors", commodityCurveTenors_.at(""));
-        XMLUtils::addChild(doc, commodityPriceNode, "DayCounter", commodityCurveDayCounters_.at(""));
-    }
-
-    // Commodity volatilities
-    DLOG("Writing commodity volatilities");
-    XMLNode* commodityVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CommodityVolatilities");
-    if (!commodityVolNames().empty()) {
-        XMLUtils::addChild(doc, commodityVolatilitiesNode, "Simulate", commodityVolSimulate());
-        XMLUtils::addChild(doc, commodityVolatilitiesNode, "ReactionToTimeDecay", commodityVolDecayMode_);
-        XMLNode* namesNode = XMLUtils::addChild(doc, commodityVolatilitiesNode, "Names");
-        for (const auto& name : commodityVolNames()) {
-            XMLNode* nameNode = doc.allocNode("Name");
-            XMLUtils::addAttribute(doc, nameNode, "id", name);
-            XMLUtils::addGenericChildAsList(doc, nameNode, "Expiries", commodityVolExpiries_[name]);
-            XMLUtils::addGenericChildAsList(doc, nameNode, "Moneyness", commodityVolMoneyness_[name]);
-            XMLUtils::appendNode(namesNode, nameNode);
-        }
-        XMLUtils::addChild(doc, commodityVolatilitiesNode, "DayCounter", commodityVolDayCounters_.at(""));
-    }
-
     // correlations
-    DLOG("Writing correlation");
-    XMLNode* correlationsNode = XMLUtils::addChild(doc, marketNode, "Correlations");
     if (!correlationPairs().empty()) {
+        DLOG("Writing correlation");
+        XMLNode* correlationsNode = XMLUtils::addChild(doc, marketNode, "Correlations");
         XMLUtils::addChild(doc, correlationsNode, "Simulate", simulateCorrelations());
         XMLUtils::addChildren(doc, correlationsNode, "Pairs", "Pair", correlationPairs());
 

@@ -1,4 +1,5 @@
 <Portfolio>
+  <!--
   <Trade id="Swap_20">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -109,7 +110,8 @@
       <Strike>12.24</Strike>
       <Quantity>775</Quantity>
     </EquityOptionData>
-  </Trade>
+    </Trade>
+    -->
   <Trade id="CommodityForward_Gold_1Y">
     <TradeType>CommodityForward</TradeType>
     <Envelope>

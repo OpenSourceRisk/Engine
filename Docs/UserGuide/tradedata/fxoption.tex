@@ -1,10 +1,10 @@
 \subsubsection{FX Option}
 
-The \lstinline!FXOptionData!  node is the trade data container for the FX Option trade type.  Vanilla FX options are
-supported, the exercise style must be \emph{European}. The strike rate of an FX option is: SoldAmount / BoughtAmount. The
-\lstinline!FXOptionData!  node includes one and only one \lstinline!OptionData! trade component sub-node plus elements
-specific to the FX Option. The structure of an example \lstinline!FXOptionData! node for a FX Option is shown in Listing
-\ref{lst:fxoption_data}.
+The \lstinline!FXOptionData!  node is the trade data container for the \emph{FxOption} trade type.   FX options with exercise styles  \emph{European} or \emph{American} are supported. 
+The strike rate of an FX option is:
+SoldAmount / BoughtAmount. The \lstinline!FXOptionData!  node includes one and only one \lstinline!OptionData! trade
+component sub-node plus elements specific to the FX Option. The structure of an example \lstinline!FXOptionData! node
+for a FX Option is shown in Listing \ref{lst:fxoption_data}.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -27,9 +27,13 @@ The meanings and allowable values of the elements in the \lstinline!FXOptionData
 
 \begin{itemize}
 \item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. Note that the
-  FX option type allows for \emph{European} option style only.
+  FX option type allows for \emph{European} and \emph{American} option styles only. For option type \emph{Put}, Bought and Sold currencies/amounts are switched compared to the trade data node.
+For example, holder of BoughtCurrency EUR SoldCurrency JPY FX Call Option has the right to buy EUR using JPY, while
+holder of the Put counterpart has the right to buy JPY using EUR, or equivalently sell EUR for JPY. An alternative to define the latter option is copy the Call option with following changes:
+a) swapping BoughtCurrency with SoldCurrency, b) swapping BoughtAmount with SoldAmount and c) inverting the barrier level (for example changing 110 to 0.0090909). Here barrier level is
+quoted as amount of EUR per unit JPY, which is not commonly seen on market and inconsistent with the format in Call options. For these reasons, using Put/Call flag instead is recommended.
 
-\item BoughtCurrency: The bought currency of the FX option.  
+\item BoughtCurrency: The bought currency of the FX option. See OptionData above for more details.
 
 Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.
 
@@ -37,7 +41,7 @@ Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.
 
 Allowable values:  Any positive real number.
 
-\item SoldCurrency: The sold currency of the FX option.  
+\item SoldCurrency: The sold currency of the FX option. See OptionData above for more details.
 
 Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.
 
@@ -46,3 +50,6 @@ Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.
 Allowable values:  Any positive real number.
 
 \end{itemize}
+
+Note that FX Options also cover Precious Metals Options, i.e. with
+currencies XAU, XAG, XPT, XPD.

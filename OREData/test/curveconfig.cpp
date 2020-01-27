@@ -89,6 +89,7 @@ set<string> readQuotes(const string& filename) {
 vector<pair<string, string>> files = {
     make_pair("todays_market_only_ir.xml", "expected_quotes_only_ir.csv"),
     make_pair("todays_market_with_fx_vol_smile.xml", "expected_quotes_with_fx_vol_smile.csv"),
+    make_pair("todays_market_with_fx_vol_smile_delta.xml", "expected_quotes_with_fx_vol_smile_delta.csv"),
     make_pair("todays_market_with_fx_vol_atm.xml", "expected_quotes_with_fx_vol_atm.csv"),
     make_pair("todays_market_single_config_gbp.xml", "expected_quotes_tmp_single_gbp.csv")};
 

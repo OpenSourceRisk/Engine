@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
 set(OREData-Test_SRC bond.cpp
+calendaradjustment.cpp
 calendars.cpp
 ccyswapwithresets.cpp
 cds.cpp
@@ -11,14 +12,17 @@ commodityoption.cpp
 commodityvolcurve.cpp
 commodityvolcurveconfig.cpp
 conventions.cpp
+conventionsbasedfutureexpiry.cpp
 correlationcurveconfig.cpp
 cpiswap.cpp
+creditdefaultswapdata.cpp
 crossassetmodeldata.cpp
 curveconfig.cpp
 digitalcms.cpp
 equitymarketdata.cpp
 equityswap.cpp
 equitytrades.cpp
+expiry.cpp
 fixings.cpp
 fxoption.cpp
 fxswap.cpp
@@ -26,15 +30,18 @@ fxtriangulation.cpp
 indices.cpp
 inflationcapfloor.cpp
 legdata.cpp
+mxnircurves.cpp
 ored_commodityforward.cpp
 parser.cpp
 portfolio.cpp
 schedule.cpp
+strike.cpp
 swaption.cpp
 testsuite.cpp
 todaysmarket.cpp
 xmlmanipulation.cpp
-yieldcurve.cpp)
+yieldcurve.cpp
+zerocouponswap.cpp)
 
 add_executable(ored-test-suite ${OREData-Test_SRC})
 target_link_libraries(ored-test-suite ${ORED_LIB_NAME})

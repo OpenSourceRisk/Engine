@@ -23,51 +23,43 @@
 
 #pragma once
 
-#include <boost/make_shared.hpp>
-#include <ored/portfolio/builders/cachingenginebuilder.hpp>
-#include <ored/portfolio/enginefactory.hpp>
-#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
-#include <ql/processes/blackscholesprocess.hpp>
+#include <ored/portfolio/builders/vanillaoption.hpp>
 
 namespace ore {
 namespace data {
 
-//! Engine Builder base class for European FX Options
+//! Engine Builder for European Fx Option Options
+/*! Pricing engines are cached by currency pair/currency
+
+    \ingroup builders
+ */
+class FxEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
+public:
+    FxEuropeanOptionEngineBuilder()
+        : EuropeanOptionEngineBuilder("GarmanKohlhagen", {"FxOption"}, AssetClass::FX) {}
+};
+
+//! Engine Builder for American Fx Options using Finite Difference Method
 /*! Pricing engines are cached by currency pair
 
     \ingroup builders
  */
-class FxOptionEngineBuilderBase : public CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
+class FxAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
 public:
-    FxOptionEngineBuilderBase(const std::string& model, const std::string& engine)
-        : CachingEngineBuilder(model, engine, {"FxOption"}) {}
-
-protected:
-    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
-        return forCcy.code() + domCcy.code();
-    }
+    FxAmericanOptionFDEngineBuilder()
+        : AmericanOptionFDEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"},
+                                        AssetClass::FX, expiryDate_) {}
 };
 
-//! Garman-Kohlhagen Engine Builder for European FX Options
-class FxOptionEngineBuilder : public FxOptionEngineBuilderBase {
+//! Engine Builder for American Fx Options using Barone Adesi Whaley Approximation
+/*! Pricing engines are cached by currency pair
+
+    \ingroup builders
+ */
+class FxAmericanOptionBAWEngineBuilder : public AmericanOptionBAWEngineBuilder {
 public:
-    FxOptionEngineBuilder() : FxOptionEngineBuilderBase("GarmanKohlhagen", "AnalyticEuropeanEngine") {}
-
-protected:
-    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
-        return forCcy.code() + domCcy.code();
-    }
-
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
-        string pair = keyImpl(forCcy, domCcy);
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
-            market_->fxSpot(pair, configuration(MarketContext::pricing)),
-            market_->discountCurve(forCcy.code(),
-                                   configuration(MarketContext::pricing)), // dividend yield ~ foreign yield
-            market_->discountCurve(domCcy.code(), configuration(MarketContext::pricing)),
-            market_->fxVol(pair, configuration(MarketContext::pricing)));
-        return boost::make_shared<AnalyticEuropeanEngine>(gbsp);
-    }
+    FxAmericanOptionBAWEngineBuilder()
+        : AmericanOptionBAWEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX) {}
 };
 
 } // namespace data

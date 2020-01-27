@@ -31,6 +31,7 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/time/schedule.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/fxindex.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -48,8 +49,10 @@ class EquityCoupon : public Coupon, public Observer {
 public:
     EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
                  const boost::shared_ptr<EquityIndex>& equityCurve, const DayCounter& dayCounter,
-                 bool isTotalReturn = false, Real dividendFactor = 1.0, const Date& refPeriodStart = Date(),
-                 const Date& refPeriodEnd = Date(), const Date& exCouponDate = Date());
+                 bool isTotalReturn = false, Real dividendFactor = 1.0, bool notionalReset = false, 
+                 Real initialPrice = Real(), Real quantity = Real(), const Date& refPeriodStart = Date(), 
+                 const Date& refPeriodEnd = Date(), const Date& exCouponDate = Date(), 
+                 const boost::shared_ptr<FxIndex>& fxIndex = nullptr);
 
     //! \name CashFlow interface
     //@{
@@ -63,12 +66,16 @@ public:
     Real accruedAmount(const Date&) const;
     // calculates the rate for the period, not yearly i.e. (S(t+1)-S(t))/S(t)
     Rate rate() const;
+    // nominal changes if notional is resettable
+    Real nominal() const;
     //@}
 
     //! \name Inspectors
     //@{
     //! equity reference rate curve
     const boost::shared_ptr<EquityIndex>& equityCurve() const { return equityCurve_; }
+    //! fx index curve
+    const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     //! total return or price return?
     bool isTotalReturn() const { return isTotalReturn_; }
     //! are dividends scaled (e.g. to account for tax)
@@ -79,6 +86,10 @@ public:
     Date fixingEndDate() const { return fixingEndDate_; }
     //! return both fixing dates
     std::vector<Date> fixingDates() const;
+    //! initial price
+    Real initialPrice() const;
+    //! Number of equity shares held
+    Real quantity() const { return quantity_; }
     //! This function is called for other coupon types
     Date fixingDate() const {
         QL_FAIL("Equity Coupons have 2 fixings, not 1.");
@@ -100,13 +111,17 @@ public:
 
 protected:
     boost::shared_ptr<EquityCouponPricer> pricer_;
+    Natural fixingDays_;
     boost::shared_ptr<EquityIndex> equityCurve_;
     DayCounter dayCounter_;
-    Natural fixingDays_;
-    Date fixingStartDate_;
-    Date fixingEndDate_;
     bool isTotalReturn_;
     Real dividendFactor_;
+    bool notionalReset_;
+    Real initialPrice_;
+    Real quantity_;
+    Date fixingStartDate_;
+    Date fixingEndDate_;
+    boost::shared_ptr<FxIndex> fxIndex_;
 };
 
 // inline definitions
@@ -126,7 +141,8 @@ inline boost::shared_ptr<EquityCouponPricer> EquityCoupon::pricer() const { retu
  */
 class EquityLeg {
 public:
-    EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve);
+    EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
+              const boost::shared_ptr<FxIndex>& fxIndex = nullptr);
     EquityLeg& withNotional(Real notional);
     EquityLeg& withNotionals(const std::vector<Real>& notionals);
     EquityLeg& withPaymentDayCounter(const DayCounter& dayCounter);
@@ -134,19 +150,26 @@ public:
     EquityLeg& withPaymentCalendar(const Calendar& calendar);
     EquityLeg& withTotalReturn(bool);
     EquityLeg& withDividendFactor(Real);
+    EquityLeg& withInitialPrice(Real);
     EquityLeg& withFixingDays(Natural);
+    EquityLeg& withValuationSchedule(const Schedule& valuationSchedule);
+    EquityLeg& withNotionalReset(bool);
     operator Leg() const;
 
 private:
     Schedule schedule_;
     boost::shared_ptr<EquityIndex> equityCurve_;
+    boost::shared_ptr<FxIndex> fxIndex_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
     bool isTotalReturn_;
+    Real initialPrice_;
     Real dividendFactor_;
     Natural fixingDays_;
+    Schedule valuationSchedule_;
+    bool notionalReset_;
 };
 
 } // namespace QuantExt

@@ -62,6 +62,7 @@ using namespace data;
   - Index curve zero rates
   - Yield curve zero rates
   - Swaption ATM volatility matrices
+  - Yield volatility matrices
   - Cap/Floor volatility matrices (by expiry and strike)
 
   For Credit the generator covers shifts to the following termstructure types:
@@ -125,20 +126,23 @@ private:
     void generateEquityScenarios(bool up);
     void generateDividendYieldScenarios(bool up);
     void generateSwaptionVolScenarios(bool up);
+    void generateYieldVolScenarios(bool up);
     void generateFxVolScenarios(bool up);
     void generateEquityVolScenarios(bool up);
-    void generateEquityForecastCurveScenarios(bool up);
     void generateCapFloorVolScenarios(bool up);
     void generateSurvivalProbabilityScenarios(bool up);
     void generateCdsVolScenarios(bool up);
     void generateZeroInflationScenarios(bool up);
     void generateYoYInflationScenarios(bool up);
+    void generateYoYInflationCapFloorVolScenarios(bool up);
     void generateBaseCorrelationScenarios(bool up);
-    void generateCommodityScenarios(bool up);
     void generateCommodityCurveScenarios(bool up);
     void generateCommodityVolScenarios(bool up);
     void generateSecuritySpreadScenarios(bool up);
     void generateCorrelationScenarios(bool up);
+
+    // common helper for generateSwaptionVolScenarios(), generateYieldVolScenarios()
+    void generateGenericYieldVolScenarios(bool up, RiskFactorKey::KeyType rfType);
 
     ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up);
     ScenarioDescription indexScenarioDescription(string index, Size bucket, bool up);
@@ -148,17 +152,17 @@ private:
     ScenarioDescription equityScenarioDescription(string equity, bool up);
     ScenarioDescription dividendYieldScenarioDescription(string equity, Size bucket, bool up);
     ScenarioDescription equityVolScenarioDescription(string equity, Size expiryBucket, Size strikeBucket, bool up);
-    ScenarioDescription equityForecastCurveScenarioDescription(string equity, Size bucket, bool up);
     ScenarioDescription swaptionVolScenarioDescription(string ccy, Size expiryBucket, Size termBucket,
                                                        Size strikeBucket, bool up);
-    ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up);
+    ScenarioDescription yieldVolScenarioDescription(string securityId, Size expiryBucket, Size termBucket, bool up);
+    ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up, bool isAtm);
     ScenarioDescription survivalProbabilityScenarioDescription(string name, Size bucket, bool up);
     ScenarioDescription CdsVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription zeroInflationScenarioDescription(string index, Size bucket, bool up);
     ScenarioDescription yoyInflationScenarioDescription(string index, Size bucket, bool up);
+    ScenarioDescription yoyInflationCapFloorVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription baseCorrelationScenarioDescription(string indexName, Size lossLevelBucket, Size termBucket,
                                                            bool up);
-    ScenarioDescription commodityScenarioDescription(const std::string& commodityName, bool up);
     ScenarioDescription commodityCurveScenarioDescription(const std::string& commodityName, QuantLib::Size bucket,
                                                           bool up);
     ScenarioDescription commodityVolScenarioDescription(const std::string& commodityName, QuantLib::Size expiryBucket,

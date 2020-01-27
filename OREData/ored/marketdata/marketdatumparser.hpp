@@ -38,5 +38,10 @@ using QuantLib::Date;
 /*! \ingroup marketdata
  */
 boost::shared_ptr<MarketDatum> parseMarketDatum(const Date&, const string&, const Real&);
+
+//! Get a date from a date string or period
+/*! \ingroup marketdata
+ */
+Date getDateFromDateOrPeriod(const string& token, Date asof);
 } // namespace data
 } // namespace ore

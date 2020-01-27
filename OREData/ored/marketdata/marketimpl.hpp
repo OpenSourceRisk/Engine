@@ -82,6 +82,10 @@ public:
                                     const string& configuration = Market::defaultConfiguration) const;
     const string swapIndexBase(const string& ccy, const string& configuration = Market::defaultConfiguration) const;
 
+    //! Yield volatility
+    Handle<QuantLib::SwaptionVolatilityStructure>
+        yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const;
+
     //! FX
     Handle<Quote> fxSpot(const string& ccypair, const string& configuration = Market::defaultConfiguration) const;
     Handle<BlackVolTermStructure> fxVol(const string& ccypair,
@@ -106,7 +110,7 @@ public:
 
     //! YoY Inflation CapFloor volatilities
     Handle<QuantExt::YoYOptionletVolatilitySurface>
-    yoyCapFloorVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const;
+    yoyCapFloorVol(const string& name, const string& configuration = Market::defaultConfiguration) const;
 
     //! Inflation Indexes
     virtual Handle<ZeroInflationIndex>
@@ -154,9 +158,6 @@ public:
                                                       const string& configuration = Market::defaultConfiguration) const;
 
     //! Commodity curves
-    QuantLib::Handle<QuantLib::Quote> commoditySpot(const string& commodityName,
-                                                    const string& configuration = Market::defaultConfiguration) const;
-
     QuantLib::Handle<QuantExt::PriceTermStructure>
     commodityPriceCurve(const string& commodityName, const string& configuration = Market::defaultConfiguration) const;
 
@@ -191,6 +192,7 @@ protected:
     map<pair<string, string>, Handle<SwapIndex>> swapIndices_;
     map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> swaptionCurves_;
     map<pair<string, string>, pair<string, string>> swaptionIndexBases_;
+    map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> yieldVolCurves_;
     map<string, FXTriangulation> fxSpots_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> fxVols_;
     map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;
@@ -209,7 +211,6 @@ protected:
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
     map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
     map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>> correlationCurves_;
-    map<pair<string, string>, QuantLib::Handle<QuantLib::Quote>> commoditySpots_;
     map<pair<string, string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
     map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;

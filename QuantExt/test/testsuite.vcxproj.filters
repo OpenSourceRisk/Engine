@@ -113,6 +113,42 @@
     <ClCompile Include="correlationtermstructure.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="fillemptymatrix.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="strippedoptionletadapter.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="piecewiseoptionletcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="blackvariancesurfacesparse.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="blackvariancesurfacestddevs.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="piecewiseoptionletstripper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="capfloortermvolcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="piecewiseatmoptionletcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="equityforwardcurvestripper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="strippedoptionletadapter2.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="blackvolsurfacedelta.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="forwardbond.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -133,6 +169,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="utilities.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="toplevelfixture.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

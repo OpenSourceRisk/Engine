@@ -114,24 +114,25 @@ boost::shared_ptr<CurveConfigurations> CurveConfigurations::minimalCurveConfig(c
         }
     }
 
-    addMinimalCurves("YieldCurves", yieldCurveConfigs_, minimum->yieldCurveConfigs_, CurveSpec::CurveType::Yield, curveConfigIds);
+    // follow order in xsd
+    addMinimalCurves("FXSpots", fxSpotConfigs_, minimum->fxSpotConfigs_, CurveSpec::CurveType::FX, curveConfigIds);
     addMinimalCurves("FXVolatilities", fxVolCurveConfigs_, minimum->fxVolCurveConfigs_, CurveSpec::CurveType::FXVolatility, curveConfigIds);
     addMinimalCurves("SwaptionVolatilities", swaptionVolCurveConfigs_, minimum->swaptionVolCurveConfigs_,CurveSpec::CurveType::SwaptionVolatility, curveConfigIds);
+    addMinimalCurves("YieldVolatilities", yieldVolCurveConfigs_, minimum->yieldVolCurveConfigs_, CurveSpec::CurveType::YieldVolatility, curveConfigIds);
     addMinimalCurves("CapFloorVolatilities", capFloorVolCurveConfigs_, minimum->capFloorVolCurveConfigs_,CurveSpec::CurveType::CapFloorVolatility, curveConfigIds);
-    addMinimalCurves("DefaultCurves", defaultCurveConfigs_, minimum->defaultCurveConfigs_, CurveSpec::CurveType::Default, curveConfigIds);
     addMinimalCurves("CDSVolatilities", cdsVolCurveConfigs_, minimum->cdsVolCurveConfigs_, CurveSpec::CurveType::CDSVolatility, curveConfigIds);
-    addMinimalCurves("BaseCorrelations", baseCorrelationCurveConfigs_, minimum->baseCorrelationCurveConfigs_, CurveSpec::CurveType::BaseCorrelation, curveConfigIds);
-    addMinimalCurves("EquityCurves", equityCurveConfigs_, minimum->equityCurveConfigs_, CurveSpec::CurveType::Equity, curveConfigIds);
-    addMinimalCurves("EquityVolatilities", equityVolCurveConfigs_, minimum->equityVolCurveConfigs_, CurveSpec::CurveType::EquityVolatility, curveConfigIds);
+    addMinimalCurves("DefaultCurves", defaultCurveConfigs_, minimum->defaultCurveConfigs_, CurveSpec::CurveType::Default, curveConfigIds);
+    addMinimalCurves("YieldCurves", yieldCurveConfigs_, minimum->yieldCurveConfigs_, CurveSpec::CurveType::Yield, curveConfigIds);
     addMinimalCurves("InflationCurves", inflationCurveConfigs_, minimum->inflationCurveConfigs_, CurveSpec::CurveType::Inflation, curveConfigIds);
     addMinimalCurves("InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_, minimum->inflationCapFloorPriceSurfaceConfigs_, CurveSpec::CurveType::InflationCapFloorPrice, curveConfigIds);
     addMinimalCurves("InflationCapFloorVolatilities", inflationCapFloorVolCurveConfigs_, minimum->inflationCapFloorVolCurveConfigs_, CurveSpec::CurveType::InflationCapFloorVolatility, curveConfigIds);
+    addMinimalCurves("EquityCurves", equityCurveConfigs_, minimum->equityCurveConfigs_, CurveSpec::CurveType::Equity, curveConfigIds);
+    addMinimalCurves("EquityVolatilities", equityVolCurveConfigs_, minimum->equityVolCurveConfigs_, CurveSpec::CurveType::EquityVolatility, curveConfigIds);
     addMinimalCurves("Securities", securityConfigs_, minimum->securityConfigs_, CurveSpec::CurveType::Security, curveConfigIds);
-    addMinimalCurves("FXSpots", fxSpotConfigs_, minimum->fxSpotConfigs_, CurveSpec::CurveType::FX, curveConfigIds);
+    addMinimalCurves("BaseCorrelations", baseCorrelationCurveConfigs_, minimum->baseCorrelationCurveConfigs_, CurveSpec::CurveType::BaseCorrelation, curveConfigIds);
     addMinimalCurves("CommodityCurves", commodityCurveConfigs_, minimum->commodityCurveConfigs_, CurveSpec::CurveType::Commodity, curveConfigIds);
-    addMinimalCurves("CommodityVolatilities", commodityVolatilityCurveConfigs_, minimum->commodityVolatilityCurveConfigs_, CurveSpec::CurveType::CommodityVolatility,curveConfigIds);
+    addMinimalCurves("CommodityVolatilities", commodityVolatilityConfigs_, minimum->commodityVolatilityConfigs_, CurveSpec::CurveType::CommodityVolatility,curveConfigIds);
     addMinimalCurves("Correlations", correlationCurveConfigs_, minimum->correlationCurveConfigs_, CurveSpec::CurveType::Correlation, curveConfigIds);
-
 
     return minimum;
 }
@@ -168,6 +169,7 @@ std::set<string> CurveConfigurations::quotes() const {
     addQuotes(quotes, yieldCurveConfigs_, CurveSpec::CurveType::Yield);
     addQuotes(quotes, fxVolCurveConfigs_, CurveSpec::CurveType::FXVolatility);
     addQuotes(quotes, swaptionVolCurveConfigs_, CurveSpec::CurveType::SwaptionVolatility);
+    addQuotes(quotes, yieldVolCurveConfigs_, CurveSpec::CurveType::YieldVolatility);
     addQuotes(quotes, capFloorVolCurveConfigs_, CurveSpec::CurveType::CapFloorVolatility);
     addQuotes(quotes, defaultCurveConfigs_, CurveSpec::CurveType::Default);
     addQuotes(quotes, cdsVolCurveConfigs_, CurveSpec::CurveType::CDSVolatility);
@@ -180,7 +182,7 @@ std::set<string> CurveConfigurations::quotes() const {
     addQuotes(quotes, securityConfigs_, CurveSpec::CurveType::Security);
     addQuotes(quotes, fxSpotConfigs_, CurveSpec::CurveType::FX);
     addQuotes(quotes, commodityCurveConfigs_, CurveSpec::CurveType::Commodity);
-    addQuotes(quotes, commodityVolatilityCurveConfigs_, CurveSpec::CurveType::CommodityVolatility);
+    addQuotes(quotes, commodityVolatilityConfigs_, CurveSpec::CurveType::CommodityVolatility);
     addQuotes(quotes, correlationCurveConfigs_, CurveSpec::CurveType::Correlation);
 
     return quotes;
@@ -233,6 +235,15 @@ std::set<string> CurveConfigurations::conventions() const {
     return conventions;
 }
 
+set<string> CurveConfigurations::yieldCurveConfigIds() {
+
+    set<string> curves;
+    for (auto yc : yieldCurveConfigs_)
+        curves.insert(yc.first);
+
+    return curves;
+}
+
 bool CurveConfigurations::hasYieldCurveConfig(const string& curveID) const { return has(curveID, yieldCurveConfigs_); }
 
 const boost::shared_ptr<YieldCurveConfig>& CurveConfigurations::yieldCurveConfig(const string& curveID) const {
@@ -252,6 +263,15 @@ bool CurveConfigurations::hasSwaptionVolCurveConfig(const string& curveID) const
 const boost::shared_ptr<SwaptionVolatilityCurveConfig>&
 CurveConfigurations::swaptionVolCurveConfig(const string& curveID) const {
     return get(curveID, swaptionVolCurveConfigs_);
+}
+
+bool CurveConfigurations::hasYieldVolCurveConfig(const string& curveID) const {
+    return has(curveID, yieldVolCurveConfigs_);
+}
+
+const boost::shared_ptr<YieldVolatilityCurveConfig>&
+CurveConfigurations::yieldVolCurveConfig(const string& curveID) const {
+    return get(curveID, yieldVolCurveConfigs_);
 }
 
 bool CurveConfigurations::hasCapFloorVolCurveConfig(const string& curveID) const {
@@ -351,13 +371,13 @@ const boost::shared_ptr<CommodityCurveConfig>& CurveConfigurations::commodityCur
     return get(curveID, commodityCurveConfigs_);
 }
 
-bool CurveConfigurations::hasCommodityVolatilityCurveConfig(const string& curveID) const {
-    return has(curveID, commodityVolatilityCurveConfigs_);
+bool CurveConfigurations::hasCommodityVolatilityConfig(const string& curveID) const {
+    return has(curveID, commodityVolatilityConfigs_);
 }
 
-const boost::shared_ptr<CommodityVolatilityCurveConfig>&
-CurveConfigurations::commodityVolatilityCurveConfig(const string& curveID) const {
-    return get(curveID, commodityVolatilityCurveConfigs_);
+const boost::shared_ptr<CommodityVolatilityConfig>&
+CurveConfigurations::commodityVolatilityConfig(const string& curveID) const {
+    return get(curveID, commodityVolatilityConfigs_);
 }
 
 bool CurveConfigurations::hasCorrelationCurveConfig(const string& curveID) const {
@@ -376,6 +396,7 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     parseNode(node, "YieldCurves", "YieldCurve", yieldCurveConfigs_);
     parseNode(node, "FXVolatilities", "FXVolatility", fxVolCurveConfigs_);
     parseNode(node, "SwaptionVolatilities", "SwaptionVolatility", swaptionVolCurveConfigs_);
+    parseNode(node, "YieldVolatilities", "YieldVolatility", yieldVolCurveConfigs_);
     parseNode(node, "CapFloorVolatilities", "CapFloorVolatility", capFloorVolCurveConfigs_);
     parseNode(node, "DefaultCurves", "DefaultCurve", defaultCurveConfigs_);
     parseNode(node, "CDSVolatilities", "CDSVolatility", cdsVolCurveConfigs_);
@@ -389,29 +410,30 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     parseNode(node, "Securities", "Security", securityConfigs_);
     parseNode(node, "FXSpots", "FXSpot", fxSpotConfigs_);
     parseNode(node, "CommodityCurves", "CommodityCurve", commodityCurveConfigs_);
-    parseNode(node, "CommodityVolatilities", "CommodityVolatility", commodityVolatilityCurveConfigs_);
+    parseNode(node, "CommodityVolatilities", "CommodityVolatility", commodityVolatilityConfigs_);
     parseNode(node, "Correlations", "Correlation", correlationCurveConfigs_);
 }
 
 XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     XMLNode* parent = doc.allocNode("CurveConfiguration");
 
-    addNodes(doc, parent, "YieldCurves", yieldCurveConfigs_);
+    addNodes(doc, parent, "FXSpots", fxSpotConfigs_);
     addNodes(doc, parent, "FXVolatilities", fxVolCurveConfigs_);
     addNodes(doc, parent, "SwaptionVolatilities", swaptionVolCurveConfigs_);
+    addNodes(doc, parent, "YieldVolatilities", yieldVolCurveConfigs_);
     addNodes(doc, parent, "CapFloorVolatilities", capFloorVolCurveConfigs_);
-    addNodes(doc, parent, "DefaultCurves", defaultCurveConfigs_);
     addNodes(doc, parent, "CDSVolatilities", cdsVolCurveConfigs_);
-    addNodes(doc, parent, "BaseCorrelations", baseCorrelationCurveConfigs_);
-    addNodes(doc, parent, "EquityCurves", equityCurveConfigs_);
-    addNodes(doc, parent, "EquityVolatilities", equityVolCurveConfigs_);
+    addNodes(doc, parent, "DefaultCurves", defaultCurveConfigs_);
+    addNodes(doc, parent, "YieldCurves", yieldCurveConfigs_);
     addNodes(doc, parent, "InflationCurves", inflationCurveConfigs_);
     addNodes(doc, parent, "InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_);
     addNodes(doc, parent, "InflationCapFloorVolatilities", inflationCapFloorVolCurveConfigs_);
+    addNodes(doc, parent, "EquityCurves", equityCurveConfigs_);
+    addNodes(doc, parent, "EquityVolatilities", equityVolCurveConfigs_);
     addNodes(doc, parent, "Securities", securityConfigs_);
-    addNodes(doc, parent, "FXSpots", fxSpotConfigs_);
+    addNodes(doc, parent, "BaseCorrelations", baseCorrelationCurveConfigs_);
     addNodes(doc, parent, "CommodityCurves", commodityCurveConfigs_);
-    addNodes(doc, parent, "CommodityVolatilities", commodityVolatilityCurveConfigs_);
+    addNodes(doc, parent, "CommodityVolatilities", commodityVolatilityConfigs_);
     addNodes(doc, parent, "Correlations", correlationCurveConfigs_);
 
     return parent;

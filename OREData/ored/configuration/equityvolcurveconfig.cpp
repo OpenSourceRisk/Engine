@@ -69,6 +69,21 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     if (dc == "")
         dc = "A365";
     dayCounter_ = parseDayCounter(dc);
+
+    strikeExtrapolation_ = Extrapolation::Flat;
+    timeExtrapolation_ = Extrapolation::Flat;
+    XMLNode* timeNode = XMLUtils::getChildNode(node, "TimeExtrapolation");
+    if (timeNode) {
+        timeExtrapolation_ = stringToExtrapolation(XMLUtils::getChildValue(node, "TimeExtrapolation", true));
+    }
+    LOG("using time extrapolation " << extrapolationToString(timeExtrapolation_));
+
+    XMLNode* strikeNode = XMLUtils::getChildNode(node, "StrikeExtrapolation");
+    if (strikeNode) {
+        strikeExtrapolation_ = stringToExtrapolation(XMLUtils::getChildValue(node, "StrikeExtrapolation", true));
+    }
+    LOG("using strike extrapolation " << extrapolationToString(strikeExtrapolation_));
+
 }
 
 XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -79,14 +94,43 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Currency", ccy_);
     if (dimension_ == Dimension::ATM) {
         XMLUtils::addChild(doc, node, "Dimension", "ATM");
+        XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
     } else {
         XMLUtils::addChild(doc, node, "Dimension", "Smile");
+        XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
         XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
     }
-    XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
 
+    XMLUtils::addChild(doc, node, "TimeExtrapolation", extrapolationToString(timeExtrapolation_));
+    XMLUtils::addChild(doc, node, "StrikeExtrapolation", extrapolationToString(strikeExtrapolation_));
+
     return node;
+}
+
+string EquityVolatilityCurveConfig::extrapolationToString(const Extrapolation& extrap) const {
+    switch (extrap) {
+    case Extrapolation::None:
+        return "None";
+    case Extrapolation::UseInterpolator:
+        return "UseInterpolator";
+    case Extrapolation::Flat:
+        return "Flat";
+    default:
+        QL_FAIL("Can't convert equity volatility extrapolation type to string");
+    }
+}
+
+EquityVolatilityCurveConfig::Extrapolation EquityVolatilityCurveConfig::stringToExtrapolation(const string& extrap) const {
+    if (extrap == "None") {
+        return Extrapolation::None;
+    } else if (extrap == "UseInterpolator") {
+        return Extrapolation::UseInterpolator;
+    } else if (extrap == "Flat") {
+        return Extrapolation::Flat;
+    } else {
+        QL_FAIL("Cannot convert string \"" << extrap << "\" to equity volatility extrapolation type");
+    }
 }
 } // namespace data
 } // namespace ore

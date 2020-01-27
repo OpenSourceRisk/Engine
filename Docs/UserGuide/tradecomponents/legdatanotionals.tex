@@ -1,0 +1,212 @@
+\subsubsection{Leg Data and Notionals}
+\label{ss:leg_data}
+
+The \lstinline!LegData! trade component node is used within the
+\lstinline!CapFloorData!,  \lstinline!SwapData! and
+\lstinline!SwaptionData! trade data containers. It contains a
+\lstinline!ScheduleData! trade component sub-node, and a sub-node that depends on
+the value of the \lstinline!LegType! element, e.g.:  \lstinline!FixedLegData! for \lstinline!LegType! \emph{Fixed} or \lstinline!FloatingLegData! for \lstinline!LegType! \emph{Floating}. The
+\lstinline!LegData! node also includes a \lstinline!Notionals!
+sub-node  with \lstinline!Notional! child elements described below. An
+example structure of a \lstinline!LegData! node of \lstinline!LegType!
+\emph{Floating} is shown in Listing \ref{lst:leg_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+            <LegData>
+                <Payer>false</Payer>
+                <LegType>Floating</LegType>
+                <Currency>EUR</Currency>
+                <PaymentConvention>Following</PaymentConvention>
+                <DayCounter>30/360</DayCounter>
+                <Notionals>
+                    <Notional>1000000</Notional>
+                </Notionals>
+                <ScheduleData>
+                    ...
+                </ScheduleData>
+                <FloatingLegData>
+                    ...
+                </FloatingLegData>
+            </LegData>
+\end{minted}
+\caption{Leg data}
+\label{lst:leg_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!LegData! node follow below.
+
+\begin{itemize}
+\item LegType:  Determines which of the available sub-nodes must be
+  used. 
+
+Allowable values:  \emph{Fixed, Floating, Cashflow, CMS, CMSSpread, DigitalCMSSpread, Equity, CPI, ZeroCouponFixed}
+%YY,
+
+\item Payer:  The flows of the leg are paid to the counterparty if
+  \emph{true}, and received if \emph{false}.  
+
+Allowable values:  \emph{true, false} 
+
+\item Currency: The currency of the leg. 
+
+Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+
+\item PaymentConvention: The payment convention of the leg coupons. 
+
+Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
+
+\item PaymentLag [optional]: The payment lag given as as number business days, applies to fixed, Ibor and OIS legs. PaymentLag is not supported for the CapFloor trade type.
+
+Allowable values: A non-negative whole number, if not given it defaults to zero.
+
+\item DayCounter: The day count convention of the leg coupons. 
+
+Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+
+\item Notionals: This node contains child elements of type
+  \lstinline!Notional!. If the notional is fixed over the life of the
+  leg only one notional value should be entered. If the notional is
+  amortising or accreting, this is represented by entering multiple
+  notional values, each represented by a \lstinline!Notional! child
+  element. The first notional value corresponds to the first coupon,
+  the second notional value corresponds to the second coupon, etc. If
+  the number of coupons exceeds the number of notional values, the
+  notional will be kept flat at the value of last entered notional for
+  the remaining coupons.  The number of entered notional values cannot
+  exceed the number of coupons.
+
+Allowable values: Each child element can take any positive real number.
+
+\vspace{1em}
+
+An example of a \lstinline!Notionals! element for an amortising leg with four coupons is shown in Listing \ref{lst:notionals}.
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+                <Notionals>
+                    <Notional>65000000</Notional>
+                    <Notional>65000000</Notional>
+                    <Notional>55000000</Notional>
+                    <Notional>45000000</Notional>
+                </Notionals>
+\end{minted}
+\caption{Notional list}
+\label{lst:notionals}
+\end{listing}
+
+Another allowable specification of the notional schedule is shown in Listing \ref{lst:notionals_dates}. 
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+                <Notionals>
+                    <Notional>65000000</Notional>
+                    <Notional startDate='2016-01-02'>65000000</Notional>
+                    <Notional startDate='2017-01-02'>55000000</Notional>
+                    <Notional startDate='2021-01-02'>45000000</Notional>
+                </Notionals>
+\end{minted}
+\caption{Notional list with dates}
+\label{lst:notionals_dates}
+\end{listing}
+The first notional must not have a start date, it will be associated
+with the schedule's start, The subsequent notionals can have a start
+date specified from which date onwards the new notional is applied. This allows
+specifying notionals only for dates where the notional changes. 
+
+\vspace{1em} 
+
+In case of exchange of currencies an initial exchange, a final exchange
+and an amortising exchange can be specified using an \lstinline!Exchanges! child element with \break
+\lstinline!NotionalInitialExchange!, \lstinline!NotionalFinalExchange! and \break
+\lstinline!NotionalAmortizingExchange! as subelements, see Listing
+\ref{lst:notional_exchange}.
+
+Allowable values for \lstinline!NotionalInitialExchange!,  \lstinline!NotionalFinalExchange! and \lstinline!NotionalAmortizingExchange!:   \emph{true, false}. 
+If the  \lstinline!Exchanges! node is omitted then all values default to \emph{false}, but if it is included \lstinline!NotionalInitialExchange! and \lstinline!NotionalFinalExchange! default to \emph{true}.
+It is recommended that all values are explicitly set.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+                <Notionals>
+                    <Notional>65000000</Notional>
+                    <Exchanges>
+                      <NotionalInitialExchange>true</NotionalInitialExchange>
+                      <NotionalFinalExchange>true</NotionalFinalExchange>
+                      <NotionalAmortizingExchange>true</NotionalAmortizingExchange>
+                    </Exchanges>
+                </Notionals>
+\end{minted}
+\caption{Notional list with exchange}
+\label{lst:notional_exchange}
+\end{listing}
+
+FX Resets,  used for Rebalancing Cross-currency swaps, can be specified using an \lstinline!FXReset! child element with the following subelements:  See Listing \ref{lst:notional_fxreset} for an example. \break
+
+\item ForeignCurrency: The foreign currency the notional of the leg resets to.  
+
+Allowable values:  See \lstinline!Currency!  in Table \ref{tab:allow_stand_data}.
+
+\item ForeignAmount: The notional amount in the foreign currency that the notional of the leg resets to.  
+
+Allowable values:  Any positive real number.
+
+\item FXIndex: A reference to an FX Index source for the FX reset fixing. 
+
+Allowable values:  A string on the form FX-SOURCE-CCY1-CCY2.
+
+\item FixingDays: The FX fixing lag in business days
+
+Allowable values:  Any integer.
+
+\item FixingCalendar[Optional]: The calendar associated with the FX Index. 
+
+Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to the null calendar if left blank or omitted.
+
+
+
+ \begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+                <Currency>USD</Currency>
+                <Notionals>
+                    <Notional>65000000</Notional> <!-- in USD -->
+                    <FXReset>
+                      <ForeignCurrency> EUR </ForeignCurrency>
+                      <ForeignAmount> 60000000 </ForeignAmount>
+                      <FXIndex> FX-ECB-USD-EUR </FXIndex>
+                      <FixingDays> 2 </FixingDays>
+                      <FixingCalendar>TARGET</FixingCalendar>
+                    </FXReset>
+                </Notionals>
+\end{minted}
+\caption{Notional list with fx reset}
+\label{lst:notional_fxreset}
+\end{listing}
+
+
+After the \lstinline!Notional! sub-node the \lstinline!LegData! node includes a \lstinline!ScheduleData! sub-node, and a sub-node based on the choice of \lstinline!LegType! as per below:
+
+\item ScheduleData: This is a trade component sub-node outlined in section \ref{ss:schedule_data} Schedule Data and
+Dates.
+\item FixedLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{fixed} It is
+outlined in section \ref{ss:fixedleg_data}.
+\item FloatingLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{floating} It is
+outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
+\item CMSLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CMS}. It is
+  outlined in section \ref{ss:cmslegdata}.
+\item CMSSpreadLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CMSSpread}. It is
+  outlined in section \ref{ss:cmsspreadlegdata}.
+\item DigitalCMSSpreadLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{DigitalCMSSpread}. It is
+  outlined in section \ref{ss:digitalcmsspreadlegdata}.
+\item EquityLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{Equity}. It is
+  outlined in section \ref{ss:equitylegdata}.    
+\item CPILegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CPI}. It is
+  outlined in section \ref{ss:cpilegdata}.
+%\item YYLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{YY}. It is
+%  outlined in section \ref{ss:yylegdata}.
+\item ZeroCouponFixedLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{ZeroCouponFixed}. It is
+  outlined in section \ref{ss:zerolegdata}.
+\end{itemize}

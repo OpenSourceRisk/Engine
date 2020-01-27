@@ -104,7 +104,6 @@
         <Name>Lufthansa</Name>
       </Names>
       <DividendTenors>6M,1Y,2Y</DividendTenors>
-      <ForecastTenors>6M,1Y,2Y</ForecastTenors>
     </Equities>
     <SwaptionVolatilities>
       <Simulate>false</Simulate>
@@ -139,7 +138,9 @@
         <Name>COMDTY_WTI_USD</Name>
       </Names>
       <Tenors>6M,1Y,2Y,5Y,10Y</Tenors>
-      <DayCounter>A365</DayCounter>
+      <DayCounters>
+        <DayCounter name="">A365</DayCounter>
+      </DayCounters>
     </Commodities>
     <CommodityVolatilities>
       <Simulate>true</Simulate>

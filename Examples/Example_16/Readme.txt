@@ -6,7 +6,9 @@
    "Lufthansa" bought equity call option, denominated in EUR
    "Lufthansa" bought equity put option, denominated in EUR
    "Lufthansa" long equity forward, denominated in EUR
-
+   "S&P" equity payer swap, return type "price"
+   "S&P" equity payer swap, return type "total" with dividend factor 0.8
+   
 2) Market
 
    Pseudo market data as of 2016-02-05, including 

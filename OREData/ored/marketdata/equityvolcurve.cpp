@@ -24,10 +24,12 @@
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
+#include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 using namespace QuantLib;
+using namespace QuantExt;
 using namespace std;
 
 namespace ore {
@@ -49,85 +51,262 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         bool isSurface = config->dimension() == EquityVolatilityCurveConfig::Dimension::Smile;
 
         vector<string> expiries = config->expiries();
-        vector<string> strikes({"ATMF"});
+        vector<string> strikes({"ATMF"});   // in case of ATM all quotes must have ATMF strike. Strikes in config are superflous.
+        map<Date,Real> atmWcDateMap; // in case of ATM with expiry wc
         if (isSurface)
             strikes = config->strikes();
         QL_REQUIRE(expiries.size() > 0, "No expiries defined");
         QL_REQUIRE(strikes.size() > 0, "No strikes defined");
 
-        // We store them all in a matrix, we start with all values negative and use
-        // this to check if they have been set.
-        Matrix vols(strikes.size(), expiries.size(), -1.0);
+        // check for wild cards
+        bool expiriesWc = find(expiries.begin(), expiries.end(), "*") != expiries.end();
+        bool strikesWc = find(strikes.begin(), strikes.end(), "*") != strikes.end();
+        if (expiriesWc) {
+            QL_REQUIRE(expiries.size() == 1, "Wild card expiriy specified but more expiries also specified.");
+        }
+        if (strikesWc) {
+            QL_REQUIRE(strikes.size() == 1, "Wild card strike specified but more strikes also specified.");
+        }
+        bool noWildCard = !strikesWc && !expiriesWc;
+
+        Matrix dVols;               // no wild card case
+        vector<Real> sStrikes;      // wild card case
+        vector<Volatility> sVols;   // wild card case 
+        vector<Date> sExpiries;     // wild card case
+        if (noWildCard) {
+            dVols = Matrix(strikes.size(), expiries.size(), -1.0);
+        }
+
+        // In case of wild card we need the following granularity within the mkt data loop
+        bool strikeRelevant = strikesWc;
+        bool expiryRelevant = expiriesWc;
+        bool quoteRelevant;
 
         // We loop over all market data, looking for quotes that match the configuration
+        Size quotesAdded = 0;
         for (auto& md : loader.loadQuotes(asof)) {
             // skip irrelevant data
             if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION) {
                 boost::shared_ptr<EquityOptionQuote> q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
+
                 if (q->eqName() == spec.curveConfigID() && q->ccy() == spec.ccy()) {
+                    // no wild cards
+                    if (noWildCard) {
+                        Size i = std::find(strikes.begin(), strikes.end(), q->strike()) - strikes.begin();
+                        Size j = std::find(expiries.begin(), expiries.end(), q->expiry()) - expiries.begin();
 
-                    Size i = std::find(strikes.begin(), strikes.end(), q->strike()) - strikes.begin();
-                    Size j = std::find(expiries.begin(), expiries.end(), q->expiry()) - expiries.begin();
+                        if (i < strikes.size() && j < expiries.size()) {
+                            QL_REQUIRE(dVols[i][j] < 0, "Error vol (" << spec << ") for " << strikes[i] << ", "
+                                                                      << expiries[j] << " already set");
+                            dVols[i][j] = q->quote()->value();
+                            quotesAdded++;
+                        }
+                    }
+                    // some wild card + surface
+                    else if(!noWildCard && isSurface) {
+                        if (!expiriesWc) {
+                            vector<string>::iterator j = std::find(expiries.begin(), expiries.end(), q->expiry());
+                            expiryRelevant = j != expiries.end();
+                        }
+                        if (!strikesWc) {
+                            vector<string>::iterator i = std::find(strikes.begin(), strikes.end(), q->strike());
+                            strikeRelevant = i != strikes.end();
+                        } else {
+                            // todo - for now we will ignore ATMF quotes in case of strike wild card. ----
+                            strikeRelevant = q->strike() != "ATMF";
+                        }
+                        quoteRelevant = strikeRelevant && expiryRelevant;
 
-                    if (i < strikes.size() && j < expiries.size()) {
-                        QL_REQUIRE(vols[i][j] < 0, "Error vol (" << spec << ") for " << strikes[i] << ", "
-                                                                 << expiries[j] << " already set");
-                        vols[i][j] = q->quote()->value();
+                        // add quote to vectors, if relevant
+                        if (quoteRelevant) {
+                            sStrikes.push_back(parseReal(q->strike()));
+                            sVols.push_back(q->quote()->value());
+                            Date tmpDate;
+                            Period tmpPer;
+                            bool tmpIsDate;
+                            parseDateOrPeriod(q->expiry(), tmpDate, tmpPer, tmpIsDate);
+                            if (!tmpIsDate)
+                                tmpDate = WeekendsOnly().adjust(asof + tmpPer);
+                            QL_REQUIRE(tmpDate > asof, "Vol quote for a past date ("
+                                                           << io::iso_date(tmpDate) << ")");
+                            sExpiries.push_back(tmpDate);
+
+                            quotesAdded++;
+                        }
+                    }
+                    // Expiries wild-card and ATM
+                    else if (expiriesWc && !isSurface) {
+                        // here we still set up a BlackVarianceCurve (we just have an unknown number of expiries)
+                        bool expiryRelevant = true; 
+                        bool strikeRelevant = true;
+
+                        // expiry relevant
+                        Date tmpDate;
+                        Period tmpPer;
+                        bool tmpIsDate;
+                        parseDateOrPeriod(q->expiry(), tmpDate, tmpPer, tmpIsDate);
+                        if (!tmpIsDate)
+                            tmpDate = WeekendsOnly().adjust(asof + tmpPer);
+                        tmpDate >= asof ? expiryRelevant = true : false;
+
+                        // strike relevant
+                        vector<string>::iterator i = std::find(strikes.begin(), strikes.end(), q->strike());
+                        strikeRelevant = i != strikes.end();
+
+                        if (expiryRelevant && strikeRelevant) {
+                            if (atmWcDateMap.find(tmpDate) != atmWcDateMap.end()) {
+                                ALOG("dublicate market datum in loader in " << spec << " for quote " << q->name() << ". Taking second read value")
+                            }
+                            atmWcDateMap[tmpDate] = q->quote()->value();
+                        };
                     }
                 }
             }
         }
-        // Check that we have all the quotes we need
-        for (Size i = 0; i < strikes.size(); i++) {
-            for (Size j = 0; j < expiries.size(); j++) {
-                QL_REQUIRE(vols[i][j] >= 0,
-                           "Error vol (" << spec << ") for " << strikes[i] << ", " << expiries[j] << " not set");
-            }
-        }
+        LOG("EquityVolatilityCurve: read " << quotesAdded << " quotes.")
 
-        if (expiries.size() == 1 && strikes.size() == 1) {
-            LOG("EquityVolCurve: Building BlackConstantVol");
-            vol_ = boost::shared_ptr<BlackVolTermStructure>(new BlackConstantVol(asof, Calendar(), vols[0][0], dc));
+        // Check loaded quotes
+        if (noWildCard) {
+            for (Size i = 0; i < strikes.size(); i++) {
+                for (Size j = 0; j < expiries.size(); j++) {
+                    QL_REQUIRE(dVols[i][j] >= 0,
+                               "Error vol (" << spec << ") for " << strikes[i] << ", " << expiries[j] << " not set");
+                }
+            }
+
         } else {
-
-            // get dates
-            vector<Date> dates(expiries.size());
-            for (Size i = 0; i < expiries.size(); i++) {
-                Date tmpDate;
-                Period tmpPer;
-                bool tmpIsDate;
-                parseDateOrPeriod(expiries[i], tmpDate, tmpPer, tmpIsDate);
-                if (!tmpIsDate)
-                    tmpDate = WeekendsOnly().adjust(asof + tmpPer);
-                QL_REQUIRE(tmpDate > asof, "Equity Vol Curve cannot contain a vol quote for a past date ("
-                                               << io::iso_date(tmpDate) << ")");
-                dates[i] = tmpDate;
-            }
-
-            if (!isSurface) {
-                LOG("EquityVolCurve: Building BlackVarianceCurve");
-                QL_REQUIRE(vols.rows() == 1, "Matrix error, should only have 1 row (ATMF)");
-                vector<Volatility> atmVols(vols.begin(), vols.end());
-                vol_ = boost::make_shared<BlackVarianceCurve>(asof, dates, atmVols, dc);
-            } else {
-                LOG("EquityVolCurve: Building BlackVarianceSurface");
-                // convert strike strings to Reals
-                vector<Real> strikesReal;
-                for (string k : strikes)
-                    strikesReal.push_back(parseReal(k));
-
-                Calendar cal = NullCalendar(); // why do we need this?
-
-                // This can get wrapped in a QuantExt::BlackVolatilityWithATM later on
-                vol_ = boost::make_shared<BlackVarianceSurface>(asof, cal, dates, strikesReal, vols, dc);
-            }
+            QL_REQUIRE(sStrikes.size() == sVols.size() && sVols.size() == sExpiries.size(),
+                       "Quotes loaded don't produce strike,vol,expiry vectors of equal length.");
         }
-        vol_->enableExtrapolation();
+
+        // set up vols
+        if (noWildCard) {
+            // no wild cards
+            if (dVols.rows() == 1 && dVols.columns() == 1){
+                LOG("EquityVolCurve: Building BlackConstantVol");
+                vol_ = boost::shared_ptr<BlackVolTermStructure>(
+                    new BlackConstantVol(asof, Calendar(), dVols[0][0], dc));
+            } else {
+                vector<Date> dates(dVols.columns());
+                vector<Real> strikesReal;
+                // expiries
+                for (Size i = 0; i < dVols.columns(); i++) {
+                    Date tmpDate;
+                    Period tmpPer;
+                    bool tmpIsDate;
+                    parseDateOrPeriod(expiries[i], tmpDate, tmpPer, tmpIsDate);
+                    if (!tmpIsDate)
+                        tmpDate = WeekendsOnly().adjust(asof + tmpPer);
+                    QL_REQUIRE(tmpDate > asof, "Equity Vol Curve cannot contain a vol quote for a past date ("
+                                                   << io::iso_date(tmpDate) << ")");
+                    dates[i] = tmpDate;
+                }
+
+                // strikes + surface
+                if (!isSurface) {
+                    LOG("EquityVolCurve: Building BlackVarianceCurve");
+                    QL_REQUIRE(dVols.rows() == 1, "Matrix error, should only have 1 row (ATMF)");
+                    vector<Volatility> atmVols(dVols.begin(), dVols.end());
+                    vol_ = boost::make_shared<BlackVarianceCurve>(asof, dates, atmVols, dc);
+                } else {
+                    LOG("EquityVolCurve: Building BlackVarianceSurface");
+                    // convert strike strings to Reals
+                    for (string k : strikes)
+                        strikesReal.push_back(parseReal(k));
+
+                    Calendar cal = NullCalendar(); // why do we need this?
+
+                    BlackVarianceSurface::Extrapolation strikeExtrapolation;
+                    switch (config->strikeExtrapolation()) {
+                        case EquityVolatilityCurveConfig::Extrapolation::None:
+                            LOG("No extrapolation not supported, using flat");
+                        case EquityVolatilityCurveConfig::Extrapolation::Flat:
+                            strikeExtrapolation = BlackVarianceSurface::Extrapolation::ConstantExtrapolation;
+                            break;
+                        case EquityVolatilityCurveConfig::Extrapolation::UseInterpolator:
+                            strikeExtrapolation = BlackVarianceSurface::Extrapolation::InterpolatorDefaultExtrapolation;
+                            break;
+                        default:
+                            QL_FAIL("unsupported strike extrapolation type");
+                    }
+                    
+                    //only linear extrapolation is available for BlackVarianceSurface
+                    //we log if another is requested
+                    switch (config->timeExtrapolation()) {
+                        case EquityVolatilityCurveConfig::Extrapolation::None:
+                        case EquityVolatilityCurveConfig::Extrapolation::Flat:
+                            LOG("BlackVarianceSurface only uses linear extrapolation for the time direction");
+                            break;
+                        case EquityVolatilityCurveConfig::Extrapolation::UseInterpolator:
+                            break;
+                        default:
+                            QL_FAIL("unsupported time extrapolation type");
+                    }
+
+                    // This can get wrapped in a QuantExt::BlackVolatilityWithATM later on
+                    vol_ = boost::make_shared<BlackVarianceSurface>(asof, cal, dates, strikesReal, dVols, dc, strikeExtrapolation, strikeExtrapolation);
+                }
+            }
+            vol_->enableExtrapolation();
+        }
+        else if (expiriesWc && !isSurface) {
+
+            dVols = Matrix(strikes.size(), atmWcDateMap.size(), -1.0);
+            vector<Date> dates(dVols.columns());
+
+            map<Date, Real>::iterator ii;
+            int ctr = 0;
+            for (ii = atmWcDateMap.begin(); ii != atmWcDateMap.end(); ii++) {
+                dates[ctr] = ii->first;
+                dVols[0][ctr] = ii->second;
+                ctr++;
+            }
+
+            QL_REQUIRE(dVols.rows() == 1, "Matrix error, should only have 1 row (ATMF)");
+            vector<Volatility> atmVols(dVols.begin(), dVols.end());
+            vol_ = boost::make_shared<BlackVarianceCurve>(asof, dates, atmVols, dc);
+            vol_->enableExtrapolation();
+
+        } else {
+            bool strikeExtrapolation;
+            switch (config->strikeExtrapolation()) {
+                case EquityVolatilityCurveConfig::Extrapolation::None:
+                    LOG("No extrapolation not supported, using flat");
+                case EquityVolatilityCurveConfig::Extrapolation::Flat:
+                    strikeExtrapolation = true;
+                    break;
+                case EquityVolatilityCurveConfig::Extrapolation::UseInterpolator:
+                    strikeExtrapolation = false;
+                    break;
+                default:
+                    QL_FAIL("unsupported strike extrapolation type");
+            }
+
+            bool timeFlatExtrapolation = false;
+            switch (config->timeExtrapolation()) {
+                case EquityVolatilityCurveConfig::Extrapolation::None:
+                    LOG("No extrapolation not supported, using linear interpolation");
+                case EquityVolatilityCurveConfig::Extrapolation::UseInterpolator:
+                    break;
+                case EquityVolatilityCurveConfig::Extrapolation::Flat:
+                    timeFlatExtrapolation = true;
+                    break;
+                default:
+                    QL_FAIL("unsupported time extrapolation type");
+            }
+
+            // some wild card
+            Calendar cal = NullCalendar();
+            vol_ = boost::make_shared<BlackVarianceSurfaceSparse>(asof, cal, sExpiries, sStrikes, sVols, dc, strikeExtrapolation, strikeExtrapolation, timeFlatExtrapolation);
+        }
+
     } catch (std::exception& e) {
         QL_FAIL("equity vol curve building failed :" << e.what());
     } catch (...) {
         QL_FAIL("equity vol curve building failed: unknown error");
     }
 }
+
+
 } // namespace data
 } // namespace ore

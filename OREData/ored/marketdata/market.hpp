@@ -53,8 +53,7 @@ typedef BaseCorrelationTermStructure<BilinearInterpolation> BilinearBaseCorrelat
 enum class YieldCurveType {
     Discount = 0, // Chosen to match MarketObject::DiscountCurve
     Yield = 1,    // Chosen to match MarketObject::YieldCurve
-    EquityDividend = 2,
-    EquityForecast = 3
+    EquityDividend = 2
 };
 
 //! Market
@@ -94,6 +93,12 @@ public:
                                             const string& configuration = Market::defaultConfiguration) const = 0;
     virtual const string swapIndexBase(const string& ccy,
                                        const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Yield volatilities
+    //@{
+    virtual Handle<SwaptionVolatilityStructure>
+        yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Foreign Exchange
@@ -189,10 +194,6 @@ public:
 
     //! \name Commodity price curves
     //@{
-    virtual QuantLib::Handle<QuantLib::Quote>
-    commoditySpot(const std::string& commodityName,
-                  const std::string& configuration = Market::defaultConfiguration) const = 0;
-
     virtual QuantLib::Handle<QuantExt::PriceTermStructure>
     commodityPriceCurve(const std::string& commodityName,
                         const std::string& configuration = Market::defaultConfiguration) const = 0;
