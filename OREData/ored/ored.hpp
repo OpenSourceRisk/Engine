@@ -6,6 +6,7 @@
 #endif
 
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
+#include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
 #include <ored/configuration/commoditycurveconfig.hpp>
@@ -25,6 +26,7 @@
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
+#include <ored/configuration/volatilityconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/configuration/yieldvolcurveconfig.hpp>
 #include <ored/marketdata/basecorrelationcurve.hpp>
@@ -40,6 +42,7 @@
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/equitycurve.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
+#include <ored/marketdata/expiry.hpp>
 #include <ored/marketdata/fixings.hpp>
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
@@ -55,6 +58,7 @@
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/marketdata/security.hpp>
+#include <ored/marketdata/strike.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
