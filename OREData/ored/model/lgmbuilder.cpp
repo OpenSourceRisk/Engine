@@ -240,11 +240,14 @@ void LgmBuilder::getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb
     parseDateOrPeriod(termString, termDb, termPb, termDateBased);
     if(termDateBased) {
         Date tmpExpiry = expiryDateBased ? expiryDb : svts_->optionDateFromTenor(expiryPb);
-        // ensure that we have a term >= 1 Month
-        // otherwise QL might throw "non-positive swap length (0)  given" from the black swaption engine
-        // during calibration helper pricing
-        termDb = std::max(termDb, tmpExpiry + 1 * Months);
-        termT = svts_->swapLength(tmpExpiry, termDb);
+        Date tmpStart = swapIndex_->iborIndex()->valueDate(swapIndex_->iborIndex()->fixingCalendar().adjust(tmpExpiry));
+        // ensure that we have a term >= 1 Month, otherwise QL might throw "non-positive swap length (0)  given" from
+        // the black swaption engine during calibration helper pricing; also notice that we use the swap legnth
+        // calculated in the svts (i.e. a length rounded to whole months) to read the volatility from the cube, which is
+        // consistent with what is done in BlackSwaptionEngine (although one might ask whether an interpolated volatility
+        // would be more appropriate)
+        termDb = std::max(termDb, tmpStart + 1 * Months);
+        termT = svts_->swapLength(tmpStart, termDb);
     } else {
         termT = svts_->swapLength(termPb);
         // same as above, make sure the underlying term is at least >= 1 Month, but since Period::operator<
