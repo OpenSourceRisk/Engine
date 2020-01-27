@@ -97,6 +97,9 @@ CommodityCurve::CommodityCurve(const Date& asof,
         // Apply extrapolation from the curve configuration
         commodityPriceCurve_->enableExtrapolation(config->extrapolation());
 
+        // Ask for price now so that errors are thrown during the build, not later.
+        commodityPriceCurve_->price(asof + 1 * Days);
+
     } catch (std::exception& e) {
         QL_FAIL("commodity curve building failed: " << e.what());
     } catch (...) {
