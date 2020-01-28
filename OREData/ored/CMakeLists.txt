@@ -195,6 +195,7 @@ model/infdkdata.hpp
 model/irlgmdata.hpp
 model/lgmbuilder.hpp
 model/lgmdata.hpp
+model/marketobserver.hpp
 model/modelbuilder.hpp
 model/utilities.hpp
 portfolio/bond.hpp

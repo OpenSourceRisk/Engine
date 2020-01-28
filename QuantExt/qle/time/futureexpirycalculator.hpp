@@ -31,6 +31,8 @@ namespace QuantExt {
 //! Base class for classes that perform date calculations for future contracts
 class FutureExpiryCalculator {
 public:
+    virtual ~FutureExpiryCalculator() {}
+
     /*! Given  a reference date, \p referenceDate, return the expiry date of the next futures contract relative to 
         the reference date.
         

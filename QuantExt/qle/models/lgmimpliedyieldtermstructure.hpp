@@ -212,7 +212,7 @@ inline Real LgmImpliedYieldTermStructure::discountImpl(Time t) const {
 inline Real LgmImpliedYtsFwdFwdCorrected::discountImpl(Time t) const {
     QL_REQUIRE(t >= 0.0, "negative time (" << t << ") given");
     //if relativeTime_ is close to zero, we return the discount factor directly from the target curve
-    if (close_enough(relativeTime_, 0.0)) {
+    if (QuantLib::close_enough(relativeTime_, 0.0)) {
         return targetCurve_->discount(t);
     } else {
         Real HT = model_->parametrization()->H(relativeTime_ + t);
