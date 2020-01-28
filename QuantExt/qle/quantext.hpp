@@ -6,8 +6,10 @@
 #endif
 
 #include <qle/calendars/chile.hpp>
+#include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
+#include <qle/calendars/ice.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/netherlands.hpp>
@@ -112,6 +114,7 @@
 #include <qle/instruments/subperiodsswap.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
+#include <qle/math/covariancesalvage.hpp>
 #include <qle/math/deltagammavar.hpp>
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/flatextrapolation.hpp>
@@ -187,6 +190,7 @@
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
+#include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/brlcdiratehelper.hpp>
 #include <qle/termstructures/capfloorhelper.hpp>

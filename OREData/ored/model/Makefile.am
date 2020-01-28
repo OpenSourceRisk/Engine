@@ -34,6 +34,7 @@ this_include_HEADERS = \
     irlgmdata.hpp \
 	lgmdata.hpp \
 	lgmbuilder.hpp \
+	marketobserver.hpp \
 	modelbuilder.hpp \
 	utilities.hpp
 

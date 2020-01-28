@@ -78,34 +78,34 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
 
     XMLNode* n;
-    if (n = XMLUtils::getChildNode(node, "Constant")) {
+    if ((n = XMLUtils::getChildNode(node, "Constant"))) {
         volatilityConfig_ = boost::make_shared<ConstantVolatilityConfig>();
-    } else if (n = XMLUtils::getChildNode(node, "Curve")) {
+    } else if ((n = XMLUtils::getChildNode(node, "Curve"))) {
         volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>();
-    } else if (n = XMLUtils::getChildNode(node, "StrikeSurface")) {
+    } else if ((n = XMLUtils::getChildNode(node, "StrikeSurface"))) {
         volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>();
-    } else if (n = XMLUtils::getChildNode(node, "DeltaSurface")) {
+    } else if ((n = XMLUtils::getChildNode(node, "DeltaSurface"))) {
         volatilityConfig_ = boost::make_shared<VolatilityDeltaSurfaceConfig>();
-    } else if (n = XMLUtils::getChildNode(node, "MoneynessSurface")) {
+    } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
         volatilityConfig_ = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
     } else {
-        QL_FAIL("CommodityVolatility node expects one child node with name in list: Constant," <<
-            " Curve, StrikeSurface, DeltaSurface, MoneynessSurface");
+        QL_FAIL("CommodityVolatility node expects one child node with name in list: Constant,"
+                << " Curve, StrikeSurface, DeltaSurface, MoneynessSurface");
     }
     volatilityConfig_->fromXML(n);
 
     dayCounter_ = "A365";
-    if (n = XMLUtils::getChildNode(node, "DayCounter"))
+    if ((n = XMLUtils::getChildNode(node, "DayCounter")))
         dayCounter_ = XMLUtils::getNodeValue(n);
 
     calendar_ = "NullCalendar";
-    if (n = XMLUtils::getChildNode(node, "Calendar"))
+    if ((n = XMLUtils::getChildNode(node, "Calendar")))
         calendar_ = XMLUtils::getNodeValue(n);
 
     futureConventionsId_ = XMLUtils::getChildValue(node, "FutureConventions", false);
 
     optionExpiryRollDays_ = 0;
-    if (n = XMLUtils::getChildNode(node, "OptionExpiryRollDays"))
+    if ((n = XMLUtils::getChildNode(node, "OptionExpiryRollDays")))
         optionExpiryRollDays_ = parseInteger(XMLUtils::getNodeValue(n));
 
     priceCurveId_ = XMLUtils::getChildValue(node, "PriceCurveId", false);
