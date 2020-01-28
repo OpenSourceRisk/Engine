@@ -305,5 +305,65 @@ XMLNode* VolatilityMoneynessSurfaceConfig::toXML(XMLDocument& doc) {
     return node;
 }
 
+VolatilityApoFutureSurfaceConfig::VolatilityApoFutureSurfaceConfig() {}
+
+VolatilityApoFutureSurfaceConfig::VolatilityApoFutureSurfaceConfig(
+    const std::vector<std::string>& moneynessLevels,
+    const std::string& baseVolatilityId,
+    const std::string& basePriceCurveId,
+    const std::string& baseConventionsId,
+    const std::string& timeInterpolation,
+    const std::string& strikeInterpolation,
+    bool extrapolation,
+    const std::string& timeExtrapolation,
+    const std::string& strikeExtrapolation,
+    Real beta,
+    const std::string& maxTenor)
+    : VolatilitySurfaceConfig(vector<string>(), timeInterpolation, strikeInterpolation, extrapolation,
+      timeExtrapolation, strikeExtrapolation), moneynessLevels_(moneynessLevels), baseVolatilityId_(baseVolatilityId),
+      basePriceCurveId_(basePriceCurveId), baseConventionsId_(baseConventionsId), beta_(beta), maxTenor_(maxTenor) {
+}
+
+const vector<string>& VolatilityApoFutureSurfaceConfig::moneynessLevels() const { return moneynessLevels_; }
+
+const string& VolatilityApoFutureSurfaceConfig::baseVolatilityId() const { return baseVolatilityId_; }
+
+const string& VolatilityApoFutureSurfaceConfig::basePriceCurveId() const { return basePriceCurveId_; }
+
+const string& VolatilityApoFutureSurfaceConfig::baseConventionsId() const { return baseConventionsId_; }
+
+Real VolatilityApoFutureSurfaceConfig::beta() const { return beta_; }
+
+const string& VolatilityApoFutureSurfaceConfig::maxTenor() const { return maxTenor_; }
+
+vector<pair<string, string>> VolatilityApoFutureSurfaceConfig::quotes() const {
+    return vector<pair<string, string>>();
+}
+
+void VolatilityApoFutureSurfaceConfig::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "ApoFutureSurface");
+    moneynessLevels_ = XMLUtils::getChildrenValuesAsStrings(node, "MoneynessLevels", true);
+    baseVolatilityId_ = XMLUtils::getChildValue(node, "VolatilityId", true);
+    basePriceCurveId_ = XMLUtils::getChildValue(node, "PriceCurveId", true);
+    baseConventionsId_ = XMLUtils::getChildValue(node, "FutureConventions", true);
+    maxTenor_ = XMLUtils::getChildValue(node, "MaxTenor", false);
+    beta_ = XMLUtils::getChildValueAsDouble(node, "Beta", false);
+    fromNode(node);
+}
+
+XMLNode* VolatilityApoFutureSurfaceConfig::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("ApoFutureSurface");
+    XMLUtils::addGenericChildAsList(doc, node, "MoneynessLevels", moneynessLevels_);
+    XMLUtils::addChild(doc, node, "VolatilityId", baseVolatilityId_);
+    XMLUtils::addChild(doc, node, "PriceCurveId", basePriceCurveId_);
+    XMLUtils::addChild(doc, node, "FutureConventions", baseConventionsId_);
+    addNodes(doc, node);
+    if (!maxTenor_.empty())
+        XMLUtils::addChild(doc, node, "MaxTenor", maxTenor_);
+    XMLUtils::addChild(doc, node, "Beta", beta_);
+
+    return node;
+}
+
 }
 }

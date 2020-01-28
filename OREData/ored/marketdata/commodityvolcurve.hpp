@@ -53,7 +53,8 @@ public:
         const CurveConfigurations& curveConfigs,
         const Conventions& conventions,
         const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves = {},
-        const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves = {});
+        const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves = {},
+        const std::map<std::string, boost::shared_ptr<CommodityVolCurve>>& commodityVolCurves = {});
     //@}
 
     //! \name Inspectors
@@ -115,13 +116,25 @@ private:
         const Loader& loader);
 
     /*! Build a volatility surface from a collection of expiry and strike pairs where the strikes are defined in
-        terms of option delta and ATM values.
+        terms of moneyness levels.
     */
     void buildVolatility(
         const QuantLib::Date& asof,
         CommodityVolatilityConfig& vc,
         const VolatilityMoneynessSurfaceConfig& vmsc,
         const Loader& loader);
+
+    /*! Build a future price APO surface using a given price term structure. Use the natural expiries of the future 
+        options as the expiry pillar points and use configured moneyness levels in the strike dimension.
+    */
+    void buildVolatility(
+        const QuantLib::Date& asof,
+        CommodityVolatilityConfig& vc,
+        const VolatilityApoFutureSurfaceConfig& vapo,
+        const Loader& loader,
+        const boost::shared_ptr<QuantLib::BlackVolTermStructure>& baseVts,
+        const QuantLib::Handle<QuantExt::PriceTermStructure>& basePts,
+        const boost::shared_ptr<QuantExt::FutureExpiryCalculator>& baseExpCalc);
 
     /*! Assume that the input price curve \p pts is a future price curve giving the price of a sequence of future 
         contracts at the contract expiry. Create a copy of this input curve with additional pillar points at 

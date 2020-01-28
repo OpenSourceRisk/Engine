@@ -586,5 +586,14 @@
     </xs:restriction>
   </xs:simpleType>
   
+  <xs:simpleType name="non-negative-decimal">
+    <xs:annotation>
+      <xs:documentation>The non-negative-decimal type specifies a non-negative decimal value.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
 </xs:schema>
 

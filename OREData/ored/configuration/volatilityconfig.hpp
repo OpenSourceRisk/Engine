@@ -279,5 +279,57 @@ private:
     bool futurePriceCorrection_;
 };
 
+/*! Volatility configuration for an average future price option (APO) surface.
+    \ingroup configuration
+ */
+class VolatilityApoFutureSurfaceConfig : public VolatilitySurfaceConfig {
+public:
+    //! Default constructor
+    VolatilityApoFutureSurfaceConfig();
+
+    //! Explicit constructor
+    VolatilityApoFutureSurfaceConfig(
+        const std::vector<std::string>& moneynessLevels,
+        const std::string& baseVolatilityId,
+        const std::string& basePriceCurveId,
+        const std::string& baseConventionsId,
+        const std::string& timeInterpolation,
+        const std::string& strikeInterpolation,
+        bool extrapolation,
+        const std::string& timeExtrapolation,
+        const std::string& strikeExtrapolation,
+        QuantLib::Real beta = 0.0,
+        const std::string& maxTenor = "");
+
+    //! \name Inspectors
+    //@{
+    const std::vector<std::string>& moneynessLevels() const;
+    const std::string& baseVolatilityId() const;
+    const std::string& basePriceCurveId() const;
+    const std::string& baseConventionsId() const;
+    QuantLib::Real beta() const;
+    const std::string& maxTenor() const;
+    //@}
+
+    //! \name VolatilitySurfaceConfig
+    //@{
+    std::vector<std::pair<std::string, std::string>> quotes() const override;
+    //@}
+
+    //! \name Serialisation
+    //@{
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    //@}
+
+private:
+    std::vector<std::string> moneynessLevels_;
+    std::string baseVolatilityId_;
+    std::string basePriceCurveId_;
+    std::string baseConventionsId_;
+    QuantLib::Real beta_;
+    std::string maxTenor_;
+};
+
 }
 }

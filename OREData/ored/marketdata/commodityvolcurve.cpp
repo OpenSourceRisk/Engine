@@ -50,7 +50,8 @@ namespace data {
 CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatilityCurveSpec& spec,
     const Loader& loader, const CurveConfigurations& curveConfigs, const Conventions& conventions,
     const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-    const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves) {
+    const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
+    const map<string, boost::shared_ptr<CommodityVolCurve>>& commodityVolCurves) {
 
     try {
         LOG("CommodityVolCurve: start building commodity volatility structure with ID " << spec.curveConfigID());
@@ -88,6 +89,38 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
             bool fwdMoneyness = moneynessType == MoneynessStrike::Type::Forward;
             populateCurves(config, yieldCurves, commodityCurves, fwdMoneyness);
             buildVolatility(asof, config, *vmsc, loader);
+        } else if (auto vapo = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
+
+            // Get the base conventions and create the associated expiry calculator.
+            QL_REQUIRE(!vapo->baseConventionsId().empty(),
+                "The APO FutureConventions must be populated to build a future APO surface");
+            QL_REQUIRE(conventions.has(vapo->baseConventionsId()), "Conventions, " <<
+                vapo->baseConventionsId() << " for config " << config.curveID() << " not found.");
+            auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(
+                conventions.get(vapo->baseConventionsId()));
+            QL_REQUIRE(convention, "Convention with ID '" << config.futureConventionsId() <<
+                "' should be of type CommodityFutureConvention");
+            auto baseExpCalc = boost::make_shared<ConventionsBasedFutureExpiry>(*convention);
+
+            // Need to get the base commodity volatility structure.
+            QL_REQUIRE(!vapo->baseVolatilityId().empty(),
+                "The APO VolatilityId must be populated to build a future APO surface.");
+            auto itVs = commodityVolCurves.find(vapo->baseVolatilityId());
+            QL_REQUIRE(itVs != commodityVolCurves.end(),
+                "Can't find commodity volatility with id " << vapo->basePriceCurveId());
+
+            // Need to get the base price curve
+            QL_REQUIRE(!vapo->basePriceCurveId().empty(),
+                "The APO PriceCurveId must be populated to build a future APO surface.");
+            auto itPts = commodityCurves.find(vapo->basePriceCurveId());
+            QL_REQUIRE(itPts != commodityCurves.end(), "Can't find price curve with id " << vapo->basePriceCurveId());
+            auto basePts = Handle<PriceTermStructure>(itPts->second->commodityPriceCurve());
+
+            // Need a yield curve and price curve to create an APO surface.
+            populateCurves(config, yieldCurves, commodityCurves, true);
+
+            buildVolatility(asof, config, *vapo, loader, itVs->second->volatility(), basePts, baseExpCalc);
+
         } else {
             QL_FAIL("Unexpected VolatilityConfig in CommodityVolatilityConfig");
         }
@@ -1009,6 +1042,21 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     volatility_->enableExtrapolation(vmsc.extrapolation());
 
     LOG("CommodityVolCurve: finished building 2-D volatility moneyness strike surface");
+}
+
+void CommodityVolCurve::buildVolatility(
+    const Date& asof,
+    CommodityVolatilityConfig& vc,
+    const VolatilityApoFutureSurfaceConfig& vapo,
+    const Loader& loader,
+    const boost::shared_ptr<BlackVolTermStructure>& baseVts,
+    const Handle<PriceTermStructure>& basePts,
+    const boost::shared_ptr<FutureExpiryCalculator>& baseExpCalc) {
+
+    // Determine the max time of the APO surface that we are going to build.
+
+    // The APO periods will be from expiry to expiry of the conventions for *this* curve not the base curve.
+
 }
 
 Handle<PriceTermStructure> CommodityVolCurve::correctFuturePriceCurve(const Date& asof, const string& contractName,

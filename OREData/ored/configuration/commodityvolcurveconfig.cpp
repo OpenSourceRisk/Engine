@@ -88,9 +88,11 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
         volatilityConfig_ = boost::make_shared<VolatilityDeltaSurfaceConfig>();
     } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
         volatilityConfig_ = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
+    } else if ((n = XMLUtils::getChildNode(node, "ApoFutureSurface"))) {
+        volatilityConfig_ = boost::make_shared<VolatilityApoFutureSurfaceConfig>();
     } else {
         QL_FAIL("CommodityVolatility node expects one child node with name in list: Constant,"
-                << " Curve, StrikeSurface, DeltaSurface, MoneynessSurface");
+                << " Curve, StrikeSurface, DeltaSurface, MoneynessSurface, ApoFutureSurface.");
     }
     volatilityConfig_->fromXML(n);
 
