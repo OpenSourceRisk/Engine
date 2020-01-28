@@ -18,6 +18,7 @@
 
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
+#include <ql/pricingengines/swaption/blackswaptionengine.hpp>
 #include <ql/quotes/simplequote.hpp>
 
 #include <qle/models/irlgm1fconstantparametrization.hpp>
@@ -240,11 +241,14 @@ void LgmBuilder::getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb
     parseDateOrPeriod(termString, termDb, termPb, termDateBased);
     if(termDateBased) {
         Date tmpExpiry = expiryDateBased ? expiryDb : svts_->optionDateFromTenor(expiryPb);
-        // ensure that we have a term >= 1 Month
-        // otherwise QL might throw "non-positive swap length (0)  given" from the black swaption engine
-        // during calibration helper pricing
-        termDb = std::max(termDb, tmpExpiry + 1 * Months);
-        termT = svts_->swapLength(tmpExpiry, termDb);
+        Date tmpStart = swapIndex_->iborIndex()->valueDate(swapIndex_->iborIndex()->fixingCalendar().adjust(tmpExpiry));
+        // ensure that we have a term >= 1 Month, otherwise QL might throw "non-positive swap length (0)  given" from
+        // the black swaption engine during calibration helper pricing; also notice that we use the swap legnth
+        // calculated in the svts (i.e. a length rounded to whole months) to read the volatility from the cube, which is
+        // consistent with what is done in BlackSwaptionEngine (although one might ask whether an interpolated volatility
+        // would be more appropriate)
+        termDb = std::max(termDb, tmpStart + 1 * Months);
+        termT = svts_->swapLength(tmpStart, termDb);
     } else {
         termT = svts_->swapLength(termPb);
         // same as above, make sure the underlying term is at least >= 1 Month, but since Period::operator<
@@ -319,6 +323,8 @@ void LgmBuilder::buildSwaptionBasket() const {
 
     static constexpr Real minMarketValue = 1.0E-8; // minimum allowed market value of helper before switching to PriceError
 
+    Handle<YieldTermStructure> yts = market_->discountCurve(data_->ccy(), configuration_);
+
     std::vector<Time> expiryTimes(data_->optionExpiries().size());
     std::vector<Time> maturityTimes(data_->optionTerms().size());
     swaptionBasket_.clear();
@@ -343,7 +349,6 @@ void LgmBuilder::buildSwaptionBasket() const {
                                                                   : shortSwapIndex_->iborIndex()->dayCounter();
 
         Handle<Quote> vol = Handle<Quote>(boost::make_shared<SimpleQuote>(swaptionVolCache_.at(j)));
-        Handle<YieldTermStructure> yts = market_->discountCurve(data_->ccy(), configuration_);
         boost::shared_ptr<SwaptionHelper> helper;
 
         if (expiryDateBased && termDateBased) {
@@ -419,6 +424,36 @@ void LgmBuilder::buildSwaptionBasket() const {
         expiryTimes[j] = yts->timeFromReference(helper->swaption()->exercise()->date(0));
         maturityTimes[j] = yts->timeFromReference(helper->underlyingSwap()->maturityDate());
     }
+
+    // additional logging, this triggers another pricing of the swpations, which is wasterful since
+    // all the results here are produced within the swaption helper already when the market value
+    // is computed; therefore if we want to keep this we should optimise the calcuations
+    boost::shared_ptr<PricingEngine> tmpEngine;
+    switch (svts_->volatilityType()) {
+    case ShiftedLognormal:
+        tmpEngine = ext::make_shared<BlackSwaptionEngine>(yts, svts_);
+        break;
+    case Normal:
+        tmpEngine = ext::make_shared<BachelierSwaptionEngine>(yts, svts_);
+        break;
+    default:
+        QL_FAIL("can not construct engine: " << svts_->volatilityType());
+        break;
+    }
+    DLOG(std::right << std::setw(5) << "no" << std::setw(16) << "expiry" << std::setw(16) << "swapLength"
+                    << std::setw(16) << "strike" << std::setw(16) << "atmForward" << std::setw(16) << "annuity"
+                    << std::setw(16) << "vega" << std::setw(16) << "vol");
+    for (Size j = 0; j < swaptionBasket_.size(); ++j) {
+        auto swp = boost::static_pointer_cast<SwaptionHelper>(swaptionBasket_[j])->swaption();
+        swp->setPricingEngine(tmpEngine);
+        Real t = svts_->timeFromReference(swp->exercise()->dates().back());
+        DLOG(std::right << std::setw(5) << j << std::setw(16) << t << std::setw(16) << swp->result<Real>("swapLength")
+                        << std::setw(16) << swp->result<Real>("strike") << std::setw(16)
+                        << swp->result<Real>("atmForward") << std::setw(16) << swp->result<Real>("annuity")
+                        << std::setw(16) << swp->result<Real>("vega") << std::setw(16) << std::setw(16)
+                        << swp->result<Real>("stdDev") / std::sqrt(t));
+    }
+    // end of additional logging
 
     std::sort(expiryTimes.begin(), expiryTimes.end());
     auto itExpiryTime = unique(expiryTimes.begin(), expiryTimes.end());
