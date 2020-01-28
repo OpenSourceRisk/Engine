@@ -571,8 +571,6 @@ BOOST_DATA_TEST_CASE(testCommodityVolDeltaSurface, bdata::make(asofDates) * bdat
     }
 
     // Check flat time extrapolation
-    Date extrapDate = bvsd->dates().back() + 1 * Years;
-    
     auto fxss = bvsd->blackVolSmile(bvsd->dates().back());
     auto iss = boost::dynamic_pointer_cast<InterpolatedSmileSection>(fxss);
     BOOST_REQUIRE(iss);
