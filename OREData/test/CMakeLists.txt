@@ -22,6 +22,7 @@ digitalcms.cpp
 equitymarketdata.cpp
 equityswap.cpp
 equitytrades.cpp
+expiry.cpp
 fixings.cpp
 fxoption.cpp
 fxswap.cpp
@@ -34,6 +35,7 @@ ored_commodityforward.cpp
 parser.cpp
 portfolio.cpp
 schedule.cpp
+strike.cpp
 swaption.cpp
 testsuite.cpp
 todaysmarket.cpp

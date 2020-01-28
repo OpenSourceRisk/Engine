@@ -52,12 +52,15 @@ BOOST_DATA_TEST_CASE(testExpiryDates, bdata::make(commodityNames), commodityName
     BOOST_TEST_MESSAGE("Testing expiry dates for commodity: " << commodityName);
 
     // Read in the relevant conventions file
-    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
+    Conventions conventions;
     string filename = commodityName + "_conventions.xml";
-    conventions->fromFile(TEST_INPUT_FILE(filename));
+    conventions.fromFile(TEST_INPUT_FILE(filename));
 
     // Create the conventions based expiry calculator
-    ConventionsBasedFutureExpiry cbfe(conventions);
+    BOOST_TEST_REQUIRE(conventions.has(commodityName));
+    auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(commodityName));
+    BOOST_TEST_REQUIRE(convention);
+    ConventionsBasedFutureExpiry cbfe(*convention);
 
     // Read in the contract months and expected expiry dates
     filename = commodityName + "_expiries.csv";
@@ -71,7 +74,7 @@ BOOST_DATA_TEST_CASE(testExpiryDates, bdata::make(commodityNames), commodityName
         Date expExpiryDate = parseDate(reader.get(1));
 
         // Calculate the expiry date using the future expiry calculator
-        Date expiryDate = cbfe.expiryDate(commodityName, contractDate.month(), contractDate.year(), 0);
+        Date expiryDate = cbfe.expiryDate(contractDate.month(), contractDate.year(), 0);
 
         // Check that the calculated expiry equals the expected expiry date
         BOOST_CHECK_EQUAL(expExpiryDate, expiryDate);
@@ -84,7 +87,7 @@ BOOST_DATA_TEST_CASE(testExpiryDates, bdata::make(commodityNames), commodityName
             Date expOptionExpiry = parseDate(strExpOptionExpiry);
 
             // Calculate the option expiry date using the future expiry calculator
-            Date optionExpiry = cbfe.expiryDate(commodityName, contractDate.month(), contractDate.year(), 0, true);
+            Date optionExpiry = cbfe.expiryDate(contractDate.month(), contractDate.year(), 0, true);
 
             BOOST_CHECK_EQUAL(expOptionExpiry, optionExpiry);
         }

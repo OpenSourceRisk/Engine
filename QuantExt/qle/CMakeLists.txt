@@ -16,6 +16,8 @@ calendars/wmr.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
 cashflows/brlcdicouponpricer.cpp
+cashflows/commodityindexedaveragecashflow.cpp
+cashflows/commodityindexedcashflow.cpp
 cashflows/couponpricer.cpp
 cashflows/equitycoupon.cpp
 cashflows/equitycouponpricer.cpp
@@ -187,6 +189,8 @@ cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
 cashflows/brlcdicouponpricer.hpp
 cashflows/couponpricer.hpp
+cashflows/commodityindexedaveragecashflow.hpp
+cashflows/commodityindexedcashflow.hpp
 cashflows/equitycoupon.hpp
 cashflows/equitycouponpricer.hpp
 cashflows/floatingannuitycoupon.hpp
@@ -361,6 +365,8 @@ termstructures/brlcdiratehelper.hpp
 termstructures/capfloorhelper.hpp
 termstructures/capfloortermvolcurve.hpp
 termstructures/capfloortermvolsurface.hpp
+termstructures/commodityaveragebasispricecurve.hpp
+termstructures/commoditybasispricecurve.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
 termstructures/crossccybasisswaphelper.hpp

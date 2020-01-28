@@ -44,7 +44,8 @@ public:
     BlackVarianceSurfaceMoneyness(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
                                   const std::vector<Real>& moneyness,
                                   const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-                                  const DayCounter& dayCounter, bool stickyStrike);
+                                  const DayCounter& dayCounter, bool stickyStrike,
+                                  bool flatExtrapMoneyness = false);
 
     //! \name TermStructure interface
     //@{
@@ -74,6 +75,7 @@ protected:
     Handle<Quote> spot_;
     std::vector<Time> times_;
     std::vector<Real> moneyness_;
+    bool flatExtrapMoneyness_;
 
 private:
     Real blackVarianceMoneyness(Time t, Real moneyness) const;
@@ -104,7 +106,8 @@ public:
     BlackVarianceSurfaceMoneynessSpot(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
                                       const std::vector<Real>& moneyness,
                                       const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-                                      const DayCounter& dayCounter, bool stickyStrike = false);
+                                      const DayCounter& dayCounter, bool stickyStrike = false,
+                                      bool flatExtrapMoneyness = false);
 
 private:
     virtual Real moneyness(Time t, Real strike) const;
@@ -119,7 +122,9 @@ public:
                                          const std::vector<Real>& moneyness,
                                          const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                          const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
-                                         const Handle<YieldTermStructure>& domTS, bool stickyStrike = false, bool flatExtrapMoneyness = false);
+                                         const Handle<YieldTermStructure>& domTS, bool stickyStrike = false,
+                                         bool flatExtrapMoneyness = false);
+
 
 private:
     virtual Real moneyness(Time t, Real strike) const;
@@ -127,7 +132,6 @@ private:
     Handle<YieldTermStructure> domTS_;
     std::vector<Real> forwards_; // cache fwd values if StickyStrike==true
     Interpolation forwardCurve_;
-    bool flatExtrapolateMoneyness_; // flatly extraplate on moneyness axis
 };
 
 } // namespace QuantExt

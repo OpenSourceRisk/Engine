@@ -12,8 +12,8 @@
       </Quotes>
       <DayCounter>A365</DayCounter>
       <InterpolationMethod>Linear</InterpolationMethod>
-      <Extrapolation>true</Extrapolation>
       <Conventions>PM:XAUUSD</Conventions>
+      <Extrapolation>true</Extrapolation>
     </CommodityCurve>
   </CommodityCurves>
 </CurveConfiguration>

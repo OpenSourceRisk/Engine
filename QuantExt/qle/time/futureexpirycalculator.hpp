@@ -31,8 +31,10 @@ namespace QuantExt {
 //! Base class for classes that perform date calculations for future contracts
 class FutureExpiryCalculator {
 public:
-    /*! Given a future contract's name, \p contractName, and a reference date, \p referenceDate, return the expiry 
-        date of the next futures contract relative to the reference date.
+    virtual ~FutureExpiryCalculator() {}
+
+    /*! Given  a reference date, \p referenceDate, return the expiry date of the next futures contract relative to 
+        the reference date.
         
         The \p includeExpiry parameter controls what happens when the \p referenceDate is equal to the next contract's
         expiry date. If \p includeExpiry is \c true, the contract's expiry date is returned. If \p includeExpiry is 
@@ -41,19 +43,22 @@ public:
         If \p forOption is \c true, the next expiry for the option contract, as opposed to the future contract, is 
         returned.
     */
-    virtual QuantLib::Date nextExpiry(const std::string& contractName, bool includeExpiry = true,
-        const QuantLib::Date& referenceDate = QuantLib::Date(), QuantLib::Natural offset = 0, 
+    virtual QuantLib::Date nextExpiry(bool includeExpiry = true, 
+        const QuantLib::Date& referenceDate = QuantLib::Date(),
+        QuantLib::Natural offset = 0, 
         bool forOption = false) = 0;
 
-    /*! Given a future contract's name, \p contractName, the contract's month, \p contractMonth and the contract's 
-        year, \p contractYear, return the expiry date of the future contract that is \p monthOffset number of months 
-        from the future contract. If \p monthOffset is zero, the expiry date of the future contract itself is returned.
+    /*! Given the contract's month, \p contractMonth and the contract's year, \p contractYear, return the expiry date 
+        of the future contract that is \p monthOffset number of months from the future contract. If \p monthOffset is 
+        zero, the expiry date of the future contract itself is returned.
 
         If \p forOption is \c true, the expiry date for the option contract, as opposed to the future contract, is
         returned.
     */
-    virtual QuantLib::Date expiryDate(const std::string& contractName, QuantLib::Month contractMonth,
-        QuantLib::Year contractYear, QuantLib::Natural monthOffset, bool forOption = false) = 0;
+    virtual QuantLib::Date expiryDate(QuantLib::Month contractMonth,
+        QuantLib::Year contractYear,
+        QuantLib::Natural monthOffset,
+        bool forOption = false) = 0;
 };
 
 }

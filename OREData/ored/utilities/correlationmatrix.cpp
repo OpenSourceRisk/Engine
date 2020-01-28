@@ -18,6 +18,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/quotes/derivedquote.hpp>
 
 using namespace std;
 
@@ -28,13 +30,19 @@ namespace data {
 
 void CorrelationMatrixBuilder::addCorrelation(const std::string& factor1, const std::string& factor2,
                                               Real correlation) {
+    addCorrelation(factor1, factor2, Handle<Quote>(boost::make_shared<SimpleQuote>(correlation)));
+}
+
+void CorrelationMatrixBuilder::addCorrelation(const std::string& factor1, const std::string& factor2,
+                                              const Handle<Quote>& correlation) {
     checkFactor(factor1);
     checkFactor(factor2);
     // we store the correlations in a map, but we sort the key (pair of strings)
     // first for quicker lookup.
     key k = buildkey(factor1, factor2);
     QL_REQUIRE(data_.find(k) == data_.end(), "Correlation for key " << k.first << "," << k.second << " already set");
-    QL_REQUIRE(correlation >= -1.0 && correlation <= 1.0, "Invalid correlation " << correlation);
+    QL_REQUIRE(correlation->value() >= -1.0 && correlation->value() <= 1.0,
+               "Invalid correlation " << correlation->value());
     data_[k] = correlation;
 }
 
@@ -98,7 +106,7 @@ Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<
     // the lookup function takes care of FX:EURUSD / FX:USDEUR conversion
     for (Size i = 0; i < len; i++) {
         for (Size j = 0; j < i; j++)
-            mat[i][j] = mat[j][i] = lookup(factors[i], factors[j]);
+            mat[i][j] = mat[j][i] = lookup(factors[i], factors[j])->value();
     }
 
     // check it
@@ -138,7 +146,7 @@ Disposable<Matrix> CorrelationMatrixBuilder::extendCorrelationMatrix(const Matri
     QL_REQUIRE(len == mat1.columns(), "Matrix not square");
     for (Size i = 0; i < len; i++) {
         for (Size j = max(i + 1, mat.rows()); j < len; j++)
-            mat1[i][j] = mat1[j][i] = lookup(factors[i], factors[j]);
+            mat1[i][j] = mat1[j][i] = lookup(factors[i], factors[j])->value();
     }
 
     // check it
@@ -251,7 +259,7 @@ static bool isFX(const string& s) { return s.size() == 9 && s.substr(0, 3) == "F
 
 static string invertFX(const string& s) { return "FX:" + s.substr(6, 3) + s.substr(3, 3); }
 
-Real CorrelationMatrixBuilder::lookup(const string& f1, const string& f2) {
+Handle<Quote> CorrelationMatrixBuilder::lookup(const string& f1, const string& f2) {
     key k = buildkey(f1, f2);
     if (data_.find(k) != data_.end())
         return data_[k];
@@ -262,12 +270,14 @@ Real CorrelationMatrixBuilder::lookup(const string& f1, const string& f2) {
     if (isfx1) {
         k = buildkey(invertFX(f1), f2);
         if (data_.find(k) != data_.end())
-            return -data_[k]; // invert
+            return Handle<Quote>(
+                boost::make_shared<DerivedQuote<std::negate<Real>>>(data_[k], std::negate<Real>())); // invert
     }
     if (isfx2) {
         k = buildkey(f1, invertFX(f2));
         if (data_.find(k) != data_.end())
-            return -data_[k]; // invert
+            return Handle<Quote>(
+                boost::make_shared<DerivedQuote<std::negate<Real>>>(data_[k], std::negate<Real>())); // invert
     }
     if (isfx1 && isfx2) {
         k = buildkey(invertFX(f1), invertFX(f2));
@@ -276,7 +286,7 @@ Real CorrelationMatrixBuilder::lookup(const string& f1, const string& f2) {
     }
 
     // default.
-    return 0.0;
+    return Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
 }
 } // namespace data
 } // namespace ore
