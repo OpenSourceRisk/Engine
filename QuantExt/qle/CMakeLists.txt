@@ -46,6 +46,7 @@ indexes/region.cpp
 instruments/averageois.cpp
 instruments/brlcdiswap.cpp
 instruments/cdsoption.cpp
+instruments/commodityapo.cpp
 instruments/commodityforward.cpp
 instruments/creditdefaultswap.cpp
 instruments/crossccybasismtmresetswap.cpp
@@ -100,6 +101,7 @@ pricingengines/analyticlgmswaptionengine.cpp
 pricingengines/analyticxassetlgmeqoptionengine.cpp
 pricingengines/baroneadesiwhaleyengine.cpp
 pricingengines/blackcdsoptionengine.cpp
+pricingengines/commodityapoengine.cpp
 pricingengines/cpibacheliercapfloorengine.cpp
 pricingengines/cpiblackcapfloorengine.cpp
 pricingengines/cpicapfloorengines.cpp
@@ -261,6 +263,7 @@ indexes/secpi.hpp
 instruments/averageois.hpp
 instruments/brlcdiswap.hpp
 instruments/cdsoption.hpp
+instruments/commodityapo.hpp
 instruments/commodityforward.hpp
 instruments/creditdefaultswap.hpp
 instruments/crossccybasismtmresetswap.hpp
@@ -330,6 +333,7 @@ pricingengines/analyticlgmswaptionengine.hpp
 pricingengines/analyticxassetlgmeqoptionengine.hpp
 pricingengines/baroneadesiwhaleyengine.hpp
 pricingengines/blackcdsoptionengine.hpp
+pricingengines/commodityapoengine.hpp
 pricingengines/cpibacheliercapfloorengine.hpp
 pricingengines/cpiblackcapfloorengine.hpp
 pricingengines/cpicapfloorengines.hpp

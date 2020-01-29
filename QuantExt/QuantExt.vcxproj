@@ -578,6 +578,7 @@
     <ClInclude Include="qle\instruments\averageois.hpp" />
     <ClInclude Include="qle\instruments\brlcdiswap.hpp" />
     <ClInclude Include="qle\instruments\cdsoption.hpp" />
+    <ClInclude Include="qle\instruments\commodityapo.hpp" />
     <ClInclude Include="qle\instruments\commodityforward.hpp" />
     <ClInclude Include="qle\instruments\creditdefaultswap.hpp" />
     <ClInclude Include="qle\instruments\crossccybasismtmresetswap.hpp" />
@@ -646,6 +647,7 @@
     <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\baroneadesiwhaleyengine.hpp" />
     <ClInclude Include="qle\pricingengines\blackcdsoptionengine.hpp" />
+    <ClInclude Include="qle\pricingengines\commodityapoengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpibacheliercapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpiblackcapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpicapfloorengines.hpp" />
@@ -800,6 +802,7 @@
     <ClCompile Include="qle\instruments\averageois.cpp" />
     <ClCompile Include="qle\instruments\brlcdiswap.cpp" />
     <ClCompile Include="qle\instruments\cdsoption.cpp" />
+    <ClCompile Include="qle\instruments\commodityapo.cpp" />
     <ClCompile Include="qle\instruments\commodityforward.cpp" />
     <ClCompile Include="qle\instruments\creditdefaultswap.cpp" />
     <ClCompile Include="qle\instruments\crossccybasismtmresetswap.cpp" />
@@ -854,6 +857,7 @@
     <ClCompile Include="qle\pricingengines\analyticxassetlgmeqoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\baroneadesiwhaleyengine.cpp" />
     <ClCompile Include="qle\pricingengines\blackcdsoptionengine.cpp" />
+    <ClCompile Include="qle\pricingengines\commodityapoengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpibacheliercapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpiblackcapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpicapfloorengines.cpp" />
