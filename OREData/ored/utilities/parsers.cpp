@@ -938,7 +938,34 @@ DeltaVolQuote::DeltaType parseDeltaType(const std::string& s) {
     } else { 
         QL_FAIL("Delta type \"" << s << "\" not recognized"); 
     } 
-} 
+}
+
+//! Parse Extrapolation from string
+Extrapolation parseExtrapolation(const string& s) {
+    if (s == "None") {
+        return Extrapolation::None;
+    } else if (s == "UseInterpolator" || s == "Linear") {
+        return Extrapolation::UseInterpolator;
+    } else if (s == "Flat") {
+        return Extrapolation::Flat;
+    } else {
+        QL_FAIL("Extrapolation '" << s << "' not recognized");
+    }
+}
+
+//! Write Extrapolation, \p extrap, to stream.
+std::ostream& operator<<(std::ostream& os, Extrapolation extrap) {
+    switch (extrap) {
+    case Extrapolation::None:
+        return os << "None";
+    case Extrapolation::UseInterpolator:
+        return os << "UseInterpolator";
+    case Extrapolation::Flat:
+        return os << "Flat";
+    default:
+        QL_FAIL("Unknown Extrapolation");
+    }
+}
  
 } // namespace data
 } // namespace ore

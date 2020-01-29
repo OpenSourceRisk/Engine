@@ -272,7 +272,7 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
 
     // Tolerance is deprecated in favour of Accuracy in BootstrapConfig. However, if it is 
     // still provided, use it as the accuracy and global accuracy in the bootstrap.
-    if (XMLNode* n = XMLUtils::getChildNode(node, "Tolerance")) {
+    if (XMLUtils::getChildNode(node, "Tolerance")) {
         Real accuracy = XMLUtils::getChildValueAsDouble(node, "Tolerance", false);
         bootstrapConfig_ = BootstrapConfig(accuracy, accuracy, bootstrapConfig_.dontThrow(),
             bootstrapConfig_.maxAttempts(), bootstrapConfig_.maxFactor(), bootstrapConfig_.minFactor());

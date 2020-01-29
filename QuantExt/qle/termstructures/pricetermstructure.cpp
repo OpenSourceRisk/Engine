@@ -32,7 +32,13 @@ PriceTermStructure::PriceTermStructure(Natural settlementDays, const Calendar& c
 
 Real PriceTermStructure::price(Time t, bool extrapolate) const {
     checkRange(t, extrapolate);
-    return priceImpl(t);
+
+    // Fail if price is negative
+    Real price = priceImpl(t);
+    QL_REQUIRE(price >= 0.0, "Price returned from PriceTermStructure at time, " <<
+        t << ", is negative: " << price << ".");
+
+    return price;
 }
 
 Real PriceTermStructure::price(const Date& d, bool extrapolate) const {

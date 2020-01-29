@@ -46,24 +46,62 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& 
       basePriceCurveId_(basePriceCurveId), baseYieldCurveId_(baseYieldCurveId), yieldCurveId_(yieldCurveId), 
       extrapolation_(extrapolation) {}
 
+CommodityCurveConfig::CommodityCurveConfig(const string& curveId,
+    const string& curveDescription,
+    const string& currency,
+    const string& basePriceCurveId,
+    const string& baseConventionsId,
+    const vector<string>& basisQuotes,
+    const string& basisConventionsId,
+    const string& dayCountId,
+    const string& interpolationMethod,
+    bool extrapolation,
+    bool addBasis,
+    QuantLib::Natural monthOffset)
+    : CurveConfig(curveId, curveDescription),
+      type_(Type::Basis),
+      fwdQuotes_(basisQuotes),
+      currency_(currency),
+      dayCountId_(dayCountId),
+      interpolationMethod_(interpolationMethod),
+      basePriceCurveId_(basePriceCurveId),
+      extrapolation_(extrapolation),
+      conventionsId_(basisConventionsId),
+      baseConventionsId_(baseConventionsId),
+      addBasis_(addBasis),
+      monthOffset_(monthOffset) {}
+
 void CommodityCurveConfig::fromXML(XMLNode* node) {
+    
     XMLUtils::checkNode(node, "CommodityCurve");
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
     
-    // If a BasePriceCurve is provided, then we have a CrossCurrency type commodity curve
-    XMLNode* basePriceCurveNode = XMLUtils::getChildNode(node, "BasePriceCurve");
-    if (basePriceCurveNode) {
+    if (XMLNode* n = XMLUtils::getChildNode(node, "BasisConfiguration")) {
+        
+        type_ = Type::Basis;
+        basePriceCurveId_ = XMLUtils::getChildValue(n, "BasePriceCurve", true);
+        baseConventionsId_ = XMLUtils::getChildValue(n, "BasePriceConventions", true);
+        quotes_ = fwdQuotes_ = XMLUtils::getChildrenValues(n, "BasisQuotes", "Quote");
+        conventionsId_ = XMLUtils::getChildValue(n, "BasisConventions", true);
+        dayCountId_ = XMLUtils::getChildValue(n, "DayCounter", false);
+        interpolationMethod_ = XMLUtils::getChildValue(n, "InterpolationMethod", false);
+        addBasis_ = XMLUtils::getChildValueAsBool(n, "AddBasis", false);
+        monthOffset_ = XMLUtils::getChildValueAsInt(n, "MonthOffset", false);
+
+    } else if (XMLNode* n = XMLUtils::getChildNode(node, "BasePriceCurve")) {
+        
         type_ = Type::CrossCurrency;
-        basePriceCurveId_ = XMLUtils::getNodeValue(basePriceCurveNode);
+        basePriceCurveId_ = XMLUtils::getNodeValue(n);
         baseYieldCurveId_ = XMLUtils::getChildValue(node, "BaseYieldCurve", true);
         yieldCurveId_ = XMLUtils::getChildValue(node, "YieldCurve", true);
+
     } else {
+        
         type_ = Type::Direct;
         dayCountId_ = XMLUtils::getChildValue(node, "DayCounter", false);
-        
         commoditySpotQuoteId_ = XMLUtils::getChildValue(node, "SpotQuote", false);
         fwdQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote");
         quotes_ = fwdQuotes_;
@@ -72,6 +110,7 @@ void CommodityCurveConfig::fromXML(XMLNode* node) {
         
         interpolationMethod_ = XMLUtils::getChildValue(node, "InterpolationMethod", false);
         conventionsId_ = XMLUtils::getChildValue(node, "Conventions", false);
+
     }
 
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation");
@@ -85,11 +124,25 @@ XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
 
-    if (type_ == Type::CrossCurrency) {
+    if (type_ == Type::Basis) {
+
+        XMLUtils::addChild(doc, node, "BasePriceCurve", basePriceCurveId_);
+        XMLUtils::addChild(doc, node, "BasePriceConventions", baseConventionsId_);
+        XMLUtils::addChildren(doc, node, "BasisQuotes", "Quote", fwdQuotes_);
+        XMLUtils::addChild(doc, node, "BasisConventions", conventionsId_);
+        XMLUtils::addChild(doc, node, "DayCounter", dayCountId_);
+        XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
+        XMLUtils::addChild(doc, node, "AddBasis", addBasis_);
+        XMLUtils::addChild(doc, node, "MonthOffset", static_cast<int>(monthOffset_));
+
+    } else if (type_ == Type::CrossCurrency) {
+
         XMLUtils::addChild(doc, node, "BasePriceCurve", basePriceCurveId_);
         XMLUtils::addChild(doc, node, "BaseYieldCurve", baseYieldCurveId_);
         XMLUtils::addChild(doc, node, "YieldCurve", yieldCurveId_);
+
     } else {
+
         if (!commoditySpotQuoteId_.empty())
             XMLUtils::addChild(doc, node, "SpotQuote", commoditySpotQuoteId_);
         vector<string> forwardQuotes(quotes_.begin() + 1, quotes_.end());
@@ -97,6 +150,7 @@ XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "DayCounter", dayCountId_);
         XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
         XMLUtils::addChild(doc, node, "Conventions", conventionsId_);
+
     }
 
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);

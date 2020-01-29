@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <ored/marketdata/strike.hpp>
+#include <ored/marketdata/expiry.hpp>
 #include <boost/make_shared.hpp>
 #include <ql/currency.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -1314,26 +1316,31 @@ public:
         \param quoteType     The quote type, should be RATE_NVOL
         \param commodityName The name of the underlying commodity
         \param quoteCurrency The quote currency
-        \param expiry        Expiry can be a period or a date
-        \param strike        Can be underlying commodity price or ATMF
+        \param expiry        Expiry object defining the quote's expiry
+        \param strike        Strike object defining the quote's strike
     */
-    CommodityOptionQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name, QuoteType quoteType,
-                         const std::string& commodityName, const std::string& quoteCurrency, const std::string& expiry,
-                         const std::string& strike);
+    CommodityOptionQuote(QuantLib::Real value,
+        const QuantLib::Date& asof,
+        const std::string& name,
+        QuoteType quoteType,
+        const std::string& commodityName,
+        const std::string& quoteCurrency,
+        const boost::shared_ptr<Expiry>& expiry,
+        const boost::shared_ptr<BaseStrike>& strike);
 
     //! \name Inspectors
     //@{
     const std::string& commodityName() const { return commodityName_; }
     const std::string& quoteCurrency() const { return quoteCurrency_; }
-    const std::string& expiry() const { return expiry_; }
-    const std::string& strike() const { return strike_; }
+    const boost::shared_ptr<Expiry>& expiry() const { return expiry_; }
+    const boost::shared_ptr<BaseStrike>& strike() const { return strike_; }
     //@}
 
 private:
     std::string commodityName_;
     std::string quoteCurrency_;
-    std::string expiry_;
-    std::string strike_;
+    boost::shared_ptr<Expiry> expiry_;
+    boost::shared_ptr<BaseStrike> strike_;
 };
 
 //! Spread data class

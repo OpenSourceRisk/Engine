@@ -282,5 +282,18 @@ bool tryParse(const std::string& str, T& obj, std::function<T(std::string)> pars
     return true;
 }
 
+//! Enumeration for holding various extrapolation settings
+enum class Extrapolation {
+    None,
+    UseInterpolator,
+    Flat
+};
+
+//! Parse Extrapolation from string
+Extrapolation parseExtrapolation(const std::string& s);
+
+//! Write Extrapolation, \p extrap, to stream.
+std::ostream& operator<<(std::ostream& os, Extrapolation extrap);
+
 } // namespace data
 } // namespace ore

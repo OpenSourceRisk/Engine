@@ -82,7 +82,6 @@ public:
 
     //! \name TermStructure interface
     //@{
-    //! This is not used by this class and returns the maximum date
     QuantLib::Date maxDate() const;
     QuantLib::Time maxTime() const;
     //@}
@@ -114,6 +113,7 @@ private:
     void populateDatesFromTenors() const;
     void convertDatesToTimes();
     void getPricesFromQuotes() const;
+    void checkNonNegative() const;
 };
 
 template <class Interpolator>
@@ -197,12 +197,14 @@ template <class Interpolator> void InterpolatedPriceCurve<Interpolator>::perform
     if (!tenors_.empty()) {
         populateDatesFromTenors();
         this->interpolation_.update();
+        checkNonNegative();
     }
 
     // Calculations need to be performed if the curve depends on quotes
     if (!quotes_.empty()) {
         getPricesFromQuotes();
         this->interpolation_.update();
+        checkNonNegative();
     }
 }
 
@@ -242,6 +244,7 @@ template <class Interpolator> void InterpolatedPriceCurve<Interpolator>::initial
     }
 
     QL_REQUIRE(this->data_.size() == this->times_.size(), "Number of times must equal number of prices");
+    checkNonNegative();
 
     QuantLib::InterpolatedCurve<Interpolator>::setupInterpolation();
     this->interpolation_.update();
@@ -273,6 +276,10 @@ template <class Interpolator> void InterpolatedPriceCurve<Interpolator>::getPric
         QL_REQUIRE(!this->quotes_[i].empty(), "price quote at index " << i << " is empty");
         this->data_[i] = quotes_[i]->value();
     }
+}
+
+template <class Interpolator> void InterpolatedPriceCurve<Interpolator>::checkNonNegative() const {
+    QL_REQUIRE(*std::min_element(this->data_.begin(), this->data_.end()) >= 0.0, "Prices must be positive");
 }
 
 } // namespace QuantExt

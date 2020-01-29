@@ -162,6 +162,11 @@ void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& 
       settlement date minus \p inflationLookback period and settlement date
     - for MarketObject::YoYInflationCurve, take the inflation index and add the first of each month between
       settlement date minus \p inflationLookback period and settlement date
+    - for MarketObject::CommodityCurve, add \e fixings for future contracts expiring 2 months either side of the 
+      settlement date. The fixing dates are added for each weekday going back to the first day of the month that 
+      precedes the settlement date by 2 months. The approach here will give rise to some spot commodities being 
+      given a future contract name and dates added against them - this should not be a problem as there will be 
+      no fixings found for them in any case.
 
     The original \p fixings map may be empty.
 */
