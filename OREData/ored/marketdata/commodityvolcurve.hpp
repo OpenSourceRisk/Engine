@@ -131,8 +131,7 @@ private:
         const QuantLib::Date& asof,
         CommodityVolatilityConfig& vc,
         const VolatilityApoFutureSurfaceConfig& vapo,
-        const Loader& loader,
-        const boost::shared_ptr<QuantLib::BlackVolTermStructure>& baseVts,
+        const QuantLib::Handle<QuantLib::BlackVolTermStructure>& baseVts,
         const QuantLib::Handle<QuantExt::PriceTermStructure>& basePts,
         const boost::shared_ptr<QuantExt::FutureExpiryCalculator>& baseExpCalc);
 
@@ -158,6 +157,9 @@ private:
         const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves,
         const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
         bool deltaOrFwdMoneyness);
+
+    //! Check and return moneyness levels.
+    std::vector<QuantLib::Real> checkMoneyness(const std::vector<std::string>& moneynessLevels) const;
 };
 
 }

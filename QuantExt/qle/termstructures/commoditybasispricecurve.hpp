@@ -187,7 +187,7 @@ CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     this->times_ = basisTimes_;
 
     // Get the first basis contract expiry date on or after the curve reference date.
-    Date basisExpiry = basisFec_->nextExpiry(true, referenceDate());
+    Date basisExpiry = basisFec_->nextExpiry(true, referenceDate);
 
     // Get the first basis contract expiry date on or after the max date. Here, max date is defined as the maximum of 
     // 1) last pillar date of base price curve and 2) basis curve data.

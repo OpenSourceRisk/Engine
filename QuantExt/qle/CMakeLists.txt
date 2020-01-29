@@ -122,6 +122,7 @@ pricingengines/paymentdiscountingengine.cpp
 processes/crossassetstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
 quotes/logquote.cpp
+termstructures/aposurface.cpp
 termstructures/averageoisratehelper.cpp
 termstructures/basistwoswaphelper.cpp
 termstructures/blackvariancecurve3.cpp
@@ -355,6 +356,7 @@ processes/crossassetstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
+termstructures/aposurface.hpp
 termstructures/averageoisratehelper.hpp
 termstructures/basistwoswaphelper.hpp
 termstructures/blackinvertedvoltermstructure.hpp
