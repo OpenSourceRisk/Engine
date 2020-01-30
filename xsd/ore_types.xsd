@@ -11,6 +11,16 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="isodate">
+    <!-- date can only be YYYY-MM-DD -->
+    <xs:restriction base="xs:string">
+      <xs:length value="10"/>
+      <!-- This is not super strict, e.g. 2016-02-31 would pass, but it catches
+           most errors-->
+      <xs:pattern value="(\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01]))?"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="indexNameType">
     <!-- Index name is of form CCY-NAME or CCY-NAME-TENOR max length is EUR-EURIBOR-12M or FX-SOURCE-CCY1-CCY2 -->
     <xs:restriction base="xs:string">

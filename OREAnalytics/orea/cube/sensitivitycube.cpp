@@ -46,29 +46,12 @@ ore::analytics::SensitivityCube::FactorData index(const ore::analytics::RiskFact
     return it->second;
 }
 
-
-// Utility method for lookup in the cross map
-typedef ore::analytics::SensitivityCube::crossPair crossPair;
-
-Size crossIndex(const crossPair& k, const map<crossPair, Size>& m) {
-
-    auto it = m.find(k);
-
-    // Try the other way around if not found, just in case
-    if (it == m.end()) {
-        it = m.find(std::make_pair(k.second, k.first));
-    }
-
-    QL_REQUIRE(it != m.end(),
-               "Key pair, [" << k.first << "," << k.second << "], was not found in the sensitivity cube.");
-
-    return it->second;
-}
-
 } // namespace
 
 namespace ore {
 namespace analytics {
+
+typedef SensitivityCube::crossPair crossPair;
 
 std::ostream& operator<<(std::ostream& out, const SensitivityCube::crossPair& cp) {
     return out << cp.first << "-" << cp.second;

@@ -76,6 +76,7 @@
 #include <ored/model/irlgmdata.hpp>
 #include <ored/model/lgmbuilder.hpp>
 #include <ored/model/lgmdata.hpp>
+#include <ored/model/marketobserver.hpp>
 #include <ored/model/modelbuilder.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/portfolio/bond.hpp>

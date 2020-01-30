@@ -393,9 +393,10 @@ boost::shared_ptr<QuantExt::CrossAssetModel> OREApp::buildCam(boost::shared_ptr<
     if (params_->has("markets", "simulation"))
         simulationMarketStr = params_->get("markets", "simulation");
 
-    CrossAssetModelBuilder modelBuilder(market, lgmCalibrationMarketStr, fxCalibrationMarketStr, eqCalibrationMarketStr,
-                                        infCalibrationMarketStr, simulationMarketStr);
-    return modelBuilder.build(modelData);
+    CrossAssetModelBuilder modelBuilder(market, modelData, lgmCalibrationMarketStr, fxCalibrationMarketStr,
+                                        eqCalibrationMarketStr, infCalibrationMarketStr, simulationMarketStr);
+    boost::shared_ptr<QuantExt::CrossAssetModel> model = *modelBuilder.model();
+    return model;
 }
 
 boost::shared_ptr<ScenarioGenerator>
