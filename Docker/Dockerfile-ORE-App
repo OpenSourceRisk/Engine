@@ -17,7 +17,7 @@ COPY Examples /ore/Examples
 
 RUN mkdir /ore/App
 COPY --from=env_ore /usr/local/bin /ore/App
-
+RUN true
 COPY --from=env_ore /usr/local/lib /usr/local/lib
 
 # Install Python solely to run the examples
