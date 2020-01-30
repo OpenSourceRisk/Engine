@@ -143,10 +143,14 @@ CalibrationStrategy parseCalibrationStrategy(const string& s) {
         return CalibrationStrategy::CoterminalATM;
     else if (boost::algorithm::to_upper_copy(s) == "COTERMINALDEALSTRIKE")
         return CalibrationStrategy::CoterminalDealStrike;
+    else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGATM")
+        return CalibrationStrategy::UnderlyingATM;
+    else if (boost::algorithm::to_upper_copy(s) == "UNDERLYINGDEALSTRIKE")
+        return CalibrationStrategy::UnderlyingDealStrike;
     else if (boost::algorithm::to_upper_copy(s) == "NONE")
         return CalibrationStrategy::None;
     else
-        QL_FAIL("Bermudan strategy " << s << " not recognized");
+        QL_FAIL("Calibration strategy " << s << " not recognized");
 }
 
 std::ostream& operator<<(std::ostream& oss, const CalibrationStrategy& type) {
@@ -154,10 +158,14 @@ std::ostream& operator<<(std::ostream& oss, const CalibrationStrategy& type) {
         oss << "COTERMINALATM";
     else if (type == CalibrationStrategy::CoterminalDealStrike)
         oss << "COTERMINALDEALSTRIKE";
+    else if (type == CalibrationStrategy::UnderlyingATM)
+        oss << "UNDERLYINGATM";
+    else if (type == CalibrationStrategy::UnderlyingDealStrike)
+        oss << "UNDERLYINGDEALSTRIKE";
     else if (type == CalibrationStrategy::None)
         oss << "NONE";
     else
-        QL_FAIL("Bermudan strategy not covered");
+        QL_FAIL("Calibration strategy not covered");
     return oss;
 }
 
