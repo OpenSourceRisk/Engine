@@ -32,6 +32,7 @@
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <qle/termstructures/aposurface.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
@@ -102,7 +103,8 @@ MockLoader::MockLoader() {
 }
 
 boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir,
-    const string& curveConfigFile, const string& marketFile = "market.txt") {
+    const string& curveConfigFile, const string& marketFile = "market.txt",
+    const string& fixingsFile = "fixings.txt") {
 
     Conventions conventions;
     conventions.fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
@@ -114,7 +116,7 @@ boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const strin
     todaysMarketParameters.fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
 
     CSVLoader loader(TEST_INPUT_FILE(string(inputDir + "/" + marketFile)),
-        TEST_INPUT_FILE(string(inputDir + "/fixings.txt")), false);
+        TEST_INPUT_FILE(string(inputDir + "/" + fixingsFile)), false);
 
     return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs, conventions);
 }
@@ -669,6 +671,40 @@ BOOST_DATA_TEST_CASE(testCommodityVolMoneynessSurface, bdata::make(asofDates) * 
     BOOST_TEST_MESSAGE("The two upper strike extrapolated volatilities are: " <<
         fixed << setprecision(12) << volUpperStrike << "," << volUpperExtrapStrike << ".");
     BOOST_CHECK_SMALL(volUpperStrike - volUpperExtrapStrike, tol);
+
+}
+
+BOOST_DATA_TEST_CASE(testCommodityApoSurface, bdata::make(asofDates), asof) {
+
+    BOOST_TEST_MESSAGE("Testing commodity volatility forward moneyness surface building");
+
+    Settings::instance().evaluationDate() = asof;
+    
+    string fixingsFile = "fixings_" + to_string(io::iso_date(asof)) + ".txt";
+    auto todaysMarket = createTodaysMarket(asof, "apo_surface", "curveconfig.xml", "market.txt", fixingsFile);
+
+    // Get the built commodity volatility surface
+    auto vts = todaysMarket->commodityVolatility("NYMEX:FF");
+
+    // Tolerance for float comparison
+    Real tol = 1e-12;
+
+    // Read in the expected on-grid results for the given date.
+    string filename = "apo_surface/expected_grid_" + to_string(io::iso_date(asof)) + ".csv";
+    CSVFileReader reader(TEST_INPUT_FILE(filename), true, ",");
+    BOOST_REQUIRE_EQUAL(reader.numberOfColumns(), 3);
+
+    while (reader.next()) {
+
+        // Get the expected expiry date, strike and volatility grid point
+        Date expiryDate = parseDate(reader.get(0));
+        Real strike = parseReal(reader.get(1));
+        Real volatility = parseReal(reader.get(2));
+
+        // Check the surface on the grid point.
+        BOOST_CHECK_SMALL(volatility - vts->blackVol(expiryDate, strike), tol);
+
+    }
 
 }
 

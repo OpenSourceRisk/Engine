@@ -118,9 +118,6 @@ private:
         cashflow in the baseLeg_ to associate with that time.
     */
     std::map<QuantLib::Size, QuantLib::Size> legIndexMap_;
-
-    //! Get the first basis contract expiry strictly prior to the curve reference date.
-    QuantLib::Date firstExpiry() const;
 };
 
 template <class Interpolator>
@@ -174,7 +171,7 @@ CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     this->times_ = basisTimes_;
 
     // Get the first basis contract expiry date strictly prior to the curve reference date.
-    Date start = firstExpiry();
+    Date start = basisFec_->priorExpiry(false, referenceDate);
 
     // Get the first basis contract expiry date on or after the max date. Here, max date is defined as the maximum of 
     // 1) last pillar date of base price curve and 2) basis curve data.
@@ -295,39 +292,6 @@ template <class Interpolator>
 QuantLib::Real CommodityAverageBasisPriceCurve<Interpolator>::priceImpl(QuantLib::Time t) const {
     calculate();
     return this->interpolation_(t, true);
-}
-
-template <class Interpolator>
-QuantLib::Date CommodityAverageBasisPriceCurve<Interpolator>::firstExpiry() const {
-
-    using QuantLib::Date;
-    using QuantLib::io::iso_date;
-    using QuantLib::Months;
-    using QuantLib::Size;
-
-    // Get the first expiry prior to the reference date. Assume that future contracts are at least weekly and at most
-    // 6 months spaced.
-    Size maxAttempts = 40;
-    Date nextExpiry = basisFec_->nextExpiry(true, referenceDate()) - 7 * Months;
-    QL_REQUIRE(nextExpiry < referenceDate(), "Expected that nextExpiry, " << io::iso_date(nextExpiry) <<
-        ", would be before curve reference date, " << io::iso_date(referenceDate()) << ".");
-    
-    // Loop until nextExpiry is >= today => result will hold the first expiry < today.
-    Date result;
-    while (nextExpiry < referenceDate() && maxAttempts > 0) {
-        result = nextExpiry;
-        nextExpiry = basisFec_->nextExpiry(false, result + 1 * Days);
-        maxAttempts--;
-    }
-
-    // Some post checks
-    QL_REQUIRE(maxAttempts > 0, "Could not find first expiry before reference date " << io::iso_date(referenceDate()));
-    QL_REQUIRE(nextExpiry >= referenceDate(), "Expected that nextExpiry, " << io::iso_date(nextExpiry) <<
-        ", would be on or after the curve reference date, " << io::iso_date(referenceDate()) << ".");
-    QL_REQUIRE(result < referenceDate(), "Expected that result, " << io::iso_date(result) <<
-        ", would be before the curve reference date, " << io::iso_date(referenceDate()) << ".");
-
-    return result;
 }
 
 }

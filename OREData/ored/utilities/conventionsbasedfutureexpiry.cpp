@@ -24,8 +24,9 @@ using std::string;
 namespace ore {
 namespace data {
 
-ConventionsBasedFutureExpiry::ConventionsBasedFutureExpiry(const CommodityFutureConvention& convention)
-    : convention_(convention) {}
+ConventionsBasedFutureExpiry::ConventionsBasedFutureExpiry(const CommodityFutureConvention& convention,
+    Size maxIterations)
+    : convention_(convention), maxIterations_(maxIterations) {}
 
 Date ConventionsBasedFutureExpiry::nextExpiry(bool includeExpiry, const Date& referenceDate,
     Natural offset, bool forOption) {
@@ -48,6 +49,36 @@ Date ConventionsBasedFutureExpiry::nextExpiry(bool includeExpiry, const Date& re
     }
 
     return expiryDate;
+}
+
+Date ConventionsBasedFutureExpiry::priorExpiry(bool includeExpiry, const Date& referenceDate, bool forOption) {
+
+    // Set the date relative to which we are calculating the preceding expiry
+    Date today = referenceDate == Date() ? Settings::instance().evaluationDate() : referenceDate;
+
+    // Get the next expiry relative to the reference date (including the reference date)
+    Date expiry = nextExpiry(true, today, 0, forOption);
+
+    // If that expiry is equal to reference date and we have set includeExpiry to true, we are done.
+    if (includeExpiry && expiry == today)
+        return expiry;
+
+    // Get the preceding expiry.
+    Period p(convention_.contractFrequency());
+    Date baseDate = convention_.expiryCalendar().advance(expiry, -p);
+    expiry = nextExpiry(true, baseDate, 0, forOption);
+
+    // May still not have the preceding expiry but must be close
+    Size counter = maxIterations_;
+    while (expiry >= today && counter > 0) {
+        baseDate--;
+        counter--;
+        expiry = nextExpiry(true, baseDate, 0, forOption);
+    }
+    QL_REQUIRE(expiry < today, "Expected that expiry " << io::iso_date(expiry) <<
+        " would be less than reference date " << io::iso_date(today) << ".");
+
+    return expiry;
 }
 
 Date ConventionsBasedFutureExpiry::expiryDate(Month contractMonth,

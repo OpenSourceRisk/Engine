@@ -48,6 +48,20 @@ public:
         QuantLib::Natural offset = 0, 
         bool forOption = false) = 0;
 
+    /*! Given  a reference date, \p referenceDate, return the expiry date of the first futures contract prior to
+        the reference date.
+
+        The \p includeExpiry parameter controls what happens when the \p referenceDate is equal to the prior contract's
+        expiry date. If \p includeExpiry is \c true, the contract's expiry date is returned. If \p includeExpiry is
+        \c false, the next preceding contract's expiry is returned.
+
+        If \p forOption is \c true, the prior expiry for the option contract, as opposed to the future contract, is
+        returned.
+    */
+    virtual QuantLib::Date priorExpiry(bool includeExpiry = true,
+        const QuantLib::Date& referenceDate = QuantLib::Date(),
+        bool forOption = false) = 0;
+
     /*! Given the contract's month, \p contractMonth and the contract's year, \p contractYear, return the expiry date 
         of the future contract that is \p monthOffset number of months from the future contract. If \p monthOffset is 
         zero, the expiry date of the future contract itself is returned.

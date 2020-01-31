@@ -21,7 +21,9 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <qle/indexes/commodityindex.hpp>
 #include <qle/math/flatextrapolation.hpp>
+#include <qle/termstructures/aposurface.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
@@ -50,7 +52,8 @@ namespace data {
 CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatilityCurveSpec& spec,
     const Loader& loader, const CurveConfigurations& curveConfigs, const Conventions& conventions,
     const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-    const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves) {
+    const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
+    const map<string, boost::shared_ptr<CommodityVolCurve>>& commodityVolCurves) {
 
     try {
         LOG("CommodityVolCurve: start building commodity volatility structure with ID " << spec.curveConfigID());
@@ -88,6 +91,39 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
             bool fwdMoneyness = moneynessType == MoneynessStrike::Type::Forward;
             populateCurves(config, yieldCurves, commodityCurves, fwdMoneyness);
             buildVolatility(asof, config, *vmsc, loader);
+        } else if (auto vapo = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
+
+            // Get the base conventions and create the associated expiry calculator.
+            QL_REQUIRE(!vapo->baseConventionsId().empty(),
+                "The APO FutureConventions must be populated to build a future APO surface");
+            QL_REQUIRE(conventions.has(vapo->baseConventionsId()), "Conventions, " <<
+                vapo->baseConventionsId() << " for config " << config.curveID() << " not found.");
+            auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(
+                conventions.get(vapo->baseConventionsId()));
+            QL_REQUIRE(convention, "Convention with ID '" << config.futureConventionsId() <<
+                "' should be of type CommodityFutureConvention");
+            auto baseExpCalc = boost::make_shared<ConventionsBasedFutureExpiry>(*convention);
+
+            // Need to get the base commodity volatility structure.
+            QL_REQUIRE(!vapo->baseVolatilityId().empty(),
+                "The APO VolatilityId must be populated to build a future APO surface.");
+            auto itVs = commodityVolCurves.find(vapo->baseVolatilityId());
+            QL_REQUIRE(itVs != commodityVolCurves.end(),
+                "Can't find commodity volatility with id " << vapo->baseVolatilityId());
+            auto baseVs = Handle<BlackVolTermStructure>(itVs->second->volatility());
+
+            // Need to get the base price curve
+            QL_REQUIRE(!vapo->basePriceCurveId().empty(),
+                "The APO PriceCurveId must be populated to build a future APO surface.");
+            auto itPts = commodityCurves.find(vapo->basePriceCurveId());
+            QL_REQUIRE(itPts != commodityCurves.end(), "Can't find price curve with id " << vapo->basePriceCurveId());
+            auto basePts = Handle<PriceTermStructure>(itPts->second->commodityPriceCurve());
+
+            // Need a yield curve and price curve to create an APO surface.
+            populateCurves(config, yieldCurves, commodityCurves, true);
+
+            buildVolatility(asof, config, *vapo, baseVs, basePts, conventions);
+
         } else {
             QL_FAIL("Unexpected VolatilityConfig in CommodityVolatilityConfig");
         }
@@ -809,14 +845,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     LOG("CommodityVolCurve: start building 2-D volatility moneyness strike surface");
 
     // Parse, sort and check the vector of configured moneyness levels
-    vector<Real> moneynessLevels = parseVectorOfValues<Real>(vmsc.moneynessLevels(), &parseReal);
-    sort(moneynessLevels.begin(), moneynessLevels.end(), [](Real x, Real y) { return !close(x, y) && x < y; });
-    QL_REQUIRE(adjacent_find(moneynessLevels.begin(), moneynessLevels.end(),
-        [](Real x, Real y) { return close(x, y); }) == moneynessLevels.end(),
-        "The configured moneyness levels contain duplicates");
-    DLOG("Parsed " << moneynessLevels.size() << " unique configured moneyness levels.");
-    DLOG("The moneyness levels are: " << join(moneynessLevels | 
-        transformed([](Real d) { return ore::data::to_string(d); }), ","));
+    vector<Real> moneynessLevels = checkMoneyness(vmsc.moneynessLevels());
 
     // Expiries may be configured with a wildcard or given explicitly
     bool expWc = false;
@@ -1011,6 +1040,90 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     LOG("CommodityVolCurve: finished building 2-D volatility moneyness strike surface");
 }
 
+void CommodityVolCurve::buildVolatility(
+    const Date& asof,
+    CommodityVolatilityConfig& vc,
+    const VolatilityApoFutureSurfaceConfig& vapo,
+    const Handle<BlackVolTermStructure>& baseVts,
+    const Handle<PriceTermStructure>& basePts,
+    const Conventions& conventions) {
+
+    LOG("CommodityVolCurve: start building the APO surface");
+
+    // Get the base conventions and create the associated expiry calculator.
+    QL_REQUIRE(!vapo.baseConventionsId().empty(),
+        "The APO FutureConventions must be populated to build a future APO surface");
+    QL_REQUIRE(conventions.has(vapo.baseConventionsId()), "Conventions, " <<
+        vapo.baseConventionsId() << " for config " << vc.curveID() << " not found.");
+    auto baseConvention = boost::dynamic_pointer_cast<CommodityFutureConvention>(
+        conventions.get(vapo.baseConventionsId()));
+    QL_REQUIRE(baseConvention, "Convention with ID '" << vapo.baseConventionsId() <<
+        "' should be of type CommodityFutureConvention");
+
+    auto baseExpCalc = boost::make_shared<ConventionsBasedFutureExpiry>(*baseConvention);
+
+    // Get the max tenor from the config if provided.
+    boost::optional<QuantLib::Period> maxTenor;
+    if (!vapo.maxTenor().empty())
+        maxTenor = parsePeriod(vapo.maxTenor());
+
+    // Get the moneyness levels
+    vector<Real> moneynessLevels = checkMoneyness(vapo.moneynessLevels());
+
+    // Get the beta parameter to use for valuing the APOs in the surface
+    Real beta = vapo.beta();
+
+    // Construct the commodity "spot index". We pass this to merely indicate the commodity. It is replaced with a 
+    // commodity future index during curve construction in QuantExt.
+    auto index = boost::make_shared<CommoditySpotIndex>(baseConvention->id(), baseConvention->calendar(), basePts);
+
+    // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
+    // BlackVarianceSurfaceMoneyness, which underlies the ApoFutureSurface, has time extrapolation hard-coded to 
+    // constant in volatility.
+    bool flatExtrapolation = true;
+    if (vapo.extrapolation()) {
+
+        auto strikeExtrapType = parseExtrapolation(vapo.strikeExtrapolation());
+        if (strikeExtrapType == Extrapolation::UseInterpolator) {
+            DLOG("Strike extrapolation switched to using interpolator.");
+            flatExtrapolation = false;
+        } else if (strikeExtrapType == Extrapolation::None) {
+            DLOG("Strike extrapolation cannot be turned off on its own so defaulting to flat.");
+        } else if (strikeExtrapType == Extrapolation::Flat) {
+            DLOG("Strike extrapolation has been set to flat.");
+        } else {
+            DLOG("Strike extrapolation " << strikeExtrapType << " not expected so default to flat.");
+        }
+
+        auto timeExtrapType = parseExtrapolation(vapo.timeExtrapolation());
+        if (timeExtrapType != Extrapolation::Flat) {
+            DLOG("ApoFutureSurface only supports flat volatility extrapolation in the time direction");
+        }
+    } else {
+        DLOG("Extrapolation is turned off for the whole surface so the time and" <<
+            " strike extrapolation settings are ignored");
+    }
+
+    // Time interpolation
+    if (vapo.timeInterpolation() != "Linear") {
+        DLOG("ApoFutureSurface only supports linear time interpolation in variance.");
+    }
+
+    // Strike interpolation
+    if (vapo.strikeInterpolation() != "Linear") {
+        DLOG("ApoFutureSurface only supports linear strike interpolation in variance.");
+    }
+
+    DLOG("Creating ApoFutureSurface object");
+    volatility_ = boost::make_shared<ApoFutureSurface>(asof, moneynessLevels, index, pts_, yts_, 
+        expCalc_, baseVts, baseExpCalc, beta, flatExtrapolation, maxTenor);
+
+    DLOG("Setting ApoFutureSurface extrapolation to " << to_string(vapo.extrapolation()));
+    volatility_->enableExtrapolation(vapo.extrapolation());
+
+    LOG("CommodityVolCurve: finished building the APO surface");
+}
+
 Handle<PriceTermStructure> CommodityVolCurve::correctFuturePriceCurve(const Date& asof, const string& contractName,
     const boost::shared_ptr<PriceTermStructure>& pts, const vector<Date>& optionExpiries) const {
 
@@ -1173,6 +1286,23 @@ void CommodityVolCurve::populateCurves(const CommodityVolatilityConfig& config,
     auto itPts = commodityCurves.find(config.priceCurveId());
     QL_REQUIRE(itPts != commodityCurves.end(), "Can't find price curve with id " << config.priceCurveId());
     pts_ = Handle<PriceTermStructure>(itPts->second->commodityPriceCurve());
+}
+
+vector<Real> CommodityVolCurve::checkMoneyness(const vector<string>& strMoneynessLevels) const {
+    
+    using boost::adaptors::transformed;
+    using boost::algorithm::join;
+
+    vector<Real> moneynessLevels = parseVectorOfValues<Real>(strMoneynessLevels, &parseReal);
+    sort(moneynessLevels.begin(), moneynessLevels.end(), [](Real x, Real y) { return !close(x, y) && x < y; });
+    QL_REQUIRE(adjacent_find(moneynessLevels.begin(), moneynessLevels.end(),
+        [](Real x, Real y) { return close(x, y); }) == moneynessLevels.end(),
+        "The configured moneyness levels contain duplicates");
+    DLOG("Parsed " << moneynessLevels.size() << " unique configured moneyness levels.");
+    DLOG("The moneyness levels are: " << join(moneynessLevels |
+        transformed([](Real d) { return ore::data::to_string(d); }), ","));
+
+    return moneynessLevels;
 }
 
 }

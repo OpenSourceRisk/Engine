@@ -125,9 +125,6 @@ private:
     */
     std::map<QuantLib::Size, QuantLib::Size> legIndexMap_;
 
-    //! Get the first basis contract expiry date on or after the curve reference date.
-    QuantLib::Date firstExpiry() const;
-
     //! Get the contract month and year from an expiry
     QuantLib::Date getContractDate(const QuantLib::Date& expiry,
         const boost::shared_ptr<FutureExpiryCalculator>& fec) const;
@@ -190,7 +187,7 @@ CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     this->times_ = basisTimes_;
 
     // Get the first basis contract expiry date on or after the curve reference date.
-    Date basisExpiry = firstExpiry();
+    Date basisExpiry = basisFec_->nextExpiry(true, referenceDate);
 
     // Get the first basis contract expiry date on or after the max date. Here, max date is defined as the maximum of 
     // 1) last pillar date of base price curve and 2) basis curve data.
@@ -293,35 +290,6 @@ template <class Interpolator>
 QuantLib::Real CommodityBasisPriceCurve<Interpolator>::priceImpl(QuantLib::Time t) const {
     calculate();
     return this->interpolation_(t, true);
-}
-
-template <class Interpolator>
-QuantLib::Date CommodityBasisPriceCurve<Interpolator>::firstExpiry() const {
-
-    using QuantLib::Date;
-    using QuantLib::io::iso_date;
-    using QuantLib::Months;
-    using QuantLib::Size;
-
-    // Get the first expiry prior to the reference date. Assume that future contracts are at least weekly and at most
-    // 6 months spaced.
-    Size maxAttempts = 40;
-    Date nextExpiry = basisFec_->nextExpiry(true, referenceDate()) - 7 * Months;
-    QL_REQUIRE(nextExpiry < referenceDate(), "Expected that nextExpiry, " << iso_date(nextExpiry) <<
-        ", would be before curve reference date, " << iso_date(referenceDate()) << ".");
-    
-    // Loop until nextExpiry is >= today.
-    while (nextExpiry < referenceDate() && maxAttempts > 0) {
-        nextExpiry = basisFec_->nextExpiry(false, nextExpiry + 1 * Days);
-        maxAttempts--;
-    }
-
-    // Some post checks
-    QL_REQUIRE(maxAttempts > 0, "Could not find first expiry before reference date " << iso_date(referenceDate()));
-    QL_REQUIRE(nextExpiry >= referenceDate(), "Expected that nextExpiry, " << iso_date(nextExpiry) <<
-        ", would be on or after the curve reference date, " << iso_date(referenceDate()) << ".");
-
-    return nextExpiry;
 }
 
 template <class Interpolator>
