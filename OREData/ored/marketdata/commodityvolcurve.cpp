@@ -21,6 +21,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <qle/indexes/commodityindex.hpp>
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/termstructures/aposurface.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
@@ -108,7 +109,7 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
                 "The APO VolatilityId must be populated to build a future APO surface.");
             auto itVs = commodityVolCurves.find(vapo->baseVolatilityId());
             QL_REQUIRE(itVs != commodityVolCurves.end(),
-                "Can't find commodity volatility with id " << vapo->basePriceCurveId());
+                "Can't find commodity volatility with id " << vapo->baseVolatilityId());
             auto baseVs = Handle<BlackVolTermStructure>(itVs->second->volatility());
 
             // Need to get the base price curve
@@ -121,7 +122,7 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
             // Need a yield curve and price curve to create an APO surface.
             populateCurves(config, yieldCurves, commodityCurves, true);
 
-            buildVolatility(asof, config, *vapo, baseVs, basePts, baseExpCalc);
+            buildVolatility(asof, config, *vapo, baseVs, basePts, conventions);
 
         } else {
             QL_FAIL("Unexpected VolatilityConfig in CommodityVolatilityConfig");
@@ -1045,9 +1046,21 @@ void CommodityVolCurve::buildVolatility(
     const VolatilityApoFutureSurfaceConfig& vapo,
     const Handle<BlackVolTermStructure>& baseVts,
     const Handle<PriceTermStructure>& basePts,
-    const boost::shared_ptr<FutureExpiryCalculator>& baseExpCalc) {
+    const Conventions& conventions) {
 
     LOG("CommodityVolCurve: start building the APO surface");
+
+    // Get the base conventions and create the associated expiry calculator.
+    QL_REQUIRE(!vapo.baseConventionsId().empty(),
+        "The APO FutureConventions must be populated to build a future APO surface");
+    QL_REQUIRE(conventions.has(vapo.baseConventionsId()), "Conventions, " <<
+        vapo.baseConventionsId() << " for config " << vc.curveID() << " not found.");
+    auto baseConvention = boost::dynamic_pointer_cast<CommodityFutureConvention>(
+        conventions.get(vapo.baseConventionsId()));
+    QL_REQUIRE(baseConvention, "Convention with ID '" << vapo.baseConventionsId() <<
+        "' should be of type CommodityFutureConvention");
+
+    auto baseExpCalc = boost::make_shared<ConventionsBasedFutureExpiry>(*baseConvention);
 
     // Get the max tenor from the config if provided.
     boost::optional<QuantLib::Period> maxTenor;
@@ -1056,6 +1069,13 @@ void CommodityVolCurve::buildVolatility(
 
     // Get the moneyness levels
     vector<Real> moneynessLevels = checkMoneyness(vapo.moneynessLevels());
+
+    // Get the beta parameter to use for valuing the APOs in the surface
+    Real beta = vapo.beta();
+
+    // Construct the commodity "spot index". We pass this to merely indicate the commodity. It is replaced with a 
+    // commodity future index during curve construction in QuantExt.
+    auto index = boost::make_shared<CommoditySpotIndex>(baseConvention->id(), baseConvention->calendar(), basePts);
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurfaceMoneyness, which underlies the ApoFutureSurface, has time extrapolation hard-coded to 
@@ -1095,8 +1115,8 @@ void CommodityVolCurve::buildVolatility(
     }
 
     DLOG("Creating ApoFutureSurface object");
-    volatility_ = boost::make_shared<ApoFutureSurface>(asof, moneynessLevels, pts_, yts_, expCalc_,
-        baseVts, basePts, baseExpCalc, flatExtrapolation, maxTenor);
+    volatility_ = boost::make_shared<ApoFutureSurface>(asof, moneynessLevels, index, pts_, yts_, 
+        expCalc_, baseVts, baseExpCalc, beta, flatExtrapolation, maxTenor);
 
     DLOG("Setting ApoFutureSurface extrapolation to " << to_string(vapo.extrapolation()));
     volatility_->enableExtrapolation(vapo.extrapolation());

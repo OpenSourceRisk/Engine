@@ -44,6 +44,7 @@ public:
     Settlement::Method settlementMethod() const { return settlementMethod_; }
     const boost::shared_ptr<CommodityIndexedAverageCashFlow>& underlyingFlow() const { return flow_; }
     Real underlyingForwardValue() const { return underlyingForwardValue_; }
+    QuantLib::Real sigma() const { return sigma_; }
     //@}
 private:
     void fetchResults(const PricingEngine::results*) const;
@@ -55,9 +56,10 @@ private:
     QuantLib::Settlement::Type settlementType_;
     QuantLib::Settlement::Method settlementMethod_;
     mutable Real underlyingForwardValue_;
+    mutable QuantLib::Real sigma_;
 };
 
-//! %Arguments for swaption calculation
+//! %Arguments for commodity APO calculation
 class CommodityAveragePriceOption::arguments : public Option::arguments {
 public:
     arguments() : settlementType(Settlement::Physical) {}
@@ -71,10 +73,11 @@ public:
     void validate() const;
 };
 
-//! %Results from CDS-option calculation
+//! %Results from commodity APO calculation
 class CommodityAveragePriceOption::results : public Option::results {
 public:
     Real underlyingForwardValue;
+    QuantLib::Real sigma;
     void reset();
 };
 

@@ -24,6 +24,8 @@
 #ifndef quantext_apo_surface_hpp
 #define quantext_apo_surface_hpp
 
+#include <qle/indexes/commodityindex.hpp>
+#include <qle/pricingengines/commodityapoengine.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
@@ -40,12 +42,13 @@ class ApoFutureSurface : public QuantLib::LazyObject, public QuantLib::BlackVola
 public:
     ApoFutureSurface(const QuantLib::Date& referenceDate,
         const std::vector<QuantLib::Real>& moneynessLevels,
+        const boost::shared_ptr<CommoditySpotIndex>& index,
         const QuantLib::Handle<PriceTermStructure>& pts,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& yts,
         const boost::shared_ptr<FutureExpiryCalculator>& expCalc,
-        const QuantLib::Handle<BlackVolTermStructure>& baseVts,
-        const QuantLib::Handle<PriceTermStructure>& basePts,
+        const QuantLib::Handle<QuantLib::BlackVolTermStructure>& baseVts,
         const boost::shared_ptr<FutureExpiryCalculator>& baseExpCalc,
+        QuantLib::Real beta = 0.0,
         bool flatStrikeExtrapolation = true,
         const boost::optional<QuantLib::Period>& maxTenor = boost::none);
     
@@ -74,6 +77,11 @@ public:
     void performCalculations() const override;
     //@}
 
+    //! \name Inspectors
+    //@{
+    const boost::shared_ptr<BlackVarianceSurfaceMoneyness>& vts() const;
+    //@}
+
 protected:
     //! \name BlackVolatilityTermStructure
     //@{
@@ -81,13 +89,8 @@ protected:
     //@}
 
 private:
-    QuantLib::Handle<PriceTermStructure> pts_;
-    QuantLib::Handle<QuantLib::YieldTermStructure> yts_;
-    boost::shared_ptr<FutureExpiryCalculator> expCalc_;
-    QuantLib::Handle<BlackVolTermStructure> baseVts_;
-    QuantLib::Handle<PriceTermStructure> basePts_;
+    boost::shared_ptr<CommoditySpotIndex> index_;
     boost::shared_ptr<FutureExpiryCalculator> baseExpCalc_;
-    boost::optional<QuantLib::Period> maxTenor_;
 
     //! The APO schedule dates.
     std::vector<QuantLib::Date> apoDates_;
@@ -96,7 +99,10 @@ private:
     std::vector<std::vector<boost::shared_ptr<QuantLib::SimpleQuote>>> vols_;
 
     //! The surface that is created to do the work.
-    boost::shared_ptr<BlackVarianceSurfaceMoneynessForward> vts_;
+    boost::shared_ptr<BlackVarianceSurfaceMoneyness> vts_;
+
+    //! The engine for valuing the APOs
+    boost::shared_ptr<CommodityAveragePriceOptionBaseEngine> apoEngine_;
 };
 
 }

@@ -40,7 +40,6 @@ using namespace QuantLib;
           based constructor. This would cover the cases of fixed expiry options and options specified in terms 
           of tenors. The times should be calculated internally in the class. What is maxDate() when you use times
           in the interface?
-          how should stickyStrike_ set to true work with a moving reference date?
     
     \ingroup termstructures
 */
@@ -88,6 +87,12 @@ public:
     //@{
     virtual void accept(AcyclicVisitor&);
     //@}
+
+    //! \name Inspectors
+    //@{
+    std::vector<QuantLib::Real> moneyness() const { return moneyness_; }
+    //@}
+
 protected:
     virtual Real moneyness(Time t, Real strike) const = 0;
     bool stickyStrike_;

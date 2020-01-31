@@ -45,11 +45,13 @@ void CommodityAveragePriceOption::fetchResults(const PricingEngine::results* r) 
     const CommodityAveragePriceOption::results* results = dynamic_cast<const CommodityAveragePriceOption::results*>(r);
     QL_ENSURE(results != 0, "wrong results type");
     underlyingForwardValue_ = results->underlyingForwardValue;
+    sigma_ = results->sigma;
 }
 
 void CommodityAveragePriceOption::results::reset() {
     Option::results::reset();
     underlyingForwardValue = Null<Real>();
+    sigma = Null<Real>();
 }
 
 void CommodityAveragePriceOption::arguments::validate() const {

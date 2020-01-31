@@ -189,8 +189,12 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     Real tn = times.back();
     Real sigma = sqrt(log(EA2 / (EA * EA)) / tn);
     Real discount = discountCurve_->discount(arguments_.flow->date());
+    
+    // Populate results
     results_.value = arguments_.quantity * arguments_.flow->gearing() * 
         blackFormula(arguments_.type, effectiveStrike, EA, sigma * sqrt(tn), discount);
+    results_.underlyingForwardValue = EA;
+    results_.sigma = sigma;
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculate() const {
@@ -287,6 +291,8 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const pair<Real,
 
     // Populate the result value
     results_.value = arguments_.quantity * arguments_.flow->gearing() * payoff * discount;
+    results_.underlyingForwardValue = Null<Real>();
+    results_.sigma = Null<Real>();
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const pair<Real, Size>& accrued) const {
@@ -382,6 +388,8 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const pair<Rea
 
     // Populate the result value
     results_.value = arguments_.quantity * arguments_.flow->gearing() * payoff * discount;
+    results_.underlyingForwardValue = Null<Real>();
+    results_.sigma = Null<Real>();
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::setupFuture(vector<Real>& outVolatilities,

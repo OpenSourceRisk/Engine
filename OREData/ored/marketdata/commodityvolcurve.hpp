@@ -133,7 +133,7 @@ private:
         const VolatilityApoFutureSurfaceConfig& vapo,
         const QuantLib::Handle<QuantLib::BlackVolTermStructure>& baseVts,
         const QuantLib::Handle<QuantExt::PriceTermStructure>& basePts,
-        const boost::shared_ptr<QuantExt::FutureExpiryCalculator>& baseExpCalc);
+        const Conventions& conventions);
 
     /*! Assume that the input price curve \p pts is a future price curve giving the price of a sequence of future 
         contracts at the contract expiry. Create a copy of this input curve with additional pillar points at 

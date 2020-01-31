@@ -77,20 +77,16 @@ XMLNode* VolatilityCurveConfig::toXML(XMLDocument& doc) {
 VolatilitySurfaceConfig::VolatilitySurfaceConfig() {}
 
 VolatilitySurfaceConfig::VolatilitySurfaceConfig(
-    const vector<string>& expiries,
     const string& timeInterpolation,
     const string& strikeInterpolation,
     bool extrapolation,
     const string& timeExtrapolation,
     const string& strikeExtrapolation)
-    : expiries_(expiries),
-      timeInterpolation_(timeInterpolation),
+    : timeInterpolation_(timeInterpolation),
       strikeInterpolation_(strikeInterpolation),
       extrapolation_(extrapolation),
       timeExtrapolation_(timeExtrapolation),
       strikeExtrapolation_(strikeExtrapolation) {}
-
-const vector<string>& VolatilitySurfaceConfig::expiries() const { return expiries_; }
 
 const string& VolatilitySurfaceConfig::timeInterpolation() const { return timeInterpolation_; }
 
@@ -103,7 +99,6 @@ const string& VolatilitySurfaceConfig::timeExtrapolation() const { return timeEx
 const string& VolatilitySurfaceConfig::strikeExtrapolation() const { return strikeExtrapolation_; }
 
 void VolatilitySurfaceConfig::fromNode(XMLNode* node) {
-    expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
     timeInterpolation_ = XMLUtils::getChildValue(node, "TimeInterpolation", true);
     strikeInterpolation_ = XMLUtils::getChildValue(node, "StrikeInterpolation", true);
     extrapolation_ = parseBool(XMLUtils::getChildValue(node, "Extrapolation", true));
@@ -112,7 +107,6 @@ void VolatilitySurfaceConfig::fromNode(XMLNode* node) {
 }
 
 void VolatilitySurfaceConfig::addNodes(XMLDocument& doc, XMLNode* node) const {
-    XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
     XMLUtils::addChild(doc, node, "TimeInterpolation", timeInterpolation_);
     XMLUtils::addChild(doc, node, "StrikeInterpolation", strikeInterpolation_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
@@ -130,10 +124,12 @@ VolatilityStrikeSurfaceConfig::VolatilityStrikeSurfaceConfig(
     bool extrapolation,
     const string& timeExtrapolation,
     const string& strikeExtrapolation)
-    : VolatilitySurfaceConfig(expiries, timeInterpolation, strikeInterpolation, extrapolation,
-        timeExtrapolation, strikeExtrapolation), strikes_(strikes) {}
+    : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation,
+        timeExtrapolation, strikeExtrapolation), strikes_(strikes), expiries_(expiries) {}
 
 const vector<string>& VolatilityStrikeSurfaceConfig::strikes() const { return strikes_; }
+
+const vector<string>& VolatilityStrikeSurfaceConfig::expiries() const { return expiries_; }
 
 vector<pair<string, string>> VolatilityStrikeSurfaceConfig::quotes() const {
     
@@ -151,12 +147,14 @@ vector<pair<string, string>> VolatilityStrikeSurfaceConfig::quotes() const {
 void VolatilityStrikeSurfaceConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "StrikeSurface");
     strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", true);
+    expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
     fromNode(node);
 }
 
 XMLNode* VolatilityStrikeSurfaceConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("StrikeSurface");
     XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
+    XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
     addNodes(doc, node);
     return node;
 }
@@ -176,10 +174,10 @@ VolatilityDeltaSurfaceConfig::VolatilityDeltaSurfaceConfig(
     const string& strikeExtrapolation,
     const std::string& atmDeltaType,
     bool futurePriceCorrection)
-    : VolatilitySurfaceConfig(expiries, timeInterpolation, strikeInterpolation, extrapolation,
+    : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation,
         timeExtrapolation, strikeExtrapolation), deltaType_(deltaType), atmType_(atmType),
-        putDeltas_(putDeltas), callDeltas_(callDeltas), atmDeltaType_(atmDeltaType),
-        futurePriceCorrection_(futurePriceCorrection) {
+        putDeltas_(putDeltas), callDeltas_(callDeltas), expiries_(expiries),
+        atmDeltaType_(atmDeltaType), futurePriceCorrection_(futurePriceCorrection) {
 }
 
 const string& VolatilityDeltaSurfaceConfig::deltaType() const { return deltaType_; }
@@ -189,6 +187,8 @@ const string& VolatilityDeltaSurfaceConfig::atmType() const { return atmType_; }
 const vector<string>& VolatilityDeltaSurfaceConfig::putDeltas() const { return putDeltas_; }
 
 const vector<string>& VolatilityDeltaSurfaceConfig::callDeltas() const { return callDeltas_; }
+
+const vector<string>& VolatilityDeltaSurfaceConfig::expiries() const { return expiries_; }
 
 const string& VolatilityDeltaSurfaceConfig::atmDeltaType() const { return atmDeltaType_; }
 
@@ -226,6 +226,7 @@ void VolatilityDeltaSurfaceConfig::fromXML(XMLNode* node) {
     atmDeltaType_ = XMLUtils::getChildValue(node, "AtmDeltaType", false);
     putDeltas_ = XMLUtils::getChildrenValuesAsStrings(node, "PutDeltas", true);
     callDeltas_ = XMLUtils::getChildrenValuesAsStrings(node, "CallDeltas", true);
+    expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
     futurePriceCorrection_ = true;
     if (XMLNode* n = XMLUtils::getChildNode(node, "FuturePriceCorrection"))
         futurePriceCorrection_ = parseBool(XMLUtils::getNodeValue(n));
@@ -240,6 +241,7 @@ XMLNode* VolatilityDeltaSurfaceConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "AtmDeltaType", atmDeltaType_);
     XMLUtils::addGenericChildAsList(doc, node, "PutDeltas", putDeltas_);
     XMLUtils::addGenericChildAsList(doc, node, "CallDeltas", callDeltas_);
+    XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
     addNodes(doc, node);
     XMLUtils::addChild(doc, node, "FuturePriceCorrection", futurePriceCorrection_);
 
@@ -258,14 +260,16 @@ VolatilityMoneynessSurfaceConfig::VolatilityMoneynessSurfaceConfig(
     const string& timeExtrapolation,
     const string& strikeExtrapolation,
     bool futurePriceCorrection)
-    : VolatilitySurfaceConfig(expiries, timeInterpolation, strikeInterpolation, extrapolation,
+    : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation,
         timeExtrapolation, strikeExtrapolation), moneynessType_(moneynessType),
-        moneynessLevels_(moneynessLevels), futurePriceCorrection_(futurePriceCorrection) {
+        moneynessLevels_(moneynessLevels), expiries_(expiries), futurePriceCorrection_(futurePriceCorrection) {
 }
 
 const string& VolatilityMoneynessSurfaceConfig::moneynessType() const { return moneynessType_; }
 
 const vector<string>& VolatilityMoneynessSurfaceConfig::moneynessLevels() const { return moneynessLevels_; }
+
+const vector<string>& VolatilityMoneynessSurfaceConfig::expiries() const { return expiries_; }
 
 bool VolatilityMoneynessSurfaceConfig::futurePriceCorrection() const { return futurePriceCorrection_; }
 
@@ -289,6 +293,7 @@ void VolatilityMoneynessSurfaceConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "MoneynessSurface");
     moneynessType_ = XMLUtils::getChildValue(node, "MoneynessType", true);
     moneynessLevels_ = XMLUtils::getChildrenValuesAsStrings(node, "MoneynessLevels", true);
+    expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
     futurePriceCorrection_ = true;
     if (XMLNode* n = XMLUtils::getChildNode(node, "FuturePriceCorrection"))
         futurePriceCorrection_ = parseBool(XMLUtils::getNodeValue(n));
@@ -299,6 +304,7 @@ XMLNode* VolatilityMoneynessSurfaceConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("MoneynessSurface");
     XMLUtils::addChild(doc, node, "MoneynessType", moneynessType_);
     XMLUtils::addGenericChildAsList(doc, node, "MoneynessLevels", moneynessLevels_);
+    XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
     addNodes(doc, node);
     XMLUtils::addChild(doc, node, "FuturePriceCorrection", futurePriceCorrection_);
 
@@ -319,7 +325,7 @@ VolatilityApoFutureSurfaceConfig::VolatilityApoFutureSurfaceConfig(
     const std::string& strikeExtrapolation,
     Real beta,
     const std::string& maxTenor)
-    : VolatilitySurfaceConfig(vector<string>(), timeInterpolation, strikeInterpolation, extrapolation,
+    : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation,
       timeExtrapolation, strikeExtrapolation), moneynessLevels_(moneynessLevels), baseVolatilityId_(baseVolatilityId),
       basePriceCurveId_(basePriceCurveId), baseConventionsId_(baseConventionsId), beta_(beta), maxTenor_(maxTenor) {
 }

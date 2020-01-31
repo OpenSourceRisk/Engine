@@ -103,7 +103,6 @@ public:
 
     //! Explicit constructor
     VolatilitySurfaceConfig(
-        const std::vector<std::string>& expiries,
         const std::string& timeInterpolation,
         const std::string& strikeInterpolation,
         bool extrapolation,
@@ -112,7 +111,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const std::vector<std::string>& expiries() const;
     const std::string& timeInterpolation() const;
     const std::string& strikeInterpolation() const;
     bool extrapolation() const;
@@ -136,7 +134,6 @@ protected:
     void addNodes(ore::data::XMLDocument& doc, ore::data::XMLNode* node) const;
 
 private:
-    std::vector<std::string> expiries_;
     std::string timeInterpolation_;
     std::string strikeInterpolation_;
     bool extrapolation_;
@@ -165,6 +162,7 @@ public:
     //! \name Inspectors
     //@{
     const std::vector<std::string>& strikes() const;
+    const std::vector<std::string>& expiries() const;
     //@}
 
     //! \name VolatilitySurfaceConfig
@@ -180,6 +178,7 @@ public:
 
 private:
     std::vector<std::string> strikes_;
+    std::vector<std::string> expiries_;
 };
 
 /*! Volatility configuration for a 2-D delta volatility surface
@@ -211,6 +210,7 @@ public:
     const std::string& atmType() const;
     const std::vector<std::string>& putDeltas() const;
     const std::vector<std::string>& callDeltas() const;
+    const std::vector<std::string>& expiries() const;
     const std::string& atmDeltaType() const;
     bool futurePriceCorrection() const;
     //@}
@@ -231,6 +231,7 @@ private:
     std::string atmType_;
     std::vector<std::string> putDeltas_;
     std::vector<std::string> callDeltas_;
+    std::vector<std::string> expiries_;
     std::string atmDeltaType_;
     bool futurePriceCorrection_;
 };
@@ -259,6 +260,7 @@ public:
     //@{
     const std::string& moneynessType() const;
     const std::vector<std::string>& moneynessLevels() const;
+    const std::vector<std::string>& expiries() const;
     bool futurePriceCorrection() const;
     //@}
 
@@ -276,6 +278,7 @@ public:
 private:
     std::string moneynessType_;
     std::vector<std::string> moneynessLevels_;
+    std::vector<std::string> expiries_;
     bool futurePriceCorrection_;
 };
 
