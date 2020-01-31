@@ -1076,20 +1076,20 @@ Handle<PriceTermStructure> CommodityVolCurve::correctFuturePriceCurve(const Date
     // Create the "corrected" curve. Again messy but can't think of another way.
     boost::shared_ptr<PriceTermStructure> cpts;
     if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<Linear>>(pts)) {
-        cpts = boost::make_shared<InterpolatedPriceCurve<Linear>>(asof, curveDates, curvePrices, dc);
+        cpts = boost::make_shared<InterpolatedPriceCurve<Linear>>(asof, curveDates, curvePrices, dc, pts->currency());
     } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<LogLinear>>(pts)) {
-        cpts = boost::make_shared<InterpolatedPriceCurve<LogLinear>>(asof, curveDates, curvePrices, dc);
+        cpts = boost::make_shared<InterpolatedPriceCurve<LogLinear>>(asof, curveDates, curvePrices, dc, pts->currency());
     } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<Cubic>>(pts)) {
-        cpts = boost::make_shared<InterpolatedPriceCurve<Cubic>>(asof, curveDates, curvePrices, dc);
+        cpts = boost::make_shared<InterpolatedPriceCurve<Cubic>>(asof, curveDates, curvePrices, dc, pts->currency());
     } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<LinearFlat>>(pts)) {
-        cpts = boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(asof, curveDates, curvePrices, dc);
+        cpts = boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(asof, curveDates, curvePrices, dc, pts->currency());
     } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<LogLinearFlat>>(pts)) {
-        cpts = boost::make_shared<InterpolatedPriceCurve<LogLinearFlat>>(asof, curveDates, curvePrices, dc);
+        cpts = boost::make_shared<InterpolatedPriceCurve<LogLinearFlat>>(asof, curveDates, curvePrices, dc, pts->currency());
     } else if (auto ipc = boost::dynamic_pointer_cast<InterpolatedPriceCurve<CubicFlat>>(pts)) {
-        cpts = boost::make_shared<InterpolatedPriceCurve<CubicFlat>>(asof, curveDates, curvePrices, dc);
+        cpts = boost::make_shared<InterpolatedPriceCurve<CubicFlat>>(asof, curveDates, curvePrices, dc, pts->currency());
     } else {
         DLOG("Could not cast the price term structure so corrected curve is a linear InterpolatedPriceCurve.");
-        cpts = boost::make_shared<InterpolatedPriceCurve<Linear>>(asof, curveDates, curvePrices, dc);
+        cpts = boost::make_shared<InterpolatedPriceCurve<Linear>>(asof, curveDates, curvePrices, dc, pts->currency());
     }
     cpts->enableExtrapolation(pts->allowsExtrapolation());
 

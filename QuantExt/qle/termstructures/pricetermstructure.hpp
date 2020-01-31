@@ -26,6 +26,7 @@
 #include <ql/math/comparison.hpp>
 #include <ql/termstructure.hpp>
 #include <ql/quote.hpp>
+#include <ql/currency.hpp>
 
 namespace QuantExt {
 
@@ -59,6 +60,9 @@ public:
 
     //! The minimum time for which the curve can return values
     virtual QuantLib::Time minTime() const;
+
+    //! The currency in which prices are expresed
+    virtual const QuantLib::Currency& currency() const = 0;
 
     //! The pillar dates for the PriceTermStructure
     virtual std::vector<QuantLib::Date> pillarDates() const = 0;
