@@ -538,6 +538,22 @@
     </xs:sequence>
   </xs:complexType>
   
+  <xs:complexType name="volatilityApoFutureSurfaceConfig">
+    <xs:sequence>
+      <xs:element type="xs:string" name="MoneynessLevels"/>
+      <xs:element type="xs:string" name="VolatilityId"/>
+      <xs:element type="xs:string" name="PriceCurveId"/>
+      <xs:element type="xs:string" name="FutureConventions"/>
+      <xs:element type="interpolationMethodType" name="TimeInterpolation"/>
+      <xs:element type="interpolationMethodType" name="StrikeInterpolation"/>
+      <xs:element type="bool" name="Extrapolation"/>
+      <xs:element type="extrapolationType" name="TimeExtrapolation"/>
+      <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
+      <xs:element type="xs:string" name="MaxTenor" minOccurs="0"/>
+      <xs:element type="non-negative-decimal" name="Beta" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  
   <xs:complexType name="commodityVolatility">
     <xs:sequence>
       <xs:element type="xs:string" name="CurveId"/>
@@ -549,6 +565,7 @@
         <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
         <xs:element type="volatilityDeltaSurfaceConfig" name="DeltaSurface"/>
         <xs:element type="volatilityMoneynessSurfaceConfig" name="MoneynessSurface"/>
+        <xs:element type="volatilityApoFutureSurfaceConfig" name="ApoFutureSurface"/>
       </xs:choice>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>

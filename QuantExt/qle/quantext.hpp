@@ -94,6 +94,7 @@
 #include <qle/instruments/averageois.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
 #include <qle/instruments/cdsoption.hpp>
+#include <qle/instruments/commodityapo.hpp>
 #include <qle/instruments/commodityforward.hpp>
 #include <qle/instruments/creditdefaultswap.hpp>
 #include <qle/instruments/crossccybasismtmresetswap.hpp>
@@ -163,6 +164,7 @@
 #include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
+#include <qle/pricingengines/commodityapoengine.hpp>
 #include <qle/pricingengines/cpibacheliercapfloorengine.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 #include <qle/pricingengines/cpicapfloorengines.hpp>

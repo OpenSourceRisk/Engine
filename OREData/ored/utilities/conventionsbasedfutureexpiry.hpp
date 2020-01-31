@@ -34,11 +34,17 @@ class ConventionsBasedFutureExpiry : public QuantExt::FutureExpiryCalculator {
 
 public:
     //! Constructor that takes a set of \p conventions
-    ConventionsBasedFutureExpiry(const CommodityFutureConvention& convention);
+    ConventionsBasedFutureExpiry(const CommodityFutureConvention& convention,
+        QuantLib::Size maxIterations = 10);
 
     //! Provide implementation for the base class method
     QuantLib::Date nextExpiry(bool includeExpiry = true,
         const QuantLib::Date& referenceDate = QuantLib::Date(), QuantLib::Natural offset = 0,
+        bool forOption = false) override;
+
+    //! Provide implementation for the base class method
+    QuantLib::Date priorExpiry(bool includeExpiry = true,
+        const QuantLib::Date& referenceDate = QuantLib::Date(),
         bool forOption = false) override;
 
     //! Provide implementation for the base class method
@@ -47,6 +53,7 @@ public:
 
 private:
     CommodityFutureConvention convention_;
+    QuantLib::Size maxIterations_;
 
     //! Given a \p contractMonth, a \p contractYear and \p conventions, calculate the contract expiry date
     QuantLib::Date expiry(QuantLib::Month contractMonth, QuantLib::Year contractYear,

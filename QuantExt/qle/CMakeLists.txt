@@ -46,6 +46,7 @@ indexes/region.cpp
 instruments/averageois.cpp
 instruments/brlcdiswap.cpp
 instruments/cdsoption.cpp
+instruments/commodityapo.cpp
 instruments/commodityforward.cpp
 instruments/creditdefaultswap.cpp
 instruments/crossccybasismtmresetswap.cpp
@@ -100,6 +101,7 @@ pricingengines/analyticlgmswaptionengine.cpp
 pricingengines/analyticxassetlgmeqoptionengine.cpp
 pricingengines/baroneadesiwhaleyengine.cpp
 pricingengines/blackcdsoptionengine.cpp
+pricingengines/commodityapoengine.cpp
 pricingengines/cpibacheliercapfloorengine.cpp
 pricingengines/cpiblackcapfloorengine.cpp
 pricingengines/cpicapfloorengines.cpp
@@ -120,6 +122,7 @@ pricingengines/paymentdiscountingengine.cpp
 processes/crossassetstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
 quotes/logquote.cpp
+termstructures/aposurface.cpp
 termstructures/averageoisratehelper.cpp
 termstructures/basistwoswaphelper.cpp
 termstructures/blackvariancecurve3.cpp
@@ -261,6 +264,7 @@ indexes/secpi.hpp
 instruments/averageois.hpp
 instruments/brlcdiswap.hpp
 instruments/cdsoption.hpp
+instruments/commodityapo.hpp
 instruments/commodityforward.hpp
 instruments/creditdefaultswap.hpp
 instruments/crossccybasismtmresetswap.hpp
@@ -330,6 +334,7 @@ pricingengines/analyticlgmswaptionengine.hpp
 pricingengines/analyticxassetlgmeqoptionengine.hpp
 pricingengines/baroneadesiwhaleyengine.hpp
 pricingengines/blackcdsoptionengine.hpp
+pricingengines/commodityapoengine.hpp
 pricingengines/cpibacheliercapfloorengine.hpp
 pricingengines/cpiblackcapfloorengine.hpp
 pricingengines/cpicapfloorengines.hpp
@@ -351,6 +356,7 @@ processes/crossassetstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
+termstructures/aposurface.hpp
 termstructures/averageoisratehelper.hpp
 termstructures/basistwoswaphelper.hpp
 termstructures/blackinvertedvoltermstructure.hpp
