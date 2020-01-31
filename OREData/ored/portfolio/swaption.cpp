@@ -261,12 +261,6 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     }
 
     DLOG("Swaption::Build(): Underlying Start = " << QuantLib::io::iso_date(swap->startDate()));
-    try {
-        DLOG("Swaption::Build(): Underlying NPV = " << swap->NPV());
-        // DLOG("Swaption::Build(): Fair Swap Rate = " << swap->fairRate());
-    } catch (const std::exception& e) {
-        WLOG("Could not price underlying: " << e.what());
-    }
 
     // build exercise: only keep a) future exercise dates and b) exercise dates that exercise into a whole
     // accrual period of the underlying; TODO handle exercises into broken periods?
