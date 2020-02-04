@@ -27,6 +27,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <ored/portfolio/indexing.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/indexparser.hpp>
 
@@ -643,7 +644,8 @@ public:
             int fixingDays = 0, const string& fixingCalendar = "",
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
             const int paymentLag = 0, const std::string& paymentCalendar = "",
-            const std::vector<std::string>& paymentDates = std::vector<std::string>());
+            const std::vector<std::string>& paymentDates = std::vector<std::string>(),
+            const Indexing& indexing = {});
 
     //! \name Serialisation
     //@{
@@ -676,6 +678,7 @@ public:
     boost::shared_ptr<LegAdditionalData> concreteLegData() const { return concreteLegData_; }
     const std::set<std::string>& indices() const { return indices_; }
     const std::vector<std::string>& paymentDates() const { return paymentDates_; }
+    const IndexingData& indexingData() const { return indexing_; }
     //@}
 
     //! \name modifiers
@@ -716,6 +719,7 @@ private:
     int paymentLag_;
     std::string paymentCalendar_;
     std::vector<std::string> paymentDates_;
+    Indexing indexing_;
 };
 
 //! \name Utilities for building QuantLib Legs
