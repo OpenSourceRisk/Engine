@@ -35,11 +35,12 @@ void Indexing::fromXML(XMLNode* node) {
     fixingDays_ = 0;
     if (auto n = XMLUtils::getChildNode(node, "FixingDays"))
         fixingDays_ = parseInteger(XMLUtils::getNodeValue(n));
-    fixingCalendar_ = XMLUtils::getChildNode(node, "FixingCalendar");
-    fixingConvention_ = XMLUtils::getChildNode(node, "FixingConvention");
+    fixingCalendar_ = XMLUtils::getChildValue(node, "FixingCalendar");
+    fixingConvention_ = XMLUtils::getChildValue(node, "FixingConvention");
     inArrearsFixing_ = false;
     if (auto n = XMLUtils::getChildNode(node, "IsInArrears"))
         inArrearsFixing_ = parseBool(XMLUtils::getNodeValue(n));
+    hasData_ = true;
 }
 
 XMLNode* Indexing::toXML(XMLDocument& doc) {
@@ -53,10 +54,11 @@ XMLNode* Indexing::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(tmp, valuationSchedule_.toXML(doc));
         XMLUtils::appendNode(node, tmp);
     }
-    XMLUtils::addChild<Size>(doc, node, "FixingDays", fixingDays_);
+    XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
     XMLUtils::addChild(doc, node, "FixingCalendar", fixingCalendar_);
     XMLUtils::addChild(doc, node, "FixingConvention", fixingConvention_);
     XMLUtils::addChild(doc, node, "IsInArrears", inArrearsFixing_);
+    return node;
 }
 
 } // namespace data

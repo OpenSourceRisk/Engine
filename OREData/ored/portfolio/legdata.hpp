@@ -541,15 +541,16 @@ private:
 class EquityLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    EquityLegData() : LegAdditionalData("Equity") {}
+    EquityLegData() : LegAdditionalData("Equity"), quantity_(Null<Real>()) {}
     //! Constructor
-    EquityLegData(string returnType, Real dividendFactor, string eqName, Real initialPrice,  
-        bool notionalReset, Natural fixingDays = 0, const ScheduleData& valuationSchedule = ScheduleData(), 
-        string eqCurrency = "", string fxIndex = "", Natural fxIndexFixingDays = 2, string fxIndexCalendar = "" )
+    EquityLegData(string returnType, Real dividendFactor, string eqName, Real initialPrice, bool notionalReset,
+                  Natural fixingDays = 0, const ScheduleData& valuationSchedule = ScheduleData(),
+                  string eqCurrency = "", string fxIndex = "", Natural fxIndexFixingDays = 2,
+                  string fxIndexCalendar = "", Real quantity = Null<Real>())
         : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor), eqName_(eqName),
-          initialPrice_(initialPrice), notionalReset_(notionalReset), fixingDays_(fixingDays), 
-          valuationSchedule_(valuationSchedule), eqCurrency_(eqCurrency), fxIndex_(fxIndex), 
-          fxIndexFixingDays_(fxIndexFixingDays), fxIndexCalendar_(fxIndexCalendar) {
+          initialPrice_(initialPrice), notionalReset_(notionalReset), fixingDays_(fixingDays),
+          valuationSchedule_(valuationSchedule), eqCurrency_(eqCurrency), fxIndex_(fxIndex),
+          fxIndexFixingDays_(fxIndexFixingDays), fxIndexCalendar_(fxIndexCalendar), quantity_(quantity) {
         indices_.insert("EQ-" + eqName_);
     }
 
@@ -566,6 +567,7 @@ public:
     Natural fxIndexFixingDays() const { return fxIndexFixingDays_; }
     const string& fxIndexCalendar() const { return fxIndexCalendar_; }
     bool notionalReset() const { return notionalReset_; }
+    Real quantity() const { return quantity_; } // might be null
     //@}
 
     //! \name Serialisation
@@ -585,6 +587,7 @@ private:
     string fxIndex_ = "";
     Natural fxIndexFixingDays_ = 2;
     string fxIndexCalendar_ = "";
+    Real quantity_;
 
     static LegDataRegister<EquityLegData> reg_;
 };
@@ -678,7 +681,7 @@ public:
     boost::shared_ptr<LegAdditionalData> concreteLegData() const { return concreteLegData_; }
     const std::set<std::string>& indices() const { return indices_; }
     const std::vector<std::string>& paymentDates() const { return paymentDates_; }
-    const IndexingData& indexingData() const { return indexing_; }
+    const Indexing& indexing() const { return indexing_; }
     //@}
 
     //! \name modifiers
@@ -724,12 +727,14 @@ private:
 
 //! \name Utilities for building QuantLib Legs
 //@{
-Leg makeFixedLeg(const LegData& data);
+Leg makeFixedLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory = nullptr);
 Leg makeZCFixedLeg(const LegData& data);
 Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                 const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
-Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index);
-Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper);
+Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index,
+               const boost::shared_ptr<EngineFactory>& engineFactory = nullptr);
+Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper,
+               const boost::shared_ptr<EngineFactory>& engineFactory = nullptr);
 Leg makeSimpleLeg(const LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow = true);
 Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>& index);
@@ -785,6 +790,9 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
 // apply amortisation to given notionals
 void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
                        const bool annuityAllowed = false, const std::vector<Real>& rates = std::vector<Real>()); 
+
+// apply indexing (if given in LegData) to existing leg
+void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory);
 
 // template implementations
 

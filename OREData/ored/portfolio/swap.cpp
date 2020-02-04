@@ -230,7 +230,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // unless the first leg is a Resettable XCCY, then use the second leg
     // For a XCCY Resettable the currentNotional may fail due missing FX fixing so we avoid
     // using this leg if possible
-    // For a equity swap with resetting notional may fail due to missing equity fixing so avoid
+    // For a equity swap with resetting notional may fail due to missing equity fixing, so avoid
     bool isEquityNotionalReset = false;
     if (legData_[0].legType() == "Equity") {
         boost::shared_ptr<EquityLegData> eld = boost::dynamic_pointer_cast<EquityLegData>(
@@ -238,13 +238,14 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         isEquityNotionalReset = eld->notionalReset();
     }
 
-    if (legData_.size() > 1 && (!legData_[0].isNotResetXCCY() || isEquityNotionalReset)) {
-        npvCurrency_ = legData_[1].currency();
-        notional_ = currentNotional(legs_[1]);
-    } else {
-        npvCurrency_ = legData_[0].currency();
-        notional_ = currentNotional(legs_[0]);
-    }    
+    Size legIndex = legData_.size() > 1 && (!legData_[0].isNotResetXCCY() || isEquityNotionalReset) ? 1 : 0;
+    npvCurrency_ = legData_[legIndex].currency();
+    try {
+        // might fail on indexed legs due to missing index fixing
+        notional_ = currentNotional(legs_[legIndex]);
+    } catch (...) {
+        notional_ = 0.0;
+    }
     DLOG("Notional is " << notional_ << " " << npvCurrency_);
     Currency npvCcy = parseCurrency(npvCurrency_);
 
@@ -305,7 +306,14 @@ map<string, set<Date>> Swap::fixings(const Date& settlementDate) const {
 void Swap::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     legData_.clear();
-    XMLNode* swapNode = XMLUtils::getChildNode(node, "SwapData");
+    XMLNode* swapNode = XMLUtils::getChildNode(node, tradeType() + "Data");
+    // backwards compatibility
+    if(swapNode == nullptr) {
+        swapNode = XMLUtils::getChildNode(node, "SwapData");
+    }
+    QL_REQUIRE(swapNode, "Swap::fromXML(): expected '" << tradeType() << "Data'"
+                                                       << (tradeType() == "Swap" ? "" : " or 'SwapData'"));
+
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(swapNode, "LegData");
     for (Size i = 0; i < nodes.size(); i++) {
         auto ld = createLegData();

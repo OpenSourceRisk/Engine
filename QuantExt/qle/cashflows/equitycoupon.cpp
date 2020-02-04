@@ -78,7 +78,7 @@ Real EquityCoupon::nominal() const {
 }
 
 Real EquityCoupon::initialPrice() const {
-    if (initialPrice_)
+    if (initialPrice_ != Null<Real>())
         return initialPrice_;
     else
         return equityCurve_->fixing(fixingStartDate(), false, false);
@@ -114,8 +114,9 @@ std::vector<Date> EquityCoupon::fixingDates() const {
 
 EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
                      const boost::shared_ptr<FxIndex>& fxIndex)
-    : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentAdjustment_(Following), 
-      paymentCalendar_(Calendar()), dividendFactor_(1.0), fixingDays_(0) {}
+    : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentAdjustment_(Following),
+      paymentCalendar_(Calendar()), isTotalReturn_(false), initialPrice_(Null<Real>()), dividendFactor_(1.0),
+      fixingDays_(0), notionalReset_(false), quantity_(Null<Real>()) {}
 
 EquityLeg& EquityLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -172,9 +173,12 @@ EquityLeg& EquityLeg::withNotionalReset(bool notionalReset) {
     return *this;
 }
 
-EquityLeg::operator Leg() const {
+EquityLeg& EquityLeg::withQuantity(Real quantity) {
+    quantity_ = quantity;
+    return *this;
+}
 
-    QL_REQUIRE(!notionals_.empty(), "No notional given for equity leg.");
+EquityLeg::operator Leg() const {
 
     Leg cashflows;
     Date startDate;
@@ -190,15 +194,23 @@ EquityLeg::operator Leg() const {
     }
 
     Size numPeriods = schedule_.size() - 1;
-    Real quantity = Real();
-    if (notionalReset_) {
-        // Calculate the initial quantity - only needed if resetting notional trade
-        Date fixingStartDate = valuationSchedule_.size() > 0 ? valuationSchedule_.date(0) : 
-            equityCurve_->fixingCalendar().advance(schedule_.date(0), -static_cast<Integer>(fixingDays_), Days, Preceding);
-        Real initialPrice = initialPrice_ ? initialPrice_ : equityCurve_->fixing(fixingStartDate, false, false);
-        // Notional in leg currency
-        Real fxRate = fxIndex_ ? fxIndex_->fixing(fixingStartDate) : 1.0;
-        quantity = notionals_.front() / (initialPrice * fxRate);
+    Real quantity = Null<Real>();
+    if (quantity_ != Null<Real>()) {
+        QL_REQUIRE(notionalReset_, "notional reset must be true if quantity is given");
+        quantity = quantity_;
+    } else {
+        QL_REQUIRE(!notionals_.empty(), "No notional given for equity leg.");
+        if (notionalReset_) {
+            // Calculate the initial quantity - only needed if resetting notional trade
+            Date fixingStartDate = valuationSchedule_.size() > 0
+                                       ? valuationSchedule_.date(0)
+                                       : equityCurve_->fixingCalendar().advance(
+                                             schedule_.date(0), -static_cast<Integer>(fixingDays_), Days, Preceding);
+            Real initialPrice = initialPrice_ ? initialPrice_ : equityCurve_->fixing(fixingStartDate, false, false);
+            // Notional in leg currency
+            Real fxRate = fxIndex_ ? fxIndex_->fixing(fixingStartDate) : 1.0;
+            quantity = notionals_.front() / (initialPrice * fxRate);
+        }
     }
 
     if (valuationSchedule_.size() > 0){
@@ -217,10 +229,10 @@ EquityLeg::operator Leg() const {
             refEndDate = valuationSchedule_.date(i + 1);
         }
 
-        Real initialPrice = (i == 0) ? initialPrice_ : Real();
+        Real initialPrice = (i == 0) ? initialPrice_ : Null<Real>();
 
         boost::shared_ptr<EquityCoupon> cashflow(
-            new EquityCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
+            new EquityCoupon(paymentDate, detail::get(notionals_, i, 0.0), startDate, endDate,
                              fixingDays_, equityCurve_, paymentDayCounter_, isTotalReturn_, dividendFactor_, 
                              notionalReset_, initialPrice, quantity, refStartDate, refEndDate, Date(), fxIndex_));
 

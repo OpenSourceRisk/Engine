@@ -35,6 +35,7 @@
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
+#include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 
@@ -51,19 +52,20 @@ namespace data {
     and a \c visit method implemented against it
 */
 class FixingDateGetter : public QuantLib::AcyclicVisitor,
-    public QuantLib::Visitor<QuantLib::CashFlow>,
-    public QuantLib::Visitor<QuantLib::FloatingRateCoupon>,
-    public QuantLib::Visitor<QuantLib::IndexedCashFlow>,
-    public QuantLib::Visitor<QuantLib::CPICashFlow>,
-    public QuantLib::Visitor<QuantLib::CPICoupon>,
-    public QuantLib::Visitor<QuantLib::YoYInflationCoupon>,
-    public QuantLib::Visitor<QuantLib::OvernightIndexedCoupon>,
-    public QuantLib::Visitor<QuantLib::AverageBMACoupon>,
-    public QuantLib::Visitor<QuantExt::AverageONIndexedCoupon>,
-    public QuantLib::Visitor<QuantExt::EquityCoupon>,
-    public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon>,
-    public QuantLib::Visitor<QuantExt::FXLinkedCashFlow>,
-    public QuantLib::Visitor<QuantExt::SubPeriodsCoupon> {
+                         public QuantLib::Visitor<QuantLib::CashFlow>,
+                         public QuantLib::Visitor<QuantLib::FloatingRateCoupon>,
+                         public QuantLib::Visitor<QuantLib::IndexedCashFlow>,
+                         public QuantLib::Visitor<QuantLib::CPICashFlow>,
+                         public QuantLib::Visitor<QuantLib::CPICoupon>,
+                         public QuantLib::Visitor<QuantLib::YoYInflationCoupon>,
+                         public QuantLib::Visitor<QuantLib::OvernightIndexedCoupon>,
+                         public QuantLib::Visitor<QuantLib::AverageBMACoupon>,
+                         public QuantLib::Visitor<QuantExt::AverageONIndexedCoupon>,
+                         public QuantLib::Visitor<QuantExt::EquityCoupon>,
+                         public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon>,
+                         public QuantLib::Visitor<QuantExt::FXLinkedCashFlow>,
+                         public QuantLib::Visitor<QuantExt::SubPeriodsCoupon>,
+                         public QuantLib::Visitor<QuantExt::IndexedCoupon> {
 
 public:
     //! Constructor
@@ -87,6 +89,7 @@ public:
     void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c);
     void visit(QuantExt::FXLinkedCashFlow& c);
     void visit(QuantExt::SubPeriodsCoupon& c);
+    void visit(QuantExt::IndexedCoupon& c);
     //@}
 
     //! Get the settlement date

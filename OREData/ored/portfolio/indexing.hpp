@@ -36,16 +36,18 @@ using namespace QuantLib;
 */
 class Indexing : public XMLSerializable {
 public:
-    Indexing() : quantity_(0.0), initialFixing_(Null<Real>()), fixingDays_(0), inArrearsFixing_(false) {}
+    Indexing()
+        : hasData_(false), quantity_(0.0), initialFixing_(Null<Real>()), fixingDays_(0), inArrearsFixing_(false) {}
     Indexing(const Real quantity, const std::string& index, const Real initialFixing = Null<Real>(),
              const ScheduleData& valuationSchedule = ScheduleData(), const Size fixingDays = 0,
              const string& fixingCalendar = "", const string& fixingConvention = "", const bool inArrearsFixing = false)
-        : quantity_(quantity), index_(index), initialFixing_(initialFixing), valuationSchedule_(valuationSchedule),
-          fixingDays_(fixingDays), fixingCalendar_(fixingCalendar), fixingConvention_(fixingConvention),
-          inArrearsFixing_(inArrearsFixing) {}
+        : hasData_(true), quantity_(quantity), index_(index), initialFixing_(initialFixing),
+          valuationSchedule_(valuationSchedule), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar),
+          fixingConvention_(fixingConvention), inArrearsFixing_(inArrearsFixing) {}
 
     //! \name Inspectors
     //@{
+    bool hasData() const { return hasData_; }
     Real quantity() const { return quantity_; }
     const string& index() const { return index_; }
     Real initialFixing() const { return initialFixing_; }
@@ -62,6 +64,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 private:
+    bool hasData_;
     Real quantity_;
     string index_;
     Real initialFixing_;

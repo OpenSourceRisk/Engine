@@ -18,6 +18,7 @@
 
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <ql/settings.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
@@ -39,6 +40,7 @@ using QuantExt::EquityCoupon;
 using QuantExt::FloatingRateFXLinkedNotionalCoupon;
 using QuantExt::FXLinkedCashFlow;
 using QuantExt::SubPeriodsCoupon;
+using QuantExt::IndexedCoupon;
 using QuantLib::Leg;
 using QuantLib::Settings;
 using QuantLib::ZeroInflationIndex;
@@ -262,6 +264,14 @@ void FixingDateGetter::visit(SubPeriodsCoupon& c) {
                 indicesDates_[c.index()->name()].insert(fixingDate);
             }
         }
+    }
+}
+
+void FixingDateGetter::visit(IndexedCoupon& c) {
+    if (!c.hasOccurred(today_)) {
+        if(c.index())
+            indicesDates_[c.index()->name()].insert(c.fixingDate());
+        visit(*c.underlying());
     }
 }
 

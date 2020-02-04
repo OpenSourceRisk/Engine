@@ -44,14 +44,37 @@ public:
     /*! pays c->amount() / c->nominal() * qty * initialFixing */
     IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const Real initialFixing);
 
+    //! \name Observer interface
+    //@{
+    void update() override;
+    //@}
+
     //! \name Coupon interface
     //@{
+    Real amount() const override;
     Real nominal() const override;
     Real rate() const override;
     DayCounter dayCounter() const override;
+    Real accruedAmount(const Date& d) const override;
+    //@}
+
+    //! \name Inspectors
+    //@{
+    boost::shared_ptr<Coupon> underlying() const;
+    Real quantity() const;
+    boost::shared_ptr<Index> index() const; // might be null
+    const Date& fixingDate() const;         // might be null
+    Real initialFixing() const;             // might be null
+    //@}
+
+    //! \name Visitability
+    //@{
+    void accept(AcyclicVisitor&) override;
     //@}
 
 private:
+    Real multiplier() const;
+
     const boost::shared_ptr<Coupon> c_;
     const Real qty_;
     const boost::shared_ptr<Index> index_;
