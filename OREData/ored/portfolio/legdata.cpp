@@ -1525,6 +1525,7 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                                       << "' in indexing data, expected EQ-, FX-, COMM- index");
         }
 
+        // apply the indexing
         IndexedCouponLeg indLeg(leg, data.indexing().quantity(), index);
         indLeg.withInitialFixing(data.indexing().initialFixing());
         indLeg.withFixingDays(data.indexing().fixingDays());
@@ -1536,6 +1537,32 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
         if (!data.indexing().fixingConvention().empty())
             indLeg.withFixingConvention(parseBusinessDayConvention(data.indexing().fixingConvention()));
         leg = indLeg;
+
+        // if we have an additional FX indexing, we apply that on top of the indexing above
+        if (data.indexing().fx().hasData()) {
+            auto tmp = parseFxIndex(data.indexing().fx().index());
+            auto fx = parseFxIndex(
+                data.indexing().fx().index(),
+                engineFactory->market()->fxSpot(tmp->sourceCurrency().code() + tmp->targetCurrency().code(), config),
+                engineFactory->market()->discountCurve(tmp->sourceCurrency().code(), config),
+                engineFactory->market()->discountCurve(tmp->targetCurrency().code(), config));
+            QL_REQUIRE(data.currency() == fx->targetCurrency().code() || data.currency() == fx->sourceCurrency().code(),
+                       "leg currency (" << data.currency() << ") must match FX index (" << data.indexing().fx().index()
+                                        << ") source or target currency");
+            // flip indexing if necessary
+            IndexedCouponLeg indLeg(leg, 1.0, fx, fx->targetCurrency().code() != data.currency());
+            indLeg.withInitialFixing(data.indexing().fx().initialFixing());
+            indLeg.withFixingDays(data.indexing().fx().fixingDays());
+            indLeg.inArrearsFixing(data.indexing().fx().inArrearsFixing());
+            // valuation schedule from the indexing above, the fx section does not have a separate one
+            if (data.indexing().valuationSchedule().hasData())
+                indLeg.withValuationSchedule(makeSchedule(data.indexing().valuationSchedule()));
+            if (!data.indexing().fx().fixingCalendar().empty())
+                indLeg.withFixingCalendar(parseCalendar(data.indexing().fixingCalendar()));
+            if (!data.indexing().fx().fixingConvention().empty())
+                indLeg.withFixingConvention(parseBusinessDayConvention(data.indexing().fixingConvention()));
+            leg = indLeg;
+        }
     }
 }
 

@@ -36,14 +36,46 @@ using namespace QuantLib;
 */
 class Indexing : public XMLSerializable {
 public:
+    class Fx : public XMLSerializable {
+    public:
+        Fx() : hasData_(false), initialFixing_(Null<Real>()), fixingDays_(0), inArrearsFixing_(false) {}
+        Fx(const std::string& index, const Real initialFixing = Null<Real>(), const Size fixingDays = 0,
+           const string& fixingCalendar = "", const string& fixingConvention = "", const bool inArrearsFixing = false)
+            : hasData_(true), index_(index), initialFixing_(initialFixing), fixingDays_(fixingDays),
+              fixingCalendar_(fixingCalendar), fixingConvention_(fixingConvention), inArrearsFixing_(inArrearsFixing) {}
+
+        //! Inspectors
+        bool hasData() const { return hasData_; }
+        const string& index() const { return index_; }
+        Real initialFixing() const { return initialFixing_; }
+        Size fixingDays() const { return fixingDays_; }
+        const string& fixingCalendar() const { return fixingCalendar_; }
+        const string& fixingConvention() const { return fixingConvention_; }
+        bool inArrearsFixing() const { return inArrearsFixing_; }
+
+        //! Serialisation
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) override;
+
+    private:
+        bool hasData_;
+        string index_;
+        Real initialFixing_;
+        Size fixingDays_;
+        string fixingCalendar_;
+        string fixingConvention_;
+        bool inArrearsFixing_;
+    }; // Fx
+
     Indexing()
         : hasData_(false), quantity_(0.0), initialFixing_(Null<Real>()), fixingDays_(0), inArrearsFixing_(false) {}
     Indexing(const Real quantity, const std::string& index, const Real initialFixing = Null<Real>(),
              const ScheduleData& valuationSchedule = ScheduleData(), const Size fixingDays = 0,
-             const string& fixingCalendar = "", const string& fixingConvention = "", const bool inArrearsFixing = false)
+             const string& fixingCalendar = "", const string& fixingConvention = "", const bool inArrearsFixing = false,
+             const Fx& fx = {})
         : hasData_(true), quantity_(quantity), index_(index), initialFixing_(initialFixing),
           valuationSchedule_(valuationSchedule), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar),
-          fixingConvention_(fixingConvention), inArrearsFixing_(inArrearsFixing) {}
+          fixingConvention_(fixingConvention), inArrearsFixing_(inArrearsFixing), fx_(fx) {}
 
     //! \name Inspectors
     //@{
@@ -56,6 +88,7 @@ public:
     const string& fixingCalendar() const { return fixingCalendar_; }
     const string& fixingConvention() const { return fixingConvention_; }
     bool inArrearsFixing() const { return inArrearsFixing_; }
+    Fx fx() const { return fx_; }
     //@}
 
     //! \name Serialisation
@@ -73,6 +106,7 @@ private:
     string fixingCalendar_;
     string fixingConvention_;
     bool inArrearsFixing_;
+    Fx fx_;
 };
 
 } // namespace data

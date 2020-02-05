@@ -40,6 +40,8 @@ void Indexing::fromXML(XMLNode* node) {
     inArrearsFixing_ = false;
     if (auto n = XMLUtils::getChildNode(node, "IsInArrears"))
         inArrearsFixing_ = parseBool(XMLUtils::getNodeValue(n));
+    if (auto n = XMLUtils::getChildNode(node, "FX"))
+        fx_.fromXML(n);
     hasData_ = true;
 }
 
@@ -54,6 +56,40 @@ XMLNode* Indexing::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(tmp, valuationSchedule_.toXML(doc));
         XMLUtils::appendNode(node, tmp);
     }
+    XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
+    XMLUtils::addChild(doc, node, "FixingCalendar", fixingCalendar_);
+    XMLUtils::addChild(doc, node, "FixingConvention", fixingConvention_);
+    XMLUtils::addChild(doc, node, "IsInArrears", inArrearsFixing_);
+    if (fx_.hasData()) {
+        XMLNode* tmp = doc.allocNode("FX");
+        XMLUtils::appendNode(tmp, fx_.toXML(doc));
+        XMLUtils::appendNode(node, tmp);
+    }
+    return node;
+}
+
+void Indexing::Fx::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "FX");
+    index_ = XMLUtils::getChildValue(node, "Index", true);
+    initialFixing_ = Null<Real>();
+    if (auto n = XMLUtils::getChildNode(node, "InitialFixing"))
+        initialFixing_ = parseReal(XMLUtils::getNodeValue(n));
+    fixingDays_ = 0;
+    if (auto n = XMLUtils::getChildNode(node, "FixingDays"))
+        fixingDays_ = parseInteger(XMLUtils::getNodeValue(n));
+    fixingCalendar_ = XMLUtils::getChildValue(node, "FixingCalendar");
+    fixingConvention_ = XMLUtils::getChildValue(node, "FixingConvention");
+    inArrearsFixing_ = false;
+    if (auto n = XMLUtils::getChildNode(node, "IsInArrears"))
+        inArrearsFixing_ = parseBool(XMLUtils::getNodeValue(n));
+    hasData_ = true;
+}
+
+XMLNode* Indexing::Fx::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("FX");
+    XMLUtils::addChild(doc, node, "Index", index_);
+    if (initialFixing_ != Null<Real>())
+        XMLUtils::addChild(doc, node, "InitialFixing", initialFixing_);
     XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
     XMLUtils::addChild(doc, node, "FixingCalendar", fixingCalendar_);
     XMLUtils::addChild(doc, node, "FixingConvention", fixingConvention_);

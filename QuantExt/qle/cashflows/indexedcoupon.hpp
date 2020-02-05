@@ -40,9 +40,10 @@ public:
     /*! pays c->amount() / c->nominal() * qty * index(fixingDate), i.e. the original nominal of the coupon
       is replaced by qty times the index fixing */
     IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const boost::shared_ptr<Index>& index,
-                  const Date& fixingDate);
+                  const Date& fixingDate, const bool flipIndex = false);
     /*! pays c->amount() / c->nominal() * qty * initialFixing */
-    IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const Real initialFixing);
+    IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const Real initialFixing,
+                  const bool flipIndex = false);
 
     //! \name Observer interface
     //@{
@@ -65,6 +66,7 @@ public:
     boost::shared_ptr<Index> index() const; // might be null
     const Date& fixingDate() const;         // might be null
     Real initialFixing() const;             // might be null
+    bool flipIndex() const;
     //@}
 
     //! \name Visitability
@@ -80,6 +82,7 @@ private:
     const boost::shared_ptr<Index> index_;
     const Date fixingDate_;
     const Real initialFixing_;
+    const bool flipIndex_;
 };
 
 //! indexed coupon leg
@@ -88,7 +91,8 @@ private:
 */
 class IndexedCouponLeg {
 public:
-    IndexedCouponLeg(const Leg& underlyingLeg, const Real qty, const boost::shared_ptr<Index>& index);
+    IndexedCouponLeg(const Leg& underlyingLeg, const Real qty, const boost::shared_ptr<Index>& index,
+                     const bool flipIndex = false);
     IndexedCouponLeg& withInitialFixing(const Real initialFixing);
     IndexedCouponLeg& withValuationSchedule(const Schedule& valuationSchedule);
     IndexedCouponLeg& withFixingDays(const Size fixingDays);
@@ -108,6 +112,7 @@ private:
     Calendar fixingCalendar_;
     BusinessDayConvention fixingConvention_;
     bool inArrearsFixing_;
+    bool flipIndex_;
 };
 
 } // namespace QuantExt
