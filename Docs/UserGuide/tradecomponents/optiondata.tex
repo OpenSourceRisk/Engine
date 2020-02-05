@@ -20,15 +20,18 @@ elements. An example structure of the \lstinline!OptionData! trade component nod
                 <PayOffAtExpiry>true</PayOffAtExpiry>
                 <ExerciseFees>
                     <ExerciseFee type="Percentage">0.0020</ExerciseFee>
-                    <ExerciseFee type="Absolute" startDate="2017-04-20">25000</ExerciseFee>
+                    <ExerciseFee type="Absolute" startDate="2020-04-20">25000</ExerciseFee>
                 </ExerciseFees>
                 <ExerciseFeeSettlementPeriod>2D</ExerciseFeeSettlementPeriod>
                 <ExerciseFeeSettlementConvention>F</ExerciseFeeSettlementConvention>
                 <ExerciseFeeSettlementCalendar>TARGET</ExerciseFeeSettlementCalendar>
                 <ExerciseDates>
-                    <ExerciseDate>2016-04-20</ExerciseDate>
-                    <ExerciseDate>2017-04-20</ExerciseDate>
+                    <ExerciseDate>2019-04-20</ExerciseDate>
+                    <ExerciseDate>2020-04-20</ExerciseDate>
                 </ExerciseDates>
+                <PremiumAmount>100000</PremiumAmount> 
+                <PremiumCurrency>EUR</PremiumCurrency>            
+                <PremiumPayDate>2018-05-07</PremiumPayDate>  
             </OptionData>
 \end{minted}
 \caption{Option data}
