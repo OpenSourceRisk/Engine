@@ -50,7 +50,8 @@ public:
     EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
                  const boost::shared_ptr<EquityIndex>& equityCurve, const DayCounter& dayCounter,
                  bool isTotalReturn = false, Real dividendFactor = 1.0, bool notionalReset = false,
-                 Real initialPrice = Null<Real>(), Real quantity = Null<Real>(), const Date& refPeriodStart = Date(),
+                 Real initialPrice = Null<Real>(), Real quantity = Null<Real>(), const Date& fixingStartDate = Date(),
+                 const Date& fixingEndDate = Date(), const Date& refPeriodStart = Date(),
                  const Date& refPeriodEnd = Date(), const Date& exCouponDate = Date(),
                  const boost::shared_ptr<FxIndex>& fxIndex = nullptr);
 
