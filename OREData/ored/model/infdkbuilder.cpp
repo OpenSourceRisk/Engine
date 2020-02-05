@@ -40,10 +40,25 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
 
     LOG("DkBuilder for " << data_->infIndex());
 
+    marketObserver_ = boost::make_shared<MarketObserver>();
+
+    // get market data
+    std::string infIndex = data_->infIndex();
     inflationIndex_ = boost::dynamic_pointer_cast<ZeroInflationIndex>(
         *market_->zeroInflationIndex(data_->infIndex(), configuration_));
     QL_REQUIRE(inflationIndex_, "DkBuilder: requires ZeroInflationIndex, got " << data_->infIndex());
+    infPrice_ = market_->cpiInflationCapFloorPriceSurface(infIndex, configuration_);
 
+    // register with market observables except vols
+    marketObserver_->registerWith(inflationIndex_);
+
+    // register the builder with the market observer
+    registerWith(marketObserver_);
+
+    // notify observers of all market data changes, not only when not calculated
+    alwaysForwardNotifications();
+
+    // build option basket and derive parametrization from it
     if (data_->calibrateA() || data_->calibrateH())
         buildCapFloorBasket();
 
@@ -51,10 +66,6 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     Array hTimes(data_->hTimes().begin(), data_->hTimes().end());
     Array alpha(data_->aValues().begin(), data_->aValues().end());
     Array h(data_->hValues().begin(), data_->hValues().end());
-
-    // TODO, support other param types
-    //  QL_REQUIRE(data_->aParamType() == ParamType::Piecewise, "DkBuilder, only piecewise volatility is supported
-    //  currently");
 
     if (data_->aParamType() == ParamType::Constant) {
         QL_REQUIRE(data_->aTimes().size() == 0, "empty alpha times expected");
@@ -130,55 +141,103 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     }
 }
 
-void InfDkBuilder::buildCapFloorBasket() {
-    QL_REQUIRE(data_->optionExpiries().size() == data_->optionStrikes().size(), "Inf option vector size mismatch");
-    Date today = Settings::instance().evaluationDate();
-    std::string infIndex = data_->infIndex();
+boost::shared_ptr<QuantExt::InfDkParametrization> InfDkBuilder::parametrization() const {
+    calculate();
+    return parametrization_;
+}
 
-    Handle<CPICapFloorTermPriceSurface> infVol = market_->cpiInflationCapFloorPriceSurface(infIndex, configuration_);
-    QL_REQUIRE(!infVol.empty(), "Inf vol termstructure not found for " << infIndex);
+std::vector<boost::shared_ptr<BlackCalibrationHelper>> InfDkBuilder::optionBasket() const {
+    calculate();
+    return optionBasket_;
+}
+
+bool InfDkBuilder::requiresRecalibration() const {
+    return (data_->calibrateA() || data_->calibrateH()) &&
+           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
+}
+
+void InfDkBuilder::performCalculations() const {
+    if (requiresRecalibration()) {
+        // update vol cache
+        volSurfaceChanged(true);
+        // reset market observer updated flag
+        marketObserver_->hasUpdated(true);
+    }
+}
+
+Real InfDkBuilder::optionStrike(const Size j) const {
+    Strike strike = parseStrike(data_->optionStrikes()[j]);
+
+    Real strikeValue;
+    QL_REQUIRE(strike.type == Strike::Type::Absolute,
+               "DkBuilder: only fixed strikes supported, got " << data_->optionStrikes()[j]);
+    strikeValue = strike.value;
+    return strikeValue;
+}
+
+Date InfDkBuilder::optionExpiry(const Size j) const {
+    Date today = Settings::instance().evaluationDate();
+    std::string expiryString = data_->optionExpiries()[j];
+    Period expiry = parsePeriod(expiryString);
+    Date expiryDate = inflationIndex_->fixingCalendar().advance(today, expiry);
+    QL_REQUIRE(expiryDate > today, "expired calibration option expiry " << QuantLib::io::iso_date(expiryDate));
+    return expiryDate;
+}
+
+bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
+    bool hasUpdated = false;
+
+    // if cache doesn't exist resize vector
+    if (infPriceCache_.size() != data_->optionExpiries().size())
+        infPriceCache_ = vector<Real>(data_->optionExpiries().size());
+
+    std::vector<Time> expiryTimes(data_->optionExpiries().size());
+    for (Size j = 0; j < data_->optionExpiries().size(); j++) {
+        Real price = data_->capFloor() == "Cap" ? infPrice_->capPrice(optionExpiry(j), optionStrike(j))
+                                                : infPrice_->floorPrice(optionExpiry(j), optionStrike(j));
+        if (!close_enough(infPriceCache_[j], price)) {
+            if (updateCache)
+                infPriceCache_[j] = price;
+            hasUpdated = true;
+        }
+    }
+    return hasUpdated;
+}
+
+void InfDkBuilder::buildCapFloorBasket() const {
+    QL_REQUIRE(data_->optionExpiries().size() == data_->optionStrikes().size(), "Inf option vector size mismatch");
 
     std::vector<Time> expiryTimes(data_->optionExpiries().size());
     optionBasket_.clear();
     for (Size j = 0; j < data_->optionExpiries().size(); j++) {
-        std::string expiryString = data_->optionExpiries()[j];
-        // may wish to calibrate against specific futures expiry dates...
-        Period expiry = parsePeriod(expiryString);
-        Date expiryDate = inflationIndex_->fixingCalendar().advance(today, expiry);
+        Date expiryDate = optionExpiry(j);
+        Real strikeValue = optionStrike(j);
 
-        QL_REQUIRE(expiryDate > today, "expired calibration option expiry " << QuantLib::io::iso_date(expiryDate));
-        Strike strike = parseStrike(data_->optionStrikes()[j]);
-
-        Real strikeValue;
-        QL_REQUIRE(strike.type == Strike::Type::Absolute,
-                   "DkBuilder: only fixed strikes supported, got " << data_->optionStrikes()[j]);
-        strikeValue = strike.value;
-
-        Handle<ZeroInflationIndex> zInfIndex = market_->zeroInflationIndex(infIndex, configuration_);
-        Calendar fixCalendar = zInfIndex->fixingCalendar();
-        Date baseDate = zInfIndex->zeroInflationTermStructure()->baseDate();
-        Real baseCPI = zInfIndex->fixing(baseDate);
+        Calendar fixCalendar = inflationIndex_->fixingCalendar();
+        Date baseDate = inflationIndex_->zeroInflationTermStructure()->baseDate();
+        Real baseCPI = inflationIndex_->fixing(baseDate);
 
         Option::Type capfloor;
         Real marketPrem;
         if (data_->capFloor() == "Cap") {
             capfloor = Option::Type::Call;
-            marketPrem = infVol->capPrice(expiry, strikeValue);
+            marketPrem = infPrice_->capPrice(expiryDate, strikeValue);
         } else {
             capfloor = Option::Type::Put;
-            marketPrem = infVol->floorPrice(expiry, strikeValue);
+            marketPrem = infPrice_->floorPrice(expiryDate, strikeValue);
         }
 
         boost::shared_ptr<QuantExt::CpiCapFloorHelper> helper = boost::make_shared<QuantExt::CpiCapFloorHelper>(
-            capfloor, baseCPI, expiryDate, fixCalendar, infVol->businessDayConvention(), fixCalendar,
-            infVol->businessDayConvention(), strikeValue, zInfIndex, infVol->observationLag(), marketPrem);
+            capfloor, baseCPI, expiryDate, fixCalendar, infPrice_->businessDayConvention(), fixCalendar,
+            infPrice_->businessDayConvention(), strikeValue, Handle<ZeroInflationIndex>(inflationIndex_),
+            infPrice_->observationLag(), marketPrem);
 
         optionBasket_.push_back(helper);
         helper->performCalculations();
-        expiryTimes[j] = inflationYearFraction(zInfIndex->frequency(), zInfIndex->interpolated(),
-                                               zInfIndex->zeroInflationTermStructure()->dayCounter(), baseDate,
+        expiryTimes[j] = inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
+                                               inflationIndex_->zeroInflationTermStructure()->dayCounter(), baseDate,
                                                helper->instrument()->fixingDate());
-        LOG("Added InflationOptionHelper " << infIndex << " " << expiry);
+        LOG("Added InflationOptionHelper " << data_->infIndex() << " " << QuantLib::io::iso_date(expiryDate));
     }
 
     std::sort(expiryTimes.begin(), expiryTimes.end());
@@ -189,5 +248,12 @@ void InfDkBuilder::buildCapFloorBasket() {
     for (Size j = 0; j < expiryTimes.size(); j++)
         optionExpiries_[j] = expiryTimes[j];
 }
+
+void InfDkBuilder::forceRecalculate() {
+    forceCalibration_ = true;
+    ModelBuilder::forceRecalculate();
+    forceCalibration_ = false;
+}
+
 } // namespace data
 } // namespace ore

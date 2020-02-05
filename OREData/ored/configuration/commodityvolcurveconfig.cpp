@@ -17,155 +17,147 @@
 */
 
 #include <ored/configuration/commodityvolcurveconfig.hpp>
-
+#include <ored/utilities/parsers.hpp>
 #include <ql/errors.hpp>
+
+using namespace QuantLib;
+using std::string;
 
 namespace ore {
 namespace data {
 
-CommodityVolatilityCurveConfig::CommodityVolatilityCurveConfig(const string& curveId, const string& curveDescription,
-                                                               const std::string& currency, const string& quote,
-                                                               const string& dayCounter, const string& calendar)
-    : CurveConfig(curveId, curveDescription), currency_(currency), type_(Type::Constant), dayCounter_(dayCounter),
-      calendar_(calendar), extrapolate_(true), lowerStrikeConstantExtrapolation_(false),
-      upperStrikeConstantExtrapolation_(false) {
+CommodityVolatilityConfig::CommodityVolatilityConfig() {}
 
-    quotes_ = {quote};
+CommodityVolatilityConfig::CommodityVolatilityConfig(
+    const string& curveId,
+    const string& curveDescription,
+    const std::string& currency,
+    const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+    const string& dayCounter,
+    const string& calendar,
+    const std::string& futureConventionsId,
+    QuantLib::Natural optionExpiryRollDays,
+    const std::string& priceCurveId,
+    const std::string& yieldCurveId)
+    : CurveConfig(curveId, curveDescription),
+      currency_(currency),
+      volatilityConfig_(volatilityConfig),
+      dayCounter_(dayCounter),
+      calendar_(calendar),
+      futureConventionsId_(futureConventionsId),
+      optionExpiryRollDays_(optionExpiryRollDays),
+      priceCurveId_(priceCurveId),
+      yieldCurveId_(yieldCurveId) {
+    populateQuotes();
 }
 
-CommodityVolatilityCurveConfig::CommodityVolatilityCurveConfig(const string& curveId, const string& curveDescription,
-                                                               const std::string& currency,
-                                                               const vector<string>& quotes, const string& dayCounter,
-                                                               const string& calendar, bool extrapolate)
-    : CurveConfig(curveId, curveDescription), currency_(currency), type_(Type::Curve), dayCounter_(dayCounter),
-      calendar_(calendar), extrapolate_(extrapolate), lowerStrikeConstantExtrapolation_(false),
-      upperStrikeConstantExtrapolation_(false) {
+const string& CommodityVolatilityConfig::currency() const { return currency_; }
 
-    quotes_ = quotes;
+const string& CommodityVolatilityConfig::dayCounter() const { return dayCounter_; }
+
+const boost::shared_ptr<VolatilityConfig>& CommodityVolatilityConfig::volatilityConfig() const {
+    return volatilityConfig_;
 }
 
-CommodityVolatilityCurveConfig::CommodityVolatilityCurveConfig(const string& curveId, const string& curveDescription,
-                                                               const string& currency, const vector<string>& expiries,
-                                                               const vector<string>& strikes, const string& dayCounter,
-                                                               const string& calendar, bool extrapolate,
-                                                               bool lowerStrikeConstantExtrapolation,
-                                                               bool upperStrikeConstantExtrapolation)
-    : CurveConfig(curveId, curveDescription), currency_(currency), type_(Type::Surface), expiries_(expiries),
-      strikes_(strikes), dayCounter_(dayCounter), calendar_(calendar), extrapolate_(extrapolate),
-      lowerStrikeConstantExtrapolation_(lowerStrikeConstantExtrapolation),
-      upperStrikeConstantExtrapolation_(upperStrikeConstantExtrapolation) {
+const string& CommodityVolatilityConfig::calendar() const { return calendar_; }
 
-    // Populate the quotes_ member
-    buildQuotes();
-}
+const string& CommodityVolatilityConfig::futureConventionsId() const { return futureConventionsId_; }
 
-void CommodityVolatilityCurveConfig::fromXML(XMLNode* node) {
+Natural CommodityVolatilityConfig::optionExpiryRollDays() const { return optionExpiryRollDays_; }
+
+const string& CommodityVolatilityConfig::priceCurveId() const { return priceCurveId_; }
+
+const string& CommodityVolatilityConfig::yieldCurveId() const { return yieldCurveId_; }
+
+void CommodityVolatilityConfig::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "CommodityVolatility");
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
-
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
-    type_ = stringToType(XMLUtils::getChildValue(node, "Type", true));
 
-    if (type_ == Type::Constant) {
-        // If type is Constant, we expect a single Quote node
-        quotes_ = {XMLUtils::getChildValue(node, "Quote", true)};
-    } else if (type_ == Type::Curve) {
-        // If type is Curve, we expect a Quotes node with one or more Quote nodes
-        quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
-    } else if (type_ == Type::Surface) {
-        // If type is Surface, we expect an Expiries and Strikes node
-        XMLNode* surfaceNode = XMLUtils::getChildNode(node, "Surface");
-        QL_REQUIRE(surfaceNode, "Expect a 'Surface' node when configuring a commodity volatility surface");
-        expiries_ = XMLUtils::getChildrenValuesAsStrings(surfaceNode, "Expiries", true);
-        strikes_ = XMLUtils::getChildrenValuesAsStrings(surfaceNode, "Strikes", true);
-        buildQuotes();
+    XMLNode* n;
+    if ((n = XMLUtils::getChildNode(node, "Constant"))) {
+        volatilityConfig_ = boost::make_shared<ConstantVolatilityConfig>();
+    } else if ((n = XMLUtils::getChildNode(node, "Curve"))) {
+        volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>();
+    } else if ((n = XMLUtils::getChildNode(node, "StrikeSurface"))) {
+        volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>();
+    } else if ((n = XMLUtils::getChildNode(node, "DeltaSurface"))) {
+        volatilityConfig_ = boost::make_shared<VolatilityDeltaSurfaceConfig>();
+    } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
+        volatilityConfig_ = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
+    } else if ((n = XMLUtils::getChildNode(node, "ApoFutureSurface"))) {
+        volatilityConfig_ = boost::make_shared<VolatilityApoFutureSurfaceConfig>();
+    } else {
+        QL_FAIL("CommodityVolatility node expects one child node with name in list: Constant,"
+                << " Curve, StrikeSurface, DeltaSurface, MoneynessSurface, ApoFutureSurface.");
     }
+    volatilityConfig_->fromXML(n);
 
-    // Should I set defaults here?
-    // It is cleaner but it means toXML will return additional nodes possibly.
-    dayCounter_ = XMLUtils::getChildValue(node, "DayCounter", false);
-    if (dayCounter_ == "")
-        dayCounter_ = "A365";
-    calendar_ = XMLUtils::getChildValue(node, "Calendar", false);
-    if (calendar_ == "")
-        calendar_ = "NullCalendar";
-    XMLNode* testNode = XMLUtils::getChildNode(node, "Extrapolation");
-    extrapolate_ = testNode ? XMLUtils::getChildValueAsBool(node, "Extrapolation") : true;
-    testNode = XMLUtils::getChildNode(node, "LowerStrikeConstantExtrapolation");
-    lowerStrikeConstantExtrapolation_ =
-        testNode ? XMLUtils::getChildValueAsBool(node, "LowerStrikeConstantExtrapolation") : false;
-    testNode = XMLUtils::getChildNode(node, "UpperStrikeConstantExtrapolation");
-    upperStrikeConstantExtrapolation_ =
-        testNode ? XMLUtils::getChildValueAsBool(node, "UpperStrikeConstantExtrapolation") : false;
+    dayCounter_ = "A365";
+    if ((n = XMLUtils::getChildNode(node, "DayCounter")))
+        dayCounter_ = XMLUtils::getNodeValue(n);
+
+    calendar_ = "NullCalendar";
+    if ((n = XMLUtils::getChildNode(node, "Calendar")))
+        calendar_ = XMLUtils::getNodeValue(n);
+
+    futureConventionsId_ = XMLUtils::getChildValue(node, "FutureConventions", false);
+
+    optionExpiryRollDays_ = 0;
+    if ((n = XMLUtils::getChildNode(node, "OptionExpiryRollDays")))
+        optionExpiryRollDays_ = parseInteger(XMLUtils::getNodeValue(n));
+
+    priceCurveId_ = XMLUtils::getChildValue(node, "PriceCurveId", false);
+    yieldCurveId_ = XMLUtils::getChildValue(node, "YieldCurveId", false);
+
+    populateQuotes();
 }
 
-XMLNode* CommodityVolatilityCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
 
     XMLNode* node = doc.allocNode("CommodityVolatility");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-
     XMLUtils::addChild(doc, node, "Currency", currency_);
-    XMLUtils::addChild(doc, node, "Type", typeToString(type_));
-
-    if (type_ == Type::Constant) {
-        XMLUtils::addChild(doc, node, "Quote", quotes_[0]);
-    } else if (type_ == Type::Curve) {
-        XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
-    } else if (type_ == Type::Surface) {
-        XMLNode* surfaceNode = doc.allocNode("Surface");
-        XMLUtils::addGenericChildAsList(doc, surfaceNode, "Expiries", expiries_);
-        XMLUtils::addGenericChildAsList(doc, surfaceNode, "Strikes", strikes_);
-        XMLUtils::appendNode(node, surfaceNode);
-    }
+    
+    XMLNode* n = volatilityConfig_->toXML(doc);
+    XMLUtils::appendNode(node, n);
 
     XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
     XMLUtils::addChild(doc, node, "Calendar", calendar_);
-    XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
-    XMLUtils::addChild(doc, node, "LowerStrikeConstantExtrapolation", lowerStrikeConstantExtrapolation_);
-    XMLUtils::addChild(doc, node, "UpperStrikeConstantExtrapolation", upperStrikeConstantExtrapolation_);
-
+    if (!futureConventionsId_.empty())
+        XMLUtils::addChild(doc, node, "FutureConventions", futureConventionsId_);
+    XMLUtils::addChild(doc, node, "OptionExpiryRollDays", static_cast<int>(optionExpiryRollDays_));
+    if (!priceCurveId_.empty())
+        XMLUtils::addChild(doc, node, "PriceCurveId", futureConventionsId_);
+    if (!yieldCurveId_.empty())
+        XMLUtils::addChild(doc, node, "YieldCurveId", futureConventionsId_);
+    
     return node;
 }
 
-void CommodityVolatilityCurveConfig::buildQuotes() {
-    // Called to initialise quotes_ when Type is Surface
-    string base = "COMMODITY_OPTION/RATE_LNVOL/" + curveID_ + "/" + currency_ + "/";
-    for (const string& e : expiries_) {
-        for (const string& s : strikes_) {
-            quotes_.push_back(base + e + "/" + s);
+void CommodityVolatilityConfig::populateQuotes() {
+    
+    // The quotes depend on the type of volatility structure that has been configured.
+    if (auto vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(volatilityConfig_)) {
+        quotes_ = { vc->quote() };
+    } else if (auto vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(volatilityConfig_)) {
+        quotes_ = vc->quotes();
+    } else if (auto vc = boost::dynamic_pointer_cast<VolatilitySurfaceConfig>(volatilityConfig_)) {
+        // Clear the quotes_ if necessary and populate with surface quotes
+        quotes_.clear();
+        string stem = "COMMODITY_OPTION/RATE_LNVOL/" + curveID_ + "/" + currency_ + "/";
+        for (const pair<string, string>& p : vc->quotes()) {
+            quotes_.push_back(stem + p.first + "/" + p.second);
         }
-    }
-}
-
-string CommodityVolatilityCurveConfig::typeToString(const Type& type) const {
-    switch (type) {
-    case Type::Constant:
-        return "Constant";
-    case Type::Curve:
-        return "Curve";
-    case Type::Surface:
-        return "Surface";
-    default:
-        QL_FAIL("Can't convert commodity volatility type to string");
-    }
-}
-
-CommodityVolatilityCurveConfig::Type CommodityVolatilityCurveConfig::stringToType(const string& type) const {
-    if (type == "Constant") {
-        return Type::Constant;
-    } else if (type == "Curve") {
-        return Type::Curve;
-    } else if (type == "Surface") {
-        return Type::Surface;
     } else {
-        QL_FAIL("Cannot convert string \"" << type << "\" to commodity volatility type");
+        QL_FAIL("CommodityVolatilityConfig expected a constant, curve or surface");
     }
 }
 
-} // namespace data
-} // namespace ore
+}
+}

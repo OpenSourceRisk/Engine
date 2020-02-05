@@ -28,7 +28,8 @@ libInstruments_la_SOURCES = \
 	impliedbondspread.cpp \
     fixedbmaswap.cpp \
 	crossccyfixfloatswap.cpp \
-	rebatedexercise.cpp
+	rebatedexercise.cpp \
+	commodityapo.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
@@ -56,7 +57,8 @@ this_include_HEADERS = \
 	impliedbondspread.hpp \
     fixedbmaswap.hpp \
 	crossccyfixfloatswap.hpp \
-	rebatedexercise.hpp
+	rebatedexercise.hpp \
+	commodityapo.hpp
 
 noinst_LTLIBRARIES = libInstruments.la
 

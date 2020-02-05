@@ -101,6 +101,17 @@ PostProcess::PostProcess(
 
     QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
+    // check portfolio and cube have the same trade ids, in the same order
+    QL_REQUIRE(portfolio->size() == cube_->ids().size(),
+               "PostProcess::PostProcess(): portfolio size ("
+                   << portfolio->size() << ") does not match cube trade size (" << cube_->ids().size() << ")");
+    for (Size i = 0; i < portfolio->size(); ++i) {
+        QL_REQUIRE(portfolio->trades()[i]->id() == cube_->ids()[i], "PostProcess::PostProcess(): portfolio trade #"
+                                                                        << i << " (id=" << portfolio->trades()[i]->id()
+                                                                        << ") does not match cube trade id ("
+                                                                        << cube_->ids()[i]);
+    }
+
     Size trades = portfolio->size();
     Size dates = cube_->dates().size();
     Size samples = cube->samples();
