@@ -271,7 +271,7 @@ void FixingDateGetter::visit(IndexedCoupon& c) {
     if (!c.hasOccurred(today_)) {
         if(c.index())
             indicesDates_[c.index()->name()].insert(c.fixingDate());
-        visit(*c.underlying());
+        c.underlying()->accept(*this);
     }
 }
 
