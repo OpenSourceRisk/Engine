@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
 
     // Totaxl return coupon with underlying in different ccy - Base ccy EUR, and underlying SP5 in USD
     EquityCoupon eq5(cfDate2, nominal, today, cfDate2, 0, eqIndex, dc, true, 1.0, false, Null<Real>(), Null<Real>(),
-                     Date(), Date(), Date(), fxIndex);
+                     Date(), Date(), Date(), Date(), Date(), fxIndex);
 
     boost::shared_ptr<EquityCouponPricer> pricer1(new EquityCouponPricer());
     boost::shared_ptr<EquityCouponPricer> pricer2(new EquityCouponPricer());
