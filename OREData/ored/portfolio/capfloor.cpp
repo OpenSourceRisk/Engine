@@ -75,8 +75,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         // We treat overnight and bma indices approximately as ibor indices and warn about this in the log
         if (boost::dynamic_pointer_cast<OvernightIndex>(index) ||
-            boost
-            ::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index))
+            boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index))
             ALOG("CapFloor trade " << id() << " on ON or BMA index '" << underlyingIndex_
                                    << "' built, will treat the index approximately as an ibor index");
 
