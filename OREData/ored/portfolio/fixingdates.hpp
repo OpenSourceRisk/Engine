@@ -24,6 +24,7 @@
 
 #include <ql/time/date.hpp>
 #include <ql/cashflow.hpp>
+#include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/cashflows/averagebmacoupon.hpp>
@@ -53,6 +54,8 @@ namespace data {
 class FixingDateGetter : public QuantLib::AcyclicVisitor,
     public QuantLib::Visitor<QuantLib::CashFlow>,
     public QuantLib::Visitor<QuantLib::FloatingRateCoupon>,
+    public QuantLib::Visitor<QuantLib::IborCoupon>,
+    public QuantLib::Visitor<QuantLib::CappedFlooredCoupon>,
     public QuantLib::Visitor<QuantLib::IndexedCashFlow>,
     public QuantLib::Visitor<QuantLib::CPICashFlow>,
     public QuantLib::Visitor<QuantLib::CPICoupon>,
@@ -73,6 +76,8 @@ public:
     //@{
     void visit(QuantLib::CashFlow& c);
     void visit(QuantLib::FloatingRateCoupon& c);
+    void visit(QuantLib::IborCoupon& c);
+    void visit(QuantLib::CappedFlooredCoupon& c);
     void visit(QuantLib::IndexedCashFlow& c);
     /*! Not added in QuantLib so will never be hit automatically!
         Managed by passing off from IndexedCashFlow.
