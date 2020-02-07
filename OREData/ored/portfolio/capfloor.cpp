@@ -73,13 +73,13 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << underlyingIndex_ << " in market.");
         boost::shared_ptr<IborIndex> index = hIndex.currentLink();
 
-        // Do not support caps/floors involving overnight indices
-        boost::shared_ptr<OvernightIndex> ois = boost::dynamic_pointer_cast<OvernightIndex>(index);
-        //QL_REQUIRE(!ois, "CapFloor trade type does not support overnight indices.");
-	if (ois)
-	  ALOG("IBOR CapFloor trade " << id() << " built with overnight index");
-	
-	legs_.push_back(makeIborLeg(legData_, index, engineFactory));
+        // We treat overnight and bma indices approximately as ibor indices and warn about this in the log
+        if (boost::dynamic_pointer_cast<OvernightIndex>(index) ||
+            boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index))
+            ALOG("CapFloor trade " << id() << " on ON or BMA index '" << underlyingIndex_
+                                   << "' built, will treat the index approximately as an ibor index");
+
+        legs_.push_back(makeIborLeg(legData_, index, engineFactory));
 
         // If a vector of cap/floor rates are provided, ensure they align with the number of schedule periods
         if (floors_.size() > 1) {
