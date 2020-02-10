@@ -25,6 +25,7 @@
   <xs:group name="oreTradeData">
     <xs:choice>
       <xs:element type="swapData" name="SwapData"/>
+      <xs:element type="swapData" name="EquitySwapData"/>
       <xs:element type="swaptionData" name="SwaptionData"/>
       <xs:element type="forwardRateAgreementData" name="ForwardRateAgreementData"/>
       <xs:element type="fxForwardData" name="FxForwardData"/>

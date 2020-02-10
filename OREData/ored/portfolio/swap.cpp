@@ -307,7 +307,13 @@ map<string, set<Date>> Swap::fixings(const Date& settlementDate) const {
 void Swap::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     legData_.clear();
-    XMLNode* swapNode = XMLUtils::getChildNode(node, "SwapData");
+    XMLNode* swapNode = XMLUtils::getChildNode(node, tradeType() + "Data");
+    // backwards compatibility
+    if(swapNode == nullptr) {
+        swapNode = XMLUtils::getChildNode(node, "SwapData");
+    }
+    QL_REQUIRE(swapNode, "Swap::fromXML(): expected '" << tradeType() << "Data'"
+                                                       << (tradeType() == "Swap" ? "" : " or 'SwapData'"));
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(swapNode, "LegData");
     for (Size i = 0; i < nodes.size(); i++) {
         auto ld = createLegData();
@@ -320,7 +326,7 @@ boost::shared_ptr<LegData> Swap::createLegData() const { return boost::make_shar
 
 XMLNode* Swap::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
-    XMLNode* swapNode = doc.allocNode("SwapData");
+    XMLNode* swapNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, swapNode);
     for (Size i = 0; i < legData_.size(); i++)
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));

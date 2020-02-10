@@ -516,6 +516,12 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
 
     VanillaSwap::Type type = swap_[fixedLegIndex].isPayer() ? VanillaSwap::Payer : VanillaSwap::Receiver;
 
+    // We treat overnight and bma indices approximately as ibor indices and warn about this in the log
+    if (boost::dynamic_pointer_cast<OvernightIndex>(*index) ||
+        boost ::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(*index))
+        ALOG("Swaption trade " << id() << " on ON or BMA index '" << underlyingIndex_
+                               << "' built, will treat the index approximately as an ibor index");
+
     // only take into account accrual periods with start date on or after first exercise date (if given)
     if (firstExerciseDate != Null<Date>()) {
         std::vector<Date> fixDates = fixedSchedule.dates();
@@ -601,6 +607,12 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
         engineFactory->market()->iborIndex(indexName, swapBuilder->configuration(MarketContext::pricing));
     DayCounter floatingDayCounter = parseDayCounter(swap_[floatingLegIndex].dayCounter());
     BusinessDayConvention paymentConvention = parseBusinessDayConvention(swap_[floatingLegIndex].paymentConvention());
+
+    // We treat overnight and bma indices approximately as ibor indices and warn about this in the log
+    if (boost::dynamic_pointer_cast<OvernightIndex>(*index) ||
+        boost ::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(*index))
+        ALOG("Swaption trade " << id() << " on ON or BMA index '" << underlyingIndex_
+                               << "' built, will treat the index approximately as an ibor index");
 
     VanillaSwap::Type type = swap_[fixedLegIndex].isPayer() ? VanillaSwap::Payer : VanillaSwap::Receiver;
 
