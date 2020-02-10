@@ -65,6 +65,7 @@ void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         instrument_.reset(new VanillaInstrument(composite));
         npvCurrency_ = nearBoughtCurrency_;
         notional_ = nearBoughtAmount_;
+        npvCurrency_ = nearBoughtCurrency_;
         maturity_ = farDate;
 
     } catch (std::exception&) {

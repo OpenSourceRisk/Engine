@@ -213,6 +213,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legCurrencies_.push_back(legData_.currency());
     legPayers_.push_back(legData_.isPayer());
     npvCurrency_ = legData_.currency();
+    notionalCurrency_ = legData_.currency();
     notional_ = currentNotional(legs_[0]);
 }
 

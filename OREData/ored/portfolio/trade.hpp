@@ -131,6 +131,8 @@ public:
     // of notional, for exotic trades this may not be what you expect.
     QuantLib::Real notional() { return notional_; }
 
+    const string& notionalCurrency() { return notionalCurrency_; }
+
     const Date& maturity() { return maturity_; }
     //@}
 
@@ -154,6 +156,7 @@ protected:
     std::vector<bool> legPayers_;
     string npvCurrency_;
     QuantLib::Real notional_;
+    string notionalCurrency_;
     Date maturity_;
 
     // Utility to add a single (fee, option premium, etc.) payment such that it is taken into account in pricing and
