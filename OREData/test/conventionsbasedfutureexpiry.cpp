@@ -38,7 +38,8 @@ namespace {
 vector<string> commodityNames = {
     "ice_brent",
     "ice_brent_old",
-    "nymex_cl"
+    "nymex_cl",
+    "ice_cig_basis"
 };
 
 }

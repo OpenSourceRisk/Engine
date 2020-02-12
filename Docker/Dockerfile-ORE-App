@@ -5,19 +5,15 @@ FROM env_ore:${ore_version} as env_ore
 
 FROM debian:${debian_tag}
 
-#we update to a UK debian mirror. This is from https://www.debian.org/mirror/sponsors.html
-RUN echo \
-   'deb http://ukdebian.mirror.anlx.net/debian stable main contrib non-free\n \
-    deb-src http://ukdebian.mirror.anlx.net/debian stable main contrib non-free\n \
-    deb-src http://ukdebian.mirror.anlx.net/debian stable-updates main contrib non-free\n' \
-    > /etc/apt/sources.list
-
-
 COPY Examples /ore/Examples
 
 RUN mkdir /ore/App
+
 COPY --from=env_ore /usr/local/bin /ore/App
+
+# Needed to prevent error on Jenkins. Not needed locally.
 RUN true
+
 COPY --from=env_ore /usr/local/lib /usr/local/lib
 
 # Install Python solely to run the examples
