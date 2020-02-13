@@ -23,6 +23,7 @@
 #include <ql/math/interpolations/all.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/currencies/america.hpp>
 
 #include <qle/termstructures/pricecurve.hpp>
 
@@ -68,6 +69,7 @@ public:
     DayCounter curveDayCounter;
     Real tolerance;
     bool extrapolate;
+    USDCurrency currency;
 
     // cleanup
     SavedSettings backup;
@@ -190,13 +192,13 @@ BOOST_AUTO_TEST_CASE(testPeriodsAndPricesCurve) {
     Settings::instance().evaluationDate() = td.testDates[0];
 
     // Create a linearly interpolated price curve
-    InterpolatedPriceCurve<Linear> priceCurve(td.curveTenors, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<Linear> priceCurve(td.curveTenors, td.prices, td.curveDayCounter, td.currency);
 
     // Common checks on curve
     commonChecks(td, priceCurve, false);
 
     // Create a loglinearly interpolated price curve
-    InterpolatedPriceCurve<LogLinear> logPriceCurve(td.curveTenors, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<LogLinear> logPriceCurve(td.curveTenors, td.prices, td.curveDayCounter, td.currency);
 
     // Common checks on curve
     commonChecks(td, logPriceCurve, true);
@@ -227,13 +229,13 @@ BOOST_AUTO_TEST_CASE(testPeriodsAndQuotesCurve) {
     Settings::instance().evaluationDate() = td.testDates[0];
 
     // Create a linearly interpolated price curve
-    InterpolatedPriceCurve<Linear> priceCurve(td.curveTenors, td.quotes, td.curveDayCounter);
+    InterpolatedPriceCurve<Linear> priceCurve(td.curveTenors, td.quotes, td.curveDayCounter, td.currency);
 
     // Common checks on curve
     commonChecks(td, priceCurve, false);
 
     // Create a loglinearly interpolated price curve
-    InterpolatedPriceCurve<LogLinear> logPriceCurve(td.curveTenors, td.quotes, td.curveDayCounter);
+    InterpolatedPriceCurve<LogLinear> logPriceCurve(td.curveTenors, td.quotes, td.curveDayCounter, td.currency);
 
     // Common checks on curve
     commonChecks(td, logPriceCurve, true);
@@ -285,13 +287,13 @@ BOOST_AUTO_TEST_CASE(testDatesAndPricesCurve) {
 
     // Create a linearly interpolated price curve
     vector<Date> dates = td.dates(0);
-    InterpolatedPriceCurve<Linear> priceCurve(dates[0], dates, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<Linear> priceCurve(dates[0], dates, td.prices, td.curveDayCounter, td.currency);
 
     // Common checks on curve
     commonChecks(td, priceCurve, false);
 
     // Create a loglinearly interpolated price curve
-    InterpolatedPriceCurve<LogLinear> logPriceCurve(dates[0], dates, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<LogLinear> logPriceCurve(dates[0], dates, td.prices, td.curveDayCounter, td.currency);
 
     // Common checks on curve
     commonChecks(td, logPriceCurve, true);
@@ -323,13 +325,13 @@ BOOST_AUTO_TEST_CASE(testDatesAndQuotesCurve) {
 
     // Create a linearly interpolated price curve
     vector<Date> dates = td.dates(0);
-    InterpolatedPriceCurve<Linear> priceCurve(dates[0], dates, td.quotes, td.curveDayCounter);
+    InterpolatedPriceCurve<Linear> priceCurve(dates[0], dates, td.quotes, td.curveDayCounter, td.currency);
 
     // Common checks on curve
     commonChecks(td, priceCurve, false);
 
     // Create a loglinearly interpolated price curve
-    InterpolatedPriceCurve<LogLinear> logPriceCurve(dates[0], dates, td.quotes, td.curveDayCounter);
+    InterpolatedPriceCurve<LogLinear> logPriceCurve(dates[0], dates, td.quotes, td.curveDayCounter, td.currency);
 
     // Common checks on curve
     commonChecks(td, logPriceCurve, true);
@@ -372,14 +374,14 @@ BOOST_AUTO_TEST_CASE(testNoTimeZeroWorks) {
     vector<Period> tenors = td.curveTenors;
     tenors.erase(tenors.begin());
     td.prices.erase(td.prices.begin());
-    InterpolatedPriceCurve<Linear> priceCurve(tenors, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<Linear> priceCurve(tenors, td.prices, td.curveDayCounter, td.currency);
 
     // Check requests for prices between first curve time ~0.5 and 0
     BOOST_CHECK_CLOSE(15.1391304347826, priceCurve.price(0.25, td.extrapolate), td.tolerance);
     BOOST_CHECK_CLOSE(13.5521739130435, priceCurve.price(0.0, td.extrapolate), td.tolerance);
 
     // Test log-linear interpolation also
-    InterpolatedPriceCurve<LogLinear> logPriceCurve(tenors, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<LogLinear> logPriceCurve(tenors, td.prices, td.curveDayCounter, td.currency);
     BOOST_CHECK_CLOSE(15.331307232214800, logPriceCurve.price(0.25, td.extrapolate), td.tolerance);
     BOOST_CHECK_CLOSE(14.054688467053400, logPriceCurve.price(0.0, td.extrapolate), td.tolerance);
 
@@ -398,7 +400,7 @@ BOOST_AUTO_TEST_CASE(testNegativeTimeRequestThrows) {
     Settings::instance().evaluationDate() = today;
 
     // Create the price curve
-    InterpolatedPriceCurve<Linear> priceCurve(td.curveTenors, td.prices, td.curveDayCounter);
+    InterpolatedPriceCurve<Linear> priceCurve(td.curveTenors, td.prices, td.curveDayCounter, td.currency);
 
     // Check requests for prices at times < 0
     Time t = -0.5;
