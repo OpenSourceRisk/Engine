@@ -142,6 +142,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     npvCurrency_ = currency_;
     maturity_ = bond->cashflows().back()->date();
     notional_ = currentNotional(bond->cashflows());
+    notionalCurrency_ = currency_;
 
     // Add legs (only 1)
     legs_ = {bond->cashflows()};

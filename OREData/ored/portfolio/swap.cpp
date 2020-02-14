@@ -240,12 +240,14 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     if (legData_.size() > 1 && (!legData_[0].isNotResetXCCY() || isEquityNotionalReset)) {
         npvCurrency_ = legData_[1].currency();
+        notionalCurrency_ = legData_[1].currency();
         notional_ = currentNotional(legs_[1]);
     } else {
         npvCurrency_ = legData_[0].currency();
+        notionalCurrency_ = legData_[0].currency();
         notional_ = currentNotional(legs_[0]);
     }    
-    DLOG("Notional is " << notional_ << " " << npvCurrency_);
+    DLOG("Notional is " << notional_ << " " << notionalCurrency_);
     Currency npvCcy = parseCurrency(npvCurrency_);
 
     if (isXCCY) {
