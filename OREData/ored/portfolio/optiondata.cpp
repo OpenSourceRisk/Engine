@@ -18,6 +18,8 @@
 
 #include <ored/portfolio/optiondata.hpp>
 
+#include <ored/utilities/parsers.hpp>
+
 using namespace QuantLib;
 
 namespace ore {
@@ -42,8 +44,8 @@ void OptionData::fromXML(XMLNode* node) {
     vector<std::reference_wrapper<vector<string>>> attrs;
     attrs.push_back(exerciseFeeTypes_);
     attrs.push_back(exerciseFeeDates_);
-    exerciseFees_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "ExerciseFees", "ExerciseFee",
-                                                                       {"type", "startDate"}, attrs, false);
+    exerciseFees_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "ExerciseFees", "ExerciseFee",
+                                                                    {"type", "startDate"}, attrs, &parseReal);
     exerciseFeeSettlementPeriod_ = XMLUtils::getChildValue(node, "ExerciseFeeSettlementPeriod", false);
     exerciseFeeSettlementCalendar_ = XMLUtils::getChildValue(node, "ExerciseFeeSettlementCalendar", false);
     exerciseFeeSettlementConvention_ = XMLUtils::getChildValue(node, "ExerciseFeeSettlementConvention", false);
