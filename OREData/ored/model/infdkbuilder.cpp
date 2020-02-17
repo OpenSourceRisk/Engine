@@ -73,7 +73,7 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     } else if (data_->aParamType() == ParamType::Piecewise) {
         if (data_->calibrateA() && data_->calibrationType() == CalibrationType::Bootstrap) { // override
             if (data_->aTimes().size() > 0) {
-                LOG("overriding alpha time grid with option expiries");
+                DLOG("overriding alpha time grid with option expiries");
             }
             QL_REQUIRE(optionExpiries_.size() > 0, "empty option expiries");
             aTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
@@ -90,7 +90,7 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     } else if (data_->hParamType() == ParamType::Piecewise) {
         if (data_->calibrateH() && data_->calibrationType() == CalibrationType::Bootstrap) { // override
             if (data_->hTimes().size() > 0) {
-                LOG("overriding H time grid with option expiries");
+                DLOG("overriding H time grid with option expiries");
             }
             QL_REQUIRE(optionExpiries_.size() > 0, "empty option expiries");
             hTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
@@ -101,17 +101,17 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     } else
         QL_FAIL("H type case not covered");
 
-    LOG("before calibration: alpha times = " << aTimes << " values = " << alpha);
-    LOG("before calibration:     h times = " << hTimes << " values = " << h)
+    DLOG("before calibration: alpha times = " << aTimes << " values = " << alpha);
+    DLOG("before calibration:     h times = " << hTimes << " values = " << h)
 
     if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
         data_->volatilityType() == LgmData::VolatilityType::HullWhite) {
-        LOG("INF parametrization: InfDkPiecewiseConstantHullWhiteAdaptor");
+        DLOG("INF parametrization: InfDkPiecewiseConstantHullWhiteAdaptor");
         parametrization_ = boost::make_shared<InfDkPiecewiseConstantHullWhiteAdaptor>(
             inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
             data_->infIndex());
     } else if (data_->reversionType() == LgmData::ReversionType::HullWhite) {
-        LOG("INF parametrization for " << data_->infIndex() << ": InfDkPiecewiseConstant");
+        DLOG("INF parametrization for " << data_->infIndex() << ": InfDkPiecewiseConstant");
         parametrization_ = boost::make_shared<InfDkPiecewiseConstantParametrization>(
             inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
             data_->infIndex());
@@ -119,24 +119,24 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
         parametrization_ = boost::make_shared<InfDkPiecewiseLinearParametrization>(
             inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
             data_->infIndex());
-        LOG("INF parametrization for " << data_->infIndex() << ": InfDkPiecewiseLinear");
+        DLOG("INF parametrization for " << data_->infIndex() << ": InfDkPiecewiseLinear");
     }
 
-    LOG("alpha times size: " << aTimes.size());
-    LOG("lambda times size: " << hTimes.size());
+    DLOG("alpha times size: " << aTimes.size());
+    DLOG("lambda times size: " << hTimes.size());
 
-    LOG("Apply shift horizon and scale");
+    DLOG("Apply shift horizon and scale");
 
     QL_REQUIRE(data_->shiftHorizon() >= 0.0, "shift horizon must be non negative");
     QL_REQUIRE(data_->scaling() > 0.0, "scaling must be positive");
 
     if (data_->shiftHorizon() > 0.0) {
-        LOG("Apply shift horizon " << data_->shiftHorizon() << " to the " << data_->infIndex() << " DK model");
+        DLOG("Apply shift horizon " << data_->shiftHorizon() << " to the " << data_->infIndex() << " DK model");
         parametrization_->shift() = data_->shiftHorizon();
     }
 
     if (data_->scaling() != 1.0) {
-        LOG("Apply scaling " << data_->scaling() << " to the " << data_->infIndex() << " DK model");
+        DLOG("Apply scaling " << data_->scaling() << " to the " << data_->infIndex() << " DK model");
         parametrization_->scaling() = data_->scaling();
     }
 }
@@ -237,7 +237,7 @@ void InfDkBuilder::buildCapFloorBasket() const {
         expiryTimes[j] = inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
                                                inflationIndex_->zeroInflationTermStructure()->dayCounter(), baseDate,
                                                helper->instrument()->fixingDate());
-        LOG("Added InflationOptionHelper " << data_->infIndex() << " " << QuantLib::io::iso_date(expiryDate));
+        DLOG("Added InflationOptionHelper " << data_->infIndex() << " " << QuantLib::io::iso_date(expiryDate));
     }
 
     std::sort(expiryTimes.begin(), expiryTimes.end());

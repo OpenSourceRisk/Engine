@@ -82,6 +82,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         legPayers_ = { false };
         npvCurrency_ = swap_[0].currency();
         notional_ = 0.0;
+        notionalCurrency_ = npvCurrency_;
         maturity_ = latestExerciseDate;
         return;
     }
@@ -629,6 +630,7 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
     // Set other ore::data::Trade details
     npvCurrency_ = ccy;
     notional_ = std::max(currentNotional(swap->fixedLeg()), currentNotional(swap->floatingLeg()));
+    notionalCurrency_ = npvCurrency_;
     legCurrencies_ = vector<string>(2, ccy);
     legs_.push_back(swap->fixedLeg());
     legs_.push_back(swap->floatingLeg());
