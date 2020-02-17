@@ -60,13 +60,13 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("NettingSet", string())
         .addColumn("CounterParty", string());
     for (auto trade : portfolio->trades()) {
-        string npvCcy = trade->npvCurrency();
-        Real fx = 1.0, fxNotional = 1.0;
-        if (npvCcy != baseCurrency)
-            fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
-        if (trade->notionalCurrency() != "" && trade->notionalCurrency() != baseCurrency)
-            fxNotional = market->fxSpot(trade->notionalCurrency() + baseCurrency, configuration)->value();
         try {
+            string npvCcy = trade->npvCurrency();
+            Real fx = 1.0, fxNotional = 1.0;
+            if (npvCcy != baseCurrency)
+                fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
+            if (trade->notionalCurrency() != "" && trade->notionalCurrency() != baseCurrency)
+                fxNotional = market->fxSpot(trade->notionalCurrency() + baseCurrency, configuration)->value();
             Real npv = trade->instrument()->NPV();
             QL_REQUIRE(std::isfinite(npv), "npv is not finite (" << npv << ")");
             Date maturity = trade->maturity();
