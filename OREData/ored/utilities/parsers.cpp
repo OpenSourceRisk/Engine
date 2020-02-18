@@ -35,6 +35,7 @@
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
+#include <qle/calendars/israel.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
@@ -215,7 +216,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"IS", Iceland()},
                                       {"IN", India()},
                                       {"ID", Indonesia()},
-                                      {"IL", Israel()},
+                                      {"IL", QuantLib::Israel()},
                                       {"IT", Italy()},
                                       {"JP", Japan()},
                                       {"MX", Mexico()},
@@ -260,7 +261,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"ISL", Iceland()},
                                       {"IND", India()},
                                       {"IDN", Indonesia()},
-                                      {"ISR", Israel()},
+                                      {"ISR", QuantLib::Israel()},
                                       {"ITA", Italy()},
                                       {"JPN", Japan()},
                                       {"MEX", Mexico()},
@@ -303,7 +304,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"HUF", Hungary()},
                                       {"INR", India()},
                                       {"IDR", Indonesia()},
-                                      {"ILS", Israel()},
+                                      {"ILS", QuantLib::Israel()},
                                       {"ISK", Iceland()},
                                       {"ITL", Italy()},
                                       {"JPY", Japan()},
@@ -357,7 +358,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"EUWA", Germany(Germany::Euwax)},
                                       {"XJKT", Indonesia(Indonesia::JSX)},
                                       {"XIDX", Indonesia(Indonesia::IDX)},
-                                      {"XTAE", Israel(Israel::TASE)},
+                                      {"XTAE", QuantLib::Israel(QuantLib::Israel::TASE)},
                                       {"XMIL", Italy(Italy::Exchange)},
                                       {"MISX", Russia(Russia::MOEX)},
                                       {"XKRX", SouthKorea(SouthKorea::KRX)},
@@ -368,6 +369,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
 
                                       // Other / Legacy
                                       {"DEN", Denmark()}, // TODO: consider remove it, not ISO
+                                      {"Telbor", QuantExt::Israel(QuantExt::Israel::Telbor)},
                                       {"London stock exchange", UnitedKingdom(UnitedKingdom::Exchange)},
                                       {"LNB", UnitedKingdom()},
                                       {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},
