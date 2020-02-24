@@ -29,6 +29,7 @@ void OptionData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "OptionData");
     longShort_ = XMLUtils::getChildValue(node, "LongShort", true);
     callPut_ = XMLUtils::getChildValue(node, "OptionType", false);
+    payoffType_ = XMLUtils::getChildValue(node, "PayoffType", false);
     style_ = XMLUtils::getChildValue(node, "Style", false);
     noticePeriod_ = XMLUtils::getChildValue(node, "NoticePeriod", false);
     noticeCalendar_ = XMLUtils::getChildValue(node, "NoticeCalendar", false);
@@ -58,6 +59,8 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "LongShort", longShort_);
     if (callPut_ != "")
         XMLUtils::addChild(doc, node, "OptionType", callPut_);
+    if (payoffType_ != "")
+        XMLUtils::addChild(doc, node, "PayoffType", payoffType_);
     if (style_ != "")
         XMLUtils::addChild(doc, node, "Style", style_);
     // if (noticePeriod_ != "")
