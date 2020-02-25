@@ -301,19 +301,19 @@ std::vector<QuantLib::Time> OptionInterpolator2d<IS, IE>::times() const {
 template <class IS, class IE>
 std::vector<QuantLib::Date> OptionInterpolator2d<IS, IE>::expiries() const {
     QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
-    return expiries_;
+    return OptionInterpolatorBase::expiries();
 }
 
 template <class IS, class IE>
 std::vector<std::vector<QuantLib::Real> > OptionInterpolator2d<IS, IE>::strikes() const {
     QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
-    return strikes_;
+    return OptionInterpolatorBase::strikes();
 }
 
 template <class IS, class IE>
 std::vector<std::vector<QuantLib::Real> > OptionInterpolator2d<IS, IE>::values() const {
     QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
-    return values_;
+    return OptionInterpolatorBase::values();
 }
 
 } //namespace QuantExt

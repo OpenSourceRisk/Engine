@@ -144,6 +144,8 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "Currency", ccy_);
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+    if (calendar_ != "NullCalendar")
+        XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLNode* n = volatilityConfig_->toXML(doc);
     XMLUtils::appendNode(node, n);
     return node;

@@ -53,6 +53,9 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
             "EquityVolCurve: Only lognormal volatilities and option premiums supported for equity volatility surfaces.");
         
         calendar_ = parseCalendar(config.calendar());
+        // if calendar is null use WeekdaysOnly
+        if (calendar_ == NullCalendar())
+            calendar_ = WeekendsOnly();
         dayCounter_ = parseDayCounter(config.dayCounter());
 
         // Do different things depending on the type of volatility configured
@@ -430,7 +433,8 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         } else {
             QL_FAIL("EquityVolatility: Invalid quote type provided.");
         }
-        vol_->enableExtrapolation();
+        DLOG("Setting BlackVarianceSurfaceSparse extrapolation to " << to_string(vssc.extrapolation()));
+        vol_->enableExtrapolation(vssc.extrapolation());
 
     } catch (std::exception& e) {
         QL_FAIL("equity vol curve building failed :" << e.what());

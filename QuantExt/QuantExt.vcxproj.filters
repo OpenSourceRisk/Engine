@@ -1399,6 +1399,5 @@
     <ClCompile Include="qle\termstructures\equityoptionsurfacestripper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\interpolators\optioninterpolator2d.cpp" />
   </ItemGroup>
 </Project>
