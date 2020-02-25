@@ -816,6 +816,9 @@
     <ClInclude Include="qle\termstructures\aposurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\equityoptionsurfacestripper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1393,5 +1396,9 @@
     <ClCompile Include="qle\termstructures\aposurface.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
+    <ClCompile Include="qle\termstructures\equityoptionsurfacestripper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\interpolators\optioninterpolator2d.cpp" />
   </ItemGroup>
 </Project>
