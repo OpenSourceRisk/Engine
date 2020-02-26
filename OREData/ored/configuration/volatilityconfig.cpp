@@ -41,7 +41,7 @@ void VolatilityConfig::fromBaseNode(XMLNode* node) {
             QL_FAIL("Volatiltiy type " << volType << " is not supported;");
         }
     } else if (qType == "Premium") {
-        quoteType_ == MarketDatum::QuoteType::PRICE;
+        quoteType_ = MarketDatum::QuoteType::PRICE;
         // If we have premiums the exercise type is required
         exerciseType_ = parseExerciseType(XMLUtils::getChildValue(node, "ExerciseType", true));
     } else {

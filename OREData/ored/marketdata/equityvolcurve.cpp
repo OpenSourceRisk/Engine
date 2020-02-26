@@ -327,6 +327,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
             }
         }
 
+        QL_REQUIRE(callQuotesAdded > 0, "No valid equity volatility quotes provided");
         bool callSurfaceOnly = false;
         if (callQuotesAdded > 0 && putQuotesAdded == 0) {
             QL_REQUIRE(vc.quoteType() != MarketDatum::QuoteType::PRICE, "For Premium quotes, call and put quotes must be supplied.");

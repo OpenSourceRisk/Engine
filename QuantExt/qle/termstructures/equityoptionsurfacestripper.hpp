@@ -47,11 +47,11 @@ public:
     void performCalculations() const;
     //@}
 
-    boost::shared_ptr<QuantLib::BlackVolTermStructure> volSurface() { return volSurface_; };
+    boost::shared_ptr<QuantLib::BlackVolTermStructure> volSurface();
 
 private:
-    const boost::shared_ptr<OptionInterpolatorBase>& callSurface_;
-    const boost::shared_ptr<OptionInterpolatorBase>& putSurface_;
+    boost::shared_ptr<OptionInterpolatorBase> callSurface_;
+    boost::shared_ptr<OptionInterpolatorBase> putSurface_;
     QuantLib::Handle<QuantExt::EquityIndex> eqIndex_;
     const Calendar& calendar_;
     const DayCounter& dayCounter_;
@@ -67,4 +67,5 @@ private:
 };
 
 } // namespace QuantExt
-# endif#pragma once
+# endif
+#pragma once

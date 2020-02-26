@@ -86,9 +86,11 @@ EquityOptionSurfaceStripper::EquityOptionSurfaceStripper(
 void EquityOptionSurfaceStripper::performCalculations() const {
     // create a set of all dates
     std::set<Date> allExpiries;
-    for (auto expiry : callSurface_->expiries())
+    std::vector<Date> callExpiries = callSurface_->expiries();
+    std::vector<Date> putExpiries = putSurface_->expiries();
+    for (auto expiry : callExpiries)
         allExpiries.insert(expiry);
-    for (auto expiry : putSurface_->expiries())
+    for (auto expiry : putExpiries)
         allExpiries.insert(expiry);
 
     boost::shared_ptr<SimpleQuote> volQuote;
@@ -133,14 +135,14 @@ void EquityOptionSurfaceStripper::performCalculations() const {
         Real forward = eqIndex_->fixing(exp);
 
         vector<Real> callStrikes, putStrikes;
-        auto itc = std::find(callSurface_->expiries().begin(), callSurface_->expiries().end(), exp);
-        if (itc != callSurface_->expiries().end()) {
-            auto pos = std::distance(callSurface_->expiries().begin(), itc);
+        auto itc = std::find(callExpiries.begin(), callExpiries.end(), exp);
+        if (itc != callExpiries.end()) {
+            auto pos = std::distance(callExpiries.begin(), itc);
             callStrikes = callSurface_->strikes().at(pos);
         }
-        auto itp = std::find(putSurface_->expiries().begin(), putSurface_->expiries().end(), exp);
-        if (itp != putSurface_->expiries().end()) {
-            auto pos = std::distance(putSurface_->expiries().begin(), itp);
+        auto itp = std::find(putExpiries.begin(), putExpiries.end(), exp);
+        if (itp != putExpiries.end()) {
+            auto pos = std::distance(putExpiries.begin(), itp);
             putStrikes = putSurface_->strikes().at(pos);
         }
 
@@ -157,30 +159,31 @@ void EquityOptionSurfaceStripper::performCalculations() const {
             havePuts = true;
 
         for (auto cs : callStrikes) {
-            if (!havePuts || cs < forward)
+            if (!havePuts || cs < forward) {
                 volStrikes.push_back(cs);
-            volExpiries.push_back(exp);
-            if (premiumSurfaces) {
-                volData.push_back(implyVol(exp, cs, Option::Call, engine, volQuote));
-            } else {
-                volData.push_back(callSurface_->getValue(exp, cs));
+                volExpiries.push_back(exp);
+                if (premiumSurfaces) {
+                    volData.push_back(implyVol(exp, cs, Option::Call, engine, volQuote));
+                } else {
+                    volData.push_back(callSurface_->getValue(exp, cs));
+                }
             }
         }
         for (auto ps : putStrikes) {
-            if (!havePuts || ps > forward)
+            if (!havePuts || ps > forward) {
                 volStrikes.push_back(ps);
-            volExpiries.push_back(exp);
-            if (premiumSurfaces) {
-                volData.push_back(implyVol(exp, ps, Option::Put, engine, volQuote));
-            } else {
-                volData.push_back(putSurface_->getValue(exp, ps));
+                volExpiries.push_back(exp);
+                if (premiumSurfaces) {
+                    volData.push_back(implyVol(exp, ps, Option::Put, engine, volQuote));
+                } else {
+                    volData.push_back(putSurface_->getValue(exp, ps));
+                }
             }
         }
-
-        volSurface_ = boost::make_shared<BlackVarianceSurfaceSparse>(callSurface_->referenceDate(), calendar_,
-            volExpiries, volStrikes, volData, dayCounter_, lowerStrikeConstExtrap_, upperStrikeConstExtrap_,
-            timeFlatExtrapolation_);
     }
+    volSurface_ = boost::make_shared<BlackVarianceSurfaceSparse>(callSurface_->referenceDate(), calendar_,
+        volExpiries, volStrikes, volData, dayCounter_, lowerStrikeConstExtrap_, upperStrikeConstExtrap_,
+        timeFlatExtrapolation_);
 }
 
 Real EquityOptionSurfaceStripper::implyVol(Date expiry, Real strike, Option::Type type,
@@ -188,7 +191,14 @@ Real EquityOptionSurfaceStripper::implyVol(Date expiry, Real strike, Option::Typ
 
     // create an american option for current strike/expiry and type
     boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike));
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<AmericanExercise>(expiry);
+    boost::shared_ptr<Exercise> exercise;
+    if (type_ == Exercise::American) {
+        exercise = boost::make_shared<AmericanExercise>(expiry);
+    } else if (type_ == Exercise::European) {
+        exercise = boost::make_shared<EuropeanExercise>(expiry);
+    } else {
+        QL_FAIL("Unsupported exercise type for option stripping");
+    }
     VanillaOption option(payoff, exercise);
     option.setPricingEngine(engine);
 
@@ -208,6 +218,11 @@ Real EquityOptionSurfaceStripper::implyVol(Date expiry, Real strike, Option::Typ
         vol = 0.0;
     }
     return vol;
+}
+
+boost::shared_ptr<QuantLib::BlackVolTermStructure> EquityOptionSurfaceStripper::volSurface() { 
+    calculate();
+    return volSurface_; 
 }
 
 #pragma once
