@@ -192,12 +192,12 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             // We return the last fixing inside the coupon period
                             fixingDate = ptrBMA->fixingDates().end()[-2];
                             fixingValue = ptrBMA->pricer()->swapletRate();
-                            if (ptrBMA->index()->pastFixing(fixingDate) == Null<Real>())
+                            if (fixingDate > asof)
                                 flowType = "BMAaverage";
                         } else if (ptrFloat) {
                             fixingDate = ptrFloat->fixingDate();
                             fixingValue = ptrFloat->index()->fixing(fixingDate);
-                            if (ptrFloat->index()->pastFixing(fixingDate) == Null<Real>())
+                            if (fixingDate > asof)
                                 flowType = "InterestProjected";
                         } else if (ptrInfl) {
                             fixingDate = ptrInfl->fixingDate();
