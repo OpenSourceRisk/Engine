@@ -3190,7 +3190,9 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
       <Parameter name="IntegrationPoints">16</Parameter>
     </EngineParameters>
   </Product>
-</PricingEngines>
+  <GlobalParameters>
+    <Parameter name="ContinueOnCalibrationError>true</Parameter>
+  </GlobalParameters>
 \end{minted}
 \caption{Pricing engine configuration}
 \label{lst:pricingengine_config}
@@ -3225,7 +3227,15 @@ pricer (CapFlooredIborLeg), please refer to the commented parts in {\tt Examples
 \medskip
 This file is relevant in particular for structured products which are on the roadmap of future ORE releases. But it is also
 intended to allow the selection of optimised pricing engines for vanilla products such as Interest Rate Swaps.
- 
+
+\medskip
+In addition to product specific settings there is also a block with global parameters with the following meaning:
+\begin{itemize}
+\item ContinueOnCalibrationError If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
+  LGM model) will not cause the trade building to fail, instead a warning is logged and the trade is processed
+  anyway. Optional, defaults to false.
+\end{itemize}
+
 %--------------------------------------------------------
 \subsection{Simulation: {\tt simulation.xml}}\label{sec:simulation}
 %--------------------------------------------------------

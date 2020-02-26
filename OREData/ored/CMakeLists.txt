@@ -197,6 +197,7 @@ model/lgmbuilder.hpp
 model/lgmdata.hpp
 model/marketobserver.hpp
 model/modelbuilder.hpp
+model/structuredmodelerror.hpp
 model/utilities.hpp
 portfolio/bond.hpp
 portfolio/builders/bond.hpp

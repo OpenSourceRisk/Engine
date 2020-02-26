@@ -72,7 +72,10 @@ public:
         //! Daycounter for date/time conversions
         const DayCounter& dayCounter = ActualActual(),
         //! calibrate the model?
-        const bool dontCalibrate = false);
+        const bool dontCalibrate = false,
+        //! continue if bootstrap error exceeds tolerance
+        const bool continueOnError = false
+        );
 
     //! Default destructor
     ~CrossAssetModelBuilder() {}
@@ -121,6 +124,7 @@ private:
         configurationInfCalibration_, configurationFinalModel_;
     const DayCounter dayCounter_;
     const bool dontCalibrate_;
+    const bool continueOnError_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;
