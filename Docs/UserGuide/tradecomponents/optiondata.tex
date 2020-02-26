@@ -66,6 +66,14 @@ FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined
   \label{tab:callput_specs}
 \end{table}
 
+\item PayoffType: Specifies a detailled payoff type for exotic options. Only applicable to specific trade types as
+  indicated in brackets:
+
+  Allowable values:
+  \begin{itemize}
+  \item Accumulator, Decumulator (applies to trade type Accumulator only)
+  \item TargetFull, TargetExact, TargetTruncated (applies to trade type TaRF only)
+  \end{itemize}
 
 \item Style: The exercise style of the option. 
 
