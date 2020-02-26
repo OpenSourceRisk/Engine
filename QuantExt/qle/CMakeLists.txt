@@ -68,7 +68,6 @@ instruments/payment.cpp
 instruments/rebatedexercise.cpp
 instruments/subperiodsswap.cpp
 instruments/tenorbasisswap.cpp
-interpolators/optioninterpolator2d.cpp
 math/deltagammavar.cpp
 math/fillemptymatrix.cpp
 methods/multipathgeneratorbase.cpp
