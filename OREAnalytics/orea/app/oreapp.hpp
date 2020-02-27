@@ -107,12 +107,13 @@ protected:
     //! load scenarioGeneratorData
     boost::shared_ptr<ScenarioGeneratorData> getScenarioGeneratorData();
     //! build CAM
-    boost::shared_ptr<QuantExt::CrossAssetModel> buildCam(boost::shared_ptr<Market> market);
+    boost::shared_ptr<QuantExt::CrossAssetModel> buildCam(boost::shared_ptr<Market> market,
+                                                          const bool continueOnCalibrationError);
     //! build scenarioGenerator
     virtual boost::shared_ptr<ScenarioGenerator>
     buildScenarioGenerator(boost::shared_ptr<Market> market,
                            boost::shared_ptr<ScenarioSimMarketParameters> simMarketData,
-                           boost::shared_ptr<ScenarioGeneratorData> sgd);
+                           boost::shared_ptr<ScenarioGeneratorData> sgd, const bool continueOnCalibrationError);
 
     //! load in scenarioData
     virtual void loadScenarioData();

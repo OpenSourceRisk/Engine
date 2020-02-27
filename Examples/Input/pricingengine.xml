@@ -213,4 +213,7 @@
     <Engine>CPIBlackCapFloorEngine</Engine>
     <EngineParameters/>
   </Product>
+  <GlobalParameters>
+    <Parameter name="ContinueOnCalibrationError">true</Parameter>
+  </GlobalParameters>
 </PricingEngines>

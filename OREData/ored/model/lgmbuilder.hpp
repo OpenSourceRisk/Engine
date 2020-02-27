@@ -52,7 +52,8 @@ public:
       alternative discounting curves are then usually set in the pricing
       engines for swaptions etc. */
     LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
-               const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001);
+               const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
+               const bool continueOnError = false);
     //! Return calibration error
     Real error() const;
 
@@ -75,6 +76,7 @@ public:
 private:
     void performCalculations() const override;
     void buildSwaptionBasket() const;
+    std::string getBasketDetails() const;
     // checks whether swaption vols have changed compared to cache and updates the cache if requested
     bool volSurfaceChanged(const bool updateCache) const;
     // populate expiry and term
@@ -86,7 +88,8 @@ private:
     boost::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
     boost::shared_ptr<IrLgmData> data_;
-    Real bootstrapTolerance_;
+    const Real bootstrapTolerance_;
+    const bool continueOnError_;
     mutable Real error_;
     boost::shared_ptr<QuantExt::LGM> model_;
     Array params_;
