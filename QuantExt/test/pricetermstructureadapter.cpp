@@ -25,6 +25,7 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/zerocurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/currencies/america.hpp>
 
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
@@ -48,6 +49,7 @@ public:
     DayCounter dayCounter;
     vector<Period> priceTenors;
     vector<boost::shared_ptr<SimpleQuote> > priceQuotes;
+    USDCurrency currency;
 
     CommonData() : tolerance(1e-10), priceTenors(5), priceQuotes(5) {
         flatZero = boost::make_shared<SimpleQuote>(0.015);
@@ -94,7 +96,7 @@ BOOST_AUTO_TEST_CASE(testImpliedZeroRates) {
         prices[i] = Handle<Quote>(td.priceQuotes[i]);
     }
     boost::shared_ptr<PriceTermStructure> priceCurve =
-        boost::make_shared<InterpolatedPriceCurve<Linear> >(td.priceTenors, prices, td.dayCounter);
+        boost::make_shared<InterpolatedPriceCurve<Linear> >(td.priceTenors, prices, td.dayCounter, td.currency);
 
     // Adapted price curve i.e. implied yield termstructure
     PriceTermStructureAdapter priceAdapter(priceCurve, discount);
@@ -152,7 +154,7 @@ BOOST_AUTO_TEST_CASE(testFloatingDiscountFixedPrice) {
         prices[i] = Handle<Quote>(td.priceQuotes[i]);
     }
     boost::shared_ptr<PriceTermStructure> fixedReferencePriceCurve =
-        boost::make_shared<InterpolatedPriceCurve<Linear> >(asof, dates, prices, td.dayCounter);
+        boost::make_shared<InterpolatedPriceCurve<Linear> >(asof, dates, prices, td.dayCounter, td.currency);
 
     // Check construction of adapted price curve passes => reference dates same on construction
     BOOST_REQUIRE_NO_THROW(
@@ -188,7 +190,7 @@ BOOST_AUTO_TEST_CASE(testFixedDiscountFloatingPrice) {
         prices[i] = Handle<Quote>(td.priceQuotes[i]);
     }
     boost::shared_ptr<PriceTermStructure> fixedReferencePriceCurve =
-        boost::make_shared<InterpolatedPriceCurve<Linear> >(td.priceTenors, prices, td.dayCounter);
+        boost::make_shared<InterpolatedPriceCurve<Linear> >(td.priceTenors, prices, td.dayCounter, td.currency);
 
     // Check construction of adapted price curve passes => reference dates same on construction
     BOOST_REQUIRE_NO_THROW(PriceTermStructureAdapter(fixedReferencePriceCurve, floatReferenceDiscountCurve));
@@ -230,7 +232,7 @@ BOOST_AUTO_TEST_CASE(testExtrapolation) {
         prices[i] = Handle<Quote>(td.priceQuotes[i]);
     }
     boost::shared_ptr<PriceTermStructure> priceCurve =
-        boost::make_shared<InterpolatedPriceCurve<Linear> >(td.priceTenors, prices, td.dayCounter);
+        boost::make_shared<InterpolatedPriceCurve<Linear> >(td.priceTenors, prices, td.dayCounter, td.currency);
 
     // Check construction of adapted price curve passes
     BOOST_REQUIRE_NO_THROW(PriceTermStructureAdapter(priceCurve, zeroCurve));

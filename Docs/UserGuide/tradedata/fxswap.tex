@@ -17,6 +17,7 @@ It contains no sub-nodes.
             <FarDate>2028-09-01</FarDate>
             <FarBoughtAmount>1300000</FarBoughtAmount>
             <FarSoldAmount>1000000</FarSoldAmount>
+            <Settlement>Cash</Settlement>
         </FxSwapData>
 \end{minted}
 \caption{FX Swap data}
@@ -34,7 +35,7 @@ The meanings and allowable values of the various elements in the \lstinline!FXSw
 \item FarDate: The date of the final fx exchange of the FX Swap. \\ Allowable values:  Any date further into the future than NearDate. See \lstinline!Date! in Table  \ref{tab:allow_stand_data}.
 \item FarBoughtAmount: The amount to be bought on far date.  \\ Allowable values:  Any positive real number.
 \item FarSoldAmount: The amount to be sold on far date.  \\ Allowable values:  Any positive real number.
-\item Settlement [Optional]: Delivery type.  Note that Non-Deliverable Swaps can be represented by \emph{Cash} settlement. Delivery type does not impact pricing in ORE.  
+\item Settlement [Optional]: Delivery type.  Note that Non-Deliverable FX Swaps can be represented by \emph{Cash} settlement, and that deliverable FX Swaps will be excluded from the CRIF output. Delivery type does not impact pricing in ORE.  
 
 Allowable values: \emph{Cash} or \emph{Physical}.  Defaults to \emph{Physical} if left blank or omitted.
 

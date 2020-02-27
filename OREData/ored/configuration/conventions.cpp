@@ -1280,7 +1280,7 @@ void CommodityFutureConvention::build() {
 
     // Optional entries
     oneContractMonth_ = strOneContractMonth_.empty() ? Month::Jan : parseMonth(strOneContractMonth_);
-    offsetDays_ = strOffsetDays_.empty() ? 0 : lexical_cast<Natural>(strOffsetDays_);
+    offsetDays_ = strOffsetDays_.empty() ? 0 : lexical_cast<Integer>(strOffsetDays_);
     bdc_ = strBdc_.empty() ? Preceding : parseBusinessDayConvention(strBdc_);
     optionExpiryOffset_ = strOptionExpiryOffset_.empty() ? 0 : lexical_cast<Natural>(strOptionExpiryOffset_);
     for (const string& strDate : strProhibitedExpiries_) {

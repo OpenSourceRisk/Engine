@@ -55,15 +55,18 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("NPV(Base)", double(), 6)
         .addColumn("BaseCurrency", string())
         .addColumn("Notional", double(), 2)
+        .addColumn("NotionalCurrency", string())
         .addColumn("Notional(Base)", double(), 2)
         .addColumn("NettingSet", string())
         .addColumn("CounterParty", string());
     for (auto trade : portfolio->trades()) {
-        string npvCcy = trade->npvCurrency();
-        Real fx = 1.0;
-        if (npvCcy != baseCurrency)
-            fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
         try {
+            string npvCcy = trade->npvCurrency();
+            Real fx = 1.0, fxNotional = 1.0;
+            if (npvCcy != baseCurrency)
+                fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
+            if (trade->notionalCurrency() != "" && trade->notionalCurrency() != baseCurrency)
+                fxNotional = market->fxSpot(trade->notionalCurrency() + baseCurrency, configuration)->value();
             Real npv = trade->instrument()->NPV();
             QL_REQUIRE(std::isfinite(npv), "npv is not finite (" << npv << ")");
             Date maturity = trade->maturity();
@@ -77,7 +80,10 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(npv * fx)
                 .add(baseCurrency)
                 .add(trade->notional())
-                .add(trade->notional() * fx)
+                .add(trade->notionalCurrency() == "" ? "#NA" : trade->notionalCurrency())
+                .add(trade->notional() == Null<Real>() || trade->notionalCurrency() == ""
+                         ? Null<Real>()
+                         : trade->notional() * fxNotional)
                 .add(trade->envelope().nettingSetId())
                 .add(trade->envelope().counterparty());
         } catch (std::exception& e) {
@@ -93,6 +99,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(Null<Real>())
                 .add("#NA")
                 .add(Null<Real>())
+                .add("#NA")
                 .add(Null<Real>())
                 .add("#NA")
                 .add("#NA");
@@ -185,12 +192,12 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             // We return the last fixing inside the coupon period
                             fixingDate = ptrBMA->fixingDates().end()[-2];
                             fixingValue = ptrBMA->pricer()->swapletRate();
-                            if (ptrBMA->index()->pastFixing(fixingDate) == Null<Real>())
+                            if (fixingDate > asof)
                                 flowType = "BMAaverage";
                         } else if (ptrFloat) {
                             fixingDate = ptrFloat->fixingDate();
                             fixingValue = ptrFloat->index()->fixing(fixingDate);
-                            if (ptrFloat->index()->pastFixing(fixingDate) == Null<Real>())
+                            if (fixingDate > asof)
                                 flowType = "InterestProjected";
                         } else if (ptrInfl) {
                             fixingDate = ptrInfl->fixingDate();

@@ -227,7 +227,8 @@ void CommodityCurve::buildCurve(const Date& asof,
     }
 
     // Build the curve using the data
-    populateCurve<InterpolatedPriceCurve>(asof, curveDates, curvePrices, dayCounter_);
+    populateCurve<InterpolatedPriceCurve>(asof, curveDates, curvePrices, dayCounter_,
+                                          parseCurrency(config->currency()));
 }
 
 void CommodityCurve::buildCrossCurrencyPriceCurve(const Date& asof,
@@ -258,10 +259,9 @@ void CommodityCurve::buildCrossCurrencyPriceCurve(const Date& asof,
     Handle<Quote> fxSpot = fxSpots.getQuote(baseConfig->currency() + config->currency());
 
     // Populate the commodityPriceCurve_ member
-    commodityPriceCurve_ = boost::make_shared<CrossCurrencyPriceTermStructure>(asof, 
-        QuantLib::Handle<PriceTermStructure>(commIt->second->commodityPriceCurve()), 
-        fxSpot, baseYtsIt->second->handle(), ytsIt->second->handle());
-
+    commodityPriceCurve_ = boost::make_shared<CrossCurrencyPriceTermStructure>(
+        asof, QuantLib::Handle<PriceTermStructure>(commIt->second->commodityPriceCurve()), fxSpot,
+        baseYtsIt->second->handle(), ytsIt->second->handle(), parseCurrency(config->currency()));
 }
 
 void CommodityCurve::buildBasisPriceCurve(const Date& asof,

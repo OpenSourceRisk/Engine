@@ -126,8 +126,8 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
         expiry = convention_.expiryCalendar().adjust(expiry, convention_.businessDayConvention());
     }
 
-    // Apply offset adjustments if necessary
-    expiry = convention_.expiryCalendar().advance(expiry, -static_cast<Integer>(convention_.offsetDays()), Days);
+    // Apply offset adjustments if necessary. A negative integer indicates that we move forward that number of days.
+    expiry = convention_.expiryCalendar().advance(expiry, -convention_.offsetDays(), Days);
 
     // If expiry date is one of the prohibited dates, move to preceding business day
     while (convention_.prohibitedExpiries().count(expiry) > 0) {

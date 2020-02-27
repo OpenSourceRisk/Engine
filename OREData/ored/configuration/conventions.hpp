@@ -1204,7 +1204,7 @@ public:
     const QuantLib::Calendar& expiryCalendar() const { return expiryCalendar_; }
     QuantLib::Natural expiryMonthLag() const { return expiryMonthLag_; }
     QuantLib::Month oneContractMonth() const { return oneContractMonth_; }
-    QuantLib::Natural offsetDays() const { return offsetDays_; }
+    QuantLib::Integer offsetDays() const { return offsetDays_; }
     QuantLib::BusinessDayConvention businessDayConvention() const { return bdc_; }
     bool adjustBeforeOffset() const { return adjustBeforeOffset_; }
     bool isAveraging() const { return isAveraging_; }
@@ -1231,7 +1231,7 @@ private:
     QuantLib::Calendar calendar_;
     QuantLib::Calendar expiryCalendar_;
     QuantLib::Month oneContractMonth_;
-    QuantLib::Natural offsetDays_;
+    QuantLib::Integer offsetDays_;
     QuantLib::BusinessDayConvention bdc_;
     QuantLib::Natural optionExpiryOffset_;
     std::set<QuantLib::Date> prohibitedExpiries_;
