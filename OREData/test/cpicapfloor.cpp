@@ -17,8 +17,9 @@
 */
 
 #include <boost/make_shared.hpp>
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/csvloader.hpp>
@@ -30,7 +31,6 @@
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <oret/datapaths.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <tuple>
 
 using namespace QuantLib;
