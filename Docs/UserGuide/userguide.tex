@@ -1,6 +1,15 @@
 \documentclass[12pt, a4paper]{article}
 
-\usepackage[urlcolor=blue]{hyperref}
+% Use \hypersetup here to get rid of the ugly boxes around links
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue
+}
+
+% For nicer paragraph spacing
+\usepackage{parskip}
 
 \usepackage[disable]{todonotes}
 %\usepackage{todonotes}
@@ -14,7 +23,14 @@
 \usepackage{epstopdf}
 \usepackage{longtable}
 \usepackage{floatrow}
+
+% Use \setminted here to get horizontal line above and below listings
 \usepackage{minted}
+\setminted{
+   frame=lines,
+   framesep=2mm
+}
+
 \usepackage{textcomp}
 \usepackage{color,soul}
 \usepackage[font={small,it}]{caption}
@@ -43,7 +59,9 @@
   belowskip=2\medskipamount
 }
 
-%\usepackage{float}
+% All listings have a left aligned caption. This looks better as the listings themselves are left aligned.
+\captionsetup[listing]{justification=justified,singlelinecheck=false}
+
 \usepackage{tabu}
 \tabulinesep=1.0mm
 \restylefloat{table}
@@ -52,6 +70,9 @@
 
 \newenvironment{longlisting}{\captionsetup{type=listing}}{}
 %\usepackage[colorlinks=true]{hyperref}
+
+% Inline code fragments can run over the page boundary without ragged right.
+\AtBeginDocument{\raggedright}
 
 \renewcommand\P{\ensuremath{\mathbb{P}}}
 \newcommand\E{\ensuremath{\mathbb{E}}}
@@ -870,6 +891,8 @@ Example & Description \\
 \hline
 29 & Curve Building using Fixed vs. Float Cross Currency Helpers\\
 \hline
+33 & USD-Prime Curve Building via Prime-LIBOR Basis Swap\\
+\hline
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -906,6 +929,7 @@ examples. The particular selection of input files is determined by the 'master' 
   {\tt simulation.xml} & Configuration of simulation model and market\\
   {\tt market.txt} &  Market data snapshot \\
   {\tt fixings.txt} &  Index fixing history \\
+  {\tt dividends.txt} &  Dividends history \\
   {\tt curveconfig.xml} & Curve and term structure composition from individual market instruments\\
   {\tt conventions.xml} & Market conventions for all market data points\\
   {\tt todaysmarket.xml} &  Configuration of the market composition, relevant for the pricing of the given portfolio as
@@ -1000,7 +1024,7 @@ both Swap legs reset, i.e. annually in this case\footnote{Using closed form expr
   prices.}. And if the simulation model has been calibrated to the points on the Swaption surface which are used for
 European Swaption pricing, then we can expect to see that the simulated exposure matches Swaption prices at these annual
 points, as in figure \ref{fig_1}.  In Example\_1 we used co-terminal ATM Swaptions for both model calibration and
-Swaption pricing. Moreover, as the the yield curve is flat in this example, the exposures from both parties'
+Swaption pricing. Moreover, as the yield curve is flat in this example, the exposures from both parties'
 perspectives (EPE and ENE) match not only at the annual resets, but also for the period between annual reset of both
 legs to the point in time when the floating leg resets. Thereafter, between floating leg (only) reset and next joint
 fixed/floating leg reset, we see and expect a deviation of the two exposure profiles.
@@ -1955,6 +1979,27 @@ The portfolio contains an at-market fixed vs. float cross currency swap that is
 included in the curve building. The NPV of this swap should be zero when the example is run,
 using {\tt python run.py} or ``directly'' calling {\tt ore[.exe] ore.xml}.
 
+% Missing examples 30, 31, 32
+%--------------------------------------------------------
+\subsection{USD-Prime Curve Building via Prime-LIBOR Basis Swap}% Example 33
+\label{example:33}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_33} demonstrates the implementation of the USD-Prime index in the ORE.
+The USD-Prime yield curve is built from USD-Prime vs USD 3M Libor basis swap quotes.
+The portfolio consists of two fair basis swaps (NPVs equal to 0):
+\begin{itemize}
+\item US Dollar Prime Rate vs 3 Month LIBOR
+\item US Dollar 3 Month LIBOR vs Fed Funds + 0.027
+\end{itemize}
+
+In particular, it is confirmed that the bootstrapped curves USD-FedFunds and USD-Prime follow
+the 3\% rule observed on the market: {\tt U.S. Prime Rate = (The Fed Funds Target Rate + 3)}.
+(See \url{http://www.fedprimerate.com/}.)
+
+Running ORE in directory {\tt Examples/Example\_33} with {\tt python run.py }
+yields the USD-Prime curve in {\tt Examples/Example\_33/Output/curves.csv.}
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
@@ -2079,6 +2124,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="logMask">255</Parameter>
   <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
   <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
+  <Parameter name="dividendDataFile">../../Input/dividends_20160205.txt</Parameter> <!-- Optional -->
   <Parameter name="implyTodaysFixings">Y</Parameter>
   <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
   <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
@@ -2105,7 +2151,7 @@ Parameter {\tt logMask} determines the verbosity of log file output. Log message
 internally labelled as Alert, Critical, Error, Warning, Notice, Debug, associated with logMask values 1, 2, 4, 8, ..., 64. 
 The logMask allows filtering subsets of these categories and controlling the verbosity of log file output\footnote{by bitwise comparison of the the external logMask value with each message's log level}. LogMask 255 ensures maximum verbosity. \\
 
-When ORE starts, it will initialise today's market, i.e. load market data and fixings, and build all term structures as
+When ORE starts, it will initialise today's market, i.e. load market data, fixings and dividends, and build all term structures as
 specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the trades in {\tt portfolio.xml} and link them with
 pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt implyTodaysFixings} is set to Y, today's
 fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as e.g. in
@@ -2910,7 +2956,7 @@ file:
 </InflationCapFloorPriceSurfaces>
 \end{minted}
 \caption{Inflation Cap/Floor Price Surfaces block with ID 'default'}
-\label{lst:yoyinflationindexcurve_spec}
+\label{lst:inflation_cap_floor_surface_spec}
 \end{listing}
 
 This instructs ORE to build a set of zero inflation cap floor price surfaces, which are defined in the curve
@@ -3657,6 +3703,9 @@ If no day counter is specified for a given riskfactor then the default Actual365
         <SimulateATMOnly>false</SimulateATMOnly><!-- false -->
         <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness><!-- omitted if SimulateATMOnly true -->
       </Surface>
+      <TimeExtrapolation>Flat</TimeExtrapolation>
+      <StrikeExtrapolation>Flat</StrikeExtrapolation>
+
   </EquityVolatilities>
   ...
   <BenchmarkCurves>
@@ -4022,7 +4071,19 @@ for the construction of a market.
 \subsubsection{Default Curves}
 
 Listing \ref{lst:defaultcurve_configuration} shows the configuration of Default curves built from CDS spread
-quotes. Alternatively default curves can be set up as a difference curve of two yield curves as shown in listing
+quotes. The \lstinline!BootstrapConfig! node is optional and holds configuration details for the iterative bootstrap 
+that are described in section \ref{sec:bootstrap_config}. Also note - if the \lstinline!Type! is not \lstinline!Benchmark!
+then \lstinline!Quote! elements within the \lstinline!Quotes! node may have an \lstinline!optional! attribute, indicating
+whether or not the quote is optional. Example:
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Quotes>
+  <Quote optional="true">CDS/CREDIT_SPREAD/BANK/SR/USD/1Y</Quote>
+</Quotes>
+\end{minted}
+%\hrule
+
+Alternatively default curves can be set up as a difference curve of two yield curves as shown in listing
 \ref{lst:defaultcurve_configuration_2}. If $P_B(0,t)$ and $P_S(0,t)$ denote the discount factors of the given benchmark
 and source curve respectively the resulting default term structures has survival probabilities
 
@@ -4052,6 +4113,9 @@ on the given pillars, and w.r.t. a a zero recovery rate. The interpolation is ba
       <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/10Y</Quote>
     </Quotes>
     <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+    <BootstrapConfig>
+      ...
+    </BootstrapConfig>
   </DefaultCurve>
   <DefaultCurve>
   ...
@@ -4128,6 +4192,10 @@ Listing \ref{lst:swaptionvol_configuration} shows the configuration of Swaption 
 
 Listing \ref{lst:capfloorvol_configuration} shows the configuration of Cap/Floor volatility structures.
 
+The \lstinline!BootstrapConfig! node is optional and holds configuration details for the iterative bootstrap 
+that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described 
+in section \ref{sec:bootstrap_config} are used.
+
 \begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -4150,6 +4218,9 @@ Listing \ref{lst:capfloorvol_configuration} shows the configuration of Cap/Floor
       <Strikes>-0.01,0.0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1</Strikes>
       <IborIndex>EUR-EURIBOR-6M</IborIndex>
       <DiscountCurve>Yield/EUR/EUR1D</DiscountCurve>
+      <BootstrapConfig>
+        ...
+      </BootstrapConfig>
     </CapFloorVolatility>
     ...
   </CapFloorVolatilities>
@@ -4170,12 +4241,25 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
     <CurveId>EURUSD</CurveId>
     <CurveDescription />
     <Dimension>ATM</Dimension> <!-- ATM, Smile -->
-    <SmileInterpolation>VannaVolga1</SmileInterpolation> <!-- VannaVolga1,VannaVolga2 -->
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <FXSpotID>FX/EUR/USD</FXSpotID>
     <FXForeignCurveID>Yield/USD/USD1D</FXForeignCurveID>
     <FXDomesticCurveID>Yield/EUR/EUR1D</FXDomesticCurveID>
   </FXVolatility>
+    <FXVolatility>
+    <CurveId>USDJPY</CurveId>
+    <CurveDescription />
+    <Dimension>Smile</Dimension> <!-- ATM, Smile -->
+    <SmileType>Delta</SmileType> <!--VannaVolga, Delta -->
+    <SmileInterpolation>Linear</SmileInterpolation> <!-- VannaVolga1,VannaVolga2, Linear, Cubic -->
+    <Conventions>FX-USD-JPY-OPTION-CONVENTIONS</Conventions>
+    <Deltas>10P,20P,ATM,10C,20C</Deltas>
+    <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
+    <FXSpotID>FX/USD/JPY</FXSpotID>
+    <FXForeignCurveID>Yield/JPY/JPY1D</FXForeignCurveID>
+    <FXDomesticCurveID>Yield/USD/USD1D</FXDomesticCurveID>
+  </FXVolatility>
+
   <FXVolatility>
     ...
   </FXVolatility>
@@ -4185,11 +4269,11 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
 \label{lst:fxoptionvol_configuration}
 \end{longlisting}
 
-The \lstinline!SmileInterpolation! is optional and only used when the \lstinline!Dimension! is set to \emph{Smile}. If  \lstinline!Dimension! is set to \emph{Smile}, 
-Vanna Volga is used as per (Castagna \& Mercurio - 2006). \lstinline!SmileInterpolation! specifies which approximation to use
-for implied volatilities; \emph{VannaVolga1} or \emph{VannaVolga2} for (eq. 13) or (eq. 14)  respectively. The first approximation
-is less accurate for far OTM but is always defined. The second approximation is defined in most practical applications. 
-\lstinline!SmileInterpolation! defaults to second approximation.
+The \lstinline!SmileInterpolation! is optional and only used when the \lstinline!Dimension! is set to \emph{Smile}. If  \lstinline!Dimension! is set to \emph{Smile} 
+and the  \lstinline!SmileType! is set to \emph{VannaVolga}, then Vanna Volga is used as per (Castagna \& Mercurio - 2006). \lstinline!SmileInterpolation! specifies which approximation to use for implied volatilities; \emph{VannaVolga1} or \emph{VannaVolga2} for (eq. 13) or (eq. 14)  respectively. The first approximation
+is less accurate for far OTM but is always defined. The second approximation is defined in most practical applications. \lstinline!SmileInterpolation! defaults to second approximation.
+
+If  \lstinline!Dimension! is set to \emph{Smile}  and the  \lstinline!SmileType! is set to \emph{Delta}, then Delta quotes are used to build a full surface using the deltas specified in \emph{Deltas} and the expiries in \emph{Expiries}. \lstinline!SmileInterpolation! specifies which interpolation method to use for implied volatilities; \emph{Linear} or \emph{Cubic}.
 
 \subsubsection{Equity Curve Structures}
 
@@ -4246,6 +4330,8 @@ Listing \ref{lst:eqoptionvol_configuration} shows the configuration of equity vo
     <Expiries>1M,5Y,10Y</Expiries>
     <!-- If Dimension is Smile: -->
     <Strikes>1932.8,2147.56,2254.939</Strikes>
+    <TimeExtrapolation>Flat</TimeExtrapolation>
+    <StrikeExtrapolation>Flat</StrikeExtrapolation>
   </EquityVolatility>
   <EquityVolatility>
     ...
@@ -4255,6 +4341,11 @@ Listing \ref{lst:eqoptionvol_configuration} shows the configuration of equity vo
 \caption{Equity option volatility configuration}
 \label{lst:eqoptionvol_configuration}
 \end{longlisting}
+
+\begin{itemize}
+\item {\tt TimeExtrapolation}: Defaults to Flat if omitted. The method used for Extrapolation in the time direction. May take any of the values: Flat or UseInterpolator. For Surfaces built without wildcards this value is not configurable, all curves will have  UseInterpolator extrapolation.
+\item {\tt StrikeExtrapolation}: Defaults to Flat if omitted. The method used for Extrapolation in the strike direction. The values Flat or UseInterpolator are accepted.
+\end{itemize}
 
 \subsubsection{Inflation Curves}
 
@@ -4515,6 +4606,174 @@ Listing \ref{lst:correlation_configuration} shows the configuration of the Corre
 \label{lst:correlation_configuration}
 \end{longlisting}
 
+
+\subsubsection{Commodity Curves}
+
+Commodity Curves are setup as price curves in ORE, meaning that they return a price for a given time $t$ rather than a rate or discount factor, these curves are common in commodities and can be populated with futures prices directly.
+
+Listing \ref{lst:commodity_curve_configuration_1} shows the configuration of Commodity curves built from futures prices, in this example WTI Oil prices, note there is no spot price in this configuration, rather we have a set of futures prices only.
+
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <CommodityCurve>
+      <CurveId>WTI_USD</CurveId>
+      <CurveDescription>WTI USD price curve</CurveDescription>
+      <Currency>USD</Currency>
+      <Quotes>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-07-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-08-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-09-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-10-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-11-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-01-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-02-28</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-03-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-04-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-05-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-07-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-08-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-09-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-10-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-11-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-01-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-02-28</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-03-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-04-30</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <InterpolationMethod>Linear</InterpolationMethod>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+  </CommodityCurves>
+\end{minted}
+\caption{Commodity Curve Configuration for WTI Oil}
+\label{lst:commodity_curve_configuration_1}
+\end{longlisting}
+
+Listing \ref{lst:commodity_curve_configuration_2} shows the configuration for a Precious Metal curve using FX style spot and forward point quotes, note that SpotQuote is used in this case. The different interpretation of the forward quotes is controlled by the conventions.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CommodityCurves>
+    <CommodityCurve>
+      <CurveId>XAU</CurveId>
+      <CurveDescription>Gold USD price curve</CurveDescription>
+      <Currency>USD</Currency>
+      <SpotQuote>COMMODITY/PRICE/XAU/USD</SpotQuote>
+      <Quotes>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/ON</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/TN</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/SN</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/1W</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/1M</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/3M</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/6M</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/9M</Quote>
+        <Quote>COMMODITY_FWD/PRICE/XAU/USD/1Y</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <InterpolationMethod>Linear</InterpolationMethod>
+      <Conventions>XAU</Conventions>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+  </CommodityCurves>
+\end{minted}
+\caption{Commodity Curve Configuration for Gold in USD}
+\label{lst:commodity_curve_configuration_2}
+\end{longlisting}
+
+The meaning of each of the top level elements is given below. If an element is labelled
+as 'Optional', then it may be excluded or included and left blank.
+\begin{itemize}
+\item CurveId: Unique identifier for the curve.
+\item CurveDescription: A description of the curve. This field may be left blank.
+\item Currency: The commodity curve currency.
+\item SpotQuote [Optional]: The spot price quote, if omitted then the spot value will be interpolated.
+\item Quotes: forward price quotes. These can be a futures price or forward points.
+\item DayCounter: The day count basis used internally by the curve to calculate the time between dates.
+\item InterpolationMethod [Optional]: The variable on which the interpolation is performed. The allowable values are
+Linear, LogLinear, Cubic, LinearFlat, LogLinearFlat, CubicFlat. This is different to yield curves above in that Flat versions
+of the standard methods are defined, with each of these if there is no Spot price than any extrapolation between $T_0$ and the
+first future price will be flat (i.e. the first future price will be copied back "Flat" to $T_0$). 
+If the element is omitted or left blank, then it defaults to \emph{Linear}.
+\item Conventions [Optional]: The conventions to use, if omited it is assumed that these quotes are Outright prices.
+\item Extrapolation [Optional]: Set to \emph{True} or \emph{False} to enable or disable extrapolation respectively. If
+the element is omitted or left blank, then it defaults to \emph{True}.
+\end{itemize}
+
+
+Alternatively commodity curves can be set up as a commodity curve times the ratio of two yield curves as shown in listing
+\ref{lst:commodity_curve_configuration_3}. This can be used to setup commodity curves in different currencies, for example Gold in EUR (XAUEUR) can be built from a Gold in USD curve and then the ratio of the EUR and USD discount factors at each pillar. This is akin to crossing FX forward points to get FX forward prices for any pair.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CommodityCurves>
+    <CommodityCurve>
+      <CurveId>XAUEUR</CurveId>
+      <CurveDescription>Gold EUR price curve</CurveDescription>
+      <Currency>EUR</Currency>
+      <BasePriceCurve>XAU</BasePriceCurve>
+      <BaseYieldCurve>USD-FedFunds</BaseYieldCurve>
+      <YieldCurve>EUR-IN-USD</YieldCurve>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+  </CommodityCurves>
+\end{minted}
+\caption{Commodity Curve Configuration for Gold in EUR}
+\label{lst:commodity_curve_configuration_3}
+\end{longlisting}
+
+\subsubsection{Bootstrap Configuration}
+\label{sec:bootstrap_config}
+The The \lstinline!BootstrapConfig! node, outlined in listing \ref{lst:bootstrap_config_outline}, can be added to curve configurations that use a bootstrap algorithm to alter the default behaviour of the bootstrap algorithm.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BootstrapConfig>
+  <Accuracy>...</Accuracy>
+  <GlobalAccuracy>...</GlobalAccuracy>
+  <DontThrow>...</DontThrow>
+  <MaxAttempts>...</MaxAttempts>
+  <MaxFactor>...</MaxFactor>
+  <MinFactor>...</MinFactor>
+  <DontThrowSteps>...</DontThrowSteps>
+</BootstrapConfig>
+\end{minted}
+\caption{\lstinline!BootstrapConfig! node outline}
+\label{lst:bootstrap_config_outline}
+\end{longlisting}
+
+The meaning of each of the elements is:
+\begin{itemize}
+\item \lstinline!Accuracy! [Optional]:
+The accuracy with which the implied quote must match the market quote for each instrument in the curve bootstrap. This node should hold a positive real number. If omitted, the default value is \num[scientific-notation=true]{1.0e-12}.
+
+\item \lstinline!GlobalAccuracy! [Optional]:
+If the interpolation method in the bootstrap is global, e.g. cubic spline, the bootstrap routine needs to perform multiple iterative bootstraps of the curve to converge. After each such bootstrap of the full curve, the absolute value of the change between the current bootstrap and previous bootstrap for the curve value at each pillar is calculated. The global bootstrap is deemed to have converged if the maximum of these changes is less than the global accuracy or the accuracy from the \lstinline!Accuracy! node. This node should hold a positive real number. If omitted, the global accuracy is set equal to the accuracy from the \lstinline!Accuracy! node. This node is useful in some cases where a slightly less restrictive accuracy, than that given by the \lstinline!Accuracy! node, is needed for the global bootstrap.
+
+\item \lstinline!DontThrow! [Optional]:
+If this node is set to \lstinline!true!, the curve bootstrap does not throw an error when the bootstrap fails at a pillar. Instead, a curve value is sought at the failing pillar that minimises the absolute value of the difference between the implied quote and the market quote at that pillar. The minimum is sought between the minimum and maximum curve value that was used in the root finding routine that failed at the pillar. The number of steps used in this search is given by the \lstinline!DontThrowSteps! node below. This node should hold a boolean value. If omitted, the default value is \lstinline!false! i.e. the bootstrap throws an exception at the first pillar where the bootstrap fails.
+
+\item \lstinline!MaxAttempts! [Optional]:
+At each pillar, the bootstrap routine searches between a minimum curve value and a maximum curve value for a curve value that gives an implied quote that matches the market quote at that pillar. In some cases, the minimum curve value and maximum curve value are too restrictive and the bootstrap fails at a pillar. This node determines how many times the bootstrap should be attempted at each pillar. For example, if the node is set to 1, the bootstrap uses the minimum curve value and maximum curve value implied in the code and fails if a root is not found. If this node is set to 2 and the first attempt fails, the minimum curve value is reduced by a factor specified in the node \lstinline!MinFactor!, the maximum curve value is increased by a factor specified in the node \lstinline!MaxFactor! and a second attempt is made to find a root between the enlarged bounds. If no root is found, the bootstrap then fails at this pillar. This node should hold a positive integer. If omitted, the default value is 5.
+
+\item \lstinline!MaxFactor! [Optional]:
+This node is used only if \lstinline!MaxAttempts! is greater than 1. The meaning of this node is given in the description of the \lstinline!MaxAttempts! node. This node should hold a positive real number. If omitted, the default value is 2.0.
+
+\item \lstinline!MinFactor! [Optional]:
+This node is used only if \lstinline!MaxAttempts! is greater than 1. The meaning of this node is given in the description of the \lstinline!MaxAttempts! node. This node should hold a positive real number. If omitted, the default value is 2.0.
+
+\item \lstinline!DontThrowSteps! [Optional]:
+This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning of this node is given in the description of the \lstinline!DontThrow! node. This node should hold a positive integer. If omitted, the default value is 10.
+
+\end{itemize}
+
+
 %--------------------------------------------------------
 %\subsection{Conventions: {\tt conventions.xml}}
 %\label{sec:conventions}
@@ -4543,6 +4802,7 @@ Listing \ref{lst:correlation_configuration} shows the configuration of the Corre
 \input{tradedata/cpiswap}
 \input{tradedata/yyswap}
 \input{tradedata/bond}
+\input{tradedata/forwardbond}
 \input{tradedata/creditdefaultswap}
 \input{tradedata/commodityoption}
 \input{tradedata/commodityforward}
@@ -4562,6 +4822,7 @@ Listing \ref{lst:correlation_configuration} shows the configuration of the Corre
 \input{../../Docs/UserGuide/tradecomponents/cpileg}
 \input{../../Docs/UserGuide/tradecomponents/yyleg}
 \input{../../Docs/UserGuide/tradecomponents/zerocouponleg}
+\input{../../Docs/UserGuide/tradecomponents/cdsreferenceinformation}
 
 
 \include{allowablevalues}
@@ -4580,6 +4841,11 @@ Listing \ref{lst:correlation_configuration} shows the configuration of the Corre
 %\section{Fixing History}
 %========================================================
 \include{fixingdata}
+
+%========================================================
+%\section{Dividend History}
+%========================================================
+\include{dividenddata}
 
 \newpage
 \begin{appendix}

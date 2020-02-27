@@ -47,7 +47,7 @@
         <PaymentConvention>ModifiedFollowing</PaymentConvention>
         <CashflowData>
           <Cashflow>
-            <Amount Date="2019-02-12">11010533</Amount>
+            <Amount date="2019-02-12">11010533</Amount>
           </Cashflow>
         </CashflowData>
       </LegData>

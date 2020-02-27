@@ -23,11 +23,14 @@
 
 #pragma once
 
+#include <ored/utilities/log.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
+#include <ql/experimental/fx/deltavolquote.hpp> 
 #include <ql/instruments/swaption.hpp>
+#include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/position.hpp>
 #include <ql/time/businessdayconvention.hpp>
@@ -188,6 +191,16 @@ QuantLib::SobolBrownianGenerator::Ordering parseSobolBrownianGeneratorOrdering(c
 */
 QuantLib::SobolRsg::DirectionIntegers parseSobolRsgDirectionIntegers(const std::string& s);
 
+/*! Convert text to QuantLib::Weekday
+    \ingroup utilities
+*/
+QuantLib::Weekday parseWeekday(const std::string& s);
+
+/*! Convert text to QuantLib::Month
+    \ingroup utilities
+*/
+QuantLib::Month parseMonth(const std::string& s);
+
 //! Convert comma separated list of values to vector of values
 /*!
 \ingroup utilities
@@ -228,6 +241,66 @@ QuantExt::SequenceType parseSequenceType(const std::string& s);
 \ingroup utilities
 */
 QuantLib::CPI::InterpolationType parseObservationInterpolation(const std::string& s);
+
+//! Convert string to fdm scheme desc
+/*!
+\ingroup utilities
+*/
+QuantLib::FdmSchemeDesc parseFdmSchemeDesc(const std::string& s);
+
+enum class AssetClass { EQ, FX, COM, IR, INF, CR };
+
+//! Convert text to ore::data::AssetClass
+/*!
+\ingroup utilities
+*/
+AssetClass parseAssetClass(const std::string& s);
+
+//! Convert text to QuantLib::DeltaVolQuote::AtmType 
+/*! 
+\ingroup utilities 
+*/ 
+QuantLib::DeltaVolQuote::AtmType parseAtmType(const std::string& s); 
+ 
+//! Convert text to QuantLib::DeltaVolQuote::DeltaType 
+/*! 
+\ingroup utilities 
+*/ 
+QuantLib::DeltaVolQuote::DeltaType parseDeltaType(const std::string& s); 
+ 
+/*! Attempt to parse string \p str to \p obj of type \c T using \p parser
+    \param[in]  str    The string we wish to parse.
+    \param[out] obj    The resulting object if the parsing was successful.
+    \param[in]  parser The function to use to attempt to parse \p str. This function may throw.
+
+    \return \c true if the parsing was successful and \c false if not.
+
+    \ingroup utilities
+*/
+template <class T>
+bool tryParse(const std::string& str, T& obj, std::function<T(std::string)> parser) {
+    DLOG("tryParse: attempting to parse " << str);
+    try {
+        obj = parser(str);
+    } catch (...) {
+        TLOG("String " << str << " could not be parsed");
+        return false;
+    }
+    return true;
+}
+
+//! Enumeration for holding various extrapolation settings
+enum class Extrapolation {
+    None,
+    UseInterpolator,
+    Flat
+};
+
+//! Parse Extrapolation from string
+Extrapolation parseExtrapolation(const std::string& s);
+
+//! Write Extrapolation, \p extrap, to stream.
+std::ostream& operator<<(std::ostream& os, Extrapolation extrap);
 
 } // namespace data
 } // namespace ore

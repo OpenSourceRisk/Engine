@@ -35,14 +35,15 @@ boost::shared_ptr<QuantLib::PricingEngine> CommodityOptionEngineBuilder::engineI
                                                                                     const Currency& ccy) {
 
     // Create the commodity yield curve for the process
-    Handle<Quote> commoditySpot = market_->commoditySpot(commodityName, configuration(MarketContext::pricing));
     Handle<PriceTermStructure> priceCurve =
         market_->commodityPriceCurve(commodityName, configuration(MarketContext::pricing));
+    Handle<Quote> commoditySpot(boost::make_shared<DerivedPriceQuote>(priceCurve));
     Handle<YieldTermStructure> discountCurve =
         market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
 
     Handle<YieldTermStructure> yield = Handle<YieldTermStructure>(
-        boost::make_shared<PriceTermStructureAdapter>(*commoditySpot, *priceCurve, *discountCurve));
+        boost::make_shared<PriceTermStructureAdapter>(*priceCurve, *discountCurve));
+    yield->enableExtrapolation();
 
     // Create the option engine
     boost::shared_ptr<GeneralizedBlackScholesProcess> process = boost::make_shared<GeneralizedBlackScholesProcess>(

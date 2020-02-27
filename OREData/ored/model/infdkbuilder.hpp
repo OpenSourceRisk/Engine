@@ -29,6 +29,9 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/infdkdata.hpp>
+#include <ored/model/modelbuilder.hpp>
+#include <ored/model/marketobserver.hpp>
+
 #include <qle/models/crossassetmodel.hpp>
 
 namespace ore {
@@ -43,7 +46,7 @@ instanciate a CrossAssetModel.
 
 \ingroup models
 */
-class InfDkBuilder {
+class InfDkBuilder : public ModelBuilder {
 public:
     //! Constructor
     InfDkBuilder( //! Market object
@@ -56,19 +59,46 @@ public:
     //! \name Inspectors
     //@{
     std::string infIndex() { return data_->infIndex(); }
-    boost::shared_ptr<QuantExt::InfDkParametrization>& parametrization() { return parametrization_; }
-    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket() { return optionBasket_; }
+    boost::shared_ptr<QuantExt::InfDkParametrization> parametrization() const;
+    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
     //@}
-private:
-    void buildCapFloorBasket();
 
-    boost::shared_ptr<ore::data::Market> market_;
+    //! \name ModelBuilder interface
+    //@{
+    void forceRecalculate() override;
+    bool requiresRecalibration() const override;
+    //@}
+
+private:
+    void performCalculations() const override;
+    Real optionStrike(const Size j) const;
+    Date optionExpiry(const Size j) const;
+    void buildCapFloorBasket() const;
+    // checks whether inf vols have changed compared to cache and updates the cache if requested
+    bool volSurfaceChanged(const bool updateCache) const;
+
+    // input data
+    const boost::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
-    boost::shared_ptr<InfDkData> data_;
-    boost::shared_ptr<ZeroInflationIndex> inflationIndex_;
+    const boost::shared_ptr<InfDkData> data_;
+
+    // computed
     boost::shared_ptr<QuantExt::InfDkParametrization> parametrization_;
-    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
-    Array optionExpiries_;
+    mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
+    mutable Array optionExpiries_;
+
+    // market data
+    boost::shared_ptr<ZeroInflationIndex> inflationIndex_;
+    Handle<CPICapFloorTermPriceSurface> infPrice_;
+
+    // Cache the fx volatilities
+    mutable std::vector<QuantLib::Real> infPriceCache_;
+
+    // helper flag to process forRecalculate()
+    bool forceCalibration_ = false;
+
+    // market observer
+    boost::shared_ptr<MarketObserver> marketObserver_;
 };
 } // namespace data
 } // namespace ore

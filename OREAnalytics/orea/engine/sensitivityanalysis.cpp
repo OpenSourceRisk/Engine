@@ -475,7 +475,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             Size expiryIndex = key.index % it->second.shiftExpiries.size();
             Real moneyness = it->second.shiftStrikes[moneynessIndex];
             Period expiry = it->second.shiftExpiries[expiryIndex];
-            Real spotValue = simMarket->commoditySpot(keylabel, marketConfiguration)->value();
+            Real spotValue = simMarket->commodityPriceCurve(keylabel, marketConfiguration)->price(0);
             Handle<BlackVolTermStructure> vts = simMarket->commodityVolatility(keylabel, marketConfiguration);
             Time t = vts->dayCounter().yearFraction(asof, asof + expiry);
             Real vol = vts->blackVol(t, moneyness * spotValue);

@@ -17,6 +17,7 @@
 */
 
 #include <boost/make_shared.hpp>
+#include <ql/currencies/america.hpp>
 #include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/indexes/inflation/ukrpi.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
@@ -277,23 +278,19 @@ TestMarket::TestMarket(Date asof) {
 
     // Commodity price curves and spots
     Actual365Fixed ccDayCounter;
-    vector<Time> times = {0.0, 1.0, 2.0, 5.0};
+    vector<Period> commTenors = { 0 * Days, 365 * Days, 730 * Days, 1825 * Days };
 
     // Gold curve
     vector<Real> prices = {1155.593, 1160.9, 1168.1, 1210};
-    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] =
-        Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(times, prices, ccDayCounter));
+    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] = Handle<PriceTermStructure>(
+        boost::make_shared<InterpolatedPriceCurve<Linear>>(commTenors, prices, ccDayCounter, USDCurrency()));
     commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")]->enableExtrapolation();
-    commoditySpots_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] =
-        Handle<Quote>(boost::make_shared<SimpleQuote>(1155.593));
 
     // WTI Oil curve
     prices = {30.89, 41.23, 44.44, 49.18};
-    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")] =
-        Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(times, prices, ccDayCounter));
+    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")] = Handle<PriceTermStructure>(
+        boost::make_shared<InterpolatedPriceCurve<Linear>>(commTenors, prices, ccDayCounter, USDCurrency()));
     commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")]->enableExtrapolation();
-    commoditySpots_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")] =
-        Handle<Quote>(boost::make_shared<SimpleQuote>(30.89));
 
     // Commodity volatilities
     commodityVols_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] = flatRateFxv(0.15);
@@ -409,21 +406,22 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
 
-    simMarketData->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years,  4 * Years,
-                                     5 * Years, 7 * Years, 10 * Years, 20 * Years};
-    simMarketData->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
-                                        5 * Years,  7 * Years, 10 * Years, 20 * Years};
+    simMarketData->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years,  4 * Years,
+                                     5 * Years, 7 * Years, 10 * Years, 20 * Years});
+    simMarketData->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years,  3 * Years,
+                                        5 * Years,  7 * Years, 10 * Years, 20 * Years});
     simMarketData->setSwapVolCcys({"EUR", "GBP"});
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->setSimulateSwapVols(true);
     simMarketData->setSwapVolDayCounters("", "ACT/ACT");
 
-    simMarketData->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    simMarketData->fxVolDecayMode() = "ConstantVariance";
+    simMarketData->setFxVolExpiries(
+        vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
+    simMarketData->setFxVolDecayMode(string("ConstantVariance"));
     simMarketData->setSimulateFXVols(true);
     simMarketData->setFxVolCcyPairs({"EURGBP"});
-    simMarketData->fxVolIsSurface() = true;
-    simMarketData->fxVolMoneyness() = {0.1, 0.2, 0.3, 0.5, 1, 2, 3};
+    simMarketData->setFxVolIsSurface(true);
+    simMarketData->setFxVolMoneyness(vector<Real>{0.1, 0.2, 0.3, 0.5, 1, 2, 3});
     simMarketData->setFxVolDayCounters("", "ACT/ACT");
 
     simMarketData->setFxCcyPairs({"EURGBP"});
@@ -451,20 +449,21 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
 
-    simMarketData->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years};
-    simMarketData->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
-                                        5 * Years,  7 * Years, 10 * Years, 20 * Years};
+    simMarketData->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
+    simMarketData->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years,  3 * Years,
+                                        5 * Years,  7 * Years, 10 * Years, 20 * Years});
     simMarketData->setSwapVolCcys({"EUR", "GBP", "USD", "CHF", "JPY"});
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->setSimulateSwapVols(true); // false;
     simMarketData->setSwapVolDayCounters("", "ACT/ACT");
 
-    simMarketData->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    simMarketData->fxVolDecayMode() = "ConstantVariance";
+    simMarketData->setFxVolExpiries(
+        vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
+    simMarketData->setFxVolDecayMode(string("ConstantVariance"));
     simMarketData->setSimulateFXVols(true); // false;
     simMarketData->setFxVolCcyPairs({"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"});
-    simMarketData->fxVolIsSurface() = true;
-    simMarketData->fxVolMoneyness() = {0.1, 0.2, 0.3, 0.5, 1, 2, 3};
+    simMarketData->setFxVolIsSurface(true);
+    simMarketData->setFxVolMoneyness(vector<Real>{0.1, 0.2, 0.3, 0.5, 1, 2, 3});
     simMarketData->setFxVolDayCounters("", "ACT/ACT");
 
     simMarketData->setFxCcyPairs({"EURUSD", "EURGBP", "EURCHF", "EURJPY"});
@@ -701,10 +700,6 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     zinfData.shiftSize = 0.0001;
     zinfData.shiftTenors = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years};
 
-    ore::analytics::SensitivityScenarioData::SpotShiftData commoditySpotShiftData;
-    commoditySpotShiftData.shiftType = "Relative";
-    commoditySpotShiftData.shiftSize = 0.01;
-
     auto commodityShiftData = boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>();
     commodityShiftData->shiftType = "Relative";
     commodityShiftData->shiftSize = 0.01;
@@ -786,8 +781,6 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->yoyInflationCurveShiftData()["UKRPI"] =
         boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(zinfData);
 
-    sensiData->commodityShiftData()["COMDTY_GOLD_USD"] = commoditySpotShiftData;
-    sensiData->commodityShiftData()["COMDTY_WTI_USD"] = commoditySpotShiftData;
     sensiData->commodityCurveShiftData()["COMDTY_GOLD_USD"] = commodityShiftData;
     sensiData->commodityCurrencies()["COMDTY_GOLD_USD"] = "USD";
     sensiData->commodityCurveShiftData()["COMDTY_WTI_USD"] = commodityShiftData;

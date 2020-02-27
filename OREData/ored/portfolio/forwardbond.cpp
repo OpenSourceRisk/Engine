@@ -98,9 +98,9 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // FIXME: zero bonds are always long (firstLegIsPayer = false, mult = 1.0)
     bool firstLegIsPayer = (coupons_.size() == 0) ? false : coupons_[0].isPayer();
     QL_REQUIRE(firstLegIsPayer == false,
-               "Require long position in bond. Specify long/short position of forward in longInBond");
+               "The zero bond position must be Long. Specify long/short position of the forward using 'longInBond'");
     QL_REQUIRE(compensationPayment >= 0,
-               "Require long position in bond. Specify long/short position of forward in longInBond");
+               "Negative compensation payments are not supported");
 
     boost::shared_ptr<Payoff> payoff =
         longInBond ? boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, payOff)
@@ -142,6 +142,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     npvCurrency_ = currency_;
     maturity_ = bond->cashflows().back()->date();
     notional_ = currentNotional(bond->cashflows());
+    notionalCurrency_ = currency_;
 
     // Add legs (only 1)
     legs_ = {bond->cashflows()};
@@ -160,8 +161,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     LOG("Calling engine for forward bond " << id() << " with credit curve: " << creditCurveId_
                                            << " with reference curve:" << referenceCurveId_
                                            << " with income curve: " << incomeCurveId_);
-
-    fwdBond->setPricingEngine(fwdBondBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_,
+    fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, creditCurveId_, securityId_, referenceCurveId_,
                                                      incomeCurveId_, adjustmentSpread_));
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0)); // long or short is regulated via the payoff class
 }
@@ -234,8 +234,8 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(fwdBondNode, bondNode);
     XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
     XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
-    XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
     XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
+    XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
     XMLUtils::addChild(doc, bondNode, "SettlementDays", settlementDays_);
     XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
     XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
@@ -243,19 +243,19 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
 
-    XMLUtils::addChild(doc, fwdBondNode, "IncomeCurveId", incomeCurveId_);
-    XMLUtils::addChild(doc, fwdBondNode, "LongInForward", longInBond_);
-
     XMLNode* fwdSettlmentNode = doc.allocNode("SettlementData");
-    XMLUtils::appendNode(fwdSettlmentNode, fwdBondNode);
+    XMLUtils::appendNode(fwdBondNode, fwdSettlmentNode);
     XMLUtils::addChild(doc, fwdSettlmentNode, "ForwardMaturityDate", fwdMaturityDate_);
     XMLUtils::addChild(doc, fwdSettlmentNode, "Amount", payOff_);
     XMLUtils::addChild(doc, fwdSettlmentNode, "SettlementDirty", settlementDirty_);
 
     XMLNode* fwdPremiumNode = doc.allocNode("PremiumData");
-    XMLUtils::appendNode(fwdPremiumNode, fwdBondNode);
+    XMLUtils::appendNode(fwdBondNode, fwdPremiumNode);
     XMLUtils::addChild(doc, fwdPremiumNode, "Amount", compensationPayment_);
     XMLUtils::addChild(doc, fwdPremiumNode, "Date", compensationPaymentDate_);
+
+    XMLUtils::addChild(doc, fwdBondNode, "LongInForward", longInBond_);
+    XMLUtils::addChild(doc, fwdBondNode, "IncomeCurveId", incomeCurveId_);
 
     return node;
 }

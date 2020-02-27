@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ql/experimental/fx/blackdeltacalculator.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/quotes/simplequote.hpp>
 
@@ -40,9 +41,32 @@ FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
                          const std::string& configuration)
     : market_(market), configuration_(configuration), data_(data) {
 
+    marketObserver_ = boost::make_shared<MarketObserver>();
     QuantLib::Currency ccy = ore::data::parseCurrency(data->foreignCcy());
     QuantLib::Currency domesticCcy = ore::data::parseCurrency(data->domesticCcy());
+    std::string ccyPair = ccy.code() + domesticCcy.code();
 
+    LOG("Start building FxBs model for ccyPair")
+
+    // get market data
+    fxSpot_ = market_->fxSpot(ccyPair, configuration_);
+    ytsDom_ = market_->discountCurve(domesticCcy.code(), configuration_);
+    ytsFor_ = market_->discountCurve(ccy.code(), configuration_);
+    fxVol_ = market_->fxVol(ccyPair, configuration_);
+
+    // register with market observables except vols
+    marketObserver_->addObservable(fxSpot_);
+    marketObserver_->addObservable(market_->discountCurve(domesticCcy.code()));
+    marketObserver_->addObservable(market_->discountCurve(ccy.code()));
+
+    // register the builder with the vol and the market observer
+    registerWith(fxVol_);
+    registerWith(marketObserver_);
+
+    // notify observers of all market data changes, not only when not calculated
+    alwaysForwardNotifications();
+
+    // build option basket and derive parametrization from it
     if (data->calibrateSigma())
         buildOptionBasket();
 
@@ -65,61 +89,107 @@ FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
         }
     }
 
-    // Quotation needs to be consistent with FX spot quotation in the FX calibration basket
-    Handle<Quote> fxSpot = market_->fxSpot(ccy.code() + domesticCcy.code(), configuration_);
-
     if (data->sigmaParamType() == ParamType::Piecewise)
         parametrization_ =
-            boost::make_shared<QuantExt::FxBsPiecewiseConstantParametrization>(ccy, fxSpot, sigmaTimes, sigma);
+            boost::make_shared<QuantExt::FxBsPiecewiseConstantParametrization>(ccy, fxSpot_, sigmaTimes, sigma);
     else if (data->sigmaParamType() == ParamType::Constant)
-        parametrization_ = boost::make_shared<QuantExt::FxBsConstantParametrization>(ccy, fxSpot, sigma[0]);
+        parametrization_ = boost::make_shared<QuantExt::FxBsConstantParametrization>(ccy, fxSpot_, sigma[0]);
     else
         QL_FAIL("interpolation type not supported for FX");
 }
 
-void FxBsBuilder::update() {
-    ; // nothing to do here
+Real FxBsBuilder::error() const {
+    calculate();
+    return error_;
 }
 
-void FxBsBuilder::buildOptionBasket() {
-    QL_REQUIRE(data_->optionExpiries().size() == data_->optionStrikes().size(), "fx option vector size mismatch");
+boost::shared_ptr<QuantExt::FxBsParametrization> FxBsBuilder::parametrization() const {
+    calculate();
+    return parametrization_;
+}
+std::vector<boost::shared_ptr<BlackCalibrationHelper>> FxBsBuilder::optionBasket() const {
+    calculate();
+    return optionBasket_;
+}
+
+bool FxBsBuilder::requiresRecalibration() const {
+    return data_->calibrateSigma() &&
+           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
+}
+
+void FxBsBuilder::performCalculations() const {
+    if (requiresRecalibration()) {
+        // update vol cache
+        volSurfaceChanged(true);
+        // reset market observer updated flag
+        marketObserver_->hasUpdated(true);
+    }
+}
+
+Real FxBsBuilder::optionStrike(const Size j) const {
+    Date expiryDate = optionExpiry(j);
+    ore::data::Strike strike = ore::data::parseStrike(data_->optionStrikes()[j]);
+    Real strikeValue;
+    BlackDeltaCalculator bdc(Option::Type::Call, DeltaVolQuote::DeltaType::Spot, fxSpot_->value(),
+                             ytsDom_->discount(expiryDate), ytsFor_->discount(expiryDate),
+                             fxVol_->blackVol(expiryDate, Null<Real>()) * sqrt(fxVol_->timeFromReference(expiryDate)));
+
+    // TODO: Extend strike type coverage
+    if (strike.type == ore::data::Strike::Type::ATMF)
+        strikeValue = bdc.atmStrike(DeltaVolQuote::AtmFwd);
+    else if (strike.type == ore::data::Strike::Type::Absolute)
+        strikeValue = strike.value;
+    else
+        QL_FAIL("strike type ATMF or Absolute expected");
+    Handle<Quote> quote(boost::make_shared<SimpleQuote>(fxVol_->blackVol(expiryDate, strikeValue)));
+    return strikeValue;
+}
+
+Date FxBsBuilder::optionExpiry(const Size j) const {
     Date today = Settings::instance().evaluationDate();
-    std::string domesticCcy = data_->domesticCcy();
-    std::string ccy = data_->foreignCcy();
-    std::string ccyPair = ccy + domesticCcy;
-    Handle<Quote> fxSpot = market_->fxSpot(ccyPair, configuration_);
-    QL_REQUIRE(!fxSpot.empty(), "FX spot quote not found");
-    Handle<YieldTermStructure> ytsDom = market_->discountCurve(domesticCcy, configuration_);
-    QL_REQUIRE(!ytsDom.empty(), "domestic yield termstructure not found");
-    Handle<YieldTermStructure> ytsFor = market_->discountCurve(ccy, configuration_);
-    QL_REQUIRE(!ytsFor.empty(), "foreign yield termstructure not found");
-    Handle<BlackVolTermStructure> fxVol = market_->fxVol(ccyPair, configuration_);
-    QL_REQUIRE(!fxVol.empty(), "fx vol termstructure not found");
+    std::string expiryString = data_->optionExpiries()[j];
+    bool expiryDateBased;
+    Period expiryPb;
+    Date expiryDb;
+    parseDateOrPeriod(expiryString, expiryDb, expiryPb, expiryDateBased);
+    Date expiryDate = expiryDateBased ? expiryDb : today + expiryPb;
+    return expiryDate;
+}
+
+bool FxBsBuilder::volSurfaceChanged(const bool updateCache) const {
+    bool hasUpdated = false;
+
+    // if cache doesn't exist resize vector
+    if (fxVolCache_.size() != data_->optionExpiries().size())
+        fxVolCache_ = vector<Real>(data_->optionExpiries().size());
+
     std::vector<Time> expiryTimes(data_->optionExpiries().size());
     for (Size j = 0; j < data_->optionExpiries().size(); j++) {
-        std::string expiryString = data_->optionExpiries()[j];
-        bool expiryDateBased;
-        Period expiryPb;
-        Date expiryDb;
-        parseDateOrPeriod(expiryString, expiryDb, expiryPb, expiryDateBased);
-        Date expiryDate = expiryDateBased ? expiryDb : today + expiryPb;
-        ore::data::Strike strike = ore::data::parseStrike(data_->optionStrikes()[j]);
-        Real strikeValue;
-        // TODO: Extend strike type coverage
-        if (strike.type == ore::data::Strike::Type::ATMF)
-            strikeValue = Null<Real>();
-        else if (strike.type == ore::data::Strike::Type::Absolute)
-            strikeValue = strike.value;
-        else
-            QL_FAIL("strike type ATMF or Absolute expected");
-        Handle<Quote> quote(boost::make_shared<SimpleQuote>(fxVol->blackVol(expiryDate, strikeValue)));
+        Real vol = fxVol_->blackVol(optionExpiry(j), optionStrike(j));
+        if (!close_enough(fxVolCache_[j], vol)) {
+            if (updateCache)
+                fxVolCache_[j] = vol;
+            hasUpdated = true;
+        }
+    }
+    return hasUpdated;
+}
+
+void FxBsBuilder::buildOptionBasket() const {
+    QL_REQUIRE(data_->optionExpiries().size() == data_->optionStrikes().size(), "fx option vector size mismatch");
+    std::vector<Time> expiryTimes(data_->optionExpiries().size());
+    for (Size j = 0; j < data_->optionExpiries().size(); j++) {
+        Date expiryDate = optionExpiry(j);
+        Real strikeValue = optionStrike(j);
+        Handle<Quote> quote(boost::make_shared<SimpleQuote>(fxVol_->blackVol(expiryDate, strikeValue)));
         boost::shared_ptr<QuantExt::FxEqOptionHelper> helper =
-            boost::make_shared<QuantExt::FxEqOptionHelper>(expiryDate, strikeValue, fxSpot, quote, ytsDom, ytsFor);
+            boost::make_shared<QuantExt::FxEqOptionHelper>(expiryDate, strikeValue, fxSpot_, quote, ytsDom_, ytsFor_);
         optionBasket_.push_back(helper);
         helper->performCalculations();
-        expiryTimes[j] = ytsDom->timeFromReference(helper->option()->exercise()->date(0));
-        LOG("Added FxEqOptionHelper " << ccyPair << " " << QuantLib::io::iso_date(expiryDate) << " " << helper->strike()
-                                      << " " << quote->value());
+        expiryTimes[j] = ytsDom_->timeFromReference(helper->option()->exercise()->date(0));
+        DLOG("Added FxEqOptionHelper " << (data_->foreignCcy() + data_->domesticCcy()) << " "
+                                      << QuantLib::io::iso_date(expiryDate) << " " << helper->strike() << " "
+                                      << quote->value());
     }
 
     std::sort(expiryTimes.begin(), expiryTimes.end());
@@ -129,6 +199,12 @@ void FxBsBuilder::buildOptionBasket() {
     optionExpiries_ = Array(expiryTimes.size());
     for (Size j = 0; j < expiryTimes.size(); j++)
         optionExpiries_[j] = expiryTimes[j];
+}
+
+void FxBsBuilder::forceRecalculate() {
+    forceCalibration_ = true;
+    ModelBuilder::forceRecalculate();
+    forceCalibration_ = false;
 }
 } // namespace data
 } // namespace ore

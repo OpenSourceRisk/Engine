@@ -38,18 +38,16 @@ using namespace QuantLib;
 //! Base class for FX Linked cashflows
 class FXLinked {
 public:
-    FXLinked(const Date& fixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex, bool invertIndex = false);
+    FXLinked(const Date& fixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex);
     Date fxFixingDate() const { return fxFixingDate_; }
     Real foreignAmount() const { return foreignAmount_; }
     const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
-    bool invertFxIndex() const { return invertIndex_; }
     Real fxRate() const;
 
 private:
     Date fxFixingDate_;
     Real foreignAmount_;
     boost::shared_ptr<FxIndex> fxIndex_;
-    bool invertIndex_;
 };
 
 //! FX Linked cash-flow
@@ -79,7 +77,7 @@ private:
 class FXLinkedCashFlow : public CashFlow, public FXLinked, public Observer {
 public:
     FXLinkedCashFlow(const Date& cashFlowDate, const Date& fixingDate, Real foreignAmount,
-                     boost::shared_ptr<FxIndex> fxIndex, bool invertIndex = false);
+                     boost::shared_ptr<FxIndex> fxIndex);
 
     //! \name CashFlow interface
     //@{

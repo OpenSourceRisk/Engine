@@ -40,7 +40,9 @@ DiscountingForwardBondEngine::DiscountingForwardBondEngine(
       settlementDate_(settlementDate), npvDate_(npvDate) {
 
     bondReferenceYieldCurve_ =
-        Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(bondReferenceYieldCurve, bondSpread));
+        bondSpread_.empty() ? bondReferenceYieldCurve
+                            : Handle<YieldTermStructure>(
+                                  boost::make_shared<ZeroSpreadedTermStructure>(bondReferenceYieldCurve, bondSpread_));
     registerWith(discountCurve_);           // curve for discounting of the forward derivative contract. OIS, usually.
     registerWith(incomeCurve_);             // this is a curve for compounding of the bond
     registerWith(bondReferenceYieldCurve_); // this is the bond reference curve, for discounting, usually RePo
