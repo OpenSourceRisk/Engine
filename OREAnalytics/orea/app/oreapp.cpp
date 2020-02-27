@@ -371,8 +371,9 @@ boost::shared_ptr<ScenarioGeneratorData> OREApp::getScenarioGeneratorData() {
     return sgd;
 }
 
-boost::shared_ptr<QuantExt::CrossAssetModel> OREApp::buildCam(boost::shared_ptr<Market> market) {
-    LOG("Build Simulation Model");
+boost::shared_ptr<QuantExt::CrossAssetModel> OREApp::buildCam(boost::shared_ptr<Market> market,
+                                                              const bool continueOnCalibrationError) {
+    LOG("Build Simulation Model (continueOnCalibrationError = " << std::boolalpha << continueOnCalibrationError << ")");
     string simulationConfigFile = inputPath_ + "/" + params_->get("simulation", "simulationConfigFile");
     LOG("Load simulation model data from file: " << simulationConfigFile);
     boost::shared_ptr<CrossAssetModelData> modelData = boost::make_shared<CrossAssetModelData>();
@@ -394,7 +395,8 @@ boost::shared_ptr<QuantExt::CrossAssetModel> OREApp::buildCam(boost::shared_ptr<
         simulationMarketStr = params_->get("markets", "simulation");
 
     CrossAssetModelBuilder modelBuilder(market, modelData, lgmCalibrationMarketStr, fxCalibrationMarketStr,
-                                        eqCalibrationMarketStr, infCalibrationMarketStr, simulationMarketStr);
+                                        eqCalibrationMarketStr, infCalibrationMarketStr, simulationMarketStr,
+                                        ActualActual(), false, continueOnCalibrationError);
     boost::shared_ptr<QuantExt::CrossAssetModel> model = *modelBuilder.model();
     return model;
 }
@@ -402,8 +404,8 @@ boost::shared_ptr<QuantExt::CrossAssetModel> OREApp::buildCam(boost::shared_ptr<
 boost::shared_ptr<ScenarioGenerator>
 OREApp::buildScenarioGenerator(boost::shared_ptr<Market> market,
                                boost::shared_ptr<ScenarioSimMarketParameters> simMarketData,
-                               boost::shared_ptr<ScenarioGeneratorData> sgd) {
-    boost::shared_ptr<QuantExt::CrossAssetModel> model = buildCam(market);
+                               boost::shared_ptr<ScenarioGeneratorData> sgd, const bool continueOnCalibrationError) {
+    boost::shared_ptr<QuantExt::CrossAssetModel> model = buildCam(market, continueOnCalibrationError);
     LOG("Load Simulation Parameters");
     ScenarioGeneratorBuilder sgb(sgd);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
@@ -667,17 +669,22 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     grid_ = sgd->grid();
     samples_ = sgd->samples();
 
-    boost::shared_ptr<ScenarioGenerator> sg = buildScenarioGenerator(market_, simMarketData, sgd);
     if (buildSimMarket_) {
         LOG("Build Simulation Market");
 
         simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_, getFixingManager(),
                                                            params_->get("markets", "simulation"), curveConfigs_,
                                                            marketParameters_, continueOnError_);
-        simMarket_->scenarioGenerator() = sg;
-
         string groupName = "simulation";
         boost::shared_ptr<EngineFactory> simFactory = buildEngineFactory(simMarket_, groupName);
+
+        auto continueOnCalErr = simFactory->engineData()->globalParameters().find("ContinueOnCalibrationError");
+        boost::shared_ptr<ScenarioGenerator> sg =
+            buildScenarioGenerator(market_, simMarketData, sgd,
+                                   continueOnCalErr != simFactory->engineData()->globalParameters().end() &&
+                                       parseBool(continueOnCalErr->second));
+        simMarket_->scenarioGenerator() = sg;
+
 
         LOG("Build portfolio linked to sim market");
         Size n = portfolio->size();

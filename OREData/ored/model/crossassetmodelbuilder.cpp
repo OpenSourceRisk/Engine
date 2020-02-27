@@ -170,8 +170,8 @@ void CrossAssetModelBuilder::buildModel() const {
     for (Size i = 0; i < config_->irConfigs().size(); i++) {
         boost::shared_ptr<IrLgmData> ir = config_->irConfigs()[i];
         DLOG("IR Parametrization " << i << " ccy " << ir->ccy());
-        boost::shared_ptr<LgmBuilder> builder =
-            boost::make_shared<LgmBuilder>(market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance());
+        boost::shared_ptr<LgmBuilder> builder = boost::make_shared<LgmBuilder>(
+            market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_);
         if (dontCalibrate_)
             builder->freeze();
         irBuilder.push_back(builder);
