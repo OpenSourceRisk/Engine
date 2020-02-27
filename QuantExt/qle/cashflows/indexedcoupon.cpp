@@ -18,39 +18,77 @@
 
 #include <qle/cashflows/indexedcoupon.hpp>
 
+#include <ql/patterns/visitor.hpp>
 #include <ql/time/daycounter.hpp>
 
 namespace QuantExt {
 
 IndexedCoupon::IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const boost::shared_ptr<Index>& index,
-                             const Date& fixingDate)
+                             const Date& fixingDate, const bool flipIndex)
     : Coupon(c->date(), c->nominal(), c->accrualStartDate(), c->accrualEndDate(), c->referencePeriodStart(),
              c->referencePeriodEnd(), c->exCouponDate()),
-      c_(c), qty_(qty), index_(index), fixingDate_(fixingDate), initialFixing_(Null<Real>()) {
+      c_(c), qty_(qty), index_(index), fixingDate_(fixingDate), initialFixing_(Null<Real>()), flipIndex_(flipIndex) {
+    QL_REQUIRE(index, "IndexedCoupon: index is null");
+    QL_REQUIRE(fixingDate != Date(), "IndexedCoupon: fixingDate is null");
+    registerWith(c);
+    registerWith(index);
+}
+
+IndexedCoupon::IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const Real initialFixing,
+                             const bool flipIndex)
+    : Coupon(c->date(), c->nominal(), c->accrualStartDate(), c->accrualEndDate(), c->referencePeriodStart(),
+             c->referencePeriodEnd(), c->exCouponDate()),
+      c_(c), qty_(qty), initialFixing_(initialFixing), flipIndex_(flipIndex) {
+    QL_REQUIRE(initialFixing != Null<Real>(), "IndexedCoupon: initial fixing is null");
     registerWith(c);
 }
 
-IndexedCoupon::IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const Real initialFixing)
-    : Coupon(c->date(), c->nominal(), c->accrualStartDate(), c->accrualEndDate(), c->referencePeriodStart(),
-             c->referencePeriodEnd(), c->exCouponDate()),
-      c_(c), qty_(qty), initialFixing_(initialFixing) {
-    registerWith(c);
+void IndexedCoupon::update() { notifyObservers(); }
+
+Real IndexedCoupon::amount() const {
+    return c_->amount() * multiplier();
 }
 
-Real IndexedCoupon::nominal() const {
-    if (index_)
-        return qty_ * index_->fixing(fixingDate_);
-    else
-        return qty_ * initialFixing_;
+Real IndexedCoupon::accruedAmount(const Date& d) const { return c_->accruedAmount(d) * multiplier(); }
+
+Real IndexedCoupon::multiplier() const {
+    Real m = index_ ? qty_ * index_->fixing(fixingDate_) : qty_ * initialFixing_;
+    if (flipIndex_) {
+        QL_REQUIRE(!close_enough(m, 0.0), "IndexedCoupon: can not flip zero fixing");
+        return 1.0 / m;
+    } else {
+        return m;
+    }
 }
+
+Real IndexedCoupon::nominal() const { return c_->nominal() * multiplier(); }
 
 Real IndexedCoupon::rate() const { return c_->rate(); }
 
 DayCounter IndexedCoupon::dayCounter() const { return c_->dayCounter(); }
 
-IndexedCouponLeg::IndexedCouponLeg(const Leg& underlyingLeg, const Real qty, const boost::shared_ptr<Index>& index)
+boost::shared_ptr<Coupon> IndexedCoupon::underlying() const { return c_; }
+
+Real IndexedCoupon::quantity() const { return qty_; }
+
+const Date& IndexedCoupon::fixingDate() const { return fixingDate_; }
+
+Real IndexedCoupon::initialFixing() const { return initialFixing_; }
+
+boost::shared_ptr<Index> IndexedCoupon::index() const { return index_; }
+
+void IndexedCoupon::accept(AcyclicVisitor& v) {
+    Visitor<IndexedCoupon>* v1 = dynamic_cast<Visitor<IndexedCoupon>*>(&v);
+    if (v1 != 0)
+        v1->visit(*this);
+    else
+        Coupon::accept(v);
+}
+
+IndexedCouponLeg::IndexedCouponLeg(const Leg& underlyingLeg, const Real qty, const boost::shared_ptr<Index>& index,
+                                   const bool flipIndex)
     : underlyingLeg_(underlyingLeg), qty_(qty), index_(index), initialFixing_(Null<Real>()), fixingDays_(0),
-      fixingCalendar_(NullCalendar()), fixingConvention_(Preceding) {
+      fixingCalendar_(NullCalendar()), fixingConvention_(Preceding), flipIndex_(flipIndex) {
     QL_REQUIRE(index, "IndexedCouponLeg: index required");
 }
 
@@ -104,10 +142,11 @@ IndexedCouponLeg::operator Leg() const {
             fixingDate = inArrearsFixing_ ? valuationSchedule_.date(i + 1) : valuationSchedule_.date(i);
         fixingDate = fixingCalendar_.advance(fixingDate, -static_cast<int>(fixingDays_), Days, fixingConvention_);
 
-        if (i == 0 && initialFixing_ != Null<Real>())
-            resultLeg.push_back(boost::make_shared<IndexedCoupon>(cpn, qty_, initialFixing_));
-        else
-            resultLeg.push_back(boost::make_shared<IndexedCoupon>(cpn, qty_, index_, fixingDate));
+        if (i == 0 && initialFixing_ != Null<Real>()) {
+            resultLeg.push_back(boost::make_shared<IndexedCoupon>(cpn, qty_, initialFixing_, flipIndex_));
+        } else {
+            resultLeg.push_back(boost::make_shared<IndexedCoupon>(cpn, qty_, index_, fixingDate, flipIndex_));
+        }
     }
 
     return resultLeg;

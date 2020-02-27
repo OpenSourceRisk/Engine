@@ -226,49 +226,28 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
     } // for legs
 
-    // The npv currency, notional currency and current notional are taken from the first leg that
-    // appears in the XML that has a notional. If no such leg exists the notional currency
-    // and current notional are left empty and the npv currency is set to the first leg's currency
-
-    Size notionalTakenFromLeg = 0;
-    for (; notionalTakenFromLeg < legData_.size(); ++notionalTakenFromLeg) {
-        const LegData& d = legData_[notionalTakenFromLeg];
-        if (!d.notionals().empty())
-            break;
+    // NPV currency and Current notional taken from the first leg that appears in the XML
+    // unless the first leg is a Resettable XCCY, then use the second leg
+    // For a XCCY Resettable the currentNotional may fail due missing FX fixing so we avoid
+    // using this leg if possible
+    // For a equity swap with resetting notional may fail due to missing equity fixing, so avoid
+    bool isEquityNotionalReset = false;
+    if (legData_[0].legType() == "Equity") {
+        boost::shared_ptr<EquityLegData> eld = boost::dynamic_pointer_cast<EquityLegData>(
+            legData_[0].concreteLegData());
+        isEquityNotionalReset = eld->notionalReset();
     }
 
-    if (notionalTakenFromLeg == legData_.size()) {
-        ALOG("no suitable leg found to set notional, set to null and notionalCurrency to empty string");
-        notional_ = Null<Real>();
-        notionalCurrency_ = "";
-        npvCurrency_ = legData_.front().currency();
-    } else {
-        if (legData_[notionalTakenFromLeg].schedule().hasData()) {
-            Schedule schedule = makeSchedule(legData_[notionalTakenFromLeg].schedule());
-            auto notional =
-                buildScheduledVectorNormalised(legData_[notionalTakenFromLeg].notionals(),
-                                               legData_[notionalTakenFromLeg].notionalDates(), schedule, 0.0);
-            Date today = Settings::instance().evaluationDate();
-            auto d = std::upper_bound(schedule.dates().begin(), schedule.dates().end(), today);
-            // forward starting => take first notional
-            // on or after last schedule date => zero notional
-            // in between => notional of current period
-            if (d == schedule.dates().begin())
-                notional_ = notional.at(0);
-            else if (d == schedule.dates().end())
-                notional_ = 0.0;
-            else
-                notional_ = notional.at(std::distance(schedule.dates().begin(), d) - 1);
-        } else {
-            notional_ = legData_[notionalTakenFromLeg].notionals().at(0);
-        }
-        notionalCurrency_ = legData_[notionalTakenFromLeg].currency();
-        npvCurrency_ = legData_[notionalTakenFromLeg].currency();
-        DLOG("Notional is " << notional_ << " " << notionalCurrency_);
+    Size legIndex = legData_.size() > 1 && (!legData_[0].isNotResetXCCY() || isEquityNotionalReset) ? 1 : 0;
+    npvCurrency_ = legData_[legIndex].currency();
+    try {
+        // might fail on indexed legs due to missing index fixing
+        notional_ = currentNotional(legs_[legIndex]);
+    } catch (...) {
+        notional_ = 0.0;
     }
-
+    DLOG("Notional is " << notional_ << " " << npvCurrency_);
     Currency npvCcy = parseCurrency(npvCurrency_);
-    DLOG("npv currency is " << npvCurrency_);
 
     if (isXCCY) {
         boost::shared_ptr<QuantExt::CurrencySwap> swap(new QuantExt::CurrencySwap(legs_, legPayers_, currencies));
@@ -334,6 +313,7 @@ void Swap::fromXML(XMLNode* node) {
     }
     QL_REQUIRE(swapNode, "Swap::fromXML(): expected '" << tradeType() << "Data'"
                                                        << (tradeType() == "Swap" ? "" : " or 'SwapData'"));
+
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(swapNode, "LegData");
     for (Size i = 0; i < nodes.size(); i++) {
         auto ld = createLegData();
@@ -346,7 +326,7 @@ boost::shared_ptr<LegData> Swap::createLegData() const { return boost::make_shar
 
 XMLNode* Swap::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
-    XMLNode* swapNode = doc.allocNode(tradeType() + "Data");
+    XMLNode* swapNode = doc.allocNode("SwapData");
     XMLUtils::appendNode(node, swapNode);
     for (Size i = 0; i < legData_.size(); i++)
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));

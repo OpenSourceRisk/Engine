@@ -28,7 +28,7 @@ namespace data {
 Leg FixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                               const string& configuration) const {
 
-    return makeFixedLeg(data);
+    return makeFixedLeg(data, engineFactory);
 }
 
 Leg ZeroCouponFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -45,11 +45,11 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
     auto index = *engineFactory->market()->iborIndex(indexName, configuration);
     auto ois = boost::dynamic_pointer_cast<OvernightIndex>(index);
     if (ois != nullptr)
-        return makeOISLeg(data, ois);
+        return makeOISLeg(data, ois, engineFactory);
     else {
         auto bma = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index);
         if (bma != nullptr)
-            return makeBMALeg(data, bma);
+            return makeBMALeg(data, bma, engineFactory);
         else
             return makeIborLeg(data, index, engineFactory);
     }
