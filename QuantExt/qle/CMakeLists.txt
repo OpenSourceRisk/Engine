@@ -147,6 +147,7 @@ termstructures/dynamicoptionletvolatilitystructure.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
 termstructures/dynamicyoyoptionletvolatilitystructure.cpp
 termstructures/equityforwardcurvestripper.cpp
+termstructures/equityoptionsurfacestripper.cpp
 termstructures/flatcorrelation.cpp
 termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
@@ -389,6 +390,7 @@ termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
 termstructures/dynamicyoyoptionletvolatilitystructure.hpp
 termstructures/equityforwardcurvestripper.hpp
+termstructures/equityoptionsurfacestripper.hpp
 termstructures/equityvolconstantspread.hpp
 termstructures/flatcorrelation.hpp
 termstructures/fxblackvolsurface.hpp
