@@ -679,8 +679,11 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         // build the curve
                         LOG("Building EquityVol for asof " << asof);
 
+                        // First we need the Equity Index, this should already be built
+                        Handle<EquityIndex> eqIndex = MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration.first);
+
                         boost::shared_ptr<EquityVolCurve> eqVolCurve =
-                            boost::make_shared<EquityVolCurve>(asof, *eqvolspec, loader, curveConfigs);
+                            boost::make_shared<EquityVolCurve>(asof, *eqvolspec, loader, curveConfigs, eqIndex);
                         itr = requiredEquityVolCurves.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
                     }
 

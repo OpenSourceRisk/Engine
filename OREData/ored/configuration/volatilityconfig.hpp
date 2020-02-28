@@ -24,6 +24,8 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/marketdata/marketdatum.hpp>
+#include <ql/exercise.hpp>
 
 namespace ore {
 namespace data {
@@ -32,6 +34,25 @@ namespace data {
     \ingroup configuration
 */
 class VolatilityConfig : public ore::data::XMLSerializable {
+public:    
+    //! Default constructor
+    VolatilityConfig() : quoteType_(MarketDatum::QuoteType::RATE_LNVOL) {};
+
+    //! \name Inspectors
+    //@{
+    const MarketDatum::QuoteType& quoteType() const { return quoteType_; };
+    const QuantLib::Exercise::Type& exerciseType() const { return exerciseType_; };
+    //@}
+
+    //! \name Serialisation
+    //@{
+    void fromBaseNode(ore::data::XMLNode* node);
+    void addBaseNode(ore::data::XMLDocument& doc, ore::data::XMLNode* node);
+    //@}
+
+private:
+    MarketDatum::QuoteType quoteType_;
+    QuantLib::Exercise::Type exerciseType_;
 };
 
 /*! Volatility configuration for a single constant volatility
