@@ -112,25 +112,20 @@ InterpolatedCPIVolatilitySurface<Interpolator2D>::InterpolatedCPIVolatilitySurfa
     BusinessDayConvention bdc, const DayCounter& dc, const Period& observationLag, const Interpolator2D& interpolator2d)
     : CPIVolatilitySurface(settlementDays, cal, bdc, dc, observationLag, index->frequency(), index->interpolated()),
       optionTenors_(optionTenors), strikes_(strikes), quotes_(quotes), index_(index), interpolator2d_(interpolator2d) {
-
-    volData_ = QuantLib::Matrix(strikes_.size(), optionTenors_.size(), QuantLib::Null<QuantLib::Real>());
-
-    QL_REQUIRE(quotes_.size() == optionTenors_.size(), "quotes rows does not match option tenors size");
-    optionTimes_.clear();
     for (Size i = 0; i < optionTenors_.size(); ++i) {
         QL_REQUIRE(quotes_[i].size() == strikes_.size(), "quotes row " << i << " length does not match strikes size");
-        QuantLib::Date d = optionDateFromTenor(optionTenors_[i]);
-        optionTimes_.push_back(inflationTime(d));
         for (Size j = 0; j < strikes_.size(); ++j)
             registerWith(quotes_[i][j]);
     }
-    registerWith(Settings::instance().evaluationDate());
-
-    performCalculations();
 }
 
 template <class Interpolator2D> void InterpolatedCPIVolatilitySurface<Interpolator2D>::performCalculations() const {
-    for (QuantLib::Size i = 0; i < optionTenors_.size(); i++) {
+    volData_ = QuantLib::Matrix(strikes_.size(), optionTenors_.size(), QuantLib::Null<QuantLib::Real>());
+    QL_REQUIRE(quotes_.size() == optionTenors_.size(), "quotes rows does not match option tenors size");
+    optionTimes_.clear();
+    for (Size i = 0; i < optionTenors_.size(); ++i) {
+        QuantLib::Date d = optionDateFromTenor(optionTenors_[i]);
+        optionTimes_.push_back(inflationTime(d));
         for (QuantLib::Size j = 0; j < strikes_.size(); j++)
             volData_[j][i] = quotes_[i][j]->value();
     }
