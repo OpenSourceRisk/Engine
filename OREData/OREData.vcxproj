@@ -108,6 +108,7 @@
     <ClInclude Include="ored\model\lgmbuilder.hpp" />
     <ClInclude Include="ored\model\lgmdata.hpp" />
     <ClInclude Include="ored\model\modelbuilder.hpp" />
+    <ClInclude Include="ored\model\structuredmodelerror.hpp" />
     <ClInclude Include="ored\model\utilities.hpp" />
     <ClInclude Include="ored\ored.hpp" />
     <ClInclude Include="ored\portfolio\bond.hpp" />

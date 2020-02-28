@@ -36,10 +36,36 @@ struct CloseEnoughComparator {
     QuantLib::Real v_;
 };
 
+//! Option surface interpolator base
+class OptionInterpolatorBase {
+
+public:
+    // default Constructor
+    OptionInterpolatorBase(const QuantLib::Date& referenceDate) : referenceDate_(referenceDate){};
+
+    //! virtual access methods
+    virtual QuantLib::Real getValue(QuantLib::Time t, QuantLib::Real strike) const = 0;
+    virtual QuantLib::Real getValue(QuantLib::Date d, QuantLib::Real strike) const = 0;
+
+    const QuantLib::Date& referenceDate() const { return referenceDate_; }
+    std::vector<QuantLib::Time> times() const { return times_; };
+    std::vector<QuantLib::Date> expiries() const { return expiries_; };
+    std::vector<std::vector<QuantLib::Real> > strikes() const { return strikes_; };
+    std::vector<std::vector<QuantLib::Real> > values() const { return values_; };
+
+protected:
+    std::vector<QuantLib::Date> expiries_;                            // expiries
+    std::vector<QuantLib::Time> times_;                               // times
+    std::vector<std::vector<QuantLib::Real> > strikes_;               // strikes for each expiry
+    std::vector<std::vector<QuantLib::Real> > values_;
+    QuantLib::Date referenceDate_;
+
+};
+
 //! Option surface intepolator
 //!  \ingroup interpolators
 template <class InterpolatorStrike, class InterpolatorExpiry>
-class OptionInterpolator2d {
+class OptionInterpolator2d : public OptionInterpolatorBase {
 
 public:
     //! OptionInterpolator2d Constructor
@@ -48,7 +74,7 @@ public:
                          bool upperStrikeConstExtrap = true,
                          const InterpolatorStrike& interpolatorStrike = InterpolatorStrike(),
                          const InterpolatorExpiry& interpolatorExpiry = InterpolatorExpiry())
-        : referenceDate_(referenceDate), dayCounter_(dayCounter), lowerStrikeConstExtrap_(lowerStrikeConstExtrap),
+        : OptionInterpolatorBase(referenceDate), dayCounter_(dayCounter), lowerStrikeConstExtrap_(lowerStrikeConstExtrap),
           upperStrikeConstExtrap_(upperStrikeConstExtrap), interpolatorStrike_(interpolatorStrike),
           interpolatorExpiry_(interpolatorExpiry), initialised_(false){};
 
@@ -66,26 +92,19 @@ public:
 
     //! \name Getters
     //@{
-    const QuantLib::Date& referenceDate() const { return referenceDate_; }
-    QuantLib::DayCounter dayCounter() const { return dayCounter_; }
-    std::vector<QuantLib::Time> times() const;
+    std::vector<QuantLib::Time> times() const ;
     std::vector<QuantLib::Date> expiries() const;
     std::vector<std::vector<QuantLib::Real> > strikes() const;
     std::vector<std::vector<QuantLib::Real> > values() const;
+    QuantLib::DayCounter dayCounter() const { return dayCounter_; }
     QuantLib::Real getValue(QuantLib::Time t, QuantLib::Real strike) const;
     QuantLib::Real getValue(QuantLib::Date d, QuantLib::Real strike) const;
     //@}
 
 protected:
-    std::vector<QuantLib::Date> expiries_;                            // expiries
-    std::vector<QuantLib::Time> times_;                               // times
     std::vector<QuantLib::Interpolation> interpolations_;             // strike interpolations for each expiry
-    std::vector<std::vector<QuantLib::Real> > strikes_;               // strikes for each expiry
-    std::vector<std::vector<QuantLib::Real> > values_;
-
 
 private:
-    QuantLib::Date referenceDate_;
     QuantLib::DayCounter dayCounter_;
     QuantLib::Real getValueForStrike(QuantLib::Real strike, const std::vector<QuantLib::Real>& strks, 
         const std::vector<QuantLib::Real>& vars, const QuantLib::Interpolation& intrp) const;
@@ -94,7 +113,6 @@ private:
     InterpolatorStrike interpolatorStrike_;
     InterpolatorExpiry interpolatorExpiry_;
     bool initialised_;
-
 };
 
 // template definitions
@@ -107,7 +125,7 @@ OptionInterpolator2d<InterpolatorStrike, InterpolatorExpiry>::OptionInterpolator
     bool upperStrikeConstExtrap,
     const InterpolatorStrike& interpolatorStrike,
     const InterpolatorExpiry& interpolatorExpiry) :
-    referenceDate_(referenceDate), dayCounter_(dayCounter), lowerStrikeConstExtrap_(lowerStrikeConstExtrap), upperStrikeConstExtrap_(upperStrikeConstExtrap), interpolatorStrike_(interpolatorStrike),
+    OptionInterpolatorBase(referenceDate), dayCounter_(dayCounter), lowerStrikeConstExtrap_(lowerStrikeConstExtrap), upperStrikeConstExtrap_(upperStrikeConstExtrap), interpolatorStrike_(interpolatorStrike),
     interpolatorExpiry_(interpolatorExpiry), initialised_(false) {
 
     initialise(dates, strikes, values);
@@ -271,32 +289,31 @@ QuantLib::Real OptionInterpolator2d<IS, IE>::getValue(QuantLib::Date d, QuantLib
         QuantLib::Time t = dayCounter_.yearFraction(referenceDate_, d);
         valueReturn = getValue(t, strike);
     }
-
     return valueReturn;
 }
 
 template <class IS, class IE>
 std::vector<QuantLib::Time> OptionInterpolator2d<IS, IE>::times() const {
     QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
-    return times_;
+    return OptionInterpolatorBase::times();
 }
 
 template <class IS, class IE>
 std::vector<QuantLib::Date> OptionInterpolator2d<IS, IE>::expiries() const {
     QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
-    return expiries_;
+    return OptionInterpolatorBase::expiries();
 }
 
 template <class IS, class IE>
 std::vector<std::vector<QuantLib::Real> > OptionInterpolator2d<IS, IE>::strikes() const {
     QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
-    return strikes_;
+    return OptionInterpolatorBase::strikes();
 }
 
 template <class IS, class IE>
 std::vector<std::vector<QuantLib::Real> > OptionInterpolator2d<IS, IE>::values() const {
     QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
-    return values_;
+    return OptionInterpolatorBase::values();
 }
 
 } //namespace QuantExt

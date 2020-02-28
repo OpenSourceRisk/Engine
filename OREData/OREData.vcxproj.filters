@@ -468,6 +468,9 @@
     <ClInclude Include="ored\configuration\volatilityconfig.hpp">
       <Filter>configuration</Filter>
     </ClInclude>
+    <ClInclude Include="ored\model\structuredmodelerror.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">

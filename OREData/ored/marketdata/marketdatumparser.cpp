@@ -25,7 +25,6 @@
 #include <ored/marketdata/strike.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ql/time/calendars/weekendsonly.hpp>
 
 using namespace std;
 using QuantLib::WeekendsOnly;
@@ -115,14 +114,13 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
 }
 
 // calls parseDateOrPeriod and returns a Date (either the supplied date or asof+period)
-Date getDateFromDateOrPeriod(const string& token, Date asof) {
+Date getDateFromDateOrPeriod(const string& token, Date asof, QuantLib::Calendar cal) {
     Period term;                                           // gets populated by parseDateOrPeriod
     Date expiryDate;                                       // gets populated by parseDateOrPeriod
     bool tmpIsDate;                                        // gets populated by parseDateOrPeriod
     parseDateOrPeriod(token, expiryDate, term, tmpIsDate); // checks if the market string contains a date or a period
     if (!tmpIsDate)
-        expiryDate =
-            WeekendsOnly().adjust(asof + term); // we have no calendar information here, so we use a generic calendar
+        expiryDate = cal.adjust(asof + term);
     return expiryDate;
 }
 
