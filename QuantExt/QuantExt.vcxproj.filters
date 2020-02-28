@@ -816,6 +816,9 @@
     <ClInclude Include="qle\termstructures\aposurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\cashflows\indexedcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1392,6 +1395,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\aposurface.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\indexedcoupon.cpp">
+      <Filter>cashflows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
