@@ -648,7 +648,7 @@ public:
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
             const int paymentLag = 0, const std::string& paymentCalendar = "",
             const std::vector<std::string>& paymentDates = std::vector<std::string>(),
-            const Indexing& indexing = {});
+            const std::vector<Indexing>& indexing = {});
 
     //! \name Serialisation
     //@{
@@ -681,7 +681,7 @@ public:
     boost::shared_ptr<LegAdditionalData> concreteLegData() const { return concreteLegData_; }
     const std::set<std::string>& indices() const { return indices_; }
     const std::vector<std::string>& paymentDates() const { return paymentDates_; }
-    const Indexing& indexing() const { return indexing_; }
+    const std::vector<Indexing>& indexing() const { return indexing_; }
     //@}
 
     //! \name modifiers
@@ -722,7 +722,7 @@ private:
     int paymentLag_;
     std::string paymentCalendar_;
     std::vector<std::string> paymentDates_;
-    Indexing indexing_;
+    std::vector<Indexing> indexing_;
 };
 
 //! \name Utilities for building QuantLib Legs
