@@ -115,10 +115,15 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     }
     extrapolate_ = XMLUtils::getChildValueAsBool(node, "Extrapolation", true);
     tenors_ = XMLUtils::getChildrenValuesAsStrings(node, "Tenors", true);
+    settleDays_ = 0; // optional
+    if (XMLNode* n = XMLUtils::getChildNode(node, "SettlementDays")) {
+        Integer d = parseInteger(XMLUtils::getNodeValue(n));
+        QL_REQUIRE(d >= 0, "SettlementDays (" << d << ") must be non-negative");
+        settleDays_ = static_cast<Natural>(d);
+    }
     calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
     dayCounter_ = parseDayCounter(XMLUtils::getChildValue(node, "DayCounter", true));
     businessDayConvention_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));
-
     index_ = XMLUtils::getChildValue(node, "Index", true);
     indexCurve_ = XMLUtils::getChildValue(node, "IndexCurve", true);
     yieldTermStructure_ = XMLUtils::getChildValue(node, "YieldTermStructure", true);
@@ -150,6 +155,7 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
     XMLUtils::addGenericChildAsList(doc, node, "Tenors", tenors_);
+    XMLUtils::addChild(doc, node, "SettlementDays", static_cast<int>(settleDays_));
     XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
