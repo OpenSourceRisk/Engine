@@ -515,7 +515,6 @@
     <ClInclude Include="qle\cashflows\floatingannuitynominal.hpp" />
     <ClInclude Include="qle\cashflows\floatingratefxlinkednotionalcoupon.hpp" />
     <ClInclude Include="qle\cashflows\fxlinkedcashflow.hpp" />
-    <ClInclude Include="qle\cashflows\indexedcoupon.hpp" />
     <ClInclude Include="qle\cashflows\lognormalcmsspreadpricer.hpp" />
     <ClInclude Include="qle\cashflows\quantocouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp" />
@@ -783,7 +782,6 @@
     <ClCompile Include="qle\cashflows\floatingannuitycoupon.cpp" />
     <ClCompile Include="qle\cashflows\floatingannuitynominal.cpp" />
     <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp" />
-    <ClCompile Include="qle\cashflows\indexedcoupon.cpp" />
     <ClCompile Include="qle\cashflows\lognormalcmsspreadpricer.cpp" />
     <ClCompile Include="qle\cashflows\quantocouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.cpp" />
