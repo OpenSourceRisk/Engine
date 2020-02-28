@@ -400,6 +400,7 @@
       <xs:element type="calendar" name="Calendar" minOccurs="1" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Tenors" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="SettlementDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Strikes" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="IndexCurve" minOccurs="1" maxOccurs="1"/>
