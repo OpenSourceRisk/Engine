@@ -128,7 +128,6 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
 
     model_ = boost::make_shared<QuantExt::LGM>(parametrization_);
     params_ = model_->params();
-    swaptionEngine_ = boost::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_);
 
     if (data_->calibrateA() || data_->calibrateH()) {
         registerWith(svts_);
@@ -141,9 +140,6 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     registerWith(marketObserver_);
     // notify observers of all market data changes, not only when not calculated
     alwaysForwardNotifications();
-
-    for (Size j = 0; j < swaptionBasket_.size(); j++)
-        swaptionBasket_[j]->setPricingEngine(swaptionEngine_);
 }
 
 Real LgmBuilder::error() const {
@@ -189,8 +185,11 @@ void LgmBuilder::performCalculations() const {
         if (data_->calibrateA() || data_->calibrateH())
             buildSwaptionBasket();
 
-        for (Size j = 0; j < swaptionBasket_.size(); j++)
-            swaptionBasket_[j]->setPricingEngine(swaptionEngine_);
+        for (Size j = 0; j < swaptionBasket_.size(); j++) {
+            auto engine = boost::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_);
+            engine->enableCache(!data_->calibrateH(), !data_->calibrateA());
+            swaptionBasket_[j]->setPricingEngine(engine);
+        }
 
         // reset model parameters, this ensures that a calibration gives the same
         // result if the input market data is the same
