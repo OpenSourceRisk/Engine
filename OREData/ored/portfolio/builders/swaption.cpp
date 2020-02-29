@@ -55,6 +55,7 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     DLOG("Get model data");
     auto calibration = parseCalibrationType(modelParameter("Calibration"));
     auto calibrationStrategy = parseCalibrationStrategy(modelParameter("CalibrationStrategy"));
+    Size minGapCalibrationExpiries = parseInteger(modelParameter("MinGapCalibrationExpiries"));
     Real lambda = parseReal(modelParameter("Reversion", ccy));
     vector<Real> sigma = parseListOfValues<Real>(modelParameter("Volatility"), &parseReal);
     vector<Real> sigmaTimes = parseListOfValues<Real>(modelParameter("VolatilityTimes", "", false), &parseReal);
@@ -106,9 +107,13 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
         calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
         DLOG("Build LgmData for co-terminal specification");
         vector<string> expiryDates, termDates;
+        Date lastExpiryDate = Date::minDate();
         for (Size i = 0; i < expiries.size(); ++i) {
-            expiryDates.push_back(to_string(expiries[i]));
-            termDates.push_back(to_string(maturity));
+            if (expiries[i] >= lastExpiryDate + minGapCalibrationExpiries) {
+                expiryDates.push_back(to_string(expiries[i]));
+                termDates.push_back(to_string(maturity));
+                lastExpiryDate = expiries[i];
+            }
         }
         data->optionExpiries() = expiryDates;
         data->optionTerms() = termDates;
