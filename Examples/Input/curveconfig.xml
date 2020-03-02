@@ -2971,6 +2971,7 @@
           <IndexCurve>Inflation/EUHICPXT/EUHICPXT_YY_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
           <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
+	  <ObservationLag>3M</ObservationLag>
       </InflationCapFloorVolatility>
   </InflationCapFloorVolatilities>
   

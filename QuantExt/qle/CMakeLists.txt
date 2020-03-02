@@ -19,6 +19,8 @@ cashflows/brlcdicouponpricer.cpp
 cashflows/commodityindexedaveragecashflow.cpp
 cashflows/commodityindexedcashflow.cpp
 cashflows/couponpricer.cpp
+cashflows/cpicoupon.cpp
+cashflows/cpicouponpricer.cpp
 cashflows/equitycoupon.cpp
 cashflows/equitycouponpricer.cpp
 cashflows/floatingannuitycoupon.cpp
@@ -27,6 +29,7 @@ cashflows/fxlinkedcashflow.cpp
 cashflows/lognormalcmsspreadpricer.cpp
 cashflows/quantocouponpricer.cpp
 cashflows/strippedcapflooredyoyinflationcoupon.cpp
+cashflows/strippedcapflooredcpicoupon.cpp
 cashflows/subperiodscoupon.cpp
 cashflows/subperiodscouponpricer.cpp
 currencies/africa.cpp
@@ -143,6 +146,7 @@ termstructures/datedstrippedoptionlet.cpp
 termstructures/datedstrippedoptionletadapter.cpp
 termstructures/defaultprobabilityhelpers.cpp
 termstructures/discountratiomodifiedcurve.cpp
+termstructures/dynamiccpivolatilitystructure.cpp
 termstructures/dynamicoptionletvolatilitystructure.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
 termstructures/dynamicyoyoptionletvolatilitystructure.cpp
@@ -195,6 +199,8 @@ cashflows/brlcdicouponpricer.hpp
 cashflows/commodityindexedaveragecashflow.hpp
 cashflows/commodityindexedcashflow.hpp
 cashflows/couponpricer.hpp
+cashflows/cpicoupon.hpp
+cashflows/cpicouponpricer.hpp
 cashflows/equitycoupon.hpp
 cashflows/equitycouponpricer.hpp
 cashflows/floatingannuitycoupon.hpp
@@ -204,6 +210,7 @@ cashflows/fxlinkedcashflow.hpp
 cashflows/lognormalcmsspreadpricer.hpp
 cashflows/quantocouponpricer.hpp
 cashflows/strippedcapflooredyoyinflationcoupon.hpp
+cashflows/strippedcapflooredcpicoupon.hpp
 cashflows/subperiodscoupon.hpp
 cashflows/subperiodscouponpricer.hpp
 currencies/africa.hpp
@@ -385,6 +392,7 @@ termstructures/datedstrippedoptionletbase.hpp
 termstructures/defaultprobabilityhelpers.hpp
 termstructures/discountratiomodifiedcurve.hpp
 termstructures/dynamicblackvoltermstructure.hpp
+termstructures/dynamiccpivolatilitystructure.hpp
 termstructures/dynamicoptionletvolatilitystructure.hpp
 termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
@@ -402,6 +410,7 @@ termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolateddiscountcurve.hpp
 termstructures/interpolateddiscountcurve2.hpp
 termstructures/interpolatedyoycapfloortermpricesurface.hpp
+termstructures/interpolatedcpivolatilitysurface.hpp
 termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/oibasisswaphelper.hpp
