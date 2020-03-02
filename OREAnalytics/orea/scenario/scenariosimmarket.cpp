@@ -25,6 +25,7 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
+#include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
@@ -45,12 +46,13 @@
 
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/termstructures/blackvariancesurfacestddevs.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/pricecurve.hpp>
-#include <qle/termstructures/strippedoptionletadapter2.hpp>
+#include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
@@ -433,17 +435,17 @@ ScenarioSimMarket::ScenarioSimMarket(
                         vector<Period> optionTenors, underlyingTenors;
                         vector<Real> strikeSpreads;
                         string shortSwapIndexBase = "", swapIndexBase = "";
-                        bool isCube, atmOnly;
+                        bool isCube, isAtm, simulateAtmOnly;
                         if (param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
                             LOG("building " << name << " swaption volatility curve...");
                             wrapper.linkTo(*initMarket->swaptionVol(name, configuration));
                             shortSwapIndexBase = initMarket->shortSwapIndexBase(name, configuration);
                             swapIndexBase = initMarket->swapIndexBase(name, configuration);
-                            isCube = parameters->swapVolIsCube();
-                            optionTenors = parameters->swapVolExpiries();
-                            underlyingTenors = parameters->swapVolTerms();
-                            strikeSpreads = parameters->swapVolStrikeSpreads();
-                            atmOnly = parameters->simulateSwapVolATMOnly();
+                            isCube = parameters->swapVolIsCube(name);
+                            optionTenors = parameters->swapVolExpiries(name);
+                            underlyingTenors = parameters->swapVolTerms(name);
+                            strikeSpreads = parameters->swapVolStrikeSpreads(name);
+                            simulateAtmOnly = parameters->simulateSwapVolATMOnly();
                         } else {
                             LOG("building " << name << " yield volatility curve...");
                             wrapper.linkTo(*initMarket->yieldVol(name, configuration));
@@ -451,46 +453,24 @@ ScenarioSimMarket::ScenarioSimMarket(
                             optionTenors = parameters->yieldVolExpiries();
                             underlyingTenors = parameters->yieldVolTerms();
                             strikeSpreads = {0.0};
-                            atmOnly = true;
+                            simulateAtmOnly = true;
                         }
                         LOG("Initial market " << name << " yield volatility type = " << wrapper->volatilityType());
-
-                        // If volatility type is not Normal and we have swaptions, convert to Normal for the simulation
-                        // Notice that this is not possible for yield volatilities, since the ATM level is not known
-                        if (wrapper->volatilityType() != Normal &&
-                            param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
-                            // FIXME we can not convert constant swaption vol structures yet
-                            if (boost::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr) {
-                                ALOG("Constant swaption volatility found in configuration "
-                                     << configuration << " for currency " << name
-                                     << " will not be converted to normal");
-                            } else {
-                                // Get swap index associated with this volatility structure
-                                Handle<SwapIndex> swapIndex = initMarket->swapIndex(swapIndexBase, configuration);
-                                Handle<SwapIndex> shortSwapIndex =
-                                    initMarket->swapIndex(shortSwapIndexBase, configuration);
-                                // Set up swaption volatility converter
-                                SwaptionVolatilityConverter converter(asof_, *wrapper, *swapIndex, *shortSwapIndex,
-                                                                      Normal);
-                                wrapper.linkTo(converter.convert());
-                                LOG("Converting swaption volatilities in configuration "
-                                    << configuration << " with currency " << name
-                                    << " to normal swaption volatilities");
-                            }
-                        }
+                        
+                        // Check is underlying market surface is atm or smile
+                        isAtm = boost::dynamic_pointer_cast<SwaptionVolatilityMatrix>(*wrapper) != nullptr;
+                        
                         Handle<SwaptionVolatilityStructure> svp;
                         if (param.second.first) {
-                            LOG("Simulating (" << wrapper->volatilityType() << ") yield vols for ccy " << name);
-                            DLOG("YieldVol atmOnly : " << (atmOnly ? "True" : "False"));
+                            LOG("Simulating yield vols for ccy " << name);
+                            DLOG("YieldVol isAtm : " << (isAtm ? "True" : "False"));
                             DLOG("YieldVol isCube : " << (isCube ? "True" : "False"));
-                            if (atmOnly) {
+                            if (simulateAtmOnly) {
                                 QL_REQUIRE(strikeSpreads.size() == 1 && close_enough(strikeSpreads[0], 0),
                                            "for atmOnly strikeSpreads must be {0.0}");
-                            } else {
-                                QL_REQUIRE(isCube, "Only atmOnly simulation supported for swaption vol surfaces");
                             }
                             boost::shared_ptr<QuantLib::SwaptionVolatilityCube> cube;
-                            if (isCube) {
+                            if (isCube && !isAtm) {
                                 boost::shared_ptr<SwaptionVolCubeWithATM> tmp =
                                     boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*wrapper);
                                 QL_REQUIRE(tmp, "swaption cube missing")
@@ -507,15 +487,35 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             strikeSpreads.begin();
                             QL_REQUIRE(atmSlice < strikeSpreads.size(),
                                        "could not find atm slice (strikeSpreads do not contain 0.0)");
+
+                            // Set up a vol converter, and create if vol type is not normal
+                            SwaptionVolatilityConverter* converter = nullptr;
+                            if (wrapper->volatilityType() != Normal &&
+                                param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
+
+                                Handle<SwapIndex> swapIndex = initMarket->swapIndex(swapIndexBase, configuration);
+                                Handle<SwapIndex> shortSwapIndex =
+                                    initMarket->swapIndex(shortSwapIndexBase, configuration);
+                                converter = new SwaptionVolatilityConverter(asof_, *wrapper, *swapIndex, *shortSwapIndex, Normal);
+                            }
+
                             for (Size k = 0; k < strikeSpreads.size(); ++k) {
                                 for (Size i = 0; i < optionTenors.size(); ++i) {
                                     for (Size j = 0; j < underlyingTenors.size(); ++j) {
                                         Real strike = Null<Real>();
-                                        if (!atmOnly && cube)
+                                        if (!simulateAtmOnly && cube)
                                             strike = cube->atmStrike(optionTenors[i], underlyingTenors[j]) +
                                                      strikeSpreads[k];
-                                        Real vol =
-                                            wrapper->volatility(optionTenors[i], underlyingTenors[j], strike, true);
+                                        Real vol;
+                                        if (wrapper->volatilityType() != Normal &&
+                                            param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
+                                            // if not a normal volatility use the converted to convert to normal at given point
+                                            vol = converter->convert(wrapper->optionDateFromTenor(optionTenors[i]), underlyingTenors[j], 
+                                                strikeSpreads[k], wrapper->dayCounter(), Normal );                                            
+                                        } else {
+                                            vol =
+                                                wrapper->volatility(optionTenors[i], underlyingTenors[j], strike, true);
+                                        }
                                         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
 
                                         Size index = i * underlyingTenors.size() * strikeSpreads.size() +
@@ -541,30 +541,32 @@ ScenarioSimMarket::ScenarioSimMarket(
                             Handle<SwaptionVolatilityStructure> atm(boost::make_shared<SwaptionVolatilityMatrix>(
                                 wrapper->calendar(), wrapper->businessDayConvention(), optionTenors, underlyingTenors,
                                 atmQuotes, dc, flatExtrapolation, volType, shift));
-                            if (atmOnly) {
-                                // floating reference date matrix in sim market
-                                // if we have a cube, we keep the vol spreads constant under scenarios
-                                // notice that cube is from todaysmarket, so it has a fixed reference date, which means
-                                // that we keep the smiles constant in terms of vol spreads when moving forward in time;
-                                // notice also that the volatility will be "sticky strike", i.e. it will not react to
-                                // changes in the ATM level
-                                if (isCube) {
+                            if (simulateAtmOnly) {
+                                if (isAtm) {
+                                    svp = atm;
+                                } else {
+                                    // floating reference date matrix in sim market
+                                    // if we have a cube, we keep the vol spreads constant under scenarios
+                                    // notice that cube is from todaysmarket, so it has a fixed reference date, which means
+                                    // that we keep the smiles constant in terms of vol spreads when moving forward in time;
+                                    // notice also that the volatility will be "sticky strike", i.e. it will not react to
+                                    // changes in the ATM level
                                     svp = Handle<SwaptionVolatilityStructure>(
                                         boost::make_shared<SwaptionVolatilityConstantSpread>(atm, wrapper));
+                                }
+                            } else {
+                                if (isCube) {
+                                    boost::shared_ptr<SwaptionVolatilityCube> tmp(new QuantExt::SwaptionVolCube2(
+                                        atm, optionTenors, underlyingTenors, strikeSpreads, quotes,
+                                        *initMarket->swapIndex(swapIndexBase, configuration),
+                                        *initMarket->swapIndex(shortSwapIndexBase, configuration), false, flatExtrapolation,
+                                        false));
+                                    svp = Handle<SwaptionVolatilityStructure>(
+                                        boost::make_shared<SwaptionVolCubeWithATM>(tmp));
                                 } else {
                                     svp = atm;
                                 }
-                            } else {
-                                QL_REQUIRE(isCube, "Only atmOnly simulation supported for yield vol surfaces");
-                                boost::shared_ptr<SwaptionVolatilityCube> tmp(new QuantExt::SwaptionVolCube2(
-                                    atm, optionTenors, underlyingTenors, strikeSpreads, quotes,
-                                    *initMarket->swapIndex(swapIndexBase, configuration),
-                                    *initMarket->swapIndex(shortSwapIndexBase, configuration), false, flatExtrapolation,
-                                    false));
-                                svp = Handle<SwaptionVolatilityStructure>(
-                                    boost::make_shared<SwaptionVolCubeWithATM>(tmp));
-                            }
-
+                            }                                                        
                         } else {
                             string decayModeString = parameters->swapVolDecayMode();
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
@@ -620,10 +622,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                             boost::shared_ptr<IborIndex> iborIndex;
                             Date spotDate;
                             Calendar capCalendar;
+                            string strIborIndex;
+                            Natural settleDays = 0;
                             if (curveConfigs.hasCapFloorVolCurveConfig(name)) {
                                 // From the cap floor config, get the ibor index name
                                 auto config = curveConfigs.capFloorVolCurveConfig(name);
-                                auto strIborIndex = config->iborIndex();
+                                settleDays = config->settleDays();
+                                strIborIndex = config->iborIndex();
                                 if (tryParseIborIndex(strIborIndex, iborIndex)) {
                                     capCalendar = iborIndex->fixingCalendar();
                                     Natural settlementDays = iborIndex->fixingDays();
@@ -634,26 +639,52 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                             vector<Period> optionTenors = parameters->capFloorVolExpiries(name);
                             vector<Date> optionDates(optionTenors.size());
-                            vector<Real> strikes = parameters->capFloorVolStrikes();
+
+                            vector<Real> strikes = parameters->capFloorVolStrikes(name);
+                            bool isAtm = false;
+                            // Strikes may be empty here which means that an ATM curve has been configured
+                            if (strikes.empty()) {
+                                QL_REQUIRE(parameters->capFloorVolIsAtm(name), "Strikes for " << name <<
+                                    " is empty in simulation parameters so expected its ATM flag to be true");
+                                strikes = { 0.0 };
+                                isAtm = true;
+                            }
+
                             vector<vector<Handle<Quote>>> quotes(optionTenors.size(),
                                                                  vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
                             
                             for (Size i = 0; i < optionTenors.size(); ++i) {
 
                                 if (iborIndex) {
-                                    optionDates[i] = spotDate +  optionTenors[i];
-                                    optionDates[i] = iborIndex->fixingDate(optionDates[i]);
+                                    // If we ask for cap pillars at tenors t_i for i = 1,...,N, we should attempt to 
+                                    // place the optionlet pillars at the fixing date of the last optionlet in the cap
+                                    // with tenor t_i
+                                    QL_REQUIRE(optionTenors[i] > iborIndex->tenor(), "The cap floor tenor must be greater than the ibor index tenor");
+                                    boost::shared_ptr<CapFloor> capFloor = MakeCapFloor(CapFloor::Cap, optionTenors[i], iborIndex, 0.0, 0 * Days);
+                                    optionDates[i] = capFloor->lastFloatingRateCoupon()->fixingDate();
                                     DLOG("Option [tenor, date] pair is [" << optionTenors[i] << ", " << io::iso_date(optionDates[i]) << "]");
                                 } else {
                                     optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
                                 }
 
+                                // If ATM, use initial market's discount curve and ibor index to calculate ATM rate
+                                Rate strike = Null<Rate>();
+                                if (isAtm) {
+                                    QL_REQUIRE(!strIborIndex.empty(), "Expected cap floor vol curve config for "
+                                        << name << " to have an ibor index name");
+                                    initMarket->iborIndex(strIborIndex, configuration);
+                                    boost::shared_ptr<CapFloor> cap = MakeCapFloor(CapFloor::Cap, optionTenors[i], 
+                                        *initMarket->iborIndex(strIborIndex, configuration), 0.0, 0 * Days);
+                                    strike = cap->atmRate(**initMarket->discountCurve(name, configuration));
+                                }
+
                                 for (Size j = 0; j < strikes.size(); ++j) {
-                                    Real vol = wrapper->volatility(optionDates[i], strikes[j], wrapper->allowsExtrapolation());
+                                    strike = isAtm ? strike : strikes[j];
+                                    Real vol = wrapper->volatility(optionDates[i], strike, wrapper->allowsExtrapolation());
                                     DLOG("Vol at [date, strike] pair [" << optionDates[i] << ", " << 
-                                        std::fixed << std::setprecision(4) << strikes[j] << "] is " << 
+                                        std::fixed << std::setprecision(4) << strike << "] is " << 
                                         std::setprecision(12) << vol);
-                                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                                    boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(vol);
                                     Size index = i * strikes.size() + j;
                                     simDataTmp.emplace(std::piecewise_construct,
                                                        std::forward_as_tuple(param.first, name, index),
@@ -663,17 +694,15 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
 
                             DayCounter dc = ore::data::parseDayCounter(parameters->capFloorVolDayCounter(name));
+                            
                             // FIXME: Works as of today only, i.e. for sensitivity/scenario analysis.
                             // TODO: Build floating reference date StrippedOptionlet class for MC path generators
                             boost::shared_ptr<StrippedOptionlet> optionlet = boost::make_shared<StrippedOptionlet>(
-                                0, // FIXME: settlement days
-                                wrapper->calendar(), wrapper->businessDayConvention(),
-                                boost::shared_ptr<IborIndex>(), // FIXME: required for ATM vol calculation
+                                settleDays, wrapper->calendar(), wrapper->businessDayConvention(), iborIndex,
                                 optionDates, strikes, quotes, dc, wrapper->volatilityType(), wrapper->displacement());
-                            boost::shared_ptr<StrippedOptionletAdapter2> adapter =
-                                boost::make_shared<StrippedOptionletAdapter2>(optionlet,
-                                                                              true); // FIXME always flat extrapolation
-                            hCapletVol = Handle<OptionletVolatilityStructure>(adapter);
+                            
+                            hCapletVol = Handle<OptionletVolatilityStructure>(
+                                boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(optionlet));
                         } else {
                             string decayModeString = parameters->capFloorVolDecayMode();
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
@@ -683,7 +712,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             hCapletVol = Handle<OptionletVolatilityStructure>(capletVol);
                         }
 
-                        hCapletVol->enableExtrapolation(); // FIXME
+                        hCapletVol->enableExtrapolation();
                         capFloorCurves_.emplace(std::piecewise_construct,
                                                 std::forward_as_tuple(Market::defaultConfiguration, name),
                                                 std::forward_as_tuple(hCapletVol));
@@ -787,7 +816,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                             DayCounter dc = ore::data::parseDayCounter(parameters->cdsVolDayCounter(name));
                             boost::shared_ptr<BlackVolTermStructure> cdsVolCurve(new BlackVarianceCurve3(
-                                0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes));
+                                0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes, false));
 
                             cvh = Handle<BlackVolTermStructure>(cdsVolCurve);
                         } else {
@@ -837,14 +866,23 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<BlackVolTermStructure> fvh;
 
                         if (param.second.first) {
-                            LOG("Simulating FX Vols (BlackVarianceCurve3) for " << name);
+                            LOG("Simulating FX Vols for " << name);
                             Size n = parameters->fxVolExpiries().size();
-                            Size m = parameters->fxVolMoneyness().size();
+                            Size m;
+                            if (parameters->useMoneyness(name)) {
+                                m = parameters->fxVolMoneyness(name).size();
+                            } else {
+                                m = parameters->fxVolStdDevs(name).size();
+                            }
                             vector<vector<Handle<Quote>>> quotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
                             Calendar cal = wrapper->calendar();
+                            if (cal.empty()) {
+                                cal = NullCalendar();
+                            }
                             // FIXME hardcoded in todaysmarket
                             DayCounter dc = ore::data::parseDayCounter(parameters->fxVolDayCounter(name));
                             vector<Time> times;
+                            vector<Date> dates;
 
                             // Attempt to get the relevant yield curves from the initial market  
                             Handle<YieldTermStructure> forTS = getYieldCurve(foreignTsId, todaysMarketParams, configuration, initMarket);
@@ -859,28 +897,70 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 domTS = initMarket->discountCurve(domCcy, configuration);
                             }
 
-                            for (Size i = 0; i < n; i++) {
-                                Date date = asof_ + parameters->fxVolExpiries()[i];
+                            // get vol matrix to feed to surface
+                            if (parameters->useMoneyness(name) || !(parameters->fxVolIsSurface(name))) {    // if moneyness or ATM
+                                for (Size i = 0; i < n; i++) {
+                                    Date date = asof_ + parameters->fxVolExpiries()[i];
 
-                                times.push_back(wrapper->timeFromReference(date));
+                                    times.push_back(wrapper->timeFromReference(date));
 
-                                for (Size j = 0; j < m; j++) {
-                                    Size idx = j * n + i;
-                                    Real mon = parameters->fxVolMoneyness()[j]; // 0 if ATM
+                                    for (Size j = 0; j < m; j++) {
+                                        Size idx = j * n + i;
+                                        Real mon = parameters->fxVolMoneyness(name)[j]; // 0 if ATM
 
-                                    // strike (assuming forward prices)
-                                    Real k = spot->value() * mon * forTS->discount(date) / domTS->discount(date);
-                                    Volatility vol = wrapper->blackVol(date, k, true);
-                                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
-                                    simDataTmp.emplace(std::piecewise_construct,
-                                                       std::forward_as_tuple(param.first, name, idx),
-                                                       std::forward_as_tuple(q));
-                                    quotes[j][i] = Handle<Quote>(q);
+                                        // strike (assuming forward prices)
+                                        Real k = spot->value() * mon * forTS->discount(date) / domTS->discount(date);
+                                        Volatility vol = wrapper->blackVol(date, k, true);
+                                        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                                        simDataTmp.emplace(std::piecewise_construct,
+                                            std::forward_as_tuple(param.first, name, idx),
+                                            std::forward_as_tuple(q));
+                                        quotes[j][i] = Handle<Quote>(q);
+                                    }
+                                }
+                            } else {  // if stdDevPoints
+
+                                // times (for fwds)
+                                for (Size i = 0; i < n; i++) {
+                                    Date date = asof_ + parameters->fxVolExpiries()[i];
+                                    times.push_back(wrapper->timeFromReference(date));
+                                    dates.push_back(date);
+                                }
+
+                                //forwards
+                                vector<Real> fwds;
+                                vector<Real> atmVols;
+                                for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
+                                    fwds.push_back(spot->value() * forTS->discount(times[i]) / domTS->discount(times[i]));
+                                    atmVols.push_back(wrapper->blackVol(dates[i], spot->value()));
+                                    DLOG("atmVol(s) is " << atmVols.back() << " on date "<< dates[i]);
+                                }
+
+                                // interpolations
+                                Interpolation forwardCurve = Linear().interpolate(times.begin(), times.end(), fwds.begin());
+                                Interpolation atmVolCurve = Linear().interpolate(times.begin(), times.end(), atmVols.begin());
+
+                                // populate quotes
+                                BlackVarianceSurfaceStdDevs::populateVolMatrix (wrapper, quotes,
+                                    parameters->fxVolExpiries(), parameters->fxVolStdDevs(name), forwardCurve, atmVolCurve);
+
+                                // sort out simDataTemp
+                                for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
+                                    for (Size j = 0; j < parameters->fxVolStdDevs(name).size(); j++) {
+                                        Size idx = j * n + i;
+                                        boost::shared_ptr<Quote> q = quotes[j][i].currentLink();
+                                        boost::shared_ptr<SimpleQuote> sq = boost::dynamic_pointer_cast<SimpleQuote>(q);
+                                        QL_REQUIRE(sq, "Quote is not a SimpleQuote"); // why do we need this?
+                                        simDataTmp.emplace(std::piecewise_construct,
+                                            std::forward_as_tuple(param.first, name, idx),
+                                            std::forward_as_tuple(sq)); 
+                                    }
                                 }
                             }
-
+                            
+                            // build surface
                             boost::shared_ptr<BlackVolTermStructure> fxVolCurve;
-                            if (parameters->fxVolIsSurface()) {
+                            if (parameters->fxVolIsSurface(name)) {
 
                                 // Attempt to get the relevant yield curves from this scenario simulation market  
                                 Handle<YieldTermStructure> forTS = getYieldCurve(foreignTsId, todaysMarketParams, Market::defaultConfiguration);
@@ -895,11 +975,19 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     domTS = discountCurve(domCcy);
 
                                 }
-
                                 bool stickyStrike = true;
-                                fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
-                                    new BlackVarianceSurfaceMoneynessForward(cal, spot, times, parameters->fxVolMoneyness(),
-                                                                             quotes, dc, forTS, domTS, stickyStrike));
+                                bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
+
+                                if (parameters->useMoneyness(name)) { // moneyness
+                                    fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
+                                        new BlackVarianceSurfaceMoneynessForward(cal, spot, times, parameters->fxVolMoneyness(name),
+                                            quotes, dc, forTS, domTS, stickyStrike, flatExtrapolation));
+                                } else { // standard deviations
+                                    fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
+                                        new BlackVarianceSurfaceStdDevs(cal, spot, times, parameters->fxVolStdDevs(name), quotes, 
+                                            dc, forTS, domTS, stickyStrike, flatExtrapolation));
+                                }
+                                
                             } else {
                                 fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
                                     0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false));
@@ -985,7 +1073,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             } else {
                                 LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << name);
                                 eqVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
-                                    0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0]));
+                                    0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false));
                             }
 
                             // if we have a surface but are only simulating atm vols we wrap the atm curve and the full t0
@@ -1357,21 +1445,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                 }
                 break;
 
-            case RiskFactorKey::KeyType::CommoditySpot:
-                for (const auto& name : param.second.second) {
-                    try {
-                        Real spot = initMarket->commoditySpot(name, configuration)->value();
-                        DLOG("adding " << name << " commodity spot price");
-                        boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(spot);
-                        commoditySpots_.emplace(piecewise_construct, forward_as_tuple(Market::defaultConfiguration, name),
-                                                forward_as_tuple(q));
-                        simDataTmp.emplace(piecewise_construct, forward_as_tuple(param.first, name), forward_as_tuple(q));
-                    } catch (const std::exception& e) {
-                        processException(continueOnError, e);
-                    }
-                }
-                break;
-
             case RiskFactorKey::KeyType::CommodityCurve:
                 for (const auto& name : param.second.second) {
                     try {
@@ -1382,15 +1455,28 @@ ScenarioSimMarket::ScenarioSimMarket(
                             initMarket->commodityPriceCurve(name, configuration);
                         bool allowsExtrapolation = initialCommodityCurve->allowsExtrapolation();
 
-                        // Get prices at specified simulation tenors from time 0 market curve and place in quotes
+                        // Get the configured simulation tenors. Simulation tenors being empty at this point means 
+                        // that we wish to use the pillar date points from the t_0 market PriceTermStructure.
                         vector<Period> simulationTenors = parameters->commodityCurveTenors(name);
                         DayCounter commodityCurveDayCounter = parseDayCounter(parameters->commodityCurveDayCounter(name));
-                        vector<Time> times(simulationTenors.size());
-                        vector<Handle<Quote>> quotes(simulationTenors.size());
+                        if (simulationTenors.empty()) {
+                            simulationTenors.reserve(initialCommodityCurve->pillarDates().size());
+                            for (const Date& d : initialCommodityCurve->pillarDates()) {
+                                QL_REQUIRE(d >= asof_, "Commodity curve pillar date (" << io::iso_date(d) <<
+                                    ") must be after as of (" << io::iso_date(asof_) << ").");
+                                simulationTenors.push_back(Period(d - asof_, Days));
+                            }
+                            
+                            // It isn't great to be updating parameters here. However, actual tenors are requested 
+                            // downstream from parameters and they need to be populated.
+                            parameters->setCommodityCurveTenors(name, simulationTenors);
+                        }
 
+                        // Get prices at specified simulation times from time 0 market curve and place in quotes
+                        vector<Handle<Quote>> quotes(simulationTenors.size());
                         for (Size i = 0; i < simulationTenors.size(); i++) {
-                            times[i] = commodityCurveDayCounter.yearFraction(asof_, asof_ + simulationTenors[i]);
-                            Real price = initialCommodityCurve->price(times[i], allowsExtrapolation);
+                            Date d = asof_ + simulationTenors[i];
+                            Real price = initialCommodityCurve->price(d, allowsExtrapolation);
                             boost::shared_ptr<SimpleQuote> quote = boost::make_shared<SimpleQuote>(price);
                             quotes[i] = Handle<Quote>(quote);
 
@@ -1402,9 +1488,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
 
                         // Create a commodity price curve with simulation tenors as pillars and store
-                        // Hard-coded linear interpolation here - may need to make this more dynamic
+                        // Hard-coded linear flat interpolation here - may need to make this more dynamic
                         Handle<PriceTermStructure> simCommodityCurve(
-                            boost::make_shared<InterpolatedPriceCurve<Linear>>(times, quotes, commodityCurveDayCounter));
+                            boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(
+                                simulationTenors, quotes, commodityCurveDayCounter, initialCommodityCurve->currency()));
                         simCommodityCurve->enableExtrapolation(allowsExtrapolation);
 
                         commodityCurves_.emplace(piecewise_construct, forward_as_tuple(Market::defaultConfiguration, name),
@@ -1423,7 +1510,8 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         Handle<BlackVolTermStructure> newVol;
                         if (param.second.first) {
-                            Handle<Quote> spot = commoditySpot(name, configuration);
+                            Handle<Quote> spot(boost::make_shared<SimpleQuote>(
+                                initMarket->commodityPriceCurve(name, configuration)->price(0)));
                             const vector<Real>& moneyness = parameters->commodityVolMoneyness(name);
                             QL_REQUIRE(!moneyness.empty(), "Commodity volatility moneyness for "
                                                                << name << " should have at least one element");
@@ -1456,7 +1544,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 LOG("Simulating commodity volatilites for " << name << " using BlackVarianceCurve3.");
                                 newVol = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceCurve3>(
                                     0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes,
-                                    quotes[0]));
+                                    quotes[0], false));
                             } else {
                                 // We have a volatility surface
                                 LOG("Simulating commodity volatilites for " << name
@@ -1497,8 +1585,17 @@ ScenarioSimMarket::ScenarioSimMarket(
                     try {
                         LOG("Adding correlations for " << name << " from configuration " << configuration);
 
+                        // Look for '&' first
+                        // see todaysmarket.cpp for similar logic
+                        string delim;
+                        if (name.find('&') != std::string::npos)
+                            delim = "&";
+                        else
+                            // otherwise fall back on old behavior
+                            delim = ":";
+
                         vector<string> tokens;
-                        boost::split(tokens, name, boost::is_any_of(":"));
+                        boost::split(tokens, name, boost::is_any_of(delim));
                         QL_REQUIRE(tokens.size() == 2, "not a valid correlation pair: " << name);
                         pair<string, string> pair = std::make_pair(tokens[0], tokens[1]);
 
@@ -1745,20 +1842,6 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const string& yieldS
     if (yieldSpecId.empty()) return Handle<YieldTermStructure>();
     
     if (todaysMarketParams.hasConfiguration(configuration)) {
-        // Look for yield spec ID in discount curves of todays market  
-        if (todaysMarketParams.hasMarketObject(MarketObject::DiscountCurve)) {
-            for (const auto& discountMapping : todaysMarketParams.mapping(MarketObject::DiscountCurve, configuration)) {
-                if (discountMapping.second == yieldSpecId) {
-                    if (market) {
-                        return market->discountCurve(discountMapping.first, configuration);
-                    }
-                    else {
-                        return discountCurve(discountMapping.first, configuration);
-                    }
-                }
-            }
-        }
-
         // Look for yield spec ID in index curves of todays market  
         if (todaysMarketParams.hasMarketObject(MarketObject::IndexCurve)) {
             for (const auto& indexMapping : todaysMarketParams.mapping(MarketObject::IndexCurve, configuration)) {
@@ -1782,6 +1865,19 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const string& yieldS
                     }
                     else {
                         return yieldCurve(yieldMapping.first, configuration);
+                    }
+                }
+            }
+        }
+        
+        // Look for yield spec ID in discount curves of todays market  
+        if (todaysMarketParams.hasMarketObject(MarketObject::DiscountCurve)) {
+            for (const auto& discountMapping : todaysMarketParams.mapping(MarketObject::DiscountCurve, configuration)) {
+                if (discountMapping.second == yieldSpecId) {
+                    if (market) {
+                        return market->discountCurve(discountMapping.first, configuration);
+                    } else {
+                        return discountCurve(discountMapping.first, configuration);
                     }
                 }
             }

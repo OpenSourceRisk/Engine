@@ -58,19 +58,26 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
+LegDataRegister<CashflowData> CashflowData::reg_("Cashflow");
+
 void CashflowData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
-    amounts_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Cashflow", "Amount", "Date", dates_);
+    amounts_ =
+        XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Cashflow", "Amount", "date", dates_, &parseReal, false);
 }
 
 XMLNode* CashflowData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
-    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Cashflow", "Amount", amounts_, "Date", dates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Cashflow", "Amount", amounts_, "date", dates_);
     return node;
 }
+
+LegDataRegister<FixedLegData> FixedLegData::reg_("Fixed");
+
 void FixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
-    rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_, true);
+    rates_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Rates", "Rate", "startDate", rateDates_, parseReal,
+                                                             true);
 }
 
 XMLNode* FixedLegData::toXML(XMLDocument& doc) {
@@ -79,9 +86,11 @@ XMLNode* FixedLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+LegDataRegister<ZeroCouponFixedLegData> ZeroCouponFixedLegData::reg_("ZeroCouponFixed");
+
 void ZeroCouponFixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
-    rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_, true);
+    rates_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Rates", "Rate", "startDate", rateDates_, &parseReal, true);
     XMLNode* compNode = XMLUtils::getChildNode(node, "Compounding");
     if (compNode)
         compounding_ = XMLUtils::getChildValue(node, "Compounding", true);
@@ -97,13 +106,15 @@ XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+LegDataRegister<FloatingLegData> FloatingLegData::reg_("Floating");
+
 void FloatingLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
-    index_ = XMLUtils::getChildValue(node, "Index", true);
+    index_ = internalIndexName(XMLUtils::getChildValue(node, "Index", true));
     indices_.insert(index_);
     // These are all optional
-    spreads_ =
-        XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_);
+    spreads_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Spreads", "Spread", "startDate", spreadDates_,
+                                                               &parseReal);
     isInArrears_ = isAveraged_ = hasSubPeriods_ = includeSpread_ = false;
     if(XMLNode* arrNode = XMLUtils::getChildNode(node, "IsInArrears"))
         isInArrears_ = parseBool(XMLUtils::getNodeValue(arrNode));
@@ -117,10 +128,11 @@ void FloatingLegData::fromXML(XMLNode* node) {
         fixingDays_ = parseInteger(XMLUtils::getNodeValue(n));
     else
         fixingDays_ = Null<Size>();
-    caps_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Caps", "Cap", "startDate", capDates_);
-    floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
-    gearings_ =
-        XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
+    caps_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Caps", "Cap", "startDate", capDates_, &parseReal);
+    floors_ =
+        XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Floors", "Floor", "startDate", floorDates_, &parseReal);
+    gearings_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Gearings", "Gearing", "startDate", gearingDates_,
+                                                                &parseReal, false);
     if (XMLUtils::getChildNode(node, "NakedOption"))
         nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
     else
@@ -145,6 +157,8 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+LegDataRegister<CPILegData> CPILegData::reg_("CPI");
+
 void CPILegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     index_ = XMLUtils::getChildValue(node, "Index", true);
@@ -157,7 +171,8 @@ void CPILegData::fromXML(XMLNode* node) {
         subtractInflationNominal_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotional", true);
     else
         subtractInflationNominal_ = false;
-    rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_, true);
+    rates_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Rates", "Rate", "startDate", rateDates_, &parseReal,
+                                                             true);
 }
 
 XMLNode* CPILegData::toXML(XMLDocument& doc) {
@@ -171,17 +186,21 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+LegDataRegister<YoYLegData> YoYLegData::reg_("YY");
+
 void YoYLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     index_ = XMLUtils::getChildValue(node, "Index", true);
     indices_.insert(index_);
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays", true);
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
-    gearings_ =
-        XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
-    spreads_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_);
-    caps_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Caps", "Cap", "startDate", capDates_);
-    floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
+    gearings_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Gearings", "Gearing", "startDate", gearingDates_,
+                                                                &parseReal);
+    spreads_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Spreads", "Spread", "startDate", spreadDates_,
+                                                               &parseReal);
+    caps_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Caps", "Cap", "startDate", capDates_, &parseReal);
+    floors_ =
+        XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Floors", "Floor", "startDate", floorDates_, &parseReal);
     if (XMLUtils::getChildNode(node, "NakedOption"))
         nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
     else
@@ -217,13 +236,15 @@ XMLNode* CMSLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+LegDataRegister<CMSLegData> CMSLegData::reg_("CMS");
+
 void CMSLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     swapIndex_ = XMLUtils::getChildValue(node, "Index", true);
     indices_.insert(swapIndex_);
     // These are all optional
-    spreads_ =
-        XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_);
+    spreads_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Spreads", "Spread", "startDate", spreadDates_,
+                                                               &parseReal);
     XMLNode* arrNode = XMLUtils::getChildNode(node, "IsInArrears");
     if (arrNode)
         isInArrears_ = XMLUtils::getChildValueAsBool(node, "IsInArrears", true);
@@ -233,10 +254,11 @@ void CMSLegData::fromXML(XMLNode* node) {
         fixingDays_ = parseInteger(XMLUtils::getNodeValue(n));
     else
         fixingDays_ = Null<Size>();
-    caps_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Caps", "Cap", "startDate", capDates_);
-    floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
-    gearings_ =
-        XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
+    caps_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Caps", "Cap", "startDate", capDates_, &parseReal);
+    floors_ =
+        XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Floors", "Floor", "startDate", floorDates_, &parseReal);
+    gearings_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Gearings", "Gearing", "startDate", gearingDates_,
+                                                                &parseReal);
     if (XMLUtils::getChildNode(node, "NakedOption"))
         nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
     else
@@ -259,6 +281,8 @@ XMLNode* CMSSpreadLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+LegDataRegister<CMSSpreadLegData> CMSSpreadLegData::reg_("CMSSpread");
+
 void CMSSpreadLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     swapIndex1_ = XMLUtils::getChildValue(node, "Index1", true);
@@ -266,8 +290,8 @@ void CMSSpreadLegData::fromXML(XMLNode* node) {
     indices_.insert(swapIndex1_);
     indices_.insert(swapIndex2_);
     // These are all optional
-    spreads_ =
-        XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_);
+    spreads_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Spreads", "Spread", "startDate", spreadDates_,
+                                                               &parseReal);
     XMLNode* arrNode = XMLUtils::getChildNode(node, "IsInArrears");
     if (arrNode)
         isInArrears_ = XMLUtils::getChildValueAsBool(node, "IsInArrears", true);
@@ -277,10 +301,11 @@ void CMSSpreadLegData::fromXML(XMLNode* node) {
         fixingDays_ = parseInteger(XMLUtils::getNodeValue(n));
     else
         fixingDays_ = Null<Size>();
-    caps_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Caps", "Cap", "startDate", capDates_);
-    floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
-    gearings_ =
-        XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
+    caps_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Caps", "Cap", "startDate", capDates_, &parseReal);
+    floors_ =
+        XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Floors", "Floor", "startDate", floorDates_, &parseReal);
+    gearings_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Gearings", "Gearing", "startDate", gearingDates_,
+                                                                &parseReal);
     if (XMLUtils::getChildNode(node, "NakedOption"))
         nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
     else
@@ -308,6 +333,8 @@ XMLNode* DigitalCMSSpreadLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+LegDataRegister<DigitalCMSSpreadLegData> DigitalCMSSpreadLegData::reg_("DigitalCMSSpread");
+
 void DigitalCMSSpreadLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
 
@@ -316,26 +343,28 @@ void DigitalCMSSpreadLegData::fromXML(XMLNode* node) {
     underlying_->fromXML(underlyingNode);
     indices_ = underlying_->indices();
 
-    callStrikes_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "CallStrikes", "Strike", "startDate",
-                                                                      callStrikeDates_, false);
+    callStrikes_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "CallStrikes", "Strike", "startDate",
+                                                                   callStrikeDates_, &parseReal);
     if (callStrikes_.size() > 0) {
         string cp = XMLUtils::getChildValue(node, "CallPosition", true);
         callPosition_ = parsePositionType(cp);
         isCallATMIncluded_ = XMLUtils::getChildValueAsBool(node, "IsCallATMIncluded", true);
-        callPayoffs_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "CallPayoffs", "Payoff", "startDate",
-                                                                      callPayoffDates_, false);
+        callPayoffs_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "CallPayoffs", "Payoff", "startDate",
+                                                                       callPayoffDates_, &parseReal);
     }
-    
-    putStrikes_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "PutStrikes", "Strike", "startDate",
-                                                                     putStrikeDates_, false);
+
+    putStrikes_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "PutStrikes", "Strike", "startDate",
+                                                                  putStrikeDates_, &parseReal);
     if (putStrikes_.size() > 0) {
         string pp = XMLUtils::getChildValue(node, "PutPosition", true);
         putPosition_ = parsePositionType(pp);
         isPutATMIncluded_ = XMLUtils::getChildValueAsBool(node, "IsPutATMIncluded", true);
-        putPayoffs_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "PutPayoffs", "Payoff", "startDate",
-                                                                     putPayoffDates_, false);
+        putPayoffs_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "PutPayoffs", "Payoff", "startDate",
+                                                                      putPayoffDates_, &parseReal);
     }
 }
+
+LegDataRegister<EquityLegData> EquityLegData::reg_("Equity");
 
 void EquityLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
@@ -358,6 +387,14 @@ void EquityLegData::fromXML(XMLNode* node) {
         notionalReset_ = XMLUtils::getChildValueAsBool(node, "NotionalReset");
     else
         notionalReset_ = false;
+
+    XMLNode* fxt = XMLUtils::getChildNode(node, "FXTerms");
+    if (fxt) {
+        eqCurrency_ = XMLUtils::getChildValue(fxt, "EquityCurrency", true);
+        fxIndex_ = XMLUtils::getChildValue(fxt, "FXIndex", true);
+        fxIndexFixingDays_ = XMLUtils::getChildValueAsInt(fxt, "FXIndexFixingDays");
+        fxIndexCalendar_ = XMLUtils::getChildValue(fxt, "FXIndexCalendar");
+    }
 }
 
 XMLNode* EquityLegData::toXML(XMLDocument& doc) {
@@ -371,10 +408,24 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
     XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
 
-    if (valuationSchedule_.hasData())
-        XMLUtils::appendNode(node, valuationSchedule_.toXML(doc));
-    else
+    if (valuationSchedule_.hasData()) {
+        XMLNode* schedNode = valuationSchedule_.toXML(doc);
+        XMLUtils::setNodeName(doc, schedNode, "ValuationSchedule"); 
+        XMLUtils::appendNode(node, schedNode);
+    } else {
         XMLUtils::addChild(doc, node, "FixingDays", static_cast<Integer>(fixingDays_));
+    }
+
+    if (fxIndex_ != "") {
+        XMLNode* fxNode = doc.allocNode("FXTerms");
+        XMLUtils::addChild(doc, fxNode, "EquityCurrency", eqCurrency_);
+        XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);
+        if (fxIndexFixingDays_)
+            XMLUtils::addChild(doc, fxNode, "FXIndexFixingDays", static_cast<Integer>(fxIndexFixingDays_));
+        if (fxIndexCalendar_ != "")
+            XMLUtils::addChild(doc, fxNode, "FXIndexCalendar", fxIndexCalendar_);
+        XMLUtils::appendNode(node, fxNode);
+    }
     return node;
 }
 
@@ -408,14 +459,15 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
                  const bool notionalInitialExchange, const bool notionalFinalExchange,
                  const bool notionalAmortizingExchange, const bool isNotResetXCCY, const string& foreignCurrency,
                  const double foreignAmount, const string& fxIndex, int fixingDays, const string& fixingCalendar,
-                 const std::vector<AmortizationData>& amortizationData, const int paymentLag)
+                 const std::vector<AmortizationData>& amortizationData, const int paymentLag,
+                 const string& paymentCalendar, const vector<string>& paymentDates)
     : concreteLegData_(concreteLegData), isPayer_(isPayer), currency_(currency), schedule_(scheduleData),
       dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
       paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
       notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
       isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
       fxIndex_(fxIndex), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar), amortizationData_(amortizationData),
-      paymentLag_(paymentLag) {
+      paymentLag_(paymentLag), paymentCalendar_(paymentCalendar), paymentDates_(paymentDates) {
     
     indices_ = concreteLegData_->indices();
     if (!fxIndex_.empty())
@@ -430,9 +482,10 @@ void LegData::fromXML(XMLNode* node) {
     dayCounter_ = XMLUtils::getChildValue(node, "DayCounter"); // optional
     paymentConvention_ = XMLUtils::getChildValue(node, "PaymentConvention");
     paymentLag_ = XMLUtils::getChildValueAsInt(node, "PaymentLag");
+    paymentCalendar_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
     // if not given, default of getChildValueAsBool is true, which fits our needs here
-    notionals_ =
-        XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Notionals", "Notional", "startDate", notionalDates_);
+    notionals_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Notionals", "Notional", "startDate",
+                                                                 notionalDates_, &parseReal);
     XMLNode* tmp = XMLUtils::getChildNode(node, "Notionals");
     isNotResetXCCY_ = true;
     notionalInitialExchange_ = false;
@@ -452,6 +505,7 @@ void LegData::fromXML(XMLNode* node) {
         }
         XMLNode* exchangeNode = XMLUtils::getChildNode(tmp, "Exchanges");
         if (exchangeNode) {
+            
             notionalInitialExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalInitialExchange");
             notionalFinalExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalFinalExchange");
             if (XMLUtils::getChildNode(exchangeNode, "NotionalAmortizingExchange"))
@@ -472,6 +526,8 @@ void LegData::fromXML(XMLNode* node) {
     if (tmp)
         schedule_.fromXML(tmp);
 
+    paymentDates_ = XMLUtils::getChildrenValues(node, "PaymentDates", "PaymentDate", false);
+
     concreteLegData_ = initialiseConcreteLegData(legType);
     concreteLegData_->fromXML(XMLUtils::getChildNode(node, concreteLegData_->legNodeName()));
 
@@ -479,29 +535,9 @@ void LegData::fromXML(XMLNode* node) {
 }
 
 boost::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(const string& legType) {
-    if (legType == "Fixed") {
-        return boost::make_shared<FixedLegData>();
-    } else if (legType == "ZeroCouponFixed") {
-        return boost::make_shared<ZeroCouponFixedLegData>();
-    } else if (legType == "Floating") {
-        return boost::make_shared<FloatingLegData>();
-    } else if (legType == "Cashflow") {
-        return boost::make_shared<CashflowData>();
-    } else if (legType == "CPI") {
-        return boost::make_shared<CPILegData>();
-    } else if (legType == "YY") {
-        return boost::make_shared<YoYLegData>();
-    } else if (legType == "CMS") {
-        return boost::make_shared<CMSLegData>();
-    } else if (legType == "CMSSpread") {
-        return boost::make_shared<CMSSpreadLegData>();
-    } else if (legType == "DigitalCMSSpread") {
-        return boost::make_shared<DigitalCMSSpreadLegData>();
-    } else if (legType == "Equity") {
-        return boost::make_shared<EquityLegData>();
-    } else {
-        QL_FAIL("Unkown leg type " << legType);
-    }
+    auto legData = LegDataFactory::instance().build(legType);
+    QL_REQUIRE(legData, "Leg type " << legType << " has not been registered with the leg data factory.");
+    return legData;
 }
 
 XMLNode* LegData::toXML(XMLDocument& doc) {
@@ -514,6 +550,8 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
     if (paymentLag_ != 0)
         XMLUtils::addChild(doc, node, "PaymentLag", paymentLag_);
+    if (!paymentCalendar_.empty())
+        XMLUtils::addChild(doc, node, "PaymentCalendar", paymentCalendar_);
     if (dayCounter_ != "")
         XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Notionals", "Notional", notionals_, "startDate",
@@ -537,6 +575,9 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(notionalsNodePtr, exchangeNode);
 
     XMLUtils::appendNode(node, schedule_.toXML(doc));
+
+    if (!paymentDates_.empty())
+        XMLUtils::addChildren(doc, node, "PaymentDates", "PaymentDate", paymentDates_);
 
     if (!amortizationData_.empty()) {
         XMLNode* amortisationsParentNode = doc.allocNode("Amortizations");
@@ -864,8 +905,10 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 
     // Initial Flow Amount
     if (initNomFlow) {
-        double initFlowAmt = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[0])->nominal();
-        Date initDate = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[0])->accrualStartDate();
+        auto coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[0]);
+        QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
+        double initFlowAmt = coupon->nominal();
+        Date initDate = coupon->accrualStartDate();
         if (initFlowAmt != 0)
             leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(-initFlowAmt, initDate)));
     }
@@ -873,9 +916,13 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
     // Amortization Flows
     if (amortNomFlow) {
         for (Size i = 1; i < refLeg.size(); i++) {
-            Date flowDate = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i])->accrualStartDate();
-            Real initNom = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i - 1])->nominal();
-            Real newNom = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i])->nominal();
+            auto coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i]);
+            QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
+            auto coupon2 = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i-1]);
+            QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
+            Date flowDate = coupon->accrualStartDate();
+            Real initNom = coupon2->nominal();
+            Real newNom = coupon->nominal();
             Real flow = initNom - newNom;
             if (flow != 0)
                 leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(flow, flowDate)));
@@ -884,8 +931,10 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 
     // Final Nominal Return at Maturity
     if (finalNomFlow) {
-        double finalNomFlow = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back())->nominal();
-        Date finalDate = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back())->date();
+        auto coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back());
+        QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
+        double finalNomFlow = coupon->nominal();
+        Date finalDate = coupon->date();
         if (finalNomFlow != 0)
             leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(finalNomFlow, finalDate)));
     }
@@ -924,6 +973,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     // If Notional Exchange set to false, remove the final cashflow.
 
     if (!data.notionalFinalExchange()) {
+        QL_REQUIRE(n > 1, "Cannot have Notional Final Exchange with just a single cashflow");
         boost::shared_ptr<CPICashFlow> cpicf = boost::dynamic_pointer_cast<CPICashFlow>(leg[n - 1]);
         boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(leg[n - 2]);
         if (cpicf && (cpicf->date() == coupon->date()))
@@ -1222,7 +1272,8 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
     return tmpLeg;
 }
 
-Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equityCurve) {
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equityCurve, 
+                  const boost::shared_ptr<QuantExt::FxIndex>& fxIndex) {
     boost::shared_ptr<EquityLegData> eqLegData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
     QL_REQUIRE(eqLegData, "Wrong LegType, expected Equity, got " << data.legType());
 
@@ -1242,7 +1293,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
 
     applyAmortization(notionals, data, schedule, false);
 
-    Leg leg = EquityLeg(schedule, equityCurve)
+    Leg leg = EquityLeg(schedule, equityCurve, fxIndex)
                   .withNotionals(notionals)
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)
@@ -1272,75 +1323,10 @@ Real currentNotional(const Leg& leg) {
     return 0;
 }
 
-// e.g. node is Notionals, get all the children Notional
-vector<double> buildScheduledVector(const vector<double>& values, const vector<string>& dates,
-                                    const Schedule& schedule) {
-    if (values.size() < 2 || dates.size() == 0)
-        return values;
-
-    QL_REQUIRE(values.size() == dates.size(), "Value / Date size mismatch in buildScheduledVector."
-                                                  << "Value:" << values.size() << ", Dates:" << dates.size());
-
-    // Need to use schedule logic
-    // Length of data will be 1 less than schedule
-    //
-    // Notional 100
-    // Notional {startDate 2015-01-01} 200
-    // Notional {startDate 2016-01-01} 300
-    //
-    // Given schedule June, Dec from 2014 to 2016 (6 dates, 5 coupons)
-    // we return 100, 100, 200, 200, 300
-
-    // The first node must not have a date.
-    // If the second one has a date, all the rest must have, and we process
-    // If the second one does not have a date, none of them must have one
-    // and we return the vector uneffected.
-    QL_REQUIRE(dates[0] == "", "Invalid date " << dates[0] << " for first node");
-    if (dates[1] == "") {
-        // They must all be empty and then we return values
-        for (Size i = 2; i < dates.size(); i++) {
-            QL_REQUIRE(dates[i] == "", "Invalid date " << dates[i] << " for node " << i
-                                                       << ". Cannot mix dates and non-dates attributes");
-        }
-        return values;
-    }
-
-    // We have nodes with date attributes now
-    Size len = schedule.size() - 1;
-    vector<double> data(len);
-    Size j = 0, max_j = dates.size() - 1; // j is the index of date/value vector. 0 to max_j
-    Date d = parseDate(dates[j + 1]);     // The first start date
-    for (Size i = 0; i < len; i++) {      // loop over data vector and populate it.
-        // If j == max_j we just fall through and take the final value
-        while (schedule[i] >= d && j < max_j) {
-            j++;
-            if (j < max_j) {
-                QL_REQUIRE(dates[j + 1] != "", "Cannot have empty date attribute for node " << j + 1);
-                d = parseDate(dates[j + 1]);
-            }
-        }
-        data[i] = values[j];
-    }
-
-    return data;
-}
-
-vector<double> normaliseToSchedule(const vector<double>& values, const Schedule& schedule, const Real defaultValue) {
-    vector<double> res = values;
-    if (res.size() < schedule.size() - 1)
-        res.resize(schedule.size() - 1, res.size() == 0 ? defaultValue : res.back());
-    return res;
-}
-
-vector<double> buildScheduledVectorNormalised(const vector<double>& values, const vector<string>& dates,
-                                              const Schedule& schedule, const Real defaultValue) {
-    return normaliseToSchedule(buildScheduledVector(values, dates, schedule), schedule, defaultValue);
-}
-
 vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notionals, const Schedule& schedule,
                                                     const AmortizationData& data) {
     LOG("Build fixed amortization notional schedule");
-    vector<double> nominals = normaliseToSchedule(notionals, schedule);
+    vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
     Date startDate = parseDate(data.startDate());
     Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
     bool underflow = data.underflow();
@@ -1366,7 +1352,7 @@ vector<double> buildAmortizationScheduleRelativeToInitialNotional(const vector<d
                                                                   const Schedule& schedule,
                                                                   const AmortizationData& data) {
     LOG("Build notional schedule with amortizations expressed as percentages of initial notional");
-    vector<double> nominals = normaliseToSchedule(notionals, schedule);
+    vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
     Date startDate = parseDate(data.startDate());
     Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
     bool underflow = data.underflow();
@@ -1395,7 +1381,7 @@ vector<double> buildAmortizationScheduleRelativeToPreviousNotional(const vector<
                                                                    const Schedule& schedule,
                                                                    const AmortizationData& data) {
     LOG("Build notional schedule with amortizations expressed as percentages of previous notionals");
-    vector<double> nominals = normaliseToSchedule(notionals, schedule);
+    vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
     Date startDate = parseDate(data.startDate());
     Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
     Period amortPeriod = parsePeriod(data.frequency());
@@ -1418,7 +1404,7 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
                                                      const Schedule& schedule, const AmortizationData& data,
                                                      const DayCounter& dc) {
     LOG("Build fixed annuity notional schedule");
-    vector<double> nominals = normaliseToSchedule(notionals, schedule);
+    vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
     Date startDate = parseDate(data.startDate());
     Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
     bool underflow = data.underflow();

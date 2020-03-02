@@ -48,7 +48,7 @@ CrossAssetStateProcess::discretization parseDiscretization(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Cannot convert " << s << " to QuantExt::CrossAssetStateProcess::discretization");
+        QL_FAIL("Cannot convert \"" << s << "\" to QuantExt::CrossAssetStateProcess::discretization");
     }
 }
 
@@ -95,6 +95,12 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
 
     samples_ = XMLUtils::getChildValueAsInt(node, "Samples", true);
     LOG("ScenarioGeneratorData samples = " << samples_);
+
+    // overwrite samples with enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES
+    if (auto c = getenv("OVERWRITE_SCENARIOGENERATOR_SAMPLES")) {
+        samples_ = std::stol(c);
+        ALOG("Overwrite samples with " << samples_ << " from enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES");
+    }
 
     if (auto n = XMLUtils::getChildNode(node, "Ordering"))
         ordering_ = parseSobolBrownianGeneratorOrdering(XMLUtils::getNodeValue(n));

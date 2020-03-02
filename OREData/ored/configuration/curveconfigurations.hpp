@@ -153,12 +153,12 @@ public:
     };
     const boost::shared_ptr<CommodityCurveConfig>& commodityCurveConfig(const std::string& curveID) const;
 
-    bool hasCommodityVolatilityCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<CommodityVolatilityCurveConfig>& commodityVolatilityCurveConfig(const std::string& curveID) {
-        return commodityVolatilityCurveConfigs_[curveID];
+    bool hasCommodityVolatilityConfig(const std::string& curveID) const;
+    boost::shared_ptr<CommodityVolatilityConfig>& commodityVolatilityConfig(const std::string& curveID) {
+        return commodityVolatilityConfigs_[curveID];
     };
-    const boost::shared_ptr<CommodityVolatilityCurveConfig>&
-    commodityVolatilityCurveConfig(const std::string& curveID) const;
+    const boost::shared_ptr<CommodityVolatilityConfig>&
+    commodityVolatilityConfig(const std::string& curveID) const;
 
     bool hasCorrelationCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<CorrelationCurveConfig>& correlationCurveConfig(const std::string& curveID) {
@@ -178,6 +178,11 @@ public:
 
     std::set<string> conventions(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams, const std::set<std::string>& configurations = {""}) const;
     std::set<string> conventions() const;
+
+
+    /*! Return the Yields curves available */
+    std::set<string> yieldCurveConfigIds();
+
     //@}
 
     //! \name Serialisation
@@ -202,7 +207,7 @@ private:
     std::map<std::string, boost::shared_ptr<SecurityConfig>> securityConfigs_;
     std::map<std::string, boost::shared_ptr<FXSpotConfig>> fxSpotConfigs_;
     std::map<std::string, boost::shared_ptr<CommodityCurveConfig>> commodityCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<CommodityVolatilityCurveConfig>> commodityVolatilityCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<CommodityVolatilityConfig>> commodityVolatilityConfigs_;
     std::map<std::string, boost::shared_ptr<CorrelationCurveConfig>> correlationCurveConfigs_;
 };
 } // namespace data

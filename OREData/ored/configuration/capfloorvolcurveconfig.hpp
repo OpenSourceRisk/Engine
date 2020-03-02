@@ -17,13 +17,16 @@
 */
 
 /*! \file ored/configuration/capfloorvolcurveconfig.hpp
-    \brief CapFloor volatility curve configuration class
+    \brief Cap floor volatility curve configuration class
     \ingroup configuration
 */
 
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/bootstrapconfig.hpp>
+#include <qle/termstructures/capfloortermvolsurface.hpp>
+#include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
@@ -31,32 +34,43 @@
 
 namespace ore {
 namespace data {
-using std::string;
-using std::vector;
-using ore::data::XMLNode;
-using QuantLib::Period;
-using QuantLib::DayCounter;
-using QuantLib::Natural;
-using QuantLib::Calendar;
-using QuantLib::BusinessDayConvention;
 
-//! CapFloor volatility curve configuration class
-/*! \ingroup configuration
+/*! Cap floor volatility curve configuration class
+    \ingroup configuration
  */
 class CapFloorVolatilityCurveConfig : public CurveConfig {
 public:
+    //! The type of volatility quotes that have been configured.
     enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
 
-    static const string defaultInterpolationMethod; // BicubicSpline
+    //! The type of structure that has been configured
+    enum class Type { Atm, Surface, SurfaceWithAtm };
 
+    //! Default constructor
     CapFloorVolatilityCurveConfig() {}
-    CapFloorVolatilityCurveConfig(const string& curveID, const string& curveDescription,
-                                  const VolatilityType& volatilityType, const bool extrapolate,
-                                  const bool flatExtrapolation, bool inlcudeAtm, const vector<std::string>& tenors,
-                                  const vector<std::string>& strikes, const DayCounter& dayCounter, Natural settleDays,
-                                  const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
-                                  const string& iborIndex, const string& discountCurve,
-                                  const string& interpolationMethod = defaultInterpolationMethod);
+
+    //! Detailed constructor
+    CapFloorVolatilityCurveConfig(
+        const std::string& curveID,
+        const std::string& curveDescription,
+        const VolatilityType& volatilityType,
+        bool extrapolate,
+        bool flatExtrapolation,
+        bool inlcudeAtm,
+        const std::vector<std::string>& tenors,
+        const std::vector<std::string>& strikes,
+        const QuantLib::DayCounter& dayCounter,
+        QuantLib::Natural settleDays,
+        const QuantLib::Calendar& calendar,
+        const QuantLib::BusinessDayConvention& businessDayConvention,
+        const std::string& iborIndex,
+        const std::string& discountCurve,
+        const std::string& interpolationMethod = "BicubicSpline",
+        const std::string& interpolateOn = "TermVolatilities",
+        const std::string& timeInterpolation = "LinearFlat",
+        const std::string& strikeInterpolation = "LinearFlat",
+        const std::vector<std::string>& atmTenors = {},
+        const BootstrapConfig& bootstrapConfig = BootstrapConfig());
 
     //! \name XMLSerializable interface
     //@{
@@ -67,51 +81,77 @@ public:
     //! \name Inspectors
     //@{
     const VolatilityType& volatilityType() const { return volatilityType_; }
-    const bool& extrapolate() const { return extrapolate_; }
-    const bool& flatExtrapolation() const { return flatExtrapolation_; }
-    const bool& includeAtm() const { return includeAtm_; }
-    const vector<std::string>& tenors() const { return tenors_; }
-    const vector<std::string>& strikes() const { return strikes_; }
-    const DayCounter& dayCounter() const { return dayCounter_; }
-    const Natural& settleDays() const { return settleDays_; }
-    const Calendar& calendar() const { return calendar_; }
-    const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
-    const string& iborIndex() const { return iborIndex_; }
-    const string& discountCurve() const { return discountCurve_; }
-    const string& interpolationMethod() const { return interpolationMethod_; }
-    const vector<string>& quotes() override;
+    bool extrapolate() const { return extrapolate_; }
+    bool flatExtrapolation() const { return flatExtrapolation_; }
+    bool includeAtm() const { return includeAtm_; }
+    const std::vector<std::string>& tenors() const { return tenors_; }
+    const std::vector<std::string>& strikes() const { return strikes_; }
+    const QuantLib::DayCounter& dayCounter() const { return dayCounter_; }
+    const QuantLib::Natural& settleDays() const { return settleDays_; }
+    const QuantLib::Calendar& calendar() const { return calendar_; }
+    const QuantLib::BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
+    const std::string& iborIndex() const { return iborIndex_; }
+    const std::string& discountCurve() const { return discountCurve_; }
+    QuantExt::CapFloorTermVolSurface::InterpolationMethod interpolationMethod() const;
+    const std::string& interpolateOn() const { return interpolateOn_; }
+    const std::string& timeInterpolation() const { return timeInterpolation_; }
+    const std::string& strikeInterpolation() const { return strikeInterpolation_; }
+    const std::vector<std::string>& atmTenors() const { return atmTenors_; }
+    const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
+    Type type() const { return type_; }
     //@}
 
-    //! \name Setters
-    //@{
-    VolatilityType& volatilityType() { return volatilityType_; }
-    bool& extrapolate() { return extrapolate_; }
-    bool& flatExtrapolation() { return flatExtrapolation_; }
-    bool& includeAtm() { return includeAtm_; }
-    vector<std::string>& tenors() { return tenors_; }
-    vector<std::string>& strikes() { return strikes_; }
-    DayCounter& dayCounter() { return dayCounter_; }
-    Natural& settleDays() { return settleDays_; }
-    Calendar& calendar() { return calendar_; }
-    string& iborIndex() { return iborIndex_; }
-    string& discountCurve() { return discountCurve_; }
-    string& interpolationMethod() { return interpolationMethod_; }
-    //@}
+    //! Convert VolatilityType \p type to string
+    std::string toString(VolatilityType type) const;
 
 private:
     VolatilityType volatilityType_;
-    bool extrapolate_, flatExtrapolation_, includeAtm_;
-    vector<std::string> tenors_;
-    vector<std::string> strikes_;
-    DayCounter dayCounter_;
-    Natural settleDays_;
-    Calendar calendar_;
-    BusinessDayConvention businessDayConvention_;
-    string iborIndex_;
-    string discountCurve_;
-    string interpolationMethod_;
+    bool extrapolate_;
+    bool flatExtrapolation_;
+    bool includeAtm_;
+    std::vector<std::string> tenors_;
+    std::vector<std::string> strikes_;
+    QuantLib::DayCounter dayCounter_;
+    QuantLib::Natural settleDays_;
+    QuantLib::Calendar calendar_;
+    QuantLib::BusinessDayConvention businessDayConvention_;
+    std::string iborIndex_;
+    std::string discountCurve_;
+    std::string interpolationMethod_;
+    std::string interpolateOn_;
+    std::string timeInterpolation_;
+    std::string strikeInterpolation_;
+    std::vector<std::string> atmTenors_;
+    BootstrapConfig bootstrapConfig_;
+    Type type_;
+    std::string extrapolation_;
+    
+    //! Populate the quotes vector
+    void populateQuotes();
+
+    /*! Set the values of \c extrapolate_ and \c flatExtrapolation_ based on the value of \p extrapolation.
+        The \p extrapolation string can take the values \c "Linear", \c "Flat" or \c "None".
+        - \c "Linear" is for backwards compatibility and means extrapolation is on and flat extrapolation is off
+        - \c "Flat" means extrapolation is on and it is flat
+        - \c "None" means extrapolation is off
+    */
+    void configureExtrapolation(const std::string& extrapolation);
+
+    //! Set the value of \c volatilityType_ based on the value of \p type
+    void configureVolatilityType(const std::string& type);
+
+    //! Set the value of \c type_ i.e. the type of cap floor structure that is configured
+    void configureType();
+
+    //! Validate the configuration
+    void validate() const;
 };
 
-std::ostream& operator<<(std::ostream& out, CapFloorVolatilityCurveConfig::VolatilityType t);
-} // namespace data
-} // namespace ore
+//! Imply market datum quote type from CapFloorVolatilityCurveConfig::VolatilityType 
+std::string quoteType(CapFloorVolatilityCurveConfig::VolatilityType type);
+
+//! Imply QuantLib::VolatilityType from CapFloorVolatilityCurveConfig::VolatilityType 
+QuantLib::VolatilityType volatilityType(CapFloorVolatilityCurveConfig::VolatilityType type);
+
+}
+}

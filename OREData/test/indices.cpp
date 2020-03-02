@@ -97,10 +97,12 @@ struct test_data {
 static struct test_data index_data[] = {
     // parsing string,     index name,                     tenor
     {"EUR-EONIA-1D", "EoniaON Actual/360", 1 * Days},
+    {"EUR-ESTER", "EsterON Actual/360", 1 * Days},
     {"GBP-SONIA-1D", "SoniaON Actual/365 (Fixed)", 1 * Days},
     {"JPY-TONAR-1D", "TONARON Actual/365 (Fixed)", 1 * Days},
     {"CHF-TOIS", "CHF-TOISTN Actual/360", 1 * Days},
     {"USD-FedFunds", "FedFundsON Actual/360", 1 * Days},
+    {"USD-SOFR", "SOFRON Actual/360", 1 * Days},
     {"CHF-SARON", "CHF-SARONON Actual/360", 1 * Days},
     {"DKK-DKKOIS", "DKK-DKKOISTN Actual/360", 1 * Days},
     {"SEK-SIOR", "SEK-SIORTN Actual/360", 1 * Days},
@@ -350,7 +352,7 @@ BOOST_AUTO_TEST_CASE(testIborIndexParsing) {
 
     Size len = sizeof(index_data) / sizeof(index_data[0]);
     for (Size i = 0; i < len; ++i) {
-        string str(index_data[i].str);
+        string str(ore::data::internalIndexName(index_data[i].str));
         string index_name(index_data[i].index_name);
         Period tenor(index_data[i].tenor);
 
@@ -378,7 +380,6 @@ BOOST_AUTO_TEST_CASE(testIborIndexParsingFails) {
 
     // Test invalid strings
     BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-EONIA-1M"), QuantLib::Error);
-    BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-EURIBOR-1D"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-FALSE-6M"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseIborIndex("It's a trap!"), QuantLib::Error);
 }

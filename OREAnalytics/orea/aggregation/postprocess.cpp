@@ -101,6 +101,17 @@ PostProcess::PostProcess(
 
     QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
+    // check portfolio and cube have the same trade ids, in the same order
+    QL_REQUIRE(portfolio->size() == cube_->ids().size(),
+               "PostProcess::PostProcess(): portfolio size ("
+                   << portfolio->size() << ") does not match cube trade size (" << cube_->ids().size() << ")");
+    for (Size i = 0; i < portfolio->size(); ++i) {
+        QL_REQUIRE(portfolio->trades()[i]->id() == cube_->ids()[i], "PostProcess::PostProcess(): portfolio trade #"
+                                                                        << i << " (id=" << portfolio->trades()[i]->id()
+                                                                        << ") does not match cube trade id ("
+                                                                        << cube_->ids()[i]);
+    }
+
     Size trades = portfolio->size();
     Size dates = cube_->dates().size();
     Size samples = cube->samples();
@@ -729,17 +740,17 @@ void PostProcess::updateNettingSetKVA() {
 		 << " EEPE=" << setprecision(2) << eepe_kva_1
 		 << " EPE=" << epe[j] 
 		 << " RC=" << kvaRC1
-		 << " M=" << kvaNWMaturity1
+		 << " M=" << setprecision(6) << kvaNWMaturity1
 		 << " MA=" << kvaMatAdj1 
-		 << " Cost=" << kvaCCRIncrement1 
+		 << " Cost=" << setprecision(2) << kvaCCRIncrement1
 		 << " KVA=" << ourNettingSetKVACCR_[nettingSetId]);
             DLOG("Their KVA-CCR for " << nettingSetId << ": " << j
 		 << " EENE=" << eepe_kva_2
 		 << " ENE=" << ene[j] 
 		 << " RC=" << kvaRC2
-		 << " M=" << kvaNWMaturity1
-		 << " MA=" << kvaMatAdj1
-		 << " Cost=" << kvaCCRIncrement2
+		 << " M=" << setprecision(6) << kvaNWMaturity2
+		 << " MA=" << kvaMatAdj2
+		 << " Cost=" << setprecision(2) << kvaCCRIncrement2
 		 << " KVA=" << theirNettingSetKVACCR_[nettingSetId]);
 
 	    // CVA Capital

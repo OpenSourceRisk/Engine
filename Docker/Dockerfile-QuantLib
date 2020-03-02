@@ -14,9 +14,8 @@ COPY QuantLib /ore/QuantLib
 # scripts fail if there are CRLF present in the files
 RUN cd /ore/QuantLib \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
-  && ./autogen.sh \
-  && ./configure --enable-static CXXFLAGS=-O2 \
-  && cd ql \
+  && mkdir -p build.ql && cd build.ql \
+  && cmake .. \
   && make -j ${num_cores} \
   && make install \
   && cd / \

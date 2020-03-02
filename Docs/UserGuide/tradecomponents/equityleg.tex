@@ -11,9 +11,9 @@ Allowable values:  \emph{Price} or  \emph{Total}
 
 \item Name: The identifier of the underlying equity or equity index.
  
- Allowable values: Any string (provided it is an ID of an equity in the market configuration). Typically an ISIN-code with the \emph{ISIN:} prefix.
+ Allowable values: See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data}. \\
 
-\item InitialPrice [Optional]: Initial Price of the equity, if not present, the first valuation date is used to determine the initial price.
+\item InitialPrice [Optional]: Initial Price of the equity, if not present, the first valuation date is used to determine the initial price. The Initial price is assumed to be in the currency of the underlying equity.
 
 Allowable values: Any positive real number
 
@@ -30,6 +30,16 @@ Allowable values: 0 $\leq$ DividendFactor $\leq$  1.   Defaults to \emph{1} if l
 Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref{ss:schedule_data}). If omitted, equity valuation dates follow the schedule of the equity leg adjusted for FixingDays.
 
 \item FixingDays [Optional]: The number of days before payment date for equity valuation. \emph{N.B.} Only used when no valuation schedule present. Defaults to \emph{0}.
+
+\item FXTerms [Optional]: Only present if the currency of the underlying equity is different from the leg: contains the following nodes:
+
+\item EquityCurrency: Currency underlying equity is quoted in. Required if FXTerms present.
+
+\item FXIndex: Name of the index for FX fixings, e.g. FX-TR20H-EUR-USD for Thomson Reuters 20:00 EURUSD FX fixing. Required if FXTerms present.
+
+\item FXIndexFixingDays [Optional]: Number of fixing days for FX Index, defaults to \emph{0}.
+
+\item FXIndexCalendar [Optional]: Calendar for FX Index.
 
 %Allowable values:  Any positive real number.
 \end{itemize} 
@@ -62,7 +72,7 @@ Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref
         </ScheduleData>
         <EquityLegData>
           <ReturnType>Price</ReturnType>
-          <Name>ISIN:US78378X1072</Name>
+          <Name>RIC:.SPX</Name>
           <InitialPrice>100</InitialPrice>
           <NotionalReset>true</NotionalReset>
           <DividendFactor>1</DividendFactor>
@@ -84,6 +94,12 @@ Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref
             </Dates>
            </ValuationSchedule>
            <FixingDays>0</FixingDays>
+           <FXTerms>
+             <EquityCurrency>USD</EquityCurrency>
+             <FXIndex>FX-TR20H-EUR-USD</FXIndex>
+             <FXIndexFixingDays>2</FXIndexFixingDays>
+             <FXIndexCalendar>TARGET,USD</FXIndexCalendar>
+           <FXTerms>
         </EquityLegData>
       </LegData>
 \end{minted}

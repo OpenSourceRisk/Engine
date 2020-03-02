@@ -3,7 +3,10 @@
 set(QuantExt-Test_SRC analyticlgmswaptionengine.cpp
 blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
+blackvariancesurfacestddevs.cpp
+blackvolsurfacedelta.cpp
 bonds.cpp
+capfloortermvolcurve.cpp
 cashflow.cpp
 commodityforward.cpp
 correlationtermstructure.cpp
@@ -23,6 +26,7 @@ discountingcommodityforwardengine.cpp
 discountratiomodifiedcurve.cpp
 dynamicblackvoltermstructure.cpp
 dynamicswaptionvolmatrix.cpp
+equityforwardcurvestripper.cpp
 fillemptymatrix.cpp
 forwardbond.cpp
 fxvolsmile.cpp
@@ -31,6 +35,9 @@ interpolatedyoycapfloortermpricesurface.cpp
 logquote.cpp
 optionletstripper.cpp
 payment.cpp
+piecewiseatmoptionletcurve.cpp
+piecewiseoptionletcurve.cpp
+piecewiseoptionletstripper.cpp
 pricecurve.cpp
 pricetermstructureadapter.cpp
 qle_calendars.cpp
@@ -38,6 +45,7 @@ ratehelpers.cpp
 stabilisedglls.cpp
 staticallycorrectedyieldtermstructure.cpp
 strippedoptionletadapter.cpp
+strippedoptionletadapter2.cpp
 survivalprobabilitycurve.cpp
 swaptionvolatilityconverter.cpp
 swaptionvolconstantspread.cpp

@@ -162,25 +162,25 @@ struct TestData {
                                                            ParamType::Constant, aTimes, aValues, 0.0, 1.0, "Floor",
                                                            infExpiries, std::vector<std::string>(), infStrikes));
 
-        std::map<std::pair<std::string, std::string>, Real> corr;
-        corr[std::make_pair("IR:EUR", "IR:USD")] = 0.6;
-        corr[std::make_pair("IR:EUR", "IR:GBP")] = 0.3;
-        corr[std::make_pair("IR:USD", "IR:GBP")] = 0.1;
-        corr[std::make_pair("FX:USDEUR", "FX:GBPEUR")] = 0.3;
-        corr[std::make_pair("IR:EUR", "FX:USDEUR")] = 0.2;
-        corr[std::make_pair("IR:EUR", "FX:GBPEUR")] = 0.3;
-        corr[std::make_pair("IR:USD", "FX:USDEUR")] = -0.2;
-        corr[std::make_pair("IR:USD", "FX:GBPEUR")] = -0.1;
-        corr[std::make_pair("IR:GBP", "FX:USDEUR")] = 0.0;
-        corr[std::make_pair("IR:GBP", "FX:GBPEUR")] = 0.1;
-        corr[std::make_pair("INF:UKRPI", "IR:GBP")] = 0.1;
-        corr[std::make_pair("INF:EUHICPXT", "IR:EUR")] = 0.1;
+        std::map<std::pair<std::string, std::string>, Handle<Quote>> corr;
+        corr[std::make_pair("IR:EUR", "IR:USD")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.6));
+        corr[std::make_pair("IR:EUR", "IR:GBP")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.3));
+        corr[std::make_pair("IR:USD", "IR:GBP")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.1));
+        corr[std::make_pair("FX:USDEUR", "FX:GBPEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.3));
+        corr[std::make_pair("IR:EUR", "FX:USDEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.2));
+        corr[std::make_pair("IR:EUR", "FX:GBPEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.3));
+        corr[std::make_pair("IR:USD", "FX:USDEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(-0.2));
+        corr[std::make_pair("IR:USD", "FX:GBPEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(-0.1));
+        corr[std::make_pair("IR:GBP", "FX:USDEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
+        corr[std::make_pair("IR:GBP", "FX:GBPEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.1));
+        corr[std::make_pair("INF:UKRPI", "IR:GBP")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.1));
+        corr[std::make_pair("INF:EUHICPXT", "IR:EUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.1));
 
         boost::shared_ptr<CrossAssetModelData> config(
             boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, corr));
 
-        CrossAssetModelBuilder modelBuilder(market);
-        ccLgm = modelBuilder.build(config);
+        CrossAssetModelBuilder modelBuilder(market, config);
+        ccLgm = *modelBuilder.model();
 
         lgm = boost::make_shared<QuantExt::LGM>(ccLgm->irlgm1f(0));
     }
@@ -489,8 +489,8 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
     simMarketConfig->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"});
     simMarketConfig->interpolation() = "LogLinear";
-    simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
-    simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
+    simMarketConfig->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years});
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
     simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
@@ -636,8 +636,8 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
     simMarketConfig->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"});
     simMarketConfig->interpolation() = "LogLinear";
-    simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
-    simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
+    simMarketConfig->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years});
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
     simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
@@ -781,8 +781,8 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
     simMarketConfig->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"});
     simMarketConfig->interpolation() = "LogLinear";
-    simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
-    simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
+    simMarketConfig->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years});
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
     simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
@@ -921,11 +921,12 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
     simMarketConfig->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"});
-    simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
-    simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
+    simMarketConfig->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years});
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
-    simMarketConfig->fxVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
-    simMarketConfig->fxVolDecayMode() = "ForwardVariance";
+    simMarketConfig->setFxVolExpiries(
+        vector<Period>{6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
+    simMarketConfig->setFxVolDecayMode(string("ForwardVariance"));
     simMarketConfig->setFxVolCcyPairs({"USDEUR"});
     simMarketConfig->setFxVolDayCounters("", "ACT/ACT");
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
@@ -1056,8 +1057,8 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
     simMarketConfig->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"});
-    simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
-    simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
+    simMarketConfig->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years});
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
     simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
@@ -1187,8 +1188,8 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
     simMarketConfig->setIndices({"EUR-EURIBOR-6M"});
-    simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
-    simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
+    simMarketConfig->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years});
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
     simMarketConfig->setZeroInflationIndices({"UKRPI", "EUHICPXT"});

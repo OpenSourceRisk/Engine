@@ -1,4 +1,60 @@
 <CurveConfiguration>
+  <FXVolatilities>
+    <FXVolatility>
+      <CurveId>EURUSD_SMILE</CurveId>
+      <CurveDescription/>
+      <Dimension>Smile</Dimension>
+      <Expiries>6M,1Y</Expiries>
+      <FXSpotID>FX/EUR/USD</FXSpotID>
+      <FXForeignCurveID>Yield/EUR/EUR-IN-USD</FXForeignCurveID>
+      <FXDomesticCurveID>Yield/USD/USD-FedFunds</FXDomesticCurveID>
+    </FXVolatility>
+    <FXVolatility>
+      <CurveId>EURUSD_SMILE_DELTA</CurveId>
+      <CurveDescription/>
+      <Dimension>Smile</Dimension>
+      <SmileType>Delta</SmileType>
+      <Deltas>10C,20C,ATM,10P,20P</Deltas>
+      <Expiries>6M,1Y</Expiries>
+      <FXSpotID>FX/EUR/USD</FXSpotID>
+      <FXForeignCurveID>Yield/EUR/EUR-IN-USD</FXForeignCurveID>
+      <FXDomesticCurveID>Yield/USD/USD-FedFunds</FXDomesticCurveID>
+    </FXVolatility>
+    <FXVolatility>
+      <CurveId>EURUSD_ATM</CurveId>
+      <CurveDescription/>
+      <Dimension>ATM</Dimension>
+      <Expiries>6M,1Y</Expiries>
+      <FXSpotID>FX/EUR/USD</FXSpotID>
+    </FXVolatility>
+    <FXVolatility>
+      <CurveId>GBPUSD_ATM</CurveId>
+      <CurveDescription/>
+      <Dimension>ATM</Dimension>
+      <Expiries>6M,1Y</Expiries>
+      <FXSpotID>FX/GBP/USD</FXSpotID>
+    </FXVolatility>
+    <FXVolatility>
+      <CurveId>GBPUSD_SMILE</CurveId>
+      <CurveDescription/>
+      <Dimension>Smile</Dimension>
+      <Expiries>6M,1Y</Expiries>
+      <FXSpotID>FX/GBP/USD</FXSpotID>
+      <FXForeignCurveID>Yield/GBP/GBP-IN-USD</FXForeignCurveID>
+      <FXDomesticCurveID>Yield/USD/USD-FedFunds</FXDomesticCurveID>
+    </FXVolatility>
+    <FXVolatility>
+      <CurveId>GBPUSD_SMILE_DELTA</CurveId>
+      <CurveDescription/>
+      <Dimension>Smile</Dimension>
+      <SmileType>Delta</SmileType>
+      <Deltas>10C,20C,ATM,10P,20P</Deltas>
+      <Expiries>6M,1Y</Expiries>
+      <FXSpotID>FX/GBP/USD</FXSpotID>
+      <FXForeignCurveID>Yield/GBP/GBP-IN-USD</FXForeignCurveID>
+      <FXDomesticCurveID>Yield/USD/USD-FedFunds</FXDomesticCurveID>
+    </FXVolatility>
+  </FXVolatilities>
   <YieldCurves>
     <YieldCurve>
       <CurveId>USD-FedFunds</CurveId>
@@ -379,45 +435,76 @@
       </Segments>
     </YieldCurve>
   </YieldCurves>
-  <FXVolatilities>
-    <FXVolatility>
-      <CurveId>EURUSD_SMILE</CurveId>
+  <EquityCurves>
+    <EquityCurve>
+      <CurveId>EQUITY_A</CurveId>
       <CurveDescription/>
-      <Dimension>Smile</Dimension>
-      <Expiries>6M,1Y</Expiries>
-      <FXSpotID>FX/EUR/USD</FXSpotID>
-      <FXForeignCurveID>Yield/EUR/EUR-IN-USD</FXForeignCurveID>
-      <FXDomesticCurveID>Yield/USD/USD-FedFunds</FXDomesticCurveID>
-    </FXVolatility>
-    <FXVolatility>
-      <CurveId>EURUSD_ATM</CurveId>
+      <Currency>EUR</Currency>
+      <ForecastingCurve>EUR-EONIA</ForecastingCurve>
+      <Type>NoDividends</Type>
+      <SpotQuote>EQUITY/PRICE/EQUITY_A/EUR</SpotQuote>
+      <DayCounter>A365</DayCounter>
+    </EquityCurve>
+    <EquityCurve>
+      <CurveId>EQUITY_B</CurveId>
       <CurveDescription/>
-      <Dimension>ATM</Dimension>
-      <Expiries>6M,1Y</Expiries>
-      <FXSpotID>FX/EUR/USD</FXSpotID>
-    </FXVolatility>
-    <FXVolatility>
-      <CurveId>GBPUSD_ATM</CurveId>
+      <Currency>EUR</Currency>
+      <ForecastingCurve>EUR-EONIA</ForecastingCurve>
+      <Type>DividendYield</Type>
+      <SpotQuote>EQUITY/PRICE/EQUITY_B/EUR</SpotQuote>	  
+      <Quotes>
+        <Quote>EQUITY_DIVIDEND/RATE/EQUITY_B/EUR/1Y</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+    </EquityCurve>
+    <EquityCurve>
+      <CurveId>EQUITY_C</CurveId>
       <CurveDescription/>
-      <Dimension>ATM</Dimension>
-      <Expiries>6M,1Y</Expiries>
-      <FXSpotID>FX/GBP/USD</FXSpotID>
-    </FXVolatility>
-    <FXVolatility>
-      <CurveId>GBPUSD_SMILE</CurveId>
+      <Currency>EUR</Currency>
+      <ForecastingCurve>EUR-EONIA</ForecastingCurve>
+      <Type>ForwardPrice</Type>
+      <SpotQuote>EQUITY/PRICE/EQUITY_C/EUR</SpotQuote>
+      <Quotes>
+        <Quote>EQUITY_FWD/PRICE/EQUITY_C/EUR/1Y</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+    </EquityCurve>
+    <EquityCurve>
+      <CurveId>EQUITY_D</CurveId>
       <CurveDescription/>
-      <Dimension>Smile</Dimension>
-      <Expiries>6M,1Y</Expiries>
-      <FXSpotID>FX/GBP/USD</FXSpotID>
-      <FXForeignCurveID>Yield/GBP/GBP-IN-USD</FXForeignCurveID>
-      <FXDomesticCurveID>Yield/USD/USD-FedFunds</FXDomesticCurveID>
-    </FXVolatility>
-  </FXVolatilities>
+      <Currency>EUR</Currency>
+      <ForecastingCurve>EUR-EONIA</ForecastingCurve>
+      <Type>OptionPremium</Type>
+      <SpotQuote>EQUITY/PRICE/EQUITY_D/EUR</SpotQuote>
+      <ExerciseStyle>European</ExerciseStyle>
+      <Quotes>
+        <Quote>EQUITY_OPTION/PRICE/EQUITY_D/EUR/1Y/1000/C</Quote>
+        <Quote>EQUITY_OPTION/PRICE/EQUITY_D/EUR/1Y/1000/P</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+    </EquityCurve>
+    <EquityCurve>
+      <CurveId>EQUITY_E</CurveId>
+      <CurveDescription/>
+      <Currency>EUR</Currency>
+      <ForecastingCurve>EUR-EONIA</ForecastingCurve>
+      <Type>OptionPremium</Type>
+      <SpotQuote>EQUITY/PRICE/EQUITY_E/EUR</SpotQuote>
+      <ExerciseStyle>American</ExerciseStyle>
+      <Quotes>
+        <Quote>EQUITY_OPTION/PRICE/EQUITY_E/EUR/1Y/1000/C</Quote>
+        <Quote>EQUITY_OPTION/PRICE/EQUITY_E/EUR/1Y/1000/P</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+    </EquityCurve>
+  </EquityCurves>
   <Correlations>
     <Correlation>
       <CurveId>EUR-CMS-10Y/EUR-CMS-1Y</CurveId>
       <CurveDescription>EUR CMS correlations</CurveDescription>
       <CorrelationType>CMSSpread</CorrelationType>
+      <Index1>EUR-CMS-10Y</Index1>
+      <Index2>EUR-CMS-1Y</Index2>
       <Currency>EUR</Currency>
       <!-- ATM -->
       <Dimension>ATM</Dimension>
@@ -430,13 +517,13 @@
       <Calendar>TARGET</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <OptionTenors>1Y,2Y</OptionTenors>
-      <Index1>EUR-CMS-10Y</Index1>
-      <Index2>EUR-CMS-1Y</Index2>
     </Correlation>
     <Correlation>
       <CurveId>USD-CMS-10Y/USD-CMS-1Y</CurveId>
       <CurveDescription>USD CMS correlations</CurveDescription>
       <CorrelationType>CMSSpread</CorrelationType>
+      <Index1>USD-CMS-10Y</Index1>
+      <Index2>USD-CMS-1Y</Index2>
       <Currency>USD</Currency>
       <!-- ATM -->
       <Dimension>ATM</Dimension>
@@ -449,14 +536,13 @@
       <Calendar>TARGET</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <OptionTenors>1Y</OptionTenors>
-      <Index1>USD-CMS-10Y</Index1>
-      <Index2>USD-CMS-1Y</Index2>
     </Correlation>
-   <Correlation>
+    <Correlation>
       <CurveId>EUR-CMS-10Y/EUR-CMS-1Y</CurveId>
       <CurveDescription>EUR CMS Generic correlations</CurveDescription>
       <CorrelationType>Generic</CorrelationType>
-      <Currency/>
+      <Index1>EUR-CMS-10Y</Index1>
+      <Index2>EUR-CMS-1Y</Index2>
       <!-- ATM -->
       <Dimension>Constant</Dimension>
       <!-- Rate, Price -->
@@ -466,25 +552,14 @@
       <DayCounter>Actual/365 (Fixed)</DayCounter>
       <!--Ccalendar and Business day convention for option tenor to date conversion -->
       <Calendar>TARGET</Calendar>
-      <BusinessDayConvention/>
       <OptionTenors>1Y,2Y</OptionTenors>
-      <Index1>EUR-CMS-10Y</Index1>
-      <Index2>EUR-CMS-1Y</Index2>
-   </Correlation>
-   <Correlation>
+    </Correlation>
+    <Correlation>
       <CurveId>EUR-CMS-10Y/EUR-CMS-1Y</CurveId>
       <CurveDescription>EUR CMS null correlation</CurveDescription>
       <CorrelationType>Generic</CorrelationType>
-      <Currency/>
-      <Dimension/>
-      <QuoteType/>
-      <Extrapolation/>
       <DayCounter>Actual/365 (Fixed)</DayCounter>
       <Calendar>TARGET</Calendar>
-      <BusinessDayConvention/>
-      <OptionTenors/>
-      <Index1/>
-      <Index2/>
     </Correlation>
-  </Correlations>
+  </Correlations>	
 </CurveConfiguration>

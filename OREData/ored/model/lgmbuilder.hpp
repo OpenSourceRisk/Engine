@@ -30,11 +30,13 @@
 #include <qle/models/lgm.hpp>
 
 #include <ored/model/irlgmdata.hpp>
+#include <ored/model/marketobserver.hpp>
 #include <ored/model/modelbuilder.hpp>
 
 namespace ore {
 namespace data {
 using namespace QuantLib;
+
 
 //! Builder for a Linear Gauss Markov model component
 /*!
@@ -50,35 +52,44 @@ public:
       alternative discounting curves are then usually set in the pricing
       engines for swaptions etc. */
     LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
-               const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001);
+               const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
+               const bool continueOnError = false);
     //! Return calibration error
-    Real error() {
-        calculate();
-        return error_;
-    }
+    Real error() const;
 
     //! \name Inspectors
     //@{
     std::string currency() { return data_->ccy(); }
-    boost::shared_ptr<QuantExt::LGM>& model() {
-        calculate();
-        return model_;
-    }
-    boost::shared_ptr<QuantExt::IrLgm1fParametrization>& parametrization() { return parametrization_; }
+    boost::shared_ptr<QuantExt::LGM> model() const;
+    boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization() const;
     RelinkableHandle<YieldTermStructure> discountCurve() { return discountCurve_; }
-    std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket() {
-        calculate();
-        return swaptionBasket_;
-    }
+    std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;
     //@}
+
+
+    //! \name ModelBuilder interface
+    //@{
+    void forceRecalculate() override;
+    bool requiresRecalibration() const override;
+    //@}
+
 private:
     void performCalculations() const override;
     void buildSwaptionBasket() const;
+    std::string getBasketDetails() const;
+    // checks whether swaption vols have changed compared to cache and updates the cache if requested
+    bool volSurfaceChanged(const bool updateCache) const;
+    // populate expiry and term
+    void getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb, Date& expiryDb, Date& termDb, Real& termT,
+                          bool& expiryDateBased, bool& termDateBased) const;
+    // get strike for jth option (or Null<Real>() if ATM)
+    Real getStrike(const Size j) const;
 
     boost::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
     boost::shared_ptr<IrLgmData> data_;
-    Real bootstrapTolerance_;
+    const Real bootstrapTolerance_;
+    const bool continueOnError_;
     mutable Real error_;
     boost::shared_ptr<QuantExt::LGM> model_;
     Array params_;
@@ -96,6 +107,14 @@ private:
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
     BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
+
+    // Cache the swation volatilities
+    mutable std::vector<QuantLib::Real> swaptionVolCache_;
+
+    bool forceCalibration_ = false;
+
+    // LGM Oberver
+    boost::shared_ptr<MarketObserver> marketObserver_;
 };
 } // namespace data
 } // namespace ore

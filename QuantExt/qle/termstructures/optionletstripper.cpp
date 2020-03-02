@@ -17,6 +17,8 @@
 */
 
 #include <ql/indexes/iborindex.hpp>
+#include <ql/instruments/makecapfloor.hpp>
+#include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <qle/termstructures/optionletstripper.hpp>
 
 using std::vector;
@@ -125,5 +127,24 @@ ext::shared_ptr<IborIndex> OptionletStripper::iborIndex() const { return iborInd
 Real OptionletStripper::displacement() const { return displacement_; }
 
 VolatilityType OptionletStripper::volatilityType() const { return volatilityType_; }
+
+void OptionletStripper::populateDates() const {
+    
+    Date referenceDate = termVolSurface_->referenceDate();
+    DayCounter dc = termVolSurface_->dayCounter();
+    boost::shared_ptr<BlackCapFloorEngine> dummyEngine = boost::make_shared<BlackCapFloorEngine>(
+        iborIndex_->forwardingTermStructure(), 0.20, dc);
+    
+    for (Size i = 0; i < nOptionletTenors_; ++i) {
+        CapFloor dummyCap = MakeCapFloor(CapFloor::Cap, capFloorLengths_[i], iborIndex_, 0.04, 0 * Days)
+            .withPricingEngine(dummyEngine);
+        boost::shared_ptr<FloatingRateCoupon> lastCoupon = dummyCap.lastFloatingRateCoupon();
+        optionletDates_[i] = lastCoupon->fixingDate();
+        optionletPaymentDates_[i] = lastCoupon->date();
+        optionletAccrualPeriods_[i] = lastCoupon->accrualPeriod();
+        optionletTimes_[i] = dc.yearFraction(referenceDate, optionletDates_[i]);
+        atmOptionletRate_[i] = lastCoupon->indexFixing();
+    }
+}
 
 } // namespace QuantExt

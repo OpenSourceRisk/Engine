@@ -27,6 +27,7 @@
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/thailand.hpp>
+#include <qle/calendars/israel.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -262,6 +263,29 @@ BOOST_AUTO_TEST_CASE(testFrenchCalendar) {
 
     check::checkCalendars(expectedHolidays, hol);
 }
+
+BOOST_AUTO_TEST_CASE(testIsraelTelbor) {
+
+    BOOST_TEST_MESSAGE("Testing Israel Telbor standard weekends");
+
+    Calendar c = QuantExt::Israel(QuantExt::Israel::Telbor);
+
+    BOOST_CHECK(!c.isWeekend(Friday));
+    BOOST_CHECK(c.isWeekend(Saturday));
+    BOOST_CHECK(c.isWeekend(Sunday));
+}
+
+BOOST_AUTO_TEST_CASE(testIsraelTelAviv) {
+
+    BOOST_TEST_MESSAGE("Testing Israel TelAviv weekends");
+
+    Calendar c = QuantExt::Israel(QuantExt::Israel::Settlement);
+
+    BOOST_CHECK(c.isWeekend(Friday));
+    BOOST_CHECK(c.isWeekend(Saturday));
+    BOOST_CHECK(!c.isWeekend(Sunday));
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

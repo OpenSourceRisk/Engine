@@ -52,7 +52,9 @@ InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
 
 const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
-        boost::shared_ptr<ZeroInflationIndex> index = parseZeroInflationIndex(index_);
+        QL_REQUIRE(isInflationIndex(index_), "Index '" << index_ << "' for InflationCapFloorVolatilityCurveConfig '" <<
+            curveID_ << "' should be an inflation index");
+        boost::shared_ptr<InflationIndex> index = parseZeroInflationIndex(index_);
         Currency ccy = index->currency();
 
         string type;

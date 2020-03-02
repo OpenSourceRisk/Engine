@@ -2,9 +2,9 @@ version: '3'
 
 services:
   env_quantlib:
-    image: env_quantlib:1.14
+    image: env_quantlib:1.14_68da2c580
     build:
       context: ../
       dockerfile: Docker/Dockerfile-QuantLib
       args:
-        - boost_version=1.65.1
+        - boost_version=1.69.0

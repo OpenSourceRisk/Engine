@@ -8,7 +8,11 @@ FROM debian:${debian_tag}
 COPY Examples /ore/Examples
 
 RUN mkdir /ore/App
+
 COPY --from=env_ore /usr/local/bin /ore/App
+
+# Needed to prevent error on Jenkins. Not needed locally.
+RUN true
 
 COPY --from=env_ore /usr/local/lib /usr/local/lib
 

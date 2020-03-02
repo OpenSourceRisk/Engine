@@ -40,7 +40,7 @@ public:
     YoYOptionletVolatilitySurface(boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> referenceVolSurface,
                                   VolatilityType volType = ShiftedLognormal, Real displacement = 0.0)
         : TermStructure(), referenceVolSurface_(referenceVolSurface), volType_(volType), displacement_(displacement) {
-        QL_REQUIRE(close_enough(displacement, 0.0) || close_enough(displacement, 1.0),
+        QL_REQUIRE(QuantLib::close_enough(displacement, 0.0) || QuantLib::close_enough(displacement, 1.0),
                    "YoYOptionletVolatilitySurface: displacement (" << displacement << ") must be 0 or 1");
         registerWith(referenceVolSurface_);
         referenceVolSurface->enableExtrapolation();

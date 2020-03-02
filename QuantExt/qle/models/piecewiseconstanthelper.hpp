@@ -221,7 +221,7 @@ inline void PiecewiseConstantHelper3::update() const {
     std::vector<Real> tTmp(t1_.begin(), t1_.end());
     tTmp.insert(tTmp.end(), t2_.begin(), t2_.end());
     std::sort(tTmp.begin(), tTmp.end());
-    std::vector<Real>::const_iterator end = std::unique(tTmp.begin(), tTmp.end(), std::ptr_fun(close_enough));
+    std::vector<Real>::const_iterator end = std::unique(tTmp.begin(), tTmp.end(), std::ptr_fun(QuantLib::close_enough));
     tTmp.resize(end - tTmp.begin());
     tUnion_ = Array(tTmp.begin(), tTmp.end());
     y1Union_ = Array(tUnion_.size() + 1);

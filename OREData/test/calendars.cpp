@@ -26,7 +26,11 @@
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
+#include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/thailand.hpp>
+#include <qle/calendars/wmr.hpp>
+#include <qle/calendars/ice.hpp>
+#include <qle/calendars/cme.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -51,7 +55,7 @@ ostream& operator<<(ostream& os, const TestDatum& testDatum) {
 
 TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"EUR", TARGET()},
-                            {"CHF", Switzerland()},
+                            {"CHF", QuantExt::Switzerland()},
                             {"USD", UnitedStates()},
                             {"GBP", UnitedKingdom()},
                             {"CAD", Canada()},
@@ -78,7 +82,7 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"RUB", Russia()},
                             {"SAR", SaudiArabia()},
                             {"SGD", Singapore()},
-                            {"KRW", SouthKorea()},
+                            {"KRW", SouthKorea(SouthKorea::Settlement)},
                             {"TWD", Taiwan()},
                             {"TRY", Turkey()},
                             {"UAH", Ukraine()},
@@ -104,14 +108,34 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"RON", Romania()},
                             {"THB", QuantExt::Thailand()},
                             {"TND", TARGET()},
+                            {"UYU", TARGET()},
                             {"VND", TARGET()},
+                            {"CHF", QuantExt::Switzerland()},
+                            {"ZA", SouthAfrica()},
+                            {"MISX", Russia(Russia::MOEX)},
+                            {"XSWX", QuantExt::Switzerland(QuantExt::Switzerland::SIX)},
+                            {"XLON", UnitedKingdom(UnitedKingdom::Exchange)},
+                            {"WMR", Wmr()},
+                            // ICE exchange calendars
+                            { "ICE_FuturesUS", ICE(ICE::FuturesUS) },
+                            { "ICE_FuturesUS_1", ICE(ICE::FuturesUS_1) },
+                            { "ICE_FuturesUS_2", ICE(ICE::FuturesUS_2) },
+                            { "ICE_FuturesEU", ICE(ICE::FuturesEU) },
+                            { "ICE_FuturesEU_1", ICE(ICE::FuturesEU_1) },
+                            { "ICE_EndexEnergy", ICE(ICE::EndexEnergy) },
+                            { "ICE_EndexEquities", ICE(ICE::EndexEquities) },
+                            { "ICE_SwapTradeUS", ICE(ICE::SwapTradeUS) },
+                            { "ICE_SwapTradeUK", ICE(ICE::SwapTradeUK) },
+                            { "ICE_FuturesSingapore", ICE(ICE::FuturesSingapore) },
+                            // CME exchange calendar
+                            { "CME", CME() },
                             // joint calendars
                             {"US,TARGET", JointCalendar(UnitedStates(), TARGET())},
                             {"NYB,TGT", JointCalendar(UnitedStates(), TARGET())},
                             {"NYB,LNB", JointCalendar(UnitedStates(), UnitedKingdom())},
-                            {"LNB,ZUB", JointCalendar(UnitedKingdom(), Switzerland())},
+                            {"LNB,ZUB", JointCalendar(UnitedKingdom(), QuantExt::Switzerland())},
                             {"LNB,NYB,TGT", JointCalendar(UnitedKingdom(), UnitedStates(), TARGET())},
-                            {"NYB,ZUB,LNB", JointCalendar(UnitedStates(), Switzerland(), UnitedKingdom())},
+                            {"NYB,ZUB,LNB", JointCalendar(UnitedStates(), QuantExt::Switzerland(), UnitedKingdom())},
                             {"NYB,TRB,LNB", JointCalendar(UnitedStates(), Canada(), UnitedKingdom())},
                             {"TKB,USD,LNB", JointCalendar(Japan(), UnitedStates(), UnitedKingdom())},
                             {"NYB,SYB", JointCalendar(UnitedStates(), Australia())}};

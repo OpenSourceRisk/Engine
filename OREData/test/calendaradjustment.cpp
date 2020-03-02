@@ -65,17 +65,12 @@ struct TestDatum {
     std::vector<Date> holidays;
 };
 
-// Needed for BOOST_DATA_TEST_CASE below as it writes out the TestDatum
-ostream& operator<<(ostream& os, const TestDatum& testDatum) {
-    return os << "[" << testDatum.calendarName << "," << testDatum.holidays.size() << " holidays]";
-}
-
 std::vector<TestDatum> loadExpectedHolidays() {
     // load from file
     string fileName = TEST_INPUT_FILE("holidays.csv");
     std::vector<TestDatum> data;
     ifstream file;
-    file.open("..\\" + fileName);
+    file.open(fileName);
     QL_REQUIRE(file.is_open(), "error opening file " << fileName);
     std::string line;
     // skip empty lines
@@ -106,12 +101,15 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, F)
 
 BOOST_AUTO_TEST_SUITE(CalendarAdjustmentsTests)
 
-BOOST_DATA_TEST_CASE(testCalendarAdjustmentRealCalendars, bdata::make(loadExpectedHolidays()), expectedHolidays) {
+//BOOST_DATA_TEST_CASE(testCalendarAdjustmentRealCalendars, bdata::make(loadExpectedHolidays()), expectedHolidays) 
+BOOST_AUTO_TEST_CASE(testCalendarAdjustmentRealCalendars) {
     //loop over expected holidays, for each calendar call parseCalendar() 
     //and check that the holidays match the expected ones
-    vector<Date> qcalHols;
-    qcalHols = Calendar::holidayList(parseCalendar(expectedHolidays.calendarName,true), startDate, endDate, false);
-    BOOST_CHECK_EQUAL_COLLECTIONS(qcalHols.begin(), qcalHols.end(), expectedHolidays.holidays.begin(), expectedHolidays.holidays.end());
+    for (auto expectedHolidays: loadExpectedHolidays()) {
+        vector<Date> qcalHols;
+        qcalHols = Calendar::holidayList(parseCalendar(expectedHolidays.calendarName,true), startDate, endDate, false);
+        BOOST_CHECK_EQUAL_COLLECTIONS(qcalHols.begin(), qcalHols.end(), expectedHolidays.holidays.begin(), expectedHolidays.holidays.end());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(testCalendarAdjustment) {

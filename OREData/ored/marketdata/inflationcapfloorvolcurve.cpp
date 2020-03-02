@@ -139,7 +139,7 @@ InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloo
         }
 
         // Non-ATM cap/floor volatility surface
-        boost::shared_ptr<CapFloorTermVolSurface> capVol = boost::make_shared<CapFloorTermVolSurface>(
+        boost::shared_ptr<QuantLib::CapFloorTermVolSurface> capVol = boost::make_shared<QuantLib::CapFloorTermVolSurface>(
             0, config->calendar(), config->businessDayConvention(), tenors, strikes, vols, config->dayCounter());
 
         // Only handle YoY Inflation at the moment
