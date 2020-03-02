@@ -263,7 +263,7 @@
           </xs:complexType>
         </xs:element>
         <xs:element type="xs:float" name="BaseCPI" maxOccurs="1"/>
-	<xs:attribute name="startDate" type="xs:string" />
+	<xs:element type="date" name="StartDate" maxOccurs="1"/>
         <xs:element type="xs:string" name="ObservationLag" maxOccurs="1"/>
         <xs:element type="bool" name="Interpolation" maxOccurs="1"/>
         <xs:element type="bool" name="SubtractInflationNotional" maxOccurs="1"/>
