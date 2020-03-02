@@ -187,6 +187,10 @@ const vector<Period>& ScenarioSimMarketParameters::yoyInflationCapFloorVolExpiri
     return lookup(yoyInflationCapFloorVolExpiries_, key);
 }
 
+const vector<Rate>& ScenarioSimMarketParameters::yoyInflationCapFloorVolStrikes(const string& key) const {
+    return lookup(yoyInflationCapFloorVolStrikes_, key);
+}
+
 const vector<Period>& ScenarioSimMarketParameters::defaultTenors(const string& key) const {
     return lookup(defaultTenors_, key);
 }
@@ -645,6 +649,10 @@ void ScenarioSimMarketParameters::setYoYInflationCapFloorVolExpiries(const strin
     yoyInflationCapFloorVolExpiries_[key] = p;
 }
 
+void ScenarioSimMarketParameters::setYoYInflationCapFloorVolStrikes(const string& key, const vector<Rate>& strikes) {
+    yoyInflationCapFloorVolStrikes_[key] = strikes;
+}
+
 void ScenarioSimMarketParameters::setYoYInflationCapFloorVolDayCounters(const string& key, const string& p) {
     yoyInflationCapFloorVolDayCounters_[key] = p;
 }
@@ -1085,13 +1093,55 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     DLOG("Loading YYCapFloorVolatilities");
     nodeChild = XMLUtils::getChildNode(node, "YYCapFloorVolatilities");
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
+        // Are we simulating yy caps
         setSimulateYoYInflationCapFloorVols(false);
         XMLNode* yoyCapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
         if (yoyCapVolSimNode)
             setSimulateYoYInflationCapFloorVols(ore::data::parseBool(XMLUtils::getNodeValue(yoyCapVolSimNode)));
-        yoyInflationCapFloorVolExpiries_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
-        yoyInflationCapFloorVolStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Strikes", true);
+
+        // All yy cap indices
         setYoYInflationCapFloorVolNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
+        set<string> yyIndices = params_.find(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility)->second.second;
+        QL_REQUIRE(yyIndices.size() > 0, "YYCapFloorVolatilities needs at least on index");
+
+        // Get configured expiries
+        vector<XMLNode*> expiryNodes = XMLUtils::getChildrenNodes(nodeChild, "Expiries");
+        QL_REQUIRE(expiryNodes.size() > 0, "YYCapFloorVolatilities needs at least one Expiries node");
+        set<string> indicesCheck = yyIndices;
+        bool defaultProvided = false;
+        for (XMLNode* expiryNode: expiryNodes) {
+            string index = XMLUtils::getAttribute(expiryNode, "name");
+            vector<Period> expiries = parseListOfValues<Period>(XMLUtils::getNodeValue(expiryNode), &parsePeriod);
+            QL_REQUIRE(yoyInflationCapFloorVolExpiries_.insert(make_pair(index, expiries)).second,
+                       "YYCapFloorVolatlities has duplicate expiries for key '" << index << "'");
+            indicesCheck.erase(index);
+            defaultProvided = index == "";
+        }
+        QL_REQUIRE(defaultProvided || indicesCheck.size() == 0, "YYCapFloorVolatilites has no expiries for indices '"
+                                                                    << join(indicesCheck, ";")
+                                                                    << "' and no default expiry has been given");
+
+        // Get configured strikes
+        vector<XMLNode*> strikeNodes = XMLUtils::getChildrenNodes(nodeChild, "Strikes");
+        QL_REQUIRE(strikeNodes.size() > 0, "CapFloorVolatilities needs at least one Strikes node");
+        indicesCheck = yyIndices;
+        defaultProvided = false;
+        for (XMLNode* strikeNode : strikeNodes) {
+            string index = XMLUtils::getAttribute(strikeNode, "name");
+            // For the strike value, we allow ATM or a comma separated list of absolute strike values
+            // If ATM, the stored strikes vector is left as an empty vector
+            vector<Rate> strikes;
+            string strStrike = XMLUtils::getNodeValue(strikeNode);
+            strikes = parseListOfValues<Rate>(strStrike, &parseReal);
+            QL_REQUIRE(yoyInflationCapFloorVolStrikes_.insert(make_pair(index, strikes)).second,
+                "YYInflationCapFloorVolatilities has duplicate strikes for key '" << index << "'");
+            indicesCheck.erase(index);
+            defaultProvided = index == "";
+        }
+        QL_REQUIRE(defaultProvided || indicesCheck.size() == 0, "YYInflationCapFloorVolatilities has no strikes for "
+                                                                    << "currencies '" << join(indicesCheck, ",")
+                                                                    << "' and no default strike set has been given");
+
         yoyInflationCapFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
         XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
         if (dc) {
@@ -1102,7 +1152,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             }
         }
         QL_REQUIRE(yoyInflationCapFloorVolDayCounters_.find("") != yoyInflationCapFloorVolDayCounters_.end(),
-                   "default daycounter is not set for capFloorVolSurfaces");
+                   "default daycounter is not set for yyCapFloorVolSurfaces");
     }
 
     DLOG("Loading CPICapFloorVolatilities");
@@ -1779,12 +1829,24 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, n, "Simulate", simulateYoYInflationCapFloorVols());
         XMLUtils::addChild(doc, n, "ReactionToTimeDecay", yoyInflationCapFloorVolDecayMode());
         XMLUtils::addChildren(doc, n, "Names", "Name", yoyInflationCapFloorVolNames());
-        // TODO write other keys
-        string nodeValue = join(yoyInflationCapFloorVolExpiries_.at("") |
-                                    transformed([](Period p) { return ore::data::to_string(p); }),
-                                ",");
-        XMLUtils::addChild(doc, n, "Expiries", nodeValue);
-        XMLUtils::addGenericChildAsList(doc, n, "Strikes", yoyInflationCapFloorVolStrikes());
+
+        // Write out cap floor expiries node for each currency
+        for (auto kv : yoyInflationCapFloorVolExpiries_) {
+            string nodeValue = join(kv.second | transformed([](Period p) { return ore::data::to_string(p); }), ",");
+            XMLNode* expiriesNode = doc.allocNode("Expiries", nodeValue);
+            XMLUtils::addAttribute(doc, expiriesNode, "name", kv.first);
+            XMLUtils::appendNode(n, expiriesNode);
+        }
+
+        // Write out cap floor strikes for each currency
+        for (auto kv : yoyInflationCapFloorVolStrikes_) {
+            string nodeValue = kv.second.empty() ? "ATM" :
+                join(kv.second | transformed([](Rate s) { return ore::data::to_string(s); }), ",");
+            XMLNode* strikesNode = doc.allocNode("Strikes", nodeValue);
+            XMLUtils::addAttribute(doc, strikesNode, "name", kv.first);
+            XMLUtils::appendNode(n, strikesNode);
+        }
+
         if (capFloorVolDayCounters_.size() > 0) {
             XMLNode* node = XMLUtils::addChild(doc, n, "DayCounters");
             for (auto dc : yoyInflationCapFloorVolDayCounters_) {

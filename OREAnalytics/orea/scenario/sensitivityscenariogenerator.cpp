@@ -1561,11 +1561,10 @@ void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool
         }
     }
 
-    Size n_yoyvol_strikes = simMarketData_->yoyInflationCapFloorVolStrikes().size();
-    vector<Real> volStrikes = simMarketData_->yoyInflationCapFloorVolStrikes();
-
     for (auto c : sensitivityData_->yoyInflationCapFloorVolShiftData()) {
         std::string name = c.first;
+        Size n_yoyvol_strikes = simMarketData_->yoyInflationCapFloorVolStrikes(name).size();
+        vector<Real> volStrikes = simMarketData_->yoyInflationCapFloorVolStrikes(name);
         Size n_yoyvol_exp = simMarketData_->yoyInflationCapFloorVolExpiries(name).size();
         SensitivityScenarioData::VolShiftData data = *c.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
@@ -2468,11 +2467,10 @@ SensitivityScenarioGenerator::yoyInflationCapFloorVolScenarioDescription(string 
     SensitivityScenarioData::CapFloorVolShiftData data = *sensitivityData_->yoyInflationCapFloorVolShiftData()[name];
     QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
     QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
-    // Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
     Size index = expiryBucket * data.shiftStrikes.size() + strikeBucket;
     RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, name, index);
     std::ostringstream o;
-    // Currently CapFloorVolShiftData must have a collection of absolute strikes
+    // Currently CapFloorVolShiftData must have a collection of absolute strikes for yoy inflation cap/floor vols
     o << data.shiftExpiries[expiryBucket] << "/" << std::setprecision(4) << data.shiftStrikes[strikeBucket];
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;

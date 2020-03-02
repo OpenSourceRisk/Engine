@@ -1518,9 +1518,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             LOG("Simulating yoy inflation optionlet vols for index name " << name);
                             vector<Period> optionTenors = parameters->yoyInflationCapFloorVolExpiries(name);
                             vector<Date> optionDates(optionTenors.size());
-                            vector<Real> strikes = parameters->yoyInflationCapFloorVolStrikes();
-                            vector<vector<Handle<Quote>>> quotes(
-                                optionTenors.size(), vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
+                            vector<Real> strikes = parameters->yoyInflationCapFloorVolStrikes(name);
+                            vector<vector<Handle<Quote>>> quotes(optionTenors.size(),
+                                vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
                             for (Size i = 0; i < optionTenors.size(); ++i) {
                                 optionDates[i] = wrapper->yoyVolSurface()->optionDateFromTenor(optionTenors[i]);
                                 for (Size j = 0; j < strikes.size(); ++j) {
