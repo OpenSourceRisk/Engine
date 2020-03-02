@@ -145,6 +145,12 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="cpicapfloorvolatilities">
+    <xs:sequence>
+      <xs:element type="cpicapfloorvolatility" name="CPICapFloorVolatility" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="basecorrelations">
     <xs:sequence>
       <xs:element type="basecorrelation" name="BaseCorrelation" maxOccurs="unbounded" minOccurs="0"/>
