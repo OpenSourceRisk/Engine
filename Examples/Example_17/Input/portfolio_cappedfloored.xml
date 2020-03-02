@@ -657,7 +657,7 @@
 	  <Caps>
 	    <Cap>0.03</Cap>
 	  </Caps>
-	  <NakedOption>Y</NakedOption>
+	  <NakedOption>true</NakedOption>
         </CPILegData>
       </LegData>
     </SwapData>
@@ -707,7 +707,7 @@
 	  <Caps>
 	    <Cap>0.03</Cap>
 	  </Caps>
-	  <NakedOption>Y</NakedOption>
+	  <NakedOption>true</NakedOption>
 	</CPILegData>
       </LegData>
     </SwapData>
