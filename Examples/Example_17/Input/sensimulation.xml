@@ -97,16 +97,6 @@
       <Tenors>1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
     </YYInflationIndexCurves>
 
-    <YYCapFloorVolatilities>
-      <Simulate>true</Simulate>
-      <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
-      <Names>
-        <Name>EUHICPXT</Name>
-      </Names>
-      <Expiries>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Expiries>
-      <Strikes>0.00,0.01,0.02,0.03</Strikes>
-    </YYCapFloorVolatilities>
-
     <CPICapFloorVolatilities>
       <Simulate>true</Simulate>
       <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
@@ -116,6 +106,16 @@
       <Expiries>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Expiries>
       <Strikes>0.00,0.01,0.02,0.03</Strikes>
     </CPICapFloorVolatilities>
+
+    <YYCapFloorVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
+      <Names>
+        <Name>EUHICPXT</Name>
+      </Names>
+      <Expiries>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Expiries>
+      <Strikes>0.00,0.01,0.02,0.03</Strikes>
+    </YYCapFloorVolatilities>
 
     <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->

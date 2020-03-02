@@ -193,7 +193,6 @@
       <IndexInterpolated>N</IndexInterpolated>
       <ObservationLag>3M</ObservationLag>
       <YieldTermStructure>Yield/EUR/EUR-EONIA</YieldTermStructure>
-      <Extrapolation>Y</Extrapolation>
     </InflationCapFloorVolatility>
   </InflationCapFloorVolatilities>
   <EquityCurves/>
