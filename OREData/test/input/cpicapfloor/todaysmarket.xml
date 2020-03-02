@@ -35,11 +35,11 @@
 	<ZeroInflationIndexCurves id="default">
 		<ZeroInflationIndexCurve name="EUHICPXT">Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</ZeroInflationIndexCurve>
 	</ZeroInflationIndexCurves>
-	<ZeroInflationCapFloorVolatilities id="default">
-		<ZeroInflationCapFloorVolatility name="EUHICPXT">InflationCapFloorVolatility/EUHICPXT/EUHICPXT_ZC_CF_N</ZeroInflationCapFloorVolatility>
-	</ZeroInflationCapFloorVolatilities>
 	<FxSpots id="default">
 		<FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
 	</FxSpots>
+	<ZeroInflationCapFloorVolatilities id="default">
+		<ZeroInflationCapFloorVolatility name="EUHICPXT">InflationCapFloorVolatility/EUHICPXT/EUHICPXT_ZC_CF_N</ZeroInflationCapFloorVolatility>
+	</ZeroInflationCapFloorVolatilities>
 </TodaysMarket>
 

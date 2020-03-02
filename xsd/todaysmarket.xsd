@@ -52,7 +52,7 @@
       <xs:element type="xs:string" name="InflationCapFloorPriceSurfacesId" minOccurs="0"/>
       <xs:element type="xs:string" name="YYInflationCapFloorPriceSurfacesId" minOccurs="0"/>
       <xs:element type="xs:string" name="YYInflationCapFloorVolatilitiesId" minOccurs="0"/>
-      <xs:element type="xs:string" name="ZeroInflationCapFloorVolatilitiesId" minOccurs="0"/>
+      <!--<xs:element type="xs:string" name="ZeroInflationCapFloorVolatilitiesId" minOccurs="0"/>-->
       <xs:element type="xs:string" name="EquityCurvesId" minOccurs="0"/>
       <xs:element type="xs:string" name="EquityVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="SecuritiesId" minOccurs="0"/>
