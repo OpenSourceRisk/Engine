@@ -113,6 +113,9 @@ public:
     const map<string, boost::shared_ptr<CapFloorVolShiftData>>& yoyInflationCapFloorVolShiftData() const {
         return yoyInflationCapFloorVolShiftData_;
     }
+    const map<string, boost::shared_ptr<CapFloorVolShiftData>>& zeroInflationCapFloorVolShiftData() const {
+        return zeroInflationCapFloorVolShiftData_;
+    }
     const map<string, string>& creditCcys() const { return creditCcys_; }
     const map<string, boost::shared_ptr<CurveShiftData>>& creditCurveShiftData() const { return creditCurveShiftData_; }
     const map<string, SpotShiftData>& equityShiftData() const { return equityShiftData_; }
@@ -155,6 +158,9 @@ public:
     map<string, boost::shared_ptr<CurveShiftData>>& yoyInflationCurveShiftData() { return yoyInflationCurveShiftData_; }
     map<string, boost::shared_ptr<CapFloorVolShiftData>>& yoyInflationCapFloorVolShiftData() {
         return yoyInflationCapFloorVolShiftData_;
+    }
+    map<string, boost::shared_ptr<CapFloorVolShiftData>>& zeroInflationCapFloorVolShiftData() {
+        return zeroInflationCapFloorVolShiftData_;
     }
     map<string, SpotShiftData>& equityShiftData() { return equityShiftData_; }
     map<string, boost::shared_ptr<CurveShiftData>>& dividendYieldShiftData() { return dividendYieldShiftData_; }
@@ -212,6 +218,7 @@ protected:
     map<string, boost::shared_ptr<CurveShiftData>> zeroInflationCurveShiftData_; // key: inflation index name
     map<string, boost::shared_ptr<CurveShiftData>> yoyInflationCurveShiftData_;  // key: yoy inflation index name
     map<string, boost::shared_ptr<CapFloorVolShiftData>> yoyInflationCapFloorVolShiftData_;  // key: inflation index name
+    map<string, boost::shared_ptr<CapFloorVolShiftData>> zeroInflationCapFloorVolShiftData_;  // key: inflation index name
     map<string, string> creditCcys_;
     map<string, boost::shared_ptr<CurveShiftData>> creditCurveShiftData_;         // key: credit name
     map<string, SpotShiftData> equityShiftData_;                                  // key: equity name

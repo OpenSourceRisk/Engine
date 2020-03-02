@@ -14,6 +14,7 @@ commodityvolcurveconfig.cpp
 conventions.cpp
 conventionsbasedfutureexpiry.cpp
 correlationcurveconfig.cpp
+cpicapfloor.cpp
 cpiswap.cpp
 creditdefaultswapdata.cpp
 crossassetmodeldata.cpp

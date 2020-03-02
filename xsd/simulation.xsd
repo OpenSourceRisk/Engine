@@ -775,7 +775,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="CpiCapFloorVolatilities" minOccurs="0" maxOccurs="1">
+      <xs:element name="CPICapFloorVolatilities" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
             <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>

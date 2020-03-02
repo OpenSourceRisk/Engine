@@ -509,6 +509,8 @@
     <ClInclude Include="qle\cashflows\commodityindexedaveragecashflow.hpp" />
     <ClInclude Include="qle\cashflows\commodityindexedcashflow.hpp" />
     <ClInclude Include="qle\cashflows\couponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\cpicoupon.hpp" />
+    <ClInclude Include="qle\cashflows\cpicouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\equitycoupon.hpp" />
     <ClInclude Include="qle\cashflows\equitycouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\floatingannuitycoupon.hpp" />
@@ -517,6 +519,7 @@
     <ClInclude Include="qle\cashflows\fxlinkedcashflow.hpp" />
     <ClInclude Include="qle\cashflows\lognormalcmsspreadpricer.hpp" />
     <ClInclude Include="qle\cashflows\quantocouponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\strippedcapflooredcpicoupon.hpp" />
     <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscoupon.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscouponpricer.hpp" />
@@ -777,6 +780,8 @@
     <ClCompile Include="qle\cashflows\commodityindexedaveragecashflow.cpp" />
     <ClCompile Include="qle\cashflows\commodityindexedcashflow.cpp" />
     <ClCompile Include="qle\cashflows\couponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\cpicoupon.cpp" />
+    <ClCompile Include="qle\cashflows\cpicouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\equitycoupon.cpp" />
     <ClCompile Include="qle\cashflows\equitycouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\floatingannuitycoupon.cpp" />
@@ -784,6 +789,7 @@
     <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp" />
     <ClCompile Include="qle\cashflows\lognormalcmsspreadpricer.cpp" />
     <ClCompile Include="qle\cashflows\quantocouponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\strippedcapflooredcpicoupon.cpp" />
     <ClCompile Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscoupon.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscouponpricer.cpp" />

@@ -81,6 +81,24 @@
     <Engine>CapFlooredYYCouponPricer</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="CpiCapFloor">
+    <Model>CpiCapModel</Model>
+    <ModelParameters/>
+    <Engine>CpiCapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CappedFlooredCpiLegCoupons">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackAnalytic</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CappedFlooredCpiLegCashFlows">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackAnalytic</Engine>
+    <EngineParameters/>
+  </Product>
   <Product type="CapFlooredIborLeg">
     <Model>BlackOrBachelier</Model>
     <ModelParameters/>
@@ -209,7 +227,6 @@
   <Product type="CPICapFloor">
     <Model>CPICapFloorModel</Model>
     <ModelParameters/>
-    <!--<Engine>CPICapFloorEngine</Engine>-->
     <Engine>CPIBlackCapFloorEngine</Engine>
     <EngineParameters/>
   </Product>

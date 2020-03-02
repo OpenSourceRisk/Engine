@@ -590,7 +590,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     // have we built the curve already ?
                     auto itr = requiredInflationCapFloorVolCurves.find(infcapfloorspec->name());
                     if (itr == requiredInflationCapFloorVolCurves.end()) {
-                        LOG("Building InflationCapFloorPriceSurface for asof " << asof);
+                        LOG("Building InflationCapFloorVolatilitySurface for asof " << asof);
                         boost::shared_ptr<InflationCapFloorVolCurve> inflationCapFloorVolCurve =
                             boost::make_shared<InflationCapFloorVolCurve>(asof, *infcapfloorspec, loader, curveConfigs,
                                                                           requiredYieldCurves, requiredInflationCurves);
@@ -609,7 +609,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         if (it.second == spec->name()) {
                             LOG("Adding InflationCapFloorVol (" << it.first << ") with spec " << *infcapfloorspec
                                                                 << " to configuration " << configuration.first);
-                            // Add Zero Inflation Vol curves
+                            cpiInflationCapFloorVolatilitySurfaces_[make_pair(configuration.first, it.first)] =
+                                Handle<CPIVolatilitySurface>(
+                                    itr->second->cpiInflationCapFloorVolSurface());
                         }
                     }
 

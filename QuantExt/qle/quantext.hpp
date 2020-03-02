@@ -24,6 +24,8 @@
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/cashflows/couponpricer.hpp>
+#include <qle/cashflows/cpicoupon.hpp>
+#include <qle/cashflows/cpicouponpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
@@ -32,6 +34,7 @@
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
 #include <qle/cashflows/quantocouponpricer.hpp>
+#include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
@@ -216,6 +219,7 @@
 #include <qle/termstructures/defaultprobabilityhelpers.hpp>
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
+#include <qle/termstructures/dynamiccpivolatilitystructure.hpp>
 #include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
@@ -230,6 +234,7 @@
 #include <qle/termstructures/hazardspreadeddefaulttermstructure.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
+#include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/interpolateddiscountcurve.hpp>
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
