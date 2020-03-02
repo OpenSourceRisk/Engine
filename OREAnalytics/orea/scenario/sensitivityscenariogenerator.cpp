@@ -1555,11 +1555,10 @@ void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool
         }
     }
 
-    Size n_yoyvol_strikes = simMarketData_->yoyInflationCapFloorVolStrikes().size();
-    vector<Real> volStrikes = simMarketData_->yoyInflationCapFloorVolStrikes();
-
     for (auto c : sensitivityData_->yoyInflationCapFloorVolShiftData()) {
         std::string name = c.first;
+        Size n_yoyvol_strikes = simMarketData_->yoyInflationCapFloorVolStrikes(name).size();
+        vector<Real> volStrikes = simMarketData_->yoyInflationCapFloorVolStrikes(name);
         Size n_yoyvol_exp = simMarketData_->yoyInflationCapFloorVolExpiries(name).size();
         SensitivityScenarioData::VolShiftData data = *c.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
