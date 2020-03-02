@@ -872,6 +872,18 @@ SequenceType parseSequenceType(const std::string& s) {
         QL_FAIL("sequence type \"" << s << "\" not recognised");
 }
 
+QuantLib::CPI::InterpolationType parseObservationInterpolation(const std::string& s) {
+    static map<string, CPI::InterpolationType> seq = {{"Flat", CPI::Flat},
+						      {"Linear", CPI::Linear},
+						      {"AsIndex", CPI::AsIndex}};
+    auto it = seq.find(s);
+    if (it != seq.end())
+        return it->second;
+    else
+        QL_FAIL("observation interpolation type \"" << s << "\" not recognised");
+
+}
+
 FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
     static std::map<std::string, FdmSchemeDesc> m = {
             {"Hundsdorfer", FdmSchemeDesc::Hundsdorfer()},
