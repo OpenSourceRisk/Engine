@@ -640,17 +640,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "index", kv.first); 
             volShiftDataToXML(doc, node, *kv.second); 
         } 
-    } 
-
-    // if (!commodityShiftData_.empty()) {
-    //     LOG("toXML for CommoditySpots");
-    //     XMLNode* parent = XMLUtils::addChild(doc, root, "CommoditySpots");
-    //     for (const auto& kv : commodityShiftData_) {
-    //         XMLNode* node = XMLUtils::addChild(doc, parent, "CommoditySpot");
-    //         XMLUtils::addAttribute(doc, node, "name", kv.first);
-    //         shiftDataToXML(doc, node, kv.second);
-    //     }
-    // }
+    }
 
     if (!commodityCurveShiftData_.empty()) {
         LOG("toXML for CommodityCurves");
