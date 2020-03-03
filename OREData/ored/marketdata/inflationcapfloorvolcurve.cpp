@@ -137,7 +137,7 @@ InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloo
                 }
             }
             DLOGGERSTREAM << m.str() << endl;
-            QL_FAIL("could not build cap/floor vol curve");
+            QL_FAIL("could not build inflation cap/floor vol curve");
         }
 
         if (config->type() == InflationCapFloorVolatilityCurveConfig::Type::YY) {

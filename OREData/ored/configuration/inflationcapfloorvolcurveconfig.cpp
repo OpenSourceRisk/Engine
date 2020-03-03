@@ -162,8 +162,8 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
     XMLUtils::addChild(doc, node, "Index", index_);
     XMLUtils::addChild(doc, node, "IndexCurve", indexCurve_);
-    XMLUtils::addChild(doc, node, "YieldTermStructure", yieldTermStructure_);
     XMLUtils::addChild(doc, node, "ObservationLag", to_string(observationLag_));
+    XMLUtils::addChild(doc, node, "YieldTermStructure", yieldTermStructure_);
 
     return node;
 }

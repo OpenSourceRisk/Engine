@@ -1518,7 +1518,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             LOG("Simulating yoy inflation optionlet vols for index name " << name);
                             vector<Period> optionTenors = parameters->yoyInflationCapFloorVolExpiries(name);
                             vector<Date> optionDates(optionTenors.size());
-                            vector<Real> strikes = parameters->yoyInflationCapFloorVolStrikes();
+                            vector<Real> strikes = parameters->yoyInflationCapFloorVolStrikes(name);
                             vector<vector<Handle<Quote>>> quotes(
                                 optionTenors.size(), vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
                             for (Size i = 0; i < optionTenors.size(); ++i) {
@@ -1533,6 +1533,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                        std::forward_as_tuple(param.first, name, index),
                                                        std::forward_as_tuple(q));
                                     quotes[i][j] = Handle<Quote>(q);
+                                    TLOG("ScenarioSimMarket yoy cf vol " << name << " tenor #" << i << " strike #" << j << " " << vol);
                                 }
                             }
                             DayCounter dc =

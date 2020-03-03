@@ -1152,8 +1152,6 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
             leg = StrippedCappedFlooredYoYInflationCouponLeg(leg);
             for (auto const& t : leg) {
                 auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredYoYInflationCoupon>(t);
-                if (s != nullptr)
-                    s->registerWith(s->underlying());
             }
         }
 

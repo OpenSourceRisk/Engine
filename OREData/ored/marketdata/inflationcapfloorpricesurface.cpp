@@ -308,8 +308,8 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
             boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
                 boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex, hovs);
 
-            boost::shared_ptr<QuantExt::StrikeInterpolatedYoYOptionletVolatilitySurface<Linear>> interpVolSurface =
-	      boost::make_shared<QuantExt::StrikeInterpolatedYoYOptionletVolatilitySurface<Linear>>(
+            boost::shared_ptr<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>> interpVolSurface =
+	      boost::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
                     yoySurface->settlementDays(), yoySurface->calendar(), yoySurface->businessDayConvention(),
                     yoySurface->dayCounter(), yoySurface->observationLag(), yoySurface, cfEngine, yoyStripper, 0);
 
