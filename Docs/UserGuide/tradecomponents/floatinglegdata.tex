@@ -50,7 +50,9 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
 \item HasSubPeriods [Optional]: For cases where several Ibor fixings result in a single payment for a period, e.g. if
   the Ibor tenor is 3M and the schedule tenor is 6M, two fixings are used to compute the amount of the semiannual coupon
   payments. \emph{true} indicates that an average (IsAveraged = true) or a compounded (IsAveraged=false) value of the
-  fixings is used to determine the payment rate.
+  fixings is used to determine the payment rate.  \emph{false} indicates that the initial index period fixing determines the payment rate for the 
+  full tenor, i.e. no further fixings, no averaging and no compounding. IsAveraged is ignored for Ibor legs when HasSubPeriods is set to  \emph{false}.
+  HasSubPeriods does not apply to Overnight indices. 
 
 Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 

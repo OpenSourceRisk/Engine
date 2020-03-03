@@ -764,10 +764,12 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->swaptionVolShiftData()["JPY"] = swvsData;
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
-    sensiData->capFloorVolShiftData()["EUR"] = cfvsData;
-    sensiData->capFloorVolShiftData()["EUR"].indexName = "EUR-EURIBOR-6M";
-    sensiData->capFloorVolShiftData()["USD"] = cfvsData;
-    sensiData->capFloorVolShiftData()["USD"].indexName = "USD-LIBOR-3M";
+    sensiData->capFloorVolShiftData()["EUR"] =
+        boost::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+    sensiData->capFloorVolShiftData()["EUR"]->indexName = "EUR-EURIBOR-6M";
+    sensiData->capFloorVolShiftData()["USD"] =
+        boost::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+    sensiData->capFloorVolShiftData()["USD"]->indexName = "USD-LIBOR-3M";
 
     sensiData->equityShiftData()["SP5"] = eqsData;
     sensiData->equityShiftData()["Lufthansa"] = eqsData;

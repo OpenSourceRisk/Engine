@@ -65,8 +65,9 @@
             <Rate>0.01</Rate>
           </Rates>
           <BaseCPI>246.00</BaseCPI>
+          <StartDate>2018-02-12</StartDate>
           <ObservationLag>3M</ObservationLag>
-          <Interpolated>true</Interpolated>
+          <Interpolation>Linear</Interpolation>
           <SubtractInflationNotional>false</SubtractInflationNotional>
         </CPILegData>
       </LegData>
