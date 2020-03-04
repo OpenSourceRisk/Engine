@@ -86,9 +86,18 @@ const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
 
         // TODO: how to tell if atmFlag or relative flag should be true
         for (auto t : tenors_) {
-            for (auto s : strikes_) {
-                quotes_.push_back(base + t + "/F/" + s);
-            }
+            if (quoteType_ == QuoteType::Price) {
+                for (auto s : capStrikes_) {
+                    quotes_.push_back(base + t + "/C/" + s);
+                }
+                for (auto s : floorStrikes_) {
+                    quotes_.push_back(base + t + "/F/" + s);
+                }
+            } else {
+                for (auto s : strikes_) {
+                    quotes_.push_back(base + t + "/F/" + s);
+                }
+	    }
         }
 
         if (volatilityType_ == VolatilityType::ShiftedLognormal) {
@@ -198,6 +207,8 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
     XMLUtils::addGenericChildAsList(doc, node, "Tenors", tenors_);
     XMLUtils::addChild(doc, node, "SettlementDays", static_cast<int>(settleDays_));
+    XMLUtils::addGenericChildAsList(doc, node, "CapStrikes", capStrikes_);
+    XMLUtils::addGenericChildAsList(doc, node, "FloorStrikes", floorStrikes_);
     XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));

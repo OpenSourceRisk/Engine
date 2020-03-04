@@ -20,20 +20,20 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 
-#include <ql/math/comparison.hpp>
-#include <ql/math/matrix.hpp>
-#include <ql/math/interpolations/bilinearinterpolation.hpp>
-#include <ql/termstructures/volatility/capfloor/capfloortermvolcurve.hpp>
 #include <ql/experimental/inflation/interpolatedyoyoptionletstripper.hpp>
 #include <ql/experimental/inflation/kinterpolatedyoyoptionletvolatilitysurface.hpp>
+#include <ql/math/comparison.hpp>
+#include <ql/math/interpolations/bilinearinterpolation.hpp>
+#include <ql/math/matrix.hpp>
+#include <ql/termstructures/volatility/capfloor/capfloortermvolcurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
-#include <qle/termstructures/strippedcpivolatilitystructure.hpp>
-#include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
 #include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
+#include <qle/termstructures/strippedcpivolatilitystructure.hpp>
+#include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -73,6 +73,8 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
     const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>& config,
     map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
     map<string, boost::shared_ptr<InflationCurve>>& inflationCurves) {
+
+    DLOG("Build InflationCapFloorVolCurve " << spec.name() << " from vols");
 
     Handle<YieldTermStructure> yts;
     auto it = yieldCurves.find(config->yieldTermStructure());
@@ -242,12 +244,14 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                                                 map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                                                 map<string, boost::shared_ptr<InflationCurve>>& inflationCurves) {
 
+    DLOG("Build InflationCapFloorVolCurve " << spec.name() << " from prices");
+
     QL_REQUIRE((config->type() == InflationCapFloorVolatilityCurveConfig::Type::ZC) ||
                    (config->type() == InflationCapFloorVolatilityCurveConfig::Type::YY),
                "Inflation cap floor pricevolatility surfaces must be of type 'ZC' or 'YY'");
 
-    // Required by QuantLib price surface constructores but apparently not used 
-    Real startRate = 0.0; 
+    // Required by QuantLib price surface constructores but apparently not used
+    Real startRate = 0.0;
 
     Handle<YieldTermStructure> yts;
     auto it = yieldCurves.find(config->yieldTermStructure());
