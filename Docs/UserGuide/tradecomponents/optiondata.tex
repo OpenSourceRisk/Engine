@@ -66,15 +66,17 @@ FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined
   \label{tab:callput_specs}
 \end{table}
 
-\item PayoffType [Optional, except for trade types detailed below]: Specifies a detailled payoff type for exotic options. Only applicable to specific trade types as
-  indicated in brackets:
+\item PayoffType [Optional, except for trade types detailed below]: Specifies a detailed payoff type for exotic options. Only applicable to specific trade types as
+  indicated in parentheses:
 
   Allowable values:
   \begin{itemize}
-  \item Accumulator, Decumulator (applies to trade type Accumulator only)
-  \item TargetFull, TargetExact, TargetTruncated (applies to trade type TaRF only)
-  \item BestOfAssetOrCash, WorstOfAssetOrCash, MaxRainbow, MinRainbow (applies to trade type RainbowOption only)
-  \item Vanilla, Asian, AverageStrike, LookbackCall, LookbackPut (applies to trade type BasketOption only)
+  \item Accumulator, Decumulator (applies to trade types EquityAccumulator, FxAccumulator, CommodityAccumulator only)
+  \item TargetFull, TargetExact, TargetTruncated (applies to trade types EquityTaRF, FxTaRF, CommodityTaRF only)
+  \item BestOfAssetOrCash, WorstOfAssetOrCash, MaxRainbow, MinRainbow (applies to trade types EquityRainbowOption,
+    FxRainbowOption, CommodityRainbowOption only)
+  \item Vanilla, Asian, AverageStrike, LookbackCall, LookbackPut (applies to trade types EquityBasketOption,
+    FxBasketOption, CommodityBasketOption only)
   \end{itemize}
 
 \item Style: The exercise style of the option. 
