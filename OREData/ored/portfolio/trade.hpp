@@ -73,6 +73,8 @@ public:
     */
     virtual std::map<std::string, std::set<QuantLib::Date>>
     fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const = 0;
+    
+    virtual std::map<AssetClass, std::set<std::string>> underlyingIndices() const { return {};}
 
     //! \name Serialisation
     //@{

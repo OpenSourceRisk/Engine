@@ -324,6 +324,23 @@ map<string, set<Date>> Swap::fixings(const Date& settlementDate) const {
     return result;
 }
 
+map<AssetClass, set<string>> Swap::underlyingIndices() const {
+
+    map<AssetClass, set<string>> result;
+    for (const auto& p : nameIndexPairs_) {
+        boost::shared_ptr<Index> index = parseIndex(p.first);
+
+        // only handle equity and commodity for now
+        if (auto ei = boost::dynamic_pointer_cast<EquityIndex>(index)) {
+            result[AssetClass::EQ].insert(ei->name());
+        } else if (auto ci = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
+            result[AssetClass::COM].insert(ci->name());
+        }    
+    }
+
+    return result;
+}
+
 void Swap::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     legData_.clear();
