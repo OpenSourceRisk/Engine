@@ -62,6 +62,7 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     // We really need today's spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
     notional_ = strike_ * quantity_;
+    notionalCurrency_ = currency_;
 }
 
 void CommodityForward::fromXML(XMLNode* node) {

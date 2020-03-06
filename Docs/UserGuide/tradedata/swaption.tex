@@ -7,7 +7,8 @@ component sub-node.  These trade components are outlined in section \ref{ss:opti
 \vspace{5mm}
 Supported swaption exercise styles are European and Bermudan.  Swaptions of both exercise styles must have two legs, with
 each leg represented by a \lstinline!LegData! sub-node.  Cross currency swaptions are not supported for either exercise style, i.e. the Currency element must
-have the same value for all \lstinline!LegData! sub-nodes of a swaption. See Table \ref{tab:swaption_requirements} for further details on requirements for
+have the same value for all \lstinline!LegData! sub-nodes of a swaption. There must be at least one full coupon period after the exercise date for European 
+Swaptions, and after the last exercise date for Bermudan Swaptions. See Table \ref{tab:swaption_requirements} for further details on requirements for
  swaptions.\\
 \vspace{5mm}
 The structure of an example \lstinline!SwaptionData!  node of a European swaption is shown in Listing

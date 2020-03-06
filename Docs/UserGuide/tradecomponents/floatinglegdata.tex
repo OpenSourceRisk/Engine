@@ -25,7 +25,7 @@ An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:fl
                     <Floors>
                         <Floor>0.01</Floor>
                     </Floors>
-                    <NakedOption>N</NakedOption>    
+                    <NakedOption>false</NakedOption>    
                 </FloatingLegData>
 \end{minted}
 \caption{Floating leg data}
@@ -50,7 +50,9 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
 \item HasSubPeriods [Optional]: For cases where several Ibor fixings result in a single payment for a period, e.g. if
   the Ibor tenor is 3M and the schedule tenor is 6M, two fixings are used to compute the amount of the semiannual coupon
   payments. \emph{true} indicates that an average (IsAveraged = true) or a compounded (IsAveraged=false) value of the
-  fixings is used to determine the payment rate.
+  fixings is used to determine the payment rate.  \emph{false} indicates that the initial index period fixing determines the payment rate for the 
+  full tenor, i.e. no further fixings, no averaging and no compounding. IsAveraged is ignored for Ibor legs when HasSubPeriods is set to  \emph{false}.
+  HasSubPeriods does not apply to Overnight indices. 
 
 Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 
@@ -117,7 +119,9 @@ If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \
   the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
   above.
 
-\item NakedOption [Optional]: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. 
+\item NakedOption [Optional]: Optional node, if \emph{true} the leg represents only the embedded floor, cap or collar. 
 By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
+
+ Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
 
 \end{itemize}

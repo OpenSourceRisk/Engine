@@ -45,12 +45,14 @@ public:
                                term structure's currency.
         \param baseCurrencyYts The yield term structure for the base currency.
         \param yts             The yield term structure for this price term structure's currency.
+        \param currency        The price term structure's currency.
     */
     CrossCurrencyPriceTermStructure(const QuantLib::Date& referenceDate,
-        const QuantLib::Handle<PriceTermStructure>& basePriceTs,
-        const QuantLib::Handle<QuantLib::Quote>& fxSpot,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& baseCurrencyYts,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& yts);
+                                    const QuantLib::Handle<PriceTermStructure>& basePriceTs,
+                                    const QuantLib::Handle<QuantLib::Quote>& fxSpot,
+                                    const QuantLib::Handle<QuantLib::YieldTermStructure>& baseCurrencyYts,
+                                    const QuantLib::Handle<QuantLib::YieldTermStructure>& yts,
+                                    const QuantLib::Currency& currency);
 
     /*! Floating reference date based price term structure.
         \param settlementDays  This price term structure's settlement days.
@@ -59,12 +61,14 @@ public:
                                term structure's currency.
         \param baseCurrencyYts The yield term structure for the base currency.
         \param yts             The yield term structure for this price term structure's currency.
+        \param currency        The price term structure's currency.
     */
     CrossCurrencyPriceTermStructure(QuantLib::Natural settlementDays,
-        const QuantLib::Handle<PriceTermStructure>& basePriceTs,
-        const QuantLib::Handle<QuantLib::Quote>& fxSpot,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& baseCurrencyYts,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& yts);
+                                    const QuantLib::Handle<PriceTermStructure>& basePriceTs,
+                                    const QuantLib::Handle<QuantLib::Quote>& fxSpot,
+                                    const QuantLib::Handle<QuantLib::YieldTermStructure>& baseCurrencyYts,
+                                    const QuantLib::Handle<QuantLib::YieldTermStructure>& yts,
+                                    const QuantLib::Currency& currency);
     //@}
 
     //! \name TermStructure interface
@@ -76,6 +80,8 @@ public:
     //! \name PriceTermStructure interface
     //@{
     QuantLib::Time minTime() const;
+    std::vector<QuantLib::Date> pillarDates() const;
+    const QuantLib::Currency& currency() const { return currency_; }
     //@}
 
     //! \name Inspectors
@@ -105,6 +111,7 @@ private:
     QuantLib::Handle<QuantLib::Quote> fxSpot_;
     QuantLib::Handle<QuantLib::YieldTermStructure> baseCurrencyYts_;
     QuantLib::Handle<QuantLib::YieldTermStructure> yts_;
+    QuantLib::Currency currency_;
 };
 
 }

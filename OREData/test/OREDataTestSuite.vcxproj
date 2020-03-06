@@ -648,7 +648,9 @@
     <ClCompile Include="commodityvolcurve.cpp" />
     <ClCompile Include="commodityvolcurveconfig.cpp" />
     <ClCompile Include="conventions.cpp" />
+    <ClCompile Include="conventionsbasedfutureexpiry.cpp" />
     <ClCompile Include="correlationcurveconfig.cpp" />
+    <ClCompile Include="cpicapfloor.cpp" />
     <ClCompile Include="cpiswap.cpp" />
     <ClCompile Include="creditdefaultswapdata.cpp" />
     <ClCompile Include="crossassetmodeldata.cpp" />
@@ -657,6 +659,7 @@
     <ClCompile Include="equitymarketdata.cpp" />
     <ClCompile Include="equityswap.cpp" />
     <ClCompile Include="equitytrades.cpp" />
+    <ClCompile Include="expiry.cpp" />
     <ClCompile Include="fixings.cpp" />
     <ClCompile Include="fxoption.cpp" />
     <ClCompile Include="fxswap.cpp" />
@@ -669,6 +672,7 @@
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="portfolio.cpp" />
     <ClCompile Include="schedule.cpp" />
+    <ClCompile Include="strike.cpp" />
     <ClCompile Include="swaption.cpp" />
     <ClCompile Include="testsuite.cpp" />
     <ClCompile Include="todaysmarket.cpp" />

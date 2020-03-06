@@ -111,11 +111,14 @@ public:
 // MXN TIIE
 // If tenor equates to 28 Days, i.e. tenor is 4W or 28D, ensure that the index is created
 // with a tenor of 4W under the hood. Things work better this way especially cap floor stripping.
+// We do the same with 91D -> 3M (a la KRW CD below)
 template <> class IborIndexParserWithPeriod<MXNTiie> : public IborIndexParser {
 public:
     boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
         if (p.units() == Days && p.length() == 28) {
             return boost::make_shared<MXNTiie>(4 * Weeks, h);
+        } else if (p.units() == Days && p.length() == 91) {
+            return boost::make_shared<MXNTiie>(3 * Months, h);
         } else {
             return boost::make_shared<MXNTiie>(p, h);
         }
@@ -169,13 +172,10 @@ boost::shared_ptr<FxIndex> parseFxIndex(const string& s) {
 boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
-    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
+    QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3, "two or three tokens required in " << s << ": EQ-NAME(-CCY)");
     QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
-    if (tokens.size() == 2) {
-        return boost::make_shared<EquityIndex>(tokens[1], NullCalendar(), Currency());
-    } else {
-        QL_FAIL("Error parsing equity string " + s);
-    }
+    return boost::make_shared<EquityIndex>(tokens[1], NullCalendar(),
+                                           tokens.size() == 3 ? parseCurrency(tokens[2]) : Currency());
 }
 
 bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index) {

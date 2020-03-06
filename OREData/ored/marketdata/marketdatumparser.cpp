@@ -18,11 +18,13 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/range.hpp>
 #include <map>
+#include <ored/marketdata/expiry.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
+#include <ored/marketdata/strike.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ql/time/calendars/weekendsonly.hpp>
 
 using namespace std;
 using QuantLib::WeekendsOnly;
@@ -113,14 +115,13 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
 }
 
 // calls parseDateOrPeriod and returns a Date (either the supplied date or asof+period)
-Date getDateFromDateOrPeriod(const string& token, Date asof) {
+Date getDateFromDateOrPeriod(const string& token, Date asof, QuantLib::Calendar cal) {
     Period term;                                           // gets populated by parseDateOrPeriod
     Date expiryDate;                                       // gets populated by parseDateOrPeriod
     bool tmpIsDate;                                        // gets populated by parseDateOrPeriod
     parseDateOrPeriod(token, expiryDate, term, tmpIsDate); // checks if the market string contains a date or a period
     if (!tmpIsDate)
-        expiryDate =
-            WeekendsOnly().adjust(asof + term); // we have no calendar information here, so we use a generic calendar
+        expiryDate = cal.adjust(asof + term);
     return expiryDate;
 }
 
@@ -550,13 +551,17 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
 
     case MarketDatum::InstrumentType::COMMODITY_OPTION: {
         // Expects the following form:
-        // COMMODITY_OPTION/RATE_LNVOL/<COMDTY_NAME>/<CCY>/<DATE/TENOR>/<STRIKE>
-        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        // COMMODITY_OPTION/RATE_LNVOL/<COMDTY_NAME>/<CCY>/<EXPIRY>/<STRIKE>
+        QL_REQUIRE(tokens.size() >= 6, "At least 6 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL,
                    "Quote type for " << datumName << " should be 'RATE_LNVOL'");
 
-        return boost::make_shared<CommodityOptionQuote>(value, asof, datumName, quoteType, tokens[2], tokens[3],
-                                                        tokens[4], tokens[5]);
+        boost::shared_ptr<Expiry> expiry = parseExpiry(tokens[4]);
+        string strStrike = boost::algorithm::join(boost::make_iterator_range(tokens.begin() + 5, tokens.end()), "/");
+        boost::shared_ptr<BaseStrike> strike = parseBaseStrike(strStrike);
+
+        return boost::make_shared<CommodityOptionQuote>(value, asof, datumName, quoteType, 
+            tokens[2], tokens[3], expiry, strike);
     }
 
     case MarketDatum::InstrumentType::CORRELATION: {

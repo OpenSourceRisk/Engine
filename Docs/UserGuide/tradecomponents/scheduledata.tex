@@ -126,7 +126,7 @@ The meanings and allowable values of the elements in a {\tt <Dates>} based secti
 
 Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to \emph{NullCalendar} if omitted, i.e. no holidays at all, not even on weekends.
 
-\item Convention [Optional]: Convention used to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based.
+\item Convention [Optional]: Roll Convention to determine payment dates, and also used to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based.
 
 Allowable values: See \lstinline!Roll Convention! in Table
 \ref{tab:allow_stand_data}. Defaults to \emph{Unadjusted} if omitted.
@@ -147,7 +147,7 @@ Allowable values: \emph{True, False}. Defaults to \emph{False} if left blank or 
 \item Dates: This is a sub-sub-node and contains child elements of type
   \lstinline!Date!. In this case the schedule dates are determined
   directly by the \lstinline!Date! child elements.  At least two
-  \lstinline!Date! child elements must be provided.     
+  \lstinline!Date! child elements must be provided. Note that if no calendar and roll convention is given, the specified dates must be given as adjusted dates.    
 
   Allowable values: Each \lstinline!Date!  child element can take the allowable values listed in \lstinline!Date! in
   Table \ref{tab:allow_stand_data}.

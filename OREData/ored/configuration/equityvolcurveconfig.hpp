@@ -24,6 +24,8 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/volatilityconfig.hpp>
+#include <ored/marketdata/marketdatum.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/types.hpp>
 
@@ -41,18 +43,18 @@ using QuantLib::DayCounter;
 */
 class EquityVolatilityCurveConfig : public CurveConfig {
 public:
-    //! supported volatility structure types
-    enum class Dimension { ATM, Smile };
-
     //! \name Constructors/Destructors
     //@{
     //! Default constructor
     EquityVolatilityCurveConfig() {}
     //! Detailed constructor
-    EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                                const Dimension& dimension, const vector<string>& expiries,
-                                const vector<string>& strikes = vector<string>(),
-                                const DayCounter& dayCounter = QuantLib::Actual365Fixed());
+    EquityVolatilityCurveConfig(
+        const string& curveID,
+        const string& curveDescription,
+        const string& currency,
+        const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+        const string& dayCounter = "A365",
+        const string& calendar = "NullCalendar");
     //@}
 
     //! \name Serialisation
@@ -64,30 +66,27 @@ public:
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
-    const Dimension& dimension() const { return dimension_; }
-    const vector<string>& expiries() const { return expiries_; }
-    const DayCounter& dayCounter() const { return dayCounter_; }
-    const vector<string>& strikes() const {
-        return strikes_;
-    } // Really these should be Reals, but we want to match the type of
-      // The equity option market datum (which is string for "ATMF"
-    const vector<string>& quotes() override;
+    const MarketDatum::QuoteType& quoteType() const { return volatilityConfig_->quoteType(); }
+    const QuantLib::Exercise::Type& exerciseType() const { return volatilityConfig_->exerciseType(); }
+    const string& dayCounter() const { return dayCounter_; }
+    const string& calendar() const { return calendar_; }
+    const boost::shared_ptr<VolatilityConfig>& volatilityConfig() const { return volatilityConfig_; };
+    const string quoteStem() const { return "EQUITY_OPTION/RATE_LNVOL/" + curveID_ + "/" + ccy_ + "/"; };
+    void populateQuotes();
     //@}
 
     //! \name Setters
     //@{
     string& ccy() { return ccy_; }
-    Dimension& dimension() { return dimension_; }
-    vector<string>& expiries() { return expiries_; }
-    DayCounter& dayCounter() { return dayCounter_; }
-    vector<string>& strikes() { return strikes_; }
+    string& dayCounter() { return dayCounter_; }
     //@}
+
 private:
+    
     string ccy_;
-    Dimension dimension_;
-    vector<string> expiries_;
-    DayCounter dayCounter_;
-    vector<string> strikes_;
+    boost::shared_ptr<VolatilityConfig> volatilityConfig_;
+    string dayCounter_;
+    string calendar_;
 };
 } // namespace data
 } // namespace ore

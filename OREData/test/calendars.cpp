@@ -29,6 +29,8 @@
 #include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/thailand.hpp>
 #include <qle/calendars/wmr.hpp>
+#include <qle/calendars/ice.hpp>
+#include <qle/calendars/cme.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -106,6 +108,7 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"RON", Romania()},
                             {"THB", QuantExt::Thailand()},
                             {"TND", TARGET()},
+                            {"UYU", TARGET()},
                             {"VND", TARGET()},
                             {"CHF", QuantExt::Switzerland()},
                             {"ZA", SouthAfrica()},
@@ -113,6 +116,19 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"XSWX", QuantExt::Switzerland(QuantExt::Switzerland::SIX)},
                             {"XLON", UnitedKingdom(UnitedKingdom::Exchange)},
                             {"WMR", Wmr()},
+                            // ICE exchange calendars
+                            { "ICE_FuturesUS", ICE(ICE::FuturesUS) },
+                            { "ICE_FuturesUS_1", ICE(ICE::FuturesUS_1) },
+                            { "ICE_FuturesUS_2", ICE(ICE::FuturesUS_2) },
+                            { "ICE_FuturesEU", ICE(ICE::FuturesEU) },
+                            { "ICE_FuturesEU_1", ICE(ICE::FuturesEU_1) },
+                            { "ICE_EndexEnergy", ICE(ICE::EndexEnergy) },
+                            { "ICE_EndexEquities", ICE(ICE::EndexEquities) },
+                            { "ICE_SwapTradeUS", ICE(ICE::SwapTradeUS) },
+                            { "ICE_SwapTradeUK", ICE(ICE::SwapTradeUK) },
+                            { "ICE_FuturesSingapore", ICE(ICE::FuturesSingapore) },
+                            // CME exchange calendar
+                            { "CME", CME() },
                             // joint calendars
                             {"US,TARGET", JointCalendar(UnitedStates(), TARGET())},
                             {"NYB,TGT", JointCalendar(UnitedStates(), TARGET())},

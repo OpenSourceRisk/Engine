@@ -23,9 +23,10 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/lexical_cast.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
-#include <ored/utilities/log.hpp>
 
 // we only want to include these here.
 #include <rapidxml.hpp>
@@ -40,6 +41,39 @@ using QuantLib::Size;
 
 namespace ore {
 namespace data {
+
+namespace {
+
+// helper routine to convert a value of an arbitrary type to string
+
+string convertToString(const Real value) {
+    // We want to write out a double that conforms to xs:double, this means no
+    // scientific notation, so we check for really small numbers here and explicitly set
+    // to 16 decimal places
+    string result;
+    if (abs(value) < 1.0e-6) {
+        std::ostringstream obj1;
+        obj1.precision(16);
+        obj1 << std::fixed << value;
+        result = obj1.str();
+    } else {
+        // And here we just use boost::lexical_cast which is better
+        // at precision than std::to_string()
+        result = boost::lexical_cast<std::string>(value);
+    }
+    return result;
+}
+
+template <class T> string convertToString(const T& value) { return ore::data::to_string(value); }
+
+// FIXME another variant of the above routine, just for backwards compatibility, we should get
+// rid of one of these two
+string convertToString2(const std::string& s) { return s; }
+template <class T> string convertToString2(const T& value) {
+    return std::to_string(value);
+}
+
+} // namespace
 
 XMLDocument::XMLDocument() : _doc(new rapidxml::xml_document<char>()), _buffer(NULL) {}
 
@@ -184,7 +218,8 @@ void XMLUtils::addChildAsCdata(XMLDocument& doc, XMLNode* n, const string& name,
     }
 }
 
-void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value, const string& attrName, const string& attr) {
+void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value, const string& attrName,
+                        const string& attr) {
     XMLNode* node;
     if (value.size() == 0) {
         node = addChild(doc, n, name);
@@ -199,23 +234,11 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, Real value) {
-    // We want to write out a double that conforms to xs:double, this means no
-    // scientific notation, so we check for really small numbers here and explicitly set
-    // to 16 decimal places
-    if (abs(value) < 1.0e-6) {
-        std::ostringstream obj1;
-        obj1.precision(16);
-        obj1 << std::fixed << value;
-        addChild(doc, n, name, obj1.str());
-    } else {
-        // And here we just use boost::lexical_cast which is better
-        // at precision than std::to_string()
-        addChild(doc, n, name, boost::lexical_cast<std::string>(value));
-    }
- }
+    addChild(doc, n, name, convertToString(value));
+}
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, int value) {
-    addChild(doc, n, name, std::to_string(value));
+    addChild(doc, n, name, convertToString(value));
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, bool value) {
@@ -223,75 +246,10 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, bool v
     addChild(doc, n, name, s);
 }
 
-void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
-                                                 const vector<Real>& values, const string& attrName,
-                                                 const vector<string>& attrs) {
-    addChildrenWithOptionalAttributes(doc, n, names, name, values, vector<string>{attrName},
-                                      vector<vector<string>>{attrs});
-}
-
-void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
-                                                 const vector<Real>& values, const vector<string>& attrNames,
-                                                  const vector<vector<string>>& attrs) {
-    QL_REQUIRE(attrNames.size() == attrs.size(),
-               "attrNames size (" << attrNames.size() << ") must match attrs size (" << attrs.size() << ")");
-    for(auto const& attr: attrs)
-        QL_REQUIRE(attr.empty() == attrs.front().empty(), "all attributes must be empty or non-empty at the same time");
-    if (attrs.empty() || attrs.front().empty())
-        XMLUtils::addChildren(doc, n, names, name, values);
-    else
-        XMLUtils::addChildrenWithAttributes(doc, n, names, name, values, attrNames, attrs);
-}
-
-void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
-                           const vector<string>& values) {
-    XMLNode* node = addChild(doc, parent, names);
-    for (Size i = 0; i < values.size(); i++)
-        addChild(doc, node, name, values[i]);
-}
-
-void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
-                           const vector<Real>& values) {
-    vector<string> strings(values.size());
-    std::transform(values.begin(), values.end(), strings.begin(), [](Real x) { return std::to_string(x); });
-    addChildren(doc, parent, names, name, strings);
-}
-
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* parent, const string& name, const vector<Real>& values) {
     vector<string> strings(values.size());
-    std::transform(values.begin(), values.end(), strings.begin(), [](Real x) { return std::to_string(x); });
+    std::transform(values.begin(), values.end(), strings.begin(), [](Real x) { return convertToString2(x); });
     addChild(doc, parent, name, boost::algorithm::join(strings, ","));
-}
-
-void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
-                                         const vector<Real>& values, const string& attrName,
-                                         const vector<string>& attrs) {
-    addChildrenWithAttributes(doc, parent, names, name, values, vector<string>{attrName},
-                              vector<vector<string>>{attrs});
-}
-
-void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
-                                         const vector<Real>& values, const vector<string>& attrNames,
-                                         const vector<vector<string>>& attrs) {
-    QL_REQUIRE(attrNames.size() == attrs.size(),
-               "attrNames size (" << attrNames.size() << ") must match attrs size (" << attrs.size() << ")");
-    if (values.size() > 0) {
-        for (auto const& attr : attrs) {
-            QL_REQUIRE(values.size() == attr.size(), "Values / Attribute vector size mismatch");
-        }
-        QL_REQUIRE(parent, "XML Node is null (Adding " << names << ")");
-        XMLNode* node = addChild(doc, parent, names);
-        for (Size i = 0; i < values.size(); i++) {
-            XMLNode* c = doc.allocNode(name, std::to_string(values[i]));
-            QL_REQUIRE(c, "XML AllocNode failure (" << name << ")");
-            QL_REQUIRE(node, "XML Node is NULL (" << name << ")");
-            node->insert_node(0, c);
-            for (Size j = 0; j < attrs.size(); ++j) {
-                if (attrs[j][i] != "")
-                    addAttribute(doc, c, attrNames[j], attrs[j][i]);
-            }
-        }
-    }
 }
 
 void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
@@ -362,41 +320,6 @@ vector<Real> XMLUtils::getNodeValueAsDoublesCompact(XMLNode* node) {
     return parseListOfValues(s, std::function<Real(string)>(&parseReal));
 }
 
-vector<Real> XMLUtils::getChildrenValuesAsDoublesWithAttributes(XMLNode* parent, const string& names,
-                                                                const string& name, const string& attrName,
-                                                                vector<string>& attrs, bool mandatory) {
-    std::vector<std::reference_wrapper<vector<string>>> attrs_v;
-    attrs_v.push_back(attrs);
-    return getChildrenValuesAsDoublesWithAttributes(parent, names, name, vector<string>{attrName}, attrs_v, mandatory);
-}
-
-vector<Real> XMLUtils::getChildrenValuesAsDoublesWithAttributes(XMLNode* parent, const string& names,
-                                                                const string& name, const vector<string>& attrNames,
-                                                                const vector<std::reference_wrapper<vector<string>>>& attrs, bool mandatory) {
-    QL_REQUIRE(attrNames.size() == attrs.size(),
-               "attrNames size (" << attrNames.size() << ") must match attrs size (" << attrs.size() << ")");
-    vector<Real> vec;
-    xml_node<>* node = parent->first_node(names.c_str());
-    if (mandatory) {
-        QL_REQUIRE(node, "Error: No XML Node " << names << " found.");
-    }
-    if (node) {
-        for (xml_node<>* child = node->first_node(name.c_str()); child; child = child->next_sibling(name.c_str())) {
-
-            vec.push_back(parseReal(getNodeValue(child)));
-
-            for(Size i=0;i<attrNames.size();++i) {
-                xml_attribute<>* attr = child->first_attribute(attrNames[i].c_str());
-                if (attr && attr->value())
-                    ((vector<string>&)attrs[i]).push_back(attr->value());
-                else
-                    ((vector<string>&)attrs[i]).push_back("");
-            }
-        }
-    }
-    return vec;
-}
-
 vector<Period> XMLUtils::getChildrenValuesAsPeriods(XMLNode* node, const string& name, bool mandatory) {
     string s = getChildValue(node, name, mandatory);
     return parseListOfValues(s, std::function<Period(string)>(&parsePeriod));
@@ -436,7 +359,6 @@ map<string, string> XMLUtils::getChildrenAttributesAndValues(XMLNode* parent, co
             QL_REQUIRE(first != "", "empty attribute for " << names);
         }
         res.insert(pair<string, string>(first, second));
-        TLOG("Added pair [" << first << "," << second << "] to the map");
     }
     if (mandatory) {
         QL_REQUIRE(res.size() > 0, "Error: No XML Node " << names << " found.");
@@ -521,5 +443,185 @@ string XMLUtils::getNodeValue(XMLNode* node) {
     return node->value();
 }
 
+// template implementations
+
+// FIXME only needed as long as we want convert2String2() here, can be removed once we have consolidated
+// convert2String() and convert2String()
+template <>
+void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
+                           const vector<Real>& values) {
+    vector<string> strings(values.size());
+    std::transform(values.begin(), values.end(), strings.begin(), [](Real x) { return convertToString2(x); });
+    addChildren(doc, parent, names, name, strings);
+}
+
+template <class T>
+void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
+                           const vector<T>& values) {
+    XMLNode* node = addChild(doc, parent, names);
+    for (Size i = 0; i < values.size(); i++)
+        addChild(doc, node, name, values[i]);
+}
+
+template <class T>
+void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
+                                         const vector<T>& values, const string& attrName,
+                                         const vector<string>& attrs) {
+    addChildrenWithAttributes(doc, parent, names, name, values, vector<string>{attrName},
+                              vector<vector<string>>{attrs});
+}
+
+template <class T>
+void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
+                                         const vector<T>& values, const vector<string>& attrNames,
+                                         const vector<vector<string>>& attrs) {
+    QL_REQUIRE(attrNames.size() == attrs.size(),
+               "attrNames size (" << attrNames.size() << ") must match attrs size (" << attrs.size() << ")");
+    if (values.size() > 0) {
+        for (auto const& attr : attrs) {
+            QL_REQUIRE(values.size() == attr.size(), "Values / Attribute vector size mismatch");
+        }
+        QL_REQUIRE(parent, "XML Node is null (Adding " << names << ")");
+        XMLNode* node = addChild(doc, parent, names);
+        for (Size i = 0; i < values.size(); i++) {
+            XMLNode* c = doc.allocNode(name, convertToString2(values[i]));
+            QL_REQUIRE(c, "XML AllocNode failure (" << name << ")");
+            QL_REQUIRE(node, "XML Node is NULL (" << name << ")");
+            node->insert_node(0, c);
+            for (Size j = 0; j < attrs.size(); ++j) {
+                if (attrs[j][i] != "")
+                    addAttribute(doc, c, attrNames[j], attrs[j][i]);
+            }
+        }
+    }
+}
+
+template <class T>
+void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
+                                                 const vector<T>& values, const string& attrName,
+                                                 const vector<string>& attrs) {
+    addChildrenWithOptionalAttributes(doc, n, names, name, values, vector<string>{attrName},
+                                      vector<vector<string>>{attrs});
+}
+
+template <class T>
+void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
+                                                 const vector<T>& values, const vector<string>& attrNames,
+                                                 const vector<vector<string>>& attrs) {
+    QL_REQUIRE(attrNames.size() == attrs.size(),
+               "attrNames size (" << attrNames.size() << ") must match attrs size (" << attrs.size() << ")");
+    for (auto const& attr : attrs)
+        QL_REQUIRE(attr.empty() == attrs.front().empty(), "all attributes must be empty or non-empty at the same time");
+    if (attrs.empty() || attrs.front().empty())
+        XMLUtils::addChildren(doc, n, names, name, values);
+    else
+        XMLUtils::addChildrenWithAttributes(doc, n, names, name, values, attrNames, attrs);
+}
+
+vector<string> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent, const string& names, const string& name,
+                                                    const string& attrName, vector<string>& attrs, bool mandatory) {
+    return getChildrenValuesWithAttributes<string>(parent, names, name, attrName, attrs,
+                                                   [](const string& x) { return x; }, mandatory);
+}
+
+template <class T>
+vector<T> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent, const string& names, const string& name,
+                                                    const string& attrName, vector<string>& attrs,
+                                                    const std::function<T(string)> parser, bool mandatory) {
+    std::vector<std::reference_wrapper<vector<string>>> attrs_v;
+    attrs_v.push_back(attrs);
+    return getChildrenValuesWithAttributes(parent, names, name, vector<string>{attrName}, attrs_v, parser, mandatory);
+}
+
+vector<string> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent, const string& names, const string& name,
+                                                    const vector<string>& attrNames,
+                                                    const vector<std::reference_wrapper<vector<string>>>& attrs,
+                                                    bool mandatory) {
+    return getChildrenValuesWithAttributes<string>(parent, names, name, attrNames, attrs,
+                                                   [](const string& x) { return x; }, mandatory);
+}
+
+template <class T>
+vector<T> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent, const string& names, const string& name,
+                                                    const vector<string>& attrNames,
+                                                    const vector<std::reference_wrapper<vector<string>>>& attrs,
+                                                    const std::function<T(string)> parser, bool mandatory) {
+    QL_REQUIRE(parser, "XMLUtils::getChildrenValuesWithAttributes(): parser is null");
+    QL_REQUIRE(attrNames.size() == attrs.size(),
+               "attrNames size (" << attrNames.size() << ") must match attrs size (" << attrs.size() << ")");
+    vector<T> vec;
+    rapidxml::xml_node<>* node = parent->first_node(names.c_str());
+    if (mandatory) {
+        QL_REQUIRE(node, "Error: No XML Node " << names << " found.");
+    }
+    if (node) {
+        for (rapidxml::xml_node<>* child = node->first_node(name.c_str()); child;
+             child = child->next_sibling(name.c_str())) {
+
+            std::string vstr = getNodeValue(child);
+            vec.push_back(parser(vstr));
+
+            for (Size i = 0; i < attrNames.size(); ++i) {
+                xml_attribute<>* attr = child->first_attribute(attrNames[i].c_str());
+                if (attr && attr->value())
+                    ((vector<string>&)attrs[i]).push_back(attr->value());
+                else
+                    ((vector<string>&)attrs[i]).push_back("");
+            }
+        }
+    }
+    return vec;
+}
+
+/* Instantiate some template functions above for types T we want to support. Add instantiations for more types here,
+   if required. This has two advantages over putting the templated version of the functions in the header file:
+   - faster compile times
+   - we do not need to include the rapid xml headers in xmlutils.hpp */
+
+template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
+                                    const vector<string>& values);
+template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
+                                    const vector<double>& values);
+
+template void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, const string& names,
+                                                  const string& name, const vector<string>& values,
+                                                  const string& attrName, const vector<string>& attrs);
+template void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, const string& names,
+                                                  const string& name, const vector<double>& values,
+                                                  const string& attrName, const vector<string>& attrs);
+
+template void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, const string& names,
+                                                  const string& name, const vector<string>& values,
+                                                  const vector<string>& attrNames, const vector<vector<string>>& attrs);
+template void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, const string& names,
+                                                  const string& name, const vector<double>& values,
+                                                  const vector<string>& attrNames, const vector<vector<string>>& attrs);
+
+template void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names,
+                                                          const string& name, const vector<string>& values,
+                                                          const string& attrName, const vector<string>& attrs);
+template void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names,
+                                                          const string& name, const vector<double>& values,
+                                                          const string& attrName, const vector<string>& attrs);
+
+template void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names,
+                                                          const string& name, const vector<string>& values,
+                                                          const vector<string>& attrNames,
+                                                          const vector<vector<string>>& attrs);
+template void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names,
+                                                          const string& name, const vector<double>& values,
+                                                          const vector<string>& attrNames,
+                                                          const vector<vector<string>>& attrs);
+
+template vector<std::string> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent, const string& names,
+                                                                       const string& name, const string& attrName,
+                                                                       vector<string>& attrs,
+                                                                       std::function<string(string)> parser,
+                                                                       bool mandatory);
+
+template vector<double> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent, const string& names,
+                                                                  const string& name, const string& attrName,
+                                                                  vector<string>& attrs,
+                                                                  std::function<double(string)> parser, bool mandatory);
 } // namespace data
 } // namespace ore

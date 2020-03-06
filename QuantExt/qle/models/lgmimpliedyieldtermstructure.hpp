@@ -211,11 +211,9 @@ inline Real LgmImpliedYieldTermStructure::discountImpl(Time t) const {
 
 inline Real LgmImpliedYtsFwdFwdCorrected::discountImpl(Time t) const {
     QL_REQUIRE(t >= 0.0, "negative time (" << t << ") given");
-    //if t and relativTime_ are close enough the discountBond value is takne to be ~1
-    if (close_enough(t, relativeTime_ + t)) {
-        return targetCurve_->discount(relativeTime_ + t) /
-           targetCurve_->discount(relativeTime_) * model_->parametrization()->termStructure()->discount(relativeTime_) /
-           model_->parametrization()->termStructure()->discount(relativeTime_ + t);
+    //if relativeTime_ is close to zero, we return the discount factor directly from the target curve
+    if (QuantLib::close_enough(relativeTime_, 0.0)) {
+        return targetCurve_->discount(t);
     } else {
         Real HT = model_->parametrization()->H(relativeTime_ + t);
         if (!cacheValues_) {
@@ -225,7 +223,6 @@ inline Real LgmImpliedYtsFwdFwdCorrected::discountImpl(Time t) const {
         }
         return std::exp(-(HT - Ht_) * state_ - 0.5 * (HT * HT - Ht_ * Ht_) * zeta_) * targetCurve_->discount(relativeTime_ + t) / dt_;
     }
-        
 }
 
 inline Real LgmImpliedYtsSpotCorrected::discountImpl(Time t) const {
