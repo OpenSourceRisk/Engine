@@ -98,6 +98,36 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof,
     // Get the CDS spread curve quotes
     map<Period, Real> quotes = getConfiguredQuotes(config, asof, loader);
 
+    // 0M as a tenor should be allowable with CDS date generation but it is not yet supported so we 
+    // remove any CDS pillars that have a Period with length == 0. For the erasing logic while iterating map:
+    // https://stackoverflow.com/questions/8234779/how-to-remove-from-a-map-while-iterating-it
+    for (auto it = quotes.cbegin(); it != quotes.cend();) {
+        if (it->first.length() == 0) {
+            WLOG("Removing CDS with tenor zero from curve " << spec.name() << " since it is not supported yet");
+            it = quotes.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    // If date generation rule is DateGeneration::CDS2015, need to ensure that the CDS tenor is a multiple of 
+    // 6M. The wrong CDS maturity date is generated if it is not. Additionally, you can end up with a curve that 
+    // has multiple identical maturity dates which leads to a crash. Issue opened with QuantLib on this:
+    // https://github.com/lballabio/QuantLib/issues/727
+    if (cdsConv->rule() == DateGeneration::CDS2015) {
+        // Erase any elements with a tenor that is not a multiple of 6 months. Intentionally getting rid of anything
+        // here that is in units of days or weeks also.
+        for (auto it = quotes.cbegin(); it != quotes.cend();) {
+            if ((it->first.units() == Months && it->first.length() % 6 == 0) || it->first.units() == Years) {
+                ++it;
+            } else {
+                WLOG("Removing CDS with tenor " << it->first << " from curve " << spec.name() <<
+                    " since date generation rule is CDS2015 and the tenor is not a multiple of 6 months");
+                it = quotes.erase(it);
+            }
+        }
+    }
+
     // Create the CDS instrument helpers
     vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>> helpers;
     for (auto quote : quotes) {

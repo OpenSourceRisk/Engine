@@ -23,7 +23,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <map>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ql/currencies/all.hpp>
@@ -36,6 +35,7 @@
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
+#include <qle/calendars/israel.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
@@ -43,6 +43,8 @@
 #include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/thailand.hpp>
 #include <qle/calendars/wmr.hpp>
+#include <qle/calendars/ice.hpp>
+#include <qle/calendars/cme.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
@@ -214,7 +216,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"IS", Iceland()},
                                       {"IN", India()},
                                       {"ID", Indonesia()},
-                                      {"IL", Israel()},
+                                      {"IL", QuantLib::Israel()},
                                       {"IT", Italy()},
                                       {"JP", Japan()},
                                       {"MX", Mexico()},
@@ -259,7 +261,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"ISL", Iceland()},
                                       {"IND", India()},
                                       {"IDN", Indonesia()},
-                                      {"ISR", Israel()},
+                                      {"ISR", QuantLib::Israel()},
                                       {"ITA", Italy()},
                                       {"JPN", Japan()},
                                       {"MEX", Mexico()},
@@ -302,7 +304,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"HUF", Hungary()},
                                       {"INR", India()},
                                       {"IDR", Indonesia()},
-                                      {"ILS", Israel()},
+                                      {"ILS", QuantLib::Israel()},
                                       {"ISK", Iceland()},
                                       {"ITL", Italy()},
                                       {"JPY", Japan()},
@@ -342,6 +344,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"OMR", TARGET()},
                                       {"PKR", TARGET()},
                                       {"QAR", TARGET()},
+                                      {"UYU", TARGET()},
                                       {"TND", TARGET()},
                                       {"VND", TARGET()},
 
@@ -355,7 +358,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"EUWA", Germany(Germany::Euwax)},
                                       {"XJKT", Indonesia(Indonesia::JSX)},
                                       {"XIDX", Indonesia(Indonesia::IDX)},
-                                      {"XTAE", Israel(Israel::TASE)},
+                                      {"XTAE", QuantLib::Israel(QuantLib::Israel::TASE)},
                                       {"XMIL", Italy(Italy::Exchange)},
                                       {"MISX", Russia(Russia::MOEX)},
                                       {"XKRX", SouthKorea(SouthKorea::KRX)},
@@ -366,6 +369,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
 
                                       // Other / Legacy
                                       {"DEN", Denmark()}, // TODO: consider remove it, not ISO
+                                      {"Telbor", QuantExt::Israel(QuantExt::Israel::Telbor)},
                                       {"London stock exchange", UnitedKingdom(UnitedKingdom::Exchange)},
                                       {"LNB", UnitedKingdom()},
                                       {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},
@@ -382,7 +386,21 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"US with Libor impact", UnitedStates(UnitedStates::LiborImpact)},
                                       {"WMR", Wmr()},
                                       {"ZUB", QuantExt::Switzerland()},
-
+                                      
+                                      // ICE exchange calendars
+                                      { "ICE_FuturesUS", ICE(ICE::FuturesUS) },
+                                      { "ICE_FuturesUS_1", ICE(ICE::FuturesUS_1) },
+                                      { "ICE_FuturesUS_2", ICE(ICE::FuturesUS_2) },
+                                      { "ICE_FuturesEU", ICE(ICE::FuturesEU) },
+                                      { "ICE_FuturesEU_1", ICE(ICE::FuturesEU_1) },
+                                      { "ICE_EndexEnergy", ICE(ICE::EndexEnergy) },
+                                      { "ICE_EndexEquities", ICE(ICE::EndexEquities) },
+                                      { "ICE_SwapTradeUS", ICE(ICE::SwapTradeUS) },
+                                      { "ICE_SwapTradeUK", ICE(ICE::SwapTradeUK) },
+                                      { "ICE_FuturesSingapore", ICE(ICE::FuturesSingapore) },
+                                      // CME exchange calendar
+                                      { "CME", CME() },
+                                      
                                       // Simple calendars
                                       {"WeekendsOnly", WeekendsOnly()},
                                       {"UNMAPPED", WeekendsOnly()},
@@ -560,8 +578,8 @@ Currency parseCurrency(const string& s) {
         {"UAH", UAHCurrency()}, {"KZT", KZTCurrency()}, {"QAR", QARCurrency()}, {"MXV", MXVCurrency()},
         {"CLF", CLFCurrency()}, {"EGP", EGPCurrency()}, {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()},
         {"VND", VNDCurrency()}, {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()},
-        {"MAD", MADCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()}, {"XPD", XPDCurrency()},
-        {"XPT", XPTCurrency()}};
+        {"MAD", MADCurrency()}, {"UYU", UYUCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()},
+        {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -854,6 +872,18 @@ SequenceType parseSequenceType(const std::string& s) {
         QL_FAIL("sequence type \"" << s << "\" not recognised");
 }
 
+QuantLib::CPI::InterpolationType parseObservationInterpolation(const std::string& s) {
+    static map<string, CPI::InterpolationType> seq = {{"Flat", CPI::Flat},
+						      {"Linear", CPI::Linear},
+						      {"AsIndex", CPI::AsIndex}};
+    auto it = seq.find(s);
+    if (it != seq.end())
+        return it->second;
+    else
+        QL_FAIL("observation interpolation type \"" << s << "\" not recognised");
+
+}
+
 FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
     static std::map<std::string, FdmSchemeDesc> m = {
             {"Hundsdorfer", FdmSchemeDesc::Hundsdorfer()},
@@ -891,5 +921,65 @@ AssetClass parseAssetClass(const std::string& s) {
     }
 }
 
+DeltaVolQuote::AtmType parseAtmType(const std::string& s) { 
+    static map<string, DeltaVolQuote::AtmType> m = { 
+        {"AtmNull", DeltaVolQuote::AtmNull}, 
+        {"AtmSpot", DeltaVolQuote::AtmSpot}, 
+        {"AtmFwd", DeltaVolQuote::AtmFwd}, 
+        {"AtmDeltaNeutral", DeltaVolQuote::AtmDeltaNeutral}, 
+        {"AtmVegaMax", DeltaVolQuote::AtmVegaMax}, 
+        {"AtmGammaMax", DeltaVolQuote::AtmGammaMax}, 
+        {"AtmPutCall50", DeltaVolQuote::AtmPutCall50} 
+    }; 
+ 
+    auto it = m.find(s); 
+    if (it != m.end()) { 
+        return it->second; 
+    } else { 
+        QL_FAIL("ATM type \"" << s << "\" not recognized"); 
+    } 
+} 
+ 
+DeltaVolQuote::DeltaType parseDeltaType(const std::string& s) { 
+    static map<string, DeltaVolQuote::DeltaType> m = {{"Spot", DeltaVolQuote::Spot}, 
+                                                      {"Fwd", DeltaVolQuote::Fwd}, 
+                                                      {"PaSpot", DeltaVolQuote::PaSpot}, 
+                                                      {"PaFwd", DeltaVolQuote::PaFwd}}; 
+ 
+    auto it = m.find(s); 
+    if (it != m.end()) { 
+        return it->second; 
+    } else { 
+        QL_FAIL("Delta type \"" << s << "\" not recognized"); 
+    } 
+}
+
+//! Parse Extrapolation from string
+Extrapolation parseExtrapolation(const string& s) {
+    if (s == "None") {
+        return Extrapolation::None;
+    } else if (s == "UseInterpolator" || s == "Linear") {
+        return Extrapolation::UseInterpolator;
+    } else if (s == "Flat") {
+        return Extrapolation::Flat;
+    } else {
+        QL_FAIL("Extrapolation '" << s << "' not recognized");
+    }
+}
+
+//! Write Extrapolation, \p extrap, to stream.
+std::ostream& operator<<(std::ostream& os, Extrapolation extrap) {
+    switch (extrap) {
+    case Extrapolation::None:
+        return os << "None";
+    case Extrapolation::UseInterpolator:
+        return os << "UseInterpolator";
+    case Extrapolation::Flat:
+        return os << "Flat";
+    default:
+        QL_FAIL("Unknown Extrapolation");
+    }
+}
+ 
 } // namespace data
 } // namespace ore

@@ -27,28 +27,27 @@ using QuantLib::Time;
 using QuantLib::YieldTermStructure;
 using std::max;
 using std::min;
+using std::vector;
 
 namespace QuantExt {
 
-CrossCurrencyPriceTermStructure::CrossCurrencyPriceTermStructure(const QuantLib::Date& referenceDate,
-    const QuantLib::Handle<PriceTermStructure>& basePriceTs,
+CrossCurrencyPriceTermStructure::CrossCurrencyPriceTermStructure(
+    const QuantLib::Date& referenceDate, const QuantLib::Handle<PriceTermStructure>& basePriceTs,
     const QuantLib::Handle<QuantLib::Quote>& fxSpot,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& baseCurrencyYts,
-    const QuantLib::Handle<QuantLib::YieldTermStructure>& yts)
-    : PriceTermStructure(referenceDate, basePriceTs->calendar(), basePriceTs->dayCounter()),
-      basePriceTs_(basePriceTs), fxSpot_(fxSpot), baseCurrencyYts_(baseCurrencyYts),
-      yts_(yts) {
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& yts, const QuantLib::Currency& currency)
+    : PriceTermStructure(referenceDate, basePriceTs->calendar(), basePriceTs->dayCounter()), basePriceTs_(basePriceTs),
+      fxSpot_(fxSpot), baseCurrencyYts_(baseCurrencyYts), yts_(yts), currency_(currency) {
     registration();
 }
 
-CrossCurrencyPriceTermStructure::CrossCurrencyPriceTermStructure(Natural settlementDays,
-    const QuantLib::Handle<PriceTermStructure>& basePriceTs,
+CrossCurrencyPriceTermStructure::CrossCurrencyPriceTermStructure(
+    Natural settlementDays, const QuantLib::Handle<PriceTermStructure>& basePriceTs,
     const QuantLib::Handle<QuantLib::Quote>& fxSpot,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& baseCurrencyYts,
-    const QuantLib::Handle<QuantLib::YieldTermStructure>& yts)
-    : PriceTermStructure(settlementDays, basePriceTs->calendar(), basePriceTs->dayCounter()),
-      basePriceTs_(basePriceTs), fxSpot_(fxSpot), baseCurrencyYts_(baseCurrencyYts),
-      yts_(yts) {
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& yts, const QuantLib::Currency& currency)
+    : PriceTermStructure(settlementDays, basePriceTs->calendar(), basePriceTs->dayCounter()), basePriceTs_(basePriceTs),
+      fxSpot_(fxSpot), baseCurrencyYts_(baseCurrencyYts), yts_(yts), currency_(currency) {
     registration();
 }
 
@@ -62,6 +61,10 @@ Time CrossCurrencyPriceTermStructure::maxTime() const {
 
 Time CrossCurrencyPriceTermStructure::minTime() const {
     return basePriceTs_->minTime();
+}
+
+vector<Date> CrossCurrencyPriceTermStructure::pillarDates() const {
+    return basePriceTs_->pillarDates();
 }
 
 QuantLib::Real CrossCurrencyPriceTermStructure::priceImpl(QuantLib::Time t) const {

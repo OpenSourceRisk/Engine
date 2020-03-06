@@ -32,6 +32,7 @@
 #include <ql/quote.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/currency.hpp>
 
 namespace QuantExt {
 
@@ -50,24 +51,27 @@ class InterpolatedPriceCurve : public PriceTermStructure,
 public:
     //! \name Constructors
     //@{
-    //! Curve constructed from periods and prices. No conventions are applied in getting to a date from a period. 
+    //! Curve constructed from periods and prices. No conventions are applied in getting to a date from a period.
     InterpolatedPriceCurve(const std::vector<QuantLib::Period>& tenors, const std::vector<QuantLib::Real>& prices,
-                           const QuantLib::DayCounter& dc, const Interpolator& interpolator = Interpolator());
+                           const QuantLib::DayCounter& dc, const QuantLib::Currency& currency,
+                           const Interpolator& interpolator = Interpolator());
 
     //! Curve constructed from periods and quotes. No conventions are applied in getting to a date from a period.
     InterpolatedPriceCurve(const std::vector<QuantLib::Period>& tenors,
                            const std::vector<QuantLib::Handle<QuantLib::Quote> >& quotes,
-                           const QuantLib::DayCounter& dc, const Interpolator& interpolator = Interpolator());
+                           const QuantLib::DayCounter& dc, const QuantLib::Currency& currency,
+                           const Interpolator& interpolator = Interpolator());
 
     //! Curve constructed from dates and prices
-    InterpolatedPriceCurve(const QuantLib::Date& referenceDate, 
-        const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& prices,
-        const QuantLib::DayCounter& dc, const Interpolator& interpolator = Interpolator());
+    InterpolatedPriceCurve(const QuantLib::Date& referenceDate, const std::vector<QuantLib::Date>& dates,
+                           const std::vector<QuantLib::Real>& prices, const QuantLib::DayCounter& dc,
+                           const QuantLib::Currency& currency, const Interpolator& interpolator = Interpolator());
 
     //! Curve constructed from dates and quotes
-    InterpolatedPriceCurve(const QuantLib::Date& referenceDate, 
-        const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Handle<QuantLib::Quote> >& quotes,
-        const QuantLib::DayCounter& dc, const Interpolator& interpolator = Interpolator());
+    InterpolatedPriceCurve(const QuantLib::Date& referenceDate, const std::vector<QuantLib::Date>& dates,
+                           const std::vector<QuantLib::Handle<QuantLib::Quote> >& quotes,
+                           const QuantLib::DayCounter& dc, const QuantLib::Currency& currency,
+                           const Interpolator& interpolator = Interpolator());
     //@}
 
     //! \name Observer interface
@@ -82,7 +86,6 @@ public:
 
     //! \name TermStructure interface
     //@{
-    //! This is not used by this class and returns the maximum date
     QuantLib::Date maxDate() const;
     QuantLib::Time maxTime() const;
     //@}
@@ -90,6 +93,8 @@ public:
     //! \name PriceTermStructure interface
     //@{
     QuantLib::Time minTime() const;
+    std::vector<QuantLib::Date> pillarDates() const;
+    const QuantLib::Currency& currency() const { return currency_; }
     //@}
 
     //! \name Inspectors
@@ -105,6 +110,7 @@ protected:
     //@}
 
 private:
+    const QuantLib::Currency currency_;
     std::vector<QuantLib::Handle<QuantLib::Quote> > quotes_;
     std::vector<QuantLib::Period> tenors_;
     mutable std::vector<QuantLib::Date> dates_;
@@ -119,10 +125,12 @@ template <class Interpolator>
 InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(const std::vector<QuantLib::Period>& tenors,
                                                              const std::vector<QuantLib::Real>& prices,
                                                              const QuantLib::DayCounter& dc,
+                                                             const QuantLib::Currency& currency,
                                                              const Interpolator& interpolator)
     : PriceTermStructure(0, QuantLib::NullCalendar(), dc), QuantLib::InterpolatedCurve<Interpolator>(
-        std::vector<QuantLib::Time>(tenors.size()), prices, interpolator),
-      tenors_(tenors), dates_(tenors.size()) {
+                                                               std::vector<QuantLib::Time>(tenors.size()), prices,
+                                                               interpolator),
+      currency_(currency), tenors_(tenors), dates_(tenors.size()) {
 
     QL_REQUIRE(boost::algorithm::is_sorted(tenors_.begin(), tenors_.end()), "Tenors must be sorted");
     populateDatesFromTenors();
@@ -132,10 +140,12 @@ InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(const std::vector<Q
 template <class Interpolator>
 InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(
     const std::vector<QuantLib::Period>& tenors, const std::vector<QuantLib::Handle<QuantLib::Quote> >& quotes,
-    const QuantLib::DayCounter& dc, const Interpolator& interpolator)
+    const QuantLib::DayCounter& dc, const QuantLib::Currency& currency, const Interpolator& interpolator)
     : PriceTermStructure(0, QuantLib::NullCalendar(), dc), QuantLib::InterpolatedCurve<Interpolator>(
-        std::vector<QuantLib::Time>(tenors.size()), std::vector<QuantLib::Real>(quotes.size()), interpolator), 
-      quotes_(quotes), tenors_(tenors), dates_(tenors.size()) {
+                                                               std::vector<QuantLib::Time>(tenors.size()),
+                                                               std::vector<QuantLib::Real>(quotes.size()),
+                                                               interpolator),
+      currency_(currency), quotes_(quotes), tenors_(tenors), dates_(tenors.size()) {
 
     QL_REQUIRE(boost::algorithm::is_sorted(tenors_.begin(), tenors_.end()), "Tenors must be sorted");
     populateDatesFromTenors();
@@ -152,25 +162,27 @@ InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(const QuantLib::Dat
                                                              const std::vector<QuantLib::Date>& dates,
                                                              const std::vector<QuantLib::Real>& prices,
                                                              const QuantLib::DayCounter& dc,
+                                                             const QuantLib::Currency& currency,
                                                              const Interpolator& interpolator)
     : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), dc), QuantLib::InterpolatedCurve<Interpolator>(
-                                                                         std::vector<QuantLib::Time>(dates.size()),
-                                                                         prices, interpolator),
-      dates_(dates) {
+                                                                           std::vector<QuantLib::Time>(dates.size()),
+                                                                           prices, interpolator),
+      currency_(currency), dates_(dates) {
 
     convertDatesToTimes();
     initialise();
 }
 
 template <class Interpolator>
-InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(const QuantLib::Date& referenceDate,
-    const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Handle<QuantLib::Quote> >& quotes,
-    const QuantLib::DayCounter& dc, const Interpolator& interpolator)
+InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(
+    const QuantLib::Date& referenceDate, const std::vector<QuantLib::Date>& dates,
+    const std::vector<QuantLib::Handle<QuantLib::Quote> >& quotes, const QuantLib::DayCounter& dc,
+    const QuantLib::Currency& currency, const Interpolator& interpolator)
     : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), dc), QuantLib::InterpolatedCurve<Interpolator>(
-                                                                         std::vector<QuantLib::Time>(dates.size()),
-                                                                         std::vector<QuantLib::Real>(quotes.size()),
-                                                                         interpolator),
-      quotes_(quotes), dates_(dates) {
+                                                                           std::vector<QuantLib::Time>(dates.size()),
+                                                                           std::vector<QuantLib::Real>(quotes.size()),
+                                                                           interpolator),
+      currency_(currency), quotes_(quotes), dates_(dates) {
 
     convertDatesToTimes();
     initialise();
@@ -218,6 +230,11 @@ template <class Interpolator> QuantLib::Time InterpolatedPriceCurve<Interpolator
 template <class Interpolator> QuantLib::Time InterpolatedPriceCurve<Interpolator>::minTime() const {
     calculate();
     return this->times_.front();
+}
+
+template <class Interpolator> std::vector<QuantLib::Date> InterpolatedPriceCurve<Interpolator>::pillarDates() const {
+    calculate();
+    return dates_;
 }
 
 template <class Interpolator> QuantLib::Real InterpolatedPriceCurve<Interpolator>::priceImpl(QuantLib::Time t) const {

@@ -29,6 +29,7 @@
 #include <ored/marketdata/loader.hpp>
 
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
+#include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
 
 namespace ore {
 namespace data {
@@ -54,10 +55,15 @@ public:
     const boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const {
         return yoyVolSurface_;
     }
+    const boost::shared_ptr<QuantLib::CPIVolatilitySurface> cpiInflationCapFloorVolSurface() const {
+        return cpiVolSurface_;
+    }
+
     //@}
 private:
     InflationCapFloorVolatilityCurveSpec spec_;
     boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyVolSurface_;
+    boost::shared_ptr<QuantLib::CPIVolatilitySurface> cpiVolSurface_;
 };
 } // namespace data
 } // namespace ore

@@ -137,8 +137,40 @@ XMLNode* CdsReferenceInformation::toXML(XMLDocument& doc) {
 }
 
 void CdsReferenceInformation::populateId() {
-    // TODO: make the format here configurable
     id_ = referenceEntityId_ + "|" + to_string(tier_) + "|" + currency_.code() + "|" + to_string(docClause_);
+}
+
+bool tryParseCdsInformation(const string& strInfo, CdsReferenceInformation& cdsInfo) {
+
+    DLOG("tryParseCdsInformation: attempting to parse " << strInfo);
+
+    // As in documentation comment, expect strInfo of form ID|TIER|CCY|DOCCLAUSE
+    vector<string> tokens;
+    boost::split(tokens, strInfo, boost::is_any_of("|"));
+
+    if (tokens.size() != 4) {
+        TLOG("String " << strInfo << " not of form ID|TIER|CCY|DOCCLAUSE so parsing failed");
+        return false;
+    }
+
+    CdsTier cdsTier;
+    if (!tryParse<CdsTier>(tokens[1], cdsTier, &parseCdsTier)) {
+        return false;
+    }
+
+    Currency ccy;
+    if (!tryParse<Currency>(tokens[2], ccy, &parseCurrency)) {
+        return false;
+    }
+
+    CdsDocClause cdsDocClause;
+    if (!tryParse<CdsDocClause>(tokens[3], cdsDocClause, &parseCdsDocClause)) {
+        return false;
+    }
+
+    cdsInfo = CdsReferenceInformation(tokens[0], cdsTier, ccy, cdsDocClause);
+
+    return true;
 }
 
 CreditDefaultSwapData::CreditDefaultSwapData(const string& issuerId,

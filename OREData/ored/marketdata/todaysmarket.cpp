@@ -230,7 +230,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         // build the curve
                         LOG("Building FXVolatility for asof " << asof);
                         boost::shared_ptr<FXVolCurve> fxVolCurve = boost::make_shared<FXVolCurve>(
-                            asof, *fxvolspec, loader, curveConfigs, fxT, requiredYieldCurves);
+                            asof, *fxvolspec, loader, curveConfigs, fxT, requiredYieldCurves, conventions);
                         itr = requiredFxVolCurves.insert(make_pair(fxvolspec->name(), fxVolCurve)).first;
                     }
 
@@ -427,7 +427,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     // add the handle to the Market Map (possible lots of times for proxies)
                     for (const auto& it : params.mapping(MarketObject::BaseCorrelation, configuration.first)) {
                         if (it.second == spec->name()) {
-                            LOG("Adding Base Correlatin (" << it.first << ") with spec " << *baseCorrelationSpec
+                            LOG("Adding Base Correlation (" << it.first << ") with spec " << *baseCorrelationSpec
                                                            << " to configuration " << configuration.first);
                             baseCorrelations_[make_pair(configuration.first, it.first)] =
                                 Handle<BaseCorrelationTermStructure<BilinearInterpolation>>(
@@ -590,7 +590,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     // have we built the curve already ?
                     auto itr = requiredInflationCapFloorVolCurves.find(infcapfloorspec->name());
                     if (itr == requiredInflationCapFloorVolCurves.end()) {
-                        LOG("Building InflationCapFloorPriceSurface for asof " << asof);
+                        LOG("Building InflationCapFloorVolatilitySurface for asof " << asof);
                         boost::shared_ptr<InflationCapFloorVolCurve> inflationCapFloorVolCurve =
                             boost::make_shared<InflationCapFloorVolCurve>(asof, *infcapfloorspec, loader, curveConfigs,
                                                                           requiredYieldCurves, requiredInflationCurves);
@@ -609,7 +609,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         if (it.second == spec->name()) {
                             LOG("Adding InflationCapFloorVol (" << it.first << ") with spec " << *infcapfloorspec
                                                                 << " to configuration " << configuration.first);
-                            // Add Zero Inflation Vol curves
+                            cpiInflationCapFloorVolatilitySurfaces_[make_pair(configuration.first, it.first)] =
+                                Handle<CPIVolatilitySurface>(
+                                    itr->second->cpiInflationCapFloorVolSurface());
                         }
                     }
 
@@ -679,8 +681,11 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         // build the curve
                         LOG("Building EquityVol for asof " << asof);
 
+                        // First we need the Equity Index, this should already be built
+                        Handle<EquityIndex> eqIndex = MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration.first);
+
                         boost::shared_ptr<EquityVolCurve> eqVolCurve =
-                            boost::make_shared<EquityVolCurve>(asof, *eqvolspec, loader, curveConfigs);
+                            boost::make_shared<EquityVolCurve>(asof, *eqvolspec, loader, curveConfigs, eqIndex);
                         itr = requiredEquityVolCurves.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
                     }
 
@@ -784,7 +789,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         LOG("Building commodity volatility for asof " << asof);
 
                         boost::shared_ptr<CommodityVolCurve> commodityVolCurve =
-                            boost::make_shared<CommodityVolCurve>(asof, *commodityVolSpec, loader, curveConfigs);
+                            boost::make_shared<CommodityVolCurve>(asof, *commodityVolSpec, loader,
+                                curveConfigs, conventions, requiredYieldCurves, requiredCommodityCurves,
+                                requiredCommodityVolCurves);
                         itr = requiredCommodityVolCurves.insert(make_pair(commodityVolSpec->name(), commodityVolCurve))
                                   .first;
                     }
@@ -835,8 +842,16 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             LOG("Adding CorrelationCurve (" << it.first << ") with spec " << *corrspec
                                                             << " to configuration " << configuration.first);
 
+                            // Look for & first as it avoids collisions with : which can be used in an index name
+                            // if it is not there we fall back on the old behaviour
+                            string delim;
+                            if (it.first.find('&') != std::string::npos)
+                                delim = "&";
+                            else
+                                delim = "/:";
                             vector<string> tokens;
-                            boost::split(tokens, it.first, boost::is_any_of("/:"));
+                            boost::split(tokens, it.first, boost::is_any_of(delim));
+                            QL_REQUIRE(tokens.size() == 2, "Invalid correlation spec " << it.first);
                             correlationCurves_[make_tuple(configuration.first, tokens[0], tokens[1])] =
                                 Handle<QuantExt::CorrelationTermStructure>(itr->second->corrTermStructure());
                         }

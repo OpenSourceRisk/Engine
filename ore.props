@@ -27,5 +27,10 @@
     <additionalWarning>$(additionalWarning) /w34189</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34101</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34701</additionalWarning>
-  </PropertyGroup>
+  </PropertyGroup>  
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);BOOST_ENABLE_ASSERT_HANDLER</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>  
 </Project>

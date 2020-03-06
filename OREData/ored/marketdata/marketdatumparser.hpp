@@ -25,6 +25,8 @@
 
 #include <ored/marketdata/marketdatum.hpp>
 #include <ql/time/date.hpp>
+#include <ql/time/calendar.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/types.hpp>
 #include <string>
 
@@ -42,6 +44,6 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date&, const string&, cons
 //! Get a date from a date string or period
 /*! \ingroup marketdata
  */
-Date getDateFromDateOrPeriod(const string& token, Date asof);
+Date getDateFromDateOrPeriod(const string& token, Date asof, QuantLib::Calendar cal = QuantLib::WeekendsOnly());
 } // namespace data
 } // namespace ore

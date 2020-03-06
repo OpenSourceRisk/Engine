@@ -91,6 +91,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
     notional_ = strike_ * quantity_;
+    notionalCurrency_= currency_;
 }
 
 void VanillaOptionTrade::fromXML(XMLNode* node) {

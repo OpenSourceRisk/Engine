@@ -30,37 +30,13 @@
 #include <qle/models/lgm.hpp>
 
 #include <ored/model/irlgmdata.hpp>
+#include <ored/model/marketobserver.hpp>
 #include <ored/model/modelbuilder.hpp>
 
 namespace ore {
 namespace data {
 using namespace QuantLib;
 
-
-//! Observer class for LgmBuilder
-/*! 
-  This class holds all observables, except the swaption vol surface,
-  for an LgmBuilder, and contains an update flag to indicate any 
-  changes since it was last called
-
-  \ingroup models
-*/
-class LgmObserver : public Observer, public Observable {
-public:
-    LgmObserver() : updated_(true) {};
-
-    //! Add an observable
-    void addObserver(boost::shared_ptr<Observable> observable);
-    //! Observer interface
-    void update();
-    //! Returns true if has been updated since the last call
-    bool hasUpdated();
-
-private:
-    //! Flag to indicate if updated since last call
-    bool updated_;
-
-};
 
 //! Builder for a Linear Gauss Markov model component
 /*!
@@ -76,40 +52,44 @@ public:
       alternative discounting curves are then usually set in the pricing
       engines for swaptions etc. */
     LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
-               const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001);
+               const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
+               const bool continueOnError = false);
     //! Return calibration error
-    Real error() {
-        calculate();
-        return error_;
-    }
+    Real error() const;
 
     //! \name Inspectors
     //@{
     std::string currency() { return data_->ccy(); }
-    boost::shared_ptr<QuantExt::LGM>& model() {
-        calculate();
-        return model_;
-    }
-    boost::shared_ptr<QuantExt::IrLgm1fParametrization>& parametrization() { return parametrization_; }
+    boost::shared_ptr<QuantExt::LGM> model() const;
+    boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization() const;
     RelinkableHandle<YieldTermStructure> discountCurve() { return discountCurve_; }
-    std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket() {
-        calculate();
-        return swaptionBasket_;
-    }
-
-
-    void forceRecalculate() override;
+    std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;
     //@}
+
+
+    //! \name ModelBuilder interface
+    //@{
+    void forceRecalculate() override;
+    bool requiresRecalibration() const override;
+    //@}
+
 private:
     void performCalculations() const override;
     void buildSwaptionBasket() const;
-    // updates the swaption vol cache, and returns a bool - true if cache changed
-    bool updateSwaptionVolCache() const;
+    std::string getBasketDetails() const;
+    // checks whether swaption vols have changed compared to cache and updates the cache if requested
+    bool volSurfaceChanged(const bool updateCache) const;
+    // populate expiry and term
+    void getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb, Date& expiryDb, Date& termDb, Real& termT,
+                          bool& expiryDateBased, bool& termDateBased) const;
+    // get strike for jth option (or Null<Real>() if ATM)
+    Real getStrike(const Size j) const;
 
     boost::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
     boost::shared_ptr<IrLgmData> data_;
-    Real bootstrapTolerance_;
+    const Real bootstrapTolerance_;
+    const bool continueOnError_;
     mutable Real error_;
     boost::shared_ptr<QuantExt::LGM> model_;
     Array params_;
@@ -134,7 +114,7 @@ private:
     bool forceCalibration_ = false;
 
     // LGM Oberver
-    boost::shared_ptr<LgmObserver> lgmObserver_;
+    boost::shared_ptr<MarketObserver> marketObserver_;
 };
 } // namespace data
 } // namespace ore

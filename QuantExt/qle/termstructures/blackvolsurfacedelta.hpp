@@ -50,6 +50,12 @@ public:
 
     Volatility volatility(Real strike) const override;
 
+    //! \name Inspectors
+    //@{
+    const std::vector<Real>& strikes() const { return strikes_; }
+    const std::vector<Volatility>& volatilities() const { return vols_; }
+    //@}
+
 private:
     Interpolation interpolator_;
     std::vector<Real> strikes_;
@@ -68,6 +74,7 @@ public:
                                 const Handle<YieldTermStructure>& foreignTS,
                                 DeltaVolQuote::DeltaType dt = DeltaVolQuote::DeltaType::Spot,
                                 DeltaVolQuote::AtmType at = DeltaVolQuote::AtmType::AtmDeltaNeutral,
+                                boost::optional<QuantLib::DeltaVolQuote::DeltaType> atmDeltaType = boost::none,
                                 InterpolatedSmileSection::InterpolationMethod interpolationMethod
                                     = InterpolatedSmileSection::InterpolationMethod::Linear,
                                 bool flatExtrapolation = true);
@@ -85,7 +92,11 @@ public:
     //@{
     virtual void accept(AcyclicVisitor&);
     //@}
-    //
+    
+    //! \name Inspectors
+    //@{
+    const std::vector<QuantLib::Date>& dates() const { return dates_; }
+    //@}
 
     //! Return an FxSmile for the time t
     /*! Note the smile does not observe the spot or YTS handles, it will
@@ -94,6 +105,8 @@ public:
      *  This is not really FX specific
      */
     boost::shared_ptr<FxSmileSection> blackVolSmile(Time t) const;
+
+    boost::shared_ptr<FxSmileSection> blackVolSmile(const QuantLib::Date& d) const;
 
 protected:
     virtual Volatility blackVolImpl(Time t, Real strike) const;
@@ -113,6 +126,7 @@ private:
 
     DeltaVolQuote::DeltaType dt_;
     DeltaVolQuote::AtmType at_;
+    boost::optional<QuantLib::DeltaVolQuote::DeltaType> atmDeltaType_;
 
     InterpolatedSmileSection::InterpolationMethod interpolationMethod_;
     bool flatExtrapolation_;

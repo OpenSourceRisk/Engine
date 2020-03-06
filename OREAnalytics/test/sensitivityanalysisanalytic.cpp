@@ -221,10 +221,12 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     sensiData->swaptionVolShiftData()["JPY"] = swvsData;
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
-    sensiData->capFloorVolShiftData()["EUR"] = cfvsData;
-    sensiData->capFloorVolShiftData()["EUR"].indexName = "EUR-EURIBOR-6M";
-    sensiData->capFloorVolShiftData()["USD"] = cfvsData;
-    sensiData->capFloorVolShiftData()["USD"].indexName = "USD-LIBOR-3M";
+    sensiData->capFloorVolShiftData()["EUR"] =
+        boost::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+    sensiData->capFloorVolShiftData()["EUR"]->indexName = "EUR-EURIBOR-6M";
+    sensiData->capFloorVolShiftData()["USD"] =
+        boost::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+    sensiData->capFloorVolShiftData()["USD"]->indexName = "USD-LIBOR-3M";
 
     sensiData->crossGammaFilter() = {{"DiscountCurve/EUR", "DiscountCurve/EUR"},
                                      {"DiscountCurve/USD", "DiscountCurve/USD"},

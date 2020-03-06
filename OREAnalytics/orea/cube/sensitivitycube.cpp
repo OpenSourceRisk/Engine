@@ -46,29 +46,12 @@ ore::analytics::SensitivityCube::FactorData index(const ore::analytics::RiskFact
     return it->second;
 }
 
-
-// Utility method for lookup in the cross map
-typedef ore::analytics::SensitivityCube::crossPair crossPair;
-
-Size crossIndex(const crossPair& k, const map<crossPair, Size>& m) {
-
-    auto it = m.find(k);
-
-    // Try the other way around if not found, just in case
-    if (it == m.end()) {
-        it = m.find(std::make_pair(k.second, k.first));
-    }
-
-    QL_REQUIRE(it != m.end(),
-               "Key pair, [" << k.first << "," << k.second << "], was not found in the sensitivity cube.");
-
-    return it->second;
-}
-
 } // namespace
 
 namespace ore {
 namespace analytics {
+
+typedef SensitivityCube::crossPair crossPair;
 
 std::ostream& operator<<(std::ostream& out, const SensitivityCube::crossPair& cp) {
     return out << cp.first << "-" << cp.second;
@@ -153,12 +136,13 @@ void SensitivityCube::initialise() {
         crossFactors_[cf.first] = make_tuple(id_1, id_2, cf.second);
     }
 
-    // Check that up factors and down factors align
-    QL_REQUIRE(upFactors_.size() == downFactors_.size(),
-               "The number 'Up' shifts should equal the number of 'Down' shifts");
+    // Check that up factors and down factors align (if down factors are given)
+    QL_REQUIRE(downFactors_.empty() || upFactors_.size() == downFactors_.size(),
+               "The number of 'Up' shifts (" << upFactors_.size() << ") should equal the number of 'Down' shifts (" << downFactors_.size() <<")");
 
     auto pred = [](decltype(*upFactors_.left.begin()) a, pair<RiskFactorKey, FactorData> b) { return a.first == b.first; };
-    QL_REQUIRE(equal(upFactors_.left.begin(), upFactors_.left.end(), downFactors_.begin(), pred),
+    QL_REQUIRE(downFactors_.empty() ||
+                   equal(upFactors_.left.begin(), upFactors_.left.end(), downFactors_.begin(), pred),
                "The set of risk factor keys with an 'Up' shift and 'Down' shift should match");
 
     // Log warnings if each factor does not have a shift size entry and that it is not a Null<Real>()
