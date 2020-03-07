@@ -97,7 +97,7 @@ const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
                 for (auto s : strikes_) {
                     quotes_.push_back(base + t + "/F/" + s);
                 }
-	    }
+            }
         }
 
         if (volatilityType_ == VolatilityType::ShiftedLognormal) {
@@ -154,6 +154,17 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         floorStrikes_ = XMLUtils::getChildrenValuesAsStrings(node, "FloorStrikes", true);
         QL_REQUIRE(!capStrikes_.empty() || !floorStrikes_.empty(),
                    "CapStrikes or FloorStrikes node should not be empty");
+	// Set strikes to the sorted union of cap and floor strikes 
+        std::set<Real> strikeSet;
+        for (Size i = 0; i < capStrikes_.size(); ++i)
+            strikeSet.insert(parseReal(capStrikes_[i]));
+        for (Size i = 0; i < floorStrikes_.size(); ++i)
+            strikeSet.insert(parseReal(floorStrikes_[i]));
+        strikes_.clear();
+        for (auto s : strikeSet)
+            strikes_.push_back(to_string(s));
+        for (Size i = 0; i < strikes_.size(); ++i)
+            DLOG("ZC Inflation Cap/Floor Strike " << i << " = " << strikes_[i]);
     } else {
         strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", true);
         QL_REQUIRE(!strikes_.empty(), "Strikes node should not be empty");

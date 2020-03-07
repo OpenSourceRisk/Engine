@@ -1334,7 +1334,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             LOG("Simulating zero inflation cap/floor vols for index name " << name);
                             vector<Period> optionTenors = parameters->zeroInflationCapFloorVolExpiries(name);
                             vector<Date> optionDates(optionTenors.size());
-                            vector<Real> strikes = parameters->zeroInflationCapFloorVolStrikes();
+                            vector<Real> strikes = parameters->zeroInflationCapFloorVolStrikes(name);
                             vector<vector<Handle<Quote>>> quotes(
                                 optionTenors.size(), vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
                             for (Size i = 0; i < optionTenors.size(); ++i) {
@@ -1367,10 +1367,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     Date d = optionDates[i];
                                     Real vol1 = wrapper->volatility(d, strikes[j]);
                                     Real vol2 = hCpiVol->volatility(d, strikes[j]);
-                                    // DLOG("CPI Vol Check " << i << " " << optionTenors[i] << " " << j << " "
-                                    //                       << std::setprecision(4) << strikes[j] << " "
-                                    //                       << std::setprecision(6) << vol1 << " " << vol2 << " "
-                                    //                       << vol2 - vol1);
+                                    DLOG("CPI Vol Check " << i << " " << optionTenors[i] << " " << j << " "
+                                                          << std::setprecision(4) << strikes[j] << " "
+                                                          << std::setprecision(6) << vol1 << " " << vol2 << " "
+                                                          << vol2 - vol1);
                                     QL_REQUIRE(
                                         close_enough(vol1 - vol2, 0.0),
                                         "Simulation market CPI vol does not match today's market CPI vol for expiry "

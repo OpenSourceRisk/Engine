@@ -120,7 +120,7 @@ public:
     const string& zeroInflationCapFloorVolDayCounter(const string& key) const;
     const vector<Period>& zeroInflationCapFloorVolExpiries(const string& key) const;
     bool hasZeroInflationCapFloorVolExpiries(const string& key) const { return zeroInflationCapFloorVolExpiries_.count(key) > 0; }
-    const vector<Real>& zeroInflationCapFloorVolStrikes() const { return zeroInflationCapFloorVolStrikes_; }
+    const vector<Real>& zeroInflationCapFloorVolStrikes(const string& key) const;
     const string& zeroInflationCapFloorVolDecayMode() const { return zeroInflationCapFloorVolDecayMode_; }
 
     bool simulateSurvivalProbabilities() const { return paramsSimulate(RiskFactorKey::KeyType::SurvivalProbability); }
@@ -271,9 +271,10 @@ public:
 
     void setSimulateZeroInflationCapFloorVols(bool simulate);
     void setZeroInflationCapFloorNames(vector<string> names);
-    string& zeroInflationCapFloorVolDecayMode() { return zeroInflationCapFloorVolDecayMode_; }
     void setZeroInflationCapFloorVolExpiries(const string& key, const vector<Period>& p);
-    vector<Real>& zeroInflationCapFloorVolStrikes() { return zeroInflationCapFloorVolStrikes_; }
+    void setZeroInflationCapFloorVolStrikes(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
+    string& zeroInflationCapFloorVolDecayMode() { return zeroInflationCapFloorVolDecayMode_; }
+    void setZeroInflationCapFloorVolDayCounters(const string& key, const string& p);
 
     void setSimulateSurvivalProbabilities(bool simulate);
     void setSimulateRecoveryRates(bool simulate);
@@ -423,7 +424,7 @@ private:
 
     map<string, string> zeroInflationCapFloorVolDayCounters_;
     map<string, vector<Period>> zeroInflationCapFloorVolExpiries_;
-    vector<Real> zeroInflationCapFloorVolStrikes_;
+    map<std::string, std::vector<QuantLib::Rate>> zeroInflationCapFloorVolStrikes_;
     string zeroInflationCapFloorVolDecayMode_;
 
     map<string, string> defaultCurveDayCounters_;
