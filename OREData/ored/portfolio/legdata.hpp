@@ -175,7 +175,8 @@ class FloatingLegData : public LegAdditionalData {
 public:
     //! Default constructor
     FloatingLegData()
-        : LegAdditionalData("Floating"), fixingDays_(Null<Size>()), isInArrears_(true), nakedOption_(false) {}
+        : LegAdditionalData("Floating"), fixingDays_(Null<Size>()), lookback_(0 * Days), isInArrears_(true),
+          isAveraged_(false), hasSubPeriods_(false), includeSpread_(false), nakedOption_(false) {}
     //! Constructor
     FloatingLegData(const string& index, QuantLib::Size fixingDays, bool isInArrears, const vector<double>& spreads,
                     const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
@@ -183,11 +184,13 @@ public:
                     const vector<string>& floorDates = vector<string>(),
                     const vector<double>& gearings = vector<double>(),
                     const vector<string>& gearingDates = vector<string>(), bool isAveraged = false,
-                    bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false)
-        : LegAdditionalData("Floating"), index_(ore::data::internalIndexName(index)), fixingDays_(fixingDays), isInArrears_(isInArrears),
-          isAveraged_(isAveraged), hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads),
-          spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
-          gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {
+                    bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false,
+                    QuantLib::Period lookback = 0 * Days)
+        : LegAdditionalData("Floating"), index_(ore::data::internalIndexName(index)), fixingDays_(fixingDays),
+          lookback_(lookback), isInArrears_(isInArrears), isAveraged_(isAveraged), hasSubPeriods_(hasSubPeriods),
+          includeSpread_(includeSpread), spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates),
+          floors_(floors), floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates),
+          nakedOption_(nakedOption) {
         indices_.insert(index_);
     }
 
@@ -195,6 +198,7 @@ public:
     //@{
     const string& index() const { return index_; }
     QuantLib::Size fixingDays() const { return fixingDays_; }
+    QuantLib::Period lookback() const { return lookback_; }
     bool isInArrears() const { return isInArrears_; }
     bool isAveraged() const { return isAveraged_; }
     bool hasSubPeriods() const { return hasSubPeriods_; }
@@ -218,6 +222,7 @@ public:
 private:
     string index_;
     QuantLib::Size fixingDays_;
+    QuantLib::Period lookback_;
     bool isInArrears_;
     bool isAveraged_;
     bool hasSubPeriods_;
@@ -744,7 +749,8 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
 Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index);
 Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper);
 Leg makeSimpleLeg(const LegData& data);
-Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow = true);
+Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,
+                    const BusinessDayConvention paymentConvention, const Calendar paymentCalendar);
 Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>& index,
                const boost::shared_ptr<EngineFactory>& engineFactory);
 Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& index,
