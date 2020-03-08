@@ -76,6 +76,7 @@ public:
 private:
     void performCalculations() const override;
     void buildSwaptionBasket() const;
+    void updateSwaptionBasketVols() const;
     std::string getBasketDetails() const;
     // checks whether swaption vols have changed compared to cache and updates the cache if requested
     bool volSurfaceChanged(const bool updateCache) const;
@@ -97,8 +98,10 @@ private:
     boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization_;
     RelinkableHandle<YieldTermStructure> discountCurve_;
     mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket_;
+    mutable std::vector<boost::shared_ptr<SimpleQuote>> swaptionBasketVols_;
     mutable Array swaptionExpiries_;
     mutable Array swaptionMaturities_;
+    mutable Date swaptionBasketRefDate_;
 
     Handle<QuantLib::SwaptionVolatilityStructure> svts_;
     Handle<SwapIndex> swapIndex_, shortSwapIndex_;

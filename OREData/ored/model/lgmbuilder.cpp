@@ -182,8 +182,16 @@ void LgmBuilder::performCalculations() const {
         parametrization_->shift() = 0.0;
         parametrization_->scaling() = 1.0;
 
-        if (data_->calibrateA() || data_->calibrateH())
-            buildSwaptionBasket();
+        if((data_->calibrateA() || data_->calibrateH())) {
+            if (swaptionBasketRefDate_ != discountCurve_->referenceDate()) {
+                // build swaption basket if required, i.e. if reference date has changed since last build
+                buildSwaptionBasket();
+                swaptionBasketRefDate_ = discountCurve_->referenceDate();
+            } else {
+                // otherwise just update vols
+                updateSwaptionBasketVols();
+            }
+        }
 
         for (Size j = 0; j < swaptionBasket_.size(); j++) {
             auto engine = boost::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_);
@@ -349,6 +357,11 @@ bool LgmBuilder::volSurfaceChanged(const bool updateCache) const {
     return hasUpdated;
 }
 
+void LgmBuilder::updateSwaptionBasketVols() const {
+    for (Size j = 0; j < swaptionBasketVols_.size(); ++j)
+        swaptionBasketVols_.at(j)->setValue(swaptionVolCache_.at(j));
+}
+
 void LgmBuilder::buildSwaptionBasket() const {
 
     QL_REQUIRE(data_->optionExpiries().size() == data_->optionTerms().size(), "swaption vector size mismatch");
@@ -368,6 +381,7 @@ void LgmBuilder::buildSwaptionBasket() const {
     std::vector<Time> expiryTimes(data_->optionExpiries().size());
     std::vector<Time> maturityTimes(data_->optionTerms().size());
     swaptionBasket_.clear();
+    swaptionBasketVols_.clear();
     for (Size j = 0; j < data_->optionExpiries().size(); j++) {
         bool expiryDateBased, termDateBased;
         Period expiryPb, termPb;
@@ -388,7 +402,8 @@ void LgmBuilder::buildSwaptionBasket() const {
         auto floatDayCounter = termTmp > shortSwapIndex_->tenor() ? swapIndex_->iborIndex()->dayCounter()
                                                                   : shortSwapIndex_->iborIndex()->dayCounter();
 
-        Handle<Quote> vol = Handle<Quote>(boost::make_shared<SimpleQuote>(swaptionVolCache_.at(j)));
+        swaptionBasketVols_.push_back(boost::make_shared<SimpleQuote>(swaptionVolCache_.at(j)));
+        Handle<Quote> vol = Handle<Quote>(swaptionBasketVols_.back());
         boost::shared_ptr<SwaptionHelper> helper;
 
         if (expiryDateBased && termDateBased) {
