@@ -44,6 +44,9 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
 
+    //! Add underlying Equity names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
+
     //! \name Inspectors
     //@{
     const string& equityName() const { return assetName_; }

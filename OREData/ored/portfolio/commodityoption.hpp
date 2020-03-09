@@ -50,6 +50,10 @@ public:
         return {};
     }
 
+
+    //! Add underlying Commodity names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
+
     //! \name Inspectors
     //@{
     const OptionData& option() const { return optionData_; }

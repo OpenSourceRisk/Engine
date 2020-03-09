@@ -477,6 +477,9 @@
     <ClInclude Include="ored\portfolio\builders\capflooredcpileg.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\equityidentifier.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -841,6 +844,9 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\builders\cpicapfloor.cpp">
       <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\equityidentifier.cpp">
+      <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
