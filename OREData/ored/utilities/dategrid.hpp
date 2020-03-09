@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/simulation/dategrid.hpp
+/*! \file ored/utilities/dategrid.hpp
     \brief The date grid class
     \ingroup simulation
 */
@@ -28,7 +28,7 @@
 #include <ql/timegrid.hpp>
 
 namespace ore {
-namespace analytics {
+namespace data {
 
 //! Simulation Date Grid
 /*!
@@ -94,5 +94,5 @@ private:
     std::vector<QuantLib::Time> times_;
     QuantLib::TimeGrid timeGrid_;
 };
-} // namespace analytics
+} // namespace data
 } // namespace ore

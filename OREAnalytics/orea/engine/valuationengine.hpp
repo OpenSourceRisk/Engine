@@ -25,11 +25,11 @@
 
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/valuationcalculator.hpp>
-#include <orea/simulation/dategrid.hpp>
 #include <orea/simulation/simmarket.hpp>
 #include <ored/model/modelbuilder.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/progressbar.hpp>
+#include <ored/utilities/dategrid.hpp>
 
 #include <map>
 #include <set>
