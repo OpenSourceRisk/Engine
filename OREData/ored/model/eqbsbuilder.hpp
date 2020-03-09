@@ -56,7 +56,9 @@ public:
         //! base currency for calibration
         const QuantLib::Currency& baseCcy,
         //! Market configuration to use
-        const std::string& configuration = Market::defaultConfiguration);
+        const std::string& configuration = Market::defaultConfiguration,
+        //! the reference calibration grid
+        const std::string& referenceCalibrationGrid = "");
 
     //! Return calibration error
     Real error() const;
@@ -86,11 +88,15 @@ private:
     const boost::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
     const boost::shared_ptr<EqBsData> data_;
+    const std::string referenceCalibrationGrid_;
     const QuantLib::Currency baseCcy_;
 
     // computed
     Real error_;
     mutable boost::shared_ptr<QuantExt::EqBsParametrization> parametrization_;
+    
+    // which options in data->optionExpiries() are actually in the basket?
+    mutable std::vector<bool> optionActive_;
     mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
     mutable Array optionExpiries_;
 

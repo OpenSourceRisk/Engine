@@ -55,7 +55,7 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     DLOG("Get model data");
     auto calibration = parseCalibrationType(modelParameter("Calibration"));
     auto calibrationStrategy = parseCalibrationStrategy(modelParameter("CalibrationStrategy"));
-    Size minGapCalibrationExpiries = parseInteger(modelParameter("MinGapCalibrationExpiries"));
+    std::string referenceCalibrationGrid = modelParameter("ReferenceCalibrationGrid", "", false, "");
     Real lambda = parseReal(modelParameter("Reversion", ccy));
     vector<Real> sigma = parseListOfValues<Real>(modelParameter("Volatility"), &parseReal);
     vector<Real> sigmaTimes = parseListOfValues<Real>(modelParameter("VolatilityTimes", "", false), &parseReal);
@@ -107,13 +107,9 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
         calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
         DLOG("Build LgmData for co-terminal specification");
         vector<string> expiryDates, termDates;
-        Date lastExpiryDate = Date::minDate();
         for (Size i = 0; i < expiries.size(); ++i) {
-            if (expiries[i] >= lastExpiryDate + minGapCalibrationExpiries) {
-                expiryDates.push_back(to_string(expiries[i]));
-                termDates.push_back(to_string(maturity));
-                lastExpiryDate = expiries[i];
-            }
+            expiryDates.push_back(to_string(expiries[i]));
+            termDates.push_back(to_string(maturity));
         }
         data->optionExpiries() = expiryDates;
         data->optionTerms() = termDates;
@@ -148,8 +144,9 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
 
     // Build and calibrate model
     DLOG("Build LGM model");
-    boost::shared_ptr<LgmBuilder> calib = boost::make_shared<LgmBuilder>(
-        market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError);
+    boost::shared_ptr<LgmBuilder> calib =
+        boost::make_shared<LgmBuilder>(market_, data, configuration(MarketContext::irCalibration), tolerance,
+                                       continueOnCalibrationError, referenceCalibrationGrid);
 
     // In some cases, we do not want to calibrate the model
     boost::shared_ptr<QuantExt::LGM> model;

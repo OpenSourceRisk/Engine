@@ -54,7 +54,9 @@ public:
         //! FX model parameters/dscription
         const boost::shared_ptr<FxBsData>& data,
         //! Market configuration to use
-        const std::string& configuration = Market::defaultConfiguration);
+        const std::string& configuration = Market::defaultConfiguration,
+        //! the reference calibration grid
+        const std::string& referenceCalibrationGrid = "");
 
     //! Return calibration error
     Real error() const;
@@ -84,11 +86,15 @@ private:
     const boost::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
     const boost::shared_ptr<FxBsData> data_;
+    const std::string referenceCalibrationGrid_;
 
     // computed
     mutable Real error_;
     boost::shared_ptr<QuantExt::FxBsParametrization> parametrization_;
-    mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
+
+    // which options in data->optionExpiries() are actually in the basket?
+    mutable std::vector<bool> optionActive_;
+    mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;    
     mutable Array optionExpiries_;
 
     // relevant market data
