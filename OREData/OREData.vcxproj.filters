@@ -468,6 +468,15 @@
     <ClInclude Include="ored\configuration\volatilityconfig.hpp">
       <Filter>configuration</Filter>
     </ClInclude>
+    <ClInclude Include="ored\model\structuredmodelerror.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\cpicapfloor.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\capflooredcpileg.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -829,6 +838,9 @@
     </ClCompile>
     <ClCompile Include="ored\configuration\volatilityconfig.cpp">
       <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\cpicapfloor.cpp">
+      <Filter>portfolio\builders</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

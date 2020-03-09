@@ -17,14 +17,17 @@
 */
 
 #include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/cpicapfloor.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/portfolio/fixingdates.hpp>
 
 #include <ql/instruments/capfloor.hpp>
+#include <ql/instruments/compositeinstrument.hpp>
+#include <ql/instruments/cpicapfloor.hpp>
 #include <ql/instruments/inflationcapfloor.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 
@@ -142,7 +145,120 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         maturity_ = capFloor->maturityDate();
 
     } else if (legData_.legType() == "CPI") {
-        // Add CPI Cap/Floors
+        DLOG("CPI CapFloor Type " << capFloorType << " ID " << id());
+
+        builder = engineFactory->builder("CpiCapFloor");
+
+        boost::shared_ptr<CPILegData> cpiData = boost::dynamic_pointer_cast<CPILegData>(legData_.concreteLegData());
+        QL_REQUIRE(cpiData, "Wrong LegType, expected CPI");
+
+        underlyingIndex_ = cpiData->index();
+        Handle<ZeroInflationIndex> zeroIndex = engineFactory->market()->zeroInflationIndex(
+            underlyingIndex_, builder->configuration(MarketContext::pricing));
+
+        Date startDate = parseDate(cpiData->startDate());
+        Real baseCPI = cpiData->baseCPI();
+        Period observationLag = parsePeriod(cpiData->observationLag());
+        CPI::InterpolationType interpolation = parseObservationInterpolation(cpiData->interpolation());
+        Calendar cal = zeroIndex->fixingCalendar();
+        BusinessDayConvention conv = Unadjusted; // not used in the CPI CapFloor engine
+
+        QL_REQUIRE(!zeroIndex.empty(), "Zero Inflation Index is empty");
+
+        legs_.push_back(makeCPILeg(legData_, zeroIndex.currentLink(), engineFactory));
+
+        // If a vector of cap/floor rates are provided, ensure they align with the number of schedule periods
+        if (floors_.size() > 1) {
+            QL_REQUIRE(floors_.size() == legs_[0].size(),
+                       "The number of floor rates provided does not match the number of schedule periods");
+        }
+
+        if (caps_.size() > 1) {
+            QL_REQUIRE(caps_.size() == legs_[0].size(),
+                       "The number of cap rates provided does not match the number of schedule periods");
+        }
+
+        // If one cap/floor rate is given, extend the vector to align with the number of schedule periods
+        if (floors_.size() == 1)
+            floors_.resize(legs_[0].size(), floors_[0]);
+
+        if (caps_.size() == 1)
+            caps_.resize(legs_[0].size(), caps_[0]);
+
+        boost::shared_ptr<CpiCapFloorEngineBuilder> capFloorBuilder =
+            boost::dynamic_pointer_cast<CpiCapFloorEngineBuilder>(builder);
+
+        // Create QL CPI CapFloor instruments and add to a composite
+        boost::shared_ptr<CompositeInstrument> composite = boost::make_shared<CompositeInstrument>();
+	bool legIsPayer = legData_.isPayer();
+        maturity_ = Date::minDate();
+        for (Size i = 0; i < legs_[0].size(); ++i) {
+            DLOG("Create composite " << i);
+            Real nominal, gearing, gearingSign;
+            Date paymentDate;
+            boost::shared_ptr<CPICoupon> coupon = boost::dynamic_pointer_cast<CPICoupon>(legs_[0][i]);
+            boost::shared_ptr<CPICashFlow> cashflow = boost::dynamic_pointer_cast<CPICashFlow>(legs_[0][i]);
+            if (coupon) {
+                nominal = coupon->nominal();
+                gearing = coupon->fixedRate() * coupon->accrualPeriod();
+                gearingSign = gearing >= 0.0 ? 1.0 : -1.0;
+                paymentDate = coupon->date();
+            } else if (cashflow) {
+                nominal = cashflow->notional();
+                gearing = 1.0; // no gearing here
+                gearingSign = 1.0;
+                paymentDate = cashflow->date();
+            } else {
+                QL_FAIL("Failed to interprete CPI flow");
+            }
+
+            if (capFloorType == QuantLib::CapFloor::Cap || capFloorType == QuantLib::CapFloor::Collar) {
+                Option::Type type = legIsPayer ? Option::Put : Option::Call;
+                // long call, short put, consistent with IR and YOY caps/floors/collars
+                Real sign = type == Option::Call ? gearingSign : -gearingSign;
+                boost::shared_ptr<CPICapFloor> capfloor =
+                    boost::make_shared<CPICapFloor>(type, nominal, startDate, baseCPI, paymentDate, cal, conv, cal,
+                                                    conv, caps_[i], zeroIndex, observationLag, interpolation);
+                capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex_));
+                composite->add(capfloor, sign * gearing);
+	        // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
+                //                                << " sign*gearing=" << sign * gearing);
+                maturity_ = std::max(maturity_, capfloor->payDate());
+                // if (coupon) {
+                //   std::cout << "CapFloor CPI Coupon " << std::endl
+                // 	    << "  payment date = " << QuantLib::io::iso_date(paymentDate) << std::endl
+                // 	    << "  nominal = " << nominal << std::endl
+                // 	    << "  gearing = " << gearing << std::endl
+                // 	    << "  start date = " << startDate << std::endl
+                // 	    << "  baseCPI = " << baseCPI << std::endl
+                // 	    << "  index  = " << zeroIndex->name() << std::endl
+                // 	    << "  lag = " << observationLag << std::endl
+                // 	    << "  interpolation = " << interpolation << std::endl;
+                //   }
+            }
+
+            if (capFloorType == QuantLib::CapFloor::Floor || capFloorType == QuantLib::CapFloor::Collar) {
+                Option::Type type = legIsPayer ? Option::Call : Option::Put;
+                // long call, short put, consistent with IR and YOY caps/floors/collars
+                Real sign = type == Option::Call ? gearingSign : -gearingSign;
+                boost::shared_ptr<CPICapFloor> capfloor =
+                    boost::make_shared<CPICapFloor>(type, nominal, startDate, baseCPI, paymentDate, cal, conv, cal,
+                                                    conv, floors_[i], zeroIndex, observationLag, interpolation);
+                capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex_));
+                composite->add(capfloor, sign * gearing);
+	        // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
+                //                                << " sign*gearing=" << sign * gearing);
+                maturity_ = std::max(maturity_, capfloor->payDate());
+            }
+
+            // DLOG(id() << " CPI CapFloor Composite NPV " << composite->NPV());
+        }
+
+        // Wrap the QL instrument in a vanilla instrument
+        Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
+        instrument_ = boost::make_shared<VanillaInstrument>(composite, multiplier);
+        // DLOG(id() << " CPI CapFloor Instrument NPV " << instrument_->NPV());
+
     } else if (legData_.legType() == "YY") {
         builder = engineFactory->builder("YYCapFloor");
 
@@ -152,17 +268,18 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         underlyingIndex_ = yyData->index();
         Handle<YoYInflationIndex> yoyIndex;
         // look for yoy inflation index
-        yoyIndex = engineFactory->market()->yoyInflationIndex(underlyingIndex_, builder->configuration(MarketContext::pricing));
+        yoyIndex = engineFactory->market()->yoyInflationIndex(underlyingIndex_,
+                                                              builder->configuration(MarketContext::pricing));
 
         // we must have either an yoy or a zero inflation index in the market, if no yoy curve, get teh zero
         // and create a yoy index from it
         if (yoyIndex.empty()) {
-            Handle<ZeroInflationIndex> zeroIndex =
-                engineFactory->market()->zeroInflationIndex(underlyingIndex_, builder->configuration(MarketContext::pricing));
-            QL_REQUIRE(!zeroIndex.empty(), 
-                "Could not find inflation index (of type either zero or yoy) " << underlyingIndex_ << " in market.");
-            yoyIndex = Handle<YoYInflationIndex>(
-                boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex.currentLink(), zeroIndex->interpolated()));
+            Handle<ZeroInflationIndex> zeroIndex = engineFactory->market()->zeroInflationIndex(
+                underlyingIndex_, builder->configuration(MarketContext::pricing));
+            QL_REQUIRE(!zeroIndex.empty(), "Could not find inflation index (of type either zero or yoy) "
+                                               << underlyingIndex_ << " in market.");
+            yoyIndex = Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+                zeroIndex.currentLink(), zeroIndex->interpolated()));
         }
 
         legs_.push_back(makeYoYLeg(legData_, yoyIndex.currentLink(), engineFactory));
@@ -191,6 +308,9 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             yoyCapFloor = boost::shared_ptr<YoYInflationCapFloor>(new YoYInflationCap(legs_[0], caps_));
         } else if (capFloorType == QuantLib::CapFloor::Floor) {
             yoyCapFloor = boost::shared_ptr<YoYInflationCapFloor>(new YoYInflationFloor(legs_[0], floors_));
+        } else if (capFloorType == QuantLib::CapFloor::Collar) {
+            yoyCapFloor = boost::shared_ptr<YoYInflationCapFloor>(
+                new YoYInflationCapFloor(QuantLib::YoYInflationCapFloor::Collar, legs_[0], caps_, floors_));
         } else {
             QL_FAIL("unknown YoYInflation cap/floor type");
         }
@@ -204,7 +324,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         instrument_ = boost::make_shared<VanillaInstrument>(yoyCapFloor, multiplier);
 
         maturity_ = yoyCapFloor->maturityDate();
-
     } else {
         QL_FAIL("Invalid legType for CapFloor");
     }
@@ -213,6 +332,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legCurrencies_.push_back(legData_.currency());
     legPayers_.push_back(legData_.isPayer());
     npvCurrency_ = legData_.currency();
+    notionalCurrency_ = legData_.currency();
     notional_ = currentNotional(legs_[0]);
 }
 

@@ -17,7 +17,6 @@
 */
 
 #include <ql/experimental/inflation/interpolatedyoyoptionletstripper.hpp>
-#include <ql/experimental/inflation/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <ql/instruments/makeyoyinflationcapfloor.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
@@ -101,13 +100,38 @@ void YoYInflationOptionletVolStripper::performCalculations() {
         }
     }
 
+    // switch between floors and caps using the last option maturity, but keep one floor and one cap strike at least
+    // this is the best we can do to use OTM instruments with the original QL yoy vol bootstrapper
+    int jCritical = 0;
+    while (jCritical < static_cast<int>(strikes.size()) &&
+           fPrice[jCritical][optionletTerms.size() - 1] < cPrice[jCritical][optionletTerms.size() - 1])
+        ++jCritical;
+    int numberOfFloors = std::max(1, jCritical - 1);
+    int numberOfCaps = std::max(1, static_cast<int>(strikes.size()) - jCritical + 1);
+    Matrix cPriceFinal(numberOfCaps, strikes.size() == 0 ? 0 : optionletTerms.size());
+    Matrix fPriceFinal(numberOfFloors, strikes.size() == 0 ? 0 : optionletTerms.size());
+    std::vector<Real> fStrikes, cStrikes;
+    for (int j = 0; j < numberOfCaps; ++j) {
+        for (int i = 0; i < static_cast<int>(optionletTerms.size()); ++i) {
+            cPriceFinal(j, i) = cPrice[strikes.size() - numberOfCaps + j][i];
+        }
+        cStrikes.push_back(strikes[strikes.size() - numberOfCaps + j]);
+    }
+    for (int j = 0; j < numberOfFloors; ++j) {
+        for (int i = 0; i < static_cast<int>(optionletTerms.size()); ++i) {
+            fPriceFinal(j, i) = fPrice[j][i];
+        }
+        fStrikes.push_back(strikes[j]);
+    }
+
     Rate baseRate = yoyIndex_->yoyInflationTermStructure()->baseRate();
     QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> ys(settDays, obsLag, yoyIndex_, baseRate,
-                                                                           nominalTs_, dc, cal, bdc, strikes, strikes,
-                                                                           optionletTerms, cPrice, fPrice);
+                                                                           nominalTs_, dc, cal, bdc, cStrikes, fStrikes,
+                                                                           optionletTerms, cPriceFinal, fPriceFinal);
 
     boost::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> > yoySurface =
         boost::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> >(ys);
+    yoySurface->enableExtrapolation();
 
     boost::shared_ptr<InterpolatedYoYOptionletStripper<Linear> > yoyStripper =
         boost::make_shared<InterpolatedYoYOptionletStripper<Linear> >();
@@ -122,10 +146,10 @@ void YoYInflationOptionletVolStripper::performCalculations() {
     boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
         boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs);
 
-    boost::shared_ptr<QuantExt::StrikeInterpolatedYoYOptionletVolatilitySurface<Linear> > interpVolSurface =
-      boost::make_shared<QuantExt::StrikeInterpolatedYoYOptionletVolatilitySurface<Linear> >(settDays, cal, bdc, dc, obsLag,
+    boost::shared_ptr<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear> > interpVolSurface =
+      boost::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear> >(settDays, cal, bdc, dc, obsLag,
                                                                                 yoySurface, cfEngine, yoyStripper, 0);
-
+    interpVolSurface->enableExtrapolation();
     boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> newSurface =
         boost::make_shared<QuantExt::YoYOptionletVolatilitySurface>(interpVolSurface, type_, displacement_);
     yoyOptionletVolSurface_ = newSurface;

@@ -26,28 +26,38 @@ using ore::data::XMLUtils;
 namespace ore {
 namespace data {
 
-EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
-                                                         const string& currency, const Dimension& dimension,
-                                                         const vector<string>& expiries, const vector<string>& strikes,
-                                                         const DayCounter& dayCounter)
-    : CurveConfig(curveID, curveDescription), ccy_(currency), dimension_(dimension), expiries_(expiries),
-      dayCounter_(dayCounter), strikes_(strikes) {}
+EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
+    const string& curveID, 
+    const string& curveDescription, 
+    const string& currency, 
+    const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+    const string& dayCounter,
+    const string& calendar)
+    : CurveConfig(curveID, curveDescription), ccy_(currency), volatilityConfig_(volatilityConfig),
+      dayCounter_(dayCounter), calendar_(calendar) {
+    populateQuotes();
+}
 
-const vector<string>& EquityVolatilityCurveConfig::quotes() {
-    if (quotes_.size() == 0) {
-        string base = "EQUITY_OPTION/RATE_LNVOL/" + curveID_ + "/" + ccy_ + "/";
-        if (dimension_ == Dimension::ATM) {
-            for (auto e : expiries_)
-                quotes_.push_back(base + to_string(e) + "/ATMF");
-        } else {
-            for (auto e : expiries_) {
-                for (auto s : strikes_) {
-                    quotes_.push_back(base + to_string(e) + "/" + to_string(s));
-                }
+void EquityVolatilityCurveConfig::populateQuotes() {
+
+    // The quotes depend on the type of volatility structure that has been configured.
+    if (auto vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(volatilityConfig_)) {
+        quotes_ = { vc->quote() };
+    } else if (auto vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(volatilityConfig_)) {
+        quotes_ = vc->quotes();
+    } else if (auto vc = boost::dynamic_pointer_cast<VolatilitySurfaceConfig>(volatilityConfig_)) {
+        // Clear the quotes_ if necessary and populate with surface quotes
+        quotes_.clear();
+        string quoteStr;
+        for (const pair<string, string>& p : vc->quotes()) {
+            if (p.first == "*" || p.second == "*") {
+                quoteStr = quoteStem() + "*";
+            } else {
+                quoteStr = quoteStem() + p.first + "/" + p.second;
             }
+            quotes_.push_back(quoteStr);
         }
     }
-    return quotes_;
 }
 
 void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
@@ -56,81 +66,94 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     ccy_ = XMLUtils::getChildValue(node, "Currency", true);
-    string dim = XMLUtils::getChildValue(node, "Dimension", true);
-    if (dim == "ATM") {
-        dimension_ = Dimension::ATM;
-    } else if (dim == "Smile") {
-        dimension_ = Dimension::Smile;
-        strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", true);
+
+    XMLNode* n;
+    calendar_ = "NullCalendar";
+    if ((n = XMLUtils::getChildNode(node, "Calendar")))
+        calendar_ = XMLUtils::getNodeValue(n);
+    
+    dayCounter_ = "A365";
+    if ((n = XMLUtils::getChildNode(node, "DayCounter")))
+        dayCounter_ = XMLUtils::getNodeValue(n);
+    
+    // In order to remain backward compatible, we first check for a dimension node
+    // If this is present we read the nodes as before but create volatilityConfigs from the inputs
+    // If no dimension nodes then we expect VolatilityConfig nodes - this is the preferred configuration
+    string dim = XMLUtils::getChildValue(node, "Dimension", false);   
+    if (dim == "ATM" || dim == "Smile") {        
+        vector<string> expiries = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);        
+        string strikeExtrapolation = "Flat";
+        string timeExtrapolation = "Flat";
+        XMLNode* timeNode = XMLUtils::getChildNode(node, "TimeExtrapolation");
+        if (timeNode) {
+            timeExtrapolation = XMLUtils::getChildValue(node, "TimeExtrapolation", true);
+        }
+        XMLNode* strikeNode = XMLUtils::getChildNode(node, "StrikeExtrapolation");
+        if (strikeNode) {
+            strikeExtrapolation = XMLUtils::getChildValue(node, "StrikeExtrapolation", true);
+        }              
+        vector<string> strikes = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", false);
+        if (dim == "ATM") {
+            QL_REQUIRE(strikes.size() == 0, "Dimension ATM, but multiple strikes provided for EquityVolatility " << curveID_);
+            // if ATM create VolatilityCurveConfig which requires quotes to be provided
+            vector<string> quotes(expiries.size());
+            if (expiries.size() == 1 && expiries.front() == "*") {
+                quotes[0] = (quoteStem() + "*");
+            } else {
+                Size i = 0;
+                for (auto ex : expiries) {
+                    quotes[i] = (quoteStem() + ex + "/ATMF");
+                    i++;
+                }
+            }
+            volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>(quotes, timeExtrapolation, timeExtrapolation);
+        } else {
+            // if Smile create VolatilityStrikeSurfaceConfig
+            volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>(strikes, expiries, "Linear", "Linear", true, timeExtrapolation, strikeExtrapolation);
+        }
+
+    } else if (dim == "") {
+        XMLNode* n;
+        if ((n = XMLUtils::getChildNode(node, "Constant"))) {
+            volatilityConfig_ = boost::make_shared<ConstantVolatilityConfig>();
+        } else if ((n = XMLUtils::getChildNode(node, "Curve"))) {
+            volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>();
+        } else if ((n = XMLUtils::getChildNode(node, "StrikeSurface"))) {
+            volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>();
+        } else if ((n = XMLUtils::getChildNode(node, "DeltaSurface"))) {
+            QL_FAIL("DeltaSurface not currently supported for equity volatilities.");
+        } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
+            QL_FAIL("MoneynessSurface not currently supported for equity volatilities.");
+        } else if ((n = XMLUtils::getChildNode(node, "ApoFutureSurface"))) {
+            QL_FAIL("ApoFutureSurface not supported for equity volatilities.");
+        } else {
+            QL_FAIL("EquityVolatility node expects one child node with name in list: Constant,"
+                << " Curve, StrikeSurface.");
+        }
+        volatilityConfig_->fromXML(n);
+    } else {
+        QL_FAIL("Only ATM and Smile dimensions, or Volatility Config supported for EquityVolatility " << curveID_);
     }
-    expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
-
-    string dc = XMLUtils::getChildValue(node, "DayCounter");
-    if (dc == "")
-        dc = "A365";
-    dayCounter_ = parseDayCounter(dc);
-
-    strikeExtrapolation_ = Extrapolation::Flat;
-    timeExtrapolation_ = Extrapolation::Flat;
-    XMLNode* timeNode = XMLUtils::getChildNode(node, "TimeExtrapolation");
-    if (timeNode) {
-        timeExtrapolation_ = stringToExtrapolation(XMLUtils::getChildValue(node, "TimeExtrapolation", true));
-    }
-    LOG("using time extrapolation " << extrapolationToString(timeExtrapolation_));
-
-    XMLNode* strikeNode = XMLUtils::getChildNode(node, "StrikeExtrapolation");
-    if (strikeNode) {
-        strikeExtrapolation_ = stringToExtrapolation(XMLUtils::getChildValue(node, "StrikeExtrapolation", true));
-    }
-    LOG("using strike extrapolation " << extrapolationToString(strikeExtrapolation_));
-
+    populateQuotes();
 }
 
 XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
+    
     XMLNode* node = doc.allocNode("EquityVolatility");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "Currency", ccy_);
-    if (dimension_ == Dimension::ATM) {
-        XMLUtils::addChild(doc, node, "Dimension", "ATM");
-        XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
-    } else {
-        XMLUtils::addChild(doc, node, "Dimension", "Smile");
-        XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
-        XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
-    }
-    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+    XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
+    
+    XMLNode* n = volatilityConfig_->toXML(doc);
+    XMLUtils::appendNode(node, n);
 
-    XMLUtils::addChild(doc, node, "TimeExtrapolation", extrapolationToString(timeExtrapolation_));
-    XMLUtils::addChild(doc, node, "StrikeExtrapolation", extrapolationToString(strikeExtrapolation_));
-
+    if (calendar_ != "NullCalendar")
+        XMLUtils::addChild(doc, node, "Calendar", calendar_);
+    
     return node;
 }
 
-string EquityVolatilityCurveConfig::extrapolationToString(const Extrapolation& extrap) const {
-    switch (extrap) {
-    case Extrapolation::None:
-        return "None";
-    case Extrapolation::UseInterpolator:
-        return "UseInterpolator";
-    case Extrapolation::Flat:
-        return "Flat";
-    default:
-        QL_FAIL("Can't convert equity volatility extrapolation type to string");
-    }
-}
-
-EquityVolatilityCurveConfig::Extrapolation EquityVolatilityCurveConfig::stringToExtrapolation(const string& extrap) const {
-    if (extrap == "None") {
-        return Extrapolation::None;
-    } else if (extrap == "UseInterpolator") {
-        return Extrapolation::UseInterpolator;
-    } else if (extrap == "Flat") {
-        return Extrapolation::Flat;
-    } else {
-        QL_FAIL("Cannot convert string \"" << extrap << "\" to equity volatility extrapolation type");
-    }
-}
 } // namespace data
 } // namespace ore

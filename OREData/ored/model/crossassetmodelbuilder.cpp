@@ -21,6 +21,7 @@
 #include <ored/model/fxbsbuilder.hpp>
 #include <ored/model/infdkbuilder.hpp>
 #include <ored/model/lgmbuilder.hpp>
+#include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
@@ -49,15 +50,18 @@
 namespace ore {
 namespace data {
 
-CrossAssetModelBuilder::CrossAssetModelBuilder(
-    const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<CrossAssetModelData>& config,
-    const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
-    const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
-    const std::string& configurationFinalModel, const DayCounter& dayCounter, const bool dontCalibrate)
+CrossAssetModelBuilder::CrossAssetModelBuilder(const boost::shared_ptr<ore::data::Market>& market,
+                                               const boost::shared_ptr<CrossAssetModelData>& config,
+                                               const std::string& configurationLgmCalibration,
+                                               const std::string& configurationFxCalibration,
+                                               const std::string& configurationEqCalibration,
+                                               const std::string& configurationInfCalibration,
+                                               const std::string& configurationFinalModel, const DayCounter& dayCounter,
+                                               const bool dontCalibrate, const bool continueOnError)
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration), configurationFinalModel_(configurationFinalModel),
-      dayCounter_(dayCounter), dontCalibrate_(dontCalibrate),
+      dayCounter_(dayCounter), dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
     buildModel();
@@ -166,8 +170,8 @@ void CrossAssetModelBuilder::buildModel() const {
     for (Size i = 0; i < config_->irConfigs().size(); i++) {
         boost::shared_ptr<IrLgmData> ir = config_->irConfigs()[i];
         DLOG("IR Parametrization " << i << " ccy " << ir->ccy());
-        boost::shared_ptr<LgmBuilder> builder =
-            boost::make_shared<LgmBuilder>(market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance());
+        boost::shared_ptr<LgmBuilder> builder = boost::make_shared<LgmBuilder>(
+            market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_);
         if (dontCalibrate_)
             builder->freeze();
         irBuilder.push_back(builder);
@@ -335,12 +339,29 @@ void CrossAssetModelBuilder::buildModel() const {
                                                       *optimizationMethod_, endCriteria_);
 
             DLOG("FX " << fx->foreignCcy() << " calibration errors:");
-            fxOptionCalibrationErrors_[i] =
-                logCalibrationErrors(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]);
+            fxOptionCalibrationErrors_[i] = getCalibrationError(fxOptionBaskets_[i]);
             if (fx->calibrationType() == CalibrationType::Bootstrap) {
-                QL_REQUIRE(fabs(fxOptionCalibrationErrors_[i]) < config_->bootstrapTolerance(),
-                           "calibration error " << fxOptionCalibrationErrors_[i] << " exceeds tolerance "
-                                                << config_->bootstrapTolerance());
+                if (fabs(fxOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
+                    // we check the log level here to avoid unncessary computations
+                    if(Log::instance().filter(ORE_DATA)) {
+                        TLOGGERSTREAM << "Calibration details:";
+                        TLOGGERSTREAM << getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i],
+                                                               irParametrizations[0]);
+                        TLOGGERSTREAM << "rmse = " << fxOptionCalibrationErrors_[i];
+                    }
+                } else {
+                    std::string exceptionMessage = "FX BS " + std::to_string(i) + " calibration error " +
+                                                   std::to_string(fxOptionCalibrationErrors_[i]) +
+                                                   " exceeds tolerance " +
+                                                   std::to_string(config_->bootstrapTolerance());
+                    WLOG(StructuredModelErrorMessage("Failed to calibrate FX BS Model", exceptionMessage));
+                    WLOGGERSTREAM << "Calibration details:";
+                    WLOGGERSTREAM << getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i],
+                                                           irParametrizations[0]);
+                    WLOGGERSTREAM << "rmse = " << fxOptionCalibrationErrors_[i];
+                    if(!continueOnError_)
+                        QL_FAIL(exceptionMessage);
+                }
             }
         }
     }
@@ -383,12 +404,29 @@ void CrossAssetModelBuilder::buildModel() const {
                 model_->calibrateBsVolatilitiesGlobal(CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i],
                                                       *optimizationMethod_, endCriteria_);
             DLOG("EQ " << eq->eqName() << " calibration errors:");
-            eqOptionCalibrationErrors_[i] =
-                logCalibrationErrors(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]);
+            eqOptionCalibrationErrors_[i] = getCalibrationError(eqOptionBaskets_[i]);
             if (eq->calibrationType() == CalibrationType::Bootstrap) {
-                QL_REQUIRE(fabs(eqOptionCalibrationErrors_[i]) < config_->bootstrapTolerance(),
-                           "calibration error " << eqOptionCalibrationErrors_[i] << " exceeds tolerance "
-                                                << config_->bootstrapTolerance());
+                if (fabs(eqOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
+                    // we check the log level here to avoid unncessary computations
+                    if (Log::instance().filter(ORE_DATA)) {
+                        TLOGGERSTREAM << "Calibration details:";
+                        TLOGGERSTREAM << getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i],
+                                                               irParametrizations[0]);
+                        TLOGGERSTREAM << "rmse = " << eqOptionCalibrationErrors_[i];
+                    }
+                } else {
+                    std::string exceptionMessage = "EQ BS " + std::to_string(i) + " calibration error " +
+                                                   std::to_string(eqOptionCalibrationErrors_[i]) +
+                                                   " exceeds tolerance " +
+                                                   std::to_string(config_->bootstrapTolerance());
+                    WLOG(StructuredModelErrorMessage("Failed to calibrate EQ BS Model", exceptionMessage));
+                    WLOGGERSTREAM << "Calibration details:";
+                    WLOGGERSTREAM << getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i],
+                                                           irParametrizations[0]);
+                    WLOGGERSTREAM << "rmse = " << eqOptionCalibrationErrors_[i];
+                    if (!continueOnError_)
+                        QL_FAIL(exceptionMessage);
+                }
             }
         }
     }
@@ -449,12 +487,29 @@ void CrossAssetModelBuilder::buildModel() const {
             }
 
             DLOG("INF " << inf->infIndex() << " calibration errors:");
-            infCapFloorCalibrationErrors_[i] =
-                logCalibrationErrors(infCapFloorBaskets_[i], infParametrizations[i], irParametrizations[0]);
+            infCapFloorCalibrationErrors_[i] = getCalibrationError(infCapFloorBaskets_[i]);
             if (inf->calibrationType() == CalibrationType::Bootstrap) {
-                QL_REQUIRE(fabs(infCapFloorCalibrationErrors_[i]) < config_->bootstrapTolerance(),
-                           "calibration error " << infCapFloorCalibrationErrors_[i] << " exceeds tolerance "
-                                                << config_->bootstrapTolerance());
+                if (fabs(infCapFloorCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
+                    // we check the log level here to avoid unncessary computations
+                    if(Log::instance().filter(ORE_DATA)) {
+                        TLOGGERSTREAM << "Calibration details:";
+                        TLOGGERSTREAM << getCalibrationDetails(infCapFloorBaskets_[i], infParametrizations[i],
+                                                               irParametrizations[0]);
+                        TLOGGERSTREAM << "rmse = " << infCapFloorCalibrationErrors_[i];
+                    }
+                } else {
+                    std::string exceptionMessage = "INF DK " + std::to_string(i) + " calibration error " +
+                                                   std::to_string(infCapFloorCalibrationErrors_[i]) +
+                                                   " exceeds tolerance " +
+                                                   std::to_string(config_->bootstrapTolerance());
+                    WLOG(StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage));
+                    WLOGGERSTREAM << "Calibration details:";
+                    WLOGGERSTREAM << getCalibrationDetails(infCapFloorBaskets_[i], infParametrizations[i],
+                                                           irParametrizations[0]);
+                    WLOGGERSTREAM << "rmse = " << infCapFloorCalibrationErrors_[i];
+                    if(!continueOnError_)
+                        QL_FAIL(exceptionMessage);
+                }
             }
         }
     }

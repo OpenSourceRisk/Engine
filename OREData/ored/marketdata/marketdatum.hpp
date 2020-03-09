@@ -72,6 +72,7 @@ public:
         DISCOUNT,
         MM,
         MM_FUTURE,
+        OI_FUTURE,
         FRA,
         IMM_FRA,
         IR_SWAP,
@@ -362,6 +363,41 @@ private:
     string contract_;
     Period tenor_;
 };
+
+//! Overnight index future data class
+/*! This class holds single market points of type - OI_FUTURE.
+    Specific data comprise currency, expiry, contract and future tenor.
+
+    \warning expiry parameter is expected in the format YYYY-MM e.g.
+             2013-06 for Jun 2013, 1998-05 for May 1998, etc.
+
+    \ingroup marketdata
+*/
+class OIFutureQuote : public MarketDatum {
+public:
+    //! Constructor
+    OIFutureQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, string expiry,
+                  string contract = "", Period tenor = 3 * Months)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::OI_FUTURE), ccy_(ccy), expiry_(expiry),
+          contract_(contract), tenor_(tenor) {}
+
+    //! \name Inspectors
+    //@{
+    const string& ccy() const { return ccy_; }
+    const string& expiry() const { return expiry_; }
+    Natural expiryYear() const;
+    Month expiryMonth() const;
+    const string& contract() const { return contract_; }
+    const Period& tenor() const { return tenor_; }
+    //@}
+
+private:
+    string ccy_;
+    string expiry_;
+    string contract_;
+    Period tenor_;
+};
+
 
 //! Basis Swap data class
 /*!

@@ -71,6 +71,7 @@ portfolio/builders/capfloorediborleg.cpp
 portfolio/builders/cms.cpp
 portfolio/builders/cmsspread.cpp
 portfolio/builders/commodityoption.cpp
+portfolio/builders/cpicapfloor.cpp
 portfolio/builders/swaption.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
@@ -197,6 +198,7 @@ model/lgmbuilder.hpp
 model/lgmdata.hpp
 model/marketobserver.hpp
 model/modelbuilder.hpp
+model/structuredmodelerror.hpp
 model/utilities.hpp
 portfolio/bond.hpp
 portfolio/builders/bond.hpp
@@ -204,10 +206,12 @@ portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
 portfolio/builders/capfloorediborleg.hpp
 portfolio/builders/capflooredyoyleg.hpp
+portfolio/builders/capflooredcpileg.hpp
 portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
 portfolio/builders/commodityforward.hpp
 portfolio/builders/commodityoption.hpp
+portfolio/builders/cpicapfloor.hpp
 portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityoption.hpp
