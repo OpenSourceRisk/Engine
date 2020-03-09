@@ -48,7 +48,7 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : extrapolate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0.0}),
+        : extrapolate_(false), swapVolIsCube_({ {"", false} }), swapVolSimulateATMOnly_(false), swapVolStrikeSpreads_({ {"", {0.0}} }),
           equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), cprSimulate_(false),
           correlationIsSurface_(false), correlationStrikes_({0.0}) {
         setDefaults();
@@ -80,14 +80,14 @@ public:
     vector<string> fxCcyPairs() const { return paramsLookup(RiskFactorKey::KeyType::FXSpot); }
 
     bool simulateSwapVols() const { return paramsSimulate(RiskFactorKey::KeyType::SwaptionVolatility); }
-    bool swapVolIsCube() const { return swapVolIsCube_; }
+    bool swapVolIsCube(const string& key) const;
     bool simulateSwapVolATMOnly() const { return swapVolSimulateATMOnly_; }
-    const vector<Period>& swapVolTerms() const { return swapVolTerms_; }
-    const vector<Period>& swapVolExpiries() const { return swapVolExpiries_; }
+    const vector<Period>& swapVolTerms(const string& key) const;
+    const vector<Period>& swapVolExpiries(const string& key) const;
     vector<string> swapVolCcys() const { return paramsLookup(RiskFactorKey::KeyType::SwaptionVolatility); }
     const string& swapVolDayCounter(const string& key) const;
     const string& swapVolDecayMode() const { return swapVolDecayMode_; }
-    const vector<Real>& swapVolStrikeSpreads() const { return swapVolStrikeSpreads_; }
+    const vector<Real>& swapVolStrikeSpreads(const string& key) const;
 
     bool simulateYieldVols() const { return paramsSimulate(RiskFactorKey::KeyType::YieldVolatility); }
     const vector<Period>& yieldVolTerms() const { return yieldVolTerms_; }
@@ -140,12 +140,16 @@ public:
     bool fxVolIsSurface(const std::string& ccypair) const;
     bool fxVolIsSurface() const;
     bool hasFxPairWithSurface() const { return hasFxPairWithSurface_; }
+    bool useMoneyness(const std::string& ccypair) const;
+    bool useMoneyness() const;
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
     const string& fxVolDayCounter(const string& key) const;
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
     vector<string> fxVolCcyPairs() const { return paramsLookup(RiskFactorKey::KeyType::FXVolatility); }
     const vector<Real>& fxVolMoneyness(const string& ccypair) const;
     const vector<Real>& fxVolMoneyness() const;
+    const vector<Real>& fxVolStdDevs(const string& ccypair) const;
+    const vector<Real>& fxVolStdDevs() const;
 
     bool simulateEquityVols() const { return paramsSimulate(RiskFactorKey::KeyType::EquityVolatility); }
     bool equityVolIsSurface() const { return equityIsSurface_; }
@@ -226,12 +230,12 @@ public:
     void setFxCcyPairs(vector<string> names);
 
     void setSimulateSwapVols(bool simulate);
-    bool& swapVolIsCube() { return swapVolIsCube_; }
+    void setSwapVolIsCube(const string& key, bool isCube);
     bool& simulateSwapVolATMOnly() { return swapVolSimulateATMOnly_; }
-    vector<Period>& swapVolTerms() { return swapVolTerms_; }
+    void setSwapVolTerms(const string& key, const vector<Period>& p);
     void setSwapVolCcys(vector<string> names);
-    vector<Period>& swapVolExpiries() { return swapVolExpiries_; }
-    vector<Real>& swapVolStrikeSpreads() { return swapVolStrikeSpreads_; }
+    void setSwapVolExpiries(const string& key, const vector<Period>& p);
+    void setSwapVolStrikeSpreads(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
     string& swapVolDecayMode() { return swapVolDecayMode_; }
     void setSwapVolDayCounters(const string& key, const string& p);
 
@@ -276,11 +280,15 @@ public:
     void setFxVolIsSurface(const string& ccypair, bool val);
     void setFxVolIsSurface(bool val);
     void setHasFxPairWithSurface(bool val);
+    void setUseMoneyness(const string& ccypair, bool val);
+    void setUseMoneyness(bool val);
     void setFxVolExpiries(const vector<Period>& expiries);
     void setFxVolDecayMode(const string& val);
     void setFxVolCcyPairs(vector<string> names);
     void setFxVolMoneyness(const string& ccypair, const vector<Real>& moneyness);
     void setFxVolMoneyness(const vector<Real>& moneyness);
+    void setFxVolStdDevs(const string& ccypair, const vector<Real>& stdDevs);
+    void setFxVolStdDevs(const vector<Real>& stdDevs);
     void setFxVolDayCounters(const string& key, const string& p);
 
     void setSimulateEquityVols(bool simulate);
@@ -371,12 +379,12 @@ private:
     string interpolation_;
     bool extrapolate_;
 
-    bool swapVolIsCube_;
+    map<string, bool> swapVolIsCube_;
     bool swapVolSimulateATMOnly_;
-    vector<Period> swapVolTerms_;
+    map<string, vector<Period>> swapVolTerms_;
     map<string, string> swapVolDayCounters_;
-    vector<Period> swapVolExpiries_;
-    vector<Real> swapVolStrikeSpreads_;
+    map<string, vector<Period>> swapVolExpiries_;
+    map<string, vector<Real>> swapVolStrikeSpreads_;
     string swapVolDecayMode_;
 
     vector<Period> yieldVolTerms_;
@@ -407,11 +415,13 @@ private:
 
     // FX volatility data
     bool hasFxPairWithSurface_;
+    map<std::string, bool> useMoneyness_;
     map<std::string, bool> fxVolIsSurface_;
     vector<Period> fxVolExpiries_;
     map<string, string> fxVolDayCounters_;
     string fxVolDecayMode_;
     map<string, vector<Real>> fxMoneyness_;
+    map<string, vector<Real>> fxStandardDevs_;
 
     bool equityIsSurface_;
     bool equityVolSimulateATMOnly_;

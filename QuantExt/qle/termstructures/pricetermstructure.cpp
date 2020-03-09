@@ -32,12 +32,7 @@ PriceTermStructure::PriceTermStructure(Natural settlementDays, const Calendar& c
 
 Real PriceTermStructure::price(Time t, bool extrapolate) const {
     checkRange(t, extrapolate);
-
-    // Fail if price is negative
-    Real price = priceImpl(t);
-    QL_REQUIRE(price >= 0.0, "Price returned from PriceTermStructure cannot be negative (" << price << ")");
-
-    return price;
+    return priceImpl(t);
 }
 
 Real PriceTermStructure::price(const Date& d, bool extrapolate) const {
@@ -57,6 +52,24 @@ void PriceTermStructure::checkRange(Time t, bool extrapolate) const {
 
     // Now, do the usual TermStructure checks
     TermStructure::checkRange(t, extrapolate);
+}
+
+DerivedPriceQuote::DerivedPriceQuote(const QuantLib::Handle<PriceTermStructure>& priceTs)
+    : priceTs_(priceTs) {
+    registerWith(priceTs_);
+}
+
+Real DerivedPriceQuote::value() const {
+    QL_REQUIRE(isValid(), "Invalid DerivedPriceQuote");
+    return priceTs_->price(0, true);
+}
+
+bool DerivedPriceQuote::isValid() const {
+    return !priceTs_.empty();
+}
+
+void DerivedPriceQuote::update() {
+    notifyObservers();
 }
 
 } // namespace QuantExt

@@ -54,6 +54,9 @@ public:
     const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const;
     const std::vector<Fixing>& loadFixings() const { return fixings_; }
     const std::vector<Fixing>& loadDividends() const { return dividends_; }
+    void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addDividend(QuantLib::Date date, const string& name, QuantLib::Real value) {}
 
 private:
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
@@ -763,7 +766,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // clang-format on
 
     configs->commodityCurveConfig("GOLD_USD") =
-        boost::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", "COMMODITY/PRICE/GOLD/USD", commodityQuotes);
+        boost::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", commodityQuotes, "COMMODITY/PRICE/GOLD/USD");
 
     return configs;
 }

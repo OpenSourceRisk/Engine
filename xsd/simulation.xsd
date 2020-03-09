@@ -457,12 +457,14 @@
             </xs:element>
             <xs:element type="xs:string" name="Expiries"/>
             <xs:element type="xs:string" name="Terms"/>
-            <xs:element name="Cube" minOccurs="0">
+            <xs:element type="xs:boolean" name="SimulateATMOnly" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="StrikeSpreads" maxOccurs="unbounded" minOccurs="0">
               <xs:complexType>
-                <xs:sequence>
-                  <xs:element type="xs:boolean" name="SimulateATMOnly" maxOccurs="1" minOccurs="0"/>
-                  <xs:element type="xs:string" name="StrikeSpreads" maxOccurs="1" minOccurs="0"/>
-                </xs:sequence>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="ccy" type="xs:string" use="optional"/>
+                  </xs:extension>
+                </xs:simpleContent>
               </xs:complexType>
             </xs:element>
             <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
@@ -602,7 +604,7 @@
             <xs:element type="xs:string" name="Expiries"/>
             <xs:element name="Surface" maxOccurs="1" minOccurs="0">
               <xs:complexType>
-                <xs:sequence>
+                <xs:choice>
                   <xs:element name="Moneyness" maxOccurs="unbounded" minOccurs="0">
                     <xs:complexType>
                       <xs:simpleContent>
@@ -612,7 +614,16 @@
                       </xs:simpleContent>
                     </xs:complexType>
                   </xs:element>
-                </xs:sequence>
+                  <xs:element name="StandardDeviations" maxOccurs="unbounded" minOccurs="0">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="ccyPair" type="xs:string" use="optional"/>
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:choice>
               </xs:complexType>
             </xs:element>
             <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
@@ -809,8 +820,30 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
-            <xs:element type="xs:string" name="Tenors" maxOccurs="1" minOccurs="1"/>
-            <xs:element type="xs:string" name="DayCounter" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="Tenors" maxOccurs="unbounded" minOccurs="1">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="name" type="xs:string" use="optional"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="DayCounter" maxOccurs="unbounded" minOccurs="1">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="name" type="xs:string" use="optional"/>
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>

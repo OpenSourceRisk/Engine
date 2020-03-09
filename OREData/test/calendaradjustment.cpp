@@ -65,11 +65,6 @@ struct TestDatum {
     std::vector<Date> holidays;
 };
 
-// Needed for BOOST_DATA_TEST_CASE below as it writes out the TestDatum
-ostream& operator<<(ostream& os, const TestDatum& testDatum) {
-    return os << "[" << testDatum.calendarName << "," << testDatum.holidays.size() << " holidays]";
-}
-
 std::vector<TestDatum> loadExpectedHolidays() {
     // load from file
     string fileName = TEST_INPUT_FILE("holidays.csv");

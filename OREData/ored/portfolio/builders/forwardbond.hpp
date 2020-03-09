@@ -20,6 +20,7 @@
 
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -34,16 +35,18 @@
 namespace ore {
 namespace data {
 
-class fwdBondEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&,
-                                                                const string&, const string&, const string&> {
+class fwdBondEngineBuilder
+    : public CachingPricingEngineBuilder<string, const string&, const Currency&, const string&, const string&, const string&,
+                                         const string&, const string&> {
 protected:
     fwdBondEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"ForwardBond"}) {}
 
-    virtual string keyImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
+    virtual string keyImpl(const string& id, const Currency& ccy, const string& creditCurveId, const string& securityId,
                            const string& referenceCurveId, const string& incomeCurveId,
                            const string& adjustmentSpread) override {
 
+        // id is _not_ part of the key
         std::string returnString = ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId;
 
         return returnString;
@@ -57,9 +60,9 @@ public:
                                "DiscountingForwardBondEngine" /*the engine*/) {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
-                                                        const string& securityId, const string& referenceCurveId,
-                                                        const string& incomeCurveId,
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& id, const Currency& ccy,
+                                                        const string& creditCurveId, const string& securityId,
+                                                        const string& referenceCurveId, const string& incomeCurveId,
                                                         const string& adjustmentSpread) override {
 
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
@@ -84,11 +87,13 @@ protected:
                 recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
         }
 
-        Handle<Quote> bondSpread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
-
-        LOG("Starting engine for forward bond: " << securityId << " with recovery rate: " << recovery->value()
-                                                 << " with spread adjustment: " << bondSpread->value());
-
+        Handle<Quote> bondSpread;
+        try {
+            // spread is optional, pass empty handle to engine if not given (will be treated as 0 spread there)
+            bondSpread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
+        } catch (...) {
+            WLOG(StructuredTradeErrorMessage(id, "ForwardBond", "no security spread is given - using 0.0"));
+        }
         return boost::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, incomeTS, yts, bondSpread, dpts,
                                                                           recovery, tsperiod);
     } //(currency, creditCurveId_, securityId_, referenceCurveId_,derivativeCurveId_,incomeCurveId_)

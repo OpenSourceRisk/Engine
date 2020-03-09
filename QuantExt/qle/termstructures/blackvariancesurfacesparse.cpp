@@ -26,8 +26,12 @@ namespace QuantExt {
 BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate, const Calendar& cal,
                                                        const vector<Date>& dates, const vector<Real>& strikes,
                                                        const vector<Volatility>& volatilities,
-                                                       const DayCounter& dayCounter)
-    : BlackVarianceTermStructure(referenceDate, cal), OptionInterpolator2d<Linear, Linear>(referenceDate, dayCounter) {
+                                                       const DayCounter& dayCounter,
+                                                       bool lowerStrikeConstExtrap,
+                                                       bool upperStrikeConstExtrap, 
+                                                       bool timeFlatExtrapolation) 
+    : BlackVarianceTermStructure(referenceDate, cal), OptionInterpolator2d<Linear, Linear>
+        (referenceDate, dayCounter, lowerStrikeConstExtrap, upperStrikeConstExtrap), timeFlatExtrapolation_(timeFlatExtrapolation) {
 
     QL_REQUIRE((strikes.size() == dates.size()) && (dates.size() == volatilities.size()),
         "dates, strikes and volatilities vectors not of equal size.");
@@ -54,4 +58,13 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
     initialise(modDates, modStrikes, variances);    
 }
 
+QuantLib::Real BlackVarianceSurfaceSparse::blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const {
+
+    QuantLib::Time tb = times().back();
+    if (timeFlatExtrapolation_ && t > tb) {
+        return getValue(tb, strike) * t / tb;
+    } else {
+        return getValue(t, strike);
+    }
+};
 } // namespace QuantExt

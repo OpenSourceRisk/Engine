@@ -57,7 +57,7 @@ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 
 Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
 
-\item PaymentLag [optional]: The payment lag given as as number business days, applies to fixed, Ibor and OIS legs.
+\item PaymentLag [optional]: The payment lag given as as number business days, applies to fixed, Ibor and OIS legs. PaymentLag is not supported for the CapFloor trade type.
 
 Allowable values: A non-negative whole number, if not given it defaults to zero.
 
@@ -122,6 +122,10 @@ and an amortising exchange can be specified using an \lstinline!Exchanges! child
 \lstinline!NotionalInitialExchange!, \lstinline!NotionalFinalExchange! and \break
 \lstinline!NotionalAmortizingExchange! as subelements, see Listing
 \ref{lst:notional_exchange}.
+
+Allowable values for \lstinline!NotionalInitialExchange!,  \lstinline!NotionalFinalExchange! and \lstinline!NotionalAmortizingExchange!:   \emph{true, false}. 
+If the  \lstinline!Exchanges! node is omitted then all values default to \emph{false}, but if it is included \lstinline!NotionalInitialExchange! and \lstinline!NotionalFinalExchange! default to \emph{true}.
+It is recommended that all values are explicitly set.
 
 \begin{listing}[H]
 %\hrule\medskip

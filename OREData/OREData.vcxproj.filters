@@ -450,6 +450,24 @@
     <ClInclude Include="ored\portfolio\structuredtradeerror.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\legdatafactory.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\utilities\conventionsbasedfutureexpiry.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\configuration\bootstrapconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\marketdata\strike.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\marketdata\expiry.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\configuration\volatilityconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -793,6 +811,24 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\vanillaoption.cpp">
       <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\legdatafactory.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\utilities\conventionsbasedfutureexpiry.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\configuration\bootstrapconfig.cpp">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\strike.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\expiry.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\configuration\volatilityconfig.cpp">
+      <Filter>configuration</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

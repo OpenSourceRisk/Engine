@@ -1,6 +1,6 @@
 \subsubsection{FX Swap}
 
-The \lstinline!FXSwapData!  node is the trade data container for the FX Swap trade type.  The structure -
+The \lstinline!FXSwapData!  node is the trade data container for the \emph{FxSwap} trade type.  The structure -
 including example values - of the \lstinline!FXSwapData!  node is shown in Listing 
 \ref{lst:fxswap_data}. 
 It contains no sub-nodes.
@@ -34,4 +34,11 @@ The meanings and allowable values of the various elements in the \lstinline!FXSw
 \item FarDate: The date of the final fx exchange of the FX Swap. \\ Allowable values:  Any date further into the future than NearDate. See \lstinline!Date! in Table  \ref{tab:allow_stand_data}.
 \item FarBoughtAmount: The amount to be bought on far date.  \\ Allowable values:  Any positive real number.
 \item FarSoldAmount: The amount to be sold on far date.  \\ Allowable values:  Any positive real number.
+\item Settlement [Optional]: Delivery type.  Note that Non-Deliverable Swaps can be represented by \emph{Cash} settlement. Delivery type does not impact pricing in ORE.  
+
+Allowable values: \emph{Cash} or \emph{Physical}.  Defaults to \emph{Physical} if left blank or omitted.
+
 \end{itemize}
+
+Note that FX Swaps also cover Precious Metals Swaps, i.e. with
+currencies XAU, XAG, XPT, XPD.

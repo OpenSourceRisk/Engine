@@ -23,7 +23,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <map>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ql/currencies/all.hpp>
@@ -42,6 +41,9 @@
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/thailand.hpp>
+#include <qle/calendars/wmr.hpp>
+#include <qle/calendars/ice.hpp>
+#include <qle/calendars/cme.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
@@ -53,6 +55,7 @@
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
+using boost::algorithm::to_lower_copy;
 
 namespace ore {
 namespace data {
@@ -66,7 +69,7 @@ Date parseDate(const string& s) {
     // guess formats from token number and sizes
     // check permissible lengths
     QL_REQUIRE((s.size() >= 3 && s.size() <= 6) || s.size() == 8 || s.size() == 10,
-               "invalid date format of " << s << ", date string length 8 or 10 or between 3 and 6 required");
+               "invalid date format of \"" << s << "\", date string length 8 or 10 or between 3 and 6 required");
 
     vector<string> tokens;
     boost::split(tokens, s, boost::is_any_of("-/.:"));
@@ -152,7 +155,7 @@ bool parseBool(const string& s) {
     if (it != b.end()) {
         return it->second;
     } else {
-        QL_FAIL("Cannot convert " << s << " to bool");
+        QL_FAIL("Cannot convert \"" << s << "\" to bool");
     }
 }
 
@@ -340,6 +343,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"OMR", TARGET()},
                                       {"PKR", TARGET()},
                                       {"QAR", TARGET()},
+                                      {"UYU", TARGET()},
                                       {"TND", TARGET()},
                                       {"VND", TARGET()},
 
@@ -378,8 +382,23 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"UK settlement", UnitedKingdom()},
                                       {"US settlement", UnitedStates(UnitedStates::Settlement)},
                                       {"US with Libor impact", UnitedStates(UnitedStates::LiborImpact)},
+                                      {"WMR", Wmr()},
                                       {"ZUB", QuantExt::Switzerland()},
-
+                                      
+                                      // ICE exchange calendars
+                                      { "ICE_FuturesUS", ICE(ICE::FuturesUS) },
+                                      { "ICE_FuturesUS_1", ICE(ICE::FuturesUS_1) },
+                                      { "ICE_FuturesUS_2", ICE(ICE::FuturesUS_2) },
+                                      { "ICE_FuturesEU", ICE(ICE::FuturesEU) },
+                                      { "ICE_FuturesEU_1", ICE(ICE::FuturesEU_1) },
+                                      { "ICE_EndexEnergy", ICE(ICE::EndexEnergy) },
+                                      { "ICE_EndexEquities", ICE(ICE::EndexEquities) },
+                                      { "ICE_SwapTradeUS", ICE(ICE::SwapTradeUS) },
+                                      { "ICE_SwapTradeUK", ICE(ICE::SwapTradeUK) },
+                                      { "ICE_FuturesSingapore", ICE(ICE::FuturesSingapore) },
+                                      // CME exchange calendar
+                                      { "CME", CME() },
+                                      
                                       // Simple calendars
                                       {"WeekendsOnly", WeekendsOnly()},
                                       {"UNMAPPED", WeekendsOnly()},
@@ -431,9 +450,9 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
             try {
                 calendars.push_back(parseCalendar(calendarNames[i], adjustCalendar));
             } catch (std::exception& e) {
-                QL_FAIL("Cannot convert " << s << " to Calendar [exception:" << e.what() << "]");
+                QL_FAIL("Cannot convert \"" << s << "\" to Calendar [exception:" << e.what() << "]");
             } catch (...) {
-                QL_FAIL("Cannot convert " << s << " to Calendar [unhandled exception]");
+                QL_FAIL("Cannot convert \"" << s << "\" to Calendar [unhandled exception]");
             }
         }
 
@@ -445,7 +464,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
         case 4:
             return JointCalendar(calendars[0], calendars[1], calendars[2], calendars[3]);
         default:
-            QL_FAIL("Cannot convert " << s << " to Calendar");
+            QL_FAIL("Cannot convert \"" << s << "\" to Calendar");
         }
     }
 }
@@ -479,7 +498,7 @@ BusinessDayConvention parseBusinessDayConvention(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Cannot convert " << s << " to BusinessDayConvention");
+        QL_FAIL("Cannot convert \"" << s << "\" to BusinessDayConvention");
     }
 }
 
@@ -535,7 +554,7 @@ DayCounter parseDayCounter(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("DayCounter " << s << " not recognized");
+        QL_FAIL("DayCounter \"" << s << "\" not recognized");
     }
 }
 
@@ -557,14 +576,14 @@ Currency parseCurrency(const string& s) {
         {"UAH", UAHCurrency()}, {"KZT", KZTCurrency()}, {"QAR", QARCurrency()}, {"MXV", MXVCurrency()},
         {"CLF", CLFCurrency()}, {"EGP", EGPCurrency()}, {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()},
         {"VND", VNDCurrency()}, {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()},
-        {"MAD", MADCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()}, {"XPD", XPDCurrency()},
-        {"XPT", XPTCurrency()}};
+        {"MAD", MADCurrency()}, {"UYU", UYUCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()},
+        {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Currency " << s << " not recognized");
+        QL_FAIL("Currency \"" << s << "\" not recognized");
     }
 }
 
@@ -583,7 +602,7 @@ DateGeneration::Rule parseDateGenerationRule(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Date Generation Rule " << s << " not recognized");
+        QL_FAIL("Date Generation Rule \"" << s << "\" not recognized");
     }
 }
 
@@ -766,6 +785,51 @@ SobolRsg::DirectionIntegers parseSobolRsgDirectionIntegers(const std::string& s)
     }
 }
 
+Weekday parseWeekday(const string& s) {
+
+    static map<string, Weekday> m = {
+        { "Sun", Weekday::Sunday },
+        { "Mon", Weekday::Monday },
+        { "Tue", Weekday::Tuesday },
+        { "Wed", Weekday::Wednesday },
+        { "Thu", Weekday::Thursday },
+        { "Fri", Weekday::Friday },
+        { "Sat", Weekday::Saturday }
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("The string \"" << s << "\" is not recognized as a Weekday");
+    }
+}
+
+Month parseMonth(const string& s) {
+
+    static map<string, Month> m = {
+        { "Jan", Month::January },
+        { "Feb", Month::February },
+        { "Mar", Month::March },
+        { "Apr", Month::April },
+        { "May", Month::May },
+        { "Jun", Month::June },
+        { "Jul", Month::July },
+        { "Aug", Month::August },
+        { "Sep", Month::September },
+        { "Oct", Month::October },
+        { "Nov", Month::November },
+        { "Dec", Month::December }
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("The string \"" << s << "\" is not recognized as a Month");
+    }
+}
+
 std::vector<string> parseListOfValues(string s) {
     boost::trim(s);
     std::vector<string> vec;
@@ -843,5 +907,65 @@ AssetClass parseAssetClass(const std::string& s) {
     }
 }
 
+DeltaVolQuote::AtmType parseAtmType(const std::string& s) { 
+    static map<string, DeltaVolQuote::AtmType> m = { 
+        {"AtmNull", DeltaVolQuote::AtmNull}, 
+        {"AtmSpot", DeltaVolQuote::AtmSpot}, 
+        {"AtmFwd", DeltaVolQuote::AtmFwd}, 
+        {"AtmDeltaNeutral", DeltaVolQuote::AtmDeltaNeutral}, 
+        {"AtmVegaMax", DeltaVolQuote::AtmVegaMax}, 
+        {"AtmGammaMax", DeltaVolQuote::AtmGammaMax}, 
+        {"AtmPutCall50", DeltaVolQuote::AtmPutCall50} 
+    }; 
+ 
+    auto it = m.find(s); 
+    if (it != m.end()) { 
+        return it->second; 
+    } else { 
+        QL_FAIL("ATM type \"" << s << "\" not recognized"); 
+    } 
+} 
+ 
+DeltaVolQuote::DeltaType parseDeltaType(const std::string& s) { 
+    static map<string, DeltaVolQuote::DeltaType> m = {{"Spot", DeltaVolQuote::Spot}, 
+                                                      {"Fwd", DeltaVolQuote::Fwd}, 
+                                                      {"PaSpot", DeltaVolQuote::PaSpot}, 
+                                                      {"PaFwd", DeltaVolQuote::PaFwd}}; 
+ 
+    auto it = m.find(s); 
+    if (it != m.end()) { 
+        return it->second; 
+    } else { 
+        QL_FAIL("Delta type \"" << s << "\" not recognized"); 
+    } 
+}
+
+//! Parse Extrapolation from string
+Extrapolation parseExtrapolation(const string& s) {
+    if (s == "None") {
+        return Extrapolation::None;
+    } else if (s == "UseInterpolator" || s == "Linear") {
+        return Extrapolation::UseInterpolator;
+    } else if (s == "Flat") {
+        return Extrapolation::Flat;
+    } else {
+        QL_FAIL("Extrapolation '" << s << "' not recognized");
+    }
+}
+
+//! Write Extrapolation, \p extrap, to stream.
+std::ostream& operator<<(std::ostream& os, Extrapolation extrap) {
+    switch (extrap) {
+    case Extrapolation::None:
+        return os << "None";
+    case Extrapolation::UseInterpolator:
+        return os << "UseInterpolator";
+    case Extrapolation::Flat:
+        return os << "Flat";
+    default:
+        QL_FAIL("Unknown Extrapolation");
+    }
+}
+ 
 } // namespace data
 } // namespace ore

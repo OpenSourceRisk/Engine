@@ -36,10 +36,15 @@ class BlackVarianceSurfaceSparse : public QuantLib::BlackVarianceTermStructure,
                                    public OptionInterpolator2d<QuantLib::Linear, QuantLib::Linear> {
 
 public:
-    BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal, const std::vector<QuantLib::Date>& dates,
-                               const std::vector<QuantLib::Real>& strikes, const std::vector<QuantLib::Volatility>& volatilities,
-                               const QuantLib::DayCounter& dayCounter);
+    BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal,
+                               const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes,
+                               const std::vector<QuantLib::Volatility>& volatilities,
+                               const QuantLib::DayCounter& dayCounter,
+                               bool lowerStrikeConstExtrap = true,
+                               bool upperStrikeConstExtrap = true,
+                               bool timeFlatExtrapolation = false);
 
+    enum class TimeInterpolationMethod { Linear, Flat};
     //! \name TermStructure interface
     //@{
     QuantLib::Date maxDate() const { return QuantLib::Date::maxDate(); }
@@ -58,8 +63,9 @@ public:
     //@}
 
 protected:
-    virtual QuantLib::Real blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const { return getValue(t, strike); };
-    
+    virtual QuantLib::Real blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const;
+                                       
+    bool timeFlatExtrapolation_;
 };
 
 // inline definitions

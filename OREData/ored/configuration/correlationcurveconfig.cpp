@@ -240,7 +240,7 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
         s1 = 2;
     else if (tokens1[0] == "EQ")
         s1 = 1;
-    else if (tokens1[0] == "COM")
+    else if (tokens1[0] == "COMM")
         s1 = 0;
     else
         s1 = 3; // assume Ibor
@@ -251,7 +251,7 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
         s2 = 2;
     else if (tokens2[0] == "EQ")
         s2 = 1;
-    else if (tokens2[0] == "COM")
+    else if (tokens2[0] == "COMM")
         s2 = 0;
     else
         s2 = 3; // assume Ibor
@@ -277,7 +277,7 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
 
     // both FX, compare CCY1 then CCY2 alphabetical
     if (s1 == 2) {
-        return (tokens1[2] + "-" + tokens1[3]) < (tokens2[2] + "-" + tokens1[3]);
+        return (tokens1[2] + "-" + tokens1[3]) < (tokens2[2] + "-" + tokens2[3]);
     }
 
     QL_FAIL("indexNameLessThan(): internal error");

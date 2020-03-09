@@ -18,12 +18,15 @@
 
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <qle/indexes/commodityindex.hpp>
 #include <ql/settings.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 
 using QuantLib::CashFlow;
 using QuantLib::Date;
 using QuantLib::FloatingRateCoupon;
+using QuantLib::IborCoupon;
+using QuantLib::CappedFlooredIborCoupon;
 using QuantLib::InflationCoupon;
 using QuantLib::IndexedCashFlow;
 using QuantLib::CPICashFlow;
@@ -33,6 +36,7 @@ using QuantLib::CPI;
 using QuantLib::OvernightIndexedCoupon;
 using QuantLib::AverageBMACoupon;
 using QuantExt::AverageONIndexedCoupon;
+using QuantExt::CommodityFuturesIndex;
 using QuantExt::EquityCoupon;
 using QuantExt::FloatingRateFXLinkedNotionalCoupon;
 using QuantExt::FXLinkedCashFlow;
@@ -137,17 +141,6 @@ void addZeroInflationDates(set<Date>& dates, const Date& fixingDate, const Date&
 namespace ore {
 namespace data {
 
-set<Date> fixingDates(const Leg& leg, Date settlementDate) {
-    
-    FixingDateGetter fdg(settlementDate);
-    
-    for (const auto& cf: leg) {
-        cf->accept(fdg);
-    }
-    
-    return fdg.fixingDates();
-}
-
 FixingDateGetter::FixingDateGetter(const Date& settlementDate) {
 
     today_ = settlementDate;
@@ -160,12 +153,38 @@ void FixingDateGetter::visit(CashFlow& c) {
 }
 
 void FixingDateGetter::visit(FloatingRateCoupon& c) {
-    if (!c.hasOccurred(today_)) {
+    // Some pricing engines in QL (e.g CapFloor) don't respect
+    // hasOccurred() and ask for the fixing regarless, so we
+    // are conservative here and ask for a fixing if it is today.
+    if (!c.hasOccurred(today_) || c.date() == today_) {
         Date fixingDate = c.fixingDate();
         if (fixingDate <= today_) {
-            fixingDates_.insert(fixingDate);
+            indicesDates_[c.index()->name()].insert(fixingDate);
         }
     }
+}
+
+void FixingDateGetter::visit(IborCoupon& c) {
+    if (!c.hasOccurred(today_) || c.date() == today_) {
+        if (auto bma = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(c.index())) {
+            // Handle bma indices which we allow in IborCoupon as an approximation to BMA
+            // coupons. For these we allow fixing dates that are invalid as BMA fixing dates
+            // and adjust these dates to the last valid BMA fixing date in the BMAIndexWrapper.
+            // It is this adjusted date that we want to record here.
+            Date fixingDate = c.fixingDate();
+            if (fixingDate <= today_) {
+                indicesDates_[c.index()->name()].insert(bma->adjustedFixingDate(fixingDate));
+            }
+        } else {
+            // otherwise fall through to FloatingRateCoupon handling
+            visit(static_cast<FloatingRateCoupon&>(c));
+        }
+    }
+}
+
+void FixingDateGetter::visit(CappedFlooredCoupon& c) {
+    // handle the underlying
+    c.underlying()->accept(*this);
 }
 
 void FixingDateGetter::visit(IndexedCashFlow& c) {
@@ -184,7 +203,8 @@ void FixingDateGetter::visit(CPICashFlow& c) {
         QL_REQUIRE(zeroInflationIndex, "Expected CPICashFlow to have an index of type ZeroInflationIndex");
         
         // Mimic the logic in QuantLib::CPICashFlow::amount() to arrive at the fixing date(s) needed
-        addZeroInflationDates(fixingDates_, fixingDate, today_, zeroInflationIndex, c.interpolation(), c.frequency());
+        string name = zeroInflationIndex->name();
+        addZeroInflationDates(indicesDates_[name], fixingDate, today_, zeroInflationIndex, c.interpolation(), c.frequency());
     }
 }
 
@@ -198,7 +218,8 @@ void FixingDateGetter::visit(CPICoupon& c) {
         QL_REQUIRE(zeroInflationIndex, "Expected CPICashFlow to have an index of type ZeroInflationIndex");
 
         // Mimic the logic in QuantLib::CPICoupon::indexFixing() to arrive at the fixing date(s) needed
-        addZeroInflationDates(fixingDates_, fixingDate, today_, zeroInflationIndex, c.observationInterpolation(), zeroInflationIndex->frequency());
+        string name = zeroInflationIndex->name();
+        addZeroInflationDates(indicesDates_[name], fixingDate, today_, zeroInflationIndex, c.observationInterpolation(), zeroInflationIndex->frequency());
     }
 }
 
@@ -211,50 +232,51 @@ void FixingDateGetter::visit(YoYInflationCoupon& c) {
         QL_REQUIRE(yoyInflationIndex, "Expected YoYInflationCoupon to have an index of type YoYInflationIndex");
 
         // Get necessary fixing date(s). May be empty
+        string name = yoyInflationIndex->name();
         auto fixingDates = needsForecast(fixingDate, today_, yoyInflationIndex->interpolated(), 
             yoyInflationIndex->frequency(), yoyInflationIndex->availabilityLag());
-        fixingDates_.insert(fixingDates.begin(), fixingDates.end());
+        indicesDates_[name].insert(fixingDates.begin(), fixingDates.end());
 
         // Add the previous year's date(s) also if any.
         for (const auto d : fixingDates) {
-            fixingDates_.insert(d - 1 * Years);
+            indicesDates_[name].insert(d - 1 * Years);
         }
     }
 }
 
 void FixingDateGetter::visit(OvernightIndexedCoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addMultipleFixings(c, fixingDates_, today_);
+        addMultipleFixings(c, indicesDates_[c.index()->name()], today_);
     }
 }
 
 void FixingDateGetter::visit(AverageBMACoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addMultipleFixings(c, fixingDates_, today_);
+        addMultipleFixings(c, indicesDates_[c.index()->name()], today_);
     }
 }
 
 void FixingDateGetter::visit(AverageONIndexedCoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addMultipleFixings(c, fixingDates_, today_);
+        addMultipleFixings(c, indicesDates_[c.index()->name()], today_);
     }
 }
 
 void FixingDateGetter::visit(EquityCoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addMultipleFixings(c, fixingDates_, today_);
+        addMultipleFixings(c, indicesDates_[c.equityCurve()->name()], today_);
     }
 }
 
 void FixingDateGetter::visit(FloatingRateFXLinkedNotionalCoupon& c) {
     if (!c.hasOccurred(today_)) {
-        addFxFixings(c, fixingDates_, today_);
+        addFxFixings(c, indicesDates_[c.fxIndex()->name()], today_);
     }
 }
 
 void FixingDateGetter::visit(FXLinkedCashFlow& c) {
     if (!c.hasOccurred(today_)) {
-        addFxFixings(c, fixingDates_, today_);
+        addFxFixings(c, indicesDates_[c.fxIndex()->name()], today_);
     }
 }
 
@@ -262,10 +284,61 @@ void FixingDateGetter::visit(SubPeriodsCoupon& c) {
     if (!c.hasOccurred(today_)) {
         for (auto const& fixingDate : c.fixingDates()) {
             if (fixingDate <= today_) {
-                fixingDates_.insert(fixingDate);
+                indicesDates_[c.index()->name()].insert(fixingDate);
             }
         }
     }
+}
+
+set<Date> fixingDates(const Leg& leg, const Date& settlementDate) {
+    
+    // If settlement date is an empty date, update to evaluation date.
+    Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
+    
+    FixingDateGetter fdg(d);
+    return fixingDates(leg, d, fdg);
+}
+
+set<Date> fixingDates(const Leg& leg, const Date& settlementDate, FixingDateGetter& fdg) {
+
+    // If settlement date is an empty date, update to evaluation date.
+    Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
+
+    map<string, set<Date>> m = fixingDatesIndices(leg, d, fdg);
+
+    if (m.size() == 0) {
+        return set<Date>();
+    }
+
+    if (m.size() > 1) {
+        WLOG("The leg has fixing dates for multiple indices but we are just returning those for the first index");
+    }
+
+    return m.begin()->second;
+}
+
+map<string, set<Date>> fixingDatesIndices(const Leg& leg, const Date& settlementDate) {
+    
+    // If settlement date is an empty date, update to evaluation date.
+    Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
+
+    FixingDateGetter fdg(d);
+    return fixingDatesIndices(leg, d, fdg);
+}
+
+map<string, set<Date>> fixingDatesIndices(const Leg& leg, const Date& settlementDate, FixingDateGetter& fdg) {
+
+    // If settlement date is an empty date, update to evaluation date.
+    Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
+
+    // Set the FixingDateGetter's settlement date
+    fdg.today() = d;
+
+    for (const auto& cf : leg) {
+        cf->accept(fdg);
+    }
+
+    return fdg.fixingDatesIndices();
 }
 
 void amendInflationFixingDates(map<string, set<Date>>& fixings) {
@@ -346,6 +419,51 @@ void addMarketFixingDates(map<std::string, set<Date>>& fixings, const TodaysMark
                 for (const auto& kv : mktParams.mapping(MarketObject::YoYInflationCurve, configuration)) {
                     TLOG("Adding extra fixing dates for (yoy) inflation index " << kv.first);
                     fixings[kv.first].insert(dates.begin(), dates.end());
+                }
+            }
+        }
+
+        // If there are commodity curves, add "fixings" for this month and two previous months. We add "fixings" for 
+        // future contracts with expiry from two months hence to two months prior.
+        if (mktParams.hasMarketObject(MarketObject::CommodityCurve)) {
+
+            // "Fixing" dates for commodities.
+            Period commodityLookback = 2 * Months;
+            Date today = Settings::instance().evaluationDate();
+            Date lookback = today - commodityLookback;
+            lookback = Date(1, lookback.month(), lookback.year());
+            set<Date> dates;
+            do {
+                TLOG("Adding date " << io::iso_date(lookback) << " to fixings for commodities");
+                dates.insert(lookback);
+                lookback = WeekendsOnly().advance(lookback, 1 * Days);
+            } while (lookback <= today);
+
+            // Expiry months and years for which we require future contract fixings. For our purposes here, using the 
+            // 1st of the month does not matter. We will just use the date to get the appropriate commodity future
+            // index name below when adding the dates and the "-01" will be removed.
+            Size numberMonths = 2;
+            vector<Date> contractExpiries;
+            Date startContract = today - numberMonths * Months;
+            Date endContract = today + numberMonths * Months;
+            do {
+                Month m = startContract.month();
+                Year y = startContract.year();
+                TLOG("Adding contract month and year (" << m << "," << y << ")");
+                contractExpiries.push_back(Date(1, m, y));
+                startContract += 1 * Months;
+            } while (startContract <= endContract);
+
+            // For each of the commodity names, create the future contract name with the relevant expiry and insert 
+            // the dates. There may be some spot commodities here treated like futures but this should not matter
+            // i.e. we will just not get fixings for them.
+            if (mktParams.hasMarketObject(MarketObject::CommodityCurve)) {
+                for (const auto& kv : mktParams.mapping(MarketObject::CommodityCurve, configuration)) {
+                    for (const Date& expiry : contractExpiries) {
+                        auto indexName = CommodityFuturesIndex(kv.first, expiry, NullCalendar()).name();
+                        TLOG("Adding extra fixing dates for commodity future " << indexName);
+                        fixings[indexName].insert(dates.begin(), dates.end());
+                    }
                 }
             }
         }

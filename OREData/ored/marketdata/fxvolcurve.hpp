@@ -57,10 +57,12 @@ public:
     //! Detailed constructor
     FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
                const std::map<string, boost::shared_ptr<FXSpot>>& fxSpots,
-               const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+               const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, 
+               const Conventions& conventions);
     //! Detailed constructor
     FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-               const ore::data::FXTriangulation& fxSpots, const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+               const ore::data::FXTriangulation& fxSpots, const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, 
+               const Conventions& conventions);
     //@}
 
     //! \name Inspectors
@@ -74,7 +76,16 @@ private:
     boost::shared_ptr<BlackVolTermStructure> vol_;
 
     void init(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-              const FXLookup& fxSpots, const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+              const FXLookup& fxSpots, const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, 
+              const Conventions& conventions); 
+
+    void buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
+                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const Conventions& conventions);
+    
+    void buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
+                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const Conventions& conventions);
 };
 } // namespace data
 } // namespace ore

@@ -1,7 +1,15 @@
 #!/bin/sh
 
 function validate {
-find Examples -name '*.xml' -print0 | \
+
+# Get a list of the directories to check
+dirs="Examples"
+[ -d "OREAnalytics/test/input" ] && dirs="${dirs} OREAnalytics/test/input"
+[ -d "OREData/test/input" ] && dirs="${dirs} OREData/test/input"
+[ -d "QuantExt/test/input" ] && dirs="${dirs} QuantExt/test/input"
+
+# Check the XML files under the existing directories
+find $dirs -name '*.xml' -print0 | \
 { 
 fail=0
     while read -d $'\0' file

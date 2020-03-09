@@ -19,6 +19,7 @@
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
@@ -75,37 +76,11 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         legPayers_[i] = legData_[i].isPayer();
 
         boost::shared_ptr<FxIndex> fxIndex;
-        bool invertFxIndex = false;
         if (legData_[i].fxIndex() != "") {
             // We have an FX Index to setup
-
-            // 1. Parse the index we have with no term structures
-            boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(legData_[i].fxIndex());
-
-            // get market data objects - we set up the index using source/target, fixing days
-            // and calendar from legData_[i].fxIndex()
-            string source = fxIndexBase->sourceCurrency().code();
-            string target = fxIndexBase->targetCurrency().code();
-            Handle<YieldTermStructure> sorTS = market->discountCurve(source, configuration);
-            Handle<YieldTermStructure> tarTS = market->discountCurve(target, configuration);
-            Handle<Quote> spot = market->fxSpot(source + target);
-            Calendar cal = parseCalendar(legData_[i].fixingCalendar());
-            fxIndex = boost::make_shared<FxIndex>(fxIndexBase->familyName(), legData_[i].fixingDays(),
-                                                  fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(), cal,
-                                                  spot, sorTS, tarTS);
-            QL_REQUIRE(fxIndex, "Resetting XCCY - fxIndex failed to build");
-
-            // Now check the ccy and foreignCcy from the legdata, work out if we need to invert or not
-            string domestic = legData_[i].currency();
-            string foreign = legData_[i].foreignCurrency();
-            if (domestic == target && foreign == source) {
-                invertFxIndex = false;
-            } else if (domestic == source && foreign == target) {
-                invertFxIndex = true;
-            } else {
-                QL_FAIL("Cannot combine FX Index " << legData_[i].fxIndex() << " with reset ccy " << domestic
-                                                   << " and reset foreignCurrency " << foreign);
-            }
+            fxIndex = buildFxIndex(legData_[i].fxIndex(), legData_[i].currency(),
+                legData_[i].foreignCurrency(), market, configuration,
+                legData_[i].fixingCalendar(), legData_[i].fixingDays());            
         }
 
         // build the leg
@@ -162,7 +137,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                                         -static_cast<Integer>(fxIndex->fixingDays()), Days);
                     boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
                         boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, legData_[i].foreignAmount(),
-                                                                               fxIndex, invertFxIndex, coupon);
+                                                                               fxIndex, coupon);
                     // set the same pricer
                     fxLinkedCoupon->setPricer(coupon->pricer());
                     legs_[i][j] = fxLinkedCoupon;
@@ -198,10 +173,10 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                         Date fixingDate = fxIndex->fixingDate(c->accrualStartDate());
                         if (legData_[i].notionalInitialExchange()) {
                             outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate,
-                                -foreignNotional, fxIndex, invertFxIndex);
+                                -foreignNotional, fxIndex);
                         }
                         inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate,
-                            foreignNotional, fxIndex, invertFxIndex);
+                            foreignNotional, fxIndex);
                     } else {
                         if (legData_[i].notionalInitialExchange()) {
                             outCf = boost::make_shared<SimpleCashFlow>(-c->nominal(), c->accrualStartDate());
@@ -211,11 +186,11 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 } else {
                     Date fixingDate = fxIndex->fixingDate(c->accrualStartDate());
                     outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate,
-                        -foreignNotional, fxIndex, invertFxIndex);
+                        -foreignNotional, fxIndex);
                     // we don't want a final one, unless there is notional exchange
                     if (j < legs_[i].size() - 1 || legData_[i].notionalFinalExchange()) {
                         inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate,
-                            foreignNotional, fxIndex, invertFxIndex);
+                            foreignNotional, fxIndex);
                     }
                 }
 
@@ -255,7 +230,15 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // unless the first leg is a Resettable XCCY, then use the second leg
     // For a XCCY Resettable the currentNotional may fail due missing FX fixing so we avoid
     // using this leg if possible
-    if (legData_.size() > 1 && !legData_[0].isNotResetXCCY()) {
+    // For a equity swap with resetting notional may fail due to missing equity fixing so avoid
+    bool isEquityNotionalReset = false;
+    if (legData_[0].legType() == "Equity") {
+        boost::shared_ptr<EquityLegData> eld = boost::dynamic_pointer_cast<EquityLegData>(
+            legData_[0].concreteLegData());
+        isEquityNotionalReset = eld->notionalReset();
+    }
+
+    if (legData_.size() > 1 && (!legData_[0].isNotResetXCCY() || isEquityNotionalReset)) {
         npvCurrency_ = legData_[1].currency();
         notional_ = currentNotional(legs_[1]);
     } else {
@@ -267,8 +250,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     if (isXCCY) {
         boost::shared_ptr<QuantExt::CurrencySwap> swap(new QuantExt::CurrencySwap(legs_, legPayers_, currencies));
-        boost::shared_ptr<CrossCurrencySwapEngineBuilder> swapBuilder =
-            boost::dynamic_pointer_cast<CrossCurrencySwapEngineBuilder>(builder);
+        boost::shared_ptr<CrossCurrencySwapEngineBuilderBase> swapBuilder =
+            boost::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
         swap->setPricingEngine(swapBuilder->engine(currencies, npvCcy));
         // take the first legs currency as the npv currency (arbitrary choice)
@@ -322,7 +305,13 @@ map<string, set<Date>> Swap::fixings(const Date& settlementDate) const {
 void Swap::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     legData_.clear();
-    XMLNode* swapNode = XMLUtils::getChildNode(node, "SwapData");
+    XMLNode* swapNode = XMLUtils::getChildNode(node, tradeType() + "Data");
+    // backwards compatibility
+    if(swapNode == nullptr) {
+        swapNode = XMLUtils::getChildNode(node, "SwapData");
+    }
+    QL_REQUIRE(swapNode, "Swap::fromXML(): expected '" << tradeType() << "Data'"
+                                                       << (tradeType() == "Swap" ? "" : " or 'SwapData'"));
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(swapNode, "LegData");
     for (Size i = 0; i < nodes.size(); i++) {
         auto ld = createLegData();
@@ -335,7 +324,7 @@ boost::shared_ptr<LegData> Swap::createLegData() const { return boost::make_shar
 
 XMLNode* Swap::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
-    XMLNode* swapNode = doc.allocNode("SwapData");
+    XMLNode* swapNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, swapNode);
     for (Size i = 0; i < legData_.size(); i++)
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));

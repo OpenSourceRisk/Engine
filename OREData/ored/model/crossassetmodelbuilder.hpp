@@ -32,6 +32,8 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
+#include <ored/model/modelbuilder.hpp>
+#include <ored/model/marketobserver.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 namespace ore {
@@ -46,7 +48,7 @@ using namespace QuantLib;
 
   \ingroup models
  */
-class CrossAssetModelBuilder {
+class CrossAssetModelBuilder : public ModelBuilder {
 public:
     /*! The market for the calibration can possibly be different from the final market
       defining the curves attached to the marginal LGM models; for example domestic OIS
@@ -55,6 +57,8 @@ public:
       OIS curve. */
     CrossAssetModelBuilder( //! Market object
         const boost::shared_ptr<Market>& market,
+        //! cam configuration
+        const boost::shared_ptr<CrossAssetModelData>& config,
         //! Market configuration for interest rate model calibration
         const std::string& configurationLgmCalibration = Market::defaultConfiguration,
         //! Market configuration for FX model calibration
@@ -66,44 +70,71 @@ public:
         //! Market configuration for simulation
         const std::string& configurationFinalModel = Market::defaultConfiguration,
         //! Daycounter for date/time conversions
-        const DayCounter& dayCounter = ActualActual());
+        const DayCounter& dayCounter = ActualActual(),
+        //! calibrate the model?
+        const bool dontCalibrate = false);
 
     //! Default destructor
     ~CrossAssetModelBuilder() {}
 
-    //! Build and return the model for given configuration
-    boost::shared_ptr<QuantExt::CrossAssetModel> build(const boost::shared_ptr<CrossAssetModelData>& config);
+    //! return the model
+    Handle<QuantExt::CrossAssetModel> model() const;
 
     //! \name Inspectors
     //@{
-    const std::vector<Real>& swaptionCalibrationErrors() { return swaptionCalibrationErrors_; }
-    const std::vector<Real>& fxOptionCalibrationErrors() { return fxOptionCalibrationErrors_; }
-    const std::vector<Real>& eqOptionCalibrationErrors() { return eqOptionCalibrationErrors_; }
-    const std::vector<Real>& infCapFloorCalibrationErrors() { return infCapFloorCalibrationErrors_; }
+    const std::vector<Real>& swaptionCalibrationErrors();
+    const std::vector<Real>& fxOptionCalibrationErrors();
+    const std::vector<Real>& eqOptionCalibrationErrors();
+    const std::vector<Real>& infCapFloorCalibrationErrors();
+    //@}
+
+    //! \name ModelBuilder interface
+    //@{
+    void forceRecalculate() override;
+    bool requiresRecalibration() const override;
     //@}
 
 private:
-    std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> swaptionBaskets_;
-    std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> fxOptionBaskets_;
-    std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> eqOptionBaskets_;
-    std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> infCapFloorBaskets_;
-    std::vector<Array> optionExpiries_;
-    std::vector<Array> swaptionMaturities_;
-    std::vector<Array> fxOptionExpiries_;
-    std::vector<Array> eqOptionExpiries_;
-    std::vector<Array> infCapFloorExpiries_;
-    std::vector<Real> swaptionCalibrationErrors_;
-    std::vector<Real> fxOptionCalibrationErrors_;
-    std::vector<Real> eqOptionCalibrationErrors_;
-    std::vector<Real> infCapFloorCalibrationErrors_;
-    boost::shared_ptr<ore::data::Market> market_;
+    void performCalculations() const override;
+    void buildModel() const;
+    void registerWithSubBuilders();
+    void unregisterWithSubBuilders();
+
+    mutable std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> swaptionBaskets_;
+    mutable std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> fxOptionBaskets_;
+    mutable std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> eqOptionBaskets_;
+    mutable std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> infCapFloorBaskets_;
+    mutable std::vector<Array> optionExpiries_;
+    mutable std::vector<Array> swaptionMaturities_;
+    mutable std::vector<Array> fxOptionExpiries_;
+    mutable std::vector<Array> eqOptionExpiries_;
+    mutable std::vector<Array> infCapFloorExpiries_;
+    mutable std::vector<Real> swaptionCalibrationErrors_;
+    mutable std::vector<Real> fxOptionCalibrationErrors_;
+    mutable std::vector<Real> eqOptionCalibrationErrors_;
+    mutable std::vector<Real> infCapFloorCalibrationErrors_;
+    mutable std::set<boost::shared_ptr<ModelBuilder>> subBuilders_;
+
+    const boost::shared_ptr<ore::data::Market> market_;
+    const boost::shared_ptr<CrossAssetModelData> config_;
     const std::string configurationLgmCalibration_, configurationFxCalibration_, configurationEqCalibration_,
         configurationInfCalibration_, configurationFinalModel_;
     const DayCounter dayCounter_;
+    const bool dontCalibrate_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
+
+    // helper flag to prcess forceRecalculate()
+    bool forceCalibration_ = false;
+
+    // market observer
+    boost::shared_ptr<MarketObserver> marketObserver_;
+
+    // resulting model
+    mutable RelinkableHandle<QuantExt::CrossAssetModel> model_;
 };
+
 } // namespace data
 } // namespace ore

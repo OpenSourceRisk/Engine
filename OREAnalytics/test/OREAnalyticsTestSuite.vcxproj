@@ -35,6 +35,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="oreatoplevelfixture.hpp" />
     <ClInclude Include="testmarket.hpp" />
     <ClInclude Include="testportfolio.hpp" />
   </ItemGroup>

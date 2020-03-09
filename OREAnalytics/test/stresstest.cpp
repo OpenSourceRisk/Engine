@@ -118,9 +118,9 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
     simMarketData->extrapolate() = true;
     simMarketData->setYieldCurveDayCounters("", "ACT/ACT");
 
-    simMarketData->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years};
-    simMarketData->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
-                                        5 * Years,  7 * Years, 10 * Years, 20 * Years};
+    simMarketData->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
+    simMarketData->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years,  3 * Years,
+                                        5 * Years,  7 * Years, 10 * Years, 20 * Years});
     simMarketData->setSwapVolCcys({"EUR", "GBP", "USD", "CHF", "JPY"});
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->setSimulateSwapVols(true); // false;
@@ -351,8 +351,8 @@ BOOST_AUTO_TEST_CASE(regression) {
                                           {"2_Swap_USD", "stresstest_1", 599846},
                                           {"3_Swap_GBP", "stresstest_1", 1.11005e+06},
                                           {"4_Swap_JPY", "stresstest_1", 186736},
-                                          {"5_Swaption_EUR", "stresstest_1", 20768.2},
-                                          {"6_Swaption_EUR", "stresstest_1", 8247.32},
+                                          {"5_Swaption_EUR", "stresstest_1", 4.08982e-11},
+                                          {"6_Swaption_EUR", "stresstest_1", 4.8021e-50},
                                           {"7_FxOption_EUR_USD", "stresstest_1", 748160},
                                           {"8_FxOption_EUR_GBP", "stresstest_1", 1.21724e+06},
                                           {"9_Cap_EUR", "stresstest_1", 1175.5}};
