@@ -269,6 +269,9 @@ TestMarket::TestMarket(Date asof) {
         makeYoYInflationIndex("UKRPI", datesZCII, ratesZCII, yi,
                               yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")]);
 
+    cpiInflationCapFloorVolatilitySurfaces_[make_pair(Market::defaultConfiguration, "EUHICPXT")] = flatCpiVolSurface(0.05);
+    cpiInflationCapFloorVolatilitySurfaces_[make_pair(Market::defaultConfiguration, "UKRPI")] = flatCpiVolSurface(0.04);
+
     // Commodity price curves and spots
     Actual365Fixed ccDayCounter;
     vector<Period> commTenors = { 0 * Days, 365 * Days, 730 * Days, 1825 * Days };
