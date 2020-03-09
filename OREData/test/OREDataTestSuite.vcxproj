@@ -650,6 +650,7 @@
     <ClCompile Include="conventions.cpp" />
     <ClCompile Include="conventionsbasedfutureexpiry.cpp" />
     <ClCompile Include="correlationcurveconfig.cpp" />
+    <ClCompile Include="cpicapfloor.cpp" />
     <ClCompile Include="cpiswap.cpp" />
     <ClCompile Include="creditdefaultswapdata.cpp" />
     <ClCompile Include="crossassetmodeldata.cpp" />

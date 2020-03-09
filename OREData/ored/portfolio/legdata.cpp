@@ -35,7 +35,6 @@
 #include <ql/cashflows/digitalcoupon.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
-#include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/errors.hpp>
 #include <ql/experimental/coupons/cmsspreadcoupon.hpp>
@@ -50,6 +49,7 @@
 #include <qle/cashflows/cpicouponpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
@@ -139,6 +139,10 @@ void FloatingLegData::fromXML(XMLNode* node) {
         fixingDays_ = parseInteger(XMLUtils::getNodeValue(n));
     else
         fixingDays_ = Null<Size>();
+    if(auto n = XMLUtils::getChildNode(node, "Lookback"))
+        lookback_ = parsePeriod(XMLUtils::getNodeValue(n));
+    else
+        lookback_ = 0 * Days;
     caps_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Caps", "Cap", "startDate", capDates_, &parseReal);
     floors_ =
         XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Floors", "Floor", "startDate", floorDates_, &parseReal);
@@ -159,6 +163,8 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "IncludeSpread", includeSpread_);
     if (fixingDays_ != Null<Size>())
         XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
+    if (lookback_ != 0 * Days)
+        XMLUtils::addChild(doc, node, "Lookback", ore::data::to_string(lookback_));
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
@@ -873,20 +879,24 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                                          .withPaymentDayCounter(dc)
                                          .withPaymentAdjustment(bdc)
                                          .withRateCutoff(2)
+                                         .withPaymentLag(paymentLag)
+                                         .withLookback(floatData->lookback())
                                          .withAverageONIndexedCouponPricer(couponPricer);
 
         return leg;
 
     } else {
 
-        Leg leg = OvernightLeg(schedule, index)
-                      .withNotionals(notionals)
-                      .withSpreads(spreads)
-                      .withPaymentDayCounter(dc)
-                      .withPaymentAdjustment(bdc)
-                      .withPaymentCalendar(paymentCalendar)
-                      .withPaymentLag(paymentLag)
-                      .withGearings(gearings);
+        Leg leg = QuantExt::OvernightLeg(schedule, index)
+                               .withNotionals(notionals)
+                               .withSpreads(spreads)
+                               .withPaymentDayCounter(dc)
+                               .withPaymentAdjustment(bdc)
+                               .withPaymentCalendar(paymentCalendar)
+                               .withPaymentLag(paymentLag)
+                               .withGearings(gearings)
+                               .includeSpread(floatData->includeSpread())
+                               .withLookback(floatData->lookback());
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(index);
@@ -925,7 +935,8 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
     return leg;
 }
 
-Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow) {
+Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,
+                    const BusinessDayConvention paymentConvention, const Calendar paymentCalendar) {
 
     // Assumption - Cashflows on Input Leg are all coupons
     // This is the Leg to be populated
@@ -937,6 +948,7 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
         QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
         double initFlowAmt = coupon->nominal();
         Date initDate = coupon->accrualStartDate();
+        initDate = paymentCalendar.adjust(initDate, paymentConvention);
         if (initFlowAmt != 0)
             leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(-initFlowAmt, initDate)));
     }
@@ -949,6 +961,7 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
             auto coupon2 = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i-1]);
             QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
             Date flowDate = coupon->accrualStartDate();
+            flowDate = paymentCalendar.adjust(flowDate, paymentConvention);
             Real initNom = coupon2->nominal();
             Real newNom = coupon->nominal();
             Real flow = initNom - newNom;
@@ -971,7 +984,8 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
         auto coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back());
         QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
         double finalNomFlow = coupon->nominal();
-        Date finalDate = coupon->date();
+        Date finalDate = coupon->accrualEndDate();
+        finalDate = paymentCalendar.adjust(finalDate, paymentConvention);
         if (finalNomFlow != 0)
             leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(finalNomFlow, finalDate)));
     }
