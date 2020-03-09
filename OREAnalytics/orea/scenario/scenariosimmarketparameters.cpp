@@ -1730,18 +1730,6 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     }
 
     // zero inflation cap/floor volatilities
-    // if (!zeroInflationCapFloorVolNames().empty()) {
-    //     DLOG("Writing zero inflation cap/floor volatilities");
-    //     XMLNode* ziCapFloorVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CPICapFloorVolatilities");
-    //     XMLUtils::addChild(doc, ziCapFloorVolatilitiesNode, "Simulate", simulateZeroInflationCapFloorVols());
-    //     XMLUtils::addChild(doc, ziCapFloorVolatilitiesNode, "ReactionToTimeDecay", zeroInflationCapFloorVolDecayMode_);
-    //     XMLUtils::addChildren(doc, ziCapFloorVolatilitiesNode, "Names", "Name", zeroInflationCapFloorVolNames());
-    //     XMLUtils::addGenericChildAsList(doc, ziCapFloorVolatilitiesNode, "Expiries",
-    // 					lookup(zeroInflationCapFloorVolExpiries_, ""));
-    //     XMLUtils::addGenericChildAsList(doc, ziCapFloorVolatilitiesNode, "Strikes", zeroInflationCapFloorVolStrikes_);
-    // }
-
-    // zero inflation cap/floor volatilities
     if (!zeroInflationCapFloorVolNames().empty()) {
         DLOG("Writing zero inflation cap/floor volatilities");
         XMLNode* n = XMLUtils::addChild(doc, marketNode, "CPICapFloorVolatilities");

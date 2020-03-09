@@ -1367,10 +1367,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     Date d = optionDates[i];
                                     Real vol1 = wrapper->volatility(d, strikes[j]);
                                     Real vol2 = hCpiVol->volatility(d, strikes[j]);
-                                    DLOG("CPI Vol Check " << i << " " << optionTenors[i] << " " << j << " "
-                                                          << std::setprecision(4) << strikes[j] << " "
-                                                          << std::setprecision(6) << vol1 << " " << vol2 << " "
-                                                          << vol2 - vol1);
+                                    // DLOG("CPI Vol Check " << i << " " << optionTenors[i] << " " << j << " "
+                                    //                       << std::setprecision(4) << strikes[j] << " "
+                                    //                       << std::setprecision(6) << vol1 << " " << vol2 << " "
+                                    //                       << vol2 - vol1);
                                     QL_REQUIRE(
                                         close_enough(vol1 - vol2, 0.0),
                                         "Simulation market CPI vol does not match today's market CPI vol for expiry "
