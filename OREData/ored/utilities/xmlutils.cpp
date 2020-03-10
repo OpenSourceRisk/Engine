@@ -359,7 +359,6 @@ map<string, string> XMLUtils::getChildrenAttributesAndValues(XMLNode* parent, co
             QL_REQUIRE(first != "", "empty attribute for " << names);
         }
         res.insert(pair<string, string>(first, second));
-        TLOG("Added pair [" << first << "," << second << "] to the map");
     }
     if (mandatory) {
         QL_REQUIRE(res.size() > 0, "Error: No XML Node " << names << " found.");

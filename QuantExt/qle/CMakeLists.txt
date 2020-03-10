@@ -27,6 +27,7 @@ cashflows/floatingannuitycoupon.cpp
 cashflows/floatingannuitynominal.cpp
 cashflows/fxlinkedcashflow.cpp
 cashflows/lognormalcmsspreadpricer.cpp
+cashflows/overnightindexedcoupon.cpp
 cashflows/quantocouponpricer.cpp
 cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/strippedcapflooredcpicoupon.cpp
@@ -67,6 +68,7 @@ instruments/makeaverageois.cpp
 instruments/makecds.cpp
 instruments/oibasisswap.cpp
 instruments/oiccbasisswap.cpp
+instruments/overnightindexfuture.cpp
 instruments/payment.cpp
 instruments/rebatedexercise.cpp
 instruments/subperiodsswap.cpp
@@ -117,6 +119,7 @@ pricingengines/discountingforwardbondengine.cpp
 pricingengines/discountingfxforwardengine.cpp
 pricingengines/discountingriskybondengine.cpp
 pricingengines/discountingswapenginemulticurve.cpp
+pricingengines/inflationcapfloorengines.cpp
 pricingengines/lgmconvolutionsolver.cpp
 pricingengines/midpointcdsengine.cpp
 pricingengines/numericlgmswaptionengine.cpp
@@ -137,6 +140,7 @@ termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
 termstructures/capfloortermvolsurface.cpp
+termstructures/constantyoyinflationoptionletvolatility.cpp
 termstructures/correlationtermstructure.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
@@ -163,6 +167,7 @@ termstructures/oisratehelper.cpp
 termstructures/optionletstripper.cpp
 termstructures/optionletstripper1.cpp
 termstructures/optionletstripper2.cpp
+termstructures/overnightindexfutureratehelper.cpp
 termstructures/pricetermstructure.cpp
 termstructures/pricetermstructureadapter.cpp
 termstructures/spreadedoptionletvolatility.cpp
@@ -208,6 +213,7 @@ cashflows/floatingannuitynominal.hpp
 cashflows/floatingratefxlinkednotionalcoupon.hpp
 cashflows/fxlinkedcashflow.hpp
 cashflows/lognormalcmsspreadpricer.hpp
+cashflows/overnightindexedcoupon.hpp
 cashflows/quantocouponpricer.hpp
 cashflows/strippedcapflooredyoyinflationcoupon.hpp
 cashflows/strippedcapflooredcpicoupon.hpp
@@ -290,6 +296,7 @@ instruments/makeaverageois.hpp
 instruments/makecds.hpp
 instruments/oibasisswap.hpp
 instruments/oiccbasisswap.hpp
+instruments/overnightindexfuture.hpp
 instruments/payment.hpp
 instruments/rebatedexercise.hpp
 instruments/subperiodsswap.hpp
@@ -355,6 +362,7 @@ pricingengines/discountingforwardbondengine.hpp
 pricingengines/discountingfxforwardengine.hpp
 pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingswapenginemulticurve.hpp
+pricingengines/inflationcapfloorengines.hpp
 pricingengines/lgmconvolutionsolver.hpp
 pricingengines/midpointcdsengine.hpp
 pricingengines/numericlgmswaptionengine.hpp
@@ -379,6 +387,7 @@ termstructures/brlcdiratehelper.hpp
 termstructures/capfloorhelper.hpp
 termstructures/capfloortermvolcurve.hpp
 termstructures/capfloortermvolsurface.hpp
+termstructures/constantyoyinflationoptionletvolatility.hpp
 termstructures/commodityaveragebasispricecurve.hpp
 termstructures/commoditybasispricecurve.hpp
 termstructures/correlationtermstructure.hpp
@@ -422,6 +431,7 @@ termstructures/optionletstripper1.hpp
 termstructures/optionletstripper2.hpp
 termstructures/optionletstripperwithatm.hpp
 termstructures/optionpricesurface.hpp
+termstructures/overnightindexfutureratehelper.hpp
 termstructures/piecewiseatmoptionletcurve.hpp
 termstructures/piecewiseoptionletcurve.hpp
 termstructures/piecewiseoptionletstripper.hpp

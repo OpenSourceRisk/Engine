@@ -64,6 +64,7 @@
             <Rate>1</Rate>
           </Rates>
           <BaseCPI>210</BaseCPI>
+	  <StartDate>2016-02-05</StartDate>
           <ObservationLag>2M</ObservationLag>
           <Interpolation>AsIndex</Interpolation>
 	  <SubtractInflationNotional>false</SubtractInflationNotional>
@@ -139,6 +140,7 @@
             <Rate>0.02</Rate>
           </Rates>
           <BaseCPI>210</BaseCPI>
+	  <StartDate>2016-07-18</StartDate>
           <ObservationLag>2M</ObservationLag>
           <Interpolation>AsIndex</Interpolation>
         </CPILegData>

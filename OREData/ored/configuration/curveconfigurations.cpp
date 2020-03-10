@@ -124,7 +124,6 @@ boost::shared_ptr<CurveConfigurations> CurveConfigurations::minimalCurveConfig(c
     addMinimalCurves("DefaultCurves", defaultCurveConfigs_, minimum->defaultCurveConfigs_, CurveSpec::CurveType::Default, curveConfigIds);
     addMinimalCurves("YieldCurves", yieldCurveConfigs_, minimum->yieldCurveConfigs_, CurveSpec::CurveType::Yield, curveConfigIds);
     addMinimalCurves("InflationCurves", inflationCurveConfigs_, minimum->inflationCurveConfigs_, CurveSpec::CurveType::Inflation, curveConfigIds);
-    addMinimalCurves("InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_, minimum->inflationCapFloorPriceSurfaceConfigs_, CurveSpec::CurveType::InflationCapFloorPrice, curveConfigIds);
     addMinimalCurves("InflationCapFloorVolatilities", inflationCapFloorVolCurveConfigs_, minimum->inflationCapFloorVolCurveConfigs_, CurveSpec::CurveType::InflationCapFloorVolatility, curveConfigIds);
     addMinimalCurves("EquityCurves", equityCurveConfigs_, minimum->equityCurveConfigs_, CurveSpec::CurveType::Equity, curveConfigIds);
     addMinimalCurves("EquityVolatilities", equityVolCurveConfigs_, minimum->equityVolCurveConfigs_, CurveSpec::CurveType::EquityVolatility, curveConfigIds);
@@ -175,7 +174,6 @@ std::set<string> CurveConfigurations::quotes() const {
     addQuotes(quotes, cdsVolCurveConfigs_, CurveSpec::CurveType::CDSVolatility);
     addQuotes(quotes, baseCorrelationCurveConfigs_, CurveSpec::CurveType::BaseCorrelation);
     addQuotes(quotes, inflationCurveConfigs_, CurveSpec::CurveType::Inflation);
-    addQuotes(quotes, inflationCapFloorPriceSurfaceConfigs_, CurveSpec::CurveType::InflationCapFloorPrice);
     addQuotes(quotes, inflationCapFloorVolCurveConfigs_, CurveSpec::CurveType::InflationCapFloorVolatility);
     addQuotes(quotes, equityCurveConfigs_, CurveSpec::CurveType::Equity);
     addQuotes(quotes, equityVolCurveConfigs_, CurveSpec::CurveType::EquityVolatility);
@@ -316,15 +314,6 @@ const boost::shared_ptr<InflationCurveConfig>& CurveConfigurations::inflationCur
     return get(curveID, inflationCurveConfigs_);
 }
 
-bool CurveConfigurations::hasInflationCapFloorPriceSurfaceConfig(const string& curveID) const {
-    return has(curveID, inflationCapFloorPriceSurfaceConfigs_);
-}
-
-const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>&
-CurveConfigurations::inflationCapFloorPriceSurfaceConfig(const string& curveID) const {
-    return get(curveID, inflationCapFloorPriceSurfaceConfigs_);
-}
-
 bool CurveConfigurations::hasInflationCapFloorVolCurveConfig(const string& curveID) const {
     return has(curveID, inflationCapFloorVolCurveConfigs_);
 }
@@ -404,8 +393,6 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     parseNode(node, "EquityCurves", "EquityCurve", equityCurveConfigs_);
     parseNode(node, "EquityVolatilities", "EquityVolatility", equityVolCurveConfigs_);
     parseNode(node, "InflationCurves", "InflationCurve", inflationCurveConfigs_);
-    parseNode(node, "InflationCapFloorPriceSurfaces", "InflationCapFloorPriceSurface",
-              inflationCapFloorPriceSurfaceConfigs_);
     parseNode(node, "InflationCapFloorVolatilities", "InflationCapFloorVolatility", inflationCapFloorVolCurveConfigs_);
     parseNode(node, "Securities", "Security", securityConfigs_);
     parseNode(node, "FXSpots", "FXSpot", fxSpotConfigs_);
@@ -426,7 +413,6 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "DefaultCurves", defaultCurveConfigs_);
     addNodes(doc, parent, "YieldCurves", yieldCurveConfigs_);
     addNodes(doc, parent, "InflationCurves", inflationCurveConfigs_);
-    addNodes(doc, parent, "InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_);
     addNodes(doc, parent, "InflationCapFloorVolatilities", inflationCapFloorVolCurveConfigs_);
     addNodes(doc, parent, "EquityCurves", equityCurveConfigs_);
     addNodes(doc, parent, "EquityVolatilities", equityVolCurveConfigs_);

@@ -41,6 +41,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"DISCOUNT", MarketDatum::InstrumentType::DISCOUNT},
         {"MM", MarketDatum::InstrumentType::MM},
         {"MM_FUTURE", MarketDatum::InstrumentType::MM_FUTURE},
+        {"OI_FUTURE", MarketDatum::InstrumentType::OI_FUTURE},
         {"FRA", MarketDatum::InstrumentType::FRA},
         {"IMM_FRA", MarketDatum::InstrumentType::IMM_FRA},
         {"IR_SWAP", MarketDatum::InstrumentType::IR_SWAP},
@@ -184,6 +185,15 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& contract = tokens[4];
         Period term = parsePeriod(tokens[5]);
         return boost::make_shared<MMFutureQuote>(value, asof, datumName, quoteType, ccy, expiry, contract, term);
+    }
+
+    case MarketDatum::InstrumentType::OI_FUTURE: {
+        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        const string& ccy = tokens[2];
+        const string& expiry = tokens[3];
+        const string& contract = tokens[4];
+        Period term = parsePeriod(tokens[5]);
+        return boost::make_shared<OIFutureQuote>(value, asof, datumName, quoteType, ccy, expiry, contract, term);
     }
 
     case MarketDatum::InstrumentType::FRA: {

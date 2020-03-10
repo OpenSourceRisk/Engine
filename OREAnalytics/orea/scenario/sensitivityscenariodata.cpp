@@ -90,7 +90,7 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
     case RFType::YieldVolatility:
         return yieldVolShiftData().at(name);
     case RFType::OptionletVolatility:
-        return capFloorVolShiftData().at(name);
+        return *capFloorVolShiftData().at(name);
     case RFType::FXVolatility:
         return fxVolShiftData().at(name);
     case RFType::CDSVolatility:
@@ -104,7 +104,7 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
     case RFType::YoYInflationCurve:
         return *yoyInflationCurveShiftData().at(name);
     case RFType::YoYInflationCapFloorVolatility:
-        return yoyInflationCapFloorVolShiftData().at(name);
+        return *yoyInflationCapFloorVolShiftData().at(name);
     case RFType::ZeroInflationCapFloorVolatility:
         return *zeroInflationCapFloorVolShiftData().at(name);
     case RFType::EquitySpot:
@@ -232,9 +232,9 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         for (XMLNode* child = XMLUtils::getChildNode(capVols, "CapFloorVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
-            CapFloorVolShiftData data;
-            volShiftDataFromXML(child, data);
-            data.indexName = XMLUtils::getChildValue(child, "Index", true);
+            auto data = boost::make_shared<CapFloorVolShiftData>();
+            volShiftDataFromXML(child, *data);
+            data->indexName = XMLUtils::getChildValue(child, "Index", true);
             capFloorVolShiftData_[ccy] = data;
         }
     }
@@ -346,8 +346,8 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         for (XMLNode* child = XMLUtils::getChildNode(yoyCapVols, "YYCapFloorVolatility"); child;
             child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
-            VolShiftData data;
-            volShiftDataFromXML(child, data);
+            auto data = boost::make_shared<CapFloorVolShiftData>();
+            volShiftDataFromXML(child, *data);
             yoyInflationCapFloorVolShiftData_[index] = data;
         }
     }
@@ -532,9 +532,9 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (const auto& kv : capFloorVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "CapFloorVolatility");
             XMLUtils::addAttribute(doc, node, "ccy", kv.first);
-            volShiftDataToXML(doc, node, kv.second);
-            XMLUtils::addChild(doc, node, "Index", kv.second.indexName);
-            XMLUtils::addChild(doc, node, "IsRelative", kv.second.isRelative);
+            volShiftDataToXML(doc, node, *kv.second);
+            XMLUtils::addChild(doc, node, "Index", kv.second->indexName);
+            XMLUtils::addChild(doc, node, "IsRelative", kv.second->isRelative);
         }
     }
 
@@ -622,6 +622,16 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         }
     }
 
+    if (!yoyInflationCapFloorVolShiftData_.empty()) {
+        LOG("toXML for YYInflationCapFloorVolatilities");
+        XMLNode* parent = XMLUtils::addChild(doc, root, "YYCapFloorVolatilities");
+        for (const auto& kv : yoyInflationCapFloorVolShiftData_) {
+            XMLNode* node = XMLUtils::addChild(doc, parent, "YYCapFloorVolatility");
+            XMLUtils::addAttribute(doc, node, "index", kv.first);
+            volShiftDataToXML(doc, node, *kv.second);
+        }
+    }
+
     if (!zeroInflationCapFloorVolShiftData_.empty()) { 
         LOG("toXML for CPIInflationCapFloorVolatilities"); 
         XMLNode* parent = XMLUtils::addChild(doc, root, "CPICapFloorVolatilities"); 
@@ -630,17 +640,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "index", kv.first); 
             volShiftDataToXML(doc, node, *kv.second); 
         } 
-    } 
-
-    // if (!commodityShiftData_.empty()) {
-    //     LOG("toXML for CommoditySpots");
-    //     XMLNode* parent = XMLUtils::addChild(doc, root, "CommoditySpots");
-    //     for (const auto& kv : commodityShiftData_) {
-    //         XMLNode* node = XMLUtils::addChild(doc, parent, "CommoditySpot");
-    //         XMLUtils::addAttribute(doc, node, "name", kv.first);
-    //         shiftDataToXML(doc, node, kv.second);
-    //     }
-    // }
+    }
 
     if (!commodityCurveShiftData_.empty()) {
         LOG("toXML for CommodityCurves");

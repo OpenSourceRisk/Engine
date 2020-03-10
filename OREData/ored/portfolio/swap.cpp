@@ -218,9 +218,10 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                   legData_[i].notionalAmortizingExchange()) &&
                  (legData_[i].legType() != "CPI")) {
 
-            legs_.push_back(makeNotionalLeg(legs_[i], legData_[i].notionalInitialExchange(),
-                                            legData_[i].notionalFinalExchange(),
-                                            legData_[i].notionalAmortizingExchange()));
+            legs_.push_back(makeNotionalLeg(
+                legs_[i], legData_[i].notionalInitialExchange(), legData_[i].notionalFinalExchange(),
+                legData_[i].notionalAmortizingExchange(), parseBusinessDayConvention(legData_[i].paymentConvention()),
+                parseCalendar(legData_[i].paymentCalendar())));
             legPayers_.push_back(legPayers_[i]);
             currencies.push_back(currencies[i]);
         }
@@ -319,6 +320,25 @@ map<string, set<Date>> Swap::fixings(const Date& settlementDate) const {
         // Get the set of fixing dates on the leg and update the results
         set<Date> dates = fixingDates(kv.second, settlementDate);
         if (!dates.empty()) result[kv.first].insert(dates.begin(), dates.end());
+    }
+
+    return result;
+}
+
+map<AssetClass, set<string>> Swap::underlyingIndices() const {
+
+    map<AssetClass, set<string>> result;
+    for (const auto& ld : legData_) {
+        for (auto ind : ld.indices()) {
+            boost::shared_ptr<Index> index = parseIndex(ind);
+
+            // only handle equity and commodity for now
+            if (auto ei = boost::dynamic_pointer_cast<EquityIndex>(index)) {
+                result[AssetClass::EQ].insert(ei->name());
+            } else if (auto ci = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
+                result[AssetClass::COM].insert(ci->name());
+            }
+        }
     }
 
     return result;
