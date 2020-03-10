@@ -79,7 +79,6 @@
     <ClInclude Include="ored\marketdata\fxtriangulation.hpp" />
     <ClInclude Include="ored\marketdata\fxvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\genericyieldvolcurve.hpp" />
-    <ClInclude Include="ored\marketdata\inflationcapfloorpricesurface.hpp" />
     <ClInclude Include="ored\marketdata\inflationcurve.hpp" />
     <ClInclude Include="ored\marketdata\loader.hpp" />
     <ClInclude Include="ored\marketdata\market.hpp" />
@@ -227,7 +226,6 @@
     <ClCompile Include="ored\marketdata\fxtriangulation.cpp" />
     <ClCompile Include="ored\marketdata\fxvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\genericyieldvolcurve.cpp" />
-    <ClCompile Include="ored\marketdata\inflationcapfloorpricesurface.cpp" />
     <ClCompile Include="ored\marketdata\inflationcurve.cpp" />
     <ClCompile Include="ored\marketdata\market.cpp" />
     <ClCompile Include="ored\marketdata\marketdatum.cpp" />

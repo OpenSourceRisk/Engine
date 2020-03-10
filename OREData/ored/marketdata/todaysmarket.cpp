@@ -35,7 +35,6 @@
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxvolcurve.hpp>
-#include <ored/marketdata/inflationcapfloorpricesurface.hpp>
 #include <ored/marketdata/inflationcapfloorvolcurve.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
 #include <ored/marketdata/security.hpp>
