@@ -518,6 +518,7 @@
     <ClInclude Include="qle\cashflows\floatingratefxlinkednotionalcoupon.hpp" />
     <ClInclude Include="qle\cashflows\fxlinkedcashflow.hpp" />
     <ClInclude Include="qle\cashflows\lognormalcmsspreadpricer.hpp" />
+    <ClInclude Include="qle\cashflows\overnightindexedcoupon.hpp" />
     <ClInclude Include="qle\cashflows\quantocouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\strippedcapflooredcpicoupon.hpp" />
     <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp" />
@@ -599,6 +600,7 @@
     <ClInclude Include="qle\instruments\makecds.hpp" />
     <ClInclude Include="qle\instruments\oibasisswap.hpp" />
     <ClInclude Include="qle\instruments\oiccbasisswap.hpp" />
+    <ClInclude Include="qle\instruments\overnightindexfuture.hpp" />
     <ClInclude Include="qle\instruments\payment.hpp" />
     <ClInclude Include="qle\instruments\rebatedexercise.hpp" />
     <ClInclude Include="qle\instruments\subperiodsswap.hpp" />
@@ -708,6 +710,7 @@
     <ClInclude Include="qle\termstructures\optionletcurve.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripper.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripperwithatm.hpp" />
+    <ClInclude Include="qle\termstructures\overnightindexfutureratehelper.hpp" />
     <ClInclude Include="qle\termstructures\piecewiseatmoptionletcurve.hpp" />
     <ClInclude Include="qle\termstructures\piecewiseoptionletcurve.hpp" />
     <ClInclude Include="qle\termstructures\piecewiseoptionletstripper.hpp" />
@@ -791,6 +794,7 @@
     <ClCompile Include="qle\cashflows\floatingannuitynominal.cpp" />
     <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp" />
     <ClCompile Include="qle\cashflows\lognormalcmsspreadpricer.cpp" />
+    <ClCompile Include="qle\cashflows\overnightindexedcoupon.cpp" />
     <ClCompile Include="qle\cashflows\quantocouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\strippedcapflooredcpicoupon.cpp" />
     <ClCompile Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.cpp" />
@@ -831,6 +835,7 @@
     <ClCompile Include="qle\instruments\makecds.cpp" />
     <ClCompile Include="qle\instruments\oibasisswap.cpp" />
     <ClCompile Include="qle\instruments\oiccbasisswap.cpp" />
+    <ClCompile Include="qle\instruments\overnightindexfuture.cpp" />
     <ClCompile Include="qle\instruments\payment.cpp" />
     <ClCompile Include="qle\instruments\rebatedexercise.cpp" />
     <ClCompile Include="qle\instruments\subperiodsswap.cpp" />
@@ -929,6 +934,7 @@
     <ClCompile Include="qle\termstructures\optionletstripper.cpp" />
     <ClCompile Include="qle\termstructures\optionletstripper1.cpp" />
     <ClCompile Include="qle\termstructures\optionletstripper2.cpp" />
+    <ClCompile Include="qle\termstructures\overnightindexfutureratehelper.cpp" />
     <ClCompile Include="qle\termstructures\pricetermstructure.cpp" />
     <ClCompile Include="qle\termstructures\pricetermstructureadapter.cpp" />
     <ClCompile Include="qle\termstructures\spreadedoptionletvolatility.cpp" />
