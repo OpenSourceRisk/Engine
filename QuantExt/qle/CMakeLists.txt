@@ -36,6 +36,7 @@ cashflows/subperiodscouponpricer.cpp
 currencies/africa.cpp
 currencies/america.cpp
 currencies/asia.cpp
+currencies/europe.cpp
 currencies/metals.cpp
 indexes/bondindex.cpp
 indexes/commodityindex.cpp
@@ -222,6 +223,7 @@ cashflows/subperiodscouponpricer.hpp
 currencies/africa.hpp
 currencies/america.hpp
 currencies/asia.hpp
+currencies/europe.hpp
 currencies/metals.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
