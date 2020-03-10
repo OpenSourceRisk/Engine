@@ -33,6 +33,7 @@
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/quantocouponpricer.hpp>
 #include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
@@ -115,6 +116,7 @@
 #include <qle/instruments/makecds.hpp>
 #include <qle/instruments/oibasisswap.hpp>
 #include <qle/instruments/oiccbasisswap.hpp>
+#include <qle/instruments/overnightindexfuture.hpp>
 #include <qle/instruments/payment.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
 #include <qle/instruments/subperiodsswap.hpp>
@@ -249,6 +251,7 @@
 #include <qle/termstructures/optionletstripper2.hpp>
 #include <qle/termstructures/optionletstripperwithatm.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
+#include <qle/termstructures/overnightindexfutureratehelper.hpp>
 #include <qle/termstructures/piecewiseatmoptionletcurve.hpp>
 #include <qle/termstructures/piecewiseoptionletcurve.hpp>
 #include <qle/termstructures/piecewiseoptionletstripper.hpp>
