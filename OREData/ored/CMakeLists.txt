@@ -166,7 +166,6 @@ marketdata/fxspot.hpp
 marketdata/fxtriangulation.hpp
 marketdata/fxvolcurve.hpp
 marketdata/genericyieldvolcurve.hpp
-marketdata/inflationcapfloorpricesurface.hpp
 marketdata/inflationcapfloorvolcurve.hpp
 marketdata/inflationcurve.hpp
 marketdata/inmemoryloader.hpp
