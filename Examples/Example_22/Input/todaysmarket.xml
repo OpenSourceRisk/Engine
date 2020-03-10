@@ -115,10 +115,10 @@
     <DefaultCurve name="CPTY_C">Default/EUR/CPTY_C_SR_EUR</DefaultCurve>
   </DefaultCurves>
   <!-- inflation price surface definition -->
-  <InflationCapFloorPriceSurfaces id="default">
-      <InflationCapFloorPriceSurface name="EUHICPXT">InflationCapFloorPrice/EUHICPXT/EUHICPXT_ZC_CF</InflationCapFloorPriceSurface>
-      <InflationCapFloorPriceSurface name="USCPI">InflationCapFloorPrice/USCPI/USCPI_ZC_CF</InflationCapFloorPriceSurface>
-  </InflationCapFloorPriceSurfaces>
+  <ZeroInflationCapFloorVolatilities id="default">
+      <ZeroInflationCapFloorVolatility name="EUHICPXT">InflationCapFloorVolatility/EUHICPXT/EUHICPXT_ZC_CF</ZeroInflationCapFloorVolatility>
+      <ZeroInflationCapFloorVolatility name="USCPI">InflationCapFloorVolatility/USCPI/USCPI_ZC_CF</ZeroInflationCapFloorVolatility>
+  </ZeroInflationCapFloorVolatilities>
   <EquityCurves id="default">
       <EquityCurve name="SP5">Equity/USD/SP5</EquityCurve>
       <EquityCurve name="Lufthansa">Equity/EUR/Lufthansa</EquityCurve>
