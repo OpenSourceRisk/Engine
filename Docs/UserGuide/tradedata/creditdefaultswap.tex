@@ -1,39 +1,58 @@
 \subsubsection{Credit Default Swap}
 
-A credit default swap is set up using a {\tt CreditDefaultSwapData} block as shown in listing \ref{lst:cdsdata}. The CDS specific elements
-are
+A credit default swap, trade type \lstinline!CreditDefaultSwap!, is set up using a \lstinline!CreditDefaultSwapData! block as shown in listing \ref{lst:cdsdata} or \ref{lst:cdsdata_with_ref_info}. The elements have the following meaning:
 
 \begin{itemize}
-\item IssuerId: An identifier for the reference entity of the CDS. For informational purposes and not used for pricing.
-\item CreditCurveId: Typically the ISIN-code of the reference entity defining the default curve used for pricing. Other identifiers may be used as well, provided they are supported in the market data configuration.
+\item IssuerId [Optional]: An identifier for the reference entity of the CDS. For informational purposes and not used for pricing.
+\item CreditCurveId: The identifier of the reference entity defining the default curve used for pricing. For the allowable values, see \lstinline!Name! for credit trades - single name in Table \ref{tab:equity_credit_data}. A \lstinline!ReferenceInformation! node may be used in place of this \lstinline!CreditCurveId! node.
+\item \lstinline!ReferenceInformation!: This node may be used as an alternative to the \lstinline!CreditCurveId! node to specify the reference entity, tier, currency and documentation clause for the CDS. This in turn defines the credit curve used for pricing. The \lstinline!ReferenceInformation! node is described in further detail in Section \ref{ss:cds_reference_information}.
 \item SettlesAccrual [Optional]: Whether or not the accrued coupon is due in the event of a default. This defaults to \lstinline!true! if not provided.
 \item PaysAtDefaultTime [Optional]: If set to \lstinline!true!, any payments triggered by a default event are due at default time. If set to \lstinline!false!, they are due at the end of the accrual period. This defaults to \lstinline!true! if not provided.
-\item ProtectionStart [Optional]: The first date where a default event will trigger the contract. This defaults to the first date in the schedule if it is not provided.
+\item ProtectionStart [Optional]: The first date where a default event will trigger the contract. This defaults to the first date in the schedule if it is not provided. Must be set to a date before or on the first date in the schedule.
 \item UpfrontDate [Optional]: Settlement date for the UpfrontFee if an UpfrontFee is provided. If an UpfrontFee is provided and it is non-zero, UpfrontDate is required. The UpfrontDate, if provided, must be on or after the ProtectionStart date.
-\item UpfrontFee [Optional]: The upfront payment, expressed as a rate, to be multiplied by notional amount.
+\item UpfrontFee [Optional]: The upfront payment, expressed as a rate, to be multiplied by notional amount. If an UpfrontDate is provided, an UpfrontFee must also be provided. The UpfrontFee cannot be left blank.
 \item FixedRecoveryRate [Optional]: This node holds the fixed recovery rate if the CDS is a fixed recovery CDS. For a standard CDS, this field should be omitted.
 \end{itemize}
 
-A LegData block then defines the cashflow structure of the credit default swap, this must be be of type \emph{Fixed}.
+The \lstinline!LegData! block then defines the CDS premium leg structure. This premium leg must be be of type \lstinline!Fixed! as described in Section \ref{ss:fixedleg_data}.
 
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-    <CreditDefaultSwapData>
-      <IssuerId>CPTY_A</IssuerId>
-      <CreditCurveId>ISIN:XS0982710740</CreditCurveId>
-      <SettlesAccrual>Y</SettlesAccrual>
-      <PaysAtDefaultTime>Y</PaysAtDefaultTime>
-      <ProtectionStart>20160206</ProtectionStart>
-      <UpfrontDate>20160208</UpfrontDate>
-      <UpfrontFee>0.0</UpfrontFee>
-      <LegData>
-            <LegType>Fixed</LegType>
-            <Payer>false</Payer>
-            ...
-      </LegData>
-    </CreditDefaultSwapData>
+<CreditDefaultSwapData>
+  <IssuerId>CPTY_A</IssuerId>
+  <CreditCurveId>RED:008CA0|SNRFOR|USD|MR14</CreditCurveId>
+  <SettlesAccrual>Y</SettlesAccrual>
+  <PaysAtDefaultTime>Y</PaysAtDefaultTime>
+  <ProtectionStart>2016-02-06</ProtectionStart>
+  <UpfrontDate>2016-02-08</UpfrontDate>
+  <UpfrontFee>0.0</UpfrontFee>
+  <LegData>
+    <LegType>Fixed</LegType>
+    <Payer>false</Payer>
+    ...
+  </LegData>
+</CreditDefaultSwapData>
 \end{minted}
 \caption{CreditDefaultSwap Data}
 \label{lst:cdsdata}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CreditDefaultSwapData>
+  <ReferenceInformation>
+    <ReferenceEntityId>RED:008CA0</ReferenceEntityId>
+    <Tier>SNRFOR</Tier>
+    <Currency>USD</Currency>
+    <DocClause>MR14</DocClause>
+  </ReferenceInformation>
+  <LegData>
+    ...
+  </LegData>
+</CreditDefaultSwapData>
+\end{minted}
+\caption{\lstinline!CreditDefaultSwapData! with \lstinline!ReferenceInformation!}
+\label{lst:cdsdata_with_ref_info}
 \end{listing}

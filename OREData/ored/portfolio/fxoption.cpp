@@ -32,88 +32,37 @@ namespace ore {
 namespace data {
 
 void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-
-    Currency boughtCcy = parseCurrency(boughtCurrency_);
-    Currency soldCcy = parseCurrency(soldCurrency_);
-
-    QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxOption");
-
-    // Payoff
-    Real strike = soldAmount_ / boughtAmount_;
-    Option::Type type = parseOptionType(option_.callPut());
-    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike));
-
-    // Only European Vanilla supported for now
-    QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
-    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
-    Date expiryDate = parseDate(option_.exerciseDates().front());
-
-    // Exercise
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate);
-
-    // Vanilla European/American.
-    // If price adjustment is necessary we build a simple EU Option
-    boost::shared_ptr<QuantLib::Instrument> instrument;
-
-    // QL does not have an FXOption, so we add a vanilla one here and wrap
-    // it in a composite to get the notional in.
-    boost::shared_ptr<Instrument> vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
-
-    // we buy foriegn with domestic(=sold ccy).
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
-    QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<FxOptionEngineBuilder> fxOptBuilder = boost::dynamic_pointer_cast<FxOptionEngineBuilder>(builder);
-
-    vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy));
-
-    Position::Type positionType = parsePositionType(option_.longShort());
-    Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
-    Real mult = boughtAmount_ * bsInd;
-
-    // If premium data is provided
-    // 1) build the fee trade and pass it to the instrument wrapper for pricing
-    // 2) add fee payment as additional trade leg for cash flow reporting
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
-    std::vector<Real> additionalMultipliers;
-    if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
-        Real premiumAmount = -bsInd * option_.premium(); // pay if long, receive if short
-        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
-        Date premiumDate = parseDate(option_.premiumPayDate());
-        // soldCcy is the NpvCcy, see below
-        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, soldCcy,
-                   engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
-        DLOG("option premium added for fx option " << id());
-    }
-
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(
-        new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
-
-    npvCurrency_ = soldCurrency_; // sold is the domestic
-    notional_ = soldAmount_;
-    maturity_ = expiryDate;
+    VanillaOptionTrade::build(engineFactory);
+    const string& ccyPairCode = assetName_ + currency_;
+    Handle<BlackVolTermStructure> blackVol = engineFactory->market()->fxVol(ccyPairCode);
+    LOG("Implied vol for " << tradeType_ << " on " << ccyPairCode << " with maturity " << maturity_ << " and strike " << strike_
+                                        << " is " << blackVol->blackVol(maturity_, strike_));
 }
 
 void FxOption::fromXML(XMLNode* node) {
-    Trade::fromXML(node);
+    VanillaOptionTrade::fromXML(node);
     XMLNode* fxNode = XMLUtils::getChildNode(node, "FxOptionData");
     QL_REQUIRE(fxNode, "No FxOptionData Node");
     option_.fromXML(XMLUtils::getChildNode(fxNode, "OptionData"));
-    boughtCurrency_ = XMLUtils::getChildValue(fxNode, "BoughtCurrency", true);
-    soldCurrency_ = XMLUtils::getChildValue(fxNode, "SoldCurrency", true);
-    boughtAmount_ = XMLUtils::getChildValueAsDouble(fxNode, "BoughtAmount", true);
-    soldAmount_ = XMLUtils::getChildValueAsDouble(fxNode, "SoldAmount", true);
+    assetName_ = XMLUtils::getChildValue(fxNode, "BoughtCurrency", true);
+    currency_ = XMLUtils::getChildValue(fxNode, "SoldCurrency", true);
+    double boughtAmount = XMLUtils::getChildValueAsDouble(fxNode, "BoughtAmount", true);
+    double soldAmount = XMLUtils::getChildValueAsDouble(fxNode, "SoldAmount", true);
+    strike_ = soldAmount / boughtAmount;
+    quantity_ = boughtAmount;
 }
 
 XMLNode* FxOption::toXML(XMLDocument& doc) {
+    //TODO: Should call parent class to xml?
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxOptionData");
     XMLUtils::appendNode(node, fxNode);
 
     XMLUtils::appendNode(fxNode, option_.toXML(doc));
-    XMLUtils::addChild(doc, fxNode, "BoughtCurrency", boughtCurrency_);
-    XMLUtils::addChild(doc, fxNode, "BoughtAmount", boughtAmount_);
-    XMLUtils::addChild(doc, fxNode, "SoldCurrency", soldCurrency_);
-    XMLUtils::addChild(doc, fxNode, "SoldAmount", soldAmount_);
+    XMLUtils::addChild(doc, fxNode, "BoughtCurrency", boughtCurrency());
+    XMLUtils::addChild(doc, fxNode, "BoughtAmount", boughtAmount());
+    XMLUtils::addChild(doc, fxNode, "SoldCurrency", soldCurrency());
+    XMLUtils::addChild(doc, fxNode, "SoldAmount", soldAmount());
 
     return node;
 }

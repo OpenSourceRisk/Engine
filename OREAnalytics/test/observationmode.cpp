@@ -178,14 +178,15 @@ void simulation(string dateGridString, bool checkFixings) {
     parameters->interpolation() = "LogLinear";
     parameters->extrapolate() = true;
 
-    parameters->swapVolTerms() = {6 * Months, 1 * Years};
-    parameters->swapVolExpiries() = {1 * Years, 2 * Years};
+    parameters->setSwapVolTerms("", {6 * Months, 1 * Years});
+    parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});
     parameters->setSwapVolCcys(ccys);
     parameters->swapVolDecayMode() = "ForwardVariance";
     parameters->setSimulateSwapVols(false);
 
-    parameters->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    parameters->fxVolDecayMode() = "ConstantVariance";
+    parameters->setFxVolExpiries(
+        vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
+    parameters->setFxVolDecayMode(string("ConstantVariance"));
     parameters->setSimulateFXVols(false);
 
     parameters->setFxVolCcyPairs({"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"});
@@ -263,15 +264,15 @@ void simulation(string dateGridString, bool checkFixings) {
     fxConfigs.push_back(boost::make_shared<FxBsData>("JPY", "EUR", calibrationType, true, ParamType::Piecewise,
                                                      sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 
-    std::map<std::pair<std::string, std::string>, Real> corr;
-    corr[std::make_pair("IR:EUR", "IR:USD")] = 0.6;
+    std::map<std::pair<std::string, std::string>, Handle<Quote>> corr;
+    corr[std::make_pair("IR:EUR", "IR:USD")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.6));
 
     boost::shared_ptr<CrossAssetModelData> config(boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, corr));
 
     // Model Builder & Model
     // model builder
-    boost::shared_ptr<CrossAssetModelBuilder> modelBuilder(new CrossAssetModelBuilder(initMarket));
-    boost::shared_ptr<QuantExt::CrossAssetModel> model = modelBuilder->build(config);
+    boost::shared_ptr<CrossAssetModelBuilder> modelBuilder(new CrossAssetModelBuilder(initMarket, config));
+    boost::shared_ptr<QuantExt::CrossAssetModel> model = *modelBuilder->model();
     modelBuilder = NULL;
 
     // Path generator

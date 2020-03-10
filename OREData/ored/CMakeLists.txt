@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
 set(OREData_SRC configuration/basecorrelationcurveconfig.cpp
+configuration/bootstrapconfig.cpp
 configuration/capfloorvolcurveconfig.cpp
 configuration/cdsvolcurveconfig.cpp
 configuration/commoditycurveconfig.cpp
@@ -16,6 +17,7 @@ configuration/genericyieldvolcurveconfig.cpp
 configuration/inflationcapfloorpricesurfaceconfig.cpp
 configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
+configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
 marketdata/basecorrelationcurve.cpp
 marketdata/capfloorvolcurve.cpp
@@ -30,6 +32,7 @@ marketdata/curvespecparser.cpp
 marketdata/defaultcurve.cpp
 marketdata/equitycurve.cpp
 marketdata/equityvolcurve.cpp
+marketdata/expiry.cpp
 marketdata/fixings.cpp
 marketdata/fxspot.cpp
 marketdata/fxtriangulation.cpp
@@ -44,6 +47,7 @@ marketdata/marketdatum.cpp
 marketdata/marketdatumparser.cpp
 marketdata/marketimpl.cpp
 marketdata/security.cpp
+marketdata/strike.cpp
 marketdata/swaptionvolcurve.cpp
 marketdata/todaysmarket.cpp
 marketdata/todaysmarketparameters.cpp
@@ -67,6 +71,7 @@ portfolio/builders/capfloorediborleg.cpp
 portfolio/builders/cms.cpp
 portfolio/builders/cmsspread.cpp
 portfolio/builders/commodityoption.cpp
+portfolio/builders/cpicapfloor.cpp
 portfolio/builders/swaption.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
@@ -88,6 +93,7 @@ portfolio/fxoption.cpp
 portfolio/fxswap.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
+portfolio/legdatafactory.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetmanager.cpp
 portfolio/optiondata.cpp
@@ -99,8 +105,10 @@ portfolio/swaption.cpp
 portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradefactory.cpp
+portfolio/vanillaoption.cpp
 report/csvreport.cpp
 utilities/calendaradjustmentconfig.cpp
+utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
 utilities/currencycheck.cpp
@@ -118,6 +126,7 @@ utilities/xmlutils.cpp)
 
 set(OREData_HDR auto_link.hpp
 configuration/basecorrelationcurveconfig.hpp
+configuration/bootstrapconfig.hpp
 configuration/capfloorvolcurveconfig.hpp
 configuration/cdsvolcurveconfig.hpp
 configuration/commoditycurveconfig.hpp
@@ -137,6 +146,7 @@ configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
 configuration/securityconfig.hpp
 configuration/swaptionvolcurveconfig.hpp
+configuration/volatilityconfig.hpp
 configuration/yieldcurveconfig.hpp
 configuration/yieldvolcurveconfig.hpp
 marketdata/basecorrelationcurve.hpp
@@ -152,6 +162,7 @@ marketdata/curvespecparser.hpp
 marketdata/defaultcurve.hpp
 marketdata/equitycurve.hpp
 marketdata/equityvolcurve.hpp
+marketdata/expiry.hpp
 marketdata/fixings.hpp
 marketdata/fxspot.hpp
 marketdata/fxtriangulation.hpp
@@ -167,6 +178,7 @@ marketdata/marketdatum.hpp
 marketdata/marketdatumparser.hpp
 marketdata/marketimpl.hpp
 marketdata/security.hpp
+marketdata/strike.hpp
 marketdata/structuredcurveerror.hpp
 marketdata/swaptionvolcurve.hpp
 marketdata/todaysmarket.hpp
@@ -184,7 +196,9 @@ model/infdkdata.hpp
 model/irlgmdata.hpp
 model/lgmbuilder.hpp
 model/lgmdata.hpp
+model/marketobserver.hpp
 model/modelbuilder.hpp
+model/structuredmodelerror.hpp
 model/utilities.hpp
 portfolio/bond.hpp
 portfolio/builders/bond.hpp
@@ -192,10 +206,12 @@ portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
 portfolio/builders/capfloorediborleg.hpp
 portfolio/builders/capflooredyoyleg.hpp
+portfolio/builders/capflooredcpileg.hpp
 portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
 portfolio/builders/commodityforward.hpp
 portfolio/builders/commodityoption.hpp
+portfolio/builders/cpicapfloor.hpp
 portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityoption.hpp
@@ -204,6 +220,7 @@ portfolio/builders/fxforward.hpp
 portfolio/builders/fxoption.hpp
 portfolio/builders/swap.hpp
 portfolio/builders/swaption.hpp
+portfolio/builders/vanillaoption.hpp
 portfolio/builders/yoycapfloor.hpp
 portfolio/capfloor.hpp
 portfolio/commodityforward.hpp
@@ -225,6 +242,7 @@ portfolio/fxswap.hpp
 portfolio/instrumentwrapper.hpp
 portfolio/legbuilders.hpp
 portfolio/legdata.hpp
+portfolio/legdatafactory.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetmanager.hpp
 portfolio/optiondata.hpp
@@ -237,10 +255,12 @@ portfolio/swaption.hpp
 portfolio/trade.hpp
 portfolio/tradeactions.hpp
 portfolio/tradefactory.hpp
+portfolio/vanillaoption.hpp
 report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
 utilities/calendaradjustmentconfig.hpp
+utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
 utilities/currencycheck.hpp

@@ -33,11 +33,12 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curv
                                        const std::vector<std::pair<std::string, bool>>& cdsQuotes, bool extrapolation,
                                        const string& benchmarkCurveID, const string& sourceCurveID,
                                        const std::vector<string>& pillars, const Calendar& calendar, const Size spotLag,
-                                       const Date& startDate)
+                                       const Date& startDate, const BootstrapConfig& bootstrapConfig)
     : CurveConfig(curveID, curveDescription), cdsQuotes_(cdsQuotes), currency_(currency), type_(type),
       discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
       conventionID_(conventionID), extrapolation_(extrapolation), benchmarkCurveID_(benchmarkCurveID),
-      sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar), spotLag_(spotLag), startDate_(startDate) {
+      sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar), spotLag_(spotLag),
+      startDate_(startDate), bootstrapConfig_(bootstrapConfig) {
 
     for (const auto& kv : cdsQuotes) {
         quotes_.push_back(kv.first);
@@ -112,6 +113,11 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
                 WLOG("'StartDate' is only used when type is 'SpreadCDS'");
             }
         }
+
+        // Optional bootstrap configuration
+        if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
+            bootstrapConfig_.fromXML(n);
+        }
     }
 }
 
@@ -150,6 +156,8 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
 
     if (startDate_ != Date())
         XMLUtils::addChild(doc, node, "StartDate", to_string(startDate_));
+
+    XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
 
     return node;
 }

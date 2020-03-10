@@ -90,7 +90,7 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
     case RFType::YieldVolatility:
         return yieldVolShiftData().at(name);
     case RFType::OptionletVolatility:
-        return capFloorVolShiftData().at(name);
+        return *capFloorVolShiftData().at(name);
     case RFType::FXVolatility:
         return fxVolShiftData().at(name);
     case RFType::CDSVolatility:
@@ -104,15 +104,15 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
     case RFType::YoYInflationCurve:
         return *yoyInflationCurveShiftData().at(name);
     case RFType::YoYInflationCapFloorVolatility:
-        return yoyInflationCapFloorVolShiftData().at(name);
+        return *yoyInflationCapFloorVolShiftData().at(name);
+    case RFType::ZeroInflationCapFloorVolatility:
+        return *zeroInflationCapFloorVolShiftData().at(name);
     case RFType::EquitySpot:
         return equityShiftData().at(name);
     case RFType::EquityVolatility:
         return equityVolShiftData().at(name);
     case RFType::DividendYield:
         return *dividendYieldShiftData().at(name);
-    case RFType::CommoditySpot:
-        return commodityShiftData().at(name);
     case RFType::CommodityCurve:
         return *commodityCurveShiftData().at(name);
     case RFType::CommodityVolatility:
@@ -232,9 +232,9 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         for (XMLNode* child = XMLUtils::getChildNode(capVols, "CapFloorVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
-            CapFloorVolShiftData data;
-            volShiftDataFromXML(child, data);
-            data.indexName = XMLUtils::getChildValue(child, "Index", true);
+            auto data = boost::make_shared<CapFloorVolShiftData>();
+            volShiftDataFromXML(child, *data);
+            data->indexName = XMLUtils::getChildValue(child, "Index", true);
             capFloorVolShiftData_[ccy] = data;
         }
     }
@@ -346,23 +346,35 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         for (XMLNode* child = XMLUtils::getChildNode(yoyCapVols, "YYCapFloorVolatility"); child;
             child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
-            VolShiftData data;
-            volShiftDataFromXML(child, data);
+            auto data = boost::make_shared<CapFloorVolShiftData>();
+            volShiftDataFromXML(child, *data);
             yoyInflationCapFloorVolShiftData_[index] = data;
         }
     }
 
-    LOG("Get commodity spot sensitivity parameters");
-    XMLNode* csNode = XMLUtils::getChildNode(node, "CommoditySpots");
-    if (csNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(csNode, "CommoditySpot"); child;
-             child = XMLUtils::getNextSibling(child)) {
-            string name = XMLUtils::getAttribute(child, "name");
-            SpotShiftData data;
-            shiftDataFromXML(child, data);
-            commodityShiftData_[name] = data;
+    LOG("Get zero inflation cap/floor vol sensitivity parameters");
+    XMLNode* zeroCapVols = XMLUtils::getChildNode(node, "CPICapFloorVolatilities");
+    if (zeroCapVols) {
+        for (XMLNode* child = XMLUtils::getChildNode(zeroCapVols, "CPICapFloorVolatility"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            auto data = boost::make_shared<CapFloorVolShiftData>(); 
+            volShiftDataFromXML(child, *data);
+	    zeroInflationCapFloorVolShiftData_[index] = data;
         }
     }
+
+    // LOG("Get commodity spot sensitivity parameters");
+    // XMLNode* csNode = XMLUtils::getChildNode(node, "CommoditySpots");
+    // if (csNode) {
+    //     for (XMLNode* child = XMLUtils::getChildNode(csNode, "CommoditySpot"); child;
+    //          child = XMLUtils::getNextSibling(child)) {
+    //         string name = XMLUtils::getAttribute(child, "name");
+    //         SpotShiftData data;
+    //         shiftDataFromXML(child, data);
+    //         commodityShiftData_[name] = data;
+    //     }
+    // }
 
     LOG("Get commodity curve sensitivity parameters");
     XMLNode* ccNode = XMLUtils::getChildNode(node, "CommodityCurves");
@@ -422,14 +434,20 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get cross gamma parameters");
-    vector<string> filter = XMLUtils::getChildrenValues(node, "CrossGammaFilter", "Pair", true);
-    for (Size i = 0; i < filter.size(); ++i) {
-        vector<string> tokens;
-        boost::split(tokens, filter[i], boost::is_any_of(","));
-        QL_REQUIRE(tokens.size() == 2, "expected 2 tokens, found " << tokens.size() << " in " << filter[i]);
-        crossGammaFilter_.push_back(pair<string, string>(tokens[0], tokens[1]));
+    XMLNode* CGF = XMLUtils::getChildNode(node, "CrossGammaFilter");
+    if (CGF) {
+        LOG("Get cross gamma parameters");
+        vector<string> filter = XMLUtils::getChildrenValues(node, "CrossGammaFilter", "Pair", true);
+        for (Size i = 0; i < filter.size(); ++i) {
+            vector<string> tokens;
+            boost::split(tokens, filter[i], boost::is_any_of(","));
+            QL_REQUIRE(tokens.size() == 2, "expected 2 tokens, found " << tokens.size() << " in " << filter[i]);
+            crossGammaFilter_.push_back(pair<string, string>(tokens[0], tokens[1]));
+        }
     }
+
+    LOG("Get compute gamma flag");
+    computeGamma_ = XMLUtils::getChildValueAsBool(node, "ComputeGamma", false); // defaults to true
 }
 
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
@@ -514,9 +532,9 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (const auto& kv : capFloorVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "CapFloorVolatility");
             XMLUtils::addAttribute(doc, node, "ccy", kv.first);
-            volShiftDataToXML(doc, node, kv.second);
-            XMLUtils::addChild(doc, node, "Index", kv.second.indexName);
-            XMLUtils::addChild(doc, node, "IsRelative", kv.second.isRelative);
+            volShiftDataToXML(doc, node, *kv.second);
+            XMLUtils::addChild(doc, node, "Index", kv.second->indexName);
+            XMLUtils::addChild(doc, node, "IsRelative", kv.second->isRelative);
         }
     }
 
@@ -604,14 +622,24 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         }
     }
 
-    if (!commodityShiftData_.empty()) {
-        LOG("toXML for CommoditySpots");
-        XMLNode* parent = XMLUtils::addChild(doc, root, "CommoditySpots");
-        for (const auto& kv : commodityShiftData_) {
-            XMLNode* node = XMLUtils::addChild(doc, parent, "CommoditySpot");
-            XMLUtils::addAttribute(doc, node, "name", kv.first);
-            shiftDataToXML(doc, node, kv.second);
+    if (!yoyInflationCapFloorVolShiftData_.empty()) {
+        LOG("toXML for YYInflationCapFloorVolatilities");
+        XMLNode* parent = XMLUtils::addChild(doc, root, "YYCapFloorVolatilities");
+        for (const auto& kv : yoyInflationCapFloorVolShiftData_) {
+            XMLNode* node = XMLUtils::addChild(doc, parent, "YYCapFloorVolatility");
+            XMLUtils::addAttribute(doc, node, "index", kv.first);
+            volShiftDataToXML(doc, node, *kv.second);
         }
+    }
+
+    if (!zeroInflationCapFloorVolShiftData_.empty()) { 
+        LOG("toXML for CPIInflationCapFloorVolatilities"); 
+        XMLNode* parent = XMLUtils::addChild(doc, root, "CPICapFloorVolatilities"); 
+        for (const auto& kv : zeroInflationCapFloorVolShiftData_) { 
+            XMLNode* node = XMLUtils::addChild(doc, parent, "CPICapFloorVolatility"); 
+            XMLUtils::addAttribute(doc, node, "index", kv.first); 
+            volShiftDataToXML(doc, node, *kv.second); 
+        } 
     }
 
     if (!commodityCurveShiftData_.empty()) {
@@ -666,6 +694,8 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addChild(doc, parent, "Pair", crossGamma.first + "," + crossGamma.second);
         }
     }
+
+    XMLUtils::addChild(doc, root, "ComputeGamma", computeGamma_);
 
     return root;
 }

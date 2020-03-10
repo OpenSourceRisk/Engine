@@ -115,5 +115,23 @@
     <ClCompile Include="calendaradjustment.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="creditdefaultswapdata.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="zerocouponswap.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="conventionsbasedfutureexpiry.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="strike.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="expiry.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="cpicapfloor.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

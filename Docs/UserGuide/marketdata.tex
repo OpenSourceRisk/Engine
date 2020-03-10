@@ -314,6 +314,37 @@ Example:
 \item {MM\_FUTURE/PRICE/EUR/2018-06/LIF3ME/3M}
 \end{itemize}
 
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Overnight Index Futures Price}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
+  \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{OI\_FUTURE} & \\ \hline
+    Quote Type & \emph{PRICE} & \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Overnight Index Future price\\ \hline
+    Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
+    Contract & String & Contract name\\ \hline
+    Term & An integer followed by D, W, M or Y & Underlying Term\\ \hline
+  % date rule & {\tt string} &  \\
+  \end{tabular}
+  \caption{Money Market Futures Price}
+  \label{tab:mmfp_quote}
+\end{table}
+
+Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule such as 3rd
+Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly, but
+defined in the futures contract.
+
+\medskip
+Example: Three Months SOFR Futures (DEC 2019):
+\begin{itemize}
+\item {OI\_FUTURE/PRICE/USD/2019-12/CME:SR3Z2019/3M}
+\end{itemize}
+
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 %\subsection{Equity Futures Price}
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -519,14 +550,15 @@ Example:
 
 \begin{table}[H]
 \centering
-  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \begin{tabular}{|p{3.4cm}|p{3.8cm}|p{6.3cm}|}
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
     Instrument Type & \emph{BASIS\_SWAP} & \\ \hline
     Quote Type & \emph{BASIS\_SPREAD} & \\ \hline
     Flat tenor & An integer followed by D, W, M or Y & Zero spread leg's index tenor\\ \hline
     Tenor & An integer followed by D, W, M or Y & Non-zero spread leg's index tenor\\ \hline
-    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the basis swap spread\\ \hline
+    Currency & See \lstinline!Currency! in Table~\ref{tab:allow_stand_data}& Currency of the basis swap spread\\ \hline
+    Optional Identifier & String & Basis swap name\\ \hline
     Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\ \hline
   \end{tabular}
   \caption{Basis Swap Spread}
@@ -535,9 +567,12 @@ Example:
 
 
 \medskip
-Example:
+Examples:
 \begin{itemize}
 \item {BASIS\_SWAP/BASIS\_SPREAD/6M/3M/CHF/10Y}
+\item {BASIS\_SWAP/BASIS\_SPREAD/3M/1D/USD/2Y}
+\item {BASIS\_SWAP/BASIS\_SPREAD/3M/1D/USD/LIBOR\_PRIME/2Y}
+\item {BASIS\_SWAP/BASIS\_SPREAD/3M/1D/USD/LIBOR\_FEDFUNDS/2Y}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

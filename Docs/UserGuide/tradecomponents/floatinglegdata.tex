@@ -12,6 +12,9 @@ An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:fl
                 <FloatingLegData>
                     <Index>USD-LIBOR-3M</Index>
                     <IsInArrears>false</IsInArrears>
+                    <IsAveraged>false</IsAveraged>
+                    <HasSubPeriods>false</HasSubPeriods>
+                    <IncludeSpread>false</IncludeSpread>
                     <FixingDays>2</FixingDays>
                     <Spreads>
                         <Spread>0.005</Spread>
@@ -25,7 +28,7 @@ An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:fl
                     <Floors>
                         <Floor>0.01</Floor>
                     </Floors>
-                    <NakedOption>N</NakedOption>    
+                    <NakedOption>false</NakedOption>    
                 </FloatingLegData>
 \end{minted}
 \caption{Floating leg data}
@@ -50,12 +53,14 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
 \item HasSubPeriods [Optional]: For cases where several Ibor fixings result in a single payment for a period, e.g. if
   the Ibor tenor is 3M and the schedule tenor is 6M, two fixings are used to compute the amount of the semiannual coupon
   payments. \emph{true} indicates that an average (IsAveraged = true) or a compounded (IsAveraged=false) value of the
-  fixings is used to determine the payment rate.
+  fixings is used to determine the payment rate.  \emph{false} indicates that the initial index period fixing determines the payment rate for the 
+  full tenor, i.e. no further fixings, no averaging and no compounding. IsAveraged is ignored for Ibor legs when HasSubPeriods is set to  \emph{false}.
+  HasSubPeriods does not apply to Overnight indices. 
 
 Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 
-\item IncludeSpread [Optional]: Only applies to Sub Periods Coupons. If \emph{true} the spread is included in the
-  compounding, otherwise it is excluded.
+\item IncludeSpread [Optional]: Only applies to Sub Periods and (compounded) OIS Coupons. If \emph{true} the spread is
+  included in the compounding, otherwise it is excluded.
 
 Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 
@@ -71,6 +76,11 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
   before the period end date an index fixing is taken.   
 
 Allowable values:  Positive integers.  Defaults to the index's fixing days if blank or omitted.
+
+\item Lookback [Optional]: A period by which the fixing schedule of (averaged, compounded) OIS legs is shifted into the
+  past.
+
+Allowable values: any valid period, e.g. 2D, 3M, 1Y
 
 \item Spreads [Optional]: This node contains child elements of type
   \lstinline!Spread!. If the spread is constant over the life of the
@@ -117,7 +127,9 @@ If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \
   the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
   above.
 
-\item NakedOption [Optional]: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. 
+\item NakedOption [Optional]: Optional node, if \emph{true} the leg represents only the embedded floor, cap or collar. 
 By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
+
+ Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
 
 \end{itemize}

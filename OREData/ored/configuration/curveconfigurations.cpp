@@ -131,7 +131,7 @@ boost::shared_ptr<CurveConfigurations> CurveConfigurations::minimalCurveConfig(c
     addMinimalCurves("Securities", securityConfigs_, minimum->securityConfigs_, CurveSpec::CurveType::Security, curveConfigIds);
     addMinimalCurves("BaseCorrelations", baseCorrelationCurveConfigs_, minimum->baseCorrelationCurveConfigs_, CurveSpec::CurveType::BaseCorrelation, curveConfigIds);
     addMinimalCurves("CommodityCurves", commodityCurveConfigs_, minimum->commodityCurveConfigs_, CurveSpec::CurveType::Commodity, curveConfigIds);
-    addMinimalCurves("CommodityVolatilities", commodityVolatilityCurveConfigs_, minimum->commodityVolatilityCurveConfigs_, CurveSpec::CurveType::CommodityVolatility,curveConfigIds);
+    addMinimalCurves("CommodityVolatilities", commodityVolatilityConfigs_, minimum->commodityVolatilityConfigs_, CurveSpec::CurveType::CommodityVolatility,curveConfigIds);
     addMinimalCurves("Correlations", correlationCurveConfigs_, minimum->correlationCurveConfigs_, CurveSpec::CurveType::Correlation, curveConfigIds);
 
     return minimum;
@@ -182,7 +182,7 @@ std::set<string> CurveConfigurations::quotes() const {
     addQuotes(quotes, securityConfigs_, CurveSpec::CurveType::Security);
     addQuotes(quotes, fxSpotConfigs_, CurveSpec::CurveType::FX);
     addQuotes(quotes, commodityCurveConfigs_, CurveSpec::CurveType::Commodity);
-    addQuotes(quotes, commodityVolatilityCurveConfigs_, CurveSpec::CurveType::CommodityVolatility);
+    addQuotes(quotes, commodityVolatilityConfigs_, CurveSpec::CurveType::CommodityVolatility);
     addQuotes(quotes, correlationCurveConfigs_, CurveSpec::CurveType::Correlation);
 
     return quotes;
@@ -371,13 +371,13 @@ const boost::shared_ptr<CommodityCurveConfig>& CurveConfigurations::commodityCur
     return get(curveID, commodityCurveConfigs_);
 }
 
-bool CurveConfigurations::hasCommodityVolatilityCurveConfig(const string& curveID) const {
-    return has(curveID, commodityVolatilityCurveConfigs_);
+bool CurveConfigurations::hasCommodityVolatilityConfig(const string& curveID) const {
+    return has(curveID, commodityVolatilityConfigs_);
 }
 
-const boost::shared_ptr<CommodityVolatilityCurveConfig>&
-CurveConfigurations::commodityVolatilityCurveConfig(const string& curveID) const {
-    return get(curveID, commodityVolatilityCurveConfigs_);
+const boost::shared_ptr<CommodityVolatilityConfig>&
+CurveConfigurations::commodityVolatilityConfig(const string& curveID) const {
+    return get(curveID, commodityVolatilityConfigs_);
 }
 
 bool CurveConfigurations::hasCorrelationCurveConfig(const string& curveID) const {
@@ -410,7 +410,7 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     parseNode(node, "Securities", "Security", securityConfigs_);
     parseNode(node, "FXSpots", "FXSpot", fxSpotConfigs_);
     parseNode(node, "CommodityCurves", "CommodityCurve", commodityCurveConfigs_);
-    parseNode(node, "CommodityVolatilities", "CommodityVolatility", commodityVolatilityCurveConfigs_);
+    parseNode(node, "CommodityVolatilities", "CommodityVolatility", commodityVolatilityConfigs_);
     parseNode(node, "Correlations", "Correlation", correlationCurveConfigs_);
 }
 
@@ -433,7 +433,7 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "Securities", securityConfigs_);
     addNodes(doc, parent, "BaseCorrelations", baseCorrelationCurveConfigs_);
     addNodes(doc, parent, "CommodityCurves", commodityCurveConfigs_);
-    addNodes(doc, parent, "CommodityVolatilities", commodityVolatilityCurveConfigs_);
+    addNodes(doc, parent, "CommodityVolatilities", commodityVolatilityConfigs_);
     addNodes(doc, parent, "Correlations", correlationCurveConfigs_);
 
     return parent;

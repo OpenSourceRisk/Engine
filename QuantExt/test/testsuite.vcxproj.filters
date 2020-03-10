@@ -125,6 +125,9 @@
     <ClCompile Include="blackvariancesurfacesparse.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="blackvariancesurfacestddevs.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
     <ClCompile Include="piecewiseoptionletstripper.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -138,6 +141,12 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="strippedoptionletadapter2.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="blackvolsurfacedelta.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="forwardbond.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -160,6 +169,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="utilities.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="toplevelfixture.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

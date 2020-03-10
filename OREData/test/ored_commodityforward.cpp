@@ -58,7 +58,7 @@ public:
         vector<Date> dates = {asof_, Date(19, Feb, 2019)};
         vector<Real> prices = {1346.0, 1348.0};
         Handle<PriceTermStructure> priceCurve(
-            boost::make_shared<InterpolatedPriceCurve<Linear>>(dates, prices, dayCounter));
+            boost::make_shared<InterpolatedPriceCurve<Linear>>(asof_, dates, prices, dayCounter, USDCurrency()));
         commodityCurves_[make_pair(Market::defaultConfiguration, "GOLD_USD")] = priceCurve;
     }
 };

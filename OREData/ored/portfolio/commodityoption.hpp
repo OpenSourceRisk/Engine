@@ -50,6 +50,10 @@ public:
         return {};
     }
 
+
+    //! Add underlying Commodity names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
+
     //! \name Inspectors
     //@{
     const OptionData& option() const { return optionData_; }
@@ -63,6 +67,11 @@ public:
     //@{
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+
+    //! \name Trade
+    //@{
+    bool hasCashflows() const override { return false; }
     //@}
 
 private:

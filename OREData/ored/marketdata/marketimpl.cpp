@@ -62,22 +62,66 @@ A lookup(const B& map, const C& key, const YieldCurveType y, const string& confi
     return it->second;
 }
 
-template <class A, class B, class C>
-A lookup(const B& map, const C& key1, const C& key2, const string& configuration, const string& type) {
+Handle<QuantExt::CorrelationTermStructure>
+lookup(const map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>>& map,
+       const std::string& key1, const std::string& key2, const string& configuration) {
+    // straight pair
     auto it = map.find(make_tuple(configuration, key1, key2));
-    if (it == map.end()) {
-        // fall back to default configuration
-        it = map.find(make_tuple(Market::defaultConfiguration, key1, key2));
-        QL_REQUIRE(it != map.end(), "did not find object " << key1 << "/" << key2 << " of type " << type
-                                                           << " under configuration " << configuration
-                                                           << " in CorrelationCurves");
+    if (it != map.end())
+        return it->second;
+    // inverse pair
+    it = map.find(make_tuple(configuration, key2, key1));
+    if (it != map.end())
+        return it->second;
+    // inverse fx index1
+    if (isFxIndex(key1)) {
+        it = map.find(make_tuple(configuration, inverseFxIndex(key1), key2));
+        if (it != map.end())
+            return Handle<QuantExt::CorrelationTermStructure>(
+                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
+        it = map.find(make_tuple(configuration, key2, inverseFxIndex(key1)));
+        if (it != map.end())
+            return Handle<QuantExt::CorrelationTermStructure>(
+                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
     }
-    return it->second;
+    // inverse fx index2
+    if (isFxIndex(key2)) {
+        it = map.find(make_tuple(configuration, key1, inverseFxIndex(key2)));
+        if (it != map.end())
+            return Handle<QuantExt::CorrelationTermStructure>(
+                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
+        it = map.find(make_tuple(configuration, inverseFxIndex(key2), key1));
+        if (it != map.end())
+            return Handle<QuantExt::CorrelationTermStructure>(
+                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
+    }
+    // both fx indices inverted
+    if (isFxIndex(key1) && isFxIndex(key2)) {
+        it = map.find(make_tuple(configuration, inverseFxIndex(key1), inverseFxIndex(key2)));
+        if (it != map.end())
+            return it->second;
+        it = map.find(make_tuple(configuration, inverseFxIndex(key2), inverseFxIndex(key1)));
+        if (it != map.end())
+            return it->second;
+    }
+    // if not found, fall back to default configuration
+    if (configuration == Market::defaultConfiguration) {
+        QL_FAIL("did not find object " << key1 << "/" << key2 << " in CorrelationCurves");
+    } else {
+        return lookup(map, key1, key2, Market::defaultConfiguration);
+    }
 }
 
 } // anonymous namespace
+
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, const string& key,
                                                   const string& configuration) const {
+    // we allow for ibor index names as keys and return the index forward curve in case of a match
+    boost::shared_ptr<IborIndex> notUsed;
+    if (tryParseIborIndex(key, notUsed)) {
+        return iborIndex(key, configuration)->forwardingTermStructure();
+    }
+    // no ibor index found under key => look for a genuine yield curve
     return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, type, configuration, "yield curve");
 }
 
@@ -87,7 +131,7 @@ Handle<YieldTermStructure> MarketImpl::discountCurve(const string& key, const st
 }
 
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const string& key, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::Yield, configuration, "yield curve");
+    return yieldCurve(YieldCurveType::Yield, key, configuration);
 }
 
 Handle<IborIndex> MarketImpl::iborIndex(const string& key, const string& configuration) const {
@@ -139,7 +183,9 @@ Handle<BlackVolTermStructure> MarketImpl::fxVol(const string& ccypair, const str
         if (it != fxVols_.end()) {
             Handle<BlackVolTermStructure> h(boost::make_shared<QuantExt::BlackInvertedVolTermStructure>(it->second));
             h->enableExtrapolation();
-            fxVols_[make_pair(configuration, ccypairInverted)] = h;
+            // we have found a surface for the inverted pair.
+            // so we can invert the surface and store that under the original pair.
+            fxVols_[make_pair(configuration, ccypair)] = h;
             return h;
         } else {
             if (configuration == Market::defaultConfiguration)
@@ -233,10 +279,6 @@ Handle<QuantExt::InflationIndexObserver> MarketImpl::baseCpis(const string& key,
     return lookup<Handle<QuantExt::InflationIndexObserver>>(baseCpis_, key, configuration, "base CPI");
 }
 
-Handle<Quote> MarketImpl::commoditySpot(const string& commodityName, const string& configuration) const {
-    return lookup<Handle<Quote>>(commoditySpots_, commodityName, configuration, "commodity spot");
-}
-
 Handle<PriceTermStructure> MarketImpl::commodityPriceCurve(const string& commodityName,
                                                            const string& configuration) const {
     return lookup<Handle<PriceTermStructure>>(commodityCurves_, commodityName, configuration, "commodity price curve");
@@ -249,8 +291,7 @@ Handle<BlackVolTermStructure> MarketImpl::commodityVolatility(const string& comm
 
 Handle<QuantExt::CorrelationTermStructure> MarketImpl::correlationCurve(const string& index1, const string& index2,
                                                                         const string& configuration) const {
-    return lookup<Handle<QuantExt::CorrelationTermStructure>>(correlationCurves_, index1, index2, configuration,
-                                                              "correlation curve");
+    return lookup(correlationCurves_, index1, index2, configuration);
 }
 
 Handle<Quote> MarketImpl::cpr(const string& securityID, const string& configuration) const {
@@ -393,8 +434,10 @@ void MarketImpl::refresh(const string& configuration) {
         }
     }
 
+    // term structures might be wrappers around nested termstructures that need to be updated as well,
+    // therefore we need to call deepUpdate() (=update() if no such nesting is present)
     for (auto& x : it->second)
-        x->update();
+        x->deepUpdate();
 
     // update fx spot quotes
     auto fxSpots = fxSpots_.find(configuration);

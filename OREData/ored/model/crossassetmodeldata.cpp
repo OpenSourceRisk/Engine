@@ -41,11 +41,20 @@ namespace data {
 
 bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
 
+    // compare correlations by value (not the handle links)
+    map<pair<string, string>, Handle<Quote>>::const_iterator corr1, corr2;
+    for (corr1 = correlations_.begin(), corr2 = rhs.correlations_.begin();
+         corr1 != correlations_.end() && corr2 != rhs.correlations_.end(); ++corr1, ++corr2) {
+        if (corr1->first != corr2->first || !close_enough(corr1->second->value(), corr2->second->value()))
+            return false;
+    }
+    if (corr1 != correlations_.end() || corr2 != rhs.correlations_.end())
+        return false;
+
     if (domesticCurrency_ != rhs.domesticCurrency_ || currencies_ != rhs.currencies_ || equities_ != rhs.equities_ ||
-        infindices_ != rhs.infindices_ || correlations_ != rhs.correlations_ ||
-        bootstrapTolerance_ != rhs.bootstrapTolerance_ || irConfigs_.size() != rhs.irConfigs_.size() ||
-        fxConfigs_.size() != rhs.fxConfigs_.size() || eqConfigs_.size() != rhs.eqConfigs_.size() ||
-        infConfigs_.size() != rhs.infConfigs_.size()) {
+        infindices_ != rhs.infindices_ || bootstrapTolerance_ != rhs.bootstrapTolerance_ ||
+        irConfigs_.size() != rhs.irConfigs_.size() || fxConfigs_.size() != rhs.fxConfigs_.size() ||
+        eqConfigs_.size() != rhs.eqConfigs_.size() || infConfigs_.size() != rhs.infConfigs_.size()) {
         return false;
     }
 
@@ -425,7 +434,7 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
 
     for (auto correlationIterator = correlations_.begin(); correlationIterator != correlations_.end();
          correlationIterator++) {
-        XMLNode* node = doc.allocNode("Correlation", std::to_string(correlationIterator->second));
+        XMLNode* node = doc.allocNode("Correlation", std::to_string(correlationIterator->second->value()));
         XMLUtils::appendNode(instantaneousCorrelationsNode, node);
         std::vector<std::string> factors = pairToStrings(correlationIterator->first);
         XMLUtils::addAttribute(doc, node, "factor1", factors[0]);

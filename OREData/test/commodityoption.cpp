@@ -67,13 +67,9 @@ public:
         // Add GOLD_USD price curve
         vector<Date> dates = {asof_, Date(19, Feb, 2019)};
         vector<Real> prices = {1346.0, 1348.0};
-        Handle<PriceTermStructure> priceCurve(boost::make_shared<InterpolatedPriceCurve<Linear>>(
-            InterpolatedPriceCurve<Linear>(dates, prices, dayCounter)));
+        Handle<PriceTermStructure> priceCurve(
+            boost::make_shared<InterpolatedPriceCurve<Linear>>(asof_, dates, prices, dayCounter, USDCurrency()));
         commodityCurves_[make_pair(Market::defaultConfiguration, "GOLD_USD")] = priceCurve;
-
-        // Add GOLD_USD spot quote
-        commoditySpots_[make_pair(Market::defaultConfiguration, "GOLD_USD")] =
-            Handle<Quote>(boost::make_shared<SimpleQuote>(prices[0]));
 
         // Add GOLD_USD volatilities
         vector<Date> volatilityDates = {Date(19, Feb, 2019), Date(19, Feb, 2020)};

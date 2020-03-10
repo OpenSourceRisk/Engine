@@ -42,6 +42,7 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     maturity_ = endDate;
     instrument_->qlInstrument()->update();
     notional_ = amount_;
+    notionalCurrency_ = currency_;
 }
 
 void ForwardRateAgreement::fromXML(XMLNode* node) {

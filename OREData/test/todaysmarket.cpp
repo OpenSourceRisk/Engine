@@ -27,6 +27,7 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/configuration/volatilityconfig.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/actual360.hpp>
@@ -54,6 +55,9 @@ public:
     const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const;
     const std::vector<Fixing>& loadFixings() const { return fixings_; }
     const std::vector<Fixing>& loadDividends() const { return dividends_; }
+    void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
+    void addDividend(QuantLib::Date date, const string& name, QuantLib::Real value) {}
 
 private:
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
@@ -748,8 +752,11 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     configs->equityCurveConfig("SP5") = boost::make_shared<EquityCurveConfig>(
         "SP5", "", "USD1D", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes);
 
-    configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>(
-        "SP5", "", "USD", EquityVolatilityCurveConfig::Dimension::ATM, equityVolExpiries);
+    vector<string> eqVolQuotes = { "EQUITY_OPTION/RATE_LNVOL/SP5/USD/1Y/ATMF", "EQUITY_OPTION/RATE_LNVOL/SP5/USD/2018-02-26/ATMF" };
+    boost::shared_ptr<VolatilityCurveConfig> vcc =
+        boost::make_shared<VolatilityCurveConfig>(eqVolQuotes, "Flat", "Flat");
+
+    configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>("SP5", "", "USD", vcc);
 
     // clang-format off
     vector<string> commodityQuotes{
@@ -763,7 +770,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // clang-format on
 
     configs->commodityCurveConfig("GOLD_USD") =
-        boost::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", "COMMODITY/PRICE/GOLD/USD", commodityQuotes);
+        boost::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", commodityQuotes, "COMMODITY/PRICE/GOLD/USD");
 
     return configs;
 }

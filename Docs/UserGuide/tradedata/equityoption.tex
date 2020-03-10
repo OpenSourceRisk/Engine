@@ -1,7 +1,7 @@
 \subsubsection{Equity Option}
 
-The \lstinline!EquityOptionData!  node is the trade data container for the equity option trade type.  Vanilla equity 
-options are supported, the exercise style must be \emph{European}. The \lstinline!EquityOptionData!  node includes one and 
+The \lstinline!EquityOptionData!  node is the trade data container for the \emph{EquityOption} trade type.  Equity 
+options with exercise styles \emph{European} and \emph{American}. The \lstinline!EquityOptionData!  node includes one and 
 only one \lstinline!OptionData! trade component sub-node plus elements specific to the equity option. The structure of 
 an example \lstinline!EquityOptionData! node for an equity option is shown in Listing
 \ref{lst:eqoption_data}.
@@ -29,7 +29,7 @@ The meanings and allowable values of the elements in the \lstinline!EquityOption
 	\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note 
 	that the equity option type allows for \emph{European} option style only.	
 	\item Name: The identifier of the underlying equity or equity index. \\
-	Allowable values:  Any string (provided it is the ID of an equity in the market configuration). Typically a RIC-code with the \emph{RIC:} prefix.
+	Allowable values:  See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data}. \\
 	\item Currency: The currency of the equity option. \\
 	Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.	
 	\item Strike: The option strike price.\\

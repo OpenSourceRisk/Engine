@@ -1,0 +1,11 @@
+<Conventions>
+  <CommodityForward>
+    <Id>PM:XAUUSD</Id>
+    <SpotDays>2</SpotDays>
+    <PointsFactor>100</PointsFactor>
+    <AdvanceCalendar>USD</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <BusinessDayConvention>ModifiedFollowing</BusinessDayConvention>
+    <Outright>false</Outright>
+  </CommodityForward>
+</Conventions>

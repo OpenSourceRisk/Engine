@@ -5,6 +5,7 @@
   <xs:complexType name="pricingengines">
     <xs:sequence>
       <xs:element type="product" name="Product" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="globalParameters" name="GlobalParameters" minOccurs="0"/>
       <!-- FIXME: poor name -->
     </xs:sequence>
   </xs:complexType>
@@ -29,6 +30,12 @@
       </xs:element>
     </xs:sequence>
     <xs:attribute type="xs:string" name="type" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="globalParameters">
+    <xs:sequence>
+      <xs:element type="parameter" name="Parameter" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="parameter">
