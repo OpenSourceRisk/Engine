@@ -335,7 +335,7 @@ boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPay
     LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, floatSchedule,
                         floatDC, notionals);
     // fixed leg
-    LegData cpiLeg(boost::make_shared<CPILegData>(cpiIndex, baseRate, observationLag, interpolated, cpiRates), isPayer,
+    LegData cpiLeg(boost::make_shared<CPILegData>(cpiIndex, startDate, baseRate, observationLag, (interpolated ? "Linear" : "Flat"), cpiRates), isPayer,
                    ccy, cpiSchedule, cpiDC, notionals, vector<string>(), "F", false, true);
 
     // trade

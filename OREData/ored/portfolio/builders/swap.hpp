@@ -79,16 +79,16 @@ protected:
     }
 };
 
-//! Engine Builder for Cross Currency Swaps
+//! Engine Builder base class for Cross Currency Swaps
 /*! Pricing engines are cached by currencies (represented as a string list)
 
     \ingroup builders
 */
-class CrossCurrencySwapEngineBuilder
+class CrossCurrencySwapEngineBuilderBase
     : public CachingPricingEngineBuilder<string, const std::vector<Currency>&, const Currency&> {
 public:
-    CrossCurrencySwapEngineBuilder()
-        : CachingEngineBuilder("DiscountedCashflows", "DiscountingCrossCurrencySwapEngine", {"CrossCurrencySwap"}) {}
+    CrossCurrencySwapEngineBuilderBase(const std::string& model, const std::string& engine)
+        : CachingEngineBuilder(model, engine, {"CrossCurrencySwap"}) {}
 
 protected:
     virtual string keyImpl(const std::vector<Currency>& ccys, const Currency& base) override {
@@ -98,7 +98,15 @@ protected:
             ccyskey << ccys[i] << ((i < ccys.size() - 1) ? "-" : "");
         return ccyskey.str();
     }
+};
 
+//! Discounted Cashflows Engine Builder for Cross Currency Swaps
+class CrossCurrencySwapEngineBuilder : public CrossCurrencySwapEngineBuilderBase {
+public:
+    CrossCurrencySwapEngineBuilder()
+        : CrossCurrencySwapEngineBuilderBase("DiscountedCashflows", "DiscountingCrossCurrencySwapEngine") {}
+
+protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys,
                                                         const Currency& base) override {
 

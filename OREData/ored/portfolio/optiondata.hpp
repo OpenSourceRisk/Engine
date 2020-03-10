@@ -43,13 +43,14 @@ public:
                vector<double> exercisePrices = vector<Real>(), string noticePeriod = "", string noticeCalendar = "",
                string noticeConvention = "", const vector<string>& exerciseFeeDates = vector<string>(),
                const vector<string>& exerciseFeeTypes = vector<string>(), string exerciseFeeSettlementPeriod = "",
-               string exerciseFeeSettlementCalendar = "", string exerciseFeeSettlementConvention = "")
-        : longShort_(longShort), callPut_(callPut), style_(style), payoffAtExpiry_(payoffAtExpiry),
-          exerciseDates_(exerciseDates), noticePeriod_(noticePeriod), noticeCalendar_(noticeCalendar),
-          noticeConvention_(noticeConvention), settlement_(settlement), settlementMethod_(settlementMethod),
-          premium_(premium), premiumCcy_(premiumCcy), premiumPayDate_(premiumPayDate), exerciseFees_(exerciseFees),
-          exerciseFeeDates_(exerciseFeeDates), exerciseFeeTypes_(exerciseFeeTypes),
-          exerciseFeeSettlementPeriod_(exerciseFeeSettlementPeriod),
+               string exerciseFeeSettlementCalendar = "", string exerciseFeeSettlementConvention = "",
+               string payoffType = "")
+        : longShort_(longShort), callPut_(callPut), payoffType_(payoffType), style_(style),
+          payoffAtExpiry_(payoffAtExpiry), exerciseDates_(exerciseDates), noticePeriod_(noticePeriod),
+          noticeCalendar_(noticeCalendar), noticeConvention_(noticeConvention), settlement_(settlement),
+          settlementMethod_(settlementMethod), premium_(premium), premiumCcy_(premiumCcy),
+          premiumPayDate_(premiumPayDate), exerciseFees_(exerciseFees), exerciseFeeDates_(exerciseFeeDates),
+          exerciseFeeTypes_(exerciseFeeTypes), exerciseFeeSettlementPeriod_(exerciseFeeSettlementPeriod),
           exerciseFeeSettlementCalendar_(exerciseFeeSettlementCalendar),
           exerciseFeeSettlementConvention_(exerciseFeeSettlementConvention), exercisePrices_(exercisePrices) {}
 
@@ -57,6 +58,7 @@ public:
     //@{
     const string& longShort() const { return longShort_; }
     const string& callPut() const { return callPut_; }
+    const string& payoffType() const { return payoffType_; }
     const string& style() const { return style_; }
     const bool& payoffAtExpiry() const { return payoffAtExpiry_; }
     const vector<string>& exerciseDates() const { return exerciseDates_; }
@@ -86,6 +88,7 @@ public:
 private:
     string longShort_;    // long or short
     string callPut_;      // call or put
+    string payoffType_;   // Accumulator, Decumulator, TargetExact, TargetFull, TargetTruncated, ...
     string style_;        // European, Bermudan, American
     bool payoffAtExpiry_; // Y or N
     vector<string> exerciseDates_;

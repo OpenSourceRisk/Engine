@@ -25,6 +25,7 @@
   <xs:group name="oreTradeData">
     <xs:choice>
       <xs:element type="swapData" name="SwapData"/>
+      <xs:element type="swapData" name="EquitySwapData"/>
       <xs:element type="swaptionData" name="SwaptionData"/>
       <xs:element type="forwardRateAgreementData" name="ForwardRateAgreementData"/>
       <xs:element type="fxForwardData" name="FxForwardData"/>
@@ -99,6 +100,7 @@
     <xs:all>
       <xs:element type="xs:string" name="LongShort"/>
       <xs:element type="xs:string" name="OptionType" minOccurs="0"/>
+      <xs:element type="xs:string" name="PayoffType" minOccurs="0"/>
       <xs:element type="xs:string" name="Style" minOccurs="0"/>
       <xs:element type="xs:string" name="NoticePeriod" minOccurs="0"/>
       <xs:element type="xs:string" name="NoticeCalendar" minOccurs="0"/>
@@ -129,10 +131,10 @@
       <xs:element type="xs:string" name="ExerciseFeeSettlementPeriod" minOccurs="0"/>
       <xs:element type="xs:string" name="ExerciseFeeSettlementCalendar" minOccurs="0"/>
       <xs:element type="xs:string" name="ExerciseFeeSettlementConvention" minOccurs="0"/>
-      <xs:element name="ExerciseDates">
+      <xs:element name="ExerciseDates" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element type="date" name="ExerciseDate" maxOccurs="unbounded"/>
+            <xs:element type="date" name="ExerciseDate" minOccurs="0" maxOccurs="unbounded"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -191,7 +193,7 @@
                 <xs:complexType>
                   <xs:simpleContent>
                     <xs:extension base="xs:float">
-                      <xs:attribute name="Date" type="xs:string" />
+                      <xs:attribute name="date" type="xs:string" />
                     </xs:extension>
                   </xs:simpleContent>
                 </xs:complexType>
@@ -229,6 +231,7 @@
         <xs:element type="indexNameType" name="Index"/>
         <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:string" name="Lookback" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="IsAveraged" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="HasSubPeriods" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="IncludeSpread" minOccurs="0" maxOccurs="1"/>
@@ -261,9 +264,13 @@
           </xs:complexType>
         </xs:element>
         <xs:element type="xs:float" name="BaseCPI" maxOccurs="1"/>
+	<xs:element type="date" name="StartDate" maxOccurs="1"/>
         <xs:element type="xs:string" name="ObservationLag" maxOccurs="1"/>
-        <xs:element type="bool" name="Interpolated" maxOccurs="1"/>
+        <xs:element type="xs:string" name="Interpolation" maxOccurs="1"/>
         <xs:element type="bool" name="SubtractInflationNotional" maxOccurs="1"/>
+        <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>
@@ -405,6 +412,7 @@
           </xs:complexType>
         </xs:element>
         <xs:element type="xs:string" name="Compounding" maxOccurs="1"/>
+        <xs:element type="xs:string" name="SubtractNotional" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>
@@ -543,7 +551,6 @@
       <xs:enumeration value="ForwardBond"/>
       <xs:enumeration value="CreditDefaultSwap"/>
       <xs:enumeration value="CMS"/>
-      <xs:enumeration value="CPICapFloor"/>
     </xs:restriction>
   </xs:simpleType>
 

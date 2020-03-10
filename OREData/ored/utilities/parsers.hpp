@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/utilities/log.hpp>
+#include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
@@ -235,6 +236,12 @@ AmortizationType parseAmortizationType(const std::string& s);
 */
 QuantExt::SequenceType parseSequenceType(const std::string& s);
 
+//! Convert string to observation interpolation
+/*!
+\ingroup utilities
+*/
+QuantLib::CPI::InterpolationType parseObservationInterpolation(const std::string& s);
+
 //! Convert string to fdm scheme desc
 /*!
 \ingroup utilities
@@ -281,6 +288,19 @@ bool tryParse(const std::string& str, T& obj, std::function<T(std::string)> pars
     }
     return true;
 }
+
+//! Enumeration for holding various extrapolation settings
+enum class Extrapolation {
+    None,
+    UseInterpolator,
+    Flat
+};
+
+//! Parse Extrapolation from string
+Extrapolation parseExtrapolation(const std::string& s);
+
+//! Write Extrapolation, \p extrap, to stream.
+std::ostream& operator<<(std::ostream& os, Extrapolation extrap);
 
 } // namespace data
 } // namespace ore

@@ -73,7 +73,7 @@ enum class CalibrationType {
 };
 
 //! Supported calibration strategies
-enum class CalibrationStrategy { CoterminalATM, CoterminalDealStrike, None };
+enum class CalibrationStrategy { CoterminalATM, CoterminalDealStrike, UnderlyingATM, UnderlyingDealStrike, None };
 
 //! Convert calibration type string into enumerated class value
 CalibrationType parseCalibrationType(const string& s);

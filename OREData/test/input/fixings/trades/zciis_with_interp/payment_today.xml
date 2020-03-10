@@ -34,8 +34,9 @@
             <Rate>1.0</Rate>
           </Rates>
           <BaseCPI>234.781</BaseCPI>
+          <StartDate>2019-02-12</StartDate>
           <ObservationLag>3M</ObservationLag>
-          <Interpolated>true</Interpolated>
+          <Interpolation>Linear</Interpolation>
           <SubtractInflationNotional>false</SubtractInflationNotional>
         </CPILegData>
       </LegData>
@@ -46,7 +47,7 @@
         <PaymentConvention>ModifiedFollowing</PaymentConvention>
         <CashflowData>
           <Cashflow>
-            <Amount Date="2019-02-12">11010533</Amount>
+            <Amount date="2019-02-12">11010533</Amount>
           </Cashflow>
         </CashflowData>
       </LegData>

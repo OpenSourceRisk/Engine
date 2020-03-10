@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <ored/marketdata/strike.hpp>
+#include <ored/marketdata/expiry.hpp>
 #include <boost/make_shared.hpp>
 #include <ql/currency.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -70,6 +72,7 @@ public:
         DISCOUNT,
         MM,
         MM_FUTURE,
+        OI_FUTURE,
         FRA,
         IMM_FRA,
         IR_SWAP,
@@ -360,6 +363,41 @@ private:
     string contract_;
     Period tenor_;
 };
+
+//! Overnight index future data class
+/*! This class holds single market points of type - OI_FUTURE.
+    Specific data comprise currency, expiry, contract and future tenor.
+
+    \warning expiry parameter is expected in the format YYYY-MM e.g.
+             2013-06 for Jun 2013, 1998-05 for May 1998, etc.
+
+    \ingroup marketdata
+*/
+class OIFutureQuote : public MarketDatum {
+public:
+    //! Constructor
+    OIFutureQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, string expiry,
+                  string contract = "", Period tenor = 3 * Months)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::OI_FUTURE), ccy_(ccy), expiry_(expiry),
+          contract_(contract), tenor_(tenor) {}
+
+    //! \name Inspectors
+    //@{
+    const string& ccy() const { return ccy_; }
+    const string& expiry() const { return expiry_; }
+    Natural expiryYear() const;
+    Month expiryMonth() const;
+    const string& contract() const { return contract_; }
+    const Period& tenor() const { return tenor_; }
+    //@}
+
+private:
+    string ccy_;
+    string expiry_;
+    string contract_;
+    Period tenor_;
+};
+
 
 //! Basis Swap data class
 /*!
@@ -1314,26 +1352,31 @@ public:
         \param quoteType     The quote type, should be RATE_NVOL
         \param commodityName The name of the underlying commodity
         \param quoteCurrency The quote currency
-        \param expiry        Expiry can be a period or a date
-        \param strike        Can be underlying commodity price or ATMF
+        \param expiry        Expiry object defining the quote's expiry
+        \param strike        Strike object defining the quote's strike
     */
-    CommodityOptionQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name, QuoteType quoteType,
-                         const std::string& commodityName, const std::string& quoteCurrency, const std::string& expiry,
-                         const std::string& strike);
+    CommodityOptionQuote(QuantLib::Real value,
+        const QuantLib::Date& asof,
+        const std::string& name,
+        QuoteType quoteType,
+        const std::string& commodityName,
+        const std::string& quoteCurrency,
+        const boost::shared_ptr<Expiry>& expiry,
+        const boost::shared_ptr<BaseStrike>& strike);
 
     //! \name Inspectors
     //@{
     const std::string& commodityName() const { return commodityName_; }
     const std::string& quoteCurrency() const { return quoteCurrency_; }
-    const std::string& expiry() const { return expiry_; }
-    const std::string& strike() const { return strike_; }
+    const boost::shared_ptr<Expiry>& expiry() const { return expiry_; }
+    const boost::shared_ptr<BaseStrike>& strike() const { return strike_; }
     //@}
 
 private:
     std::string commodityName_;
     std::string quoteCurrency_;
-    std::string expiry_;
-    std::string strike_;
+    boost::shared_ptr<Expiry> expiry_;
+    boost::shared_ptr<BaseStrike> strike_;
 };
 
 //! Spread data class

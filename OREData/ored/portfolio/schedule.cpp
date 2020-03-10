@@ -76,6 +76,7 @@ XMLNode* ScheduleDates::toXML(XMLDocument& doc) {
 }
 
 void ScheduleData::fromXML(XMLNode* node) {
+    QL_REQUIRE(node, "ScheduleData::fromXML(): no node given");
     for (auto& r : XMLUtils::getChildrenNodes(node, "Rules")) {
         rules_.emplace_back();
         rules_.back().fromXML(r);

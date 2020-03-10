@@ -47,6 +47,7 @@ public:
     //! \name TermStructure interface
     //@{
     Date maxDate() const { return Date::maxDate(); }
+    Time maxTime() const { return QL_MAX_REAL; }
     //@}
     //! \name Inspectors
     //@{

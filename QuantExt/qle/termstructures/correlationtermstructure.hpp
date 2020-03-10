@@ -25,6 +25,7 @@
 
 #include <ql/math/comparison.hpp>
 #include <ql/termstructure.hpp>
+#include <ql/quote.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -80,6 +81,20 @@ public:
 private:
     virtual Real correlationImpl(Time t, Real strike) const override;
     Handle<CorrelationTermStructure> c_;
+};
+
+//! Wrapper class that extracts a value at a given time from the term strucuture
+class CorrelationValue : public Observer, public Quote {
+public:
+    CorrelationValue(const Handle<CorrelationTermStructure>& correlation, const Time t,
+                     const Real strike = Null<Real>());
+    Real value() const override;
+    bool isValid() const override;
+    void update() override;
+private:
+    Handle<CorrelationTermStructure> correlation_;
+    const Time t_;
+    const Real strike_;
 };
 
 } // namespace QuantExt

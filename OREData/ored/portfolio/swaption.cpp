@@ -82,6 +82,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         legPayers_ = { false };
         npvCurrency_ = swap_[0].currency();
         notional_ = 0.0;
+        notionalCurrency_ = npvCurrency_;
         maturity_ = latestExerciseDate;
         return;
     }
@@ -261,12 +262,6 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     }
 
     DLOG("Swaption::Build(): Underlying Start = " << QuantLib::io::iso_date(swap->startDate()));
-    try {
-        DLOG("Swaption::Build(): Underlying NPV = " << swap->NPV());
-        // DLOG("Swaption::Build(): Fair Swap Rate = " << swap->fairRate());
-    } catch (const std::exception& e) {
-        WLOG("Could not price underlying: " << e.what());
-    }
 
     // build exercise: only keep a) future exercise dates and b) exercise dates that exercise into a whole
     // accrual period of the underlying; TODO handle exercises into broken periods?
@@ -522,19 +517,25 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
 
     VanillaSwap::Type type = swap_[fixedLegIndex].isPayer() ? VanillaSwap::Payer : VanillaSwap::Receiver;
 
+    // We treat overnight and bma indices approximately as ibor indices and warn about this in the log
+    if (boost::dynamic_pointer_cast<OvernightIndex>(*index) ||
+        boost ::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(*index))
+        ALOG("Swaption trade " << id() << " on ON or BMA index '" << underlyingIndex_
+                               << "' built, will treat the index approximately as an ibor index");
+
     // only take into account accrual periods with start date on or after first exercise date (if given)
     if (firstExerciseDate != Null<Date>()) {
         std::vector<Date> fixDates = fixedSchedule.dates();
         auto it1 = std::lower_bound(fixDates.begin(), fixDates.end(), firstExerciseDate);
         fixDates.erase(fixDates.begin(), it1);
         // check we have at least 1 to stop set fault on vector(fixDates.size() - 1, true) but maybe check should be 2
-        QL_REQUIRE(fixDates.size() > 0, "No schedule dates are left in Swaption fixed leg (check exercise dates)");
+        QL_REQUIRE(fixDates.size() >= 2, "Not enough schedule dates are left in Swaption fixed leg (check exercise dates)");
         fixedSchedule = Schedule(fixDates, fixedSchedule.calendar(), Unadjusted, boost::none, boost::none, boost::none,
                                  boost::none, std::vector<bool>(fixDates.size() - 1, true));
         std::vector<Date> floatingDates = floatingSchedule.dates();
         auto it2 = std::lower_bound(floatingDates.begin(), floatingDates.end(), firstExerciseDate);
         floatingDates.erase(floatingDates.begin(), it2);
-        QL_REQUIRE(floatingDates.size() > 0, "No schedule dates are left in Swaption floating leg (check exercise dates)");
+        QL_REQUIRE(floatingDates.size() >= 2, "Not enough schedule dates are left in Swaption floating leg (check exercise dates)");
         floatingSchedule = Schedule(floatingDates, floatingSchedule.calendar(), Unadjusted, boost::none, boost::none,
                                     boost::none, boost::none, std::vector<bool>(floatingDates.size() - 1, true));
     }
@@ -549,6 +550,7 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
     // Set other ore::data::Trade details
     npvCurrency_ = ccy;
     notional_ = nominal;
+    notionalCurrency_ = ccy;
     legCurrencies_ = vector<string>(2, ccy);
     legs_.push_back(swap->fixedLeg());
     legs_.push_back(swap->floatingLeg());
@@ -607,6 +609,12 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
     DayCounter floatingDayCounter = parseDayCounter(swap_[floatingLegIndex].dayCounter());
     BusinessDayConvention paymentConvention = parseBusinessDayConvention(swap_[floatingLegIndex].paymentConvention());
 
+    // We treat overnight and bma indices approximately as ibor indices and warn about this in the log
+    if (boost::dynamic_pointer_cast<OvernightIndex>(*index) ||
+        boost ::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(*index))
+        ALOG("Swaption trade " << id() << " on ON or BMA index '" << underlyingIndex_
+                               << "' built, will treat the index approximately as an ibor index");
+
     VanillaSwap::Type type = swap_[fixedLegIndex].isPayer() ? VanillaSwap::Payer : VanillaSwap::Receiver;
 
     // Build a vanilla (bullet) swap underlying
@@ -622,6 +630,7 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
     // Set other ore::data::Trade details
     npvCurrency_ = ccy;
     notional_ = std::max(currentNotional(swap->fixedLeg()), currentNotional(swap->floatingLeg()));
+    notionalCurrency_ = npvCurrency_;
     legCurrencies_ = vector<string>(2, ccy);
     legs_.push_back(swap->fixedLeg());
     legs_.push_back(swap->floatingLeg());

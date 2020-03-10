@@ -73,6 +73,8 @@ public:
     */
     virtual std::map<std::string, std::set<QuantLib::Date>>
     fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const = 0;
+    
+    virtual std::map<AssetClass, std::set<std::string>> underlyingIndices() const { return {};}
 
     //! \name Serialisation
     //@{
@@ -88,7 +90,8 @@ public:
         legCurrencies_.clear();
         legPayers_.clear();
         npvCurrency_ = "";
-        notional_ = 0.0;
+        notional_ = Null<Real>();
+        notionalCurrency_ = "";
         maturity_ = Date();
         tradeActions_.clear();
     }
@@ -117,21 +120,23 @@ public:
 
     const TradeActions& tradeActions() const { return tradeActions_; }
 
-    const boost::shared_ptr<InstrumentWrapper>& instrument() { return instrument_; }
+    const boost::shared_ptr<InstrumentWrapper>& instrument() const { return instrument_; }
 
-    const std::vector<QuantLib::Leg>& legs() { return legs_; }
+    const std::vector<QuantLib::Leg>& legs() const { return legs_; }
 
-    const std::vector<string>& legCurrencies() { return legCurrencies_; }
+    const std::vector<string>& legCurrencies() const { return legCurrencies_; }
 
-    const std::vector<bool>& legPayers() { return legPayers_; }
+    const std::vector<bool>& legPayers() const { return legPayers_; }
 
-    const string& npvCurrency() { return npvCurrency_; }
+    const string& npvCurrency() const { return npvCurrency_; }
 
     //! Return the current notional in npvCurrency. See individual sub-classes for the precise definition
     // of notional, for exotic trades this may not be what you expect.
-    QuantLib::Real notional() { return notional_; }
+    virtual QuantLib::Real notional() const { return notional_; }
 
-    const Date& maturity() { return maturity_; }
+    virtual string notionalCurrency() const { return notionalCurrency_; }
+
+    const Date& maturity() const { return maturity_; }
     //@}
 
     //! \name Utility
@@ -154,6 +159,7 @@ protected:
     std::vector<bool> legPayers_;
     string npvCurrency_;
     QuantLib::Real notional_;
+    string notionalCurrency_;
     Date maturity_;
 
     // Utility to add a single (fee, option premium, etc.) payment such that it is taken into account in pricing and

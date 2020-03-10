@@ -78,7 +78,10 @@ Rate AverageONIndexedCouponPricer::swapletRate() const {
         QL_FAIL("Invalid Approximation for AverageONIndexedCouponPricer");
     }
     // Return factor * rate + spread
-    Rate rate = gearing_ * accumulatedRate / accrualPeriod_ + spread_;
+    Rate tau = coupon_->lookback() == 0 * Days
+                   ? accrualPeriod_
+                   : coupon_->dayCounter().yearFraction(coupon_->valueDates().front(), coupon_->valueDates().back());
+    Rate rate = gearing_ * accumulatedRate / tau + spread_;
     return rate;
 }
 

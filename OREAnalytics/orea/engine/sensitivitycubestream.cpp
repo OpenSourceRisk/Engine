@@ -57,15 +57,19 @@ SensitivityRecord SensitivityCubeStream::next() {
         // Are there more deltas and gammas for current trade ID
         if (upRiskFactor_ != cube_->upFactors().end()) {
             Size usrx = upRiskFactor_->right.index;
-            Size dsrx = downRiskFactor_->second.index;
             sr.key_1 = upRiskFactor_->left;
             sr.desc_1 = upRiskFactor_->right.factorDesc;
             sr.shift_1 = upRiskFactor_->right.shiftSize;
             sr.delta = cube_->delta(tradeIdx, usrx);
-            sr.gamma = cube_->gamma(tradeIdx, usrx, dsrx);
+            if(downRiskFactor_ != cube_->downFactors().end()) {
+                Size dsrx = downRiskFactor_->second.index;
+                sr.gamma = cube_->gamma(tradeIdx, usrx, dsrx);
+                downRiskFactor_++;
+            } else {
+                sr.gamma = Null<Real>(); // marks na result
+            }
 
             upRiskFactor_++;
-            downRiskFactor_++;
 
             TLOG("Next record is: " << sr);
             return sr;
