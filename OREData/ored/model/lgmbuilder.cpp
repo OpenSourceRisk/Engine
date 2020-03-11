@@ -194,6 +194,8 @@ void LgmBuilder::performCalculations() const {
             auto engine = boost::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_);
             engine->enableCache(!data_->calibrateH(), !data_->calibrateA());
             swaptionBasket_[j]->setPricingEngine(engine);
+            // necessary if notifications are disabled (observation mode = Disable)
+            swaptionBasket_[j]->update();
         }
 
         // reset model parameters, this ensures that a calibration gives the same
