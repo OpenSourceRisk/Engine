@@ -509,6 +509,8 @@
     <ClInclude Include="qle\cashflows\commodityindexedaveragecashflow.hpp" />
     <ClInclude Include="qle\cashflows\commodityindexedcashflow.hpp" />
     <ClInclude Include="qle\cashflows\couponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\cpicoupon.hpp" />
+    <ClInclude Include="qle\cashflows\cpicouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\equitycoupon.hpp" />
     <ClInclude Include="qle\cashflows\equitycouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\floatingannuitycoupon.hpp" />
@@ -517,6 +519,7 @@
     <ClInclude Include="qle\cashflows\fxlinkedcashflow.hpp" />
     <ClInclude Include="qle\cashflows\lognormalcmsspreadpricer.hpp" />
     <ClInclude Include="qle\cashflows\quantocouponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\strippedcapflooredcpicoupon.hpp" />
     <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscoupon.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscouponpricer.hpp" />
@@ -660,6 +663,7 @@
     <ClInclude Include="qle\pricingengines\discountingfxforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp" />
+    <ClInclude Include="qle\pricingengines\inflationcapfloorengines.hpp" />
     <ClInclude Include="qle\pricingengines\lgmconvolutionsolver.hpp" />
     <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp" />
     <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp" />
@@ -687,11 +691,13 @@
     <ClInclude Include="qle\termstructures\capfloortermvolsurface.hpp" />
     <ClInclude Include="qle\termstructures\commodityaveragebasispricecurve.hpp" />
     <ClInclude Include="qle\termstructures\commoditybasispricecurve.hpp" />
+    <ClInclude Include="qle\termstructures\constantyoyinflationoptionletvolatility.hpp" />
     <ClInclude Include="qle\termstructures\correlationtermstructure.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasismtmresetswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\crossccyfixfloatswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\crosscurrencypricetermstructure.hpp" />
     <ClInclude Include="qle\termstructures\discountratiomodifiedcurve.hpp" />
+    <ClInclude Include="qle\termstructures\dynamiccpivolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\equityforwardcurvestripper.hpp" />
     <ClInclude Include="qle\termstructures\equityoptionsurfacestripper.hpp" />
@@ -777,6 +783,8 @@
     <ClCompile Include="qle\cashflows\commodityindexedaveragecashflow.cpp" />
     <ClCompile Include="qle\cashflows\commodityindexedcashflow.cpp" />
     <ClCompile Include="qle\cashflows\couponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\cpicoupon.cpp" />
+    <ClCompile Include="qle\cashflows\cpicouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\equitycoupon.cpp" />
     <ClCompile Include="qle\cashflows\equitycouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\floatingannuitycoupon.cpp" />
@@ -784,6 +792,7 @@
     <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp" />
     <ClCompile Include="qle\cashflows\lognormalcmsspreadpricer.cpp" />
     <ClCompile Include="qle\cashflows\quantocouponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\strippedcapflooredcpicoupon.cpp" />
     <ClCompile Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscoupon.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscouponpricer.cpp" />
@@ -872,6 +881,7 @@
     <ClCompile Include="qle\pricingengines\discountingfxforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp" />
+    <ClCompile Include="qle\pricingengines\inflationcapfloorengines.cpp" />
     <ClCompile Include="qle\pricingengines\lgmconvolutionsolver.cpp" />
     <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp" />
     <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp" />
@@ -892,6 +902,7 @@
     <ClCompile Include="qle\termstructures\brlcdiratehelper.cpp" />
     <ClCompile Include="qle\termstructures\capfloorhelper.cpp" />
     <ClCompile Include="qle\termstructures\capfloortermvolsurface.cpp" />
+    <ClCompile Include="qle\termstructures\constantyoyinflationoptionletvolatility.cpp" />
     <ClCompile Include="qle\termstructures\correlationtermstructure.cpp" />
     <ClCompile Include="qle\termstructures\crossccybasismtmresetswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\crossccybasisswaphelper.cpp" />
@@ -901,6 +912,7 @@
     <ClCompile Include="qle\termstructures\datedstrippedoptionletadapter.cpp" />
     <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp" />
     <ClCompile Include="qle\termstructures\discountratiomodifiedcurve.cpp" />
+    <ClCompile Include="qle\termstructures\dynamiccpivolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\dynamicoptionletvolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.cpp" />

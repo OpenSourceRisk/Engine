@@ -54,7 +54,8 @@ public:
                                            const vector<string>& tenors, const vector<string>& strikes,
                                            const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
                                            const BusinessDayConvention& businessDayConvention, const string& index,
-                                           const string& indexCurve, const string& yieldTermStructure);
+                                           const string& indexCurve, const string& yieldTermStructure,
+                                           const Period& observationLag);
 
     //! \name XMLSerializable interface
     //@{
@@ -77,6 +78,7 @@ public:
     const string& indexCurve() const { return indexCurve_; }
     const string& yieldTermStructure() const { return yieldTermStructure_; }
     const vector<string>& quotes() override;
+    const Period& observationLag() const { return observationLag_; }
     //@}
 
     //! \name Setters
@@ -92,6 +94,7 @@ public:
     string& index() { return index_; }
     string& indexCurve() { return indexCurve_; }
     string& yieldTermStructure() { return yieldTermStructure_; }
+    Period& observationLag() { return observationLag_; }
     //@}
 
 private:
@@ -107,6 +110,7 @@ private:
     string index_;
     string indexCurve_;
     string yieldTermStructure_;
+    Period observationLag_;
 };
 
 std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::VolatilityType t);

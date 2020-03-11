@@ -18,6 +18,7 @@
 
 #include <ored/configuration/volatilityconfig.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 
 using std::make_pair;
 using std::pair;
@@ -50,26 +51,26 @@ void VolatilityConfig::fromBaseNode(XMLNode* node) {
 }
 
 void VolatilityConfig::addBaseNode(XMLDocument& doc, XMLNode* node) {
-    string quoteStr;
-    string volStr = "";
+
+    // Check first for premium
     if (quoteType_ == MarketDatum::QuoteType::PRICE) {
-        quoteStr = "Premium";
-    } else if (quoteType_ == MarketDatum::QuoteType::RATE_LNVOL) {
-        quoteStr = "ImpliedVolatility";
-        volStr = "Lognormal";
+        XMLUtils::addChild(doc, node, "QuoteType", "Premium");
+        XMLUtils::addChild(doc, node, "ExerciseType", to_string(exerciseType_));
+        return;
+    }
+    
+    // Must be a volatility (or possibly fail)
+    XMLUtils::addChild(doc, node, "QuoteType", "ImpliedVolatility");
+    if (quoteType_ == MarketDatum::QuoteType::RATE_LNVOL) {
+        XMLUtils::addChild(doc, node, "VolatilityType", "Lognormal");
     } else if (quoteType_ == MarketDatum::QuoteType::RATE_SLNVOL) {
-        quoteStr = "ImpliedVolatility";
-        volStr = "ShiftedLognormal";
+        XMLUtils::addChild(doc, node, "VolatilityType", "ShiftedLognormal");
     } else if (quoteType_ == MarketDatum::QuoteType::RATE_NVOL) {
-        quoteStr = "ImpliedVolatility";
-        volStr = "Normal";
+        XMLUtils::addChild(doc, node, "VolatilityType", "Normal");
     } else {
-    QL_FAIL("Invalid quote type");
+        QL_FAIL("Invalid quote type");
     }
-    XMLUtils::addChild(doc, node, "QuoteType", quoteStr);
-    if (volStr != "") {
-        XMLUtils::addChild(doc, node, "VolatilityType", volStr);
-    }
+
 }
 
 ConstantVolatilityConfig::ConstantVolatilityConfig() {}

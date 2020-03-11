@@ -138,7 +138,7 @@ void SensitivityCube::initialise() {
 
     // Check that up factors and down factors align (if down factors are given)
     QL_REQUIRE(downFactors_.empty() || upFactors_.size() == downFactors_.size(),
-               "The number 'Up' shifts should equal the number of 'Down' shifts");
+               "The number of 'Up' shifts (" << upFactors_.size() << ") should equal the number of 'Down' shifts (" << downFactors_.size() <<")");
 
     auto pred = [](decltype(*upFactors_.left.begin()) a, pair<RiskFactorKey, FactorData> b) { return a.first == b.first; };
     QL_REQUIRE(downFactors_.empty() ||

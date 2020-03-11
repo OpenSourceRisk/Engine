@@ -62,6 +62,9 @@ public:
         const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
         return {};
     }
+
+    //! Add underlying Commodity names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
     //@}
 
     //! \name Serialisation

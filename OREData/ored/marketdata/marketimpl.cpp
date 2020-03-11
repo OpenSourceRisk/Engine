@@ -434,8 +434,10 @@ void MarketImpl::refresh(const string& configuration) {
         }
     }
 
+    // term structures might be wrappers around nested termstructures that need to be updated as well,
+    // therefore we need to call deepUpdate() (=update() if no such nesting is present)
     for (auto& x : it->second)
-        x->update();
+        x->deepUpdate();
 
     // update fx spot quotes
     auto fxSpots = fxSpots_.find(configuration);
