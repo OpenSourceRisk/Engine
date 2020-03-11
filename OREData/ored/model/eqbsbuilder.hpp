@@ -94,7 +94,7 @@ private:
     // computed
     Real error_;
     mutable boost::shared_ptr<QuantExt::EqBsParametrization> parametrization_;
-    
+
     // which options in data->optionExpiries() are actually in the basket?
     mutable std::vector<bool> optionActive_;
     mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;

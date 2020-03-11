@@ -94,7 +94,7 @@ private:
 
     // which options in data->optionExpiries() are actually in the basket?
     mutable std::vector<bool> optionActive_;
-    mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;    
+    mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
     mutable Array optionExpiries_;
 
     // relevant market data

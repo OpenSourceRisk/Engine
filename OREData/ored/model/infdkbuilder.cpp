@@ -289,9 +289,9 @@ void InfDkBuilder::buildCapFloorBasket() const {
 
             optionBasket_.push_back(helper);
             helper->performCalculations();
-            expiryTimes[j] = inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
-                                                   inflationIndex_->zeroInflationTermStructure()->dayCounter(),
-                                                   baseDate, helper->instrument()->fixingDate());
+            expiryTimes.push_back(inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
+                                                        inflationIndex_->zeroInflationTermStructure()->dayCounter(),
+                                                        baseDate, helper->instrument()->fixingDate()));
             DLOG("Added InflationOptionHelper " << data_->infIndex() << " " << QuantLib::io::iso_date(expiryDate));
         } else {
             optionActive_[j] = false;
