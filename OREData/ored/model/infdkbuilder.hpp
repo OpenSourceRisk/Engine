@@ -95,7 +95,7 @@ private:
 
     // market data
     boost::shared_ptr<ZeroInflationIndex> inflationIndex_;
-    Handle<CPICapFloorTermPriceSurface> infPrice_;
+    Handle<CPIVolatilitySurface> infVol_;
 
     // Cache the fx volatilities
     mutable std::vector<QuantLib::Real> infPriceCache_;

@@ -181,6 +181,7 @@
       <CurveId>EUHICPXT_ZC_CF_N</CurveId>
       <CurveDescription>EUR log-normal CPI cap floor volatilities</CurveDescription>
       <Type>ZC</Type>
+      <QuoteType>Volatility</QuoteType>
       <VolatilityType>Lognormal</VolatilityType>
       <Extrapolation>Y</Extrapolation>
       <DayCounter>Actual/365 (Fixed)</DayCounter>
