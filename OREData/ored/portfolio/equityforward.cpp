@@ -85,5 +85,10 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, eNode, "Quantity", quantity_);
     return node;
 }
+
+std::map<AssetClass, std::set<std::string>> EquityForward::underlyingIndices() const {
+    return { {AssetClass::EQ, std::set<std::string>({eqName_})} };
+}
+
 } // namespace data
 } // namespace ore

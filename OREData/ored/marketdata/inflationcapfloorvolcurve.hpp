@@ -61,9 +61,21 @@ public:
 
     //@}
 private:
+    void buildFromVolatilities(Date asof, InflationCapFloorVolatilityCurveSpec spec, const Loader& loader,
+			       const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>& config,
+			       map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+			       map<string, boost::shared_ptr<InflationCurve>>& inflationCurves);
+    void buildFromPrices(Date asof, InflationCapFloorVolatilityCurveSpec spec, const Loader& loader,
+			 const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>& config,
+			 map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+			 map<string, boost::shared_ptr<InflationCurve>>& inflationCurves);
+  
     InflationCapFloorVolatilityCurveSpec spec_;
     boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyVolSurface_;
     boost::shared_ptr<QuantLib::CPIVolatilitySurface> cpiVolSurface_;
+    boost::shared_ptr<InflationTermStructure> surface_;
+    bool useMarketYoyCurve_;
+    boost::shared_ptr<YoYInflationTermStructure> yoyTs_;
 };
 } // namespace data
 } // namespace ore

@@ -34,7 +34,7 @@ namespace QuantExt {
 using namespace QuantLib;
 using boost::optional;
 
-typedef std::vector<std::vector<boost::shared_ptr<CapFloor> > > CapFloorMatrix;
+typedef std::vector<std::vector<boost::shared_ptr<QuantLib::CapFloor> > > CapFloorMatrix;
 
 /*! Helper class to strip optionlet (i.e. caplet/floorlet) volatilities
     (a.k.a. forward-forward volatilities) from the (cap/floor) term

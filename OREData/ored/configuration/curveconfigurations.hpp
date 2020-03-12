@@ -113,13 +113,6 @@ public:
     };
     const boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) const;
 
-    bool hasInflationCapFloorPriceSurfaceConfig(const std::string& curveID) const;
-    boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>& inflationCapFloorPriceSurfaceConfig(const string& curveID) {
-        return inflationCapFloorPriceSurfaceConfigs_[curveID];
-    };
-    const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>&
-    inflationCapFloorPriceSurfaceConfig(const string& curveID) const;
-
     bool hasInflationCapFloorVolCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>& inflationCapFloorVolCurveConfig(const string& curveID) {
         return inflationCapFloorVolCurveConfigs_[curveID];

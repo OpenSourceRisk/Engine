@@ -29,8 +29,8 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/infdkdata.hpp>
-#include <ored/model/modelbuilder.hpp>
 #include <ored/model/marketobserver.hpp>
+#include <ored/model/modelbuilder.hpp>
 
 #include <qle/models/crossassetmodel.hpp>
 
@@ -89,7 +89,7 @@ private:
 
     // market data
     boost::shared_ptr<ZeroInflationIndex> inflationIndex_;
-    Handle<CPICapFloorTermPriceSurface> infPrice_;
+    Handle<CPIVolatilitySurface> infVol_;
 
     // Cache the fx volatilities
     mutable std::vector<QuantLib::Real> infPriceCache_;

@@ -65,6 +65,10 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     notionalCurrency_ = currency_;
 }
 
+std::map<AssetClass, std::set<std::string>> CommodityForward::underlyingIndices() const {
+    return { {AssetClass::COM, std::set<std::string>({ commodityName_ })} };
+}
+
 void CommodityForward::fromXML(XMLNode* node) {
 
     Trade::fromXML(node);

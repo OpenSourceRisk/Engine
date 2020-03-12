@@ -98,6 +98,10 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     maturity_ = expiryDate;
 }
 
+std::map<AssetClass, std::set<std::string>> CommodityOption::underlyingIndices() const {
+    return { {AssetClass::COM, std::set<std::string>({ commodityName_ })} };
+}
+
 void CommodityOption::fromXML(XMLNode* node) {
 
     Trade::fromXML(node);
