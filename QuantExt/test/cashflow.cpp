@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
     // Add historical and todays fixing
     fxIndex->addFixing(cfDate1, 1.09);
 
-    // Totaxl return coupon with underlying in different ccy - Base ccy EUR, and underlying SP5 in USD
+    // Total return coupon with underlying in different ccy - Base ccy EUR, and underlying SP5 in USD
     EquityCoupon eq5(cfDate2, nominal, today, cfDate2, 0, eqIndex, dc, true, 1.0, false, Null<Real>(), Null<Real>(),
                      Date(), Date(), Date(), Date(), Date(), fxIndex);
 

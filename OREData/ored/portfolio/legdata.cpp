@@ -496,19 +496,24 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
                  const bool notionalAmortizingExchange, const bool isNotResetXCCY, const string& foreignCurrency,
                  const double foreignAmount, const string& fxIndex, int fixingDays, const string& fixingCalendar,
                  const std::vector<AmortizationData>& amortizationData, const int paymentLag,
-                 const string& paymentCalendar, const vector<string>& paymentDates, const Indexing& indexing)
+                 const string& paymentCalendar, const vector<string>& paymentDates,
+                 const std::vector<Indexing>& indexing)
     : concreteLegData_(concreteLegData), isPayer_(isPayer), currency_(currency), schedule_(scheduleData),
       dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
       paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
       notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
       isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
       fxIndex_(fxIndex), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar), amortizationData_(amortizationData),
-      paymentLag_(paymentLag), paymentCalendar_(paymentCalendar), paymentDates_(paymentDates),
-      indexing_(indexing) {
+      paymentLag_(paymentLag), paymentCalendar_(paymentCalendar), paymentDates_(paymentDates), indexing_(indexing) {
 
     indices_ = concreteLegData_->indices();
+
     if (!fxIndex_.empty())
         indices_.insert(fxIndex_);
+
+    for (auto const& i : indexing)
+        if (i.hasData())
+            indices_.insert(i.index());
 }
 
 void LegData::fromXML(XMLNode* node) {
@@ -565,9 +570,14 @@ void LegData::fromXML(XMLNode* node) {
 
     paymentDates_ = XMLUtils::getChildrenValues(node, "PaymentDates", "PaymentDate", false);
 
-    tmp = XMLUtils::getChildNode(node, "Indexing");
-    if (tmp)
-        indexing_.fromXML(tmp);
+    tmp = XMLUtils::getChildNode(node, "Indexings");
+    if (tmp) {
+        auto indexings = XMLUtils::getChildrenNodes(tmp, "Indexing");
+        for(auto const& i:indexings) {
+            indexing_.push_back(Indexing());
+            indexing_.back().fromXML(i);
+        }
+    }
 
     concreteLegData_ = initialiseConcreteLegData(legType);
     concreteLegData_->fromXML(XMLUtils::getChildNode(node, concreteLegData_->legNodeName()));
@@ -630,8 +640,13 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(node, amortisationsParentNode);
     }
 
-    if (indexing_.hasData()) {
-        XMLUtils::appendNode(node, indexing_.toXML(doc));
+    if (!indexing_.empty()) {
+        XMLNode* indexingsNode = doc.allocNode("Indexings");
+        for (auto& i : indexing_) {
+            if(i.hasData())
+                XMLUtils::appendNode(indexingsNode, i.toXML(doc));
+        }
+        XMLUtils::appendNode(node, indexingsNode);
     }
 
     XMLUtils::appendNode(node, concreteLegData_->toXML(doc));
@@ -1639,67 +1654,43 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 }
 
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory) {
-    if (data.indexing().hasData()) {
-        QL_REQUIRE(engineFactory, "applyIndexing: engineFactory required");
+    for (auto const& indexing : data.indexing()) {
+        if (indexing.hasData()) {
+            QL_REQUIRE(engineFactory, "applyIndexing: engineFactory required");
 
-        // we allow indexing by equity, commodity and FX indices (technically any QuantLib::Index
-        // will work, so the list of index types can be extended here if required)
-        boost::shared_ptr<Index> index;
-        string config = engineFactory->configuration(MarketContext::pricing);
-        if (boost::starts_with(data.indexing().index(), "EQ-")) {
-            index = *engineFactory->market()->equityCurve(parseEquityIndex(data.indexing().index())->name(), config);
-        } else if (boost::starts_with(data.indexing().index(), "FX-")) {
-            auto tmp = parseFxIndex(data.indexing().index());
-            index = parseFxIndex(
-                data.indexing().index(),
-                engineFactory->market()->fxSpot(tmp->sourceCurrency().code() + tmp->targetCurrency().code(), config),
-                engineFactory->market()->discountCurve(tmp->sourceCurrency().code(), config),
-                engineFactory->market()->discountCurve(tmp->targetCurrency().code(), config));
-        } else if (boost::starts_with(data.indexing().index(), "COMM-")) {
-            auto tmp = parseCommodityIndex(data.indexing().index());
-            index = parseCommodityIndex(data.indexing().index(), tmp->fixingCalendar(),
+            // we allow indexing by equity, commodity and FX indices (technically any QuantLib::Index
+            // will work, so the list of index types can be extended here if required)
+            boost::shared_ptr<Index> index;
+            string config = engineFactory->configuration(MarketContext::pricing);
+            if (boost::starts_with(indexing.index(), "EQ-")) {
+                index = *engineFactory->market()->equityCurve(parseEquityIndex(indexing.index())->name(), config);
+            } else if (boost::starts_with(indexing.index(), "FX-")) {
+                auto tmp = parseFxIndex(indexing.index());
+                index = parseFxIndex(indexing.index(),
+                                     engineFactory->market()->fxSpot(
+                                         tmp->sourceCurrency().code() + tmp->targetCurrency().code(), config),
+                                     engineFactory->market()->discountCurve(tmp->sourceCurrency().code(), config),
+                                     engineFactory->market()->discountCurve(tmp->targetCurrency().code(), config));
+            } else if (boost::starts_with(indexing.index(), "COMM-")) {
+                auto tmp = parseCommodityIndex(indexing.index());
+                index =
+                    parseCommodityIndex(indexing.index(), tmp->fixingCalendar(),
                                         engineFactory->market()->commodityPriceCurve(tmp->underlyingName(), config));
-        } else {
-            QL_FAIL("invalid index '" << data.indexing().index()
-                                      << "' in indexing data, expected EQ-, FX-, COMM- index");
-        }
+            } else {
+                QL_FAIL("invalid index '" << indexing.index() << "' in indexing data, expected EQ-, FX-, COMM- index");
+            }
 
-        // apply the indexing
-        IndexedCouponLeg indLeg(leg, data.indexing().quantity(), index);
-        indLeg.withInitialFixing(data.indexing().initialFixing());
-        indLeg.withFixingDays(data.indexing().fixingDays());
-        indLeg.inArrearsFixing(data.indexing().inArrearsFixing());
-        if (data.indexing().valuationSchedule().hasData())
-            indLeg.withValuationSchedule(makeSchedule(data.indexing().valuationSchedule()));
-        if (!data.indexing().fixingCalendar().empty())
-            indLeg.withFixingCalendar(parseCalendar(data.indexing().fixingCalendar()));
-        if (!data.indexing().fixingConvention().empty())
-            indLeg.withFixingConvention(parseBusinessDayConvention(data.indexing().fixingConvention()));
-        leg = indLeg;
-
-        // if we have an additional FX indexing, we apply that on top of the indexing above
-        if (data.indexing().fx().hasData()) {
-            auto tmp = parseFxIndex(data.indexing().fx().index());
-            auto fx = parseFxIndex(
-                data.indexing().fx().index(),
-                engineFactory->market()->fxSpot(tmp->sourceCurrency().code() + tmp->targetCurrency().code(), config),
-                engineFactory->market()->discountCurve(tmp->sourceCurrency().code(), config),
-                engineFactory->market()->discountCurve(tmp->targetCurrency().code(), config));
-            QL_REQUIRE(data.currency() == fx->targetCurrency().code() || data.currency() == fx->sourceCurrency().code(),
-                       "leg currency (" << data.currency() << ") must match FX index (" << data.indexing().fx().index()
-                                        << ") source or target currency");
-            // flip indexing if necessary
-            IndexedCouponLeg indLeg(leg, 1.0, fx, fx->targetCurrency().code() != data.currency());
-            indLeg.withInitialFixing(data.indexing().fx().initialFixing());
-            indLeg.withFixingDays(data.indexing().fx().fixingDays());
-            indLeg.inArrearsFixing(data.indexing().fx().inArrearsFixing());
-            // valuation schedule from the indexing above, the fx section does not have a separate one
-            if (data.indexing().valuationSchedule().hasData())
-                indLeg.withValuationSchedule(makeSchedule(data.indexing().valuationSchedule()));
-            if (!data.indexing().fx().fixingCalendar().empty())
-                indLeg.withFixingCalendar(parseCalendar(data.indexing().fixingCalendar()));
-            if (!data.indexing().fx().fixingConvention().empty())
-                indLeg.withFixingConvention(parseBusinessDayConvention(data.indexing().fixingConvention()));
+            // apply the indexing
+            IndexedCouponLeg indLeg(leg, indexing.quantity(), index);
+            indLeg.withInitialFixing(indexing.initialFixing());
+            indLeg.withFixingDays(indexing.fixingDays());
+            indLeg.inArrearsFixing(indexing.inArrearsFixing());
+            if (indexing.valuationSchedule().hasData())
+                indLeg.withValuationSchedule(makeSchedule(indexing.valuationSchedule()));
+            if (!indexing.fixingCalendar().empty())
+                indLeg.withFixingCalendar(parseCalendar(indexing.fixingCalendar()));
+            if (!indexing.fixingConvention().empty())
+                indLeg.withFixingConvention(parseBusinessDayConvention(indexing.fixingConvention()));
             leg = indLeg;
         }
     }
