@@ -69,8 +69,11 @@ public:
     class arguments;
     class results;
     class engine;
+
+    enum StrikeType { Price, Spread };
+
     CdsOption(const boost::shared_ptr<CreditDefaultSwap>& swap, const boost::shared_ptr<Exercise>& exercise,
-              bool knocksOut = true, const Real upfrontStrike = Null<Real>());
+              bool knocksOut = true, const Real strike = Null<Real>(), const StrikeType strikeType = StrikeType::Spread);
 
     //! \name Instrument interface
     //@{
@@ -94,7 +97,8 @@ public:
 private:
     boost::shared_ptr<CreditDefaultSwap> swap_;
     bool knocksOut_;
-    Real upfrontStrike_;
+    Real strike_;
+    StrikeType strikeType_;
 
     mutable Real riskyAnnuity_;
     void setupExpired() const;
@@ -108,7 +112,8 @@ public:
 
     boost::shared_ptr<CreditDefaultSwap> swap;
     bool knocksOut;
-    Real upfrontStrike;
+    Real strike;
+    StrikeType strikeType;
     void validate() const;
 };
 

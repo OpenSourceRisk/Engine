@@ -58,7 +58,8 @@ public:
                              boost::optional<bool> includeSettlementDateFlows);
     virtual ~BlackCdsOptionEngineBase() {}
     void calculate(const CreditDefaultSwap& swap, const Date& exerciseDate, const bool knocksOut,
-                   CdsOption::results& results, const Date& refDate, const Real upfrontStrike) const;
+                   CdsOption::results& results, const Date& refDate, const Real strike,
+                   const CdsOption::StrikeType strikeType) const;
     Handle<YieldTermStructure> termStructure();
     Handle<BlackVolTermStructure> volatility();
 
