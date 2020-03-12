@@ -113,7 +113,16 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                                "analytic lgm swaption engine");
 
         Size k = k1_;
-        boost::shared_ptr<IborIndex> flatIbor = arguments_.swap->iborIndex()->clone(c_);
+        // The method reduces the problem to a one curve configuration w.r.t. the discount curve and
+        // apply a correction for the discount curve / forwarding curve spread. Furthermore the method
+        // assumes that no historical fixings are present in the floating rate coupons. Therefore we
+        // set up a benchmark index "flatIbor" with forwarding curve = discounting curve and without
+        // historical fixings against which the correction is computed. We also ensure that the fixing
+        // dates are always >= today.
+        auto index = arguments_.swap->iborIndex();
+        auto flatIbor = boost::make_shared<IborIndex>(
+            index->familyName() + " (no fixings)", index->tenor(), index->fixingDays(), index->currency(),
+            index->fixingCalendar(), index->businessDayConvention(), index->endOfMonth(), index->dayCounter(), c_);
         for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
             Real sum1 = 0.0, sum2 = 0.0;
             for (Size rr = 0; rr < ratio && k < arguments_.floatingCoupons.size(); ++rr, ++k) {
@@ -126,7 +135,9 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                     lambda1 = 1.0 - lambda2;
                 }
                 if (amount != Null<Real>()) {
-                    Real flatAmount = flatIbor->fixing(arguments_.floatingFixingDates[k]) *
+                    Date fixingDate =
+                        flatIbor->fixingCalendar().adjust(std::max(arguments_.floatingFixingDates[k], reference));
+                    Real flatAmount = flatIbor->fixing(fixingDate) *
                                       arguments_.floatingAccrualTimes[k] * arguments_.nominal;
                     Real correction = (amount - flatAmount) * c_->discount(arguments_.floatingPayDates[k]);
                     sum1 += lambda1 * correction;
