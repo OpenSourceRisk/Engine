@@ -18,6 +18,8 @@
 
 #include <ored/portfolio/optiondata.hpp>
 
+#include <ored/utilities/parsers.hpp>
+
 using namespace QuantLib;
 
 namespace ore {
@@ -27,6 +29,7 @@ void OptionData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "OptionData");
     longShort_ = XMLUtils::getChildValue(node, "LongShort", true);
     callPut_ = XMLUtils::getChildValue(node, "OptionType", false);
+    payoffType_ = XMLUtils::getChildValue(node, "PayoffType", false);
     style_ = XMLUtils::getChildValue(node, "Style", false);
     noticePeriod_ = XMLUtils::getChildValue(node, "NoticePeriod", false);
     noticeCalendar_ = XMLUtils::getChildValue(node, "NoticeCalendar", false);
@@ -42,8 +45,8 @@ void OptionData::fromXML(XMLNode* node) {
     vector<std::reference_wrapper<vector<string>>> attrs;
     attrs.push_back(exerciseFeeTypes_);
     attrs.push_back(exerciseFeeDates_);
-    exerciseFees_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "ExerciseFees", "ExerciseFee",
-                                                                       {"type", "startDate"}, attrs, false);
+    exerciseFees_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "ExerciseFees", "ExerciseFee",
+                                                                    {"type", "startDate"}, attrs, &parseReal);
     exerciseFeeSettlementPeriod_ = XMLUtils::getChildValue(node, "ExerciseFeeSettlementPeriod", false);
     exerciseFeeSettlementCalendar_ = XMLUtils::getChildValue(node, "ExerciseFeeSettlementCalendar", false);
     exerciseFeeSettlementConvention_ = XMLUtils::getChildValue(node, "ExerciseFeeSettlementConvention", false);
@@ -56,6 +59,8 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "LongShort", longShort_);
     if (callPut_ != "")
         XMLUtils::addChild(doc, node, "OptionType", callPut_);
+    if (payoffType_ != "")
+        XMLUtils::addChild(doc, node, "PayoffType", payoffType_);
     if (style_ != "")
         XMLUtils::addChild(doc, node, "Style", style_);
     // if (noticePeriod_ != "")

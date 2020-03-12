@@ -17,6 +17,7 @@
 */
 
 #include <boost/make_shared.hpp>
+#include <ql/currencies/america.hpp>
 #include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/indexes/inflation/ukrpi.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
@@ -268,12 +269,8 @@ TestMarket::TestMarket(Date asof) {
         makeYoYInflationIndex("UKRPI", datesZCII, ratesZCII, yi,
                               yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")]);
 
-    cpiInflationCapFloorPriceSurfaces_[make_pair(Market::defaultConfiguration, "EUHICPXT")] = flatRateCps(
-        zeroInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")], vector<Real>{0.0, 0.01, 0.02},
-        vector<Real>{-1.0, -0.99}, vector<Period>{5 * Years, 10 * Years}, Matrix(3, 2, 0.15), Matrix(2, 2, 0.15));
-    cpiInflationCapFloorPriceSurfaces_[make_pair(Market::defaultConfiguration, "UKRPI")] = flatRateCps(
-        zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")], vector<Real>{0.0, 0.01, 0.02},
-        vector<Real>{-1.0, -0.99}, vector<Period>{5 * Years, 10 * Years}, Matrix(3, 2, 0.15), Matrix(2, 2, 0.15));
+    cpiInflationCapFloorVolatilitySurfaces_[make_pair(Market::defaultConfiguration, "EUHICPXT")] = flatCpiVolSurface(0.05);
+    cpiInflationCapFloorVolatilitySurfaces_[make_pair(Market::defaultConfiguration, "UKRPI")] = flatCpiVolSurface(0.04);
 
     // Commodity price curves and spots
     Actual365Fixed ccDayCounter;
@@ -281,14 +278,14 @@ TestMarket::TestMarket(Date asof) {
 
     // Gold curve
     vector<Real> prices = {1155.593, 1160.9, 1168.1, 1210};
-    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] =
-        Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(commTenors, prices, ccDayCounter));
+    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] = Handle<PriceTermStructure>(
+        boost::make_shared<InterpolatedPriceCurve<Linear>>(commTenors, prices, ccDayCounter, USDCurrency()));
     commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")]->enableExtrapolation();
 
     // WTI Oil curve
     prices = {30.89, 41.23, 44.44, 49.18};
-    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")] =
-        Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(commTenors, prices, ccDayCounter));
+    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")] = Handle<PriceTermStructure>(
+        boost::make_shared<InterpolatedPriceCurve<Linear>>(commTenors, prices, ccDayCounter, USDCurrency()));
     commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")]->enableExtrapolation();
 
     // Commodity volatilities
@@ -763,10 +760,12 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->swaptionVolShiftData()["JPY"] = swvsData;
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
-    sensiData->capFloorVolShiftData()["EUR"] = cfvsData;
-    sensiData->capFloorVolShiftData()["EUR"].indexName = "EUR-EURIBOR-6M";
-    sensiData->capFloorVolShiftData()["USD"] = cfvsData;
-    sensiData->capFloorVolShiftData()["USD"].indexName = "USD-LIBOR-3M";
+    sensiData->capFloorVolShiftData()["EUR"] =
+        boost::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+    sensiData->capFloorVolShiftData()["EUR"]->indexName = "EUR-EURIBOR-6M";
+    sensiData->capFloorVolShiftData()["USD"] =
+        boost::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+    sensiData->capFloorVolShiftData()["USD"]->indexName = "USD-LIBOR-3M";
 
     sensiData->equityShiftData()["SP5"] = eqsData;
     sensiData->equityShiftData()["Lufthansa"] = eqsData;

@@ -21,6 +21,7 @@
 #include <ored/model/fxbsbuilder.hpp>
 #include <ored/model/infdkbuilder.hpp>
 #include <ored/model/lgmbuilder.hpp>
+#include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
@@ -49,15 +50,18 @@
 namespace ore {
 namespace data {
 
-CrossAssetModelBuilder::CrossAssetModelBuilder(
-    const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<CrossAssetModelData>& config,
-    const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
-    const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
-    const std::string& configurationFinalModel, const DayCounter& dayCounter, const bool dontCalibrate)
+CrossAssetModelBuilder::CrossAssetModelBuilder(const boost::shared_ptr<ore::data::Market>& market,
+                                               const boost::shared_ptr<CrossAssetModelData>& config,
+                                               const std::string& configurationLgmCalibration,
+                                               const std::string& configurationFxCalibration,
+                                               const std::string& configurationEqCalibration,
+                                               const std::string& configurationInfCalibration,
+                                               const std::string& configurationFinalModel, const DayCounter& dayCounter,
+                                               const bool dontCalibrate, const bool continueOnError)
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration), configurationFinalModel_(configurationFinalModel),
-      dayCounter_(dayCounter), dontCalibrate_(dontCalibrate),
+      dayCounter_(dayCounter), dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
     buildModel();
@@ -125,12 +129,13 @@ void CrossAssetModelBuilder::performCalculations() const {
 void CrossAssetModelBuilder::buildModel() const {
 
     QL_REQUIRE(market_ != NULL, "CrossAssetModelBuilder: no market given");
-    LOG("Start building CrossAssetModel, configurations: LgmCalibration "
-        << configurationLgmCalibration_ << ", FxCalibration " << configurationFxCalibration_ << ", EqCalibration "
-        << configurationEqCalibration_ << ", InfCalibration " << configurationInfCalibration_ << ", FinalModel "
-        << configurationFinalModel_);
+    LOG("Start building CrossAssetModel");
+    DLOG("configurations: LgmCalibration "
+         << configurationLgmCalibration_ << ", FxCalibration " << configurationFxCalibration_ << ", EqCalibration "
+         << configurationEqCalibration_ << ", InfCalibration " << configurationInfCalibration_ << ", FinalModel "
+         << configurationFinalModel_);
     if (dontCalibrate_) {
-        LOG("Calibration of the model is disabled.");
+        DLOG("Calibration of the model is disabled.");
     }
 
     QL_REQUIRE(config_->irConfigs().size() > 0, "missing IR configurations");
@@ -164,9 +169,9 @@ void CrossAssetModelBuilder::buildModel() const {
 
     for (Size i = 0; i < config_->irConfigs().size(); i++) {
         boost::shared_ptr<IrLgmData> ir = config_->irConfigs()[i];
-        LOG("IR Parametrization " << i << " ccy " << ir->ccy());
-        boost::shared_ptr<LgmBuilder> builder =
-            boost::make_shared<LgmBuilder>(market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance());
+        DLOG("IR Parametrization " << i << " ccy " << ir->ccy());
+        boost::shared_ptr<LgmBuilder> builder = boost::make_shared<LgmBuilder>(
+            market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_);
         if (dontCalibrate_)
             builder->freeze();
         irBuilder.push_back(builder);
@@ -187,7 +192,7 @@ void CrossAssetModelBuilder::buildModel() const {
      */
     std::vector<boost::shared_ptr<QuantExt::FxBsParametrization>> fxParametrizations;
     for (Size i = 0; i < config_->fxConfigs().size(); i++) {
-        LOG("FX Parametrization " << i);
+        DLOG("FX Parametrization " << i);
         boost::shared_ptr<FxBsData> fx = config_->fxConfigs()[i];
         QuantLib::Currency ccy = ore::data::parseCurrency(fx->foreignCcy());
         QuantLib::Currency domCcy = ore::data::parseCurrency(fx->domesticCcy());
@@ -213,7 +218,7 @@ void CrossAssetModelBuilder::buildModel() const {
      */
     std::vector<boost::shared_ptr<QuantExt::EqBsParametrization>> eqParametrizations;
     for (Size i = 0; i < config_->eqConfigs().size(); i++) {
-        LOG("EQ Parametrization " << i);
+        DLOG("EQ Parametrization " << i);
         boost::shared_ptr<EqBsData> eq = config_->eqConfigs()[i];
         string eqName = eq->eqName();
         QuantLib::Currency eqCcy = ore::data::parseCurrency(eq->currency());
@@ -233,7 +238,7 @@ void CrossAssetModelBuilder::buildModel() const {
      */
     std::vector<boost::shared_ptr<QuantExt::InfDkParametrization>> infParametrizations;
     for (Size i = 0; i < config_->infConfigs().size(); i++) {
-        LOG("INF Parametrization " << i);
+        DLOG("INF Parametrization " << i);
         boost::shared_ptr<InfDkData> inf = config_->infConfigs()[i];
         string infIndex = inf->infIndex();
         boost::shared_ptr<InfDkBuilder> builder =
@@ -266,13 +271,13 @@ void CrossAssetModelBuilder::buildModel() const {
         std::string factor1 = it->first.first;
         std::string factor2 = it->first.second;
         Handle<Quote> corr = it->second;
-        LOG("Add correlation for " << factor1 << " " << factor2);
+        DLOG("Add correlation for " << factor1 << " " << factor2);
         cmb.addCorrelation(factor1, factor2, corr);
     }
 
-    LOG("Get correlation matrix for currencies:");
+    DLOG("Get correlation matrix for currencies:");
     for (auto c : currencies)
-        LOG("Currency " << c);
+        DLOG("Currency " << c);
 
     Matrix corrMatrix = cmb.correlationMatrix(currencies, infIndices, crNames, eqNames);
 
@@ -287,7 +292,7 @@ void CrossAssetModelBuilder::buildModel() const {
      */
 
     for (Size i = 0; i < irBuilder.size(); i++) {
-        LOG("IR Calibration " << i);
+        DLOG("IR Calibration " << i);
         swaptionCalibrationErrors_[i] = irBuilder[i]->error();
     }
 
@@ -298,7 +303,7 @@ void CrossAssetModelBuilder::buildModel() const {
     for (Size i = 0; i < irParametrizations.size(); i++) {
         auto p = irParametrizations[i];
         irDiscountCurves[i].linkTo(*market_->discountCurve(p->currency().code(), configurationFxCalibration_));
-        LOG("Relinked discounting curve for " << p->currency().code() << " for FX calibration");
+        DLOG("Relinked discounting curve for " << p->currency().code() << " for FX calibration");
     }
 
     /*************************
@@ -309,11 +314,11 @@ void CrossAssetModelBuilder::buildModel() const {
         boost::shared_ptr<FxBsData> fx = config_->fxConfigs()[i];
 
         if (fx->calibrationType() == CalibrationType::None || !fx->calibrateSigma()) {
-            LOG("FX Calibration " << i << " skipped");
+            DLOG("FX Calibration " << i << " skipped");
             continue;
         }
 
-        LOG("FX Calibration " << i);
+        DLOG("FX Calibration " << i);
 
         // attach pricing engines to helpers
         boost::shared_ptr<QuantExt::AnalyticCcLgmFxOptionEngine> engine =
@@ -333,13 +338,30 @@ void CrossAssetModelBuilder::buildModel() const {
                 model_->calibrateBsVolatilitiesGlobal(CrossAssetModelTypes::FX, i, fxOptionBaskets_[i],
                                                       *optimizationMethod_, endCriteria_);
 
-            LOG("FX " << fx->foreignCcy() << " calibration errors:");
-            fxOptionCalibrationErrors_[i] =
-                logCalibrationErrors(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]);
+            DLOG("FX " << fx->foreignCcy() << " calibration errors:");
+            fxOptionCalibrationErrors_[i] = getCalibrationError(fxOptionBaskets_[i]);
             if (fx->calibrationType() == CalibrationType::Bootstrap) {
-                QL_REQUIRE(fabs(fxOptionCalibrationErrors_[i]) < config_->bootstrapTolerance(),
-                           "calibration error " << fxOptionCalibrationErrors_[i] << " exceeds tolerance "
-                                                << config_->bootstrapTolerance());
+                if (fabs(fxOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
+                    // we check the log level here to avoid unncessary computations
+                    if(Log::instance().filter(ORE_DATA)) {
+                        TLOGGERSTREAM << "Calibration details:";
+                        TLOGGERSTREAM << getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i],
+                                                               irParametrizations[0]);
+                        TLOGGERSTREAM << "rmse = " << fxOptionCalibrationErrors_[i];
+                    }
+                } else {
+                    std::string exceptionMessage = "FX BS " + std::to_string(i) + " calibration error " +
+                                                   std::to_string(fxOptionCalibrationErrors_[i]) +
+                                                   " exceeds tolerance " +
+                                                   std::to_string(config_->bootstrapTolerance());
+                    WLOG(StructuredModelErrorMessage("Failed to calibrate FX BS Model", exceptionMessage));
+                    WLOGGERSTREAM << "Calibration details:";
+                    WLOGGERSTREAM << getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i],
+                                                           irParametrizations[0]);
+                    WLOGGERSTREAM << "rmse = " << fxOptionCalibrationErrors_[i];
+                    if(!continueOnError_)
+                        QL_FAIL(exceptionMessage);
+                }
             }
         }
     }
@@ -351,7 +373,7 @@ void CrossAssetModelBuilder::buildModel() const {
     for (Size i = 0; i < irParametrizations.size(); i++) {
         auto p = irParametrizations[i];
         irDiscountCurves[i].linkTo(*market_->discountCurve(p->currency().code(), configurationEqCalibration_));
-        LOG("Relinked discounting curve for " << p->currency().code() << " for EQ calibration");
+        DLOG("Relinked discounting curve for " << p->currency().code() << " for EQ calibration");
     }
 
     /*************************
@@ -361,10 +383,10 @@ void CrossAssetModelBuilder::buildModel() const {
     for (Size i = 0; i < eqParametrizations.size(); i++) {
         boost::shared_ptr<EqBsData> eq = config_->eqConfigs()[i];
         if (!eq->calibrateSigma()) {
-            LOG("EQ Calibration " << i << " skipped");
+            DLOG("EQ Calibration " << i << " skipped");
             continue;
         }
-        LOG("EQ Calibration " << i);
+        DLOG("EQ Calibration " << i);
         // attach pricing engines to helpers
         Currency eqCcy = eqParametrizations[i]->currency();
         Size eqCcyIdx = model_->ccyIndex(eqCcy);
@@ -381,13 +403,30 @@ void CrossAssetModelBuilder::buildModel() const {
             else
                 model_->calibrateBsVolatilitiesGlobal(CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i],
                                                       *optimizationMethod_, endCriteria_);
-            LOG("EQ " << eq->eqName() << " calibration errors:");
-            eqOptionCalibrationErrors_[i] =
-                logCalibrationErrors(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]);
+            DLOG("EQ " << eq->eqName() << " calibration errors:");
+            eqOptionCalibrationErrors_[i] = getCalibrationError(eqOptionBaskets_[i]);
             if (eq->calibrationType() == CalibrationType::Bootstrap) {
-                QL_REQUIRE(fabs(eqOptionCalibrationErrors_[i]) < config_->bootstrapTolerance(),
-                           "calibration error " << eqOptionCalibrationErrors_[i] << " exceeds tolerance "
-                                                << config_->bootstrapTolerance());
+                if (fabs(eqOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
+                    // we check the log level here to avoid unncessary computations
+                    if (Log::instance().filter(ORE_DATA)) {
+                        TLOGGERSTREAM << "Calibration details:";
+                        TLOGGERSTREAM << getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i],
+                                                               irParametrizations[0]);
+                        TLOGGERSTREAM << "rmse = " << eqOptionCalibrationErrors_[i];
+                    }
+                } else {
+                    std::string exceptionMessage = "EQ BS " + std::to_string(i) + " calibration error " +
+                                                   std::to_string(eqOptionCalibrationErrors_[i]) +
+                                                   " exceeds tolerance " +
+                                                   std::to_string(config_->bootstrapTolerance());
+                    WLOG(StructuredModelErrorMessage("Failed to calibrate EQ BS Model", exceptionMessage));
+                    WLOGGERSTREAM << "Calibration details:";
+                    WLOGGERSTREAM << getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i],
+                                                           irParametrizations[0]);
+                    WLOGGERSTREAM << "rmse = " << eqOptionCalibrationErrors_[i];
+                    if (!continueOnError_)
+                        QL_FAIL(exceptionMessage);
+                }
             }
         }
     }
@@ -399,7 +438,7 @@ void CrossAssetModelBuilder::buildModel() const {
     for (Size i = 0; i < irParametrizations.size(); i++) {
         auto p = irParametrizations[i];
         irDiscountCurves[i].linkTo(*market_->discountCurve(p->currency().code(), configurationFinalModel_));
-        LOG("Relinked discounting curve for " << p->currency().code() << " as final model curves");
+        DLOG("Relinked discounting curve for " << p->currency().code() << " as final model curves");
     }
 
     /*************************
@@ -410,10 +449,10 @@ void CrossAssetModelBuilder::buildModel() const {
     for (Size i = 0; i < infParametrizations.size(); i++) {
         boost::shared_ptr<InfDkData> inf = config_->infConfigs()[i];
         if ((!inf->calibrateA() && !inf->calibrateH()) || (inf->calibrationType() == CalibrationType::None)) {
-            LOG("INF Calibration " << i << " skipped");
+            DLOG("INF Calibration " << i << " skipped");
             continue;
         }
-        LOG("INF Calibration " << i);
+        DLOG("INF Calibration " << i);
         // attach pricing engines to helpers
 
         Handle<ZeroInflationIndex> zInfIndex =
@@ -447,13 +486,30 @@ void CrossAssetModelBuilder::buildModel() const {
                 model_->calibrate(infCapFloorBaskets_[i], *optimizationMethod_, endCriteria_);
             }
 
-            LOG("INF " << inf->infIndex() << " calibration errors:");
-            infCapFloorCalibrationErrors_[i] =
-                logCalibrationErrors(infCapFloorBaskets_[i], infParametrizations[i], irParametrizations[0]);
+            DLOG("INF " << inf->infIndex() << " calibration errors:");
+            infCapFloorCalibrationErrors_[i] = getCalibrationError(infCapFloorBaskets_[i]);
             if (inf->calibrationType() == CalibrationType::Bootstrap) {
-                QL_REQUIRE(fabs(infCapFloorCalibrationErrors_[i]) < config_->bootstrapTolerance(),
-                           "calibration error " << infCapFloorCalibrationErrors_[i] << " exceeds tolerance "
-                                                << config_->bootstrapTolerance());
+                if (fabs(infCapFloorCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
+                    // we check the log level here to avoid unncessary computations
+                    if(Log::instance().filter(ORE_DATA)) {
+                        TLOGGERSTREAM << "Calibration details:";
+                        TLOGGERSTREAM << getCalibrationDetails(infCapFloorBaskets_[i], infParametrizations[i],
+                                                               irParametrizations[0]);
+                        TLOGGERSTREAM << "rmse = " << infCapFloorCalibrationErrors_[i];
+                    }
+                } else {
+                    std::string exceptionMessage = "INF DK " + std::to_string(i) + " calibration error " +
+                                                   std::to_string(infCapFloorCalibrationErrors_[i]) +
+                                                   " exceeds tolerance " +
+                                                   std::to_string(config_->bootstrapTolerance());
+                    WLOG(StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage));
+                    WLOGGERSTREAM << "Calibration details:";
+                    WLOGGERSTREAM << getCalibrationDetails(infCapFloorBaskets_[i], infParametrizations[i],
+                                                           irParametrizations[0]);
+                    WLOGGERSTREAM << "rmse = " << infCapFloorCalibrationErrors_[i];
+                    if(!continueOnError_)
+                        QL_FAIL(exceptionMessage);
+                }
             }
         }
     }
@@ -465,14 +521,14 @@ void CrossAssetModelBuilder::buildModel() const {
     for (Size i = 0; i < irParametrizations.size(); i++) {
         auto p = irParametrizations[i];
         irDiscountCurves[i].linkTo(*market_->discountCurve(p->currency().code(), configurationFinalModel_));
-        LOG("Relinked discounting curve for " << p->currency().code() << " as final model curves");
+        DLOG("Relinked discounting curve for " << p->currency().code() << " as final model curves");
     }
 
     // play safe (although the cache of the model should be empty at
     // this point from all what we know...)
     model_->update();
 
-    LOG("Building CrossAssetModel done");
+    DLOG("Building CrossAssetModel done");
 }
 
 void CrossAssetModelBuilder::forceRecalculate() {

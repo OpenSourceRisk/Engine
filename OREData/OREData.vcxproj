@@ -79,7 +79,6 @@
     <ClInclude Include="ored\marketdata\fxtriangulation.hpp" />
     <ClInclude Include="ored\marketdata\fxvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\genericyieldvolcurve.hpp" />
-    <ClInclude Include="ored\marketdata\inflationcapfloorpricesurface.hpp" />
     <ClInclude Include="ored\marketdata\inflationcurve.hpp" />
     <ClInclude Include="ored\marketdata\loader.hpp" />
     <ClInclude Include="ored\marketdata\market.hpp" />
@@ -108,18 +107,21 @@
     <ClInclude Include="ored\model\lgmbuilder.hpp" />
     <ClInclude Include="ored\model\lgmdata.hpp" />
     <ClInclude Include="ored\model\modelbuilder.hpp" />
+    <ClInclude Include="ored\model\structuredmodelerror.hpp" />
     <ClInclude Include="ored\model\utilities.hpp" />
     <ClInclude Include="ored\ored.hpp" />
     <ClInclude Include="ored\portfolio\bond.hpp" />
     <ClInclude Include="ored\portfolio\builders\bond.hpp" />
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
+    <ClInclude Include="ored\portfolio\builders\capflooredcpileg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloorediborleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capflooredyoyleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\cms.hpp" />
     <ClInclude Include="ored\portfolio\builders\cmsspread.hpp" />
     <ClInclude Include="ored\portfolio\builders\commodityforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\commodityoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\cpicapfloor.hpp" />
     <ClInclude Include="ored\portfolio\builders\creditdefaultswap.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityoption.hpp" />
@@ -141,6 +143,7 @@
     <ClInclude Include="ored\portfolio\equityforward.hpp" />
     <ClInclude Include="ored\portfolio\equityoption.hpp" />
     <ClInclude Include="ored\portfolio\equityswap.hpp" />
+    <ClInclude Include="ored\portfolio\equityidentifier.hpp" />
     <ClInclude Include="ored\portfolio\fixingdates.hpp" />
     <ClInclude Include="ored\portfolio\forwardbond.hpp" />
     <ClInclude Include="ored\portfolio\forwardrateagreement.hpp" />
@@ -225,7 +228,6 @@
     <ClCompile Include="ored\marketdata\fxtriangulation.cpp" />
     <ClCompile Include="ored\marketdata\fxvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\genericyieldvolcurve.cpp" />
-    <ClCompile Include="ored\marketdata\inflationcapfloorpricesurface.cpp" />
     <ClCompile Include="ored\marketdata\inflationcurve.cpp" />
     <ClCompile Include="ored\marketdata\market.cpp" />
     <ClCompile Include="ored\marketdata\marketdatum.cpp" />
@@ -258,6 +260,7 @@
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />
     <ClCompile Include="ored\portfolio\builders\cmsspread.cpp" />
     <ClCompile Include="ored\portfolio\builders\commodityoption.cpp" />
+    <ClCompile Include="ored\portfolio\builders\cpicapfloor.cpp" />
     <ClCompile Include="ored\portfolio\builders\swaption.cpp" />
     <ClCompile Include="ored\portfolio\builders\yoycapfloor.cpp" />
     <ClCompile Include="ored\portfolio\capfloor.cpp" />
@@ -271,6 +274,7 @@
     <ClCompile Include="ored\portfolio\equityforward.cpp" />
     <ClCompile Include="ored\portfolio\equityoption.cpp" />
     <ClCompile Include="ored\portfolio\equityswap.cpp" />
+    <ClCompile Include="ored\portfolio\equityidentifier.cpp" />
     <ClCompile Include="ored\portfolio\fixingdates.cpp" />
     <ClCompile Include="ored\portfolio\forwardbond.cpp" />
     <ClCompile Include="ored\portfolio\forwardrateagreement.cpp" />

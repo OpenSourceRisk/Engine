@@ -82,6 +82,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         legPayers_ = { false };
         npvCurrency_ = swap_[0].currency();
         notional_ = 0.0;
+        notionalCurrency_ = npvCurrency_;
         maturity_ = latestExerciseDate;
         return;
     }
@@ -516,6 +517,12 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
 
     VanillaSwap::Type type = swap_[fixedLegIndex].isPayer() ? VanillaSwap::Payer : VanillaSwap::Receiver;
 
+    // We treat overnight and bma indices approximately as ibor indices and warn about this in the log
+    if (boost::dynamic_pointer_cast<OvernightIndex>(*index) ||
+        boost ::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(*index))
+        ALOG("Swaption trade " << id() << " on ON or BMA index '" << underlyingIndex_
+                               << "' built, will treat the index approximately as an ibor index");
+
     // only take into account accrual periods with start date on or after first exercise date (if given)
     if (firstExerciseDate != Null<Date>()) {
         std::vector<Date> fixDates = fixedSchedule.dates();
@@ -543,6 +550,7 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
     // Set other ore::data::Trade details
     npvCurrency_ = ccy;
     notional_ = nominal;
+    notionalCurrency_ = ccy;
     legCurrencies_ = vector<string>(2, ccy);
     legs_.push_back(swap->fixedLeg());
     legs_.push_back(swap->floatingLeg());
@@ -601,6 +609,12 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
     DayCounter floatingDayCounter = parseDayCounter(swap_[floatingLegIndex].dayCounter());
     BusinessDayConvention paymentConvention = parseBusinessDayConvention(swap_[floatingLegIndex].paymentConvention());
 
+    // We treat overnight and bma indices approximately as ibor indices and warn about this in the log
+    if (boost::dynamic_pointer_cast<OvernightIndex>(*index) ||
+        boost ::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(*index))
+        ALOG("Swaption trade " << id() << " on ON or BMA index '" << underlyingIndex_
+                               << "' built, will treat the index approximately as an ibor index");
+
     VanillaSwap::Type type = swap_[fixedLegIndex].isPayer() ? VanillaSwap::Payer : VanillaSwap::Receiver;
 
     // Build a vanilla (bullet) swap underlying
@@ -616,6 +630,7 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
     // Set other ore::data::Trade details
     npvCurrency_ = ccy;
     notional_ = std::max(currentNotional(swap->fixedLeg()), currentNotional(swap->floatingLeg()));
+    notionalCurrency_ = npvCurrency_;
     legCurrencies_ = vector<string>(2, ccy);
     legs_.push_back(swap->fixedLeg());
     legs_.push_back(swap->floatingLeg());

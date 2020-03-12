@@ -57,6 +57,7 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
     notional_ = strike_ * quantity_;
+    notionalCurrency_ = currency_;
 }
 
 void EquityForward::fromXML(XMLNode* node) {
@@ -84,5 +85,10 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, eNode, "Quantity", quantity_);
     return node;
 }
+
+std::map<AssetClass, std::set<std::string>> EquityForward::underlyingIndices() const {
+    return { {AssetClass::EQ, std::set<std::string>({eqName_})} };
+}
+
 } // namespace data
 } // namespace ore

@@ -80,6 +80,7 @@ public:
     //@{
     QuantLib::Time minTime() const;
     std::vector<QuantLib::Date> pillarDates() const;
+    const QuantLib::Currency& currency() const { return basePts_->currency(); }
     //@}
 
     //! \name Inspectors

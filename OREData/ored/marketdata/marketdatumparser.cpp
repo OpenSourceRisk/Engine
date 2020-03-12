@@ -25,7 +25,6 @@
 #include <ored/marketdata/strike.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ql/time/calendars/weekendsonly.hpp>
 
 using namespace std;
 using QuantLib::WeekendsOnly;
@@ -42,6 +41,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"DISCOUNT", MarketDatum::InstrumentType::DISCOUNT},
         {"MM", MarketDatum::InstrumentType::MM},
         {"MM_FUTURE", MarketDatum::InstrumentType::MM_FUTURE},
+        {"OI_FUTURE", MarketDatum::InstrumentType::OI_FUTURE},
         {"FRA", MarketDatum::InstrumentType::FRA},
         {"IMM_FRA", MarketDatum::InstrumentType::IMM_FRA},
         {"IR_SWAP", MarketDatum::InstrumentType::IR_SWAP},
@@ -115,14 +115,13 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
 }
 
 // calls parseDateOrPeriod and returns a Date (either the supplied date or asof+period)
-Date getDateFromDateOrPeriod(const string& token, Date asof) {
+Date getDateFromDateOrPeriod(const string& token, Date asof, QuantLib::Calendar cal) {
     Period term;                                           // gets populated by parseDateOrPeriod
     Date expiryDate;                                       // gets populated by parseDateOrPeriod
     bool tmpIsDate;                                        // gets populated by parseDateOrPeriod
     parseDateOrPeriod(token, expiryDate, term, tmpIsDate); // checks if the market string contains a date or a period
     if (!tmpIsDate)
-        expiryDate =
-            WeekendsOnly().adjust(asof + term); // we have no calendar information here, so we use a generic calendar
+        expiryDate = cal.adjust(asof + term);
     return expiryDate;
 }
 
@@ -186,6 +185,15 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& contract = tokens[4];
         Period term = parsePeriod(tokens[5]);
         return boost::make_shared<MMFutureQuote>(value, asof, datumName, quoteType, ccy, expiry, contract, term);
+    }
+
+    case MarketDatum::InstrumentType::OI_FUTURE: {
+        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        const string& ccy = tokens[2];
+        const string& expiry = tokens[3];
+        const string& contract = tokens[4];
+        Period term = parsePeriod(tokens[5]);
+        return boost::make_shared<OIFutureQuote>(value, asof, datumName, quoteType, ccy, expiry, contract, term);
     }
 
     case MarketDatum::InstrumentType::FRA: {

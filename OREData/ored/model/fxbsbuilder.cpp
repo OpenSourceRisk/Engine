@@ -46,6 +46,8 @@ FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
     QuantLib::Currency domesticCcy = ore::data::parseCurrency(data->domesticCcy());
     std::string ccyPair = ccy.code() + domesticCcy.code();
 
+    LOG("Start building FxBs model for ccyPair")
+
     // get market data
     fxSpot_ = market_->fxSpot(ccyPair, configuration_);
     ytsDom_ = market_->discountCurve(domesticCcy.code(), configuration_);
@@ -185,7 +187,7 @@ void FxBsBuilder::buildOptionBasket() const {
         optionBasket_.push_back(helper);
         helper->performCalculations();
         expiryTimes[j] = ytsDom_->timeFromReference(helper->option()->exercise()->date(0));
-        LOG("Added FxEqOptionHelper " << (data_->foreignCcy() + data_->domesticCcy()) << " "
+        DLOG("Added FxEqOptionHelper " << (data_->foreignCcy() + data_->domesticCcy()) << " "
                                       << QuantLib::io::iso_date(expiryDate) << " " << helper->strike() << " "
                                       << quote->value());
     }

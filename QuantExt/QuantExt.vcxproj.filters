@@ -816,6 +816,36 @@
     <ClInclude Include="qle\termstructures\aposurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\equityoptionsurfacestripper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\cpicoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\cpicouponpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\strippedcapflooredcpicoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\constantyoyinflationoptionletvolatility.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\dynamiccpivolatilitystructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\inflationcapfloorengines.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\overnightindexedcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\overnightindexfuture.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\overnightindexfutureratehelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1391,6 +1421,36 @@
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\aposurface.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\equityoptionsurfacestripper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\cpicoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\cpicouponpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\strippedcapflooredcpicoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\constantyoyinflationoptionletvolatility.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\dynamiccpivolatilitystructure.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\inflationcapfloorengines.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\overnightindexedcoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\overnightindexfuture.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\overnightindexfutureratehelper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

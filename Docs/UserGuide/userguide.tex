@@ -2596,7 +2596,7 @@ and {\tt </TodaysMarket>}. The file then contains configuration blocks for
 \item Swaption volatility structures
 \item Cap/Floor volatility structures
 \item FX volatility structures
-\item Inflation Cap/Floor price surfaces
+\item Inflation Cap/Floor volatility surfaces
 \item Equity volatility structures
 \item CDS volatility structures
 \item Base correlation structures
@@ -2935,35 +2935,32 @@ Note that the index name is the same as in the corresponding zero index curve de
 the CurveId tag is different. This is because the actual underlying index (and in particular its fixings) are shared
 between the two index types, while different projection curves are used to forecast future index realisations.
 
-\subsubsection{Inflation Cap/Floor Price Surfaces}
+\subsubsection{Inflation Cap/Floor Volatility Surfaces}
 
-The following is an excerpt of the Inflation Cap/Floor Price Surfaces block with ID 'default' from the sample example
+The following is an excerpt of the Inflation Cap/Floor Volatility Surfaces blocks with ID 'default' from the sample example
 file:
 
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<InflationCapFloorPriceSurfaces id="default">
-    <InflationCapFloorPriceSurface name="EUHICPXT">
-        InflationCapFloorPrice/EUHICPXT/EUHICPXT_ZC_CF
-    </InflationCapFloorPriceSurface>
-    <InflationCapFloorPriceSurface name="USCPI">
-        InflationCapFloorPrice/USCPI/USCPI_ZC_CF
-    </InflationCapFloorPriceSurface>
-    <InflationCapFloorPriceSurface name="UKRPI">
-        InflationCapFloorPrice/UKRPI/UKRPI_ZC_CF
-    </InflationCapFloorPriceSurface>
-</InflationCapFloorPriceSurfaces>
+  <YYInflationCapFloorVolatilities id="default">
+    <YYInflationCapFloorVolatitlity name="EUHICPXT">
+        InflationCapFloorVolatility/EUHICPXT/EUHICPXT_YY_CF
+    </InflationCapFloorVolatility>
+  </YYInflationCapFloorVolatilities>
+  <ZeroInflationCapFloorVolatilities id="default">
+    <ZeroInflationCapFloorVolatility name="UKRPI">InflationCapFloorVolatility/UKRPI/UKRPI_ZC_CF</ZeroInflationCapFloorVolatility>
+    <ZeroInflationCapFloorVolatility name="EUHICPXT">InflationCapFloorVolatility/EUHICPXT/EUHICPXT_ZC_CF</ZeroInflationCapFloorVolatility>
+    <ZeroInflationCapFloorVolatility name="USCPI">InflationCapFloorVolatility/USCPI/USCPI_ZC_CF</ZeroInflationCapFloorVolatility>
+  </ZeroInflationCapFloorVolatilities>
 \end{minted}
-\caption{Inflation Cap/Floor Price Surfaces block with ID 'default'}
+\caption{Inflation Cap/Floor Volatility Surfaces block with ID 'default'}
 \label{lst:inflation_cap_floor_surface_spec}
 \end{listing}
 
-This instructs ORE to build a set of zero inflation cap floor price surfaces, which are defined in the curve
+This instructs ORE to build a set of year-on-year and zero inflation cap floor volatility surfaces, which are defined in the curve
 configuration file. Each surface is associated with an idnex name. The last token (e.g. EUHICPXT\_ZC\_CF) is user defined
 and will be found in the curve configuration's CurveId tag.
-
-Currently only zero coupon surfaces are supported, year on year surfaces are not supported.
 
 \subsubsection{CDS Volatility Structures}
 
@@ -3190,7 +3187,9 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
       <Parameter name="IntegrationPoints">16</Parameter>
     </EngineParameters>
   </Product>
-</PricingEngines>
+  <GlobalParameters>
+    <Parameter name="ContinueOnCalibrationError>true</Parameter>
+  </GlobalParameters>
 \end{minted}
 \caption{Pricing engine configuration}
 \label{lst:pricingengine_config}
@@ -3225,7 +3224,15 @@ pricer (CapFlooredIborLeg), please refer to the commented parts in {\tt Examples
 \medskip
 This file is relevant in particular for structured products which are on the roadmap of future ORE releases. But it is also
 intended to allow the selection of optimised pricing engines for vanilla products such as Interest Rate Swaps.
- 
+
+\medskip
+In addition to product specific settings there is also a block with global parameters with the following meaning:
+\begin{itemize}
+\item ContinueOnCalibrationError If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
+  LGM model) will not cause the trade building to fail, instead a warning is logged and the trade is processed
+  anyway. Optional, defaults to false.
+\end{itemize}
+
 %--------------------------------------------------------
 \subsection{Simulation: {\tt simulation.xml}}\label{sec:simulation}
 %--------------------------------------------------------
@@ -4327,6 +4334,7 @@ Listing \ref{lst:eqoptionvol_configuration} shows the configuration of equity vo
     <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
     <Currency>USD</Currency>
     <Dimension>Smile</Dimension><!-- Alternative: ATM -->
+    <QuoteType>ImpliedVolatility</QuoteType><!--Alternative: Premium -->
     <Expiries>1M,5Y,10Y</Expiries>
     <!-- If Dimension is Smile: -->
     <Strikes>1932.8,2147.56,2254.939</Strikes>
@@ -4425,53 +4433,61 @@ We note that if zero coupon swap market quotes are given, but the type is set to
 converted to year on year swap quotes on the fly, using the plain forward rates, i.e. no convexity adjustment is
 applied.
 
-\subsubsection{Inflation Cap/Floor Price Surfaces}
+\subsubsection{Inflation Cap/Floor Volatility Surfaces}
 
-Listing \ref{lst:inflationcapfloorpricesurface_configuration} shows the configuration of an zero coupon inflation cap
+Listing \ref{lst:inflationcapfloorvolsurface_configuration} shows the configuration of an zero coupon inflation cap
 floor price surface.
 
 \begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<InflationCapFloorPriceSurfaces>
-  <InflationCapFloorPriceSurface>
-      <CurveId>EUHICPXT_ZC_CF</CurveId>
-      <CurveDescription>Price Surface ZC CapFloor EUHICPXT</CurveDescription>
-      <Type>ZC</Type>
-      <StartRate>0.10</StartRate>
-      <ObservationLag>3M</ObservationLag>
-      <Calendar>TARGET</Calendar>
-      <BusinessDayConvention>MF</BusinessDayConvention>
-      <DayCounter>A365</DayCounter>
-      <Index>EUHICPXT</Index>
-      <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
-      <IndexInterpolated>false</IndexInterpolated>
-      <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
-      <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes>
-      <FloorStrikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
-      <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
-  </InflationCapFloorPriceSurface>
-</InflationCapFloorPriceSurfaces>
+      <InflationCapFloorVolatility>
+          <CurveId>EUHICPXT_ZC_CF</CurveId>
+          <CurveDescription>EUHICPXT CPI Cap/Floor vol surface derived from price quotes</CurveDescription>
+          <Type>ZC</Type>
+          <QuoteType>Price</QuoteType>
+	  <VolatilityType>Normal</VolatilityType>
+	  <Extrapolation>Y</Extrapolation>
+          <DayCounter>ACT</DayCounter>
+          <Calendar>TARGET</Calendar>
+          <BusinessDayConvention>MF</BusinessDayConvention>
+          <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Tenors>
+          <!-- QuoteType 'Volatility' requires <Strikes>: -->
+          <!-- <Strikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</Strikes> -->
+          <!-- QuoteType 'Price' requires <CapStrikes> and/or <FloorStrikes>: -->
+          <CapStrikes/> 
+          <FloorStrikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
+          <Index>EUHICPXT</Index>
+          <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
+          <IndexInterpolated>false</IndexInterpolated>
+	  <ObservationLag>3M</ObservationLag>
+          <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
+      </InflationCapFloorVolatility>
 \end{minted}
-\caption{Inflation zc cap floor price surface configuration}
-\label{lst:inflationcapfloorpricesurface_configuration}
+\caption{Inflation ZC cap floor volatility surface configuration}
+\label{lst:inflationcapfloorvolsurface_configuration}
 \end{longlisting}
 
 \begin{itemize}
-\item {\tt Type}: The type of the surface, {\tt ZC} for zero coupon, {\tt YY} for year on year. Only zero coupon
-  surfaces are supported currently.
-\item {\tt StartRate}: A fall back value used in case the inflation index does not have a term structure
-  attached. Should not be relevant.
-\item {\tt Observation Lag}: The observation lag applicable to the term structure.
+\item {\tt Type}: The type of the surface, {\tt ZC} for zero coupon, {\tt YY} for year on year. 
+\item {\tt QuoteType}: The type of the quotes used to build the surface, {\tt Volatility} for volatility quotes, {\tt Price} for bootstrap from option premia. 
+\item {\tt VolatilityType}: If QuoteType is {\tt Volatility}, this specifies whether the input is {\tt Normal}, {\tt Lognormal} or {\tt ShiftedLognormal}. 
+\item {\tt Extrapolation}: Boolean to indictae whether the surface should allow extrapolation. 
+\item {\tt DayCounter}: The term structure's day counter
+\item {\tt Calendar}: The term structure's calendar 
+\item {\tt BusinessDayConvention}: The term structure's business day convention
+\item {\tt Tenors:} The maturities for which cap and floor prices are quoted
+\item {\tt Strikes}: In the case of QuoteType {\tt Volatility}, the strikes for which floor prices are quoted (may, and will usually, overlap with the cap
+  strike region); neither CapStrikes nor FloorStrikes are expected in this case. 
+\item {\tt CapStrikes}: The strikes for which cap prices are quoted (may, and will usually, overlap with the floor
+  strike region); if the QuoteType above is {\tt Price}, either CapStrikes or FloorStrikes or both are required.
+\item {\tt FloorStrikes}: The strikes for which floor prices are quoted (may and will usually) overlap with the cap
+  strike region); if the QuoteType above is {\tt Price}, either CapStrikes or FloorStrikes or both are required. 
 \item {\tt Index}: The underlying zero inflation index.
 \item {\tt IndexCurve}: The curve id of the index's projection curve used to determine the ATM levels for the surface.
 \item {\tt IndexInterpolated}: Flag indicating whether the index should be interpolating.
+\item {\tt Observation Lag}: The observation lag applicable to the term structure.
 \item {\tt YieldTermStructure}: The nominal term structure.
-\item {\tt CapStrikes}: The strikes for which cap prices are quoted (may (and will usually) overlap with the floor
-  strike region).
-\item {\tt FloorStrikes}: The strikes for which floor prices are quoted (may (and will usually) overlap with the cap
-  strike region).
-\item {\tt Maturities:} The maturities for which cap and floor prices are quoted
 \end{itemize}
 
 \subsubsection{CDS Volatilities}

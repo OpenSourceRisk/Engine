@@ -84,7 +84,8 @@ void Trade::validate() const {
     QL_REQUIRE(tradeType_ !="", "Trade id has not been set.");
     QL_REQUIRE(instrument_ || legs_.size()>0, "Trade " << id_ << " requires either QuantLib instruments or legs to be created.");
     QL_REQUIRE(npvCurrency_ != "", "NPV currency has not been set for trade " << id_ << ".");
-    QL_REQUIRE(notional_ != Null<Real>() && notional_ != 0.0, "Notional has not been set for trade " << id_ << ".");
+    QL_REQUIRE(notional_ != Null<Real>(), "Notional has not been set for trade " << id_ << ".");
+    QL_REQUIRE(notionalCurrency_ != "", "Notional currency has not been set for trade " << id_ << ".");
     QL_REQUIRE(maturity_ != Null<Date>(), "Maturity not set for trade " << id_ << ".");
     QL_REQUIRE(!envelope_.empty(), "Envelope not set for trade " << id_ << ".");
     if (legs_.size() > 0) {

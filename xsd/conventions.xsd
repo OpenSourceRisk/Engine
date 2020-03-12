@@ -304,7 +304,7 @@
       <xs:element type="xs:string" name="ExpiryCalendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="ExpiryMonthLag" minOccurs="0" maxOccurs="1"/>
       <xs:element type="monthType" name="OneContractMonth" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:nonNegativeInteger" name="OffsetDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="OffsetDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="AdjustBeforeOffset" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="IsAveraging" minOccurs="0" maxOccurs="1"/>

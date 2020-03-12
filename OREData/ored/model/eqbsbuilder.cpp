@@ -43,6 +43,8 @@ EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
     QuantLib::Currency ccy = ore::data::parseCurrency(data->currency());
     string eqName = data->eqName();
 
+    LOG("Start building EqBs model for " << eqName);
+
     // get market data
     std::string fxCcyPair = ccy.code() + baseCcy_.code();
     eqSpot_ = market_->equitySpot(eqName, configuration_);
@@ -184,7 +186,7 @@ void EqBsBuilder::buildOptionBasket() const {
         optionBasket_.push_back(helper);
         helper->performCalculations();
         expiryTimes[j] = ytsRate_->timeFromReference(helper->option()->exercise()->date(0));
-        LOG("Added EquityOptionHelper " << data_->eqName() << " " << QuantLib::io::iso_date(expiryDate) << " "
+        DLOG("Added EquityOptionHelper " << data_->eqName() << " " << QuantLib::io::iso_date(expiryDate) << " "
                                         << volQuote->value());
     }
 

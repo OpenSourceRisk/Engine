@@ -26,6 +26,8 @@
 using QuantLib::CashFlow;
 using QuantLib::Date;
 using QuantLib::FloatingRateCoupon;
+using QuantLib::IborCoupon;
+using QuantLib::CappedFlooredIborCoupon;
 using QuantLib::InflationCoupon;
 using QuantLib::IndexedCashFlow;
 using QuantLib::CPICashFlow;
@@ -162,6 +164,29 @@ void FixingDateGetter::visit(FloatingRateCoupon& c) {
             indicesDates_[c.index()->name()].insert(fixingDate);
         }
     }
+}
+
+void FixingDateGetter::visit(IborCoupon& c) {
+    if (!c.hasOccurred(today_) || c.date() == today_) {
+        if (auto bma = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(c.index())) {
+            // Handle bma indices which we allow in IborCoupon as an approximation to BMA
+            // coupons. For these we allow fixing dates that are invalid as BMA fixing dates
+            // and adjust these dates to the last valid BMA fixing date in the BMAIndexWrapper.
+            // It is this adjusted date that we want to record here.
+            Date fixingDate = c.fixingDate();
+            if (fixingDate <= today_) {
+                indicesDates_[c.index()->name()].insert(bma->adjustedFixingDate(fixingDate));
+            }
+        } else {
+            // otherwise fall through to FloatingRateCoupon handling
+            visit(static_cast<FloatingRateCoupon&>(c));
+        }
+    }
+}
+
+void FixingDateGetter::visit(CappedFlooredCoupon& c) {
+    // handle the underlying
+    c.underlying()->accept(*this);
 }
 
 void FixingDateGetter::visit(IndexedCashFlow& c) {
