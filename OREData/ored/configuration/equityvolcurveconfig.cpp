@@ -38,6 +38,12 @@ EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
     populateQuotes();
 }
 
+const string EquityVolatilityCurveConfig::quoteStem() const {
+    string volType = to_string<MarketDatum::QuoteType>(volatilityConfig()->quoteType());
+
+    return "EQUITY_OPTION/" + volType + "/" + curveID_ + "/" + ccy_ + "/"; 
+}
+
 void EquityVolatilityCurveConfig::populateQuotes() {
 
     // The quotes depend on the type of volatility structure that has been configured.

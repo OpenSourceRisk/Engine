@@ -220,5 +220,15 @@ std::map<AssetClass, std::set<std::string>> Portfolio::underlyingIndices() {
     return underlyingIndicesCache_;
 }
 
+std::set<std::string> Portfolio::underlyingIndices(AssetClass assetClass) {
+
+    std::map<AssetClass, std::set<std::string>> indices = underlyingIndices();
+    auto it = indices.find(assetClass);
+    if (it != indices.end()) {
+        return it->second;
+    }
+    return std::set<std::string>();
+}
+
 } // namespace data
 } // namespace ore

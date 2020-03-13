@@ -55,7 +55,7 @@ public:
                       const string& currency, const Type& type, const string& equitySpotQuote,
                       const vector<string>& quotes, const string& dayCountID = "",
                       const string& dividendInterpVariable = "Zero", const string& dividendInterpMethod = "Linear",
-                      bool extrapolation = true);
+                      bool extrapolation = true, const QuantLib::Exercise::Type& exerciseStyle = QuantLib::Exercise::Type::European);
     //! Default constructor
     EquityCurveConfig() {}
     //@}
@@ -71,12 +71,12 @@ public:
     const string& forecastingCurve() const { return forecastingCurve_; }
     const string& currency() const { return currency_; }
     const Type& type() const { return type_; }
-    const QuantLib::Exercise::Type exerciseStyle() const { return exerciseStyle_; }
     const string& equitySpotQuoteID() const { return equitySpotQuoteID_; }
     const string& dayCountID() const { return dayCountID_; }
     const string& dividendInterpolationVariable() const { return divInterpVariable_; }
     const string& dividendInterpolationMethod() const { return divInterpMethod_; }
     bool extrapolation() const { return extrapolation_; }
+    const QuantLib::Exercise::Type exerciseStyle() const { return exerciseStyle_; }
     const vector<string>& fwdQuotes() { return fwdQuotes_; }
     //@}
 
@@ -85,12 +85,12 @@ public:
     string& forecastingCurve() { return forecastingCurve_; }
     string& currency() { return currency_; }
     Type& type() { return type_; }
-    QuantLib::Exercise::Type& exerciseStyle() { return exerciseStyle_; }
     string& equitySpotQuoteID() { return equitySpotQuoteID_; }
     string& dayCountID() { return dayCountID_; }
     string& dividendInterpolationVariable() { return divInterpVariable_; }
     string& dividendInterpolationMethod() { return divInterpMethod_; }
     bool& extrapolation() { return extrapolation_; }
+    QuantLib::Exercise::Type& exerciseStyle() { return exerciseStyle_; }
     //@}
 
 private:
@@ -98,12 +98,12 @@ private:
     string forecastingCurve_;
     string currency_;
     Type type_;
-    QuantLib::Exercise::Type exerciseStyle_;
     string equitySpotQuoteID_;
     string dayCountID_;
     string divInterpVariable_;
     string divInterpMethod_;
     bool extrapolation_;
+    QuantLib::Exercise::Type exerciseStyle_;
 };
 
 std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t);
