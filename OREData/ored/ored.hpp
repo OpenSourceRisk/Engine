@@ -48,7 +48,6 @@
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/genericyieldvolcurve.hpp>
-#include <ored/marketdata/inflationcapfloorpricesurface.hpp>
 #include <ored/marketdata/inflationcapfloorvolcurve.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
 #include <ored/marketdata/inmemoryloader.hpp>
