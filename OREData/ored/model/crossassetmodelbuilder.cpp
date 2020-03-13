@@ -50,18 +50,17 @@
 namespace ore {
 namespace data {
 
-CrossAssetModelBuilder::CrossAssetModelBuilder(const boost::shared_ptr<ore::data::Market>& market,
-                                               const boost::shared_ptr<CrossAssetModelData>& config,
-                                               const std::string& configurationLgmCalibration,
-                                               const std::string& configurationFxCalibration,
-                                               const std::string& configurationEqCalibration,
-                                               const std::string& configurationInfCalibration,
-                                               const std::string& configurationFinalModel, const DayCounter& dayCounter,
-                                               const bool dontCalibrate, const bool continueOnError)
+CrossAssetModelBuilder::CrossAssetModelBuilder(
+    const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<CrossAssetModelData>& config,
+    const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
+    const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
+    const std::string& configurationFinalModel, const DayCounter& dayCounter, const bool dontCalibrate,
+    const bool continueOnError, const std::string& referenceCalibrationGrid)
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration), configurationFinalModel_(configurationFinalModel),
       dayCounter_(dayCounter), dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
+      referenceCalibrationGrid_(referenceCalibrationGrid),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
     buildModel();
@@ -170,8 +169,9 @@ void CrossAssetModelBuilder::buildModel() const {
     for (Size i = 0; i < config_->irConfigs().size(); i++) {
         boost::shared_ptr<IrLgmData> ir = config_->irConfigs()[i];
         DLOG("IR Parametrization " << i << " ccy " << ir->ccy());
-        boost::shared_ptr<LgmBuilder> builder = boost::make_shared<LgmBuilder>(
-            market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_);
+        boost::shared_ptr<LgmBuilder> builder =
+            boost::make_shared<LgmBuilder>(market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance(),
+                                           continueOnError_, referenceCalibrationGrid_);
         if (dontCalibrate_)
             builder->freeze();
         irBuilder.push_back(builder);
@@ -205,7 +205,7 @@ void CrossAssetModelBuilder::buildModel() const {
                                                                  << " does not match domestic ccy " << domesticCcy);
 
         boost::shared_ptr<FxBsBuilder> builder =
-            boost::make_shared<FxBsBuilder>(market_, fx, configurationFxCalibration_);
+            boost::make_shared<FxBsBuilder>(market_, fx, configurationFxCalibration_, referenceCalibrationGrid_);
         boost::shared_ptr<QuantExt::FxBsParametrization> parametrization = builder->parametrization();
 
         fxOptionBaskets_[i] = builder->optionBasket();
@@ -224,8 +224,8 @@ void CrossAssetModelBuilder::buildModel() const {
         QuantLib::Currency eqCcy = ore::data::parseCurrency(eq->currency());
         QL_REQUIRE(std::find(currencies.begin(), currencies.end(), eqCcy.code()) != currencies.end(),
                    "Currency (" << eqCcy << ") for equity " << eqName << " not covered by CrossAssetModelData");
-        boost::shared_ptr<EqBsBuilder> builder =
-            boost::make_shared<EqBsBuilder>(market_, eq, domesticCcy, configurationEqCalibration_);
+        boost::shared_ptr<EqBsBuilder> builder = boost::make_shared<EqBsBuilder>(
+            market_, eq, domesticCcy, configurationEqCalibration_, referenceCalibrationGrid_);
         boost::shared_ptr<QuantExt::EqBsParametrization> parametrization = builder->parametrization();
         eqOptionBaskets_[i] = builder->optionBasket();
         eqParametrizations.push_back(parametrization);
@@ -242,7 +242,7 @@ void CrossAssetModelBuilder::buildModel() const {
         boost::shared_ptr<InfDkData> inf = config_->infConfigs()[i];
         string infIndex = inf->infIndex();
         boost::shared_ptr<InfDkBuilder> builder =
-            boost::make_shared<InfDkBuilder>(market_, inf, configurationInfCalibration_);
+            boost::make_shared<InfDkBuilder>(market_, inf, configurationInfCalibration_, referenceCalibrationGrid_);
         boost::shared_ptr<QuantExt::InfDkParametrization> parametrization = builder->parametrization();
         infCapFloorBaskets_[i] = builder->optionBasket();
         infParametrizations.push_back(parametrization);

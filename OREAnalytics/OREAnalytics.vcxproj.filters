@@ -42,9 +42,6 @@
     <ClInclude Include="orea\engine\valuationengine.hpp">
       <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="orea\simulation\dategrid.hpp">
-      <Filter>simulation</Filter>
-    </ClInclude>
     <ClInclude Include="orea\simulation\simmarket.hpp">
       <Filter>simulation</Filter>
     </ClInclude>
@@ -186,9 +183,6 @@
     </ClCompile>
     <ClCompile Include="orea\engine\valuationengine.cpp">
       <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="orea\simulation\dategrid.cpp">
-      <Filter>simulation</Filter>
     </ClCompile>
     <ClCompile Include="orea\simulation\simmarket.cpp">
       <Filter>simulation</Filter>

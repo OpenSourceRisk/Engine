@@ -28,7 +28,8 @@ AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<Lin
                                                      const Handle<YieldTermStructure>& discountCurve,
                                                      const FloatSpreadMapping floatSpreadMapping)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(model->parametrization()),
-      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping) {
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping),
+      caching_(false) {
     registerWith(model);
     registerWith(c_);
 }
@@ -37,7 +38,8 @@ AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<Cro
                                                      const Handle<YieldTermStructure>& discountCurve,
                                                      const FloatSpreadMapping floatSpreadMapping)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(model->irlgm1f(ccy)),
-      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping) {
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping),
+      caching_(false) {
     registerWith(model);
     registerWith(c_);
 }
@@ -46,8 +48,22 @@ AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<IrL
                                                      const Handle<YieldTermStructure>& discountCurve,
                                                      const FloatSpreadMapping floatSpreadMapping)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(irlgm1f),
-      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping) {
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping),
+      caching_(false) {
     registerWith(c_);
+}
+
+void AnalyticLgmSwaptionEngine::enableCache(const bool lgm_H_constant, const bool lgm_alpha_constant) {
+    caching_ = true;
+    lgm_H_constant_ = lgm_H_constant;
+    lgm_alpha_constant_ = lgm_alpha_constant;
+    clearCache();
+}
+
+void AnalyticLgmSwaptionEngine::clearCache() {
+    S_.clear();             // indicates that H / alpha independent variables are not yet computed
+    Hj_.clear();            // indicates that H dependent variables not not yet computed
+    zetaex_ = Null<Real>(); // indicates that alpha dependent variables are not yet computed
 }
 
 void AnalyticLgmSwaptionEngine::calculate() const {
@@ -65,91 +81,110 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         return;
     }
 
-    VanillaSwap swap = *arguments_.swap;
-    Option::Type type = arguments_.type == VanillaSwap::Payer ? Option::Call : Option::Put;
-    Schedule fixedSchedule = swap.fixedSchedule();
-    Schedule floatSchedule = swap.floatingSchedule();
+    if (!caching_ || S_.empty()) {
 
-    j1_ = std::lower_bound(fixedSchedule.dates().begin(), fixedSchedule.dates().end(), expiry) -
-          fixedSchedule.dates().begin();
-    k1_ = std::lower_bound(floatSchedule.dates().begin(), floatSchedule.dates().end(), expiry) -
-          floatSchedule.dates().begin();
+        Option::Type type = arguments_.type == VanillaSwap::Payer ? Option::Call : Option::Put;
+        const Schedule& fixedSchedule = arguments_.swap->fixedSchedule();
+        const Schedule& floatSchedule = arguments_.swap->floatingSchedule();
 
-    // compute S_i, i.e. equivalent fixed rate spreads compensating for
-    // a) a possibly non-zero float spread and
-    // b) a spread between the ibor indices forwarding curve and the
-    //     discounting curve
-    // here, we do not work with a spread corrections directly, but
-    // with this multiplied by the nominal and accrual basis,
-    // so S_i is really an amount correction.
+        j1_ = std::lower_bound(fixedSchedule.dates().begin(), fixedSchedule.dates().end(), expiry) -
+              fixedSchedule.dates().begin();
+        k1_ = std::lower_bound(floatSchedule.dates().begin(), floatSchedule.dates().end(), expiry) -
+              floatSchedule.dates().begin();
 
-    S_.resize(arguments_.fixedCoupons.size() - j1_);
-    for (Size i = 0; i < S_.size(); ++i) {
-        S_[i] = 0.0;
-    }
-    S_m1 = 0.0;
-    Size ratio = static_cast<Size>(
-        static_cast<Real>(arguments_.floatingCoupons.size()) / static_cast<Real>(arguments_.fixedCoupons.size()) + 0.5);
-    QL_REQUIRE(ratio >= 1, "floating leg's payment frequency must be equal or "
-                           "higher than fixed leg's payment frequency in "
-                           "analytic lgm swaption engine");
+        // compute S_i, i.e. equivalent fixed rate spreads compensating for
+        // a) a possibly non-zero float spread and
+        // b) a spread between the ibor indices forwarding curve and the
+        //     discounting curve
+        // here, we do not work with a spread corrections directly, but
+        // with this multiplied by the nominal and accrual basis,
+        // so S_i is really an amount correction.
 
-    Size k = k1_;
-    boost::shared_ptr<IborIndex> flatIbor = swap.iborIndex()->clone(c_);
-    for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
-        Real sum1 = 0.0, sum2 = 0.0;
-        for (Size rr = 0; rr < ratio && k < arguments_.floatingCoupons.size(); ++rr, ++k) {
-            Real amount = arguments_.floatingCoupons[k];
-            Real lambda1 = 0.0, lambda2 = 1.0;
-            if (floatSpreadMapping_ == proRata) {
-                // we do not use the exact pay dates but the ratio to determine
-                // the distance to the adjacent payment dates
-                lambda2 = static_cast<Real>(rr + 1) / static_cast<Real>(ratio);
-                lambda1 = 1.0 - lambda2;
+        S_.resize(arguments_.fixedCoupons.size() - j1_);
+        for (Size i = 0; i < S_.size(); ++i) {
+            S_[i] = 0.0;
+        }
+        S_m1 = 0.0;
+        Size ratio = static_cast<Size>(static_cast<Real>(arguments_.floatingCoupons.size()) /
+                                           static_cast<Real>(arguments_.fixedCoupons.size()) +
+                                       0.5);
+        QL_REQUIRE(ratio >= 1, "floating leg's payment frequency must be equal or "
+                               "higher than fixed leg's payment frequency in "
+                               "analytic lgm swaption engine");
+
+        Size k = k1_;
+        // The method reduces the problem to a one curve configuration w.r.t. the discount curve and
+        // apply a correction for the discount curve / forwarding curve spread. Furthermore the method
+        // assumes that no historical fixings are present in the floating rate coupons. Therefore we
+        // set up a benchmark index "flatIbor" with forwarding curve = discounting curve and without
+        // historical fixings against which the correction is computed. We also ensure that the fixing
+        // dates are always >= today.
+        auto index = arguments_.swap->iborIndex();
+        auto flatIbor = boost::make_shared<IborIndex>(
+            index->familyName() + " (no fixings)", index->tenor(), index->fixingDays(), index->currency(),
+            index->fixingCalendar(), index->businessDayConvention(), index->endOfMonth(), index->dayCounter(), c_);
+        for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
+            Real sum1 = 0.0, sum2 = 0.0;
+            for (Size rr = 0; rr < ratio && k < arguments_.floatingCoupons.size(); ++rr, ++k) {
+                Real amount = arguments_.floatingCoupons[k];
+                Real lambda1 = 0.0, lambda2 = 1.0;
+                if (floatSpreadMapping_ == proRata) {
+                    // we do not use the exact pay dates but the ratio to determine
+                    // the distance to the adjacent payment dates
+                    lambda2 = static_cast<Real>(rr + 1) / static_cast<Real>(ratio);
+                    lambda1 = 1.0 - lambda2;
+                }
+                if (amount != Null<Real>()) {
+                    Date fixingDate =
+                        flatIbor->fixingCalendar().adjust(std::max(arguments_.floatingFixingDates[k], reference));
+                    Real flatAmount = flatIbor->fixing(fixingDate) *
+                                      arguments_.floatingAccrualTimes[k] * arguments_.nominal;
+                    Real correction = (amount - flatAmount) * c_->discount(arguments_.floatingPayDates[k]);
+                    sum1 += lambda1 * correction;
+                    sum2 += lambda2 * correction;
+                } else {
+                    // if no amount is given, we do not need a spread correction
+                    // due to different forward / discounting curves since then
+                    // no curve is attached to the swap's ibor index and so we
+                    // assume a one curve setup;
+                    // but we can still have a float spread that has to be converted
+                    // into a fixed leg's payment
+                    Real correction = arguments_.nominal * arguments_.floatingSpreads[k] *
+                                      arguments_.floatingAccrualTimes[k] * c_->discount(arguments_.floatingPayDates[k]);
+                    sum1 += lambda1 * correction;
+                    sum2 += lambda2 * correction;
+                }
             }
-            if (amount != Null<Real>()) {
-                Real flatAmount = flatIbor->fixing(arguments_.floatingFixingDates[k]) *
-                                  arguments_.floatingAccrualTimes[k] * arguments_.nominal;
-                Real correction = (amount - flatAmount) * c_->discount(arguments_.floatingPayDates[k]);
-                sum1 += lambda1 * correction;
-                sum2 += lambda2 * correction;
+            if (j > j1_) {
+                S_[j - j1_ - 1] += sum1 / c_->discount(arguments_.fixedPayDates[j - 1]);
             } else {
-                // if no amount is given, we do not need a spread correction
-                // due to different forward / discounting curves since then
-                // no curve is attached to the swap's ibor index and so we
-                // assume a one curve setup;
-                // but we can still have a float spread that has to be converted
-                // into a fixed leg's payment
-                Real correction = arguments_.nominal * arguments_.floatingSpreads[k] *
-                                  arguments_.floatingAccrualTimes[k] * c_->discount(arguments_.floatingPayDates[k]);
-                sum1 += lambda1 * correction;
-                sum2 += lambda2 * correction;
+                S_m1 += sum1 / c_->discount(arguments_.floatingResetDates[k1_]);
             }
+            S_[j - j1_] += sum2 / c_->discount(arguments_.fixedPayDates[j]);
         }
-        if (j > j1_) {
-            S_[j - j1_ - 1] += sum1 / c_->discount(arguments_.fixedPayDates[j - 1]);
-        } else {
-            S_m1 += sum1 / c_->discount(arguments_.floatingResetDates[k1_]);
+
+        w_ = type == Option::Call ? -1.0 : 1.0;
+        D0_ = c_->discount(arguments_.floatingResetDates[k1_]);
+        Dj_.resize(arguments_.fixedCoupons.size() - j1_);
+        for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
+            Dj_[j - j1_] = c_->discount(arguments_.fixedPayDates[j - j1_]);
         }
-        S_[j - j1_] += sum2 / c_->discount(arguments_.fixedPayDates[j]);
     }
 
-    Real w = type == Option::Call ? -1.0 : 1.0;
+    if (!caching_ || !lgm_H_constant_ || Hj_.empty()) {
+        // it is a requirement that H' does not change its sign,
+        // with u = -1.0 we handle the case H' < 0
+        u_ = p_->Hprime(0.0) > 0.0 ? 1.0 : -1.0;
 
-    // it is a requirement that H' does not change its sign,
-    // with u = -1.0 we handle the case H' < 0
-    Real u = p_->Hprime(0.0) > 0.0 ? 1.0 : -1.0;
+        H0_ = p_->H(p_->termStructure()->timeFromReference(arguments_.floatingResetDates[k1_]));
+        Hj_.resize(arguments_.fixedCoupons.size() - j1_);
+        for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
+            Hj_[j - j1_] = p_->H(p_->termStructure()->timeFromReference(arguments_.fixedPayDates[j]));
+        }
+    }
 
-    // do the actual pricing
-
-    zetaex_ = p_->zeta(p_->termStructure()->timeFromReference(expiry));
-    H0_ = p_->H(p_->termStructure()->timeFromReference(arguments_.floatingResetDates[k1_]));
-    D0_ = c_->discount(arguments_.floatingResetDates[k1_]);
-    Hj_.resize(arguments_.fixedCoupons.size() - j1_);
-    Dj_.resize(arguments_.fixedCoupons.size() - j1_);
-    for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
-        Hj_[j - j1_] = p_->H(p_->termStructure()->timeFromReference(arguments_.fixedPayDates[j]));
-        Dj_[j - j1_] = c_->discount(arguments_.fixedPayDates[j - j1_]);
+    if (!caching_ || !lgm_alpha_constant_ || zetaex_ == Null<Real>()) {
+        zetaex_ = p_->zeta(p_->termStructure()->timeFromReference(expiry));
     }
 
     Brent b;
@@ -164,12 +199,12 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     Real sqrt_zetaex = std::sqrt(zetaex_);
     Real sum = 0.0;
     for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
-        sum += w * (arguments_.fixedCoupons[j] - S_[j - j1_]) * Dj_[j - j1_] *
-               N(u * w * (yStar + (Hj_[j - j1_] - H0_) * zetaex_) / sqrt_zetaex);
+        sum += w_ * (arguments_.fixedCoupons[j] - S_[j - j1_]) * Dj_[j - j1_] *
+               N(u_ * w_ * (yStar + (Hj_[j - j1_] - H0_) * zetaex_) / sqrt_zetaex);
     }
-    sum += -w * S_m1 * D0_ * N(u * w * yStar / sqrt_zetaex);
-    sum += w * (arguments_.nominal * Dj_.back() * N(u * w * (yStar + (Hj_.back() - H0_) * zetaex_) / sqrt_zetaex) -
-                arguments_.nominal * D0_ * N(u * w * yStar / sqrt_zetaex));
+    sum += -w_ * S_m1 * D0_ * N(u_ * w_ * yStar / sqrt_zetaex);
+    sum += w_ * (arguments_.nominal * Dj_.back() * N(u_ * w_ * (yStar + (Hj_.back() - H0_) * zetaex_) / sqrt_zetaex) -
+                 arguments_.nominal * D0_ * N(u_ * w_ * yStar / sqrt_zetaex));
     results_.value = sum;
 
     results_.additionalResults["fixedAmountCorrectionSettlement"] = S_m1;

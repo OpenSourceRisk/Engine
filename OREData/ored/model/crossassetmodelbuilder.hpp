@@ -74,8 +74,9 @@ public:
         //! calibrate the model?
         const bool dontCalibrate = false,
         //! continue if bootstrap error exceeds tolerance
-        const bool continueOnError = false
-        );
+        const bool continueOnError = false,
+        //! reference calibration grid
+        const std::string& referenceCalibrationGrid_ = "");
 
     //! Default destructor
     ~CrossAssetModelBuilder() {}
@@ -125,6 +126,7 @@ private:
     const DayCounter dayCounter_;
     const bool dontCalibrate_;
     const bool continueOnError_;
+    const std::string referenceCalibrationGrid_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;

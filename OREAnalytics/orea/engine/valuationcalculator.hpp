@@ -24,7 +24,7 @@
 #pragma once
 
 #include <orea/cube/npvcube.hpp>
-#include <orea/simulation/dategrid.hpp>
+#include <ored/utilities/dategrid.hpp>
 #include <orea/simulation/simmarket.hpp>
 #include <ored/portfolio/trade.hpp>
 
