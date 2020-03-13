@@ -14,7 +14,6 @@ configuration/equitycurveconfig.cpp
 configuration/equityvolcurveconfig.cpp
 configuration/fxvolcurveconfig.cpp
 configuration/genericyieldvolcurveconfig.cpp
-configuration/inflationcapfloorpricesurfaceconfig.cpp
 configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
 configuration/volatilityconfig.cpp
@@ -38,7 +37,6 @@ marketdata/fxspot.cpp
 marketdata/fxtriangulation.cpp
 marketdata/fxvolcurve.cpp
 marketdata/genericyieldvolcurve.cpp
-marketdata/inflationcapfloorpricesurface.cpp
 marketdata/inflationcapfloorvolcurve.cpp
 marketdata/inflationcurve.cpp
 marketdata/inmemoryloader.cpp
@@ -83,6 +81,7 @@ portfolio/enginedata.cpp
 portfolio/enginefactory.cpp
 portfolio/envelope.cpp
 portfolio/equityforward.cpp
+portfolio/equityidentifier.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
 portfolio/fixingdates.cpp
@@ -112,6 +111,7 @@ utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
 utilities/currencycheck.cpp
+utilities/dategrid.cpp
 utilities/flowanalysis.cpp
 utilities/indexparser.cpp
 utilities/log.cpp
@@ -168,7 +168,6 @@ marketdata/fxspot.hpp
 marketdata/fxtriangulation.hpp
 marketdata/fxvolcurve.hpp
 marketdata/genericyieldvolcurve.hpp
-marketdata/inflationcapfloorpricesurface.hpp
 marketdata/inflationcapfloorvolcurve.hpp
 marketdata/inflationcurve.hpp
 marketdata/inmemoryloader.hpp
@@ -204,9 +203,9 @@ portfolio/bond.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
+portfolio/builders/capflooredcpileg.hpp
 portfolio/builders/capfloorediborleg.hpp
 portfolio/builders/capflooredyoyleg.hpp
-portfolio/builders/capflooredcpileg.hpp
 portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
 portfolio/builders/commodityforward.hpp
@@ -231,6 +230,7 @@ portfolio/enginedata.hpp
 portfolio/enginefactory.hpp
 portfolio/envelope.hpp
 portfolio/equityforward.hpp
+portfolio/equityidentifier.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
 portfolio/fixingdates.hpp
@@ -264,6 +264,7 @@ utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
 utilities/currencycheck.hpp
+utilities/dategrid.hpp
 utilities/flowanalysis.hpp
 utilities/indexparser.hpp
 utilities/log.hpp

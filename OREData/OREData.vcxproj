@@ -79,7 +79,6 @@
     <ClInclude Include="ored\marketdata\fxtriangulation.hpp" />
     <ClInclude Include="ored\marketdata\fxvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\genericyieldvolcurve.hpp" />
-    <ClInclude Include="ored\marketdata\inflationcapfloorpricesurface.hpp" />
     <ClInclude Include="ored\marketdata\inflationcurve.hpp" />
     <ClInclude Include="ored\marketdata\loader.hpp" />
     <ClInclude Include="ored\marketdata\market.hpp" />
@@ -176,6 +175,7 @@
     <ClInclude Include="ored\utilities\correlationmatrix.hpp" />
     <ClInclude Include="ored\utilities\csvfilereader.hpp" />
     <ClInclude Include="ored\utilities\currencycheck.hpp" />
+    <ClInclude Include="ored\utilities\dategrid.hpp" />
     <ClInclude Include="ored\utilities\flowanalysis.hpp" />
     <ClInclude Include="ored\utilities\indexparser.hpp" />
     <ClInclude Include="ored\utilities\log.hpp" />
@@ -229,7 +229,6 @@
     <ClCompile Include="ored\marketdata\fxtriangulation.cpp" />
     <ClCompile Include="ored\marketdata\fxvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\genericyieldvolcurve.cpp" />
-    <ClCompile Include="ored\marketdata\inflationcapfloorpricesurface.cpp" />
     <ClCompile Include="ored\marketdata\inflationcurve.cpp" />
     <ClCompile Include="ored\marketdata\market.cpp" />
     <ClCompile Include="ored\marketdata\marketdatum.cpp" />
@@ -304,6 +303,7 @@
     <ClCompile Include="ored\utilities\correlationmatrix.cpp" />
     <ClCompile Include="ored\utilities\csvfilereader.cpp" />
     <ClCompile Include="ored\utilities\currencycheck.cpp" />
+    <ClCompile Include="ored\utilities\dategrid.cpp" />
     <ClCompile Include="ored\utilities\flowanalysis.cpp" />
     <ClCompile Include="ored\utilities\indexparser.cpp" />
     <ClCompile Include="ored\utilities\log.cpp" />

@@ -48,7 +48,6 @@
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/genericyieldvolcurve.hpp>
-#include <ored/marketdata/inflationcapfloorpricesurface.hpp>
 #include <ored/marketdata/inflationcapfloorvolcurve.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
 #include <ored/marketdata/inmemoryloader.hpp>
@@ -111,6 +110,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/equityforward.hpp>
+#include <ored/portfolio/equityidentifier.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityswap.hpp>
 #include <ored/portfolio/fixingdates.hpp>
@@ -144,6 +144,7 @@
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/currencycheck.hpp>
+#include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>

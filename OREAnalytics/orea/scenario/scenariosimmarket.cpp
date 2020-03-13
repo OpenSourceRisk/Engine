@@ -1334,7 +1334,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             LOG("Simulating zero inflation cap/floor vols for index name " << name);
                             vector<Period> optionTenors = parameters->zeroInflationCapFloorVolExpiries(name);
                             vector<Date> optionDates(optionTenors.size());
-                            vector<Real> strikes = parameters->zeroInflationCapFloorVolStrikes();
+                            vector<Real> strikes = parameters->zeroInflationCapFloorVolStrikes(name);
                             vector<vector<Handle<Quote>>> quotes(
                                 optionTenors.size(), vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
                             for (Size i = 0; i < optionTenors.size(); ++i) {
@@ -1568,23 +1568,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                     }
                 }
                 break;
-
-            // case RiskFactorKey::KeyType::CommoditySpot:
-            //     for (const auto& name : param.second.second) {
-            //         try {
-            //             Real spot = initMarket->commoditySpot(name, configuration)->value();
-            //             DLOG("adding " << name << " commodity spot price");
-            //             boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(spot);
-            //             commoditySpots_.emplace(piecewise_construct,
-            //                                     forward_as_tuple(Market::defaultConfiguration, name),
-            //                                     forward_as_tuple(q));
-            //             simDataTmp.emplace(piecewise_construct, forward_as_tuple(param.first, name),
-            //                                forward_as_tuple(q));
-            //         } catch (const std::exception& e) {
-            //             processException(continueOnError, e);
-            //         }
-            //     }
-            //     break;
 
             case RiskFactorKey::KeyType::CommodityCurve:
                 for (const auto& name : param.second.second) {

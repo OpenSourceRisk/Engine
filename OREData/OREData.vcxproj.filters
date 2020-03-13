@@ -288,9 +288,6 @@
     <ClInclude Include="ored\configuration\inflationcurveconfig.hpp">
       <Filter>configuration</Filter>
     </ClInclude>
-    <ClInclude Include="ored\marketdata\inflationcapfloorpricesurface.hpp">
-      <Filter>marketdata</Filter>
-    </ClInclude>
     <ClInclude Include="ored\marketdata\inflationcurve.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
@@ -479,6 +476,9 @@
     </ClInclude>
     <ClInclude Include="ored\portfolio\equityidentifier.hpp">
       <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\utilities\dategrid.hpp">
+      <Filter>utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -704,9 +704,6 @@
     <ClCompile Include="ored\configuration\inflationcurveconfig.cpp">
       <Filter>configuration</Filter>
     </ClCompile>
-    <ClCompile Include="ored\marketdata\inflationcapfloorpricesurface.cpp">
-      <Filter>marketdata</Filter>
-    </ClCompile>
     <ClCompile Include="ored\marketdata\inflationcurve.cpp">
       <Filter>marketdata</Filter>
     </ClCompile>
@@ -847,6 +844,9 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\equityidentifier.cpp">
       <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\utilities\dategrid.cpp">
+      <Filter>utilities</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -85,12 +85,20 @@ public:
 
     void calculate() const;
 
+    /* If enabled, the underlying instrument should not changed between two pricings or the cache has to be
+       cleared. Furhtermore it is assumed that all the market data stays constant between two pricings.
+       Regarding the LGM parameters it is assumed that either H(t) or alpha(t) (or both) is constant, depending
+       on the passed parameters here. enableCache() should only be called once on an instance of this class. */
+    void enableCache(const bool lgm_H_constant = true, const bool lgm_alpha_constant = false);
+    void clearCache();
+
 private:
     Real yStarHelper(const Real y) const;
     const boost::shared_ptr<IrLgm1fParametrization> p_;
     const Handle<YieldTermStructure> c_;
     const FloatSpreadMapping floatSpreadMapping_;
-    mutable Real H0_, D0_, zetaex_, S_m1;
+    bool caching_, lgm_H_constant_, lgm_alpha_constant_;
+    mutable Real H0_, D0_, zetaex_, S_m1, u_, w_;
     mutable std::vector<Real> S_, Hj_, Dj_;
     mutable Size j1_, k1_;
 };

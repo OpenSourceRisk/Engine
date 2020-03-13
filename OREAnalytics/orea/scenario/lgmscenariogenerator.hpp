@@ -26,7 +26,7 @@
 #include <orea/scenario/scenariofactory.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/simulation/dategrid.hpp>
+#include <ored/utilities/dategrid.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/lgm.hpp>
 
