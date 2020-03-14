@@ -846,6 +846,9 @@
     <ClInclude Include="qle\termstructures\overnightindexfutureratehelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\currencies\europe.hpp">
+      <Filter>currencies</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1452,6 +1455,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\overnightindexfutureratehelper.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\currencies\europe.cpp">
+      <Filter>currencies</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
