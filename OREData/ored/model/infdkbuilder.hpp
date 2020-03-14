@@ -54,7 +54,9 @@ public:
         //! INF model parameters/dscription
         const boost::shared_ptr<InfDkData>& data,
         //! Market configuration to use
-        const std::string& configuration = Market::defaultConfiguration);
+        const std::string& configuration = Market::defaultConfiguration,
+        //! the reference calibration grid
+        const std::string& referenceCalibrationGrid = "");
 
     //! \name Inspectors
     //@{
@@ -81,9 +83,13 @@ private:
     const boost::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
     const boost::shared_ptr<InfDkData> data_;
+    const std::string referenceCalibrationGrid_;
 
     // computed
     boost::shared_ptr<QuantExt::InfDkParametrization> parametrization_;
+
+    // which option in data->optionExpries() are actually in the basket?
+    mutable std::vector<bool> optionActive_;
     mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
     mutable Array optionExpiries_;
 

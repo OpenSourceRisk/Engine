@@ -48,6 +48,7 @@
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
+#include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
 #include <qle/time/yearcounter.hpp>
 
@@ -579,7 +580,8 @@ Currency parseCurrency(const string& s) {
         {"CLF", CLFCurrency()}, {"EGP", EGPCurrency()}, {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()},
         {"VND", VNDCurrency()}, {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()},
         {"MAD", MADCurrency()}, {"UYU", UYUCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()},
-        {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}};
+        {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"KES", KESCurrency()}, {"LKR", LKRCurrency()},
+        {"RSD", RSDCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {

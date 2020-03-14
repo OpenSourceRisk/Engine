@@ -83,7 +83,6 @@
     <ClInclude Include="orea\scenario\simplescenariofactory.hpp" />
     <ClInclude Include="orea\scenario\stressscenariodata.hpp" />
     <ClInclude Include="orea\scenario\stressscenariogenerator.hpp" />
-    <ClInclude Include="orea\simulation\dategrid.hpp" />
     <ClInclude Include="orea\simulation\fixingmanager.hpp" />
     <ClInclude Include="orea\simulation\simmarket.hpp" />
   </ItemGroup>
@@ -124,7 +123,6 @@
     <ClCompile Include="orea\scenario\simplescenario.cpp" />
     <ClCompile Include="orea\scenario\stressscenariodata.cpp" />
     <ClCompile Include="orea\scenario\stressscenariogenerator.cpp" />
-    <ClCompile Include="orea\simulation\dategrid.cpp" />
     <ClCompile Include="orea\simulation\fixingmanager.cpp" />
     <ClCompile Include="orea\simulation\simmarket.cpp" />
   </ItemGroup>

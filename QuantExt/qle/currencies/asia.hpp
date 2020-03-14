@@ -108,5 +108,17 @@ class CNHCurrency : public Currency {
 public:
     CNHCurrency();
 };
+
+//! Sri Lankan rupee
+/*! The ISO three-letter code is LKR; there numeric code is 144.
+ It is divided into 100 cents.
+
+ \ingroup currencies
+*/
+class LKRCurrency : public Currency {
+public:
+    LKRCurrency();
+};
+
 } // namespace QuantExt
 #endif

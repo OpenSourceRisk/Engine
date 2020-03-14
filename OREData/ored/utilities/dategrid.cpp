@@ -17,7 +17,7 @@
 */
 
 #include <boost/algorithm/string.hpp>
-#include <orea/simulation/dategrid.hpp>
+#include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/settings.hpp>
@@ -27,7 +27,7 @@ using namespace QuantLib;
 using namespace std;
 
 namespace ore {
-namespace analytics {
+namespace data {
 
 DateGrid::DateGrid()
     : dates_(1, Settings::instance().evaluationDate()), tenors_(1, 0 * Days), times_(1, 0.0),
