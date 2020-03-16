@@ -11,9 +11,6 @@ RUN mkdir /ore/App
 
 COPY --from=env_ore /usr/local/bin /ore/App
 
-# Without this, the build fails: https://github.com/moby/moby/issues/37965
-RUN true
-
 COPY --from=env_ore /usr/local/lib /usr/local/lib
 
 # Install Python solely to run the examples
