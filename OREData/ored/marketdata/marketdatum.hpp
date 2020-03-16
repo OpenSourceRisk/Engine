@@ -148,6 +148,8 @@ protected:
     QuoteType quoteType_;
 };
 
+std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type);
+
 //! Money market data class
 /*!
   This class holds single market points of type
