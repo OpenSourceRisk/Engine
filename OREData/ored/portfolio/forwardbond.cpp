@@ -68,6 +68,11 @@ Leg joinLegs(const std::vector<Leg>& legs) {
 void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("ForwardBond::build() called for trade " << id());
 
+    // check data requirements (can not enforce this is fromXML(), since the fields
+    // might be filled via reference data in a derived class)
+    QL_REQUIRE(!referenceCurveId_.empty(), "reference curve id required");
+    QL_REQUIRE(!settlementDays_.empty(), "settlement days required");
+
     // Clear the separateLegs_ member here. Should be done in reset() but it is not virtual
     separateLegs_.clear();
 
