@@ -175,7 +175,6 @@
       </Seasonality>
     </InflationCurve>
   </InflationCurves>
-  <InflationCapFloorPriceSurfaces/>
   <InflationCapFloorVolatilities>
     <InflationCapFloorVolatility>
       <CurveId>EUHICPXT_ZC_CF_N</CurveId>

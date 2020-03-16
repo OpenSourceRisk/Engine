@@ -102,8 +102,9 @@ public:
     const string& compensationPaymentDate() const { return compensationPaymentDate_; }
     const string& maturityDate() const { return maturityDate_; }
     const string& currency() const { return currency_; }
+    const string& bondNotional() const { return bondNotional_; }
 
-private:
+protected:
     string issuerId_;
     string creditCurveId_;
     string securityId_;
@@ -120,6 +121,7 @@ private:
     string settlementDirty_;
     string compensationPayment_;
     string compensationPaymentDate_;
+    string bondNotional_;
     std::vector<LegData> coupons_;
     Real faceAmount_;
     string maturityDate_;

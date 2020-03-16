@@ -162,8 +162,6 @@
       <Tolerance>0.000000000001</Tolerance>
     </InflationCurve>
   </InflationCurves>
-  <InflationCapFloorPriceSurfaces>
-  </InflationCapFloorPriceSurfaces>
   <InflationCapFloorVolatilities>
   </InflationCapFloorVolatilities>
   <EquityCurves>

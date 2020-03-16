@@ -188,7 +188,7 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
             }
         }
     }
-    return npvValue;
+    return npvValue * arguments_.bondNotional;
 }
 
 boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPresentValue(
@@ -212,7 +212,8 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
     boost::shared_ptr<Bond> bd = arguments_.underlying;
 
     // the case of dirty strike corresponds here to an accrual of 0.0. This will be convenient in the code.
-    Real accruedAmount = dirty ? 0.0 : bd->accruedAmount(computeDate) * bd->notional(computeDate) / 100;
+    Real accruedAmount =
+        dirty ? 0.0 : bd->accruedAmount(computeDate) * bd->notional(computeDate) / 100 * arguments_.bondNotional;
 
     /* Discounting and compounding, taking account of possible bond default before delivery*/
 
@@ -254,8 +255,9 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
             Date defaultDate = effectiveStartDate + (effectiveEndDate - effectiveStartDate) / 2;
             Probability P = creditCurvePtr->defaultProbability(effectiveStartDate, effectiveEndDate);
 
-            forwardContractPresentValue += (*arguments_.payoff)(coupon->nominal() * recoveryVal - accruedAmount) * P *
-                                           (discountCurve_->discount(defaultDate));
+            forwardContractPresentValue +=
+                (*arguments_.payoff)(coupon->nominal() * arguments_.bondNotional * recoveryVal - accruedAmount) * P *
+                (discountCurve_->discount(defaultDate));
         }
     }
 
@@ -270,8 +272,9 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
             Date defaultDate = startDate + (endDate - startDate) / 2;
             Probability P = creditCurvePtr->defaultProbability(startDate, endDate);
 
-            forwardContractPresentValue += (*arguments_.payoff)(firstCoupon->nominal() * recoveryVal - accruedAmount) *
-                                           P * (discountCurve_->discount(defaultDate));
+            forwardContractPresentValue +=
+                (*arguments_.payoff)(firstCoupon->nominal() * arguments_.bondNotional * recoveryVal - accruedAmount) *
+                P * (discountCurve_->discount(defaultDate));
             startDate = stepDate;
         }
     }
@@ -291,8 +294,8 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
                 Probability P = creditCurvePtr->defaultProbability(startDate, endDate);
 
                 forwardContractPresentValue +=
-                    (*arguments_.payoff)(redemption->amount() * recoveryVal - accruedAmount) * P *
-                    (discountCurve_->discount(defaultDate));
+                    (*arguments_.payoff)(redemption->amount() * arguments_.bondNotional * recoveryVal - accruedAmount) *
+                    P * (discountCurve_->discount(defaultDate));
                 startDate = stepDate;
             }
         }
