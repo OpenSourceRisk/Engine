@@ -26,6 +26,35 @@ using boost::bad_lexical_cast;
 namespace ore {
 namespace data {
 
+std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) {
+    switch (type) {
+    case MarketDatum::QuoteType::BASIS_SPREAD:
+        return out << "BASIS_SPREAD";
+    case MarketDatum::QuoteType::CREDIT_SPREAD:
+        return out << "CREDIT_SPREAD";
+    case MarketDatum::QuoteType::YIELD_SPREAD:
+        return out << "YIELD_SPREAD";
+    case MarketDatum::QuoteType::RATE:
+        return out << "RATE";
+    case MarketDatum::QuoteType::RATIO:
+        return out << "RATIO";
+    case MarketDatum::QuoteType::PRICE:
+        return out << "PRICE";
+    case MarketDatum::QuoteType::RATE_LNVOL:
+        return out << "RATE_LNVOL";
+    case MarketDatum::QuoteType::RATE_NVOL:
+        return out << "RATE_NVOL";
+    case MarketDatum::QuoteType::RATE_SLNVOL:
+        return out << "RATE_SLNVOL";
+    case MarketDatum::QuoteType::BASE_CORRELATION:
+        return out << "BASE_CORRELATION";
+    case MarketDatum::QuoteType::SHIFT:
+        return out << "SHIFT";
+    default:
+        return out << "?";
+    }
+}
+
 EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
                                      string equityName, string ccy, string expiry, string strike, bool isCall)
     : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_OPTION), eqName_(equityName), ccy_(ccy),
