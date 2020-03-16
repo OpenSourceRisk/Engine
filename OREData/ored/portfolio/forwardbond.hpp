@@ -103,7 +103,7 @@ public:
     const string& maturityDate() const { return maturityDate_; }
     const string& currency() const { return currency_; }
 
-private:
+protected:
     string issuerId_;
     string creditCurveId_;
     string securityId_;
