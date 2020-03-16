@@ -5,7 +5,7 @@ MAINTAINER Quaternion Risk Management
 LABEL Description="Build ORE and add to the QuantLib build environment"
 
 # Argument for number of cores to use while building
-ARG num_cores=16
+ARG num_cores
 
 # Copy ORE sources for libs and app
 COPY QuantExt /ore/QuantExt
@@ -24,7 +24,7 @@ RUN cd /ore \
   && cp Docker/CMakeLists_ORE.txt CMakeLists.txt \
   && mkdir -p build.ore && cd build.ore \
   && cmake .. -DBUILD_DOC=OFF\
-  && make  -j ${num_cores} \
+  && make -j ${num_cores} \
   && make install \
   && cd / \
   && rm -rf ore

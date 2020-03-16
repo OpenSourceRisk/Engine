@@ -11,9 +11,6 @@ RUN mkdir /ore/App
 
 COPY --from=env_ore /usr/local/bin /ore/App
 
-# Needed to prevent error on Jenkins. Not needed locally.
-RUN true
-
 COPY --from=env_ore /usr/local/lib /usr/local/lib
 
 # Install Python solely to run the examples
@@ -21,12 +18,10 @@ COPY --from=env_ore /usr/local/lib /usr/local/lib
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y dos2unix python3 python3-pip \
   && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
-
-RUN pip3 install matplotlib pandas
-
-# For the examples to work, input txt files need unix line endings
-RUN cd /ore/Examples && find -regex ".*\.\(sh\|txt\)" -exec dos2unix {} ';'
+  && rm -rf /var/lib/apt/lists/* \
+  && pip3 install matplotlib pandas \
+  && cd /ore/Examples \
+  && find -regex ".*\.\(sh\|txt\)" -exec dos2unix {} ';'
 
 WORKDIR /ore/Examples/Example_1
 

@@ -65,11 +65,15 @@ public:
     CurveConfigurations curveConfigs;
 
     F() {
+
+        // Clear previous output if any.
+        clearOutput(TEST_OUTPUT_PATH);
+
         // Read curve configurations from file
         curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
     }
 
-    ~F() { clearOutput(TEST_OUTPUT_PATH); }
+    ~F() { }
 };
 
 set<string> readQuotes(const string& filename) {

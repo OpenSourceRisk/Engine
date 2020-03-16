@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ql/time/date.hpp>
+#include <ored/configuration/equitycurveconfig.hpp>
 #include <sstream>
 
 namespace ore {
