@@ -47,7 +47,7 @@ public:
     //! Constructor
     ForwardBond(const boost::shared_ptr<QuantLib::Bond>& underlying, const boost::shared_ptr<Payoff>& payoff,
                 const Date& fwdMaturityDate, const bool settlementDirty, const Real compensationPayment,
-                const Date compensationPaymentDate);
+                const Date compensationPaymentDate, const Real bondNotional = 1.0);
 
     //! \name Instrument interface
     //@{
@@ -68,6 +68,7 @@ private:
     bool settlementDirty_;
     Real compensationPayment_;
     Date compensationPaymentDate_;
+    Real bondNotional_;
     mutable Real underlyingIncome_;
     mutable Real underlyingSpotValue_;
     mutable Real forwardValue_;
@@ -82,6 +83,7 @@ public:
     bool settlementDirty;
     Real compensationPayment;
     Date compensationPaymentDate;
+    Real bondNotional;
     void validate() const;
 };
 

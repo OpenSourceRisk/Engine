@@ -71,7 +71,9 @@ protected:
 
         Handle<YieldTermStructure> discountTS =
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        Handle<YieldTermStructure> incomeTS = market_->yieldCurve(incomeCurveId, configuration(MarketContext::pricing));
+        // fall back on reference curve if no income curve is specified
+        Handle<YieldTermStructure> incomeTS = market_->yieldCurve(
+            incomeCurveId.empty() ? referenceCurveId : incomeCurveId, configuration(MarketContext::pricing));
         Handle<DefaultProbabilityTermStructure> dpts;
         // credit curve may not always be used. If credit curve ID is empty proceed without it
         if (!creditCurveId.empty())
