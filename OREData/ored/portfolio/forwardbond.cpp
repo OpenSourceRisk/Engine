@@ -68,6 +68,11 @@ Leg joinLegs(const std::vector<Leg>& legs) {
 void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("ForwardBond::build() called for trade " << id());
 
+    // check data requirements (can not enforce this is fromXML(), since the fields
+    // might be filled via reference data in a derived class)
+    QL_REQUIRE(!referenceCurveId_.empty(), "reference curve id required");
+    QL_REQUIRE(!settlementDays_.empty(), "settlement days required");
+
     // Clear the separateLegs_ member here. Should be done in reset() but it is not virtual
     separateLegs_.clear();
 
@@ -139,9 +144,13 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             bond->registerWith(c);
     }
 
+    Real bondNotional = 1.0;
+    if (!bondNotional_.empty())
+        bondNotional = parseReal(bondNotional_);
+
     npvCurrency_ = currency_;
     maturity_ = bond->cashflows().back()->date();
-    notional_ = currentNotional(bond->cashflows());
+    notional_ = currentNotional(bond->cashflows()) * bondNotional;
     notionalCurrency_ = currency_;
 
     // Add legs (only 1)
@@ -152,7 +161,8 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency currency = parseCurrency(currency_);
 
     fwdBond.reset(new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, settlementDirty, compensationPayment,
-                                            compensationPaymentDate)); // nur bond payoff maturityDate lassen
+                                            compensationPaymentDate,
+                                            bondNotional)); // nur bond payoff maturityDate lassen
 
     boost::shared_ptr<fwdBondEngineBuilder> fwdBondBuilder =
         boost::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
@@ -196,10 +206,12 @@ void ForwardBond::fromXML(XMLNode* node) {
     creditCurveId_ =
         XMLUtils::getChildValue(bondNode, "CreditCurveId", false); // issuer credit term structure not mandatory
     securityId_ = XMLUtils::getChildValue(bondNode, "SecurityId", true);
-    referenceCurveId_ = XMLUtils::getChildValue(bondNode, "ReferenceCurveId", true);
-    settlementDays_ = XMLUtils::getChildValue(bondNode, "SettlementDays", true);
-    calendar_ = XMLUtils::getChildValue(bondNode, "Calendar", true);
-    issueDate_ = XMLUtils::getChildValue(bondNode, "IssueDate", true);
+    referenceCurveId_ = XMLUtils::getChildValue(bondNode, "ReferenceCurveId", false);
+    incomeCurveId_ = XMLUtils::getChildValue(bondNode, "IncomeCurveId", false);
+    settlementDays_ = XMLUtils::getChildValue(bondNode, "SettlementDays", false);
+    calendar_ = XMLUtils::getChildValue(bondNode, "Calendar", false);
+    issueDate_ = XMLUtils::getChildValue(bondNode, "IssueDate", false);
+    bondNotional_ = XMLUtils::getChildValue(bondNode, "BondNotional", false);
     XMLNode* legNode = XMLUtils::getChildNode(bondNode, "LegData");
     while (legNode != nullptr) {
         coupons_.push_back(LegData());
@@ -207,7 +219,6 @@ void ForwardBond::fromXML(XMLNode* node) {
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
 
-    incomeCurveId_ = XMLUtils::getChildValue(fwdBondNode, "IncomeCurveId", true);
     XMLNode* fwdSettlementNode = XMLUtils::getChildNode(fwdBondNode, "SettlementData");
     QL_REQUIRE(fwdSettlementNode, "No fwdSettlementNode Node");
 
@@ -236,9 +247,12 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
     XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
     XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
+    XMLUtils::addChild(doc, bondNode, "IncomeCurveId", incomeCurveId_);
     XMLUtils::addChild(doc, bondNode, "SettlementDays", settlementDays_);
     XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
     XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
+    if (!bondNotional_.empty())
+        XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
 
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
@@ -255,7 +269,6 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, fwdPremiumNode, "Date", compensationPaymentDate_);
 
     XMLUtils::addChild(doc, fwdBondNode, "LongInForward", longInBond_);
-    XMLUtils::addChild(doc, fwdBondNode, "IncomeCurveId", incomeCurveId_);
 
     return node;
 }

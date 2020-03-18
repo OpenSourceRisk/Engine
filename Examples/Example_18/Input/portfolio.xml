@@ -59,6 +59,7 @@
         <CreditCurveId>CPTY_C</CreditCurveId>
         <SecurityId>SECURITY_1</SecurityId>
         <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
+        <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
         <IssueDate>20160717</IssueDate>
@@ -102,7 +103,6 @@
         <Date>20160720</Date>
       </PremiumData>
       <LongInForward>true</LongInForward>
-      <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
     </ForwardBondData>
   </Trade>
   <Trade id="Bond_Floating">
@@ -168,6 +168,7 @@
         <CreditCurveId>CPTY_C</CreditCurveId>
         <SecurityId>SECURITY_1</SecurityId>
         <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
+        <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
         <IssueDate>20160718</IssueDate>
@@ -215,7 +216,6 @@
         <Date>20160722</Date>
       </PremiumData>
       <LongInForward>true</LongInForward>
-      <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
     </ForwardBondData>
   </Trade>
   <Trade id="Bond_Fixed_Then_Floating">
@@ -310,6 +310,7 @@
         <CreditCurveId>CPTY_C</CreditCurveId>
         <SecurityId>SECURITY_1</SecurityId>
         <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
+        <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
         <IssueDate>20160718</IssueDate>
@@ -386,7 +387,6 @@
         <Date>20160720</Date>
       </PremiumData>
       <LongInForward>true</LongInForward>
-      <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
     </ForwardBondData>
   </Trade>
   <Trade id="Bond_Amortizing_FixedAmount">
@@ -457,6 +457,7 @@
         <CreditCurveId>CPTY_C</CreditCurveId>
         <SecurityId>SECURITY_1</SecurityId>
         <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
+        <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
         <IssueDate>20160718</IssueDate>
@@ -509,7 +510,6 @@
         <Date>20160720</Date>
       </PremiumData>
       <LongInForward>true</LongInForward>
-      <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
     </ForwardBondData>
   </Trade>
   <Trade id="Bond_Amortizing_Percentage_Initial">
@@ -580,6 +580,7 @@
         <CreditCurveId>CPTY_C</CreditCurveId>
         <SecurityId>SECURITY_1</SecurityId>
         <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
+        <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
         <IssueDate>20160718</IssueDate>
@@ -628,7 +629,6 @@
         <SettlementDirty>true</SettlementDirty>
       </SettlementData>
       <LongInForward>true</LongInForward>
-      <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
     </ForwardBondData>
   </Trade>
   <Trade id="Bond_Amortizing_Percentage_Previous">
@@ -699,6 +699,7 @@
         <CreditCurveId>CPTY_C</CreditCurveId>
         <SecurityId>SECURITY_1</SecurityId>
         <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
+        <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
         <IssueDate>20160718</IssueDate>
@@ -747,7 +748,6 @@
         <SettlementDirty>true</SettlementDirty>
       </SettlementData>
       <LongInForward>true</LongInForward>
-      <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
     </ForwardBondData>
   </Trade>
   <Trade id="Bond_Amortizing_Fixed_Annuity">
@@ -817,6 +817,7 @@
         <CreditCurveId>CPTY_C</CreditCurveId>
         <SecurityId>SECURITY_1</SecurityId>
         <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
+        <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
         <IssueDate>20160718</IssueDate>
@@ -864,7 +865,6 @@
         <SettlementDirty>true</SettlementDirty>
       </SettlementData>
       <LongInForward>true</LongInForward>
-      <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
     </ForwardBondData>
   </Trade>
   <Trade id="Bond_Amortizing_Floating_Annuity">
@@ -938,6 +938,7 @@
         <CreditCurveId>CPTY_C</CreditCurveId>
         <SecurityId>SECURITY_1</SecurityId>
         <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
+        <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
         <IssueDate>20160718</IssueDate>
@@ -989,7 +990,6 @@
         <SettlementDirty>true</SettlementDirty>
       </SettlementData>
       <LongInForward>true</LongInForward>
-      <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
     </ForwardBondData>
   </Trade>
   <Trade id="Bond_Amortizing_FixedAmount_PercentagePrevious">
@@ -1067,6 +1067,7 @@
         <CreditCurveId>CPTY_C</CreditCurveId>
         <SecurityId>SECURITY_1</SecurityId>
         <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
+        <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
         <IssueDate>20160718</IssueDate>
@@ -1122,7 +1123,6 @@
         <SettlementDirty>true</SettlementDirty>
       </SettlementData>
       <LongInForward>true</LongInForward>
-      <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
     </ForwardBondData>
   </Trade>
 </Portfolio>

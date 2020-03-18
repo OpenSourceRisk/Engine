@@ -25,9 +25,10 @@ namespace QuantExt {
 
 ForwardBond::ForwardBond(const boost::shared_ptr<Bond>& underlying, const boost::shared_ptr<Payoff>& payoff,
                          const Date& fwdMaturityDate, const bool settlementDirty, const Real compensationPayment,
-                         const Date compensationPaymentDate)
+                         const Date compensationPaymentDate, const Real bondNotional)
     : underlying_(underlying), payoff_(payoff), fwdMaturityDate_(fwdMaturityDate), settlementDirty_(settlementDirty),
-      compensationPayment_(compensationPayment), compensationPaymentDate_(compensationPaymentDate) {}
+      compensationPayment_(compensationPayment), compensationPaymentDate_(compensationPaymentDate),
+      bondNotional_(bondNotional) {}
 
 bool ForwardBond::isExpired() const { return detail::simple_event(fwdMaturityDate_).hasOccurred(); }
 
@@ -40,6 +41,7 @@ void ForwardBond::setupArguments(PricingEngine::arguments* args) const {
     arguments->settlementDirty = settlementDirty_;
     arguments->compensationPayment = compensationPayment_;
     arguments->compensationPaymentDate = compensationPaymentDate_;
+    arguments->bondNotional = bondNotional_;
 }
 
 void ForwardBond::results::reset() {
