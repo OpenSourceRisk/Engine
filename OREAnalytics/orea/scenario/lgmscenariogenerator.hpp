@@ -54,7 +54,7 @@ public:
                          boost::shared_ptr<QuantExt::MultiPathGeneratorBase> multiPathGenerator,
                          boost::shared_ptr<ScenarioFactory> scenarioFactory,
                          boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig, Date today,
-                         ore::analytics::DateGrid grid);
+                         DateGrid grid);
     //! Destructor
     ~LgmScenarioGenerator(){};
     std::vector<boost::shared_ptr<Scenario>> nextPath();

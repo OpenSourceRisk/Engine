@@ -59,7 +59,7 @@ public:
                                      boost::shared_ptr<QuantExt::MultiPathGeneratorBase> multiPathGenerator,
                                      boost::shared_ptr<ScenarioFactory> scenarioFactory,
                                      boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
-                                     QuantLib::Date today, boost::shared_ptr<ore::analytics::DateGrid> grid,
+                                     QuantLib::Date today, boost::shared_ptr<DateGrid> grid,
                                      boost::shared_ptr<ore::data::Market> initMarket,
                                      const std::string& configuration = Market::defaultConfiguration);
     //! Default destructor

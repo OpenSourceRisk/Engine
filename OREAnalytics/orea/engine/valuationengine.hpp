@@ -61,7 +61,7 @@ public:
         //! Valuation date
         const QuantLib::Date& today,
         //! Simulation date grid
-        const boost::shared_ptr<analytics::DateGrid>& dg,
+        const boost::shared_ptr<DateGrid>& dg,
         //! Simulated market object
         const boost::shared_ptr<analytics::SimMarket>& simMarket,
         //! model builders to be updated
@@ -79,7 +79,7 @@ public:
 
 private:
     QuantLib::Date today_;
-    boost::shared_ptr<analytics::DateGrid> dg_;
+    boost::shared_ptr<DateGrid> dg_;
     boost::shared_ptr<analytics::SimMarket> simMarket_;
     set<std::pair<string, boost::shared_ptr<data::ModelBuilder>>> modelBuilders_;
 };
