@@ -46,6 +46,11 @@ namespace CrossAssetModelTypes {
 //! Cross Asset Type
 //! \ingroup crossassetmodel
 enum AssetType { IR, FX, INF, CR, EQ };
+static constexpr Size crossAssetModelAssetTypes = 5;
+
+/*! the model types supported by the CrossAssetModel or derived classes;
+  a model type may applicable to several asset types (like BS for FX, EQ) */
+enum ModelType { LGM1F, BS, DK, CIRPP };
 } // namespace CrossAssetModelTypes
 
 using namespace CrossAssetModelTypes;
@@ -97,6 +102,9 @@ public:
     /*! number of state variables for a component */
     Size stateVariables(const AssetType t, const Size i) const;
 
+    /*! model type of a component */
+    ModelType modelType(const AssetType t, const Size i) const;
+
     /*! return index for currency (0 = domestic, 1 = first
       foreign currency and so on) */
     Size ccyIndex(const Currency& ccy) const;
@@ -110,6 +118,13 @@ public:
     /*! observer and linked calibrated model interface */
     void update();
     void generateArguments();
+
+    /*! components per asset class, see below for specific model type inspectors */
+    const boost::shared_ptr<Parametrization> ir(const Size ccy) const;
+    const boost::shared_ptr<Parametrization> fx(const Size ccy) const;
+    const boost::shared_ptr<Parametrization> inf(const Size i) const;
+    const boost::shared_ptr<Parametrization> cr(const Size i) const;
+    const boost::shared_ptr<Parametrization> eq(const Size i) const;
 
     /*! LGM1F components, ccy=0 refers to the domestic currency */
     const boost::shared_ptr<LinearGaussMarkovModel> lgm(const Size ccy) const;
@@ -290,6 +305,17 @@ protected:
     /*! index of component in the arguments vector, by offset */
     Size aIdx(const AssetType t, const Size i, const Size offset = 0) const;
 
+    /*! asset and model type for given parametrization */
+    virtual std::pair<AssetType, ModelType> getComponentType(const Size i) const;
+    /*! number of parameters for given parametrization */
+    virtual Size getNumberOfParameters(const Size i) const;
+    /*! number of brownians for given parametrization */
+    virtual Size getNumberOfBrownians(const Size i) const;
+    /*! number of state variables for given parametrization */
+    virtual Size getNumberOfStateVariables(const Size i) const;
+    /*! helper function to init component indices */
+    void updateIndices(const AssetType& t, const Size i, const Size cIdx, const Size pIdx, const Size aIdx);
+
     /* init methods */
     virtual void initialize();
     virtual void initializeParametrizations();
@@ -326,8 +352,15 @@ protected:
 
     /* members */
 
-    Size nIrLgm1f_, nFxBs_, nInfDk_, nCrLgm1f_, nEqBs_;
-    Size totalNumberOfParameters_;
+    // components per asset type
+    std::vector<Size> components_;
+    // indices per asset type and component number within asset type
+    std::vector<std::vector<Size> > idx_, cIdx_, pIdx_, aIdx_, brownians_, stateVariables_, numArguments_;
+    // counter
+    Size totalDimension_, totalNumberOfBrownians_, totalNumberOfParameters_;
+    // model type per asset type and component number within asset type
+    std::vector<std::vector<ModelType> > modelType_;
+    // parametrizations, models
     std::vector<boost::shared_ptr<Parametrization> > p_;
     std::vector<boost::shared_ptr<LinearGaussMarkovModel> > lgm_;
     Matrix rho_;
@@ -337,114 +370,35 @@ protected:
 
     /* calibration constraints */
 
-    // move parameter param (e.g. vol, reversion) of asset type component t / index
-    // at step i (or at all steps if i is null)
+    void appendToFixedParameterVector(const AssetType t, const AssetType v, const Size param, const Size index,
+                                      const Size i, std::vector<bool>& res) {
+        for (Size j = 0; j < components(t); ++j) {
+            for (Size k = 0; k < arguments(t, j); ++k) {
+                std::vector<bool> tmp1(p_[idx(t, j)]->parameter(k)->size(), true);
+                if ((param == Null<Size>() || k == param) && t == v && index == j) {
+                    for (Size ii = 0; ii < tmp1.size(); ++ii) {
+                        if (i == Null<Size>() || i == ii) {
+                            tmp1[ii] = false;
+                        }
+                    }
+                }
+                res.insert(res.end(), tmp1.begin(), tmp1.end());
+            }
+        }
+    }
+
+    // move parameter param (e.g. vol, reversion, or all if null) of asset type component t / index at step i (or at all
+    // steps if i is null)
     Disposable<std::vector<bool> > MoveParameter(const AssetType t, const Size param, const Size index, const Size i) {
-        switch (t) {
-        case IR:
-            QL_REQUIRE(param <= 1, "irlgm1f parameter " << param << " out of bounds 0...1");
-            QL_REQUIRE(i < irlgm1f(index)->parameter(param)->size(),
-                       "irlgm1f parameter (" << param << ") index (" << i << ") for ccy " << index
-                                             << " out of bounds 0..." << irlgm1f(index)->parameter(param)->size() - 1);
-            break;
-        case FX:
-            QL_REQUIRE(param == 0, "fxbs parameter " << param << " out of bounds 0...0");
-            QL_REQUIRE(i < fxbs(index)->parameter(param)->size(),
-                       "fxbs volatility index (" << i << ") for ccy " << index << " out of bounds 0..."
-                                                 << fxbs(index)->parameter(param)->size() - 1);
-            break;
-        case INF:
-            QL_REQUIRE(param <= 1, "infdk parameter " << param << " out of bounds 0...1");
-            QL_REQUIRE(i < infdk(index)->parameter(param)->size(),
-                       "infdk parameter (" << param << ") index (" << i << ") for inflation component " << index
-                                           << " out of bounds 0..." << infdk(index)->parameter(param)->size() - 1);
-            break;
-        case CR:
-            QL_REQUIRE(param <= 1, "crlgm1f parameter " << param << " out of bounds 0...1");
-            QL_REQUIRE(i < crlgm1f(index)->parameter(param)->size(),
-                       "crlgm1f parameter (" << param << ") index (" << i << ") for credit component " << index
-                                             << " out of bounds 0..." << crlgm1f(index)->parameter(param)->size() - 1);
-            break;
-        case EQ:
-            QL_REQUIRE(param == 0, "eqbs parameter " << param << " out of bounds 0...0");
-            QL_REQUIRE(i < eqbs(index)->parameter(param)->size(),
-                       "eqbs volatility index (" << i << ") for index " << index << " out of bounds 0..."
-                                                 << eqbs(index)->parameter(param)->size() - 1);
-            break;
-        default:
-            QL_FAIL("asset type not recognised");
-        }
+        QL_REQUIRE(param == Null<Size>() || param < arguments(t, index),
+                   "parameter for " << t << " at " << index << " (" << param << ") out of bounds 0..."
+                                    << arguments(t, index) - 1);
         std::vector<bool> res(0);
-        for (Size j = 0; j < nIrLgm1f_; ++j) {
-            std::vector<bool> tmp1(p_[idx(IR, j)]->parameter(0)->size(), true);
-            std::vector<bool> tmp2(p_[idx(IR, j)]->parameter(1)->size(), true);
-            std::vector<std::vector<bool> > tmp;
-            tmp.push_back(tmp1);
-            tmp.push_back(tmp2);
-            if (t == IR && index == j) {
-                for (Size ii = 0; ii < tmp[param].size(); ++ii) {
-                    if (i == Null<Size>() || i == ii) {
-                        tmp[param][ii] = false;
-                    }
-                }
-            }
-            res.insert(res.end(), tmp[0].begin(), tmp[0].end());
-            res.insert(res.end(), tmp[1].begin(), tmp[1].end());
-        }
-        for (Size j = 0; j < nFxBs_; ++j) {
-            std::vector<bool> tmp(p_[idx(FX, j)]->parameter(0)->size(), true);
-            if (t == FX && index == j) {
-                for (Size ii = 0; ii < tmp.size(); ++ii) {
-                    if (i == Null<Size>() || i == ii) {
-                        tmp[i] = false;
-                    }
-                }
-            }
-            res.insert(res.end(), tmp.begin(), tmp.end());
-        }
-        for (Size j = 0; j < nInfDk_; ++j) {
-            std::vector<bool> tmp1(p_[idx(INF, j)]->parameter(0)->size(), true);
-            std::vector<bool> tmp2(p_[idx(INF, j)]->parameter(1)->size(), true);
-            std::vector<std::vector<bool> > tmp;
-            tmp.push_back(tmp1);
-            tmp.push_back(tmp2);
-            if (t == INF && index == j) {
-                for (Size ii = 0; ii < tmp[param].size(); ++ii) {
-                    if (i == Null<Size>() || i == ii) {
-                        tmp[param][ii] = false;
-                    }
-                }
-            }
-            res.insert(res.end(), tmp[0].begin(), tmp[0].end());
-            res.insert(res.end(), tmp[1].begin(), tmp[1].end());
-        }
-        for (Size j = 0; j < nCrLgm1f_; ++j) {
-            std::vector<bool> tmp1(p_[idx(CR, j)]->parameter(0)->size(), true);
-            std::vector<bool> tmp2(p_[idx(CR, j)]->parameter(1)->size(), true);
-            std::vector<std::vector<bool> > tmp;
-            tmp.push_back(tmp1);
-            tmp.push_back(tmp2);
-            if (t == CR && index == j) {
-                for (Size ii = 0; ii < tmp[param].size(); ++ii) {
-                    if (i == Null<Size>() || i == ii) {
-                        tmp[param][ii] = false;
-                    }
-                }
-            }
-            res.insert(res.end(), tmp[0].begin(), tmp[0].end());
-            res.insert(res.end(), tmp[1].begin(), tmp[1].end());
-        }
-        for (Size j = 0; j < nEqBs_; ++j) {
-            std::vector<bool> tmp(p_[idx(EQ, j)]->parameter(0)->size(), true);
-            if (t == EQ && index == j) {
-                for (Size ii = 0; ii < tmp.size(); ++ii) {
-                    if (i == Null<Size>() || i == ii) {
-                        tmp[i] = false;
-                    }
-                }
-            }
-            res.insert(res.end(), tmp.begin(), tmp.end());
-        }
+        appendToFixedParameterVector(IR, t, param, index, i, res);
+        appendToFixedParameterVector(FX, t, param, index, i, res);
+        appendToFixedParameterVector(INF, t, param, index, i, res);
+        appendToFixedParameterVector(CR, t, param, index, i, res);
+        appendToFixedParameterVector(EQ, t, param, index, i, res);
         return res;
     }
 };
@@ -456,22 +410,28 @@ CrossAssetModel::stateProcess(CrossAssetStateProcess::discretization disc) const
     return disc == CrossAssetStateProcess::exact ? stateProcessExact_ : stateProcessEuler_;
 }
 
-inline Size CrossAssetModel::dimension() const {
-    // this assumes specific models, as soon as other model types are added
-    // this formula has to be generalized as well
-    return nIrLgm1f_ * 1 + nFxBs_ * 1 + nInfDk_ * 2 + nCrLgm1f_ * 2 + nEqBs_ * 1;
-}
+inline Size CrossAssetModel::dimension() const { return totalDimension_; }
 
-inline Size CrossAssetModel::brownians() const {
-    // this assumes specific models, as soon as other model types are added
-    // this formula has to be generalized as well
-    return nIrLgm1f_ * 1 + nFxBs_ * 1 + nInfDk_ * 1 + nCrLgm1f_ * 1 + nEqBs_ * 1;
-}
+inline Size CrossAssetModel::brownians() const { return totalNumberOfBrownians_; }
 
 inline Size CrossAssetModel::totalNumberOfParameters() const { return totalNumberOfParameters_; }
 
+inline const boost::shared_ptr<Parametrization> CrossAssetModel::ir(const Size ccy) const { return p_[idx(IR, ccy)]; }
+
+inline const boost::shared_ptr<Parametrization> CrossAssetModel::fx(const Size ccy) const { return p_[idx(FX, ccy)]; }
+
+inline const boost::shared_ptr<Parametrization> CrossAssetModel::inf(const Size i) const { return p_[idx(INF, i)]; }
+
+inline const boost::shared_ptr<Parametrization> CrossAssetModel::cr(const Size i) const { return p_[idx(CR, i)]; }
+
+inline const boost::shared_ptr<Parametrization> CrossAssetModel::eq(const Size i) const {
+    return boost::static_pointer_cast<Parametrization>(p_[idx(EQ, i)]);
+}
+
 inline const boost::shared_ptr<LinearGaussMarkovModel> CrossAssetModel::lgm(const Size ccy) const {
-    return lgm_[idx(IR, ccy)];
+    boost::shared_ptr<LinearGaussMarkovModel> tmp = lgm_[idx(IR, ccy)];
+    QL_REQUIRE(tmp, "model at " << ccy << " is not IR-LGM1F");
+    return tmp;
 }
 
 inline const boost::shared_ptr<IrLgm1fParametrization> CrossAssetModel::irlgm1f(const Size ccy) const {
@@ -479,15 +439,21 @@ inline const boost::shared_ptr<IrLgm1fParametrization> CrossAssetModel::irlgm1f(
 }
 
 inline const boost::shared_ptr<InfDkParametrization> CrossAssetModel::infdk(const Size i) const {
-    return boost::static_pointer_cast<InfDkParametrization>(p_[idx(INF, i)]);
+    boost::shared_ptr<InfDkParametrization> tmp = boost::dynamic_pointer_cast<InfDkParametrization>(p_[idx(INF, i)]);
+    QL_REQUIRE(tmp, "model at " << i << " is not INF-DK");
+    return tmp;
 }
 
 inline const boost::shared_ptr<CrLgm1fParametrization> CrossAssetModel::crlgm1f(const Size i) const {
-    return boost::static_pointer_cast<CrLgm1fParametrization>(p_[idx(CR, i)]);
+    boost::shared_ptr<CrLgm1fParametrization> tmp = boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[idx(CR, i)]);
+    QL_REQUIRE(tmp, "model at " << i << " is not CR-LGM");
+    return tmp;
 }
 
 inline const boost::shared_ptr<EqBsParametrization> CrossAssetModel::eqbs(const Size name) const {
-    return boost::dynamic_pointer_cast<EqBsParametrization>(p_[idx(EQ, name)]);
+    boost::shared_ptr<EqBsParametrization> tmp = boost::dynamic_pointer_cast<EqBsParametrization>(p_[idx(EQ, name)]);
+    QL_REQUIRE(tmp, "model at " << name << " is not EQ-BS");
+    return tmp;
 }
 
 inline Real CrossAssetModel::numeraire(const Size ccy, const Time t, const Real x,
