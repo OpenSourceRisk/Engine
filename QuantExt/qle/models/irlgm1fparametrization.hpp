@@ -57,14 +57,11 @@ public:
       while all other methods return scaled (and shifted) values */
     Real& scaling();
 
-    const std::string& name() const { return name_; }
-
 protected:
     Real shift_, scaling_;
 
 private:
     const Handle<TS> termStructure_;
-    std::string name_;
 };
 
 // implementation
@@ -72,9 +69,8 @@ private:
 template <class TS>
 Lgm1fParametrization<TS>::Lgm1fParametrization(const Currency& currency, const Handle<TS>& termStructure,
                                                const std::string& name)
-    : Parametrization(currency), shift_(0.0), scaling_(1.0), termStructure_(termStructure) {
-    name_ = name.empty() ? currency.code() : name;
-}
+    : Parametrization(currency, name.empty() ? currency.code() : name), shift_(0.0), scaling_(1.0),
+      termStructure_(termStructure) {}
 
 // inline
 
