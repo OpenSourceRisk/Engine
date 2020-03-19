@@ -29,7 +29,6 @@
 #include <ored/configuration/equityvolcurveconfig.hpp>
 #include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
-#include <ored/configuration/inflationcapfloorpricesurfaceconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
