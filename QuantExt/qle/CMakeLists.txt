@@ -13,6 +13,9 @@ calendars/philippines.cpp
 calendars/switzerland.cpp
 calendars/thailand.cpp
 calendars/wmr.cpp
+calendars/belgium.cpp
+calendars/spain.cpp
+calendars/luxembourg.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
 cashflows/brlcdicouponpricer.cpp
@@ -199,6 +202,9 @@ calendars/philippines.hpp
 calendars/switzerland.hpp
 calendars/thailand.hpp
 calendars/wmr.hpp
+calendars/belgium.hpp
+calendars/spain.hpp
+calendars/luxembourg.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
 cashflows/brlcdicouponpricer.hpp
