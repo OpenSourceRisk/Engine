@@ -282,9 +282,6 @@
     <ClInclude Include="ored\portfolio\builders\bond.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
-    <ClInclude Include="ored\configuration\inflationcapfloorpricesurfaceconfig.hpp">
-      <Filter>configuration</Filter>
-    </ClInclude>
     <ClInclude Include="ored\configuration\inflationcurveconfig.hpp">
       <Filter>configuration</Filter>
     </ClInclude>
@@ -697,9 +694,6 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\bond.cpp">
       <Filter>portfolio</Filter>
-    </ClCompile>
-    <ClCompile Include="ored\configuration\inflationcapfloorpricesurfaceconfig.cpp">
-      <Filter>configuration</Filter>
     </ClCompile>
     <ClCompile Include="ored\configuration\inflationcurveconfig.cpp">
       <Filter>configuration</Filter>

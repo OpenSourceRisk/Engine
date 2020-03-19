@@ -141,7 +141,6 @@ configuration/equityvolcurveconfig.hpp
 configuration/fxspotconfig.hpp
 configuration/fxvolcurveconfig.hpp
 configuration/genericyieldvolcurveconfig.hpp
-configuration/inflationcapfloorpricesurfaceconfig.hpp
 configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
 configuration/securityconfig.hpp

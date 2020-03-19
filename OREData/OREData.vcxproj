@@ -52,7 +52,6 @@
     <ClInclude Include="ored\configuration\fxspotconfig.hpp" />
     <ClInclude Include="ored\configuration\fxvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\genericyieldvolcurveconfig.hpp" />
-    <ClInclude Include="ored\configuration\inflationcapfloorpricesurfaceconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcapfloorvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\securityconfig.hpp" />
@@ -205,7 +204,6 @@
     <ClCompile Include="ored\configuration\equityvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\fxvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\genericyieldvolcurveconfig.cpp" />
-    <ClCompile Include="ored\configuration\inflationcapfloorpricesurfaceconfig.cpp" />
     <ClCompile Include="ored\configuration\inflationcapfloorvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\inflationcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\volatilityconfig.cpp" />
