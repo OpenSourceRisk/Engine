@@ -26,16 +26,15 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/trade.hpp>
 
-using std::string;
-
 namespace ore {
 namespace data {
+using std::string;
 
 //! Serializable Equity Forward contract
 /*!
 \ingroup tradedata
 */
-class EquitySwap: public Swap {
+class EquitySwap : public Swap {
 public:
     //! Deault constructor
     EquitySwap() : Swap("EquitySwap") {}
@@ -49,14 +48,13 @@ public:
     void checkEquitySwap(const vector<LegData>& legData);
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    //virtual void build(const boost::shared_ptr<EngineFactory>&);
+    // virtual void build(const boost::shared_ptr<EngineFactory>&);
 
     //! \name Serialisation
     //@{
-    //virtual void fromXML(XMLNode* node);
-    //virtual XMLNode* toXML(XMLDocument& doc);
+    // virtual void fromXML(XMLNode* node);
+    // virtual XMLNode* toXML(XMLDocument& doc);
     //@}
-
 };
 } // namespace data
 } // namespace ore

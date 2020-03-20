@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
@@ -24,22 +25,22 @@ using namespace std;
 
 namespace QuantExt {
 
-FxBlackVolatilitySurface::FxBlackVolatilitySurface(const Date& referenceDate, const std::vector<Date>& dates,
-                                                   const std::vector<Volatility>& atmVols,
-                                                   const std::vector<Volatility>& rr25d,
-                                                   const std::vector<Volatility>& bf25d, const DayCounter& dayCounter,
-                                                   const Calendar& cal, const Handle<Quote>& fxSpot,
-                                                   const Handle<YieldTermStructure>& domesticTS,
-                                                   const Handle<YieldTermStructure>& foreignTS)
+FxBlackVolatilitySurface::FxBlackVolatilitySurface(
+    const Date& referenceDate, const std::vector<Date>& dates, const std::vector<Volatility>& atmVols,
+    const std::vector<Volatility>& rr, const std::vector<Volatility>& bf, const DayCounter& dayCounter,
+    const Calendar& cal, const Handle<Quote>& fxSpot, const Handle<YieldTermStructure>& domesticTS,
+    const Handle<YieldTermStructure>& foreignTS, bool requireMonotoneVariance,
+    const DeltaVolQuote::AtmType atmType, const DeltaVolQuote::DeltaType deltaType, const Real delta)
     : BlackVolatilityTermStructure(referenceDate, cal), times_(dates.size()), dayCounter_(dayCounter), fxSpot_(fxSpot),
-      domesticTS_(domesticTS), foreignTS_(foreignTS), atmCurve_(referenceDate, dates, atmVols, dayCounter),
-      rr25d_(rr25d), bf25d_(bf25d) {
+      domesticTS_(domesticTS), foreignTS_(foreignTS),
+      atmCurve_(referenceDate, dates, atmVols, dayCounter, requireMonotoneVariance), rr_(rr), bf_(bf),
+      atmType_(atmType), deltaType_(deltaType), delta_(delta) {
 
-    QL_REQUIRE(dates.size() > 1, "at least 1 date required");
+    QL_REQUIRE(dates.size() >= 1, "at least 1 date required");
     maxDate_ = dates.back();
 
-    QL_REQUIRE(dates.size() == rr25d.size(), "mismatch between date vector and 25D RR vector");
-    QL_REQUIRE(dates.size() == bf25d.size(), "mismatch between date vector and 25D BF vector");
+    QL_REQUIRE(dates.size() == rr.size(), "mismatch between date vector and RR vector");
+    QL_REQUIRE(dates.size() == bf.size(), "mismatch between date vector and BF vector");
 
     // this has already been done for dates
     for (Size i = 0; i < dates.size(); i++) {
@@ -51,8 +52,13 @@ FxBlackVolatilitySurface::FxBlackVolatilitySurface(const Date& referenceDate, co
     }
 
     // set up the 3 interpolators
-    rrCurve_ = LinearInterpolation(times_.begin(), times_.end(), rr25d_.begin());
-    bfCurve_ = LinearInterpolation(times_.begin(), times_.end(), bf25d_.begin());
+    if (dates.size() > 1) {
+        rrCurve_ = LinearInterpolation(times_.begin(), times_.end(), rr_.begin());
+        bfCurve_ = LinearInterpolation(times_.begin(), times_.end(), bf_.begin());
+    } else {
+        rrCurve_ = BackwardFlatInterpolation(times_.begin(), times_.end(), rr_.begin());
+        bfCurve_ = BackwardFlatInterpolation(times_.begin(), times_.end(), bf_.begin());
+    }
 
     atmCurve_.enableExtrapolation();
 
@@ -63,7 +69,7 @@ FxBlackVolatilitySurface::FxBlackVolatilitySurface(const Date& referenceDate, co
 
 boost::shared_ptr<FxSmileSection> FxBlackVolatilitySurface::blackVolSmile(Time t) const {
     // we interpolate on the 3 curves independently
-    Volatility atm = atmCurve_.blackVol(t, 0); // any strike will do
+    Volatility atm = atmCurve_.blackVol(t, 0); // blackVol returns atm vol when strike is 0
 
     // Flat extrapolation for RR + BF.
     Volatility rr, bf;

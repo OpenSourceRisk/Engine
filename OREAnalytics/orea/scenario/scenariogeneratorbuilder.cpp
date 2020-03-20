@@ -50,7 +50,8 @@ ScenarioGeneratorBuilder::build(boost::shared_ptr<QuantExt::CrossAssetModel> mod
     boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess(data_->discretization());
 
     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen =
-        makeMultiPathGenerator(data_->sequenceType(), stateProcess, data_->grid()->timeGrid(), data_->seed());
+        makeMultiPathGenerator(data_->sequenceType(), stateProcess, data_->grid()->timeGrid(), data_->seed(),
+                               data_->ordering(), data_->directionIntegers());
 
     boost::shared_ptr<ScenarioGenerator> scenGen = boost::make_shared<CrossAssetModelScenarioGenerator>(
         model, pathGen, scenarioFactory, marketConfig, asof, data_->grid(), initMarket, configuration);

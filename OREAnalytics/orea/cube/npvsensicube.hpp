@@ -23,16 +23,16 @@
 
 #pragma once
 
+#include <map>
+#include <set>
 #include <orea/cube/npvcube.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
-#include <map>
-#include <set>
 
 namespace ore {
 namespace analytics {
 //! NPVSensiCube class stores NPVs resulting from risk factor shifts on an as of date.
-/*! This class is a restriction of the NPVCube to a grid of values where the ids are 
+/*! This class is a restriction of the NPVCube to a grid of values where the ids are
     trade IDs and the samples are risk factor shifts
 
     \ingroup cube
@@ -49,32 +49,29 @@ public:
     QuantLib::Size depth() const override { return 1; }
 
     //! Convenience method to get a value from the cube using \p id and \p sample only
-    Real get(QuantLib::Size id, QuantLib::Size sample) const {
-        return this->get(id, 0, sample, 0);
-    }
+    Real get(QuantLib::Size id, QuantLib::Size sample) const { return this->get(id, 0, sample, 0); }
 
     //! Convenience method to get a value from the cube using \p id and \p sample only
-    Real get(const std::string& id, QuantLib::Size sample) const {
-        return this->get(id, asof(), sample, 0);
-    };
-    
+    Real get(const std::string& id, QuantLib::Size sample) const { return this->get(id, asof(), sample, 0); };
+
     //! Convenience method to set a value in the cube using \p id and \p sample only
-    void set(QuantLib::Real value, QuantLib::Size id, QuantLib::Size sample) {
-        this->set(value, id, 0, sample, 0);
-    }
-    
+    void set(QuantLib::Real value, QuantLib::Size id, QuantLib::Size sample) { this->set(value, id, 0, sample, 0); }
+
     //! Convenience method to set a value in the cube using \p id and \p sample only
     void set(QuantLib::Real value, const std::string& id, QuantLib::Size sample) {
         this->set(value, id, asof(), sample, 0);
     }
 
-    /*! Return a map for the trade ID at index \p tradeIdx where the map key is the index of the 
+    //! Return the index of the trade in the cube
+    Size getTradeIndex(const std::string& tradeId) const { return index(tradeId); }
+
+    /*! Return a map for the trade ID at index \p tradeIdx where the map key is the index of the
         risk factor shift and the map value is the NPV under that shift
     */
     // Returning a const reference to the map makes the derived class have it as a member
     virtual const std::map<QuantLib::Size, QuantLib::Real>& getTradeNPVs(Size tradeIdx) const = 0;
 
-    /*! Return a map for the \p tradeId where the map key is the index of the 
+    /*! Return a map for the \p tradeId where the map key is the index of the
         risk factor shift and the map value is the NPV under that shift
     */
     const std::map<QuantLib::Size, QuantLib::Real>& getTradeNPVs(const std::string& tradeId) const {
@@ -85,5 +82,5 @@ public:
     virtual const std::set<QuantLib::Size>& relevantScenarios() const = 0;
 };
 
-}
-}
+} // namespace analytics
+} // namespace ore

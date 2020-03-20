@@ -28,9 +28,10 @@
 #include <ql/index.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
+#include <ql/currency.hpp>
 
-using namespace QuantLib;
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Equity Index
 /*! \ingroup indexes */
@@ -38,18 +39,30 @@ class EquityIndex : public Index, public Observer {
 public:
     /*! spot quote is interpreted as of today */
     EquityIndex(const std::string& familyName, const Calendar& fixingCalendar,
+                const Currency& currency,
                 const Handle<Quote> spotQuote = Handle<Quote>(),
                 const Handle<YieldTermStructure>& rate = Handle<YieldTermStructure>(),
                 const Handle<YieldTermStructure>& dividend = Handle<YieldTermStructure>());
     //! \name Index interface
     //@{
     std::string name() const;
+    void resetName() { name_ = familyName(); }
+    std::string dividendName() const { return name() + "_div"; }
+    Currency currency() const { return currency_; }
     Calendar fixingCalendar() const;
     bool isValidFixingDate(const Date& fixingDate) const;
-    // Equity fixing price - can be either fixed hstorical or forecasted. 
+    // Equity fixing price - can be either fixed hstorical or forecasted.
     // Forecasted price can include dividend returns by setting incDividend = true
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDividend) const;
+    // Dividend Fixings
+    //! stores the historical dividend fixing at the given date
+    /*! the date passed as arguments must be the actual calendar
+        date of the fixing; no settlement days must be used.
+    */
+    virtual void addDividend(const Date& fixingDate, Real fixing, bool forceOverwrite = false);
+    const TimeSeries<Real>& dividendFixings() const { return IndexManager::instance().getHistory(dividendName()); }
+    Real dividendsBetweenDates(const Date& startDate, const Date& endDate) const;
     //@}
     //! \name Observer interface
     //@{
@@ -58,6 +71,7 @@ public:
     //! \name Inspectors
     //@{
     std::string familyName() const { return familyName_; }
+    const Handle<Quote>& equitySpot() const { return spotQuote_; }
     const Handle<YieldTermStructure>& equityForecastCurve() const { return rate_; }
     const Handle<YieldTermStructure>& equityDividendCurve() const { return dividend_; }
     //@}
@@ -71,13 +85,12 @@ public:
     // @}
     //! \name Additional methods
     //@{
-    virtual boost::shared_ptr<EquityIndex> clone(
-        const Handle<Quote> spotQuote, 
-        const Handle<YieldTermStructure>& rate,
-        const Handle<YieldTermStructure>& dividend) const;
+    virtual boost::shared_ptr<EquityIndex> clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
+                                                 const Handle<YieldTermStructure>& dividend) const;
     // @}
 protected:
     std::string familyName_;
+    Currency currency_;
     const Handle<YieldTermStructure> rate_, dividend_;
     std::string name_;
     const Handle<Quote> spotQuote_;
@@ -100,6 +113,6 @@ inline Real EquityIndex::pastFixing(const Date& fixingDate) const {
     QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
     return timeSeries()[fixingDate];
 }
-}
+} // namespace QuantExt
 
 #endif

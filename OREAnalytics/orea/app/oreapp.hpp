@@ -25,7 +25,9 @@
 
 #include <boost/make_shared.hpp>
 #include <iostream>
-#include <orea/aggregation/all.hpp>
+#include <orea/aggregation/collateralaccount.hpp>
+#include <orea/aggregation/collatexposurehelper.hpp>
+#include <orea/aggregation/postprocess.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
@@ -37,10 +39,9 @@
 #include <ored/ored.hpp>
 #include <ored/portfolio/tradefactory.hpp>
 
-using namespace ore::data;
-
 namespace ore {
 namespace analytics {
+using namespace ore::data;
 
 class SensitivityScenarioData;
 class SensitivityAnalysis;
@@ -54,6 +55,22 @@ public:
     //! generates XVA reports for a given portfolio and market
     virtual int run();
 
+    //! Load curve configurations from xml file, build t0 market using market data provided.
+    //! If any of the passed vectors are empty fall back on OREApp::buildMarket() and use market/fixing data files
+    void buildMarket(const std::string& todaysMarketXML = "", const std::string& curveConfigXML = "",
+                     const std::string& conventionsXML = "",
+                     const std::vector<std::string>& marketData = std::vector<std::string>(),
+                     const std::vector<std::string>& fixingData = std::vector<std::string>());
+
+    //! Get the t0 market
+    // TODO: This should return a market, not market impl
+    boost::shared_ptr<ore::data::MarketImpl> getMarket() const;
+
+    //! build engine factory for a given market from an XML String
+    boost::shared_ptr<ore::data::EngineFactory>
+    buildEngineFactoryFromXMLString(const boost::shared_ptr<ore::data::Market>& market,
+                                    const std::string& pricingEngineXML);
+
 protected:
     //! read setup from params_
     virtual void readSetup();
@@ -65,8 +82,6 @@ protected:
     void getConventions();
     //! load market parameters
     void getMarketParameters();
-    //! build today's market
-    void buildMarket();
     //! build engine factory for a given market
     virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market,
                                                                 const string& groupName = "setup") const;
@@ -74,24 +89,31 @@ protected:
     boost::shared_ptr<TradeFactory> buildTradeFactory() const;
     //! build portfolio for a given market
     boost::shared_ptr<Portfolio> buildPortfolio(const boost::shared_ptr<EngineFactory>& factory);
+    //! load portfolio from file(s)
+    boost::shared_ptr<Portfolio> loadPortfolio();
 
     //! generate NPV cube
-    void generateNPVCube();
+    virtual void generateNPVCube();
     //! get an instance of an aggregationScenarioData class
     virtual void initAggregationScenarioData();
     //! get an instance of a cube class
-    virtual void initCube();
+    virtual void initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids);
     //! build an NPV cube
     virtual void buildNPVCube();
+    //! initialise NPV cube generation
+    void initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio);
     //! load simMarketData
     boost::shared_ptr<ScenarioSimMarketParameters> getSimMarketData();
     //! load scenarioGeneratorData
     boost::shared_ptr<ScenarioGeneratorData> getScenarioGeneratorData();
+    //! build CAM
+    boost::shared_ptr<QuantExt::CrossAssetModel> buildCam(boost::shared_ptr<Market> market,
+                                                          const bool continueOnCalibrationError);
     //! build scenarioGenerator
     virtual boost::shared_ptr<ScenarioGenerator>
     buildScenarioGenerator(boost::shared_ptr<Market> market,
                            boost::shared_ptr<ScenarioSimMarketParameters> simMarketData,
-                           boost::shared_ptr<ScenarioGeneratorData> sgd);
+                           boost::shared_ptr<ScenarioGeneratorData> sgd, const bool continueOnCalibrationError);
 
     //! load in scenarioData
     virtual void loadScenarioData();
@@ -112,7 +134,7 @@ protected:
     //! write out DIM reports
     void writeDIMReport();
     //! write out cube
-    void writeCube();
+    void writeCube(boost::shared_ptr<NPVCube> cube);
     //! write out scenarioData
     void writeScenarioData();
     //! write out base scenario
@@ -121,11 +143,11 @@ protected:
     boost::shared_ptr<NettingSetManager> initNettingSetManager();
 
     //! Get report writer
-    /*! This calls the private method getReportWriterImpl() which returns the 
-        actual ReportWriter implementation. The private method is virtual and 
-        can be overridden in derived classes to provide a dervied ReportWriter 
-        instance. This method is not virtual and can be hidden in derived 
-        classes by a method with the same name. This method can then return a 
+    /*! This calls the private method getReportWriterImpl() which returns the
+        actual ReportWriter implementation. The private method is virtual and
+        can be overridden in derived classes to provide a dervied ReportWriter
+        instance. This method is not virtual and can be hidden in derived
+        classes by a method with the same name. This method can then return a
         shared pointer to the derived ReportWriter class.
 
         For example, we can have the following in a derived class:
@@ -142,7 +164,7 @@ protected:
             }
         };
         \endcode
-        where we have our own special report writer class MyReportWriter that 
+        where we have our own special report writer class MyReportWriter that
         derives from ReportWriter or any class in its hierarchy.
     */
     boost::shared_ptr<ReportWriter> getReportWriter() const;
@@ -153,8 +175,12 @@ protected:
     //! Add extra leg builders
     virtual std::vector<boost::shared_ptr<LegBuilder>> getExtraLegBuilders() const { return {}; };
     //! Add extra trade builders
-    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> getExtraTradeBuilders() const { return {}; };
-
+    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>>
+    getExtraTradeBuilders(const boost::shared_ptr<TradeFactory>& = {}) const {
+        return {};
+    };
+    //! Get fixing manager
+    virtual boost::shared_ptr<FixingManager> getFixingManager() { return boost::make_shared<FixingManager>(asof_); }
     //! Get parametric var calculator
     virtual boost::shared_ptr<ParametricVarCalculator>
     buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
@@ -178,6 +204,7 @@ protected:
     bool stress_;
     bool parametricVar_;
     bool writeBaseScenario_;
+    bool continueOnError_;
     std::string inputPath_;
     std::string outputPath_;
 
@@ -198,10 +225,10 @@ protected:
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
 
+    ore::data::CurveConfigurations curveConfigs_;
+
 private:
-    virtual ReportWriter* getReportWriterImpl() const {
-        return new ReportWriter();
-    }
+    virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }
 };
 } // namespace analytics
 } // namespace ore

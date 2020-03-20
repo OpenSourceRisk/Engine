@@ -23,50 +23,40 @@
 
 #pragma once
 
-#include <ored/portfolio/optiondata.hpp>
-#include <ored/portfolio/trade.hpp>
-
-using std::string;
+#include <ored/portfolio/vanillaoption.hpp>
 
 namespace ore {
 namespace data {
+using std::string;
 
 //! Serializable Equity Option
 /*!
   \ingroup tradedata
 */
-class EquityOption : public Trade {
+class EquityOption : public VanillaOptionTrade {
 public:
     //! Default constructor
-    EquityOption() : Trade("EquityOption"), strike_(0.0), quantity_(0.0) {}
+    EquityOption() : VanillaOptionTrade(AssetClass::EQ) { tradeType_ = "EquityOption"; }
     //! Constructor
     EquityOption(Envelope& env, OptionData option, string equityName, string currency, double strike, double quantity)
-        : Trade("EquityOption", env), option_(option), eqName_(equityName), currency_(currency), strike_(strike),
-          quantity_(quantity) {}
+        : VanillaOptionTrade(env, AssetClass::EQ, option, equityName, currency, strike, quantity) { tradeType_ = "EquityOption"; }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>&);
+    void build(const boost::shared_ptr<EngineFactory>&) override;
+
+    //! Add underlying Equity names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
 
     //! \name Inspectors
     //@{
-    const OptionData& option() const { return option_; }
-    const string& equityName() const { return eqName_; }
-    const string& currency() const { return currency_; }
-    double strike() const { return strike_; }
-    double quantity() const { return quantity_; }
+    const string& equityName() const { return assetName_; }
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
-private:
-    OptionData option_;
-    string eqName_;
-    string currency_;
-    double strike_;
-    double quantity_;
 };
 } // namespace data
 } // namespace ore

@@ -24,6 +24,17 @@
     <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="FxOptionAmerican">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
+      <Parameter name="XGrid">100</Parameter>
+      <Parameter name="DampingSteps">0</Parameter>
+    </EngineParameters>
+  </Product>
   <Product type="EuropeanSwaption">
     <Model>BlackBachelier</Model>
     <!-- depends on input vol -->
@@ -64,6 +75,30 @@
     <Engine>YYCapEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="CapFlooredYYLeg">
+    <Model>CapFlooredYYModel</Model>
+    <ModelParameters/>
+    <Engine>CapFlooredYYCouponPricer</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CpiCapFloor">
+    <Model>CpiCapModel</Model>
+    <ModelParameters/>
+    <Engine>CpiCapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CappedFlooredCpiLegCoupons">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackAnalytic</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CappedFlooredCpiLegCashFlows">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackAnalytic</Engine>
+    <EngineParameters/>
+  </Product>
   <Product type="CapFlooredIborLeg">
     <Model>BlackOrBachelier</Model>
     <ModelParameters/>
@@ -87,22 +122,29 @@
     <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters/>
   </Product>
-  <Product type="VarianceSwap">
+  <Product type="EquityOptionAmerican">
     <Model>BlackScholesMerton</Model>
     <ModelParameters/>
-    <Engine>ReplicatingVarianceSwapEngine</Engine>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
     <EngineParameters>
-    <!-- Optionally we need to define the grid of calls and puts we wish to integrate over. -->
-    <!-- The default parameters are #Calls=11, #Puts=11, annualised step size=5% of spot -->
-        <Parameter name="NumberOfCalls">8</Parameter>
-        <Parameter name="NumberOfPuts">11</Parameter>
-        <Parameter name="MoneynessStep">0.05</Parameter>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
+      <Parameter name="XGrid">100</Parameter>
+      <Parameter name="DampingSteps">0</Parameter>
     </EngineParameters>
   </Product>
   <Product type="Bond">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
     <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="ForwardBond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingForwardBondEngine</Engine>
     <EngineParameters>
       <Parameter name="TimestepPeriod">6M</Parameter>
     </EngineParameters>
@@ -164,12 +206,7 @@
   <!-- CMS Spread Brigo Mercurio Model -->
   <Product type="CMSSpread">
     <Model>BrigoMercurio</Model>
-    <ModelParameters>
-      <Parameter name="Correlation_EUR">0.8</Parameter>
-      <Parameter name="Correlation_USD">0.75</Parameter>
-      <Parameter name="Correlation_GBP">0.72</Parameter>
-      <Parameter name="Correlation_CHF">0.7</Parameter>
-    </ModelParameters>
+    <ModelParameters/>
     <Engine>Analytic</Engine>
     <EngineParameters>
       <Parameter name="IntegrationPoints">16</Parameter>
@@ -187,4 +224,13 @@
     <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="CPICapFloor">
+    <Model>CPICapFloorModel</Model>
+    <ModelParameters/>
+    <Engine>CPIBlackCapFloorEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <GlobalParameters>
+    <Parameter name="ContinueOnCalibrationError">true</Parameter>
+  </GlobalParameters>
 </PricingEngines>

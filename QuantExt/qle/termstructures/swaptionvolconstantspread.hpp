@@ -28,11 +28,8 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <iostream>
-
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 namespace {
 class ConstantSpreadSmileSection : public SmileSection {
@@ -111,7 +108,10 @@ protected:
     }
 
     Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const {
-        return smileSectionImpl(optionTime, swapLength)->volatility(strike);
+        if (strike == Null<Real>())
+            return atm_->volatility(optionTime, swapLength, 0.0);
+        else
+            return smileSectionImpl(optionTime, swapLength)->volatility(strike);
     }
 
 private:

@@ -37,7 +37,6 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency soldCcy = parseCurrency(soldCurrency_);
     Date maturityDate = parseDate(maturityDate_);
 
-
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxForward");
 
     try {
@@ -49,6 +48,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         npvCurrency_ = soldCurrency_;
         notional_ = soldAmount_;
+	notionalCurrency_ = soldCurrency_;
         maturity_ = maturityDate;
 
     } catch (std::exception&) {

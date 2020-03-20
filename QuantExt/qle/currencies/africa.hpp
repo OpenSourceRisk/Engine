@@ -30,9 +30,8 @@
 
 #include <ql/currency.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Tunisian dinar
 /*! The ISO three-letter code is TND; the numeric code is 788.
@@ -77,5 +76,17 @@ class MADCurrency : public Currency {
 public:
     MADCurrency();
 };
+
+//! Kenyan shilling
+/*! The ISO three-letter code is KES; the numeric code is 404.
+ It is divided into 100 cents.
+
+ \ingroup currencies
+*/
+class KESCurrency : public Currency {
+public:
+    KESCurrency();
+};
+
 } // namespace QuantExt
 #endif

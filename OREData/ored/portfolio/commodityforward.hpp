@@ -18,7 +18,7 @@
 
 /*! \file ored/portfolio/commodityforward.hpp
     \brief Commodity forward representation
-    
+
     \ingroup tradedata
 */
 
@@ -38,13 +38,9 @@ public:
     //! Default constructor
     CommodityForward();
     //! Detailed constructor
-    CommodityForward(const Envelope& envelope, 
-        const std::string& position, 
-        const std::string& commodityName,
-        const std::string& currency, 
-        QuantLib::Real quantity, 
-        const std::string& maturityDate, 
-        QuantLib::Real strike);
+    CommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
+                     const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
+                     QuantLib::Real strike);
     //@}
 
     //! \name Inspectors
@@ -59,13 +55,22 @@ public:
 
     //! \name Trade interface
     //@{
-    void build(const boost::shared_ptr<EngineFactory>&);
+    void build(const boost::shared_ptr<EngineFactory>&) override;
+
+    //! Return no fixings for a CommodityForward
+    std::map<std::string, std::set<QuantLib::Date>> fixings(
+        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
+        return {};
+    }
+
+    //! Add underlying Commodity names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
 private:
@@ -76,5 +81,5 @@ private:
     std::string maturityDate_;
     QuantLib::Real strike_;
 };
-}
-}
+} // namespace data
+} // namespace ore

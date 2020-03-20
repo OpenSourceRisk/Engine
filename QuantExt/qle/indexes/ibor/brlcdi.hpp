@@ -27,21 +27,29 @@
 #include <ql/currencies/america.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/brazil.hpp>
-#include <ql/time/daycounters/actual360.hpp>
-
-using namespace QuantLib;
+#include <ql/time/daycounters/business252.hpp>
 
 namespace QuantExt {
 
 //! BRL-CDI index
 
-//****** Figure out day count - According to BBG: DU252 ******
-
-class BRLCdi : public IborIndex {
+class BRLCdi : public QuantLib::OvernightIndex {
 public:
-    BRLCdi(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("BRL-CDI", tenor, 0, BRLCurrency(), Brazil(), ModifiedFollowing, false, Actual360(), h) {}
+    BRLCdi(const QuantLib::Handle<QuantLib::YieldTermStructure>& h = QuantLib::Handle<QuantLib::YieldTermStructure>())
+        : QuantLib::OvernightIndex("BRL-CDI", 0, QuantLib::BRLCurrency(), 
+          QuantLib::Brazil(QuantLib::Brazil::Settlement), QuantLib::Business252(), h) {}
+
+    //! \name InterestRateIndex interface
+    //@{
+    QuantLib::Rate forecastFixing(const QuantLib::Date& fixingDate) const;
+    //@}
+
+    //! \name IborIndex interface
+    //@{
+    boost::shared_ptr<IborIndex> clone(const QuantLib::Handle<QuantLib::YieldTermStructure>& h) const;
+    //@}
 };
+
 } // namespace QuantExt
 
 #endif

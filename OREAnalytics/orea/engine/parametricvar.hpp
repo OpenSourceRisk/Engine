@@ -27,17 +27,18 @@
 
 #include <ored/report/report.hpp>
 
+#include <qle/math/covariancesalvage.hpp>
+
 #include <ql/math/array.hpp>
 #include <ql/math/matrix.hpp>
 
 #include <map>
 #include <set>
 
-using QuantLib::Matrix;
-using QuantLib::Array;
-
 namespace ore {
 namespace analytics {
+using QuantLib::Matrix;
+using QuantLib::Array;
 
 //! Parametric VaR Calculator
 /*! This class takes sensitivity data and a covariance matrix as an input and computes a parametric value at risk. The
@@ -46,7 +47,8 @@ class ParametricVarCalculator {
 public:
     virtual ~ParametricVarCalculator() {}
     ParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
-                            const std::string& portfolioFilter, const boost::shared_ptr<SensitivityStream>& sensitivities,
+                            const std::string& portfolioFilter,
+                            const boost::shared_ptr<SensitivityStream>& sensitivities,
                             const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
                             const std::vector<Real>& p, const std::string& method, const Size mcSamples,
                             const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix);
@@ -54,7 +56,8 @@ public:
 
 protected:
     virtual std::vector<Real> computeVar(const Matrix& omega, const Array& delta, const Matrix& gamma,
-                                         const std::vector<Real>& p);
+                                         const std::vector<Real>& p,
+                                         const QuantExt::CovarianceSalvage& covarianceSalvage);
     const std::map<std::string, std::set<std::string>> tradePortfolios_;
     const std::string portfolioFilter_;
     const boost::shared_ptr<SensitivityStream> sensitivities_;

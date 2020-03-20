@@ -29,9 +29,8 @@
 #include <ql/time/calendars/russia.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! RUB-MOSPRIME index
 //! RUB-MOSPRIME rate
@@ -39,8 +38,7 @@ namespace QuantExt {
 class RUBMosprime : public IborIndex {
 public:
     RUBMosprime(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("RUB-MOSPRIME", tenor, 2, RUBCurrency(), Russia(), ModifiedFollowing, false, ActualActual(),
-                    h) {}
+        : IborIndex("RUB-MOSPRIME", tenor, 2, RUBCurrency(), Russia(), ModifiedFollowing, false, ActualActual(), h) {}
 };
 } // namespace QuantExt
 

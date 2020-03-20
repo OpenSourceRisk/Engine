@@ -4,7 +4,7 @@
 
  This file is part of ORE, a free-software/open-source library
  for transparent pricing and risk analysis - http://opensourcerisk.org
- 
+
  ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program.
@@ -24,26 +24,28 @@
 #ifndef quantext_yoyinflationoptionletvolstripper_hpp
 #define quantext_yoyinflationoptionletvolstripper_hpp
 
-#include <ql/termstructures/volatility/capfloor/capfloortermvolsurface.hpp>
 #include <ql/indexes/inflationindex.hpp>
+#include <ql/termstructures/volatility/capfloor/capfloortermvolsurface.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 
+namespace QuantExt {
 using namespace QuantLib;
 
-namespace QuantExt {
-    
 /*! Helper class to strip yoy inlfation optionlet (i.e. caplet/floorlet) volatilities
     from the (cap/floor) term volatilities of a CapFloorTermVolSurface.
 \ingroup termstructures
 */
 class YoYInflationOptionletVolStripper {
 public:
-    YoYInflationOptionletVolStripper(const boost::shared_ptr<CapFloorTermVolSurface>& volSurface, 
-        const boost::shared_ptr<YoYInflationIndex>& index, const Handle<YieldTermStructure>& nominalTs,
-        VolatilityType type = ShiftedLognormal, Real displacement = 0.0);
+    YoYInflationOptionletVolStripper(const boost::shared_ptr<QuantLib::CapFloorTermVolSurface>& volSurface,
+                                     const boost::shared_ptr<YoYInflationIndex>& index,
+                                     const Handle<YieldTermStructure>& nominalTs,
+                                     VolatilityType type = ShiftedLognormal, Real displacement = 0.0);
 
-    const boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const { return yoyOptionletVolSurface_; }
+    const boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const {
+        return yoyOptionletVolSurface_;
+    }
 
     //! \name LazyObject interface
     //@{
@@ -51,9 +53,9 @@ public:
     //@}
 private:
     boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyOptionletVolSurface_;
-    boost::shared_ptr<CapFloorTermVolSurface> volSurface_;
+    boost::shared_ptr<QuantLib::CapFloorTermVolSurface> volSurface_;
     boost::shared_ptr<YoYInflationIndex> yoyIndex_;
-    Handle<YieldTermStructure>nominalTs_;
+    Handle<YieldTermStructure> nominalTs_;
     VolatilityType type_;
     Real displacement_;
 };

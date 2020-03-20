@@ -24,13 +24,10 @@
 
 #include <ored/portfolio/portfolio.hpp>
 
-using QuantLib::Date;
-using QuantLib::Real;
-using QuantLib::Index;
-using ore::data::Portfolio;
-
 namespace ore {
 namespace analytics {
+using namespace QuantLib;
+using ore::data::Portfolio;
 
 //! Pseudo Fixings Manager
 /*!
@@ -50,17 +47,20 @@ namespace analytics {
 class FixingManager {
 public:
     FixingManager(Date today) : today_(today), fixingsEnd_(today), modifiedFixingHistory_(false) {}
+    virtual ~FixingManager() {}
 
     //! Initialise the manager with these flows and indices from the given portfolio
     void initialise(const boost::shared_ptr<Portfolio>& portfolio);
-
+  
+    virtual void processCashFlows(const boost::shared_ptr<QuantLib::CashFlow> cf);
+  
     //! Update fixings to date d
     void update(Date d);
 
     //! Reset fixings to t0 (today)
     void reset();
 
-private:
+protected:
     void applyFixings(Date start, Date end);
 
     Date today_, fixingsEnd_;

@@ -16,18 +16,26 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <iostream>
+#include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/strike.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/time/daycounters/all.hpp>
-#include <test/parser.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
 
-namespace testsuite {
+using ore::data::CommoditySpotQuote;
+using ore::data::FXOptionQuote;
+using ore::data::CommodityForwardQuote;
+using ore::data::MarketDatum;
+using ore::data::parseMarketDatum;
+
+namespace {
 
 struct test_daycounter_data {
     const char* str;
@@ -102,7 +110,24 @@ static struct test_comp_data comp_data[] = {
     {"SimpleThenCompounded", SimpleThenCompounded},
 };
 
-void ParseTest::testDayCounterParsing() {
+void checkStrikeParser(const std::string& s, const ore::data::Strike::Type expectedType, const Real expectedValue) {
+    if (ore::data::parseStrike(s).type != expectedType) {
+        BOOST_FAIL("unexpected strike type parsed from input string " << s);
+    }
+    if (!close_enough(ore::data::parseStrike(s).value, expectedValue)) {
+        BOOST_FAIL("unexpected strike value parsed from input string " << s);
+    }
+    return;
+}
+
+} // namespace
+
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(ParserTests)
+
+BOOST_AUTO_TEST_CASE(testDayCounterParsing) {
+
     BOOST_TEST_MESSAGE("Testing day counter parsing...");
 
     Size len = sizeof(daycounter_data) / sizeof(daycounter_data[0]);
@@ -124,63 +149,52 @@ void ParseTest::testDayCounterParsing() {
     }
 }
 
-void ParseTest::testFrequencyParsing() {
+BOOST_AUTO_TEST_CASE(testFrequencyParsing) {
+
     BOOST_TEST_MESSAGE("Testing frequency parsing...");
 
     Size len = sizeof(freq_data) / sizeof(freq_data[0]);
     for (Size i = 0; i < len; ++i) {
         string str(freq_data[i].str);
-        QuantLib::Frequency f;
 
         try {
-            f = ore::data::parseFrequency(str);
+            QuantLib::Frequency f = ore::data::parseFrequency(str);
+            if (f) {
+                if (f != freq_data[i].freq)
+                    BOOST_FAIL("Frequency Parser(" << str << ") returned frequency " << f << " expected "
+                                                   << freq_data[i].freq);
+                BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << f);
+            }
         } catch (...) {
             BOOST_FAIL("Frequency Parser failed to parse " << str);
-        }
-        if (f) {
-            if (f != freq_data[i].freq)
-                BOOST_FAIL("Frequency Parser(" << str << ") returned frequency " << f << " expected "
-                                               << freq_data[i].freq);
-            BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << f);
         }
     }
 }
 
-void ParseTest::testCompoundingParsing() {
+BOOST_AUTO_TEST_CASE(testCompoundingParsing) {
+
     BOOST_TEST_MESSAGE("Testing Compounding parsing...");
 
     Size len = sizeof(comp_data) / sizeof(comp_data[0]);
     for (Size i = 0; i < len; ++i) {
         string str(comp_data[i].str);
-        QuantLib::Compounding c;
 
         try {
-            c = ore::data::parseCompounding(str);
+            QuantLib::Compounding c = ore::data::parseCompounding(str);
+            if (c) {
+                if (c != comp_data[i].comp)
+                    BOOST_FAIL("Compounding Parser(" << str << ") returned Compounding " << c << " expected "
+                                                     << comp_data[i].comp);
+                BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << c);
+            }
         } catch (...) {
             BOOST_FAIL("Compounding Parser failed to parse " << str);
         }
-        if (c) {
-            if (c != comp_data[i].comp)
-                BOOST_FAIL("Compounding Parser(" << str << ") returned Compounding " << c << " expected "
-                                                 << comp_data[i].comp);
-            BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << c);
-        }
     }
 }
 
-namespace {
-void checkStrikeParser(const std::string& s, const ore::data::Strike::Type expectedType, const Real expectedValue) {
-    if (ore::data::parseStrike(s).type != expectedType) {
-        BOOST_FAIL("unexpected strike type parsed from input string " << s);
-    }
-    if (!close_enough(ore::data::parseStrike(s).value, expectedValue)) {
-        BOOST_FAIL("unexpected strike value parsed from input string " << s);
-    }
-    return;
-}
-} // namespace
+BOOST_AUTO_TEST_CASE(testStrikeParsing) {
 
-void ParseTest::testStrikeParsing() {
     BOOST_TEST_MESSAGE("Testing Strike parsing...");
 
     checkStrikeParser("ATM", ore::data::Strike::Type::ATM, 0.0);
@@ -213,11 +227,19 @@ void ParseTest::testStrikeParsing() {
     checkStrikeParser("+10.0D", ore::data::Strike::Type::Delta, 10.0);
     checkStrikeParser("-25D", ore::data::Strike::Type::Delta, -25.0);
     checkStrikeParser("-25.0D", ore::data::Strike::Type::Delta, -25.0);
-
+    checkStrikeParser("10C", ore::data::Strike::Type::DeltaCall, 10.0);
+    checkStrikeParser("10c", ore::data::Strike::Type::DeltaCall, 10.0);
+    checkStrikeParser("20P", ore::data::Strike::Type::DeltaPut, 20.0);
+    checkStrikeParser("20p", ore::data::Strike::Type::DeltaPut, 20.0);
+    checkStrikeParser("25BF", ore::data::Strike::Type::BF, 25.0);
+    checkStrikeParser("25bf", ore::data::Strike::Type::BF, 25.0);
+    checkStrikeParser("25RR", ore::data::Strike::Type::RR, 25.0);
+    checkStrikeParser("25rr", ore::data::Strike::Type::RR, 25.0);
     BOOST_CHECK(true);
 }
 
-void ParseTest::testDatePeriodParsing() {
+BOOST_AUTO_TEST_CASE(testDatePeriodParsing) {
+
     BOOST_TEST_MESSAGE("Testing Date and Period parsing...");
 
     BOOST_CHECK_EQUAL(ore::data::parseDate("20170605"), Date(5, Jun, 2017));
@@ -234,12 +256,12 @@ void ParseTest::testDatePeriodParsing() {
     BOOST_CHECK_EQUAL(ore::data::parseDate("05/06/17"), Date(5, Jun, 2017));
     BOOST_CHECK_EQUAL(ore::data::parseDate("05.06.17"), Date(5, Jun, 2017));
     //
-    BOOST_CHECK_THROW(ore::data::parseDate("1Y"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDate("05-06-1Y"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDate("X5-06-17"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05-"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDate("-2017-06-05"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDate("xx17-06-05"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parseDate("1Y"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("05-06-1Y"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("X5-06-17"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05-"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("-2017-06-05"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("xx17-06-05"), QuantLib::Error);
 
     BOOST_CHECK_EQUAL(ore::data::parsePeriod("3Y"), 3 * Years);
     BOOST_CHECK_EQUAL(ore::data::parsePeriod("3y"), 3 * Years);
@@ -254,11 +276,11 @@ void ParseTest::testDatePeriodParsing() {
     BOOST_CHECK_EQUAL(ore::data::parsePeriod("6M0W"), 6 * Months + 0 * Weeks);
     BOOST_CHECK_EQUAL(ore::data::parsePeriod("6M0D"), 6 * Months + 0 * Days);
     //
-    BOOST_CHECK_THROW(ore::data::parsePeriod("20170605"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parsePeriod("3X"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parsePeriod("xY"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parsePeriod(".3M"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parsePeriod("3M."), std::exception);
+    BOOST_CHECK_THROW(ore::data::parsePeriod("20170605"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parsePeriod("3X"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parsePeriod("xY"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parsePeriod(".3M"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parsePeriod("3M."), QuantLib::Error);
 
     Date d;
     Period p;
@@ -279,20 +301,269 @@ void ParseTest::testDatePeriodParsing() {
     ore::data::parseDateOrPeriod("20170605D", d, p, isDate);
     BOOST_CHECK(!isDate && p == 20170605 * Days);
     //
-    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("5Y2017", d, p, isDate), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("2017-06-05D", d, p, isDate), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod(".3M", d, p, isDate), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("3M.", d, p, isDate), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("xx17-06-05", d, p, isDate), std::exception);
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("5Y2017", d, p, isDate), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("2017-06-05D", d, p, isDate), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod(".3M", d, p, isDate), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("3M.", d, p, isDate), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("xx17-06-05", d, p, isDate), QuantLib::Error);
 }
 
-test_suite* ParseTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("ParseTest");
-    suite->add(BOOST_TEST_CASE(&ParseTest::testDayCounterParsing));
-    suite->add(BOOST_TEST_CASE(&ParseTest::testFrequencyParsing));
-    suite->add(BOOST_TEST_CASE(&ParseTest::testCompoundingParsing));
-    suite->add(BOOST_TEST_CASE(&ParseTest::testStrikeParsing));
-    suite->add(BOOST_TEST_CASE(&ParseTest::testDatePeriodParsing));
-    return suite;
+BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
+
+    BOOST_TEST_MESSAGE("Testing market datum parsing...");
+
+    BOOST_TEST_MESSAGE("Testing correlation market datum parsing...");
+
+    { // test rate quote
+        Date d(1, Jan, 1990);
+        Real value = 1;
+
+        string input = "CORRELATION/RATE/INDEX1/INDEX2/1Y/ATM";
+
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::CORRELATION);
+        BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::RATE);
+
+        boost::shared_ptr<ore::data::CorrelationQuote> spreadDatum =
+            boost::dynamic_pointer_cast<ore::data::CorrelationQuote>(datum);
+
+        BOOST_CHECK(spreadDatum->index1() == "INDEX1");
+        BOOST_CHECK(spreadDatum->index2() == "INDEX2");
+        BOOST_CHECK(spreadDatum->expiry() == "1Y");
+        BOOST_CHECK(spreadDatum->strike() == "ATM");
+    }
+
+    { // test price quote
+        Date d(3, Mar, 2018);
+        Real value = 10;
+
+        string input = "CORRELATION/PRICE/INDEX1/INDEX2/1Y/0.1";
+
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::CORRELATION);
+        BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::PRICE);
+
+        boost::shared_ptr<ore::data::CorrelationQuote> spreadDatum =
+            boost::dynamic_pointer_cast<ore::data::CorrelationQuote>(datum);
+
+        BOOST_CHECK(spreadDatum->index1() == "INDEX1");
+        BOOST_CHECK(spreadDatum->index2() == "INDEX2");
+        BOOST_CHECK(spreadDatum->expiry() == "1Y");
+        BOOST_CHECK(spreadDatum->strike() == "0.1");
+    }
+
+    { // test parsing throws
+        Date d(3, Mar, 2018);
+        Real value = 10;
+
+        BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "CORRELATION/PRICE/INDEX1/INDEX2/1Y/SS", value),
+                          QuantLib::Error);
+        BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "CORRELATION/PRICE/INDEX1/INDEX2/6X/0.1", value),
+                          QuantLib::Error);
+    }
+
+    BOOST_TEST_MESSAGE("Testing commodity spot market datum parsing...");
+
+    // test normal parsing
+    {
+        Date d(29, Jul, 2019);
+        Real value = 1418.1;
+
+        string input = "COMMODITY/PRICE/PM:XAUUSD/USD";
+
+        boost::shared_ptr<MarketDatum> datum = parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == MarketDatum::InstrumentType::COMMODITY_SPOT);
+        BOOST_CHECK(datum->quoteType() == MarketDatum::QuoteType::PRICE);
+
+        boost::shared_ptr<CommoditySpotQuote> q = boost::dynamic_pointer_cast<CommoditySpotQuote>(datum);
+
+        BOOST_CHECK(q->commodityName() == "PM:XAUUSD");
+        BOOST_CHECK(q->quoteCurrency() == "USD");
+    }
+
+    // test possible exceptions
+    {
+        Date d(29, Jul, 2019);
+        Real value = 1418.1;
+
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_SPOT/PRICE/PM:XAUUSD/USD", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY/RATE/PM:XAUUSD/USD", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY/PRICE/USD", value), Error);
+    }
+
+    BOOST_TEST_MESSAGE("Testing commodity forward market datum parsing...");
+
+    // test normal parsing
+    {
+        Date d(29, Jul, 2019);
+        Real value = 300.16535;
+
+        // Tenor based quote
+        string input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/1M";
+        boost::shared_ptr<MarketDatum> datum = parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == MarketDatum::InstrumentType::COMMODITY_FWD);
+        BOOST_CHECK(datum->quoteType() == MarketDatum::QuoteType::PRICE);
+
+        boost::shared_ptr<CommodityForwardQuote> q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->commodityName() == "PM:XAUUSD");
+        BOOST_CHECK(q->quoteCurrency() == "USD");
+        BOOST_CHECK(q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date());
+        BOOST_CHECK(q->tenor() == 1 * Months);
+        BOOST_CHECK(q->startTenor() == boost::none);
+
+        // Date based quote
+        input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2019-08-30";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->commodityName() == "PM:XAUUSD");
+        BOOST_CHECK(q->quoteCurrency() == "USD");
+        BOOST_CHECK(!q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date(30, Aug, 2019));
+        BOOST_CHECK(q->tenor() == Period());
+        BOOST_CHECK(q->startTenor() == boost::none);
+
+        // Special tenor based quotes
+
+        // Overnight
+        input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/ON";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date());
+        BOOST_CHECK(q->tenor() == 1 * Days);
+        BOOST_CHECK(q->startTenor() == 0 * Days);
+
+        // Tom-next
+        input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/TN";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date());
+        BOOST_CHECK(q->tenor() == 1 * Days);
+        BOOST_CHECK(q->startTenor() == 1 * Days);
+
+        // Spot-next
+        input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/SN";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date());
+        BOOST_CHECK(q->tenor() == 1 * Days);
+        BOOST_CHECK(q->startTenor() == boost::none);
+    }
+
+    // test possible exceptions
+    {
+        Date d(29, Jul, 2019);
+        Real value = 300.16535;
+
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_FORWARD/PRICE/PM:XAUUSD/USD/1M", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_FWD/RATE/PM:XAUUSD/USD/1M", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_FWD/PRICE/USD/1M", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2019-12", value), Error);
+    }
+
+    BOOST_TEST_MESSAGE("Testing fx option market datum parsing...");
+
+    // test normal parsing
+    {
+        Date d(29, Jul, 2019);
+        Real value = 1.234;
+        
+        // ATM quote
+        string input = "FX_OPTION/RATE_LNVOL/EUR/USD/1M/ATM";
+        boost::shared_ptr<MarketDatum> datum = parseMarketDatum(d, input, value);
+        
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == MarketDatum::InstrumentType::FX_OPTION);
+        BOOST_CHECK(datum->quoteType() == MarketDatum::QuoteType::RATE_LNVOL);
+        
+        boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(1, Months));
+        BOOST_CHECK(q->strike() == "ATM");
+        
+        //Butterfly quote
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/25BF";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "25BF");
+
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/10BF";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "10BF");
+        
+        //Risk Reversal quote
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/25RR";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "25RR");
+
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/10RR";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "10RR");
+        
+        //Strike based quote
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/10C";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "10C");
+        
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/20P";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "20P");
+        
+        // test possible exceptions
+        {
+            Date d(29, Jul, 2019);
+            Real value = 300.16535;
+            
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/ATMF", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/BBFF", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/1LRR", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/10D", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/2019-12", value), Error);
+        }
+    }
 }
-} // namespace testsuite
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

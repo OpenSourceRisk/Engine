@@ -16,24 +16,27 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "bonds.hpp"
-
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/termstructures/credit/flathazardrate.hpp>
+#include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
+#include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/credit/flathazardrate.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/schedule.hpp>
-#include <ql/cashflows/fixedratecoupon.hpp>
 #include <qle/instruments/impliedbondspread.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 
 #include <boost/make_shared.hpp>
 
 using namespace boost::unit_test_framework;
+using namespace QuantLib;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void BondsTest::testBondSpreads() {
+BOOST_AUTO_TEST_SUITE(BondsTest)
+
+BOOST_AUTO_TEST_CASE(testBondSpreads) {
 
     BOOST_TEST_MESSAGE("Testing QuantExt bond spread helper");
 
@@ -45,10 +48,8 @@ void BondsTest::testBondSpreads() {
     Handle<Quote> rateQuote(boost::make_shared<SimpleQuote>(0.02));
     Handle<Quote> issuerSpreadQuote(boost::make_shared<SimpleQuote>(0.01));
     DayCounter dc = Actual365Fixed();
-    Handle<YieldTermStructure> yts(
-        boost::make_shared<FlatForward>(today, rateQuote, dc, Compounded, Semiannual));
-    Handle<DefaultProbabilityTermStructure> dpts(
-        boost::make_shared<FlatHazardRate>(today,issuerSpreadQuote, dc));
+    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(today, rateQuote, dc, Compounded, Semiannual));
+    Handle<DefaultProbabilityTermStructure> dpts(boost::make_shared<FlatHazardRate>(today, issuerSpreadQuote, dc));
     Handle<Quote> bondSpecificSpread(boost::make_shared<SimpleQuote>(0.005));
 
     // build the bond
@@ -65,11 +66,13 @@ void BondsTest::testBondSpreads() {
 
     Real redemption = 100.0;
     Real couponRate = 0.04;
-    Leg leg = FixedRateLeg(schedule).withNotionals(redemption).withCouponRates(couponRate, dc).withPaymentAdjustment(bdc);
+    Leg leg =
+        FixedRateLeg(schedule).withNotionals(redemption).withCouponRates(couponRate, dc).withPaymentAdjustment(bdc);
 
     boost::shared_ptr<QuantLib::Bond> bond(boost::make_shared<QuantLib::Bond>(0, WeekendsOnly(), today, leg));
     Handle<Quote> recovery;
-    boost::shared_ptr<PricingEngine> pricingEngine(boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, bondSpecificSpread, 1*Months));
+    boost::shared_ptr<PricingEngine> pricingEngine(
+        boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, bondSpecificSpread, 1 * Months));
     bond->setPricingEngine(pricingEngine);
 
     Real price = bond->dirtyPrice();
@@ -81,7 +84,8 @@ void BondsTest::testBondSpreads() {
     boost::shared_ptr<PricingEngine> tmpEngine;
     tmpEngine.reset(new QuantExt::DiscountingRiskyBondEngine(yts, dpts, recovery, tmpSpreadH, 1 * Months));
 
-    Real impliedSpread = QuantExt::detail::ImpliedBondSpreadHelper::calculate(bond, tmpEngine, tmpSpread, price, false, 1.e-12, 10000, -0.02, 1.00);
+    Real impliedSpread = QuantExt::detail::ImpliedBondSpreadHelper::calculate(bond, tmpEngine, tmpSpread, price, false,
+                                                                              1.e-12, 10000, -0.02, 1.00);
     BOOST_TEST_MESSAGE("Implied spread = " << impliedSpread);
     BOOST_CHECK_CLOSE(impliedSpread, bondSpecificSpread->value(), 0.0001);
 
@@ -90,9 +94,11 @@ void BondsTest::testBondSpreads() {
 
     // which spread would mean the bond price is par?
     Real parRedemption = 100.0;
-    Real impliedSpreadPar = QuantExt::detail::ImpliedBondSpreadHelper::calculate(bond, tmpEngine, tmpSpread, parRedemption, false, 1.e-12, 10000, -0.02, 1.00);
+    Real impliedSpreadPar = QuantExt::detail::ImpliedBondSpreadHelper::calculate(
+        bond, tmpEngine, tmpSpread, parRedemption, false, 1.e-12, 10000, -0.02, 1.00);
     BOOST_TEST_MESSAGE("Par bond price would require spread of " << impliedSpreadPar);
-    BOOST_CHECK_EQUAL(price, bond->dirtyPrice()); // ensure hypothetical impliedSpread calc has not affected the original position
+    BOOST_CHECK_EQUAL(
+        price, bond->dirtyPrice()); // ensure hypothetical impliedSpread calc has not affected the original position
 
     boost::dynamic_pointer_cast<SimpleQuote>(*bondSpecificSpread)->setValue(impliedSpreadPar);
     Real pricePar = bond->dirtyPrice();
@@ -107,24 +113,21 @@ void BondsTest::testBondSpreads() {
     bond->setPricingEngine(pricingEngine);
     Real priceNoIssuerCurve = bond->dirtyPrice();
     BOOST_TEST_MESSAGE("Bond price (ignoring issuer spread) = " << priceNoIssuerCurve);
-    impliedSpread = QuantExt::detail::ImpliedBondSpreadHelper::calculate(bond, tmpEngine, tmpSpread, priceNoIssuerCurve, false, 1.e-12, 10000, -0.02, 1.00);
+    impliedSpread = QuantExt::detail::ImpliedBondSpreadHelper::calculate(bond, tmpEngine, tmpSpread, priceNoIssuerCurve,
+                                                                         false, 1.e-12, 10000, -0.02, 1.00);
     BOOST_TEST_MESSAGE("Bond spread (ignoring issuer spread) = " << impliedSpread);
     BOOST_CHECK_CLOSE(impliedSpread, bondSpecificSpread->value(), 0.0001);
 
     // which spread would mean the bond price is par?
-    impliedSpreadPar = QuantExt::detail::ImpliedBondSpreadHelper::calculate(bond, tmpEngine, tmpSpread, parRedemption, false, 1.e-12, 10000, -0.02, 1.00);
+    impliedSpreadPar = QuantExt::detail::ImpliedBondSpreadHelper::calculate(bond, tmpEngine, tmpSpread, parRedemption,
+                                                                            false, 1.e-12, 10000, -0.02, 1.00);
     BOOST_TEST_MESSAGE("Par bond price would require spread of " << impliedSpreadPar);
     BOOST_CHECK_CLOSE(impliedSpreadPar, bondSpecificSpread->value() + issuerSpreadQuote->value(), 0.0001);
     boost::dynamic_pointer_cast<SimpleQuote>(*bondSpecificSpread)->setValue(impliedSpreadPar);
     pricePar = bond->dirtyPrice();
     BOOST_TEST_MESSAGE("Bond spread of " << bondSpecificSpread->value() << " means price of " << pricePar);
     BOOST_CHECK_CLOSE(pricePar, parRedemption, 0.0001);
-
 }
+BOOST_AUTO_TEST_SUITE_END()
 
-test_suite* BondsTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("BondHelpersTests");
-    suite->add(BOOST_TEST_CASE(&BondsTest::testBondSpreads));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

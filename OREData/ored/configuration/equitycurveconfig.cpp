@@ -21,6 +21,8 @@
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
+using namespace QuantLib;
+
 namespace ore {
 namespace data {
 
@@ -29,11 +31,11 @@ EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveD
                                      const EquityCurveConfig::Type& type, const string& equitySpotQuote,
                                      const vector<string>& fwdQuotes, const string& dayCountID,
                                      const string& dividendInterpVariable, const string& dividendInterpMethod,
-                                     bool extrapolation)
+                                     bool extrapolation, const QuantLib::Exercise::Type& exerciseStyle)
     : CurveConfig(curveID, curveDescription), fwdQuotes_(fwdQuotes), forecastingCurve_(forecastingCurve),
       currency_(currency), type_(type), equitySpotQuoteID_(equitySpotQuote), dayCountID_(dayCountID),
       divInterpVariable_(dividendInterpVariable), divInterpMethod_(dividendInterpMethod),
-      extrapolation_(extrapolation) {
+      extrapolation_(extrapolation), exerciseStyle_(exerciseStyle) {
     quotes_ = fwdQuotes;
     quotes_.insert(quotes_.begin(), equitySpotQuote);
 }
@@ -45,21 +47,15 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     forecastingCurve_ = XMLUtils::getChildValue(node, "ForecastingCurve", true);
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
-
-    string type = XMLUtils::getChildValue(node, "Type", true);
-    if (type == "DividendYield") {
-        type_ = Type::DividendYield;
-    } else if (type == "ForwardPrice") {
-        type_ = Type::ForwardPrice;
-    } else {
-        QL_FAIL("Type " << type << " not recognized");
-    }
-
+    type_ = parseEquityCurveConfigType(XMLUtils::getChildValue(node, "Type", true));
+    if (type_ == EquityCurveConfig::Type::OptionPremium)
+        exerciseStyle_ = parseExerciseType(XMLUtils::getChildValue(node, "ExerciseStyle", true));
     equitySpotQuoteID_ = XMLUtils::getChildValue(node, "SpotQuote", true);
     dayCountID_ = XMLUtils::getChildValue(node, "DayCounter", false);
-    fwdQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+    fwdQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote");
     quotes_ = fwdQuotes_;
-    quotes_.insert(quotes_.begin(), equitySpotQuoteID_);
+    if (equitySpotQuoteID_ != "")
+        quotes_.insert(quotes_.begin(), equitySpotQuoteID_);
 
     XMLNode* divInterpNode = XMLUtils::getChildNode(node, "DividendInterpolation");
     if (divInterpNode) {
@@ -71,34 +67,77 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     }
 
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
+
+    if (type_ == Type::NoDividends) {
+        QL_REQUIRE(fwdQuotes_.size() == 0,
+                   "Invalid EquityCurveConfig, no Quotes should be present when type=NoDividends");
+        QL_REQUIRE(divInterpNode == nullptr,
+                   "Invalid EquityCurveConfig, no DividendInterpolation should be present when type=NoDividends");
+    } else {
+        QL_REQUIRE(fwdQuotes_.size() > 0, "Invalid EquityCurveConfig, Quotes should be present when type!=NoDividends");
+    }
 }
 
 XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("EquityCurve");
-
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-    XMLUtils::addChild(doc, node, "ForecastingCurve", forecastingCurve_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
-
-    if (type_ == Type::DividendYield)
-        XMLUtils::addChild(doc, node, "Type", "DividendYield");
-    else if (type_ == Type::ForwardPrice)
-        XMLUtils::addChild(doc, node, "Type", "ForwardPrice");
-    else
-        QL_FAIL("Unkown type in EquityCurveConfig::toXML()");
-
+    XMLUtils::addChild(doc, node, "ForecastingCurve", forecastingCurve_);
+    XMLUtils::addChild(doc, node, "Type", to_string(type_));
+    if (type_ == EquityCurveConfig::Type::OptionPremium)
+        XMLUtils::addChild(doc, node, "ExerciseStyle", to_string(exerciseStyle_));
     XMLUtils::addChild(doc, node, "SpotQuote", equitySpotQuoteID_);
-    XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", fwdQuotes_);
+    XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);
 
-    XMLNode* divInterpNode = XMLUtils::addChild(doc, node, "DividendInterpolation");
-    XMLUtils::addChild(doc, divInterpNode, "InterpolationVariable", divInterpVariable_);
-    XMLUtils::addChild(doc, divInterpNode, "InterpolationMethod", divInterpMethod_);
-
+    if (type_ != Type::NoDividends) {
+        XMLNode* divInterpNode = XMLUtils::addChild(doc, node, "DividendInterpolation");
+        XMLUtils::addChild(doc, divInterpNode, "InterpolationVariable", divInterpVariable_);
+        XMLUtils::addChild(doc, divInterpNode, "InterpolationMethod", divInterpMethod_);
+    }
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
 
     return node;
 }
+
+std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t) {
+    switch (t) {
+    case EquityCurveConfig::Type::DividendYield:
+        return out << "DividendYield";
+    case EquityCurveConfig::Type::ForwardPrice:
+        return out << "ForwardPrice";
+    case EquityCurveConfig::Type::OptionPremium:
+        return out << "OptionPremium";
+    case EquityCurveConfig::Type::NoDividends:
+        return out << "NoDividends";
+    default:
+        QL_FAIL("unknown EquityCurveConfig::Type(" << int(t) << ")");
+    }
+}
+
+EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str) {
+    if (str == "DividendYield")
+        return EquityCurveConfig::Type::DividendYield;
+    else if (str == "ForwardPrice")
+        return EquityCurveConfig::Type::ForwardPrice;
+    else if (str == "OptionPremium")
+        return EquityCurveConfig::Type::OptionPremium;
+    else if (str == "NoDividends")
+        return EquityCurveConfig::Type::NoDividends;
+    QL_FAIL("Invalid EquityCurveConfig::Type " << str);
+}
+
+std::ostream& operator<<(std::ostream& out, Exercise::Type t) {
+    switch (t) {
+    case Exercise::American:
+        return out << "American";
+    case Exercise::European:
+        return out << "European";
+    default:
+        QL_FAIL("invalid Exercise::Type(" << int(t) << ")");
+    }
+}
+
 } // namespace data
 } // namespace ore

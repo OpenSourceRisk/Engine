@@ -27,11 +27,17 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/indexes/bmaindex.hpp>
 #include <ql/indexes/iborindex.hpp>
 
+namespace QuantExt {
 using namespace QuantLib;
 
-namespace QuantExt {
-
-//! Wrapper that adapts the quantlib BMAIndex into a class inheriting from IborIndex
+/*! Wrapper that adapts the quantlib BMAIndex into a class inheriting from IborIndex
+    The purpose of this is twofold:
+    1) we can use Market::iborIndex() to retrieve a BMA index
+    2) we can set up an IborCoupon using this index wrapper to approximate an AveragedBMACoupon
+       at places where a pricer only supports an IborCoupon, e.g. for cap/floors or swaptions on
+       BMA underlyings
+    To make 2) work we tweak the implementations of isValidFixingDate(), maturityDate() and pastFixing()
+    to make sure an Ibor coupon on this index class will behave gracefully. */
 /*!
 \ingroup indexes
 */
@@ -51,15 +57,35 @@ public:
 
     // overwrite all the virtual methods
     std::string name() const { return "BMA"; }
-    bool isValidFixingDate(const Date& date) const { return bma_->isValidFixingDate(date); }
+    bool isValidFixingDate(const Date& date) const {
+        // this is not the original BMA behaviour!
+        return fixingCalendar().isBusinessDay(date);
+    }
     Handle<YieldTermStructure> forwardingTermStructure() const { return bma_->forwardingTermStructure(); }
-    Date maturityDate(const Date& valueDate) const { return bma_->maturityDate(valueDate); }
+    Date maturityDate(const Date& valueDate) const {
+        Date d = bma_->maturityDate(valueDate);
+        // make sure that d > valueDate to avoid problems in IborCoupon, this is not the original
+        // BMAIndex behaviour!
+        return std::max<Date>(d, valueDate + 1);
+    }
     Schedule fixingSchedule(const Date& start, const Date& end) { return bma_->fixingSchedule(start, end); }
     Rate forecastFixing(const Date& fixingDate) const {
         QL_REQUIRE(!termStructure_.empty(), "null term structure set to this instance of " << name());
         Date start = fixingCalendar().advance(fixingDate, 1, Days);
         Date end = maturityDate(start);
         return termStructure_->forwardRate(start, end, dayCounter_, Simple);
+    }
+    // return the last valid BMA fixing date before or on the given fixingDate
+    Date adjustedFixingDate(const Date& fixingDate) const {
+        Date tmp = fixingDate;
+        while (!bma_->isValidFixingDate(tmp) && tmp > Date::minDate())
+            tmp--;
+        return tmp;
+    }
+    Rate pastFixing(const Date& fixingDate) const {
+        // we allow for fixing dates that are not valid BMA fixing dates, so we need to make sure that we
+        // read a past fixing from a valid BMA fixing date
+        return bma_->fixing(adjustedFixingDate(fixingDate));
     }
     boost::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& h) const {
         return boost::shared_ptr<BMAIndexWrapper>(new BMAIndexWrapper(bma(), h));
@@ -75,6 +101,5 @@ private:
     boost::shared_ptr<QuantLib::BMAIndex> bma_;
 };
 } // namespace QuantExt
-// namespace QuantExt
 
 #endif

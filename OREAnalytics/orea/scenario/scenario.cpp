@@ -37,6 +37,8 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "IndexCurve";
     case RiskFactorKey::KeyType::SwaptionVolatility:
         return out << "SwaptionVolatility";
+    case RiskFactorKey::KeyType::YieldVolatility:
+        return out << "YieldVolatility";
     case RiskFactorKey::KeyType::OptionletVolatility:
         return out << "OptionletVolatility";
     case RiskFactorKey::KeyType::FXSpot:
@@ -47,8 +49,6 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "EquitySpot";
     case RiskFactorKey::KeyType::EquityVolatility:
         return out << "EquityVolatility";
-    case RiskFactorKey::KeyType::EquityForecastCurve:
-        return out << "EquityForecastCurve";
     case RiskFactorKey::KeyType::DividendYield:
         return out << "DividendYield";
     case RiskFactorKey::KeyType::SurvivalProbability:
@@ -65,14 +65,20 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "ZeroInflationCurve";
     case RiskFactorKey::KeyType::YoYInflationCurve:
         return out << "YoYInflationCurve";
-    case RiskFactorKey::KeyType::CommoditySpot:
-        return out << "CommoditySpot";
+    case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
+        return out << "YoYInflationCapFloorVolatility";
+    case RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility:
+        return out << "ZeroInflationCapFloorVolatility";
     case RiskFactorKey::KeyType::CommodityCurve:
         return out << "CommodityCurve";
     case RiskFactorKey::KeyType::CommodityVolatility:
         return out << "CommodityVolatility";
     case RiskFactorKey::KeyType::SecuritySpread:
         return out << "SecuritySpread";
+    case RiskFactorKey::KeyType::Correlation:
+        return out << "Correlation";
+    case RiskFactorKey::KeyType::CPR:
+        return out << "CPR";
     default:
         return out << "?";
     }
@@ -97,6 +103,8 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::IndexCurve;
     else if (str == "SwaptionVolatility")
         return RiskFactorKey::KeyType::SwaptionVolatility;
+    else if (str == "YieldVolatility")
+        return RiskFactorKey::KeyType::YieldVolatility;
     else if (str == "OptionletVolatility")
         return RiskFactorKey::KeyType::OptionletVolatility;
     else if (str == "FXSpot")
@@ -107,8 +115,6 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::EquitySpot;
     else if (str == "EquityVolatility")
         return RiskFactorKey::KeyType::EquityVolatility;
-    else if (str == "EquityForecastCurve")
-        return RiskFactorKey::KeyType::EquityForecastCurve;
     else if (str == "DividendYield")
         return RiskFactorKey::KeyType::DividendYield;
     else if (str == "SurvivalProbability")
@@ -125,14 +131,20 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::ZeroInflationCurve;
     else if (str == "YoYInflationCurve")
         return RiskFactorKey::KeyType::YoYInflationCurve;
-    else if (str == "CommoditySpot")
-        return RiskFactorKey::KeyType::CommoditySpot;
+    else if (str == "YoYInflationCapFloorVolatility")
+        return RiskFactorKey::KeyType::YoYInflationCapFloorVolatility;
+    else if (str == "ZeroInflationCapFloorVolatility")
+        return RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility;
     else if (str == "CommodityCurve")
         return RiskFactorKey::KeyType::CommodityCurve;
     else if (str == "CommodityVolatility")
         return RiskFactorKey::KeyType::CommodityVolatility;
     else if (str == "SecuritySpread")
         return RiskFactorKey::KeyType::SecuritySpread;
+    else if (str == "Correlation")
+        return RiskFactorKey::KeyType::Correlation;
+    else if (str == "CPR")
+        return RiskFactorKey::KeyType::CPR;
 
     QL_FAIL("RiskFactorKey " << str << " does not exist.");
 }

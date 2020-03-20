@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ql/time/date.hpp>
+#include <ored/configuration/equitycurveconfig.hpp>
 #include <sstream>
 
 namespace ore {
@@ -33,6 +34,8 @@ namespace data {
 /*!
   Returns date as a string in YYYY-MM-DD format, which matches QuantLib::io::iso_date()
   However that function can have issues with locale so we have a local snprintf() based version.
+
+  If date == Date() returns 1900-01-01 so the above format is preserved.
 
   \ingroup utilities
 */

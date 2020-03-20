@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<Simulation>
+  <Market>
+    <BaseCurrency>USD</BaseCurrency>
+    <Currencies>
+      <Currency>USD</Currency>
+    </Currencies>
+    <YieldCurves>
+      <Configuration curve="">
+        <Tenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Tenors>
+        <Interpolation>LogLinear</Interpolation>
+        <Extrapolation>true</Extrapolation>
+        <DayCounter>A365</DayCounter>
+      </Configuration>
+    </YieldCurves>
+    <Indices>
+      <Index>USD-FedFunds</Index>
+      <Index>USD-LIBOR-3M</Index>
+      <Index>USD-Prime</Index>
+    </Indices>
+  </Market>
+</Simulation>

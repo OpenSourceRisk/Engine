@@ -16,22 +16,19 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "deltagammavar.hpp"
-
-#include <qle/math/deltagammavar.hpp>
-
+#include "toplevelfixture.hpp"
 #include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/math/distributions/chi_squared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <boost/timer.hpp>
+#include <qle/math/deltagammavar.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
 
 using namespace boost::unit_test_framework;
 using std::vector;
-
-namespace testsuite {
 
 namespace {
 void test(const Size dim, const bool nonzeroDelta, const bool nonzeroGamma, const Size seedParam, const Size seedMc,
@@ -133,7 +130,11 @@ void test(const Size dim, const bool nonzeroDelta, const bool nonzeroGamma, cons
 } // test
 } // anonymous namespace
 
-void DeltaGammaVarTest::testDeltaGammaVar() {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(DeltaGammaVarTest)
+
+BOOST_AUTO_TEST_CASE(testDeltaGammaVar) {
 
     // TODO add more test cases (negative gammas, higher dimensions)
 
@@ -153,7 +154,7 @@ void DeltaGammaVarTest::testDeltaGammaVar() {
     test(100, true, true, 42, 42, (Size)1E6);
 }
 
-void DeltaGammaVarTest::testNegativeGamma() {
+BOOST_AUTO_TEST_CASE(testNegativeGamma) {
 
     BOOST_TEST_MESSAGE("Testing delta gamma var for pl = -u^2, u standard normal...");
 
@@ -181,11 +182,6 @@ void DeltaGammaVarTest::testNegativeGamma() {
     BOOST_CHECK_SMALL(std::abs(refVal - var_mc), 0.5);
 }
 
-test_suite* DeltaGammaVarTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("DeltaGammaVarTests");
-    suite->add(BOOST_TEST_CASE(&DeltaGammaVarTest::testDeltaGammaVar));
-    suite->add(BOOST_TEST_CASE(&DeltaGammaVarTest::testNegativeGamma));
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

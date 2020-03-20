@@ -20,9 +20,9 @@
     \brief fx vol smile
 */
 
-#include "fxvolsmile.hpp"
-
+#include "toplevelfixture.hpp"
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
@@ -106,11 +106,23 @@ struct CommonVars {
     }
 };
 
+struct VolData {
+    const char* tenor;
+    Volatility atm;
+    Volatility rr;
+    Volatility bf;
+    Time time;
+    Real df_d;
+    Real df_f;
+};
+
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void FxVolSmileTest::testVannaVolgaFxSmileSection() {
+BOOST_AUTO_TEST_SUITE(FxVolSmileTest)
+
+BOOST_AUTO_TEST_CASE(testVannaVolgaFxSmileSection) {
 
     BOOST_TEST_MESSAGE("Testing fx vanna volga smile");
 
@@ -139,24 +151,24 @@ void FxVolSmileTest::testVannaVolgaFxSmileSection() {
     Real tolerance = 0.0001; // 4 decimal places
     if (fabs(vvss.k_atm() - 1.2114) > tolerance)
         BOOST_FAIL("VannaVolgaSmileSection failed to calculte ATM strike, got " << vvss.k_atm());
-    if (fabs(vvss.k_25p() - 1.1733) > tolerance)
-        BOOST_FAIL("VannaVolgaSmileSection failed to calculate 25P strike, got " << vvss.k_25p());
-    if (fabs(vvss.k_25c() - 1.2487) > tolerance)
-        BOOST_FAIL("VannaVolgaSmileSection failed to calculate 25C strike, got " << vvss.k_25c());
+    if (fabs(vvss.k_p() - 1.1733) > tolerance)
+        BOOST_FAIL("VannaVolgaSmileSection failed to calculate 25P strike, got " << vvss.k_p());
+    if (fabs(vvss.k_c() - 1.2487) > tolerance)
+        BOOST_FAIL("VannaVolgaSmileSection failed to calculate 25C strike, got " << vvss.k_c());
     if (fabs(vvss.vol_atm() - 0.0905) > tolerance)
         BOOST_FAIL("VannaVolgaSmileSection failed to calculate ATM vol, got " << vvss.vol_atm());
-    if (fabs(vvss.vol_25p() - 0.0943) > tolerance)
-        BOOST_FAIL("VannaVolgaSmileSection failed to calculate 25P vol, got " << vvss.vol_25p());
-    if (fabs(vvss.vol_25c() - 0.0893) > tolerance)
-        BOOST_FAIL("VannaVolgaSmileSection failed to calculate 25C vol, got " << vvss.vol_25c());
+    if (fabs(vvss.vol_p() - 0.0943) > tolerance)
+        BOOST_FAIL("VannaVolgaSmileSection failed to calculate 25P vol, got " << vvss.vol_p());
+    if (fabs(vvss.vol_c() - 0.0893) > tolerance)
+        BOOST_FAIL("VannaVolgaSmileSection failed to calculate 25C vol, got " << vvss.vol_c());
 
     // Now check that our smile returns these
     if (fabs(vvss.volatility(vvss.k_atm()) - vvss.vol_atm()) > tolerance)
         BOOST_FAIL("VannaVolgaSmileSection failed to recover ATM vol, got " << vvss.volatility(vvss.k_atm()));
-    if (fabs(vvss.volatility(vvss.k_25p()) - vvss.vol_25p()) > tolerance)
-        BOOST_FAIL("VannaVolgaSmileSection failed to recover 25P vol, got " << vvss.volatility(vvss.k_25p()));
-    if (fabs(vvss.volatility(vvss.k_25c()) - vvss.vol_25c()) > tolerance)
-        BOOST_FAIL("VannaVolgaSmileSection failed to recover 25C vol, got " << vvss.volatility(vvss.k_25c()));
+    if (fabs(vvss.volatility(vvss.k_p()) - vvss.vol_p()) > tolerance)
+        BOOST_FAIL("VannaVolgaSmileSection failed to recover 25P vol, got " << vvss.volatility(vvss.k_p()));
+    if (fabs(vvss.volatility(vvss.k_c()) - vvss.vol_c()) > tolerance)
+        BOOST_FAIL("VannaVolgaSmileSection failed to recover 25C vol, got " << vvss.volatility(vvss.k_c()));
 
     // To graph the smile, uncomment this code
     /*
@@ -168,17 +180,7 @@ void FxVolSmileTest::testVannaVolgaFxSmileSection() {
     */
 }
 
-struct VolData {
-    const char* tenor;
-    Volatility atm;
-    Volatility rr;
-    Volatility bf;
-    Time time;
-    Real df_d;
-    Real df_f;
-};
-
-void FxVolSmileTest::testVannaVolgaFxVolSurface() {
+BOOST_AUTO_TEST_CASE(testVannaVolgaFxVolSurface) {
 
     BOOST_TEST_MESSAGE("Testing fx vanna volga surface");
 
@@ -255,16 +257,26 @@ void FxVolSmileTest::testVannaVolgaFxVolSurface() {
     Real vol = volSurface.blackVol(1.75, 1.55);
     Real expected = 0.121507;
     if (fabs(vol - expected) > 0.00001)
-        BOOST_FAIL("Failed to get expected vol from surface");
+        BOOST_FAIL("Failed to get expected vol from surface " << vol);
     /*
     cout << "strike,time,vol" << endl;
     for (Real k = 1.0; k < 1.6; k += 0.01) // extreme
         for (Time tt = 0.1; tt < 2; tt+= 0.05)
             cout << k << "," << tt << "," << volSurface.blackVol(tt, k) << endl;
      */
+    
+    // Test if Null<Real>() or 0 strike returns atm vol
+    for(Size i = 0; i < len; i++) {
+        Real vol = volSurface.blackVol(dates[i], Null<Real>());
+        Real vol2 = volSurface.blackVol(dates[i], 0);
+        if (fabs(vol - atm[i]) > 0.00001)
+            BOOST_FAIL("Failed to get expected atm vol from surface: " << vol);
+        if (fabs(vol2 - atm[i]) > 0.00001)
+            BOOST_FAIL("Failed to get expected atm vol from surface: " << vol);
+    } 
 }
 
-void FxVolSmileTest::testInvertedVolTermStructure() {
+BOOST_AUTO_TEST_CASE(testInvertedVolTermStructure) {
 
     BOOST_TEST_MESSAGE("Testing inverted vol term structure");
 
@@ -301,12 +313,6 @@ void FxVolSmileTest::testInvertedVolTermStructure() {
     }
 }
 
-test_suite* FxVolSmileTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("FxVolSmileTests");
-    suite->add(BOOST_TEST_CASE(&FxVolSmileTest::testVannaVolgaFxSmileSection));
-    suite->add(BOOST_TEST_CASE(&FxVolSmileTest::testVannaVolgaFxVolSurface));
-    suite->add(BOOST_TEST_CASE(&FxVolSmileTest::testInvertedVolTermStructure));
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

@@ -48,7 +48,7 @@ CrossAssetStateProcess::discretization parseDiscretization(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Cannot convert " << s << " to QuantExt::CrossAssetStateProcess::discretization");
+        QL_FAIL("Cannot convert \"" << s << "\" to QuantExt::CrossAssetStateProcess::discretization");
     }
 }
 
@@ -79,10 +79,10 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     std::vector<std::string> tokens;
     boost::split(tokens, gridString, boost::is_any_of(","));
     if (tokens.size() <= 2) {
-        grid_ = boost::make_shared<ore::analytics::DateGrid>(gridString, cal);
+        grid_ = boost::make_shared<DateGrid>(gridString, cal);
     } else {
         std::vector<Period> gridTenors = XMLUtils::getChildrenValuesAsPeriods(node, "Grid", true);
-        grid_ = boost::make_shared<ore::analytics::DateGrid>(gridTenors, cal);
+        grid_ = boost::make_shared<DateGrid>(gridTenors, cal);
     }
     LOG("ScenarioGeneratorData grid points size = " << grid_->size());
 
@@ -96,11 +96,27 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     samples_ = XMLUtils::getChildValueAsInt(node, "Samples", true);
     LOG("ScenarioGeneratorData samples = " << samples_);
 
+    // overwrite samples with enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES
+    if (auto c = getenv("OVERWRITE_SCENARIOGENERATOR_SAMPLES")) {
+        samples_ = std::stol(c);
+        ALOG("Overwrite samples with " << samples_ << " from enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES");
+    }
+
+    if (auto n = XMLUtils::getChildNode(node, "Ordering"))
+        ordering_ = parseSobolBrownianGeneratorOrdering(XMLUtils::getNodeValue(n));
+    else
+        ordering_ = SobolBrownianGenerator::Steps;
+
+    if (auto n = XMLUtils::getChildNode(node, "DirectionIntegers"))
+        directionIntegers_ = parseSobolRsgDirectionIntegers(XMLUtils::getNodeValue(n));
+    else
+        directionIntegers_ = SobolRsg::JoeKuoD7;
+
     LOG("ScenarioGeneratorData done.");
 }
 
 XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("Simlation");
+    XMLNode* node = doc.allocNode("Simulation");
     return node;
 }
 } // namespace analytics

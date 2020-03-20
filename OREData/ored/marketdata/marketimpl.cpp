@@ -62,9 +62,66 @@ A lookup(const B& map, const C& key, const YieldCurveType y, const string& confi
     return it->second;
 }
 
+Handle<QuantExt::CorrelationTermStructure>
+lookup(const map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>>& map,
+       const std::string& key1, const std::string& key2, const string& configuration) {
+    // straight pair
+    auto it = map.find(make_tuple(configuration, key1, key2));
+    if (it != map.end())
+        return it->second;
+    // inverse pair
+    it = map.find(make_tuple(configuration, key2, key1));
+    if (it != map.end())
+        return it->second;
+    // inverse fx index1
+    if (isFxIndex(key1)) {
+        it = map.find(make_tuple(configuration, inverseFxIndex(key1), key2));
+        if (it != map.end())
+            return Handle<QuantExt::CorrelationTermStructure>(
+                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
+        it = map.find(make_tuple(configuration, key2, inverseFxIndex(key1)));
+        if (it != map.end())
+            return Handle<QuantExt::CorrelationTermStructure>(
+                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
+    }
+    // inverse fx index2
+    if (isFxIndex(key2)) {
+        it = map.find(make_tuple(configuration, key1, inverseFxIndex(key2)));
+        if (it != map.end())
+            return Handle<QuantExt::CorrelationTermStructure>(
+                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
+        it = map.find(make_tuple(configuration, inverseFxIndex(key2), key1));
+        if (it != map.end())
+            return Handle<QuantExt::CorrelationTermStructure>(
+                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
+    }
+    // both fx indices inverted
+    if (isFxIndex(key1) && isFxIndex(key2)) {
+        it = map.find(make_tuple(configuration, inverseFxIndex(key1), inverseFxIndex(key2)));
+        if (it != map.end())
+            return it->second;
+        it = map.find(make_tuple(configuration, inverseFxIndex(key2), inverseFxIndex(key1)));
+        if (it != map.end())
+            return it->second;
+    }
+    // if not found, fall back to default configuration
+    if (configuration == Market::defaultConfiguration) {
+        QL_FAIL("did not find object " << key1 << "/" << key2 << " in CorrelationCurves");
+    } else {
+        return lookup(map, key1, key2, Market::defaultConfiguration);
+    }
+}
+
 } // anonymous namespace
+
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, const string& key,
                                                   const string& configuration) const {
+    // we allow for ibor index names as keys and return the index forward curve in case of a match
+    boost::shared_ptr<IborIndex> notUsed;
+    if (tryParseIborIndex(key, notUsed)) {
+        return iborIndex(key, configuration)->forwardingTermStructure();
+    }
+    // no ibor index found under key => look for a genuine yield curve
     return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, type, configuration, "yield curve");
 }
 
@@ -74,7 +131,7 @@ Handle<YieldTermStructure> MarketImpl::discountCurve(const string& key, const st
 }
 
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const string& key, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::Yield, configuration, "yield curve");
+    return yieldCurve(YieldCurveType::Yield, key, configuration);
 }
 
 Handle<IborIndex> MarketImpl::iborIndex(const string& key, const string& configuration) const {
@@ -98,6 +155,13 @@ const string MarketImpl::swapIndexBase(const string& key, const string& configur
     return lookup<pair<string, string>>(swaptionIndexBases_, key, configuration, "swap index base").second;
 }
 
+Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(
+    const string& key,
+    const string& configuration) const {
+    return lookup<Handle<QuantLib::SwaptionVolatilityStructure>>
+        (yieldVolCurves_, key, configuration, "yield volatility curve");
+}
+
 Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configuration) const {
     auto it = fxSpots_.find(configuration);
     if (it == fxSpots_.end())
@@ -119,7 +183,9 @@ Handle<BlackVolTermStructure> MarketImpl::fxVol(const string& ccypair, const str
         if (it != fxVols_.end()) {
             Handle<BlackVolTermStructure> h(boost::make_shared<QuantExt::BlackInvertedVolTermStructure>(it->second));
             h->enableExtrapolation();
-            fxVols_[make_pair(configuration, ccypairInverted)] = h;
+            // we have found a surface for the inverted pair.
+            // so we can invert the surface and store that under the original pair.
+            fxVols_[make_pair(configuration, ccypair)] = h;
             return h;
         } else {
             if (configuration == Market::defaultConfiguration)
@@ -152,8 +218,10 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
 }
 
-Handle<QuantExt::YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key, const string& configuration) const {
-    return lookup<Handle<QuantExt::YoYOptionletVolatilitySurface>>(yoyCapFloorVolSurfaces_, key, configuration, "capfloor curve");
+Handle<QuantExt::YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key,
+                                                                           const string& configuration) const {
+    return lookup<Handle<QuantExt::YoYOptionletVolatilitySurface>>(yoyCapFloorVolSurfaces_, key, configuration,
+                                                                   "yoy inflation capfloor curve");
 }
 
 Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexName, const string& configuration) const {
@@ -164,16 +232,10 @@ Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName,
     return lookup<Handle<YoYInflationIndex>>(yoyInflationIndices_, indexName, configuration, "yoy inflation index");
 }
 
-Handle<CPICapFloorTermPriceSurface> MarketImpl::cpiInflationCapFloorPriceSurface(const string& indexName,
-                                                                                 const string& configuration) const {
-    return lookup<Handle<CPICapFloorTermPriceSurface>>(cpiInflationCapFloorPriceSurfaces_, indexName, configuration,
-                                                       "inflation cap floor price surface");
-}
-
-Handle<YoYCapFloorTermPriceSurface> MarketImpl::yoyInflationCapFloorPriceSurface(const string& indexName,
-                                                                                 const string& configuration) const {
-    return lookup<Handle<YoYCapFloorTermPriceSurface>>(yoyInflationCapFloorPriceSurfaces_, indexName, configuration,
-                                                       "inflation cap floor price surface");
+Handle<CPIVolatilitySurface> MarketImpl::cpiInflationCapFloorVolatilitySurface(const string& indexName,
+                                                                               const string& configuration) const {
+    return lookup<Handle<CPIVolatilitySurface>>(cpiInflationCapFloorVolatilitySurfaces_, indexName, configuration,
+                                                "cpi cap floor volatility surface");
 }
 
 Handle<Quote> MarketImpl::equitySpot(const string& key, const string& configuration) const {
@@ -194,8 +256,7 @@ Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const str
 }
 
 Handle<YieldTermStructure> MarketImpl::equityForecastCurve(const string& eqName, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, eqName, YieldCurveType::EquityForecast, configuration,
-                                              "equity forecast yield curve");
+    return equityCurve(eqName, configuration)->equityForecastCurve();
 }
 
 Handle<Quote> MarketImpl::securitySpread(const string& key, const string& configuration) const {
@@ -206,16 +267,23 @@ Handle<QuantExt::InflationIndexObserver> MarketImpl::baseCpis(const string& key,
     return lookup<Handle<QuantExt::InflationIndexObserver>>(baseCpis_, key, configuration, "base CPI");
 }
 
-Handle<Quote> MarketImpl::commoditySpot(const string& commodityName, const string& configuration) const {
-    return lookup<Handle<Quote>>(commoditySpots_, commodityName, configuration, "commodity spot");
-}
-
-Handle<PriceTermStructure> MarketImpl::commodityPriceCurve(const string& commodityName, const string& configuration) const {
+Handle<PriceTermStructure> MarketImpl::commodityPriceCurve(const string& commodityName,
+                                                           const string& configuration) const {
     return lookup<Handle<PriceTermStructure>>(commodityCurves_, commodityName, configuration, "commodity price curve");
 }
 
-Handle<BlackVolTermStructure> MarketImpl::commodityVolatility(const string& commodityName, const string& configuration) const {
+Handle<BlackVolTermStructure> MarketImpl::commodityVolatility(const string& commodityName,
+                                                              const string& configuration) const {
     return lookup<Handle<BlackVolTermStructure>>(commodityVols_, commodityName, configuration, "commodity volatility");
+}
+
+Handle<QuantExt::CorrelationTermStructure> MarketImpl::correlationCurve(const string& index1, const string& index2,
+                                                                        const string& configuration) const {
+    return lookup(correlationCurves_, index1, index2, configuration);
+}
+
+Handle<Quote> MarketImpl::cpr(const string& securityID, const string& configuration) const {
+    return lookup<Handle<Quote>>(cprs_, securityID, configuration, "cpr");
 }
 
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
@@ -313,11 +381,11 @@ void MarketImpl::refresh(const string& configuration) {
                 it->second.insert(*x.second->yoyInflationTermStructure());
             }
         }
-        for (auto& x : cpiInflationCapFloorPriceSurfaces_) {
+	for (auto& x : cpiInflationCapFloorVolatilitySurfaces_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
-        for (auto& x : yoyInflationCapFloorPriceSurfaces_) {
+        for (auto& x : yoyCapFloorVolSurfaces_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
@@ -347,10 +415,17 @@ void MarketImpl::refresh(const string& configuration) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
+
+        for (auto& x : correlationCurves_) {
+            if (get<0>(x.first) == configuration || get<0>(x.first) == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
     }
 
+    // term structures might be wrappers around nested termstructures that need to be updated as well,
+    // therefore we need to call deepUpdate() (=update() if no such nesting is present)
     for (auto& x : it->second)
-        x->update();
+        x->deepUpdate();
 
     // update fx spot quotes
     auto fxSpots = fxSpots_.find(configuration);

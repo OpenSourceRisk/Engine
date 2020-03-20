@@ -28,9 +28,8 @@
 
 #include <boost/shared_ptr.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Wrapper class for a SwaptionVolatilityCube that easily and efficiently exposes ATM vols.
 /*! This class implements SwaptionVolatilityStructure and takes a cube as an input. If asked for

@@ -16,24 +16,25 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/commodityoption.hpp>
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 
-#include <boost/make_shared.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/make_shared.hpp>
 
 #include <ql/currencies/america.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/math/interpolations/linearinterpolation.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/pricingengines/blackformula.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 
 #include <qle/termstructures/pricecurve.hpp>
 
+#include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/commodityoption.hpp>
 #include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/portfolio.hpp>
-#include <ored/marketdata/marketimpl.hpp>
 
 using namespace std;
 using namespace boost::unit_test_framework;
@@ -66,27 +67,21 @@ public:
         // Add GOLD_USD price curve
         vector<Date> dates = {asof_, Date(19, Feb, 2019)};
         vector<Real> prices = {1346.0, 1348.0};
-        Handle<PriceTermStructure> priceCurve(boost::make_shared<InterpolatedPriceCurve<Linear>>(
-            InterpolatedPriceCurve<Linear>(dates, prices, dayCounter)));
+        Handle<PriceTermStructure> priceCurve(
+            boost::make_shared<InterpolatedPriceCurve<Linear>>(asof_, dates, prices, dayCounter, USDCurrency()));
         commodityCurves_[make_pair(Market::defaultConfiguration, "GOLD_USD")] = priceCurve;
 
-        // Add GOLD_USD spot quote
-        commoditySpots_[make_pair(Market::defaultConfiguration, "GOLD_USD")] = Handle<Quote>(
-            boost::make_shared<SimpleQuote>(prices[0]));
-
         // Add GOLD_USD volatilities
-        vector<Date> volatilityDates = { Date(19, Feb, 2019), Date(19, Feb, 2020) };
-        vector<Real> volatilities = { 0.10, 0.11 };
-        Handle<BlackVolTermStructure> volatility(boost::make_shared<BlackVarianceCurve>(
-            asof_, volatilityDates, volatilities, dayCounter));
+        vector<Date> volatilityDates = {Date(19, Feb, 2019), Date(19, Feb, 2020)};
+        vector<Real> volatilities = {0.10, 0.11};
+        Handle<BlackVolTermStructure> volatility(
+            boost::make_shared<BlackVarianceCurve>(asof_, volatilityDates, volatilities, dayCounter));
         commodityVols_[make_pair(Market::defaultConfiguration, "GOLD_USD")] = volatility;
     }
 };
 
 class CommonData {
 public:
-    SavedSettings backup;
-
     Envelope envelope;
     string commodityName;
     string currency;
@@ -99,9 +94,9 @@ public:
     boost::shared_ptr<Market> market;
     boost::shared_ptr<EngineFactory> engineFactory;
 
-    CommonData() : commodityName("GOLD_USD"), currency("USD"),
-        quantity(100), strike(1340.0), payOffAtExpiry(false), expiry(1, "2019-02-19"),
-        expiryDate(19, Feb, 2019) {
+    CommonData()
+        : commodityName("GOLD_USD"), currency("USD"), quantity(100), strike(1340.0), payOffAtExpiry(false),
+          expiry(1, "2019-02-19"), expiryDate(19, Feb, 2019) {
 
         // Create engine factory
         market = boost::make_shared<TestMarket>();
@@ -115,12 +110,14 @@ public:
     }
 };
 
-}
+} // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
-void CommodityOptionTest::testCommodityOptionTradeBuilding() {
-    
+BOOST_AUTO_TEST_SUITE(CommodityOptionTests)
+
+BOOST_AUTO_TEST_CASE(testCommodityOptionTradeBuilding) {
+
     BOOST_TEST_MESSAGE("Testing commodity option trade building");
 
     // Common test data and setup
@@ -135,15 +132,13 @@ void CommodityOptionTest::testCommodityOptionTradeBuilding() {
     // Check the underlying instrument was built as expected
     boost::shared_ptr<Instrument> qlInstrument = option->instrument()->qlInstrument();
 
-    boost::shared_ptr<VanillaOption> vanillaOption = 
-        boost::dynamic_pointer_cast<VanillaOption>(qlInstrument);
+    boost::shared_ptr<VanillaOption> vanillaOption = boost::dynamic_pointer_cast<VanillaOption>(qlInstrument);
     BOOST_CHECK(vanillaOption);
     BOOST_CHECK_EQUAL(vanillaOption->exercise()->type(), Exercise::Type::European);
     BOOST_CHECK_EQUAL(vanillaOption->exercise()->dates().size(), 1);
     BOOST_CHECK_EQUAL(vanillaOption->exercise()->dates()[0], td.expiryDate);
-    
-    boost::shared_ptr<TypePayoff> payoff =
-        boost::dynamic_pointer_cast<TypePayoff>(vanillaOption->payoff());
+
+    boost::shared_ptr<TypePayoff> payoff = boost::dynamic_pointer_cast<TypePayoff>(vanillaOption->payoff());
     BOOST_CHECK(payoff);
     BOOST_CHECK_EQUAL(payoff->optionType(), Option::Type::Call);
 
@@ -153,14 +148,15 @@ void CommodityOptionTest::testCommodityOptionTradeBuilding() {
     Real forwardPrice = td.market->commodityPriceCurve(td.commodityName)->price(td.expiryDate);
     DiscountFactor discount = td.market->discountCurve(td.currency)->discount(td.expiryDate);
     Real variance = td.market->commodityVolatility(td.commodityName)->blackVariance(td.expiryDate, td.strike);
-    Real expectedPrice = td.quantity * blackFormula(Option::Type::Call, td.strike, forwardPrice, sqrt(variance), discount);
+    Real expectedPrice =
+        td.quantity * blackFormula(Option::Type::Call, td.strike, forwardPrice, sqrt(variance), discount);
     BOOST_CHECK_CLOSE(expectedPrice, cachedCallPrice, testTolerance);
 
     // Check the price
     BOOST_CHECK_CLOSE(option->instrument()->NPV(), expectedPrice, testTolerance);
 }
 
-void CommodityOptionTest::testCommodityOptionFromXml() {
+BOOST_AUTO_TEST_CASE(testCommodityOptionFromXml) {
 
     BOOST_TEST_MESSAGE("Testing parsing of commodity option trade from XML");
 
@@ -202,8 +198,7 @@ void CommodityOptionTest::testCommodityOptionFromXml() {
 
     // Extract CommodityOption trade from portfolio
     boost::shared_ptr<Trade> trade = portfolio.trades()[0];
-    boost::shared_ptr<CommodityOption> option = 
-        boost::dynamic_pointer_cast<ore::data::CommodityOption>(trade);
+    boost::shared_ptr<CommodityOption> option = boost::dynamic_pointer_cast<ore::data::CommodityOption>(trade);
 
     // Check fields after checking that the cast was successful
     BOOST_CHECK(option);
@@ -248,7 +243,7 @@ void CommodityOptionTest::testCommodityOptionFromXml() {
     BOOST_CHECK_CLOSE(trade->instrument()->NPV(), cachedPutPrice, testTolerance);
 }
 
-void CommodityOptionTest::testLongShortCallPutPrices() {
+BOOST_AUTO_TEST_CASE(testLongShortCallPutPrices) {
 
     BOOST_TEST_MESSAGE("Testing commodity option prices");
 
@@ -260,34 +255,34 @@ void CommodityOptionTest::testLongShortCallPutPrices() {
 
     // Long call
     OptionData optionData("Long", "Call", "European", td.payOffAtExpiry, td.expiry);
-    option = boost::make_shared<CommodityOption>(
-        td.envelope, optionData, td.commodityName, td.currency, td.strike, td.quantity);
+    option = boost::make_shared<CommodityOption>(td.envelope, optionData, td.commodityName, td.currency, td.strike,
+                                                 td.quantity);
     option->build(td.engineFactory);
     BOOST_CHECK_CLOSE(option->instrument()->NPV(), cachedCallPrice, testTolerance);
 
     // Short call
     optionData = OptionData("Short", "Call", "European", td.payOffAtExpiry, td.expiry);
-    option = boost::make_shared<CommodityOption>(
-        td.envelope, optionData, td.commodityName, td.currency, td.strike, td.quantity);
+    option = boost::make_shared<CommodityOption>(td.envelope, optionData, td.commodityName, td.currency, td.strike,
+                                                 td.quantity);
     option->build(td.engineFactory);
     BOOST_CHECK_CLOSE(option->instrument()->NPV(), -cachedCallPrice, testTolerance);
 
     // Long put
     optionData = OptionData("Long", "Put", "European", td.payOffAtExpiry, td.expiry);
-    option = boost::make_shared<CommodityOption>(
-        td.envelope, optionData, td.commodityName, td.currency, td.strike, td.quantity);
+    option = boost::make_shared<CommodityOption>(td.envelope, optionData, td.commodityName, td.currency, td.strike,
+                                                 td.quantity);
     option->build(td.engineFactory);
     BOOST_CHECK_CLOSE(option->instrument()->NPV(), cachedPutPrice, testTolerance);
 
     // Short put
     optionData = OptionData("Short", "Put", "European", td.payOffAtExpiry, td.expiry);
-    option = boost::make_shared<CommodityOption>(
-        td.envelope, optionData, td.commodityName, td.currency, td.strike, td.quantity);
+    option = boost::make_shared<CommodityOption>(td.envelope, optionData, td.commodityName, td.currency, td.strike,
+                                                 td.quantity);
     option->build(td.engineFactory);
     BOOST_CHECK_CLOSE(option->instrument()->NPV(), -cachedPutPrice, testTolerance);
 }
 
-void CommodityOptionTest::testCommodityOptionBuildExceptions() {
+BOOST_AUTO_TEST_CASE(testCommodityOptionBuildExceptions) {
 
     BOOST_TEST_MESSAGE("Testing commodity option exceptions during building");
 
@@ -299,36 +294,36 @@ void CommodityOptionTest::testCommodityOptionBuildExceptions() {
 
     // Negative strike throws
     OptionData optionData("Long", "Call", "European", td.payOffAtExpiry, td.expiry);
-    option = boost::make_shared<CommodityOption>(
-        td.envelope, optionData, td.commodityName, td.currency, -td.strike, td.quantity);
+    option = boost::make_shared<CommodityOption>(td.envelope, optionData, td.commodityName, td.currency, -td.strike,
+                                                 td.quantity);
     BOOST_CHECK_THROW(option->build(td.engineFactory), Error);
 
     // Negative quantity throws
-    option = boost::make_shared<CommodityOption>(
-        td.envelope, optionData, td.commodityName, td.currency, td.strike, -td.quantity);
+    option = boost::make_shared<CommodityOption>(td.envelope, optionData, td.commodityName, td.currency, td.strike,
+                                                 -td.quantity);
     BOOST_CHECK_THROW(option->build(td.engineFactory), Error);
 
     // Name of commodity with no market data throws
-    option = boost::make_shared<CommodityOption>(
-        td.envelope, optionData, "GOLD_USD_MISSING", td.currency, td.strike, td.quantity);
+    option = boost::make_shared<CommodityOption>(td.envelope, optionData, "GOLD_USD_MISSING", td.currency, td.strike,
+                                                 td.quantity);
     BOOST_CHECK_THROW(option->build(td.engineFactory), Error);
 
     // Non-European OptionData style throws
     optionData = OptionData("Long", "Call", "American", td.payOffAtExpiry, td.expiry);
-    option = boost::make_shared<CommodityOption>(
-        td.envelope, optionData, td.commodityName, td.currency, td.strike, td.quantity);
+    option = boost::make_shared<CommodityOption>(td.envelope, optionData, td.commodityName, td.currency, td.strike,
+                                                 td.quantity);
     BOOST_CHECK_THROW(option->build(td.engineFactory), Error);
 
     // More than one expiry date throws
     vector<string> extraExpiries = td.expiry;
     extraExpiries.push_back("2019-08-19");
     optionData = OptionData("Long", "Call", "European", td.payOffAtExpiry, extraExpiries);
-    option = boost::make_shared<CommodityOption>(
-        td.envelope, optionData, td.commodityName, td.currency, td.strike, td.quantity);
+    option = boost::make_shared<CommodityOption>(td.envelope, optionData, td.commodityName, td.currency, td.strike,
+                                                 td.quantity);
     BOOST_CHECK_THROW(option->build(td.engineFactory), Error);
 }
 
-void CommodityOptionTest::testCommodityOptionPremium() {
+BOOST_AUTO_TEST_CASE(testCommodityOptionPremium) {
 
     BOOST_TEST_MESSAGE("Testing commodity option premium works");
 
@@ -338,9 +333,10 @@ void CommodityOptionTest::testCommodityOptionPremium() {
     // Premium
     Real premium = 5000;
     Date premiumDate(21, Feb, 2018);
-    
+
     // Create option
-    OptionData optionData("Long", "Call", "European", td.payOffAtExpiry, td.expiry, "Cash", premium, td.currency, "2018-02-21");
+    OptionData optionData("Long", "Call", "European", td.payOffAtExpiry, td.expiry, "Cash", "", premium, td.currency,
+                          "2018-02-21");
     boost::shared_ptr<CommodityOption> option = boost::make_shared<CommodityOption>(
         td.envelope, optionData, td.commodityName, td.currency, td.strike, td.quantity);
 
@@ -352,17 +348,6 @@ void CommodityOptionTest::testCommodityOptionPremium() {
     BOOST_CHECK_CLOSE(option->instrument()->NPV(), cachedCallPrice - premiumDiscount * premium, testTolerance);
 }
 
-test_suite* CommodityOptionTest::suite() {
-    
-    test_suite* suite = BOOST_TEST_SUITE("CommodityOptionTest");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&CommodityOptionTest::testCommodityOptionTradeBuilding));
-    suite->add(BOOST_TEST_CASE(&CommodityOptionTest::testCommodityOptionFromXml));
-    suite->add(BOOST_TEST_CASE(&CommodityOptionTest::testLongShortCallPutPrices));
-    suite->add(BOOST_TEST_CASE(&CommodityOptionTest::testCommodityOptionBuildExceptions));
-    suite->add(BOOST_TEST_CASE(&CommodityOptionTest::testCommodityOptionPremium));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

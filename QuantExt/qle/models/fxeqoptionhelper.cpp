@@ -29,8 +29,8 @@ FxEqOptionHelper::FxEqOptionHelper(const Period& maturity, const Calendar& calen
                                    const Handle<Quote> spot, const Handle<Quote> volatility,
                                    const Handle<YieldTermStructure>& domesticYield,
                                    const Handle<YieldTermStructure>& foreignYield,
-                                   CalibrationHelper::CalibrationErrorType errorType)
-    : CalibrationHelper(volatility, domesticYield, errorType), hasMaturity_(true), maturity_(maturity),
+                                   BlackCalibrationHelper::CalibrationErrorType errorType)
+    : BlackCalibrationHelper(volatility, domesticYield, errorType), hasMaturity_(true), maturity_(maturity),
       calendar_(calendar), strike_(strike), spot_(spot), foreignYield_(foreignYield) {
     registerWith(spot_);
     registerWith(foreignYield_);
@@ -39,8 +39,8 @@ FxEqOptionHelper::FxEqOptionHelper(const Period& maturity, const Calendar& calen
 FxEqOptionHelper::FxEqOptionHelper(const Date& exerciseDate, const Real strike, const Handle<Quote> spot,
                                    const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
                                    const Handle<YieldTermStructure>& foreignYield,
-                                   CalibrationHelper::CalibrationErrorType errorType)
-    : CalibrationHelper(volatility, domesticYield, errorType), hasMaturity_(false), exerciseDate_(exerciseDate),
+                                   BlackCalibrationHelper::CalibrationErrorType errorType)
+    : BlackCalibrationHelper(volatility, domesticYield, errorType), hasMaturity_(false), exerciseDate_(exerciseDate),
       strike_(strike), spot_(spot), foreignYield_(foreignYield) {
     registerWith(spot_);
     registerWith(foreignYield_);
@@ -58,7 +58,7 @@ void FxEqOptionHelper::performCalculations() const {
     boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type_, effStrike_));
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate_);
     option_ = boost::shared_ptr<VanillaOption>(new VanillaOption(payoff, exercise));
-    CalibrationHelper::performCalculations();
+    BlackCalibrationHelper::performCalculations();
 }
 
 Real FxEqOptionHelper::modelValue() const {

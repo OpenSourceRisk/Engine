@@ -26,9 +26,8 @@
 
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Black volatility surface that inverts an existing surface.
 /*! This class is used when one wants a USD/EUR volatility, at a given USD/EUR strike

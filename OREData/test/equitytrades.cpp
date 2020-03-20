@@ -17,25 +17,25 @@
 */
 
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityoption.hpp>
+#include <oret/toplevelfixture.hpp>
+#include <qle/indexes/equityindex.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/equitytrades.hpp>
 
 using namespace QuantLib;
+using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
-using namespace ore::data;
-
-// Equity option/forward test, example from Haug, Chapter 1
 
 namespace {
 
@@ -62,9 +62,9 @@ public:
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "zzzCorp")] =
             flatRateYts(0.05);
 
-        // add forecast curve
-        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityForecast, "zzzCorp")] =
-            flatRateYts(0.1);
+        // add equity curve
+        equityCurves_[make_pair(Market::defaultConfiguration, "zzzCorp")] = Handle<EquityIndex>(boost::make_shared<EquityIndex>("zzzCorp", TARGET(), parseCurrency("EUR"),
+            equitySpot("zzzCorp"), yieldCurve(YieldCurveType::Discount, "EUR"), yieldCurve(YieldCurveType::EquityDividend, "zzzCorp")));
 
         // build equity vols
         equityVols_[make_pair(Market::defaultConfiguration, "zzzCorp")] = flatRateFxv(0.20);
@@ -82,9 +82,13 @@ private:
 };
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
-void EquityTradesTest::testEquityTradePrices() {
+BOOST_AUTO_TEST_SUITE(EquityTradesTests)
+
+// Equity option/forward test, example from Haug, Chapter 1
+BOOST_AUTO_TEST_CASE(testEquityTradePrices) {
+
     BOOST_TEST_MESSAGE("Testing EquityOption Price...");
 
     Date today = Settings::instance().evaluationDate();
@@ -99,17 +103,17 @@ void EquityTradesTest::testEquityTradePrices() {
 
     // build EquityOption - expiry in 1 Year
     OptionData callData("Long", "Call", "European", true, vector<string>(1, exp_str));
-    OptionData callDataPremium("Long", "Call", "European", true, vector<string>(1, exp_str), "Cash", 1.0, "EUR",
+    OptionData callDataPremium("Long", "Call", "European", true, vector<string>(1, exp_str), "Cash", "", 1.0, "EUR",
                                exp_str);
     OptionData putData("Short", "Put", "European", true, vector<string>(1, exp_str));
-    OptionData putDataPremium("Short", "Put", "European", true, vector<string>(1, exp_str), "Cash", 1.0, "EUR",
+    OptionData putDataPremium("Short", "Put", "European", true, vector<string>(1, exp_str), "Cash", "", 1.0, "EUR",
                               exp_str);
     Envelope env("CP1");
     EquityOption eqCall(env, callData, "zzzCorp", "EUR", 95.0, 1.0);
     EquityOption eqCallPremium(env, callDataPremium, "zzzCorp", "EUR", 95.0, 1.0);
     EquityOption eqPut(env, putData, "zzzCorp", "EUR", 95.0, 1.0);
     EquityOption eqPutPremium(env, putDataPremium, "zzzCorp", "EUR", 95.0, 1.0);
-    EquityForward eqFwd(env, "Long", "zzzCorp", "EUR", 1.0, exp_str, 95.0);
+    ore::data::EquityForward eqFwd(env, "Long", "zzzCorp", "EUR", 1.0, exp_str, 95.0);
 
     Real expectedNPV_Put = -2.4648;           // negative for sold option
     Real expectedNPV_Put_Premium = -1.513558; // less negative due to received premium of 1 EUR at expiry
@@ -121,7 +125,7 @@ void EquityTradesTest::testEquityTradePrices() {
     engineData->model("EquityForward") = "DiscountedCashflows";
     engineData->engine("EquityForward") = "DiscountingEquityForwardEngine";
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
+    engineFactory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
     engineFactory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
 
     eqCall.build(engineFactory);
@@ -147,9 +151,6 @@ void EquityTradesTest::testEquityTradePrices() {
     Settings::instance().evaluationDate() = today; // reset
 }
 
-test_suite* EquityTradesTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("EquityTradesTest");
-    suite->add(BOOST_TEST_CASE(&EquityTradesTest::testEquityTradePrices));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

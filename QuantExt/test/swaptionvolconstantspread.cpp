@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "swaptionvolconstantspread.hpp"
 #include "swaptionmarketdata.hpp"
+#include "toplevelfixture.hpp"
 #include "yieldcurvemarketdata.hpp"
-
+#include <boost/test/unit_test.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
@@ -118,9 +118,10 @@ struct CommonVars {
 };
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void SwaptionVolConstantSpreadTest::testAtmNormalVolShiftPropagation() {
+BOOST_AUTO_TEST_SUITE(SwaptionVolConstantSpreadTest)
+BOOST_AUTO_TEST_CASE(testAtmNormalVolShiftPropagation) {
     BOOST_TEST_MESSAGE("Testing ATM normal vol shift propagation...");
 
     CommonVars vars1;
@@ -169,7 +170,7 @@ void SwaptionVolConstantSpreadTest::testAtmNormalVolShiftPropagation() {
     }
 }
 
-void SwaptionVolConstantSpreadTest::testAtmLogNormalVolShiftPropagation() {
+BOOST_AUTO_TEST_CASE(testAtmLogNormalVolShiftPropagation) {
     BOOST_TEST_MESSAGE("Testing ATM log-normal vol shift propagation...");
 
     CommonVars vars1;
@@ -218,12 +219,6 @@ void SwaptionVolConstantSpreadTest::testAtmLogNormalVolShiftPropagation() {
     }
 }
 
-test_suite* SwaptionVolConstantSpreadTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("SwaptionVolConstantSpreadTests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&SwaptionVolConstantSpreadTest::testAtmNormalVolShiftPropagation));
-    suite->add(BOOST_TEST_CASE(&SwaptionVolConstantSpreadTest::testAtmLogNormalVolShiftPropagation));
-
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

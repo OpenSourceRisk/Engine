@@ -32,14 +32,12 @@
 #include <ql/instrument.hpp>
 #include <ql/time/date.hpp>
 
-using std::string;
-using ore::data::XMLSerializable;
-
-using ore::data::XMLNode;
-using QuantLib::Date;
-
 namespace ore {
 namespace data {
+using ore::data::XMLNode;
+using ore::data::XMLSerializable;
+using QuantLib::Date;
+using std::string;
 
 //! Trade base class
 /*! Instrument interface to pricing and risk applications
@@ -63,6 +61,21 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&) = 0;
 
+    /*! Return the fixings that will be requested in order to price this Trade given the \p settlementDate.
+        
+
+
+        If the \p settlementDate is not provided, the current evaluation date is taken as the settlement date.
+        If a Trade does not have any fixings, this method will return an empty map.
+        The map key is the ORE name of the index and the map value is the set of fixing dates.
+
+        \warning This method will return an empty map if the Trade has not been built.
+    */
+    virtual std::map<std::string, std::set<QuantLib::Date>>
+    fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const = 0;
+    
+    virtual std::map<AssetClass, std::set<std::string>> underlyingIndices() const { return {};}
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);
@@ -77,13 +90,23 @@ public:
         legCurrencies_.clear();
         legPayers_.clear();
         npvCurrency_ = "";
-        notional_ = 0.0;
+        notional_ = Null<Real>();
+        notionalCurrency_ = "";
         maturity_ = Date();
         tradeActions_.clear();
     }
 
+    //! \name Setters
+    //@{
     //! Set the trade id
     string& id() { return id_; }
+
+    //! Set the envelope with counterparty and portfolio info
+    Envelope& envelope() { return envelope_; }
+
+    //! Set the trade actions
+    TradeActions& tradeActions() { return tradeActions_; }
+    //@}
 
     //! \name Inspectors
     //@{
@@ -95,27 +118,40 @@ public:
 
     const set<string>& portfolioIds() const { return envelope().portfolioIds(); }
 
-    const TradeActions& tradeActions() { return tradeActions_; }
+    const TradeActions& tradeActions() const { return tradeActions_; }
 
-    const boost::shared_ptr<InstrumentWrapper>& instrument() { return instrument_; }
+    const boost::shared_ptr<InstrumentWrapper>& instrument() const { return instrument_; }
 
-    const std::vector<QuantLib::Leg>& legs() { return legs_; }
+    const std::vector<QuantLib::Leg>& legs() const { return legs_; }
 
-    const std::vector<string>& legCurrencies() { return legCurrencies_; }
+    const std::vector<string>& legCurrencies() const { return legCurrencies_; }
 
-    const std::vector<bool>& legPayers() { return legPayers_; }
+    const std::vector<bool>& legPayers() const { return legPayers_; }
 
-    const string& npvCurrency() { return npvCurrency_; }
+    const string& npvCurrency() const { return npvCurrency_; }
 
     //! Return the current notional in npvCurrency. See individual sub-classes for the precise definition
     // of notional, for exotic trades this may not be what you expect.
-    QuantLib::Real notional() { return notional_; }
+    virtual QuantLib::Real notional() const { return notional_; }
 
-    const Date& maturity() { return maturity_; }
+    virtual string notionalCurrency() const { return notionalCurrency_; }
+
+    const Date& maturity() const { return maturity_; }
+    //@}
+
+    //! \name Utility
+    //@{
+    //! Utility to validate that everything that needs to be set in this base class is actually set
+    void validate() const;
+
+    /*! Utility method indicating if the trade has cashflows for the cashflow report. The default implementation 
+        returns \c true so that a trade is automatically considered when cashflows are being written. To prevent a 
+        trade from being asked for its cashflows, the method can be overridden to return \c false.
+    */
+    virtual bool hasCashflows() const { return true; }
     //@}
 
 protected:
-    // protected members, to be set by build functions of derived classes
     string tradeType_; // class name of the derived class
     boost::shared_ptr<InstrumentWrapper> instrument_;
     std::vector<QuantLib::Leg> legs_;
@@ -123,6 +159,7 @@ protected:
     std::vector<bool> legPayers_;
     string npvCurrency_;
     QuantLib::Real notional_;
+    string notionalCurrency_;
     Date maturity_;
 
     // Utility to add a single (fee, option premium, etc.) payment such that it is taken into account in pricing and

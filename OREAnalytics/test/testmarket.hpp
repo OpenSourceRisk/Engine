@@ -25,12 +25,15 @@
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/volatility/inflation/constantcpivolatility.hpp>
 #include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/voltermstructure.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/termstructures/flatcorrelation.hpp>
+#include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;
@@ -80,6 +83,11 @@ private:
                                                       ModifiedFollowing, vol, ActualActual(), type, shift));
         return Handle<OptionletVolatilityStructure>(ts);
     }
+    Handle<QuantExt::CorrelationTermStructure> flatCorrelation(Real correlation = 0.0) {
+        boost::shared_ptr<QuantExt::CorrelationTermStructure> ts(
+            new QuantExt::FlatCorrelation(Settings::instance().evaluationDate(), correlation, ActualActual()));
+        return Handle<QuantExt::CorrelationTermStructure>(ts);
+    }
     Handle<CPICapFloorTermPriceSurface> flatRateCps(Handle<ZeroInflationIndex> infIndex,
                                                     const std::vector<Rate> cStrikes, std::vector<Rate> fStrikes,
                                                     std::vector<Period> cfMaturities, Matrix cPrice, Matrix fPrice) {
@@ -89,6 +97,19 @@ private:
                 ActualActual(), infIndex, discountCurve(infIndex->currency().code()), cStrikes, fStrikes, cfMaturities,
                 cPrice, fPrice));
         return Handle<CPICapFloorTermPriceSurface>(ts);
+    }
+    Handle<QuantLib::CPIVolatilitySurface> flatCpiVolSurface(Volatility v) {
+        Natural settleDays = 0;
+        Calendar cal = TARGET();
+        BusinessDayConvention bdc = Following;
+        DayCounter dc = Actual365Fixed();
+        Period lag = 2 * Months;
+        Frequency freq = Annual;
+        bool interp = false;
+        boost::shared_ptr<ConstantCPIVolatility> cpiCapFloorVolSurface =
+            boost::make_shared<ConstantCPIVolatility>(v, settleDays, cal, bdc, dc, lag, freq, interp);
+
+        return Handle<QuantLib::CPIVolatilitySurface>(cpiCapFloorVolSurface);
     }
     Handle<ZeroInflationIndex> makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates,
                                                       boost::shared_ptr<ZeroInflationIndex> ii,

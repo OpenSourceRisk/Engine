@@ -21,13 +21,17 @@
 
 namespace QuantExt {
 
-FXLinkedCashFlow::FXLinkedCashFlow(const Date& cashFlowDate, const Date& fxFixingDate, Real foreignAmount,
-                                   boost::shared_ptr<FxIndex> fxIndex, bool invertIndex)
-    : cashFlowDate_(cashFlowDate), fxFixingDate_(fxFixingDate), foreignAmount_(foreignAmount), fxIndex_(fxIndex),
-      invertIndex_(invertIndex) {}
+FXLinked::FXLinked(const Date& fxFixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex)
+    : fxFixingDate_(fxFixingDate), foreignAmount_(foreignAmount), fxIndex_(fxIndex) {}
 
-Real FXLinkedCashFlow::fxRate() const {
-    Real fixing = fxIndex_->fixing(fxFixingDate_);
-    return invertIndex_ ? 1.0 / fixing : fixing;
+Real FXLinked::fxRate() const {
+    return fxIndex_->fixing(fxFixingDate_);
 }
+
+FXLinkedCashFlow::FXLinkedCashFlow(const Date& cashFlowDate, const Date& fxFixingDate, Real foreignAmount,
+                                   boost::shared_ptr<FxIndex> fxIndex)
+    : FXLinked(fxFixingDate, foreignAmount, fxIndex), cashFlowDate_(cashFlowDate) {
+    registerWith(FXLinked::fxIndex());
+}
+
 } // namespace QuantExt

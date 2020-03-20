@@ -19,8 +19,7 @@
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/errors.hpp>
-
-#include <iomanip>
+#include <ored/utilities/to_string.hpp>
 
 using namespace ore::data;
 
@@ -98,10 +97,11 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
 }
 
 XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("SwaptionVolatility");
+    XMLNode* node = doc.allocNode("InflationCurve");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
+    XMLUtils::addChild(doc, node, "NominalTermStructure", nominalTermStructure_);
 
     if (type_ == Type::ZC) {
         XMLUtils::addChild(doc, node, "Type", "ZC");
@@ -115,28 +115,26 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
     string extrap = (extrapolate_ ? "true" : "false");
     XMLUtils::addChild(doc, node, "Extrapolation", extrap);
 
-    std::ostringstream cal, dc, lag, freq, baseZr, tol;
-    cal << calendar_;
-    dc << dayCounter_;
-    lag << lag_;
-    freq << frequency_;
+    string baseRateStr;
     if (baseRate_ != QuantLib::Null<Real>())
-        baseZr << std::setprecision(16) << std::fixed << baseRate_;
-    tol << std::setprecision(16) << std::scientific << tolerance_;
+        baseRateStr = to_string(baseRate_);
+    else
+        baseRateStr = "";
 
-    XMLUtils::addChild(doc, node, "Calendar", cal.str());
-    XMLUtils::addChild(doc, node, "DayCounter", dc.str());
-    XMLUtils::addChild(doc, node, "Lag", lag.str());
-    XMLUtils::addChild(doc, node, "Frequency", freq.str());
-    XMLUtils::addChild(doc, node, "BaseRate", baseZr.str());
-    XMLUtils::addChild(doc, node, "Tolerance", tol.str());
+    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
+    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+    XMLUtils::addChild(doc, node, "Lag", to_string(lag_));
+    XMLUtils::addChild(doc, node, "Frequency", to_string(frequency_));
+    XMLUtils::addChild(doc, node, "BaseRate", baseRateStr);
+    XMLUtils::addChild(doc, node, "Tolerance", tolerance_);
 
-    XMLNode* seasonalityNode = XMLUtils::addChild(doc, node, "Seasonality");
     if (seasonalityBaseDate_ != QuantLib::Null<Date>()) {
-        std::ostringstream dateStr;
+        XMLNode* seasonalityNode = XMLUtils::addChild(doc, node, "Seasonality");
+        std::ostringstream dateStr, sFreq;
         dateStr << QuantLib::io::iso_date(seasonalityBaseDate_);
+        sFreq <<  seasonalityFrequency_;
         XMLUtils::addChild(doc, seasonalityNode, "BaseDate", dateStr.str());
-        XMLUtils::addChild(doc, seasonalityNode, "Frequency", seasonalityFrequency_);
+        XMLUtils::addChild(doc, seasonalityNode, "Frequency", sFreq.str());
         XMLUtils::addChildren(doc, seasonalityNode, "Factors", "Factor", seasonalityFactors_);
     }
 

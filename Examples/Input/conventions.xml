@@ -275,6 +275,10 @@
     <Index>EUR-EURIBOR-3M</Index>
   </FRA>
   <FRA>
+    <Id>EUR-1M-FRA-CONVENTIONS</Id>
+    <Index>EUR-EURIBOR-1M</Index>
+  </FRA>
+  <FRA>
     <Id>AUD-3M-FRA-CONVENTIONS</Id>
     <Index>AUD-BBSW-3M</Index>
   </FRA>
@@ -776,14 +780,6 @@
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
     <Index>THB-BIBOR-6M</Index>
-  </Swap>
-  <Swap>
-    <Id>COP-3M-SWAP</Id>
-    <FixedCalendar>COP</FixedCalendar>
-    <FixedFrequency>Quarterly</FixedFrequency>
-    <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>ACT/360</FixedDayCounter>
-    <Index>COP-IBR-3M</Index>
   </Swap>  
   <Swap>
     <Id>PHP-3M-SWAP</Id>
@@ -1071,7 +1067,7 @@
   <BMABasisSwap>
     <Id>USD-LIBOR-SIFMA-3M-BASIS-CONVENTIONS</Id>
     <LiborIndex>USD-LIBOR-3M</LiborIndex>
-    <BMAIndex>USD-SIFMA-1W</BMAIndex>
+    <BMAIndex>USD-SIFMA</BMAIndex>
   </BMABasisSwap>
   <!-- FX Forwards -->
   <FX>
@@ -1292,6 +1288,8 @@
     <RollConvention>MF</RollConvention>
     <FlatIndex>USD-LIBOR-3M</FlatIndex>
     <SpreadIndex>EUR-EURIBOR-3M</SpreadIndex>
+    <IsResettable>Y</IsResettable>
+    <FlatIndexIsResettable>Y</FlatIndexIsResettable>
   </CrossCurrencyBasis>
   <CrossCurrencyBasis>
     <Id>USD-GBP-XCCY-BASIS-CONVENTIONS</Id>
@@ -1445,6 +1443,18 @@
     <FlatIndex>USD-LIBOR-3M</FlatIndex>
     <SpreadIndex>TWD-GENERIC-3M</SpreadIndex>
   </CrossCurrencyBasis>
+  <!-- Cross Currency Fix Float Swaps -->
+  <CrossCurrencyFixFloat>
+    <Id>USD-TRY-XCCY-FIX-FLOAT-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>US,UK,TRY</SettlementCalendar>
+    <SettlementConvention>F</SettlementConvention>
+    <FixedCurrency>TRY</FixedCurrency>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>F</FixedConvention>
+    <FixedDayCounter>A360</FixedDayCounter>
+    <Index>USD-LIBOR-3M</Index>
+  </CrossCurrencyFixFloat>
   <!-- Inflation Swaps -->
   <InflationSwap>
       <Id>EUHICP_INFLATIONSWAP</Id>
@@ -1489,7 +1499,7 @@
       <DayCounter>30/360</DayCounter>
       <Index>UKRPI</Index>
       <Interpolated>false</Interpolated>
-      <ObservationLag>3M</ObservationLag>
+      <ObservationLag>2M</ObservationLag>
       <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
       <InflationCalendar>UK</InflationCalendar>
       <InflationConvention>MF</InflationConvention>
@@ -1518,4 +1528,124 @@
       <InflationCalendar>ZAR</InflationCalendar>
       <InflationConvention>MF</InflationConvention>
   </InflationSwap>
+  <CmsSpreadOption>
+    <Id>EUR-CMS-10Y-2Y-CONVENTION</Id>
+    <ForwardStart>0M</ForwardStart>
+    <SpotDays>2D</SpotDays>
+    <SwapTenor>3M</SwapTenor>
+    <FixingDays>2</FixingDays>
+    <Calendar>TARGET</Calendar>
+    <DayCounter>A360</DayCounter>
+    <RollConvention>MF</RollConvention>
+  </CmsSpreadOption>
+  <FxOption> 
+    <Id>FX-EUR-USD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>Fwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-GBP-USD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>Fwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-AUD-USD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>Fwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-NZD-USD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>Fwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-USD-CAD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-USD-CHF-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-USD-JPY-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-EUR-GBP-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-EUR-AUD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-EUR-CAD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-EUR-CHF-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-EUR-JPY-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-GBP-AUD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-GBP-CAD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-GBP-CHF-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-GBP-JPY-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-AUD-NZD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-AUD-CAD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-AUD-JPY-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-NZD-JPY-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-CAD-JPY-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-CHF-JPY-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
 </Conventions>

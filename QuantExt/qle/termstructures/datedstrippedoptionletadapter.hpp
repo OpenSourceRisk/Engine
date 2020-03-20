@@ -28,9 +28,8 @@
 #include <ql/math/interpolation.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Adapter class for turning a DatedStrippedOptionletBase object into an OptionletVolatilityStructure
 /*! Takes a DatedStrippedOptionletBase and converts it into an OptionletVolatilityStructure with a fixed
@@ -40,7 +39,7 @@ namespace QuantExt {
 */
 class DatedStrippedOptionletAdapter : public OptionletVolatilityStructure, public LazyObject {
 public:
-    DatedStrippedOptionletAdapter(const boost::shared_ptr<DatedStrippedOptionletBase>& s);
+    DatedStrippedOptionletAdapter(const boost::shared_ptr<DatedStrippedOptionletBase>& s, const bool flatExtrapolation);
 
     //! \name TermStructure interface
     //@{
@@ -71,6 +70,7 @@ private:
     const boost::shared_ptr<DatedStrippedOptionletBase> optionletStripper_;
     Size nInterpolations_;
     mutable vector<boost::shared_ptr<Interpolation> > strikeInterpolations_;
+    bool flatExtrapolation_;
 };
 
 inline void DatedStrippedOptionletAdapter::update() {

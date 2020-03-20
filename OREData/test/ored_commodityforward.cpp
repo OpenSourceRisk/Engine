@@ -16,20 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/ored_commodityforward.hpp>
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <boost/make_shared.hpp>
 
 #include <ql/currencies/america.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 
 #include <qle/termstructures/pricecurve.hpp>
 
+#include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/commodityforward.hpp>
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/portfolio.hpp>
-#include <ored/marketdata/marketimpl.hpp>
 
 using namespace std;
 using namespace boost::unit_test_framework;
@@ -56,22 +57,21 @@ public:
         // Add GOLD_USD price curve
         vector<Date> dates = {asof_, Date(19, Feb, 2019)};
         vector<Real> prices = {1346.0, 1348.0};
-        Handle<PriceTermStructure> priceCurve(boost::make_shared<InterpolatedPriceCurve<Linear>>(
-            dates, prices, dayCounter));
+        Handle<PriceTermStructure> priceCurve(
+            boost::make_shared<InterpolatedPriceCurve<Linear>>(asof_, dates, prices, dayCounter, USDCurrency()));
         commodityCurves_[make_pair(Market::defaultConfiguration, "GOLD_USD")] = priceCurve;
     }
 };
 
-}
+} // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
-void CommodityForwardTest::testCommodityForwardTradeBuilding() {
-    
+BOOST_AUTO_TEST_SUITE(CommodityForwardTests)
+
+BOOST_AUTO_TEST_CASE(testCommodityForwardTradeBuilding) {
+
     BOOST_TEST_MESSAGE("Testing commodity forward trade building");
-
-    // Ensure settings are restored after this test
-    SavedSettings backup;
 
     // Create market
     boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
@@ -99,7 +99,7 @@ void CommodityForwardTest::testCommodityForwardTradeBuilding() {
 
     // Check the instrument was built as expected
     boost::shared_ptr<Instrument> qlInstrument = forward->instrument()->qlInstrument();
-    boost::shared_ptr<QuantExt::CommodityForward> commodityForward = 
+    boost::shared_ptr<QuantExt::CommodityForward> commodityForward =
         boost::dynamic_pointer_cast<QuantExt::CommodityForward>(qlInstrument);
     BOOST_CHECK(commodityForward);
     BOOST_CHECK_EQUAL(commodityForward->position(), Position::Type::Long);
@@ -113,8 +113,8 @@ void CommodityForwardTest::testCommodityForwardTradeBuilding() {
     BOOST_CHECK_CLOSE(commodityForward->NPV(), 800.0, testTolerance);
 
     // Check short
-    forward = boost::make_shared<ore::data::CommodityForward>(
-        envelope, "Short", commodityName, currency, quantity, maturity, strike);
+    forward = boost::make_shared<ore::data::CommodityForward>(envelope, "Short", commodityName, currency, quantity,
+                                                              maturity, strike);
     BOOST_CHECK_NO_THROW(forward->build(engineFactory));
     qlInstrument = forward->instrument()->qlInstrument();
     commodityForward = boost::dynamic_pointer_cast<QuantExt::CommodityForward>(qlInstrument);
@@ -123,22 +123,22 @@ void CommodityForwardTest::testCommodityForwardTradeBuilding() {
     BOOST_CHECK_CLOSE(commodityForward->NPV(), -800.0, testTolerance);
 
     // Check that negative quantity throws an error
-    forward = boost::make_shared<ore::data::CommodityForward>(
-        envelope, position, commodityName, currency, -quantity, maturity, strike);
+    forward = boost::make_shared<ore::data::CommodityForward>(envelope, position, commodityName, currency, -quantity,
+                                                              maturity, strike);
     BOOST_CHECK_THROW(forward->build(engineFactory), Error);
 
     // Check that negative strike throws an error
-    forward = boost::make_shared<ore::data::CommodityForward>(
-        envelope, position, commodityName, currency, quantity, maturity, -strike);
+    forward = boost::make_shared<ore::data::CommodityForward>(envelope, position, commodityName, currency, quantity,
+                                                              maturity, -strike);
     BOOST_CHECK_THROW(forward->build(engineFactory), Error);
 
     // Check that build fails when commodity name does not match that in the market
-    forward = boost::make_shared<ore::data::CommodityForward>(
-        envelope, position, "GOLD", currency, quantity, maturity, strike);
+    forward = boost::make_shared<ore::data::CommodityForward>(envelope, position, "GOLD", currency, quantity, maturity,
+                                                              strike);
     BOOST_CHECK_THROW(forward->build(engineFactory), Error);
 }
 
-void CommodityForwardTest::testCommodityForwardFromXml() {
+BOOST_AUTO_TEST_CASE(testCommodityForwardFromXml) {
 
     BOOST_TEST_MESSAGE("Testing parsing of commodity forward trade from XML");
 
@@ -184,14 +184,6 @@ void CommodityForwardTest::testCommodityForwardFromXml() {
     BOOST_CHECK_CLOSE(commodityForward->quantity(), 500000.0, testTolerance);
 }
 
-test_suite* CommodityForwardTest::suite() {
-    
-    test_suite* suite = BOOST_TEST_SUITE("CommodityForwardTest");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&CommodityForwardTest::testCommodityForwardTradeBuilding));
-    suite->add(BOOST_TEST_CASE(&CommodityForwardTest::testCommodityForwardFromXml));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

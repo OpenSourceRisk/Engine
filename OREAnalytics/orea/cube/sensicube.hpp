@@ -38,12 +38,11 @@ namespace ore {
 namespace analytics {
 
 //! Naieve concrete implementation of NPVSensiCube
-template <typename T>
-class SensiCube : public ore::analytics::NPVSensiCube {
+template <typename T> class SensiCube : public ore::analytics::NPVSensiCube {
 public:
-    SensiCube(const std::vector<std::string>& ids, const QuantLib::Date& asof, QuantLib::Size samples, const T& t = T()) :
-        ids_(ids), asof_(asof), dates_(1, asof_), samples_(samples), t0Data_(ids.size(), t), tradeNPVs_(ids.size(), map<Size,T>()) {
-    }
+    SensiCube(const std::vector<std::string>& ids, const QuantLib::Date& asof, QuantLib::Size samples, const T& t = T())
+        : ids_(ids), asof_(asof), dates_(1, asof_), samples_(samples), t0Data_(ids.size(), t),
+          tradeNPVs_(ids.size(), std::map<Size, T>()) {}
 
     //! load cube from an archive
     void load(const std::string& fileName) override {
@@ -53,22 +52,21 @@ public:
         ia >> *this;
     }
 
-    
     //! write cube to an archive
-    void save(const std::string& fileName) const override{
+    void save(const std::string& fileName) const override {
         std::ofstream ofs(fileName.c_str(), std::fstream::binary);
         QL_REQUIRE(ofs.is_open(), "error opening file " << fileName);
         boost::archive::binary_oarchive oa(ofs);
         oa << *this;
     }
-    
+
     //! Return the length of each dimension
     QuantLib::Size numIds() const override { return ids_.size(); }
     QuantLib::Size samples() const override { return samples_; }
 
     //! Get the vector of ids for this cube
     const std::vector<std::string>& ids() const override { return ids_; }
-    
+
     //! Get the vector of dates for this cube
     const std::vector<QuantLib::Date>& dates() const override { return dates_; }
 
@@ -80,27 +78,27 @@ public:
         this->check(i, 0, 0);
         return this->t0Data_[i];
     }
-    
+
     //! Set a value in the cube
-    void setT0(QuantLib::Real value, QuantLib::Size i, QuantLib::Size) override  {
+    void setT0(QuantLib::Real value, QuantLib::Size i, QuantLib::Size) override {
         this->check(i, 0, 0);
         this->t0Data_[i] = static_cast<T>(value);
     }
-    
+
     //! Get a value from the cube
     Real get(QuantLib::Size i, QuantLib::Size j, QuantLib::Size k, QuantLib::Size) const override {
         this->check(i, j, k);
 
         auto itr = this->tradeNPVs_[i].find(k);
         if (itr != tradeNPVs_[i].end()) {
-            return itr->second; 
+            return itr->second;
         } else {
             return this->t0Data_[i];
         }
     }
 
     //! Set a value in the cube
-    void set(QuantLib::Real value, QuantLib::Size i, QuantLib::Size j, QuantLib::Size k, QuantLib::Size ) override {
+    void set(QuantLib::Real value, QuantLib::Size i, QuantLib::Size j, QuantLib::Size k, QuantLib::Size) override {
         this->check(i, j, k);
         this->tradeNPVs_[i][k] = static_cast<T>(value);
         relevantScenarios_.insert(k);
@@ -145,5 +143,5 @@ using SinglePrecisionSensiCube = SensiCube<float>;
 //! Sensi cube with double precision floating point numbers.
 using DoublePrecisionSensiCube = SensiCube<double>;
 
-}
-}
+} // namespace analytics
+} // namespace ore

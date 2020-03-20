@@ -34,7 +34,8 @@ namespace data {
 
     \ingroup builders
  */
-class CommodityOptionEngineBuilder : public CachingPricingEngineBuilder<std::string, const std::string&, const QuantLib::Currency&> {
+class CommodityOptionEngineBuilder
+    : public CachingPricingEngineBuilder<std::string, const std::string&, const QuantLib::Currency&> {
 public:
     CommodityOptionEngineBuilder()
         : CachingEngineBuilder("BlackScholes", "AnalyticEuropeanEngine", {"CommodityOption"}) {}
@@ -44,8 +45,9 @@ protected:
         return commodityName + "/" + ccy.code();
     }
 
-    virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& commodityName, const QuantLib::Currency& ccy) override;
+    virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& commodityName,
+                                                                  const QuantLib::Currency& ccy) override;
 };
 
-}
-}
+} // namespace data
+} // namespace ore

@@ -30,20 +30,18 @@ using std::function;
 namespace ore {
 namespace analytics {
 
-SensitivityAggregator::SensitivityAggregator(const map<string, set<string>>& categories)
-    : setCategories_(categories) {
-    
+SensitivityAggregator::SensitivityAggregator(const map<string, set<pair<string, Size>>>& categories) : setCategories_(categories) {
+
     // Initialise the category functions
     for (const auto& kv : setCategories_) {
-        categories_[kv.first] = bind(&SensitivityAggregator::inCategory, this, 
-            std::placeholders::_1, kv.first);
+        categories_[kv.first] = bind(&SensitivityAggregator::inCategory, this, std::placeholders::_1, kv.first);
     }
 
     // Initialise the categorised records
     init();
 }
 
-SensitivityAggregator::SensitivityAggregator(const map<string, function<bool(std::string)>>& categories) 
+SensitivityAggregator::SensitivityAggregator(const map<string, function<bool(string)>>& categories)
     : categories_(categories) {
 
     // Initialise the categorised records
@@ -57,9 +55,11 @@ void SensitivityAggregator::aggregate(SensitivityStream& ss, const boost::shared
     // Loop over stream's records
     while (SensitivityRecord sr = ss.next()) {
         // Skip this record if the risk factor is not in the filter
-        if (!sr.isCrossGamma() && !filter->allow(sr.key_1)) continue;
-        if (sr.isCrossGamma() && (!filter->allow(sr.key_1) || !filter->allow(sr.key_2))) continue;
-        
+        if (!sr.isCrossGamma() && !filter->allow(sr.key_1))
+            continue;
+        if (sr.isCrossGamma() && (!filter->allow(sr.key_1) || !filter->allow(sr.key_2)))
+            continue;
+
         // "Blank out" trade ID before adding
         string tradeId = sr.tradeId;
         sr.tradeId = "";
@@ -84,10 +84,10 @@ void SensitivityAggregator::reset() {
 }
 
 const set<SensitivityRecord>& SensitivityAggregator::sensitivities(const string& category) const {
-    
+
     auto it = aggRecords_.find(category);
-    QL_REQUIRE(it != aggRecords_.end(), "The category " << category <<
-        " was not used in the construction of the SensitivityAggregator");
+    QL_REQUIRE(it != aggRecords_.end(),
+               "The category " << category << " was not used in the construction of the SensitivityAggregator");
 
     return it->second;
 }
@@ -112,8 +112,13 @@ void SensitivityAggregator::add(SensitivityRecord& sr, set<SensitivityRecord>& r
 
 bool SensitivityAggregator::inCategory(const string& tradeId, const string& category) const {
     QL_REQUIRE(setCategories_.count(category), "The category " << category << " is not valid");
-    return setCategories_.at(category).count(tradeId) > 0;
+    auto tradeIds = setCategories_.at(category);
+    for (auto it = tradeIds.begin(); it != tradeIds.end(); ++it) {
+        if (it->first == tradeId)
+            return true;
+    }
+    return false;
 }
 
-}
-}
+} // namespace analytics
+} // namespace ore

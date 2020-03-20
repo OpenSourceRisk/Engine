@@ -29,6 +29,8 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
@@ -37,9 +39,6 @@ using QuantLib::DayCounter;
 using QuantLib::Natural;
 using QuantLib::Calendar;
 using QuantLib::BusinessDayConvention;
-
-namespace ore {
-namespace data {
 
 //! Base Correlation term structure configuration
 /*!
@@ -53,7 +52,7 @@ public:
     BaseCorrelationCurveConfig() {}
     //! Detailed constructor
     BaseCorrelationCurveConfig(const string& curveID, const string& curveDescription,
-                               const vector<Real>& detachmentPoints, const vector<Period>& terms);
+                               const vector<string>& detachmentPoints, const vector<string>& terms);
     //@}
 
     //! \name Serialisation
@@ -64,8 +63,8 @@ public:
 
     //! \name Inspectors
     //@{
-    const vector<Period>& terms() const { return terms_; }
-    const vector<Real>& detachmentPoints() const { return detachmentPoints_; }
+    const vector<string>& terms() const { return terms_; }
+    const vector<string>& detachmentPoints() const { return detachmentPoints_; }
     const Size& settlementDays() const { return settlementDays_; }
     const Calendar& calendar() const { return calendar_; }
     const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
@@ -76,8 +75,8 @@ public:
 
     //! \name Setters
     //@{
-    vector<Period>& terms() { return terms_; }
-    vector<Real>& detachmentPoints() { return detachmentPoints_; }
+    vector<string>& terms() { return terms_; }
+    vector<string>& detachmentPoints() { return detachmentPoints_; }
     Size& settlementDays() { return settlementDays_; }
     Calendar& calendar() { return calendar_; }
     BusinessDayConvention& businessDayConvention() { return businessDayConvention_; }
@@ -85,8 +84,8 @@ public:
     bool& extrapolate() { return extrapolate_; }
     //@}
 private:
-    vector<Real> detachmentPoints_;
-    vector<Period> terms_;
+    vector<string> detachmentPoints_;
+    vector<string> terms_;
     Size settlementDays_;
     Calendar calendar_;
     BusinessDayConvention businessDayConvention_;

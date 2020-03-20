@@ -20,10 +20,10 @@
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ostream>
+#include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/indexes/interestrateindex.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
@@ -123,16 +123,15 @@ void AnalysisGenerator::visit(QuantLib::AverageBMACoupon& c) {
 void AnalysisGenerator::visit(QuantExt::FXLinkedCashFlow& c) {
     visit(static_cast<QuantLib::CashFlow&>(c));
     flowAnalysis_.back()[FIXING_DATE] = to_string(c.fxFixingDate());
-    flowAnalysis_.back()[INDEX] = c.index()->name();
+    flowAnalysis_.back()[INDEX] = c.fxIndex()->name();
 }
 
 void AnalysisGenerator::visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c) {
     // Ibor
     visit(static_cast<QuantLib::FloatingRateCoupon&>(c));
-
     // FX
-    QuantExt::FXLinkedCashFlow d = c.fxLinkedCashFlow();
-    visit(static_cast<QuantExt::FXLinkedCashFlow&>(d));
+    flowAnalysis_.back()[FIXING_DATE] = to_string(c.fxFixingDate());
+    flowAnalysis_.back()[INDEX] = c.fxIndex()->name();
 }
 
 void AnalysisGenerator::visit(QuantLib::InflationCoupon& c) {

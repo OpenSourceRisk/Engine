@@ -27,12 +27,15 @@
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
 #include <map>
+#include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/patterns/visitor.hpp>
 #include <ql/types.hpp>
 #include <set>
 
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using std::set;
@@ -42,9 +45,6 @@ using boost::optional;
 using ore::data::XMLNode;
 using QuantLib::AcyclicVisitor;
 using QuantLib::Real;
-
-namespace ore {
-namespace data {
 
 //! Base class for yield curve segments.
 /*!
@@ -67,7 +67,9 @@ public:
         TenorBasisTwo,
         BMABasis,
         FXForward,
-        CrossCcyBasis
+        CrossCcyBasis,
+        CrossCcyFixFloat,
+        DiscountRatio
     };
     //! Default destructor
     virtual ~YieldCurveSegment() {}
@@ -84,7 +86,7 @@ public:
     // TODO: why typeID?
     const string& typeID() const { return typeID_; }
     const string& conventionsID() const { return conventionsID_; }
-    virtual vector<string> quotes() const { return quotes_; }
+    const vector<pair<string, bool>>& quotes() const { return quotes_; }
     //@}
 
     //! \name Visitability
@@ -97,10 +99,19 @@ protected:
     //@{
     //! Default constructor
     YieldCurveSegment() {}
-    //! Detailed constructor
+    //! Detailed constructor - assumes all quotes are mandatory
     YieldCurveSegment(const string& typeID, const string& conventionsID, const vector<string>& quotes);
     //@}
-    vector<string> quotes_;
+
+    //! Quote and optional flag pair
+    vector<pair<string, bool>> quotes_;
+
+    //! Utility to build a quote, optional flag defaults to false
+    pair<string, bool> quote(const string& name, bool opt = false) { return make_pair(name, opt); }
+
+    //! Utility method to read quotes from XML
+    void loadQuotesFromXML(XMLNode* node);
+    //! Utility method to write quotes to XML
 
 private:
     // TODO: why type and typeID?
@@ -325,7 +336,7 @@ private:
 */
 class ZeroSpreadedYieldCurveSegment : public YieldCurveSegment {
 public:
-    //! \name COnstructors/Destructors
+    //! \name Constructors/Destructors
     //@{
     //! Default constructor
     ZeroSpreadedYieldCurveSegment() {}
@@ -356,6 +367,54 @@ private:
     string referenceCurveID_;
 };
 
+//! Discount ratio yield curve segment
+/*! Used to configure a QuantExt::DiscountRatioModifiedCurve.
+
+    \ingroup configuration
+*/
+class DiscountRatioYieldCurveSegment : public YieldCurveSegment {
+public:
+    //! \name Constructors/Destructors
+    //@{
+    //! Default constructor
+    DiscountRatioYieldCurveSegment() {}
+    //! Detailed constructor
+    DiscountRatioYieldCurveSegment(const std::string& typeId, const std::string& baseCurveId,
+                                   const std::string& baseCurveCurrency, const std::string& numeratorCurveId,
+                                   const std::string& numeratorCurveCurrency, const std::string& denominatorCurveId,
+                                   const std::string& denominatorCurveCurrency);
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const string& baseCurveId() const { return baseCurveId_; }
+    const string& baseCurveCurrency() const { return baseCurveCurrency_; }
+    const string& numeratorCurveId() const { return numeratorCurveId_; }
+    const string& numeratorCurveCurrency() const { return numeratorCurveCurrency_; }
+    const string& denominatorCurveId() const { return denominatorCurveId_; }
+    const string& denominatorCurveCurrency() const { return denominatorCurveCurrency_; }
+    //@}
+
+    //! \name Visitability
+    //@{
+    void accept(QuantLib::AcyclicVisitor& v);
+    //@}
+
+private:
+    std::string baseCurveId_;
+    std::string baseCurveCurrency_;
+    std::string numeratorCurveId_;
+    std::string numeratorCurveCurrency_;
+    std::string denominatorCurveId_;
+    std::string denominatorCurveCurrency_;
+};
+
 //! Yield Curve configuration
 /*!
   Wrapper class containing all yield curve segments needed to build a yield curve.
@@ -372,7 +431,8 @@ public:
     YieldCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                      const string& discountCurveID, const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments,
                      const string& interpolationVariable = "Discount", const string& interpolationMethod = "LogLinear",
-                     const string& zeroDayCounter = "A365", bool extrapolation = true, Real tolerance = 1.0e-12);
+                     const string& zeroDayCounter = "A365", bool extrapolation = true,
+                     const BootstrapConfig& bootstrapConfig = BootstrapConfig());
     //! Default destructor
     virtual ~YieldCurveConfig() {}
     //@}
@@ -392,7 +452,7 @@ public:
     const string& interpolationMethod() const { return interpolationMethod_; }
     const string& zeroDayCounter() const { return zeroDayCounter_; }
     bool extrapolation() const { return extrapolation_; }
-    Real tolerance() const { return tolerance_; }
+    const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
     const set<string>& requiredYieldCurveIDs() const { return requiredYieldCurveIDs_; }
     //@}
 
@@ -402,7 +462,7 @@ public:
     string& interpolationMethod() { return interpolationMethod_; }
     string& zeroDayCounter() { return zeroDayCounter_; }
     bool& extrapolation() { return extrapolation_; }
-    Real& tolerance() { return tolerance_; }
+    void setBootstrapConfig(const BootstrapConfig& bootstrapConfig) { bootstrapConfig_ = bootstrapConfig; }
     //@}
 
     const vector<string>& quotes() override;
@@ -421,7 +481,7 @@ private:
     string interpolationMethod_;
     string zeroDayCounter_;
     bool extrapolation_;
-    Real tolerance_;
+    BootstrapConfig bootstrapConfig_;
 };
 
 // Map form curveID to YieldCurveConfig

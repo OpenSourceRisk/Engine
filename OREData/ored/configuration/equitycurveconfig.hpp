@@ -24,11 +24,14 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ql/exercise.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
@@ -37,9 +40,6 @@ using QuantLib::DayCounter;
 using QuantLib::Calendar;
 using QuantLib::BusinessDayConvention;
 
-namespace ore {
-namespace data {
-
 //! Equity curve configuration
 /*!
   \ingroup configuration
@@ -47,7 +47,7 @@ namespace data {
 class EquityCurveConfig : public CurveConfig {
 public:
     //! Supported equity curve types
-    enum class Type { DividendYield, ForwardPrice };
+    enum class Type { DividendYield, ForwardPrice, OptionPremium, NoDividends };
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
@@ -55,7 +55,7 @@ public:
                       const string& currency, const Type& type, const string& equitySpotQuote,
                       const vector<string>& quotes, const string& dayCountID = "",
                       const string& dividendInterpVariable = "Zero", const string& dividendInterpMethod = "Linear",
-                      bool extrapolation = true);
+                      bool extrapolation = true, const QuantLib::Exercise::Type& exerciseStyle = QuantLib::Exercise::Type::European);
     //! Default constructor
     EquityCurveConfig() {}
     //@}
@@ -76,6 +76,7 @@ public:
     const string& dividendInterpolationVariable() const { return divInterpVariable_; }
     const string& dividendInterpolationMethod() const { return divInterpMethod_; }
     bool extrapolation() const { return extrapolation_; }
+    const QuantLib::Exercise::Type exerciseStyle() const { return exerciseStyle_; }
     const vector<string>& fwdQuotes() { return fwdQuotes_; }
     //@}
 
@@ -89,6 +90,7 @@ public:
     string& dividendInterpolationVariable() { return divInterpVariable_; }
     string& dividendInterpolationMethod() { return divInterpMethod_; }
     bool& extrapolation() { return extrapolation_; }
+    QuantLib::Exercise::Type& exerciseStyle() { return exerciseStyle_; }
     //@}
 
 private:
@@ -101,6 +103,13 @@ private:
     string divInterpVariable_;
     string divInterpMethod_;
     bool extrapolation_;
+    QuantLib::Exercise::Type exerciseStyle_;
 };
+
+std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t);
+std::ostream& operator<<(std::ostream& out, QuantLib::Exercise::Type t);
+
+EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str); 
+
 } // namespace data
 } // namespace ore

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/configuration/inflationcapfloorvolcurveconfig.hpp 
+/*! \file ored/configuration/inflationcapfloorvolcurveconfig.hpp
     \brief Inflation CapFloor volatility curve configuration class
     \ingroup configuration
 */
@@ -29,6 +29,8 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
@@ -38,24 +40,25 @@ using QuantLib::Natural;
 using QuantLib::Calendar;
 using QuantLib::BusinessDayConvention;
 
-namespace ore {
-namespace data {
-
 //! Inflation CapFloor volatility curve configuration class
 /*! \ingroup configuration
-*/
+ */
 class InflationCapFloorVolatilityCurveConfig : public CurveConfig {
 public:
     enum class Type { ZC, YY };
     enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
+    enum class QuoteType { Price, Volatility };
 
     InflationCapFloorVolatilityCurveConfig() {}
-    InflationCapFloorVolatilityCurveConfig(const string& curveID, const string& curveDescription,
-        const Type type, const VolatilityType& volatilityType, const bool extrapolate,
-        const vector<Period>& tenors, const vector<double>& strikes,
-        const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
-        const BusinessDayConvention& businessDayConvention, const string& index, 
-        const string& indexCurve, const string& yieldTermStructure);
+    InflationCapFloorVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Type type,
+                                           const QuoteType& quoteType, const VolatilityType& volatilityType,
+                                           const bool extrapolate, const vector<string>& tenors,
+                                           const vector<string>& capStrikes, const vector<string>& floorStrikes,
+					   const vector<string>& strikes, const DayCounter& dayCounter,
+                                           Natural settleDays, const Calendar& calendar,
+                                           const BusinessDayConvention& businessDayConvention, const string& index,
+                                           const string& indexCurve, const string& yieldTermStructure,
+                                           const Period& observationLag);
 
     //! \name XMLSerializable interface
     //@{
@@ -66,10 +69,13 @@ public:
     //! \name Inspectors
     //@{
     const Type& type() const { return type_; }
+    const QuoteType& quoteType() const { return quoteType_; }
     const VolatilityType& volatilityType() const { return volatilityType_; }
     const bool& extrapolate() const { return extrapolate_; }
-    const vector<Period>& tenors() const { return tenors_; }
-    const vector<double>& strikes() const { return strikes_; }
+    const vector<string>& tenors() const { return tenors_; }
+    const vector<string>& strikes() const { return strikes_; }
+    const vector<string>& capStrikes() const { return capStrikes_; }
+    const vector<string>& floorStrikes() const { return floorStrikes_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const Natural& settleDays() const { return settleDays_; }
     const Calendar& calendar() const { return calendar_; }
@@ -78,29 +84,37 @@ public:
     const string& indexCurve() const { return indexCurve_; }
     const string& yieldTermStructure() const { return yieldTermStructure_; }
     const vector<string>& quotes() override;
+    const Period& observationLag() const { return observationLag_; }
     //@}
 
     //! \name Setters
     //@{
     Type& type() { return type_; }
+    QuoteType& quoteType() { return quoteType_; }
     VolatilityType& volatilityType() { return volatilityType_; }
     bool& extrapolate() { return extrapolate_; }
-    vector<Period>& tenors() { return tenors_; }
-    vector<double>& strikes() { return strikes_; }
+    vector<string>& tenors() { return tenors_; }
+    vector<string>& strikes() { return strikes_; }
+    vector<string>& capStrikes() { return capStrikes_; }
+    vector<string>& floorStrikes() { return floorStrikes_; }
     DayCounter& dayCounter() { return dayCounter_; }
     Natural& settleDays() { return settleDays_; }
     Calendar& calendar() { return calendar_; }
     string& index() { return index_; }
     string& indexCurve() { return indexCurve_; }
     string& yieldTermStructure() { return yieldTermStructure_; }
+    Period& observationLag() { return observationLag_; }
     //@}
 
 private:
     Type type_;
+    QuoteType quoteType_;
     VolatilityType volatilityType_;
     bool extrapolate_;
-    vector<Period> tenors_;
-    vector<double> strikes_;
+    vector<string> tenors_;
+    vector<string> capStrikes_;   // price surfaces with different strikes for cap and floor premia
+    vector<string> floorStrikes_; // price surfaces with different strikes for cap and floor premia
+    vector<string> strikes_;      // union of cap and floor strikes
     DayCounter dayCounter_;
     Natural settleDays_;
     Calendar calendar_;
@@ -108,8 +122,10 @@ private:
     string index_;
     string indexCurve_;
     string yieldTermStructure_;
+    Period observationLag_;
 };
 
 std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::VolatilityType t);
+std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::QuoteType t);
 } // namespace data
 } // namespace ore

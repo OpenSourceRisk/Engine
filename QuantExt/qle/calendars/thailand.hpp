@@ -18,6 +18,7 @@
 
 /*! \file thailand.hpp
     \brief Thai calendar
+    TODO reconcile with QuantLib::Thailand
 */
 
 #ifndef quantext_thai_calendar_hpp
@@ -25,23 +26,23 @@
 
 #include <ql/time/calendar.hpp>
 
-namespace QuantLib {
+namespace QuantExt {
 
-
-
-    class Thailand : public Calendar {
-      private:
-        class SetImpl : public Calendar::WesternImpl {
-          public:
-            std::string name() const { return "Stock Exchange of Thailand"; }
-            bool isBusinessDay(const Date&) const;
-        };
-      public:
-        enum Market { SET    //Stock Exchange of Thailand
-        };
-        Thailand(Market m = SET);
+class Thailand : public QuantLib::Calendar {
+private:
+    class SetImpl : public Calendar::WesternImpl {
+    public:
+        std::string name() const { return "Stock Exchange of Thailand"; }
+        bool isBusinessDay(const QuantLib::Date&) const;
     };
 
-}
+public:
+    enum Market {
+        SET // Stock Exchange of Thailand
+    };
+    Thailand(Market m = SET);
+};
+
+} // namespace QuantExt
 
 #endif

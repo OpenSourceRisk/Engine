@@ -21,6 +21,7 @@
 #include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
+using namespace std;
 
 namespace ore {
 namespace analytics {
@@ -204,7 +205,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
         QL_REQUIRE(securitySpreads, "SecuritySpreads node not found");
         test.securitySpreadShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(securitySpreads, "SecuritySpread"); child;
-            child = XMLUtils::getNextSibling(child)) {
+             child = XMLUtils::getNextSibling(child)) {
             string bond = XMLUtils::getAttribute(child, "security");
             LOG("Loading stress parameters for Security spreads " << bond);
             SpotShiftData data;

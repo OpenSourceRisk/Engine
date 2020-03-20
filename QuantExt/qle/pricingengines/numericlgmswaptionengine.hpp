@@ -27,6 +27,7 @@
 
 #include <qle/models/lgm.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
+#include <qle/pricingengines/lgmconvolutionsolver.hpp>
 
 #include <ql/indexes/iborindex.hpp>
 #include <ql/instruments/nonstandardswaption.hpp>
@@ -42,10 +43,10 @@ namespace QuantExt {
     option expiry are considered to be
     part of the exercise into right.
 
-    \warning Cash settled swaptions are not supported
+    \warning Cash ParYieldCurve-settled swaptions are not supported
 
     Reference: Hagan, Methodology for callable swaps and Bermudan
-               “exercise into” swaptions
+               exercise into swaptions
 */
 
 /*! Base class from which we derive the engines for both the Swaption
@@ -53,48 +54,10 @@ namespace QuantExt {
 
   \ingroup engines
 */
-class NumericLgmSwaptionEngineBase {
+class NumericLgmSwaptionEngineBase : protected LgmConvolutionSolver {
 protected:
     NumericLgmSwaptionEngineBase(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
-                                 const Real sx, const Size nx, const Handle<YieldTermStructure>& discountCurve)
-        : model_(model), nx_(nx), discountCurve_(discountCurve) {
-
-        // precompute weights
-
-        // number of x, y grid points > 0
-        mx_ = static_cast<Size>(floor(sx * static_cast<Real>(nx)) + 0.5);
-        my_ = static_cast<Size>(floor(sy * static_cast<Real>(ny)) + 0.5);
-
-        // y-grid spacing
-        h_ = 1.0 / ny;
-
-        // weights for convolution in the rollback step
-        CumulativeNormalDistribution N;
-        NormalDistribution G;
-
-        y_.resize(2 * my_ + 1);         // x-coordinate / standard deviation of x
-        w_.resize(2 * my_ + 1);         // probability weight around y-grid point i
-        wsum_.resize(2 * my_ + 1, 0.0); // partial sum of the weights
-        Real M0 = 0.0, M2 = 0.0, M4 = 0.0;
-        for (int i = 0; i <= 2 * my_; i++) {
-            y_[i] = h_ * (i - my_);
-            if (i == 0 || i == 2 * my_)
-                w_[i] = (1. + y_[0] / h_) * N(y_[0] + h_) - y_[0] / h_ * N(y_[0]) + (G(y_[0] + h_) - G(y_[0])) / h_;
-            else
-                w_[i] = (1. + y_[i] / h_) * N(y_[i] + h_) - 2. * y_[i] / h_ * N(y_[i]) -
-                        (1. - y_[i] / h_) * N(y_[i] - h_) // opposite sign in the paper
-                        + (G(y_[i] + h_) - 2. * G(y_[i]) + G(y_[i] - h_)) / h_;
-            // w_[i] might be negative due to numerical errors
-            if (w_[i] < 0.0) {
-                QL_REQUIRE(w_[i] > -1.0E-10, "NumericLgmSwaptionEngine: negative w (" << w_[i] << ") at i=" << i);
-                w_[i] = 0.0;
-            }
-            M0 += w_[i];
-            Real y2 = y_[i] * y_[i];
-            M2 += w_[i] * y2;
-            M4 += w_[i] * y2 * y2;
-        }
-    }
+                                 const Real sx, const Size nx, const Handle<YieldTermStructure>& discountCurve);
 
     virtual ~NumericLgmSwaptionEngineBase() {}
 
@@ -102,14 +65,12 @@ protected:
 
     virtual Real conditionalSwapValue(Real x, Real t, const Date expiry0) const = 0;
 
+    Real rebatePv(const Real x, const Real t, const Size exerciseIndex) const;
+
     mutable boost::shared_ptr<Exercise> exercise_;
     mutable boost::shared_ptr<IborIndex> iborIndex_, iborIndexCorrected_;
-    boost::shared_ptr<LinearGaussMarkovModel> model_;
     mutable boost::shared_ptr<LgmImpliedYieldTermStructure> iborModelCurve_;
-    int mx_, my_, nx_;
     const Handle<YieldTermStructure> discountCurve_;
-    Real h_;
-    std::vector<Real> y_, w_, wsum_;
 }; // NnumercLgmSwaptionEngineBase
 
 //! Engine for Swaption instrument
@@ -125,7 +86,7 @@ public:
           NumericLgmSwaptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
         if (!discountCurve_.empty())
             registerWith(discountCurve_);
-        registerWith(model_);
+        registerWith(LgmConvolutionSolver::model());
     }
 
     void calculate() const;
@@ -147,7 +108,7 @@ public:
           NumericLgmSwaptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
         if (!discountCurve_.empty())
             registerWith(discountCurve_);
-        registerWith(model_);
+        registerWith(LgmConvolutionSolver::model());
     }
 
     void calculate() const;

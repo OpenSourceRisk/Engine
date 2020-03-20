@@ -31,9 +31,8 @@
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/stochasticprocess.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 //! Linear Gauss Morkov Model
 /*! LGM 1f interest rate model
     Basically the same remarks as for CrossAssetModel hold
@@ -62,14 +61,14 @@ public:
 
     /*! calibrate volatilities to a sequence of ir options with
         expiry times equal to step times in the parametrization */
-    void calibrateVolatilitiesIterative(const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+    void calibrateVolatilitiesIterative(const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                         OptimizationMethod& method, const EndCriteria& endCriteria,
                                         const Constraint& constraint = Constraint(),
                                         const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate reversion to a sequence of ir options with
         maturities equal to step times in the parametrization */
-    void calibrateReversionsIterative(const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+    void calibrateReversionsIterative(const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                       OptimizationMethod& method, const EndCriteria& endCriteria,
                                       const Constraint& constraint = Constraint(),
                                       const std::vector<Real>& weights = std::vector<Real>());
@@ -130,7 +129,7 @@ inline Real LinearGaussMarkovModel::numeraire(const Time t, const Real x,
 
 inline Real LinearGaussMarkovModel::discountBond(const Time t, const Time T, const Real x,
                                                  const Handle<YieldTermStructure> discountCurve) const {
-    if (close_enough(t, T))
+    if (QuantLib::close_enough(t, T))
         return 1.0;
     QL_REQUIRE(T >= t && t >= 0.0, "T(" << T << ") >= t(" << t << ") >= 0 required in LGM::discountBond");
     Real Ht = parametrization_->H(t);
@@ -143,9 +142,9 @@ inline Real LinearGaussMarkovModel::discountBond(const Time t, const Time T, con
 
 inline Real LinearGaussMarkovModel::reducedDiscountBond(const Time t, const Time T, const Real x,
                                                         const Handle<YieldTermStructure> discountCurve) const {
-    if (close_enough(t, T))
+    if (QuantLib::close_enough(t, T))
         return 1.0 / numeraire(t, x, discountCurve);
-    QL_REQUIRE(T >= t && t >= 0.0, "T(" << T << ") >= t(" << t << ") >= 0 required in LGM::reducedDxsiscountBond");
+    QL_REQUIRE(T >= t && t >= 0.0, "T(" << T << ") >= t(" << t << ") >= 0 required in LGM::reducedDiscountBond");
     Real HT = parametrization_->H(T);
     return (discountCurve.empty() ? parametrization_->termStructure()->discount(T) : discountCurve->discount(T)) *
            std::exp(-HT * x - 0.5 * HT * HT * parametrization_->zeta(t));
@@ -161,7 +160,7 @@ inline Real LinearGaussMarkovModel::discountBondOption(Option::Type type, const 
     Real pT = discountCurve.empty() ? parametrization_->termStructure()->discount(T) : discountCurve->discount(T);
     // slight generalization of Lichters, Stamm, Gallagher 11.2.1
     // with t < S, SSRN: https://ssrn.com/abstract=2246054
-    Real sigma = sqrt(parametrization_->zeta(t)) * (parametrization_->H(T) - parametrization_->H(S));
+    Real sigma = std::sqrt(parametrization_->zeta(t)) * (parametrization_->H(T) - parametrization_->H(S));
     Real dp = (std::log(pT / (K * pS)) / sigma + 0.5 * sigma);
     Real dm = dp - sigma;
     CumulativeNormalDistribution N;
@@ -169,20 +168,19 @@ inline Real LinearGaussMarkovModel::discountBondOption(Option::Type type, const 
 }
 
 inline void LinearGaussMarkovModel::calibrateVolatilitiesIterative(
-    const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, OptimizationMethod& method,
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers, OptimizationMethod& method,
     const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
+        std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveVolatility(i));
     }
 }
 
-inline void
-LinearGaussMarkovModel::calibrateReversionsIterative(const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
-                                                     OptimizationMethod& method, const EndCriteria& endCriteria,
-                                                     const Constraint& constraint, const std::vector<Real>& weights) {
+inline void LinearGaussMarkovModel::calibrateReversionsIterative(
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
+        std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveReversion(i));
     }
 }

@@ -25,6 +25,7 @@
 #include <orea/engine/sensitivitystream.hpp>
 
 #include <fstream>
+#include <set>
 #include <string>
 
 namespace ore {
@@ -33,18 +34,17 @@ namespace analytics {
 //! Class that wraps a sensitivity stream and filters out neglible records
 class FilteredSensitivityStream : public SensitivityStream {
 public:
-    /*! Constructor providing the thresholds. If the absolute value of the delta is 
-        greater than the \p deltaThreshold or the absolute value of the gamma is greater 
+    /*! Constructor providing the thresholds. If the absolute value of the delta is
+        greater than the \p deltaThreshold or the absolute value of the gamma is greater
         than the \p gammaThreshold, then the SensitivityRecord is streamed
     */
-    FilteredSensitivityStream(const boost::shared_ptr<SensitivityStream>& ss,
-        QuantLib::Real deltaThreshold, QuantLib::Real gammaThreshold);
+    FilteredSensitivityStream(const boost::shared_ptr<SensitivityStream>& ss, QuantLib::Real deltaThreshold,
+                              QuantLib::Real gammaThreshold);
     //! Constructor that uses the same \p threshold for delta and gamma
-    FilteredSensitivityStream(const boost::shared_ptr<SensitivityStream>& ss,
-        QuantLib::Real threshold);
+    FilteredSensitivityStream(const boost::shared_ptr<SensitivityStream>& ss, QuantLib::Real threshold);
     //! Returns the next SensitivityRecord in the stream after filtering
     SensitivityRecord next() override;
-    //! Resets the stream so that SensitivityRecord objects can be streamed again 
+    //! Resets the stream so that SensitivityRecord objects can be streamed again
     void reset() override;
 
 private:
@@ -54,7 +54,9 @@ private:
     QuantLib::Real deltaThreshold_;
     //! The gamma threshold
     QuantLib::Real gammaThreshold_;
+    //! Set to hold Delta Keys appearing in CrossGammas
+    std::set<RiskFactorKey> deltaKeys_;
 };
 
-}
-}
+} // namespace analytics
+} // namespace ore

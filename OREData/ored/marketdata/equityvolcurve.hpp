@@ -27,14 +27,14 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/equitycurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-
-using QuantLib::Date;
-using QuantLib::BlackVolTermStructure;
-using ore::data::CurveConfigurations;
 
 namespace ore {
 namespace data {
+using QuantLib::Date;
+using QuantLib::BlackVolTermStructure;
+using ore::data::CurveConfigurations;
 
 //! Wrapper class for building Equity volatility structures
 /*!
@@ -47,19 +47,46 @@ public:
     //! Default constructor
     EquityVolCurve() {}
     //! Detailed constructor
-    EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader,
-                   const CurveConfigurations& curveConfigs);
+    EquityVolCurve(Date asof, 
+        EquityVolatilityCurveSpec spec, 
+        const Loader& loader,
+        const CurveConfigurations& curveConfigs,
+        const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex);
     //@}
 
     //! \name Inspectors
     //@{
     const EquityVolatilityCurveSpec& spec() const { return spec_; }
 
+    //! Build a volatility structure from a single constant volatlity quote
+    void buildVolatility(
+        const QuantLib::Date& asof,
+        const EquityVolatilityCurveConfig& vc,
+        const ConstantVolatilityConfig& cvc,
+        const Loader& loader);
+
+    //! Build a volatility curve from a 1-D curve of volatlity quotes
+    void buildVolatility(
+        const QuantLib::Date& asof,
+        const EquityVolatilityCurveConfig& vc,
+        const VolatilityCurveConfig& vcc,
+        const Loader& loader);
+
+    //! Build a volatility surface from a collection of expiry and absolute strike pairs.
+    void buildVolatility(
+        const QuantLib::Date& asof,
+        EquityVolatilityCurveConfig& vc,
+        const VolatilityStrikeSurfaceConfig& vssc,
+        const Loader& loader,
+        const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex);
+
     const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() { return vol_; }
     //@}
 private:
     EquityVolatilityCurveSpec spec_;
     boost::shared_ptr<BlackVolTermStructure> vol_;
+    QuantLib::Calendar calendar_;
+    QuantLib::DayCounter dayCounter_;
 };
 } // namespace data
 } // namespace ore

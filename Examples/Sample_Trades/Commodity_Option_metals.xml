@@ -1,16 +1,24 @@
-<Trade id="CommodityForward_Gold_1Y">
-    <TradeType>CommodityForward</TradeType>
+<Trade id="CommodityOption">
+    <TradeType>CommodityOption</TradeType>
     <Envelope>
         <CounterParty>CPTY_A</CounterParty>
         <NettingSetId>CPTY_A</NettingSetId>
         <AdditionalFields/>
     </Envelope>
-    <CommodityForwardData>
-        <Position>Short</Position>
-        <Maturity>2017-02-05</Maturity>
-        <Name>COMDTY_GOLD_USD</Name>
+    <CommodityOptionData>
+        <OptionData>
+            <LongShort>Short</LongShort>
+            <OptionType>Put</OptionType>
+            <Style>European</Style>
+            <Settlement>Cash</Settlement>
+            <PayOffAtExpiry>false</PayOffAtExpiry>
+            <ExerciseDates>
+                <ExerciseDate>2019-04-28</ExerciseDate>
+            </ExerciseDates>
+        </OptionData>
+        <Name>Gold</Name>
         <Currency>USD</Currency>
-        <Strike>1162.0</Strike>
-        <Quantity>1000</Quantity>
-    </CommodityForwardData>
+        <Strike>1161.8</Strike>
+        <Quantity>500</Quantity>
+    </CommodityOptionData>
 </Trade>

@@ -23,12 +23,21 @@
 
 #pragma once
 
+#include <ql/patterns/lazyobject.hpp>
+
 namespace ore {
 namespace data {
 
-class ModelBuilder : public LazyObject {
+class ModelBuilder : public QuantLib::LazyObject {
 public:
-    void recalibrate() { calculate(); }
+    //! recalibrate model, if necessary
+    void recalibrate() const { calculate(); }
+
+    //! force recalibration of model
+    virtual void forceRecalculate() { recalculate(); }
+
+    //! if false is returned, the model does not require a recalibration
+    virtual bool requiresRecalibration() const = 0;
 };
 
 } // namespace data

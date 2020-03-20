@@ -31,9 +31,9 @@ StressScenarioGenerator::StressScenarioGenerator(const boost::shared_ptr<StressT
                                                  const boost::shared_ptr<Scenario>& baseScenario,
                                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                                  const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory)
-    : ShiftScenarioGenerator(baseScenario, simMarketData), stressData_(stressData), 
+    : ShiftScenarioGenerator(baseScenario, simMarketData), stressData_(stressData),
       stressScenarioFactory_(stressScenarioFactory) {
-    
+
     QL_REQUIRE(stressData_, "StressScenarioGenerator: stressData is null");
 
     generateScenarios();
@@ -381,17 +381,17 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
                                                    boost::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
 
-    Size n_swvol_term = simMarketData_->swapVolTerms().size();
-    Size n_swvol_exp = simMarketData_->swapVolExpiries().size();
-
-    vector<vector<Real>> volData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
-    vector<Real> volExpiryTimes(n_swvol_exp, 0.0);
-    vector<Real> volTermTimes(n_swvol_term, 0.0);
-    vector<vector<Real>> shiftedVolData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
-
     for (auto d : std.swaptionVolShifts) {
         std::string ccy = d.first;
         LOG("Apply stress scenario to swaption vol structure " << ccy);
+
+        Size n_swvol_term = simMarketData_->swapVolTerms(ccy).size();
+        Size n_swvol_exp = simMarketData_->swapVolExpiries(ccy).size();
+
+        vector<vector<Real>> volData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
+        vector<Real> volExpiryTimes(n_swvol_exp, 0.0);
+        vector<Real> volTermTimes(n_swvol_term, 0.0);
+        vector<vector<Real>> shiftedVolData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
 
         StressTestScenarioData::SwaptionVolShiftData data = d.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
@@ -404,11 +404,11 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
 
         // cache original vol data
         for (Size j = 0; j < n_swvol_exp; ++j) {
-            Date expiry = asof + simMarketData_->swapVolExpiries()[j];
+            Date expiry = asof + simMarketData_->swapVolExpiries(ccy)[j];
             volExpiryTimes[j] = dc.yearFraction(asof, expiry);
         }
         for (Size j = 0; j < n_swvol_term; ++j) {
-            Date term = asof + simMarketData_->swapVolTerms()[j];
+            Date term = asof + simMarketData_->swapVolTerms(ccy)[j];
             volTermTimes[j] = dc.yearFraction(asof, term);
         }
         for (Size j = 0; j < n_swvol_exp; ++j) {
@@ -462,12 +462,16 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
                                                    boost::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
 
-    vector<Real> volStrikes = simMarketData_->capFloorVolStrikes();
-    Size n_cfvol_strikes = volStrikes.size();
-
     for (auto d : std.capVolShifts) {
         std::string ccy = d.first;
         LOG("Apply stress scenario to cap/floor vol structure " << ccy);
+
+        vector<Real> volStrikes = simMarketData_->capFloorVolStrikes(ccy);
+        // Strikes may be empty which indicates that the optionlet structure in the simulation market is an ATM curve
+        if (volStrikes.empty()) {
+            volStrikes = { 0.0 };
+        }
+        Size n_cfvol_strikes = volStrikes.size();
 
         Size n_cfvol_exp = simMarketData_->capFloorVolExpiries(ccy).size();
         vector<vector<Real>> volData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
@@ -519,7 +523,7 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
 }
 
 void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::StressTestData& std,
-    boost::shared_ptr<Scenario>& scenario) {
+                                                      boost::shared_ptr<Scenario>& scenario) {
     for (auto d : std.securitySpreadShifts) {
         string bond = d.first;
         StressTestScenarioData::SpotShiftData data = d.second;

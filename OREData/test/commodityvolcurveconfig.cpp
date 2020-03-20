@@ -16,7 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/commodityvolcurveconfig.hpp>
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <ored/configuration/commodityvolcurveconfig.hpp>
 
@@ -25,9 +26,11 @@ using namespace boost::unit_test_framework;
 using namespace QuantLib;
 using namespace ore::data;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
-void CommodityVolatilityCurveConfigTest::testParseConstantVolFromXml() {
+BOOST_AUTO_TEST_SUITE(CommodityVolatilityConfigTests)
+
+BOOST_AUTO_TEST_CASE(testParseConstantVolFromXml) {
 
     BOOST_TEST_MESSAGE("Testing parsing of constant commodity vol curve configuration from XML");
 
@@ -37,8 +40,9 @@ void CommodityVolatilityCurveConfigTest::testParseConstantVolFromXml() {
     configXml.append("  <CurveId>GOLD_USD_VOLS</CurveId>");
     configXml.append("  <CurveDescription/>");
     configXml.append("  <Currency>USD</Currency>");
-    configXml.append("  <Type>Constant</Type>");
-    configXml.append("	<Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF</Quote>");
+    configXml.append("  <Constant>");
+    configXml.append("    <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATM/AtmFwd</Quote>");
+    configXml.append("  </Constant>");
     configXml.append("</CommodityVolatility>");
 
     // Create the XMLNode
@@ -47,25 +51,26 @@ void CommodityVolatilityCurveConfigTest::testParseConstantVolFromXml() {
     XMLNode* configNode = doc.getFirstNode("CommodityVolatility");
 
     // Parse commodity volatility curve configuration from XML
-    CommodityVolatilityCurveConfig config;
+    CommodityVolatilityConfig config;
     config.fromXML(configNode);
 
     // Check fields
     BOOST_CHECK_EQUAL(config.curveID(), "GOLD_USD_VOLS");
     BOOST_CHECK_EQUAL(config.currency(), "USD");
-    BOOST_CHECK(config.type() == CommodityVolatilityCurveConfig::Type::Constant);
+    // Check that we have a constant volatility config.
+    auto vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(config.volatilityConfig());
+    BOOST_CHECK(vc);
     BOOST_CHECK_EQUAL(config.quotes().size(), 1);
-    BOOST_CHECK_EQUAL(config.quotes()[0], "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF");
-    
+    BOOST_CHECK_EQUAL(config.quotes()[0], "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATM/AtmFwd");
+
     // Check defaults (don't matter for constant config in any case)
     BOOST_CHECK_EQUAL(config.dayCounter(), "A365");
     BOOST_CHECK_EQUAL(config.calendar(), "NullCalendar");
-    BOOST_CHECK_EQUAL(config.extrapolate(), true);
-    BOOST_CHECK_EQUAL(config.lowerStrikeConstantExtrapolation(), false);
-    BOOST_CHECK_EQUAL(config.upperStrikeConstantExtrapolation(), false);
+    BOOST_CHECK_EQUAL(config.futureConventionsId(), "");
+    BOOST_CHECK_EQUAL(config.optionExpiryRollDays(), 0);
 }
 
-void CommodityVolatilityCurveConfigTest::testParseVolCurveFromXml() {
+BOOST_AUTO_TEST_CASE(testParseVolCurveFromXml) {
 
     BOOST_TEST_MESSAGE("Testing parsing of commodity vol curve configuration from XML");
 
@@ -75,12 +80,15 @@ void CommodityVolatilityCurveConfigTest::testParseVolCurveFromXml() {
     configXml.append("  <CurveId>GOLD_USD_VOLS</CurveId>");
     configXml.append("  <CurveDescription/>");
     configXml.append("  <Currency>USD</Currency>");
-    configXml.append("  <Type>Curve</Type>");
-    configXml.append("  <Quotes>");
-    configXml.append("    <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF</Quote>");
-    configXml.append("    <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATMF</Quote>");
-    configXml.append("    <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/10Y/ATMF</Quote>");
-    configXml.append("  </Quotes>");
+    configXml.append("  <Curve>");
+    configXml.append("    <Quotes>");
+    configXml.append("      <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATM/AtmFwd</Quote>");
+    configXml.append("      <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATM/AtmFwd</Quote>");
+    configXml.append("      <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/10Y/ATM/AtmFwd</Quote>");
+    configXml.append("    </Quotes>");
+    configXml.append("    <Interpolation>Linear</Interpolation>");
+    configXml.append("    <Extrapolation>Flat</Extrapolation>");
+    configXml.append("  </Curve>");
     configXml.append("</CommodityVolatility>");
 
     // Create the XMLNode
@@ -89,29 +97,30 @@ void CommodityVolatilityCurveConfigTest::testParseVolCurveFromXml() {
     XMLNode* configNode = doc.getFirstNode("CommodityVolatility");
 
     // Parse commodity volatility curve configuration from XML
-    CommodityVolatilityCurveConfig config;
+    CommodityVolatilityConfig config;
     config.fromXML(configNode);
 
     // Expected vector of quotes
-    vector<string> quotes = {
-        "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF",
-        "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATMF",
-        "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/10Y/ATMF"
-    };
+    vector<string> quotes = {"COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATM/AtmFwd",
+                             "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATM/AtmFwd",
+                             "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/10Y/ATM/AtmFwd"};
 
     // Check fields
     BOOST_CHECK_EQUAL(config.curveID(), "GOLD_USD_VOLS");
     BOOST_CHECK_EQUAL(config.currency(), "USD");
-    BOOST_CHECK(config.type() == CommodityVolatilityCurveConfig::Type::Curve);
+    // Check that we have a volatility curve config.
+    auto vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(config.volatilityConfig());
+    BOOST_REQUIRE(vc);
+    BOOST_CHECK_EQUAL(vc->interpolation(), "Linear");
+    BOOST_CHECK_EQUAL(vc->extrapolation(), "Flat");
     BOOST_CHECK_EQUAL(config.quotes().size(), 3);
     BOOST_CHECK_EQUAL_COLLECTIONS(quotes.begin(), quotes.end(), config.quotes().begin(), config.quotes().end());
 
     // Check defaults
     BOOST_CHECK_EQUAL(config.dayCounter(), "A365");
     BOOST_CHECK_EQUAL(config.calendar(), "NullCalendar");
-    BOOST_CHECK_EQUAL(config.extrapolate(), true);
-    BOOST_CHECK_EQUAL(config.lowerStrikeConstantExtrapolation(), false);
-    BOOST_CHECK_EQUAL(config.upperStrikeConstantExtrapolation(), false);
+    BOOST_CHECK_EQUAL(config.futureConventionsId(), "");
+    BOOST_CHECK_EQUAL(config.optionExpiryRollDays(), 0);
 
     // Override defaults in turn and check
 
@@ -125,13 +134,18 @@ void CommodityVolatilityCurveConfigTest::testParseVolCurveFromXml() {
     config.fromXML(configNode);
     BOOST_CHECK_EQUAL(config.calendar(), "TARGET");
 
-    // Extrapolation
-    XMLUtils::addChild(doc, configNode, "Extrapolation", false);
+    // Future conventions Id
+    XMLUtils::addChild(doc, configNode, "FutureConventions", "NYMEX:CL");
     config.fromXML(configNode);
-    BOOST_CHECK_EQUAL(config.extrapolate(), false);
+    BOOST_CHECK_EQUAL(config.futureConventionsId(), "NYMEX:CL");
+
+    // Option expiry roll days
+    XMLUtils::addChild(doc, configNode, "OptionExpiryRollDays", "2");
+    config.fromXML(configNode);
+    BOOST_CHECK_EQUAL(config.optionExpiryRollDays(), 2);
 }
 
-void CommodityVolatilityCurveConfigTest::testParseVolSurfaceFromXml() {
+BOOST_AUTO_TEST_CASE(testParseVolSurfaceFromXml) {
 
     BOOST_TEST_MESSAGE("Testing parsing of commodity vol surface configuration from XML");
 
@@ -141,11 +155,15 @@ void CommodityVolatilityCurveConfigTest::testParseVolSurfaceFromXml() {
     configXml.append("  <CurveId>WTI_USD_VOLS</CurveId>");
     configXml.append("  <CurveDescription/>");
     configXml.append("  <Currency>USD</Currency>");
-    configXml.append("  <Type>Surface</Type>");
-    configXml.append("  <Surface>");
-    configXml.append("    <Expiries>1Y,5Y,10Y</Expiries>");
+    configXml.append("  <StrikeSurface>");
     configXml.append("    <Strikes>30.0,40.0,60.0</Strikes>");
-    configXml.append("  </Surface>");
+    configXml.append("    <Expiries>1Y,5Y,10Y</Expiries>");
+    configXml.append("    <TimeInterpolation>Linear</TimeInterpolation>");
+    configXml.append("    <StrikeInterpolation>Linear</StrikeInterpolation>");
+    configXml.append("    <Extrapolation>true</Extrapolation>");
+    configXml.append("    <TimeExtrapolation>Flat</TimeExtrapolation>");
+    configXml.append("    <StrikeExtrapolation>Flat</StrikeExtrapolation>");
+    configXml.append("  </StrikeSurface>");
     configXml.append("</CommodityVolatility>");
 
     // Create the XMLNode
@@ -154,58 +172,41 @@ void CommodityVolatilityCurveConfigTest::testParseVolSurfaceFromXml() {
     XMLNode* configNode = doc.getFirstNode("CommodityVolatility");
 
     // Parse commodity volatility curve configuration from XML
-    CommodityVolatilityCurveConfig config;
+    CommodityVolatilityConfig config;
     config.fromXML(configNode);
 
     // Expected vector of quotes
-    vector<string> quotes = {
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/1Y/30.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/1Y/40.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/1Y/60.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/5Y/30.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/5Y/40.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/5Y/60.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/10Y/30.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/10Y/40.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/10Y/60.0"
-    };
+    vector<string> quotes = {"COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/1Y/30.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/1Y/40.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/1Y/60.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/5Y/30.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/5Y/40.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/5Y/60.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/10Y/30.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/10Y/40.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/10Y/60.0"};
 
     // Check fields
     BOOST_CHECK_EQUAL(config.curveID(), "WTI_USD_VOLS");
     BOOST_CHECK_EQUAL(config.currency(), "USD");
-    BOOST_CHECK(config.type() == CommodityVolatilityCurveConfig::Type::Surface);
+    // Check that we have a volatility strike surface config.
+    auto vc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(config.volatilityConfig());
+    BOOST_REQUIRE(vc);
+    BOOST_CHECK_EQUAL(vc->timeInterpolation(), "Linear");
+    BOOST_CHECK_EQUAL(vc->strikeInterpolation(), "Linear");
+    BOOST_CHECK(vc->extrapolation());
+    BOOST_CHECK_EQUAL(vc->timeExtrapolation(), "Flat");
+    BOOST_CHECK_EQUAL(vc->strikeExtrapolation(), "Flat");
     BOOST_CHECK_EQUAL(config.quotes().size(), 9);
     BOOST_CHECK_EQUAL_COLLECTIONS(quotes.begin(), quotes.end(), config.quotes().begin(), config.quotes().end());
 
     // Check defaults
     BOOST_CHECK_EQUAL(config.dayCounter(), "A365");
     BOOST_CHECK_EQUAL(config.calendar(), "NullCalendar");
-    BOOST_CHECK_EQUAL(config.extrapolate(), true);
-    BOOST_CHECK_EQUAL(config.lowerStrikeConstantExtrapolation(), false);
-    BOOST_CHECK_EQUAL(config.upperStrikeConstantExtrapolation(), false);
-
-    // Override defaults related to surface
-
-    // Day counter
-    XMLUtils::addChild(doc, configNode, "LowerStrikeConstantExtrapolation", true);
-    config.fromXML(configNode);
-    BOOST_CHECK_EQUAL(config.lowerStrikeConstantExtrapolation(), true);
-
-    // Calendar
-    XMLUtils::addChild(doc, configNode, "UpperStrikeConstantExtrapolation", true);
-    config.fromXML(configNode);
-    BOOST_CHECK_EQUAL(config.upperStrikeConstantExtrapolation(), true);
+    BOOST_CHECK_EQUAL(config.futureConventionsId(), "");
+    BOOST_CHECK_EQUAL(config.optionExpiryRollDays(), 0);
 }
 
-test_suite* CommodityVolatilityCurveConfigTest::suite() {
-    
-    test_suite* suite = BOOST_TEST_SUITE("CommodityVolatilityCurveConfigTest");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&CommodityVolatilityCurveConfigTest::testParseConstantVolFromXml));
-    suite->add(BOOST_TEST_CASE(&CommodityVolatilityCurveConfigTest::testParseVolCurveFromXml));
-    suite->add(BOOST_TEST_CASE(&CommodityVolatilityCurveConfigTest::testParseVolSurfaceFromXml));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

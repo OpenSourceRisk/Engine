@@ -31,13 +31,12 @@
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 
+namespace ore {
+namespace analytics {
 using QuantLib::Real;
 using QuantLib::Size;
 using QuantLib::Date;
 using std::string;
-
-namespace ore {
-namespace analytics {
 
 //! Data types stored in the scenario class
 /*! \ingroup scenario
@@ -51,11 +50,11 @@ public:
         YieldCurve,
         IndexCurve,
         SwaptionVolatility,
+        YieldVolatility,
         OptionletVolatility,
         FXSpot,
         FXVolatility,
         EquitySpot,
-        EquityForecastCurve,
         EquityVolatility,
         DividendYield,
         SurvivalProbability,
@@ -67,10 +66,11 @@ public:
         ZeroInflationCapFloorVolatility,
         YoYInflationCurve,
         YoYInflationCapFloorVolatility,
-        CommoditySpot,
         CommodityCurve,
         CommodityVolatility,
-        SecuritySpread
+        SecuritySpread,
+        Correlation,
+        CPR
     };
 
     //! Constructor

@@ -16,13 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/sensitivityaggregator.hpp>
-
+#include <boost/test/unit_test.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/engine/sensitivityinmemorystream.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/math/comparison.hpp>
 
 using namespace boost::unit_test_framework;
+using namespace std;
 
 using ore::analytics::RiskFactorKey;
 using ore::analytics::SensitivityRecord;
@@ -31,8 +33,6 @@ using ore::analytics::SensitivityAggregator;
 using std::set;
 using std::map;
 using std::function;
-
-namespace testsuite {
 
 using RFType = RiskFactorKey::KeyType;
 
@@ -129,21 +129,28 @@ set<SensitivityRecord> filter(set<SensitivityRecord> records, const string& trad
 // Check the expected result, 'exp', against the actual result, 'res'.
 void check(const set<SensitivityRecord>& exp, const set<SensitivityRecord>& res, const string& category) {
     BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), res.begin(), res.end());
-    for (set<SensitivityRecord>::iterator itExp = exp.begin(), itRes = res.begin();
-        itExp != exp.end(); itExp++, itRes++) {
-        BOOST_CHECK_MESSAGE(QuantLib::close(itExp->baseNpv, itRes->baseNpv), 
-            "Category = " << category << ": Base NPVs (exp = " << itExp->baseNpv << 
-            " vs. actual = " << itRes->baseNpv << ") are not equal for aggregated expected record " << *itExp);
+    for (set<SensitivityRecord>::iterator itExp = exp.begin(), itRes = res.begin(); itExp != exp.end();
+         itExp++, itRes++) {
+        BOOST_CHECK_MESSAGE(QuantLib::close(itExp->baseNpv, itRes->baseNpv),
+                            "Category = " << category << ": Base NPVs (exp = " << itExp->baseNpv
+                                          << " vs. actual = " << itRes->baseNpv
+                                          << ") are not equal for aggregated expected record " << *itExp);
         BOOST_CHECK_MESSAGE(QuantLib::close(itExp->delta, itRes->delta),
-            "Category = " << category << ": Deltas (exp = " << itExp->delta <<
-            " vs. actual = " << itRes->delta << ") are not equal for aggregated expected record " << *itExp);
+                            "Category = " << category << ": Deltas (exp = " << itExp->delta
+                                          << " vs. actual = " << itRes->delta
+                                          << ") are not equal for aggregated expected record " << *itExp);
         BOOST_CHECK_MESSAGE(QuantLib::close(itExp->gamma, itRes->gamma),
-            "Category = " << category << ": Gammas (exp = " << itExp->gamma <<
-            " vs. actual = " << itRes->gamma << ") are not equal for aggregated expected record " << *itExp);
+                            "Category = " << category << ": Gammas (exp = " << itExp->gamma
+                                          << " vs. actual = " << itRes->gamma
+                                          << ") are not equal for aggregated expected record " << *itExp);
     }
 }
 
-void SensitivityAggregatorTest::testGeneralAggregationSetCategories() {
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(SensitivityAggregatorTest)
+
+BOOST_AUTO_TEST_CASE(testGeneralAggregationSetCategories) {
 
     BOOST_TEST_MESSAGE("Testing general aggregation using sets of trades for categories");
 
@@ -151,11 +158,17 @@ void SensitivityAggregatorTest::testGeneralAggregationSetCategories() {
     SensitivityInMemoryStream ss(records);
 
     // Categories for aggregator
-    map<string, set<string>> categories;
+    map<string, set<std::pair<std::string, QuantLib::Size>>> categories;
     // No aggregation, just single trade categories
-    set<string> trades = { "trade_001", "trade_003", "trade_004", "trade_005", "trade_006" };
+    set<pair<string, QuantLib::Size>> trades = {
+        make_pair("trade_001", 0), 
+        make_pair("trade_003", 1),
+        make_pair("trade_004", 2),
+        make_pair("trade_005", 3),
+        make_pair("trade_006", 4)};
+
     for (const auto& trade : trades) {
-        categories[trade] = { trade };
+        categories[trade.first] = {trade};
     }
     // Aggregate over all trades except trade_002
     categories["all_except_002"] = trades;
@@ -170,10 +183,10 @@ void SensitivityAggregatorTest::testGeneralAggregationSetCategories() {
 
     // Test results for single trade categories
     for (const auto& trade : trades) {
-        exp = filter(records, trade);
-        res = sAgg.sensitivities(trade);
-        BOOST_TEST_MESSAGE("Testing for category with single trade " << trade);
-        check(exp, res, trade);
+        exp = filter(records, trade.first);
+        res = sAgg.sensitivities(trade.first);
+        BOOST_TEST_MESSAGE("Testing for category with single trade " << trade.first);
+        check(exp, res, trade.first);
     }
 
     // Test results for the aggregated "All" category
@@ -182,7 +195,7 @@ void SensitivityAggregatorTest::testGeneralAggregationSetCategories() {
     check(expAggregationAll, res, "all_except_002");
 }
 
-void SensitivityAggregatorTest::testGeneralAggregationFunctionCategories() {
+BOOST_AUTO_TEST_CASE(testGeneralAggregationFunctionCategories) {
 
     BOOST_TEST_MESSAGE("Testing general aggregation using functions for categories");
 
@@ -192,12 +205,22 @@ void SensitivityAggregatorTest::testGeneralAggregationFunctionCategories() {
     // Category functions for aggregator
     map<string, function<bool(string)>> categories;
     // No aggregation, just single trade categories
-    set<string> trades = { "trade_001", "trade_003", "trade_004", "trade_005", "trade_006" };
+    set<pair<string, QuantLib::Size>> trades = {
+        make_pair("trade_001", 0),
+        make_pair("trade_003", 1),
+        make_pair("trade_004", 2),
+        make_pair("trade_005", 3),
+        make_pair("trade_006", 4) };
+
     for (const auto& trade : trades) {
-        categories[trade] = [&trade](string tradeId) { return tradeId == trade; };
+        categories[trade.first] = [&trade](string tradeId) { return tradeId == trade.first; };
     }
     // Aggregate over all trades except trade_002
-    categories["all_except_002"] = [&trades](string tradeId) { return trades.count(tradeId) > 0; };
+    categories["all_except_002"] = [&trades](string tradeId) { 
+        for (auto it = trades.begin(); it != trades.end(); ++it) {
+            if (it->first == tradeId) return true;
+        }
+        return false; };
 
     // Create aggregator and call aggregate
     SensitivityAggregator sAgg(categories);
@@ -209,10 +232,10 @@ void SensitivityAggregatorTest::testGeneralAggregationFunctionCategories() {
 
     // Test results for single trade categories
     for (const auto& trade : trades) {
-        exp = filter(records, trade);
-        res = sAgg.sensitivities(trade);
-        BOOST_TEST_MESSAGE("Testing for category with single trade " << trade);
-        check(exp, res, trade);
+        exp = filter(records, trade.first);
+        res = sAgg.sensitivities(trade.first);
+        BOOST_TEST_MESSAGE("Testing for category with single trade " << trade.first);
+        check(exp, res, trade.first);
     }
 
     // Test results for the aggregated "All" category
@@ -221,14 +244,6 @@ void SensitivityAggregatorTest::testGeneralAggregationFunctionCategories() {
     check(expAggregationAll, res, "all_except_002");
 }
 
-test_suite* SensitivityAggregatorTest::suite() {
-    
-    test_suite* suite = BOOST_TEST_SUITE("SensitivityAggregatorTests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&SensitivityAggregatorTest::testGeneralAggregationSetCategories));
-    suite->add(BOOST_TEST_CASE(&SensitivityAggregatorTest::testGeneralAggregationFunctionCategories));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

@@ -21,9 +21,24 @@
 namespace QuantExt {
 
 Rate EquityCouponPricer::swapletRate() const {
-    Real start = equityCurve_->fixing(coupon_->accrualStartDate(), false, isTotalReturn_);
-    Real end = equityCurve_->fixing(coupon_->accrualEndDate(), false, isTotalReturn_);
-    return (end - start) / start;
+    // Start fixing shouldn't include dividends as the assumption of continuous dividends means they will have been paid
+    // as they accrued in the previous period (or at least at the end when performance is measured).
+    Real start = coupon_->initialPrice();
+    Real end = equityCurve_->fixing(coupon_->fixingEndDate(), false, false);
+
+    // fx rates at start and end
+    Real fxStart = fxIndex_ ? fxIndex_->fixing(coupon_->fixingStartDate()) : 1.0;
+    Real fxEnd = fxIndex_ ? fxIndex_->fixing(coupon_->fixingEndDate()) : 1.0;
+
+    Real dividends = 0.0;
+
+    // Dividends that are already fixed dividends + yield accrued over remaining period.
+    // yield accrued = Forward without dividend yield - Forward with dividend yield
+    if (isTotalReturn_)
+        dividends = (equityCurve_->fixing(coupon_->fixingEndDate(), false, true) - end) +
+                    equityCurve_->dividendsBetweenDates(coupon_->fixingStartDate(), coupon_->fixingEndDate());
+
+    return ((end + dividends * dividendFactor_) * fxEnd - start * fxStart) / (start * fxStart);
 }
 
 void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
@@ -31,7 +46,9 @@ void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
     coupon_ = &coupon;
 
     equityCurve_ = boost::dynamic_pointer_cast<EquityIndex>(coupon.equityCurve());
+    fxIndex_ = boost::dynamic_pointer_cast<FxIndex>(coupon.fxIndex());
     isTotalReturn_ = coupon.isTotalReturn();
+    dividendFactor_ = coupon.dividendFactor();
 }
 
-} // QuantExt
+} // namespace QuantExt

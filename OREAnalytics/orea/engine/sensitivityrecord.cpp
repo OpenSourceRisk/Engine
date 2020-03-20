@@ -18,8 +18,8 @@
 
 #include <orea/engine/sensitivityrecord.hpp>
 
-#include <ql/math/comparison.hpp>
 #include <iomanip>
+#include <ql/math/comparison.hpp>
 
 using QuantLib::close;
 using std::ostream;
@@ -37,33 +37,16 @@ bool SensitivityRecord::operator==(const SensitivityRecord& sr) const {
 
 bool SensitivityRecord::operator<(const SensitivityRecord& sr) const {
     // Verbose, would be nice to use std::tie but want to use close on the shifts
-    if (tradeId < sr.tradeId) return true;
-    if (tradeId > sr.tradeId) return false;
+    
+    if (key_1 != sr.key_1)
+        return key_1 < sr.key_1;
+    
+    if (key_2 != sr.key_2)
+        return key_2 < sr.key_2;
 
-    if (isPar < sr.isPar) return true;
-    if (isPar > sr.isPar) return false;
-
-    if (key_1 < sr.key_1) return true;
-    if (key_1 > sr.key_1) return false;
-
-    if (desc_1 < sr.desc_1) return true;
-    if (desc_1 > sr.desc_1) return false;
-
-    if (!close(shift_1, sr.shift_1) && shift_1 < sr.shift_1) return true;
-    if (!close(shift_1, sr.shift_1) && shift_1 > sr.shift_1) return false;
-
-    if (key_2 < sr.key_2) return true;
-    if (key_2 > sr.key_2) return false;
-
-    if (desc_2 < sr.desc_2) return true;
-    if (desc_2 > sr.desc_2) return false;
-
-    if (!close(shift_2, sr.shift_2) && shift_2 < sr.shift_2) return true;
-    if (!close(shift_2, sr.shift_2) && shift_2 > sr.shift_2) return false;
-
-    if (currency < sr.currency) return true;
-    if (currency > sr.currency) return false;
-
+    if (tradeId != sr.tradeId)
+        return tradeId < sr.tradeId;
+    
     return false;
 }
 
@@ -77,26 +60,15 @@ SensitivityRecord::operator bool() const {
     return *this != SensitivityRecord();
 }
 
-bool SensitivityRecord::isCrossGamma() const {
-    return key_2 != RiskFactorKey();
-}
+bool SensitivityRecord::isCrossGamma() const { return key_2 != RiskFactorKey(); }
 
 std::ostream& operator<<(ostream& out, const SensitivityRecord& sr) {
-    return out << "[" <<
-        sr.tradeId << ", " <<
-        std::boolalpha << sr.isPar << ", " <<
-        sr.key_1 << ", " <<
-        sr.desc_1 << ", " <<
-        fixed << setprecision(6) << sr.shift_1 << ", " <<
-        sr.key_2 << ", " <<
-        sr.desc_2 << ", " <<
-        fixed << setprecision(6) << sr.shift_2 << ", " <<
-        sr.currency << ", " <<
-        fixed << setprecision(2) << sr.baseNpv << ", " <<
-        fixed << setprecision(2) << sr.delta << ", " <<
-        fixed << setprecision(2) << sr.gamma <<
-    "]";
+    return out << "[" << sr.tradeId << ", " << std::boolalpha << sr.isPar << ", " << sr.key_1 << ", " << sr.desc_1
+               << ", " << fixed << setprecision(6) << sr.shift_1 << ", " << sr.key_2 << ", " << sr.desc_2 << ", "
+               << fixed << setprecision(6) << sr.shift_2 << ", " << sr.currency << ", " << fixed << setprecision(2)
+               << sr.baseNpv << ", " << fixed << setprecision(2) << sr.delta << ", " << fixed << setprecision(2)
+               << sr.gamma << "]";
 }
 
-}
-}
+} // namespace analytics
+} // namespace ore

@@ -28,15 +28,14 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
+namespace ore {
+namespace data {
 using std::vector;
 using std::string;
 using std::pair;
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLUtils;
-
-namespace ore {
-namespace data {
 
 //! Market Configuration structure
 /*!
@@ -65,15 +64,15 @@ enum class MarketObject {
     CapFloorVol = 10,
     ZeroInflationCurve = 11,
     YoYInflationCurve = 12,
-    InflationCapFloorPriceSurface = 13,
-    YoYInflationCapFloorPriceSurface = 14,
-    ZeroInflationCapFloorVol = 15,
-    YoYInflationCapFloorVol = 16,
-    EquityCurve = 17,
-    EquityVol = 18,
-    Security = 19,
-    CommodityCurve = 20,
-    CommodityVolatility = 21
+    ZeroInflationCapFloorVol = 13,
+    YoYInflationCapFloorVol = 14,
+    EquityCurve = 15,
+    EquityVol = 16,
+    Security = 17,
+    CommodityCurve = 18,
+    CommodityVolatility = 19,
+    Correlation = 20,
+    YieldVol = 21
 };
 
 std::ostream& operator<<(std::ostream& out, const MarketObject& o);
@@ -184,14 +183,6 @@ inline const map<string, string>& TodaysMarketParameters::mapping(const MarketOb
 
 inline void TodaysMarketParameters::addConfiguration(const string& id, const MarketConfiguration& configuration) {
     configurations_[id] = configuration;
-}
-
-inline void TodaysMarketParameters::addMarketObject(const MarketObject o, const string& id,
-                                                    const map<string, string>& assignments) {
-    marketObjects_[o][id] = assignments;
-    for (auto s : assignments)
-        DLOG("TodaysMarketParameters, add market objects of type " << o << ": " << id << " " << s.first << " "
-                                                                   << s.second);
 }
 
 } // namespace data

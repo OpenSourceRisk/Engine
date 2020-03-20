@@ -23,51 +23,42 @@
 
 #pragma once
 
-#include <ored/portfolio/optiondata.hpp>
-#include <ored/portfolio/trade.hpp>
-
-using std::string;
+#include <ored/portfolio/vanillaoption.hpp>
 
 namespace ore {
 namespace data {
+using std::string;
 
 //! Serializable FX Option
 /*!
   \ingroup tradedata
 */
-class FxOption : public Trade {
+class FxOption : public VanillaOptionTrade {
 public:
     //! Default constructor
-    FxOption() : Trade("FxOption"), boughtAmount_(0.0), soldAmount_(0.0) {}
+    FxOption() : VanillaOptionTrade(AssetClass::FX) { tradeType_ = "FxOption"; }
     //! Constructor
     FxOption(Envelope& env, OptionData option, string boughtCurrency, double boughtAmount, string soldCurrency,
              double soldAmount)
-        : Trade("FxOption", env), option_(option), boughtCurrency_(boughtCurrency), boughtAmount_(boughtAmount),
-          soldCurrency_(soldCurrency), soldAmount_(soldAmount) {}
+        : VanillaOptionTrade(env, AssetClass::FX, option, boughtCurrency, soldCurrency, soldAmount / boughtAmount, boughtAmount)
+          { tradeType_ = "FxOption"; }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>&);
+    void build(const boost::shared_ptr<EngineFactory>&) override;
 
     //! \name Inspectors
     //@{
-    const OptionData& option() const { return option_; }
-    const string& boughtCurrency() const { return boughtCurrency_; }
-    double boughtAmount() const { return boughtAmount_; }
-    const string& soldCurrency() const { return soldCurrency_; }
-    double soldAmount() const { return soldAmount_; }
+    const string& boughtCurrency() const { return assetName_; }
+    double boughtAmount() const { return quantity_; }
+    const string& soldCurrency() const { return currency_; }
+    double soldAmount() const { return strike_ * quantity_; }
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
-private:
-    OptionData option_;
-    string boughtCurrency_;
-    double boughtAmount_;
-    string soldCurrency_;
-    double soldAmount_;
 };
 } // namespace data
 } // namespace ore

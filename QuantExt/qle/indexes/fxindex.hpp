@@ -44,8 +44,8 @@
 #include <ql/index.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
-using namespace QuantLib;
 namespace QuantExt {
+using namespace QuantLib;
 
 //! FX Index
 /*! \ingroup indexes */
@@ -59,11 +59,11 @@ public:
         this class uses the exchange rate manager to retrieve spot values */
     FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
             const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
-            const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>());
+            const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false);
     FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
             const Calendar& fixingCalendar, const Handle<Quote> fxQuote,
             const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
-            const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>());
+            const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false);
     //! \name Index interface
     //@{
     std::string name() const;
@@ -102,6 +102,7 @@ protected:
 
 private:
     Calendar fixingCalendar_;
+    bool inverseIndex_;
 };
 
 // inline definitions

@@ -29,19 +29,20 @@
 
 namespace QuantExt {
 
-OptionletStripper2::OptionletStripper2(const boost::shared_ptr<OptionletStripper1>& optionletStripper1,
-                                       const Handle<CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
+OptionletStripper2::OptionletStripper2(const boost::shared_ptr<QuantExt::OptionletStripper>& optionletStripper,
+                                       const Handle<QuantLib::CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
+                                       const Handle<YieldTermStructure>& discount,
                                        const VolatilityType type, const Real displacement)
-    : OptionletStripper(optionletStripper1->termVolSurface(), optionletStripper1->iborIndex(),
-                        optionletStripper1->discountCurve(), optionletStripper1->volatilityType(),
-                        optionletStripper1->displacement()),
-      stripper1_(optionletStripper1), atmCapFloorTermVolCurve_(atmCapFloorTermVolCurve),
-      dc_(stripper1_->termVolSurface()->dayCounter()), nOptionExpiries_(atmCapFloorTermVolCurve->optionTenors().size()),
+    : OptionletStripper(optionletStripper->termVolSurface(), optionletStripper->iborIndex(),
+                        discount, optionletStripper->volatilityType(),
+                        optionletStripper->displacement()),
+      stripper_(optionletStripper), atmCapFloorTermVolCurve_(atmCapFloorTermVolCurve),
+      dc_(stripper_->termVolSurface()->dayCounter()), nOptionExpiries_(atmCapFloorTermVolCurve->optionTenors().size()),
       atmCapFloorStrikes_(nOptionExpiries_), atmCapFloorPrices_(nOptionExpiries_), spreadsVolImplied_(nOptionExpiries_),
       caps_(nOptionExpiries_), maxEvaluations_(10000), accuracy_(1.e-6), inputVolatilityType_(type),
       inputDisplacement_(displacement) {
 
-    registerWith(stripper1_);
+    registerWith(stripper_);
     registerWith(atmCapFloorTermVolCurve_);
 
     QL_REQUIRE(dc_ == atmCapFloorTermVolCurve->dayCounter(), "different day counters provided");
@@ -50,14 +51,14 @@ OptionletStripper2::OptionletStripper2(const boost::shared_ptr<OptionletStripper
 void OptionletStripper2::performCalculations() const {
 
     // optionletStripper data
-    optionletDates_ = stripper1_->optionletFixingDates();
-    optionletPaymentDates_ = stripper1_->optionletPaymentDates();
-    optionletAccrualPeriods_ = stripper1_->optionletAccrualPeriods();
-    optionletTimes_ = stripper1_->optionletFixingTimes();
-    atmOptionletRate_ = stripper1_->atmOptionletRates();
+    optionletDates_ = stripper_->optionletFixingDates();
+    optionletPaymentDates_ = stripper_->optionletPaymentDates();
+    optionletAccrualPeriods_ = stripper_->optionletAccrualPeriods();
+    optionletTimes_ = stripper_->optionletFixingTimes();
+    atmOptionletRate_ = stripper_->atmOptionletRates();
     for (Size i = 0; i < optionletTimes_.size(); ++i) {
-        optionletStrikes_[i] = stripper1_->optionletStrikes(i);
-        optionletVolatilities_[i] = stripper1_->optionletVolatilities(i);
+        optionletStrikes_[i] = stripper_->optionletStrikes(i);
+        optionletVolatilities_[i] = stripper_->optionletVolatilities(i);
     }
 
     // atmCapFloorTermVolCurve data
@@ -98,7 +99,7 @@ void OptionletStripper2::performCalculations() const {
 
     spreadsVolImplied_ = spreadsVolImplied(discountCurve);
 
-    StrippedOptionletAdapter adapter(stripper1_);
+    StrippedOptionletAdapter adapter(stripper_);
     adapter.enableExtrapolation();
 
     Volatility unadjustedVol, adjustedVol;
@@ -126,7 +127,7 @@ vector<Volatility> OptionletStripper2::spreadsVolImplied(const Handle<YieldTermS
     vector<Volatility> result(nOptionExpiries_);
     Volatility guess = 0.0001, minSpread = -0.1, maxSpread = 0.1;
     for (Size j = 0; j < nOptionExpiries_; ++j) {
-        ObjectiveFunction f(stripper1_, caps_[j], atmCapFloorPrices_[j], discount);
+        ObjectiveFunction f(stripper_, caps_[j], atmCapFloorPrices_[j], discount);
         solver.setMaxEvaluations(maxEvaluations_);
         Volatility root = solver.solve(f, accuracy_, guess, minSpread, maxSpread);
         result[j] = root;
@@ -151,10 +152,10 @@ vector<Real> OptionletStripper2::atmCapFloorPrices() const {
 
 // OptionletStripper2::ObjectiveFunction
 OptionletStripper2::ObjectiveFunction::ObjectiveFunction(
-    const boost::shared_ptr<OptionletStripper1>& optionletStripper1, const boost::shared_ptr<CapFloor>& cap,
+    const boost::shared_ptr<QuantExt::OptionletStripper>& optionletStripper, const boost::shared_ptr<CapFloor>& cap,
     Real targetValue, const Handle<YieldTermStructure>& discount)
     : cap_(cap), targetValue_(targetValue), discount_(discount) {
-    boost::shared_ptr<OptionletVolatilityStructure> adapter(new StrippedOptionletAdapter(optionletStripper1));
+    boost::shared_ptr<OptionletVolatilityStructure> adapter(new StrippedOptionletAdapter(optionletStripper));
     adapter->enableExtrapolation();
 
     // set an implausible value, so that calculation is forced
@@ -164,17 +165,17 @@ OptionletStripper2::ObjectiveFunction::ObjectiveFunction(
     boost::shared_ptr<OptionletVolatilityStructure> spreadedAdapter(
         new SpreadedOptionletVolatility(Handle<OptionletVolatilityStructure>(adapter), Handle<Quote>(spreadQuote_)));
 
-    // Use the same volatility type as optionletStripper1
+    // Use the same volatility type as optionletStripper
     // Anything else would not make sense
     boost::shared_ptr<PricingEngine> engine;
-    if (optionletStripper1->volatilityType() == ShiftedLognormal) {
+    if (optionletStripper->volatilityType() == ShiftedLognormal) {
         engine = boost::make_shared<BlackCapFloorEngine>(
-            discount_, Handle<OptionletVolatilityStructure>(spreadedAdapter), optionletStripper1->displacement());
-    } else if (optionletStripper1->volatilityType() == Normal) {
+            discount_, Handle<OptionletVolatilityStructure>(spreadedAdapter), optionletStripper->displacement());
+    } else if (optionletStripper->volatilityType() == Normal) {
         engine = boost::make_shared<BachelierCapFloorEngine>(discount_,
                                                              Handle<OptionletVolatilityStructure>(spreadedAdapter));
     } else {
-        QL_FAIL("Unknown volatility type: " << optionletStripper1->volatilityType());
+        QL_FAIL("Unknown volatility type: " << optionletStripper->volatilityType());
     }
 
     cap_->setPricingEngine(engine);

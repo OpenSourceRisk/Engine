@@ -16,13 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "discountingcommodityforwardengine.hpp"
-
+#include "toplevelfixture.hpp"
 #include <boost/make_shared.hpp>
-
+#include <boost/test/unit_test.hpp>
 #include <ql/currencies/america.hpp>
-#include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/settings.hpp>
+#include <ql/termstructures/yield/discountcurve.hpp>
 
 #include <qle/pricingengines/discountingcommodityforwardengine.hpp>
 #include <qle/termstructures/pricecurve.hpp>
@@ -32,10 +31,12 @@ using namespace boost::unit_test_framework;
 using namespace QuantLib;
 using namespace QuantExt;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void DiscountingCommodityForwardEngineTest::testPricing() {
-    
+BOOST_AUTO_TEST_SUITE(DiscountingCommodityForwardEngineTest)
+
+BOOST_AUTO_TEST_CASE(testPricing) {
+
     BOOST_TEST_MESSAGE("Testing discounting commodity forward engine pricing");
 
     SavedSettings backup;
@@ -55,8 +56,10 @@ void DiscountingCommodityForwardEngineTest::testPricing() {
     // Discount curve
     vector<Date> dates(2);
     vector<DiscountFactor> dfs(2);
-    dates[0] = asof;     dfs[0] = 1.0;
-    dates[1] = maturity; dfs[1] = 0.85;
+    dates[0] = asof;
+    dfs[0] = 1.0;
+    dates[1] = maturity;
+    dfs[1] = 0.85;
     Handle<YieldTermStructure> discountCurve(boost::make_shared<InterpolatedDiscountCurve<LogLinear> >(
         InterpolatedDiscountCurve<LogLinear>(dates, dfs, dayCounter)));
 
@@ -64,11 +67,11 @@ void DiscountingCommodityForwardEngineTest::testPricing() {
     vector<Real> prices(2);
     prices[0] = 1346.0;
     prices[1] = 1384.0;
-    Handle<PriceTermStructure> priceCurve(boost::make_shared<InterpolatedPriceCurve<Linear> >(
-        InterpolatedPriceCurve<Linear>(dates, prices, dayCounter)));
+    Handle<PriceTermStructure> priceCurve(
+        boost::make_shared<InterpolatedPriceCurve<Linear> >(asof, dates, prices, dayCounter, USDCurrency()));
 
     // Create the engine
-    boost::shared_ptr<DiscountingCommodityForwardEngine> engine = 
+    boost::shared_ptr<DiscountingCommodityForwardEngine> engine =
         boost::make_shared<DiscountingCommodityForwardEngine>(priceCurve, discountCurve);
 
     // Set evaluation date
@@ -78,8 +81,8 @@ void DiscountingCommodityForwardEngineTest::testPricing() {
     Position::Type position = Position::Long;
     Real quantity = 100;
     Real strike = 1380.0;
-    boost::shared_ptr<CommodityForward> forward = boost::make_shared<CommodityForward>(
-        name, currency, position, quantity, maturity, strike);
+    boost::shared_ptr<CommodityForward> forward =
+        boost::make_shared<CommodityForward>(name, currency, position, quantity, maturity, strike);
     forward->setPricingEngine(engine);
     BOOST_CHECK_CLOSE(forward->NPV(), quantity * (prices[1] - strike) * dfs[1], tolerance);
 
@@ -105,7 +108,9 @@ void DiscountingCommodityForwardEngineTest::testPricing() {
     maturity = Date(19, Aug, 2018);
     forward = boost::make_shared<CommodityForward>(name, currency, position, quantity, maturity, strike);
     forward->setPricingEngine(engine);
-    BOOST_CHECK_CLOSE(forward->NPV(), -quantity * (priceCurve->price(maturity) - strike) * discountCurve->discount(maturity), tolerance);
+    BOOST_CHECK_CLOSE(forward->NPV(),
+                      -quantity * (priceCurve->price(maturity) - strike) * discountCurve->discount(maturity),
+                      tolerance);
 
     // Make maturity of forward equal to today
     forward = boost::make_shared<CommodityForward>(name, currency, position, quantity, asof, strike);
@@ -116,7 +121,7 @@ void DiscountingCommodityForwardEngineTest::testPricing() {
     Settings::instance().includeReferenceDateEvents() = true;
     forward->recalculate();
     BOOST_CHECK_CLOSE(forward->NPV(), -quantity * (prices[0] - strike), tolerance);
-    // Override behaviour in engine i.e. don't include flows on reference date even when 
+    // Override behaviour in engine i.e. don't include flows on reference date even when
     // Settings::instance().includeReferenceDateEvents() is true
     engine = boost::make_shared<DiscountingCommodityForwardEngine>(priceCurve, discountCurve, false);
     forward->setPricingEngine(engine);
@@ -137,12 +142,6 @@ void DiscountingCommodityForwardEngineTest::testPricing() {
     BOOST_CHECK_CLOSE(forward->NPV(), -quantity * (prices[1] - strike) * dfs[1] / npvDateDiscount, tolerance);
 }
 
-test_suite* DiscountingCommodityForwardEngineTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("DiscountingCommodityForwardEngineTests");
-    
-    suite->add(BOOST_TEST_CASE(&DiscountingCommodityForwardEngineTest::testPricing));
-    
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()
 
-}
+BOOST_AUTO_TEST_SUITE_END()

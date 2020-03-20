@@ -41,40 +41,36 @@
 #define quantext_coupon_quanto_pricer_hpp
 
 #include <ql/cashflows/couponpricer.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/quote.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
+namespace QuantExt {
 using QuantLib::Real;
 using QuantLib::Rate;
 using QuantLib::Handle;
 using QuantLib::Null;
 
-namespace QuantExt {
-
-    /*! Same as QuantLib, but with fixed t1 computation (dc from vol ts instead
-      of index) and extended to SLN and N vol types */
-    class BlackIborQuantoCouponPricer : public QuantLib::BlackIborCouponPricer {
-      public:
-        BlackIborQuantoCouponPricer(
-            const Handle<QuantLib::BlackVolTermStructure>& fxRateBlackVolatility,
-            const Handle<QuantLib::Quote>& underlyingFxCorrelation,
-            const Handle<QuantLib::OptionletVolatilityStructure>& capletVolatility)
-        : BlackIborCouponPricer(capletVolatility),
-          fxRateBlackVolatility_(fxRateBlackVolatility),
+/*! Same as QuantLib, but with fixed t1 computation (dc from vol ts instead
+  of index) and extended to SLN and N vol types */
+class BlackIborQuantoCouponPricer : public QuantLib::BlackIborCouponPricer {
+public:
+    BlackIborQuantoCouponPricer(const Handle<QuantLib::BlackVolTermStructure>& fxRateBlackVolatility,
+                                const Handle<QuantLib::Quote>& underlyingFxCorrelation,
+                                const Handle<QuantLib::OptionletVolatilityStructure>& capletVolatility)
+        : BlackIborCouponPricer(capletVolatility), fxRateBlackVolatility_(fxRateBlackVolatility),
           underlyingFxCorrelation_(underlyingFxCorrelation) {
-            registerWith(fxRateBlackVolatility_);
-            registerWith(underlyingFxCorrelation_);
-        }
+        registerWith(fxRateBlackVolatility_);
+        registerWith(underlyingFxCorrelation_);
+    }
 
-      protected:
-        Rate adjustedFixing(Rate fixing = Null<Rate>()) const;
+protected:
+    Rate adjustedFixing(Rate fixing = Null<Rate>()) const;
 
-      private:
-        Handle<QuantLib::BlackVolTermStructure> fxRateBlackVolatility_;
-        Handle<QuantLib::Quote> underlyingFxCorrelation_;
-    };
+private:
+    Handle<QuantLib::BlackVolTermStructure> fxRateBlackVolatility_;
+    Handle<QuantLib::Quote> underlyingFxCorrelation_;
+};
 
-}
-
+} // namespace QuantExt
 
 #endif

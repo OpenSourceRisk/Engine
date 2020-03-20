@@ -61,13 +61,18 @@ class ValuationCalculator;
 class SensitivityAnalysis : public ore::data::ProgressReporter {
 public:
     //! Constructor
-    SensitivityAnalysis(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-                        const boost::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
-                        const boost::shared_ptr<ore::data::EngineData>& engineData,
-                        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                        const Conventions& conventions, const bool recalibrateModels,
-                        const bool nonShiftedBaseCurrencyConversion = false);
+    SensitivityAnalysis(
+        const boost::shared_ptr<ore::data::Portfolio>& portfolio, const boost::shared_ptr<ore::data::Market>& market,
+        const string& marketConfiguration, const boost::shared_ptr<ore::data::EngineData>& engineData,
+        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, const Conventions& conventions,
+        const bool recalibrateModels,
+        const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
+        const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
+        const bool nonShiftedBaseCurrencyConversion = false,
+        std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
+        std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
+        const bool continueOnError = false);
 
     virtual ~SensitivityAnalysis() {}
 
@@ -122,7 +127,7 @@ protected:
     virtual void initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact = {});
 
     //! build valuation calculators for valuation engine
-    std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
+    virtual std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
 
     boost::shared_ptr<ore::data::Market> market_;
     std::string marketConfiguration_;
@@ -132,10 +137,19 @@ protected:
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     Conventions conventions_;
-    bool recalibrateModels_, overrideTenors_;
+    bool recalibrateModels_;
+    //! Optional curve configurations. Used in building the scenario sim market.
+    ore::data::CurveConfigurations curveConfigs_;
+    //! Optional todays market parameters. Used in building the scenario sim market.
+    ore::data::TodaysMarketParameters todaysMarketParams_;
+    bool overrideTenors_;
 
     // if true, convert sensis to base currency using the original (non-shifted) FX rate
     bool nonShiftedBaseCurrencyConversion_;
+    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
+    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
+    // if true, the processing is continued even on build errors
+    bool continueOnError_;
     //! the engine data (provided as input, needed to construct the engine factory)
     boost::shared_ptr<EngineData> engineData_;
     //! the portfolio (provided as input)
@@ -148,13 +162,11 @@ protected:
     boost::shared_ptr<SensitivityCube> sensiCube_;
 };
 
-/*! Returns the absolute shift size corresponding to a particular risk factor \p key 
-    given sensitivity parameters \p sensiParams and a simulation market \p simMarket 
+/*! Returns the absolute shift size corresponding to a particular risk factor \p key
+    given sensitivity parameters \p sensiParams and a simulation market \p simMarket
 */
-Real getShiftSize(const RiskFactorKey& key, 
-    const SensitivityScenarioData& sensiParams, 
-    const boost::shared_ptr<ScenarioSimMarket>& simMarket,
-    const std::string& marketConfiguration = "");
+Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensiParams,
+                  const boost::shared_ptr<ScenarioSimMarket>& simMarket, const std::string& marketConfiguration = "");
 
 } // namespace analytics
 } // namespace ore

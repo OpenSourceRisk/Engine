@@ -36,9 +36,9 @@ namespace ore {
 namespace data {
 
 CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionData, const string& commodityName,
-    const string& currency, Real strike, Real quantity)
-    : Trade("CommodityOption", env), optionData_(optionData), commodityName_(commodityName), 
-      currency_(currency), strike_(strike), quantity_(quantity) {}
+                                 const string& currency, Real strike, Real quantity)
+    : Trade("CommodityOption", env), optionData_(optionData), commodityName_(commodityName), currency_(currency),
+      strike_(strike), quantity_(quantity) {}
 
 void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
@@ -46,7 +46,8 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     QL_REQUIRE(quantity_ > 0, "Commodity option requires a positive quatity");
     QL_REQUIRE(strike_ > 0, "Commodity option requires a positive strike");
     QL_REQUIRE(tradeActions().empty(), "Trade actions not supported for commodity option");
-    QL_REQUIRE(optionData_.style() == "European", "Option style is '" << optionData_.style() << "'. Only European style is supported");
+    QL_REQUIRE(optionData_.style() == "European",
+               "Option style is '" << optionData_.style() << "'. Only European style is supported");
     QL_REQUIRE(optionData_.exerciseDates().size() == 1, "Expect a single exercise date for European option");
 
     // Build up option trade data
@@ -73,38 +74,43 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     if (optionData_.premiumPayDate() != "" && optionData_.premiumCcy() != "") {
         // Pay premium if long, receive if short
         Real premiumAmount = optionData_.premium();
-        if (positionType == Position::Long) premiumAmount *= -1.0;
+        if (positionType == Position::Long)
+            premiumAmount *= -1.0;
 
         Currency premiumCurrency = parseCurrency(optionData_.premiumCcy());
         Date premiumDate = parseDate(optionData_.premiumPayDate());
-        
-        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, 
-            premiumCurrency, ccy, engineFactory, engineBuilder->configuration(MarketContext::pricing));
+
+        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, ccy,
+                   engineFactory, engineBuilder->configuration(MarketContext::pricing));
 
         DLOG("Option premium added for commodity option " << id());
     }
 
     // Create the composite instrument wrapper (option trade + fee "trade")
     Real factor = positionType == Position::Long ? quantity_ : -quantity_;
-    instrument_ = boost::make_shared<VanillaInstrument>(
-        vanilla, factor, additionalInstruments, additionalMultipliers);
+    instrument_ = boost::make_shared<VanillaInstrument>(vanilla, factor, additionalInstruments, additionalMultipliers);
 
     // We just use strike to get notional rather than spot price
     notional_ = strike_ * quantity_;
-    
+
+    notionalCurrency_ = currency_;
     npvCurrency_ = currency_;
     maturity_ = expiryDate;
 }
 
+std::map<AssetClass, std::set<std::string>> CommodityOption::underlyingIndices() const {
+    return { {AssetClass::COM, std::set<std::string>({ commodityName_ })} };
+}
+
 void CommodityOption::fromXML(XMLNode* node) {
-    
+
     Trade::fromXML(node);
 
     XMLNode* commodityNode = XMLUtils::getChildNode(node, "CommodityOptionData");
     QL_REQUIRE(commodityNode, "A commodity option needs a 'CommodityOptionData' node");
 
     optionData_.fromXML(XMLUtils::getChildNode(commodityNode, "OptionData"));
-    
+
     commodityName_ = XMLUtils::getChildValue(commodityNode, "Name", true);
     currency_ = XMLUtils::getChildValue(commodityNode, "Currency", true);
     strike_ = XMLUtils::getChildValueAsDouble(commodityNode, "Strike", true);
@@ -112,14 +118,14 @@ void CommodityOption::fromXML(XMLNode* node) {
 }
 
 XMLNode* CommodityOption::toXML(XMLDocument& doc) {
-    
+
     XMLNode* node = Trade::toXML(doc);
-    
+
     XMLNode* eqNode = doc.allocNode("CommodityOptionData");
     XMLUtils::appendNode(node, eqNode);
 
     XMLUtils::appendNode(eqNode, optionData_.toXML(doc));
-    
+
     XMLUtils::addChild(doc, eqNode, "Name", commodityName_);
     XMLUtils::addChild(doc, eqNode, "Currency", currency_);
     XMLUtils::addChild(doc, eqNode, "Strike", strike_);
@@ -128,5 +134,5 @@ XMLNode* CommodityOption::toXML(XMLDocument& doc) {
     return node;
 }
 
-}
-}
+} // namespace data
+} // namespace ore

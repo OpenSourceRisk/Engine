@@ -31,29 +31,31 @@
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 
+namespace ore {
+namespace data {
 using namespace QuantExt;
 using namespace QuantLib;
 
-namespace ore {
-namespace data {
+Real getCalibrationError(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket);
 
-Real logCalibrationErrors(
-    const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
+std::string getCalibrationDetails(
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
     const boost::shared_ptr<IrLgm1fParametrization>& parametrization = boost::shared_ptr<IrLgm1fParametrization>());
 
-Real logCalibrationErrors(
-    const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
+std::string getCalibrationDetails(
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
     const boost::shared_ptr<FxBsParametrization>& parametrization = boost::shared_ptr<FxBsParametrization>(),
     const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
 
-Real logCalibrationErrors(
-    const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
+std::string getCalibrationDetails(
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
     const boost::shared_ptr<EqBsParametrization>& parametrization = boost::shared_ptr<EqBsParametrization>(),
     const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
 
-Real logCalibrationErrors(
-    const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
+std::string getCalibrationDetails(
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
     const boost::shared_ptr<InfDkParametrization>& parametrization = boost::shared_ptr<InfDkParametrization>(),
     const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
+
 } // namespace data
 } // namespace ore

@@ -21,6 +21,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -36,12 +37,25 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     QL_REQUIRE(swap_.leg().legType() == "Fixed", "CreditDefaultSwap requires Fixed leg");
     Schedule schedule = makeSchedule(swap_.leg().schedule());
-    Calendar calendar = parseCalendar(swap_.leg().schedule().rules().front().calendar());
-    BusinessDayConvention payConvention = parseBusinessDayConvention(swap_.leg().paymentConvention());
+    
+    BusinessDayConvention payConvention = Following;
+    if (!swap_.leg().paymentConvention().empty()) {
+        payConvention = parseBusinessDayConvention(swap_.leg().paymentConvention());
+    }
+
     Protection::Side prot = swap_.leg().isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
     QL_REQUIRE(swap_.leg().notionals().size() == 1, "CreditDefaultSwap requires single notional");
     notional_ = swap_.leg().notionals().front();
-    DayCounter dc = parseDayCounter(swap_.leg().dayCounter());
+
+    DayCounter dc = Actual360(true);
+    if (!swap_.leg().dayCounter().empty()) {
+        dc = parseDayCounter(swap_.leg().dayCounter());
+    }
+
+    // In general for CDS and CDS index trades, the standard day counter is Actual/360 and the final
+    // period coupon accrual includes the maturity date.
+    Actual360 standardDayCounter;
+    DayCounter lastPeriodDayCounter = dc == standardDayCounter ? Actual360(true) : dc;
 
     boost::shared_ptr<FixedLegData> fixedData =
         boost::dynamic_pointer_cast<FixedLegData>(swap_.leg().concreteLegData());
@@ -54,12 +68,14 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     if (swap_.upfrontDate() == Null<Date>())
         cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
             prot, swap_.leg().notionals().front(), fixedData->rates().front(), schedule, payConvention, dc,
-            swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart());
+            swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart(), 
+            boost::shared_ptr<Claim>(), lastPeriodDayCounter);
     else {
         QL_REQUIRE(swap_.upfrontFee() != Null<Real>(), "CreditDefaultSwap: upfront date given, but no upfront fee");
         cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
             prot, notional_, swap_.upfrontFee(), fixedData->rates().front(), schedule, payConvention, dc,
-            swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart(), swap_.upfrontDate());
+            swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart(), swap_.upfrontDate(),
+            boost::shared_ptr<Claim>(), lastPeriodDayCounter);
     }
 
     boost::shared_ptr<CreditDefaultSwapEngineBuilder> cdsBuilder =
@@ -68,7 +84,7 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     npvCurrency_ = swap_.leg().currency();
 
     QL_REQUIRE(cdsBuilder, "No Builder found for CreditDefaultSwap: " << id());
-    cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveId()));
+    cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveId(), swap_.recoveryRate()));
 
     instrument_.reset(new VanillaInstrument(cds));
 
@@ -77,6 +93,7 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     legs_ = {cds->coupons()};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {swap_.leg().isPayer()};
+    notionalCurrency_ = swap_.leg().currency();
 }
 
 void CreditDefaultSwap::fromXML(XMLNode* node) {

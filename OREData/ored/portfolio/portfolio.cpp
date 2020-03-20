@@ -20,6 +20,7 @@
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/errors.hpp>
@@ -56,33 +57,30 @@ void Portfolio::loadFromXMLString(const string& xmlString, const boost::shared_p
     XMLNode* node = doc.getFirstNode("Portfolio");
     fromXML(node, factory);
 }
-    
+
 void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& factory) {
     XMLUtils::checkNode(node, "Portfolio");
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(node, "Trade");
     for (Size i = 0; i < nodes.size(); i++) {
         string tradeType = XMLUtils::getChildValue(nodes[i], "TradeType", true);
-            
+
         // Get the id attribute
         string id = XMLUtils::getAttribute(nodes[i], "id");
         QL_REQUIRE(id != "", "No id attribute in Trade Node");
         DLOG("Parsing trade id:" << id);
-            
+
         boost::shared_ptr<Trade> trade = factory->build(tradeType);
-            
+
         if (trade) {
             try {
                 trade->fromXML(nodes[i]);
                 trade->id() = id;
                 add(trade);
-                    
+
                 DLOG("Added Trade " << id << " (" << trade->id() << ")"
-                        << " class:" << tradeType);
+                                    << " type:" << tradeType);
             } catch (std::exception& ex) {
-                ALOG("Exception parsing Trade XML Node (id=" << id
-                        << ") "
-                        "(class="
-                        << tradeType << ") : " << ex.what());
+                ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing Trade XML", ex.what()));
             }
         } else {
             WLOG("Unable to build Trade for tradeType=" << tradeType);
@@ -90,7 +88,6 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
     }
     LOG("Finished Parsing XML doc");
 }
-
 
 void Portfolio::save(const string& fileName) const {
     LOG("Saving Portfolio to " << fileName);
@@ -114,6 +111,17 @@ bool Portfolio::remove(const std::string& tradeID) {
     return false;
 }
 
+void Portfolio::removeMatured(const Date& asof) {
+    for (auto it = trades_.begin(); it != trades_.end(); /* manual */) {
+        if ((*it)->maturity() < asof) {
+            ALOG(StructuredTradeErrorMessage(*it, "Trade is Matured", ""));
+            it = trades_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     LOG("Building Portfolio of size " << trades_.size());
     auto trade = trades_.begin();
@@ -122,11 +130,13 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             (*trade)->build(engineFactory);
             ++trade;
         } catch (std::exception& e) {
-            ALOG("Error building trade (" << (*trade)->id() << ") : " << e.what());
+            ALOG(StructuredTradeErrorMessage(*trade, "Error building trade", e.what()));
             trade = trades_.erase(trade);
         }
     }
     LOG("Built Portfolio. Size now " << trades_.size());
+
+    QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades");
 }
 
 Date Portfolio::maturity() const {
@@ -163,7 +173,7 @@ bool Portfolio::has(const string& id) {
 
 boost::shared_ptr<Trade> Portfolio::get(const string& id) const {
     auto it = find_if(trades_.begin(), trades_.end(),
-        [id](const boost::shared_ptr<Trade>& trade) { return trade->id() == id; });
+                      [id](const boost::shared_ptr<Trade>& trade) { return trade->id() == id; });
 
     if (it == trades_.end()) {
         return nullptr;
@@ -177,6 +187,47 @@ std::set<std::string> Portfolio::portfolioIds() const {
     for (auto const& t : trades_)
         portfolioIds.insert(t->portfolioIds().begin(), t->portfolioIds().end());
     return portfolioIds;
+}
+
+map<string, set<Date>> Portfolio::fixings(const Date& settlementDate) const {
+
+    map<string, set<Date>> result;
+
+    for (const auto& t : trades_) {
+        auto fixings = t->fixings(settlementDate);
+        for (const auto& kv : fixings) {
+            result[kv.first].insert(kv.second.begin(), kv.second.end());
+        }
+    }
+
+    return result;
+}
+
+std::map<AssetClass, std::set<std::string>> Portfolio::underlyingIndices() {
+    
+    if (!underlyingIndicesCache_.empty())
+        return underlyingIndicesCache_;
+
+    map<AssetClass, std::set<std::string>> result;
+
+    for (const auto& t : trades_) {
+        auto underlyings = t->underlyingIndices();
+        for (const auto& kv : underlyings) {
+            result[kv.first].insert(kv.second.begin(), kv.second.end());
+        }
+    }
+    underlyingIndicesCache_ = result;
+    return underlyingIndicesCache_;
+}
+
+std::set<std::string> Portfolio::underlyingIndices(AssetClass assetClass) {
+
+    std::map<AssetClass, std::set<std::string>> indices = underlyingIndices();
+    auto it = indices.find(assetClass);
+    if (it != indices.end()) {
+        return it->second;
+    }
+    return std::set<std::string>();
 }
 
 } // namespace data

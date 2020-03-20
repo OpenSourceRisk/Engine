@@ -16,11 +16,26 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include "testmarket.hpp"
+#include <boost/test/unit_test.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
-#include <orea/engine/all.hpp>
+#include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/parametricvar.hpp>
+#include <orea/engine/riskfilter.hpp>
+#include <orea/engine/sensitivityaggregator.hpp>
+#include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/engine/sensitivitycubestream.hpp>
+#include <orea/engine/sensitivityfilestream.hpp>
+#include <orea/engine/sensitivityinmemorystream.hpp>
+#include <orea/engine/sensitivityrecord.hpp>
+#include <orea/engine/sensitivitystream.hpp>
+#include <orea/engine/stresstest.hpp>
+#include <orea/engine/valuationcalculator.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
@@ -32,13 +47,12 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
-#include <test/observationmode.hpp>
-#include <test/testmarket.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -48,7 +62,7 @@ using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
-namespace testsuite {
+using testsuite::TestMarket;
 
 boost::shared_ptr<data::Conventions> conventions() {
     boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
@@ -81,7 +95,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
     string calStr = "TARGET";
     string conv = "MF";
     string rule = "Forward";
-    Size days = 2;
+    Natural days = 2;
     string fixDC = "30/360";
     string floatDC = "ACT/360";
 
@@ -157,26 +171,27 @@ void simulation(string dateGridString, bool checkFixings) {
     // build scenario sim market parameters
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
     parameters->baseCcy() = "EUR";
-    parameters->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
+    parameters->setDiscountCurveNames({"EUR", "GBP", "USD", "CHF", "JPY"});
     parameters->setYieldCurveTenors("",
                                     {1 * Months, 6 * Months, 1 * Years, 2 * Years, 5 * Years, 10 * Years, 20 * Years});
-    parameters->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
+    parameters->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"});
     parameters->interpolation() = "LogLinear";
     parameters->extrapolate() = true;
 
-    parameters->swapVolTerms() = {6 * Months, 1 * Years};
-    parameters->swapVolExpiries() = {1 * Years, 2 * Years};
-    parameters->swapVolCcys() = ccys;
+    parameters->setSwapVolTerms("", {6 * Months, 1 * Years});
+    parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});
+    parameters->setSwapVolCcys(ccys);
     parameters->swapVolDecayMode() = "ForwardVariance";
-    parameters->simulateSwapVols() = false;
+    parameters->setSimulateSwapVols(false);
 
-    parameters->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    parameters->fxVolDecayMode() = "ConstantVariance";
-    parameters->simulateFXVols() = false;
+    parameters->setFxVolExpiries(
+        vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
+    parameters->setFxVolDecayMode(string("ConstantVariance"));
+    parameters->setSimulateFXVols(false);
 
-    parameters->fxVolCcyPairs() = {"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"};
+    parameters->setFxVolCcyPairs({"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"});
 
-    parameters->fxCcyPairs() = {"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"};
+    parameters->setFxCcyPairs({"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"});
 
     parameters->additionalScenarioDataIndices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M",
                                                    "JPY-LIBOR-6M"};
@@ -249,19 +264,19 @@ void simulation(string dateGridString, bool checkFixings) {
     fxConfigs.push_back(boost::make_shared<FxBsData>("JPY", "EUR", calibrationType, true, ParamType::Piecewise,
                                                      sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 
-    std::map<std::pair<std::string, std::string>, Real> corr;
-    corr[std::make_pair("IR:EUR", "IR:USD")] = 0.6;
+    std::map<std::pair<std::string, std::string>, Handle<Quote>> corr;
+    corr[std::make_pair("IR:EUR", "IR:USD")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.6));
 
     boost::shared_ptr<CrossAssetModelData> config(boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, corr));
 
     // Model Builder & Model
     // model builder
-    boost::shared_ptr<CrossAssetModelBuilder> modelBuilder(new CrossAssetModelBuilder(initMarket));
-    boost::shared_ptr<QuantExt::CrossAssetModel> model = modelBuilder->build(config);
+    boost::shared_ptr<CrossAssetModelBuilder> modelBuilder(new CrossAssetModelBuilder(initMarket, config));
+    boost::shared_ptr<QuantExt::CrossAssetModel> model = *modelBuilder->model();
     modelBuilder = NULL;
 
     // Path generator
-    Size seed = 5;
+    BigNatural seed = 5;
     bool antithetic = false;
     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen =
         boost::make_shared<MultiPathGeneratorMersenneTwister>(model->stateProcess(), dg->timeGrid(), seed, antithetic);
@@ -335,7 +350,11 @@ void simulation(string dateGridString, bool checkFixings) {
     }
 }
 
-void ObservationModeTest::testDisableShort() {
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(ObservationModeTest)
+
+BOOST_AUTO_TEST_CASE(testDisableShort) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Disable);
 
     BOOST_TEST_MESSAGE("Testing Observation Mode Disable, Short Grid, No Fixing Checks");
@@ -345,7 +364,7 @@ void ObservationModeTest::testDisableShort() {
     simulation("10,1Y", true);
 }
 
-void ObservationModeTest::testDisableLong() {
+BOOST_AUTO_TEST_CASE(testDisableLong) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Disable);
 
     BOOST_TEST_MESSAGE("Testing Observation Mode Disable, Long Grid, No Fixing Checks");
@@ -355,7 +374,7 @@ void ObservationModeTest::testDisableLong() {
     simulation("11,1Y", true);
 }
 
-void ObservationModeTest::testNone() {
+BOOST_AUTO_TEST_CASE(testNone) {
     ObservationMode::instance().setMode(ObservationMode::Mode::None);
 
     BOOST_TEST_MESSAGE("Testing Observation Mode None, Short Grid, No Fixing Checks");
@@ -371,7 +390,7 @@ void ObservationModeTest::testNone() {
     simulation("11,1Y", true);
 }
 
-void ObservationModeTest::testUnregister() {
+BOOST_AUTO_TEST_CASE(testUnregister) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Unregister);
 
     BOOST_TEST_MESSAGE("Testing Observation Mode Unregister, Long Grid, No Fixing Checks");
@@ -387,7 +406,7 @@ void ObservationModeTest::testUnregister() {
     simulation("10,1Y", true);
 }
 
-void ObservationModeTest::testDefer() {
+BOOST_AUTO_TEST_CASE(testDefer) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Defer);
 
     BOOST_TEST_MESSAGE("Testing Observation Mode Defer, Long Grid, No Fixing Checks");
@@ -403,14 +422,6 @@ void ObservationModeTest::testDefer() {
     simulation("10,1Y", true);
 }
 
-test_suite* ObservationModeTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("ObservationModeTest");
-    // Set the Observation mode here
-    suite->add(BOOST_TEST_CASE(&ObservationModeTest::testNone));
-    suite->add(BOOST_TEST_CASE(&ObservationModeTest::testUnregister));
-    suite->add(BOOST_TEST_CASE(&ObservationModeTest::testDefer));
-    suite->add(BOOST_TEST_CASE(&ObservationModeTest::testDisableShort));
-    suite->add(BOOST_TEST_CASE(&ObservationModeTest::testDisableLong));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

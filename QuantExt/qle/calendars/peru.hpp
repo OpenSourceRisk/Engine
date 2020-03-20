@@ -25,23 +25,24 @@
 
 #include <ql/time/calendar.hpp>
 
+namespace QuantExt {
 using namespace QuantLib;
 
-namespace QuantExt {
-
-    class Peru : public Calendar {
-      private:
-        class LseImpl : public Calendar::WesternImpl {
-          public:
-            std::string name() const { return "Lima stock exchange"; }
-            bool isBusinessDay(const Date&) const;
-        };
-      public:
-        enum Market { LSE    //Lima Stock Exchange
-        };
-        Peru(Market m = LSE);
+class Peru : public Calendar {
+private:
+    class LseImpl : public Calendar::WesternImpl {
+    public:
+        std::string name() const { return "Lima stock exchange"; }
+        bool isBusinessDay(const Date&) const;
     };
 
-}
+public:
+    enum Market {
+        LSE // Lima Stock Exchange
+    };
+    Peru(Market m = LSE);
+};
+
+} // namespace QuantExt
 
 #endif

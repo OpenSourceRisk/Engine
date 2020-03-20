@@ -16,9 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "crossassetmodelparametrizations.hpp"
 #include "utilities.hpp"
 
+#include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ql/currencies/america.hpp>
 #include <ql/currencies/europe.hpp>
 #include <ql/math/array.hpp>
@@ -26,7 +27,37 @@
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
-#include <qle/models/all.hpp>
+#include <qle/models/cdsoptionhelper.hpp>
+#include <qle/models/cpicapfloorhelper.hpp>
+#include <qle/models/crlgm1fparametrization.hpp>
+#include <qle/models/crossassetanalytics.hpp>
+#include <qle/models/crossassetanalyticsbase.hpp>
+#include <qle/models/crossassetmodel.hpp>
+#include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
+#include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
+#include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
+#include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
+#include <qle/models/eqbsconstantparametrization.hpp>
+#include <qle/models/eqbsparametrization.hpp>
+#include <qle/models/eqbspiecewiseconstantparametrization.hpp>
+#include <qle/models/fxbsconstantparametrization.hpp>
+#include <qle/models/fxbsparametrization.hpp>
+#include <qle/models/fxbspiecewiseconstantparametrization.hpp>
+#include <qle/models/fxeqoptionhelper.hpp>
+#include <qle/models/gaussian1dcrossassetadaptor.hpp>
+#include <qle/models/infdkparametrization.hpp>
+#include <qle/models/irlgm1fconstantparametrization.hpp>
+#include <qle/models/irlgm1fparametrization.hpp>
+#include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
+#include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
+#include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
+#include <qle/models/lgm.hpp>
+#include <qle/models/lgmimplieddefaulttermstructure.hpp>
+#include <qle/models/lgmimpliedyieldtermstructure.hpp>
+#include <qle/models/linkablecalibratedmodel.hpp>
+#include <qle/models/parametrization.hpp>
+#include <qle/models/piecewiseconstanthelper.hpp>
+#include <qle/models/pseudoparameter.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -55,9 +86,10 @@ void check2(const std::string& s, const Real x, const Real y, const Real e, cons
 
 } // anonymous namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
+BOOST_AUTO_TEST_SUITE(CrossAssetModelParametrizationsTest)
 
-void CrossAssetModelParametrizationsTest::testParametrizationBaseClasses() {
+BOOST_AUTO_TEST_CASE(testParametrizationBaseClasses) {
 
     BOOST_TEST_MESSAGE("Testing CrossAssetModel parametrizations (base classes)...");
 
@@ -264,7 +296,7 @@ void CrossAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     check("time from date helper1x", 0.0, helper1x.t()[3], yts->timeFromReference(dates[3]));
 }
 
-void CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations() {
+BOOST_AUTO_TEST_CASE(testIrLgm1fParametrizations) {
 
     BOOST_TEST_MESSAGE("Testing CrossAssetModel parametrizations (irlgm1f)...");
 
@@ -432,7 +464,7 @@ void CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations() {
     }
 }
 
-void CrossAssetModelParametrizationsTest::testFxBsParametrizations() {
+BOOST_AUTO_TEST_CASE(testFxBsParametrizations) {
 
     BOOST_TEST_MESSAGE("Testing CrossAssetModel parametrizations (fxbs)...");
 
@@ -489,11 +521,6 @@ void CrossAssetModelParametrizationsTest::testFxBsParametrizations() {
     check("fxb2_1.sigma", 5.0, fxbs_1.sigma(5.0), 0.15);
 }
 
-test_suite* CrossAssetModelParametrizationsTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CrossAsset model parametrizations tests");
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelParametrizationsTest::testParametrizationBaseClasses));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelParametrizationsTest::testFxBsParametrizations));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

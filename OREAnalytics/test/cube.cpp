@@ -16,9 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "cube.hpp"
 #include <boost/filesystem.hpp>
+#include <boost/test/unit_test.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <oret/toplevelfixture.hpp>
 
 using namespace ore::analytics;
 using namespace boost::unit_test_framework;
@@ -105,63 +107,6 @@ template <class T> void testCubeFileIO(NPVCube& cube, const std::string& cubeNam
     // All done
     delete cube2;
 }
-} // namespace
-
-namespace testsuite {
-
-void CubeTest::testSinglePrecisionInMemoryCube() {
-    // trades, dates, samples
-    vector<string> ids(100, string("id")); // the overlap doesn't matter
-    vector<Date> dates(100, Date());
-    Size samples = 1000;
-    SinglePrecisionInMemoryCube c(Date(), ids, dates, samples);
-    testCube(c, "SinglePrecisionInMemoryCube", 1e-5);
-}
-
-void CubeTest::testDoublePrecisionInMemoryCube() {
-    vector<string> ids(100, string("id")); // the overlap doesn't matter
-    vector<Date> dates(100, Date());
-    Size samples = 1000;
-    DoublePrecisionInMemoryCube c(Date(), ids, dates, samples);
-    testCube(c, "DoublePrecisionInMemoryCube", 1e-14);
-}
-
-void CubeTest::testSinglePrecisionInMemoryCubeN() {
-    vector<string> ids(100, string("id"));
-    vector<Date> dates(50, Date());
-    Size samples = 200;
-    Size depth = 6;
-    SinglePrecisionInMemoryCubeN c(Date(), ids, dates, samples, depth);
-    testCube(c, "SinglePrecisionInMemoryCubeN", 1e-5);
-}
-
-void CubeTest::testDoublePrecisionInMemoryCubeN() {
-    vector<string> ids(100, string("id"));
-    vector<Date> dates(50, Date());
-    Size samples = 200;
-    Size depth = 6;
-    DoublePrecisionInMemoryCubeN c(Date(), ids, dates, samples, depth);
-    testCube(c, "DoublePrecisionInMemoryCubeN", 1e-14);
-}
-
-void CubeTest::testDoublePrecisionInMemoryCubeFileIO() {
-    vector<string> ids(100, string("id")); // the overlap doesn't matter
-    Date d(1, QuantLib::Jan, 2016);        // need a real date here
-    vector<Date> dates(100, d);
-    Size samples = 1000;
-    DoublePrecisionInMemoryCube c(d, ids, dates, samples);
-    testCubeFileIO<DoublePrecisionInMemoryCube>(c, "DoublePrecisionInMemoryCube", 1e-14);
-}
-
-void CubeTest::testDoublePrecisionInMemoryCubeFileNIO() {
-    vector<string> ids(100, string("id")); // the overlap doesn't matter
-    Date d(1, QuantLib::Jan, 2016);        // need a real date here
-    vector<Date> dates(50, d);
-    Size samples = 200;
-    Size depth = 6;
-    DoublePrecisionInMemoryCubeN c(d, ids, dates, samples, depth);
-    testCubeFileIO<DoublePrecisionInMemoryCubeN>(c, "DoublePrecisionInMemoryCubeN", 1e-14);
-}
 
 void testCubeGetSetbyDateID(NPVCube& cube, Real tolerance) {
     vector<string> ids = cube.ids();
@@ -185,28 +130,76 @@ void testCubeGetSetbyDateID(NPVCube& cube, Real tolerance) {
     }
 }
 
-void CubeTest::testInMemoryCubeGetSetbyDateID() {
+} // namespace
+
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(CubeTest)
+
+BOOST_AUTO_TEST_CASE(testSinglePrecisionInMemoryCube) {
+    // trades, dates, samples
+    vector<string> ids(100, string("id")); // the overlap doesn't matter
+    vector<Date> dates(100, Date());
+    Size samples = 1000;
+    SinglePrecisionInMemoryCube c(Date(), ids, dates, samples);
+    testCube(c, "SinglePrecisionInMemoryCube", 1e-5);
+}
+
+BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCube) {
+    vector<string> ids(100, string("id")); // the overlap doesn't matter
+    vector<Date> dates(100, Date());
+    Size samples = 1000;
+    DoublePrecisionInMemoryCube c(Date(), ids, dates, samples);
+    testCube(c, "DoublePrecisionInMemoryCube", 1e-14);
+}
+
+BOOST_AUTO_TEST_CASE(testSinglePrecisionInMemoryCubeN) {
+    vector<string> ids(100, string("id"));
+    vector<Date> dates(50, Date());
+    Size samples = 200;
+    Size depth = 6;
+    SinglePrecisionInMemoryCubeN c(Date(), ids, dates, samples, depth);
+    testCube(c, "SinglePrecisionInMemoryCubeN", 1e-5);
+}
+
+BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeN) {
+    vector<string> ids(100, string("id"));
+    vector<Date> dates(50, Date());
+    Size samples = 200;
+    Size depth = 6;
+    DoublePrecisionInMemoryCubeN c(Date(), ids, dates, samples, depth);
+    testCube(c, "DoublePrecisionInMemoryCubeN", 1e-14);
+}
+
+BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileIO) {
+    vector<string> ids(100, string("id")); // the overlap doesn't matter
+    Date d(1, QuantLib::Jan, 2016);        // need a real date here
+    vector<Date> dates(100, d);
+    Size samples = 1000;
+    DoublePrecisionInMemoryCube c(d, ids, dates, samples);
+    testCubeFileIO<DoublePrecisionInMemoryCube>(c, "DoublePrecisionInMemoryCube", 1e-14);
+}
+
+BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileNIO) {
+    vector<string> ids(100, string("id")); // the overlap doesn't matter
+    Date d(1, QuantLib::Jan, 2016);        // need a real date here
+    vector<Date> dates(50, d);
+    Size samples = 200;
+    Size depth = 6;
+    DoublePrecisionInMemoryCubeN c(d, ids, dates, samples, depth);
+    testCubeFileIO<DoublePrecisionInMemoryCubeN>(c, "DoublePrecisionInMemoryCubeN", 1e-14);
+}
+
+BOOST_AUTO_TEST_CASE(testInMemoryCubeGetSetbyDateID) {
     vector<string> ids = {"id1", "id2", "id3"}; // the overlap doesn't matter
     Date today = Date::todaysDate();
-    vector<Date> dates = { today + QuantLib::Period(1, QuantLib::Days),
-                           today + QuantLib::Period(2, QuantLib::Days),
-                           today + QuantLib::Period(3, QuantLib::Days) };
+    vector<Date> dates = {today + QuantLib::Period(1, QuantLib::Days), today + QuantLib::Period(2, QuantLib::Days),
+                          today + QuantLib::Period(3, QuantLib::Days)};
     Size samples = 1;
     DoublePrecisionInMemoryCube cube(Date(), ids, dates, samples);
     testCubeGetSetbyDateID(cube, 1e-14);
 }
 
-test_suite* CubeTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("Cube tests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&CubeTest::testSinglePrecisionInMemoryCube));
-    suite->add(BOOST_TEST_CASE(&CubeTest::testDoublePrecisionInMemoryCube));
-    suite->add(BOOST_TEST_CASE(&CubeTest::testSinglePrecisionInMemoryCubeN));
-    suite->add(BOOST_TEST_CASE(&CubeTest::testDoublePrecisionInMemoryCubeN));
-    suite->add(BOOST_TEST_CASE(&CubeTest::testDoublePrecisionInMemoryCubeFileIO));
-    suite->add(BOOST_TEST_CASE(&CubeTest::testDoublePrecisionInMemoryCubeFileNIO));
-    suite->add(BOOST_TEST_CASE(&CubeTest::testInMemoryCubeGetSetbyDateID));
-
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

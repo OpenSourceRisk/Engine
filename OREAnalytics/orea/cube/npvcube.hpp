@@ -24,16 +24,15 @@
 #pragma once
 
 #include <boost/shared_ptr.hpp>
+#include <ql/errors.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
-#include <ql/errors.hpp>
 #include <vector>
-
-using QuantLib::Size;
-using QuantLib::Real;
 
 namespace ore {
 namespace analytics {
+using QuantLib::Size;
+using QuantLib::Real;
 //! NPV Cube class stores both future and current NPV values.
 /*! The cube class stores futures NPV values in a 3-D array, i.e. each side can be of a different
  *  length (so a cuboid).
@@ -70,24 +69,20 @@ public:
     //! Get a T0 value from the cube using index
     virtual Real getT0(Size id, Size depth = 0) const = 0;
     //! Get a T0 value from the cube using trade id
-    virtual Real getT0(const std::string& id, Size depth = 0) const {
-        return getT0(index(id), depth);
-    };
+    virtual Real getT0(const std::string& id, Size depth = 0) const { return getT0(index(id), depth); };
     //! Set a value in the cube using index
     virtual void setT0(Real value, Size id, Size depth = 0) = 0;
     //! Set a value in the cube using trade id
-    virtual void setT0(Real value, const std::string& id, Size depth = 0) {
-        setT0(value, index(id), depth);
-    };
+    virtual void setT0(Real value, const std::string& id, Size depth = 0) { setT0(value, index(id), depth); };
 
     //! Get a value from the cube using index
     virtual Real get(Size id, Size date, Size sample, Size depth = 0) const = 0;
     //! Set a value in the cube using index
     virtual void set(Real value, Size id, Size date, Size sample, Size depth = 0) = 0;
 
-    //!Get a value from the cube using trade id and date
+    //! Get a value from the cube using trade id and date
     virtual Real get(const std::string& id, const QuantLib::Date& date, Size sample, Size depth = 0) const {
-        return get(index(id), index(date), sample, depth); 
+        return get(index(id), index(date), sample, depth);
     };
     //! Set a value in the cube using trade id and date
     virtual void set(Real value, const std::string& id, const QuantLib::Date& date, Size sample, Size depth = 0) {
@@ -98,7 +93,6 @@ public:
     virtual void load(const std::string& fileName) = 0;
     //! Persist cube contents to disk
     virtual void save(const std::string& fileName) const = 0;
-
 
 protected:
     virtual Size index(const std::string& id) const {
@@ -112,7 +106,6 @@ protected:
         QL_REQUIRE(it != dates().end(), "NPVCube can't find an index for date " << date);
         return std::distance(dates().begin(), it);
     };
-
 };
 } // namespace analytics
 } // namespace ore

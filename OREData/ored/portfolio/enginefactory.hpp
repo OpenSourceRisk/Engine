@@ -36,6 +36,8 @@
 #include <set>
 #include <vector>
 
+namespace ore {
+namespace data {
 using std::map;
 using std::set;
 using std::string;
@@ -44,9 +46,6 @@ using std::tuple;
 using ore::data::Market;
 using QuantLib::PricingEngine;
 using QuantLib::Disposable;
-
-namespace ore {
-namespace data {
 
 class Trade;
 class LegBuilder;
@@ -125,17 +124,25 @@ public:
      *  before it is returned.
      */
     void init(const boost::shared_ptr<Market> market, const map<MarketContext, string>& configurations,
-              const map<string, string>& modelParameters, const map<string, string>& engineParameters) {
+              const map<string, string>& modelParameters, const map<string, string>& engineParameters,
+              const std::map<std::string, std::string>& globalParameters = {}) {
         market_ = market;
         configurations_ = configurations;
         modelParameters_ = modelParameters;
         engineParameters_ = engineParameters;
+        globalParameters_ = globalParameters;
     }
 
     //! return model builders
     const set<std::pair<string, boost::shared_ptr<ModelBuilder>>>& modelBuilders() const { return modelBuilders_; }
 
 protected:
+    /*! retrieve engine parameter p, first look for p_qualifier, if this does not exist fall back to p */
+    std::string engineParameter(const std::string& p, const std::string qualifier = "", const bool mandatory = true,
+                                const std::string& defaultValue = "");
+    /*! retrieve model parameter p, first look for p_qualifier, if this does not exist fall back to p */
+    std::string modelParameter(const std::string& p, const std::string qualifier = "", const bool mandatory = true,
+                               const std::string& defaultValue = "");
     string model_;
     string engine_;
     set<string> tradeTypes_;
@@ -143,6 +150,7 @@ protected:
     map<MarketContext, string> configurations_;
     map<string, string> modelParameters_;
     map<string, string> engineParameters_;
+    std::map<std::string, std::string> globalParameters_;
     set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
 };
 
@@ -179,7 +187,8 @@ public:
     const boost::shared_ptr<Market>& market() const { return market_; };
     //! Return the market configurations used by this EngineFactory
     const map<MarketContext, string>& configurations() const { return configurations_; };
-
+    //! Return the EngineData parameters
+    const boost::shared_ptr<EngineData> engineData() const { return engineData_; };
     //! Register a builder with the factory
     void registerBuilder(const boost::shared_ptr<EngineBuilder>& builder);
 

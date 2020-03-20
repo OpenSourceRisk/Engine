@@ -17,6 +17,9 @@
 */
 
 #include <qle/cashflows/couponpricer.hpp>
+#include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/subperiodscouponpricer.hpp>
+#include <qle/cashflows/brlcdicouponpricer.hpp>
 
 namespace QuantExt {
 
@@ -25,6 +28,7 @@ namespace {
 class PricerSetter : public AcyclicVisitor,
                      public Visitor<CashFlow>,
                      public Visitor<Coupon>,
+                     public Visitor<OvernightIndexedCoupon>,
                      public Visitor<AverageONIndexedCoupon>,
                      public Visitor<SubPeriodsCoupon> {
 private:
@@ -35,6 +39,7 @@ public:
 
     void visit(CashFlow& c);
     void visit(Coupon& c);
+    void visit(OvernightIndexedCoupon& c);
     void visit(AverageONIndexedCoupon& c);
     void visit(SubPeriodsCoupon& c);
 };
@@ -45,6 +50,19 @@ void PricerSetter::visit(CashFlow&) {
 
 void PricerSetter::visit(Coupon&) {
     // nothing to do
+}
+
+void PricerSetter::visit(OvernightIndexedCoupon& c) {
+    // Special pricer for BRL CDI
+    boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(c.index());
+    if (brlCdiIndex) {
+        const boost::shared_ptr<BRLCdiCouponPricer> brlCdiCouponPricer =
+            boost::dynamic_pointer_cast<BRLCdiCouponPricer>(pricer_);
+        QL_REQUIRE(brlCdiCouponPricer, "Pricer not compatible with BRL CDI coupon");
+        c.setPricer(brlCdiCouponPricer);
+    } else {
+        c.setPricer(pricer_);
+    }
 }
 
 void PricerSetter::visit(AverageONIndexedCoupon& c) {

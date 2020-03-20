@@ -24,17 +24,16 @@
 #pragma once
 
 #include <orea/cube/npvcube.hpp>
-#include <orea/simulation/dategrid.hpp>
+#include <ored/utilities/dategrid.hpp>
 #include <orea/simulation/simmarket.hpp>
 #include <ored/portfolio/trade.hpp>
 
+namespace ore {
+namespace analytics {
 using ore::data::Trade;
 using QuantLib::Date;
 using QuantLib::Size;
 using QuantLib::Real;
-
-namespace ore {
-namespace analytics {
 
 //! ValuationCalculator interface
 class ValuationCalculator {
@@ -85,8 +84,8 @@ public:
     virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                              const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube);
 
-private:
-    Real npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket);
+protected:
+    virtual Real npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket);
 
     std::string baseCcyCode_;
     Size index_;

@@ -32,8 +32,8 @@
 #include <tuple>
 
 namespace ore {
-using namespace data;
 namespace analytics {
+using namespace data;
 
 //! Shift Scenario Generator
 /*!
@@ -57,7 +57,7 @@ public:
               indexDesc2_(d2.indexDesc1()) {}
         //! Construct from string
         ScenarioDescription(const std::string& description);
-        
+
         //! Inspectors
         //@{
         const Type& type() const { return type_; }
@@ -196,25 +196,25 @@ ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s);
 
 std::ostream& operator<<(std::ostream& out, const ShiftScenarioGenerator::ScenarioDescription& scenarioDescription);
 
-//! Retrieve the RiskFactorKey and index description from the result of ScenarioDescription::factor1() or ScenarioDescription::factor2() 
+//! Retrieve the RiskFactorKey and index description from the result of ScenarioDescription::factor1() or
+//! ScenarioDescription::factor2()
 std::pair<RiskFactorKey, std::string> deconstructFactor(const std::string& factor);
 
-//! Reconstruct the string description from a risk factor \p key and its index description \p desc 
+//! Reconstruct the string description from a risk factor \p key and its index description \p desc
 std::string reconstructFactor(const RiskFactorKey& key, const std::string& desc);
 
 //! risk factor key parser that takes into account additional tokens occuring in sensitivity risk factor keys
 boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const std::string& str, std::vector<std::string>& addTokens);
 
-inline bool operator<(const ShiftScenarioGenerator::ScenarioDescription& lhs, const ShiftScenarioGenerator::ScenarioDescription& rhs) {
+inline bool operator<(const ShiftScenarioGenerator::ScenarioDescription& lhs,
+                      const ShiftScenarioGenerator::ScenarioDescription& rhs) {
     return std::tie(lhs.type(), lhs.key1(), lhs.key2()) < std::tie(rhs.type(), rhs.key1(), rhs.key2());
 }
 
-inline bool operator==(const ShiftScenarioGenerator::ScenarioDescription& lhs, const ShiftScenarioGenerator::ScenarioDescription& rhs) {
-    return lhs.type() == rhs.type() && 
-        lhs.key1() == rhs.key1() && 
-        lhs.indexDesc1() == rhs.indexDesc1() &&
-        lhs.key2() == rhs.key2() &&
-        lhs.indexDesc2() == rhs.indexDesc2();
+inline bool operator==(const ShiftScenarioGenerator::ScenarioDescription& lhs,
+                       const ShiftScenarioGenerator::ScenarioDescription& rhs) {
+    return lhs.type() == rhs.type() && lhs.key1() == rhs.key1() && lhs.indexDesc1() == rhs.indexDesc1() &&
+           lhs.key2() == rhs.key2() && lhs.indexDesc2() == rhs.indexDesc2();
 }
 
 } // namespace analytics

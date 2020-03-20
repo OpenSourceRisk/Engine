@@ -41,6 +41,16 @@ CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& l
             curveConfigs.cdsVolCurveConfig(spec.curveConfigID());
         // We loop over all market data, looking for quotes that match the configuration
         // every time we find a matching expiry we remove it from the list
+        //
+        // TODO: check strike
+        // At the moment this code will just load the first quote it can for an expiry
+        // and name, so if your market data has a full surface (i.e. multiple quotes for
+        // the same name and expity), it will not just load a single strip.
+        //
+        // This is dangerous, but works.
+        //
+        // If you only have a single set of quotes for this surface it will
+        // load as before,
         vector<boost::shared_ptr<IndexCDSOptionQuote>> quotes;
         vector<string> expiries = config->expiries();
         for (auto& md : loader.loadQuotes(asof)) {

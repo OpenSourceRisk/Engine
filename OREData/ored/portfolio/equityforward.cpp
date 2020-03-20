@@ -57,6 +57,7 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
     notional_ = strike_ * quantity_;
+    notionalCurrency_ = currency_;
 }
 
 void EquityForward::fromXML(XMLNode* node) {
@@ -64,11 +65,11 @@ void EquityForward::fromXML(XMLNode* node) {
     XMLNode* eNode = XMLUtils::getChildNode(node, "EquityForwardData");
 
     longShort_ = XMLUtils::getChildValue(eNode, "LongShort", true);
+    maturityDate_ = XMLUtils::getChildValue(eNode, "Maturity", true);
     eqName_ = XMLUtils::getChildValue(eNode, "Name", true);
     currency_ = XMLUtils::getChildValue(eNode, "Currency", true);
-    quantity_ = XMLUtils::getChildValueAsDouble(eNode, "Quantity", true);
-    maturityDate_ = XMLUtils::getChildValue(eNode, "Maturity", true);
     strike_ = XMLUtils::getChildValueAsDouble(eNode, "Strike", true);
+    quantity_ = XMLUtils::getChildValueAsDouble(eNode, "Quantity", true);
 }
 
 XMLNode* EquityForward::toXML(XMLDocument& doc) {
@@ -77,12 +78,17 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, eNode);
 
     XMLUtils::addChild(doc, eNode, "LongShort", longShort_);
+    XMLUtils::addChild(doc, eNode, "Maturity", maturityDate_);
     XMLUtils::addChild(doc, eNode, "Name", eqName_);
     XMLUtils::addChild(doc, eNode, "Currency", currency_);
-    XMLUtils::addChild(doc, eNode, "Quantity", quantity_);
-    XMLUtils::addChild(doc, eNode, "Maturity", maturityDate_);
     XMLUtils::addChild(doc, eNode, "Strike", strike_);
+    XMLUtils::addChild(doc, eNode, "Quantity", quantity_);
     return node;
 }
+
+std::map<AssetClass, std::set<std::string>> EquityForward::underlyingIndices() const {
+    return { {AssetClass::EQ, std::set<std::string>({eqName_})} };
+}
+
 } // namespace data
 } // namespace ore

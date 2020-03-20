@@ -28,10 +28,41 @@
 namespace ore {
 namespace data {
 
-Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
-                          const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
-    LOG("# time   modelVol marketVol (diff) modelValue marketValue (diff) irlgm1fAlpha irlgm1fKappa irlgm1fHwSigma");
-    Real rmse = 0;
+Real getCalibrationError(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket) {
+    Real rmse = 0.0;
+    for (auto const& h : basket) {
+        Real tmp = h->calibrationError();
+        rmse += tmp * tmp;
+    }
+    return std::sqrt(rmse / static_cast<Real>(basket.size()));
+}
+
+namespace {
+Real impliedVolatility(const boost::shared_ptr<BlackCalibrationHelper>& h) {
+    try {
+        Real minVol, maxVol;
+        if (h->volatilityType() == QuantLib::ShiftedLognormal) {
+            minVol = 1.0e-7;
+            maxVol = 4.0;
+        } else {
+            minVol = 1.0e-7;
+            maxVol = 0.05;
+        }
+        return h->impliedVolatility(h->modelValue(), 1e-4, 1000, minVol, maxVol);
+    } catch (...) {
+        // vol could not be implied, return 0.0
+        return 0.0;
+    }
+}
+} // namespace
+
+std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
+    std::ostringstream log;
+    log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
+        << "marketVol" << std::setw(14) << "(diff)" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
+        << std::setw(14) << "(diff)" << std::setw(14) << "irlgm1fAlpha" << std::setw(14) << "irlgm1fKappa"
+        << std::setw(16) << "irlgm1fHwSigma\n";
     Real t = 0.0, modelAlpha = 0.0, modelKappa = 0.0, modelHwSigma = 0.0;
     for (Size j = 0; j < basket.size(); j++) {
         Real modelValue = basket[j]->modelValue();
@@ -47,23 +78,13 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
             modelHwSigma = parametrization->hullWhiteSigma(t);
         }
         // TODO handle other calibration helpers, too (capfloor)
-        try {
-            // TODO handle volatility type to switch the tolerance boundaries (available in QuantLib 1.9)
-            marketVol = basket[j]->impliedVolatility(marketValue, 1e-4, 1000, 5e-10, 5.0);
-        } catch (...) {
-            LOG("error implying market vol for instrument " << j);
-        }
-        try {
-            // TODO handle volatility type to switch the tolerance boundaries (available in QuantLib 1.9)
-            modelVol = basket[j]->impliedVolatility(modelValue, 1e-4, 1000, 5e-10, 5.0);
-            volDiff = modelVol - marketVol;
-        } catch (...) {
-            LOG("error implying model vol for instrument " << j);
-        }
-        rmse += volDiff * volDiff;
-        LOG(std::setw(2) << j << "  " << std::setprecision(6) << t << " " << modelVol << " " << marketVol << " ("
-                         << std::setw(8) << volDiff << ")  " << modelValue << " " << marketValue << " (" << std::setw(8)
-                         << valueDiff << ")  " << modelAlpha << " " << modelKappa << " " << modelHwSigma);
+        marketVol = basket[j]->volatility()->value();
+        modelVol = impliedVolatility(basket[j]);
+        volDiff = modelVol - marketVol;
+        log << std::setw(3) << j << std::setprecision(6) << std::setw(14) << t << std::setw(14) << modelVol
+            << std::setw(14) << marketVol << std::setw(14) << volDiff << std::setw(14) << modelValue << std::setw(14)
+            << marketValue << std::setw(14) << valueDiff << std::setw(14) << modelAlpha << std::setw(14) << modelKappa
+            << std::setw(16) << modelHwSigma << "\n";
     }
     if (parametrization != nullptr) {
         // report alpha, kappa at t_expiry^+ for last expiry
@@ -72,18 +93,18 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
         modelKappa = parametrization->kappa(t);
         modelHwSigma = parametrization->hullWhiteSigma(t);
     }
-    LOG("t >= " << t << ": irlgm1fAlpha = " << modelAlpha << " irlgm1fKappa = " << modelKappa
-                << " irlgm1fHwSigma = " << modelHwSigma);
-    rmse = sqrt(rmse / basket.size());
-    LOG("rmse = " << rmse);
-    return rmse;
+    log << "t >= " << t << ": irlgm1fAlpha = " << modelAlpha << " irlgm1fKappa = " << modelKappa
+        << " irlgm1fHwSigma = " << modelHwSigma << "\n";
+    return log.str();
 }
 
-Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
-                          const boost::shared_ptr<FxBsParametrization>& parametrization,
-                          const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
-    LOG("# time    modelVol marketVol (diff) modelValue marketValue (diff) fxbsSigma");
-    Real rmse = 0;
+std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const boost::shared_ptr<FxBsParametrization>& parametrization,
+                                  const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
+    std::ostringstream log;
+    log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
+        << "marketVol" << std::setw(14) << "(diff)" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
+        << std::setw(14) << "(diff)" << std::setw(14) << "fxbsSigma\n";
     Real t = 0.0, modelSigma = 0.0;
     for (Size j = 0; j < basket.size(); j++) {
         Real modelValue = basket[j]->modelValue();
@@ -96,38 +117,29 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
             t = domesticLgm->termStructure()->timeFromReference(fxoption->option()->exercise()->date(0)) - 1E-4;
             modelSigma = parametrization->sigma(t);
         }
-        try {
-            marketVol = basket[j]->impliedVolatility(marketValue, 1e-4, 1000, 5e-10, 0.5);
-        } catch (...) {
-            LOG("error implying market vol for instrument " << j);
-        }
-        try {
-            modelVol = basket[j]->impliedVolatility(modelValue, 1e-4, 1000, 5e-10, 0.5);
-            volDiff = modelVol - marketVol;
-        } catch (...) {
-            LOG("error implying model vol for instrument " << j);
-        }
-        rmse += volDiff * volDiff;
-        LOG(std::setw(2) << j << " " << t << "  " << std::setprecision(6) << modelVol << " " << marketVol << " ("
-                         << std::setw(8) << volDiff << ")  " << modelValue << " " << marketValue << " (" << std::setw(8)
-                         << valueDiff << ")  " << modelSigma);
+        marketVol = basket[j]->volatility()->value();
+        modelVol = impliedVolatility(basket[j]);
+        volDiff = modelVol - marketVol;
+        log << std::setw(3) << j << std::setprecision(6) << std::setw(14) << t << std::setw(14) << modelVol
+            << std::setw(14) << marketVol << std::setw(14) << volDiff << std::setw(14) << modelValue << std::setw(14)
+            << marketValue << std::setw(14) << valueDiff << std::setw(14) << modelSigma << "\n";
     }
     if (parametrization != nullptr) {
         // report alpha, kappa at t_expiry^+ for last expiry
         t += 2 * 1E-4;
         modelSigma = parametrization->sigma(t);
     }
-    LOG("t >= " << t << ": fxbsSigma = " << modelSigma);
-    rmse = sqrt(rmse / basket.size());
-    LOG("rmse = " << rmse);
-    return rmse;
+    log << "t >= " << t << ": fxbsSigma = " << modelSigma << "\n";
+    return log.str();
 }
 
-Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
-                          const boost::shared_ptr<EqBsParametrization>& parametrization,
-                          const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
-    LOG("# modelVol marketVol (diff) modelValue marketValue (diff) eqbsSigma");
-    Real rmse = 0;
+std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const boost::shared_ptr<EqBsParametrization>& parametrization,
+                                  const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
+    std::ostringstream log;
+    log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
+        << "marketVol" << std::setw(14) << "(diff)" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
+        << std::setw(14) << "(diff)" << std::setw(14) << "eqbsSigma\n";
     Real t = 0.0, modelSigma = 0.0;
     for (Size j = 0; j < basket.size(); j++) {
         Real modelValue = basket[j]->modelValue();
@@ -139,37 +151,27 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
             t = domesticLgm->termStructure()->timeFromReference(eqoption->option()->exercise()->date(0)) - 1E-4;
             modelSigma = parametrization->sigma(t);
         }
-        try {
-            marketVol = basket[j]->impliedVolatility(marketValue, 1e-4, 1000, 5e-10, 0.5);
-        } catch (...) {
-            LOG("error implying market vol for instrument " << j);
-        }
-        try {
-            modelVol = basket[j]->impliedVolatility(modelValue, 1e-4, 1000, 5e-10, 0.5);
-            volDiff = modelVol - marketVol;
-        } catch (...) {
-            LOG("error implying model vol for instrument " << j);
-        }
-        rmse += volDiff * volDiff;
-        LOG(std::setw(2) << j << "  " << std::setprecision(6) << modelVol << " " << marketVol << " (" << std::setw(8)
-                         << volDiff << ")  " << modelValue << " " << marketValue << " (" << std::setw(8) << valueDiff
-                         << ")  " << modelSigma);
+        marketVol = basket[j]->volatility()->value();
+        modelVol = impliedVolatility(basket[j]);
+        volDiff = modelVol - marketVol;
+        log << std::setw(3) << j << std::setprecision(6) << std::setw(14) << t << std::setw(14) << modelVol
+            << std::setw(14) << marketVol << std::setw(14) << volDiff << std::setw(14) << modelValue << std::setw(14)
+            << marketValue << std::setw(14) << valueDiff << std::setw(14) << modelSigma << "\n";
     }
     if (parametrization != nullptr) {
         t += 2 * 1E-4;
         modelSigma = parametrization->sigma(t);
     }
-    LOG("t >= " << t << ": eqbsSigma = " << modelSigma);
-    rmse = sqrt(rmse / basket.size());
-    LOG("rmse = " << rmse);
-    return rmse;
+    log << "t >= " << t << ": eqbsSigma = " << modelSigma << "\n";
+    return log.str();
 }
 
-Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
-                          const boost::shared_ptr<InfDkParametrization>& parametrization,
-                          const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
-    LOG("# modelValue marketValue (diff) infdkAlpha infdkH");
-    Real rmse = 0;
+std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const boost::shared_ptr<InfDkParametrization>& parametrization,
+                                  const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
+    std::ostringstream log;
+    log << std::right << std::setw(3) << "#" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
+        << std::setw(14) << "(diff)" << std::setw(14) << "infdkAlpha" << std::setw(14) << "infdkH\n";
     Real t = 0.0, modelAlpha = 0.0, modelH = 0.0;
     for (Size j = 0; j < basket.size(); j++) {
         Real modelValue = basket[j]->modelValue();
@@ -188,9 +190,8 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
             modelH = parametrization->H(t);
         }
         // TODO handle other calibration helpers, too (capfloor)
-        rmse += valueDiff * valueDiff;
-        LOG(std::setw(2) << j << "  " << std::setprecision(6) << modelValue << " " << marketValue << " ("
-                         << std::setw(8) << valueDiff << ")  " << modelAlpha << " " << modelH);
+        log << std::setw(3) << j << std::setprecision(6) << std::setw(14) << modelValue << std::setw(14) << marketValue
+            << std::setw(14) << valueDiff << std::setw(14) << modelAlpha << std::setw(14) << modelH << "\n";
     }
     if (parametrization != nullptr) {
         // report alpha, kappa at t_expiry^+ for last expiry
@@ -198,11 +199,8 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
         modelAlpha = parametrization->alpha(t);
         modelH = parametrization->H(t);
     }
-    LOG("t >= " << t << ": infDkAlpha = " << modelAlpha << " infDkH = " << modelH);
-    rmse = sqrt(rmse / basket.size());
-    ;
-    LOG("rmse = " << rmse);
-    return rmse;
+    log << "t >= " << t << ": infDkAlpha = " << modelAlpha << " infDkH = " << modelH << "\n";
+    return log.str();
 }
 
 } // namespace data
