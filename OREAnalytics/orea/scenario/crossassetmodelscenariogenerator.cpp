@@ -115,7 +115,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     Size n_eq = model_->components(EQ);
     eqKeys_.reserve(n_eq);
     for (Size k = 0; k < n_eq; k++) {
-        const string& eqName = model_->eqbs(k)->eqName();
+        const string& eqName = model_->eqbs(k)->name();
         eqKeys_.emplace_back(RiskFactorKey::KeyType::EquitySpot, eqName);
     }
 
