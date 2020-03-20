@@ -21,6 +21,13 @@
 namespace ore {
 namespace data {
 
+const string& EquityIdentifier::equityName() const {
+    if (!equityName_.empty())
+        return equityName_;
+    else
+        return identifierType_ + ":" + identifierName_ + "-" + currency_ + "-" + exchange_;
+}
+
 void EquityIdentifier::fromXML(XMLNode* node) {
     // May get an explicit CreditCurveId node. If so, we use it. Otherwise, we must have ReferenceInformation node.
     XMLNode* tmp = XMLUtils::getChildNode(node, "Name");

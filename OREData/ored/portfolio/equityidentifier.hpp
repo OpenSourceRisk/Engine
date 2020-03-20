@@ -41,7 +41,7 @@ public:
         const std::string& exchange) : identifierType_(identifierType), identifierName_(identifierName),
         currency_(currency), exchange_(exchange) {};
 
-    const std::string& equityName() const { return equityName_; };
+    const std::string& equityName() const;
     const std::string& currency() const { return currency_; };
     const std::string& exchange() const { return exchange_; };
 

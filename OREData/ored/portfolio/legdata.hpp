@@ -25,6 +25,7 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/EquityIdentifier.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -565,20 +566,20 @@ public:
     //! Default constructor
     EquityLegData() : LegAdditionalData("Equity") {}
     //! Constructor
-    EquityLegData(string returnType, Real dividendFactor, string eqName, Real initialPrice,  
+    EquityLegData(string returnType, Real dividendFactor, EquityIdentifier equityIdentifier, Real initialPrice,
         bool notionalReset, Natural fixingDays = 0, const ScheduleData& valuationSchedule = ScheduleData(), 
         string eqCurrency = "", string fxIndex = "", Natural fxIndexFixingDays = 2, string fxIndexCalendar = "" )
-        : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor), eqName_(eqName),
-          initialPrice_(initialPrice), notionalReset_(notionalReset), fixingDays_(fixingDays), 
-          valuationSchedule_(valuationSchedule), eqCurrency_(eqCurrency), fxIndex_(fxIndex), 
+        : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor),
+          equityIdentifier_(equityIdentifier), initialPrice_(initialPrice), notionalReset_(notionalReset), 
+          fixingDays_(fixingDays), valuationSchedule_(valuationSchedule), eqCurrency_(eqCurrency), fxIndex_(fxIndex), 
           fxIndexFixingDays_(fxIndexFixingDays), fxIndexCalendar_(fxIndexCalendar) {
-        indices_.insert("EQ-" + eqName_);
+        indices_.insert("EQ-" + eqName());
     }
 
     //! \name Inspectors
     //@{
     const string& returnType() const { return returnType_; }
-    const string& eqName() const { return eqName_; }
+    const string& eqName() const { return equityIdentifier_.equityName(); }
     Real dividendFactor() const { return dividendFactor_; }
     Real initialPrice() const { return initialPrice_; }
     Natural fixingDays() const { return fixingDays_; }
@@ -598,7 +599,7 @@ public:
 private:
     string returnType_;
     Real dividendFactor_ = 1.0;
-    string eqName_;
+    EquityIdentifier equityIdentifier_;
     Real initialPrice_;
     bool notionalReset_ = false;
     Natural fixingDays_ = 0;
