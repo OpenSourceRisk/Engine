@@ -31,6 +31,7 @@
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/belgium.hpp>
+#include <qle/calendars/austria.hpp>
 #include <qle/calendars/wmr.hpp>
 #include <qle/calendars/ice.hpp>
 #include <qle/calendars/cme.hpp>
@@ -122,6 +123,7 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"LUX", Luxembourg()},
                             {"BEL", Belgium()},
                             {"ESP", Spain()},
+                            {"AUT", Austria()},
                             // ICE exchange calendars
                             { "ICE_FuturesUS", ICE(ICE::FuturesUS) },
                             { "ICE_FuturesUS_1", ICE(ICE::FuturesUS_1) },

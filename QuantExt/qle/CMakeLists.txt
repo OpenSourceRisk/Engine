@@ -16,6 +16,7 @@ calendars/wmr.cpp
 calendars/belgium.cpp
 calendars/spain.cpp
 calendars/luxembourg.cpp
+calendars/austria.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
 cashflows/brlcdicouponpricer.cpp
@@ -205,6 +206,7 @@ calendars/wmr.hpp
 calendars/belgium.hpp
 calendars/spain.hpp
 calendars/luxembourg.hpp
+calendars/austria.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
 cashflows/brlcdicouponpricer.hpp
