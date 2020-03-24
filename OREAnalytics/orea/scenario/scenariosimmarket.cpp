@@ -545,7 +545,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DayCounter dc = ore::data::parseDayCounter(parameters->swapVolDayCounter(name));
                             Handle<SwaptionVolatilityStructure> atm(boost::make_shared<SwaptionVolatilityMatrix>(
                                 wrapper->calendar(), wrapper->businessDayConvention(), optionTenors, underlyingTenors,
-                                atmQuotes, dc, flatExtrapolation, volType, shift));
+                                atmQuotes, dc, flatExtrapolation, converter != nullptr ? Normal : volType, shift));
                             if (simulateAtmOnly) {
                                 if (isAtm) {
                                     svp = atm;
