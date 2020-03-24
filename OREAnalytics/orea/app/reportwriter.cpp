@@ -70,6 +70,12 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
             Real npv = trade->instrument()->NPV();
             QL_REQUIRE(std::isfinite(npv), "npv is not finite (" << npv << ")");
             Date maturity = trade->maturity();
+
+            if (trade->tradeType() == "CommoditySwaption") {
+                Real sigma = trade->instrument()->qlInstrument()->result<Real>("Sigma");
+                LOG(trade->id() << "," << npv << "," << std::fixed << std::setprecision(4) << sigma);
+            }
+
             report.next()
                 .add(trade->id())
                 .add(trade->tradeType())
