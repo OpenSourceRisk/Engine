@@ -462,14 +462,16 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
                         LOG("Initial market " << name << " yield volatility type = " << wrapper->volatilityType());
                         
-                        // Check is underlying market surface is atm or smile
-                        isAtm = boost::dynamic_pointer_cast<SwaptionVolatilityMatrix>(*wrapper) != nullptr;
-                        
+                        // Check if underlying market surface is atm or smile
+                        isAtm = boost::dynamic_pointer_cast<SwaptionVolatilityMatrix>(*wrapper) != nullptr ||
+                                boost::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr;
+
                         Handle<SwaptionVolatilityStructure> svp;
                         if (param.second.first) {
                             LOG("Simulating yield vols for ccy " << name);
-                            DLOG("YieldVol isAtm : " << (isAtm ? "True" : "False"));
-                            DLOG("YieldVol isCube : " << (isCube ? "True" : "False"));
+                            DLOG("YieldVol T0  source is atm     : " << (isAtm ? "True" : "False"));
+                            DLOG("YieldVol ssm target is cube    : " << (isCube ? "True" : "False"));
+                            DLOG("YieldVol simulate atm only     : " << (simulateAtmOnly ? "True" : "False"));
                             if (simulateAtmOnly) {
                                 QL_REQUIRE(strikeSpreads.size() == 1 && close_enough(strikeSpreads[0], 0),
                                            "for atmOnly strikeSpreads must be {0.0}");
@@ -493,11 +495,24 @@ ScenarioSimMarket::ScenarioSimMarket(
                             QL_REQUIRE(atmSlice < strikeSpreads.size(),
                                        "could not find atm slice (strikeSpreads do not contain 0.0)");
 
+                            // convert to normal if
+                            // a) we have a swaption (i.e. not a yield) volatility and
+                            // b) the T0 term structure is not normal
+                            // c) we are not in the situation of simulating ATM only and having a non-normal cube in T0,
+                            //    since in this case the T0 structure is dynamically used to determine the sim market
+                            //    vols
+                            bool convertToNormal = wrapper->volatilityType() != Normal &&
+                                                   param.first == RiskFactorKey::KeyType::SwaptionVolatility &&
+                                                   (!simulateAtmOnly || isAtm);
+                            DLOG("T0 ts is normal             : " << (wrapper->volatilityType() == Normal ? "True"
+                                                                                                          : "False"));
+                            DLOG("Have swaption vol           : "
+                                 << (param.first == RiskFactorKey::KeyType::SwaptionVolatility ? "True" : "False"));
+                            DLOG("Will convert to normal vol  : " << (convertToNormal ? "True" : "False"));
+
                             // Set up a vol converter, and create if vol type is not normal
                             SwaptionVolatilityConverter* converter = nullptr;
-                            if (wrapper->volatilityType() != Normal &&
-                                param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
-
+                            if (convertToNormal) {
                                 Handle<SwapIndex> swapIndex = initMarket->swapIndex(swapIndexBase, configuration);
                                 Handle<SwapIndex> shortSwapIndex =
                                     initMarket->swapIndex(shortSwapIndexBase, configuration);
@@ -512,8 +527,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             strike = cube->atmStrike(optionTenors[i], underlyingTenors[j]) +
                                                      strikeSpreads[k];
                                         Real vol;
-                                        if (wrapper->volatilityType() != Normal &&
-                                            param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
+                                        if (convertToNormal) {
                                             // if not a normal volatility use the converted to convert to normal at given point
                                             vol = converter->convert(wrapper->optionDateFromTenor(optionTenors[i]), underlyingTenors[j], 
                                                 strikeSpreads[k], wrapper->dayCounter(), Normal );                                            
@@ -533,19 +547,20 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         quotes[i * underlyingTenors.size() + j][k] = tmp;
                                         if (k == atmSlice) {
                                             atmQuotes[i][j] = tmp;
-                                            shift[i][j] = wrapper->volatilityType() == ShiftedLognormal
-                                                              ? wrapper->shift(optionTenors[i], underlyingTenors[j])
-                                                              : 0.0;
+                                            shift[i][j] =
+                                                !convertToNormal && wrapper->volatilityType() == ShiftedLognormal
+                                                    ? wrapper->shift(optionTenors[i], underlyingTenors[j])
+                                                    : 0.0;
                                         }
                                     }
                                 }
                             }
                             bool flatExtrapolation = true; // FIXME: get this from curve configuration
-                            VolatilityType volType = wrapper->volatilityType();
+                            VolatilityType volType = convertToNormal ? Normal : wrapper->volatilityType();
                             DayCounter dc = ore::data::parseDayCounter(parameters->swapVolDayCounter(name));
                             Handle<SwaptionVolatilityStructure> atm(boost::make_shared<SwaptionVolatilityMatrix>(
                                 wrapper->calendar(), wrapper->businessDayConvention(), optionTenors, underlyingTenors,
-                                atmQuotes, dc, flatExtrapolation, converter != nullptr ? Normal : volType, shift));
+                                atmQuotes, dc, flatExtrapolation, volType, shift));
                             if (simulateAtmOnly) {
                                 if (isAtm) {
                                     svp = atm;
