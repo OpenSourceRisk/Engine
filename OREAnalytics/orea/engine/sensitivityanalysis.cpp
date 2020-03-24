@@ -326,15 +326,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             vector<Real> strikes = itr->second->shiftStrikes;
             vector<Period> expiries = itr->second->shiftExpiries;
             QL_REQUIRE(strikes.size() > 0, "Only strike capfloor vols supported");
-            Size keyIdx = key.index;
-            Size expIdx = keyIdx / strikes.size();
-            Period p_exp = expiries[expIdx];
-            Size strIdx = keyIdx % strikes.size();
-            Real strike = strikes[strIdx];
-            Handle<OptionletVolatilityStructure> vts = simMarket->capFloorVol(ccy, marketConfiguration);
-            Time t_exp = vts->dayCounter().yearFraction(asof, asof + p_exp);
-            Real vol = vts->volatility(t_exp, strike);
-            shiftMult = vol;
+            shiftMult = simMarket->baseScenario()->get(
+                RiskFactorKey(RiskFactorKey::KeyType::OptionletVolatility, ccy, key.index));
         }
     } break;
     case RiskFactorKey::KeyType::CDSVolatility: {
