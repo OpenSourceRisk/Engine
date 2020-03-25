@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2020 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,15 +16,33 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/eqbsparametrization.hpp>
+/*! \file austria.hpp
+    \brief Austrian calendar
+*/
+
+#ifndef quantext_austrian_calendar_hpp
+#define quantext_austrian_calendar_hpp
+
+#include <ql/time/calendar.hpp>
 
 namespace QuantExt {
+using namespace QuantLib;
 
-EqBsParametrization::EqBsParametrization(const Currency& eqCcy, const std::string& eqName,
-                                         const Handle<Quote>& equitySpotToday, const Handle<Quote>& fxSpotToday,
-                                         const Handle<YieldTermStructure>& equityIrCurveToday,
-                                         const Handle<YieldTermStructure>& equityDivCurveToday)
-    : Parametrization(eqCcy, eqName), eqSpotToday_(equitySpotToday), fxSpotToday_(fxSpotToday),
-      eqRateCurveToday_(equityIrCurveToday), eqDivYieldCurveToday_(equityDivCurveToday) {}
+class Austria : public Calendar {
+private:
+    class SettlementImpl : public Calendar::WesternImpl {
+    public:
+        std::string name() const { return "Austrian settlement"; }
+        bool isBusinessDay(const Date&) const;
+    };
+
+public:
+    enum Market {
+        Settlement // generic settlement calendar
+    };
+    Austria(Market m = Settlement);
+};
 
 } // namespace QuantExt
+
+#endif

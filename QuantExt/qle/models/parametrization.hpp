@@ -36,7 +36,7 @@ using namespace QuantLib;
  */
 class Parametrization {
 public:
-    Parametrization(const Currency& currency);
+    Parametrization(const Currency& currency, const std::string& name = "");
     virtual ~Parametrization() {}
 
     virtual const Currency currency() const;
@@ -59,6 +59,9 @@ public:
         to ensure consistent results */
     virtual void update() const;
 
+    /*! return a name (inflation index, equity name, credit name, etc.) */
+    const std::string& name() const { return name_; }
+
 protected:
     /*! step size for numerical differentiation */
     const Real h_, h2_;
@@ -74,6 +77,7 @@ protected:
 
 private:
     Currency currency_;
+    std::string name_;
     const Array emptyTimes_;
     const boost::shared_ptr<Parameter> emptyParameter_;
 };

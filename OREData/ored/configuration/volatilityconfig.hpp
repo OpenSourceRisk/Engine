@@ -38,12 +38,12 @@ public:
     //! Default constructor
     VolatilityConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
                      QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European) : 
-        quoteType_(quoteType), exerciseType_(exerciseType) {};
+        quoteType_(quoteType), exerciseType_(exerciseType) {}
 
     //! \name Inspectors
     //@{
-    const MarketDatum::QuoteType& quoteType() const { return quoteType_; };
-    const QuantLib::Exercise::Type& exerciseType() const { return exerciseType_; };
+    const MarketDatum::QuoteType& quoteType() const { return quoteType_; }
+    const QuantLib::Exercise::Type& exerciseType() const { return exerciseType_; }
     //@}
 
     //! \name Serialisation

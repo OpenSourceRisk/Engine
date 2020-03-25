@@ -849,9 +849,15 @@
     <ClInclude Include="qle\currencies\europe.hpp">
       <Filter>currencies</Filter>
     </ClInclude>
-    <ClInclude Include="qle\calendars\belgium.hpp" />
-    <ClInclude Include="qle\calendars\luxembourg.hpp" />
-    <ClInclude Include="qle\calendars\spain.hpp" />
+    <ClInclude Include="qle\calendars\belgium.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\luxembourg.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\spain.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1462,8 +1468,14 @@
     <ClCompile Include="qle\currencies\europe.cpp">
       <Filter>currencies</Filter>
     </ClCompile>
-    <ClCompile Include="qle\calendars\belgium.cpp" />
-    <ClCompile Include="qle\calendars\luxembourg.cpp" />
-    <ClCompile Include="qle\calendars\spain.cpp" />
+    <ClCompile Include="qle\calendars\belgium.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\luxembourg.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\spain.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
