@@ -126,6 +126,9 @@ public:
     //! riskFactorKeyPair
     QuantLib::Real crossGamma(const std::string& tradeId, const crossPair& riskFactorKeyPair) const;
 
+    //! Get the relevant risk factors
+    std::set<RiskFactorKey> relevantRiskFactors();
+
     //! Get the trade cross gamma for trade given the index of trade and risk factors in the cube
     QuantLib::Real crossGamma(QuantLib::Size id, QuantLib::Size upIdx_1, QuantLib::Size upIdx_2, QuantLib::Size crossIdx) const;
 
