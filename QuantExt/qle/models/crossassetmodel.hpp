@@ -205,6 +205,11 @@ public:
     std::pair<Real, Real> crlgm1fS(const Size i, const Size ccy, const Time t, const Time T, const Real z,
                                    const Real y) const;
 
+    /*! tentative: more generic interface that is agnostic of the model type - so far only for CR */
+    virtual Handle<DefaultProbabilityTermStructure> crTs(const Size i) const;
+    virtual std::pair<Real, Real> crS(const Size i, const Size ccy, const Time t, const Time T, const Real z,
+                                      const Real y) const;
+
     /*! calibration procedures */
 
     /*! calibrate irlgm1f volatilities to a sequence of ir options with
@@ -478,12 +483,23 @@ inline Real CrossAssetModel::discountBondOption(const Size ccy, Option::Type typ
 }
 
 inline const boost::shared_ptr<FxBsParametrization> CrossAssetModel::fxbs(const Size ccy) const {
-    return boost::dynamic_pointer_cast<FxBsParametrization>(p_[idx(FX, ccy)]);
+    boost::shared_ptr<FxBsParametrization> tmp = boost::dynamic_pointer_cast<FxBsParametrization>(p_[idx(FX, ccy)]);
+    QL_REQUIRE(tmp, "model at " << ccy << " is not FX-BS");
+    return tmp;
 }
 
 inline const Matrix& CrossAssetModel::correlation() const { return rho_; }
 
 inline const boost::shared_ptr<Integrator> CrossAssetModel::integrator() const { return integrator_; }
+
+inline Handle<DefaultProbabilityTermStructure> CrossAssetModel::crTs(const Size i) const {
+    return crlgm1f(i)->termStructure();
+}
+
+inline std::pair<Real, Real> CrossAssetModel::crS(const Size i, const Size ccy, const Time t, const Time T,
+                                                  const Real z, const Real y) const {
+    return crlgm1fS(i, ccy, t, T, z, y);
+}
 
 } // namespace QuantExt
 
