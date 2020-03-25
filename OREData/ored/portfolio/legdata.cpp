@@ -431,7 +431,7 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     if (returnType_ == "Total") {
         XMLUtils::addChild(doc, node, "DividendFactor", dividendFactor_);
     }
-    equityIdentifier_.toXML(doc);
+    XMLUtils::appendNode(node, equityIdentifier_.toXML(doc));
     if (initialPrice_)
         XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
     XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);

@@ -849,6 +849,9 @@
     <ClInclude Include="qle\currencies\europe.hpp">
       <Filter>currencies</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\belgium.hpp" />
+    <ClInclude Include="qle\calendars\luxembourg.hpp" />
+    <ClInclude Include="qle\calendars\spain.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1459,5 +1462,8 @@
     <ClCompile Include="qle\currencies\europe.cpp">
       <Filter>currencies</Filter>
     </ClCompile>
+    <ClCompile Include="qle\calendars\belgium.cpp" />
+    <ClCompile Include="qle\calendars\luxembourg.cpp" />
+    <ClCompile Include="qle\calendars\spain.cpp" />
   </ItemGroup>
 </Project>

@@ -579,8 +579,9 @@ public:
     //! \name Inspectors
     //@{
     const string& returnType() const { return returnType_; }
-    const string& eqName() const { return equityIdentifier_.equityName(); }
+    string eqName() { return equityIdentifier_.equityName(); }
     Real dividendFactor() const { return dividendFactor_; }
+    EquityIdentifier equityIdentifier() const { return equityIdentifier_; }
     Real initialPrice() const { return initialPrice_; }
     Natural fixingDays() const { return fixingDays_; }
     ScheduleData valuationSchedule() const { return valuationSchedule_; }

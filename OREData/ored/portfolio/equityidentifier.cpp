@@ -20,12 +20,13 @@
 
 namespace ore {
 namespace data {
-
-const string& EquityIdentifier::equityName() const {
-    if (!equityName_.empty())
+    
+string EquityIdentifier::equityName() {
+    if (!equityName_.empty()) {
         return equityName_;
-    else
-        return identifierType_ + ":" + identifierName_ + "-" + currency_ + "-" + exchange_;
+    } else {
+        return identifierType_ + ":" + identifierName_ + ":" + currency_ + ":" + exchange_;
+    }
 }
 
 void EquityIdentifier::fromXML(XMLNode* node) {

@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/equityswap.hpp
-    \brief Equity Swap data model and serialization
-    \ingroup tradedata
+/*! \file portfolio/equityidentifier.hpp
+    \brief Equity Identifier Information
+    \ingroup portfolio
 */
 
 #pragma once
@@ -41,7 +41,7 @@ public:
         const std::string& exchange) : identifierType_(identifierType), identifierName_(identifierName),
         currency_(currency), exchange_(exchange) {};
 
-    const std::string& equityName() const;
+    std::string equityName();
     const std::string& currency() const { return currency_; };
     const std::string& exchange() const { return exchange_; };
 
