@@ -263,13 +263,11 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     case MarketDatum::InstrumentType::CC_FIX_FLOAT_SWAP: {
         // CC_FIX_FLOAT_SWAP/RATE/USD/3M/TRY/1Y/5Y
         QL_REQUIRE(tokens.size() == 7, "7 tokens expected in " << datumName);
-        Currency floatCurrency = parseCurrency(tokens[2]);
         Period floatTenor = parsePeriod(tokens[3]);
-        Currency fixedCurrency = parseCurrency(tokens[4]);
         Period fixedTenor = parsePeriod(tokens[5]);
         Period maturity = parsePeriod(tokens[6]);
-        return boost::make_shared<CrossCcyFixFloatSwapQuote>(value, asof, datumName, quoteType, floatCurrency,
-                                                             floatTenor, fixedCurrency, fixedTenor, maturity);
+        return boost::make_shared<CrossCcyFixFloatSwapQuote>(value, asof, datumName, quoteType, tokens[2], floatTenor,
+                                                             tokens[4], fixedTenor, maturity);
     }
 
     case MarketDatum::InstrumentType::CDS: {
