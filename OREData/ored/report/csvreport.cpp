@@ -39,7 +39,7 @@ public:
         }
     }
     void operator()(const Real d) const {
-        if (d == QuantLib::Null<Real>()) {
+        if (d == QuantLib::Null<Real>() || !std::isfinite(d)) {
             fprintNull();
         } else {
             Real r = rounding_(d);
