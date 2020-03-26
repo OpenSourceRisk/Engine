@@ -51,8 +51,6 @@ static const vector<MarketObjectMetaInfo> marketObjectData = {
     { MarketObject::CapFloorVol,                       "CapFloorVol",                        "CapFloorVolatilities",              { "CapFloorVolatility", "currency" } },
     { MarketObject::CDSVol,                            "CDSVol",                             "CDSVolatilities",                   { "CDSVolatility", "name" } },
     { MarketObject::DefaultCurve,                      "DefaultCurve",                       "DefaultCurves",                     { "DefaultCurve", "name" } },
-    { MarketObject::InflationCapFloorPriceSurface,     "InflationCapFloorPriceSurface",      "InflationCapFloorPriceSurfaces",    { "InflationCapFloorPriceSurface", "name" } },
-    { MarketObject::YoYInflationCapFloorPriceSurface,  "YoYInflationCapFloorPriceSurface",   "YYInflationCapFloorPriceSurfaces",  { "YYInflationCapFloorPriceSurface", "name" } },
     { MarketObject::YoYInflationCapFloorVol,           "YoYInflationCapFloorVol",            "YYInflationCapFloorVolatilities",   { "YYInflationCapFloorVolatility", "name" } },
     { MarketObject::EquityCurve,                       "EquityCurves",                       "EquityCurves",                      { "EquityCurve", "name" } },
     { MarketObject::EquityVol,                         "EquityVols",                         "EquityVolatilities",                { "EquityVolatility", "name" } },
@@ -207,6 +205,52 @@ vector<string> TodaysMarketParameters::curveSpecs(const string& configuration) c
         }
     }
     return specs;
+}
+
+void TodaysMarketParameters::addMarketObject(const MarketObject o, const string& id,
+                                             const map<string, string>& assignments) {
+
+    // check that we do not have an inconcsistent mapping within one market object
+    auto mo = marketObjects_.find(o);
+    if (mo != marketObjects_.end()) {
+        auto mp = mo->second.find(id);
+        if (mp != mo->second.end()) {
+            for (auto const& m : mp->second) {
+                auto a = assignments.find(m.first);
+                if (a != assignments.end()) {
+                    QL_REQUIRE(m.first != a->first || m.second == a->second,
+                               "TodaysMarketParameters, inconsistent mapping is added for market object type "
+                                   << o << ", id " << id << ": " << a->first << " " << a->second << ", but have "
+                                   << m.first << " " << m.second << " already.");
+                }
+            }
+        }
+    }
+
+    // check that we do not have an overlap of names for yield curves and index curves
+    if (o == MarketObject::YieldCurve || o == MarketObject::IndexCurve) {
+        auto mo =
+            marketObjects_.find(o == MarketObject::YieldCurve ? MarketObject::IndexCurve : MarketObject::YieldCurve);
+        if (mo != marketObjects_.end()) {
+            auto mp = mo->second.find(id);
+            if (mp != mo->second.end()) {
+                for (auto const& m : mp->second) {
+                    auto a = assignments.find(m.first);
+                    QL_REQUIRE(a == assignments.end(),
+                               "TodaysMarketParameters, overlap between YieldCurve and IndexCurve names, try to add "
+                               "mapping for market object type "
+                                   << o << ", id " << id << ": " << a->first << " " << a->second << ", but have "
+                                   << m.first << " " << m.second << " already in other market object's mappnig");
+                }
+            }
+        }
+    }
+
+    // add the mapping
+    marketObjects_[o][id] = assignments;
+    for (auto s : assignments)
+        DLOG("TodaysMarketParameters, add market objects of type " << o << ": " << id << " " << s.first << " "
+                                                                   << s.second);
 }
 
 } // namespace data

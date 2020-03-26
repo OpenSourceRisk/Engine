@@ -27,6 +27,7 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/configuration/volatilityconfig.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/actual360.hpp>
@@ -751,8 +752,11 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     configs->equityCurveConfig("SP5") = boost::make_shared<EquityCurveConfig>(
         "SP5", "", "USD1D", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes);
 
-    configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>(
-        "SP5", "", "USD", EquityVolatilityCurveConfig::Dimension::ATM, equityVolExpiries);
+    vector<string> eqVolQuotes = { "EQUITY_OPTION/RATE_LNVOL/SP5/USD/1Y/ATMF", "EQUITY_OPTION/RATE_LNVOL/SP5/USD/2018-02-26/ATMF" };
+    boost::shared_ptr<VolatilityCurveConfig> vcc =
+        boost::make_shared<VolatilityCurveConfig>(eqVolQuotes, "Flat", "Flat");
+
+    configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>("SP5", "", "USD", vcc);
 
     // clang-format off
     vector<string> commodityQuotes{

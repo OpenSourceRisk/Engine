@@ -35,7 +35,6 @@
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxvolcurve.hpp>
-#include <ored/marketdata/inflationcapfloorpricesurface.hpp>
 #include <ored/marketdata/inflationcapfloorvolcurve.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
 #include <ored/marketdata/security.hpp>
@@ -93,7 +92,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<CDSVolCurve>> requiredCDSVolCurves;
     map<string, boost::shared_ptr<BaseCorrelationCurve>> requiredBaseCorrelationCurves;
     map<string, boost::shared_ptr<InflationCurve>> requiredInflationCurves;
-    map<string, boost::shared_ptr<InflationCapFloorPriceSurface>> requiredInflationCapFloorPriceSurfaces;
+    //map<string, boost::shared_ptr<InflationCapFloorPriceSurface>> requiredInflationCapFloorPriceSurfaces;
     map<string, boost::shared_ptr<InflationCapFloorVolCurve>> requiredInflationCapFloorVolCurves;
     map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves;
     map<string, boost::shared_ptr<EquityVolCurve>> requiredEquityVolCurves;
@@ -496,92 +495,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     }
                     break;
                 }
-
-                case CurveSpec::CurveType::InflationCapFloorPrice: {
-                    boost::shared_ptr<InflationCapFloorPriceSurfaceSpec> infcapfloorspec =
-                        boost::dynamic_pointer_cast<InflationCapFloorPriceSurfaceSpec>(spec);
-                    QL_REQUIRE(infcapfloorspec, "Failed to convert spec " << *spec << " to inf cap floor spec");
-
-                    // have we built the curve already ?
-                    auto itr = requiredInflationCapFloorPriceSurfaces.find(infcapfloorspec->name());
-                    if (itr == requiredInflationCapFloorPriceSurfaces.end()) {
-                        LOG("Building InflationCapFloorPriceSurface for asof " << asof);
-                        boost::shared_ptr<InflationCapFloorPriceSurface> inflationCapFloorPriceSurface =
-                            boost::make_shared<InflationCapFloorPriceSurface>(asof, *infcapfloorspec, loader,
-                                                                              curveConfigs, requiredYieldCurves,
-                                                                              requiredInflationCurves);
-                        itr = requiredInflationCapFloorPriceSurfaces
-                                  .insert(make_pair(infcapfloorspec->name(), inflationCapFloorPriceSurface))
-                                  .first;
-                    }
-
-                    map<string, string> zcInfMap;
-                    try {
-                        zcInfMap = params.mapping(MarketObject::InflationCapFloorPriceSurface, configuration.first);
-                    } catch (QuantLib::Error& e) {
-                        LOG(e.what());
-                    }
-                    for (const auto it : zcInfMap) {
-                        if (it.second == spec->name()) {
-                            LOG("Adding InflationCapFloorPriceSurface (" << it.first << ") with spec "
-                                                                         << *infcapfloorspec << " to configuration "
-                                                                         << configuration.first);
-                            cpiInflationCapFloorPriceSurfaces_[make_pair(configuration.first, it.first)] =
-                                Handle<CPICapFloorTermPriceSurface>(
-                                    boost::dynamic_pointer_cast<CPICapFloorTermPriceSurface>(
-                                        itr->second->inflationCapFloorPriceSurface()));
-
-                            LOG("Adding InflationCapFloorVolatilitySurface ("
-                                << it.first << ") with spec " << *infcapfloorspec << " to configuration "
-                                << configuration.first);
-                            cpiInflationCapFloorVolatilitySurfaces_[make_pair(configuration.first, it.first)] =
-                                Handle<CPIVolatilitySurface>(boost::dynamic_pointer_cast<CPIVolatilitySurface>(
-                                    itr->second->cpiInflationCapFloorVolSurface()));
-                        }
-                    }
-
-                    map<string, string> yyInfMap;
-                    try {
-                        yyInfMap = params.mapping(MarketObject::YoYInflationCapFloorPriceSurface, configuration.first);
-                    } catch (QuantLib::Error& e) {
-                        LOG(e.what());
-                    }
-                    for (const auto it : yyInfMap) {
-                        if (it.second == spec->name()) {
-                            LOG("Adding YoYInflationCapFloorPriceSurface (" << it.first << ") with spec "
-                                                                            << *infcapfloorspec << " to configuration "
-                                                                            << configuration.first);
-                            yoyInflationCapFloorPriceSurfaces_[make_pair(configuration.first, it.first)] =
-                                Handle<YoYCapFloorTermPriceSurface>(
-                                    boost::dynamic_pointer_cast<YoYCapFloorTermPriceSurface>(
-                                        itr->second->inflationCapFloorPriceSurface()));
-
-                            LOG("Adding YoYOptionletVolatilitySurface (" << it.first << ") with spec "
-                                                                         << *infcapfloorspec << " to configuration "
-                                                                         << configuration.first);
-                            yoyCapFloorVolSurfaces_[make_pair(configuration.first, it.first)] =
-                                Handle<QuantExt::YoYOptionletVolatilitySurface>(
-                                    boost::dynamic_pointer_cast<QuantExt::YoYOptionletVolatilitySurface>(
-                                        itr->second->yoyInflationCapFloorVolSurface()));
-
-                            if (!itr->second->useMarketYoyCurve()) {
-                                LOG("Adding YoYInflationCurve (" << it.first << ") to configuration "
-                                                                 << configuration.first);
-                                boost::shared_ptr<YoYInflationTermStructure> ts = itr->second->yoyInflationAtmCurve();
-
-                                QL_REQUIRE(ts, "expected yoy inflation term structure for index "
-                                                   << it.first << ", but could not cast");
-                                yoyInflationIndices_[make_pair(configuration.first, it.first)] =
-                                    Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                                        parseZeroInflationIndex(it.first, false), false,
-                                        Handle<YoYInflationTermStructure>(ts)));
-                            }
-                        }
-                    }
-
-                    break;
-                }
-
+		  
                 case CurveSpec::CurveType::InflationCapFloorVolatility: {
                     boost::shared_ptr<InflationCapFloorVolatilityCurveSpec> infcapfloorspec =
                         boost::dynamic_pointer_cast<InflationCapFloorVolatilityCurveSpec>(spec);
@@ -590,7 +504,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     // have we built the curve already ?
                     auto itr = requiredInflationCapFloorVolCurves.find(infcapfloorspec->name());
                     if (itr == requiredInflationCapFloorVolCurves.end()) {
-                        LOG("Building InflationCapFloorPriceSurface for asof " << asof);
+                        LOG("Building InflationCapFloorVolatilitySurface for asof " << asof);
                         boost::shared_ptr<InflationCapFloorVolCurve> inflationCapFloorVolCurve =
                             boost::make_shared<InflationCapFloorVolCurve>(asof, *infcapfloorspec, loader, curveConfigs,
                                                                           requiredYieldCurves, requiredInflationCurves);
@@ -609,7 +523,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         if (it.second == spec->name()) {
                             LOG("Adding InflationCapFloorVol (" << it.first << ") with spec " << *infcapfloorspec
                                                                 << " to configuration " << configuration.first);
-                            // Add Zero Inflation Vol curves
+                            cpiInflationCapFloorVolatilitySurfaces_[make_pair(configuration.first, it.first)] =
+                                Handle<CPIVolatilitySurface>(
+                                    itr->second->cpiInflationCapFloorVolSurface());
                         }
                     }
 
@@ -679,8 +595,11 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         // build the curve
                         LOG("Building EquityVol for asof " << asof);
 
+                        // First we need the Equity Index, this should already be built
+                        Handle<EquityIndex> eqIndex = MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration.first);
+
                         boost::shared_ptr<EquityVolCurve> eqVolCurve =
-                            boost::make_shared<EquityVolCurve>(asof, *eqvolspec, loader, curveConfigs);
+                            boost::make_shared<EquityVolCurve>(asof, *eqvolspec, loader, curveConfigs, eqIndex);
                         itr = requiredEquityVolCurves.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
                     }
 
@@ -784,7 +703,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         LOG("Building commodity volatility for asof " << asof);
 
                         boost::shared_ptr<CommodityVolCurve> commodityVolCurve =
-                            boost::make_shared<CommodityVolCurve>(asof, *commodityVolSpec, loader, curveConfigs);
+                            boost::make_shared<CommodityVolCurve>(asof, *commodityVolSpec, loader,
+                                curveConfigs, conventions, requiredYieldCurves, requiredCommodityCurves,
+                                requiredCommodityVolCurves);
                         itr = requiredCommodityVolCurves.insert(make_pair(commodityVolSpec->name(), commodityVolCurve))
                                   .first;
                     }

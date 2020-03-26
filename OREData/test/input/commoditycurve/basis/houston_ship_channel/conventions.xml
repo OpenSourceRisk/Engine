@@ -1,0 +1,31 @@
+<Conventions>
+  <CommodityFuture>
+    <Id>NYMEX:NG</Id>
+    <AnchorDay>
+      <DayOfMonth>31</DayOfMonth>
+    </AnchorDay>
+    <ContractFrequency>Monthly</ContractFrequency>
+    <Calendar>CME</Calendar>
+    <ExpiryMonthLag>1</ExpiryMonthLag>
+    <OffsetDays>2</OffsetDays>
+    <BusinessDayConvention>Preceding</BusinessDayConvention>
+    <AdjustBeforeOffset>true</AdjustBeforeOffset>
+    <IsAveraging>false</IsAveraging>
+  </CommodityFuture>
+  <CommodityFuture>
+    <Id>ICE:HXS</Id>
+    <AnchorDay>
+      <DayOfMonth>31</DayOfMonth>
+    </AnchorDay>
+    <ContractFrequency>Monthly</ContractFrequency>
+    <Calendar>ICE_FuturesUS</Calendar>
+    <ExpiryCalendar>ICE_FuturesUS_1</ExpiryCalendar>
+    <ExpiryMonthLag>1</ExpiryMonthLag>
+    <IsAveraging>false</IsAveraging>
+    <ProhibitedExpiries>
+      <Dates>
+        <Date>2027-12-31</Date>
+      </Dates>
+    </ProhibitedExpiries>
+  </CommodityFuture>
+</Conventions>

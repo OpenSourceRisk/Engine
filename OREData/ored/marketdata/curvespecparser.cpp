@@ -227,7 +227,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
     }
 
     case CurveSpec::CurveType::CommodityVolatility: {
-        // CommodityVolatility/CCY/CommodityVolatilityCurveConfigId
+        // CommodityVolatility/CCY/CommodityVolatilityConfigId
         QL_REQUIRE(tokens.size() == 3, "Unexpected number of tokens in commodity volatility spec " << s);
         return boost::make_shared<CommodityVolatilityCurveSpec>(tokens[1], tokens[2]);
     }

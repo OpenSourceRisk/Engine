@@ -93,8 +93,13 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     // We just use strike to get notional rather than spot price
     notional_ = strike_ * quantity_;
 
+    notionalCurrency_ = currency_;
     npvCurrency_ = currency_;
     maturity_ = expiryDate;
+}
+
+std::map<AssetClass, std::set<std::string>> CommodityOption::underlyingIndices() const {
+    return { {AssetClass::COM, std::set<std::string>({ commodityName_ })} };
 }
 
 void CommodityOption::fromXML(XMLNode* node) {

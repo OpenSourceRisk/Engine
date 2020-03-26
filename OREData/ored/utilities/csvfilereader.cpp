@@ -64,8 +64,9 @@ bool CSVFileReader::next() {
     // skip empty lines
     while (line.size() == 0 && !file_.eof()) {
         getline(file_, line, eolMarker_);
+        boost::trim(line);
     }
-    if (file_.eof()) {
+    if (file_.eof() && line.empty()) {
         close();
         return false;
     }
@@ -73,7 +74,6 @@ bool CSVFileReader::next() {
         currentLine_ = 0;
     else
         ++currentLine_;
-    boost::trim(line);
     boost::split(data_, line, boost::is_any_of(delimiters_), boost::token_compress_off);
     if (numberOfColumns_ == Null<Size>())
         numberOfColumns_ = data_.size();

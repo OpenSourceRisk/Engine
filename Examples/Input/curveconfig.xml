@@ -2867,110 +2867,82 @@
       </InflationCurve>
       
   </InflationCurves>
-  <InflationCapFloorPriceSurfaces>
-      
-      <!-- EUHICPXT ZC CapFloor-->
-      <InflationCapFloorPriceSurface>
-          <CurveId>EUHICPXT_ZC_CF</CurveId>
-          <CurveDescription>Price Surface ZC CapFloor EUHICPXT</CurveDescription>
-          <Type>ZC</Type>
-          <StartRate>0.10</StartRate>
-          <ObservationLag>3M</ObservationLag>
-          <Calendar>TARGET</Calendar>
-          <BusinessDayConvention>MF</BusinessDayConvention>
-          <DayCounter>ACT</DayCounter>
-          <Index>EUHICPXT</Index>
-          <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
-          <IndexInterpolated>false</IndexInterpolated>
-          <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
-          <!-- <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes> -->
-		  <CapStrikes/> 
-          <FloorStrikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
-          <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
-	  <ImplySeparateCapFloorVolSurfaces>N</ImplySeparateCapFloorVolSurfaces>
-      </InflationCapFloorPriceSurface>
-	  	  
-      <!-- EUHICPXT YY CapFloor-->
-      <InflationCapFloorPriceSurface>
-          <CurveId>EUHICPXT_YY_CF</CurveId>
-          <CurveDescription>Price Surface YY CapFloor EUHICPXT</CurveDescription>
-          <Type>YY</Type>
-          <StartRate>0.10</StartRate>
-          <ObservationLag>3M</ObservationLag>
-          <Calendar>TARGET</Calendar>
-          <BusinessDayConvention>MF</BusinessDayConvention>
-          <DayCounter>ACT</DayCounter>
-          <Index>EUHICPXT</Index>
-		  <!-- IndexCurve can be of type Yoy or Zero -->
-          <IndexCurve>Inflation/EUHICPXT/EUHICPXT_YY_Swaps</IndexCurve>
-          <IndexInterpolated>false</IndexInterpolated>
-          <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
-          <CapStrikes>0.01,0.015,0.02,0.025,0.03,0.035,0.04,0.05,0.06</CapStrikes>
-          <FloorStrikes>-0.02,-0.01,0.00,0.005,0.01,0.015,0.02</FloorStrikes>
-          <Maturities>2Y,5Y,7Y,10Y,15Y,20Y</Maturities>
-	  <ImplySeparateCapFloorVolSurfaces>N</ImplySeparateCapFloorVolSurfaces>
-      </InflationCapFloorPriceSurface>
-      
-      <!-- USCPI ZC CapFloor-->
-      <InflationCapFloorPriceSurface>
-          <CurveId>USCPI_ZC_CF</CurveId>
-          <CurveDescription>Price Surface ZC CapFloor USCPI</CurveDescription>
-          <Type>ZC</Type>
-          <StartRate>0.00</StartRate>
-          <ObservationLag>3M</ObservationLag>
-          <Calendar>US</Calendar>
-          <BusinessDayConvention>MF</BusinessDayConvention>
-          <DayCounter>ACT</DayCounter>
-          <Index>USCPI</Index>
-          <IndexCurve>Inflation/USCPI/USCPI_ZC_Swaps</IndexCurve>
-          <IndexInterpolated>false</IndexInterpolated>
-          <YieldTermStructure>Yield/USD/USD1D</YieldTermStructure>
-          <!-- <CapStrikes>0.01,0.015,0.02,0.025,0.03,0.035</CapStrikes> -->
-		  <CapStrikes/> 
-          <FloorStrikes>-0.02,-0.015,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
-          <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
-	  <ImplySeparateCapFloorVolSurfaces>N</ImplySeparateCapFloorVolSurfaces>
-      </InflationCapFloorPriceSurface>
-	  
-      <!-- UKRPI ZC CapFloor-->
-      <InflationCapFloorPriceSurface>
-          <CurveId>UKRPI_ZC_CF</CurveId>
-          <CurveDescription>Price Surface ZC CapFloor UKRPI</CurveDescription>
-          <Type>ZC</Type>
-          <StartRate>0.00</StartRate>
-          <ObservationLag>2M</ObservationLag>
-          <Calendar>GBP</Calendar>
-          <BusinessDayConvention>MF</BusinessDayConvention>
-          <DayCounter>ACT</DayCounter>
-          <Index>UKRPI</Index>
-          <IndexCurve>Inflation/UKRPI/UKRPI_ZC_Swaps</IndexCurve>
-          <IndexInterpolated>false</IndexInterpolated>
-          <YieldTermStructure>Yield/GBP/GBP1D</YieldTermStructure>
-          <!-- <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes> -->
-		  <CapStrikes/> 
-          <FloorStrikes>-0.03,-0.02,-0.015,-0.01,-0.005,0.00,0.005,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
-          <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y</Maturities>
-          <ImplySeparateCapFloorVolSurfaces>N</ImplySeparateCapFloorVolSurfaces>
-      </InflationCapFloorPriceSurface>
-      
-  </InflationCapFloorPriceSurfaces>
   
   <InflationCapFloorVolatilities>
       <InflationCapFloorVolatility>
-          <CurveId>EUHICPXT_YY_CF_N</CurveId>
-		  <CurveDescription>EUR normal cap floor volatilities</CurveDescription>
-          <Type>YY</Type>
-		  <VolatilityType>Normal</VolatilityType>
-		  <Extrapolation>TRUE</Extrapolation>
-		  <DayCounter>Actual/365 (Fixed)</DayCounter>
-		  <Calendar>TARGET</Calendar>
-		  <BusinessDayConvention>Following</BusinessDayConvention>
-		  <Tenors>2Y,5Y,7Y,10Y,15Y,20Y</Tenors>
-		  <Strikes>-0.02,-0.01,0,0.01,0.02,0.03</Strikes>
-		  <Index>EUHICPXT</Index>
-          <IndexCurve>Inflation/EUHICPXT/EUHICPXT_YY_Swaps</IndexCurve>
+          <CurveId>EUHICPXT_ZC_CF</CurveId>
+          <CurveDescription>EUHICPXT CPI Cap/Floor vol surface derived from price quotes</CurveDescription>
+          <Type>ZC</Type>
+          <QuoteType>Price</QuoteType>
+	  <VolatilityType>Normal</VolatilityType>
+	  <Extrapolation>Y</Extrapolation>
+          <DayCounter>ACT</DayCounter>
+          <Calendar>TARGET</Calendar>
+          <BusinessDayConvention>MF</BusinessDayConvention>
+          <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Tenors>
+          <CapStrikes/> 
+          <FloorStrikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
+          <Index>EUHICPXT</Index>
+          <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
+	  <ObservationLag>3M</ObservationLag>
           <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
+      </InflationCapFloorVolatility>
+      <InflationCapFloorVolatility>
+	<CurveId>UKRPI_ZC_CF</CurveId>
+	<CurveDescription>UKRPI CPI Cap/Floor vol surface derived from price quotes</CurveDescription>
+	<Type>ZC</Type>
+	<QuoteType>Price</QuoteType>
+	<VolatilityType>Lognormal</VolatilityType>
+	<Extrapolation>Y</Extrapolation>
+	<DayCounter>Actual/365 (Fixed)</DayCounter>
+	<Calendar>GBP</Calendar>
+	<BusinessDayConvention>Following</BusinessDayConvention>
+	<Tenors>2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y</Tenors>
+	<CapStrikes/> 
+        <FloorStrikes>-0.03,-0.02,-0.015,-0.01,-0.005,0.00,0.005,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
+	<Index>UKRPI</Index>
+	<IndexCurve>Inflation/UKRPI/UKRPI_ZC_Swaps</IndexCurve>
+	<IndexInterpolated>false</IndexInterpolated>
+	<ObservationLag>2M</ObservationLag>
+	<YieldTermStructure>Yield/GBP/GBP1D</YieldTermStructure>
+      </InflationCapFloorVolatility>
+      <InflationCapFloorVolatility>
+        <CurveId>USCPI_ZC_CF</CurveId>
+        <CurveDescription>Price Surface ZC CapFloor USCPI</CurveDescription>
+        <Type>ZC</Type>
+	<QuoteType>Price</QuoteType>
+	<VolatilityType>Lognormal</VolatilityType>
+	<Extrapolation>Y</Extrapolation>
+        <DayCounter>ACT</DayCounter>
+        <Calendar>US</Calendar>
+        <BusinessDayConvention>MF</BusinessDayConvention>
+        <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Tenors>
+	<CapStrikes/> 
+        <FloorStrikes>-0.02,-0.015,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
+        <Index>USCPI</Index>
+        <IndexCurve>Inflation/USCPI/USCPI_ZC_Swaps</IndexCurve>
+        <IndexInterpolated>false</IndexInterpolated>
+        <ObservationLag>3M</ObservationLag>
+        <YieldTermStructure>Yield/USD/USD1D</YieldTermStructure>
+      </InflationCapFloorVolatility>
+      <InflationCapFloorVolatility>
+        <CurveId>EUHICPXT_YY_CF_N</CurveId>
+	<CurveDescription>EUR normal cap floor volatilities</CurveDescription>
+        <Type>YY</Type>
+	<QuoteType>Volatility</QuoteType>
+	<VolatilityType>Normal</VolatilityType>
+	<Extrapolation>TRUE</Extrapolation>
+	<DayCounter>Actual/365 (Fixed)</DayCounter>
+	<Calendar>TARGET</Calendar>
+	<BusinessDayConvention>Following</BusinessDayConvention>
+	<Tenors>2Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+	<Strikes>-0.02,-0.01,0,0.01,0.02,0.03</Strikes>
+	<Index>EUHICPXT</Index>
+        <IndexCurve>Inflation/EUHICPXT/EUHICPXT_YY_Swaps</IndexCurve>
+        <IndexInterpolated>false</IndexInterpolated>
+	<ObservationLag>3M</ObservationLag>
+        <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
       </InflationCapFloorVolatility>
   </InflationCapFloorVolatilities>
   
@@ -3164,30 +3136,33 @@
       <CurveId>GOLD_USD_VOLS</CurveId>
       <CurveDescription/>
       <Currency>USD</Currency>
-      <Type>Curve</Type>
-      <Quotes>
-        <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF</Quote>
-        <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATMF</Quote>
-        <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/10Y/ATMF</Quote>
-      </Quotes>
+      <Curve>
+        <Quotes>
+          <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATM/AtmFwd</Quote>
+          <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATM/AtmFwd</Quote>
+          <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/10Y/ATM/AtmFwd</Quote>
+        </Quotes>
+        <Interpolation>Linear</Interpolation>
+        <Extrapolation>Flat</Extrapolation>
+      </Curve>
       <DayCounter>A365</DayCounter>
       <Calendar>USD</Calendar>
-      <Extrapolation>true</Extrapolation>
     </CommodityVolatility>
     <CommodityVolatility>
       <CurveId>WTI_USD_VOLS</CurveId>
       <CurveDescription/>
       <Currency>USD</Currency>
-      <Type>Surface</Type>
-      <Surface>
-        <Expiries>1Y,5Y,10Y</Expiries>
+      <StrikeSurface>
         <Strikes>30.0,35.0,40.0,45.0,50.0,55.0,60.0</Strikes>
-      </Surface>
+        <Expiries>1Y,5Y,10Y</Expiries>
+        <TimeInterpolation>Linear</TimeInterpolation>
+        <StrikeInterpolation>Linear</StrikeInterpolation>
+        <Extrapolation>true</Extrapolation>
+        <TimeExtrapolation>Flat</TimeExtrapolation>
+        <StrikeExtrapolation>Flat</StrikeExtrapolation>
+      </StrikeSurface>
       <DayCounter>A365</DayCounter>
       <Calendar>USD</Calendar>
-      <Extrapolation>true</Extrapolation>
-      <LowerStrikeConstantExtrapolation>false</LowerStrikeConstantExtrapolation>
-      <UpperStrikeConstantExtrapolation>false</UpperStrikeConstantExtrapolation>
     </CommodityVolatility>
   </CommodityVolatilities>
   <Correlations>

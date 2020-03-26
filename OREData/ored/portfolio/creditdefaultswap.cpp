@@ -93,6 +93,7 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     legs_ = {cds->coupons()};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {swap_.leg().isPayer()};
+    notionalCurrency_ = swap_.leg().currency();
 }
 
 void CreditDefaultSwap::fromXML(XMLNode* node) {

@@ -365,9 +365,13 @@ private:
     std::stringstream ss_;
 };
 
+#define ALOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_ALERT, __FILE__, __LINE__))
+#define CLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_CRITICAL, __FILE__, __LINE__))
+#define ELOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_ERROR, __FILE__, __LINE__))
+#define WLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_WARNING, __FILE__, __LINE__))
 #define LOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_NOTICE, __FILE__, __LINE__))
 #define DLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_DEBUG, __FILE__, __LINE__))
-
+#define TLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_DATA, __FILE__, __LINE__))
 
 //! Utility class for having structured Error messages
 // This can be used directly in log messages, e.g.
@@ -377,6 +381,7 @@ private:
 // .... StructuredErrorMessage { "errorType":"Trade", "tradeId":"foo", "tradeType":"SWAP" }
 class StructuredErrorMessage {
 public:
+    virtual ~StructuredErrorMessage() {}
     static constexpr const char* name = "StructuredErrorMessage";
     
     //! return a string for the log file

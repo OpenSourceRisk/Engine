@@ -18,12 +18,15 @@
 
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <qle/indexes/commodityindex.hpp>
 #include <ql/settings.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 
 using QuantLib::CashFlow;
 using QuantLib::Date;
 using QuantLib::FloatingRateCoupon;
+using QuantLib::IborCoupon;
+using QuantLib::CappedFlooredIborCoupon;
 using QuantLib::InflationCoupon;
 using QuantLib::IndexedCashFlow;
 using QuantLib::CPICashFlow;
@@ -33,6 +36,7 @@ using QuantLib::CPI;
 using QuantLib::OvernightIndexedCoupon;
 using QuantLib::AverageBMACoupon;
 using QuantExt::AverageONIndexedCoupon;
+using QuantExt::CommodityFuturesIndex;
 using QuantExt::EquityCoupon;
 using QuantExt::FloatingRateFXLinkedNotionalCoupon;
 using QuantExt::FXLinkedCashFlow;
@@ -158,6 +162,29 @@ void FixingDateGetter::visit(FloatingRateCoupon& c) {
             indicesDates_[c.index()->name()].insert(fixingDate);
         }
     }
+}
+
+void FixingDateGetter::visit(IborCoupon& c) {
+    if (!c.hasOccurred(today_) || c.date() == today_) {
+        if (auto bma = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(c.index())) {
+            // Handle bma indices which we allow in IborCoupon as an approximation to BMA
+            // coupons. For these we allow fixing dates that are invalid as BMA fixing dates
+            // and adjust these dates to the last valid BMA fixing date in the BMAIndexWrapper.
+            // It is this adjusted date that we want to record here.
+            Date fixingDate = c.fixingDate();
+            if (fixingDate <= today_) {
+                indicesDates_[c.index()->name()].insert(bma->adjustedFixingDate(fixingDate));
+            }
+        } else {
+            // otherwise fall through to FloatingRateCoupon handling
+            visit(static_cast<FloatingRateCoupon&>(c));
+        }
+    }
+}
+
+void FixingDateGetter::visit(CappedFlooredCoupon& c) {
+    // handle the underlying
+    c.underlying()->accept(*this);
 }
 
 void FixingDateGetter::visit(IndexedCashFlow& c) {
@@ -392,6 +419,51 @@ void addMarketFixingDates(map<std::string, set<Date>>& fixings, const TodaysMark
                 for (const auto& kv : mktParams.mapping(MarketObject::YoYInflationCurve, configuration)) {
                     TLOG("Adding extra fixing dates for (yoy) inflation index " << kv.first);
                     fixings[kv.first].insert(dates.begin(), dates.end());
+                }
+            }
+        }
+
+        // If there are commodity curves, add "fixings" for this month and two previous months. We add "fixings" for 
+        // future contracts with expiry from two months hence to two months prior.
+        if (mktParams.hasMarketObject(MarketObject::CommodityCurve)) {
+
+            // "Fixing" dates for commodities.
+            Period commodityLookback = 2 * Months;
+            Date today = Settings::instance().evaluationDate();
+            Date lookback = today - commodityLookback;
+            lookback = Date(1, lookback.month(), lookback.year());
+            set<Date> dates;
+            do {
+                TLOG("Adding date " << io::iso_date(lookback) << " to fixings for commodities");
+                dates.insert(lookback);
+                lookback = WeekendsOnly().advance(lookback, 1 * Days);
+            } while (lookback <= today);
+
+            // Expiry months and years for which we require future contract fixings. For our purposes here, using the 
+            // 1st of the month does not matter. We will just use the date to get the appropriate commodity future
+            // index name below when adding the dates and the "-01" will be removed.
+            Size numberMonths = 2;
+            vector<Date> contractExpiries;
+            Date startContract = today - numberMonths * Months;
+            Date endContract = today + numberMonths * Months;
+            do {
+                Month m = startContract.month();
+                Year y = startContract.year();
+                TLOG("Adding contract month and year (" << m << "," << y << ")");
+                contractExpiries.push_back(Date(1, m, y));
+                startContract += 1 * Months;
+            } while (startContract <= endContract);
+
+            // For each of the commodity names, create the future contract name with the relevant expiry and insert 
+            // the dates. There may be some spot commodities here treated like futures but this should not matter
+            // i.e. we will just not get fixings for them.
+            if (mktParams.hasMarketObject(MarketObject::CommodityCurve)) {
+                for (const auto& kv : mktParams.mapping(MarketObject::CommodityCurve, configuration)) {
+                    for (const Date& expiry : contractExpiries) {
+                        auto indexName = CommodityFuturesIndex(kv.first, expiry, NullCalendar()).name();
+                        TLOG("Adding extra fixing dates for commodity future " << indexName);
+                        fixings[indexName].insert(dates.begin(), dates.end());
+                    }
                 }
             }
         }

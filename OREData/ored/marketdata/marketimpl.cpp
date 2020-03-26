@@ -116,6 +116,12 @@ lookup(const map<tuple<string, string, string>, Handle<QuantExt::CorrelationTerm
 
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, const string& key,
                                                   const string& configuration) const {
+    // we allow for ibor index names as keys and return the index forward curve in case of a match
+    boost::shared_ptr<IborIndex> notUsed;
+    if (tryParseIborIndex(key, notUsed)) {
+        return iborIndex(key, configuration)->forwardingTermStructure();
+    }
+    // no ibor index found under key => look for a genuine yield curve
     return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, type, configuration, "yield curve");
 }
 
@@ -125,7 +131,7 @@ Handle<YieldTermStructure> MarketImpl::discountCurve(const string& key, const st
 }
 
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const string& key, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::Yield, configuration, "yield curve");
+    return yieldCurve(YieldCurveType::Yield, key, configuration);
 }
 
 Handle<IborIndex> MarketImpl::iborIndex(const string& key, const string& configuration) const {
@@ -226,22 +232,10 @@ Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName,
     return lookup<Handle<YoYInflationIndex>>(yoyInflationIndices_, indexName, configuration, "yoy inflation index");
 }
 
-Handle<CPICapFloorTermPriceSurface> MarketImpl::cpiInflationCapFloorPriceSurface(const string& indexName,
-                                                                                 const string& configuration) const {
-    return lookup<Handle<CPICapFloorTermPriceSurface>>(cpiInflationCapFloorPriceSurfaces_, indexName, configuration,
-                                                       "inflation cap floor price surface");
-}
-
 Handle<CPIVolatilitySurface> MarketImpl::cpiInflationCapFloorVolatilitySurface(const string& indexName,
                                                                                const string& configuration) const {
     return lookup<Handle<CPIVolatilitySurface>>(cpiInflationCapFloorVolatilitySurfaces_, indexName, configuration,
                                                 "cpi cap floor volatility surface");
-}
-
-Handle<YoYCapFloorTermPriceSurface> MarketImpl::yoyInflationCapFloorPriceSurface(const string& indexName,
-                                                                                 const string& configuration) const {
-    return lookup<Handle<YoYCapFloorTermPriceSurface>>(yoyInflationCapFloorPriceSurfaces_, indexName, configuration,
-                                                       "inflation cap floor price surface");
 }
 
 Handle<Quote> MarketImpl::equitySpot(const string& key, const string& configuration) const {
@@ -387,11 +381,11 @@ void MarketImpl::refresh(const string& configuration) {
                 it->second.insert(*x.second->yoyInflationTermStructure());
             }
         }
-        for (auto& x : cpiInflationCapFloorPriceSurfaces_) {
+	for (auto& x : cpiInflationCapFloorVolatilitySurfaces_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
-        for (auto& x : yoyInflationCapFloorPriceSurfaces_) {
+        for (auto& x : yoyCapFloorVolSurfaces_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
@@ -428,8 +422,10 @@ void MarketImpl::refresh(const string& configuration) {
         }
     }
 
+    // term structures might be wrappers around nested termstructures that need to be updated as well,
+    // therefore we need to call deepUpdate() (=update() if no such nesting is present)
     for (auto& x : it->second)
-        x->update();
+        x->deepUpdate();
 
     // update fx spot quotes
     auto fxSpots = fxSpots_.find(configuration);

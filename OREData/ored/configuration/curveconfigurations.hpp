@@ -113,13 +113,6 @@ public:
     };
     const boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) const;
 
-    bool hasInflationCapFloorPriceSurfaceConfig(const std::string& curveID) const;
-    boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>& inflationCapFloorPriceSurfaceConfig(const string& curveID) {
-        return inflationCapFloorPriceSurfaceConfigs_[curveID];
-    };
-    const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>&
-    inflationCapFloorPriceSurfaceConfig(const string& curveID) const;
-
     bool hasInflationCapFloorVolCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>& inflationCapFloorVolCurveConfig(const string& curveID) {
         return inflationCapFloorVolCurveConfigs_[curveID];
@@ -153,12 +146,12 @@ public:
     };
     const boost::shared_ptr<CommodityCurveConfig>& commodityCurveConfig(const std::string& curveID) const;
 
-    bool hasCommodityVolatilityCurveConfig(const std::string& curveID) const;
-    boost::shared_ptr<CommodityVolatilityCurveConfig>& commodityVolatilityCurveConfig(const std::string& curveID) {
-        return commodityVolatilityCurveConfigs_[curveID];
+    bool hasCommodityVolatilityConfig(const std::string& curveID) const;
+    boost::shared_ptr<CommodityVolatilityConfig>& commodityVolatilityConfig(const std::string& curveID) {
+        return commodityVolatilityConfigs_[curveID];
     };
-    const boost::shared_ptr<CommodityVolatilityCurveConfig>&
-    commodityVolatilityCurveConfig(const std::string& curveID) const;
+    const boost::shared_ptr<CommodityVolatilityConfig>&
+    commodityVolatilityConfig(const std::string& curveID) const;
 
     bool hasCorrelationCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<CorrelationCurveConfig>& correlationCurveConfig(const std::string& curveID) {
@@ -207,7 +200,7 @@ private:
     std::map<std::string, boost::shared_ptr<SecurityConfig>> securityConfigs_;
     std::map<std::string, boost::shared_ptr<FXSpotConfig>> fxSpotConfigs_;
     std::map<std::string, boost::shared_ptr<CommodityCurveConfig>> commodityCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<CommodityVolatilityCurveConfig>> commodityVolatilityCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<CommodityVolatilityConfig>> commodityVolatilityConfigs_;
     std::map<std::string, boost::shared_ptr<CorrelationCurveConfig>> correlationCurveConfigs_;
 };
 } // namespace data
