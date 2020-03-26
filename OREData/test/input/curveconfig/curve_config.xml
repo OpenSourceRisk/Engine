@@ -500,7 +500,7 @@
   </EquityCurves>
   <Correlations>
     <Correlation>
-      <CurveId>EUR-CMS-10Y/EUR-CMS-1Y</CurveId>
+      <CurveId>EUR-CMS-10Y/EUR-CMS-1Y_1</CurveId>
       <CurveDescription>EUR CMS correlations</CurveDescription>
       <CorrelationType>CMSSpread</CorrelationType>
       <Index1>EUR-CMS-10Y</Index1>
@@ -538,7 +538,7 @@
       <OptionTenors>1Y</OptionTenors>
     </Correlation>
     <Correlation>
-      <CurveId>EUR-CMS-10Y/EUR-CMS-1Y</CurveId>
+      <CurveId>EUR-CMS-10Y/EUR-CMS-1Y_2</CurveId>
       <CurveDescription>EUR CMS Generic correlations</CurveDescription>
       <CorrelationType>Generic</CorrelationType>
       <Index1>EUR-CMS-10Y</Index1>
@@ -552,12 +552,13 @@
       <DayCounter>Actual/365 (Fixed)</DayCounter>
       <!--Ccalendar and Business day convention for option tenor to date conversion -->
       <Calendar>TARGET</Calendar>
-      <OptionTenors>1Y,2Y</OptionTenors>
+      <OptionTenors>1Y</OptionTenors>
     </Correlation>
     <Correlation>
-      <CurveId>EUR-CMS-10Y/EUR-CMS-1Y</CurveId>
+      <CurveId>EUR-CMS-10Y/EUR-CMS-1Y_3</CurveId>
       <CurveDescription>EUR CMS null correlation</CurveDescription>
       <CorrelationType>Generic</CorrelationType>
+      <QuoteType>NULL</QuoteType>
       <DayCounter>Actual/365 (Fixed)</DayCounter>
       <Calendar>TARGET</Calendar>
     </Correlation>

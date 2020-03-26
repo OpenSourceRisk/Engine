@@ -52,7 +52,6 @@ public:
     const Handle<Quote> fxSpotToday() const;
     const Handle<YieldTermStructure> equityIrCurveToday() const;
     const Handle<YieldTermStructure> equityDivYieldCurveToday() const;
-    const std::string& eqName() const { return eqName_; }
 
 private:
     const Handle<Quote> eqSpotToday_, fxSpotToday_;

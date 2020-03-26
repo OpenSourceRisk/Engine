@@ -147,6 +147,7 @@
       <xs:element type="xs:string" name="CreditCurveId" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="xs:string" name="SecurityId" maxOccurs="unbounded" minOccurs="1"/>
       <xs:element type="xs:string" name="ReferenceCurveId" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="xs:string" name="IncomeCurveId" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="xs:string" name="VolatilityCurveId" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="xs:string" name="SettlementDays" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="xs:string" name="Calendar" maxOccurs="unbounded" minOccurs="0"/>
@@ -163,7 +164,6 @@
       <xs:element type="settlementData" name="SettlementData" maxOccurs="1" minOccurs="0"/>
       <xs:element type="premiumData" name="PremiumData" maxOccurs="1" minOccurs="0"/>
       <xs:element type="xs:string" name="LongInForward" maxOccurs="1" minOccurs="1"/>
-      <xs:element type="xs:string" name="IncomeCurveId" maxOccurs="1" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

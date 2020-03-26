@@ -81,6 +81,7 @@ portfolio/enginedata.cpp
 portfolio/enginefactory.cpp
 portfolio/envelope.cpp
 portfolio/equityforward.cpp
+portfolio/equityidentifier.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
 portfolio/fixingdates.cpp
@@ -110,6 +111,7 @@ utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
 utilities/currencycheck.cpp
+utilities/dategrid.cpp
 utilities/flowanalysis.cpp
 utilities/indexparser.cpp
 utilities/log.cpp
@@ -139,7 +141,6 @@ configuration/equityvolcurveconfig.hpp
 configuration/fxspotconfig.hpp
 configuration/fxvolcurveconfig.hpp
 configuration/genericyieldvolcurveconfig.hpp
-configuration/inflationcapfloorpricesurfaceconfig.hpp
 configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
 configuration/securityconfig.hpp
@@ -201,9 +202,9 @@ portfolio/bond.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
+portfolio/builders/capflooredcpileg.hpp
 portfolio/builders/capfloorediborleg.hpp
 portfolio/builders/capflooredyoyleg.hpp
-portfolio/builders/capflooredcpileg.hpp
 portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
 portfolio/builders/commodityforward.hpp
@@ -228,6 +229,7 @@ portfolio/enginedata.hpp
 portfolio/enginefactory.hpp
 portfolio/envelope.hpp
 portfolio/equityforward.hpp
+portfolio/equityidentifier.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
 portfolio/fixingdates.hpp
@@ -261,6 +263,7 @@ utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
 utilities/currencycheck.hpp
+utilities/dategrid.hpp
 utilities/flowanalysis.hpp
 utilities/indexparser.hpp
 utilities/log.hpp
@@ -268,6 +271,8 @@ utilities/osutils.hpp
 utilities/parsers.hpp
 utilities/progressbar.hpp
 utilities/serializationdate.hpp
+utilities/serializationdaycounter.hpp
+utilities/serializationperiod.hpp
 utilities/strike.hpp
 utilities/timeperiod.hpp
 utilities/to_string.hpp

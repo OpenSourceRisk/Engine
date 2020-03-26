@@ -53,7 +53,7 @@ public:
       engines for swaptions etc. */
     LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
-               const bool continueOnError = false);
+               const bool continueOnError = false, const std::string& referenceCalibrationGrid = "");
     //! Return calibration error
     Real error() const;
 
@@ -76,6 +76,7 @@ public:
 private:
     void performCalculations() const override;
     void buildSwaptionBasket() const;
+    void updateSwaptionBasketVols() const;
     std::string getBasketDetails() const;
     // checks whether swaption vols have changed compared to cache and updates the cache if requested
     bool volSurfaceChanged(const bool updateCache) const;
@@ -90,16 +91,22 @@ private:
     boost::shared_ptr<IrLgmData> data_;
     const Real bootstrapTolerance_;
     const bool continueOnError_;
+    const std::string referenceCalibrationGrid_;
+
     mutable Real error_;
-    boost::shared_ptr<QuantExt::LGM> model_;
-    Array params_;
-    boost::shared_ptr<QuantLib::PricingEngine> swaptionEngine_;
-    boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization_;
-    RelinkableHandle<YieldTermStructure> discountCurve_;
+    mutable boost::shared_ptr<QuantExt::LGM> model_;
+    mutable Array params_;
+    mutable boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization_;
+
+    // which swaptions in data->optionExpries() are actually in the basket?
+    mutable std::vector<bool> swaptionActive_;
     mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket_;
+    mutable std::vector<boost::shared_ptr<SimpleQuote>> swaptionBasketVols_;
     mutable Array swaptionExpiries_;
     mutable Array swaptionMaturities_;
+    mutable Date swaptionBasketRefDate_;
 
+    RelinkableHandle<YieldTermStructure> discountCurve_;
     Handle<QuantLib::SwaptionVolatilityStructure> svts_;
     Handle<SwapIndex> swapIndex_, shortSwapIndex_;
 

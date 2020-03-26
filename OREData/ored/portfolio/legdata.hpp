@@ -139,11 +139,12 @@ private:
 class ZeroCouponFixedLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    ZeroCouponFixedLegData() : LegAdditionalData("ZeroCouponFixed") {}
+    ZeroCouponFixedLegData() : LegAdditionalData("ZeroCouponFixed"), subtractNotional_(true) {}
     //! Constructor
     ZeroCouponFixedLegData(const vector<double>& rates, const vector<string>& rateDates = vector<string>(),
-                           const string& compounding = "Compounded")
-        : LegAdditionalData("ZeroCouponFixed"), rates_(rates), rateDates_(rateDates), compounding_(compounding) {}
+                           const string& compounding = "Compounded", const bool subtractNotional = true)
+        : LegAdditionalData("ZeroCouponFixed"), rates_(rates), rateDates_(rateDates), compounding_(compounding),
+          subtractNotional_(subtractNotional) {}
 
     //! \name Inspectors
     //@{

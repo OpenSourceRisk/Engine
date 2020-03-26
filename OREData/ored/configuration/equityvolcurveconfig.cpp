@@ -38,6 +38,12 @@ EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
     populateQuotes();
 }
 
+const string EquityVolatilityCurveConfig::quoteStem() const {
+    string volType = to_string<MarketDatum::QuoteType>(volatilityConfig()->quoteType());
+
+    return "EQUITY_OPTION/" + volType + "/" + curveID_ + "/" + ccy_ + "/"; 
+}
+
 void EquityVolatilityCurveConfig::populateQuotes() {
 
     // The quotes depend on the type of volatility structure that has been configured.
@@ -97,12 +103,13 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
             QL_REQUIRE(strikes.size() == 0, "Dimension ATM, but multiple strikes provided for EquityVolatility " << curveID_);
             // if ATM create VolatilityCurveConfig which requires quotes to be provided
             vector<string> quotes(expiries.size());
+            string quoteStem = "EQUITY_OPTION/RATE_LNVOL/" + curveID_ + "/" + ccy_ + "/";
             if (expiries.size() == 1 && expiries.front() == "*") {
-                quotes[0] = (quoteStem() + "*");
+                quotes[0] = (quoteStem + "*");
             } else {
                 Size i = 0;
                 for (auto ex : expiries) {
-                    quotes[i] = (quoteStem() + ex + "/ATMF");
+                    quotes[i] = (quoteStem + ex + "/ATMF");
                     i++;
                 }
             }

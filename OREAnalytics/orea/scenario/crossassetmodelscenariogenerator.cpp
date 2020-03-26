@@ -38,7 +38,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     boost::shared_ptr<QuantExt::CrossAssetModel> model,
     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator,
     boost::shared_ptr<ScenarioFactory> scenarioFactory, boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
-    Date today, boost::shared_ptr<ore::analytics::DateGrid> grid, boost::shared_ptr<ore::data::Market> initMarket,
+    Date today, boost::shared_ptr<DateGrid> grid, boost::shared_ptr<ore::data::Market> initMarket,
     const std::string& configuration)
     : ScenarioPathGenerator(today, grid->dates(), grid->timeGrid()), model_(model), pathGenerator_(pathGenerator),
       scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig), initMarket_(initMarket),
@@ -115,7 +115,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     Size n_eq = model_->components(EQ);
     eqKeys_.reserve(n_eq);
     for (Size k = 0; k < n_eq; k++) {
-        const string& eqName = model_->eqbs(k)->eqName();
+        const string& eqName = model_->eqbs(k)->name();
         eqKeys_.emplace_back(RiskFactorKey::KeyType::EquitySpot, eqName);
     }
 

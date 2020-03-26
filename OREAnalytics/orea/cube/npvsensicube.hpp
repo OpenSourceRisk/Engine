@@ -24,6 +24,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <orea/cube/npvcube.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
@@ -76,6 +77,9 @@ public:
     const std::map<QuantLib::Size, QuantLib::Real>& getTradeNPVs(const std::string& tradeId) const {
         return getTradeNPVs(index(tradeId));
     }
+
+    /*! Return the set of scenario indices with non-zero result */
+    virtual const std::set<QuantLib::Size>& relevantScenarios() const = 0;
 };
 
 } // namespace analytics

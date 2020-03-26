@@ -21,7 +21,6 @@
 #include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
-#include <ored/configuration/inflationcapfloorpricesurfaceconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
@@ -110,6 +109,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/equityforward.hpp>
+#include <ored/portfolio/equityidentifier.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityswap.hpp>
 #include <ored/portfolio/fixingdates.hpp>
@@ -143,6 +143,7 @@
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/currencycheck.hpp>
+#include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
@@ -150,6 +151,8 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>
 #include <ored/utilities/serializationdate.hpp>
+#include <ored/utilities/serializationdaycounter.hpp>
+#include <ored/utilities/serializationperiod.hpp>
 #include <ored/utilities/strike.hpp>
 #include <ored/utilities/timeperiod.hpp>
 #include <ored/utilities/to_string.hpp>

@@ -1796,8 +1796,9 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCorrelationRecovery) {
                     boost::make_shared<CrLgm1fConstantParametrization>(pseudoCcy[0], hts, 0.01, 0.01));
             }
 
+            // get QuantLib::Error: negative eigenvalue(s) (-3.649315e-16) with SalvagingAlgorithm::None
             boost::shared_ptr<CrossAssetModel> model =
-                boost::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::None);
+                boost::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::Spectral);
 
             boost::shared_ptr<StochasticProcess> peuler = model->stateProcess(CrossAssetStateProcess::euler);
             boost::shared_ptr<StochasticProcess> pexact = model->stateProcess(CrossAssetStateProcess::exact);
@@ -3683,8 +3684,9 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrCorrelationRecovery) {
                         boost::make_shared<CrLgm1fConstantParametrization>(pseudoCcy[0], hts, 0.01, 0.01));
                 }
 
+                // get QuantLib::Error: negative eigenvalue(s) (-3.649315e-16) with SalvagingAlgorithm::None
                 boost::shared_ptr<CrossAssetModel> model =
-                    boost::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::None);
+                    boost::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::Spectral);
 
                 boost::shared_ptr<StochasticProcess> peuler = model->stateProcess(CrossAssetStateProcess::euler);
                 boost::shared_ptr<StochasticProcess> pexact = model->stateProcess(CrossAssetStateProcess::exact);
@@ -3867,8 +3869,9 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
                             pseudoCcy[0], "dummy", eqspot, fxspot, notimes, eqsigma, yts, yts));
                     }
 
+                    // get QuantLib::Error: negative eigenvalue(s) (-3.649315e-16) with SalvagingAlgorithm::None
                     boost::shared_ptr<CrossAssetModel> model =
-                        boost::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::None);
+                        boost::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::Spectral);
 
                     boost::shared_ptr<StochasticProcess> peuler = model->stateProcess(CrossAssetStateProcess::euler);
                     boost::shared_ptr<StochasticProcess> pexact = model->stateProcess(CrossAssetStateProcess::exact);

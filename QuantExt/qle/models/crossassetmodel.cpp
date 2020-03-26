@@ -48,63 +48,30 @@ CrossAssetModel::CrossAssetModel(const std::vector<boost::shared_ptr<LinearGauss
     initialize();
 }
 
-Size CrossAssetModel::components(const AssetType t) const {
-    switch (t) {
-    case IR:
-        return nIrLgm1f_;
-        break;
-    case FX:
-        return nFxBs_;
-        break;
-    case INF:
-        return nInfDk_;
-        break;
-    case CR:
-        return nCrLgm1f_;
-        break;
-    case EQ:
-        return nEqBs_;
-        break;
-    default:
-        QL_FAIL("asset class " << t << " not known.");
-    }
-}
+Size CrossAssetModel::components(const AssetType t) const { return components_[t]; }
 
 Size CrossAssetModel::ccyIndex(const Currency& ccy) const {
     Size i = 0;
-    // FIXME: remove try/catch
-    try {
-        // irlgm1f() will throw if out of bounds
-        while (irlgm1f(i)->currency() != ccy)
-            ++i;
-        return i;
-    } catch (...) {
-        QL_FAIL("currency " << ccy.code() << " not present in cross asset model");
-    }
+    while (i < components(IR) && ir(i)->currency() != ccy)
+        ++i;
+    QL_REQUIRE(i < components(IR), "currency " << ccy.code() << " not present in cross asset model");
+    return i;
 }
 
 Size CrossAssetModel::eqIndex(const std::string& name) const {
     Size i = 0;
-    // FIXME: remove try/catch
-    try {
-        while (eqbs(i)->eqName() != name)
-            ++i;
-        return i;
-    } catch (...) {
-        QL_FAIL("equity name " << name << " not present in cross asset model");
-    }
+    while (i < components(EQ) && eq(i)->name() != name)
+        ++i;
+    QL_REQUIRE(i < components(EQ), "equity name " << name << " not present in cross asset model");
+    return i;
 }
 
 Size CrossAssetModel::infIndex(const std::string& index) const {
     Size i = 0;
-    // FIXME: remove try/catch
-    try {
-        while (infdk(i)->name() != index)
-            ++i;
-        return i;
-    } catch (...) {
-        QL_FAIL("inflation index " << index << " not present in cross asset model");
-    }
+    while (i < components(INF) && inf(i)->name() != index)
+        ++i;
+    QL_REQUIRE(i < components(INF), "inflation index " << index << " not present in cross asset model");
+    return i;
 }
 
 void CrossAssetModel::update() {
@@ -120,171 +87,57 @@ void CrossAssetModel::update() {
 
 void CrossAssetModel::generateArguments() { update(); }
 
-Size CrossAssetModel::brownians(const AssetType t, const Size) const {
-    switch (t) {
-    case IR:
-        return 1;
-    case FX:
-        return 1;
-    case INF:
-        return 1;
-    case CR:
-        return 1;
-    case EQ:
-        return 1;
-    default:
-        QL_FAIL("asset type (" << t << ") unknown");
-    }
+Size CrossAssetModel::brownians(const AssetType t, const Size i) const {
+    QL_REQUIRE(brownians_[t].size() > i,
+               "CrossAssetModel::brownians(): asset class " << t << ", component " << i << " not known.");
+    return brownians_[t][i];
 }
 
-Size CrossAssetModel::stateVariables(const AssetType t, const Size) const {
-    switch (t) {
-    case IR:
-        return 1;
-    case FX:
-        return 1;
-    case INF:
-        return 2;
-    case CR:
-        return 2;
-    case EQ:
-        return 1;
-    default:
-        QL_FAIL("asset type (" << t << ") unknown");
-    }
+Size CrossAssetModel::stateVariables(const AssetType t, const Size i) const {
+    QL_REQUIRE(stateVariables_[t].size() > i,
+               "CrossAssetModel::stateVariables(): asset class " << t << ", component " << i << " not known.");
+    return stateVariables_[t][i];
 }
 
-Size CrossAssetModel::arguments(const AssetType t, const Size) const {
-    switch (t) {
-    case IR:
-        return 2;
-    case FX:
-        return 1;
-    case INF:
-        return 2;
-    case CR:
-        return 2;
-    case EQ:
-        return 1;
-    default:
-        QL_FAIL("asset type (" << t << ") unknown");
-    }
+Size CrossAssetModel::arguments(const AssetType t, const Size i) const {
+    QL_REQUIRE(numArguments_[t].size() > i,
+               "CrossAssetModel::arguments(): asset class " << t << ", component " << i << " not known.");
+    return numArguments_[t][i];
+}
+
+ModelType CrossAssetModel::modelType(const AssetType t, const Size i) const {
+    QL_REQUIRE(modelType_[t].size() > i,
+               "CrossAssetModel::modelType(): asset class " << t << ", component " << i << " not known.");
+    return modelType_[t][i];
 }
 
 Size CrossAssetModel::idx(const AssetType t, const Size i) const {
-    switch (t) {
-    case IR:
-        QL_REQUIRE(i < nIrLgm1f_, "ir index (" << i << ") must be in 0..." << (nIrLgm1f_ - 1));
-        return i;
-    case FX:
-        QL_REQUIRE(nFxBs_ > 0, "fx index (" << i << ") invalid, no fx components");
-        QL_REQUIRE(i < nFxBs_, "fx index (" << i << ") must be in 0..." << (nFxBs_ - 1));
-        return nIrLgm1f_ + i;
-    case INF:
-        QL_REQUIRE(nInfDk_ > 0, "inf index (" << i << ") invalid, no inf components");
-        QL_REQUIRE(i < nInfDk_, "inf index (" << i << ") must be in 0..." << (nInfDk_ - 1));
-        return nIrLgm1f_ + nFxBs_ + i;
-    case CR:
-        QL_REQUIRE(nCrLgm1f_ > 0, "cr index (" << i << ") invalid, no cr components");
-        QL_REQUIRE(i < nCrLgm1f_, "crlgm1f index (" << i << ") must be in 0..." << (nCrLgm1f_ - 1));
-        return nIrLgm1f_ + nFxBs_ + nInfDk_ + i;
-    case EQ:
-        QL_REQUIRE(nEqBs_ > 0, "eq index (" << i << ") invalid, no eq components");
-        QL_REQUIRE(i < nEqBs_, "eq index (" << i << ") must be in 0..." << (nEqBs_ - 1));
-        return nIrLgm1f_ + nFxBs_ + nInfDk_ + nCrLgm1f_ + i;
-    default:
-        QL_FAIL("asset type (" << t << ") unknown");
-    }
+    QL_REQUIRE(idx_[t].size() > i, "CrossAssetModel::idx(): asset class " << t << ", component " << i << " not known.");
+    return idx_[t][i];
 }
 
 Size CrossAssetModel::cIdx(const AssetType t, const Size i, const Size offset) const {
     QL_REQUIRE(offset < brownians(t, i), "c-offset (" << offset << ") for asset class " << t << " and index " << i
                                                       << " must be in 0..." << brownians(t, i) - 1);
-    // the return values below assume specific models and have to be
-    // generalized when other model types are added
-    switch (t) {
-    case IR:
-        QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..." << (nIrLgm1f_ - 1));
-        return i;
-    case FX:
-        QL_REQUIRE(nFxBs_ > 0, "fx index (" << i << ") invalid, no fx components");
-        QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..." << (nFxBs_ - 1));
-        return nIrLgm1f_ + i;
-    case INF:
-        QL_REQUIRE(nInfDk_ > 0, "inf index (" << i << ") invalid, no inf components");
-        QL_REQUIRE(i < nInfDk_, "infdk index (" << i << ") must be in 0..." << (nInfDk_ - 1));
-        return nIrLgm1f_ + nFxBs_ + i;
-    case CR:
-        QL_REQUIRE(nCrLgm1f_ > 0, "cr index (" << i << ") invalid, no cr components");
-        QL_REQUIRE(i < nCrLgm1f_, "crlgm1f index (" << i << ") must be in 0..." << (nCrLgm1f_ - 1));
-        return nIrLgm1f_ + nFxBs_ + nInfDk_ + i;
-    case EQ:
-        QL_REQUIRE(nEqBs_ > 0, "eq index (" << i << ") invalid, no eq components");
-        QL_REQUIRE(i < nEqBs_, "eqbs index (" << i << ") must be in 0..." << (nEqBs_ - 1));
-        return nIrLgm1f_ + nFxBs_ + nInfDk_ + nCrLgm1f_ + i;
-    default:
-        QL_FAIL("asset type (" << t << ") unknown");
-    }
+    QL_REQUIRE(cIdx_[t].size() > i,
+               "CrossAssetModel::cIdx(): asset class " << t << ", component " << i << " not known.");
+    return cIdx_[t][i] + offset;
 }
 
 Size CrossAssetModel::pIdx(const AssetType t, const Size i, const Size offset) const {
     QL_REQUIRE(offset < stateVariables(t, i), "p-offset (" << offset << ") for asset class " << t << " and index " << i
                                                            << " must be in 0..." << stateVariables(t, i) - 1);
-    // the return values below assume specific models and have to be
-    // generalized when other model types are added
-    switch (t) {
-    case IR:
-        QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..." << (nIrLgm1f_ - 1));
-        return i;
-    case FX:
-        QL_REQUIRE(nFxBs_ > 0, "fx index (" << i << ") invalid, no fx components");
-        QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..." << (nFxBs_ - 1));
-        return nIrLgm1f_ + i;
-    case INF:
-        QL_REQUIRE(nInfDk_ > 0, "inf index (" << i << ") invalid, no inf components");
-        QL_REQUIRE(i < nInfDk_, "infdk index (" << i << ") must be in 0..." << (nInfDk_ - 1));
-        return nIrLgm1f_ + nFxBs_ + 2 * i + offset;
-    case CR:
-        QL_REQUIRE(nCrLgm1f_ > 0, "cr index (" << i << ") invalid, no cr components");
-        QL_REQUIRE(i < nCrLgm1f_, "crlgm1f index (" << i << ") must be in 0..." << (nCrLgm1f_ - 1));
-        return nIrLgm1f_ + nFxBs_ + 2 * nInfDk_ + 2 * i + offset;
-    case EQ:
-        QL_REQUIRE(nEqBs_ > 0, "eq index (" << i << ") invalid, no eq components");
-        QL_REQUIRE(i < nEqBs_, "eqbs index (" << i << ") must be in 0..." << (nEqBs_ - 1));
-        return nIrLgm1f_ + nFxBs_ + 2 * nInfDk_ + 2 * nCrLgm1f_ + i;
-    default:
-        QL_FAIL("asset type (" << t << ") unknown");
-    }
+    QL_REQUIRE(pIdx_[t].size() > i,
+               "CrossAssetModel::pIdx(): asset class " << t << ", component " << i << " not known.");
+    return pIdx_[t][i] + offset;
 }
 
 Size CrossAssetModel::aIdx(const AssetType t, const Size i, const Size offset) const {
     QL_REQUIRE(offset < arguments(t, i), "a-offset (" << offset << ") for asset class " << t << " and index " << i
                                                       << " must be in 0..." << arguments(t, i) - 1);
-    // the return values below assume specific models and have to be
-    // generalized when other model types are added
-    switch (t) {
-    case IR:
-        QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..." << (nIrLgm1f_ - 1));
-        return 2 * i + offset;
-    case FX:
-        QL_REQUIRE(nFxBs_ > 0, "fx index (" << i << ") invalid, no fx components");
-        QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..." << (nFxBs_ - 1));
-        return 2 * nIrLgm1f_ + i;
-    case INF:
-        QL_REQUIRE(nInfDk_ > 0, "inf index (" << i << ") invalid, no inf components");
-        QL_REQUIRE(i < nInfDk_, "infdk index (" << i << ") must be in 0..." << (nInfDk_ - 1));
-        return 2 * nIrLgm1f_ + nFxBs_ + 2 * i + offset;
-    case CR:
-        QL_REQUIRE(nCrLgm1f_ > 0, "cr index (" << i << ") invalid, no cr components");
-        QL_REQUIRE(i < nCrLgm1f_, "crlgm1f idnex (" << i << ") must be in 0...1" << (nCrLgm1f_ - 1));
-        return 2 * nIrLgm1f_ + nFxBs_ + 2 * nInfDk_ + 2 * i + offset;
-    case EQ:
-        QL_REQUIRE(nEqBs_ > 0, "eq index (" << i << ") invalid, no eq components");
-        QL_REQUIRE(i < nEqBs_, "crlgm1f idnex (" << i << ") must be in 0...1" << (nEqBs_ - 1));
-        return 2 * nIrLgm1f_ + nFxBs_ + 2 * nInfDk_ + 2 * nCrLgm1f_ + i;
-    default:
-        QL_FAIL("asset type (" << t << ") unknown");
-    }
+    QL_REQUIRE(aIdx_[t].size() > i,
+               "CrossAssetModel::aIdx(): asset class " << t << ", component " << i << " not known.");
+    return aIdx_[t][i];
 }
 
 const Real& CrossAssetModel::correlation(const AssetType s, const Size i, const AssetType t, const Size j,
@@ -337,75 +190,141 @@ void CrossAssetModel::setIntegrationPolicy(const boost::shared_ptr<Integrator> i
     // this is all done in PiecewiseIntegral for us
 
     std::vector<Time> allTimes;
-    for (Size i = 0; i < nIrLgm1f_; ++i) {
-        allTimes.insert(allTimes.end(), p_[idx(IR, i)]->parameterTimes(0).begin(),
-                        p_[idx(IR, i)]->parameterTimes(0).end());
-        allTimes.insert(allTimes.end(), p_[idx(IR, i)]->parameterTimes(1).begin(),
-                        p_[idx(IR, i)]->parameterTimes(1).end());
-    }
-    for (Size i = 0; i < nFxBs_; ++i) {
-        allTimes.insert(allTimes.end(), p_[idx(FX, i)]->parameterTimes(0).begin(),
-                        p_[idx(FX, i)]->parameterTimes(0).end());
-    }
-    for (Size i = 0; i < nInfDk_; ++i) {
-        allTimes.insert(allTimes.end(), p_[idx(INF, i)]->parameterTimes(0).begin(),
-                        p_[idx(INF, i)]->parameterTimes(0).end());
-        allTimes.insert(allTimes.end(), p_[idx(INF, i)]->parameterTimes(1).begin(),
-                        p_[idx(INF, i)]->parameterTimes(1).end());
-    }
-    for (Size i = 0; i < nCrLgm1f_; ++i) {
-        allTimes.insert(allTimes.end(), p_[idx(CR, i)]->parameterTimes(0).begin(),
-                        p_[idx(CR, i)]->parameterTimes(0).end());
-        allTimes.insert(allTimes.end(), p_[idx(CR, i)]->parameterTimes(1).begin(),
-                        p_[idx(CR, i)]->parameterTimes(1).end());
-    }
-    for (Size i = 0; i < nEqBs_; ++i) {
-        allTimes.insert(allTimes.end(), p_[idx(EQ, i)]->parameterTimes(0).begin(),
-                        p_[idx(EQ, i)]->parameterTimes(0).end());
+    for (Size i = 0; i < p_.size(); ++i) {
+        for (Size j = 0; j < getNumberOfParameters(i); ++j)
+            allTimes.insert(allTimes.end(), p_[i]->parameterTimes(j).begin(), p_[i]->parameterTimes(j).end());
     }
 
     // use piecewise integrator avoiding the step points
     integrator_ = boost::make_shared<PiecewiseIntegral>(integrator, allTimes, true);
 }
 
+std::pair<AssetType, ModelType> CrossAssetModel::getComponentType(const Size i) const {
+    if (boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i]))
+        return std::make_pair(IR, LGM1F);
+    if (boost::dynamic_pointer_cast<FxBsParametrization>(p_[i]))
+        return std::make_pair(FX, BS);
+    if (boost::dynamic_pointer_cast<InfDkParametrization>(p_[i]))
+        return std::make_pair(INF, DK);
+    if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
+        return std::make_pair(CR, LGM1F);
+    if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
+        return std::make_pair(EQ, BS);
+    QL_FAIL("parametrization " << i << " has unknown type");
+}
+
+Size CrossAssetModel::getNumberOfParameters(const Size i) const {
+    if (boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i]))
+        return 2;
+    if (boost::dynamic_pointer_cast<FxBsParametrization>(p_[i]))
+        return 1;
+    if (boost::dynamic_pointer_cast<InfDkParametrization>(p_[i]))
+        return 2;
+    if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
+        return 2;
+    if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
+        return 1;
+    QL_FAIL("parametrization " << i << " has unknown type");
+}
+
+Size CrossAssetModel::getNumberOfBrownians(const Size i) const {
+    if (boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i]))
+        return 1;
+    if (boost::dynamic_pointer_cast<FxBsParametrization>(p_[i]))
+        return 1;
+    if (boost::dynamic_pointer_cast<InfDkParametrization>(p_[i]))
+        return 1;
+    if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
+        return 1;
+    if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
+        return 1;
+    QL_FAIL("parametrization " << i << " has unknown type");
+}
+
+Size CrossAssetModel::getNumberOfStateVariables(const Size i) const {
+    if (boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i]))
+        return 1;
+    if (boost::dynamic_pointer_cast<FxBsParametrization>(p_[i]))
+        return 1;
+    if (boost::dynamic_pointer_cast<InfDkParametrization>(p_[i]))
+        return 2;
+    if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
+        return 2;
+    if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
+        return 1;
+    QL_FAIL("parametrization " << i << " has unknown type");
+}
+
+void CrossAssetModel::updateIndices(const AssetType& t, const Size i, const Size cIdx, const Size pIdx,
+                                    const Size aIdx) {
+    idx_[t].push_back(i);
+    modelType_[t].push_back(getComponentType(i).second);
+    brownians_[t].push_back(getNumberOfBrownians(i));
+    stateVariables_[t].push_back(getNumberOfStateVariables(i));
+    numArguments_[t].push_back(getNumberOfParameters(i));
+    cIdx_[t].push_back(cIdx);
+    pIdx_[t].push_back(pIdx);
+    aIdx_[t].push_back(aIdx);
+}
+
 void CrossAssetModel::initializeParametrizations() {
 
     // count the parametrizations and check their order and their support
 
-    nIrLgm1f_ = 0;
-    nFxBs_ = 0;
-    nInfDk_ = 0;
-    nCrLgm1f_ = 0;
-    nEqBs_ = 0;
-
-    Size i = 0;
+    Size i = 0, j;
+    Size cIdxTmp = 0, pIdxTmp = 0, aIdxTmp = 0;
+    components_.resize(crossAssetModelAssetTypes, 0);
+    idx_.resize(crossAssetModelAssetTypes);
+    cIdx_.resize(crossAssetModelAssetTypes);
+    pIdx_.resize(crossAssetModelAssetTypes);
+    aIdx_.resize(crossAssetModelAssetTypes);
+    brownians_.resize(crossAssetModelAssetTypes);
+    stateVariables_.resize(crossAssetModelAssetTypes);
+    numArguments_.resize(crossAssetModelAssetTypes);
+    modelType_.resize(crossAssetModelAssetTypes);
 
     // IR parametrizations
 
     bool genericCtor = lgm_.empty();
-    while (i < p_.size() && boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i]) != NULL) {
-        // initialize model, if generic constructor was used
+    j = 0;
+    while (i < p_.size() && getComponentType(i).first == IR) {
+        // initialize lgm model, if generic constructor was used
         if (genericCtor) {
-            lgm_.push_back(
-                boost::make_shared<LinearGaussMarkovModel>(boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i])));
+            if (getComponentType(i).second == LGM1F) {
+                lgm_.push_back(boost::make_shared<LinearGaussMarkovModel>(
+                    boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i])));
+            } else {
+                lgm_.push_back(boost::shared_ptr<LinearGaussMarkovModel>());
+            }
         }
-        // count things
-        ++nIrLgm1f_;
+        updateIndices(IR, i, cIdxTmp, pIdxTmp, aIdxTmp);
+        cIdxTmp += getNumberOfBrownians(i);
+        pIdxTmp += getNumberOfStateVariables(i);
+        aIdxTmp += getNumberOfParameters(i);
+        ++j;
         ++i;
     }
+    components_[IR] = j;
 
     // FX parametrizations
 
-    while (i < p_.size() && boost::dynamic_pointer_cast<FxBsParametrization>(p_[i]) != NULL) {
-        ++nFxBs_;
+    j = 0;
+    while (i < p_.size() && getComponentType(i).first == FX) {
+        updateIndices(FX, i, cIdxTmp, pIdxTmp, aIdxTmp);
+        cIdxTmp += getNumberOfBrownians(i);
+        pIdxTmp += getNumberOfStateVariables(i);
+        aIdxTmp += getNumberOfParameters(i);
+        ++j;
         ++i;
     }
+    components_[FX] = j;
 
-    QL_REQUIRE(nIrLgm1f_ > 0, "at least one ir parametrization must be given");
+    QL_REQUIRE(components_[IR] > 0, "at least one ir parametrization must be given");
 
-    QL_REQUIRE(nFxBs_ == nIrLgm1f_ - 1, "there must be n-1 fx "
-                                        "for n ir parametrizations, found "
-                                            << nIrLgm1f_ << " ir and " << nFxBs_ << " fx parametrizations");
+    QL_REQUIRE(components_[FX] == components_[IR] - 1, "there must be n-1 fx "
+                                                       "for n ir parametrizations, found "
+                                                           << components_[IR] << " ir and " << components_[FX]
+                                                           << " fx parametrizations");
 
     // check currencies
 
@@ -413,70 +332,88 @@ void CrossAssetModel::initializeParametrizations() {
     // to do in a simpler way ...
     Size uniqueCurrencies = 0;
     std::vector<Currency> currencies;
-    for (Size i = 0; i < nIrLgm1f_; ++i) {
+    for (Size i = 0; i < components_[IR]; ++i) {
         Size tmp = 1;
         for (Size j = 0; j < i; ++j) {
-            if (irlgm1f(i)->currency() == currencies[j])
+            if (ir(i)->currency() == currencies[j])
                 tmp = 0;
         }
         uniqueCurrencies += tmp;
-        currencies.push_back(irlgm1f(i)->currency());
+        currencies.push_back(ir(i)->currency());
     }
-    QL_REQUIRE(uniqueCurrencies == nIrLgm1f_, "there are duplicate currencies "
-                                              "in the set of irlgm1f "
-                                              "parametrizations");
-    for (Size i = 0; i < nFxBs_; ++i) {
-        QL_REQUIRE(fxbs(i)->currency() == irlgm1f(i + 1)->currency(),
+    QL_REQUIRE(uniqueCurrencies == components_[IR], "there are duplicate currencies "
+                                                    "in the set of ir "
+                                                    "parametrizations");
+    for (Size i = 0; i < components_[FX]; ++i) {
+        QL_REQUIRE(fx(i)->currency() == ir(i + 1)->currency(),
                    "fx parametrization #" << i << " must be for currency of ir parametrization #" << (i + 1)
-                                          << ", but they are " << fxbs(i)->currency() << " and "
+                                          << ", but they are " << fx(i)->currency() << " and "
                                           << irlgm1f(i + 1)->currency() << " respectively");
     }
 
     // Inf parametrizations
 
-    while (i < p_.size() && boost::dynamic_pointer_cast<InfDkParametrization>(p_[i]) != NULL) {
-        ++nInfDk_;
+    j = 0;
+    while (i < p_.size() && getComponentType(i).first == INF) {
+        updateIndices(INF, i, cIdxTmp, pIdxTmp, aIdxTmp);
+        cIdxTmp += getNumberOfBrownians(i);
+        pIdxTmp += getNumberOfStateVariables(i);
+        aIdxTmp += getNumberOfParameters(i);
+        ++j;
         ++i;
         // we do not check the currency, if not present among the model's
         // currencies, it will throw below
     }
+    components_[INF] = j;
 
     // Cr parametrizations
 
-    boost::shared_ptr<CrLgm1fParametrization> p;
-    while (i < p_.size() && (p = boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i])) != NULL) {
-        // we really don't mind the currency, don't need a check for this,
-        // because it is in the end specified in crlgm1fS() and only this
-        // is used
-        // QL_REQUIRE(p->currency() == irlgm1f(0)->currency(),
-        //            "credit currency at " << nCrLgm1f_ << " (" << p->currency()
-        //                                  << ") is not domestic ("
-        //                                  << irlgm1f(0)->currency() << ")");
-        ++nCrLgm1f_;
+    j = 0;
+    while (i < p_.size() && getComponentType(i).first == CR) {
+        updateIndices(CR, i, cIdxTmp, pIdxTmp, aIdxTmp);
+        cIdxTmp += getNumberOfBrownians(i);
+        pIdxTmp += getNumberOfStateVariables(i);
+        aIdxTmp += getNumberOfParameters(i);
+        ++j;
         ++i;
+        // we do not check the currency, if not present among the model's
+        // currencies, it will throw below
     }
+    components_[CR] = j;
 
     // Eq parametrizations
 
-    while (i < p_.size() && boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]) != NULL) {
-        ++nEqBs_;
+    j = 0;
+    while (i < p_.size() && getComponentType(i).first == EQ) {
+        updateIndices(EQ, i, cIdxTmp, pIdxTmp, aIdxTmp);
+        cIdxTmp += getNumberOfBrownians(i);
+        pIdxTmp += getNumberOfStateVariables(i);
+        aIdxTmp += getNumberOfParameters(i);
+        ++j;
         ++i;
     }
+    components_[EQ] = j;
+
     // check the equity currencies to ensure they are covered by CrossAssetModel
-    for (Size i = 0; i < nEqBs_; ++i) {
-        Currency eqCcy = eqbs(i)->currency();
+    for (Size i = 0; i < components(EQ); ++i) {
+        Currency eqCcy = eq(i)->currency();
         try {
             Size eqCcyIdx = ccyIndex(eqCcy);
-            QL_REQUIRE(eqCcyIdx < nIrLgm1f_, "Invalid currency for equity " << eqbs(i)->eqName());
+            QL_REQUIRE(eqCcyIdx < components_[IR], "Invalid currency for equity " << eqbs(i)->name());
         } catch (...) {
-            QL_FAIL("Invalid currency (" << eqCcy.code() << ") for equity " << eqbs(i)->eqName());
+            QL_FAIL("Invalid currency (" << eqCcy.code() << ") for equity " << eqbs(i)->name());
         }
     }
+
+    // Summary statistics
+
+    totalDimension_ = pIdxTmp;
+    totalNumberOfBrownians_ = cIdxTmp;
 
 } // initParametrizations
 
 void CrossAssetModel::initializeCorrelation() {
-    Size n = nIrLgm1f_ + nFxBs_ + nInfDk_ + nCrLgm1f_ + nEqBs_;
+    Size n = brownians();
     if (rho_.empty()) {
         rho_ = Matrix(n, n, 0.0);
         for (Size i = 0; i < n; ++i)
@@ -515,48 +452,14 @@ void CrossAssetModel::checkCorrelationMatrix() const {
 }
 
 void CrossAssetModel::initializeArguments() {
-
-    arguments_.resize(2 * nIrLgm1f_ + nFxBs_ + 2 * nInfDk_ + 2 * nCrLgm1f_ + nEqBs_);
-
-    // irlgm1f
-    for (Size i = 0; i < nIrLgm1f_; ++i) {
-        // volatility
-        arguments_[aIdx(IR, i, 0)] = irlgm1f(i)->parameter(0);
-        // reversion
-        arguments_[aIdx(IR, i, 1)] = irlgm1f(i)->parameter(1);
-    }
-
-    // fx bs
-    for (Size i = 0; i < nFxBs_; ++i) {
-        // volatility
-        arguments_[aIdx(FX, i, 0)] = fxbs(i)->parameter(0);
-    }
-
-    // inflation dk
-    for (Size i = 0; i < nInfDk_; ++i) {
-        // volatility
-        arguments_[aIdx(INF, i, 0)] = infdk(i)->parameter(0);
-        // reversion
-        arguments_[aIdx(INF, i, 1)] = infdk(i)->parameter(1);
-    }
-
-    // credit lgm1f
-    for (Size i = 0; i < nCrLgm1f_; ++i) {
-        // volatility
-        arguments_[aIdx(CR, i, 0)] = crlgm1f(i)->parameter(0);
-        // reversion
-        arguments_[aIdx(CR, i, 1)] = crlgm1f(i)->parameter(1);
-    }
-
-    // eq bs
-    for (Size i = 0; i < nEqBs_; ++i) {
-        // volatility
-        arguments_[aIdx(EQ, i, 0)] = eqbs(i)->parameter(0);
+    for (Size i = 0; i < p_.size(); ++i) {
+        for (Size k = 0; k < getNumberOfParameters(i); ++k) {
+            arguments_.push_back(p_[i]->parameter(k));
+        }
     }
 }
 
 void CrossAssetModel::finalizeArguments() {
-
     totalNumberOfParameters_ = 0;
     for (Size i = 0; i < arguments_.size(); ++i) {
         QL_REQUIRE(arguments_[i] != NULL, "unexpected error: argument " << i << " is null");
@@ -565,12 +468,13 @@ void CrossAssetModel::finalizeArguments() {
 }
 
 void CrossAssetModel::checkModelConsistency() const {
-    QL_REQUIRE(nIrLgm1f_ > 0, "at least one IR component must be given");
-    QL_REQUIRE(nIrLgm1f_ + nFxBs_ + nInfDk_ + nCrLgm1f_ + nEqBs_ == p_.size(),
+    QL_REQUIRE(components(IR) > 0, "at least one IR component must be given");
+    QL_REQUIRE(components(IR) + components(FX) + components(INF) + components(CR) + components(EQ) == p_.size(),
                "the parametrizations must be given in the following order: ir, "
                "fx, inf, cr, eq, found "
-                   << nIrLgm1f_ << " ir, " << nFxBs_ << " bs, " << nInfDk_ << " inf, " << nCrLgm1f_ << " cr, " << nEqBs_
-                   << " eq parametrizations, but there are " << p_.size() << " parametrizations given in total");
+                   << components(IR) << " ir, " << components(FX) << " bs, " << components(INF) << " inf, "
+                   << components(CR) << " cr, " << components(EQ) << " eq parametrizations, but there are " << p_.size()
+                   << " parametrizations given in total");
 }
 
 void CrossAssetModel::calibrateIrLgm1fVolatilitiesIterative(
@@ -745,7 +649,7 @@ Real CrossAssetModel::infdkYY(const Size i, const Time t, const Time S, const Ti
 
 std::pair<Real, Real> CrossAssetModel::crlgm1fS(const Size i, const Size ccy, const Time t, const Time T, const Real z,
                                                 const Real y) const {
-    QL_REQUIRE(ccy < nIrLgm1f_, "ccy index (" << ccy << ") must be in 0..." << (nIrLgm1f_ - 1));
+    QL_REQUIRE(ccy < components(IR), "ccy index (" << ccy << ") must be in 0..." << (components(IR) - 1));
     QL_REQUIRE(t < T || close_enough(t, T), "crlgm1fS: t (" << t << ") <= T (" << T << ") required");
     cache_key k = { i, ccy, t, T };
     boost::unordered_map<cache_key, std::pair<Real, Real> >::const_iterator it = cache_crlgm1fS_.find(k);

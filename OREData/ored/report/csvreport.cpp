@@ -39,7 +39,7 @@ public:
         }
     }
     void operator()(const Real d) const {
-        if (d == QuantLib::Null<Real>()) {
+        if (d == QuantLib::Null<Real>() || !std::isfinite(d)) {
             fprintNull();
         } else {
             Real r = rounding_(d);
@@ -75,6 +75,8 @@ CSVFileReport::CSVFileReport(const string& filename, const char sep, const bool 
 }
 
 CSVFileReport::~CSVFileReport() { end(); }
+
+void CSVFileReport::flush() { fflush(fp_); }
 
 Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size precision) {
     columnTypes_.push_back(rt);

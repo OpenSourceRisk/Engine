@@ -5,7 +5,7 @@ MAINTAINER Quaternion Risk Management
 LABEL Description="Build QuantLib and add to the Boost build environment"
 
 # Argument for number of cores to use while building
-ARG num_cores=2
+ARG num_cores
 
 # Exclusions are performed by .dockerignore
 COPY QuantLib /ore/QuantLib

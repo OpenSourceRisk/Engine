@@ -200,7 +200,6 @@
     </YieldCurve>
   </YieldCurves>
   <InflationCurves/>
-  <InflationCapFloorPriceSurfaces/>
   <InflationCapFloorVolatilities/>
   <EquityCurves/>
   <EquityVolatilities/>

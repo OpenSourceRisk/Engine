@@ -28,6 +28,10 @@
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/thailand.hpp>
 #include <qle/calendars/israel.hpp>
+#include <qle/calendars/austria.hpp>
+#include <qle/calendars/spain.hpp>
+#include <qle/calendars/luxembourg.hpp>
+#include <qle/calendars/belgium.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -284,6 +288,116 @@ BOOST_AUTO_TEST_CASE(testIsraelTelAviv) {
     BOOST_CHECK(c.isWeekend(Friday));
     BOOST_CHECK(c.isWeekend(Saturday));
     BOOST_CHECK(!c.isWeekend(Sunday));
+}
+
+BOOST_AUTO_TEST_CASE(testAustrianCalendar) {
+
+    BOOST_TEST_MESSAGE("Testing Austrian holiday list");
+
+    std::vector<Date> expectedHolidays;
+
+    expectedHolidays.push_back(Date(1, January, 2020));
+    expectedHolidays.push_back(Date(6, January, 2020));
+    expectedHolidays.push_back(Date(13, April, 2020));
+    expectedHolidays.push_back(Date(1, May, 2020));
+    expectedHolidays.push_back(Date(21, May, 2020));
+    expectedHolidays.push_back(Date(1, June, 2020));
+    expectedHolidays.push_back(Date(11, June, 2020));
+    //expectedHolidays.push_back(Date(15, August, 2020)); //Saturday
+    expectedHolidays.push_back(Date(26, October, 2020));
+    //expectedHolidays.push_back(Date(1, November, 2020)); //Sunday
+    expectedHolidays.push_back(Date(8, December, 2020));
+    expectedHolidays.push_back(Date(25, December, 2020));
+    //expectedHolidays.push_back(Date(26, December, 2020)); //Saturday
+
+    Calendar c = Austria();
+
+    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2020), Date(31, December, 2020));
+
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+
+    check::checkCalendars(expectedHolidays, hol);
+}
+
+BOOST_AUTO_TEST_CASE(testSpanishCalendar) {
+
+    BOOST_TEST_MESSAGE("Testing Spanish holiday list");
+
+    std::vector<Date> expectedHolidays;
+
+    expectedHolidays.push_back(Date(1, January, 2020));
+    expectedHolidays.push_back(Date(6, January, 2020));
+    expectedHolidays.push_back(Date(10, April, 2020));
+    expectedHolidays.push_back(Date(1, May, 2020));
+    //expectedHolidays.push_back(Date(15, August, 2020)); //Saturday
+    expectedHolidays.push_back(Date(12, October, 2020));
+    //expectedHolidays.push_back(Date(1, November, 2020)); //Sunday
+    //expectedHolidays.push_back(Date(6, December, 2020));  //Sunday
+    expectedHolidays.push_back(Date(8, December, 2020)); 
+    expectedHolidays.push_back(Date(25, December, 2020));
+
+    Calendar c = Spain();
+
+    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2020), Date(31, December, 2020));
+
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+
+    check::checkCalendars(expectedHolidays, hol);
+}
+
+BOOST_AUTO_TEST_CASE(testLuxembourgianCalendar) {
+
+    BOOST_TEST_MESSAGE("Testing Luxembourgian holiday list");
+
+    std::vector<Date> expectedHolidays;
+
+    expectedHolidays.push_back(Date(1, January, 2020));
+    expectedHolidays.push_back(Date(13, April, 2020));
+    expectedHolidays.push_back(Date(1, May, 2020));
+    //expectedHolidays.push_back(Date(9, May, 2020)); //Saturday
+    expectedHolidays.push_back(Date(21, May, 2020));
+    expectedHolidays.push_back(Date(1, June, 2020));
+    expectedHolidays.push_back(Date(23, June, 2020));
+    //expectedHolidays.push_back(Date(15, August, 2020)); //Saturday
+    //expectedHolidays.push_back(Date(1, November, 2020)); //Sunday
+    expectedHolidays.push_back(Date(25, December, 2020));
+    //expectedHolidays.push_back(Date(26, December, 2020)); //Saturday
+
+    Calendar c = Luxembourg();
+
+    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2020), Date(31, December, 2020));
+
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+
+    check::checkCalendars(expectedHolidays, hol);
+}
+
+BOOST_AUTO_TEST_CASE(testBelgianCalendar) {
+
+    BOOST_TEST_MESSAGE("Testing Belgian holiday list");
+
+    std::vector<Date> expectedHolidays;
+
+    expectedHolidays.push_back(Date(1, January, 2020));
+    //expectedHolidays.push_back(Date(12, April, 2020)); //Sunday
+    expectedHolidays.push_back(Date(13, April, 2020));
+    expectedHolidays.push_back(Date(1, May, 2020));
+    expectedHolidays.push_back(Date(21, May, 2020));
+    //expectedHolidays.push_back(Date(31, May, 2020)); //Sunday
+    expectedHolidays.push_back(Date(1, June, 2020));
+    expectedHolidays.push_back(Date(21, July, 2020));
+    //expectedHolidays.push_back(Date(15, August, 2020)); //Saturday
+    //expectedHolidays.push_back(Date(1, November, 2020)); //Sunday
+    expectedHolidays.push_back(Date(11, November, 2020));
+    expectedHolidays.push_back(Date(25, December, 2020));
+
+    Calendar c = Belgium();
+
+    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2020), Date(31, December, 2020));
+
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+
+    check::checkCalendars(expectedHolidays, hol);
 }
 
 

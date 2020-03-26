@@ -70,4 +70,11 @@ CNHCurrency::CNHCurrency() {
         new Data("Chinese yuan (Hong Kong)", "CNH", 156, "CNH", "", 100, Rounding(), "%3% %1$.2f"));
     data_ = cnhData;
 }
+
+// Sri Lankan rupee
+LKRCurrency::LKRCurrency() {
+    static boost::shared_ptr<Data> lkrData(
+        new Data("Sri Lankan rupee", "LKR", 144, "LKR", "", 100, Rounding(), "1$.2f %3%"));
+    data_ = lkrData;
+}
 } // namespace QuantExt

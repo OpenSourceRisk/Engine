@@ -36,7 +36,6 @@ scenario/shiftscenariogenerator.cpp
 scenario/simplescenario.cpp
 scenario/stressscenariodata.cpp
 scenario/stressscenariogenerator.cpp
-simulation/dategrid.cpp
 simulation/fixingmanager.cpp
 simulation/simmarket.cpp)
 
@@ -89,7 +88,6 @@ scenario/simplescenario.hpp
 scenario/simplescenariofactory.hpp
 scenario/stressscenariodata.hpp
 scenario/stressscenariogenerator.hpp
-simulation/dategrid.hpp
 simulation/fixingmanager.hpp
 simulation/simmarket.hpp
 version.hpp)

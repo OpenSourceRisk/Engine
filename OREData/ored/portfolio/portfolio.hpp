@@ -112,6 +112,7 @@ public:
 
     /*! Returns the names of the underlying instruments for each asset class */
     std::map<AssetClass, std::set<std::string>> underlyingIndices();
+    std::set<std::string> underlyingIndices(AssetClass assetClass);
 
 private:
     std::vector<boost::shared_ptr<Trade>> trades_;

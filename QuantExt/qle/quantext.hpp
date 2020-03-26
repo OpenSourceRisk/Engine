@@ -5,16 +5,20 @@
 #  include <qle/auto_link.hpp>
 #endif
 
+#include <qle/calendars/austria.hpp>
+#include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
 #include <qle/calendars/ice.hpp>
 #include <qle/calendars/israel.hpp>
+#include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
+#include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/thailand.hpp>
 #include <qle/calendars/wmr.hpp>
@@ -42,6 +46,7 @@
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
+#include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/bondindex.hpp>

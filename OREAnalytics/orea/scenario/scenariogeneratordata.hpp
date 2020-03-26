@@ -58,7 +58,7 @@ public:
 
     //! Constructor
     ScenarioGeneratorData(CrossAssetStateProcess::discretization discretization,
-                          boost::shared_ptr<ore::analytics::DateGrid> dateGrid, SequenceType sequenceType, long seed,
+                          boost::shared_ptr<DateGrid> dateGrid, SequenceType sequenceType, long seed,
                           Size samples, SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                           SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7)
         : discretization_(discretization), grid_(dateGrid), sequenceType_(sequenceType), seed_(seed), samples_(samples),
@@ -75,7 +75,7 @@ public:
     //! \name Inspectors
     //@{
     CrossAssetStateProcess::discretization discretization() const { return discretization_; }
-    boost::shared_ptr<ore::analytics::DateGrid> grid() const { return grid_; }
+    boost::shared_ptr<DateGrid> grid() const { return grid_; }
     SequenceType sequenceType() const { return sequenceType_; }
     long seed() const { return seed_; }
     Size samples() const { return samples_; }
@@ -86,7 +86,7 @@ public:
     //! \name Setters
     //@{
     CrossAssetStateProcess::discretization& discretization() { return discretization_; }
-    boost::shared_ptr<ore::analytics::DateGrid>& grid() { return grid_; }
+    boost::shared_ptr<DateGrid>& grid() { return grid_; }
     SequenceType& sequenceType() { return sequenceType_; }
     long& seed() { return seed_; }
     Size& samples() { return samples_; }
@@ -95,7 +95,7 @@ public:
     //@}
 private:
     CrossAssetStateProcess::discretization discretization_;
-    boost::shared_ptr<ore::analytics::DateGrid> grid_;
+    boost::shared_ptr<DateGrid> grid_;
     SequenceType sequenceType_;
     long seed_;
     Size samples_;
