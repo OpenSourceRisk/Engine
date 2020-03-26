@@ -116,7 +116,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
 
         boost::shared_ptr<SwaptionVolatilityStructure> atm;
 
-        if (quotesRead != 1) {
+        QL_REQUIRE(quotesRead > 0, "GenericYieldVolCurve: did not read any quotes, are option and swap tenors defined?");
+        if (quotesRead > 1) {
             atm = boost::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
                 asof, config->calendar(), config->businessDayConvention(), optionTenors,
                 underlyingTenors, vols, config->dayCounter(), config->flatExtrapolation(),

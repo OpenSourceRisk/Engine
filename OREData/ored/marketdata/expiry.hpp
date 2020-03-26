@@ -28,6 +28,8 @@
 #include <boost/shared_ptr.hpp>
 #include <string>
 
+#include <boost/serialization/base_object.hpp>
+
 namespace ore {
 namespace data {
 
@@ -49,6 +51,11 @@ public:
 protected:
     //! Override in derived classes to compare specific expiries.
     virtual bool equal_to(const Expiry& other) const = 0;
+
+private:
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) {}
 };
 
 /*! Expiry consisting of an explicit expiry date
@@ -79,6 +86,12 @@ protected:
 
 private:
     QuantLib::Date expiryDate_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<Expiry>(*this);
+        ar& expiryDate_;
+    }
 };
 
 /*! Expiry consisting of a period
@@ -109,6 +122,12 @@ protected:
 
 private:
     QuantLib::Period expiryPeriod_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<Expiry>(*this);
+        ar& expiryPeriod_;
+    }
 };
 
 /*! Expiry represented by a future continuation index
@@ -136,6 +155,12 @@ protected:
 
 private:
     QuantLib::Natural expiryIndex_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<Expiry>(*this);
+        ar& expiryIndex_;
+    }
 };
 
 //! Write \p strike to stream.
