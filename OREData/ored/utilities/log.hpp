@@ -272,6 +272,9 @@ public:
     void switchOn() { enabled_ = true; }
     void switchOff() { enabled_ = false; }
 
+    //! if a PID is set for the logger, messages are tagged with [1234] if pid = 1234
+    void setPid(const int pid) { pid_ = pid; }
+
 private:
     Log();
 
@@ -279,6 +282,8 @@ private:
     bool enabled_;
     unsigned mask_;
     std::ostringstream ls_;
+
+    int pid_ = 0;
 };
 
 /*!
