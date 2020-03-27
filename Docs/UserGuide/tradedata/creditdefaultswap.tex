@@ -9,9 +9,9 @@ A credit default swap, trade type \lstinline!CreditDefaultSwap!, is set up using
 \item SettlesAccrual [Optional]: Whether or not the accrued coupon is due in the event of a default. This defaults to \lstinline!true! if not provided.
 \item ProtectionPaymentTime [Optional]: Controls the payment time of protection and premium accrual payments in case of
   a default event. Defaults to \lstinline!atDefault!. Allowable values: \lstinline!atDefault!, \lstinline!atPeriodEnd!,
-  \lstinline!atMaturity!. Overrides {\\t PaysAtDefaultTime}
+  \lstinline!atMaturity!. Overrides the \lstinline!PaysAtDefaultTime! node
 \item PaysAtDefaultTime [Deprecated]: \lstinline!true! is equivalent to ProtectionPaymentTime = atDefault,
-  \lstinline!false! to ProtectionPaymentTime = atPeriodEnd. Overridden by {\\t ProtectionPaymentTime} if set
+  \lstinline!false! to ProtectionPaymentTime = atPeriodEnd. Overridden by the \lstinline!ProtectionPaymentTime! node if set
 \item ProtectionStart [Optional]: The first date where a default event will trigger the contract. This defaults to the first date in the schedule if it is not provided. Must be set to a date before or on the first date in the schedule.
 \item UpfrontDate [Optional]: Settlement date for the UpfrontFee if an UpfrontFee is provided. If an UpfrontFee is provided and it is non-zero, UpfrontDate is required. The UpfrontDate, if provided, must be on or after the ProtectionStart date.
 \item UpfrontFee [Optional]: The upfront payment, expressed as a rate, to be multiplied by notional amount. If an UpfrontDate is provided, an UpfrontFee must also be provided. The UpfrontFee cannot be left blank.
