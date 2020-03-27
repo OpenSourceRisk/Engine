@@ -80,15 +80,9 @@ std::ostream& operator<<(std::ostream& out, const MarketObject& o);
 class MarketConfiguration {
 public:
     MarketConfiguration();
-    string operator()(const MarketObject o) const {
-        QL_REQUIRE(marketObjectIds_.find(o) != marketObjectIds_.end(),
-                   "MarketConfiguration: did not find MarketObject " << o << " (this is unexpected)");
-        return marketObjectIds_.at(o);
-    }
-    void setId(const MarketObject o, const string& id) {
-        if (id != "")
-            marketObjectIds_[o] = id;
-    }
+    string operator()(const MarketObject o) const;
+    void setId(const MarketObject o, const string& id);
+    void add(const MarketConfiguration& o);
 
 private:
     map<MarketObject, string> marketObjectIds_;
@@ -124,6 +118,9 @@ public:
     //! Individual term structure ids for a given configuration
     string marketObjectId(const MarketObject o, const string& configuration) const;
     //@}
+
+    //! Clear the contents
+    void clear();
 
     //! \name Setters
     //@{
@@ -179,10 +176,6 @@ inline const map<string, string>& TodaysMarketParameters::mapping(const MarketOb
     }
     QL_FAIL("market object of type " << o << " with id " << marketObjectId(o, configuration)
                                      << " specified in configuration " << configuration << " not found");
-}
-
-inline void TodaysMarketParameters::addConfiguration(const string& id, const MarketConfiguration& configuration) {
-    configurations_[id] = configuration;
 }
 
 } // namespace data
