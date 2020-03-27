@@ -19,7 +19,9 @@
 #include <ored/marketdata/strike.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+
 #include <boost/algorithm/string.hpp>
+#include <boost/serialization/export.hpp>
 
 using namespace QuantLib;
 using std::ostream;
@@ -309,3 +311,8 @@ boost::shared_ptr<BaseStrike> parseBaseStrike(const string& strStrike) {
 
 }
 }
+
+BOOST_CLASS_EXPORT_GUID(ore::data::AbsoluteStrike, "AbsoluteStrike");
+BOOST_CLASS_EXPORT_GUID(ore::data::DeltaStrike, "DeltaStrike");
+BOOST_CLASS_EXPORT_GUID(ore::data::AtmStrike, "AtmStrike");
+BOOST_CLASS_EXPORT_GUID(ore::data::MoneynessStrike, "MoneynessStrike");

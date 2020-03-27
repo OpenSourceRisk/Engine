@@ -153,6 +153,10 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
     }
 
     ls_ << " : ";
+
+    // log pid if given
+    if(pid_ > 0)
+        ls_ << " [" << pid_ << "] ";
 }
 
 void Log::log(unsigned m) {

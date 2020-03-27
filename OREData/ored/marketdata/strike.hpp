@@ -26,7 +26,10 @@
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/option.hpp>
 #include <ql/types.hpp>
+
 #include <boost/optional.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/optional.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace ore {
@@ -51,6 +54,11 @@ public:
 protected:
     //! Override in derived classes to compare specific Strikes.
     virtual bool equal_to(const BaseStrike& other) const = 0;
+
+private:
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) {}
 };
 
 /*! Strike implementation where the strike is described by a single number that represents the absolute strike level.
@@ -81,6 +89,12 @@ protected:
 
 private:
     QuantLib::Real strike_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<BaseStrike>(*this);
+        ar& strike_;
+    }
 };
 
 /*! Strike implementation where the strike is described by a delta type, an option type and a delta level.
@@ -126,6 +140,14 @@ private:
     QuantLib::DeltaVolQuote::DeltaType deltaType_;
     QuantLib::Option::Type optionType_;
     QuantLib::Real delta_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<BaseStrike>(*this);
+        ar& deltaType_;
+        ar& optionType_;
+        ar& delta_;
+    }
 };
 
 /*! Strike implementation for an at-the-money strike of various types.
@@ -179,6 +201,14 @@ private:
 
     //! Perform validation
     void check() const;
+
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<BaseStrike>(*this);
+        ar& atmType_;
+        ar& deltaType_;
+    }
 };
 
 /*! Strike implementation where the strike is described by a moneyness type and a moneyness level.
@@ -229,6 +259,14 @@ protected:
 private:
     Type type_;
     QuantLib::Real moneyness_;
+
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<BaseStrike>(*this);
+        ar& type_;
+        ar& moneyness_;
+    }
 };
 
 //! Write \p strike to stream.

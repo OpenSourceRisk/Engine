@@ -215,6 +215,20 @@ string stays constant for all currency pairs. For the USD-EUR pair, ECB is used
 
 \begin{table}[H]
 \centering
+  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+    \hline
+    \multicolumn{2}{|l|}{\tt Inflation CPI Index} \\ \hline
+    \bfseries{Trade Data} & \bfseries{Allowable Values} \\
+    \hline
+    \lstinline!Index! for CPI leg & Any string (provided it is the ID of an inflation index in the market configuration) \\
+    \hline
+  \end{tabu}
+  \caption{Allowable values for CPI index.}
+  \label{tab:cpiindex_data}
+\end{table}
+
+\begin{table}[H]
+\centering
   \begin{tabu} to 1.0\linewidth {| X[-1.65,l,m] | X[-5.7,l,m] |}
     \hline
     \multicolumn{2}{|l|}{\tt Equity and Credit Name} \\ \hline
