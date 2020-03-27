@@ -182,6 +182,8 @@
     <ClInclude Include="ored\utilities\parsers.hpp" />
     <ClInclude Include="ored\utilities\progressbar.hpp" />
     <ClInclude Include="ored\utilities\serializationdate.hpp" />
+    <ClInclude Include="ored\utilities\serializationdaycounter.hpp" />
+    <ClInclude Include="ored\utilities\serializationperiod.hpp" />
     <ClInclude Include="ored\utilities\strike.hpp" />
     <ClInclude Include="ored\utilities\timeperiod.hpp" />
     <ClInclude Include="ored\utilities\to_string.hpp" />
