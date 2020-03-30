@@ -43,7 +43,9 @@ public:
         const Schedule& schedule, const BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
         const Handle<DefaultProbabilityTermStructure>& probability, const Real recoveryRate,
         const Handle<YieldTermStructure>& termStructure, const Rate spread = Null<Rate>(),
-        const Rate upfront = Null<Rate>(), const bool settlesAccrual = true, const bool paysAtDefaultTime = true,
+        const Rate upfront = Null<Rate>(), const bool settlesAccrual = true,
+        const CreditDefaultSwap::ProtectionPaymentTime proteectionPaymentTime =
+            CreditDefaultSwap::ProtectionPaymentTime::atDefault,
         const Date protectionStart = Date(), const Date upfrontDate = Date(),
         const boost::shared_ptr<Claim>& claim = boost::shared_ptr<Claim>(),
         const BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);

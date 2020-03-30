@@ -35,7 +35,8 @@ AnalyticLgmCdsOptionEngine::AnalyticLgmCdsOptionEngine(const boost::shared_ptr<C
 
 void AnalyticLgmCdsOptionEngine::calculate() const {
 
-    QL_REQUIRE(arguments_.swap->paysAtDefaultTime(), "AnalyticLgmCdsOptionEngine: pays at default time must be true");
+    QL_REQUIRE(arguments_.swap->protectionPaymentTime() == CreditDefaultSwap::ProtectionPaymentTime::atDefault,
+               "AnalyticLgmCdsOptionEngine: protection payment time must be atDefault");
 
     Real w = (arguments_.side == Protection::Buyer) ? -1.0 : 1.0;
     Rate swapSpread = arguments_.swap->runningSpread();
