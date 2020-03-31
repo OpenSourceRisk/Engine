@@ -33,18 +33,22 @@ public:
     //! Deault constructor
     EquityIdentifier() {}
 
-    //! Constructor with vector of LegData
+    //! Constructor with equity name
     EquityIdentifier(const std::string& equityName) : equityName_(equityName) {};
 
-    //! Constructor with two legs
+    //! Constructor with identifer infomation
     EquityIdentifier(const std::string& identifierType, const std::string& identifierName, const std::string& currency,
         const std::string& exchange) : identifierType_(identifierType), identifierName_(identifierName),
-        currency_(currency), exchange_(exchange) {};
+        currency_(currency), exchange_(exchange) {
+        setEquityName();
+    };
 
-    std::string equityName();
+    const std::string& equityName() const { return equityName_; };
     const std::string& currency() const { return currency_; };
     const std::string& exchange() const { return exchange_; };
 
+    //! set name of equity
+    void setEquityName();
 
     //! \name Serialisation
     //@{

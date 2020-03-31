@@ -40,15 +40,26 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     QuantLib::Position::Type longShort = parsePositionType(longShort_);
     Date maturity = parseDate(maturityDate_);
 
+    string name = eqName();
+    // Look up reference data, if the equity name exists in reference data, use the equityId
+    // if not continue with the current name
+    if (engineFactory->referenceData() != nullptr && engineFactory->referenceData()->hasData("Equity", name)) {
+        auto refData = engineFactory->referenceData()->getData("Equity", name);
+        // Check it's equity reference data
+        if (auto erd = boost::dynamic_pointer_cast<EquityReferenceDatum>(refData)) {
+            name = erd->equityData().equityId;
+        }
+    }
+
     boost::shared_ptr<Instrument> inst =
-        boost::make_shared<QuantExt::EquityForward>(eqName_, ccy, longShort, quantity_, maturity, strike_);
+        boost::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, strike_);
 
     // Pricing engine
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
     boost::shared_ptr<EquityForwardEngineBuilder> eqFwdBuilder =
         boost::dynamic_pointer_cast<EquityForwardEngineBuilder>(builder);
-    inst->setPricingEngine(eqFwdBuilder->engine(eqName_, ccy));
+    inst->setPricingEngine(eqFwdBuilder->engine(name, ccy));
 
     // set up other Trade details
     instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst));
@@ -66,7 +77,7 @@ void EquityForward::fromXML(XMLNode* node) {
 
     longShort_ = XMLUtils::getChildValue(eNode, "LongShort", true);
     maturityDate_ = XMLUtils::getChildValue(eNode, "Maturity", true);
-    eqName_ = XMLUtils::getChildValue(eNode, "Name", true);
+    equityIdentifier_.fromXML(node);
     currency_ = XMLUtils::getChildValue(eNode, "Currency", true);
     strike_ = XMLUtils::getChildValueAsDouble(eNode, "Strike", true);
     quantity_ = XMLUtils::getChildValueAsDouble(eNode, "Quantity", true);
@@ -79,7 +90,7 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, eNode, "LongShort", longShort_);
     XMLUtils::addChild(doc, eNode, "Maturity", maturityDate_);
-    XMLUtils::addChild(doc, eNode, "Name", eqName_);
+    XMLUtils::appendNode(node, equityIdentifier_.toXML(doc));
     XMLUtils::addChild(doc, eNode, "Currency", currency_);
     XMLUtils::addChild(doc, eNode, "Strike", strike_);
     XMLUtils::addChild(doc, eNode, "Quantity", quantity_);
@@ -87,7 +98,7 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
 }
 
 std::map<AssetClass, std::set<std::string>> EquityForward::underlyingIndices() const {
-    return { {AssetClass::EQ, std::set<std::string>({eqName_})} };
+    return { {AssetClass::EQ, std::set<std::string>({ eqName() })} };
 }
 
 } // namespace data

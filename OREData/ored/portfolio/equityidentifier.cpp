@@ -21,10 +21,8 @@
 namespace ore {
 namespace data {
     
-string EquityIdentifier::equityName() {
-    if (!equityName_.empty()) {
-        return equityName_;
-    } else {
+void EquityIdentifier::setEquityName() {
+    if (equityName_.empty()) {
         string name = identifierType_ + ":" + identifierName_;
         if (!currency_.empty())
             name = name + ":" + currency_;
@@ -33,7 +31,7 @@ string EquityIdentifier::equityName() {
                 name = name + ":";
             name = name + ":" + exchange_;
         }
-        return name;
+        equityName_ = name;
     }
 }
 
@@ -50,6 +48,7 @@ void EquityIdentifier::fromXML(XMLNode* node) {
         currency_ = XMLUtils::getChildValue(tmp, "Currency", false);
         exchange_ = XMLUtils::getChildValue(tmp, "Exchange", false);
     }
+    setEquityName();
 }
 
 XMLNode* EquityIdentifier::toXML(XMLDocument& doc) {
