@@ -260,7 +260,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    FutureConvention() {}
+    FutureConvention() : conventions_(nullptr) {}
     //! Constructor taking conventions only
     explicit FutureConvention(const Conventions* conventions) : conventions_(conventions) {}
     //! Index based constructor
@@ -293,7 +293,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    FraConvention() {}
+    FraConvention() : conventions_(nullptr) {}
     //! Constructor taking conventions only
     explicit FraConvention(const Conventions* conventions) : conventions_(conventions) {}
     //! Index based constructor
@@ -328,7 +328,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    OisConvention() {}
+    OisConvention() : conventions_(nullptr) {}
     //! Constructor taking conventions only
     explicit OisConvention(const Conventions* conventions) : conventions_(conventions) {}
     //! Detailed constructor
@@ -470,7 +470,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    IRSwapConvention() {}
+    IRSwapConvention() : conventions_(nullptr) {}
     //! Constructor taking conventions only
     explicit IRSwapConvention(const Conventions* conventions) : conventions_(conventions) {}
     //! Detailed constructor
@@ -532,7 +532,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    AverageOisConvention() {}
+    AverageOisConvention() : conventions_(nullptr) {}
     //! Constructor taking conventions only
     explicit AverageOisConvention(const Conventions* conventions) : conventions_(conventions) {}
     //! Detailed constructor
@@ -596,7 +596,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    TenorBasisSwapConvention() {}
+    TenorBasisSwapConvention() : conventions_(nullptr) {}
     //! Constructor taking conventions only
     explicit TenorBasisSwapConvention(const Conventions* conventions) : conventions_(conventions) {}
     //! Detailed constructor
@@ -653,7 +653,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    TenorBasisTwoSwapConvention() {}
+    TenorBasisTwoSwapConvention() : conventions_(nullptr) {}
     //! Constructor taking conventions only
     explicit TenorBasisTwoSwapConvention(const Conventions* conventions) : conventions_(conventions) {}
     //! Detailed constructor
@@ -722,7 +722,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    BMABasisSwapConvention() {}
+    BMABasisSwapConvention() : conventions_(nullptr) {}
     //! Constructor taking conventions only
     explicit BMABasisSwapConvention(const Conventions* conventions) : conventions_(conventions) {}
     //! Detailed constructor
@@ -814,7 +814,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CrossCcyBasisSwapConvention() {}
+    CrossCcyBasisSwapConvention() : conventions_(nullptr) {}
     //! Constructor taking conventions only
     explicit CrossCcyBasisSwapConvention(const Conventions* conventions) : conventions_(conventions) {}
     //! Detailed constructor
@@ -883,7 +883,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CrossCcyFixFloatSwapConvention() {}
+    CrossCcyFixFloatSwapConvention() : conventions_(nullptr) {}
     //! Constructor taking conventions only
     explicit CrossCcyFixFloatSwapConvention(const Conventions* conventions)
         : conventions_(conventions) {}
