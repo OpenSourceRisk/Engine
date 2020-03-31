@@ -16,12 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/equityswap.hpp
-    \brief Equity Swap data model and serialization
+/*! \file portfolio/referencedata.hpp
+    \brief Reference data model and serialization
     \ingroup tradedata
 */
 
+#include <ored/portfolio/referencedatafactory.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ql/patterns/singleton.hpp>
+#include <ql/time/date.hpp>
 
 #pragma once
 
@@ -37,12 +40,19 @@ namespace data {
     */
 class ReferenceDatum : public XMLSerializable {
 public:
+    //! DEfault Constructor
+    ReferenceDatum() {}
     //! Base class constructor
     ReferenceDatum(const std::string& type, const std::string& id) : type_(type), id_(id) {}
 
+    //! setters
+    void setType(const string& type) { type_ = type; }
+    void setId(const string& id) { id_ = id; }
+
+    //! getters
     const std::string& type() const { return type_; }
     const std::string& id() const { return id_; }
-
+    
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) override;
 
@@ -51,6 +61,38 @@ private:
     std::string id_;
 };
 
+class EquityReferenceDatum : public ReferenceDatum {
+public:
+    static constexpr const char* TYPE = "Equity";
+
+    struct EquityData {
+        std::string equityId;
+        std::string equityName;
+        std::string currency;
+        QuantLib::Size scalingFactor;
+        std::string preferredISIN;
+        std::string exchangeCode;
+        bool isIndex;
+        QuantLib::Date equityStartDate;
+        std::string proxyIdentifier;
+    };
+
+    EquityReferenceDatum() {}
+
+    EquityReferenceDatum(const string& id) : ReferenceDatum(TYPE, id) {}
+
+    EquityReferenceDatum(const string& id, const EquityData& equityData) : ReferenceDatum(TYPE, id), equityData_(equityData) {}
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+    const EquityData& equityData() const { return equityData_; }
+    void setEquityData(const EquityData& equityData) { equityData_ = equityData; }
+
+private:
+    EquityData equityData_;
+    static ReferenceDatumRegister<ReferenceDatumBuilder<EquityReferenceDatum>> reg_;
+};
 
 //! Interface for Reference Data lookups
 /*! The ReferenceDataManager is a repository of ReferenceDatum objects.
@@ -85,6 +127,8 @@ public:
     // Load extra data and append to this manger
     void appendData(const string& filename) { fromFile(filename); }
 
+    boost::shared_ptr<ReferenceDatum> buildReferenceDatum(const string& refDataType);
+
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) override;
 
@@ -97,6 +141,7 @@ public:
 private:
     map<pair<string, string>, boost::shared_ptr<ReferenceDatum>> data_;
 };
+
 
 
 } // namespace data

@@ -25,7 +25,15 @@ string EquityIdentifier::equityName() {
     if (!equityName_.empty()) {
         return equityName_;
     } else {
-        return identifierType_ + ":" + identifierName_ + ":" + currency_ + ":" + exchange_;
+        string name = identifierType_ + ":" + identifierName_;
+        if (!currency_.empty())
+            name = name + ":" + currency_;
+        if (!exchange_.empty()) {
+            if (currency_.empty())
+                name = name + ":";
+            name = name + ":" + exchange_;
+        }
+        return name;
     }
 }
 
