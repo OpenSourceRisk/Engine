@@ -76,11 +76,34 @@ MarketConfiguration::MarketConfiguration() {
     }
 }
 
-void TodaysMarketParameters::fromXML(XMLNode* node) {
+string MarketConfiguration::operator()(const MarketObject o) const {
+    QL_REQUIRE(marketObjectIds_.find(o) != marketObjectIds_.end(),
+               "MarketConfiguration: did not find MarketObject " << o << " (this is unexpected)");
+    return marketObjectIds_.at(o);
+}
 
+void MarketConfiguration::setId(const MarketObject o, const string& id) {
+    if (id != "")
+        marketObjectIds_[o] = id;
+}
+
+void MarketConfiguration::add(const MarketConfiguration& o) {
+    // overwrite if already existent
+    for (auto const& x : o.marketObjectIds_)
+        marketObjectIds_[x.first] = x.second;
+}
+
+void TodaysMarketParameters::addConfiguration(const string& id, const MarketConfiguration& configuration) {
+    configurations_[id].add(configuration);
+}
+
+void TodaysMarketParameters::clear() {
     // clear data members
     configurations_.clear();
     marketObjects_.clear();
+}
+
+void TodaysMarketParameters::fromXML(XMLNode* node) {
 
     // add default configuration (may be overwritten below)
     MarketConfiguration defaultConfig;
