@@ -184,8 +184,12 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             if (it.second == spec->name()) {
                                 LOG("Adding Index(" << it.first << ") with spec " << *ycspec << " to configuration "
                                                     << configuration.first);
-                                iborIndices_[make_pair(configuration.first, it.first)] =
-                                    Handle<IborIndex>(parseIborIndex(it.first, itr->second->handle()));
+                                iborIndices_[make_pair(configuration.first, it.first)] = Handle<IborIndex>(
+                                    parseIborIndex(it.first, itr->second->handle(),
+                                                   conventions.has(it.first, Convention::Type::IborIndex) ||
+                                                           conventions.has(it.first, Convention::Type::OvernightIndex)
+                                                       ? conventions.get(it.first)
+                                                       : nullptr));
                             }
                         }
                     }

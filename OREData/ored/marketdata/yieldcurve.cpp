@@ -779,9 +779,12 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
                 // EUR-EONIA, USD-FedFunds, EUR-EURIBOR, USD-LIBOR, etc.
                 string indexName = depositConvention->index();
                 boost::shared_ptr<IborIndex> index;
-                if (isOvernightIndex(indexName)) {
+                if (isOvernightIndex(indexName, conventions_)) {
                     // No need for the term here
-                    index = parseIborIndex(indexName);
+                    index = parseIborIndex(indexName, Handle<YieldTermStructure>(),
+                                           conventions_.has(indexName, Convention::Type::OvernightIndex)
+                                               ? conventions_.get(indexName)
+                                               : nullptr);
                 } else {
                     // Note that a depositTerm with units Days here could end up as a string with another unit
                     // For example:
@@ -791,7 +794,10 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
                     stringstream ss;
                     ss << indexName << "-" << io::short_period(depositTerm);
                     indexName = ss.str();
-                    index = parseIborIndex(indexName);
+                    index = parseIborIndex(indexName, Handle<YieldTermStructure>(),
+                                           conventions_.has(indexName, Convention::Type::IborIndex)
+                                               ? conventions_.get(indexName)
+                                               : nullptr);
                 }
                 depositHelper = boost::make_shared<DepositRateHelper>(hQuote, index);
             } else {
