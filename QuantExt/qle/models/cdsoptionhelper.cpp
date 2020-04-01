@@ -34,7 +34,7 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
                                  const DayCounter& dayCounter,
                                  const Handle<DefaultProbabilityTermStructure>& probability, const Real recoveryRate,
                                  const Handle<YieldTermStructure>& termStructure, const Rate spread, const Rate upfront,
-                                 const bool settlesAccrual, const bool paysAtDefaultTime, const Date protectionStart,
+                                 const bool settlesAccrual, const CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime, const Date protectionStart,
                                  const Date upfrontDate, const boost::shared_ptr<Claim>& claim,
                                  const BlackCalibrationHelper::CalibrationErrorType errorType)
     : BlackCalibrationHelper(volatility, termStructure, errorType), blackVol_(boost::make_shared<SimpleQuote>(0.0)) {
@@ -44,24 +44,24 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
 
     boost::shared_ptr<CreditDefaultSwap> tmp;
     if (upfront == Null<Real>())
-        tmp = boost::shared_ptr<CreditDefaultSwap>(new CreditDefaultSwap(side, 1.0, 0.02, schedule, paymentConvention,
-                                                                         dayCounter, settlesAccrual, paysAtDefaultTime,
-                                                                         protectionStart, claim));
+        tmp = boost::shared_ptr<CreditDefaultSwap>(
+            new CreditDefaultSwap(side, 1.0, 0.02, schedule, paymentConvention, dayCounter, settlesAccrual,
+                                  protectionPaymentTime, protectionStart, claim));
     else
         tmp = boost::shared_ptr<CreditDefaultSwap>(
             new CreditDefaultSwap(side, 1.0, upfront, 0.02, schedule, paymentConvention, dayCounter, settlesAccrual,
-                                  paysAtDefaultTime, protectionStart, upfrontDate, claim));
+                                  protectionPaymentTime, protectionStart, upfrontDate, claim));
     tmp->setPricingEngine(cdsEngine);
 
     Real strike = spread == Null<Real>() ? tmp->fairSpread() : spread;
     if (upfront == Null<Real>())
-        cds_ = boost::shared_ptr<CreditDefaultSwap>(new CreditDefaultSwap(side, 1.0, strike, schedule,
-                                                                          paymentConvention, dayCounter, settlesAccrual,
-                                                                          paysAtDefaultTime, protectionStart, claim));
+        cds_ = boost::shared_ptr<CreditDefaultSwap>(
+            new CreditDefaultSwap(side, 1.0, strike, schedule, paymentConvention, dayCounter, settlesAccrual,
+                                  protectionPaymentTime, protectionStart, claim));
     else
         cds_ = boost::shared_ptr<CreditDefaultSwap>(
             new CreditDefaultSwap(side, 1.0, upfront, strike, schedule, paymentConvention, dayCounter, settlesAccrual,
-                                  paysAtDefaultTime, protectionStart, upfrontDate, claim));
+                                  protectionPaymentTime, protectionStart, upfrontDate, claim));
 
     cds_->setPricingEngine(cdsEngine);
 

@@ -47,6 +47,7 @@ public:
     Report& next() override;
     Report& add(const ReportType& rt) override;
     void end() override;
+    void flush() override;
 
 private:
     std::vector<ReportType> columnTypes_;

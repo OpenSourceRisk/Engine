@@ -104,7 +104,8 @@ struct CommonVars {
         boost::shared_ptr<FixedLegData> fixedLegRateData = boost::make_shared<FixedLegData>(vector<double>(1, rate));
         LegData fixedLegData(fixedLegRateData, isPayer, ccy, fixedSchedule, fixDC, notionals);
 
-        CreditDefaultSwapData cd(issuerId, creditCurveId, fixedLegData, false, true);
+        CreditDefaultSwapData cd(issuerId, creditCurveId, fixedLegData, false,
+                                 QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault);
         Envelope env("CP1");
 
         boost::shared_ptr<ore::data::CreditDefaultSwap> cds(new ore::data::CreditDefaultSwap(env, cd));

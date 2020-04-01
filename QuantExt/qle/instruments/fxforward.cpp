@@ -87,8 +87,8 @@ void FxForward::fetchResults(const PricingEngine::results* r) const {
 }
 
 void FxForward::arguments::validate() const {
-    QL_REQUIRE(nominal1 > 0.0, "nominal1  should be positive: " << nominal1);
-    QL_REQUIRE(nominal2 > 0.0, "nominal2 should be positive: " << nominal2);
+    QL_REQUIRE(nominal1 >= 0.0, "nominal1 should be non-negative: " << nominal1);
+    QL_REQUIRE(nominal2 >= 0.0, "nominal2 should be non-negative: " << nominal2);
 }
 
 void FxForward::results::reset() {

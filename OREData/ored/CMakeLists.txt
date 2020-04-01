@@ -271,6 +271,8 @@ utilities/osutils.hpp
 utilities/parsers.hpp
 utilities/progressbar.hpp
 utilities/serializationdate.hpp
+utilities/serializationdaycounter.hpp
+utilities/serializationperiod.hpp
 utilities/strike.hpp
 utilities/timeperiod.hpp
 utilities/to_string.hpp
