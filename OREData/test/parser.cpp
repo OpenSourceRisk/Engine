@@ -24,8 +24,19 @@
 #include <oret/toplevelfixture.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/time/daycounters/all.hpp>
+#include <qle/calendars/chile.hpp>
+#include <qle/calendars/colombia.hpp>
+#include <qle/calendars/france.hpp>
+#include <qle/calendars/malaysia.hpp>
+#include <qle/calendars/netherlands.hpp>
+#include <qle/calendars/peru.hpp>
+#include <qle/calendars/philippines.hpp>
+#include <qle/calendars/thailand.hpp>
+#include <qle/calendars/israel.hpp>
+#include <qle/calendars/largejointcalendar.hpp>
 
 using namespace QuantLib;
+using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
 
@@ -118,6 +129,14 @@ void checkStrikeParser(const std::string& s, const ore::data::Strike::Type expec
         BOOST_FAIL("unexpected strike value parsed from input string " << s);
     }
     return;
+}
+
+void checkCalendars(const std::set<Date>& expectedHolidays, const std::vector<Date>& testHolidays) {
+    
+    for (auto eh : expectedHolidays) {
+        if (std::find(testHolidays.begin(), testHolidays.end(), eh) == testHolidays.end())
+            BOOST_FAIL("expected holiday was " << eh << " not found ");
+    }
 }
 
 } // namespace
@@ -563,6 +582,182 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE(testJointCalendar) {
+    
+    std::vector<Calendar> cals;
+    std::set<Date> expectedHolidays;
+    // add peruvian holidays    
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(29, March, 2018));
+    expectedHolidays.insert(Date(30, March, 2018));
+    expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(29, June, 2018));
+    expectedHolidays.insert(Date(27, July, 2018));
+    expectedHolidays.insert(Date(30, August, 2018));
+    expectedHolidays.insert(Date(31, August, 2018));
+    expectedHolidays.insert(Date(8, October, 2018));
+    expectedHolidays.insert(Date(1, November, 2018));
+    expectedHolidays.insert(Date(2, November, 2018));
+    expectedHolidays.insert(Date(25, December, 2018));
+
+    Calendar peru = QuantExt::Peru();
+
+    cals.push_back(peru);
+    Calendar joint1 = QuantExt::LargeJointCalendar(cals);
+
+    std::vector<Date> hol = Calendar::holidayList(joint1, Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+
+    checkCalendars(expectedHolidays, hol);    
+
+    // add columbian holidays
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(8, January, 2018));
+    expectedHolidays.insert(Date(19, March, 2018));
+    expectedHolidays.insert(Date(29, March, 2018));
+    expectedHolidays.insert(Date(30, March, 2018));
+    expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(14, May, 2018));
+    expectedHolidays.insert(Date(4, June, 2018));
+    expectedHolidays.insert(Date(11, June, 2018));
+    expectedHolidays.insert(Date(2, July, 2018));
+    expectedHolidays.insert(Date(20, July, 2018));
+    expectedHolidays.insert(Date(7, August, 2018));
+    expectedHolidays.insert(Date(20, August, 2018));
+    expectedHolidays.insert(Date(15, October, 2018));
+    expectedHolidays.insert(Date(5, November, 2018));
+    expectedHolidays.insert(Date(12, November, 2018));
+    expectedHolidays.insert(Date(25, December, 2018));
+
+    Calendar col = Colombia();
+    cals.push_back(col);
+    Calendar joint2 = QuantExt::LargeJointCalendar(cals);
+
+    hol = Calendar::holidayList(joint2, Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+    checkCalendars(expectedHolidays, hol);    
+
+    // add philippines holidays
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(2, January, 2018));
+    expectedHolidays.insert(Date(29, March, 2018));
+    expectedHolidays.insert(Date(30, March, 2018));
+    expectedHolidays.insert(Date(9, April, 2018));
+    expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(12, June, 2018));
+    expectedHolidays.insert(Date(21, August, 2018));
+    expectedHolidays.insert(Date(27, August, 2018));
+    expectedHolidays.insert(Date(1, November, 2018));
+    expectedHolidays.insert(Date(30, November, 2018));
+    expectedHolidays.insert(Date(25, December, 2018));
+    expectedHolidays.insert(Date(31, December, 2018));
+
+    Calendar phil = Philippines();
+    cals.push_back(phil);
+    Calendar joint3 = QuantExt::LargeJointCalendar(cals);
+
+    hol = Calendar::holidayList(joint3, Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+    checkCalendars(expectedHolidays, hol);    
+
+    // add thailand holidays
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(2, January, 2018));
+    expectedHolidays.insert(Date(6, April, 2018));
+    expectedHolidays.insert(Date(13, April, 2018));
+    expectedHolidays.insert(Date(16, April, 2018));
+    expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(30, July, 2018));
+    expectedHolidays.insert(Date(13, August, 2018));
+    expectedHolidays.insert(Date(15, October, 2018));
+    expectedHolidays.insert(Date(23, October, 2018));
+    expectedHolidays.insert(Date(5, December, 2018));
+    expectedHolidays.insert(Date(10, December, 2018));
+    expectedHolidays.insert(Date(31, December, 2018));
+
+    Calendar thai = Thailand();
+    cals.push_back(thai);
+    Calendar joint4 = QuantExt::LargeJointCalendar(cals);
+
+    hol = Calendar::holidayList(joint4, Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+    checkCalendars(expectedHolidays, hol);
+
+    // add malaysia holidays
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(1, February, 2018));
+    expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(31, August, 2018));
+    expectedHolidays.insert(Date(17, September, 2018));
+    expectedHolidays.insert(Date(25, December, 2018));
+
+    Calendar mal = Malaysia();
+    cals.push_back(mal);
+    Calendar joint5 = QuantExt::LargeJointCalendar(cals);
+
+    hol = Calendar::holidayList(joint5, Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+    checkCalendars(expectedHolidays, hol);
+    
+    // add chilean calendar
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(30, March, 2018));
+    expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(21, May, 2018));
+    expectedHolidays.insert(Date(16, July, 2018));
+    expectedHolidays.insert(Date(15, August, 2018));
+    expectedHolidays.insert(Date(1, November, 2018));
+    expectedHolidays.insert(Date(25, December, 2018));
+
+    Calendar chil = Chile();
+    cals.push_back(chil);
+    Calendar joint6 = QuantExt::LargeJointCalendar(cals);
+
+    hol = Calendar::holidayList(joint6, Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+    checkCalendars(expectedHolidays, hol);
+
+    // add netherlands calendar
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(30, March, 2018));
+    expectedHolidays.insert(Date(2, April, 2018));
+    expectedHolidays.insert(Date(27, April, 2018));
+    expectedHolidays.insert(Date(10, May, 2018));
+    expectedHolidays.insert(Date(21, May, 2018));
+    expectedHolidays.insert(Date(25, December, 2018));
+    expectedHolidays.insert(Date(26, December, 2018));
+
+    Calendar net = Netherlands();
+    cals.push_back(net);
+    Calendar joint7 = QuantExt::LargeJointCalendar(cals);
+
+    hol = Calendar::holidayList(joint7, Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+    checkCalendars(expectedHolidays, hol);
+
+    // add French calendar
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(30, March, 2018));
+    expectedHolidays.insert(Date(2, April, 2018));
+    expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(8, May, 2018));
+    expectedHolidays.insert(Date(10, May, 2018));
+    expectedHolidays.insert(Date(21, May, 2018));
+    expectedHolidays.insert(Date(15, August, 2018));
+    expectedHolidays.insert(Date(1, November, 2018));
+    expectedHolidays.insert(Date(25, December, 2018));
+    expectedHolidays.insert(Date(26, December, 2018));
+
+    Calendar fre = France();
+    cals.push_back(fre);
+    Calendar joint8 = QuantExt::LargeJointCalendar(cals);
+
+    hol = Calendar::holidayList(joint8, Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+    checkCalendars(expectedHolidays, hol);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
