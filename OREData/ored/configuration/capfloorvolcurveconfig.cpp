@@ -279,6 +279,7 @@ void CapFloorVolatilityCurveConfig::configureVolatilityType(const std::string& t
 
 void CapFloorVolatilityCurveConfig::configureType() {
     type_ = tenors_.empty() ? Type::Atm : (includeAtm_ ? Type::SurfaceWithAtm : Type::Surface);
+    //type_ = strikes_.empty() ? Type::Atm : (includeAtm_ ? Type::SurfaceWithAtm : Type::Surface);
 }
 
 void CapFloorVolatilityCurveConfig::validate() const {

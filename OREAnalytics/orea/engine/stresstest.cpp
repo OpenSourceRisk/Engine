@@ -88,7 +88,7 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
         "1,0W"); // TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
     calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData->baseCcy()));
-    ValuationEngine engine(asof, dg, simMarket);
+    ValuationEngine engine(asof, dg, simMarket, factory->modelBuilders());
     LOG("Run Stress Scenarios");
     /*ostringstream o;
     o.str("");

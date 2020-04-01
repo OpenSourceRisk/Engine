@@ -73,7 +73,9 @@ public:
     CdsHelper(const Handle<Quote>& quote, const Period& tenor, Integer settlementDays, const Calendar& calendar,
               Frequency frequency, BusinessDayConvention paymentConvention, DateGeneration::Rule rule,
               const DayCounter& dayCounter, Real recoveryRate, const Handle<YieldTermStructure>& discountCurve,
-              const Date& startDate = Date(), bool settlesAccrual = true, bool paysAtDefaultTime = true);
+              const Date& startDate = Date(), bool settlesAccrual = true,
+              CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
+                  CreditDefaultSwap::ProtectionPaymentTime::atDefault);
     CdsHelper(Rate quote, const Period& tenor,
               Integer settlementDays, // ISDA: 1
               const Calendar& calendar,
@@ -82,7 +84,9 @@ public:
               DateGeneration::Rule rule,               // ISDA: CDS
               const DayCounter& dayCounter,            // ISDA A360
               Real recoveryRate, const Handle<YieldTermStructure>& discountCurve, const Date& startDate = Date(),
-              bool settlesAccrual = true, bool paysAtDefaultTime = true);
+              bool settlesAccrual = true,
+              CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
+                  CreditDefaultSwap::ProtectionPaymentTime::atDefault);
     void setTermStructure(DefaultProbabilityTermStructure*);
     boost::shared_ptr<QuantExt::CreditDefaultSwap> swap() const { return swap_; }
 
@@ -100,7 +104,7 @@ protected:
     Real recoveryRate_;
     Handle<YieldTermStructure> discountCurve_;
     bool settlesAccrual_;
-    bool paysAtDefaultTime_;
+    CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime_;
 
     Schedule schedule_;
     boost::shared_ptr<QuantExt::CreditDefaultSwap> swap_;
@@ -117,12 +121,16 @@ public:
                     const Calendar& calendar, Frequency frequency, BusinessDayConvention paymentConvention,
                     DateGeneration::Rule rule, const DayCounter& dayCounter, Real recoveryRate,
                     const Handle<YieldTermStructure>& discountCurve, const Date& startDate = Date(),
-                    bool settlesAccrual = true, bool paysAtDefaultTime = true);
+                    bool settlesAccrual = true,
+                    CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
+                        CreditDefaultSwap::ProtectionPaymentTime::atDefault);
 
     SpreadCdsHelper(Rate runningSpread, const Period& tenor, Integer settlementDays, const Calendar& calendar,
                     Frequency frequency, BusinessDayConvention paymentConvention, DateGeneration::Rule rule,
                     const DayCounter& dayCounter, Real recoveryRate, const Handle<YieldTermStructure>& discountCurve,
-                    const Date& startDate = Date(), bool settlesAccrual = true, bool paysAtDefaultTime = true);
+                    const Date& startDate = Date(), bool settlesAccrual = true,
+                    CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
+                        CreditDefaultSwap::ProtectionPaymentTime::atDefault);
     Real impliedQuote() const;
 
 private:
@@ -138,14 +146,18 @@ public:
                      const Calendar& calendar, Frequency frequency, BusinessDayConvention paymentConvention,
                      DateGeneration::Rule rule, const DayCounter& dayCounter, Real recoveryRate,
                      const Handle<YieldTermStructure>& discountCurve, const Date& startDate = Date(),
-                     Natural upfrontSettlementDays = 0, bool settlesAccrual = true, bool paysAtDefaultTime = true);
+                     Natural upfrontSettlementDays = 0, bool settlesAccrual = true,
+                     CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
+                         CreditDefaultSwap::ProtectionPaymentTime::atDefault);
 
     /*! \note the upfront must be quoted in fractional units. */
     UpfrontCdsHelper(Rate upfront, Rate runningSpread, const Period& tenor, Integer settlementDays,
                      const Calendar& calendar, Frequency frequency, BusinessDayConvention paymentConvention,
                      DateGeneration::Rule rule, const DayCounter& dayCounter, Real recoveryRate,
                      const Handle<YieldTermStructure>& discountCurve, const Date& startDate = Date(),
-                     Natural upfrontSettlementDays = 0, bool settlesAccrual = true, bool paysAtDefaultTime = true);
+                     Natural upfrontSettlementDays = 0, bool settlesAccrual = true,
+                     CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
+                         CreditDefaultSwap::ProtectionPaymentTime::atDefault);
     Real impliedQuote() const;
     void initializeDates();
 
