@@ -9,10 +9,10 @@ import sys
 oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
 oreex.print_headline("Run ORE to produce NPV cube and exposures")
-#oreex.run("Input/ore.xml")
-#oreex.get_times("Output/log.txt")
+oreex.run("Input/ore.xml")
+oreex.get_times("Output/log.txt")
  
-#oreex.print_headline("Plot results")
+oreex.print_headline("Plot results")
  
 oreex.setup_plot("BaselMeasures")
 oreex.plot("exposure_trade_Swap.csv", 2, 3, 'b', "EPE")
