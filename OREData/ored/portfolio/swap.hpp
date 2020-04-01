@@ -56,8 +56,8 @@ public:
     //! Add underlying index names
     std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
 
-    //! Return whether the swap is deliverable, this is mainly for XCCY swaps
-    const bool deliverable() const { return deliverable_; }
+    //! Settlement Type can be set to "Cash" for NDF. Default value is "Physical"
+    const string& settlement() const { return settlement_; }
     
     //! \name Serialisation
     //@{
@@ -88,7 +88,7 @@ private:
     */
     std::map<std::string, QuantLib::Leg> additionalLegs_;
 
-    bool deliverable_;
+    string settlement_;
 };
 } // namespace data
 } // namespace ore

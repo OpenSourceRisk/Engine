@@ -355,8 +355,10 @@ void Swap::fromXML(XMLNode* node) {
     QL_REQUIRE(swapNode, "Swap::fromXML(): expected '" << tradeType() << "Data'"
                                                        << (tradeType() == "Swap" ? "" : " or 'SwapData'"));
     
-    //this defaults to true
-    deliverable_ = XMLUtils::getChildValueAsBool(swapNode, "Deliverable");
+    
+    settlement_ = XMLUtils::getChildValue(swapNode, "Settlement", false);
+    if (settlement_ == "")
+        settlement_ = "Physical";    
     
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(swapNode, "LegData");
     for (Size i = 0; i < nodes.size(); i++) {
@@ -372,7 +374,7 @@ XMLNode* Swap::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* swapNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, swapNode);
-    XMLUtils::addChild(doc, swapNode, "Deliverable", deliverable_);
+    XMLUtils::addChild(doc, swapNode, "Settlement", settlement_);
     for (Size i = 0; i < legData_.size(); i++)
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));
     return node;

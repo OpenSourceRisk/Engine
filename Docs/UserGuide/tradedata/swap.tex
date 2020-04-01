@@ -5,7 +5,9 @@ and can have an unlimited number of legs. Each leg is represented by a \lstinlin
 described in section \ref{ss:leg_data}. An example structure of a two-legged \lstinline!SwapData!
 node is shown in Listing \ref{lst:swap_data}.
 \begin{itemize}
-\item Deliverable: An optional boolean flag. Marks whether a cross currency swap is deliverable or non-deliverable. Defaults to true.
+\item Settlement [Optional]: Delivery type.  Note that Non-Deliverable Cross Currency can be represented by \emph{Cash} settlement. Delivery type does not impact pricing in ORE.  
+
+Allowable values: \emph{Cash} or \emph{Physical}.  Defaults to \emph{Physical} if left blank or omitted.
 \end{itemize}
 
 \begin{listing}[H]
