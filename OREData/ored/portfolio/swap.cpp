@@ -374,7 +374,9 @@ XMLNode* Swap::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* swapNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, swapNode);
-    XMLUtils::addChild(doc, swapNode, "Settlement", settlement_);
+
+    if (settlement_ == "Cash")
+        XMLUtils::addChild(doc, swapNode, "Settlement", settlement_);
     for (Size i = 0; i < legData_.size(); i++)
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));
     return node;
