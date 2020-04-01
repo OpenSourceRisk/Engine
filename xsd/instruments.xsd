@@ -79,6 +79,7 @@
 
   <xs:complexType name="swapData">
     <xs:sequence>
+      <xs:element type="xs:boolean" name="Deliverable" maxOccurs="1" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>

@@ -55,6 +55,9 @@ public:
     
     //! Add underlying index names
     std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
+
+    //! Return whether the swap is deliverable, this is mainly for XCCY swaps
+    const bool deliverable() const { return deliverable_; }
     
     //! \name Serialisation
     //@{
@@ -84,6 +87,8 @@ private:
         off to the fixings function to get additional fixing dates for an index.
     */
     std::map<std::string, QuantLib::Leg> additionalLegs_;
+
+    bool deliverable_;
 };
 } // namespace data
 } // namespace ore

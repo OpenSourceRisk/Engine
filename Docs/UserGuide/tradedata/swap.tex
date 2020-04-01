@@ -4,11 +4,15 @@ The \lstinline!SwapData! node is the trade data container for the \emph{Swap} tr
 and can have an unlimited number of legs. Each leg is represented by a \lstinline!LegData! trade component sub-node,
 described in section \ref{ss:leg_data}. An example structure of a two-legged \lstinline!SwapData!
 node is shown in Listing \ref{lst:swap_data}.
+\begin{itemize}
+\item Deliverable: An optional boolean flag. Marks whether a cross currency swap is deliverable or non-deliverable. Defaults to true.
+\end{itemize}
 
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <SwapData>
+  <Deliverable>false</Deliverable>
   <LegData>
     ...
   </LegData>
