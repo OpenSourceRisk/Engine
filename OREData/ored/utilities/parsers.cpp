@@ -32,6 +32,7 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
+#include <qle/calendars/largejointcalendar.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
@@ -464,7 +465,6 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
         calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinBusinessDays"),
                             calendarNames.end());
         calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), ""), calendarNames.end());
-        QL_REQUIRE(calendarNames.size() > 1 && calendarNames.size() <= 4, "Cannot convert " << s << " to Calendar");
         // Populate a vector of calendars.
         vector<Calendar> calendars;
         for (Size i = 0; i < calendarNames.size(); i++) {
@@ -478,16 +478,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
             }
         }
 
-        switch (calendarNames.size()) {
-        case 2:
-            return JointCalendar(calendars[0], calendars[1]);
-        case 3:
-            return JointCalendar(calendars[0], calendars[1], calendars[2]);
-        case 4:
-            return JointCalendar(calendars[0], calendars[1], calendars[2], calendars[3]);
-        default:
-            QL_FAIL("Cannot convert \"" << s << "\" to Calendar");
-        }
+        return LargeJointCalendar(calendars);
     }
 }
 
