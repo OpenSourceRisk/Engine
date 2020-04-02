@@ -70,7 +70,8 @@ public:
         CommodityVolatility,
         SecuritySpread,
         Correlation,
-        CPR
+        CPR,
+        DiscountXccyCurve
     };
 
     //! Constructor

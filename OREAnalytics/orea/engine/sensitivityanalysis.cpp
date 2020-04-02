@@ -58,13 +58,15 @@ SensitivityAnalysis::SensitivityAnalysis(
     const bool recalibrateModels, const CurveConfigurations& curveConfigs,
     const TodaysMarketParameters& todaysMarketParams, const bool nonShiftedBaseCurrencyConversion,
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
-    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders, const bool continueOnError)
+    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders, const bool continueOnError,
+    const bool includeXccyDiscounts)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
       recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
       extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders), continueOnError_(continueOnError),
-      engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false) {}
+      engineData_(engineData), portfolio_(portfolio), includeXccyDiscounts_(includeXccyDiscounts), initialized_(false),
+      computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -120,7 +122,8 @@ void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory>
 
     LOG("Initialise sim market for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
         << ")");
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_, curveConfigs_, todaysMarketParams_, continueOnError_);
+    simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_, curveConfigs_, todaysMarketParams_, 
+        continueOnError_, includeXccyDiscounts_);
 
     LOG("Sim market initialised for sensitivity analysis");
 
@@ -193,6 +196,20 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             Size keyIdx = key.index;
             Period p = itr->second->shiftTenors[keyIdx];
             Handle<YieldTermStructure> yts = simMarket->discountCurve(ccy, marketConfiguration);
+            Time t = yts->dayCounter().yearFraction(asof, asof + p);
+            Real zeroRate = yts->zeroRate(t, Continuous);
+            shiftMult = zeroRate;
+        }
+    } break;
+    case RiskFactorKey::KeyType::DiscountXccyCurve: {
+        string ccy = keylabel;
+        auto itr = sensiParams.discountXccyCurveShiftData().find(ccy);
+        QL_REQUIRE(itr != sensiParams.discountXccyCurveShiftData().end(), "shiftData not found for " << ccy);
+        shiftSize = itr->second->shiftSize;
+        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            Size keyIdx = key.index;
+            Period p = itr->second->shiftTenors[keyIdx];
+            Handle<YieldTermStructure> yts = simMarket->discountXccyCurve(ccy, marketConfiguration);
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
             Real zeroRate = yts->zeroRate(t, Continuous);
             shiftMult = zeroRate;

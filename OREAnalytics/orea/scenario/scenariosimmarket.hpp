@@ -117,20 +117,20 @@ public:
                       const std::string& configuration = Market::defaultConfiguration, 
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-                      const bool continueOnError = false);
+                      const bool continueOnError = false, const bool includeXccyDiscounts = false);
 
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
                       const boost::shared_ptr<FixingManager>& fixingManager,
                       const std::string& configuration = Market::defaultConfiguration,
-		      const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
+		              const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-                      const bool continueOnError = false);
+                      const bool continueOnError = false, const bool includeXccyDiscounts = false);
 
     //! Set scenario generator
     boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
     //! Get scenario generator
-    const boost::shared_ptr<ScenarioGenerator>& scnearioGenerator() const { return scenarioGenerator_; }
+    const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() const { return scenarioGenerator_; }
 
     //! Set aggregation data
     boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() { return asd_; }
@@ -157,6 +157,10 @@ public:
     //! is risk factor key simulated by this sim market instance?
     bool isSimulated(const RiskFactorKey::KeyType& factor) const;
 
+    //! Override discountXccy curve to look up Xccy discount curves when running that configuration
+    Handle<YieldTermStructure> discountXccyCurve(const string& ccy,
+        const string& configuration = Market::defaultConfiguration) const;
+
 protected:
     virtual void applyScenario(const boost::shared_ptr<Scenario>& scenario);
     void addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
@@ -179,6 +183,7 @@ protected:
 
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simData_;
     boost::shared_ptr<Scenario> baseScenario_;
+    bool includeXccyDiscounts_;
 
     std::set<RiskFactorKey::KeyType> nonSimulatedFactors_;
 };
