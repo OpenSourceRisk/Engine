@@ -87,75 +87,40 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
     Real riskyAnnuity = std::fabs(swap.couponLegNPV() / couponSpread);
     results.riskyAnnuity = riskyAnnuity;
 
-    // Take the accrual portion from the coupon leg NPV before dividing by the swapSpread
-    // to get the risky annuity without accrual. This is the basis on which the fair spread
-    // is calculated.
-    Real couponLegNpvNoAccrual = std::fabs(swap.couponLegNPV()) - std::fabs(swap.accrualRebateNPV());
-    Real riskyAnnuityNoAccrual = couponLegNpvNoAccrual / couponSpread;
-
-    bool isStrikeSpreadQuoted = true;
     Real adjustedForwardSpread = fairSpread;
     Real adjustedStrikeSpread = couponSpread;
     Real strikeSpread = couponSpread;
 
-    Real upfrontNPV;
+    // TODO: accuont for defaults between option trade data evaluation date
+    adjustedForwardSpread += (1 - recoveryRate()) * defaultProbability(swap.protectionStartDate()) /
+                                ((1 - defaultProbability(swap.protectionStartDate())) * riskyAnnuity / swap.notional());
     if (strike != Null<Real>()) {
         if (strikeType == CdsOption::StrikeType::Spread) {
             strikeSpread = strike;
-            SimpleCashFlow scf = SimpleCashFlow(1, swap.upfrontPaymentDate()); // dummy cashflow for hasOccured condition
-            if (!scf.hasOccurred(termStructure_->referenceDate(), includeSettlementDateFlows_)) {
-                Date effectiveProtectionStart = swap.protectionStartDate() > refDate ? swap.protectionStartDate() : refDate;
-
-                // According to market standard, for exercise price calcualtion, risky annuity is calcualted on a credit curve
-                // that has been fitted to a flat CDS term structure with spreads equal to strike
-                // We make further assumptions to approximate the calculation
-                // 1) Constant continuous interest rate from protection start to protection end
-                // 2) Continuous CDS coupons
-                // 3) CDS payment date = CDS proection end date, and other conventions related assumptions
-                double forwardRate = termStructure_->forwardRate(effectiveProtectionStart, swap.protectionEndDate(),
-                                                                termStructure_->dayCounter(), Compounding::Continuous);
-                Time maturity = termStructure_->dayCounter().yearFraction(effectiveProtectionStart, swap.maturity());
-                double riskAnnuityStrike = (1 - exp(-(forwardRate + strike / (1 - recoveryRate())) * maturity)) /
-                                        (forwardRate + strike / (1 - recoveryRate())) * 365 / 360;
-
-                adjustedForwardSpread += (1 - recoveryRate()) * defaultProbability(swap.protectionStartDate()) /
-                                        ((1 - defaultProbability(swap.protectionStartDate())) * riskyAnnuity);
-                adjustedStrikeSpread += riskAnnuityStrike * (strike - couponSpread) /
-                                        ((1 - defaultProbability(swap.protectionStartDate())) * riskyAnnuity);
-            }
+            // According to market standard, for exercise price calcualtion, risky annuity is calcualted on a credit curve
+            // that has been fitted to a flat CDS term structure with spreads equal to strike
+            // We use an approximation here
+            double zeroRate1 = termStructure_->zeroRate(swap.protectionEndDate(), tSDc, Compounding::Continuous);
+            double zeroRate2 = termStructure_->zeroRate(swap.protectionStartDate(), tSDc, Compounding::Continuous);
+            double rate = (zeroRate1 + zeroRate2) / 2;
+            Time maturity = tSDc.yearFraction(swap.protectionStartDate(), swap.maturity());
+            double riskAnnuityStrike = (1 - exp(-(rate + strike / (1 - recoveryRate())) * maturity)) /
+                                        (rate + strike / (1 - recoveryRate())) * 365 / 360;
+            adjustedStrikeSpread += riskAnnuityStrike * (strike - couponSpread) /
+                                    ((1 - defaultProbability(swap.protectionStartDate())) * riskyAnnuity / swap.notional());
         } else if (strikeType == CdsOption::StrikeType::Price) {
-
+            adjustedStrikeSpread += (100 - strike) / (riskyAnnuity / swap.notional() * 100);
         } else {
             QL_FAIL("unrecognised strike type " << strikeType);
         }
-    } else {
-        adjustedStrikeSpread += swap.upfrontNPV() / riskyAnnuityNoAccrual;
-    }
-
-    // Take into account the NPV from the upfront amount
-    // If buyer and upfront NPV > 0 => receiving upfront amount => should reduce the pay spread
-    // If buyer and upfront NPV < 0 => paying upfront amount => should increase the pay spread
-    // If seller and upfront NPV > 0 => receiving upfront amount => should increase the receive spread
-    // If seller and upfront NPV < 0 => paying upfront amount => should reduce the receive spread
-    // if (swap.side() == Protection::Buyer) {
-    //     swapSpread -= upfrontNPV / riskyAnnuityNoAccrual;
-    // } else {
-    //     swapSpread += upfrontNPV / riskyAnnuityNoAccrual;
-    // }
+    } // if strike is null, assume atm
 
     Time T = tSDc.yearFraction(settlement, exerciseDate);
-
     Real stdDev = volatility_->blackVol(exerciseDate, strikeSpread, true) * std::sqrt(T);
     Option::Type callPut = (swap.side() == Protection::Buyer) ? Option::Call : Option::Put;
 
-    results.value = blackFormula(callPut, adjustedStrikeSpread, adjustedForwardSpread, stdDev, riskyAnnuityNoAccrual);
-
-    // if a non knock-out payer option, add front end protection value
-    if (swap.side() == Protection::Buyer && !knocksOut) {
-        Real frontEndProtection = callPut * swap.notional() * (1. - recoveryRate()) * defaultProbability(exerciseDate) *
-                                  termStructure_->discount(exerciseDate);
-        results.value += frontEndProtection;
-    }
+    results.value = (1 - defaultProbability(exerciseDate)) *
+                    blackFormula(callPut, adjustedStrikeSpread, adjustedForwardSpread, stdDev, riskyAnnuity);
 }
 
 Handle<YieldTermStructure> BlackCdsOptionEngineBase::termStructure() { return termStructure_; }
