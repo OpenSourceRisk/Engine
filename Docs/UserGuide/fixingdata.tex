@@ -101,13 +101,15 @@ If the interest rate index is for an overnight rate (e.g. EONIA), then the third
 \centering
 \begin{tabular}{|l|l|}
 \hline
-\multicolumn{2}{|l|}{\textbf{IR Swap Index of form CCY-CMS-TENOR:}} \\ 
+\multicolumn{2}{|l|}{\textbf{IR Swap Index of form CCY-CMS-TENOR or CCY-CMS-TAG-TENOR:}} \\
 \hline
 \textbf{Index Component} & \textbf{Allowable Values} \\
 \hline
 CCY               & Any supported currency code \\ 
 \hline
 CMS				  & Must be ``CMS'' (to denote a swap index) \\
+\hline
+TAG				  & An optional tag that allows to define several CMS indices per currency \\
 \hline
 TENOR             & An integer followed by \emph{D, W, M or Y} \\
 \hline

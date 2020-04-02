@@ -257,6 +257,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<IborIndex> index;
                         if (indexTokens[1] == "GENERIC") {
                             // If we have a generic curve build the index using the index currency's discount curve
+                            // no need to check for a convention based ibor index in this case
                             index = Handle<IborIndex>(
                                 parseIborIndex(name, initMarket->discountCurve(indexTokens[0], configuration)));
                         } else {
@@ -646,6 +647,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             Natural settleDays = 0;
                             if (curveConfigs.hasCapFloorVolCurveConfig(name)) {
                                 // From the cap floor config, get the ibor index name
+                                // (we do not support convention based indices there)
                                 auto config = curveConfigs.capFloorVolCurveConfig(name);
                                 settleDays = config->settleDays();
                                 strIborIndex = config->iborIndex();
