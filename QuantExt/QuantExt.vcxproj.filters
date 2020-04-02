@@ -861,6 +861,9 @@
     <ClInclude Include="qle\calendars\austria.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\largejointcalendar.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1481,6 +1484,9 @@
       <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\calendars\austria.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\largejointcalendar.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
   </ItemGroup>
