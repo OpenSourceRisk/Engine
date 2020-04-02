@@ -1,0 +1,25 @@
+ARG boost_version=latest
+FROM build_env_boost_debug:${boost_version}
+
+MAINTAINER Quaternion Risk Management
+LABEL Description="Build debug version of QuantLib and add to the Boost build environment"
+
+# Argument for number of cores to use while building
+ARG num_cores
+
+# Exclusions are performed by .dockerignore
+COPY QuantLib /ore/QuantLib
+
+# Need the dos2unix all if building from Windows because the shell 
+# scripts fail if there are CRLF present in the files
+RUN cd /ore/QuantLib \
+  && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
+  && mkdir -p build.ql && cd build.ql \
+  && cmake .. -DCMAKE_BUILD_TYPE=Debug \
+  && make -j ${num_cores} \
+  && make install \
+  && cd / \
+  && rm -rf ore \
+  && ldconfig
+
+CMD bash
