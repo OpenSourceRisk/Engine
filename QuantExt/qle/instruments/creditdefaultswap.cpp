@@ -68,12 +68,15 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
 
     // acrual rebate
     if (schedule.hasRule() && (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) {
-        boost::shared_ptr<FixedRateCoupon> firstCoupon = boost::dynamic_pointer_cast<FixedRateCoupon>(leg_[0]);
+        Size i = 0;
+        while (leg_[i]->hasOccurred(protectionStart_, false)) ++i;
+        ext::shared_ptr<FixedRateCoupon> coupon =
+                ext::dynamic_pointer_cast<FixedRateCoupon>(leg_[i]);
         // adjust to T+3 standard settlement, assuming that protection start
         // is set to T+1 for standard CDS
         Date rebateDate =
             schedule.calendar().advance(schedule.calendar().adjust(protectionStart_, convention), 2, Days, convention);
-        accrualRebate_.reset(new SimpleCashFlow(firstCoupon->accruedAmount(protectionStart_), rebateDate));
+        accrualRebate_.reset(new SimpleCashFlow(coupon->accruedAmount(protectionStart_), rebateDate));
     }
 
     if (!claim_)
