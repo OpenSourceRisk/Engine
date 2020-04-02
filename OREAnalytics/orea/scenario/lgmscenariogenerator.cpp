@@ -27,7 +27,7 @@ LgmScenarioGenerator::LgmScenarioGenerator(boost::shared_ptr<QuantExt::LGM> mode
                                            boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator,
                                            boost::shared_ptr<ScenarioFactory> scenarioFactory,
                                            boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig, Date today,
-                                           ore::analytics::DateGrid grid)
+                                           DateGrid grid)
     : ScenarioPathGenerator(today, grid.dates(), grid.timeGrid()), model_(model), pathGenerator_(pathGenerator),
       scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig) {
     QL_REQUIRE(timeGrid_.size() == dates_.size() + 1, "date/time grid size mismatch");

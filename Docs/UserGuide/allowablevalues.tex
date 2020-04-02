@@ -14,8 +14,9 @@
       CZK, DEM, DKK, EUR, ESP, FIM, FRF, GBP, GRD, HKD, HUF, IEP, ITL,
       INR, ISK, JPY, KRW, LUF, NLG, NOK, NZD, PLN, PTE, RON, SEK, SGD,
       THB, TRY, TWD, USD, ZAR, ARS, CLP, COP, IDR, ILS, KWD, PEN, MXN,
-    SAR, RUB, TND, MYR, UAH, KZT, QAR, MXV, CLF, EGP, BHD, OMR, VND,
-    AED, PHP, NGN, MAD, UYU},  Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
+      SAR, RUB, TND, MYR, UAH, KZT, QAR, MXV, CLF, EGP, BHD, OMR, VND,
+      AED, PHP, NGN, MAD, UYU, CNH, KES, LKR, PKR, RSD, XAG, XAU, XPD, XPT},  
+    Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
     %\lstinline!DayCount!  \lstinline!Convention! & \begin{tabular}[l]{@{}l@{}}\indent Actual 360 can be expressed by:\\ \emph{A360, Actual/360, ACT/360}\\ \indent Actual 365 Fixed can be expressed by: \\ \emph{A365, A365F, Actual/365, Actual/365 (fixed)} \\ \indent Thirty 360 (US) can be expressed by: \\ \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT} \\ \indent Thirty 360 (European) can be expressed by: \\ \emph{30E/360, 30E/360 (Eurobond Basis)}\\ \indent Thirty 360 (Italian) is expressed by: \\ \emph{30/360 (Italian)}  \\ \indent Actual Actual (ISDA) can be expressed by: \\ \emph{ActActISDA, ActualActual (ISDA), ACT/ACT, ACT} \\ \indent Actual Actual (ISMA) can be expressed by: \\ \emph{ActActISMA, ActualActual (ISMA)} \\ \indent Actual Actual (AFB) can be expressed by:\\ \emph{ActActAFB, Actual/Actual (AFB)} \end{tabular}  \\ \hline
     \lstinline!Roll Convention! & \begin{tabular}[l]{@{}l@{}} 
 \emph{F,  Following, FOLLOWING}\\ 
@@ -83,6 +84,10 @@
     \emph{TH, THA, THB} & Thailand Calendar \\ \hline
     \emph{TR, TUR, TRY} & Turkey Calendar \\ \hline
     \emph{UA, UKR, UAH} & Ukraine Calendar \\ \hline
+    \emph{BE, BEL, BEF, BEBR} & Belgium Calendar \\ \hline
+    \emph{LU, LUX, LUF} & Luxembourg Calendar \\ \hline
+    \emph{ES, ESP} & Spain Calendar \\ \hline
+    \emph{AT, AUT, ATS} & Austria Calendar \\ \hline
     \emph{BVMF} & Brazil Bovespa Calendar \\ \hline
     \emph{XTSE} & Canada Toronto Stock Exchange Calendar \\ \hline
     \emph{XSHG} & China Shanghai Stock Exchange Calendar \\ \hline
@@ -206,6 +211,20 @@ string stays constant for all currency pairs. For the USD-EUR pair, ECB is used
 \end{tabular}
   \caption{Allowable values for FX index fixings.}
   \label{tab:fxindex_data}
+\end{table}
+
+\begin{table}[H]
+\centering
+  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+    \hline
+    \multicolumn{2}{|l|}{\tt Inflation CPI Index} \\ \hline
+    \bfseries{Trade Data} & \bfseries{Allowable Values} \\
+    \hline
+    \lstinline!Index! for CPI leg & Any string (provided it is the ID of an inflation index in the market configuration) \\
+    \hline
+  \end{tabu}
+  \caption{Allowable values for CPI index.}
+  \label{tab:cpiindex_data}
 \end{table}
 
 \begin{table}[H]

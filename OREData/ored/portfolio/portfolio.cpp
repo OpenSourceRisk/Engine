@@ -203,5 +203,32 @@ map<string, set<Date>> Portfolio::fixings(const Date& settlementDate) const {
     return result;
 }
 
+std::map<AssetClass, std::set<std::string>> Portfolio::underlyingIndices() {
+    
+    if (!underlyingIndicesCache_.empty())
+        return underlyingIndicesCache_;
+
+    map<AssetClass, std::set<std::string>> result;
+
+    for (const auto& t : trades_) {
+        auto underlyings = t->underlyingIndices();
+        for (const auto& kv : underlyings) {
+            result[kv.first].insert(kv.second.begin(), kv.second.end());
+        }
+    }
+    underlyingIndicesCache_ = result;
+    return underlyingIndicesCache_;
+}
+
+std::set<std::string> Portfolio::underlyingIndices(AssetClass assetClass) {
+
+    std::map<AssetClass, std::set<std::string>> indices = underlyingIndices();
+    auto it = indices.find(assetClass);
+    if (it != indices.end()) {
+        return it->second;
+    }
+    return std::set<std::string>();
+}
+
 } // namespace data
 } // namespace ore

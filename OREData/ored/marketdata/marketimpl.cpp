@@ -232,22 +232,10 @@ Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName,
     return lookup<Handle<YoYInflationIndex>>(yoyInflationIndices_, indexName, configuration, "yoy inflation index");
 }
 
-Handle<CPICapFloorTermPriceSurface> MarketImpl::cpiInflationCapFloorPriceSurface(const string& indexName,
-                                                                                 const string& configuration) const {
-    return lookup<Handle<CPICapFloorTermPriceSurface>>(cpiInflationCapFloorPriceSurfaces_, indexName, configuration,
-                                                       "inflation cap floor price surface");
-}
-
 Handle<CPIVolatilitySurface> MarketImpl::cpiInflationCapFloorVolatilitySurface(const string& indexName,
                                                                                const string& configuration) const {
     return lookup<Handle<CPIVolatilitySurface>>(cpiInflationCapFloorVolatilitySurfaces_, indexName, configuration,
                                                 "cpi cap floor volatility surface");
-}
-
-Handle<YoYCapFloorTermPriceSurface> MarketImpl::yoyInflationCapFloorPriceSurface(const string& indexName,
-                                                                                 const string& configuration) const {
-    return lookup<Handle<YoYCapFloorTermPriceSurface>>(yoyInflationCapFloorPriceSurfaces_, indexName, configuration,
-                                                       "inflation cap floor price surface");
 }
 
 Handle<Quote> MarketImpl::equitySpot(const string& key, const string& configuration) const {
@@ -393,11 +381,11 @@ void MarketImpl::refresh(const string& configuration) {
                 it->second.insert(*x.second->yoyInflationTermStructure());
             }
         }
-        for (auto& x : cpiInflationCapFloorPriceSurfaces_) {
+	for (auto& x : cpiInflationCapFloorVolatilitySurfaces_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
-        for (auto& x : yoyInflationCapFloorPriceSurfaces_) {
+        for (auto& x : yoyCapFloorVolSurfaces_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }

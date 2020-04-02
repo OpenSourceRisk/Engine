@@ -110,8 +110,13 @@ public:
     std::map<std::string, std::set<QuantLib::Date>> fixings(
         const QuantLib::Date& settlementDate = QuantLib::Date()) const;
 
+    /*! Returns the names of the underlying instruments for each asset class */
+    std::map<AssetClass, std::set<std::string>> underlyingIndices();
+    std::set<std::string> underlyingIndices(AssetClass assetClass);
+
 private:
     std::vector<boost::shared_ptr<Trade>> trades_;
+    std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
 };
 } // namespace data
 } // namespace ore

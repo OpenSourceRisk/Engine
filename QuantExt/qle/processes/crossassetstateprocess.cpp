@@ -24,28 +24,32 @@
 
 #include <boost/make_shared.hpp>
 
+namespace QuantExt {
+
+using namespace CrossAssetAnalytics;
 using namespace QuantLib;
 
 namespace {
-static inline void setValue(Matrix& m, const Real& value, const QuantExt::CrossAssetModel* model,
-                            const QuantExt::CrossAssetModelTypes::AssetType& t1, const Size& i1,
-                            const QuantExt::CrossAssetModelTypes::AssetType& t2, const Size& i2,
-                            const Size& offset1 = 0, const Size& offset2 = 0) {
+inline void setValue(Matrix& m, const Real& value, const QuantExt::CrossAssetModel* model,
+                     const QuantExt::CrossAssetModelTypes::AssetType& t1, const Size& i1,
+                     const QuantExt::CrossAssetModelTypes::AssetType& t2, const Size& i2, const Size& offset1 = 0,
+                     const Size& offset2 = 0) {
     Size i = model->pIdx(t1, i1, offset1);
     Size j = model->pIdx(t2, i2, offset2);
     m[i][j] = m[j][i] = value;
 }
+inline void setValue(Array& a, const Real& value, const QuantExt::CrossAssetModel* model,
+                            const QuantExt::CrossAssetModelTypes::AssetType& t, const Size& i, const Size& offset = 0) {
+    a[model->pIdx(t, i, offset)] = value;
+}
 } // anonymous namespace
-
-namespace QuantExt {
-
-using namespace CrossAssetAnalytics;
 
 CrossAssetStateProcess::CrossAssetStateProcess(const CrossAssetModel* const model, discretization disc,
                                                SalvagingAlgorithm::Type salvaging)
-    : StochasticProcess(), model_(model), salvaging_(salvaging) {
+    : StochasticProcess(), model_(model), disc_(disc), salvaging_(salvaging) {
 
-    if (disc == euler) {
+    updateSqrtCorrelation();
+    if (disc_ == euler) {
         discretization_ = boost::make_shared<EulerDiscretization>();
     } else {
         discretization_ = boost::make_shared<CrossAssetStateProcess::ExactDiscretization>(model, salvaging);
@@ -56,6 +60,7 @@ Size CrossAssetStateProcess::size() const { return model_->dimension(); }
 
 void CrossAssetStateProcess::flushCache() const {
     cache_m_.clear();
+    cache_md_.clear();
     cache_v_.clear();
     cache_d_.clear();
     boost::shared_ptr<CrossAssetStateProcess::ExactDiscretization> tmp =
@@ -63,6 +68,35 @@ void CrossAssetStateProcess::flushCache() const {
     if (tmp != NULL) {
         tmp->flushCache();
     }
+    updateSqrtCorrelation();
+}
+
+void CrossAssetStateProcess::updateSqrtCorrelation() const {
+    if (disc_ != euler)
+        return;
+    // build sqrt corr (for correlation matrix that covers all state variables)
+    // this can be simplified once we use as many brownians as model->brownians()
+    // instead of the full state vector
+    Matrix corr(model_->dimension(), model_->dimension(), 1.0);
+    Size brownianIndex = 0;
+    std::vector<Size> brownianIndices;
+    for (Size t = 0; t < crossAssetModelAssetTypes; ++t) {
+        AssetType assetType = AssetType(t);
+        for (Size i = 0; i < model_->components(assetType); ++i) {
+            for (Size j = 0; j < model_->brownians(assetType, i); ++j) {
+                for (Size ii = 0; ii < model_->stateVariables(assetType, i); ++ii) {
+                    brownianIndices.push_back(brownianIndex);
+                }
+                ++brownianIndex;
+            }
+        }
+    }
+    for (Size i = 0; i < corr.rows(); ++i) {
+        for (Size j = 0; j < i; ++j) {
+            corr[i][j] = corr[j][i] = model_->correlation()(brownianIndices[i], brownianIndices[j]);
+        }
+    }
+    sqrtCorrelation_ = pseudoSqrt(corr, salvaging_);
 }
 
 Disposable<Array> CrossAssetStateProcess::initialValues() const {
@@ -162,7 +196,7 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
 Disposable<Matrix> CrossAssetStateProcess::diffusion(Time t, const Array& x) const {
     boost::unordered_map<double, Matrix>::const_iterator i = cache_d_.find(t);
     if (i == cache_d_.end()) {
-        Matrix tmp = pseudoSqrt(diffusionImpl(t, x), salvaging_);
+        Matrix tmp = diffusionImpl(t, x);
         cache_d_.insert(std::make_pair(t, tmp));
         return tmp;
     } else {
@@ -173,8 +207,31 @@ Disposable<Matrix> CrossAssetStateProcess::diffusion(Time t, const Array& x) con
     }
 }
 
-Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t, const Array&) const {
-    Matrix res(model_->dimension(), model_->dimension());
+Disposable<Array> CrossAssetStateProcess::marginalDiffusion(Time t, const Array& x) const {
+    boost::unordered_map<double, Array>::const_iterator i = cache_md_.find(t);
+    if (i == cache_md_.end()) {
+        Array tmp = marginalDiffusionImpl(t, x);
+        cache_md_.insert(std::make_pair(t, tmp));
+        return tmp;
+    } else {
+        // we have to make a copy, otherwise we destroy the map entry
+        // since a disposable is returned
+        Array tmp = i->second;
+        return tmp;
+    }
+}
+
+Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t, const Array& x) const {
+    Matrix res(model_->dimension(), model_->dimension(), 0.0);
+    Array diag = marginalDiffusion(t, x);
+    for (Size i = 0; i < x.size(); ++i) {
+        res[i][i] = diag[i];
+    }
+    return res * sqrtCorrelation_;
+} // namespace QuantExt
+
+Disposable<Array> CrossAssetStateProcess::marginalDiffusionImpl(Time t, const Array&) const {
+    Array res(model_->dimension(), 0.0);
     Size n = model_->components(IR);
     Size m = model_->components(FX);
     Size d = model_->components(INF);
@@ -182,145 +239,49 @@ Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t, const Array&) c
     Size e = model_->components(EQ);
     // ir-ir
     for (Size i = 0; i < n; ++i) {
-        for (Size j = 0; j <= i; ++j) {
-            Real alphai = model_->irlgm1f(i)->alpha(t);
-            Real alphaj = model_->irlgm1f(j)->alpha(t);
-            Real rhozz = model_->correlation(IR, i, IR, j, 0, 0);
-            setValue(res, alphai * alphaj * rhozz, model_, IR, i, IR, j, 0, 0);
-        }
-    }
-    // ir-fx
-    for (Size i = 0; i < n; ++i) {
         Real alphai = model_->irlgm1f(i)->alpha(t);
-        for (Size j = 0; j < m; ++j) {
-            Real sigmaj = model_->fxbs(j)->sigma(t);
-            Real rhozx = model_->correlation(IR, i, FX, j, 0, 0);
-            setValue(res, alphai * sigmaj * rhozx, model_, IR, i, FX, j, 0, 0);
-        }
+        setValue(res, alphai, model_, IR, i, 0);
     }
     // fx-fx
     for (Size i = 0; i < m; ++i) {
         Real sigmai = model_->fxbs(i)->sigma(t);
-        for (Size j = 0; j <= i; ++j) {
-            Real sigmaj = model_->fxbs(j)->sigma(t);
-            Real rhoxx = model_->correlation(FX, i, FX, j, 0, 0);
-            setValue(res, sigmai * sigmaj * rhoxx, model_, FX, i, FX, j, 0, 0);
-        }
+        setValue(res, sigmai, model_, FX, i, 0);
     }
-    // ir,fx,inf - inf
-    for (Size j = 0; j < d; ++j) {
-        Real alphaj = model_->infdk(j)->alpha(t);
-        Real Hj = model_->infdk(j)->H(t);
-        for (Size i = 0; i <= j; ++i) {
-            Real alphai = model_->infdk(i)->alpha(t);
-            Real Hi = model_->infdk(i)->H(t);
-            Real rhoyy = model_->correlation(INF, i, INF, j, 0, 0);
-            // infz-infz
-            setValue(res, alphai * alphaj * rhoyy, model_, INF, i, INF, j, 0, 0);
-            // infz-infy
-            setValue(res, alphai * alphaj * Hj * rhoyy, model_, INF, i, INF, j, 0, 1);
-            setValue(res, alphai * Hi * alphaj * rhoyy, model_, INF, i, INF, j, 1, 0);
-            // infy-infy
-            setValue(res, alphai * Hi * alphaj * Hj * rhoyy, model_, INF, i, INF, j, 1, 1);
-        }
-        for (Size i = 0; i < n; ++i) {
-            Real alphai = model_->irlgm1f(i)->alpha(t);
-            Real rhozy = model_->correlation(IR, i, INF, j, 0, 0);
-            // ir-inf
-            setValue(res, alphai * alphaj * rhozy, model_, IR, i, INF, j, 0, 0);
-            setValue(res, alphai * alphaj * Hj * rhozy, model_, IR, i, INF, j, 0, 1);
-        }
-        for (Size i = 0; i < (n - 1); ++i) {
-            Real sigmai = model_->fxbs(i)->sigma(t);
-            Real rhoxy = model_->correlation(FX, i, INF, j, 0, 0);
-            // fx-inf
-            setValue(res, sigmai * alphaj * rhoxy, model_, FX, i, INF, j, 0, 0);
-            setValue(res, sigmai * alphaj * Hj * rhoxy, model_, FX, i, INF, j, 0, 1);
-        }
+    // inf-inf
+    for (Size i = 0; i < d; ++i) {
+        Real alphai = model_->infdk(i)->alpha(t);
+        Real Hi = model_->infdk(i)->H(t);
+        // infz-infz
+        setValue(res, alphai, model_, INF, i, 0);
+        // infy-infy
+        setValue(res, alphai * Hi, model_, INF, i, 1);
     }
-    // ir,fx,inf,cr - cr
-    for (Size j = 0; j < c; ++j) {
-        Real alphaj = model_->crlgm1f(j)->alpha(t);
-        Real Hj = model_->crlgm1f(j)->H(t);
-        for (Size i = 0; i <= j; ++i) {
-            Real alphai = model_->crlgm1f(i)->alpha(t);
-            Real Hi = model_->crlgm1f(i)->H(t);
-            Real rholl = model_->correlation(CR, i, CR, j, 0, 0);
-            // crz-crz
-            setValue(res, alphai * alphaj * rholl, model_, CR, i, CR, j, 0, 0);
-            // crz-cry
-            setValue(res, alphai * alphaj * Hj * rholl, model_, CR, i, CR, j, 0, 1);
-            setValue(res, alphai * Hi * alphaj * rholl, model_, CR, i, CR, j, 1, 0);
-            // cry-cry
-            setValue(res, alphai * alphaj * Hi * Hj * rholl, model_, CR, i, CR, j, 1, 1);
-        }
-        for (Size i = 0; i < n; ++i) {
-            Real alphai = model_->irlgm1f(i)->alpha(t);
-            Real rhozl = model_->correlation(IR, i, CR, j, 0, 0);
-            // ir-cr
-            setValue(res, alphai * alphaj * rhozl, model_, IR, i, CR, j, 0, 0);
-            setValue(res, alphai * alphaj * Hj * rhozl, model_, IR, i, CR, j, 0, 1);
-        }
-        for (Size i = 0; i < (n - 1); ++i) {
-            Real sigmai = model_->fxbs(i)->sigma(t);
-            Real rhoxl = model_->correlation(FX, i, CR, j, 0, 0);
-            // fx-cr
-            setValue(res, sigmai * alphaj * rhoxl, model_, FX, i, CR, j, 0, 0);
-            setValue(res, sigmai * alphaj * Hj * rhoxl, model_, FX, i, CR, j, 0, 1);
-        }
-        for (Size i = 0; i < d; ++i) {
-            Real alphai = model_->infdk(i)->alpha(t);
-            Real Hi = model_->infdk(i)->H(t);
-            Real rhoyl = model_->correlation(INF, i, CR, j, 0, 0);
-            // inf-cr
-            setValue(res, alphai * alphaj * rhoyl, model_, INF, i, CR, j, 0, 0);
-            setValue(res, Hi * alphai * alphaj * rhoyl, model_, INF, i, CR, j, 1, 0);
-            setValue(res, alphai * alphaj * Hj * rhoyl, model_, INF, i, CR, j, 0, 1);
-            setValue(res, alphai * Hi * alphaj * Hj * rhoyl, model_, INF, i, CR, j, 1, 1);
-        }
+    for (Size i = 0; i < c; ++i) {
+        // Skip CR components that are not LGM
+        if (model_->modelType(CR, i) != LGM1F)
+            continue;
+        Real alphai = model_->crlgm1f(i)->alpha(t);
+        Real Hi = model_->crlgm1f(i)->H(t);
+        // crz-crz
+        setValue(res, alphai, model_, CR, i, 0);
+        // cry-cry
+        setValue(res, alphai * Hi, model_, CR, i, 1);
     }
-    // ir,fx,inf,cr,eq - eq
-    for (Size j = 0; j < e; ++j) {
-        Real sigmaj = model_->eqbs(j)->sigma(t);
-        // ir-eq
-        for (Size i = 0; i < n; ++i) {
-            Real alphai = model_->irlgm1f(i)->alpha(t);
-            Real rhozs = model_->correlation(IR, i, EQ, j, 0, 0);
-            Real value = alphai * sigmaj * rhozs;
-            setValue(res, value, model_, IR, i, EQ, j, 0, 0);
-        }
-        // fx-eq
-        for (Size i = 0; i < m; ++i) {
-            Real sigmai = model_->fxbs(i)->sigma(t);
-            Real rhoxs = model_->correlation(FX, i, EQ, j, 0, 0);
-            Real value = sigmai * sigmaj * rhoxs;
-            setValue(res, value, model_, FX, i, EQ, j, 0, 0);
-        }
-        // inf-eq
-        for (Size i = 0; i < d; ++i) {
-            Real alphai = model_->infdk(i)->alpha(t);
-            Real Hi = model_->infdk(i)->H(t);
-            Real rhoys = model_->correlation(INF, i, EQ, j, 0, 0);
-            setValue(res, alphai * sigmaj * rhoys, model_, INF, i, EQ, j, 0, 0);
-            setValue(res, Hi * alphai * sigmaj * rhoys, model_, INF, i, EQ, j, 1, 0);
-        }
-        // cr-eq
-        for (Size i = 0; i < c; ++i) {
-            Real alphai = model_->crlgm1f(i)->alpha(t);
-            Real Hi = model_->crlgm1f(i)->H(t);
-            Real rhols = model_->correlation(CR, i, EQ, j, 0, 0);
-            setValue(res, alphai * sigmaj * rhols, model_, CR, i, EQ, j, 0, 0);
-            setValue(res, Hi * alphai * sigmaj * rhols, model_, CR, i, EQ, j, 1, 0);
-        }
-        // eq-eq
-        for (Size i = 0; i <= j; ++i) {
-            Real sigmai = model_->eqbs(i)->sigma(t);
-            Real rhoss = model_->correlation(EQ, i, EQ, j, 0, 0);
-            Real value = sigmai * sigmaj * rhoss;
-            setValue(res, value, model_, EQ, i, EQ, j, 0, 0);
-        }
+    // eq-eq
+    for (Size i = 0; i < e; ++i) {
+        Real sigmai = model_->eqbs(i)->sigma(t);
+        setValue(res, sigmai, model_, EQ, i, 0);
     }
     return res;
+}
+
+Disposable<Array> CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Array& dw) const {
+    if (disc_ == euler) {
+        const Array dz = sqrtCorrelation_ * dw;
+        const Array df = marginalDiffusion(t0, x0);
+        return apply(expectation(t0, x0, dt), df * dz * std::sqrt(dt));
+    } else
+        return StochasticProcess::evolve(t0, x0, dt, dw);
 }
 
 CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(const CrossAssetModel* const model,
@@ -477,7 +438,13 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covarianceImpl(c
     }
     // ir,fx,inf,cr - cr
     for (Size j = 0; j < c; ++j) {
+        // Skip CR components that are not LGM
+        if (model_->modelType(CR, j) != LGM1F)
+            continue;
         for (Size i = 0; i <= j; ++i) {
+            // Skip CR components that are not LGM
+            if (model_->modelType(CR, i) != LGM1F)
+                continue;
             // crz-crz
             setValue(res, crz_crz_covariance(model_, i, j, t0, dt), model_, CR, i, CR, j, 0, 0);
             // crz-cry
@@ -524,6 +491,9 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covarianceImpl(c
             setValue(res, infy_eq_covariance(model_, i, j, t0, dt), model_, INF, i, EQ, j, 1, 0);
         }
         for (Size i = 0; i < c; ++i) {
+            // Skip CR components that are not LGM
+            if (model_->modelType(CR, i) != LGM1F)
+                continue;
             // cr-eq
             setValue(res, crz_eq_covariance(model_, i, j, t0, dt), model_, CR, i, EQ, j, 0, 0);
             setValue(res, cry_eq_covariance(model_, i, j, t0, dt), model_, CR, i, EQ, j, 1, 0);

@@ -50,6 +50,9 @@ public:
         return {};
     }
 
+    //! Add underlying Equity names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
+
     string longShort() { return longShort_; }
     string eqName() { return eqName_; }
     string currency() { return currency_; }

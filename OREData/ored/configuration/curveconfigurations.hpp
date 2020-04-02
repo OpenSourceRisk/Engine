@@ -34,7 +34,6 @@
 #include <ored/configuration/equityvolcurveconfig.hpp>
 #include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
-#include <ored/configuration/inflationcapfloorpricesurfaceconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
@@ -112,13 +111,6 @@ public:
         return inflationCurveConfigs_[curveID];
     };
     const boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) const;
-
-    bool hasInflationCapFloorPriceSurfaceConfig(const std::string& curveID) const;
-    boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>& inflationCapFloorPriceSurfaceConfig(const string& curveID) {
-        return inflationCapFloorPriceSurfaceConfigs_[curveID];
-    };
-    const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>&
-    inflationCapFloorPriceSurfaceConfig(const string& curveID) const;
 
     bool hasInflationCapFloorVolCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>& inflationCapFloorVolCurveConfig(const string& curveID) {
@@ -200,7 +192,6 @@ private:
     std::map<std::string, boost::shared_ptr<CDSVolatilityCurveConfig>> cdsVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<BaseCorrelationCurveConfig>> baseCorrelationCurveConfigs_;
     std::map<std::string, boost::shared_ptr<InflationCurveConfig>> inflationCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>> inflationCapFloorPriceSurfaceConfigs_;
     std::map<std::string, boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>> inflationCapFloorVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<EquityCurveConfig>> equityCurveConfigs_;
     std::map<std::string, boost::shared_ptr<EquityVolatilityCurveConfig>> equityVolCurveConfigs_;

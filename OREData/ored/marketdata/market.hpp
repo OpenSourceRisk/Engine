@@ -147,20 +147,10 @@ public:
     virtual Handle<YoYInflationIndex>
     yoyInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const = 0;
 
-    //! Inflation Cap Floor Price Surfaces
-    virtual Handle<CPICapFloorTermPriceSurface>
-    cpiInflationCapFloorPriceSurface(const string& indexName,
-                                     const string& configuration = Market::defaultConfiguration) const = 0;
-
-    //! Inflation Cap Floor Volatility Surfaces
+    //! CPI Inflation Cap Floor Volatility Surfaces
     virtual Handle<CPIVolatilitySurface>
     cpiInflationCapFloorVolatilitySurface(const string& indexName,
                                           const string& configuration = Market::defaultConfiguration) const = 0;
-
-    //! Inflation Cap Floor Price Surfaces
-    virtual Handle<YoYCapFloorTermPriceSurface>
-    yoyInflationCapFloorPriceSurface(const string& indexName,
-                                     const string& configuration = Market::defaultConfiguration) const = 0;
 
     //! \name Equity curves
     //@{

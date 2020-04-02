@@ -20,6 +20,8 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <boost/serialization/export.hpp>
+
 using namespace QuantLib;
 using std::ostream;
 using std::string;
@@ -130,3 +132,7 @@ boost::shared_ptr<Expiry> parseExpiry(const string& strExpiry) {
 
 }
 }
+
+BOOST_CLASS_EXPORT_GUID(ore::data::ExpiryDate, "ExpiryDate");
+BOOST_CLASS_EXPORT_GUID(ore::data::ExpiryPeriod, "ExpiryPeriod");
+BOOST_CLASS_EXPORT_GUID(ore::data::FutureContinuationExpiry, "FutureContinuationExpiry");

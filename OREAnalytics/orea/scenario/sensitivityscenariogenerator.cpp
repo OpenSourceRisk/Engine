@@ -1652,12 +1652,11 @@ void SensitivityScenarioGenerator::generateZeroInflationCapFloorVolScenarios(boo
         }
     }
 
-    Size n_strikes = simMarketData_->zeroInflationCapFloorVolStrikes().size();
-    vector<Real> volStrikes = simMarketData_->zeroInflationCapFloorVolStrikes();
-
     for (auto c : sensitivityData_->zeroInflationCapFloorVolShiftData()) {
         std::string name = c.first;
+	Size n_strikes = simMarketData_->zeroInflationCapFloorVolStrikes(name).size();
         Size n_exp = simMarketData_->zeroInflationCapFloorVolExpiries(name).size();
+	vector<Real> volStrikes = simMarketData_->zeroInflationCapFloorVolStrikes(name);
         SensitivityScenarioData::VolShiftData data = *c.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;

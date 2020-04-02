@@ -45,9 +45,14 @@
 #include <qle/calendars/wmr.hpp>
 #include <qle/calendars/ice.hpp>
 #include <qle/calendars/cme.hpp>
+#include <qle/calendars/belgium.hpp>
+#include <qle/calendars/luxembourg.hpp>
+#include <qle/calendars/spain.hpp>
+#include <qle/calendars/austria.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
+#include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
 #include <qle/time/yearcounter.hpp>
 
@@ -180,6 +185,10 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"Norway", Norway()},
                                       {"Switzerland", QuantExt::Switzerland()},
                                       {"Sweden", Sweden()},
+                                      {"Belgium", Belgium()},
+                                      {"Luxembourg", Luxembourg()},
+                                      {"Spain", Spain()},
+                                      {"Austria", Austria()},
                                      
                                       // city specific calendars
                                       {"FRA", Germany(Germany::Settlement)},
@@ -195,7 +204,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
 
                                       // ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
                                       {"EUTA", TARGET()},
-                                      {"BEBR", TARGET()}, // Belgium, Brussels not in QL,
+                                      {"BEBR", Belgium()}, // Belgium, Brussels not in QL,
 
                                       // ISO 3166-1 Alpha-2 code
                                       {"AR", Argentina()},
@@ -241,6 +250,10 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"UA", Ukraine()},
                                       {"GB", UnitedKingdom()},
                                       {"US", UnitedStates()},
+                                      {"BE", Belgium()},
+                                      {"LU", Luxembourg()},
+                                      {"ES", Spain()},
+                                      {"AT", Austria()},
 
                                       // ISO 3166-1 Alpha-3 code
                                       {"ARG", Argentina()},
@@ -286,6 +299,10 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"UKR", Ukraine()},
                                       {"GBR", UnitedKingdom()},
                                       {"USA", UnitedStates()},
+                                      {"BEL", Belgium()},
+                                      {"LUX", Luxembourg()},
+                                      {"ESP", Spain()},
+                                      {"AUT", Austria()},
 
                                       // ISO 4217 Currency Alphabetic code
                                       {"ARS", Argentina()},
@@ -330,6 +347,9 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"UAH", Ukraine()},
                                       {"GBP", UnitedKingdom()},
                                       {"USD", UnitedStates()},
+                                      {"BEF", Belgium()},
+                                      {"LUF", Luxembourg()},
+                                      {"ATS", Austria()},
 
                                       // fallback to TARGET for these emerging ccys
                                       {"AED", TARGET()},
@@ -579,7 +599,8 @@ Currency parseCurrency(const string& s) {
         {"CLF", CLFCurrency()}, {"EGP", EGPCurrency()}, {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()},
         {"VND", VNDCurrency()}, {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()},
         {"MAD", MADCurrency()}, {"UYU", UYUCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()},
-        {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}};
+        {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"KES", KESCurrency()}, {"LKR", LKRCurrency()},
+        {"RSD", RSDCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {

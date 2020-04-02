@@ -15,8 +15,6 @@
 		<CapFloorVolatilitiesId>default</CapFloorVolatilitiesId>
 		<CDSVolatilitiesId>default</CDSVolatilitiesId>
 		<DefaultCurvesId>default</DefaultCurvesId>
-		<InflationCapFloorPriceSurfacesId>default</InflationCapFloorPriceSurfacesId>
-		<YYInflationCapFloorPriceSurfacesId>default</YYInflationCapFloorPriceSurfacesId>
 		<YYInflationCapFloorVolatilitiesId>default</YYInflationCapFloorVolatilitiesId>
 		<EquityCurvesId>default</EquityCurvesId>
 		<EquityVolatilitiesId>default</EquityVolatilitiesId>

@@ -51,8 +51,6 @@ static const vector<MarketObjectMetaInfo> marketObjectData = {
     { MarketObject::CapFloorVol,                       "CapFloorVol",                        "CapFloorVolatilities",              { "CapFloorVolatility", "currency" } },
     { MarketObject::CDSVol,                            "CDSVol",                             "CDSVolatilities",                   { "CDSVolatility", "name" } },
     { MarketObject::DefaultCurve,                      "DefaultCurve",                       "DefaultCurves",                     { "DefaultCurve", "name" } },
-    { MarketObject::InflationCapFloorPriceSurface,     "InflationCapFloorPriceSurface",      "InflationCapFloorPriceSurfaces",    { "InflationCapFloorPriceSurface", "name" } },
-    { MarketObject::YoYInflationCapFloorPriceSurface,  "YoYInflationCapFloorPriceSurface",   "YYInflationCapFloorPriceSurfaces",  { "YYInflationCapFloorPriceSurface", "name" } },
     { MarketObject::YoYInflationCapFloorVol,           "YoYInflationCapFloorVol",            "YYInflationCapFloorVolatilities",   { "YYInflationCapFloorVolatility", "name" } },
     { MarketObject::EquityCurve,                       "EquityCurves",                       "EquityCurves",                      { "EquityCurve", "name" } },
     { MarketObject::EquityVol,                         "EquityVols",                         "EquityVolatilities",                { "EquityVolatility", "name" } },

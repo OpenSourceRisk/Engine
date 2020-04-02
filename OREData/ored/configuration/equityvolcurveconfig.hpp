@@ -71,7 +71,7 @@ public:
     const string& dayCounter() const { return dayCounter_; }
     const string& calendar() const { return calendar_; }
     const boost::shared_ptr<VolatilityConfig>& volatilityConfig() const { return volatilityConfig_; };
-    const string quoteStem() const { return "EQUITY_OPTION/RATE_LNVOL/" + curveID_ + "/" + ccy_ + "/"; };
+    const string quoteStem() const;
     void populateQuotes();
     //@}
 

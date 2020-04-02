@@ -11,6 +11,7 @@ RUN apt-get update && apt-get upgrade -y \
 
 ARG boost_version
 ARG boost_dir
+ARG num_cores
 ENV boost_version ${boost_version}
 
 RUN wget http://downloads.sourceforge.net/project/boost/boost/${boost_version}/${boost_dir}.tar.gz \
@@ -18,7 +19,7 @@ RUN wget http://downloads.sourceforge.net/project/boost/boost/${boost_version}/$
     && rm ${boost_dir}.tar.gz \
     && cd ${boost_dir} \
     && ./bootstrap.sh \
-    && ./b2 --without-python -j 4 link=shared runtime-link=shared install \
+    && ./b2 --without-python -j ${num_cores} link=shared runtime-link=shared install \
     && cd .. && rm -rf ${boost_dir} && ldconfig
 
 CMD bash
