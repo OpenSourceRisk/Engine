@@ -48,7 +48,7 @@ using QuantLib::BusinessDayConvention;
 class DefaultCurveConfig : public CurveConfig {
 public:
     //! Supported default curve types
-    enum class Type { SpreadCDS, HazardRate, Benchmark };
+    enum class Type { SpreadCDS, HazardRate, Benchmark, Price };
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
@@ -59,7 +59,8 @@ public:
                        const std::vector<string>& pillars = std::vector<string>(),
                        const Calendar& calendar = Calendar(), const Size spotLag = 0,
                        const QuantLib::Date& startDate = QuantLib::Date(),
-                       const BootstrapConfig& bootstrapConfig = BootstrapConfig());
+                       const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
+                       QuantLib::Real runningSpread = QuantLib::Null<Real>());
     //! Default constructor
     DefaultCurveConfig() {}
     //@}
@@ -87,6 +88,7 @@ public:
     const std::vector<std::pair<std::string, bool>>& cdsQuotes() { return cdsQuotes_; }
     const QuantLib::Date& startDate() const { return startDate_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
+    const Real runningSpread() const { return runningSpread_; }
     //@}
 
     //! \name Setters
@@ -105,6 +107,7 @@ public:
     bool& extrapolation() { return extrapolation_; }
     QuantLib::Date& startDate() { return startDate_; }
     void setBootstrapConfig(const BootstrapConfig& bootstrapConfig) { bootstrapConfig_ = bootstrapConfig; }
+    Real& runningSpread() { return runningSpread_; }
     //@}
 
 private:
@@ -124,6 +127,7 @@ private:
     Size spotLag_;
     QuantLib::Date startDate_;
     BootstrapConfig bootstrapConfig_;
+    Real runningSpread_;
 };
 } // namespace data
 } // namespace ore

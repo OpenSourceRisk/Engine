@@ -273,13 +273,15 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     case MarketDatum::InstrumentType::CDS: {
         // CDS/CREDIT_SPREAD/Name/Seniority/ccy/term
         // CDS/CREDIT_SPREAD/Name/Seniority/ccy/doc/term
+        // CDS/PRICE/Name/Seniority/ccy/term
+        // CDS/PRICE/Name/Seniority/ccy/doc/term
         QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7, "6 or 7 tokens expected in " << datumName);
         const string& underlyingName = tokens[2];
         const string& seniority = tokens[3];
         const string& ccy = tokens[4];
         string docClause = tokens.size() == 7 ? tokens[5] : "";
         Period term = parsePeriod(tokens.back());
-        return boost::make_shared<CdsSpreadQuote>(value, asof, datumName, underlyingName, seniority, ccy, term, docClause);
+        return boost::make_shared<CdsQuote>(value, asof, datumName, quoteType, underlyingName, seniority, ccy, term, docClause);
     }
 
     case MarketDatum::InstrumentType::HAZARD_RATE: {

@@ -333,6 +333,7 @@
       <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:decimal" name="RunningSpread" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -341,6 +342,7 @@
       <xs:enumeration value="SpreadCDS"/>
       <xs:enumeration value="HazardRate"/>
       <xs:enumeration value="Benchmark"/>
+      <xs:enumeration value="Price"/>
     </xs:restriction>
   </xs:simpleType>
 
