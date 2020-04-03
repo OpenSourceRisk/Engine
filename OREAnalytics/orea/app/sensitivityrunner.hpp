@@ -41,9 +41,10 @@ public:
                       boost::shared_ptr<TradeFactory> tradeFactory = boost::make_shared<TradeFactory>(),
                       std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
                       std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
+                      const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
                       const bool continueOnError = false)
         : params_(params), tradeFactory_(tradeFactory), extraEngineBuilders_(extraEngineBuilders),
-          extraLegBuilders_(extraLegBuilders), continueOnError_(continueOnError) {}
+          extraLegBuilders_(extraLegBuilders), referenceData_(referenceData), continueOnError_(continueOnError) {}
 
     /*! \deprecated use other TradeFactory dependent constructor.
          Provided for backwards compatibility only
@@ -79,6 +80,7 @@ protected:
     boost::shared_ptr<TradeFactory> tradeFactory_;
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
+    boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
     const bool continueOnError_;
 };
 

@@ -131,6 +131,13 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
         // Check it's equity reference data
         if (auto erd = boost::dynamic_pointer_cast<EquityReferenceDatum>(refData)) {
             eqName = erd->equityData().equityId;
+
+            // check currency - if leg currency and equity currency are different check for FxTerms, or else fail
+            if (data.currency() != erd->equityData().currency) {
+                QL_REQUIRE(eqData->eqCurrency() == erd->equityData().currency, 
+                    "Equity Currency provided, " << eqData->eqCurrency() << ", does not match equity currency from reference " << erd->equityData().currency);
+                QL_REQUIRE(!eqData->fxIndex().empty(), "Must from FXIndex for Equity Quanto Swap Leg");
+            }
         }
     }
     auto eqCurve = *engineFactory->market()->equityCurve(eqName, configuration);

@@ -93,6 +93,13 @@ int OREApp::run() {
         buildMarket();
         out_ << "OK" << endl;
 
+        /*********
+         * Load Reference Data
+         */
+        out_ << setw(tab_) << left << "Reference... " << flush;
+        getReferenceData();
+        out_ << "OK" << endl;
+
         /************************
          *Build Pricing Engine Factory
          */
@@ -289,6 +296,15 @@ void OREApp::setupLog() {
 
 void OREApp::closeLog() { Log::instance().removeAllLoggers(); }
 
+void OREApp::getReferenceData() {
+    if (params_->has("setup", "referenceDataFile") && params_->get("setup", "referenceDataFile") != "") {
+        string referenceDataFile = inputPath_ + "/" + params_->get("setup", "referenceDataFile");
+        referenceData_ = boost::make_shared<BasicReferenceDataManager>(referenceDataFile);
+    } else {
+        LOG("No referenceDataFile file loaded");
+    }
+}
+
 void OREApp::getConventions() {
     if (params_->has("setup", "conventionsFile") && params_->get("setup", "conventionsFile") != "") {
         string conventionsFile = inputPath_ + "/" + params_->get("setup", "conventionsFile");
@@ -321,7 +337,7 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
-        engineData, market, configurations, getExtraEngineBuilders(), getExtraLegBuilders());
+        engineData, market, configurations, getExtraEngineBuilders(), getExtraLegBuilders(), referenceData_);
 
     LOG("Engine factory built");
     MEM_LOG;
@@ -479,7 +495,7 @@ boost::shared_ptr<ReportWriter> OREApp::getReportWriter() const {
 
 boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() {
     return boost::make_shared<SensitivityRunner>(params_, buildTradeFactory(), getExtraEngineBuilders(),
-                                                 getExtraLegBuilders(), continueOnError_);
+                                                 getExtraLegBuilders(), referenceData_, continueOnError_);
 }
 
 void OREApp::runStressTest() {

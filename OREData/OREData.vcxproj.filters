@@ -479,12 +479,15 @@
     </ClInclude>
     <ClInclude Include="ored\portfolio\referencedata.hpp">
       <Filter>portfolio</Filter>
-    </ClInclude>  
+    </ClInclude>
     <ClInclude Include="ored\utilities\serializationdaycounter.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
     <ClInclude Include="ored\utilities\serializationperiod.hpp">
       <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\referencedatafactory.hpp">
+      <Filter>portfolio</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -640,6 +643,7 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\nettingsetmanager.cpp">
       <Filter>portfolio</Filter>
+    </ClCompile>
     <ClCompile Include="ored\portfolio\optiondata.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
@@ -851,6 +855,9 @@
       <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\referencedata.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\referencedatafactory.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>

@@ -183,7 +183,7 @@ public:
         const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders = {},
         //! additional leg builders
         const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders = {},
-        //! optional ointer to reference data
+        //! optional pointer to reference data
         const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
 
     //! Return the market used by this EngineFactory

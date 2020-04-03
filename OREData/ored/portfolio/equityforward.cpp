@@ -48,6 +48,11 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
         // Check it's equity reference data
         if (auto erd = boost::dynamic_pointer_cast<EquityReferenceDatum>(refData)) {
             name = erd->equityData().equityId;
+
+            // check currency - if option currency and equity currency are different this is a quanto trade
+            QL_REQUIRE(currency_ == erd->equityData().currency,
+                "Option Currency: " << currency_ << " does not match equity currency: " << erd->equityData().currency << ", EquityForward does not support quantos.");
+
         }
     }
 
@@ -90,7 +95,7 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, eNode, "LongShort", longShort_);
     XMLUtils::addChild(doc, eNode, "Maturity", maturityDate_);
-    XMLUtils::appendNode(node, equityIdentifier_.toXML(doc));
+    XMLUtils::appendNode(eNode, equityIdentifier_.toXML(doc));
     XMLUtils::addChild(doc, eNode, "Currency", currency_);
     XMLUtils::addChild(doc, eNode, "Strike", strike_);
     XMLUtils::addChild(doc, eNode, "Quantity", quantity_);

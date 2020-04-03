@@ -41,8 +41,8 @@ void EquityIdentifier::fromXML(XMLNode* node) {
     if (tmp) {
         equityName_ = XMLUtils::getNodeValue(tmp);
     } else {
-        tmp = XMLUtils::getChildNode(node, "EquityInformation");
-        QL_REQUIRE(tmp, "Need either a Name or EquityInformation node.");
+        tmp = XMLUtils::getChildNode(node, "EquityIdentifier");
+        QL_REQUIRE(tmp, "Need either a Name or EquityIdentifier node.");
         identifierType_ = XMLUtils::getChildValue(tmp, "IdentifierType", true);
         identifierName_ = XMLUtils::getChildValue(tmp, "IdentifierName", true);
         currency_ = XMLUtils::getChildValue(tmp, "Currency", false);
@@ -56,12 +56,14 @@ XMLNode* EquityIdentifier::toXML(XMLDocument& doc) {
     if (identifierName_.empty()) {
         node = doc.allocNode("Name", equityName_);
     } else {
-        node = doc.allocNode("EquityInformation");
+        node = doc.allocNode("EquityIdentifier");
         QL_REQUIRE(node, "Failed to create trade node");
         XMLUtils::addChild(doc, node, "IdentifierType", identifierType_);
         XMLUtils::addChild(doc, node, "IdentifierName", identifierName_);
-        XMLUtils::addChild(doc, node, "Currency", currency_);
-        XMLUtils::addChild(doc, node, "Exchange", exchange_);
+        if (!currency_.empty())
+            XMLUtils::addChild(doc, node, "Currency", currency_);
+        if (!exchange_.empty())
+            XMLUtils::addChild(doc, node, "Exchange", exchange_);
     }
     return node;
 }
