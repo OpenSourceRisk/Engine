@@ -40,10 +40,11 @@
     <xs:sequence>	
       <xs:element type="xs:string" name="QuoteType" minOccurs="0"/>
       <xs:element type="xs:string" name="VolatilityType" minOccurs="0"/>
-      <xs:element type="xs:string" name="ExerciseType" minOccurs="0"/>	  			
+      <xs:element type="xs:string" name="ExerciseType" minOccurs="0"/>
       <xs:element type="quoteType" name="Quotes"/>
       <xs:element type="interpolationMethodType" name="Interpolation"/>
       <xs:element type="extrapolationType" name="Extrapolation"/>
+      <xs:element type="xs:boolean" name="EnforceMontoneVariance" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -218,7 +219,16 @@
     <xs:sequence>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
-      <xs:element type="xs:string" name="Expiries"/>
+      <xs:choice>
+        <xs:element type="xs:string" name="Expiries"/>
+        <xs:element type="constantVolatilityConfig" name="Constant"/>
+        <xs:element type="volatilityCurveConfig" name="Curve"/>
+        <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
+      </xs:choice>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="StrikeType" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="QuoteName" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

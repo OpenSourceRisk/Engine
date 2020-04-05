@@ -1610,22 +1610,36 @@ Specific data comprise
 */
 class IndexCDSOptionQuote : public MarketDatum {
 public:
+    //! Default constructor
     IndexCDSOptionQuote() {}
-    //! Constructor
-    IndexCDSOptionQuote(Real value, Date asofDate, const string& name, const string& indexName, const string& expiry, Real strike = 0.0)
-        : MarketDatum(value, asofDate, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION),
-          indexName_(indexName), expiry_(expiry), strike_(strike) {}
+    
+    //! Detailed constructor
+    /*! \param value     The volatility value
+        \param asof      The quote date
+        \param name      The quote name
+        \param indexName The name of the CDS index
+        \param expiry    Expiry object defining the quote's expiry
+        \param strike    Strike object defining the quote's strike
+    */
+    IndexCDSOptionQuote(QuantLib::Real value,
+        const QuantLib::Date& asof,
+        const std::string& name,
+        const std::string& indexName,
+        const boost::shared_ptr<Expiry>& expiry,
+        const boost::shared_ptr<BaseStrike>& strike = nullptr);
 
     //! \name Inspectors
     //@{
-    const string& indexName() const { return indexName_; }
-    const string& expiry() const { return expiry_; }
-    Real strike() const { return strike_; }
+    const std::string& indexName() const { return indexName_; }
+    const boost::shared_ptr<Expiry>& expiry() const { return expiry_; }
+    const boost::shared_ptr<BaseStrike>& strike() const { return strike_; }
     //@}
+
 private:
-    string indexName_;
-    string expiry_;
-    Real strike_;
+    std::string indexName_;
+    boost::shared_ptr<Expiry> expiry_;
+    boost::shared_ptr<BaseStrike> strike_;
+
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version) {
@@ -1747,7 +1761,7 @@ public:
     /*! \param value         The volatility value
         \param asof          The quote date
         \param name          The quote name
-        \param quoteType     The quote type, should be RATE_NVOL
+        \param quoteType     The quote type, should be RATE_LNVOL
         \param commodityName The name of the underlying commodity
         \param quoteCurrency The quote currency
         \param expiry        Expiry object defining the quote's expiry

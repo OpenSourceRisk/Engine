@@ -67,37 +67,62 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
 
     XMLNode* n;
-    if ((n = XMLUtils::getChildNode(node, "Constant"))) {
-        volatilityConfig_ = boost::make_shared<ConstantVolatilityConfig>();
-    } else if ((n = XMLUtils::getChildNode(node, "Curve"))) {
-        volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>();
-    } else if ((n = XMLUtils::getChildNode(node, "StrikeSurface"))) {
-        volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>();
-    } else if ((n = XMLUtils::getChildNode(node, "DeltaSurface"))) {
-        QL_FAIL("CDSVolatilityCurveConfig does not yet support a DeltaSurface.");
-    } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
-        QL_FAIL("CDSVolatilityCurveConfig does not yet support a MoneynessSurface.");
+    quoteName_ = "";
+    if (n = XMLUtils::getChildNode(node, "QuoteName"))
+        quoteName_ = XMLUtils::getNodeValue(n);
+
+    if (XMLUtils::getChildNode(node, "Expiries")) {
+        
+        // Giving just an Expiries node is allowed to be backwards compatible but is discouraged.
+        WLOG("Using an Expiries node only in CDSVolatilityCurveConfig is deprecated. " <<
+            "A volatility configuration node should be used instead.");
+        
+        // Build the quotes
+        vector<string> quotes = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
+        QL_REQUIRE(quotes.size() > 0, "Need at least one expiry in the Expiries node.");
+        string quoteName = quoteName_.empty() ? curveID_ : quoteName_;
+        string stem = "INDEX_CDS_OPTION/RATE_LNVOL/" + quoteName + "/";
+        for (string& q : quotes) {
+            q = stem + q;
+        }
+
+        // Create the relevant volatilityConfig_ object.
+        if (quotes.size() == 1) {
+            volatilityConfig_ = boost::make_shared<ConstantVolatilityConfig>(quotes[0]);
+        } else {
+            volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>(quotes, "Linear", "Flat");
+        }
+
     } else {
-        QL_FAIL("CDSVolatility node expects one child node with name in list: Constant,"
-            << " Curve, StrikeSurface.");
+        XMLNode* n;
+        if (n = XMLUtils::getChildNode(node, "Constant")) {
+            volatilityConfig_ = boost::make_shared<ConstantVolatilityConfig>();
+        } else if (n = XMLUtils::getChildNode(node, "Curve")) {
+            volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>();
+        } else if (n = XMLUtils::getChildNode(node, "StrikeSurface")) {
+            volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>();
+        } else if (n = XMLUtils::getChildNode(node, "DeltaSurface")) {
+            QL_FAIL("CDSVolatilityCurveConfig does not yet support a DeltaSurface.");
+        } else if (n = XMLUtils::getChildNode(node, "MoneynessSurface")) {
+            QL_FAIL("CDSVolatilityCurveConfig does not yet support a MoneynessSurface.");
+        } else {
+            QL_FAIL("CDSVolatility node expects one child node with name in list: Constant,"
+                << " Curve, StrikeSurface.");
+        }
+        volatilityConfig_->fromXML(n);
     }
-    volatilityConfig_->fromXML(n);
 
     dayCounter_ = "A365";
-    if ((n = XMLUtils::getChildNode(node, "DayCounter")))
+    if (n = XMLUtils::getChildNode(node, "DayCounter"))
         dayCounter_ = XMLUtils::getNodeValue(n);
 
     calendar_ = "NullCalendar";
-    if ((n = XMLUtils::getChildNode(node, "Calendar")))
+    if (n = XMLUtils::getChildNode(node, "Calendar"))
         calendar_ = XMLUtils::getNodeValue(n);
 
     strikeType_ = "";
-    if ((n = XMLUtils::getChildNode(node, "StrikeType")))
+    if (n = XMLUtils::getChildNode(node, "StrikeType"))
         strikeType_ = XMLUtils::getNodeValue(n);
-
-    quoteName_ = "";
-    if ((n = XMLUtils::getChildNode(node, "QuoteName")))
-        quoteName_ = XMLUtils::getNodeValue(n);
 
     populateQuotes();
 }
