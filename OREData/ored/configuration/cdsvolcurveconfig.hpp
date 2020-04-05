@@ -17,60 +17,62 @@
 */
 
 /*! \file ored/configuration/cdsvolcurveconfig.hpp
-    \brief CDS volatility curve configuration classes
+    \brief CDS and index CDS volatility configuration
     \ingroup configuration
 */
 
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
-#include <ql/types.hpp>
+#include <ored/configuration/volatilityconfig.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace ore {
 namespace data {
-using std::string;
-using std::vector;
-using ore::data::XMLNode;
-using QuantLib::Period;
-using QuantLib::DayCounter;
 
-//! CDS volatility structure configuration
-/*!
-  \ingroup configuration
+/*! CDS and index CDS volatility configuration
+    \ingroup configuration
 */
 class CDSVolatilityCurveConfig : public CurveConfig {
 public:
-    //! \name Constructors/Destructors
-    //@{
     //! Default constructor
-    CDSVolatilityCurveConfig() {}
+    CDSVolatilityCurveConfig();
+    
     //! Detailed constructor
-    CDSVolatilityCurveConfig(const string& curveID, const string& curveDescription, const vector<string>& expiries,
-                             const DayCounter& dayCounter = QuantLib::Actual365Fixed());
+    CDSVolatilityCurveConfig(
+        const std::string& curveId,
+        const std::string& curveDescription,
+        const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+        const std::string& dayCounter = "A365",
+        const std::string& calendar = "NullCalendar",
+        const std::string& strikeType = "",
+        const std::string& quoteName = "");
+
+    //! \name Inspectors
+    //@{
+    const boost::shared_ptr<VolatilityConfig>& volatilityConfig() const;
+    const std::string& dayCounter() const;
+    const std::string& calendar() const;
+    const std::string& strikeType() const;
+    const std::string& quoteName() const;
     //@}
 
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
     //@}
 
-    //! \name Inspectors
-    //@{
-    const vector<string>& expiries() const { return expiries_; }
-    const DayCounter& dayCounter() const { return dayCounter_; }
-    const vector<string>& quotes() override;
-    //@}
-
-    //! \name Setters
-    //@{
-    vector<string>& expiries() { return expiries_; }
-    DayCounter& dayCounter() { return dayCounter_; }
-    //@}
 private:
-    vector<string> expiries_;
-    DayCounter dayCounter_;
+    boost::shared_ptr<VolatilityConfig> volatilityConfig_;
+    std::string dayCounter_;
+    std::string calendar_;
+    std::string strikeType_;
+    std::string quoteName_;
+
+    //! Populate CurveConfig::quotes_ with the required quotes.
+    void populateQuotes();
 };
-} // namespace data
-} // namespace ore
+
+}
+}

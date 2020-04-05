@@ -23,44 +23,129 @@
 #include <ql/errors.hpp>
 
 using ore::data::XMLUtils;
+using std::string;
 
 namespace ore {
 namespace data {
 
-CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(const string& curveID, const string& curveDescription,
-                                                   const vector<string>& expiries, const DayCounter& dayCounter)
-    : CurveConfig(curveID, curveDescription), expiries_(expiries) {}
+CDSVolatilityCurveConfig::CDSVolatilityCurveConfig() {}
 
-const vector<string>& CDSVolatilityCurveConfig::quotes() {
-    if (quotes_.size() == 0) {
-        string base = "INDEX_CDS_OPTION/RATE_LNVOL/" + curveID_ + "/";
-        for (auto e : expiries_)
-            quotes_.push_back(base + e);
-    }
-    return quotes_;
+CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(
+    const std::string& curveId,
+    const std::string& curveDescription,
+    const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+    const std::string& dayCounter,
+    const std::string& calendar,
+    const std::string& strikeType,
+    const std::string& quoteName)
+    : CurveConfig(curveId, curveDescription),
+      volatilityConfig_(volatilityConfig),
+      dayCounter_(dayCounter),
+      calendar_(calendar),
+      strikeType_(strikeType),
+      quoteName_(quoteName) {
+    populateQuotes();
 }
 
+const boost::shared_ptr<VolatilityConfig>& CDSVolatilityCurveConfig::volatilityConfig() const {
+    return volatilityConfig_;
+}
+
+const string& CDSVolatilityCurveConfig::dayCounter() const { return dayCounter_; }
+
+const string& CDSVolatilityCurveConfig::calendar() const { return calendar_; }
+
+const string& CDSVolatilityCurveConfig::strikeType() const { return strikeType_; }
+
+const string& CDSVolatilityCurveConfig::quoteName() const { return quoteName_; }
+
 void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
+
     XMLUtils::checkNode(node, "CDSVolatility");
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
-    expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
-    string dc = XMLUtils::getChildValue(node, "DayCounter");
-    if (dc == "")
-        dc = "A365";
-    dayCounter_ = parseDayCounter(dc);
+
+    XMLNode* n;
+    if ((n = XMLUtils::getChildNode(node, "Constant"))) {
+        volatilityConfig_ = boost::make_shared<ConstantVolatilityConfig>();
+    } else if ((n = XMLUtils::getChildNode(node, "Curve"))) {
+        volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>();
+    } else if ((n = XMLUtils::getChildNode(node, "StrikeSurface"))) {
+        volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>();
+    } else if ((n = XMLUtils::getChildNode(node, "DeltaSurface"))) {
+        QL_FAIL("CDSVolatilityCurveConfig does not yet support a DeltaSurface.");
+    } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
+        QL_FAIL("CDSVolatilityCurveConfig does not yet support a MoneynessSurface.");
+    } else {
+        QL_FAIL("CDSVolatility node expects one child node with name in list: Constant,"
+            << " Curve, StrikeSurface.");
+    }
+    volatilityConfig_->fromXML(n);
+
+    dayCounter_ = "A365";
+    if ((n = XMLUtils::getChildNode(node, "DayCounter")))
+        dayCounter_ = XMLUtils::getNodeValue(n);
+
+    calendar_ = "NullCalendar";
+    if ((n = XMLUtils::getChildNode(node, "Calendar")))
+        calendar_ = XMLUtils::getNodeValue(n);
+
+    strikeType_ = "";
+    if ((n = XMLUtils::getChildNode(node, "StrikeType")))
+        strikeType_ = XMLUtils::getNodeValue(n);
+
+    quoteName_ = "";
+    if ((n = XMLUtils::getChildNode(node, "QuoteName")))
+        quoteName_ = XMLUtils::getNodeValue(n);
+
+    populateQuotes();
 }
 
 XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {
+
     XMLNode* node = doc.allocNode("CDSVolatility");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-    XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
-    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+
+    XMLNode* n = volatilityConfig_->toXML(doc);
+    XMLUtils::appendNode(node, n);
+
+    XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
+    XMLUtils::addChild(doc, node, "Calendar", calendar_);
+    if (!strikeType_.empty())
+        XMLUtils::addChild(doc, node, "StrikeType", strikeType_);
+    if (!quoteName_.empty())
+        XMLUtils::addChild(doc, node, "QuoteName", quoteName_);
 
     return node;
 }
-} // namespace data
-} // namespace ore
+
+void CDSVolatilityCurveConfig::populateQuotes() {
+
+    // The quotes depend on the type of volatility structure that has been configured.
+    if (auto vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(volatilityConfig_)) {
+        quotes_ = { vc->quote() };
+    } else if (auto vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(volatilityConfig_)) {
+        quotes_ = vc->quotes();
+    } else if (auto vc = boost::dynamic_pointer_cast<VolatilitySurfaceConfig>(volatilityConfig_)) {
+        
+        // Clear the quotes_ if necessary and populate with surface quotes
+        quotes_.clear();
+        
+        // If quoteName_ is empty, use the raw curveID_ in the quote id.
+        string quoteName = quoteName_.empty() ? curveID_ : quoteName_;
+
+        string stem = "INDEX_CDS_OPTION/RATE_LNVOL/" + quoteName + "/";
+        for (const pair<string, string>& p : vc->quotes()) {
+            quotes_.push_back(stem + p.first + "/" + p.second);
+        }
+
+    } else {
+        QL_FAIL("CDSVolatilityCurveConfig expected a constant, curve or surface");
+    }
+}
+
+}
+}
