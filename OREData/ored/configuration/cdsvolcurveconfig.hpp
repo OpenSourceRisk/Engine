@@ -31,12 +31,19 @@ namespace ore {
 namespace data {
 
 /*! CDS and index CDS volatility configuration
+    
+    If there is a need for different volatility surfaces for different terms, we expect the term to be 
+    a suffix on the curve configuration ID e.g. "-5Y" for a 5Y CDS, "-10Y" for a 10Y CDS etc. This term 
+    will be used to differentiate between market volatility quotes when building volatility structures. If 
+    the parsing of the term from the ID is not needed, it can be turned off below by setting \c parseTerm 
+    to \c false in the constructors.
+
     \ingroup configuration
 */
 class CDSVolatilityCurveConfig : public CurveConfig {
 public:
     //! Default constructor
-    CDSVolatilityCurveConfig();
+    CDSVolatilityCurveConfig(bool parseTerm = true);
     
     //! Detailed constructor
     CDSVolatilityCurveConfig(
@@ -46,7 +53,8 @@ public:
         const std::string& dayCounter = "A365",
         const std::string& calendar = "NullCalendar",
         const std::string& strikeType = "",
-        const std::string& quoteName = "");
+        const std::string& quoteName = "",
+        bool parseTerm = true);
 
     //! \name Inspectors
     //@{
@@ -55,6 +63,8 @@ public:
     const std::string& calendar() const;
     const std::string& strikeType() const;
     const std::string& quoteName() const;
+    bool parseTerm() const;
+    const std::string& term() const;
     //@}
 
     //! \name Serialisation
@@ -69,6 +79,11 @@ private:
     std::string calendar_;
     std::string strikeType_;
     std::string quoteName_;
+    bool parseTerm_;
+    std::string term_;
+
+    //! Attempt to populate the term_ from the curve configuration's ID.
+    void populateTerm();
 
     //! Populate CurveConfig::quotes_ with the required quotes.
     void populateQuotes();

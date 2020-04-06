@@ -65,7 +65,7 @@ CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& l
         } else if (auto vapo = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
             QL_FAIL("VolatilityApoFutureSurfaceConfig does not make sense for CDSVolCurve.");
         } else {
-            QL_FAIL("Unexpected VolatilityConfig in CommodityVolatilityConfig");
+            QL_FAIL("Unexpected VolatilityConfig in CDSVolatilityConfig");
         }
 
         LOG("CDSVolCurve: finished building CDS volatility structure with ID " << spec.curveConfigID());
@@ -75,7 +75,7 @@ CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& l
         QL_FAIL("CDS volatility curve building for ID " << spec.curveConfigID() <<  " failed : " << e.what());
     }
     catch (...) {
-        QL_FAIL("Commodity volatility curve building for ID " << spec.curveConfigID() << " failed: unknown error");
+        QL_FAIL("CDS volatility curve building for ID " << spec.curveConfigID() << " failed: unknown error");
     }
 }
 
@@ -137,7 +137,7 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
         // Create the regular expression
         regex regexp(boost::replace_all_copy(vcc.quotes()[0], "*", ".*"));
 
-        // Loop over quotes and process commodity option quotes matching pattern on asof
+        // Loop over quotes and process CDS option quotes matching pattern on asof
         for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
 
             // Go to next quote if the market data point's date does not equal our asof
@@ -189,7 +189,7 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
                     QL_REQUIRE(expiryDate > asof, "CDS volatility quote '" << q->name() <<
                         "' has expiry in the past (" << io::iso_date(expiryDate) << ")");
                     QL_REQUIRE(curveData.count(expiryDate) == 0, "Duplicate quote for the date " <<
-                        io::iso_date(expiryDate) << " provided by commodity volatility config " << vc.curveID());
+                        io::iso_date(expiryDate) << " provided by CDS volatility config " << vc.curveID());
                     curveData[expiryDate] = q->quote()->value();
 
                     TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," <<
@@ -338,6 +338,10 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
         if (!strike)
             continue;
 
+        // Make sure that the CDS index option quote term matches the configured term
+        if (q->indexTerm() != vc.term())
+            continue;
+
         // If we have been given a list of explicit expiries, check that the quote matches one of them.
         // Move to the next quote if it does not.
         if (!expWc) {
@@ -418,21 +422,21 @@ void CDSVolCurve::buildVolatilityExplicit(const Date& asof, CDSVolatilityCurveCo
 
     LOG("CDSVolCurve: start building 2-D volatility absolute strike surface with explicit strikes and expiries");
 
-    // Map to hold the rows of the commodity volatility matrix. The keys are the expiry dates and the values are the 
+    // Map to hold the rows of the CDS volatility matrix. The keys are the expiry dates and the values are the 
     // vectors of volatilities, one for each configured strike.
     map<Date, vector<Real>> surfaceData;
 
     // Count the number of quotes added. We check at the end that we have added all configured quotes.
     Size quotesAdded = 0;
 
-    // Loop over quotes and process commodity option quotes that have been requested
+    // Loop over quotes and process CDS option quotes that have been requested
     for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
 
         // Go to next quote if the market data point's date does not equal our asof.
         if (md->asofDate() != asof)
             continue;
 
-        // Go to next quote if not a commodity option quote.
+        // Go to next quote if not a CDS option quote.
         auto q = boost::dynamic_pointer_cast<IndexCDSOptionQuote>(md);
         if (!q)
             continue;

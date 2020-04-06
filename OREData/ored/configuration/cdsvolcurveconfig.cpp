@@ -28,7 +28,7 @@ using std::string;
 namespace ore {
 namespace data {
 
-CDSVolatilityCurveConfig::CDSVolatilityCurveConfig() {}
+CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(bool parseTerm) : parseTerm_(parseTerm) {}
 
 CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(
     const std::string& curveId,
@@ -37,13 +37,17 @@ CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(
     const std::string& dayCounter,
     const std::string& calendar,
     const std::string& strikeType,
-    const std::string& quoteName)
+    const std::string& quoteName,
+    bool parseTerm)
     : CurveConfig(curveId, curveDescription),
       volatilityConfig_(volatilityConfig),
       dayCounter_(dayCounter),
       calendar_(calendar),
       strikeType_(strikeType),
-      quoteName_(quoteName) {
+      quoteName_(quoteName),
+      parseTerm_(parseTerm) {
+    
+    populateTerm();
     populateQuotes();
 }
 
@@ -59,12 +63,17 @@ const string& CDSVolatilityCurveConfig::strikeType() const { return strikeType_;
 
 const string& CDSVolatilityCurveConfig::quoteName() const { return quoteName_; }
 
+bool CDSVolatilityCurveConfig::parseTerm() const { return parseTerm_; }
+
+const string& CDSVolatilityCurveConfig::term() const { return term_; }
+
 void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "CDSVolatility");
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
+    populateTerm();
 
     XMLNode* n;
     quoteName_ = "";
@@ -82,6 +91,11 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
         QL_REQUIRE(quotes.size() > 0, "Need at least one expiry in the Expiries node.");
         string quoteName = quoteName_.empty() ? curveID_ : quoteName_;
         string stem = "INDEX_CDS_OPTION/RATE_LNVOL/" + quoteName + "/";
+
+        // If the CDS term is given, add it to the quote name.
+        if (!term_.empty())
+            stem += term_ + "/";
+
         for (string& q : quotes) {
             q = stem + q;
         }
@@ -147,6 +161,29 @@ XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {
     return node;
 }
 
+void CDSVolatilityCurveConfig::populateTerm() {
+
+    // If parsing of term from ID has been turned off, just return early.
+    if (!parseTerm_)
+        return;
+
+    // Attempt to parse suffix "-<tenor_string>" from curve configuration ID.
+    // If not of this form, term_ is left as "".
+    auto pos = curveID_.find_last_of('-');
+    if (pos != string::npos && pos != curveID_.size() - 1) {
+        Period tmp;
+        string term = curveID_.substr(pos + 1);
+        if (tryParse<Period>(curveID_.substr(pos + 1), tmp, parsePeriod)) {
+            DLOG("Parsed term suffix, " << term << ", from curve configuration ID " << curveID_);
+            term_ = term;
+        } else {
+            DLOG("Could not convert suffix, " << term << ", from curve configuration ID " << curveID_ << " to term.");
+        }
+    } else {
+        DLOG("Could not parse a term suffix from curve configuration ID " << curveID_);
+    }
+}
+
 void CDSVolatilityCurveConfig::populateQuotes() {
 
     // The quotes depend on the type of volatility structure that has been configured.
@@ -163,6 +200,11 @@ void CDSVolatilityCurveConfig::populateQuotes() {
         string quoteName = quoteName_.empty() ? curveID_ : quoteName_;
 
         string stem = "INDEX_CDS_OPTION/RATE_LNVOL/" + quoteName + "/";
+
+        // If the CDS term is given, add it to the quote name.
+        if (!term_.empty())
+            stem += term_ + "/";
+
         for (const pair<string, string>& p : vc->quotes()) {
             quotes_.push_back(stem + p.first + "/" + p.second);
         }

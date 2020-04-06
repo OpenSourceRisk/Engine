@@ -1598,15 +1598,8 @@ private:
 };
 
 //! CDS Index Option data class
-/*!
-This class holds single market points of type
-- INDEX_CDS_OPTION
-Specific data comprise
-- index name
-- option expiry (either a date or a period)
-- strike (optional, default is ATM)
-
-\ingroup marketdata
+/*! This class holds single market points of type \c INDEX_CDS_OPTION
+    \ingroup marketdata
 */
 class IndexCDSOptionQuote : public MarketDatum {
 public:
@@ -1619,25 +1612,30 @@ public:
         \param name      The quote name
         \param indexName The name of the CDS index
         \param expiry    Expiry object defining the quote's expiry
-        \param strike    Strike object defining the quote's strike
+        \param indexTerm The term of the underlying CDS index e.g. 3Y, 5Y, 7Y, 10Y etc. If not given, defaults to 
+                         an empty string. Assumed here that the term is encoded in \c indexName.
+        \param strike    Strike object defining the quote's strike. If not given, assumed that quote is ATM.
     */
     IndexCDSOptionQuote(QuantLib::Real value,
         const QuantLib::Date& asof,
         const std::string& name,
         const std::string& indexName,
         const boost::shared_ptr<Expiry>& expiry,
+        const std::string& indexTerm = "",
         const boost::shared_ptr<BaseStrike>& strike = nullptr);
 
     //! \name Inspectors
     //@{
     const std::string& indexName() const { return indexName_; }
     const boost::shared_ptr<Expiry>& expiry() const { return expiry_; }
+    const std::string& indexTerm() const { return indexTerm_; }
     const boost::shared_ptr<BaseStrike>& strike() const { return strike_; }
     //@}
 
 private:
     std::string indexName_;
     boost::shared_ptr<Expiry> expiry_;
+    std::string indexTerm_;
     boost::shared_ptr<BaseStrike> strike_;
 
     //! Serialization
@@ -1646,6 +1644,7 @@ private:
         ar& boost::serialization::base_object<MarketDatum>(*this);
         ar& indexName_;
         ar& expiry_;
+        ar& indexTerm_;
         ar& strike_;
     }
 };

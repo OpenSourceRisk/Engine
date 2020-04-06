@@ -72,10 +72,12 @@ IndexCDSOptionQuote::IndexCDSOptionQuote(QuantLib::Real value,
     const string& name,
     const string& indexName,
     const boost::shared_ptr<Expiry>& expiry,
+    const string& indexTerm,
     const boost::shared_ptr<BaseStrike>& strike)
     : MarketDatum(value, asof, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION),
       indexName_(indexName),
       expiry_(expiry),
+      indexTerm_(indexTerm),
       strike_(strike) {}
 
 namespace {
