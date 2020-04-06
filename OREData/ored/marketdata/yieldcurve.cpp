@@ -140,10 +140,11 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::ConvexMonotone;
     else if (s == "ExponentialSplines")
         return YieldCurve::InterpolationMethod::ExponentialSplines;
-    if (s == "NelsonSiegel")
+    else if (s == "NelsonSiegel")
         return YieldCurve::InterpolationMethod::NelsonSiegel;
     else if (s == "Svensson")
-        return YieldCurve::InterpolationMethod::Svensson;    else
+        return YieldCurve::InterpolationMethod::Svensson;
+    else
         QL_FAIL("Yield curve interpolation method " << s << " not recognized");
 };
 
