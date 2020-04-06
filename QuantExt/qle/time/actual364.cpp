@@ -38,7 +38,7 @@ namespace QuantExt {
                                        const Date&) const {
         Time t = underlyingDCF.yearFraction(d1,d2);
 
-        return t * 360 / 364;
+        return t * 360.0 / 364.0;
     }
 
 }
