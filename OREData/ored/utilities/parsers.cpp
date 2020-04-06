@@ -56,6 +56,7 @@
 #include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/time/actual364.hpp>
 
 #include <boost/lexical_cast.hpp>
 
@@ -560,7 +561,11 @@ DayCounter parseDayCounter(const string& s) {
                                         {"NL/365", Actual365Fixed(Actual365Fixed::NoLeap)},
                                         {"Actual/365 (JGB)", Actual365Fixed(Actual365Fixed::NoLeap)},
                                         {"Simple", SimpleDayCounter()},
-                                        {"Year", YearCounter()}
+                                        {"Year", YearCounter()},
+                                        {"A364", Actual364()},
+                                        {"Actual/364", Actual364()},
+                                        {"Act/364", Actual364()},
+                                        {"ACT/364", Actual364()}
     };
 
     auto it = m.find(s);
