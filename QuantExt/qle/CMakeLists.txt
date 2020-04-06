@@ -1,23 +1,23 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt_SRC calendars/chile.cpp
-calendars/largejointcalendar.cpp
+set(QuantExt_SRC calendars/austria.cpp
+calendars/belgium.cpp
+calendars/chile.cpp
 calendars/cme.cpp
 calendars/colombia.cpp
 calendars/france.cpp
 calendars/ice.cpp
 calendars/israel.cpp
+calendars/largejointcalendar.cpp
+calendars/luxembourg.cpp
 calendars/malaysia.cpp
 calendars/netherlands.cpp
 calendars/peru.cpp
 calendars/philippines.cpp
+calendars/spain.cpp
 calendars/switzerland.cpp
 calendars/thailand.cpp
 calendars/wmr.cpp
-calendars/belgium.cpp
-calendars/spain.cpp
-calendars/luxembourg.cpp
-calendars/austria.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
 cashflows/brlcdicouponpricer.cpp
@@ -191,24 +191,24 @@ time/yearcounter.cpp)
 # hpp files, this list is maintained manually
 
 set(QuantExt_HDR auto_link.hpp
-calendars/largejointcalendar.hpp
+calendars/austria.hpp
+calendars/belgium.hpp
 calendars/chile.hpp
 calendars/cme.hpp
 calendars/colombia.hpp
 calendars/france.hpp
 calendars/ice.hpp
 calendars/israel.hpp
+calendars/largejointcalendar.hpp
+calendars/luxembourg.hpp
 calendars/malaysia.hpp
 calendars/netherlands.hpp
 calendars/peru.hpp
 calendars/philippines.hpp
+calendars/spain.hpp
 calendars/switzerland.hpp
 calendars/thailand.hpp
 calendars/wmr.hpp
-calendars/belgium.hpp
-calendars/spain.hpp
-calendars/luxembourg.hpp
-calendars/austria.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
 cashflows/brlcdicouponpricer.hpp
