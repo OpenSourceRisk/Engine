@@ -41,7 +41,7 @@ namespace QuantExt {
       private:
         class Impl : public DayCounter::Impl {
           public:
-            std::string name() const { return "Year"; }
+            std::string name() const { return "Actual/364"; }
             QuantLib::Date::serial_type dayCount(const QuantLib::Date& d1,
 						 const QuantLib::Date& d2) const;
 	    QuantLib::Time yearFraction(const QuantLib::Date& d1,

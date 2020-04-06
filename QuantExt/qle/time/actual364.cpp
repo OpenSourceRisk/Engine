@@ -19,26 +19,22 @@
 */
 
 #include <qle/time/actual364.hpp>
-#include <ql/time/daycounters/actual360.hpp>
 
 using QuantLib::Date;
 using QuantLib::Time;
 
 namespace QuantExt {
-    namespace { QuantLib::DayCounter underlyingDCF = QuantLib::Actual360(); }
     
     Date::serial_type Actual364::Impl::dayCount(const Date& d1,
                                                 const Date& d2) const {
-        return underlyingDCF.dayCount(d1,d2);
+        return d2 - d1;
     }
 
     Time Actual364::Impl::yearFraction(const Date& d1,
                                        const Date& d2,
                                        const Date&,
                                        const Date&) const {
-        Time t = underlyingDCF.yearFraction(d1,d2);
-
-        return t * 360.0 / 364.0;
+        return daysBetween(d1, d2) / 364.0;
     }
 
 }
