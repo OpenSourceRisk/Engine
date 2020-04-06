@@ -55,7 +55,16 @@ public:
     enum class InterpolationVariable { Zero, Discount, Forward };
 
     //! Supported interpolation methods
-    enum class InterpolationMethod { Linear, LogLinear, NaturalCubic, FinancialCubic, ConvexMonotone };
+    enum class InterpolationMethod {
+        Linear,
+        LogLinear,
+        NaturalCubic,
+        FinancialCubic,
+        ConvexMonotone,
+        ExponentialSplines, // fitted bond curves only
+        NelsonSiegel,       // fitted bond curves only
+        Svensson            // fitted bond curves only
+    };
 
     //! Constructor
     YieldCurve( //! Valuation date
@@ -103,6 +112,8 @@ private:
     void buildBootstrappedCurve();
     //! Build a yield curve that uses QuantExt::DiscountRatioModifiedCurve
     void buildDiscountRatioCurve();
+    //! Build a yield curve that uses QuantLib::FittedBondCurve
+    void buildFittedBondCurve();
     //! Return the yield curve with the given \p id from the requiredYieldCurves_ map
     boost::shared_ptr<YieldCurve> getYieldCurve(const std::string& ccy, const std::string& id) const;
 

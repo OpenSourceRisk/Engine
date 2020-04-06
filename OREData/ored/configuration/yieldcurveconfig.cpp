@@ -64,8 +64,9 @@ YieldCurveSegment::Type parseYieldCurveSegment(const string& s) {
         return YieldCurveSegment::Type::CrossCcyFixFloat;
     else if (iequals(s, "Discount Ratio"))
         return YieldCurveSegment::Type::DiscountRatio;
-    else
-        QL_FAIL("Yield curve segment type " << s << " not recognized");
+    else if (iequals(s, "FittedBond"))
+        return YieldCurveSegment::Type::FittedBond;
+    QL_FAIL("Yield curve segment type " << s << " not recognized");
 }
 
 class SegmentIDGetter : public AcyclicVisitor,
@@ -75,7 +76,8 @@ class SegmentIDGetter : public AcyclicVisitor,
                         public Visitor<TenorBasisYieldCurveSegment>,
                         public Visitor<CrossCcyYieldCurveSegment>,
                         public Visitor<ZeroSpreadedYieldCurveSegment>,
-                        public Visitor<DiscountRatioYieldCurveSegment> {
+                        public Visitor<DiscountRatioYieldCurveSegment>,
+                        public Visitor<FittedBondYieldCurveSegment> {
 
 public:
     SegmentIDGetter(const string& curveID, set<string>& requiredYieldCurveIDs)
@@ -88,6 +90,7 @@ public:
     void visit(CrossCcyYieldCurveSegment& s);
     void visit(ZeroSpreadedYieldCurveSegment& s);
     void visit(DiscountRatioYieldCurveSegment& s);
+    void visit(FittedBondYieldCurveSegment& s);
 
 private:
     string curveID_;
@@ -157,6 +160,11 @@ void SegmentIDGetter::visit(DiscountRatioYieldCurveSegment& s) {
     }
 }
 
+void SegmentIDGetter::visit(FittedBondYieldCurveSegment& s) {
+    for (auto const& c : s.iborIndexCurves())
+        requiredYieldCurveIDs_.insert(c.second);
+}
+
 // YieldCurveConfig
 YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                    const string& discountCurveID,
@@ -221,6 +229,8 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
                 segment.reset(new ZeroSpreadedYieldCurveSegment());
             } else if (childName == "DiscountRatio") {
                 segment.reset(new DiscountRatioYieldCurveSegment());
+            } else if (childName == "FittedBond") {
+                segment.reset(new FittedBondYieldCurveSegment());
             } else {
                 QL_FAIL("Yield curve segment node name not recognized.");
             }
@@ -622,6 +632,61 @@ XMLNode* DiscountRatioYieldCurveSegment::toXML(XMLDocument& doc) {
 
 void DiscountRatioYieldCurveSegment::accept(AcyclicVisitor& v) {
     if (Visitor<DiscountRatioYieldCurveSegment>* v1 = dynamic_cast<Visitor<DiscountRatioYieldCurveSegment>*>(&v))
+        v1->visit(*this);
+    else
+        YieldCurveSegment::accept(v);
+}
+
+FittedBondYieldCurveSegment::FittedBondYieldCurveSegment(const string& typeID, const vector<string>& quotes,
+                                                         const map<string, string>& iborIndexCurves,
+                                                         const bool extrapolateFlat, const Size calibrationTrials)
+    : YieldCurveSegment(typeID, "", quotes), iborIndexCurves_(iborIndexCurves), extrapolateFlat_(extrapolateFlat),
+      calibrationTrials_(calibrationTrials) {}
+
+void FittedBondYieldCurveSegment::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "FittedBond");
+    YieldCurveSegment::fromXML(node);
+
+    vector<string> iborIndexNames;
+    vector<string> iborIndexCurves = XMLUtils::getChildrenValuesWithAttributes(
+        node, "IborIndexCurves", "IborIndexCurve", "iborIndex", iborIndexNames, false);
+    for (Size i = 0; i < iborIndexNames.size(); ++i) {
+        iborIndexCurves_[iborIndexNames[i]] = iborIndexCurves[i];
+    }
+
+    if (auto n = XMLUtils::getChildNode(node, "ExtrapolateFlat")) {
+        extrapolateFlat_ = parseBool(XMLUtils::getNodeValue(n));
+    } else {
+        extrapolateFlat_ = false;
+    }
+    if (auto n = XMLUtils::getChildNode(node, "CalibrationTrials")) {
+        calibrationTrials_ = parseInteger(XMLUtils::getNodeValue(n));
+    } else {
+        calibrationTrials_ = 1;
+    }
+}
+
+XMLNode* FittedBondYieldCurveSegment::toXML(XMLDocument& doc) {
+    XMLNode* node = YieldCurveSegment::toXML(doc);
+    XMLUtils::setNodeName(doc, node, "FittedBond");
+
+    vector<string> iborIndexNames;
+    vector<string> iborIndexCurves;
+    for (auto const& c : iborIndexCurves_) {
+        iborIndexNames.push_back(c.first);
+        iborIndexCurves.push_back(c.second);
+    }
+    XMLUtils::addChildrenWithAttributes(doc, node, "IborIndexCurves", "IborIndexCurve", iborIndexCurves, "iborIndex",
+                                        iborIndexNames);
+
+    XMLUtils::addChild(doc, node, "ExtrapolateFlat", extrapolateFlat_);
+    XMLUtils::addChild(doc, node, "CalibrationTrials", static_cast<int>(calibrationTrials_));
+    return node;
+}
+
+void FittedBondYieldCurveSegment::accept(AcyclicVisitor& v) {
+    Visitor<FittedBondYieldCurveSegment>* v1 = dynamic_cast<Visitor<FittedBondYieldCurveSegment>*>(&v);
+    if (v1 != 0)
         v1->visit(*this);
     else
         YieldCurveSegment::accept(v);

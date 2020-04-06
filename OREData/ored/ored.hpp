@@ -42,6 +42,7 @@
 #include <ored/marketdata/equitycurve.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/expiry.hpp>
+#include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
 #include <ored/marketdata/fixings.hpp>
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>

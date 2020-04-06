@@ -69,7 +69,8 @@ public:
         FXForward,
         CrossCcyBasis,
         CrossCcyFixFloat,
-        DiscountRatio
+        DiscountRatio,
+        FittedBond
     };
     //! Default destructor
     virtual ~YieldCurveSegment() {}
@@ -413,6 +414,47 @@ private:
     std::string numeratorCurveCurrency_;
     std::string denominatorCurveId_;
     std::string denominatorCurveCurrency_;
+};
+
+//! FittedBond yield curve segment
+/*!
+  A bond segment is used to build a yield curve from liquid bond quotes.
+
+  \ingroup configuration
+*/
+class FittedBondYieldCurveSegment : public YieldCurveSegment {
+public:
+    //! \name Constructors/Destructors
+    //@{
+    //! Default constructor
+    FittedBondYieldCurveSegment() {}
+    //! Detailed constructor
+    FittedBondYieldCurveSegment(const string& typeID, const vector<string>& quotes,
+                                const map<string, string>& iborIndexCurves, const bool extrapolateFlat,
+                                const Size calibrationTrials);
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const map<string, string>& iborIndexCurves() const { return iborIndexCurves_; }
+    const bool extrapolateFlat() const { return extrapolateFlat_; }
+    const Size calibrationTrials() const { return calibrationTrials_; }
+    //@}
+
+    //! \name Visitability
+    //@{
+    virtual void accept(AcyclicVisitor&);
+    //@}
+
+private:
+    map<string, string> iborIndexCurves_;
+    bool extrapolateFlat_;
+    Size calibrationTrials_;
 };
 
 //! Yield Curve configuration
