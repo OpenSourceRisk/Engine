@@ -77,7 +77,6 @@ XMLNode* EquityUnderlying::toXML(XMLDocument& doc) {
 }
 
 void CommodityUnderlying::fromXML(XMLNode* node) {
-    // May get an explicit CreditCurveId node. If so, we use it. Otherwise, we must have ReferenceInformation node.
     XMLNode* tmp = XMLUtils::getChildNode(node, "Name");
     if (tmp) {
         name_ = XMLUtils::getNodeValue(tmp);
@@ -130,24 +129,30 @@ XMLNode* FXUnderlying::toXML(XMLDocument& doc) {
 }
 
 void UnderlyingBuilder::fromXML(XMLNode* node) {
-    XMLNode* unode = XMLUtils::getChildNode(node, "Underlying");
-    string type = XMLUtils::getChildValue(unode, "Type", true);
+    XMLNode* unode = XMLUtils::getChildNode(node, "Name");
+    if (unode) {
+        // if only a name node, make an underlying with no type
+        string name = XMLUtils::getChildValue(node, "Name", true);
+        underlying_ = boost::make_shared<Underlying>("", name);
+    } else {
+        unode = XMLUtils::getChildNode(node, "Underlying");
+        string type = XMLUtils::getChildValue(unode, "Type", true);
 
-    if (type == "Equity")
-        underlying_ = boost::make_shared<EquityUnderlying>();
-    else if (type == "Commodity")
-        underlying_ = boost::make_shared<CommodityUnderlying>();
-    else if (type == "FX")
-        underlying_ = boost::make_shared<FXUnderlying>();
-    else {
-        QL_FAIL("Unknown Underlying type " << type);
+        if (type == "Equity")
+            underlying_ = boost::make_shared<EquityUnderlying>();
+        else if (type == "Commodity")
+            underlying_ = boost::make_shared<CommodityUnderlying>();
+        else if (type == "FX")
+            underlying_ = boost::make_shared<FXUnderlying>();
+        else {
+            QL_FAIL("Unknown Underlying type " << type);
+        }
+        underlying_->fromXML(node);
     }
-    underlying_->fromXML(node);
 }
 
 XMLNode* UnderlyingBuilder::toXML(XMLDocument& doc) {
-    XMLNode* node;
-    return node;
+    return NULL;
 }
 
 } // namespace data

@@ -25,7 +25,7 @@ public:
     //! Default constructor
     Underlying() : weight_(QuantLib::Null<QuantLib::Real>()) {};
 
-    //! Constructor with tye
+    //! Constructor with type
     Underlying(const std::string& type, const std::string& name, const QuantLib::Real weight = QuantLib::Null<QuantLib::Real>()) :
         type_(type), name_(name), weight_(weight) {};
 
