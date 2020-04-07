@@ -51,21 +51,11 @@ class ReferenceDatumFactory : public QuantLib::Singleton<ReferenceDatumFactory> 
     friend class QuantLib::Singleton<ReferenceDatumFactory>;
 
 public:
-    /*! The container type used to store the leg data type key and the function that will be used to build a default
-        instance of that leg data type.
-    */
+
     typedef std::map<std::string, std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()>> map_type;
 
-    /*! A call to \c build should return an instance of \c LegAdditionalData corresponding to the required \p legType.
-        For example, a call to <code>build("Fixed")</code> should return a \c FixedLegData instance.
-
-        \warning If the \p legType has not been added to the factory then a call to this method for that \p legType
-                 will return a \c nullptr
-    */
     boost::shared_ptr<ReferenceDatum> build(const std::string& refDatumType);
 
-    /*! Add a builder function \p builder for a given \p legType
-    */
     void addBuilder(const std::string& refDatumType, std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder);
 
 private:

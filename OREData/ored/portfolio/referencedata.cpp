@@ -96,6 +96,11 @@ void BasicReferenceDataManager::fromXML(XMLNode* node) {
     }
 }
 
+
+void BasicReferenceDataManager::addDatum(const string& type, const string& id, const boost::shared_ptr<ReferenceDatum>& referenceDatum) {
+    data_[make_pair(type, id)] = referenceDatum;
+}
+
 boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildReferenceDatum(const string& refDataType) {
     auto refData = ReferenceDatumFactory::instance().build(refDataType);
     QL_REQUIRE(refData, "Reference data type " << refDataType << " has not been registered with the reference data factory.");

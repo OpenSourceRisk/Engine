@@ -471,9 +471,6 @@
     <ClInclude Include="ored\portfolio\builders\capflooredcpileg.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\equityidentifier.hpp">
-      <Filter>portfolio</Filter>
-    </ClInclude>
     <ClInclude Include="ored\utilities\dategrid.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
@@ -487,6 +484,9 @@
       <Filter>utilities</Filter>
     </ClInclude>
     <ClInclude Include="ored\portfolio\referencedatafactory.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\underlying.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
   </ItemGroup>
@@ -848,9 +848,6 @@
     <ClCompile Include="ored\portfolio\builders\cpicapfloor.cpp">
       <Filter>portfolio\builders</Filter>
     </ClCompile>
-    <ClCompile Include="ored\portfolio\equityidentifier.cpp">
-      <Filter>portfolio</Filter>
-    </ClCompile>
     <ClCompile Include="ored\utilities\dategrid.cpp">
       <Filter>utilities</Filter>
     </ClCompile>
@@ -858,6 +855,9 @@
       <Filter>portfolio</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\referencedatafactory.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\underlying.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>

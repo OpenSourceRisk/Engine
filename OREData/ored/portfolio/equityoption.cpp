@@ -63,7 +63,7 @@ void EquityOption::fromXML(XMLNode* node) {
     XMLNode* eqNode = XMLUtils::getChildNode(node, "EquityOptionData");
     QL_REQUIRE(eqNode, "No EquityOptionData Node");
     option_.fromXML(XMLUtils::getChildNode(eqNode, "OptionData"));
-    equityIdentifier_.fromXML(eqNode);
+    equityUnderlying_.fromXML(eqNode);
     currency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
     strike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
@@ -75,7 +75,7 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, eqNode);
 
     XMLUtils::appendNode(eqNode, option_.toXML(doc));
-    XMLUtils::appendNode(eqNode, equityIdentifier_.toXML(doc));
+    XMLUtils::appendNode(eqNode, equityUnderlying_.toXML(doc));
     XMLUtils::addChild(doc, eqNode, "Currency", currency_);
     XMLUtils::addChild(doc, eqNode, "Strike", strike_);
     XMLUtils::addChild(doc, eqNode, "Quantity", quantity_);

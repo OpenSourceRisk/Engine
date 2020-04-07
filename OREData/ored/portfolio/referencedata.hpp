@@ -77,7 +77,7 @@ public:
         std::string proxyIdentifier;
     };
 
-    EquityReferenceDatum() {}
+    EquityReferenceDatum() { setType(TYPE); }
 
     EquityReferenceDatum(const string& id) : ReferenceDatum(TYPE, id) {}
 
@@ -89,8 +89,10 @@ public:
     const EquityData& equityData() const { return equityData_; }
     void setEquityData(const EquityData& equityData) { equityData_ = equityData; }
 
-private:
+protected:
     EquityData equityData_;
+
+private:
     static ReferenceDatumRegister<ReferenceDatumBuilder<EquityReferenceDatum>> reg_;
 };
 
@@ -116,6 +118,7 @@ class ReferenceDataManager {
 public:
     virtual bool hasData(const string& type, const string& id) const = 0;
     virtual boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id) const = 0;
+    virtual void addDatum(const string& type, const string& id, const boost::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
 };
 
 //! Basic Concrete impl that loads an big XML and keeps data in memory
@@ -126,6 +129,8 @@ public:
 
     // Load extra data and append to this manger
     void appendData(const string& filename) { fromFile(filename); }
+
+    void addDatum(const string& type, const string& id, const boost::shared_ptr<ReferenceDatum>& referenceDatum);
 
     boost::shared_ptr<ReferenceDatum> buildReferenceDatum(const string& refDataType);
 

@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/portfolio/equityidentifier.hpp>
+#include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 
 namespace ore {
@@ -39,9 +39,9 @@ public:
     //! Default constructor
     EquityOption() : VanillaOptionTrade(AssetClass::EQ) { tradeType_ = "EquityOption"; }
     //! Constructor
-    EquityOption(Envelope& env, OptionData option, EquityIdentifier equityIdentifier, string currency, double strike, double quantity)
-        : VanillaOptionTrade(env, AssetClass::EQ, option, equityIdentifier.equityName(), 
-            currency, strike, quantity), equityIdentifier_(equityIdentifier) { tradeType_ = "EquityOption"; }
+    EquityOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, string currency, double strike, double quantity)
+        : VanillaOptionTrade(env, AssetClass::EQ, option, equityUnderlying.name(),
+            currency, strike, quantity), equityUnderlying_(equityUnderlying) { tradeType_ = "EquityOption"; }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
@@ -51,7 +51,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& equityName() const { return equityIdentifier_.equityName(); }
+    const string& equityName() const { return equityUnderlying_.name(); }
     //@}
 
     //! \name Serialisation
@@ -61,7 +61,7 @@ public:
     //@}
 
 private:
-    EquityIdentifier equityIdentifier_;
+    EquityUnderlying equityUnderlying_;
 };
 } // namespace data
 } // namespace ore
