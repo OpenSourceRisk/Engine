@@ -54,6 +54,7 @@ public:
         const std::string& calendar = "NullCalendar",
         const std::string& strikeType = "",
         const std::string& quoteName = "",
+        QuantLib::Real strikeFactor = 1.0,
         bool parseTerm = true);
 
     //! \name Inspectors
@@ -63,6 +64,7 @@ public:
     const std::string& calendar() const;
     const std::string& strikeType() const;
     const std::string& quoteName() const;
+    QuantLib::Real strikeFactor() const;
     bool parseTerm() const;
     const std::string& term() const;
     //@}
@@ -79,6 +81,7 @@ private:
     std::string calendar_;
     std::string strikeType_;
     std::string quoteName_;
+    QuantLib::Real strikeFactor_;
     bool parseTerm_;
     std::string term_;
 

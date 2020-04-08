@@ -23,6 +23,7 @@
 #include <ql/errors.hpp>
 
 using ore::data::XMLUtils;
+using QuantLib::Real;
 using std::string;
 
 namespace ore {
@@ -31,13 +32,14 @@ namespace data {
 CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(bool parseTerm) : parseTerm_(parseTerm) {}
 
 CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(
-    const std::string& curveId,
-    const std::string& curveDescription,
+    const string& curveId,
+    const string& curveDescription,
     const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
-    const std::string& dayCounter,
-    const std::string& calendar,
-    const std::string& strikeType,
-    const std::string& quoteName,
+    const string& dayCounter,
+    const string& calendar,
+    const string& strikeType,
+    const string& quoteName,
+    Real strikeFactor,
     bool parseTerm)
     : CurveConfig(curveId, curveDescription),
       volatilityConfig_(volatilityConfig),
@@ -45,6 +47,7 @@ CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(
       calendar_(calendar),
       strikeType_(strikeType),
       quoteName_(quoteName),
+      strikeFactor_(strikeFactor),
       parseTerm_(parseTerm) {
     
     populateTerm();
@@ -62,6 +65,8 @@ const string& CDSVolatilityCurveConfig::calendar() const { return calendar_; }
 const string& CDSVolatilityCurveConfig::strikeType() const { return strikeType_; }
 
 const string& CDSVolatilityCurveConfig::quoteName() const { return quoteName_; }
+
+Real CDSVolatilityCurveConfig::strikeFactor() const { return strikeFactor_; }
 
 bool CDSVolatilityCurveConfig::parseTerm() const { return parseTerm_; }
 
@@ -138,6 +143,10 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
     if (n = XMLUtils::getChildNode(node, "StrikeType"))
         strikeType_ = XMLUtils::getNodeValue(n);
 
+    strikeFactor_ = 1.0;
+    if (n = XMLUtils::getChildNode(node, "StrikeFactor"))
+        strikeFactor_ = parseReal(XMLUtils::getNodeValue(n));
+
     populateQuotes();
 }
 
@@ -157,6 +166,7 @@ XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "StrikeType", strikeType_);
     if (!quoteName_.empty())
         XMLUtils::addChild(doc, node, "QuoteName", quoteName_);
+    XMLUtils::addChild(doc, node, "StrikeFactor", strikeFactor_);
 
     return node;
 }

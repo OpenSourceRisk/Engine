@@ -229,6 +229,7 @@
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="StrikeType" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="QuoteName" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="positiveDecimal" name="StrikeFactor" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

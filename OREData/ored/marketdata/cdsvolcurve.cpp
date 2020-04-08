@@ -362,7 +362,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
 
         // If we make it here, add the data to the aligned vectors.
         expiries.push_back(getExpiry(asof, q->expiry()));
-        strikes.push_back(strike->strike());
+        strikes.push_back(strike->strike() / vc.strikeFactor());
         vols.push_back(q->quote()->value());
         quotesAdded++;
 
@@ -529,8 +529,14 @@ void CDSVolCurve::buildVolatilityExplicit(const Date& asof, CDSVolatilityCurveCo
             " strike extrapolation settings are ignored");
     }
 
+    // Divide the configured strikes by the strike factor before using in surface
+    vector<Real> strikes = configuredStrikes;
+    for (Real& strike : strikes) {
+        strike /= vc.strikeFactor();
+    }
+
     DLOG("Creating BlackVarianceSurface object");
-    auto tmp = boost::make_shared<BlackVarianceSurface>(asof, calendar_, expiryDates, configuredStrikes,
+    auto tmp = boost::make_shared<BlackVarianceSurface>(asof, calendar_, expiryDates, strikes,
         volatilities, dayCounter_, strikeExtrap, strikeExtrap);
 
     // Set the interpolation if configured properly. The default is Bilinear.
