@@ -25,7 +25,7 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <ored/portfolio/Underlying.hpp>
+#include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/parsers.hpp>
