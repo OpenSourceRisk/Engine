@@ -55,7 +55,7 @@ public:
         const std::string& strikeType = "",
         const std::string& quoteName = "",
         QuantLib::Real strikeFactor = 1.0,
-        bool parseTerm = true);
+        bool parseTerm = false);
 
     //! \name Inspectors
     //@{
@@ -66,7 +66,7 @@ public:
     const std::string& quoteName() const;
     QuantLib::Real strikeFactor() const;
     bool parseTerm() const;
-    const std::string& term() const;
+    const std::pair<std::string, std::string>& nameTerm() const;
     //@}
 
     //! \name Serialisation
@@ -83,14 +83,25 @@ private:
     std::string quoteName_;
     QuantLib::Real strikeFactor_;
     bool parseTerm_;
-    std::string term_;
 
-    //! Attempt to populate the term_ from the curve configuration's ID.
-    void populateTerm();
+    //! Name and term pair if the \c curveID_ is of that form and \c parseTerm_ is \c true.
+    std::pair<std::string, std::string> nameTerm_;
+
+    //! Attempt to populate the nameTerm_ pair from the curve configuration's ID.
+    void populateNameTerm();
 
     //! Populate CurveConfig::quotes_ with the required quotes.
     void populateQuotes();
+
+    //! Give back the quote stem used in construction of the quote strings
+    std::string quoteStem() const;
 };
+
+/*! Given an \p id of the form \c name-tenor, parse and return a pair of strings where the first element of the pair 
+    is the name and the second element is the tenor. A check is made that the tenor can be parsed as a 
+    QuantLib::Period. If the parse is not successful, the pair of strings that are returned are empty.
+*/
+std::pair<std::string, std::string> extractTermFromId(const std::string& id);
 
 }
 }

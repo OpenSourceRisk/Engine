@@ -339,7 +339,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
             continue;
 
         // Make sure that the CDS index option quote term matches the configured term
-        if (q->indexTerm() != vc.term())
+        if (q->indexTerm() != vc.nameTerm().second)
             continue;
 
         // If we have been given a list of explicit expiries, check that the quote matches one of them.

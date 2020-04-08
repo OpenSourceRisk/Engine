@@ -50,7 +50,7 @@ CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(
       strikeFactor_(strikeFactor),
       parseTerm_(parseTerm) {
     
-    populateTerm();
+    populateNameTerm();
     populateQuotes();
 }
 
@@ -70,7 +70,7 @@ Real CDSVolatilityCurveConfig::strikeFactor() const { return strikeFactor_; }
 
 bool CDSVolatilityCurveConfig::parseTerm() const { return parseTerm_; }
 
-const string& CDSVolatilityCurveConfig::term() const { return term_; }
+const pair<string, string>& CDSVolatilityCurveConfig::nameTerm() const { return nameTerm_; }
 
 void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
 
@@ -78,7 +78,7 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
-    populateTerm();
+    populateNameTerm();
 
     XMLNode* n;
     quoteName_ = "";
@@ -91,16 +91,12 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
         WLOG("Using an Expiries node only in CDSVolatilityCurveConfig is deprecated. " <<
             "A volatility configuration node should be used instead.");
         
-        // Build the quotes
+        // Get the expiries
         vector<string> quotes = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
         QL_REQUIRE(quotes.size() > 0, "Need at least one expiry in the Expiries node.");
-        string quoteName = quoteName_.empty() ? curveID_ : quoteName_;
-        string stem = "INDEX_CDS_OPTION/RATE_LNVOL/" + quoteName + "/";
-
-        // If the CDS term is given, add it to the quote name.
-        if (!term_.empty())
-            stem += term_ + "/";
-
+        
+        // Build the quotes by appending the expiries to the quote stem.
+        string stem = quoteStem();
         for (string& q : quotes) {
             q = stem + q;
         }
@@ -171,27 +167,15 @@ XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {
     return node;
 }
 
-void CDSVolatilityCurveConfig::populateTerm() {
+void CDSVolatilityCurveConfig::populateNameTerm() {
 
     // If parsing of term from ID has been turned off, just return early.
     if (!parseTerm_)
         return;
 
-    // Attempt to parse suffix "-<tenor_string>" from curve configuration ID.
-    // If not of this form, term_ is left as "".
-    auto pos = curveID_.find_last_of('-');
-    if (pos != string::npos && pos != curveID_.size() - 1) {
-        Period tmp;
-        string term = curveID_.substr(pos + 1);
-        if (tryParse<Period>(curveID_.substr(pos + 1), tmp, parsePeriod)) {
-            DLOG("Parsed term suffix, " << term << ", from curve configuration ID " << curveID_);
-            term_ = term;
-        } else {
-            DLOG("Could not convert suffix, " << term << ", from curve configuration ID " << curveID_ << " to term.");
-        }
-    } else {
-        DLOG("Could not parse a term suffix from curve configuration ID " << curveID_);
-    }
+    // Attempt to parse "<name>-<tenor>" from curve configuration ID.
+    // If not of this form, nameTerm_ is left as ("", "").
+    nameTerm_ = extractTermFromId(curveID_);
 }
 
 void CDSVolatilityCurveConfig::populateQuotes() {
@@ -206,15 +190,8 @@ void CDSVolatilityCurveConfig::populateQuotes() {
         // Clear the quotes_ if necessary and populate with surface quotes
         quotes_.clear();
         
-        // If quoteName_ is empty, use the raw curveID_ in the quote id.
-        string quoteName = quoteName_.empty() ? curveID_ : quoteName_;
-
-        string stem = "INDEX_CDS_OPTION/RATE_LNVOL/" + quoteName + "/";
-
-        // If the CDS term is given, add it to the quote name.
-        if (!term_.empty())
-            stem += term_ + "/";
-
+        // Build the quotes by appending the expiries and strikes to the quote stem.
+        string stem = quoteStem();
         for (const pair<string, string>& p : vc->quotes()) {
             quotes_.push_back(stem + p.first + "/" + p.second);
         }
@@ -222,6 +199,52 @@ void CDSVolatilityCurveConfig::populateQuotes() {
     } else {
         QL_FAIL("CDSVolatilityCurveConfig expected a constant, curve or surface");
     }
+}
+
+string CDSVolatilityCurveConfig::quoteStem() const {
+
+    string stem{ "INDEX_CDS_OPTION/RATE_LNVOL/" };
+
+    if (!quoteName_.empty()) {
+        // If an explicit quote name has been provided use this.
+        stem += quoteName_;
+    } else if (!nameTerm_.first.empty()) {
+        // If we have parsed the curveID_ from <name>-<term> to a (name, term) pair, use name.
+        stem += nameTerm_.first;
+    } else {
+        // Fallback to just using the curveID_.
+        stem += curveID_;
+    }
+    stem += "/";
+
+    // If we have parsed the curveID_ from <name>-<term> to a (name, term) pair, append term.
+    if (!nameTerm_.second.empty())
+        stem += nameTerm_.second + "/";
+
+    return stem;
+}
+
+pair<string, string> extractTermFromId(const string& id) {
+
+    pair<string, string> result;
+
+    // Attempt to parse suffix "-<tenor_string>" from id.
+    auto pos = id.find_last_of('-');
+    if (pos != string::npos && pos != id.size() - 1 && pos != 0) {
+        Period tmp;
+        string term = id.substr(pos + 1);
+        if (tryParse<Period>(id.substr(pos + 1), tmp, parsePeriod)) {
+            DLOG("Parsed term suffix, " << term << ", from id " << id);
+            result.first = id.substr(0, pos);
+            result.second = term;
+        } else {
+            DLOG("Could not convert suffix, " << term << ", from id " << id << " to term.");
+        }
+    } else {
+        DLOG("Could not parse a term suffix from id " << id);
+    }
+
+    return result;
 }
 
 }
