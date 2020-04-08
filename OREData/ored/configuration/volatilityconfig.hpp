@@ -96,7 +96,8 @@ public:
     //! Default constructor
     VolatilityCurveConfig(
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
-        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
+        bool enforceMontoneVariance = true);
 
     //! Explicit constructor
     VolatilityCurveConfig(
@@ -104,13 +105,15 @@ public:
         const std::string& interpolation,
         const std::string& extrapolation,
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
-        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
+        bool enforceMontoneVariance = true);
 
     //! \name Inspectors
     //@{
     const std::vector<std::string>& quotes() const;
     const std::string& interpolation() const;
     const std::string& extrapolation() const;
+    bool enforceMontoneVariance() const;
     //@}
 
     //! \name Serialisation
@@ -123,6 +126,7 @@ private:
     std::vector<std::string> quotes_;
     std::string interpolation_;
     std::string extrapolation_;
+    bool enforceMontoneVariance_;
 };
 
 /*! Base volatility configuration for a 2-D volatility surface

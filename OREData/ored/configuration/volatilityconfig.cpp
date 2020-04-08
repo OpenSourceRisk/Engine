@@ -95,17 +95,20 @@ XMLNode* ConstantVolatilityConfig::toXML(XMLDocument& doc) {
 }
 
 VolatilityCurveConfig::VolatilityCurveConfig(MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType) : VolatilityConfig(quoteType, exerciseType) {}
+    QuantLib::Exercise::Type exerciseType, bool enforceMontoneVariance)
+    : VolatilityConfig(quoteType, exerciseType), enforceMontoneVariance_(enforceMontoneVariance) {}
 
 VolatilityCurveConfig::VolatilityCurveConfig(const vector<string>& quotes,
     const string& interpolation,
     const string& extrapolation, 
     MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType)
+    QuantLib::Exercise::Type exerciseType,
+    bool enforceMontoneVariance)
     : VolatilityConfig(quoteType, exerciseType),
       quotes_(quotes),
       interpolation_(interpolation),
-      extrapolation_(extrapolation) {}
+      extrapolation_(extrapolation),
+      enforceMontoneVariance_(enforceMontoneVariance) {}
 
 const vector<string>& VolatilityCurveConfig::quotes() const { return quotes_; }
 
@@ -113,12 +116,18 @@ const string& VolatilityCurveConfig::interpolation() const { return interpolatio
 
 const string& VolatilityCurveConfig::extrapolation() const { return extrapolation_; }
 
+bool VolatilityCurveConfig::enforceMontoneVariance() const { return enforceMontoneVariance_; }
+
 void VolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Curve");
     VolatilityConfig::fromBaseNode(node);
     quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
     interpolation_ = XMLUtils::getChildValue(node, "Interpolation", true);
     extrapolation_ = XMLUtils::getChildValue(node, "Extrapolation", true);
+    
+    enforceMontoneVariance_ = true;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "EnforceMontoneVariance"))
+        enforceMontoneVariance_ = parseBool(XMLUtils::getNodeValue(n));
 }
 
 XMLNode* VolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -127,6 +136,7 @@ XMLNode* VolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
     XMLUtils::addChild(doc, node, "Interpolation", interpolation_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
+    XMLUtils::addChild(doc, node, "EnforceMontoneVariance", enforceMontoneVariance_);
     return node;
 }
 

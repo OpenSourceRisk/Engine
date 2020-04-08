@@ -67,6 +67,19 @@ EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& na
     parseDateOrPeriod(expiry, tmpDate, tmpPeriod, tmpBool);
 }
 
+IndexCDSOptionQuote::IndexCDSOptionQuote(QuantLib::Real value,
+    const Date& asof,
+    const string& name,
+    const string& indexName,
+    const boost::shared_ptr<Expiry>& expiry,
+    const string& indexTerm,
+    const boost::shared_ptr<BaseStrike>& strike)
+    : MarketDatum(value, asof, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION),
+      indexName_(indexName),
+      expiry_(expiry),
+      indexTerm_(indexTerm),
+      strike_(strike) {}
+
 namespace {
 Natural yearFromExpiryString(const std::string& expiry) {
     QL_REQUIRE(expiry.length() == 7, "The expiry string must be of "
