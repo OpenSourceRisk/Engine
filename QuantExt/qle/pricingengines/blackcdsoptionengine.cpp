@@ -76,7 +76,7 @@ public:
 
         QuantExt::CreditDefaultSwap swap_strike(
             swapCoupon_->side(), 1.0, spread, schedule_, Following, Actual360(),
-            swapCoupon_->settlesAccrual(), swapCoupon_->paysAtDefaultTime(), swapCoupon_->protectionStartDate(),
+            swapCoupon_->settlesAccrual(), swapCoupon_->protectionPaymentTime(), swapCoupon_->protectionStartDate(),
             boost::shared_ptr<Claim>(), Actual360(true));
 
         auto hz = swap_strike.impliedHazardRate(0.0, termStructure_, Actual360(), recovery_, 1e-6);
@@ -166,14 +166,14 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
                 .withRule(DateGeneration::CDS2015);
             auto swap_strike = boost::make_shared<QuantExt::CreditDefaultSwap>(
             Protection::Buyer, 1e8, strike, schedule, Following, Actual360(),
-            swap.settlesAccrual(), swap.paysAtDefaultTime(), swap.protectionStartDate(),
+            swap.settlesAccrual(), swap.protectionPaymentTime(), swap.protectionStartDate(),
             boost::shared_ptr<Claim>(), Actual360(true));
             auto hz = swap_strike->impliedHazardRate(0.0, termStructure_, Actual360());
 
             // Re-create the underlying swap for risky annuity calculation
             auto swap_ra = boost::make_shared<QuantExt::CreditDefaultSwap>(
             Protection::Buyer, 1, couponSpread, schedule, Following, Actual360(),
-            swap.settlesAccrual(), swap.paysAtDefaultTime(), swap.protectionStartDate(),
+            swap.settlesAccrual(), swap.protectionPaymentTime(), swap.protectionStartDate(),
             boost::shared_ptr<Claim>(), Actual360(true));
 
             Handle<DefaultProbabilityTermStructure> dp(boost::make_shared<FlatHazardRate>(
@@ -200,7 +200,7 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
 
             auto swap_coupon = boost::make_shared<QuantExt::CreditDefaultSwap>(
                 swap.side(), 1.0, couponSpread, schedule, Following, Actual360(),
-                swap.settlesAccrual(), swap.paysAtDefaultTime(), swap.protectionStartDate(),
+                swap.settlesAccrual(), swap.protectionPaymentTime(), swap.protectionStartDate(),
             boost::shared_ptr<Claim>(), Actual360(true));
 
             SimpleQuote spreadQuote;
