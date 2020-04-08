@@ -98,6 +98,7 @@ portfolio/optiondata.cpp
 portfolio/optionwrapper.cpp
 portfolio/portfolio.cpp
 portfolio/referencedata.cpp
+portfolio/referencedatafactory.cpp
 portfolio/schedule.cpp
 portfolio/swap.cpp
 portfolio/swaption.cpp
@@ -248,6 +249,7 @@ portfolio/optiondata.hpp
 portfolio/optionwrapper.hpp
 portfolio/portfolio.hpp
 portfolio/referencedata.hpp
+portfolio/referencedatafactory.hpp
 portfolio/schedule.hpp
 portfolio/structuredtradeerror.hpp
 portfolio/swap.hpp
