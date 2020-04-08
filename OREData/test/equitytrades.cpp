@@ -109,11 +109,11 @@ BOOST_AUTO_TEST_CASE(testEquityTradePrices) {
     OptionData putDataPremium("Short", "Put", "European", true, vector<string>(1, exp_str), "Cash", "", 1.0, "EUR",
                               exp_str);
     Envelope env("CP1");
-    EquityOption eqCall(env, callData, "zzzCorp", "EUR", 95.0, 1.0);
-    EquityOption eqCallPremium(env, callDataPremium, "zzzCorp", "EUR", 95.0, 1.0);
-    EquityOption eqPut(env, putData, "zzzCorp", "EUR", 95.0, 1.0);
-    EquityOption eqPutPremium(env, putDataPremium, "zzzCorp", "EUR", 95.0, 1.0);
-    ore::data::EquityForward eqFwd(env, "Long", "zzzCorp", "EUR", 1.0, exp_str, 95.0);
+    EquityOption eqCall(env, callData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
+    EquityOption eqCallPremium(env, callDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
+    EquityOption eqPut(env, putData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
+    EquityOption eqPutPremium(env, putDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
+    ore::data::EquityForward eqFwd(env, "Long", EquityUnderlying("zzzCorp"), "EUR", 1.0, exp_str, 95.0);
 
     Real expectedNPV_Put = -2.4648;           // negative for sold option
     Real expectedNPV_Put_Premium = -1.513558; // less negative due to received premium of 1 EUR at expiry
