@@ -371,7 +371,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
     }
 
     LOG("CDSVolCurve: added " << quotesAdded << " quotes in building wildcard based absolute strike surface.");
-    QL_REQUIRE(quotesAdded > 0, "No quotes loaded for" << vc.curveID());
+    QL_REQUIRE(quotesAdded > 0, "No quotes loaded for " << vc.curveID());
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     bool flatStrikeExtrap = true;
