@@ -79,6 +79,7 @@
 
   <xs:complexType name="swapData">
     <xs:sequence>
+      <xs:element type="settlementType" name="Settlement" maxOccurs="1" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
@@ -718,6 +719,7 @@
       <xs:element type="xs:string" name="ReferenceObligation" minOccurs="0"/>
       <xs:element type="bool" name="SettlesAccrual" minOccurs="0"/>
       <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0"/>
+      <xs:element type="xs:string" name="ProtectionPaymentTime" minOccurs="0"/>
       <xs:element type="date" name="ProtectionStart" minOccurs="0"/>
       <xs:element type="date" name="UpfrontDate" minOccurs="0"/>
       <xs:element type="xs:float" name="UpfrontFee" minOccurs="0"/>

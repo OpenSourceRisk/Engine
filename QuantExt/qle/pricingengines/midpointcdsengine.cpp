@@ -119,22 +119,29 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
         Probability S = survivalProbability(paymentDate);
         Probability P = defaultProbability(effectiveStartDate, endDate);
 
+        Date protectionPaymentDate;
+        if (arguments.protectionPaymentTime == CreditDefaultSwap::ProtectionPaymentTime::atDefault) {
+            protectionPaymentDate = defaultDate;
+        } else if (arguments.protectionPaymentTime == CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd) {
+            protectionPaymentDate = paymentDate;
+        } else if (arguments.protectionPaymentTime == CreditDefaultSwap::ProtectionPaymentTime::atMaturity) {
+            protectionPaymentDate = arguments.maturity;
+        } else {
+            QL_FAIL("protectionPaymentTime not handled");
+        }
+
         // on one side, we add the fixed rate payments in case of
         // survival...
         results.couponLegNPV += S * coupon->amount() * discountCurve_->discount(paymentDate);
         // ...possibly including accrual in case of default.
         if (arguments.settlesAccrual) {
-            if (arguments.paysAtDefaultTime) {
-                results.couponLegNPV += P * coupon->accruedAmount(defaultDate) * discountCurve_->discount(defaultDate);
-            } else {
-                // pays at the end
-                results.couponLegNPV += P * coupon->amount() * discountCurve_->discount(paymentDate);
-            }
+            results.couponLegNPV +=
+                P * coupon->accruedAmount(defaultDate) * discountCurve_->discount(protectionPaymentDate);
         }
 
         // on the other side, we add the payment in case of default.
         results.defaultLegNPV += expectedLoss(defaultDate, effectiveStartDate, endDate, arguments.notional) *
-                                 discountCurve_->discount(arguments.paysAtDefaultTime ? defaultDate : paymentDate);
+                                 discountCurve_->discount(protectionPaymentDate);
     }
 
     Real upfrontSign = 1.0;

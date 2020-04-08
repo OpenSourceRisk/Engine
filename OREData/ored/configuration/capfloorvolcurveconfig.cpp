@@ -236,7 +236,7 @@ void CapFloorVolatilityCurveConfig::populateQuotes() {
     // Cap floor quotes are for the form:
     // CAPFLOOR/(RATE_LNVOL|RATE_NVOL|RATE_SLNVOL)/<CCY>/<TENOR>/<IBOR_TENOR>/<ATM>/<RELATIVE>/<STRIKE>
 
-    // Ibor index term and currency
+    // Ibor index term and currency (do not allow for convention based ibor indices here)
     string tenor;
     boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_, tenor);
     string ccy = index->currency().code();
@@ -279,6 +279,7 @@ void CapFloorVolatilityCurveConfig::configureVolatilityType(const std::string& t
 
 void CapFloorVolatilityCurveConfig::configureType() {
     type_ = tenors_.empty() ? Type::Atm : (includeAtm_ ? Type::SurfaceWithAtm : Type::Surface);
+    //type_ = strikes_.empty() ? Type::Atm : (includeAtm_ ? Type::SurfaceWithAtm : Type::Surface);
 }
 
 void CapFloorVolatilityCurveConfig::validate() const {

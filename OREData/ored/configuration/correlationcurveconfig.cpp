@@ -268,9 +268,9 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
     QL_REQUIRE(tokens1.size() >= 3, "at least three tokens expected in " << index1)
     QL_REQUIRE(tokens2.size() >= 3, "at least three tokens expected in " << index2)
 
-    // both CMS or both Ibor
+    // both CMS or both Ibor, tenor is the last token (3rd or even 4th for customised CMS indices)
     if (s1 == 3 || s1 == 4)
-        return parsePeriod(tokens1[2]) < parsePeriod(tokens2[2]);
+        return parsePeriod(tokens1.back()) < parsePeriod(tokens2.back());
 
     QL_REQUIRE(tokens1.size() >= 4, "at least four tokens expected in " << index1)
     QL_REQUIRE(tokens2.size() >= 4, "at least four tokens expected in " << index2)

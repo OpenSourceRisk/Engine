@@ -73,6 +73,7 @@ using namespace QuantLib;
 */
 class CreditDefaultSwap : public Instrument {
 public:
+    enum ProtectionPaymentTime { atDefault, atPeriodEnd, atMaturity };
     class arguments;
     class results;
     class engine;
@@ -89,11 +90,7 @@ public:
         @param dayCounter  Day-count convention for accrual.
         @param settlesAccrual  Whether or not the accrued coupon is
                                due in the event of a default.
-        @param paysAtDefaultTime  If set to true, any payments
-                                  triggered by a default event are
-                                  due at default time. If set to
-                                  false, they are due at the end of
-                                  the accrual period.
+        @param protectionPaymentTime timing of protection and default accrual payments
         @param protectionStart  The first date where a default
                                 event will trigger the contract.
         @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to 
@@ -102,7 +99,7 @@ public:
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
-                      bool paysAtDefaultTime = true, const Date& protectionStart = Date(),
+                      ProtectionPaymentTime protectionPaymentTime = atDefault, const Date& protectionStart = Date(),
                       const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
                       const DayCounter& lastPeriodDayCounter = DayCounter());
     //! CDS quoted as upfront and running spread
@@ -116,11 +113,7 @@ public:
         @param dayCounter  Day-count convention for accrual.
         @param settlesAccrual Whether or not the accrued coupon is
                               due in the event of a default.
-        @param paysAtDefaultTime If set to true, any payments
-                                 triggered by a default event are
-                                 due at default time. If set to
-                                 false, they are due at the end of
-                                 the accrual period.
+        @param protectionPaymentTime timing of protection and default accrual payments
         @param protectionStart The first date where a default
                                event will trigger the contract.
         @param upfrontDate Settlement date for the upfront payment.
@@ -130,7 +123,7 @@ public:
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate upfront, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
-                      bool paysAtDefaultTime = true, const Date& protectionStart = Date(),
+                      ProtectionPaymentTime protectionPaymentTime = atDefault, const Date& protectionStart = Date(),
                       const Date& upfrontDate = Date(), const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
                       const DayCounter& lastPeriodDayCounter = DayCounter());
     //@}
@@ -147,7 +140,7 @@ public:
     Rate runningSpread() const;
     boost::optional<Rate> upfront() const;
     bool settlesAccrual() const;
-    bool paysAtDefaultTime() const;
+    ProtectionPaymentTime protectionPaymentTime() const;
     const Leg& coupons() const;
     //! The first date for which defaults will trigger the contract
     const Date& protectionStartDate() const;
@@ -247,7 +240,8 @@ protected:
     Real notional_;
     boost::optional<Rate> upfront_;
     Rate runningSpread_;
-    bool settlesAccrual_, paysAtDefaultTime_;
+    bool settlesAccrual_;
+    ProtectionPaymentTime protectionPaymentTime_;
     boost::shared_ptr<Claim> claim_;
     Leg leg_;
     boost::shared_ptr<CashFlow> upfrontPayment_, accrualRebate_;
@@ -277,7 +271,7 @@ public:
     Leg leg;
     boost::shared_ptr<CashFlow> upfrontPayment, accrualRebate;
     bool settlesAccrual;
-    bool paysAtDefaultTime;
+    ProtectionPaymentTime protectionPaymentTime;
     boost::shared_ptr<Claim> claim;
     Date protectionStart, maturity;
     void validate() const;

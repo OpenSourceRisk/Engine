@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
 set(QuantExt_SRC calendars/chile.cpp
+calendars/largejointcalendar.cpp
 calendars/cme.cpp
 calendars/colombia.cpp
 calendars/france.cpp
@@ -190,6 +191,7 @@ time/yearcounter.cpp)
 # hpp files, this list is maintained manually
 
 set(QuantExt_HDR auto_link.hpp
+calendars/largejointcalendar.hpp
 calendars/chile.hpp
 calendars/cme.hpp
 calendars/colombia.hpp

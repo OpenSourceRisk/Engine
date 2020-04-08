@@ -177,7 +177,7 @@ CreditDefaultSwapData::CreditDefaultSwapData(const string& issuerId,
     const CdsReferenceInformation& referenceInformation,
     const LegData& leg,
     bool settlesAccrual,
-    bool paysAtDefaultTime,
+    const QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime,
     const Date& protectionStart,
     const Date& upfrontDate,
     Real upfrontFee,
@@ -186,7 +186,7 @@ CreditDefaultSwapData::CreditDefaultSwapData(const string& issuerId,
     : issuerId_(issuerId),
       leg_(leg),
       settlesAccrual_(settlesAccrual),
-      paysAtDefaultTime_(paysAtDefaultTime),
+      protectionPaymentTime_(protectionPaymentTime),
       protectionStart_(protectionStart),
       upfrontDate_(upfrontDate),
       upfrontFee_(upfrontFee),
@@ -212,7 +212,24 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
     }
     
     settlesAccrual_ = XMLUtils::getChildValueAsBool(node, "SettlesAccrual", false);       // default = Y
-    paysAtDefaultTime_ = XMLUtils::getChildValueAsBool(node, "PaysAtDefaultTime", false); // default = Y
+    protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atDefault;         // set default
+    // for backwards compatibility only
+    if(auto c = XMLUtils::getChildNode(node, "PaysAtDefaultTime"))
+        if (!parseBool(XMLUtils::getNodeValue(c)))
+            protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd;
+    // new node overrides deprecated one, if both should be given
+    if(auto c = XMLUtils::getChildNode(node, "ProtectionPaymentTime")) {
+        if(XMLUtils::getNodeValue(c) == "atDefault")
+            protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atDefault;
+        else if(XMLUtils::getNodeValue(c) == "atPeriodEnd")
+            protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd;
+        else if(XMLUtils::getNodeValue(c) == "atMaturity")
+            protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atMaturity;
+        else {
+            QL_FAIL("protection payment time '" << XMLUtils::getNodeValue(c)
+                                                << "' not known, expected atDefault, atPeriodEnd, atMaturity");
+        }
+    }
     tmp = XMLUtils::getChildNode(node, "ProtectionStart");
     if (tmp)
         protectionStart_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty or missing
@@ -260,7 +277,15 @@ XMLNode* CreditDefaultSwapData::toXML(XMLDocument& doc) {
     }
 
     XMLUtils::addChild(doc, node, "SettlesAccrual", settlesAccrual_);
-    XMLUtils::addChild(doc, node, "PaysAtDefaultTime", paysAtDefaultTime_);
+    if (protectionPaymentTime_ == CreditDefaultSwap::ProtectionPaymentTime::atDefault)
+        XMLUtils::addChild(doc, node, "ProtectionPaymentTime", "atDefault");
+    else if (protectionPaymentTime_ == CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd)
+        XMLUtils::addChild(doc, node, "ProtectionPaymentTime", "atPeriodEnd");
+    else if (protectionPaymentTime_ == CreditDefaultSwap::ProtectionPaymentTime::atMaturity)
+        XMLUtils::addChild(doc, node, "ProtectionPaymentTime", "atMaturity");
+    else {
+        QL_FAIL("CreditDefaultSwapData::toXML(): unexpected protectionPaymentTime_");
+    }
     if (protectionStart_ != Date()) {
         std::ostringstream tmp;
         tmp << QuantLib::io::iso_date(protectionStart_);

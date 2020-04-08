@@ -99,7 +99,7 @@ FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined
 
   Allowable values: \emph{Cash} or \emph{Physical}
 
-\item SettlementMethod [Optional]: Specifies the method to calculate the settlement amount for swaptions.
+\item SettlementMethod [Optional]: Specifies the method to calculate the settlement amount for Swaptions and CallableSwaps.
 
   Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice},\\ \emph{ParYieldCurve}. 
   
@@ -115,7 +115,7 @@ FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined
   indicates payoff at expiry, whereas \emph{false}  indicates payoff
   at exercise. Defaults to \emph{true}  if left blank or omitted. 
 
-Allowable values: \emph{true}, \emph{false} Note that for FxTouchOption, only \emph{true} (payoff at expiry) is supported.
+Allowable values: \emph{true}, \emph{false} 
 %TBC: Do not see payoffatexpiry used in either fxoption or swaption build() functions, to be logged as a bug.       
 
 \item ExerciseFees [Optional]: This node contains child elements of tpye ExerciseFee. Similar to a list of notionals

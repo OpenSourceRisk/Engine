@@ -138,7 +138,9 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof,
             helpers.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
                 quote.second, quote.first, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                 cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                config.startDate(), cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
+                config.startDate(), cdsConv->settlesAccrual(),
+                cdsConv->paysAtDefaultTime() ? QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault
+                                             : QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd));
         }
     } else {
         for (auto quote : quotes) {
@@ -146,7 +148,8 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof,
                 quote.second, config.runningSpread(), quote.first, cdsConv->settlementDays(), cdsConv->calendar(),
                 cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
                 recoveryRate_, discountCurve, config.startDate(), cdsConv->settlesAccrual(),
-                cdsConv->paysAtDefaultTime()));
+                cdsConv->paysAtDefaultTime() ? QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault
+                                             : QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd));
         }
     }
 
