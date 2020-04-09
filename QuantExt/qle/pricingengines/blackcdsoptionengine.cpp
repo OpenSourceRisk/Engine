@@ -132,8 +132,6 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
     Rate fairSpread = swap.fairSpread();
     Rate couponSpread = swap.runningSpread();
 
-    DayCounter tSDc = termStructure_->dayCounter();
-
     // The sense of the underlying/option has to be sent this way
     // to the Black formula, no sign.
     results.riskyAnnuity = swapRiskyAnnuity(swap, false);

@@ -312,10 +312,6 @@ const Date& CreditDefaultSwap::protectionEndDate() const {
     return boost::dynamic_pointer_cast<Coupon>(leg_.back())->accrualEndDate();
 }
 
-const Date CreditDefaultSwap::upfrontPaymentDate() const {
-    return upfrontPayment_->date();
-}
-
 CreditDefaultSwap::arguments::arguments() : side(Protection::Side(-1)), notional(Null<Real>()), spread(Null<Rate>()) {}
 
 void CreditDefaultSwap::arguments::validate() const {
