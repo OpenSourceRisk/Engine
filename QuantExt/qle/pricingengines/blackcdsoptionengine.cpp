@@ -134,18 +134,18 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
 
     // The sense of the underlying/option has to be sent this way
     // to the Black formula, no sign.
-    results.riskyAnnuity = swapRiskyAnnuity(swap, false);
+    results.riskyAnnuity = swapRiskyAnnuity(swap, false) * swap.notional(); // with accural
     Real riskyAnnuity = swapRiskyAnnuity(swap);
     Real riskyAnnuityExp = riskyAnnuity / termStructure_->discount(exerciseDate);
 
-    Real adjustedForwardSpread = fairSpread;
-    Real adjustedStrikeSpread = couponSpread;
-    Real strikeSpread = couponSpread;
 
     Option::Type callPut = (swap.side() == Protection::Buyer) ? Option::Call : Option::Put;
 
     // TODO: accuont for defaults between option trade data evaluation date
     if (strike != Null<Real>()) {
+        Real strikeSpread = couponSpread;
+        Real adjustedForwardSpread = fairSpread;
+        Real adjustedStrikeSpread = couponSpread;
         adjustedForwardSpread += (1 - recoveryRate()) * defaultProbability(exerciseDate) /
                                  ((1 - defaultProbability(exerciseDate)) * riskyAnnuityExp);
         // According to market standard, for exercise price calcualtion, risky annuity is calcualted on a credit curve
@@ -225,7 +225,18 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
         results.value = swap.notional() * termStructure_->discount(exerciseDate) * (1 - defaultProbability(exerciseDate));
         results.value *= blackFormula(callPut, adjustedStrikeSpread, adjustedForwardSpread, stdDev, riskyAnnuity);
      } else {
-         // old methodology
+        // old methodology
+
+        // Take into account the NPV from the upfront amount
+        // If buyer and upfront NPV > 0 => receiving upfront amount => should reduce the pay spread
+        // If buyer and upfront NPV < 0 => paying upfront amount => should increase the pay spread
+        // If seller and upfront NPV > 0 => receiving upfront amount => should increase the receive spread
+        // If seller and upfront NPV < 0 => paying upfront amount => should reduce the receive spread
+        if (swap.side() == Protection::Buyer) {
+            couponSpread -= swap.upfrontNPV() / (riskyAnnuity * swap.notional());
+        } else {
+            couponSpread += swap.upfrontNPV() / (riskyAnnuity * swap.notional());
+        }
         Real stdDev = sqrt(volatility_->blackVariance(exerciseDate, 1.0, true));
         results.value = blackFormula(callPut, couponSpread, fairSpread, stdDev, riskyAnnuity * swap.notional());
 
