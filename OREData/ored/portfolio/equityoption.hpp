@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 
 namespace ore {
@@ -38,8 +39,9 @@ public:
     //! Default constructor
     EquityOption() : VanillaOptionTrade(AssetClass::EQ) { tradeType_ = "EquityOption"; }
     //! Constructor
-    EquityOption(Envelope& env, OptionData option, string equityName, string currency, double strike, double quantity)
-        : VanillaOptionTrade(env, AssetClass::EQ, option, equityName, currency, strike, quantity) { tradeType_ = "EquityOption"; }
+    EquityOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, string currency, double strike, double quantity)
+        : VanillaOptionTrade(env, AssetClass::EQ, option, equityUnderlying.name(),
+            currency, strike, quantity), equityUnderlying_(equityUnderlying) { tradeType_ = "EquityOption"; }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
@@ -49,7 +51,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& equityName() const { return assetName_; }
+    const string& equityName() const { return equityUnderlying_.name(); }
     //@}
 
     //! \name Serialisation
@@ -57,6 +59,9 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
+
+private:
+    EquityUnderlying equityUnderlying_;
 };
 } // namespace data
 } // namespace ore

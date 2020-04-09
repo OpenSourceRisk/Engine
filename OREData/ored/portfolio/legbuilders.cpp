@@ -18,6 +18,7 @@
 
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <qle/indexes/fxindex.hpp>
 
 using namespace QuantExt;
@@ -122,6 +123,23 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
     auto eqData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
     QL_REQUIRE(eqData, "Wrong LegType, expected Equity");
     string eqName = eqData->eqName();
+
+    // Look up reference data, if the equity name exists in reference data, use the equityId
+    // if not continue with the current name
+    if (engineFactory->referenceData() != nullptr && engineFactory->referenceData()->hasData("Equity", eqName)) {
+        auto refData = engineFactory->referenceData()->getData("Equity", eqName);
+        // Check it's equity reference data
+        if (auto erd = boost::dynamic_pointer_cast<EquityReferenceDatum>(refData)) {
+            eqName = erd->equityData().equityId;
+
+            // check currency - if leg currency and equity currency are different check for FxTerms, or else fail
+            if (data.currency() != erd->equityData().currency) {
+                QL_REQUIRE(eqData->eqCurrency() == erd->equityData().currency, 
+                    "Equity Currency provided, " << eqData->eqCurrency() << ", does not match equity currency from reference " << erd->equityData().currency);
+                QL_REQUIRE(!eqData->fxIndex().empty(), "Must from FXIndex for Equity Quanto Swap Leg");
+            }
+        }
+    }
     auto eqCurve = *engineFactory->market()->equityCurve(eqName, configuration);
 
     boost::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;

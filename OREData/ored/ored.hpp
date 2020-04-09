@@ -109,7 +109,6 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/equityforward.hpp>
-#include <ored/portfolio/equityidentifier.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityswap.hpp>
 #include <ored/portfolio/fixingdates.hpp>
@@ -134,6 +133,7 @@
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/tradeactions.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/report/csvreport.hpp>
 #include <ored/report/inmemoryreport.hpp>

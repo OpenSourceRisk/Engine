@@ -79,8 +79,9 @@ std::string EngineBuilder::modelParameter(const std::string& p, const std::strin
 EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, const boost::shared_ptr<Market>& market,
                              const map<MarketContext, string>& configurations,
                              const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
-                             const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders)
-    : market_(market), engineData_(engineData), configurations_(configurations) {
+                             const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders,
+                             const boost::shared_ptr<ReferenceDataManager>& referenceData)
+    : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData){
     LOG("Building EngineFactory");
 
     addDefaultBuilders();

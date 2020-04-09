@@ -176,7 +176,7 @@ void EquityOptionSurfaceStripper::performCalculations() const {
             }
         }
         for (auto ps : putStrikes) {
-            if (!havePuts || ps > forward) {
+            if (!haveCalls || ps > forward) {
                 volStrikes.push_back(ps);
                 volExpiries.push_back(exp);
                 if (premiumSurfaces) {
@@ -231,5 +231,4 @@ boost::shared_ptr<QuantLib::BlackVolTermStructure> EquityOptionSurfaceStripper::
     return volSurface_; 
 }
 
-#pragma once
 } // QuantExt

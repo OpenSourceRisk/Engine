@@ -408,8 +408,11 @@ void EquityLegData::fromXML(XMLNode* node) {
         dividendFactor_ = XMLUtils::getChildValueAsDouble(node, "DividendFactor", true);
     else
         dividendFactor_ = 1.0;
-    eqName_ = XMLUtils::getChildValue(node, "Name");
-    indices_.insert("EQ-" + eqName_);
+    XMLNode* utmp = XMLUtils::getChildNode(node, "Underlying");
+    if (!utmp)
+        utmp = XMLUtils::getChildNode(node, "Name");
+    equityUnderlying_.fromXML(utmp);
+    indices_.insert("EQ-" + eqName());
     if (XMLUtils::getChildNode(node, "InitialPrice"))
         initialPrice_ = XMLUtils::getChildValueAsDouble(node, "InitialPrice");
     else
@@ -438,7 +441,7 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     if (returnType_ == "Total") {
         XMLUtils::addChild(doc, node, "DividendFactor", dividendFactor_);
     }
-    XMLUtils::addChild(doc, node, "Name", eqName_);
+    XMLUtils::appendNode(node, equityUnderlying_.toXML(doc));
     if (initialPrice_)
         XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
     XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
