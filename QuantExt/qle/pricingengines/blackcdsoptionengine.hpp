@@ -54,11 +54,10 @@ using namespace QuantLib;
 //! \ingroup engines
 class BlackCdsOptionEngineBase {
 public:
-    BlackCdsOptionEngineBase(const Handle<YieldTermStructure>& termStructure, const Handle<BlackVolTermStructure>& vol,
-                             boost::optional<bool> includeSettlementDateFlows);
+    BlackCdsOptionEngineBase(const Handle<YieldTermStructure>& termStructure, const Handle<BlackVolTermStructure>& vol);
     virtual ~BlackCdsOptionEngineBase() {}
     void calculate(const CreditDefaultSwap& swap, const Date& exerciseDate, const bool knocksOut,
-                   CdsOption::results& results, const Date& refDate, const Real strike,
+                   CdsOption::results& results, const Real strike,
                    const CdsOption::StrikeType strikeType) const;
     Handle<YieldTermStructure> termStructure();
     Handle<BlackVolTermStructure> volatility();
@@ -69,15 +68,13 @@ protected:
 
     const Handle<YieldTermStructure> termStructure_;
     const Handle<BlackVolTermStructure> volatility_;
-    boost::optional<bool> includeSettlementDateFlows_;
 };
 
 //! Black-formula CDS-option engine
 class BlackCdsOptionEngine : public QuantExt::CdsOption::engine, public BlackCdsOptionEngineBase {
 public:
     BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
-                         const Handle<YieldTermStructure>& termStructure, const Handle<BlackVolTermStructure>& vol,
-                         boost::optional<bool> includeSettlementDateFlows = boost::none);
+                         const Handle<YieldTermStructure>& termStructure, const Handle<BlackVolTermStructure>& vol);
     void calculate() const;
 
 private:
