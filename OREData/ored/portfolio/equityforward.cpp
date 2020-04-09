@@ -82,9 +82,9 @@ void EquityForward::fromXML(XMLNode* node) {
 
     longShort_ = XMLUtils::getChildValue(eNode, "LongShort", true);
     maturityDate_ = XMLUtils::getChildValue(eNode, "Maturity", true);
-    XMLNode* tmp = XMLUtils::getChildNode(node, "Underlying");
+    XMLNode* tmp = XMLUtils::getChildNode(eNode, "Underlying");
     if (!tmp)
-        tmp = XMLUtils::getChildNode(node, "Name");
+        tmp = XMLUtils::getChildNode(eNode, "Name");
     equityUnderlying_.fromXML(tmp);
     currency_ = XMLUtils::getChildValue(eNode, "Currency", true);
     strike_ = XMLUtils::getChildValueAsDouble(eNode, "Strike", true);
