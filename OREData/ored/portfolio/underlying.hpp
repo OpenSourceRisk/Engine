@@ -23,7 +23,7 @@ namespace data {
 class Underlying : public ore::data::XMLSerializable {
 public:
     //! Default constructor
-    Underlying(const string& type = "") : type_(type), weight_(QuantLib::Null<QuantLib::Real>()) {};
+    Underlying() {};
 
     //! Constructor with type
     Underlying(const std::string& type, const std::string& name, const QuantLib::Real weight = QuantLib::Null<QuantLib::Real>()) :
@@ -34,6 +34,9 @@ public:
     virtual void fromXML(ore::data::XMLNode* node) override;
     virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
     //@}
+
+    void setType(const string& type) { type_ = type; }
+    void setName(const string& name) { name_ = name; }
 
     //! \name Inspectors
     //@{
@@ -50,7 +53,7 @@ protected:
 class BasicUnderlying : public Underlying {
 public:
     //! Deault constructor
-    BasicUnderlying() : Underlying("Basic") {}
+    BasicUnderlying() { setType("Basic"); };
     
     //! Constructor with identifer infomation
     BasicUnderlying(const std::string& name) : Underlying("Basic", name) {}
@@ -66,7 +69,7 @@ public:
 class EquityUnderlying : public Underlying {
 public:
     //! Default constructor
-    EquityUnderlying() : Underlying("Equity") {}
+    EquityUnderlying() { setType("Equity"); }
 
     //! Constructor with equity name
     EquityUnderlying(const std::string& equityName) : Underlying("Equity", equityName) {};
@@ -101,7 +104,7 @@ private:
 class CommodityUnderlying : public Underlying {
 public:
     //! Default Constructor
-    CommodityUnderlying() : Underlying("Commodity") {}
+    CommodityUnderlying() { setType("Equity"); }
     
     //! Constructor with identifer infomation
     CommodityUnderlying(const std::string& name, const QuantLib::Real weight = QuantLib::Null<QuantLib::Real>(),
@@ -131,7 +134,7 @@ private:
 class FXUnderlying : public Underlying {
 public:
     //! Default Constructor
-    FXUnderlying() : Underlying() {};
+    FXUnderlying() { setType("FX"); };
 
     //! Constructor with identifer infomation
     FXUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight = QuantLib::Null<QuantLib::Real>()) :
