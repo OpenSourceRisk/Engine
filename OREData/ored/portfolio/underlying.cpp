@@ -121,8 +121,6 @@ XMLNode* CommodityUnderlying::toXML(XMLDocument& doc) {
     node = Underlying::toXML(doc);
     if (!priceType_.empty())
         XMLUtils::addChild(doc, node, "PriceType", priceType_);
-    if (weight_ != Null<Real>())
-        XMLUtils::addChild(doc, node, "Weight", weight_);
     if (futureMonthOffset_ != Null<Size>())
         XMLUtils::addChild(doc, node, "FutureMonthOffset", (int)futureMonthOffset_);
     if (deliveryRollDays_ != Null<Size>())

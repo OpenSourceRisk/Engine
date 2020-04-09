@@ -96,9 +96,9 @@ void BasicReferenceDataManager::fromXML(XMLNode* node) {
     }
 }
 
-
-void BasicReferenceDataManager::addDatum(const string& type, const string& id, const boost::shared_ptr<ReferenceDatum>& referenceDatum) {
-    data_[make_pair(type, id)] = referenceDatum;
+void BasicReferenceDataManager::add(const boost::shared_ptr<ReferenceDatum>& rd) {
+    // Add reference datum, it is overwritten if it is already present.
+    data_[make_pair(rd->type(), rd->id())] = rd;
 }
 
 boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildReferenceDatum(const string& refDataType) {

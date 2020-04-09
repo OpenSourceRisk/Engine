@@ -56,7 +56,10 @@ public:
         source is the asset or foreign currency
         target is the numeraire or domestic currency
         fixingCalendar is the calendar defining good days for the pair
-        this class uses the exchange rate manager to retrieve spot values */
+        this class uses the exchange rate manager to retrieve spot values
+
+        if inverseIndex is true, the returned fixing values are flipped
+    */
     FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
             const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false);
@@ -82,6 +85,7 @@ public:
     Date fixingDate(const Date& valueDate) const;
     const Currency& sourceCurrency() const { return sourceCurrency_; }
     const Currency& targetCurrency() const { return targetCurrency_; }
+    const bool inverseIndex() const { return inverseIndex_; }
     //@}
     /*! \name Date calculations */
     virtual Date valueDate(const Date& fixingDate) const;

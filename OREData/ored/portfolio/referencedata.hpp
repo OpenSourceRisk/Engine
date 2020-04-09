@@ -118,7 +118,7 @@ class ReferenceDataManager {
 public:
     virtual bool hasData(const string& type, const string& id) const = 0;
     virtual boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id) const = 0;
-    virtual void addDatum(const string& type, const string& id, const boost::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
+    virtual void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
 };
 
 //! Basic Concrete impl that loads an big XML and keeps data in memory
@@ -129,9 +129,7 @@ public:
 
     // Load extra data and append to this manger
     void appendData(const string& filename) { fromFile(filename); }
-
-    void addDatum(const string& type, const string& id, const boost::shared_ptr<ReferenceDatum>& referenceDatum);
-
+    
     boost::shared_ptr<ReferenceDatum> buildReferenceDatum(const string& refDataType);
 
     void fromXML(XMLNode* node) override;
@@ -142,6 +140,7 @@ public:
 
     bool hasData(const string& type, const string& id) const override;
     boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id) const override;
+    void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum);
 
 private:
     map<pair<string, string>, boost::shared_ptr<ReferenceDatum>> data_;

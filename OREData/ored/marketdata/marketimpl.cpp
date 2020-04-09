@@ -116,7 +116,7 @@ lookup(const map<tuple<string, string, string>, Handle<QuantExt::CorrelationTerm
 
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, const string& key,
                                                   const string& configuration) const {
-    // we allow for ibor index names as keys and return the index forward curve in case of a match
+    // we allow for standard (i.e. not convention based) ibor index names as keys and return the index forward curve in case of a match
     boost::shared_ptr<IborIndex> notUsed;
     if (tryParseIborIndex(key, notUsed)) {
         return iborIndex(key, configuration)->forwardingTermStructure();
@@ -290,7 +290,8 @@ void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountInd
     try {
         std::vector<string> tokens;
         split(tokens, swapIndex, boost::is_any_of("-"));
-        QL_REQUIRE(tokens.size() == 3, "three tokens required in " << swapIndex << ": CCY-CMS-TENOR");
+        QL_REQUIRE(tokens.size() == 3 || tokens.size() == 4,
+                   "three or four tokens required in " << swapIndex << ": CCY-CMS-TENOR or CCY-CMS-TAG-TENOR");
         QL_REQUIRE(tokens[0].size() == 3, "invalid currency code in " << swapIndex);
         QL_REQUIRE(tokens[1] == "CMS", "expected CMS as middle token in " << swapIndex);
 
