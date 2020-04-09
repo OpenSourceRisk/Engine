@@ -21,6 +21,7 @@
 
 #include <qle/termstructures/defaultprobabilityhelpers.hpp>
 #include <qle/termstructures/probabilitytraits.hpp>
+#include <qle/termstructures/iterativebootstrap.hpp>
 
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
@@ -31,6 +32,14 @@
 
 using namespace QuantLib;
 using namespace std;
+
+// Temporary workaround to silence warnings on g++ until QL 1.17 is released with the
+// pull request: https://github.com/lballabio/QuantLib/pull/679
+#ifdef BOOST_MSVC
+#define ATTR_UNUSED
+#else
+#define ATTR_UNUSED __attribute__((unused))
+#endif
 
 namespace ore {
 namespace data {
@@ -153,10 +162,22 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof,
         }
     }
 
-    // Create the default probability term structure 
+    // Get configuration values for bootstrap
+    Real accuracy = config.bootstrapConfig().accuracy();
+    Real globalAccuracy = config.bootstrapConfig().globalAccuracy();
+    bool dontThrow = config.bootstrapConfig().dontThrow();
+    Size maxAttempts = config.bootstrapConfig().maxAttempts();
+    Real maxFactor = config.bootstrapConfig().maxFactor();
+    Real minFactor = config.bootstrapConfig().minFactor();
+    Size dontThrowSteps = config.bootstrapConfig().dontThrowSteps();
+
+    // Create the default probability term structure
+    typedef PiecewiseDefaultCurve<QuantExt::SurvivalProbability, LogLinear, QuantExt::IterativeBootstrap> SpCurve;
+    ATTR_UNUSED typedef SpCurve::traits_type dummy;
     boost::shared_ptr<DefaultProbabilityTermStructure> tmp =
-        boost::make_shared<PiecewiseDefaultCurve<QuantExt::SurvivalProbability, LogLinear>>(
-            asof, helpers, config.dayCounter());
+        boost::make_shared<SpCurve>(asof, helpers, config.dayCounter(), accuracy, LogLinear(),
+            QuantExt::IterativeBootstrap<SpCurve>(globalAccuracy, dontThrow, maxAttempts,
+                maxFactor, minFactor, dontThrowSteps));
 
     // As for yield curves we need to copy the piecewise curve because on eval date changes the relative date 
     // helpers with trigger a bootstrap.
@@ -164,10 +185,13 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof,
     vector<Real> survivalProbs;
     dates.push_back(asof);
     survivalProbs.push_back(1.0);
+    TLOG("Survival probabilities for CDS curve " << config.curveID() << ":");
+    TLOG(io::iso_date(dates.back()) << "," << fixed << setprecision(9) << survivalProbs.back());
     for (Size i = 0; i < helpers.size(); ++i) {
         if (helpers[i]->latestDate() > asof) {
             dates.push_back(helpers[i]->latestDate());
             survivalProbs.push_back(tmp->survivalProbability(dates.back()));
+            TLOG(io::iso_date(dates.back()) << "," << fixed << setprecision(9) << survivalProbs.back());
         }
     }
     QL_REQUIRE(dates.size() >= 2, "Need at least 2 points to build the default curve");
