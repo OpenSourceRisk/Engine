@@ -45,7 +45,9 @@ XMLNode* BasicUnderlying::toXML(XMLDocument& doc) {
 
 void EquityUnderlying::setEquityName() {
     if (equityName_.empty()) {
-        string name = identifierType_ + ":" + name_;
+        string name = name_;
+        if (!identifierType_.empty())
+            name = identifierType_ + ":" + name_;
         if (!currency_.empty())
             name = name + ":" + currency_;
         if (!exchange_.empty()) {
@@ -68,8 +70,8 @@ void EquityUnderlying::fromXML(XMLNode* node) {
         if (!identifierType_.empty()) {
             currency_ = XMLUtils::getChildValue(node, "Currency", false);
             exchange_ = XMLUtils::getChildValue(node, "Exchange", false);
-            setEquityName();
         }
+        setEquityName();
     } else {
         QL_FAIL("Need either a Name or Underlying node for EquityUnderlying.");
     }
