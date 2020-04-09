@@ -27,6 +27,15 @@ XMLNode* Underlying::toXML(XMLDocument& doc) {
     return node;
 }
 
+void BasicUnderlying::fromXML(XMLNode* node) {
+    name_ = XMLUtils::getChildValue(node, "Name", true);
+}
+
+XMLNode* BasicUnderlying::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("Name", name_);
+    return node;
+}
+
 void EquityUnderlying::setEquityName() {
     if (equityName_.empty()) {
         string name = identifierType_ + ":" + name_;
@@ -131,9 +140,7 @@ XMLNode* FXUnderlying::toXML(XMLDocument& doc) {
 void UnderlyingBuilder::fromXML(XMLNode* node) {
     XMLNode* unode = XMLUtils::getChildNode(node, "Name");
     if (unode) {
-        // if only a name node, make an underlying with no type
-        string name = XMLUtils::getChildValue(node, "Name", true);
-        underlying_ = boost::make_shared<Underlying>("", name);
+        underlying_ = boost::make_shared<BasicUnderlying>();
     } else {
         unode = XMLUtils::getChildNode(node, "Underlying");
         string type = XMLUtils::getChildValue(unode, "Type", true);
