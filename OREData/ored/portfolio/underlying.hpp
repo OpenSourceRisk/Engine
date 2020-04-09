@@ -23,7 +23,7 @@ namespace data {
 class Underlying : public ore::data::XMLSerializable {
 public:
     //! Default constructor
-    Underlying() : weight_(QuantLib::Null<QuantLib::Real>()) {};
+    Underlying(const string& type = "") : type_(type), weight_(QuantLib::Null<QuantLib::Real>()) {};
 
     //! Constructor with type
     Underlying(const std::string& type, const std::string& name, const QuantLib::Real weight = QuantLib::Null<QuantLib::Real>()) :
@@ -47,19 +47,35 @@ protected:
     Real weight_;
 };
 
-class EquityUnderlying : public Underlying {
+class BasicUnderlying : public Underlying {
 public:
     //! Deault constructor
-    EquityUnderlying() : Underlying() {}
+    BasicUnderlying() : Underlying("Basic") {}
+    
+    //! Constructor with identifer infomation
+    BasicUnderlying(const std::string& name) : Underlying("Basic", name) {}
+    
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+
+};
+
+class EquityUnderlying : public Underlying {
+public:
+    //! Default constructor
+    EquityUnderlying() : Underlying("Equity") {}
 
     //! Constructor with equity name
     EquityUnderlying(const std::string& equityName) : Underlying("Equity", equityName) {};
 
     //! Constructor with identifer infomation
-    EquityUnderlying(const std::string& type, const std::string& name, 
+    EquityUnderlying( const std::string& name, 
         const std::string& identifierType, const std::string& currency,        
         const std::string& exchange, const QuantLib::Real weight = QuantLib::Null<QuantLib::Real>()) :
-        Underlying(type, name, weight), identifierType_(identifierType), 
+        Underlying("Equity", name, weight), identifierType_(identifierType),
         currency_(currency), exchange_(exchange) {
         setEquityName();
     };
@@ -85,13 +101,13 @@ private:
 class CommodityUnderlying : public Underlying {
 public:
     //! Default Constructor
-    CommodityUnderlying() : Underlying() {}
+    CommodityUnderlying() : Underlying("Commodity") {}
     
     //! Constructor with identifer infomation
-    CommodityUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight = QuantLib::Null<QuantLib::Real>(),
+    CommodityUnderlying(const std::string& name, const QuantLib::Real weight = QuantLib::Null<QuantLib::Real>(),
         const std::string& priceType = "", const QuantLib::Size futureMonthOffset = QuantLib::Null<QuantLib::Size>(),
         const QuantLib::Size deliveryRollDays = QuantLib::Null<QuantLib::Size>(), const std::string& deliveryRollCalendar = "")
-        : Underlying(type, name, weight), priceType_(priceType), futureMonthOffset_(futureMonthOffset),
+        : Underlying("Commodity", name, weight), priceType_(priceType), futureMonthOffset_(futureMonthOffset),
         deliveryRollDays_(deliveryRollDays), deliveryRollCalendar_(deliveryRollCalendar) {}
 
     const std::string& priceType() const { return priceType_; }                      
