@@ -699,17 +699,18 @@ private:
 //! CDS Spread data class
 /*!
   This class holds single market points of type
-  - CREDIT_SPREAD
+  - CREDIT_SPREAD PRICE
 
   \ingroup marketdata
 */
-class CdsSpreadQuote : public MarketDatum {
+class CdsQuote : public MarketDatum {
 public:
-    CdsSpreadQuote() {}
-    //! Constructor
-    CdsSpreadQuote(Real value, Date asofDate, const string& name, const string& underlyingName, const string& seniority,
-                   const string& ccy, Period term, const string& docClause = "")
-        : MarketDatum(value, asofDate, name, QuoteType::CREDIT_SPREAD, InstrumentType::CDS),
+    CdsQuote() {}
+     //! Constructor
+    CdsQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
+             const string& underlyingName, const string& seniority,
+             const string& ccy, Period term, const string& docClause = "")
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS),
           underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy), term_(term), docClause_(docClause) {}
 
     //! \name Inspectors
