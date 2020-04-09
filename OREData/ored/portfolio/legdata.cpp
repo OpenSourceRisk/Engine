@@ -183,7 +183,14 @@ void CPILegData::fromXML(XMLNode* node) {
     indices_.insert(index_);
     baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI", true);
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
-    interpolation_ = XMLUtils::getChildValue(node, "Interpolation", true);
+    // for backwards compatibility only
+    if (auto c = XMLUtils::getChildNode(node, "Interpolated")) {
+        QL_REQUIRE(XMLUtils::getChildNode(node, "Interpolation") == nullptr,
+                   "can not have both Interpolated and Interpolation node in CPILegData");
+        interpolation_ = parseBool(XMLUtils::getNodeValue(c)) ? "Linear" : "Flat";
+    } else {
+        interpolation_ = XMLUtils::getChildValue(node, "Interpolation", true);
+    }
     XMLNode* subNomNode = XMLUtils::getChildNode(node, "SubtractInflationNotional");
     if (subNomNode)
         subtractInflationNominal_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotional", true);
