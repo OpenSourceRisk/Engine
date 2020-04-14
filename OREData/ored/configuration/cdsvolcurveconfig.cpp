@@ -82,7 +82,7 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     XMLNode* n;
     quoteName_ = "";
-    if (n = XMLUtils::getChildNode(node, "QuoteName"))
+    if ((n = XMLUtils::getChildNode(node, "QuoteName")))
         quoteName_ = XMLUtils::getNodeValue(n);
 
     if (XMLUtils::getChildNode(node, "Expiries")) {
@@ -110,15 +110,15 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     } else {
         XMLNode* n;
-        if (n = XMLUtils::getChildNode(node, "Constant")) {
+        if ((n = XMLUtils::getChildNode(node, "Constant"))) {
             volatilityConfig_ = boost::make_shared<ConstantVolatilityConfig>();
-        } else if (n = XMLUtils::getChildNode(node, "Curve")) {
+        } else if ((n = XMLUtils::getChildNode(node, "Curve"))) {
             volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>();
-        } else if (n = XMLUtils::getChildNode(node, "StrikeSurface")) {
+        } else if ((n = XMLUtils::getChildNode(node, "StrikeSurface"))) {
             volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>();
-        } else if (n = XMLUtils::getChildNode(node, "DeltaSurface")) {
+        } else if ((n = XMLUtils::getChildNode(node, "DeltaSurface"))) {
             QL_FAIL("CDSVolatilityCurveConfig does not yet support a DeltaSurface.");
-        } else if (n = XMLUtils::getChildNode(node, "MoneynessSurface")) {
+        } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
             QL_FAIL("CDSVolatilityCurveConfig does not yet support a MoneynessSurface.");
         } else {
             QL_FAIL("CDSVolatility node expects one child node with name in list: Constant,"
@@ -128,19 +128,19 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
     }
 
     dayCounter_ = "A365";
-    if (n = XMLUtils::getChildNode(node, "DayCounter"))
+    if ((n = XMLUtils::getChildNode(node, "DayCounter")))
         dayCounter_ = XMLUtils::getNodeValue(n);
 
     calendar_ = "NullCalendar";
-    if (n = XMLUtils::getChildNode(node, "Calendar"))
+    if ((n = XMLUtils::getChildNode(node, "Calendar")))
         calendar_ = XMLUtils::getNodeValue(n);
 
     strikeType_ = "";
-    if (n = XMLUtils::getChildNode(node, "StrikeType"))
+    if ((n = XMLUtils::getChildNode(node, "StrikeType")))
         strikeType_ = XMLUtils::getNodeValue(n);
 
     strikeFactor_ = 1.0;
-    if (n = XMLUtils::getChildNode(node, "StrikeFactor"))
+    if ((n = XMLUtils::getChildNode(node, "StrikeFactor")))
         strikeFactor_ = parseReal(XMLUtils::getNodeValue(n));
 
     populateQuotes();
