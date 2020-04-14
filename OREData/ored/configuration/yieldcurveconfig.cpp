@@ -659,11 +659,6 @@ void FittedBondYieldCurveSegment::fromXML(XMLNode* node) {
     } else {
         extrapolateFlat_ = false;
     }
-    if (auto n = XMLUtils::getChildNode(node, "CalibrationTrials")) {
-        calibrationTrials_ = parseInteger(XMLUtils::getNodeValue(n));
-    } else {
-        calibrationTrials_ = 1;
-    }
 }
 
 XMLNode* FittedBondYieldCurveSegment::toXML(XMLDocument& doc) {

@@ -797,7 +797,6 @@
         </xs:complexType>
       </xs:element>
       <xs:element type="xs:boolean" name="ExtrapolateFlat" minOccurs="0"/>
-      <xs:element type="xs:int" name="CalibrationTrials" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

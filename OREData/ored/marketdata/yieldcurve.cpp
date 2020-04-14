@@ -788,7 +788,7 @@ void YieldCurve::buildFittedBondCurve() {
 
     std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;
     for (auto const& c : curveSegment->iborIndexCurves()) {
-        auto y = requiredYieldCurves_.find(c.first);
+        auto y = requiredYieldCurves_.find(yieldCurveKey(c.first));
         QL_REQUIRE(y != requiredYieldCurves_.end(),
                    "required yield curve '" << c.first << "' not provided for fitted bond curve");
         iborCurveMapping[c.first] = y->second->handle();
@@ -866,21 +866,30 @@ void YieldCurve::buildFittedBondCurve() {
     boost::shared_ptr<FittedBondDiscountCurve> tmp, current;
     Real minError = QL_MAX_REAL;
     HaltonRsg halton(method->size(), 42);
-    for (Size i = 0; i < curveSegment->calibrationTrials(); ++i) {
+    // TODO randomised optimisation seeds are only implemented for NelsonSiegel so far
+    Size trials = 1;
+    if (interpolationMethod_ == InterpolationMethod::NelsonSiegel) {
+        trials = curveConfig_->bootstrapConfig().maxAttempts();
+    } else {
+        if(curveConfig_->bootstrapConfig().maxAttempts() > 1) {
+            WLOG("randomised optimisation seeds not implemented for given interpolation method");
+        }
+    }
+    for (Size i = 0; i < trials; ++i) {
         Array guess;
-        if (interpolationMethod_ == InterpolationMethod::NelsonSiegel) {
-            // first guess is the default guess (empty array, will be set to a zero vector in
-            // FittedBondDiscountCurve::calculate())
-            if (i > 0) {
-                auto seq = halton.nextSequence();
-                guess = Array(seq.value.begin(), seq.value.end());
+        // first guess is the default guess (empty array, will be set to a zero vector in
+        // FittedBondDiscountCurve::calculate())
+        if (i > 0) {
+            auto seq = halton.nextSequence();
+            guess = Array(seq.value.begin(), seq.value.end());
+            if (interpolationMethod_ == InterpolationMethod::NelsonSiegel) {
                 guess[0] = guess[0] * 0.10 - 0.05; // long term yield
                 guess[1] = guess[1] * 0.10 - 0.05; // short term component
                 guess[2] = guess[2] * 0.10 - 0.05; // medium term component
                 guess[3] = guess[3] * 5.0;         // decay factor
+            } else {
+                QL_FAIL("randomised optimisation seed not implemented");
             }
-        } else if (i > 0) {
-            WLOG("random calibration seeds are only implemented for NelsonSiegel interpolation.");
         }
         current = boost::make_shared<FittedBondDiscountCurve>(asofDate_, helpers, zeroDayCounter_, *method, 1.0e-10,
                                                               10000, guess);
@@ -890,6 +899,11 @@ void YieldCurve::buildFittedBondCurve() {
             tmp = current;
         }
         DLOG("calibration trial #" << (i + 1) << ": cost = " << cost << ", best so far = " << minError);
+        if(cost < curveConfig_->bootstrapConfig().accuracy()) {
+            DLOG("reached desired accuracy (" << curveConfig_->bootstrapConfig().accuracy()
+                                              << ") - do not attempt more calibrations");
+            break;
+        }
     }
     QL_REQUIRE(tmp, "no best solution found for fitted bond curve - this is unexpected.");
 
@@ -908,6 +922,13 @@ void YieldCurve::buildFittedBondCurve() {
         DLOG("bond " << securityIDs[i] << " model clean price " << bond->cleanPrice() << " model yield (cont,actact) "
                      << bond->yield(bond->cleanPrice(), ActualActual(), Continuous, NoFrequency));
     }
+
+    Real tolerance = curveConfig_->bootstrapConfig().globalAccuracy() == Null<Real>()
+                         ? curveConfig_->bootstrapConfig().accuracy()
+                         : curveConfig_->bootstrapConfig().globalAccuracy();
+    QL_REQUIRE(tmp->fitResults().minimumCostValue() < tolerance, "Fitted Bond Curve cost value ("
+                                                                     << tmp->fitResults().minimumCostValue()
+                                                                     << ") exceeds tolerance (" << tolerance << ")");
 
     if (extrapolation_)
         tmp->enableExtrapolation();
