@@ -65,6 +65,7 @@ model/lgmbuilder.cpp
 model/lgmdata.cpp
 model/utilities.cpp
 portfolio/bond.cpp
+portfolio/bondutils.cpp
 portfolio/builders/capfloor.cpp
 portfolio/builders/capfloorediborleg.cpp
 portfolio/builders/cms.cpp
@@ -203,6 +204,7 @@ model/modelbuilder.hpp
 model/structuredmodelerror.hpp
 model/utilities.hpp
 portfolio/bond.hpp
+portfolio/bondutils.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp

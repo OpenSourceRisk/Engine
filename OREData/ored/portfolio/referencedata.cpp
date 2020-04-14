@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -35,6 +36,48 @@ XMLNode* ReferenceDatum::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("ReferenceDatum");
     QL_REQUIRE(node, "Failed to create ReferenceDatum node");
     XMLUtils::addAttribute(doc, node, "id", id_);
+    return node;
+}
+
+ReferenceDatumRegister<ReferenceDatumBuilder<BondReferenceDatum>> BondReferenceDatum::reg_(TYPE);
+
+void BondReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    XMLNode* innerNode = XMLUtils::getChildNode(node, "BondReferenceData");
+    QL_REQUIRE(innerNode, "No BondReferenceData node");
+
+    bondData_.issuerId = XMLUtils::getChildValue(innerNode, "IssuerId", true);
+    bondData_.settlementDays = XMLUtils::getChildValue(innerNode, "SettlementDays", true);
+    bondData_.calendar = XMLUtils::getChildValue(innerNode, "Calendar", true);
+    bondData_.issueDate = XMLUtils::getChildValue(innerNode, "IssueDate", true);
+    bondData_.creditCurveId = XMLUtils::getChildValue(innerNode, "CreditCurveId", false);
+    bondData_.referenceCurveId = XMLUtils::getChildValue(innerNode, "ReferenceCurveId", true);
+    bondData_.incomeCurveId = XMLUtils::getChildValue(innerNode, "IncomeCurveId", false);
+    bondData_.volatilityCurveId = XMLUtils::getChildValue(innerNode, "VolatilityCurveId", false);
+
+    bondData_.legData.clear();
+    XMLNode* legNode = XMLUtils::getChildNode(innerNode, "LegData");
+    while (legNode != nullptr) {
+        LegData ld;
+        ld.fromXML(legNode);
+        bondData_.legData.push_back(ld);
+        legNode = XMLUtils::getNextSibling(legNode, "LegData");
+    }
+}
+
+XMLNode* BondReferenceDatum::toXML(XMLDocument& doc) {
+    XMLNode* node = ReferenceDatum::toXML(doc);
+    XMLNode* bondNode = doc.allocNode("BondReferenceData");
+    XMLUtils::appendNode(node, bondNode);
+    XMLUtils::addChild(doc, bondNode, "IssuerId", bondData_.issuerId);
+    XMLUtils::addChild(doc, bondNode, "SettlementDays", bondData_.issuerId);
+    XMLUtils::addChild(doc, bondNode, "Calendar", bondData_.issuerId);
+    XMLUtils::addChild(doc, bondNode, "IssueDate", bondData_.issuerId);
+    XMLUtils::addChild(doc, bondNode, "CreditCurveId", bondData_.issuerId);
+    XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", bondData_.issuerId);
+    XMLUtils::addChild(doc, bondNode, "VolatilityCurveId", bondData_.volatilityCurveId);
+    for (auto& bd : bondData_.legData)
+        XMLUtils::appendNode(bondNode, bd.toXML(doc));
     return node;
 }
 
