@@ -13,6 +13,7 @@
 #include <qle/calendars/france.hpp>
 #include <qle/calendars/ice.hpp>
 #include <qle/calendars/israel.hpp>
+#include <qle/calendars/largejointcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/netherlands.hpp>
@@ -285,6 +286,7 @@
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
+#include <qle/time/actual364.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/time/yearcounter.hpp>
 #include <qle/version.hpp>

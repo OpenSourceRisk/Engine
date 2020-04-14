@@ -126,6 +126,8 @@
 #include <ored/portfolio/optiondata.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/referencedatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/swap.hpp>
