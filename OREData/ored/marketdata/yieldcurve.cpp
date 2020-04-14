@@ -49,12 +49,15 @@
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
 
+#include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
+#include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/envelope.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ored/portfolio/enginefactory.hpp>
-#include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -161,10 +164,11 @@ YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const str
 
 YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigurations& curveConfigs,
                        const Loader& loader, const Conventions& conventions,
-                       const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves, 
-                       const FXTriangulation& fxTriangulation)
+                       const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves,
+                       const FXTriangulation& fxTriangulation,
+                       const boost::shared_ptr<ReferenceDataManager>& referenceData)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), conventions_(conventions),
-      requiredYieldCurves_(requiredYieldCurves), fxTriangulation_(fxTriangulation) {
+      requiredYieldCurves_(requiredYieldCurves), fxTriangulation_(fxTriangulation), referenceData_(referenceData) {
 
     try {
 
@@ -774,11 +778,13 @@ void YieldCurve::buildFittedBondCurve() {
     std::vector<std::string> securityIDs;
     Date lastMaturity = Date::minDate(), firstMaturity = Date::maxDate();
 
+    // not really relevant, we just need a working engine configuration so that the bond can be built
+    // the pricing engine here is _not_ used during the curve fitting, for this a local engine is
+    // set up within FittedBondDiscountCurve
     auto engineData = boost::make_shared<EngineData>();
-    engineData->fromXMLString(
-        "<PricingEngines><Product type=\"Bond\"><Model>DiscountedCashflows</Model><ModelParameters/>"
-        "<Engine>DiscountingRiskyBondEngine</Engine><EngineParameters><Parameter"
-        "name=\"TimestepPeriod\">6M</Parameter></EngineParameters></Product></PricingEngines>");
+    engineData->model("Bond") = "DiscountedCashflows";
+    engineData->engine("Bond") = "DiscountingRiskyBondEngine";
+    engineData->engineParameters("Bond") = {{"TimestepPeriod", "6M"}};
 
     std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;
     for (auto const& c : curveSegment->iborIndexCurves()) {
@@ -802,14 +808,13 @@ void YieldCurve::buildFittedBondCurve() {
             Handle<Quote> rescaledBondQuote(boost::make_shared<SimpleQuote>((bondQuote->quote()->value()) * 100));
             string securityID = bondQuote->securityID();
 
-            // uncomment once we have the ref data manager in ORE
-            // QL_REQUIRE(referenceDataManager_.hasData("Bond", securityID),
-            //            "bond reference data for '" << securityID << "' required to build fitted bond curve");
-            // ore::data::Bond bond(referenceDataManager_, 1.0);
-            // bond.build(engineFactory);
-
-            auto helper =
-                boost::make_shared<BondHelper>(rescaledBondQuote, /*bond.instrument()->qlInstrument()*/ nullptr);
+            QL_REQUIRE(referenceData_ != nullptr && referenceData_->hasData("Bond", securityID),
+                       "bond reference data for '" << securityID << "' required to build fitted bond curve");
+            ore::data::Bond bond(Envelope(), referenceData_, 1.0);
+            bond.build(engineFactory);
+            auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
+            QL_REQUIRE(qlInstr != nullptr, "could not cast to QuantLib::Bond, this is unexpected");
+            auto helper = boost::make_shared<BondHelper>(rescaledBondQuote, qlInstr);
 
             // skip bonds with settlement date <= curve reference date or which are otherwise non-tradeable
             if (helper->bond()->settlementDate() <= asofDate_ ||

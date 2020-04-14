@@ -41,6 +41,8 @@ using ore::data::YieldCurveConfigMap;
 using ore::data::Conventions;
 using ore::data::CurveConfigurations;
 
+class ReferenceDataManager;
+
 //! Wrapper class for building yield term structures
 /*!
   Given yield curve specification and its configuration
@@ -83,7 +85,10 @@ public:
         const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves =
             map<string, boost::shared_ptr<YieldCurve>>(),
         //! FxTriangultion to get FX rate from cross if needed
-        const FXTriangulation& fxTriangulation = FXTriangulation());
+        const FXTriangulation& fxTriangulation = FXTriangulation(),
+        //! optional pointer to reference data, needed to build fitted bond curves
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr
+        );
 
     //! \name Inspectors
     //@{
@@ -123,6 +128,7 @@ private:
     InterpolationMethod interpolationMethod_;
     map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
     const FXTriangulation& fxTriangulation_;
+    const boost::shared_ptr<ReferenceDataManager> referenceData_;
 
     boost::shared_ptr<YieldTermStructure> piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instruments);
 

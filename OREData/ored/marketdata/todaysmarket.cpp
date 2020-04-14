@@ -62,7 +62,8 @@ namespace data {
 
 TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& params, const Loader& loader,
                            const CurveConfigurations& curveConfigs, const Conventions& conventions,
-                           const bool continueOnError, bool loadFixings)
+                           const bool continueOnError, bool loadFixings,
+                           const boost::shared_ptr<ReferenceDataManager>& referenceData)
     : MarketImpl(conventions) {
 
     // Fixings
@@ -153,7 +154,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         // build
                         LOG("Building YieldCurve for asof " << asof);
                         boost::shared_ptr<YieldCurve> yieldCurve = boost::make_shared<YieldCurve>(
-                            asof, *ycspec, curveConfigs, loader, conventions, requiredYieldCurves, fxT);
+                            asof, *ycspec, curveConfigs, loader, conventions, requiredYieldCurves, fxT, referenceData);
                         itr = requiredYieldCurves.insert(make_pair(ycspec->name(), yieldCurve)).first;
                     }
 
