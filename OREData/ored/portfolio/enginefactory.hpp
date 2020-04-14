@@ -26,6 +26,7 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/model/modelbuilder.hpp>
 #include <ored/portfolio/enginedata.hpp>
+#include <ored/portfolio/referencedata.hpp>
 
 #include <ql/pricingengine.hpp>
 #include <ql/utilities/disposable.hpp>
@@ -181,7 +182,9 @@ public:
         //! additional engine builders
         const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders = {},
         //! additional leg builders
-        const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders = {});
+        const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders = {},
+        //! optional pointer to reference data
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
 
     //! Return the market used by this EngineFactory
     const boost::shared_ptr<Market>& market() const { return market_; };
@@ -191,6 +194,8 @@ public:
     const boost::shared_ptr<EngineData> engineData() const { return engineData_; };
     //! Register a builder with the factory
     void registerBuilder(const boost::shared_ptr<EngineBuilder>& builder);
+    //! Return the reference data used by this EngineFactory
+    const boost::shared_ptr<ReferenceDataManager>& referenceData() const { return referenceData_; };
 
     //! Get a builder by trade type
     /*! This will look up configured model/engine for that trade type
@@ -227,6 +232,7 @@ private:
     map<MarketContext, string> configurations_;
     map<tuple<string, string, set<string>>, boost::shared_ptr<EngineBuilder>> builders_;
     map<string, boost::shared_ptr<LegBuilder>> legBuilders_;
+    boost::shared_ptr<ReferenceDataManager> referenceData_;
 };
 
 //! Leg builder

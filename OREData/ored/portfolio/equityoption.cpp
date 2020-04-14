@@ -32,7 +32,27 @@ namespace ore {
 namespace data {
 
 void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+
+    string name = equityName();
+    // Look up reference data, if the equity name exists in reference data, use the equityId
+    // if not continue with the current name
+    if (engineFactory->referenceData() != nullptr && engineFactory->referenceData()->hasData("Equity", name)) {
+        auto refData = engineFactory->referenceData()->getData("Equity", name);
+        // Check it's equity reference data
+        if (auto erd = boost::dynamic_pointer_cast<EquityReferenceDatum>(refData)) {
+            name = erd->equityData().equityId;
+
+            // check currency - if option currency and equity currency are different this is a quanto trade
+            QL_REQUIRE(currency_ == erd->equityData().currency, 
+                "Option Currency: " << currency_ << " does not match equity currency: " << erd->equityData().currency << ", EquityOption does not support quanto options.");
+        }
+    }
+
+    // set the option assetname - may have changed after lookup
+    assetName_ = name;
+
     VanillaOptionTrade::build(engineFactory);
+
     Handle<BlackVolTermStructure> blackVol = engineFactory->market()->equityVol(assetName_);
     LOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with maturity " << maturity_ << " and strike " << strike_
                                         << " is " << blackVol->blackVol(maturity_, strike_));
@@ -43,7 +63,10 @@ void EquityOption::fromXML(XMLNode* node) {
     XMLNode* eqNode = XMLUtils::getChildNode(node, "EquityOptionData");
     QL_REQUIRE(eqNode, "No EquityOptionData Node");
     option_.fromXML(XMLUtils::getChildNode(eqNode, "OptionData"));
-    assetName_ = XMLUtils::getChildValue(eqNode, "Name", true);
+    XMLNode* tmp = XMLUtils::getChildNode(eqNode, "Underlying");
+    if (!tmp)
+        tmp = XMLUtils::getChildNode(eqNode, "Name");
+    equityUnderlying_.fromXML(tmp);
     currency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
     strike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
@@ -55,7 +78,7 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, eqNode);
 
     XMLUtils::appendNode(eqNode, option_.toXML(doc));
-    XMLUtils::addChild(doc, eqNode, "Name", assetName_);
+    XMLUtils::appendNode(eqNode, equityUnderlying_.toXML(doc));
     XMLUtils::addChild(doc, eqNode, "Currency", currency_);
     XMLUtils::addChild(doc, eqNode, "Strike", strike_);
     XMLUtils::addChild(doc, eqNode, "Quantity", quantity_);
@@ -64,7 +87,7 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
 }
 
 std::map<AssetClass, std::set<std::string>> EquityOption::underlyingIndices() const {
-    return { {AssetClass::EQ, std::set<std::string>({assetName_})} };
+    return { {AssetClass::EQ, std::set<std::string>({equityName()})} };
 }
 
 } // namespace data

@@ -82,7 +82,6 @@ portfolio/enginedata.cpp
 portfolio/enginefactory.cpp
 portfolio/envelope.cpp
 portfolio/equityforward.cpp
-portfolio/equityidentifier.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
 portfolio/fixingdates.cpp
@@ -99,12 +98,15 @@ portfolio/nettingsetmanager.cpp
 portfolio/optiondata.cpp
 portfolio/optionwrapper.cpp
 portfolio/portfolio.cpp
+portfolio/referencedata.cpp
+portfolio/referencedatafactory.cpp
 portfolio/schedule.cpp
 portfolio/swap.cpp
 portfolio/swaption.cpp
 portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradefactory.cpp
+portfolio/underlying.cpp
 portfolio/vanillaoption.cpp
 report/csvreport.cpp
 utilities/calendaradjustmentconfig.cpp
@@ -231,7 +233,6 @@ portfolio/enginedata.hpp
 portfolio/enginefactory.hpp
 portfolio/envelope.hpp
 portfolio/equityforward.hpp
-portfolio/equityidentifier.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
 portfolio/fixingdates.hpp
@@ -249,6 +250,8 @@ portfolio/nettingsetmanager.hpp
 portfolio/optiondata.hpp
 portfolio/optionwrapper.hpp
 portfolio/portfolio.hpp
+portfolio/referencedata.hpp
+portfolio/referencedatafactory.hpp
 portfolio/schedule.hpp
 portfolio/structuredtradeerror.hpp
 portfolio/swap.hpp
@@ -256,6 +259,7 @@ portfolio/swaption.hpp
 portfolio/trade.hpp
 portfolio/tradeactions.hpp
 portfolio/tradefactory.hpp
+portfolio/underlying.hpp
 portfolio/vanillaoption.hpp
 report/csvreport.hpp
 report/inmemoryreport.hpp
