@@ -3,7 +3,7 @@
  All rights reserved.
  */
 
-/*! \file oredp/portfolio/underlying.hpp
+/*! \file ored/portfolio/underlying.hpp
     \brief underlying data model
     \ingroup portfolio
 */
