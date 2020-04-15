@@ -788,7 +788,7 @@ void YieldCurve::buildFittedBondCurve() {
 
     std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;
     for (auto const& c : curveSegment->iborIndexCurves()) {
-        auto y = requiredYieldCurves_.find(yieldCurveKey(c.first));
+        auto y = requiredYieldCurves_.find(yieldCurveKey(currency_, c.first, asofDate_));
         QL_REQUIRE(y != requiredYieldCurves_.end(),
                    "required yield curve '" << c.first << "' not provided for fitted bond curve");
         iborCurveMapping[c.first] = y->second->handle();
