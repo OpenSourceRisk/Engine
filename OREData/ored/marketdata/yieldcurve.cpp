@@ -810,25 +810,28 @@ void YieldCurve::buildFittedBondCurve() {
 
             QL_REQUIRE(referenceData_ != nullptr && referenceData_->hasData("Bond", securityID),
                        "bond reference data for '" << securityID << "' required to build fitted bond curve");
-            ore::data::Bond bond(Envelope(), referenceData_, 1.0);
+            ore::data::Bond bond(Envelope(), securityID, 1.0);
             bond.build(engineFactory);
             auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
             QL_REQUIRE(qlInstr != nullptr, "could not cast to QuantLib::Bond, this is unexpected");
             auto helper = boost::make_shared<BondHelper>(rescaledBondQuote, qlInstr);
 
             // skip bonds with settlement date <= curve reference date or which are otherwise non-tradeable
-            if (helper->bond()->settlementDate() <= asofDate_ ||
-                !QuantLib::BondFunctions::isTradable(*helper->bond())) {
+            if (helper->bond()->settlementDate() > asofDate_ && QuantLib::BondFunctions::isTradable(*helper->bond())) {
                 helpers.push_back(helper);
                 Date thisMaturity = helper->bond()->maturityDate();
                 lastMaturity = std::max(lastMaturity, thisMaturity);
                 firstMaturity = std::min(firstMaturity, thisMaturity);
-                DLOG("added bond " << securityID << " maturity " << QuantLib::io::iso_date(thisMaturity)
-                                   << " clean price " << rescaledBondQuote->value() << " yield (cont,act/act) "
+                DLOG("added bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
+                                   << ", clean price = " << rescaledBondQuote->value() << ", yield (cont,act/act) = "
                                    << helper->bond()->yield(rescaledBondQuote->value(), ActualActual(), Continuous,
                                                             NoFrequency));
                 marketPrices.push_back(bondQuote->quote()->value());
                 securityIDs.push_back(securityID);
+            } else {
+                DLOG("skipped bond " << securityID << " with settlement date "
+                                     << QuantLib::io::iso_date(helper->bond()->settlementDate()) << ", isTradable = "
+                                     << std::boolalpha << QuantLib::BondFunctions::isTradable(*helper->bond()))
             }
         }
     }
@@ -871,7 +874,7 @@ void YieldCurve::buildFittedBondCurve() {
     if (interpolationMethod_ == InterpolationMethod::NelsonSiegel) {
         trials = curveConfig_->bootstrapConfig().maxAttempts();
     } else {
-        if(curveConfig_->bootstrapConfig().maxAttempts() > 1) {
+        if (curveConfig_->bootstrapConfig().maxAttempts() > 1) {
             WLOG("randomised optimisation seeds not implemented for given interpolation method");
         }
     }
@@ -893,13 +896,14 @@ void YieldCurve::buildFittedBondCurve() {
         }
         current = boost::make_shared<FittedBondDiscountCurve>(asofDate_, helpers, zeroDayCounter_, *method, 1.0e-10,
                                                               10000, guess);
-        Real cost = current->fitResults().minimumCostValue();
+        Real cost = std::sqrt(current->fitResults().minimumCostValue());
         if (cost < minError) {
             minError = cost;
             tmp = current;
         }
-        DLOG("calibration trial #" << (i + 1) << ": cost = " << cost << ", best so far = " << minError);
-        if(cost < curveConfig_->bootstrapConfig().accuracy()) {
+        DLOG("calibration trial #" << (i + 1) << " out of " << trials << ": cost = " << cost
+                                   << ", best so far = " << minError);
+        if (cost < curveConfig_->bootstrapConfig().accuracy()) {
             DLOG("reached desired accuracy (" << curveConfig_->bootstrapConfig().accuracy()
                                               << ") - do not attempt more calibrations");
             break;
@@ -914,21 +918,22 @@ void YieldCurve::buildFittedBondCurve() {
     DLOG("Fitted Bond Curve Summary:");
     DLOG("   solution:   " << tmp->fitResults().solution());
     DLOG("   iterations: " << tmp->fitResults().numberOfIterations());
-    DLOG("   cost value: " << tmp->fitResults().minimumCostValue());
+    DLOG("   cost value: " << minError);
     auto engine = boost::make_shared<DiscountingBondEngine>(Handle<YieldTermStructure>(tmp));
     for (Size i = 0; i < helpers.size(); ++i) {
         auto bond = helpers[i]->bond();
         bond->setPricingEngine(engine);
-        DLOG("bond " << securityIDs[i] << " model clean price " << bond->cleanPrice() << " model yield (cont,actact) "
-                     << bond->yield(bond->cleanPrice(), ActualActual(), Continuous, NoFrequency));
+        DLOG("bond " << securityIDs[i] << ", model clean price = " << bond->cleanPrice()
+                     << ", yield (cont,actact) = "
+                     << bond->yield(bond->cleanPrice(), ActualActual(), Continuous, NoFrequency)
+                     << ", NPV = " << bond->NPV());
     }
 
     Real tolerance = curveConfig_->bootstrapConfig().globalAccuracy() == Null<Real>()
                          ? curveConfig_->bootstrapConfig().accuracy()
                          : curveConfig_->bootstrapConfig().globalAccuracy();
-    QL_REQUIRE(tmp->fitResults().minimumCostValue() < tolerance, "Fitted Bond Curve cost value ("
-                                                                     << tmp->fitResults().minimumCostValue()
-                                                                     << ") exceeds tolerance (" << tolerance << ")");
+    QL_REQUIRE(curveConfig_->bootstrapConfig().dontThrow() || minError < tolerance,
+               "Fitted Bond Curve cost value (" << minError << ") exceeds tolerance (" << tolerance << ")");
 
     if (extrapolation_)
         tmp->enableExtrapolation();

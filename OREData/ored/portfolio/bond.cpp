@@ -73,7 +73,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     std::string dummy; // no income curve, volatility curve id needed
     populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, creditCurveId_, referenceCurveId_,
-                                  dummy, dummy, coupons_, securityId_, referenceData_);
+                                  dummy, dummy, coupons_, securityId_, engineFactory->referenceData());
 
     Date issueDate = parseDate(issueDate_);
     Calendar calendar = parseCalendar(calendar_);
@@ -82,7 +82,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // FIXME: zero bonds are always long (firstLegIsPayer = false, mult = 1.0)
     bool firstLegIsPayer = (coupons_.size() == 0) ? false : coupons_[0].isPayer();
-    Real mult = firstLegIsPayer ? -1.0 : 1.0;
+    Real mult = bondNotional_ * (firstLegIsPayer ? -1.0 : 1.0);
     if (zeroBond_) { // Zero coupon bond
         bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, parseDate(maturityDate_)));
     } else { // Coupon bond
@@ -164,6 +164,11 @@ void Bond::fromXML(XMLNode* node) {
     settlementDays_ = XMLUtils::getChildValue(bondNode, "SettlementDays", false);
     calendar_ = XMLUtils::getChildValue(bondNode, "Calendar", false);
     issueDate_ = XMLUtils::getChildValue(bondNode, "IssueDate", false);
+    if (auto n = XMLUtils::getChildNode(bondNode, "BondNotional")) {
+        bondNotional_ = parseReal(XMLUtils::getNodeValue(n));
+    } else {
+        bondNotional_ = 1.0;
+    }
     XMLNode* legNode = XMLUtils::getChildNode(bondNode, "LegData");
     while (legNode != nullptr) {
         auto ld = createLegData();
@@ -186,6 +191,7 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, bondNode, "SettlementDays", settlementDays_);
     XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
     XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
+    XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
     return node;

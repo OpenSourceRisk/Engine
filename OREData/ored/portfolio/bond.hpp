@@ -34,8 +34,13 @@ namespace data {
 */
 class Bond : public Trade {
 public:
-    //! Default constructor
-    Bond() : Trade("Bond"), zeroBond_(false) {}
+    //! Default Contructor
+    explicit Bond() : Trade("Bond"), faceAmount_(0.0), zeroBond_(false), bondNotional_(1.0) {}
+
+    //! Constructor to set up a bond from reference data
+    Bond(Envelope env, string securityId, Real bondNotional)
+        : Trade("Bond", env), securityId_(securityId), faceAmount_(0.0), zeroBond_(false), bondNotional_(bondNotional) {
+    }
 
     //! Constructor for coupon bonds
     Bond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,
@@ -62,11 +67,6 @@ public:
           issueDate_(issueDate), coupons_(), faceAmount_(faceAmount), maturityDate_(maturityDate), currency_(currency),
           zeroBond_(true), bondNotional_(1.0) {}
 
-    //! Constructor for bonds using referencing data
-    Bond(Envelope env, const boost::shared_ptr<ReferenceDataManager>& referenceData, const Real bondNotional)
-        : Trade("Bond", env), referenceData_(referenceData), faceAmount_(Null<Real>()), zeroBond_(false),
-          bondNotional_(bondNotional) {}
-
     // Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
@@ -85,13 +85,13 @@ public:
     const string& calendar() const { return calendar_; }
     const string& issueDate() const { return issueDate_; }
     const std::vector<LegData>& coupons() const { return coupons_; }
-    const Real& faceAmount() const { return faceAmount_; }
+    const Real faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
     const string& currency() const { return currency_; }
+    const Real bondNotional() const { return bondNotional_; }
 
 protected:
     virtual boost::shared_ptr<LegData> createLegData() const;
-    const boost::shared_ptr<ReferenceDataManager> referenceData_;
 
 private:
     string issuerId_;
