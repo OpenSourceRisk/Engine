@@ -4567,7 +4567,17 @@ the form "Ccy1Ccy2".
 \subsubsection{Securities}
 
 Listing \ref{lst:security_configuration} shows the configuration of the Securities. Each Security name is associated with
-a SpreadQuote and a RecoveryRateQuote.
+
+\begin{itemize}
+\item a mandatory SpreadQuote
+\item an optional RecoveryRateQuote. Usually a pricer will fall back on the recovery rate associated to the credit curve
+  involved in the pricing if no security specific recovery rate is given. If no credit curve is given either, a zero
+  recovery rate will be assumed.
+\end{itemize}
+
+If no configuration is given for a security, in general a pricer will assume as zero spread and recovery rate. Notice
+that in this case the spread and recovery will not be simulated and therefore also be excluded from the sensitvitiy and
+stress analysis.
 
 \begin{longlisting}
 %\hrule\medskip
