@@ -75,6 +75,9 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, creditCurveId_, referenceCurveId_,
                                   dummy, dummy, coupons_, securityId_, engineFactory->referenceData());
 
+    QL_REQUIRE(!settlementDays_.empty(),
+               "settlement days not given, check bond trade xml and reference data for '" << securityId_ << "'");
+
     Date issueDate = parseDate(issueDate_);
     Calendar calendar = parseCalendar(calendar_);
     Natural settlementDays = boost::lexical_cast<Natural>(settlementDays_);
