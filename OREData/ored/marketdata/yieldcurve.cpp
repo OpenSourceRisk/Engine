@@ -773,6 +773,7 @@ void YieldCurve::buildFittedBondCurve() {
     // build vector of bond helpers
 
     auto quoteIDs = curveSegment->quotes();
+    std::vector<boost::shared_ptr<QuantLib::Bond>> bonds;
     std::vector<boost::shared_ptr<BondHelper>> helpers;
     std::vector<Real> marketPrices;
     std::vector<std::string> securityIDs;
@@ -816,24 +817,24 @@ void YieldCurve::buildFittedBondCurve() {
             bond.build(engineFactory);
             auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
             QL_REQUIRE(qlInstr != nullptr, "could not cast to QuantLib::Bond, this is unexpected");
-            auto helper = boost::make_shared<BondHelper>(rescaledBondQuote, qlInstr);
 
             // skip bonds with settlement date <= curve reference date or which are otherwise non-tradeable
-            if (helper->bond()->settlementDate() > asofDate_ && QuantLib::BondFunctions::isTradable(*helper->bond())) {
-                helpers.push_back(helper);
-                Date thisMaturity = helper->bond()->maturityDate();
+            if (qlInstr->settlementDate() > asofDate_ && QuantLib::BondFunctions::isTradable(*qlInstr)) {
+                bonds.push_back(qlInstr);
+                helpers.push_back(boost::make_shared<BondHelper>(rescaledBondQuote, qlInstr));
+                Date thisMaturity = qlInstr->maturityDate();
                 lastMaturity = std::max(lastMaturity, thisMaturity);
                 firstMaturity = std::min(firstMaturity, thisMaturity);
                 DLOG("added bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
                                    << ", clean price = " << rescaledBondQuote->value() << ", yield (cont,act/act) = "
-                                   << helper->bond()->yield(rescaledBondQuote->value(), ActualActual(), Continuous,
-                                                            NoFrequency));
+                                   << qlInstr->yield(rescaledBondQuote->value(), ActualActual(), Continuous,
+                                                     NoFrequency));
                 marketPrices.push_back(bondQuote->quote()->value());
                 securityIDs.push_back(securityID);
             } else {
                 DLOG("skipped bond " << securityID << " with settlement date "
-                                     << QuantLib::io::iso_date(helper->bond()->settlementDate()) << ", isTradable = "
-                                     << std::boolalpha << QuantLib::BondFunctions::isTradable(*helper->bond()))
+                                     << QuantLib::io::iso_date(qlInstr->settlementDate()) << ", isTradable = "
+                                     << std::boolalpha << QuantLib::BondFunctions::isTradable(*qlInstr));
             }
         }
     }
@@ -922,13 +923,12 @@ void YieldCurve::buildFittedBondCurve() {
     DLOG("   iterations: " << tmp->fitResults().numberOfIterations());
     DLOG("   cost value: " << minError);
     auto engine = boost::make_shared<DiscountingBondEngine>(Handle<YieldTermStructure>(tmp));
-    for (Size i = 0; i < helpers.size(); ++i) {
-        auto bond = helpers[i]->bond();
-        bond->setPricingEngine(engine);
-        DLOG("bond " << securityIDs[i] << ", model clean price = " << bond->cleanPrice()
+    for (Size i = 0; i < bonds.size(); ++i) {
+        bonds[i]->setPricingEngine(engine);
+        DLOG("bond " << securityIDs[i] << ", model clean price = " << bonds[i]->cleanPrice()
                      << ", yield (cont,actact) = "
-                     << bond->yield(bond->cleanPrice(), ActualActual(), Continuous, NoFrequency)
-                     << ", NPV = " << bond->NPV());
+                     << bonds[i]->yield(bonds[i]->cleanPrice(), ActualActual(), Continuous, NoFrequency)
+                     << ", NPV = " << bonds[i]->NPV());
     }
 
     Real tolerance = curveConfig_->bootstrapConfig().globalAccuracy() == Null<Real>()
