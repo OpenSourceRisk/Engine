@@ -795,7 +795,9 @@ void YieldCurve::buildFittedBondCurve() {
     }
 
     auto engineFactory = boost::make_shared<EngineFactory>(
-        engineData, boost::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping, conventions_));
+        engineData, boost::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping, conventions_),
+        std::map<MarketContext, string>(), std::vector<boost::shared_ptr<EngineBuilder>>(),
+        std::vector<boost::shared_ptr<LegBuilder>>(), referenceData_);
 
     for (Size i = 0; i < quoteIDs.size(); ++i) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(quoteIDs[i], asofDate_);
