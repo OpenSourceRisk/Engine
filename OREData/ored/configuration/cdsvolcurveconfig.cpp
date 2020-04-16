@@ -78,9 +78,13 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
-    populateNameTerm();
 
     XMLNode* n;
+    if ((n = XMLUtils::getChildNode(node, "ParseTerm")))
+        parseTerm_ = parseBool(XMLUtils::getNodeValue(n));
+
+    populateNameTerm();
+
     quoteName_ = "";
     if ((n = XMLUtils::getChildNode(node, "QuoteName")))
         quoteName_ = XMLUtils::getNodeValue(n);
@@ -163,6 +167,7 @@ XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {
     if (!quoteName_.empty())
         XMLUtils::addChild(doc, node, "QuoteName", quoteName_);
     XMLUtils::addChild(doc, node, "StrikeFactor", strikeFactor_);
+    XMLUtils::addChild(doc, node, "ParseTerm", parseTerm_);
 
     return node;
 }

@@ -43,7 +43,7 @@ namespace data {
 class CDSVolatilityCurveConfig : public CurveConfig {
 public:
     //! Default constructor
-    CDSVolatilityCurveConfig(bool parseTerm = true);
+    CDSVolatilityCurveConfig(bool parseTerm = false);
     
     //! Detailed constructor
     CDSVolatilityCurveConfig(
