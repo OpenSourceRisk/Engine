@@ -21,12 +21,12 @@
     \ingroup tradedata
 */
 
+#pragma once
+
 #include <ored/portfolio/referencedatafactory.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/time/date.hpp>
-
-#pragma once
 
 namespace ore {
 namespace data {
@@ -59,6 +59,55 @@ public:
 private:
     std::string type_;
     std::string id_;
+};
+
+/*
+<ReferenceDatum id="US12345678">
+  <Type>Bond</Type>
+  <BondReferenceData>
+    <IssuerId>...</IssuerId>
+    <SettlementDays>...</SettlementDays>
+    <Calendar>...</Calendar>
+    <IssueDate>...</IssueDate>
+    <CreditCurveId>...</CreditCurveId>
+    <ReferenceCurveId>...</ReferenceCurveId>
+    <IncomCurveId>...</IncomeCurveId>
+    <LegData>...</LegData>
+  </BondReferenceData>
+</ReferenceDatum>
+*/
+class LegData;
+class BondReferenceDatum : public ReferenceDatum {
+public:
+    static constexpr const char* TYPE = "Bond";
+
+    struct BondData {
+        string issuerId;
+        string settlementDays;
+        string calendar;
+        string issueDate;
+        string creditCurveId;
+        string referenceCurveId;
+        string incomeCurveId;
+        string volatilityCurveId;
+        std::vector<LegData> legData;
+    };
+
+    BondReferenceDatum() {}
+
+    BondReferenceDatum(const string& id) : ReferenceDatum(TYPE, id) {}
+
+    BondReferenceDatum(const string& id, const BondData& bondData) : ReferenceDatum(TYPE, id), bondData_(bondData) {}
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+    const BondData& bondData() const { return bondData_; }
+    void setBondData(const BondData& bondData) { bondData_ = bondData; }
+
+private:
+    BondData bondData_;
+    static ReferenceDatumRegister<ReferenceDatumBuilder<BondReferenceDatum>> reg_;
 };
 
 class EquityReferenceDatum : public ReferenceDatum {

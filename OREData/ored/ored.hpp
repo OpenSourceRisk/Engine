@@ -42,6 +42,7 @@
 #include <ored/marketdata/equitycurve.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/expiry.hpp>
+#include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
 #include <ored/marketdata/fixings.hpp>
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
@@ -79,6 +80,7 @@
 #include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>

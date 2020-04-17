@@ -24,7 +24,6 @@
 #pragma once
 
 #include <boost/make_shared.hpp>
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
@@ -44,6 +43,8 @@ namespace ore {
 namespace data {
 using namespace QuantLib;
 using std::string;
+
+class EngineFactory;
 
 //! Serializable Additional Leg Data
 /*!

@@ -367,6 +367,9 @@
       <xs:enumeration value="LogLinearFlat"/>
       <xs:enumeration value="CubicFlat"/>
       <xs:enumeration value="ConvexMonotone"/>
+      <xs:enumeration value="ExponentialSplines"/>
+      <xs:enumeration value="NelsonSiegel"/>
+      <xs:enumeration value="Svensson"/>
     </xs:restriction>
   </xs:simpleType>
 

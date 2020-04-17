@@ -26,7 +26,7 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/model/modelbuilder.hpp>
 #include <ored/portfolio/enginedata.hpp>
-#include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/legdata.hpp>
 
 #include <ql/pricingengine.hpp>
 #include <ql/utilities/disposable.hpp>
@@ -50,7 +50,7 @@ using QuantLib::Disposable;
 
 class Trade;
 class LegBuilder;
-class LegData;
+class ReferenceDataManager;
 
 /*! Market configuration contexts. Note that there is only one pricing context.
   If several are needed (for different trade types, different collateral
