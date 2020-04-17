@@ -46,7 +46,6 @@
       <xs:enumeration value="FALSE"/>
       <xs:enumeration value="false"/>
       <xs:enumeration value="0"/>
-      <xs:enumeration value=""/>
     </xs:restriction>
   </xs:simpleType>
 
