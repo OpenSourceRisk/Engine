@@ -25,9 +25,11 @@
 
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
+#include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/tradeactions.hpp>
 #include <ored/utilities/parsers.hpp>
+
 #include <ql/cashflow.hpp>
 #include <ql/instrument.hpp>
 #include <ql/time/date.hpp>
@@ -71,9 +73,11 @@ public:
 
         \warning This method will return an empty map if the Trade has not been built.
     */
-    virtual std::map<std::string, std::set<QuantLib::Date>>
-    fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const = 0;
-    
+    std::map<std::string, std::set<QuantLib::Date>>
+    fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const {
+        return requiredFixings_.fixingDatesIndices(settlementDate);
+    }
+
     virtual std::map<AssetClass, std::set<std::string>> underlyingIndices() const { return {};}
 
     //! \name Serialisation
@@ -171,6 +175,8 @@ protected:
                     const Date& paymentDate, const Real& paymentAmount, const Currency& paymentCurrency,
                     const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
                     const string& configuration);
+
+    RequiredFixings requiredFixings_;
 
 private:
     string id_;

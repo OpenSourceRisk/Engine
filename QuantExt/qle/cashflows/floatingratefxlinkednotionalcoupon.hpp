@@ -64,6 +64,9 @@ public:
     void accept(AcyclicVisitor&);
     //@}
 
+    //! more inspectors
+    boost::shared_ptr<FloatingRateCoupon> underlying() const { return underlying_; }
+
 private:
     const boost::shared_ptr<FloatingRateCoupon> underlying_;
 };
