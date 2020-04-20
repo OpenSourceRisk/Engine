@@ -17,7 +17,18 @@ Allowable values:  \emph{Price} or  \emph{Total}
 
 Allowable values: Any positive real number
 
-\item NotionalReset [Optional]: Defaults to \emph{false}. If set to \emph{true}, the Notional is reset at the beginning of each coupon period. Notional resets only affect the equity leg.
+\item NotionalReset [Optional]: Defaults to \emph{false}.  Notional resets only affect the equity leg.
+If NotionalReset is set to \emph{true} the quantity q or number of shares of the underlying equity  is fixed for all the coupons on the equity leg, as per:
+
+q = (InitialNotional) / (InitialPrice of the Equity)
+
+If NotionalReset is set to \emph{false} the quantity q  is calculated for each period as per:
+
+q = (Notional for the period) / (Equity Price at valuation date for period)
+
+Note that for the first period the NotionalReset \emph{true,false} flag will not have an impact as 
+(InitialNotional) = (Notional for the first period) , \\
+and (InitialPrice of the Equity) = (Equity Price at valuation date for the first period)
 
 Allowable values:  \emph{true} or  \emph{false}
 
