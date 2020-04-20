@@ -32,6 +32,7 @@ marketdata/defaultcurve.cpp
 marketdata/equitycurve.cpp
 marketdata/equityvolcurve.cpp
 marketdata/expiry.cpp
+marketdata/fittedbondcurvehelpermarket.cpp
 marketdata/fixings.cpp
 marketdata/fxspot.cpp
 marketdata/fxtriangulation.cpp
@@ -64,6 +65,7 @@ model/lgmbuilder.cpp
 model/lgmdata.cpp
 model/utilities.cpp
 portfolio/bond.cpp
+portfolio/bondutils.cpp
 portfolio/builders/capfloor.cpp
 portfolio/builders/capfloorediborleg.cpp
 portfolio/builders/cms.cpp
@@ -164,6 +166,7 @@ marketdata/defaultcurve.hpp
 marketdata/equitycurve.hpp
 marketdata/equityvolcurve.hpp
 marketdata/expiry.hpp
+marketdata/fittedbondcurvehelpermarket.hpp
 marketdata/fixings.hpp
 marketdata/fxspot.hpp
 marketdata/fxtriangulation.hpp
@@ -201,6 +204,7 @@ model/modelbuilder.hpp
 model/structuredmodelerror.hpp
 model/utilities.hpp
 portfolio/bond.hpp
+portfolio/bondutils.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp

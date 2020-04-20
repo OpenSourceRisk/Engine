@@ -26,6 +26,7 @@
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/equityforward.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ql/errors.hpp>
 #include <qle/instruments/equityforward.hpp>
 

@@ -1006,7 +1006,8 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
             }
             CSVLoader loader(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings);
             out_ << "OK" << endl;
-            market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs_, conventions_, continueOnError_);
+            market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs_, conventions_,
+                                                       continueOnError_, true, referenceData_);
         } else {
             WLOG("No market data loaded from file");
         }
@@ -1015,7 +1016,7 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
         InMemoryLoader loader;
         loadDataFromBuffers(loader, marketData, fixingData, implyTodaysFixings);
         market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs_, conventions_,
-                                                   continueOnError_);
+                                                   continueOnError_, true, referenceData_);
     }
     LOG("Today's market built");
     MEM_LOG;

@@ -20,6 +20,7 @@
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/equityoption.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
