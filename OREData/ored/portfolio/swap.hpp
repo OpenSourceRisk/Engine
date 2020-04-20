@@ -49,10 +49,6 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
-    //! Return the fixings that will be requested to price the Swap given the \p settlementDate.
-    std::map<std::string, std::set<QuantLib::Date>> fixings(
-        const QuantLib::Date& settlementDate = QuantLib::Date()) const override;
-    
     //! Add underlying index names
     std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
 

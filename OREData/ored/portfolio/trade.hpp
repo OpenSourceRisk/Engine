@@ -78,6 +78,9 @@ public:
         return requiredFixings_.fixingDatesIndices(settlementDate);
     }
 
+    /*! Return the full required fixing information */
+    const RequiredFixings& requiredFixings() const { return requiredFixings_; }
+
     virtual std::map<AssetClass, std::set<std::string>> underlyingIndices() const { return {};}
 
     //! \name Serialisation
@@ -98,6 +101,7 @@ public:
         notionalCurrency_ = "";
         maturity_ = Date();
         tradeActions_.clear();
+        requiredFixings_.clear();
     }
 
     //! \name Setters

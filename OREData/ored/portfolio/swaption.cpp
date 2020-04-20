@@ -74,7 +74,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Date latestExerciseDate = *std::max_element(exerciseDates.begin(), exerciseDates.end());
     if (QuantLib::detail::simple_event(latestExerciseDate).hasOccurred()) {
-        exercise_ = boost::make_shared<BermudanExercise>(exerciseDates); // needed in fixings()
+        exercise_ = boost::make_shared<BermudanExercise>(exerciseDates);
         legs_ = {{boost::make_shared<QuantLib::SimpleCashFlow>(0.0, latestExerciseDate)} };
         instrument_ = boost::shared_ptr<InstrumentWrapper>(
             new VanillaInstrument(boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>(1, false)), 1.0, {}, {}));
@@ -109,43 +109,12 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         buildBermudan(engineFactory);
     else
         buildEuropean(engineFactory);
-}
 
-map<string, set<Date>> Swaption::fixings(const Date& settlementDate) const {
-    
-    map<string, set<Date>> result;
-
-    if (!exercise_) {
-        WLOG("Need to build Swaption before asking for fixings");
-        return result;
-    }
-
-    Date today = settlementDate;
-    if (today == Date())
-        today = Settings::instance().evaluationDate();
-
-    // Get the exercise date(s) and find the next one relative to settlementDate
-    vector<Date> exerciseDates = exercise_->dates();
-    sort(exerciseDates.begin(), exerciseDates.end());
-    auto it = lower_bound(exerciseDates.begin(), exerciseDates.end(), today);
-
-    // If all exercise dates have not passed, check if we have a case where an exercise date falls between
-    // an interest period's fixing date and its start date
-    if (it != exerciseDates.end()) {
-        Date nextExerciseDate = *it;
-        for (const auto& cf : underlyingLeg_) {
-            auto floatingCoupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
-            QL_REQUIRE(floatingCoupon, "Expect the floating leg of the underlying swap to be of type FloatingRateCoupon");
-            if (floatingCoupon->accrualStartDate() >= nextExerciseDate) {
-                Date fixingDate = floatingCoupon->fixingDate();
-                if (fixingDate <= today) {
-                    result[underlyingIndex_].insert(fixingDate);
-                }
-            }
-        }
-    }
-
-    return result;
+    // add required fixings, we add the required fixing for the underlying swap, which might be more
+    // than actually required, i.e. we are conservative here
+    addToRequiredFixings(underlyingLeg_,
+                         boost::make_shared<FixingDateGetter>(
+                             requiredFixings_, std::map<string, string>{{underlyingIndexQlName_, underlyingIndex_}}));
 }
 
 namespace {
@@ -511,6 +480,7 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
     Schedule floatingSchedule = makeSchedule(swap_[floatingLegIndex].schedule());
     Handle<IborIndex> index =
         engineFactory->market()->iborIndex(indexName, swapBuilder->configuration(MarketContext::pricing));
+    underlyingIndexQlName_ = index->name();
     DayCounter floatingDayCounter = parseDayCounter(swap_[floatingLegIndex].dayCounter());
 
     BusinessDayConvention paymentConvention = parseBusinessDayConvention(swap_[floatingLegIndex].paymentConvention());
@@ -606,6 +576,7 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
     DayCounter fixedDayCounter = parseDayCounter(swap_[fixedLegIndex].dayCounter());
     Handle<IborIndex> index =
         engineFactory->market()->iborIndex(indexName, swapBuilder->configuration(MarketContext::pricing));
+    underlyingIndexQlName_ = index->name();
     DayCounter floatingDayCounter = parseDayCounter(swap_[floatingLegIndex].dayCounter());
     BusinessDayConvention paymentConvention = parseBusinessDayConvention(swap_[floatingLegIndex].paymentConvention());
 

@@ -28,8 +28,10 @@
 #include <ql/time/date.hpp>
 
 #include <map>
+#include <ostream>
 #include <set>
 #include <string>
+#include <unordered_set>
 
 namespace QuantLib {
 class CashFlow;
@@ -57,6 +59,42 @@ class SubPeriodsCoupon;
 namespace ore {
 namespace data {
 
+namespace detail {
+struct FixingEntry {
+    std::string indexName;
+    QuantLib::Date fixingDate;
+    QuantLib::Date payDate;
+    bool alwaysAddIfPaysOnSettlement;
+    bool operator==(const FixingEntry& a) const;
+};
+
+struct InflationFixingEntry : public FixingEntry {
+    bool indexInterpolated;
+    Frequency indexFrequency;
+    Period indexAvailabilityLag;
+    bool operator==(const InflationFixingEntry& a) const;
+};
+
+struct ZeroInflationFixingEntry : public InflationFixingEntry {
+    CPI::InterpolationType couponInterpolation;
+    Frequency couponFrequency;
+    bool operator==(const ZeroInflationFixingEntry& a) const;
+};
+
+struct FixingEntryHasher {
+    std::size_t operator()(const FixingEntry& a) const;
+};
+
+struct InflationFixingEntryHasher {
+    std::size_t operator()(const InflationFixingEntry& a) const;
+};
+
+struct ZeroInflationFixingEntryHasher {
+    std::size_t operator()(const ZeroInflationFixingEntry& a) const;
+};
+
+} // namespace detail
+
 class FixingDateGetter;
 
 /*! Class holding the information on the fixings required to price a trade (or a portfolio of trades). */
@@ -76,101 +114,62 @@ public:
     std::map<std::string, std::set<QuantLib::Date>>
     fixingDatesIndices(const QuantLib::Date& settlementDate = QuantLib::Date()) const;
 
-    /*! Extracts fixing dates based on a given Leg */
-    void addFixingDates(const QuantLib::Leg& leg, const FixingDateGetter& fixingDateGetter);
-
     /*! Adds a single fixing date \p fixingDate for an index given by its ORE index name \p indexName arising from a
        coupon with payment date \p payDate. If \p alwaysAddIfPaysOnSettlement is true the fixing date will be added
        if the coupon pays on the settlement date even if the cashflow returns hasOccured(settlementDate) as true. This
        is conservative and necessary in some cases since some pricing engines in QL (e.g. CapFloor) do not respect
-       hasOccured() and ask for the fixing regardless. */
-    void addFixingDate(const QuantLib::Date& fixingDate, const std::string& indexName, const QuantLib::Date& payDate,
-                       const bool alwaysAddIfPaysOnSettlement = false);
+       hasOccured() and ask for the fixing regardless. If the payDate is not given, it defaults to Date::maxDate()
+       meaning that the added fixing is relevant unconditional on a pay date */
+    void addFixingDate(const QuantLib::Date& fixingDate, const std::string& indexName,
+                       const QuantLib::Date& payDate = Date::maxDate(), const bool alwaysAddIfPaysOnSettlement = false);
 
     /*! adds a vector of fixings dates \p fixingDates for an index given by is ORE index name \p indexName arising from
        a coupon with payment date \p payDate */
     void addFixingDates(const std::vector<QuantLib::Date>& fixingDates, const std::string& indexName,
-                        const QuantLib::Date& payDate, const bool alwaysAddIfPaysOnSettlement = false);
+                        const QuantLib::Date& payDate = Date::maxDate(),
+                        const bool alwaysAddIfPaysOnSettlement = false);
 
     /*! add a single fixing date \p fixingDate for a coupon based on a zero inflation index given by its ORE index name
         \p indexName with payment date \p payDate */
     void addZeroInflationFixingDate(const QuantLib::Date& fixingDate, const std::string& indexName,
-                                    const QuantLib::Date& payDate, const bool indexInterpolated,
-                                    const Frequency indexFrequency, const Period& indexAvailabilityLag,
+                                    const bool indexInterpolated, const Frequency indexFrequency,
+                                    const Period& indexAvailabilityLag,
                                     const CPI::InterpolationType coupopnInterpolation, const Frequency couponFrequency,
+                                    const QuantLib::Date& payDate = Date::maxDate(),
                                     const bool alwaysAddIfPaysOnSettlement = false);
 
     /*! add a single fixing date \p fixingDate for a coupon based on a yoy inflation index given by its ORE index name
         \p indexName with payment date \p payDate */
     void addYoYInflationFixingDate(const QuantLib::Date& fixingDate, const std::string& indexName,
-                                   const QuantLib::Date& payDate, const bool indexInterpolated,
-                                   const Frequency indexFrequency, const Period& indexAvailabilityLag,
+                                   const bool indexInterpolated, const Frequency indexFrequency,
+                                   const Period& indexAvailabilityLag, const QuantLib::Date& payDate = Date::maxDate(),
                                    const bool alwaysAddIfPaysOnSettlement = false);
 
+    /*! clear all data */
+    void clear();
+
+    /*! add data from another RequiredFixings instance */
+    void addData(const RequiredFixings& requiredFixings);
+
+    friend std::ostream& operator<<(std::ostream&, const RequiredFixings&);
+
 protected:
-    struct FixingEntry {
-        std::string indexName;
-        QuantLib::Date fixingDate;
-        QuantLib::Date payDate;
-        bool alwaysAddIfPaysOnSettlement;
-    };
-
-    struct InflationFixingEntry : public FixingEntry {
-        bool indexInterpolated;
-        Frequency indexFrequency;
-        Period indexAvailabilityLag;
-    };
-
-    struct ZeroInflationFixingEntry : public InflationFixingEntry {
-        CPI::InterpolationType couponInterpolation;
-        Frequency couponFrequency;
-    };
-
     // maps an ORE index name to a pair (fixing date, pay date, alwaysAddIfPaysOnSettlment)
-    std::set<FixingEntry> fixingDates_;
+    std::unordered_set<detail::FixingEntry, detail::FixingEntryHasher> fixingDates_;
     // same as above, but for zero inflation index based coupons
-    std::set<ZeroInflationFixingEntry> zeroInflationFixingDates_;
+    std::unordered_set<detail::ZeroInflationFixingEntry, detail::ZeroInflationFixingEntryHasher>
+        zeroInflationFixingDates_;
     // same as above, but for yoy inflation index based coupons
-    std::set<InflationFixingEntry> yoyInflationFixingDates_;
+    std::unordered_set<detail::InflationFixingEntry, detail::InflationFixingEntryHasher> yoyInflationFixingDates_;
 };
 
-/*! Inflation fixings are generally available on a monthly, or coarser, frequency. When a portfolio is asked for its
-    fixings, and it contains inflation fixings, ORE will by convention put the fixing date as the 1st of the
-    applicable month. Some market data providers by convention supply the inflation fixings with the date as the last
-    date of the month. This function scans the \p fixings map, and moves any inflation fixing dates from the 1st of
-    the month to the last day of the month. The key in the \p fixings map is the index name and the value is the set
-    of dates for which we require the fixings.
-*/
-void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings);
+/*! allow output of required fixings data via streams */
+std::ostream& operator<<(std::ostream& out, const RequiredFixings& f);
 
-/*! Add index and fixing date pairs to \p fixings that will be potentially needed to build a TodaysMarket.
-
-    These additional index and fixing date pairs are found by scanning the \p mktParams and:
-    - for MarketObject::IndexCurve, take the ibor index name and add the dates for each weekday between settlement
-      date minus \p iborLookback period and settlement date
-    - for MarketObject::ZeroInflationCurve, take the inflation index and add the first of each month between
-      settlement date minus \p inflationLookback period and settlement date
-    - for MarketObject::YoYInflationCurve, take the inflation index and add the first of each month between
-      settlement date minus \p inflationLookback period and settlement date
-    - for MarketObject::CommodityCurve, add \e fixings for future contracts expiring 2 months either side of the
-      settlement date. The fixing dates are added for each weekday going back to the first day of the month that
-      precedes the settlement date by 2 months. The approach here will give rise to some spot commodities being
-      given a future contract name and dates added against them - this should not be a problem as there will be
-      no fixings found for them in any case.
-
-    The original \p fixings map may be empty.
-*/
-void addMarketFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings,
-                          const TodaysMarketParameters& mktParams,
-                          const QuantLib::Period& iborLookback = 5 * QuantLib::Days,
-                          const QuantLib::Period& inflationLookback = 1 * QuantLib::Years,
-                          const std::string& configuration = Market::defaultConfiguration);
-
-/*! Helper Class that gets relevant fixing dates from coupons
+/*! Helper Class that gets relevant fixing dates from coupons and add them to a RequiredFixings instance.
 
     Each type of FloatingRateCoupon that we wish to cover should be added here
-    and a \c visit method implemented against it
-*/
+    and a \c visit method implemented against it. */
 class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantLib::CashFlow>,
                          public QuantLib::Visitor<QuantLib::FloatingRateCoupon>,
@@ -224,6 +223,41 @@ protected:
     RequiredFixings& requiredFixings_;
     std::map<std::string, std::string> qlToOREIndexNames_;
 };
+
+/*! Populates a RequiredFixings instance based on a given QuantLib::Leg */
+void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<FixingDateGetter>& fixingDateGetter);
+
+/*! Inflation fixings are generally available on a monthly, or coarser, frequency. When a portfolio is asked for its
+    fixings, and it contains inflation fixings, ORE will by convention put the fixing date as the 1st of the
+    applicable month. Some market data providers by convention supply the inflation fixings with the date as the last
+    date of the month. This function scans the \p fixings map, and moves any inflation fixing dates from the 1st of
+    the month to the last day of the month. The key in the \p fixings map is the index name and the value is the set
+    of dates for which we require the fixings.
+*/
+void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings);
+
+/*! Add index and fixing date pairs to \p fixings that will be potentially needed to build a TodaysMarket.
+
+    These additional index and fixing date pairs are found by scanning the \p mktParams and:
+    - for MarketObject::IndexCurve, take the ibor index name and add the dates for each weekday between settlement
+      date minus \p iborLookback period and settlement date
+    - for MarketObject::ZeroInflationCurve, take the inflation index and add the first of each month between
+      settlement date minus \p inflationLookback period and settlement date
+    - for MarketObject::YoYInflationCurve, take the inflation index and add the first of each month between
+      settlement date minus \p inflationLookback period and settlement date
+    - for MarketObject::CommodityCurve, add \e fixings for future contracts expiring 2 months either side of the
+      settlement date. The fixing dates are added for each weekday going back to the first day of the month that
+      precedes the settlement date by 2 months. The approach here will give rise to some spot commodities being
+      given a future contract name and dates added against them - this should not be a problem as there will be
+      no fixings found for them in any case.
+
+    The original \p fixings map may be empty.
+*/
+void addMarketFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings,
+                          const TodaysMarketParameters& mktParams,
+                          const QuantLib::Period& iborLookback = 5 * QuantLib::Days,
+                          const QuantLib::Period& inflationLookback = 1 * QuantLib::Years,
+                          const std::string& configuration = Market::defaultConfiguration);
 
 } // namespace data
 } // namespace ore

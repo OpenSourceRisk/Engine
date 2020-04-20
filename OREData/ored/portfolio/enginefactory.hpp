@@ -236,6 +236,7 @@ private:
 };
 
 //! Leg builder
+class RequiredFixings;
 class LegBuilder {
 public:
     LegBuilder(const string& legType) : legType_(legType) {}

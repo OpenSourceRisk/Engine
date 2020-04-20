@@ -52,7 +52,8 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
         else
             result = makeIborLeg(data, index, engineFactory);
     }
-    requiredFixings.addFixingDates(result, FixingDateGetter(requiredFixings, {{index->name(), indexName}}));
+    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(
+                                     requiredFixings, std::map<string, string>{{index->name(), indexName}}));
     return result;
 }
 
@@ -68,7 +69,8 @@ Leg CPILegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineF
     string inflationIndexName = cpiData->index();
     auto index = *engineFactory->market()->zeroInflationIndex(inflationIndexName, configuration);
     Leg result = makeCPILeg(data, index, engineFactory);
-    requiredFixings.addFixingDates(result, FixingDateGetter(requiredFixings, {{index->name(), inflationIndexName}}));
+    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(
+                                     requiredFixings, std::map<string, string>{{index->name(), inflationIndexName}}));
     return result;
 }
 
@@ -79,7 +81,8 @@ Leg YYLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFa
     string inflationIndexName = yyData->index();
     auto index = *engineFactory->market()->yoyInflationIndex(inflationIndexName, configuration);
     Leg result = makeYoYLeg(data, index, engineFactory);
-    requiredFixings.addFixingDates(result, FixingDateGetter(requiredFixings, {{index->name(), inflationIndexName}}));
+    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(
+                                     requiredFixings, std::map<string, string>{{index->name(), inflationIndexName}}));
     return result;
 }
 
@@ -90,7 +93,8 @@ Leg CMSLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineF
     string swapIndexName = cmsData->swapIndex();
     auto index = *engineFactory->market()->swapIndex(swapIndexName, configuration);
     Leg result = makeCMSLeg(data, index, engineFactory);
-    requiredFixings.addFixingDates(result, FixingDateGetter(requiredFixings, {{index->name(), swapIndexName}}));
+    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(
+                                     requiredFixings, std::map<string, string>{{index->name(), swapIndexName}}));
     return result;
 }
 
@@ -104,9 +108,10 @@ Leg CMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<E
                                   boost::make_shared<QuantLib::SwapSpreadIndex>(
                                       "CMSSpread_" + index1->familyName() + "_" + index2->familyName(), index1, index2),
                                   engineFactory);
-    requiredFixings.addFixingDates(result,
-                                   FixingDateGetter(requiredFixings, {{index1->name(), cmsSpreadData->swapIndex1()},
-                                                                      {index2->name(), cmsSpreadData->swapIndex2()}}));
+    addToRequiredFixings(result,
+                         boost::make_shared<FixingDateGetter>(
+                             requiredFixings, std::map<string, string>{{index1->name(), cmsSpreadData->swapIndex1()},
+                                                                       {index2->name(), cmsSpreadData->swapIndex2()}}));
     return result;
 }
 
@@ -126,9 +131,10 @@ Leg DigitalCMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::share
                                 boost::make_shared<QuantLib::SwapSpreadIndex>(
                                     "CMSSpread_" + index1->familyName() + "_" + index2->familyName(), index1, index2),
                                 engineFactory);
-    requiredFixings.addFixingDates(result,
-                                   FixingDateGetter(requiredFixings, {{index1->name(), cmsSpreadData->swapIndex1()},
-                                                                      {index2->name(), cmsSpreadData->swapIndex2()}}));
+    addToRequiredFixings(result,
+                         boost::make_shared<FixingDateGetter>(
+                             requiredFixings, std::map<string, string>{{index1->name(), cmsSpreadData->swapIndex1()},
+                                                                       {index2->name(), cmsSpreadData->swapIndex2()}}));
     return result;
 }
 
@@ -169,9 +175,11 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
     }
 
     Leg result = makeEquityLeg(data, eqCurve, fxIndex);
-    requiredFixings.addFixingDates(
-        result, FixingDateGetter(requiredFixings, {{eqCurve->name(), eqName},
-                                                   {fxIndex != nullptr ? fxIndex->name() : "na", eqData->fxIndex()}}));
+    addToRequiredFixings(
+        result, boost::make_shared<FixingDateGetter>(
+                    requiredFixings,
+                    std::map<string, string>{{eqCurve->name(), eqName},
+                                             {fxIndex != nullptr ? fxIndex->name() : "na", eqData->fxIndex()}}));
     return result;
 }
 

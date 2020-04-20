@@ -45,12 +45,6 @@ public:
 
     void build(const boost::shared_ptr<EngineFactory>&) override;
 
-    //! Return no fixings for an EquityForward.
-    std::map<std::string, std::set<QuantLib::Date>> fixings(
-        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
-        return {};
-    }
-
     //! Add underlying Equity names
     std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
 
