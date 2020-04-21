@@ -174,11 +174,13 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 // Add the cashflows to the notional leg if they have been populated
                 if (outCf) {
                     resettingLeg.push_back(outCf);
-                    requiredFixings_.addFixingDate(fixingDate, legData_[i].fxIndex(), outCf->date());
+                    if(fixingDate != Date())
+                        requiredFixings_.addFixingDate(fixingDate, legData_[i].fxIndex(), outCf->date());
                 }
                 if (inCf) {
                     resettingLeg.push_back(inCf);
-                    requiredFixings_.addFixingDate(fixingDate, legData_[i].fxIndex(), inCf->date());
+                    if(fixingDate != Date())
+                        requiredFixings_.addFixingDate(fixingDate, legData_[i].fxIndex(), inCf->date());
                 }
             }
 
