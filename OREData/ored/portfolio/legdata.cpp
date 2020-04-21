@@ -432,6 +432,7 @@ void EquityLegData::fromXML(XMLNode* node) {
         fxIndex_ = XMLUtils::getChildValue(fxt, "FXIndex", true);
         fxIndexFixingDays_ = XMLUtils::getChildValueAsInt(fxt, "FXIndexFixingDays");
         fxIndexCalendar_ = XMLUtils::getChildValue(fxt, "FXIndexCalendar");
+        indices_.insert(fxIndex_);
     }
 }
 
