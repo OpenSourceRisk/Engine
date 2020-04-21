@@ -130,7 +130,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             (*trade)->build(engineFactory);
             TLOG("Required Fixings for trade " << (*trade)->id() << ":");
             TLOGGERSTREAM << (*trade)->requiredFixings();
-            ++trade;            
+            ++trade;
         } catch (std::exception& e) {
             ALOG(StructuredTradeErrorMessage(*trade, "Error building trade", e.what()));
             trade = trades_.erase(trade);
