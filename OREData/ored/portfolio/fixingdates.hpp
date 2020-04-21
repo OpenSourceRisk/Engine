@@ -45,6 +45,7 @@ class OvernightIndexedCoupon;
 class AverageBMACoupon;
 class CmsSpreadCoupon;
 class DigitalCoupon;
+class StrippedCappedFlooredCoupon;
 } // namespace QuantLib
 
 namespace QuantExt {
@@ -153,6 +154,7 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantLib::AverageBMACoupon>,
                          public QuantLib::Visitor<QuantLib::CmsSpreadCoupon>,
                          public QuantLib::Visitor<QuantLib::DigitalCoupon>,
+                         public QuantLib::Visitor<QuantLib::StrippedCappedFlooredCoupon>,
                          public QuantLib::Visitor<QuantExt::AverageONIndexedCoupon>,
                          public QuantLib::Visitor<QuantExt::EquityCoupon>,
                          public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon>,
@@ -181,6 +183,7 @@ public:
     void visit(QuantLib::AverageBMACoupon& c);
     void visit(QuantLib::CmsSpreadCoupon& c);
     void visit(QuantLib::DigitalCoupon& c);
+    void visit(QuantLib::StrippedCappedFlooredCoupon& c);
     void visit(QuantExt::AverageONIndexedCoupon& c);
     void visit(QuantExt::EquityCoupon& c);
     void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c);

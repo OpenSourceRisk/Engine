@@ -37,6 +37,7 @@
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/experimental/coupons/cmsspreadcoupon.hpp>
+#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 
 using namespace QuantLib;
@@ -340,6 +341,8 @@ void FixingDateGetter::visit(CmsSpreadCoupon& c) {
 }
 
 void FixingDateGetter::visit(DigitalCoupon& c) { c.underlying()->accept(*this); }
+
+void FixingDateGetter::visit(StrippedCappedFlooredCoupon& c) { c.underlying()->accept(*this); }
 
 void FixingDateGetter::visit(AverageONIndexedCoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
