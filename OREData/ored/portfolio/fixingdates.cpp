@@ -226,9 +226,9 @@ void RequiredFixings::addYoYInflationFixingDate(const QuantLib::Date& fixingDate
                         indexFrequency, indexAvailabilityLag));
 }
 
-std::ostream& operator<<(std::ostream& out, const RequiredFixings& f) {
+std::ostream& operator<<(std::ostream& out, const RequiredFixings& requiredFixings) {
     out << "IndexName FixingDate PayDate AlwaysAddIfPaysOnSettlement\n";
-    for (auto const& f : f.fixingDates_) {
+    for (auto const& f : requiredFixings.fixingDates_) {
         std::string indexName = std::get<0>(f);
         Date fixingDate = std::get<1>(f);
         Date payDate = std::get<2>(f);
@@ -236,7 +236,7 @@ std::ostream& operator<<(std::ostream& out, const RequiredFixings& f) {
         out << indexName << " " << QuantLib::io::iso_date(fixingDate) << " " << QuantLib::io::iso_date(payDate) << " "
             << std::boolalpha << alwaysAddIfPaysOnSettlement << "\n";
     }
-    for (auto const& f : f.zeroInflationFixingDates_) {
+    for (auto const& f : requiredFixings.zeroInflationFixingDates_) {
         RequiredFixings::InflationFixingEntry inflationFixingEntry = std::get<0>(f);
         RequiredFixings::FixingEntry fixingEntry = std::get<0>(inflationFixingEntry);
         std::string indexName = std::get<0>(fixingEntry);
@@ -246,7 +246,7 @@ std::ostream& operator<<(std::ostream& out, const RequiredFixings& f) {
         out << indexName << " " << QuantLib::io::iso_date(fixingDate) << " " << QuantLib::io::iso_date(payDate) << " "
             << std::boolalpha << alwaysAddIfPaysOnSettlement << "\n";
     }
-    for (auto const& f : f.yoyInflationFixingDates_) {
+    for (auto const& f : requiredFixings.yoyInflationFixingDates_) {
         RequiredFixings::FixingEntry fixingEntry = std::get<0>(f);
         std::string indexName = std::get<0>(fixingEntry);
         Date fixingDate = std::get<1>(fixingEntry);
