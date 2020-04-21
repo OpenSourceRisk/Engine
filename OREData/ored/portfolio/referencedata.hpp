@@ -166,7 +166,7 @@ private:
 class ReferenceDataManager {
 public:
     virtual bool hasData(const string& type, const string& id) const = 0;
-    virtual boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id) const = 0;
+    virtual boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id) = 0;
     virtual void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
 };
 
@@ -188,10 +188,10 @@ public:
     void clear() { data_.clear(); }
 
     bool hasData(const string& type, const string& id) const override;
-    boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id) const override;
+    boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id) override;
     void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum) override;
 
-private:
+protected:
     map<pair<string, string>, boost::shared_ptr<ReferenceDatum>> data_;
 };
 
