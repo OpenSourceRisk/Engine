@@ -31,7 +31,6 @@
 #include <ostream>
 #include <set>
 #include <string>
-#include <unordered_set>
 
 namespace QuantLib {
 class CashFlow;
@@ -58,42 +57,6 @@ class SubPeriodsCoupon;
 
 namespace ore {
 namespace data {
-
-namespace detail {
-struct FixingEntry {
-    std::string indexName;
-    QuantLib::Date fixingDate;
-    QuantLib::Date payDate;
-    bool alwaysAddIfPaysOnSettlement;
-    bool operator==(const FixingEntry& a) const;
-};
-
-struct InflationFixingEntry : public FixingEntry {
-    bool indexInterpolated;
-    Frequency indexFrequency;
-    Period indexAvailabilityLag;
-    bool operator==(const InflationFixingEntry& a) const;
-};
-
-struct ZeroInflationFixingEntry : public InflationFixingEntry {
-    CPI::InterpolationType couponInterpolation;
-    Frequency couponFrequency;
-    bool operator==(const ZeroInflationFixingEntry& a) const;
-};
-
-struct FixingEntryHasher {
-    std::size_t operator()(const FixingEntry& a) const;
-};
-
-struct InflationFixingEntryHasher {
-    std::size_t operator()(const InflationFixingEntry& a) const;
-};
-
-struct ZeroInflationFixingEntryHasher {
-    std::size_t operator()(const ZeroInflationFixingEntry& a) const;
-};
-
-} // namespace detail
 
 class FixingDateGetter;
 
@@ -151,16 +114,23 @@ public:
     /*! add data from another RequiredFixings instance */
     void addData(const RequiredFixings& requiredFixings);
 
-    friend std::ostream& operator<<(std::ostream&, const RequiredFixings&);
+private:
+    // FixingEntry = indexName, fixingDate, payDate, alwaysAddIfPaysOnSettlement
+    using FixingEntry = std::tuple<std::string, QuantLib::Date, QuantLib::Date, bool>;
+    // InflationFixingEntry = FixingEntry, indexInterpolated, indexFrequency, indexAvailabilityLag
+    using InflationFixingEntry = std::tuple<FixingEntry, bool, Frequency, Period>;
+    // ZeroInflationFixingEntry = InflationFixingEntry, couponInterpolation, couponFrequency
+    using ZeroInflationFixingEntry = std::tuple<InflationFixingEntry, CPI::InterpolationType, Frequency>;
 
-protected:
     // maps an ORE index name to a pair (fixing date, pay date, alwaysAddIfPaysOnSettlment)
-    std::unordered_set<detail::FixingEntry, detail::FixingEntryHasher> fixingDates_;
+    std::set<FixingEntry> fixingDates_;
     // same as above, but for zero inflation index based coupons
-    std::unordered_set<detail::ZeroInflationFixingEntry, detail::ZeroInflationFixingEntryHasher>
-        zeroInflationFixingDates_;
+    std::set<ZeroInflationFixingEntry> zeroInflationFixingDates_;
     // same as above, but for yoy inflation index based coupons
-    std::unordered_set<detail::InflationFixingEntry, detail::InflationFixingEntryHasher> yoyInflationFixingDates_;
+    std::set<InflationFixingEntry> yoyInflationFixingDates_;
+
+    // grant access to stream output operator
+    friend std::ostream& operator<<(std::ostream&, const RequiredFixings&);
 };
 
 /*! allow output of required fixings data via streams */
