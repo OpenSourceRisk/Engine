@@ -73,6 +73,7 @@
     <ClInclude Include="ored\marketdata\equitycurve.hpp" />
     <ClInclude Include="ored\marketdata\equityvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\expiry.hpp" />
+    <ClInclude Include="ored\marketdata\fittedbondcurvehelpermarket.hpp" />
     <ClInclude Include="ored\marketdata\fixings.hpp" />
     <ClInclude Include="ored\marketdata\fxspot.hpp" />
     <ClInclude Include="ored\marketdata\fxtriangulation.hpp" />
@@ -110,6 +111,7 @@
     <ClInclude Include="ored\model\utilities.hpp" />
     <ClInclude Include="ored\ored.hpp" />
     <ClInclude Include="ored\portfolio\bond.hpp" />
+    <ClInclude Include="ored\portfolio\bondutils.hpp" />
     <ClInclude Include="ored\portfolio\builders\bond.hpp" />
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
@@ -226,6 +228,7 @@
     <ClCompile Include="ored\marketdata\equitycurve.cpp" />
     <ClCompile Include="ored\marketdata\equityvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\expiry.cpp" />
+    <ClCompile Include="ored\marketdata\fittedbondcurvehelpermarket.cpp" />
     <ClCompile Include="ored\marketdata\fixings.cpp" />
     <ClCompile Include="ored\marketdata\fxspot.cpp" />
     <ClCompile Include="ored\marketdata\fxtriangulation.cpp" />
@@ -258,6 +261,7 @@
     <ClCompile Include="ored\model\lgmdata.cpp" />
     <ClCompile Include="ored\model\utilities.cpp" />
     <ClCompile Include="ored\portfolio\bond.cpp" />
+    <ClCompile Include="ored\portfolio\bondutils.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloor.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloorediborleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />
