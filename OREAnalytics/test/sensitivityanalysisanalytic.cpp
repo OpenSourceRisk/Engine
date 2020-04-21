@@ -61,8 +61,6 @@
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
-#include <boost/timer.hpp>
-
 using namespace std;
 using namespace QuantLib;
 using namespace QuantExt;

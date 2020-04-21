@@ -21,8 +21,9 @@
 using namespace std;
 
 // Boost
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 using namespace boost;
+using boost::timer::cpu_timer;
 
 // Boost.Test
 #define BOOST_TEST_MODULE OREAnalyticsTestSuite
@@ -60,7 +61,8 @@ public:
 
     // Method called in destructor to log time taken
     void stopTimer() {
-        double seconds = t.elapsed();
+        t.stop();
+        double seconds = t.elapsed().wall * 1e-9;
         int hours = int(seconds / 3600);
         seconds -= hours * 3600;
         int minutes = int(seconds / 60);
@@ -75,7 +77,7 @@ public:
 
 private:
     // Timing the test run
-    boost::timer t;
+    cpu_timer t;
 };
 
 // Breaking change in 1.65.0
