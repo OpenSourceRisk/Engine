@@ -162,8 +162,11 @@ std::map<std::string, std::set<Date>> RequiredFixings::fixingDatesIndices(const 
         // add to result
         SimpleCashFlow dummyCf(0.0, payDate);
         if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
-            addZeroInflationDates(result[indexName], fixingDate, d, indexInterpolated, indexFrequency,
-                                  indexAvailabilityLag, couponInterpolation, couponFrequency);
+            std::set<Date> tmp;
+            addZeroInflationDates(tmp, fixingDate, d, indexInterpolated, indexFrequency, indexAvailabilityLag,
+                                  couponInterpolation, couponFrequency);
+            if (!tmp.empty())
+                result[indexName].insert(tmp.begin(), tmp.end());
         }
     }
 
@@ -182,7 +185,8 @@ std::map<std::string, std::set<Date>> RequiredFixings::fixingDatesIndices(const 
         SimpleCashFlow dummyCf(0.0, payDate);
         if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
             auto fixingDates = needsForecast(fixingDate, d, indexInterpolated, indexFrequency, indexAvailabilityLag);
-            result[indexName].insert(fixingDates.begin(), fixingDates.end());
+            if (!fixingDates.empty())
+                result[indexName].insert(fixingDates.begin(), fixingDates.end());
             // Add the previous year's date(s) also if any.
             for (const auto d : fixingDates) {
                 result[indexName].insert(d - 1 * Years);
