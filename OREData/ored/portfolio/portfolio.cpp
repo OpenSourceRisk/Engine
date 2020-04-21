@@ -128,7 +128,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     while (trade != trades_.end()) {
         try {
             (*trade)->build(engineFactory);
-            TLOG("Built trade " << (*trade)->id() << ", requires fixings:");
+            TLOG("Required Fixings for trade " << (*trade)->id() << ":");
             TLOGGERSTREAM << (*trade)->requiredFixings();
             ++trade;            
         } catch (std::exception& e) {
