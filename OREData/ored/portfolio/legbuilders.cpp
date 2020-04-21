@@ -178,7 +178,7 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
     addToRequiredFixings(
         result, boost::make_shared<FixingDateGetter>(
                     requiredFixings,
-                    std::map<string, string>{{"EQ-" + eqCurve->name(), eqName},
+                    std::map<string, string>{{eqCurve->name(), "EQ-" + eqName},
                                              {fxIndex != nullptr ? fxIndex->name() : "na", eqData->fxIndex()}}));
     return result;
 }
