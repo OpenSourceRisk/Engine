@@ -273,6 +273,7 @@ void FixingDateGetter::visit(CashFlow& c) {
 }
 
 void FixingDateGetter::visit(FloatingRateCoupon& c) {
+    // Enforce fixing to be added even if coupon pays on settlement.
     requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.index()->name()), c.date(), true);
 }
 
@@ -282,6 +283,7 @@ void FixingDateGetter::visit(IborCoupon& c) {
         // coupons. For these we allow fixing dates that are invalid as BMA fixing dates
         // and adjust these dates to the last valid BMA fixing date in the BMAIndexWrapper.
         // It is this adjusted date that we want to record here.
+        // Enforce fixing to be added even if coupon pays on settlement.
         requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.index()->name()), c.date(), true);
     } else {
         // otherwise fall through to FloatingRateCoupon handling
@@ -332,8 +334,9 @@ void FixingDateGetter::visit(AverageBMACoupon& c) {
 }
 
 void FixingDateGetter::visit(CmsSpreadCoupon& c) {
-    requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.swapSpreadIndex()->swapIndex1()->name()), c.date());
-    requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.swapSpreadIndex()->swapIndex2()->name()), c.date());
+    // Enforce fixing to be added even if coupon pays on settlement.
+    requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.swapSpreadIndex()->swapIndex1()->name()), c.date(), true);
+    requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.swapSpreadIndex()->swapIndex2()->name()), c.date(), true);
 }
 
 void FixingDateGetter::visit(DigitalCoupon& c) { c.underlying()->accept(*this); }
