@@ -159,7 +159,7 @@ bool BasicReferenceDataManager::hasData(const string& type, const string& id) co
     return data_.find(make_pair(type, id)) != data_.end();
 }
 
-boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id) const {
+boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id) {
     auto it = data_.find(make_pair(type, id));
     QL_REQUIRE(it != data_.end(), "No Reference data for " << type << " " << id);
     return it->second;

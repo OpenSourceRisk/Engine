@@ -867,6 +867,7 @@
     <ClInclude Include="qle\time\actual364.hpp">
       <Filter>time</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
