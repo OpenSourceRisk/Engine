@@ -489,8 +489,12 @@
     <ClInclude Include="ored\portfolio\underlying.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\bondutils.hpp" />
-    <ClInclude Include="ored\marketdata\fittedbondcurvehelpermarket.hpp" />
+    <ClInclude Include="ored\marketdata\fittedbondcurvehelpermarket.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\bondutils.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -862,7 +866,11 @@
     <ClCompile Include="ored\portfolio\underlying.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
-    <ClCompile Include="ored\portfolio\bondutils.cpp" />
-    <ClCompile Include="ored\marketdata\fittedbondcurvehelpermarket.cpp" />
+    <ClCompile Include="ored\marketdata\fittedbondcurvehelpermarket.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\bondutils.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

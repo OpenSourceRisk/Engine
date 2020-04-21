@@ -652,6 +652,27 @@ Example:
 \item {RECOVERY\_RATE/RATE/GE/SeniorUnsec/EUR}
 \end{itemize}
 
+\subsection{CDS Option Implied Volatility}
+\label{md:cds_option_iv}
+
+A CDS option implied volatility quote can take any one of the following four forms:
+
+\begin{enumerate}
+\item \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[EXPIRY]!
+\item \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[EXPIRY]/[STRIKE]!
+\item \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[TERM]/[EXPIRY]!
+\item \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[TERM]/[EXPIRY]/[STRIKE]!
+\end{enumerate}
+
+The terms in the quote string have the following interpretations:
+\begin{itemize}
+\item The \lstinline![NAME]! is the name of the CDS reference entity or index CDS.
+\item The \lstinline![EXPIRY]! is the expiry of the CDS option and may be a tenor or an explicit date.
+\item The \lstinline![TERM]! is optional and gives the term of the underlying CDS or index CDS. This should be a tenor e.g.\ 3Y, 5Y, etc.
+\item The \lstinline![STRIKE]! is optional and gives the strike of the CDS or index CDS option.
+\end{itemize}
+
+
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Security Recovery Rate}\label{md:sec_rec_rates}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
