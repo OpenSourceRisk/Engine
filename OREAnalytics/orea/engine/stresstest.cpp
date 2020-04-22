@@ -17,7 +17,6 @@
 */
 
 #include <boost/lexical_cast.hpp>
-#include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <orea/engine/valuationengine.hpp>

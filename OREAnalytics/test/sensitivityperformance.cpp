@@ -23,7 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <oret/toplevelfixture.hpp>
 
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -65,6 +65,8 @@ using namespace boost::unit_test_framework;
 using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
+using boost::timer::cpu_timer;
+using boost::timer::default_places;
 
 namespace {
 
@@ -542,8 +544,8 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
 
 void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bool crossGammas,
                       ObservationMode::Mode om) {
-    boost::timer t_base;
-    t_base.restart();
+    cpu_timer t_base;
+    t_base.start();
     Size portfolioSize = bigPortfolio ? 100 : 1;
     string om_str = (om == ObservationMode::Mode::None)
                         ? "None"
@@ -599,12 +601,13 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
 
     boost::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize);
 
-    boost::timer t2;
-    t2.restart();
+    cpu_timer t2;
+    t2.start();
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
         portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions, false);
     sa->generateSensitivities();
-    Real elapsed = t2.elapsed();
+    t2.stop();
+    Real elapsed = t2.elapsed().wall * 1e-9;
     Size numScenarios = sa->scenarioGenerator()->samples();
     Size scenarioSize = sa->scenarioGenerator()->scenarios().front()->keys().size();
     BOOST_TEST_MESSAGE("number of scenarios=" << numScenarios);
@@ -615,8 +618,9 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     BOOST_TEST_MESSAGE("Memory usage - " << os::getMemoryUsage());
 
     ObservationMode::instance().setMode(backupOm);
-
-    BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
+    t_base.stop();
+    
+    BOOST_TEST_MESSAGE("total time = " << t_base.format(default_places, "%w") << " seconds");
 }
 } // namespace
 

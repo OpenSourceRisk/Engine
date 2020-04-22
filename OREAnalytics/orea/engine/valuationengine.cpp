@@ -25,13 +25,15 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>
 
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 #include <ql/errors.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
 using namespace ore::data;
+using boost::timer::cpu_timer;
+using boost::timer::default_places;
 
 namespace ore {
 namespace analytics {
@@ -108,8 +110,8 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
 
     simMarket_->fixingManager()->initialise(portfolio);
 
-    boost::timer timer;
-    boost::timer loopTimer;
+    cpu_timer timer;
+    cpu_timer loopTimer;
 
     // We call Cube::samples() each time her to allow for dynamic stopping times
     // e.g. MC convergence tests
@@ -123,7 +125,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         for (Size i = 0; i < dates.size(); ++i) {
             Date d = dates[i];
 
-            timer.restart();
+            timer.start();
 
             simMarket_->update(d);
 
@@ -134,10 +136,11 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 b.second->recalibrate();
             }
 
-            updateTime += timer.elapsed();
+            timer.stop();
+            updateTime += timer.elapsed().wall * 1e-9;
 
             // loop over trades
-            timer.restart();
+            timer.start();
             for (Size j = 0; j < trades.size(); ++j) {
                 auto trade = trades[j];
 
@@ -148,17 +151,19 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 for (auto calc : calculators)
                     calc->calculate(trade, j, simMarket_, outputCube, d, i, sample);
             }
-            pricingTime += timer.elapsed();
+            timer.stop();
+            pricingTime += timer.elapsed().wall * 1e-9;
         }
 
-        timer.restart();
+        timer.start();
         simMarket_->fixingManager()->reset();
-        fixingTime += timer.elapsed();
+        fixingTime += timer.elapsed().wall * 1e-9;
     }
 
     simMarket_->reset();
     updateProgress(outputCube->samples(), outputCube->samples());
-    LOG("ValuationEngine completed: loop " << setprecision(2) << loopTimer.elapsed() << " sec, "
+    loopTimer.stop();
+    LOG("ValuationEngine completed: loop " << setprecision(2) << loopTimer.format(2, "%w") << " sec, "
                                            << "pricing " << pricingTime << " sec, "
                                            << "update " << updateTime << " sec "
                                            << "fixing " << fixingTime);

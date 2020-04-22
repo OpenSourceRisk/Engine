@@ -21,13 +21,15 @@
     \ingroup
 */
 
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 #include <ored/marketdata/fixings.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/index.hpp>
 #include <qle/indexes/equityindex.hpp>
 
+using boost::timer::cpu_timer;
+using boost::timer::default_places;
 using namespace std;
 using namespace QuantLib;
 using namespace QuantExt;
@@ -38,7 +40,7 @@ namespace data {
 void applyFixings(const vector<Fixing>& fixings, const data::Conventions& conventions) {
     Size count = 0;
     map<string, boost::shared_ptr<Index>> cache;
-    boost::timer timer;
+    cpu_timer timer;
     boost::shared_ptr<Index> index;
     for (auto& f : fixings) {
         try {
@@ -56,13 +58,15 @@ void applyFixings(const vector<Fixing>& fixings, const data::Conventions& conven
             DLOG("Error during adding fixing for " << f.name << ": " << e.what());
         }
     }
-    LOG("Added " << count << " of " << fixings.size() << " fixings in " << timer.elapsed() << " seconds");
+    timer.stop();
+    LOG("Added " << count << " of " << fixings.size() << " fixings in " <<
+        timer.format(default_places, "%w") << " seconds");
 }
 
 void applyDividends(const vector<Fixing>& dividends) {
     Size count = 0;
     map<string, boost::shared_ptr<EquityIndex>> cache;
-    boost::timer timer;
+    cpu_timer timer;
     boost::shared_ptr<EquityIndex> index;
     for (auto& f : dividends) {
         try {
@@ -80,7 +84,9 @@ void applyDividends(const vector<Fixing>& dividends) {
             WLOG("Error during adding dividend for " << f.name << ": " << e.what());
         }
     }
-    DLOG("Added " << count << " of " << dividends.size() << " dividends in " << timer.elapsed() << " seconds");
+    timer.stop();
+    DLOG("Added " << count << " of " << dividends.size() << " dividends in " <<
+        timer.format(default_places, "%w") << " seconds");
 }
 
 } // namespace data

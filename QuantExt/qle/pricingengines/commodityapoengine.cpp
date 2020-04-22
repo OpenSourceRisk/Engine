@@ -3,7 +3,6 @@
  All rights reserved.
 */
 
-#include <boost/timer.hpp>
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/processes/ornsteinuhlenbeckprocess.hpp>

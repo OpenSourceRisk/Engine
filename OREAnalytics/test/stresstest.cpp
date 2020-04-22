@@ -18,7 +18,6 @@
 
 #include <boost/test/unit_test.hpp>
 #include <test/oreatoplevelfixture.hpp>
-#include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>

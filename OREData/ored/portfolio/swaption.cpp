@@ -34,10 +34,12 @@
 #include <ored/utilities/to_string.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 
 #include <algorithm>
 
+using boost::timer::cpu_timer;
+using boost::timer::default_places;
 using namespace QuantLib;
 using std::sort;
 using std::lower_bound;
@@ -360,7 +362,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
         maturity_ = swap->maturityDate();
 
     DLOG("Get/Build Bermudan Swaption engine");
-    boost::timer timer;
+    cpu_timer timer;
 
     string tt("BermudanSwaption");
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tt);
@@ -394,8 +396,8 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<PricingEngine> engine =
         swaptionBuilder->engine(id(), isNonStandard, ccy_str, noticeDates, swap->maturityDate(), strikes);
 
-    Real ct = timer.elapsed();
-    DLOG("Swaption model calibration time: " << ct * 1000 << " ms");
+    timer.stop();
+    DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
 
     swaption->setPricingEngine(engine);
 
