@@ -61,6 +61,10 @@ void StressScenarioGenerator::generateScenarios() {
             addCapFloorVolShifts(data, scenario);
         if (simMarketData_->securitySpreadsSimulate())
             addSecuritySpreadShifts(data, scenario);
+        if (simMarketData_->simulateRecoveryRates())
+            addRecoveryRateShifts(data, scenario);
+        if (simMarketData_->simulateSurvivalProbabilities())
+            addSurvivalProbabilityShifts(data, scenario);
 
         scenarios_.push_back(scenario);
     }
@@ -171,6 +175,55 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
         }
     }
     LOG("Discount curve stress scenarios done");
+}
+
+
+void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioData::StressTestData& std,
+                                                       boost::shared_ptr<Scenario>& scenario) {
+    Date asof = baseScenario_->asof();
+
+    for (auto d : std.survivalProbabilityShifts) {
+        string name = d.first;
+        LOG("Apply stress scenario to " << name);
+
+        Size n_ten = simMarketData_->defaultTenors(name).size();
+        // original curves' buffer
+        std::vector<Real> zeros(n_ten);
+        std::vector<Real> times(n_ten);
+        // buffer for shifted zero curves
+        std::vector<Real> shiftedZeros(n_ten);
+
+        StressTestScenarioData::CurveShiftData data = d.second;
+        ShiftType shiftType = parseShiftType(data.shiftType);
+        DayCounter dc = parseDayCounter(simMarketData_->defaultCurveDayCounter(name));
+
+        for (Size j = 0; j < n_ten; ++j) {
+            Date d = asof + simMarketData_->defaultTenors(name)[j];
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote) / times[j];
+        }
+
+        std::vector<Period> shiftTenors = data.shiftTenors;
+        QL_REQUIRE(shiftTenors.size() > 0, "Survival Probability shift tenors not specified");
+        std::vector<Real> shifts = data.shifts;
+        QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
+        std::vector<Time> shiftTimes(shiftTenors.size());
+        for (Size j = 0; j < shiftTenors.size(); ++j)
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
+
+        // apply zero rate shift at tenor point j
+        for (Size j = 0; j < shiftTenors.size(); ++j)
+            applyShift(j, shifts[j], true, shiftType, shiftTimes, zeros, times, shiftedZeros, j == 0 ? true : false);
+
+        // store shifted discount curve in the scenario
+        for (Size k = 0; k < n_ten; ++k) {
+            Real shiftedSurvivalProbability = exp(-shiftedZeros[k] * times[k]);
+            scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SurvivalProbability, name, k), shiftedSurvivalProbability);
+        }
+    }
+    LOG("Default Curve stress scenarios done");
 }
 
 void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::StressTestData& std,
@@ -539,6 +592,23 @@ void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::St
     }
     LOG("Security spread scenarios done");
 }
+
+void StressScenarioGenerator::addRecoveryRateShifts(StressTestScenarioData::StressTestData& std,
+	boost::shared_ptr<Scenario>& scenario) {
+    for (auto d : std.recoveryRateShifts) {
+        string isin = d.first;
+        StressTestScenarioData::SpotShiftData data = d.second;
+        ShiftType type = parseShiftType(data.shiftType);
+        bool relShift = (type == ShiftType::Relative);
+        Real size = data.shiftSize;
+
+		RiskFactorKey key(RiskFactorKey::KeyType::RecoveryRate, isin);
+        Real base_recoveryRate = baseScenario_->get(key);
+                Real new_recoveryRate = relShift ? base_recoveryRate * (1.0 + size) : (base_recoveryRate + size);
+        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::RecoveryRate, isin), new_recoveryRate);
+	}
+}
+
 
 } // namespace analytics
 } // namespace ore
