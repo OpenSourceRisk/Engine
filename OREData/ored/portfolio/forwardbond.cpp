@@ -73,9 +73,6 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(!referenceCurveId_.empty(), "reference curve id required");
     QL_REQUIRE(!settlementDays_.empty(), "settlement days required");
 
-    // Clear the separateLegs_ member here. Should be done in reset() but it is not virtual
-    separateLegs_.clear();
-
     const boost::shared_ptr<Market> market = engineFactory->market();
 
     boost::shared_ptr<EngineBuilder> builder_fwd = engineFactory->builder("ForwardBond");
@@ -112,6 +109,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                    : boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Short, payOff);
     compensationPayment = longInBond ? compensationPayment : compensationPayment * (-1.0);
 
+    std::vector<Leg> separateLegs;
     if (zeroBond_) { // Zero coupon bond
         bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, parseDate(maturityDate_)));
     } else { // Coupon bond
@@ -128,16 +126,10 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             Leg leg;
             auto configuration = builder_bd->configuration(MarketContext::pricing);
             auto legBuilder = engineFactory->legBuilder(coupons_[i].legType());
-            leg = legBuilder->buildLeg(coupons_[i], engineFactory, configuration);
-            separateLegs_.push_back(leg);
-
-            // Initialise the set of [index name, leg] index pairs
-            for (const auto& index : coupons_[i].indices()) {
-                nameIndexPairs_.insert(make_pair(index, separateLegs_.size() - 1));
-            }
-
+            leg = legBuilder->buildLeg(coupons_[i], engineFactory, requiredFixings_, configuration);
+            separateLegs.push_back(leg);
         } // for coupons_
-        Leg leg = joinLegs(separateLegs_);
+        Leg leg = joinLegs(separateLegs);
         bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
         // workaround, QL doesn't register a bond with its leg's cashflows
         for (auto const& c : leg)
@@ -174,26 +166,6 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, creditCurveId_, securityId_, referenceCurveId_,
                                                      incomeCurveId_, adjustmentSpread_));
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0)); // long or short is regulated via the payoff class
-}
-
-map<string, set<Date>> ForwardBond::fixings(const Date& settlementDate) const {
-
-    map<string, set<Date>> result;
-
-    for (const auto& nameIndexPair : nameIndexPairs_) {
-        // For clarity
-        string indexName = nameIndexPair.first;
-        Size legNumber = nameIndexPair.second;
-
-        // Get the set of fixing dates for the  [index name, leg index] pair
-        set<Date> dates = fixingDates(separateLegs_[legNumber], settlementDate);
-
-        // Update the results with the fixing dates.
-        if (!dates.empty())
-            result[indexName].insert(dates.begin(), dates.end());
-    }
-
-    return result;
 }
 
 void ForwardBond::fromXML(XMLNode* node) {

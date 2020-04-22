@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/timer.hpp>
 #include <orea/cube/cubewriter.hpp>
 #include <orea/cube/sensicube.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>

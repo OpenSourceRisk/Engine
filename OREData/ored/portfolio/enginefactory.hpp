@@ -236,11 +236,12 @@ private:
 };
 
 //! Leg builder
+class RequiredFixings;
 class LegBuilder {
 public:
     LegBuilder(const string& legType) : legType_(legType) {}
     virtual ~LegBuilder() {}
-    virtual Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>&,
+    virtual Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>&, RequiredFixings& requiredFixings,
                          const string& configuration) const = 0;
     const string& legType() const { return legType_; }
 

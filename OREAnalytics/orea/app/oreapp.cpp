@@ -17,7 +17,7 @@
 */
 
 #include <boost/algorithm/string.hpp>
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 
 #ifdef BOOST_MSVC
 // disable warning C4503: '__LINE__Var': decorated name length exceeded, name was truncated
@@ -41,6 +41,8 @@
 using namespace std;
 using namespace ore::data;
 using namespace ore::analytics;
+using boost::timer::cpu_timer;
+using boost::timer::default_places;
 
 namespace {
 
@@ -79,7 +81,7 @@ OREApp::~OREApp() {
 
 int OREApp::run() {
 
-    boost::timer timer;
+    cpu_timer timer;
 
     try {
         out_ << "ORE starting" << std::endl;
@@ -227,7 +229,8 @@ int OREApp::run() {
         return 1;
     }
 
-    out_ << "run time: " << setprecision(2) << timer.elapsed() << " sec" << endl;
+    timer.stop();
+    out_ << "run time: " << setprecision(2) << timer.format(default_places, "%w") << " sec" << endl;
     out_ << "ORE done." << endl;
 
     LOG("ORE done.");

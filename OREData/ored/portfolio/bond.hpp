@@ -70,10 +70,6 @@ public:
     // Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
-    //! Return the fixings that will be requested to price the Bond given the \p settlementDate.
-    std::map<std::string, std::set<QuantLib::Date>>
-    fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const override;
-
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
 
@@ -107,16 +103,6 @@ private:
     string currency_;
     bool zeroBond_;
     Real bondNotional_;
-
-    /*! A bond may consist of multiple legs joined together to create a single leg. This member stores the
-        separate legs so that fixings can be retrieved later for legs that have fixings.
-    */
-    std::vector<QuantLib::Leg> separateLegs_;
-
-    /*! Set of pairs where first element of pair is the ORE index name and the second element of the pair is
-        the index of the leg, in separateLegs_, that contains that ORE index.
-    */
-    std::set<std::pair<std::string, QuantLib::Size>> nameIndexPairs_;
 };
 } // namespace data
 } // namespace ore
