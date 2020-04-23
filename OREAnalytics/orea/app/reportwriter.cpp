@@ -80,7 +80,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(npv * fx)
                 .add(baseCurrency)
                 .add(trade->notional())
-                .add(trade->notionalCurrency() == "" ? "#NA" : trade->notionalCurrency())
+                .add(trade->notionalCurrency() == "" ? nullString_ : trade->notionalCurrency())
                 .add(trade->notional() == Null<Real>() || trade->notionalCurrency() == ""
                          ? Null<Real>()
                          : trade->notional() * fxNotional)
@@ -95,14 +95,14 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(maturity)
                 .add(maturity == QuantLib::Null<Date>() ? Null<Real>() : dc.yearFraction(today, maturity))
                 .add(Null<Real>())
-                .add("#NA")
+                .add(nullString_)
                 .add(Null<Real>())
-                .add("#NA")
+                .add(nullString_)
                 .add(Null<Real>())
-                .add("#NA")
+                .add(nullString_)
                 .add(Null<Real>())
-                .add("#NA")
-                .add("#NA");
+                .add(nullString_)
+                .add(nullString_);
         }
     }
     report.end();
