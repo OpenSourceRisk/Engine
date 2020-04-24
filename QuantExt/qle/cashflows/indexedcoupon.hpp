@@ -39,10 +39,9 @@ class IndexedCoupon : public Coupon, public Observer {
 public:
     /*! pays c->amount() * qty * index(fixingDate) */
     IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const boost::shared_ptr<Index>& index,
-                  const Date& fixingDate, const bool flipIndex = false);
-    /*! pays c->amount()* qty * initialFixing */
-    IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const Real initialFixing,
-                  const bool flipIndex = false);
+                  const Date& fixingDate);
+    /*! pays c->amount() * qty * initialFixing */
+    IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const Real initialFixing);
 
     //! \name Observer interface
     //@{
@@ -81,7 +80,6 @@ private:
     const boost::shared_ptr<Index> index_;
     const Date fixingDate_;
     const Real initialFixing_;
-    const bool flipIndex_;
 };
 
 //! indexed coupon leg
@@ -90,8 +88,7 @@ private:
 */
 class IndexedCouponLeg {
 public:
-    IndexedCouponLeg(const Leg& underlyingLeg, const Real qty, const boost::shared_ptr<Index>& index,
-                     const bool flipIndex = false);
+    IndexedCouponLeg(const Leg& underlyingLeg, const Real qty, const boost::shared_ptr<Index>& index);
     IndexedCouponLeg& withInitialFixing(const Real initialFixing);
     IndexedCouponLeg& withValuationSchedule(const Schedule& valuationSchedule);
     IndexedCouponLeg& withFixingDays(const Size fixingDays);
@@ -111,7 +108,6 @@ private:
     Calendar fixingCalendar_;
     BusinessDayConvention fixingConvention_;
     bool inArrearsFixing_;
-    bool flipIndex_;
 };
 
 } // namespace QuantExt
