@@ -1659,6 +1659,9 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                 auto tmp = parseFxIndex(indexing.index());
                 Currency ccy1 = tmp->targetCurrency();
                 Currency ccy2 = tmp->sourceCurrency();
+                QL_REQUIRE(ccy1.code() == data.currency() || ccy2.code() == data.currency(),
+                           "applyIndexing: fx index '" << indexing.index() << "' ccys do not match leg ccy ("
+                                                       << data.currency() << ")");
                 std::string domestic = data.currency();
                 std::string foreign = ccy1.code() == domestic ? ccy2.code() : ccy1.code();
                 index = buildFxIndex(indexing.index(), domestic, foreign, engineFactory->market(),
