@@ -849,6 +849,28 @@
     <ClInclude Include="qle\termstructures\overnightindexfutureratehelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\currencies\europe.hpp">
+      <Filter>currencies</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\belgium.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\luxembourg.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\spain.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\austria.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\largejointcalendar.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\time\actual364.hpp">
+      <Filter>time</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1458,6 +1480,27 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\overnightindexfutureratehelper.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\currencies\europe.cpp">
+      <Filter>currencies</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\belgium.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\luxembourg.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\spain.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\austria.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\largejointcalendar.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\time\actual364.cpp">
+      <Filter>time</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

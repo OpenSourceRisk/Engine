@@ -21,7 +21,6 @@
 #include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
-#include <ored/configuration/inflationcapfloorpricesurfaceconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
@@ -43,6 +42,7 @@
 #include <ored/marketdata/equitycurve.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/expiry.hpp>
+#include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
 #include <ored/marketdata/fixings.hpp>
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
@@ -80,6 +80,7 @@
 #include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
@@ -128,6 +129,8 @@
 #include <ored/portfolio/optiondata.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/referencedatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/swap.hpp>
@@ -135,6 +138,7 @@
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/tradeactions.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/report/csvreport.hpp>
 #include <ored/report/inmemoryreport.hpp>
@@ -144,6 +148,7 @@
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/currencycheck.hpp>
+#include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
@@ -151,6 +156,8 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>
 #include <ored/utilities/serializationdate.hpp>
+#include <ored/utilities/serializationdaycounter.hpp>
+#include <ored/utilities/serializationperiod.hpp>
 #include <ored/utilities/strike.hpp>
 #include <ored/utilities/timeperiod.hpp>
 #include <ored/utilities/to_string.hpp>

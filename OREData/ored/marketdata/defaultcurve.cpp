@@ -21,6 +21,7 @@
 
 #include <qle/termstructures/defaultprobabilityhelpers.hpp>
 #include <qle/termstructures/probabilitytraits.hpp>
+#include <qle/termstructures/iterativebootstrap.hpp>
 
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
@@ -31,6 +32,14 @@
 
 using namespace QuantLib;
 using namespace std;
+
+// Temporary workaround to silence warnings on g++ until QL 1.17 is released with the
+// pull request: https://github.com/lballabio/QuantLib/pull/679
+#ifdef BOOST_MSVC
+#define ATTR_UNUSED
+#else
+#define ATTR_UNUSED __attribute__((unused))
+#endif
 
 namespace ore {
 namespace data {
@@ -54,6 +63,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         // Build the default curve of the requested type
         switch (config->type()) {
         case DefaultCurveConfig::Type::SpreadCDS:
+        case DefaultCurveConfig::Type::Price:
             buildCdsCurve(*config, asof, spec, loader, conventions, yieldCurves);
             break;
         case DefaultCurveConfig::Type::HazardRate:
@@ -79,11 +89,13 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof,
 
     LOG("Start building default curve of type SpreadCDS for curve " << config.curveID());
 
-    QL_REQUIRE(config.type() == DefaultCurveConfig::Type::SpreadCDS,
-        "DefaultCurve::buildCdsCurve expected a default curve configuration with type SpreadCDS");
+    QL_REQUIRE(
+        config.type() == DefaultCurveConfig::Type::SpreadCDS ||
+        config.type() == DefaultCurveConfig::Type::Price,
+        "DefaultCurve::buildCdsCurve expected a default curve configuration with type SpreadCDS/Price");
     QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: recovery rate needed to build SpreadCDS curve");
 
-    // Get the CDS spread curve conventions
+    // Get the CDS curve conventions
     QL_REQUIRE(conventions.has(config.conventionID()), "No conventions found with id " << config.conventionID());
     boost::shared_ptr<CdsConvention> cdsConv = boost::dynamic_pointer_cast<CdsConvention>(
         conventions.get(config.conventionID()));
@@ -95,7 +107,7 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof,
         ", required in the building of the curve, " << spec.name() << ", was not found.");
     Handle<YieldTermStructure> discountCurve = it->second->handle();
 
-    // Get the CDS spread curve quotes
+    // Get the CDS spread / price curve quotes
     map<Period, Real> quotes = getConfiguredQuotes(config, asof, loader);
 
     // 0M as a tenor should be allowable with CDS date generation but it is not yet supported so we 
@@ -130,17 +142,42 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof,
 
     // Create the CDS instrument helpers
     vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>> helpers;
-    for (auto quote : quotes) {
-        helpers.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
-            quote.second, quote.first, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
-            cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-            config.startDate(), cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
+    if (config.type() == DefaultCurveConfig::Type::SpreadCDS) {
+        for (auto quote : quotes) {
+            helpers.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
+                quote.second, quote.first, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
+                cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
+                config.startDate(), cdsConv->settlesAccrual(),
+                cdsConv->paysAtDefaultTime() ? QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault
+                                             : QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd));
+        }
+    } else {
+        for (auto quote : quotes) {
+            helpers.push_back(boost::make_shared<QuantExt::UpfrontCdsHelper>(
+                quote.second, config.runningSpread(), quote.first, cdsConv->settlementDays(), cdsConv->calendar(),
+                cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
+                recoveryRate_, discountCurve, config.startDate(), cdsConv->settlesAccrual(),
+                cdsConv->paysAtDefaultTime() ? QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault
+                                             : QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd));
+        }
     }
 
-    // Create the default probability term structure 
+    // Get configuration values for bootstrap
+    Real accuracy = config.bootstrapConfig().accuracy();
+    Real globalAccuracy = config.bootstrapConfig().globalAccuracy();
+    bool dontThrow = config.bootstrapConfig().dontThrow();
+    Size maxAttempts = config.bootstrapConfig().maxAttempts();
+    Real maxFactor = config.bootstrapConfig().maxFactor();
+    Real minFactor = config.bootstrapConfig().minFactor();
+    Size dontThrowSteps = config.bootstrapConfig().dontThrowSteps();
+
+    // Create the default probability term structure
+    typedef PiecewiseDefaultCurve<QuantExt::SurvivalProbability, LogLinear, QuantExt::IterativeBootstrap> SpCurve;
+    ATTR_UNUSED typedef SpCurve::traits_type dummy;
     boost::shared_ptr<DefaultProbabilityTermStructure> tmp =
-        boost::make_shared<PiecewiseDefaultCurve<QuantExt::SurvivalProbability, LogLinear>>(
-            asof, helpers, config.dayCounter());
+        boost::make_shared<SpCurve>(asof, helpers, config.dayCounter(), accuracy, LogLinear(),
+            QuantExt::IterativeBootstrap<SpCurve>(globalAccuracy, dontThrow, maxAttempts,
+                maxFactor, minFactor, dontThrowSteps));
 
     // As for yield curves we need to copy the piecewise curve because on eval date changes the relative date 
     // helpers with trigger a bootstrap.
@@ -148,10 +185,13 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof,
     vector<Real> survivalProbs;
     dates.push_back(asof);
     survivalProbs.push_back(1.0);
+    TLOG("Survival probabilities for CDS curve " << config.curveID() << ":");
+    TLOG(io::iso_date(dates.back()) << "," << fixed << setprecision(9) << survivalProbs.back());
     for (Size i = 0; i < helpers.size(); ++i) {
         if (helpers[i]->latestDate() > asof) {
             dates.push_back(helpers[i]->latestDate());
             survivalProbs.push_back(tmp->survivalProbability(dates.back()));
+            TLOG(io::iso_date(dates.back()) << "," << fixed << setprecision(9) << survivalProbs.back());
         }
     }
     QL_REQUIRE(dates.size() >= 2, "Need at least 2 points to build the default curve");
@@ -290,8 +330,9 @@ map<Period, Real> DefaultCurve::getConfiguredQuotes(DefaultCurveConfig& config,
     const Date& asof, const Loader& loader) const {
 
     QL_REQUIRE(config.type() == DefaultCurveConfig::Type::SpreadCDS ||
+        config.type() == DefaultCurveConfig::Type::Price ||
         config.type() == DefaultCurveConfig::Type::HazardRate,
-        "DefaultCurve::getConfiguredQuotes expected a default curve configuration with type SpreadCDS or HazardRate");
+        "DefaultCurve::getConfiguredQuotes expected a default curve configuration with type SpreadCDS, Price or HazardRate");
     QL_REQUIRE(!config.cdsQuotes().empty(), "No quotes configured for curve " << config.curveID());
 
     // Populate with quotes
@@ -330,10 +371,19 @@ map<Period, Real> DefaultCurve::getRegexQuotes(string strRegex, const string& co
 
         // If we have a CDS spread or hazard rate quote, check it and populate tenor and value if it matches
         if (type == DefaultCurveConfig::Type::SpreadCDS && (
-            md->instrumentType() == MarketDatum::InstrumentType::CDS && 
+            md->instrumentType() == MarketDatum::InstrumentType::CDS &&
             md->quoteType() == MarketDatum::QuoteType::CREDIT_SPREAD)) {
             
-            auto q = boost::dynamic_pointer_cast<CdsSpreadQuote>(md);
+            auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
+            if (regex_match(q->name(), expression)) {
+                addQuote(result, q->term(), *md, configId);
+            }
+
+        } else if (type == DefaultCurveConfig::Type::Price && (
+            md->instrumentType() == MarketDatum::InstrumentType::CDS &&
+            md->quoteType() == MarketDatum::QuoteType::PRICE)) {
+
+            auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
             if (regex_match(q->name(), expression)) {
                 addQuote(result, q->term(), *md, configId);
             }
@@ -365,8 +415,9 @@ map<Period, Real> DefaultCurve::getExplicitQuotes(const vector<pair<string, bool
     for (const auto& p : quotes) {
         if (boost::shared_ptr<MarketDatum> md = loader.get(p, asof)) {
             Period tenor;
-            if (type == DefaultCurveConfig::Type::SpreadCDS) {
-                tenor = boost::dynamic_pointer_cast<CdsSpreadQuote>(md)->term();
+            if (type == DefaultCurveConfig::Type::SpreadCDS ||
+                type == DefaultCurveConfig::Type::Price) {
+                tenor = boost::dynamic_pointer_cast<CdsQuote>(md)->term();
             } else {
                 tenor = boost::dynamic_pointer_cast<HazardRateQuote>(md)->term();
             }

@@ -18,6 +18,11 @@
 
 #include <ql/currencies/exchangeratemanager.hpp>
 #include <ql/indexes/ibor/usdlibor.hpp>
+#include <ql/math/randomnumbers/haltonrsg.hpp>
+#include <ql/pricingengines/bond/bondfunctions.hpp>
+#include <ql/pricingengines/bond/discountingbondengine.hpp>
+#include <ql/termstructures/yield/bondhelpers.hpp>
+#include <ql/termstructures/yield/nonlinearfittingmethods.hpp>
 #include <ql/termstructures/yield/oisratehelper.hpp>
 #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
 #include <ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp>
@@ -44,7 +49,12 @@
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
 
+#include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
+#include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/envelope.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -131,6 +141,12 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::FinancialCubic;
     else if (s == "ConvexMonotone")
         return YieldCurve::InterpolationMethod::ConvexMonotone;
+    else if (s == "ExponentialSplines")
+        return YieldCurve::InterpolationMethod::ExponentialSplines;
+    else if (s == "NelsonSiegel")
+        return YieldCurve::InterpolationMethod::NelsonSiegel;
+    else if (s == "Svensson")
+        return YieldCurve::InterpolationMethod::Svensson;
     else
         QL_FAIL("Yield curve interpolation method " << s << " not recognized");
 };
@@ -148,10 +164,11 @@ YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const str
 
 YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigurations& curveConfigs,
                        const Loader& loader, const Conventions& conventions,
-                       const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves, 
-                       const FXTriangulation& fxTriangulation)
+                       const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves,
+                       const FXTriangulation& fxTriangulation,
+                       const boost::shared_ptr<ReferenceDataManager>& referenceData)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), conventions_(conventions),
-      requiredYieldCurves_(requiredYieldCurves), fxTriangulation_(fxTriangulation) {
+      requiredYieldCurves_(requiredYieldCurves), fxTriangulation_(fxTriangulation), referenceData_(referenceData) {
 
     try {
 
@@ -195,6 +212,9 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
         } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::DiscountRatio) {
             DLOG("Building discount ratio yield curve " << curveSpec_);
             buildDiscountRatioCurve();
+        } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::FittedBond) {
+            DLOG("Building FittedBondCurve " << curveSpec_);
+            buildFittedBondCurve();
         } else {
             DLOG("Bootstrapping YieldCurve " << curveSpec_);
             buildBootstrappedCurve();
@@ -741,6 +761,188 @@ boost::shared_ptr<YieldCurve> YieldCurve::getYieldCurve(const string& ccy, const
     }
 }
 
+void YieldCurve::buildFittedBondCurve() {
+    QL_REQUIRE(curveSegments_.size() == 1, "FittedBond curve must contain exactly one segment.");
+    QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::FittedBond,
+               "The curve segment is not of type 'FittedBond'.");
+
+    boost::shared_ptr<FittedBondYieldCurveSegment> curveSegment =
+        boost::dynamic_pointer_cast<FittedBondYieldCurveSegment>(curveSegments_[0]);
+    QL_REQUIRE(curveSegment != nullptr, "could not cast to FittedBondYieldCurveSegment, this is unexpected");
+
+    // build vector of bond helpers
+
+    auto quoteIDs = curveSegment->quotes();
+    std::vector<boost::shared_ptr<QuantLib::Bond>> bonds;
+    std::vector<boost::shared_ptr<BondHelper>> helpers;
+    std::vector<Real> marketPrices;
+    std::vector<std::string> securityIDs;
+    Date lastMaturity = Date::minDate(), firstMaturity = Date::maxDate();
+
+    // not really relevant, we just need a working engine configuration so that the bond can be built
+    // the pricing engine here is _not_ used during the curve fitting, for this a local engine is
+    // set up within FittedBondDiscountCurve
+    auto engineData = boost::make_shared<EngineData>();
+    engineData->model("Bond") = "DiscountedCashflows";
+    engineData->engine("Bond") = "DiscountingRiskyBondEngine";
+    engineData->engineParameters("Bond") = {{"TimestepPeriod", "6M"}};
+
+    std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;
+    for (auto const& c : curveSegment->iborIndexCurves()) {
+        auto y = requiredYieldCurves_.find(yieldCurveKey(currency_, c.first, asofDate_));
+        QL_REQUIRE(y != requiredYieldCurves_.end(),
+                   "required yield curve '" << c.first << "' not provided for fitted bond curve");
+        iborCurveMapping[c.first] = y->second->handle();
+    }
+
+    auto engineFactory = boost::make_shared<EngineFactory>(
+        engineData, boost::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping, conventions_),
+        std::map<MarketContext, string>(), std::vector<boost::shared_ptr<EngineBuilder>>(),
+        std::vector<boost::shared_ptr<LegBuilder>>(), referenceData_);
+
+    for (Size i = 0; i < quoteIDs.size(); ++i) {
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(quoteIDs[i], asofDate_);
+        if (marketQuote) {
+            QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::BOND &&
+                           marketQuote->quoteType() == MarketDatum::QuoteType::PRICE,
+                       "Market quote not of type Bond / Price.");
+            boost::shared_ptr<BondPriceQuote> bondQuote = boost::dynamic_pointer_cast<BondPriceQuote>(marketQuote);
+            QL_REQUIRE(bondQuote, "market quote has type bond quote, but can not be casted, this is unexpected.");
+            Handle<Quote> rescaledBondQuote(boost::make_shared<SimpleQuote>((bondQuote->quote()->value()) * 100));
+            string securityID = bondQuote->securityID();
+
+            QL_REQUIRE(referenceData_ != nullptr && referenceData_->hasData("Bond", securityID),
+                       "bond reference data for '" << securityID << "' required to build fitted bond curve");
+            ore::data::Bond bond(Envelope(), securityID, 1.0);
+            bond.build(engineFactory);
+            auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
+            QL_REQUIRE(qlInstr != nullptr, "could not cast to QuantLib::Bond, this is unexpected");
+
+            // skip bonds with settlement date <= curve reference date or which are otherwise non-tradeable
+            if (qlInstr->settlementDate() > asofDate_ && QuantLib::BondFunctions::isTradable(*qlInstr)) {
+                bonds.push_back(qlInstr);
+                helpers.push_back(boost::make_shared<BondHelper>(rescaledBondQuote, qlInstr));
+                Date thisMaturity = qlInstr->maturityDate();
+                lastMaturity = std::max(lastMaturity, thisMaturity);
+                firstMaturity = std::min(firstMaturity, thisMaturity);
+                DLOG("added bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
+                                   << ", clean price = " << rescaledBondQuote->value() << ", yield (cont,act/act) = "
+                                   << qlInstr->yield(rescaledBondQuote->value(), ActualActual(), Continuous,
+                                                     NoFrequency));
+                marketPrices.push_back(bondQuote->quote()->value());
+                securityIDs.push_back(securityID);
+            } else {
+                DLOG("skipped bond " << securityID << " with settlement date "
+                                     << QuantLib::io::iso_date(qlInstr->settlementDate()) << ", isTradable = "
+                                     << std::boolalpha << QuantLib::BondFunctions::isTradable(*qlInstr));
+            }
+        }
+    }
+
+    // fit bond curve to helpers
+
+    QL_REQUIRE(helpers.size() >= 1, "no bonds for fitting bond curve");
+    DLOG("Fitting bond curve with " << helpers.size() << " bonds.");
+
+    Real minCutoffTime = 0.0, maxCutoffTime = QL_MAX_REAL;
+    if (curveSegment->extrapolateFlat()) {
+        minCutoffTime = zeroDayCounter_.yearFraction(asofDate_, firstMaturity);
+        maxCutoffTime = zeroDayCounter_.yearFraction(asofDate_, lastMaturity);
+        DLOG("extrapolate flat outside " << minCutoffTime << "," << maxCutoffTime);
+    }
+
+    boost::shared_ptr<FittedBondDiscountCurve::FittingMethod> method;
+    switch (interpolationMethod_) {
+    case InterpolationMethod::ExponentialSplines:
+        method = boost::make_shared<ExponentialSplinesFitting>(true, Array(), ext::shared_ptr<OptimizationMethod>(),
+                                                               Array(), minCutoffTime, maxCutoffTime);
+        break;
+    case InterpolationMethod::NelsonSiegel:
+        method = boost::make_shared<NelsonSiegelFitting>(Array(), ext::shared_ptr<OptimizationMethod>(), Array(),
+                                                         minCutoffTime, maxCutoffTime);
+        break;
+    case InterpolationMethod::Svensson:
+        method = boost::make_shared<SvenssonFitting>(Array(), ext::shared_ptr<OptimizationMethod>(), Array(),
+                                                     minCutoffTime, maxCutoffTime);
+        break;
+    default:
+        QL_FAIL("unknown fitting method");
+    }
+
+    boost::shared_ptr<FittedBondDiscountCurve> tmp, current;
+    Real minError = QL_MAX_REAL;
+    HaltonRsg halton(method->size(), 42);
+    // TODO randomised optimisation seeds are only implemented for NelsonSiegel so far
+    Size trials = 1;
+    if (interpolationMethod_ == InterpolationMethod::NelsonSiegel) {
+        trials = curveConfig_->bootstrapConfig().maxAttempts();
+    } else {
+        if (curveConfig_->bootstrapConfig().maxAttempts() > 1) {
+            WLOG("randomised optimisation seeds not implemented for given interpolation method");
+        }
+    }
+    for (Size i = 0; i < trials; ++i) {
+        Array guess;
+        // first guess is the default guess (empty array, will be set to a zero vector in
+        // FittedBondDiscountCurve::calculate())
+        if (i > 0) {
+            auto seq = halton.nextSequence();
+            guess = Array(seq.value.begin(), seq.value.end());
+            if (interpolationMethod_ == InterpolationMethod::NelsonSiegel) {
+                guess[0] = guess[0] * 0.10 - 0.05; // long term yield
+                guess[1] = guess[1] * 0.10 - 0.05; // short term component
+                guess[2] = guess[2] * 0.10 - 0.05; // medium term component
+                guess[3] = guess[3] * 5.0;         // decay factor
+            } else {
+                QL_FAIL("randomised optimisation seed not implemented");
+            }
+        }
+        current = boost::make_shared<FittedBondDiscountCurve>(asofDate_, helpers, zeroDayCounter_, *method, 1.0e-10,
+                                                              10000, guess);
+        Real cost = std::sqrt(current->fitResults().minimumCostValue());
+        if (cost < minError) {
+            minError = cost;
+            tmp = current;
+        }
+        DLOG("calibration trial #" << (i + 1) << " out of " << trials << ": cost = " << cost
+                                   << ", best so far = " << minError);
+        if (cost < curveConfig_->bootstrapConfig().accuracy()) {
+            DLOG("reached desired accuracy (" << curveConfig_->bootstrapConfig().accuracy()
+                                              << ") - do not attempt more calibrations");
+            break;
+        }
+    }
+    QL_REQUIRE(tmp, "no best solution found for fitted bond curve - this is unexpected.");
+
+    if (Norm2(tmp->fitResults().solution()) < 1.0e-4) {
+        WLOG("Fit solution is close to 0. The curve fitting should be reviewed.");
+    }
+
+    DLOG("Fitted Bond Curve Summary:");
+    DLOG("   solution:   " << tmp->fitResults().solution());
+    DLOG("   iterations: " << tmp->fitResults().numberOfIterations());
+    DLOG("   cost value: " << minError);
+    auto engine = boost::make_shared<DiscountingBondEngine>(Handle<YieldTermStructure>(tmp));
+    for (Size i = 0; i < bonds.size(); ++i) {
+        bonds[i]->setPricingEngine(engine);
+        DLOG("bond " << securityIDs[i] << ", model clean price = " << bonds[i]->cleanPrice()
+                     << ", yield (cont,actact) = "
+                     << bonds[i]->yield(bonds[i]->cleanPrice(), ActualActual(), Continuous, NoFrequency)
+                     << ", NPV = " << bonds[i]->NPV());
+    }
+
+    Real tolerance = curveConfig_->bootstrapConfig().globalAccuracy() == Null<Real>()
+                         ? curveConfig_->bootstrapConfig().accuracy()
+                         : curveConfig_->bootstrapConfig().globalAccuracy();
+    QL_REQUIRE(curveConfig_->bootstrapConfig().dontThrow() || minError < tolerance,
+               "Fitted Bond Curve cost value (" << minError << ") exceeds tolerance (" << tolerance << ")");
+
+    if (extrapolation_)
+        tmp->enableExtrapolation();
+
+    p_ = tmp;
+}
+
 void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment,
                              vector<boost::shared_ptr<RateHelper>>& instruments) {
 
@@ -779,9 +981,12 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
                 // EUR-EONIA, USD-FedFunds, EUR-EURIBOR, USD-LIBOR, etc.
                 string indexName = depositConvention->index();
                 boost::shared_ptr<IborIndex> index;
-                if (isOvernightIndex(indexName)) {
+                if (isOvernightIndex(indexName, conventions_)) {
                     // No need for the term here
-                    index = parseIborIndex(indexName);
+                    index = parseIborIndex(indexName, Handle<YieldTermStructure>(),
+                                           conventions_.has(indexName, Convention::Type::OvernightIndex)
+                                               ? conventions_.get(indexName)
+                                               : nullptr);
                 } else {
                     // Note that a depositTerm with units Days here could end up as a string with another unit
                     // For example:
@@ -791,7 +996,10 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
                     stringstream ss;
                     ss << indexName << "-" << io::short_period(depositTerm);
                     indexName = ss.str();
-                    index = parseIborIndex(indexName);
+                    index = parseIborIndex(indexName, Handle<YieldTermStructure>(),
+                                           conventions_.has(indexName, Convention::Type::IborIndex)
+                                               ? conventions_.get(indexName)
+                                               : nullptr);
                 }
                 depositHelper = boost::make_shared<DepositRateHelper>(hQuote, index);
             } else {

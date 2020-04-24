@@ -5,7 +5,14 @@ A Forward Bond is set up using a {\tt ForwardBondData} block as shown below. The
 are
 
 \begin{itemize}
-   \item BondData: A {\tt BondData} block specifying the underlying bond as described in section~\ref{ss:bond}. A long position must be taken in the bond, i.e.~({\tt Payer}) flag must be set to ({\tt true}).
+   \item BondData: A {\tt BondData} block specifying the underlying bond as described in section~\ref{ss:bond}. A long
+     position must be taken in the bond, i.e.~({\tt Payer}) flag must be set to ({\tt true}). The bond data block
+     contains an additional field for forward bonds
+     \begin{itemize}
+     \item IncomeCurveId: The benchmark curve to be used for compounding, this must match a name of a curve in the yield
+       curves or index curve block in {\tt todaysmarket.xml}. It is optional to provide this curve. If left out the
+       market reference yield curve from {\tt todaysmarket.xml} is used for compounding.
+     \end{itemize}
    \item SettlementData: The entity defining the terms of settlement:
    \begin{itemize}
        \item ForwardMaturityDate: The date of maturity of the forward contract.
@@ -18,14 +25,15 @@ are
        \item Date: The date when a premium is paid.
        \item Amount: The amount transferred as a premium.
    \end{itemize}
-   \item IncomeCurveId: The benchmark curve to be used for compounding, this must match a name of a curve in the yield
-   curves block in {\tt todaysmarket.xml}. It is optional to provide this curve. If left out the market reference yield curve from {\tt todaysmarket.xml} is used for compounding.
    \item LongInForward: A flag that determines whether the forward contract is entered in long ({\tt true}) or short ({\tt false}) position.
  \end{itemize}
 
    \begin{minted}[fontsize=\small]{xml}
    <ForwardBondData>
-     <BondData>...</BondData>
+     <BondData>
+      ...
+      <IncomeCurveId>BENCHMARKINCOME-EUR<IncomeCurveId>
+     </BondData>
      <SettlementData>
        <Amount>1000000.00</Amount>
        <ForwardMaturityDate>20160808</ForwardMaturityDate>
@@ -35,7 +43,6 @@ are
        <Amount>1000.00</Amount>
        <Date>20160808</Date>
      </PremiumData>
-     <IncomeCurveId>BENCHMARKINCOME-EUR<IncomeCurveId>
      <LongInForward>true</LongInForward>
    </ForwardBondData>
    \end{minted}

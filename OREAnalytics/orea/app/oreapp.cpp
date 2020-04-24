@@ -17,7 +17,7 @@
 */
 
 #include <boost/algorithm/string.hpp>
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 
 #ifdef BOOST_MSVC
 // disable warning C4503: '__LINE__Var': decorated name length exceeded, name was truncated
@@ -41,6 +41,8 @@
 using namespace std;
 using namespace ore::data;
 using namespace ore::analytics;
+using boost::timer::cpu_timer;
+using boost::timer::default_places;
 
 namespace {
 
@@ -79,7 +81,7 @@ OREApp::~OREApp() {
 
 int OREApp::run() {
 
-    boost::timer timer;
+    cpu_timer timer;
 
     try {
         out_ << "ORE starting" << std::endl;
@@ -91,6 +93,13 @@ int OREApp::run() {
          */
         out_ << setw(tab_) << left << "Market... " << flush;
         buildMarket();
+        out_ << "OK" << endl;
+
+        /*********
+         * Load Reference Data
+         */
+        out_ << setw(tab_) << left << "Reference... " << flush;
+        getReferenceData();
         out_ << "OK" << endl;
 
         /************************
@@ -220,7 +229,8 @@ int OREApp::run() {
         return 1;
     }
 
-    out_ << "run time: " << setprecision(2) << timer.elapsed() << " sec" << endl;
+    timer.stop();
+    out_ << "run time: " << setprecision(2) << timer.format(default_places, "%w") << " sec" << endl;
     out_ << "ORE done." << endl;
 
     LOG("ORE done.");
@@ -289,6 +299,15 @@ void OREApp::setupLog() {
 
 void OREApp::closeLog() { Log::instance().removeAllLoggers(); }
 
+void OREApp::getReferenceData() {
+    if (params_->has("setup", "referenceDataFile") && params_->get("setup", "referenceDataFile") != "") {
+        string referenceDataFile = inputPath_ + "/" + params_->get("setup", "referenceDataFile");
+        referenceData_ = boost::make_shared<BasicReferenceDataManager>(referenceDataFile);
+    } else {
+        LOG("No referenceDataFile file loaded");
+    }
+}
+
 void OREApp::getConventions() {
     if (params_->has("setup", "conventionsFile") && params_->get("setup", "conventionsFile") != "") {
         string conventionsFile = inputPath_ + "/" + params_->get("setup", "conventionsFile");
@@ -321,7 +340,7 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
-        engineData, market, configurations, getExtraEngineBuilders(), getExtraLegBuilders());
+        engineData, market, configurations, getExtraEngineBuilders(), getExtraLegBuilders(), referenceData_);
 
     LOG("Engine factory built");
     MEM_LOG;
@@ -479,7 +498,7 @@ boost::shared_ptr<ReportWriter> OREApp::getReportWriter() const {
 
 boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() {
     return boost::make_shared<SensitivityRunner>(params_, buildTradeFactory(), getExtraEngineBuilders(),
-                                                 getExtraLegBuilders(), continueOnError_);
+                                                 getExtraLegBuilders(), referenceData_, continueOnError_);
 }
 
 void OREApp::runStressTest() {
@@ -990,7 +1009,8 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
             }
             CSVLoader loader(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings);
             out_ << "OK" << endl;
-            market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs_, conventions_, continueOnError_);
+            market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs_, conventions_,
+                                                       continueOnError_, true, referenceData_);
         } else {
             WLOG("No market data loaded from file");
         }
@@ -999,7 +1019,7 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
         InMemoryLoader loader;
         loadDataFromBuffers(loader, marketData, fixingData, implyTodaysFixings);
         market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs_, conventions_,
-                                                   continueOnError_);
+                                                   continueOnError_, true, referenceData_);
     }
     LOG("Today's market built");
     MEM_LOG;

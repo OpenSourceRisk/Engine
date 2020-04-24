@@ -27,6 +27,8 @@
 #include <ored/portfolio/trade.hpp>
 #include <boost/optional.hpp>
 
+#include <qle/instruments/creditdefaultswap.hpp>
+
 namespace ore {
 namespace data {
 
@@ -124,13 +126,15 @@ public:
 
     //! Constructor that takes an explicit \p creditCurveId
     CreditDefaultSwapData(const string& issuerId, const string& creditCurveId, const LegData& leg,
-                          const bool settlesAccrual = true, const bool paysAtDefaultTime = true,
+                          const bool settlesAccrual = true,
+                          const QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
+                              QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault,
                           const Date& protectionStart = Date(), const Date& upfrontDate = Date(),
                           const Real upfrontFee = Null<Real>(),
                           QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>(),
                           const std::string& referenceObligation = "")
         : issuerId_(issuerId), creditCurveId_(creditCurveId), leg_(leg), settlesAccrual_(settlesAccrual),
-          paysAtDefaultTime_(paysAtDefaultTime), protectionStart_(protectionStart), upfrontDate_(upfrontDate),
+          protectionPaymentTime_(protectionPaymentTime), protectionStart_(protectionStart), upfrontDate_(upfrontDate),
           upfrontFee_(upfrontFee), recoveryRate_(recoveryRate), referenceObligation_(referenceObligation) {}
 
     //! Constructor that takes a \p referenceInformation object
@@ -138,7 +142,8 @@ public:
         const CdsReferenceInformation& referenceInformation,
         const LegData& leg,
         bool settlesAccrual = true,
-        bool paysAtDefaultTime = true,
+        const QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
+            QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault,
         const QuantLib::Date& protectionStart = QuantLib::Date(),
         const QuantLib::Date& upfrontDate = QuantLib::Date(),
         QuantLib::Real upfrontFee = QuantLib::Null<QuantLib::Real>(),
@@ -152,7 +157,7 @@ public:
     const string& creditCurveId() const;
     const LegData& leg() const { return leg_; }
     bool settlesAccrual() const { return settlesAccrual_; }
-    bool paysAtDefaultTime() const { return paysAtDefaultTime_; }
+    QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime() const { return protectionPaymentTime_; }
     const Date& protectionStart() const { return protectionStart_; }
     const Date& upfrontDate() const { return upfrontDate_; }
     Real upfrontFee() const { return upfrontFee_; }
@@ -173,7 +178,8 @@ private:
     string issuerId_;
     string creditCurveId_;
     LegData leg_;
-    bool settlesAccrual_, paysAtDefaultTime_;
+    bool settlesAccrual_;
+    QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime_;
     Date protectionStart_, upfrontDate_;
     Real upfrontFee_;
     

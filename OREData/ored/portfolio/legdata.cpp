@@ -185,7 +185,14 @@ void CPILegData::fromXML(XMLNode* node) {
     indices_.insert(index_);
     baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI", true);
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
-    interpolation_ = XMLUtils::getChildValue(node, "Interpolation", true);
+    // for backwards compatibility only
+    if (auto c = XMLUtils::getChildNode(node, "Interpolated")) {
+        QL_REQUIRE(XMLUtils::getChildNode(node, "Interpolation") == nullptr,
+                   "can not have both Interpolated and Interpolation node in CPILegData");
+        interpolation_ = parseBool(XMLUtils::getNodeValue(c)) ? "Linear" : "Flat";
+    } else {
+        interpolation_ = XMLUtils::getChildValue(node, "Interpolation", true);
+    }
     XMLNode* subNomNode = XMLUtils::getChildNode(node, "SubtractInflationNotional");
     if (subNomNode)
         subtractInflationNominal_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotional", true);
@@ -403,8 +410,11 @@ void EquityLegData::fromXML(XMLNode* node) {
         dividendFactor_ = XMLUtils::getChildValueAsDouble(node, "DividendFactor", true);
     else
         dividendFactor_ = 1.0;
-    eqName_ = XMLUtils::getChildValue(node, "Name");
-    indices_.insert("EQ-" + eqName_);
+    XMLNode* utmp = XMLUtils::getChildNode(node, "Underlying");
+    if (!utmp)
+        utmp = XMLUtils::getChildNode(node, "Name");
+    equityUnderlying_.fromXML(utmp);
+    indices_.insert("EQ-" + eqName());
     if (XMLUtils::getChildNode(node, "InitialPrice"))
         initialPrice_ = XMLUtils::getChildValueAsDouble(node, "InitialPrice");
     else
@@ -424,6 +434,7 @@ void EquityLegData::fromXML(XMLNode* node) {
         fxIndex_ = XMLUtils::getChildValue(fxt, "FXIndex", true);
         fxIndexFixingDays_ = XMLUtils::getChildValueAsInt(fxt, "FXIndexFixingDays");
         fxIndexCalendar_ = XMLUtils::getChildValue(fxt, "FXIndexCalendar");
+        indices_.insert(fxIndex_);
     }
 
     if(XMLNode* qty = XMLUtils::getChildNode(node, "Quantity")) {
@@ -439,7 +450,7 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     if (returnType_ == "Total") {
         XMLUtils::addChild(doc, node, "DividendFactor", dividendFactor_);
     }
-    XMLUtils::addChild(doc, node, "Name", eqName_);
+    XMLUtils::appendNode(node, equityUnderlying_.toXML(doc));
     if (initialPrice_)
         XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
     XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
@@ -1069,30 +1080,25 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     bool couponFloor = cpiLegData->floors().size() > 0;
     bool couponCapFloor = cpiLegData->caps().size() > 0 || cpiLegData->floors().size() > 0;
 
-    DLOG("Add CPI leg start date");
     if (couponCapFloor)
         cpiLeg.withStartDate(startDate);
 
-    DLOG("Add caps to CPI coupons");
     if (couponCap)
         cpiLeg.withCaps(buildScheduledVector(cpiLegData->caps(), cpiLegData->capDates(), schedule));
 
-    DLOG("Add floors to CPI coupons");
     if (couponFloor)
         cpiLeg.withFloors(buildScheduledVector(cpiLegData->floors(), cpiLegData->floorDates(), schedule));
 
     Leg leg = cpiLeg.operator Leg();
     Size n = leg.size();
     QL_REQUIRE(n > 0, "Empty CPI Leg");
-    DLOG("CPI leg size " << n);
 
     if (couponCapFloor) {
-        DLOG("Add coupon pricers");
 
         string indexName = index->name();
         // remove blanks (FIXME)
-	indexName.replace(indexName.find(" ", 0), 1, "");
- 
+        indexName.replace(indexName.find(" ", 0), 1, "");
+
         // get a coupon pricer for the leg
         boost::shared_ptr<EngineBuilder> cpBuilder = engineFactory->builder("CappedFlooredCpiLegCoupons");
         QL_REQUIRE(cpBuilder, "No builder found for CappedFlooredCpiLegCoupons");
@@ -1106,7 +1112,6 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
         boost::shared_ptr<CapFlooredCpiLegCashFlowEngineBuilder> cappedFlooredCpiCashFlowBuilder =
             boost::dynamic_pointer_cast<CapFlooredCpiLegCashFlowEngineBuilder>(cfBuilder);
         boost::shared_ptr<InflationCashFlowPricer> cashFlowPricer = cappedFlooredCpiCashFlowBuilder->engine(indexName);
-	DLOG("Stop 6");
 
         // set coupon pricer for the leg
         for (Size i = 0; i < leg.size(); i++) {
@@ -1131,7 +1136,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     // If Notional Exchange set to false, remove the final cashflow.
     if (!data.notionalFinalExchange()) {
         // QL_REQUIRE(n > 1, "Cannot have Notional Final Exchange with just a single cashflow");
-        boost::shared_ptr<CPICashFlow> cpicf = boost::dynamic_pointer_cast<CPICashFlow>(leg[n - 1]);
+        // boost::shared_ptr<CPICashFlow> cpicf = boost::dynamic_pointer_cast<CPICashFlow>(leg[n - 1]);
         // We do not need this check that the last coupon payment date matches the final CPI cash flow date, this is
         // identical by construction, see QuantLib::CPILeg or QuantExt::CPILeg.
         // Moreover, we may have no coupons and just a single fow at the end so that leg[n - 2] causes a problem.
@@ -1143,7 +1148,6 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
 
     // build naked option leg if required
     if (couponCapFloor && cpiLegData->nakedOption()) {
-        DLOG("Build StrippedCappedFlooredCouponLeg");
         leg = StrippedCappedFlooredCPICouponLeg(leg);
         // fix for missing registration in ql 1.13
         for (auto const& t : leg) {

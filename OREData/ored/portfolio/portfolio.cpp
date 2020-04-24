@@ -128,6 +128,8 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     while (trade != trades_.end()) {
         try {
             (*trade)->build(engineFactory);
+            TLOG("Required Fixings for trade " << (*trade)->id() << ":");
+            TLOGGERSTREAM << (*trade)->requiredFixings();
             ++trade;
         } catch (std::exception& e) {
             ALOG(StructuredTradeErrorMessage(*trade, "Error building trade", e.what()));
@@ -218,6 +220,16 @@ std::map<AssetClass, std::set<std::string>> Portfolio::underlyingIndices() {
     }
     underlyingIndicesCache_ = result;
     return underlyingIndicesCache_;
+}
+
+std::set<std::string> Portfolio::underlyingIndices(AssetClass assetClass) {
+
+    std::map<AssetClass, std::set<std::string>> indices = underlyingIndices();
+    auto it = indices.find(assetClass);
+    if (it != indices.end()) {
+        return it->second;
+    }
+    return std::set<std::string>();
 }
 
 } // namespace data

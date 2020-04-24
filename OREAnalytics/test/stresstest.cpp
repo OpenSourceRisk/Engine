@@ -18,7 +18,6 @@
 
 #include <boost/test/unit_test.hpp>
 #include <test/oreatoplevelfixture.hpp>
-#include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -351,8 +350,8 @@ BOOST_AUTO_TEST_CASE(regression) {
                                           {"2_Swap_USD", "stresstest_1", 599846},
                                           {"3_Swap_GBP", "stresstest_1", 1.11005e+06},
                                           {"4_Swap_JPY", "stresstest_1", 186736},
-                                          {"5_Swaption_EUR", "stresstest_1", 4.08982e-11},
-                                          {"6_Swaption_EUR", "stresstest_1", 4.8021e-50},
+                                          {"5_Swaption_EUR", "stresstest_1", 13623.1},
+                                          {"6_Swaption_EUR", "stresstest_1", 5041.52},
                                           {"7_FxOption_EUR_USD", "stresstest_1", 748160},
                                           {"8_FxOption_EUR_GBP", "stresstest_1", 1.21724e+06},
                                           {"9_Cap_EUR", "stresstest_1", 1175.5}};

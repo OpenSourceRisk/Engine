@@ -263,25 +263,25 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     case MarketDatum::InstrumentType::CC_FIX_FLOAT_SWAP: {
         // CC_FIX_FLOAT_SWAP/RATE/USD/3M/TRY/1Y/5Y
         QL_REQUIRE(tokens.size() == 7, "7 tokens expected in " << datumName);
-        Currency floatCurrency = parseCurrency(tokens[2]);
         Period floatTenor = parsePeriod(tokens[3]);
-        Currency fixedCurrency = parseCurrency(tokens[4]);
         Period fixedTenor = parsePeriod(tokens[5]);
         Period maturity = parsePeriod(tokens[6]);
-        return boost::make_shared<CrossCcyFixFloatSwapQuote>(value, asof, datumName, quoteType, floatCurrency,
-                                                             floatTenor, fixedCurrency, fixedTenor, maturity);
+        return boost::make_shared<CrossCcyFixFloatSwapQuote>(value, asof, datumName, quoteType, tokens[2], floatTenor,
+                                                             tokens[4], fixedTenor, maturity);
     }
 
     case MarketDatum::InstrumentType::CDS: {
         // CDS/CREDIT_SPREAD/Name/Seniority/ccy/term
         // CDS/CREDIT_SPREAD/Name/Seniority/ccy/doc/term
+        // CDS/PRICE/Name/Seniority/ccy/term
+        // CDS/PRICE/Name/Seniority/ccy/doc/term
         QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7, "6 or 7 tokens expected in " << datumName);
         const string& underlyingName = tokens[2];
         const string& seniority = tokens[3];
         const string& ccy = tokens[4];
         string docClause = tokens.size() == 7 ? tokens[5] : "";
         Period term = parsePeriod(tokens.back());
-        return boost::make_shared<CdsSpreadQuote>(value, asof, datumName, underlyingName, seniority, ccy, term, docClause);
+        return boost::make_shared<CdsQuote>(value, asof, datumName, quoteType, underlyingName, seniority, ccy, term, docClause);
     }
 
     case MarketDatum::InstrumentType::HAZARD_RATE: {
@@ -499,14 +499,37 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::INDEX_CDS_OPTION: {
-        QL_REQUIRE(tokens.size() == 4 || tokens.size() == 5, "4 or 5 tokens expected in " << datumName);
+        
+        // Expects the following form. The strike is optional. The index term is optional for backwards compatibility.
+        // INDEX_CDS_OPTION/RATE_LNVOL/<INDEX_NAME>[/<INDEX_TERM>]/<EXPIRY>[/<STRIKE>]
+        QL_REQUIRE(tokens.size() >= 4 || tokens.size() <= 6, "4, 5 or 6 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Invalid quote type for " << datumName);
-        const string& indexName = tokens[2];
-        const string& expiry = tokens[3];
-        Real strike = 0.0; // ATM
-        if (tokens.size() == 5)
-            strike = parseReal(tokens[4]);
-        return boost::make_shared<IndexCDSOptionQuote>(value, asof, datumName, indexName, expiry, strike);
+        
+        boost::shared_ptr<Expiry> expiry;
+        boost::shared_ptr<BaseStrike> strike;
+        string indexTerm;
+        if (tokens.size() == 6) {
+            // We have been given an index term, an expiry and a strike.
+            indexTerm = tokens[3];
+            expiry = parseExpiry(tokens[4]);
+            strike = parseBaseStrike(tokens[5]);
+        } else if (tokens.size() == 5) {
+            // We have been given either 1) an index term and an expiry or 2) an expiry and a strike.
+            // If the last token is a number, we have 2) an expiry and a strike.
+            Real tmp;
+            if (tryParseReal(tokens[4], tmp)) {
+                expiry = parseExpiry(tokens[3]);
+                strike = parseBaseStrike(tokens[4]);
+            } else {
+                indexTerm = tokens[3];
+                expiry = parseExpiry(tokens[4]);
+            }
+        } else {
+            // We have just been given the expiry.
+            expiry = parseExpiry(tokens[3]);
+        }
+        
+        return boost::make_shared<IndexCDSOptionQuote>(value, asof, datumName, tokens[2], expiry, indexTerm, strike);
     }
 
     case MarketDatum::InstrumentType::COMMODITY_SPOT: {

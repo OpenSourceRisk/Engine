@@ -26,6 +26,7 @@
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 
 #include <ored/model/fxbsbuilder.hpp>
+#include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/strike.hpp>
@@ -38,9 +39,10 @@ namespace ore {
 namespace data {
 
 FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<FxBsData>& data,
-                         const std::string& configuration)
-    : market_(market), configuration_(configuration), data_(data) {
+                         const std::string& configuration, const std::string& referenceCalibrationGrid)
+    : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid) {
 
+    optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
     marketObserver_ = boost::make_shared<MarketObserver>();
     QuantLib::Currency ccy = ore::data::parseCurrency(data->foreignCcy());
     QuantLib::Currency domesticCcy = ore::data::parseCurrency(data->domesticCcy());
@@ -119,10 +121,12 @@ bool FxBsBuilder::requiresRecalibration() const {
 
 void FxBsBuilder::performCalculations() const {
     if (requiresRecalibration()) {
-        // update vol cache
-        volSurfaceChanged(true);
         // reset market observer updated flag
         marketObserver_->hasUpdated(true);
+        // build option basket
+        buildOptionBasket();
+        // update vol cache
+        volSurfaceChanged(true);
     }
 }
 
@@ -160,36 +164,58 @@ bool FxBsBuilder::volSurfaceChanged(const bool updateCache) const {
     bool hasUpdated = false;
 
     // if cache doesn't exist resize vector
-    if (fxVolCache_.size() != data_->optionExpiries().size())
-        fxVolCache_ = vector<Real>(data_->optionExpiries().size());
+    if (fxVolCache_.size() != optionBasket_.size())
+        fxVolCache_ = vector<Real>(optionBasket_.size(), Null<Real>());
 
-    std::vector<Time> expiryTimes(data_->optionExpiries().size());
+    Size optionCounter = 0;
     for (Size j = 0; j < data_->optionExpiries().size(); j++) {
+        if (!optionActive_[j])
+            continue;
         Real vol = fxVol_->blackVol(optionExpiry(j), optionStrike(j));
-        if (!close_enough(fxVolCache_[j], vol)) {
+        if (!close_enough(fxVolCache_[optionCounter], vol)) {
             if (updateCache)
-                fxVolCache_[j] = vol;
+                fxVolCache_[optionCounter] = vol;
             hasUpdated = true;
         }
+        optionCounter++;
     }
     return hasUpdated;
 }
 
 void FxBsBuilder::buildOptionBasket() const {
     QL_REQUIRE(data_->optionExpiries().size() == data_->optionStrikes().size(), "fx option vector size mismatch");
-    std::vector<Time> expiryTimes(data_->optionExpiries().size());
+
+    DLOG("build reference date grid '" << referenceCalibrationGrid_ << "'");
+    Date lastRefCalDate = Date::minDate();
+    std::vector<Date> referenceCalibrationDates;
+    if (!referenceCalibrationGrid_.empty())
+        referenceCalibrationDates = DateGrid(referenceCalibrationGrid_).dates();
+
+    optionBasket_.clear();
+    std::vector<Time> expiryTimes;
     for (Size j = 0; j < data_->optionExpiries().size(); j++) {
         Date expiryDate = optionExpiry(j);
-        Real strikeValue = optionStrike(j);
-        Handle<Quote> quote(boost::make_shared<SimpleQuote>(fxVol_->blackVol(expiryDate, strikeValue)));
-        boost::shared_ptr<QuantExt::FxEqOptionHelper> helper =
-            boost::make_shared<QuantExt::FxEqOptionHelper>(expiryDate, strikeValue, fxSpot_, quote, ytsDom_, ytsFor_);
-        optionBasket_.push_back(helper);
-        helper->performCalculations();
-        expiryTimes[j] = ytsDom_->timeFromReference(helper->option()->exercise()->date(0));
-        DLOG("Added FxEqOptionHelper " << (data_->foreignCcy() + data_->domesticCcy()) << " "
-                                      << QuantLib::io::iso_date(expiryDate) << " " << helper->strike() << " "
-                                      << quote->value());
+
+        // check if we want to keep the helper when a reference calibration grid is given
+        auto refCalDate =
+            std::lower_bound(referenceCalibrationDates.begin(), referenceCalibrationDates.end(), expiryDate);
+        if (refCalDate == referenceCalibrationDates.end() || *refCalDate > lastRefCalDate) {
+            optionActive_[j] = true;
+            Real strikeValue = optionStrike(j);
+            Handle<Quote> quote(boost::make_shared<SimpleQuote>(fxVol_->blackVol(expiryDate, strikeValue)));
+            boost::shared_ptr<QuantExt::FxEqOptionHelper> helper = boost::make_shared<QuantExt::FxEqOptionHelper>(
+                expiryDate, strikeValue, fxSpot_, quote, ytsDom_, ytsFor_);
+            optionBasket_.push_back(helper);
+            helper->performCalculations();
+            expiryTimes.push_back(ytsDom_->timeFromReference(helper->option()->exercise()->date(0)));
+            DLOG("Added FxEqOptionHelper " << (data_->foreignCcy() + data_->domesticCcy()) << " "
+                                           << QuantLib::io::iso_date(expiryDate) << " " << helper->strike() << " "
+                                           << quote->value());
+            if (refCalDate != referenceCalibrationDates.end())
+                lastRefCalDate = *refCalDate;
+        } else {
+            optionActive_[j] = false;
+        }
     }
 
     std::sort(expiryTimes.begin(), expiryTimes.end());

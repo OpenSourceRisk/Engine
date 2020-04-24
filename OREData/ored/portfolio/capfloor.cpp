@@ -60,6 +60,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Make sure that the floating leg section does not have caps or floors
     boost::shared_ptr<EngineBuilder> builder;
+    std::string underlyingIndex, qlIndexName;
 
     if (legData_.legType() == "Floating") {
         builder = engineFactory->builder(tradeType_);
@@ -70,16 +71,17 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "CapFloor build error, Floating leg section must not have caps and floors");
 
-        underlyingIndex_ = floatData->index();
+        underlyingIndex = floatData->index();
         Handle<IborIndex> hIndex =
-            engineFactory->market()->iborIndex(underlyingIndex_, builder->configuration(MarketContext::pricing));
-        QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << underlyingIndex_ << " in market.");
+            engineFactory->market()->iborIndex(underlyingIndex, builder->configuration(MarketContext::pricing));
+        QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << underlyingIndex << " in market.");
         boost::shared_ptr<IborIndex> index = hIndex.currentLink();
+        qlIndexName = index->name();
 
         // We treat overnight and bma indices approximately as ibor indices and warn about this in the log
         if (boost::dynamic_pointer_cast<OvernightIndex>(index) ||
             boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index))
-            ALOG("CapFloor trade " << id() << " on ON or BMA index '" << underlyingIndex_
+            ALOG("CapFloor trade " << id() << " on ON or BMA index '" << underlyingIndex
                                    << "' built, will treat the index approximately as an ibor index");
 
         legs_.push_back(makeIborLeg(legData_, index, engineFactory));
@@ -122,12 +124,13 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::shared_ptr<CMSLegData> cmsData = boost::dynamic_pointer_cast<CMSLegData>(legData_.concreteLegData());
         QL_REQUIRE(cmsData, "Wrong LegType, expected CMS");
 
-        underlyingIndex_ = cmsData->swapIndex();
+        underlyingIndex = cmsData->swapIndex();
         Handle<SwapIndex> hIndex =
-            engineFactory->market()->swapIndex(underlyingIndex_, builder->configuration(MarketContext::pricing));
-        QL_REQUIRE(!hIndex.empty(), "Could not find swap index " << underlyingIndex_ << " in market.");
+            engineFactory->market()->swapIndex(underlyingIndex, builder->configuration(MarketContext::pricing));
+        QL_REQUIRE(!hIndex.empty(), "Could not find swap index " << underlyingIndex << " in market.");
 
         boost::shared_ptr<SwapIndex> index = hIndex.currentLink();
+        qlIndexName = index->name();
 
         bool payer = (parsePositionType(longShort_) == Position::Long ? false : true);
         vector<bool> legPayers_;
@@ -152,9 +155,10 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::shared_ptr<CPILegData> cpiData = boost::dynamic_pointer_cast<CPILegData>(legData_.concreteLegData());
         QL_REQUIRE(cpiData, "Wrong LegType, expected CPI");
 
-        underlyingIndex_ = cpiData->index();
+        underlyingIndex = cpiData->index();
         Handle<ZeroInflationIndex> zeroIndex = engineFactory->market()->zeroInflationIndex(
-            underlyingIndex_, builder->configuration(MarketContext::pricing));
+            underlyingIndex, builder->configuration(MarketContext::pricing));
+        qlIndexName = zeroIndex->name();
 
         Date startDate = parseDate(cpiData->startDate());
         Real baseCPI = cpiData->baseCPI();
@@ -219,7 +223,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 boost::shared_ptr<CPICapFloor> capfloor =
                     boost::make_shared<CPICapFloor>(type, nominal, startDate, baseCPI, paymentDate, cal, conv, cal,
                                                     conv, caps_[i], zeroIndex, observationLag, interpolation);
-                capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex_));
+                capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 composite->add(capfloor, sign * gearing);
 	        // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
                 //                                << " sign*gearing=" << sign * gearing);
@@ -244,7 +248,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 boost::shared_ptr<CPICapFloor> capfloor =
                     boost::make_shared<CPICapFloor>(type, nominal, startDate, baseCPI, paymentDate, cal, conv, cal,
                                                     conv, floors_[i], zeroIndex, observationLag, interpolation);
-                capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex_));
+                capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 composite->add(capfloor, sign * gearing);
 	        // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
                 //                                << " sign*gearing=" << sign * gearing);
@@ -265,19 +269,20 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::shared_ptr<YoYLegData> yyData = boost::dynamic_pointer_cast<YoYLegData>(legData_.concreteLegData());
         QL_REQUIRE(yyData, "Wrong LegType, expected YY");
 
-        underlyingIndex_ = yyData->index();
+        underlyingIndex = yyData->index();
         Handle<YoYInflationIndex> yoyIndex;
         // look for yoy inflation index
-        yoyIndex = engineFactory->market()->yoyInflationIndex(underlyingIndex_,
+        yoyIndex = engineFactory->market()->yoyInflationIndex(underlyingIndex,
                                                               builder->configuration(MarketContext::pricing));
+        qlIndexName = yoyIndex->name();
 
         // we must have either an yoy or a zero inflation index in the market, if no yoy curve, get teh zero
         // and create a yoy index from it
         if (yoyIndex.empty()) {
             Handle<ZeroInflationIndex> zeroIndex = engineFactory->market()->zeroInflationIndex(
-                underlyingIndex_, builder->configuration(MarketContext::pricing));
+                underlyingIndex, builder->configuration(MarketContext::pricing));
             QL_REQUIRE(!zeroIndex.empty(), "Could not find inflation index (of type either zero or yoy) "
-                                               << underlyingIndex_ << " in market.");
+                                               << underlyingIndex << " in market.");
             yoyIndex = Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
                 zeroIndex.currentLink(), zeroIndex->interpolated()));
         }
@@ -317,7 +322,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         boost::shared_ptr<YoYCapFloorEngineBuilder> capFloorBuilder =
             boost::dynamic_pointer_cast<YoYCapFloorEngineBuilder>(builder);
-        yoyCapFloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex_));
+        yoyCapFloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
 
         // Wrap the QL instrument in a vanilla instrument
         Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
@@ -328,26 +333,18 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_FAIL("Invalid legType for CapFloor");
     }
 
+    // add required fixings
+    auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_,
+                                                    std::map<string, string>{{qlIndexName, underlyingIndex}});
+    for(auto const& l : legs_)
+        addToRequiredFixings(l, fdg);
+
     // Fill in remaining Trade member data
     legCurrencies_.push_back(legData_.currency());
     legPayers_.push_back(legData_.isPayer());
     npvCurrency_ = legData_.currency();
     notionalCurrency_ = legData_.currency();
     notional_ = currentNotional(legs_[0]);
-}
-
-map<string, set<Date>> CapFloor::fixings(const Date& settlementDate) const {
-
-    map<string, set<Date>> result;
-
-    if (legs_.empty() || underlyingIndex_.empty()) {
-        WLOG("Need to build CapFloor before asking for fixings");
-        return result;
-    }
-
-    result[underlyingIndex_] = fixingDates(legs_[0], settlementDate);
-
-    return result;
 }
 
 void CapFloor::fromXML(XMLNode* node) {

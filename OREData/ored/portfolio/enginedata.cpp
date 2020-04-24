@@ -34,7 +34,6 @@ void EngineData::clear() {
 }
 
 void EngineData::fromXML(XMLNode* root) {
-    clear();
     XMLUtils::checkNode(root, "PricingEngines");
 
     // Get global parameters if there are any

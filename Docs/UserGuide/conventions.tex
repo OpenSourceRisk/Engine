@@ -544,6 +544,112 @@ The meaning of the elements is as follows:
 \item RollConvention: The rolling convention for the CMS Spread Leg.
 \end{itemize}
 
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Ibor Index Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+A node with name \emph{IborIndex} is used to store conventions for Ibor indices. This can be used to define new Ibor
+indices without the need of adding them to the C++ code, or also to override the conventions of existing Ibor indices.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <IborIndex>
+    <Id>EUR-EURIBOR_ACT365-3M</Id>
+    <FixingCalendar>TARGET</FixingCalendar>
+    <DayCounter>A365F</DayCounter>
+    <SettlementDays>2</SettlementDays>
+    <BusinessDayConvention>MF</BusinessDayConvention>
+    <EndOfMonth>true</EndOfMonth>
+  </IborIndex>
+\end{minted}
+\caption{Ibor index convention}
+\label{lst:ibor_index_conventions}
+\end{listing}
+
+The meaning of the elements is as follows:
+
+\begin{itemize}
+\item Id: The index name. This must be of the form ``CCY-NAME-TENOR'' with a currency ``CCY'', an index name ``NAME''
+  and a string ``TENOR'' representing a period. The name should not be ``GENERIC'', since this is reserved.
+\item FixingCalendar: The fixing calendar of the index.
+\item DayCounter: The day count convention used by the index.
+\item SettlementDays: The settlement days for the index. This must be a non-negative whole number.
+\item BusinessDayConvention: The business day convention used by the index.
+\item EndOfMonth: A flag indicating whether the index employs the end of month convention.
+\end{itemize}
+
+Notice that if another convention depends on an Ibor index convention (because it contains the Ibor index name defined
+in the latter convention), the Ibor index convention must appear before the convention that depends on it in the
+convention input file.
+
+Also notice that customised indices can not be used in cap / floor volatility surface configurations.
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Overnight Index Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+A node with name \emph{OvernightIndex} is used to store conventions for Overnight indices. This can be used to define
+new Overnight indices without the need of adding them to the C++ code, or also to override the conventions of existing
+Overnight indices.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <OvernightIndex>
+    <Id>EUR-ESTER</Id>
+    <FixingCalendar>TARGET</FixingCalendar>
+    <DayCounter>A360</DayCounter>
+    <SettlementDays>0</SettlementDays>
+  </OvernightIndex>
+\end{minted}
+\caption{Overnight index convention}
+\label{lst:overnight_index_conventions}
+\end{listing}
+
+The meaning of the elements is as follows:
+
+\begin{itemize}
+\item Id: The index name. This must be of the form ``CCY-NAME'' with a currency ``CCY'' and an index name ``NAME''. The
+  name should not be ``GENERIC'', since this is reserved.
+\item FixingCalendar: The fixing calendar of the index.
+\item DayCounter: The day count convention used by the index.
+\item SettlementDays: The settlement days for the index. This must be a non-negative whole number.
+\end{itemize}
+
+Notice that if another convention depends on an Overnight index convention (because it contains the Overnight index name
+defined in the latter convention), the Overnight index convention must appear before the convention that depends on it
+in the convention input file.
+
+Also notice that customised indices can not be used in cap / floor volatility surface configurations.
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Swap Index Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+A node with name \emph{SwapIndex} is used to store conventions for Swap indices (also known as ``CMS'' indices).
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <SwapIndex>
+    <Id>EUR-CMS-2Y</Id>
+    <Conventions>EUR-EURIBOR-6M-SWAP</Conventions>
+  </SwapIndex>
+\end{minted}
+\caption{Swap index convention}
+\label{lst:swap_index_conventions}
+\end{listing}
+
+The meaning of the elements is as follows:
+
+\begin{itemize}
+\item Id: The index name. This must be of the form ``CCY-CMS-TENOR'' with a currency ``CCY'' and a string ``TENOR''
+  representing a period. The index name can contain an optional tag ``CCY-CMS-TAG-TENOR'' which is an arbitrary label
+  that allows to define more than one swap index per currency.
+\item Conventions: A swap convention defining the index conventions.
+\end{itemize}
+
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 \subsubsection{FX Option Conventions} 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

@@ -44,13 +44,6 @@ public:
     //! Build underlying instrument and link pricing engine
     void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
 
-    //! Return no fixings for a CommodityOption
-    std::map<std::string, std::set<QuantLib::Date>> fixings(
-        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
-        return {};
-    }
-
-
     //! Add underlying Commodity names
     std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
 

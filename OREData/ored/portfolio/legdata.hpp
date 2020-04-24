@@ -24,7 +24,7 @@
 #pragma once
 
 #include <boost/make_shared.hpp>
-#include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/portfolio/indexing.hpp>
@@ -44,6 +44,8 @@ namespace ore {
 namespace data {
 using namespace QuantLib;
 using std::string;
+
+class EngineFactory;
 
 //! Serializable Additional Leg Data
 /*!
@@ -140,11 +142,12 @@ private:
 class ZeroCouponFixedLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    ZeroCouponFixedLegData() : LegAdditionalData("ZeroCouponFixed") {}
+    ZeroCouponFixedLegData() : LegAdditionalData("ZeroCouponFixed"), subtractNotional_(true) {}
     //! Constructor
     ZeroCouponFixedLegData(const vector<double>& rates, const vector<string>& rateDates = vector<string>(),
-                           const string& compounding = "Compounded")
-        : LegAdditionalData("ZeroCouponFixed"), rates_(rates), rateDates_(rateDates), compounding_(compounding) {}
+                           const string& compounding = "Compounded", const bool subtractNotional = true)
+        : LegAdditionalData("ZeroCouponFixed"), rates_(rates), rateDates_(rateDates), compounding_(compounding),
+          subtractNotional_(subtractNotional) {}
 
     //! \name Inspectors
     //@{
@@ -565,22 +568,23 @@ public:
     //! Default constructor
     EquityLegData() : LegAdditionalData("Equity"), quantity_(Null<Real>()) {}
     //! Constructor
-    EquityLegData(string returnType, Real dividendFactor, string eqName, Real initialPrice, bool notionalReset,
-                  Natural fixingDays = 0, const ScheduleData& valuationSchedule = ScheduleData(),
+    EquityLegData(string returnType, Real dividendFactor, EquityUnderlying equityUnderlying, Real initialPrice,
+                  bool notionalReset, Natural fixingDays = 0, const ScheduleData& valuationSchedule = ScheduleData(),
                   string eqCurrency = "", string fxIndex = "", Natural fxIndexFixingDays = 2,
                   string fxIndexCalendar = "", Real quantity = Null<Real>())
-        : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor), eqName_(eqName),
-          initialPrice_(initialPrice), notionalReset_(notionalReset), fixingDays_(fixingDays),
-          valuationSchedule_(valuationSchedule), eqCurrency_(eqCurrency), fxIndex_(fxIndex),
+        : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor),
+          equityUnderlying_(equityUnderlying), initialPrice_(initialPrice), notionalReset_(notionalReset),
+          fixingDays_(fixingDays), valuationSchedule_(valuationSchedule), eqCurrency_(eqCurrency), fxIndex_(fxIndex),
           fxIndexFixingDays_(fxIndexFixingDays), fxIndexCalendar_(fxIndexCalendar), quantity_(quantity) {
-        indices_.insert("EQ-" + eqName_);
+        indices_.insert("EQ-" + eqName());
     }
 
     //! \name Inspectors
     //@{
     const string& returnType() const { return returnType_; }
-    const string& eqName() const { return eqName_; }
+    string eqName() { return equityUnderlying_.name(); }
     Real dividendFactor() const { return dividendFactor_; }
+    EquityUnderlying equityIdentifier() const { return equityUnderlying_; }
     Real initialPrice() const { return initialPrice_; }
     Natural fixingDays() const { return fixingDays_; }
     ScheduleData valuationSchedule() const { return valuationSchedule_; }
@@ -600,7 +604,7 @@ public:
 private:
     string returnType_;
     Real dividendFactor_ = 1.0;
-    string eqName_;
+    EquityUnderlying equityUnderlying_;
     Real initialPrice_;
     bool notionalReset_ = false;
     Natural fixingDays_ = 0;

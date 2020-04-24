@@ -222,6 +222,9 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
             }
         }
 
+        // the curve type that we will build
+        EquityCurveConfig::Type buildCurveType = curveType_;
+
         // for curveType ForwardPrice or OptionPremium poputuate the terms_ and quotes_ with forward prices
         if (curveType_ == EquityCurveConfig::Type::ForwardPrice) {
 
@@ -245,63 +248,66 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
             }
         } else if (curveType_ == EquityCurveConfig::Type::OptionPremium) {
 
-            QL_REQUIRE(oqt.size() > 0, "No Equity Option quotes provided for " << config->curveID());
+            if (oqt.size() == 0) {
+                WLOG("No Equity Option quotes provided for " << config->curveID() << ", continuing without dividend curve.");
+                buildCurveType = EquityCurveConfig::Type::NoDividends;
+            } else {
+                DLOG("Building Equity Dividend Yield curve from Option Volatilities");
+                vector<boost::shared_ptr<EquityOptionQuote>> calls, puts;
+                vector<Date> callDates, putDates;
+                vector<Real> callStrikes, putStrikes;
+                vector<Real> callPremiums, putPremiums;
+                Calendar cal = NullCalendar();
 
-            DLOG("Building Equity Dividend Yield curve from Option Volatilities");
-            vector<boost::shared_ptr<EquityOptionQuote>> calls, puts;
-            vector<Date> callDates, putDates;
-            vector<Real> callStrikes, putStrikes;
-            vector<Real> callPremiums, putPremiums;
-            Calendar cal = NullCalendar();
-
-            // Split the quotes into call and puts
-            for (auto q : oqt) {
-                if (q->isCall()) {
-                    calls.push_back(q);
-                } else {
-                    puts.push_back(q);
-                }
-            }
-
-            // loop through the quotes and get the expiries, strikes, vols and types
-            // We only want overlapping expiry/strike pairs
-            for (Size i = 0; i < calls.size(); i++) {
-                for (Size j = 0; j < puts.size(); j++) {
-                    if (calls[i]->expiry() == puts[j]->expiry() && calls[i]->strike() == puts[j]->strike()) {
-                        TLOG("Adding Call and Put for strike/expiry pair : " << calls[i]->expiry() << "/" << calls[i]->strike());
-                        callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
-                        putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
-                        callStrikes.push_back(parseReal(calls[i]->strike()));
-                        putStrikes.push_back(parseReal(puts[j]->strike()));
-                        callPremiums.push_back(calls[i]->quote()->value());
-                        putPremiums.push_back(puts[j]->quote()->value());
+                // Split the quotes into call and puts
+                for (auto q : oqt) {
+                    if (q->isCall()) {
+                        calls.push_back(q);
+                    } else {
+                        puts.push_back(q);
                     }
                 }
+
+                // loop through the quotes and get the expiries, strikes, vols and types
+                // We only want overlapping expiry/strike pairs
+                for (Size i = 0; i < calls.size(); i++) {
+                    for (Size j = 0; j < puts.size(); j++) {
+                        if (calls[i]->expiry() == puts[j]->expiry() && calls[i]->strike() == puts[j]->strike()) {
+                            TLOG("Adding Call and Put for strike/expiry pair : " << calls[i]->expiry() << "/" << calls[i]->strike());
+                            callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
+                            putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
+                            callStrikes.push_back(parseReal(calls[i]->strike()));
+                            putStrikes.push_back(parseReal(puts[j]->strike()));
+                            callPremiums.push_back(calls[i]->quote()->value());
+                            putPremiums.push_back(puts[j]->quote()->value());
+                        }
+                    }
+                }
+
+                QL_REQUIRE(callDates.size() > 0 && putDates.size() > 0, "Must provide valid overlapping call and put quotes");
+                DLOG("Found " << callDates.size() << " Call and Put Option Volatilities");
+
+                DLOG("Building a Sparce Volatility surface for calls and puts");
+                // Build a Black Variance Sparse matrix 
+                boost::shared_ptr<OptionPriceSurface> callSurface =
+                    boost::make_shared<OptionPriceSurface>(asof, callDates, callStrikes, callPremiums, dc_);
+                boost::shared_ptr<OptionPriceSurface> putSurface =
+                    boost::make_shared<OptionPriceSurface>(asof, putDates, putStrikes, putPremiums, dc_);
+                DLOG("CallSurface contains " << callSurface->expiries().size() << " expiries.");
+
+                DLOG("Stripping equity forwards from the option premium surfaces");
+                boost::shared_ptr<EquityForwardCurveStripper> efcs = boost::make_shared<EquityForwardCurveStripper>(callSurface, putSurface,
+                    forecastYieldTermStructure_, equitySpot_, config->exerciseStyle());
+
+                // set terms and quotes from the stripper
+                terms_ = efcs->expiries();
+                quotes_ = efcs->forwards();
             }
-
-            QL_REQUIRE(callDates.size() > 0 && putDates.size() > 0, "Must provide valid overlapping call and put quotes");
-            DLOG("Found " << callDates.size() << " Call and Put Option Volatilities");
-
-            DLOG("Building a Sparce Volatility surface for calls and puts");
-            // Build a Black Variance Sparse matrix 
-            boost::shared_ptr<OptionPriceSurface> callSurface = 
-                boost::make_shared<OptionPriceSurface>(asof, callDates, callStrikes, callPremiums, dc_);
-            boost::shared_ptr<OptionPriceSurface> putSurface = 
-                boost::make_shared<OptionPriceSurface>(asof, putDates, putStrikes, putPremiums, dc_);
-            DLOG("CallSurface contains " << callSurface->expiries().size() << " expiries.");
-             
-            DLOG("Stripping equity forwards from the option premium surfaces");
-            boost::shared_ptr<EquityForwardCurveStripper> efcs = boost::make_shared<EquityForwardCurveStripper>(callSurface, putSurface,
-                forecastYieldTermStructure_, equitySpot_, config->exerciseStyle());
-
-            // set terms and quotes from the stripper
-            terms_ = efcs->expiries();
-            quotes_ = efcs->forwards();
         }
 
         // Build the Dividend Yield curve from the quotes loaded
         vector<Rate> dividendRates;
-        if (curveType_ == EquityCurveConfig::Type::ForwardPrice || curveType_ == EquityCurveConfig::Type::OptionPremium) {
+        if (buildCurveType == EquityCurveConfig::Type::ForwardPrice || buildCurveType == EquityCurveConfig::Type::OptionPremium) {
             // Convert Fwds into dividends.
             // Fwd = Spot e^{(r-q)T}
             // => q = 1/T Log(Spot/Fwd) + r
@@ -311,10 +317,10 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
                 Rate ir_rate = forecastYieldTermStructure_->zeroRate(t, Continuous);
                 dividendRates.push_back(::log(equitySpot_->value() / quotes_[i]) / t + ir_rate);
             }
-        } else if (curveType_ == EquityCurveConfig::Type::DividendYield) {
+        } else if (buildCurveType == EquityCurveConfig::Type::DividendYield) {
             DLOG("Building Equity Dividend Yield curve from Dividend Yield rates");
             dividendRates = quotes_;
-        } else if (curveType_ == EquityCurveConfig::Type::NoDividends) {
+        } else if (buildCurveType == EquityCurveConfig::Type::NoDividends) {
             DLOG("Building flat Equity Dividend Yield curve as no quotes provided");
             // Return a flat curve @ 0%
             dividendYieldTermStructure_ = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(asof, 0.0, dc_));

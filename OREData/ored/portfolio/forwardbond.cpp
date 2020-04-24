@@ -68,8 +68,10 @@ Leg joinLegs(const std::vector<Leg>& legs) {
 void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("ForwardBond::build() called for trade " << id());
 
-    // Clear the separateLegs_ member here. Should be done in reset() but it is not virtual
-    separateLegs_.clear();
+    // check data requirements (can not enforce this is fromXML(), since the fields
+    // might be filled via reference data in a derived class)
+    QL_REQUIRE(!referenceCurveId_.empty(), "reference curve id required");
+    QL_REQUIRE(!settlementDays_.empty(), "settlement days required");
 
     const boost::shared_ptr<Market> market = engineFactory->market();
 
@@ -107,6 +109,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                    : boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Short, payOff);
     compensationPayment = longInBond ? compensationPayment : compensationPayment * (-1.0);
 
+    std::vector<Leg> separateLegs;
     if (zeroBond_) { // Zero coupon bond
         bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, parseDate(maturityDate_)));
     } else { // Coupon bond
@@ -123,25 +126,23 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             Leg leg;
             auto configuration = builder_bd->configuration(MarketContext::pricing);
             auto legBuilder = engineFactory->legBuilder(coupons_[i].legType());
-            leg = legBuilder->buildLeg(coupons_[i], engineFactory, configuration);
-            separateLegs_.push_back(leg);
-
-            // Initialise the set of [index name, leg] index pairs
-            for (const auto& index : coupons_[i].indices()) {
-                nameIndexPairs_.insert(make_pair(index, separateLegs_.size() - 1));
-            }
-
+            leg = legBuilder->buildLeg(coupons_[i], engineFactory, requiredFixings_, configuration);
+            separateLegs.push_back(leg);
         } // for coupons_
-        Leg leg = joinLegs(separateLegs_);
+        Leg leg = joinLegs(separateLegs);
         bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
         // workaround, QL doesn't register a bond with its leg's cashflows
         for (auto const& c : leg)
             bond->registerWith(c);
     }
 
+    Real bondNotional = 1.0;
+    if (!bondNotional_.empty())
+        bondNotional = parseReal(bondNotional_);
+
     npvCurrency_ = currency_;
     maturity_ = bond->cashflows().back()->date();
-    notional_ = currentNotional(bond->cashflows());
+    notional_ = currentNotional(bond->cashflows()) * bondNotional;
     notionalCurrency_ = currency_;
 
     // Add legs (only 1)
@@ -152,7 +153,8 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency currency = parseCurrency(currency_);
 
     fwdBond.reset(new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, settlementDirty, compensationPayment,
-                                            compensationPaymentDate)); // nur bond payoff maturityDate lassen
+                                            compensationPaymentDate,
+                                            bondNotional)); // nur bond payoff maturityDate lassen
 
     boost::shared_ptr<fwdBondEngineBuilder> fwdBondBuilder =
         boost::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
@@ -166,26 +168,6 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0)); // long or short is regulated via the payoff class
 }
 
-map<string, set<Date>> ForwardBond::fixings(const Date& settlementDate) const {
-
-    map<string, set<Date>> result;
-
-    for (const auto& nameIndexPair : nameIndexPairs_) {
-        // For clarity
-        string indexName = nameIndexPair.first;
-        Size legNumber = nameIndexPair.second;
-
-        // Get the set of fixing dates for the  [index name, leg index] pair
-        set<Date> dates = fixingDates(separateLegs_[legNumber], settlementDate);
-
-        // Update the results with the fixing dates.
-        if (!dates.empty())
-            result[indexName].insert(dates.begin(), dates.end());
-    }
-
-    return result;
-}
-
 void ForwardBond::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* fwdBondNode = XMLUtils::getChildNode(node, "ForwardBondData");
@@ -196,10 +178,12 @@ void ForwardBond::fromXML(XMLNode* node) {
     creditCurveId_ =
         XMLUtils::getChildValue(bondNode, "CreditCurveId", false); // issuer credit term structure not mandatory
     securityId_ = XMLUtils::getChildValue(bondNode, "SecurityId", true);
-    referenceCurveId_ = XMLUtils::getChildValue(bondNode, "ReferenceCurveId", true);
-    settlementDays_ = XMLUtils::getChildValue(bondNode, "SettlementDays", true);
-    calendar_ = XMLUtils::getChildValue(bondNode, "Calendar", true);
-    issueDate_ = XMLUtils::getChildValue(bondNode, "IssueDate", true);
+    referenceCurveId_ = XMLUtils::getChildValue(bondNode, "ReferenceCurveId", false);
+    incomeCurveId_ = XMLUtils::getChildValue(bondNode, "IncomeCurveId", false);
+    settlementDays_ = XMLUtils::getChildValue(bondNode, "SettlementDays", false);
+    calendar_ = XMLUtils::getChildValue(bondNode, "Calendar", false);
+    issueDate_ = XMLUtils::getChildValue(bondNode, "IssueDate", false);
+    bondNotional_ = XMLUtils::getChildValue(bondNode, "BondNotional", false);
     XMLNode* legNode = XMLUtils::getChildNode(bondNode, "LegData");
     while (legNode != nullptr) {
         coupons_.push_back(LegData());
@@ -207,7 +191,6 @@ void ForwardBond::fromXML(XMLNode* node) {
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
 
-    incomeCurveId_ = XMLUtils::getChildValue(fwdBondNode, "IncomeCurveId", true);
     XMLNode* fwdSettlementNode = XMLUtils::getChildNode(fwdBondNode, "SettlementData");
     QL_REQUIRE(fwdSettlementNode, "No fwdSettlementNode Node");
 
@@ -236,9 +219,12 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
     XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
     XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
+    XMLUtils::addChild(doc, bondNode, "IncomeCurveId", incomeCurveId_);
     XMLUtils::addChild(doc, bondNode, "SettlementDays", settlementDays_);
     XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
     XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
+    if (!bondNotional_.empty())
+        XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
 
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
@@ -255,7 +241,6 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, fwdPremiumNode, "Date", compensationPaymentDate_);
 
     XMLUtils::addChild(doc, fwdBondNode, "LongInForward", longInBond_);
-    XMLUtils::addChild(doc, fwdBondNode, "IncomeCurveId", incomeCurveId_);
 
     return node;
 }

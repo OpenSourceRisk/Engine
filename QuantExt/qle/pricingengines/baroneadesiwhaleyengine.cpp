@@ -84,7 +84,7 @@ Real BaroneAdesiWhaleyApproximationEngine::criticalPrice(
         QL_FAIL("unknown option type");
     }
 
-
+    Real maxIterations = 10;
     // Newton Raphson algorithm for finding critical price Si
     Real Q, LHS, RHS, bi;
     Real forwardSi = Si * dividendDiscount / riskFreeDiscount;
@@ -97,6 +97,7 @@ Real BaroneAdesiWhaleyApproximationEngine::criticalPrice(
         : 2.0 / variance;
     Real temp = blackFormula(payoff->optionType(), payoff->strike(),
         forwardSi, std::sqrt(variance))*riskFreeDiscount;
+    Real i;
     switch (payoff->optionType()) {
     case Option::Call:
         Q = (-(n - 1.0) + std::sqrt(((n - 1.0)*(n - 1.0)) + 4 * K)) / 2;
@@ -105,7 +106,10 @@ Real BaroneAdesiWhaleyApproximationEngine::criticalPrice(
         bi = dividendDiscount * cumNormalDist(d1) * (1 - 1 / Q) +
             (1 - dividendDiscount *
                 cumNormalDist.derivative(d1) / std::sqrt(variance)) / Q;
+        i = 0;
         while (std::fabs(LHS - RHS) / payoff->strike() > tolerance) {
+            if (i > maxIterations)
+                QL_FAIL("Failed to determine critical price");
             Si = (payoff->strike() + RHS - bi * Si) / (1 - bi);
             forwardSi = Si * dividendDiscount / riskFreeDiscount;
             d1 = (std::log(forwardSi / payoff->strike()) + 0.5*variance)
@@ -118,6 +122,7 @@ Real BaroneAdesiWhaleyApproximationEngine::criticalPrice(
                 + (1 - dividendDiscount *
                     cumNormalDist.derivative(d1) / std::sqrt(variance))
                 / Q;
+            i++;
         }
         break;
     case Option::Put:
@@ -127,7 +132,10 @@ Real BaroneAdesiWhaleyApproximationEngine::criticalPrice(
         bi = -dividendDiscount * cumNormalDist(-d1) * (1 - 1 / Q)
             - (1 + dividendDiscount * cumNormalDist.derivative(-d1)
                 / std::sqrt(variance)) / Q;
+        i = 0;
         while (std::fabs(LHS - RHS) / payoff->strike() > tolerance) {
+            if (i > maxIterations)
+                QL_FAIL("Failed to determine critical price");
             Si = (payoff->strike() - RHS + bi * Si) / (1 + bi);
             forwardSi = Si * dividendDiscount / riskFreeDiscount;
             d1 = (std::log(forwardSi / payoff->strike()) + 0.5*variance)
@@ -139,6 +147,7 @@ Real BaroneAdesiWhaleyApproximationEngine::criticalPrice(
             bi = -dividendDiscount * cumNormalDist(-d1) * (1 - 1 / Q)
                 - (1 + dividendDiscount * cumNormalDist.derivative(-d1)
                     / std::sqrt(variance)) / Q;
+            i++;
         }
         break;
     default:

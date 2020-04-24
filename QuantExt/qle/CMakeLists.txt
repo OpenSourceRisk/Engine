@@ -1,15 +1,20 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt_SRC calendars/chile.cpp
+set(QuantExt_SRC calendars/austria.cpp
+calendars/belgium.cpp
+calendars/chile.cpp
 calendars/cme.cpp
 calendars/colombia.cpp
 calendars/france.cpp
 calendars/ice.cpp
 calendars/israel.cpp
+calendars/largejointcalendar.cpp
+calendars/luxembourg.cpp
 calendars/malaysia.cpp
 calendars/netherlands.cpp
 calendars/peru.cpp
 calendars/philippines.cpp
+calendars/spain.cpp
 calendars/switzerland.cpp
 calendars/thailand.cpp
 calendars/wmr.cpp
@@ -30,13 +35,14 @@ cashflows/indexedcoupon.cpp
 cashflows/lognormalcmsspreadpricer.cpp
 cashflows/overnightindexedcoupon.cpp
 cashflows/quantocouponpricer.cpp
-cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/strippedcapflooredcpicoupon.cpp
+cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/subperiodscoupon.cpp
 cashflows/subperiodscouponpricer.cpp
 currencies/africa.cpp
 currencies/america.cpp
 currencies/asia.cpp
+currencies/europe.cpp
 currencies/metals.cpp
 indexes/bondindex.cpp
 indexes/commodityindex.cpp
@@ -181,21 +187,27 @@ termstructures/swaptionvolatilityconverter.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
-time/yearcounter.cpp)
+time/yearcounter.cpp
+time/actual364.cpp)
 
 # hpp files, this list is maintained manually
 
 set(QuantExt_HDR auto_link.hpp
+calendars/austria.hpp
+calendars/belgium.hpp
 calendars/chile.hpp
 calendars/cme.hpp
 calendars/colombia.hpp
 calendars/france.hpp
 calendars/ice.hpp
 calendars/israel.hpp
+calendars/largejointcalendar.hpp
+calendars/luxembourg.hpp
 calendars/malaysia.hpp
 calendars/netherlands.hpp
 calendars/peru.hpp
 calendars/philippines.hpp
+calendars/spain.hpp
 calendars/switzerland.hpp
 calendars/thailand.hpp
 calendars/wmr.hpp
@@ -217,13 +229,14 @@ cashflows/indexedcoupon.hpp
 cashflows/lognormalcmsspreadpricer.hpp
 cashflows/overnightindexedcoupon.hpp
 cashflows/quantocouponpricer.hpp
-cashflows/strippedcapflooredyoyinflationcoupon.hpp
 cashflows/strippedcapflooredcpicoupon.hpp
+cashflows/strippedcapflooredyoyinflationcoupon.hpp
 cashflows/subperiodscoupon.hpp
 cashflows/subperiodscouponpricer.hpp
 currencies/africa.hpp
 currencies/america.hpp
 currencies/asia.hpp
+currencies/europe.hpp
 currencies/metals.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
@@ -389,9 +402,9 @@ termstructures/brlcdiratehelper.hpp
 termstructures/capfloorhelper.hpp
 termstructures/capfloortermvolcurve.hpp
 termstructures/capfloortermvolsurface.hpp
-termstructures/constantyoyinflationoptionletvolatility.hpp
 termstructures/commodityaveragebasispricecurve.hpp
 termstructures/commoditybasispricecurve.hpp
+termstructures/constantyoyinflationoptionletvolatility.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
 termstructures/crossccybasisswaphelper.hpp
@@ -418,10 +431,10 @@ termstructures/fxvannavolgasmilesection.hpp
 termstructures/hazardspreadeddefaulttermstructure.hpp
 termstructures/immfraratehelper.hpp
 termstructures/interpolatedcorrelationcurve.hpp
+termstructures/interpolatedcpivolatilitysurface.hpp
 termstructures/interpolateddiscountcurve.hpp
 termstructures/interpolateddiscountcurve2.hpp
 termstructures/interpolatedyoycapfloortermpricesurface.hpp
-termstructures/interpolatedcpivolatilitysurface.hpp
 termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/oibasisswaphelper.hpp
@@ -464,6 +477,7 @@ termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
+time/actual364.hpp
 version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")

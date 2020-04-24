@@ -133,5 +133,8 @@
     <ClCompile Include="cpicapfloor.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="fittedbondcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

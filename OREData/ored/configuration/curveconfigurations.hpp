@@ -34,7 +34,6 @@
 #include <ored/configuration/equityvolcurveconfig.hpp>
 #include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
-#include <ored/configuration/inflationcapfloorpricesurfaceconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
@@ -193,7 +192,6 @@ private:
     std::map<std::string, boost::shared_ptr<CDSVolatilityCurveConfig>> cdsVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<BaseCorrelationCurveConfig>> baseCorrelationCurveConfigs_;
     std::map<std::string, boost::shared_ptr<InflationCurveConfig>> inflationCurveConfigs_;
-    std::map<std::string, boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>> inflationCapFloorPriceSurfaceConfigs_;
     std::map<std::string, boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>> inflationCapFloorVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<EquityCurveConfig>> equityCurveConfigs_;
     std::map<std::string, boost::shared_ptr<EquityVolatilityCurveConfig>> equityVolCurveConfigs_;

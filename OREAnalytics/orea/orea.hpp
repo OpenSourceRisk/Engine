@@ -51,7 +51,6 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
-#include <orea/simulation/dategrid.hpp>
 #include <orea/simulation/fixingmanager.hpp>
 #include <orea/simulation/simmarket.hpp>
 #include <orea/version.hpp>

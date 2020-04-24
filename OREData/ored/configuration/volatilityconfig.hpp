@@ -36,12 +36,14 @@ namespace data {
 class VolatilityConfig : public ore::data::XMLSerializable {
 public:    
     //! Default constructor
-    VolatilityConfig() : quoteType_(MarketDatum::QuoteType::RATE_LNVOL) {};
+    VolatilityConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+                     QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European) : 
+        quoteType_(quoteType), exerciseType_(exerciseType) {}
 
     //! \name Inspectors
     //@{
-    const MarketDatum::QuoteType& quoteType() const { return quoteType_; };
-    const QuantLib::Exercise::Type& exerciseType() const { return exerciseType_; };
+    const MarketDatum::QuoteType& quoteType() const { return quoteType_; }
+    const QuantLib::Exercise::Type& exerciseType() const { return exerciseType_; }
     //@}
 
     //! \name Serialisation
@@ -61,10 +63,15 @@ private:
 class ConstantVolatilityConfig : public VolatilityConfig {
 public:
     //! Default constructor
-    ConstantVolatilityConfig();
+    ConstantVolatilityConfig(
+        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
 
     //! Explicit constructor
-    ConstantVolatilityConfig(const std::string& quote);
+    ConstantVolatilityConfig(
+        const std::string& quote, 
+        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
 
     //! \name Inspectors
     //@{
@@ -87,19 +94,26 @@ private:
 class VolatilityCurveConfig : public VolatilityConfig {
 public:
     //! Default constructor
-    VolatilityCurveConfig();
+    VolatilityCurveConfig(
+        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
+        bool enforceMontoneVariance = true);
 
     //! Explicit constructor
     VolatilityCurveConfig(
         const std::vector<std::string>& quotes,
         const std::string& interpolation,
-        const std::string& extrapolation);
+        const std::string& extrapolation,
+        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
+        bool enforceMontoneVariance = true);
 
     //! \name Inspectors
     //@{
     const std::vector<std::string>& quotes() const;
     const std::string& interpolation() const;
     const std::string& extrapolation() const;
+    bool enforceMontoneVariance() const;
     //@}
 
     //! \name Serialisation
@@ -112,6 +126,7 @@ private:
     std::vector<std::string> quotes_;
     std::string interpolation_;
     std::string extrapolation_;
+    bool enforceMontoneVariance_;
 };
 
 /*! Base volatility configuration for a 2-D volatility surface
@@ -120,7 +135,9 @@ private:
 class VolatilitySurfaceConfig : public VolatilityConfig {
 public:
     //! Default constructor
-    VolatilitySurfaceConfig();
+    VolatilitySurfaceConfig(
+        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
 
     //! Explicit constructor
     VolatilitySurfaceConfig(
@@ -128,7 +145,9 @@ public:
         const std::string& strikeInterpolation,
         bool extrapolation,
         const std::string& timeExtrapolation,
-        const std::string& strikeExtrapolation);
+        const std::string& strikeExtrapolation,
+        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
 
     //! \name Inspectors
     //@{
@@ -168,7 +187,9 @@ private:
 class VolatilityStrikeSurfaceConfig : public VolatilitySurfaceConfig {
 public:
     //! Default constructor
-    VolatilityStrikeSurfaceConfig();
+    VolatilityStrikeSurfaceConfig(
+        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
 
     //! Explicit constructor
     VolatilityStrikeSurfaceConfig(
@@ -178,7 +199,9 @@ public:
         const std::string& strikeInterpolation,
         bool extrapolation,
         const std::string& timeExtrapolation,
-        const std::string& strikeExtrapolation);
+        const std::string& strikeExtrapolation,
+        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
 
     //! \name Inspectors
     //@{
@@ -208,7 +231,9 @@ private:
 class VolatilityDeltaSurfaceConfig : public VolatilitySurfaceConfig {
 public:
     //! Default constructor
-    VolatilityDeltaSurfaceConfig();
+    VolatilityDeltaSurfaceConfig(
+        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
 
     //! Explicit constructor
     VolatilityDeltaSurfaceConfig(
@@ -223,7 +248,9 @@ public:
         const std::string& timeExtrapolation,
         const std::string& strikeExtrapolation,
         const std::string& atmDeltaType = "",
-        bool futurePriceCorrection = true);
+        bool futurePriceCorrection = true,
+        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
 
     //! \name Inspectors
     //@{
@@ -263,7 +290,9 @@ private:
 class VolatilityMoneynessSurfaceConfig : public VolatilitySurfaceConfig {
 public:
     //! Default constructor
-    VolatilityMoneynessSurfaceConfig();
+    VolatilityMoneynessSurfaceConfig(
+        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
 
     //! Explicit constructor
     VolatilityMoneynessSurfaceConfig(
@@ -275,7 +304,9 @@ public:
         bool extrapolation,
         const std::string& timeExtrapolation,
         const std::string& strikeExtrapolation,
-        bool futurePriceCorrection = true);
+        bool futurePriceCorrection = true,
+        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
 
     //! \name Inspectors
     //@{
@@ -309,7 +340,9 @@ private:
 class VolatilityApoFutureSurfaceConfig : public VolatilitySurfaceConfig {
 public:
     //! Default constructor
-    VolatilityApoFutureSurfaceConfig();
+    VolatilityApoFutureSurfaceConfig(
+        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
 
     //! Explicit constructor
     VolatilityApoFutureSurfaceConfig(
@@ -323,7 +356,9 @@ public:
         const std::string& timeExtrapolation,
         const std::string& strikeExtrapolation,
         QuantLib::Real beta = 0.0,
-        const std::string& maxTenor = "");
+        const std::string& maxTenor = "",
+        MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
 
     //! \name Inspectors
     //@{

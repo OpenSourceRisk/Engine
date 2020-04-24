@@ -79,10 +79,10 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     std::vector<std::string> tokens;
     boost::split(tokens, gridString, boost::is_any_of(","));
     if (tokens.size() <= 2) {
-        grid_ = boost::make_shared<ore::analytics::DateGrid>(gridString, cal);
+        grid_ = boost::make_shared<DateGrid>(gridString, cal);
     } else {
         std::vector<Period> gridTenors = XMLUtils::getChildrenValuesAsPeriods(node, "Grid", true);
-        grid_ = boost::make_shared<ore::analytics::DateGrid>(gridTenors, cal);
+        grid_ = boost::make_shared<DateGrid>(gridTenors, cal);
     }
     LOG("ScenarioGeneratorData grid points size = " << grid_->size());
 

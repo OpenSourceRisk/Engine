@@ -61,11 +61,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         currencies[i] = parseCurrency(legData_[i].currency());
         if (legData_[i].currency() != ccy_str)
             isXCCY = true;
-
-        // Initialise the set of index name, leg index pairs
-        for (const auto& index : legData_[i].indices()) {
-            nameIndexPairs_.insert(make_pair(index, i));
-        }
     }
 
     boost::shared_ptr<EngineBuilder> builder =
@@ -86,30 +81,13 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // build the leg
 
         auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
-        legs_[i] = legBuilder->buildLeg(legData_[i], engineFactory, configuration);
+        legs_[i] = legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration);
 
         // handle fx resetting Ibor leg
 
         if (legData_[i].legType() == "Floating" && !legData_[i].isNotResetXCCY()) {
                 // this is the reseting leg...
                 QL_REQUIRE(fxIndex != nullptr, "fx resetting leg requires fx index");
-
-                // We will add the Libor component of the leg to additionalLegs_ so that we can 
-                // capture its fixing dates later. Remove it from nameIndexPairs_ for efficiency.
-                string floatIndex = boost::dynamic_pointer_cast<FloatingLegData>(legData_[i].concreteLegData())->index();
-                auto nameIndex = make_pair(floatIndex, i);
-                QL_REQUIRE(nameIndexPairs_.count(nameIndex) == 1, "Expected floating index '" << floatIndex <<
-                    "' on swap's " << io::ordinal(i) << " leg.");
-                nameIndexPairs_.erase(nameIndex);
-
-                // We will add the FX linked component of the leg to additionalLegs_ also so erase it here. Do this because 
-                // the first coupon on the FX linked floating leg is a simple floating coupon. If we just process it as 
-                // normal, we would associate the floating coupon's fixing date with the FX index and ask for an FX fixing 
-                // that we do not need. additionalLegs_ for the FX linked floating leg will contain all but the first coupon.
-                nameIndex = make_pair(legData_[i].fxIndex(), i);
-                QL_REQUIRE(nameIndexPairs_.count(nameIndex) == 1, "Expected FX index '" << legData_[i].fxIndex() <<
-                    "' on swap's " << io::ordinal(i) << " leg.");
-                nameIndexPairs_.erase(nameIndex);
 
                 // If the domestic notional value is not specified, i.e. there are no notionals specified in the leg
                 // data, then all coupons including the first will be FX linked. If the first coupon's FX fixing date
@@ -123,7 +101,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                     // First coupon a plain floating rate coupon i.e. it is not FX linked because the initial notional is known.
                     // But, we need to add it to additionalLegs_ so that we don't miss the first coupon's ibor fixing
                     LOG("Building FX Resettable with first domestic notional specified explicitly");
-                    additionalLegs_[floatIndex].push_back(legs_[i][0]);
                     j = 1;
                 }
 
@@ -131,7 +108,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 for (; j < legs_[i].size(); ++j) {
                     boost::shared_ptr<FloatingRateCoupon> coupon =
                         boost::dynamic_pointer_cast<FloatingRateCoupon>(legs_[i][j]);
-                    additionalLegs_[floatIndex].push_back(coupon);
 
                     Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
                                                                         -static_cast<Integer>(fxIndex->fixingDays()), Days);
@@ -142,8 +118,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                     fxLinkedCoupon->setPricer(coupon->pricer());
                     legs_[i][j] = fxLinkedCoupon;
 
-                    // Add the FX linked floating coupon to the additionalLegs_
-                    additionalLegs_[legData_[i].fxIndex()].push_back(fxLinkedCoupon);
+                    // Add the FX fixing to the required fixings
+                    requiredFixings_.addFixingDate(fixingDate, legData_[i].fxIndex(), fxLinkedCoupon->date());
                 }
         }
 
@@ -165,12 +141,13 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 // They both have the same FX fixing date => same amount in this leg's currency.
                 boost::shared_ptr<CashFlow> outCf;
                 boost::shared_ptr<CashFlow> inCf;
+                Date fixingDate;
                 if (j == 0) {
                     // Two possibilities for first coupon:
                     // 1. we have not been given a domestic notional so it is an FX linked coupon
                     // 2. we have been given an explicit domestic notional so it is a simple cashflow
                     if (legData_[i].notionals().size() == 0) {
-                        Date fixingDate = fxIndex->fixingDate(c->accrualStartDate());
+                        fixingDate = fxIndex->fixingDate(c->accrualStartDate());
                         if (legData_[i].notionalInitialExchange()) {
                             outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate,
                                 -foreignNotional, fxIndex);
@@ -184,7 +161,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                         inCf = boost::make_shared<SimpleCashFlow>(c->nominal(), c->accrualEndDate());
                     }
                 } else {
-                    Date fixingDate = fxIndex->fixingDate(c->accrualStartDate());
+                    fixingDate = fxIndex->fixingDate(c->accrualStartDate());
                     outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate,
                         -foreignNotional, fxIndex);
                     // we don't want a final one, unless there is notional exchange
@@ -195,18 +172,21 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 }
 
                 // Add the cashflows to the notional leg if they have been populated
-                if (outCf)
+                if (outCf) {
                     resettingLeg.push_back(outCf);
-                if (inCf)
+                    if(fixingDate != Date())
+                        requiredFixings_.addFixingDate(fixingDate, legData_[i].fxIndex(), outCf->date());
+                }
+                if (inCf) {
                     resettingLeg.push_back(inCf);
+                    if(fixingDate != Date())
+                        requiredFixings_.addFixingDate(fixingDate, legData_[i].fxIndex(), inCf->date());
+                }
             }
 
             legs_.push_back(resettingLeg);
             legPayers_.push_back(legPayers_[i]);
             currencies.push_back(currencies[i]);
-
-            // Add this leg to nameIndexPairs_ also
-            nameIndexPairs_.insert(make_pair(legData_[i].fxIndex(), legs_.size() - 1));
 
             if (legData_[i].notionalAmortizingExchange()) {
                 QL_FAIL("Cannot have an amoritizing notional with FX reset");
@@ -305,26 +285,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 }
 
-map<string, set<Date>> Swap::fixings(const Date& settlementDate) const {
-    
-    map<string, set<Date>> result;
-    
-    for (const auto& p : nameIndexPairs_) {
-        // Get the set of fixing dates on the leg and update the results
-        set<Date> dates = fixingDates(legs_[p.second], settlementDate);
-        if (!dates.empty()) result[p.first].insert(dates.begin(), dates.end());
-    }
-
-    // Deal with any additional legs
-    for (const auto& kv : additionalLegs_) {
-        // Get the set of fixing dates on the leg and update the results
-        set<Date> dates = fixingDates(kv.second, settlementDate);
-        if (!dates.empty()) result[kv.first].insert(dates.begin(), dates.end());
-    }
-
-    return result;
-}
-
 map<AssetClass, set<string>> Swap::underlyingIndices() const {
 
     map<AssetClass, set<string>> result;
@@ -354,6 +314,12 @@ void Swap::fromXML(XMLNode* node) {
     }
     QL_REQUIRE(swapNode, "Swap::fromXML(): expected '" << tradeType() << "Data'"
                                                        << (tradeType() == "Swap" ? "" : " or 'SwapData'"));
+    
+    
+    settlement_ = XMLUtils::getChildValue(swapNode, "Settlement", false);
+    if (settlement_ == "")
+        settlement_ = "Physical";    
+    
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(swapNode, "LegData");
     for (Size i = 0; i < nodes.size(); i++) {
         auto ld = createLegData();
@@ -368,6 +334,9 @@ XMLNode* Swap::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* swapNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, swapNode);
+
+    if (settlement_ == "Cash")
+        XMLUtils::addChild(doc, swapNode, "Settlement", settlement_);
     for (Size i = 0; i < legData_.size(); i++)
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));
     return node;

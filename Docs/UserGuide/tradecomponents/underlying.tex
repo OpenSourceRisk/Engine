@@ -1,0 +1,70 @@
+\subsubsection{Underlying}
+\label{ss:underlying} 
+
+This trade component can be used to define the underlying entity for an Equity, Commodity or FX trade. It can be used for a single underlying, or within a basket with associated weight. 
+For an equity underlying a string representation is used to match \lstinline!Underlying! node to requied configuration and reference data. The string representation is of the form {IdentifierType}:{Name}:{Currency}:{Exchange}, with all entries optional except for Name.
+
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Underlying>
+  <Type>...</Type>
+  <Name>...</Name>
+  <Weight>...</Weight>
+  <Currency>...</Currency>
+  <IdentifierType>...</IdentifierType>
+  <Exchange>...</Exchange>
+  <PriceType>...</PriceType>
+  <FutureMonthOffset>...</FutureMonthOffset>
+  <DeliveryRollDays>...</DeliveryRollDays>
+  <DeliveryRollCalendar>...</DeliveryRollCalendar>
+</Underlying>
+\end{minted}
+\caption{Underlying node}
+\label{lst:underlying}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!Underlying! node are as follows:
+
+\begin{itemize}
+
+\item \lstinline!Type!:
+The type of the Underlying asset, valid entries are \lstinline!Equity!, \lstinline!FX!, \lstinline!Commodity!.
+
+\item \lstinline!Name!:
+The name of the Underlying asset. \\
+Allowable values:  \\
+Equity: See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data} \\
+Fx: A string on the form SOURCE-CCY1-CCY2, where SOURCE is ECB (European Central Bank) for EUR pairs or TR20H (Thomson Reuters 20H) for USD pairs. For ECB CCY1 should always be EUR, and for TR20H CCY1 should always be USD, except for TR20H-GBP-USD, FX-TR20H-AUD-USD and FX-TR20H-NZD-USD. For the USD-EUR pair, ECB is used (ECB-EUR-USD). \\
+Commodity: An identifier specifying the commodity being referenced in the leg. 
+% The following needs to move into client-specific documentation of allowable values: 
+%The \lstinline!Name! is of the form \lstinline!Prefix:Identifier!. The \lstinline!Prefix! is either \lstinline!PM! for precious metal or a code representing the exchange on which the commodity is traded. For precious metals, the \lstinline!Identifier! is the precious metal code followed by the precious metal price currency. For future contracts, the \lstinline!Identifier! is the exchange code for the future contract. 
+Table \ref{tab:commodity_data} lists the allowable values for \lstinline!Name! and gives a description. \\
+\item \lstinline!Weight! [Optional]:
+The relative weight of the underlying if part of a basket. For a single underlying this can be omitted or set to 1. A number between 0 and 1.
+
+\item \lstinline!Currency! [Optional]:
+The currency of the underlying. The \lstinline!Currency! section in Table \ref{tab:allow_stand_data} provides the allowable values.
+
+\item \lstinline!IdentifierType! [Optional]:
+Only valid when type is Equity. The type of the identenfier being used, e.g RIC, ISIN etc.
+
+\item \lstinline!Exchange! [Optional]:
+Only valid when type is Equity. A string code representing the exchange the equity is traded on.
+
+\item \lstinline!PriceType! [Optional]:
+Only valid when type is Commodity. 
+
+\item \lstinline!FutureMonthOffset! [Optional]:
+Only valid when type is Commodity.
+
+\item \lstinline!DeliveryRollDays! [Optional]:
+Only valid when type is Commodity.
+
+\item \lstinline!DeliveryRollCalendar! [Optional]:
+Only valid when type is Commodity.
+
+
+\end{itemize}
+

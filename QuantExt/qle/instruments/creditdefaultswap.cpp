@@ -51,12 +51,13 @@ namespace QuantExt {
 
 CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate spread, const Schedule& schedule,
                                      BusinessDayConvention convention, const DayCounter& dayCounter,
-                                     bool settlesAccrual, bool paysAtDefaultTime, const Date& protectionStart,
-                                     const boost::shared_ptr<Claim>& claim, const DayCounter& lastPeriodDayCounter)
+                                     bool settlesAccrual, ProtectionPaymentTime protectionPaymentTime,
+                                     const Date& protectionStart, const boost::shared_ptr<Claim>& claim,
+                                     const DayCounter& lastPeriodDayCounter)
     : side_(side), notional_(notional), upfront_(boost::none), runningSpread_(spread), settlesAccrual_(settlesAccrual),
-      paysAtDefaultTime_(paysAtDefaultTime), claim_(claim),
+      protectionPaymentTime_(protectionPaymentTime), claim_(claim),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
-    
+
     QL_REQUIRE((schedule.hasRule() && (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
         protectionStart_ <= schedule[0], "protection can not start after accrual for (pre big bang-) CDS");
 
@@ -68,12 +69,15 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
 
     // acrual rebate
     if (schedule.hasRule() && (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) {
-        boost::shared_ptr<FixedRateCoupon> firstCoupon = boost::dynamic_pointer_cast<FixedRateCoupon>(leg_[0]);
+        Size i = 0;
+        while (leg_[i]->hasOccurred(protectionStart_, false)) ++i;
+        ext::shared_ptr<FixedRateCoupon> coupon =
+                ext::dynamic_pointer_cast<FixedRateCoupon>(leg_[i]);
         // adjust to T+3 standard settlement, assuming that protection start
         // is set to T+1 for standard CDS
         Date rebateDate =
             schedule.calendar().advance(schedule.calendar().adjust(protectionStart_, convention), 2, Days, convention);
-        accrualRebate_.reset(new SimpleCashFlow(firstCoupon->accruedAmount(protectionStart_), rebateDate));
+        accrualRebate_.reset(new SimpleCashFlow(coupon->accruedAmount(protectionStart_), rebateDate));
     }
 
     if (!claim_)
@@ -88,11 +92,12 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
 
 CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate upfront, Rate runningSpread,
                                      const Schedule& schedule, BusinessDayConvention convention,
-                                     const DayCounter& dayCounter, bool settlesAccrual, bool paysAtDefaultTime,
-                                     const Date& protectionStart, const Date& upfrontDate,
-                                     const boost::shared_ptr<Claim>& claim, const DayCounter& lastPeriodDayCounter)
+                                     const DayCounter& dayCounter, bool settlesAccrual,
+                                     ProtectionPaymentTime protectionPaymentTime, const Date& protectionStart,
+                                     const Date& upfrontDate, const boost::shared_ptr<Claim>& claim,
+                                     const DayCounter& lastPeriodDayCounter)
     : side_(side), notional_(notional), upfront_(upfront), runningSpread_(runningSpread),
-      settlesAccrual_(settlesAccrual), paysAtDefaultTime_(paysAtDefaultTime), claim_(claim),
+      settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime), claim_(claim),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
 
     QL_REQUIRE((schedule.hasRule() && (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
@@ -138,7 +143,9 @@ boost::optional<Rate> CreditDefaultSwap::upfront() const { return upfront_; }
 
 bool CreditDefaultSwap::settlesAccrual() const { return settlesAccrual_; }
 
-bool CreditDefaultSwap::paysAtDefaultTime() const { return paysAtDefaultTime_; }
+CreditDefaultSwap::ProtectionPaymentTime CreditDefaultSwap::protectionPaymentTime() const {
+    return protectionPaymentTime_;
+}
 
 const Leg& CreditDefaultSwap::coupons() const { return leg_; }
 
@@ -167,7 +174,7 @@ void CreditDefaultSwap::setupArguments(PricingEngine::arguments* args) const {
     arguments->upfrontPayment = upfrontPayment_;
     arguments->accrualRebate = accrualRebate_;
     arguments->settlesAccrual = settlesAccrual_;
-    arguments->paysAtDefaultTime = paysAtDefaultTime_;
+    arguments->protectionPaymentTime = protectionPaymentTime_;
     arguments->claim = claim_;
     arguments->upfront = upfront_;
     arguments->spread = runningSpread_;

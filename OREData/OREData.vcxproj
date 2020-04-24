@@ -52,7 +52,6 @@
     <ClInclude Include="ored\configuration\fxspotconfig.hpp" />
     <ClInclude Include="ored\configuration\fxvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\genericyieldvolcurveconfig.hpp" />
-    <ClInclude Include="ored\configuration\inflationcapfloorpricesurfaceconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcapfloorvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\securityconfig.hpp" />
@@ -74,6 +73,7 @@
     <ClInclude Include="ored\marketdata\equitycurve.hpp" />
     <ClInclude Include="ored\marketdata\equityvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\expiry.hpp" />
+    <ClInclude Include="ored\marketdata\fittedbondcurvehelpermarket.hpp" />
     <ClInclude Include="ored\marketdata\fixings.hpp" />
     <ClInclude Include="ored\marketdata\fxspot.hpp" />
     <ClInclude Include="ored\marketdata\fxtriangulation.hpp" />
@@ -111,6 +111,7 @@
     <ClInclude Include="ored\model\utilities.hpp" />
     <ClInclude Include="ored\ored.hpp" />
     <ClInclude Include="ored\portfolio\bond.hpp" />
+    <ClInclude Include="ored\portfolio\bondutils.hpp" />
     <ClInclude Include="ored\portfolio\builders\bond.hpp" />
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
@@ -143,7 +144,6 @@
     <ClInclude Include="ored\portfolio\equityforward.hpp" />
     <ClInclude Include="ored\portfolio\equityoption.hpp" />
     <ClInclude Include="ored\portfolio\equityswap.hpp" />
-    <ClInclude Include="ored\portfolio\equityidentifier.hpp" />
     <ClInclude Include="ored\portfolio\fixingdates.hpp" />
     <ClInclude Include="ored\portfolio\forwardbond.hpp" />
     <ClInclude Include="ored\portfolio\forwardrateagreement.hpp" />
@@ -159,6 +159,8 @@
     <ClInclude Include="ored\portfolio\optiondata.hpp" />
     <ClInclude Include="ored\portfolio\optionwrapper.hpp" />
     <ClInclude Include="ored\portfolio\portfolio.hpp" />
+    <ClInclude Include="ored\portfolio\referencedata.hpp" />
+    <ClInclude Include="ored\portfolio\referencedatafactory.hpp" />
     <ClInclude Include="ored\portfolio\schedule.hpp" />
     <ClInclude Include="ored\portfolio\structuredtradeerror.hpp" />
     <ClInclude Include="ored\portfolio\swap.hpp" />
@@ -166,6 +168,7 @@
     <ClInclude Include="ored\portfolio\trade.hpp" />
     <ClInclude Include="ored\portfolio\tradeactions.hpp" />
     <ClInclude Include="ored\portfolio\tradefactory.hpp" />
+    <ClInclude Include="ored\portfolio\underlying.hpp" />
     <ClInclude Include="ored\portfolio\vanillaoption.hpp" />
     <ClInclude Include="ored\report\csvreport.hpp" />
     <ClInclude Include="ored\report\inmemoryreport.hpp" />
@@ -175,6 +178,7 @@
     <ClInclude Include="ored\utilities\correlationmatrix.hpp" />
     <ClInclude Include="ored\utilities\csvfilereader.hpp" />
     <ClInclude Include="ored\utilities\currencycheck.hpp" />
+    <ClInclude Include="ored\utilities\dategrid.hpp" />
     <ClInclude Include="ored\utilities\flowanalysis.hpp" />
     <ClInclude Include="ored\utilities\indexparser.hpp" />
     <ClInclude Include="ored\utilities\log.hpp" />
@@ -182,6 +186,8 @@
     <ClInclude Include="ored\utilities\parsers.hpp" />
     <ClInclude Include="ored\utilities\progressbar.hpp" />
     <ClInclude Include="ored\utilities\serializationdate.hpp" />
+    <ClInclude Include="ored\utilities\serializationdaycounter.hpp" />
+    <ClInclude Include="ored\utilities\serializationperiod.hpp" />
     <ClInclude Include="ored\utilities\strike.hpp" />
     <ClInclude Include="ored\utilities\timeperiod.hpp" />
     <ClInclude Include="ored\utilities\to_string.hpp" />
@@ -204,7 +210,6 @@
     <ClCompile Include="ored\configuration\equityvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\fxvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\genericyieldvolcurveconfig.cpp" />
-    <ClCompile Include="ored\configuration\inflationcapfloorpricesurfaceconfig.cpp" />
     <ClCompile Include="ored\configuration\inflationcapfloorvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\inflationcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\volatilityconfig.cpp" />
@@ -223,6 +228,7 @@
     <ClCompile Include="ored\marketdata\equitycurve.cpp" />
     <ClCompile Include="ored\marketdata\equityvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\expiry.cpp" />
+    <ClCompile Include="ored\marketdata\fittedbondcurvehelpermarket.cpp" />
     <ClCompile Include="ored\marketdata\fixings.cpp" />
     <ClCompile Include="ored\marketdata\fxspot.cpp" />
     <ClCompile Include="ored\marketdata\fxtriangulation.cpp" />
@@ -255,6 +261,7 @@
     <ClCompile Include="ored\model\lgmdata.cpp" />
     <ClCompile Include="ored\model\utilities.cpp" />
     <ClCompile Include="ored\portfolio\bond.cpp" />
+    <ClCompile Include="ored\portfolio\bondutils.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloor.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloorediborleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />
@@ -274,7 +281,6 @@
     <ClCompile Include="ored\portfolio\equityforward.cpp" />
     <ClCompile Include="ored\portfolio\equityoption.cpp" />
     <ClCompile Include="ored\portfolio\equityswap.cpp" />
-    <ClCompile Include="ored\portfolio\equityidentifier.cpp" />
     <ClCompile Include="ored\portfolio\fixingdates.cpp" />
     <ClCompile Include="ored\portfolio\forwardbond.cpp" />
     <ClCompile Include="ored\portfolio\forwardrateagreement.cpp" />
@@ -289,12 +295,15 @@
     <ClCompile Include="ored\portfolio\optiondata.cpp" />
     <ClCompile Include="ored\portfolio\optionwrapper.cpp" />
     <ClCompile Include="ored\portfolio\portfolio.cpp" />
+    <ClCompile Include="ored\portfolio\referencedata.cpp" />
+    <ClCompile Include="ored\portfolio\referencedatafactory.cpp" />
     <ClCompile Include="ored\portfolio\schedule.cpp" />
     <ClCompile Include="ored\portfolio\swap.cpp" />
     <ClCompile Include="ored\portfolio\swaption.cpp" />
     <ClCompile Include="ored\portfolio\trade.cpp" />
     <ClCompile Include="ored\portfolio\tradeactions.cpp" />
     <ClCompile Include="ored\portfolio\tradefactory.cpp" />
+    <ClCompile Include="ored\portfolio\underlying.cpp" />
     <ClCompile Include="ored\portfolio\vanillaoption.cpp" />
     <ClCompile Include="ored\report\csvreport.cpp" />
     <ClCompile Include="ored\utilities\calendaradjustmentconfig.cpp" />
@@ -302,6 +311,7 @@
     <ClCompile Include="ored\utilities\correlationmatrix.cpp" />
     <ClCompile Include="ored\utilities\csvfilereader.cpp" />
     <ClCompile Include="ored\utilities\currencycheck.cpp" />
+    <ClCompile Include="ored\utilities\dategrid.cpp" />
     <ClCompile Include="ored\utilities\flowanalysis.cpp" />
     <ClCompile Include="ored\utilities\indexparser.cpp" />
     <ClCompile Include="ored\utilities\log.cpp" />

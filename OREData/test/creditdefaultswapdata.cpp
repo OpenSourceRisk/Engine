@@ -90,7 +90,8 @@ BOOST_AUTO_TEST_CASE(testConstructionWithExplicitCreditCurveId) {
     // Perform some checks
     BOOST_CHECK_EQUAL(cdsData.issuerId(), "DB");
     BOOST_CHECK(cdsData.settlesAccrual());
-    BOOST_CHECK(cdsData.paysAtDefaultTime());
+    BOOST_CHECK_EQUAL(cdsData.protectionPaymentTime(),
+        QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault);
     BOOST_CHECK_EQUAL(cdsData.protectionStart(), Date());
     BOOST_CHECK_EQUAL(cdsData.upfrontDate(), Date());
     BOOST_CHECK_EQUAL(cdsData.upfrontFee(), Null<Real>());
@@ -111,7 +112,7 @@ BOOST_AUTO_TEST_CASE(testConstructionWithExplicitCreditCurveId) {
     // Check that the CreditDefaultSwapData object from XML is the same as the explicitly created one
     BOOST_CHECK_EQUAL(cdsData.issuerId(), xmlCdsData.issuerId());
     BOOST_CHECK_EQUAL(cdsData.settlesAccrual(), xmlCdsData.settlesAccrual());
-    BOOST_CHECK_EQUAL(cdsData.paysAtDefaultTime(), xmlCdsData.paysAtDefaultTime());
+    BOOST_CHECK_EQUAL(cdsData.protectionPaymentTime(), xmlCdsData.protectionPaymentTime());
     BOOST_CHECK_EQUAL(cdsData.protectionStart(), xmlCdsData.protectionStart());
     BOOST_CHECK_EQUAL(cdsData.upfrontDate(), xmlCdsData.upfrontDate());
     BOOST_CHECK_EQUAL(cdsData.upfrontFee(), xmlCdsData.upfrontFee());
@@ -136,7 +137,8 @@ BOOST_AUTO_TEST_CASE(testConstructionWithCdsReferenceInformation) {
     // Perform some checks
     BOOST_CHECK_EQUAL(cdsData.issuerId(), "DB");
     BOOST_CHECK(cdsData.settlesAccrual());
-    BOOST_CHECK(cdsData.paysAtDefaultTime());
+    BOOST_CHECK_EQUAL(cdsData.protectionPaymentTime(),
+        QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault);
     BOOST_CHECK_EQUAL(cdsData.protectionStart(), Date());
     BOOST_CHECK_EQUAL(cdsData.upfrontDate(), Date());
     BOOST_CHECK_EQUAL(cdsData.upfrontFee(), Null<Real>());
@@ -162,7 +164,7 @@ BOOST_AUTO_TEST_CASE(testConstructionWithCdsReferenceInformation) {
     // Check that the CreditDefaultSwapData object from XML is the same as the explicitly created one
     BOOST_CHECK_EQUAL(cdsData.issuerId(), xmlCdsData.issuerId());
     BOOST_CHECK_EQUAL(cdsData.settlesAccrual(), xmlCdsData.settlesAccrual());
-    BOOST_CHECK_EQUAL(cdsData.paysAtDefaultTime(), xmlCdsData.paysAtDefaultTime());
+    BOOST_CHECK_EQUAL(cdsData.protectionPaymentTime(), xmlCdsData.protectionPaymentTime());
     BOOST_CHECK_EQUAL(cdsData.protectionStart(), xmlCdsData.protectionStart());
     BOOST_CHECK_EQUAL(cdsData.upfrontDate(), xmlCdsData.upfrontDate());
     BOOST_CHECK_EQUAL(cdsData.upfrontFee(), xmlCdsData.upfrontFee());

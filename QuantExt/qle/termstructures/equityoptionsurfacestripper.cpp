@@ -95,6 +95,8 @@ void EquityOptionSurfaceStripper::performCalculations() const {
 
     boost::shared_ptr<SimpleQuote> volQuote;
     boost::shared_ptr<PricingEngine> engine;
+    
+    boost::shared_ptr<BlackVarianceSurfaceSparse> callVolSurface, putVolSurface;
 
     // if the surface is a price surface then we have premiums
     bool premiumSurfaces = boost::dynamic_pointer_cast<OptionPriceSurface>(callSurface_) != NULL;
@@ -123,6 +125,10 @@ void EquityOptionSurfaceStripper::performCalculations() const {
         } else {
             QL_FAIL("Unsupported exercise type for option stripping");
         }
+    } else {
+        // we have variance surfaces, explicitly cast so we can look up vol later
+        callVolSurface = boost::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(callSurface_);
+        putVolSurface = boost::dynamic_pointer_cast<BlackVarianceSurfaceSparse>(putSurface_);
     }
 
     vector<Real> volStrikes;
@@ -165,18 +171,18 @@ void EquityOptionSurfaceStripper::performCalculations() const {
                 if (premiumSurfaces) {
                     volData.push_back(implyVol(exp, cs, Option::Call, engine, volQuote));
                 } else {
-                    volData.push_back(callSurface_->getValue(exp, cs));
+                    volData.push_back(callVolSurface->blackVol(exp, cs));
                 }
             }
         }
         for (auto ps : putStrikes) {
-            if (!havePuts || ps > forward) {
+            if (!haveCalls || ps > forward) {
                 volStrikes.push_back(ps);
                 volExpiries.push_back(exp);
                 if (premiumSurfaces) {
                     volData.push_back(implyVol(exp, ps, Option::Put, engine, volQuote));
                 } else {
-                    volData.push_back(putSurface_->getValue(exp, ps));
+                    volData.push_back(putVolSurface->blackVol(exp, ps));
                 }
             }
         }
@@ -225,5 +231,4 @@ boost::shared_ptr<QuantLib::BlackVolTermStructure> EquityOptionSurfaceStripper::
     return volSurface_; 
 }
 
-#pragma once
 } // QuantExt

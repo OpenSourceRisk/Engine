@@ -14,8 +14,9 @@
       CZK, DEM, DKK, EUR, ESP, FIM, FRF, GBP, GRD, HKD, HUF, IEP, ITL,
       INR, ISK, JPY, KRW, LUF, NLG, NOK, NZD, PLN, PTE, RON, SEK, SGD,
       THB, TRY, TWD, USD, ZAR, ARS, CLP, COP, IDR, ILS, KWD, PEN, MXN,
-    SAR, RUB, TND, MYR, UAH, KZT, QAR, MXV, CLF, EGP, BHD, OMR, VND,
-    AED, PHP, NGN, MAD, UYU},  Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
+      SAR, RUB, TND, MYR, UAH, KZT, QAR, MXV, CLF, EGP, BHD, OMR, VND,
+      AED, PHP, NGN, MAD, UYU, CNH, KES, LKR, PKR, RSD, XAG, XAU, XPD, XPT},  
+    Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
     %\lstinline!DayCount!  \lstinline!Convention! & \begin{tabular}[l]{@{}l@{}}\indent Actual 360 can be expressed by:\\ \emph{A360, Actual/360, ACT/360}\\ \indent Actual 365 Fixed can be expressed by: \\ \emph{A365, A365F, Actual/365, Actual/365 (fixed)} \\ \indent Thirty 360 (US) can be expressed by: \\ \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT} \\ \indent Thirty 360 (European) can be expressed by: \\ \emph{30E/360, 30E/360 (Eurobond Basis)}\\ \indent Thirty 360 (Italian) is expressed by: \\ \emph{30/360 (Italian)}  \\ \indent Actual Actual (ISDA) can be expressed by: \\ \emph{ActActISDA, ActualActual (ISDA), ACT/ACT, ACT} \\ \indent Actual Actual (ISMA) can be expressed by: \\ \emph{ActActISMA, ActualActual (ISMA)} \\ \indent Actual Actual (AFB) can be expressed by:\\ \emph{ActActAFB, Actual/Actual (AFB)} \end{tabular}  \\ \hline
     \lstinline!Roll Convention! & \begin{tabular}[l]{@{}l@{}} 
 \emph{F,  Following, FOLLOWING}\\ 
@@ -38,17 +39,16 @@
     \emph{JP, JPN, JPY, TKB} & Japan Calendar \\ \hline
     \emph{CH, CHE, CHF, ZUB} & Switzerland Calendar \\ \hline
     \emph{GB, GBR, GBP, LNB, UK} & UK Calendar \\ \hline
-    \emph{London stock exchange} & London Stock Exchange Calendar \\ \hline
     \emph{US, USA, USD, NYB} & US Calendar \\ \hline
     \emph{US-SET} & US Settlement Calendar \\ \hline
     \emph{US-GOV} & US Government Bond Calendar \\ \hline    
     \emph{US-NYSE, New York stock exchange} & US NYSE Calendar \\ \hline
     \emph{US with Libor impact} & US Calendar for Libor fixings \\ \hline
     \emph{US-NERC} & US NERC Calendar \\ \hline  
+    \emph{AR, ARG, ARS} & Argentina Calendar \\ \hline    
     \emph{AU, AUD, AUS} & Australia Calendar \\ \hline
-    \emph{ZA, ZAF, ZAR, SA} & South Africa Calendar \\ \hline
-    \emph{SE, SWE, SEK, SS} & Sweden Calendar \\ \hline
-    \emph{AR, ARG, ARS} & Argentina Calendar \\ \hline
+    \emph{AT, AUT, ATS} & Austria Calendar \\ \hline    
+    \emph{BE, BEL, BEF} & Belgium Calendar \\ \hline    
     \emph{BW, BWA, BWP} & Botswana Calendar \\ \hline
     \emph{BR, BRA, BRL} & Brazil Calendar \\ \hline
     \emph{CL, CHL, CLP} & Chile Calendar \\ \hline
@@ -66,7 +66,8 @@
     \emph{ID, IDN, IDR} & Indonesia Calendar \\ \hline
     \emph{IL, ISR, ILS} & Israel Calendar \\ \hline
     \emph{Telbor} & Tel Aviv Inter-Bank Offered Rate Calendar \\ \hline
-    \emph{IT, ITA} & Italy Calendar \\ \hline
+    \emph{IT, ITA, ITL} & Italy Calendar \\ \hline
+    \emph{LU, LUX, LUF} & Luxembourg Calendar \\ \hline    
     \emph{MX, MEX, MXN} & Mexico Calendar \\ \hline
     \emph{MY, MYS, MYR} & Malaysia Calendar \\ \hline
     \emph{NL, NLD, NZD} & New Zealand Calendar\\ \hline
@@ -78,7 +79,10 @@
     \emph{RU, RUS, RUB} & Russia Calendar \\ \hline
     \emph{SAU, SAR} & Saudi Arabia \\ \hline
     \emph{SG, SGP, SGD} & Singapore Calendar \\ \hline
+    \emph{ZA, ZAF, ZAR, SA} & South Africa Calendar \\ \hline    
     \emph{KR, KOR, KRW} & South Korea Calendar \\ \hline
+    \emph{ES, ESP} & Spain Calendar \\ \hline
+    \emph{SE, SWE, SEK, SS} & Sweden Calendar \\ \hline        
     \emph{TW, TWN, TWD} & Taiwan Calendar \\ \hline
     \emph{TH, THA, THB} & Thailand Calendar \\ \hline
     \emph{TR, TUR, TRY} & Turkey Calendar \\ \hline
@@ -125,8 +129,7 @@
     % \emph{LNB\_NYB\_TRB} & UK, US and Canada Calendar \\ \hline 
     % \emph{LNB\_NYB\_TKB} & UK, US and Japan Calendar \\ \hline   
     % \emph{NullCalendar} & Null Calendar, i.e. all days are business days \\ \hline                 
-  \caption{Allowable Values for Calendar. Combinations of up to four
-    calendars can be provided using comma separated calendar names.}
+  \caption{Allowable Values for Calendar. Combinations of calendars can be provided using comma separated calendar names.}
   \label{tab:calendar}
 \end{longtable}
 
@@ -140,6 +143,7 @@
     \hline
     \emph{A360, Actual/360, ACT/360}& Actual 360  \\ \hline
     \emph{A365, A365F, Actual/365, Actual/365 (fixed)} & Actual 365 Fixed \\ \hline
+    \emph{A364, Actual/364, ACT/364}& Actual 364  \\ \hline
     \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT} & Thirty 360 (US) \\ \hline
     \emph{30E/360, 30E/360 (Eurobond Basis)} & Thirty 360 (European) \\ \hline
     \emph{30/360 (Italian)} & Thirty 360 (Italian) \\ \hline
@@ -206,6 +210,20 @@ string stays constant for all currency pairs. For the USD-EUR pair, ECB is used
 \end{tabular}
   \caption{Allowable values for FX index fixings.}
   \label{tab:fxindex_data}
+\end{table}
+
+\begin{table}[H]
+\centering
+  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+    \hline
+    \multicolumn{2}{|l|}{\tt Inflation CPI Index} \\ \hline
+    \bfseries{Trade Data} & \bfseries{Allowable Values} \\
+    \hline
+    \lstinline!Index! for CPI leg & Any string (provided it is the ID of an inflation index in the market configuration) \\
+    \hline
+  \end{tabu}
+  \caption{Allowable values for CPI index.}
+  \label{tab:cpiindex_data}
 \end{table}
 
 \begin{table}[H]
@@ -292,4 +310,21 @@ conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: 
   \end{tabu}
   \caption{Allowable values for \lstinline!DocClause!}
   \label{tab:docclause_data}
+\end{table}
+
+\begin{table}[H]
+\centering
+  \begin{tabu} to 0.9\linewidth {| X[1,l,m] | X[1,l,m] |}
+    \hline
+    \multicolumn{2}{|l|}{Boolean nodes} \\
+    \hline
+    \textbf{Node Value} & \textbf{Evaluates To} \\
+    \hline
+    \lstinline!Y!, \lstinline!YES!, \lstinline!TRUE!, \lstinline!true!, \lstinline!1! & \lstinline!true! \\
+    \hline
+    \lstinline!N!, \lstinline!NO!, \lstinline!FALSE!, \lstinline!false!, \lstinline!0! & \lstinline!false! \\
+    \hline
+  \end{tabu}
+  \caption{Allowable values for boolean node}
+  \label{tab:boolean_allowable}
 \end{table}

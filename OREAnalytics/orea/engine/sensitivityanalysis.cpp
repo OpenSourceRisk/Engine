@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/timer.hpp>
 #include <orea/cube/cubewriter.hpp>
 #include <orea/cube/sensicube.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
@@ -58,13 +57,14 @@ SensitivityAnalysis::SensitivityAnalysis(
     const bool recalibrateModels, const CurveConfigurations& curveConfigs,
     const TodaysMarketParameters& todaysMarketParams, const bool nonShiftedBaseCurrencyConversion,
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
-    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders, const bool continueOnError)
+    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders, 
+    const boost::shared_ptr<ReferenceDataManager>& referenceData, const bool continueOnError)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
       recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
-      extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders), continueOnError_(continueOnError),
-      engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false) {}
+      extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders), referenceData_(referenceData), 
+      continueOnError_(continueOnError), engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -146,7 +146,7 @@ SensitivityAnalysis::buildFactory(const std::vector<boost::shared_ptr<EngineBuil
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = marketConfiguration_;
     boost::shared_ptr<EngineFactory> factory =
-        boost::make_shared<EngineFactory>(engineData_, simMarket_, configurations, extraBuilders, extraLegBuilders);
+        boost::make_shared<EngineFactory>(engineData_, simMarket_, configurations, extraBuilders, extraLegBuilders, referenceData_);
     return factory;
 }
 
@@ -326,15 +326,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             vector<Real> strikes = itr->second->shiftStrikes;
             vector<Period> expiries = itr->second->shiftExpiries;
             QL_REQUIRE(strikes.size() > 0, "Only strike capfloor vols supported");
-            Size keyIdx = key.index;
-            Size expIdx = keyIdx / strikes.size();
-            Period p_exp = expiries[expIdx];
-            Size strIdx = keyIdx % strikes.size();
-            Real strike = strikes[strIdx];
-            Handle<OptionletVolatilityStructure> vts = simMarket->capFloorVol(ccy, marketConfiguration);
-            Time t_exp = vts->dayCounter().yearFraction(asof, asof + p_exp);
-            Real vol = vts->volatility(t_exp, strike);
-            shiftMult = vol;
+            shiftMult = simMarket->baseScenario()->get(
+                RiskFactorKey(RiskFactorKey::KeyType::OptionletVolatility, ccy, key.index));
         }
     } break;
     case RiskFactorKey::KeyType::CDSVolatility: {

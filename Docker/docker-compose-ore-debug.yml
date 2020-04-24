@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  env_ore_debug:
+    image: env_ore_debug
+    build:
+      context: ../
+      dockerfile: Docker/Dockerfile-ORE-Debug
+      args:
+        - quantlib_version=1.14_c8d6abbbb
+        - num_cores=16
