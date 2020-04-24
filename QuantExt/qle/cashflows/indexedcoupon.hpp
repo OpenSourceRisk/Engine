@@ -37,11 +37,10 @@ using namespace QuantLib;
 */
 class IndexedCoupon : public Coupon, public Observer {
 public:
-    /*! pays c->amount() / c->nominal() * qty * index(fixingDate), i.e. the original nominal of the coupon
-      is replaced by qty times the index fixing */
+    /*! pays c->amount() * qty * index(fixingDate) */
     IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const boost::shared_ptr<Index>& index,
                   const Date& fixingDate, const bool flipIndex = false);
-    /*! pays c->amount() / c->nominal() * qty * initialFixing */
+    /*! pays c->amount()* qty * initialFixing */
     IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const Real initialFixing,
                   const bool flipIndex = false);
 
