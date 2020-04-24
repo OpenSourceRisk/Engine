@@ -21,6 +21,8 @@
 
 #include <ql/utilities/vectors.hpp>
 
+#include <iostream>
+
 using namespace QuantLib;
 
 namespace QuantExt {
@@ -51,6 +53,8 @@ EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& st
     registerWith(equityCurve_);
     registerWith(fxIndex_);
     registerWith(Settings::instance().evaluationDate());
+
+    QL_REQUIRE(!notionalReset_ || quantity_ != Null<Real>(), "Resetting EquityCoupon requires quantity");
 }
 
 void EquityCoupon::setPricer(const boost::shared_ptr<EquityCouponPricer>& pricer) {
@@ -111,7 +115,7 @@ std::vector<Date> EquityCoupon::fixingDates() const {
 EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
                      const boost::shared_ptr<FxIndex>& fxIndex)
     : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentAdjustment_(Following),
-      paymentCalendar_(Calendar()), isTotalReturn_(false), initialPrice_(Null<Real>()), dividendFactor_(1.0),
+      paymentCalendar_(Calendar()), isTotalReturn_(true), initialPrice_(Null<Real>()), dividendFactor_(1.0),
       fixingDays_(0), notionalReset_(false), quantity_(Null<Real>()) {}
 
 EquityLeg& EquityLeg::withNotional(Real notional) {
@@ -191,22 +195,31 @@ EquityLeg::operator Leg() const {
 
     Size numPeriods = schedule_.size() - 1;
     Real quantity = Null<Real>();
+
+    Date fixingStartDate = valuationSchedule_.size() > 0
+                               ? valuationSchedule_.date(0)
+                               : equityCurve_->fixingCalendar().advance(
+                                     schedule_.date(0), -static_cast<Integer>(fixingDays_), Days, Preceding);
+    Real initialPrice = initialPrice_ ? initialPrice_ : equityCurve_->fixing(fixingStartDate, false, false);
+    Real fxRate = fxIndex_ ? fxIndex_->fixing(fixingStartDate) : 1.0;
+
+    std::vector<Real> notionals = notionals_;
+
     if (quantity_ != Null<Real>()) {
-        QL_REQUIRE(notionalReset_, "notional reset must be true if quantity is given");
-        quantity = quantity_;
-    } else {
-        QL_REQUIRE(!notionals_.empty(), "No notional given for equity leg.");
-        if (notionalReset_) {
-            // Calculate the initial quantity - only needed if resetting notional trade
-            Date fixingStartDate = valuationSchedule_.size() > 0
-                                       ? valuationSchedule_.date(0)
-                                       : equityCurve_->fixingCalendar().advance(
-                                             schedule_.date(0), -static_cast<Integer>(fixingDays_), Days, Preceding);
-            Real initialPrice = initialPrice_ ? initialPrice_ : equityCurve_->fixing(fixingStartDate, false, false);
-            // Notional in leg currency
-            Real fxRate = fxIndex_ ? fxIndex_->fixing(fixingStartDate) : 1.0;
-            quantity = notionals_.front() / (initialPrice * fxRate);
+        QL_REQUIRE(notionals_.empty(), "EquityLeg: notional and quantity must not be given at the same time");
+        if(notionalReset_) {
+            quantity = quantity_;
+        } else {
+            notionals = std::vector<Real>(1, quantity_ * initialPrice * fxRate);
         }
+    } else if (!notionals_.empty()) {
+        QL_REQUIRE(quantity_ == Null<Real>(), "EquityLeg: notional and quantity must not be given at the same time");
+        if (notionalReset_) {
+            quantity = notionals_.front() / (initialPrice * fxRate);
+            std::cerr << "quantity =" << quantity << std::endl;
+        }
+    } else {
+        QL_FAIL("EquityLeg: either notional or quantity must be given");
     }
 
     if (valuationSchedule_.size() > 0){

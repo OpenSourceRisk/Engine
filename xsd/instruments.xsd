@@ -376,6 +376,7 @@
   <xs:element name="EquityLegData" substitutionGroup="legDataType">
     <xs:complexType>
       <xs:all>
+        <xs:element type="xs:float" name="Quantity" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="ReturnType" minOccurs="1" maxOccurs="1"/>
         <xs:element ref="equityNameType"/>
         <xs:element type="xs:float" name="InitialPrice" minOccurs="0" maxOccurs="1"/>
