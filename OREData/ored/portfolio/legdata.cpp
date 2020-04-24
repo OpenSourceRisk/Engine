@@ -96,7 +96,8 @@ LegDataRegister<ZeroCouponFixedLegData> ZeroCouponFixedLegData::reg_("ZeroCoupon
 
 void ZeroCouponFixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
-    rates_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Rates", "Rate", "startDate", rateDates_, &parseReal, true);
+    rates_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Rates", "Rate", "startDate", rateDates_, &parseReal,
+                                                             true);
     XMLNode* compNode = XMLUtils::getChildNode(node, "Compounding");
     if (compNode)
         compounding_ = XMLUtils::getChildValue(node, "Compounding", true);
@@ -141,7 +142,7 @@ void FloatingLegData::fromXML(XMLNode* node) {
         fixingDays_ = parseInteger(XMLUtils::getNodeValue(n));
     else
         fixingDays_ = Null<Size>();
-    if(auto n = XMLUtils::getChildNode(node, "Lookback"))
+    if (auto n = XMLUtils::getChildNode(node, "Lookback"))
         lookback_ = parsePeriod(XMLUtils::getNodeValue(n));
     else
         lookback_ = 0 * Days;
@@ -201,7 +202,8 @@ void CPILegData::fromXML(XMLNode* node) {
     rates_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Rates", "Rate", "startDate", rateDates_, &parseReal,
                                                              true);
     caps_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Caps", "Cap", "startDate", capDates_, &parseReal);
-    floors_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Floors", "Floor", "startDate", floorDates_, &parseReal);
+    floors_ =
+        XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Floors", "Floor", "startDate", floorDates_, &parseReal);
     if (XMLUtils::getChildNode(node, "NakedOption"))
         nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
     else
@@ -437,7 +439,7 @@ void EquityLegData::fromXML(XMLNode* node) {
         indices_.insert(fxIndex_);
     }
 
-    if(XMLNode* qty = XMLUtils::getChildNode(node, "Quantity")) {
+    if (XMLNode* qty = XMLUtils::getChildNode(node, "Quantity")) {
         quantity_ = parseReal(XMLUtils::getNodeValue(qty));
     } else {
         quantity_ = Null<Real>();
@@ -457,7 +459,7 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
 
     if (valuationSchedule_.hasData()) {
         XMLNode* schedNode = valuationSchedule_.toXML(doc);
-        XMLUtils::setNodeName(doc, schedNode, "ValuationSchedule"); 
+        XMLUtils::setNodeName(doc, schedNode, "ValuationSchedule");
         XMLUtils::appendNode(node, schedNode);
     } else {
         XMLUtils::addChild(doc, node, "FixingDays", static_cast<Integer>(fixingDays_));
@@ -558,7 +560,7 @@ void LegData::fromXML(XMLNode* node) {
         }
         XMLNode* exchangeNode = XMLUtils::getChildNode(tmp, "Exchanges");
         if (exchangeNode) {
-            
+
             notionalInitialExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalInitialExchange");
             notionalFinalExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalFinalExchange");
             if (XMLUtils::getChildNode(exchangeNode, "NotionalAmortizingExchange"))
@@ -584,7 +586,7 @@ void LegData::fromXML(XMLNode* node) {
     tmp = XMLUtils::getChildNode(node, "Indexings");
     if (tmp) {
         auto indexings = XMLUtils::getChildrenNodes(tmp, "Indexing");
-        for(auto const& i:indexings) {
+        for (auto const& i : indexings) {
             indexing_.push_back(Indexing());
             indexing_.back().fromXML(i);
         }
@@ -654,7 +656,7 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     if (!indexing_.empty()) {
         XMLNode* indexingsNode = doc.allocNode("Indexings");
         for (auto& i : indexing_) {
-            if(i.hasData())
+            if (i.hasData())
                 XMLUtils::appendNode(indexingsNode, i.toXML(doc));
         }
         XMLUtils::appendNode(node, indexingsNode);
@@ -681,7 +683,7 @@ Leg makeSimpleLeg(const LegData& data) {
     return leg;
 }
 
-Leg makeFixedLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory) {
+Leg makeFixedLeg(const LegData& data) {
     boost::shared_ptr<FixedLegData> fixedLegData = boost::dynamic_pointer_cast<FixedLegData>(data.concreteLegData());
     QL_REQUIRE(fixedLegData, "Wrong LegType, expected Fixed, got " << data.legType());
 
@@ -699,7 +701,6 @@ Leg makeFixedLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& en
                   .withPaymentAdjustment(bdc)
                   .withPaymentLag(paymentLag)
                   .withPaymentCalendar(paymentCalendar);
-    applyIndexing(leg, data, engineFactory);
     return leg;
 }
 
@@ -824,7 +825,6 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
             for (Size i = 0; i < coupons.size(); i++)
                 leg.push_back(coupons[i]);
             LOG("Floating annuity notional schedule done");
-            applyIndexing(leg, data, engineFactory);
             return leg;
         }
     }
@@ -842,7 +842,6 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                       .withType(floatData->isAveraged() ? SubPeriodsCoupon::Averaging : SubPeriodsCoupon::Compounding)
                       .includeSpread(floatData->includeSpread());
         QuantExt::setCouponPricer(leg, boost::make_shared<SubPeriodsCouponPricer>());
-        applyIndexing(leg, data, engineFactory);
         return leg;
     }
 
@@ -859,7 +858,6 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     // If no caps or floors or in arrears fixing, return the leg
     if (!hasCapsFloors && !floatData->isInArrears()) {
         Leg leg = iborLeg;
-        applyIndexing(leg, data, engineFactory);
         return leg;
     }
 
@@ -872,7 +870,6 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
 
     if (!attachPricer) {
         Leg leg = iborLeg;
-        applyIndexing(leg, data, engineFactory);
         return leg;
     }
 
@@ -897,7 +894,6 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                 s->registerWith(s->underlying());
         }
     }
-    applyIndexing(tmpLeg, data, engineFactory);
     return tmpLeg;
 }
 
@@ -927,38 +923,36 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
         boost::shared_ptr<QuantExt::AverageONIndexedCouponPricer> couponPricer =
             boost::make_shared<QuantExt::AverageONIndexedCouponPricer>();
         Leg leg = QuantExt::AverageONLeg(schedule, index)
-                                         .withNotionals(notionals)
-                                         .withSpreads(spreads)
-                                         .withGearings(gearings)
-                                         .withPaymentDayCounter(dc)
-                                         .withPaymentAdjustment(bdc)
-                                         .withRateCutoff(2)
-                                         .withPaymentLag(paymentLag)
-                                         .withLookback(floatData->lookback())
-                                         .withAverageONIndexedCouponPricer(couponPricer);
+                      .withNotionals(notionals)
+                      .withSpreads(spreads)
+                      .withGearings(gearings)
+                      .withPaymentDayCounter(dc)
+                      .withPaymentAdjustment(bdc)
+                      .withRateCutoff(2)
+                      .withPaymentLag(paymentLag)
+                      .withLookback(floatData->lookback())
+                      .withAverageONIndexedCouponPricer(couponPricer);
 
-        applyIndexing(leg, data, engineFactory);
         return leg;
 
     } else {
 
         Leg leg = QuantExt::OvernightLeg(schedule, index)
-                               .withNotionals(notionals)
-                               .withSpreads(spreads)
-                               .withPaymentDayCounter(dc)
-                               .withPaymentAdjustment(bdc)
-                               .withPaymentCalendar(paymentCalendar)
-                               .withPaymentLag(paymentLag)
-                               .withGearings(gearings)
-                               .includeSpread(floatData->includeSpread())
-                               .withLookback(floatData->lookback());
+                      .withNotionals(notionals)
+                      .withSpreads(spreads)
+                      .withPaymentDayCounter(dc)
+                      .withPaymentAdjustment(bdc)
+                      .withPaymentCalendar(paymentCalendar)
+                      .withPaymentLag(paymentLag)
+                      .withGearings(gearings)
+                      .includeSpread(floatData->includeSpread())
+                      .withLookback(floatData->lookback());
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(index);
         if (brlCdiIndex)
             QuantExt::setCouponPricer(leg, boost::make_shared<BRLCdiCouponPricer>());
 
-        applyIndexing(leg, data, engineFactory);
         return leg;
     }
 }
@@ -989,7 +983,6 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
                   .withPaymentAdjustment(bdc)
                   .withGearings(gearings);
 
-    applyIndexing(leg, data, engineFactory);
     return leg;
 }
 
@@ -1016,7 +1009,7 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
         for (Size i = 1; i < refLeg.size(); i++) {
             auto coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i]);
             QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
-            auto coupon2 = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i-1]);
+            auto coupon2 = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[i - 1]);
             QL_REQUIRE(coupon, "makeNotionalLeg does not support non-coupon legs");
             Date flowDate = coupon->accrualStartDate();
             flowDate = paymentCalendar.adjust(flowDate, paymentConvention);
@@ -1220,11 +1213,9 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
             }
         }
 
-        applyIndexing(leg, data, engineFactory);
         return leg;
     } else {
         Leg leg = yoyLeg;
-        applyIndexing(leg, data, engineFactory);
         return leg;
     }
 }
@@ -1277,7 +1268,6 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
 
     if (!attachPricer) {
         Leg leg = cmsLeg;
-        applyIndexing(leg, data, engineFactory);
         return leg;
     }
 
@@ -1302,7 +1292,6 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
                 s->registerWith(s->underlying());
         }
     }
-    applyIndexing(tmpLeg, data, engineFactory);
     return tmpLeg;
 }
 
@@ -1346,7 +1335,6 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
 
     if (!attachPricer) {
         Leg leg = cmsSpreadLeg;
-        applyIndexing(leg, data, engineFactory);
         return leg;
     }
 
@@ -1377,7 +1365,6 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
                 s->registerWith(s->underlying());
         }
     }
-    applyIndexing(tmpLeg, data, engineFactory);
     return tmpLeg;
 }
 
@@ -1463,11 +1450,10 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
     Leg tmpLeg = digitalCmsSpreadLeg;
     QuantLib::setCouponPricer(tmpLeg, cmsSpreadPricer);
 
-    applyIndexing(tmpLeg, data, engineFactory);
     return tmpLeg;
 }
 
-Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equityCurve, 
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equityCurve,
                   const boost::shared_ptr<QuantExt::FxIndex>& fxIndex) {
     boost::shared_ptr<EquityLegData> eqLegData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
     QL_REQUIRE(eqLegData, "Wrong LegType, expected Equity, got " << data.legType());
@@ -1657,7 +1643,8 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
     }
 }
 
-void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory) {
+void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                   std::map<std::string, std::string>& qlToOREIndexNames) {
     for (auto const& indexing : data.indexing()) {
         if (indexing.hasData()) {
             QL_REQUIRE(engineFactory, "applyIndexing: engineFactory required");
@@ -1670,11 +1657,13 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                 index = *engineFactory->market()->equityCurve(parseEquityIndex(indexing.index())->name(), config);
             } else if (boost::starts_with(indexing.index(), "FX-")) {
                 auto tmp = parseFxIndex(indexing.index());
-                index = parseFxIndex(indexing.index(),
-                                     engineFactory->market()->fxSpot(
-                                         tmp->sourceCurrency().code() + tmp->targetCurrency().code(), config),
-                                     engineFactory->market()->discountCurve(tmp->sourceCurrency().code(), config),
-                                     engineFactory->market()->discountCurve(tmp->targetCurrency().code(), config));
+                Currency ccy1 = tmp->targetCurrency();
+                Currency ccy2 = tmp->sourceCurrency();
+                std::string domestic = data.currency();
+                std::string foreign = ccy1.code() == domestic ? ccy2.code() : ccy1.code();
+                index = buildFxIndex(indexing.index(), domestic, foreign, engineFactory->market(),
+                                     engineFactory->configuration(MarketContext::pricing), indexing.fixingCalendar(),
+                                     indexing.fixingDays());
             } else if (boost::starts_with(indexing.index(), "COMM-")) {
                 auto tmp = parseCommodityIndex(indexing.index());
                 index =
@@ -1696,8 +1685,45 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             if (!indexing.fixingConvention().empty())
                 indLeg.withFixingConvention(parseBusinessDayConvention(indexing.fixingConvention()));
             leg = indLeg;
+
+            // add to the qlToOREIndexNames map
+            qlToOREIndexNames[index->name()] = indexing.index();
         }
     }
+}
+
+boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
+                                                  const boost::shared_ptr<Market>& market, const string& configuration,
+                                                  const string& calendar, Size fixingDays) {
+    // 1. Parse the index we have with no term structures
+    boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
+
+    // get market data objects - we set up the index using source/target, fixing days
+    // and calendar from legData_[i].fxIndex()
+    string source = fxIndexBase->sourceCurrency().code();
+    string target = fxIndexBase->targetCurrency().code();
+    Handle<YieldTermStructure> sorTS = market->discountCurve(source, configuration);
+    Handle<YieldTermStructure> tarTS = market->discountCurve(target, configuration);
+    Handle<Quote> spot = market->fxSpot(source + target);
+    Calendar cal = parseCalendar(calendar);
+
+    // Now check the ccy and foreignCcy from the legdata, work out if we need to invert or not
+    bool invertFxIndex = false;
+    if (domestic == target && foreign == source) {
+        invertFxIndex = false;
+    } else if (domestic == source && foreign == target) {
+        invertFxIndex = true;
+    } else {
+        QL_FAIL("Cannot combine FX Index " << fxIndex << " with reset ccy " << domestic << " and reset foreignCurrency "
+                                           << foreign);
+    }
+
+    auto fxi = boost::make_shared<FxIndex>(fxIndexBase->familyName(), fixingDays, fxIndexBase->sourceCurrency(),
+                                           fxIndexBase->targetCurrency(), cal, spot, sorTS, tarTS, invertFxIndex);
+
+    QL_REQUIRE(fxi, "Failed to build FXIndex " << fxIndex);
+
+    return fxi;
 }
 
 } // namespace data

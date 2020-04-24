@@ -46,6 +46,7 @@ using namespace QuantLib;
 using std::string;
 
 class EngineFactory;
+class Market;
 
 //! Serializable Additional Leg Data
 /*!
@@ -753,7 +754,7 @@ private:
 
 //! \name Utilities for building QuantLib Legs
 //@{
-Leg makeFixedLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory = nullptr);
+Leg makeFixedLeg(const LegData& data);
 Leg makeZCFixedLeg(const LegData& data);
 Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                 const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
@@ -820,7 +821,8 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
                        const bool annuityAllowed = false, const std::vector<Real>& rates = std::vector<Real>());
 
 // apply indexing (if given in LegData) to existing leg
-void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory);
+void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                   std::map<std::string, std::string>& qlToOREIndexNames);
 
 // template implementations
 
@@ -889,6 +891,11 @@ vector<T> buildScheduledVectorNormalised(const vector<T>& values, const vector<s
                                          const T& defaultValue) {
     return normaliseToSchedule(buildScheduledVector(values, dates, schedule), schedule, defaultValue);
 }
+
+// build an FX Index needed by legbuilders / makeLeg methods
+boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
+                                                  const boost::shared_ptr<Market>& market, const string& configuration,
+                                                  const string& calendar, Size fixingDays = 0);
 
 } // namespace data
 } // namespace ore
