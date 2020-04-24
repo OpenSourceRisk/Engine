@@ -369,7 +369,7 @@ void FixingDateGetter::visit(SubPeriodsCoupon& c) {
 }
 
 void FixingDateGetter::visit(IndexedCoupon& c) {
-    requiredFixings_.addFixingDates(c.index(), oreIndexName(c.index()->name()), c.date());
+    requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.index()->name()), c.date());
     c.underlying()->accept(*this);
 }
 

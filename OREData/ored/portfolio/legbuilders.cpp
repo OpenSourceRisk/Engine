@@ -101,7 +101,7 @@ Leg CMSLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineF
     Leg result = makeCMSLeg(data, index, engineFactory);
     std::map<std::string, std::string> qlToOREIndexNames;
     applyIndexing(result, data, engineFactory, qlToOREIndexNames);
-    qlToOREIndexNames[index->name()] = swapInndexName;
+    qlToOREIndexNames[index->name()] = swapIndexName;
     addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
     return result;
 }
