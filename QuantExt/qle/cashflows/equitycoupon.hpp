@@ -49,9 +49,10 @@ class EquityCoupon : public Coupon, public Observer {
 public:
     EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
                  const boost::shared_ptr<EquityIndex>& equityCurve, const DayCounter& dayCounter,
-                 bool isTotalReturn = false, Real dividendFactor = 1.0, bool notionalReset = false, 
-                 Real initialPrice = Real(), Real quantity = Real(), const Date& refPeriodStart = Date(), 
-                 const Date& refPeriodEnd = Date(), const Date& exCouponDate = Date(), 
+                 bool isTotalReturn = false, Real dividendFactor = 1.0, bool notionalReset = false,
+                 Real initialPrice = Null<Real>(), Real quantity = Null<Real>(), const Date& fixingStartDate = Date(),
+                 const Date& fixingEndDate = Date(), const Date& refPeriodStart = Date(),
+                 const Date& refPeriodEnd = Date(), const Date& exCouponDate = Date(),
                  const boost::shared_ptr<FxIndex>& fxIndex = nullptr);
 
     //! \name CashFlow interface
@@ -154,6 +155,7 @@ public:
     EquityLeg& withFixingDays(Natural);
     EquityLeg& withValuationSchedule(const Schedule& valuationSchedule);
     EquityLeg& withNotionalReset(bool);
+    EquityLeg& withQuantity(Real);
     operator Leg() const;
 
 private:
@@ -170,6 +172,7 @@ private:
     Natural fixingDays_;
     Schedule valuationSchedule_;
     bool notionalReset_;
+    Real quantity_;
 };
 
 } // namespace QuantExt

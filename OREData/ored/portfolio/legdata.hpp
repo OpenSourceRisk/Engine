@@ -565,15 +565,16 @@ private:
 class EquityLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    EquityLegData() : LegAdditionalData("Equity") {}
+    EquityLegData() : LegAdditionalData("Equity"), quantity_(Null<Real>()) {}
     //! Constructor
     EquityLegData(string returnType, Real dividendFactor, EquityUnderlying equityUnderlying, Real initialPrice,
-        bool notionalReset, Natural fixingDays = 0, const ScheduleData& valuationSchedule = ScheduleData(), 
-        string eqCurrency = "", string fxIndex = "", Natural fxIndexFixingDays = 2, string fxIndexCalendar = "" )
+                  bool notionalReset, Natural fixingDays = 0, const ScheduleData& valuationSchedule = ScheduleData(),
+                  string eqCurrency = "", string fxIndex = "", Natural fxIndexFixingDays = 2,
+                  string fxIndexCalendar = "", Real quantity = Null<Real>())
         : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor),
           equityUnderlying_(equityUnderlying), initialPrice_(initialPrice), notionalReset_(notionalReset),
-          fixingDays_(fixingDays), valuationSchedule_(valuationSchedule), eqCurrency_(eqCurrency), fxIndex_(fxIndex), 
-          fxIndexFixingDays_(fxIndexFixingDays), fxIndexCalendar_(fxIndexCalendar) {
+          fixingDays_(fixingDays), valuationSchedule_(valuationSchedule), eqCurrency_(eqCurrency), fxIndex_(fxIndex),
+          fxIndexFixingDays_(fxIndexFixingDays), fxIndexCalendar_(fxIndexCalendar), quantity_(quantity) {
         indices_.insert("EQ-" + eqName());
     }
 
@@ -591,6 +592,7 @@ public:
     Natural fxIndexFixingDays() const { return fxIndexFixingDays_; }
     const string& fxIndexCalendar() const { return fxIndexCalendar_; }
     bool notionalReset() const { return notionalReset_; }
+    Real quantity() const { return quantity_; } // might be null
     //@}
 
     //! \name Serialisation
@@ -610,6 +612,7 @@ private:
     string fxIndex_ = "";
     Natural fxIndexFixingDays_ = 2;
     string fxIndexCalendar_ = "";
+    Real quantity_;
 
     static LegDataRegister<EquityLegData> reg_;
 };

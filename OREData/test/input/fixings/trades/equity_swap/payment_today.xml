@@ -47,6 +47,7 @@
         <EquityLegData>
           <ReturnType>Total</ReturnType>
           <Name>RIC:DMIWO00000GUS</Name>
+          <NotionalReset>false</NotionalReset>
           <FixingDays>2</FixingDays>
         </EquityLegData>
         <ScheduleData>

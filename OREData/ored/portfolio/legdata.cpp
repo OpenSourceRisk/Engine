@@ -424,7 +424,7 @@ void EquityLegData::fromXML(XMLNode* node) {
     if (XMLUtils::getChildNode(node, "NotionalReset"))
         notionalReset_ = XMLUtils::getChildValueAsBool(node, "NotionalReset");
     else
-        notionalReset_ = false;
+        notionalReset_ = true;
 
     XMLNode* fxt = XMLUtils::getChildNode(node, "FXTerms");
     if (fxt) {
@@ -433,6 +433,12 @@ void EquityLegData::fromXML(XMLNode* node) {
         fxIndexFixingDays_ = XMLUtils::getChildValueAsInt(fxt, "FXIndexFixingDays");
         fxIndexCalendar_ = XMLUtils::getChildValue(fxt, "FXIndexCalendar");
         indices_.insert(fxIndex_);
+    }
+
+    if (XMLNode* qty = XMLUtils::getChildNode(node, "Quantity")) {
+        quantity_ = parseReal(XMLUtils::getNodeValue(qty));
+    } else {
+        quantity_ = Null<Real>();
     }
 }
 
