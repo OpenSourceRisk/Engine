@@ -64,6 +64,90 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
 
 Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 
+A Zero Coupon Floating leg with compounding that includes spread can be set up using a rules-based schedule as shown
+in Listing \ref{lst:float_zero_coupon_leg_rules}. Note that the \lstinline!Tenor! in the rules-based schedule is not used when \lstinline!Rule! is set to \emph{Zero}.
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+            <LegData>
+                <LegType>Floating</LegType>
+                <Payer>false</Payer>
+                <Currency>USD</Currency>
+                <Notionals>
+                    <Notional>200000.0000</Notional>
+                </Notionals>
+                <DayCounter>A360</DayCounter>
+                <PaymentConvention>MF</PaymentConvention>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2020-01-14</StartDate>
+                        <EndDate>2020-07-14</EndDate>
+                        <Tenor>3M</Tenor>
+                        <Calendar>USD</Calendar>
+                        <Convention>MF</Convention>
+                        <TermConvention>MF</TermConvention>
+                        <Rule>Zero</Rule>
+                    </Rules>
+                </ScheduleData>
+                <FloatingLegData>
+                    <Index>USD-LIBOR-3M</Index>
+                    <IsAveraged>false</IsAveraged>
+                    <HasSubPeriods>true</HasSubPeriods>
+                    <IncludeSpread>true</IncludeSpread>
+                    <Spreads>
+                        <Spread>0.006500</Spread>
+                    </Spreads>
+                    <IsInArrears>false</IsInArrears>
+                    <FixingDays>2</FixingDays>
+                </FloatingLegData>
+            </LegData>
+\end{minted}
+\caption{Zero Coupon Floating Leg - Rules-based}
+\label{lst:float_zero_coupon_leg_rules}
+\end{listing}
+
+A Zero Coupon Floating leg with compounding that includes spread can also be set up using a dates-based schedule with two dates (start and end) as shown
+in Listing \ref{lst:float_zero_coupon_leg_dates}. \begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+            <LegData>
+                <LegType>Floating</LegType>
+                <Payer>false</Payer>
+                <Currency>USD</Currency>
+                <Notionals>
+                    <Notional>200000.0000</Notional>
+                </Notionals>
+                <DayCounter>A360</DayCounter>
+                <PaymentConvention>MF</PaymentConvention>
+                <ScheduleData>
+                    <Dates>
+                        <Calendar>USD</Calendar>
+                        <Convention>MF</Convention>
+                        <Dates>
+                            <Date>2020-01-14</Date>
+                            <Date>2020-07-14</Date>
+                        </Dates>
+                    </Dates>
+                </ScheduleData>
+                <FloatingLegData>
+                    <Index>USD-LIBOR-3M</Index>
+                    <IsAveraged>false</IsAveraged>
+                    <HasSubPeriods>true</HasSubPeriods>
+                    <IncludeSpread>true</IncludeSpread>
+                    <Spreads>
+                        <Spread>0.006500</Spread>
+                    </Spreads>
+                    <IsInArrears>false</IsInArrears>
+                    <FixingDays>2</FixingDays>
+                </FloatingLegData>
+            </LegData>
+\end{minted}
+\caption{Zero Coupon Floating Leg - Dates-based}
+\label{lst:float_zero_coupon_leg_dates}
+\end{listing}
+
+
+
 \item IsInArrears [Optional]:  \emph{true} indicates that  fixing is in arrears,
   i.e. the fixing gap is calculated in relation to the current period
   end date.\\ \emph{false} indicates that  fixing is in advance,
@@ -72,8 +156,8 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
 
 Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 
-\item FixingDays [Optional]: This is the fixing gap, i.e. the number of days
-  before the period end date an index fixing is taken.   
+\item FixingDays [Optional]: This is the fixing gap, i.e. the number of business days
+  before the period end date an index fixing is observed.   
 
 Allowable values:  Positive integers.  Defaults to the index's fixing days if blank or omitted.
 
