@@ -424,7 +424,7 @@ void EquityLegData::fromXML(XMLNode* node) {
     if (XMLUtils::getChildNode(node, "NotionalReset"))
         notionalReset_ = XMLUtils::getChildValueAsBool(node, "NotionalReset");
     else
-        notionalReset_ = false;
+        notionalReset_ = true;
 
     XMLNode* fxt = XMLUtils::getChildNode(node, "FXTerms");
     if (fxt) {
@@ -434,10 +434,19 @@ void EquityLegData::fromXML(XMLNode* node) {
         fxIndexCalendar_ = XMLUtils::getChildValue(fxt, "FXIndexCalendar");
         indices_.insert(fxIndex_);
     }
+
+    if (XMLNode* qty = XMLUtils::getChildNode(node, "Quantity")) {
+        quantity_ = parseReal(XMLUtils::getNodeValue(qty));
+    } else {
+        quantity_ = Null<Real>();
+    }
 }
 
 XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
+    if (quantity_ != Null<Real>()) {
+        XMLUtils::addChild(doc, node, "Quantity", quantity_);
+    }
     XMLUtils::addChild(doc, node, "ReturnType", returnType_);
     if (returnType_ == "Total") {
         XMLUtils::addChild(doc, node, "DividendFactor", dividendFactor_);
@@ -1431,6 +1440,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
 
     Leg leg = EquityLeg(schedule, equityCurve, fxIndex)
                   .withNotionals(notionals)
+                  .withQuantity(eqLegData->quantity())
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)
                   .withTotalReturn(isTotalReturn)
