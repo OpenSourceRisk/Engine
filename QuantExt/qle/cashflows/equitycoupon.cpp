@@ -202,7 +202,8 @@ EquityLeg::operator Leg() const {
                               ? valuationSchedule_.date(0)
                               : equityCurve_->fixingCalendar().advance(
                                     schedule_.date(0), -static_cast<Integer>(fixingDays_), Days, Preceding);
-        initialPrice = initialPrice_ ? initialPrice_ : equityCurve_->fixing(fixingStartDate, false, false);
+        initialPrice =
+            initialPrice_ != Null<Real>() ? initialPrice_ : equityCurve_->fixing(fixingStartDate, false, false);
         fxRate = fxIndex_ ? fxIndex_->fixing(fixingStartDate) : 1.0;
     }
 

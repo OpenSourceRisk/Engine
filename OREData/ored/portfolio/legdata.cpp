@@ -416,7 +416,7 @@ void EquityLegData::fromXML(XMLNode* node) {
     if (XMLUtils::getChildNode(node, "InitialPrice"))
         initialPrice_ = XMLUtils::getChildValueAsDouble(node, "InitialPrice");
     else
-        initialPrice_ = Real();
+        initialPrice_ = Null<Real>();
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");
     XMLNode* tmp = XMLUtils::getChildNode(node, "ValuationSchedule");
     if (tmp)
@@ -452,7 +452,7 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "DividendFactor", dividendFactor_);
     }
     XMLUtils::appendNode(node, equityUnderlying_.toXML(doc));
-    if (initialPrice_)
+    if (initialPrice_ != Null<Real>())
         XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
     XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
 
