@@ -21,10 +21,11 @@
     \ingroup tradedata
 */
 
+#pragma once
+
 #include <ql/patterns/singleton.hpp>
 #include <functional>
-
-#pragma once
+#include <string>
 
 namespace ore {
 namespace data {
