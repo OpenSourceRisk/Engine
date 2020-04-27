@@ -5,6 +5,16 @@ Listing \ref{lst:equitylegdata} shows an example of a leg of type Equity. The Eq
 elements:
 
 \begin{itemize}
+\item Quantity: The number of shares. Optional. If given, no notional must be specified on the equity leg. If not given,
+  a notional must be specified and the quantity is computed from the initial notional of the leg as
+
+  quantity = initial notional / (initial price * initial FX conversion rate)
+
+  where the initial price is the share price on the first valuation date and the fx rate is conversion rate from the equity
+  currency to the leg currency on the first valuation date (if applicable).
+
+  Allowable values: Any positive real number
+
 \item ReturnType: \emph{Price} indicates that the coupons on the equity leg are determined by the price movement of the underlying equity, whereas  \emph{Total} indicates that coupons are determined by the total return of the underlying equity including dividends.
 
 Allowable values:  \emph{Price} or  \emph{Total}
@@ -19,20 +29,21 @@ Allowable values: See \lstinline!Name! for equity trades in Table \ref{tab:equit
 
 Allowable values: Any positive real number
 
-\item NotionalReset [Optional]: Defaults to \emph{false}.  Notional resets only affect the equity leg.
-If NotionalReset is set to \emph{true} the quantity q or number of shares of the underlying equity  is fixed for all the coupons on the equity leg, as per:
+\item NotionalReset [Optional]: Defaults to \emph{true}.  Notional resets only affect the equity leg. If NotionalReset
+  is set to \emph{true} the quantity or number of shares of the underlying equity is fixed for all the coupons on the
+  equity leg and the notional for a period is computed as
 
-q = (InitialNotional) / (InitialPrice of the Equity)
+  notional = quantity x share price at valuation date for period x FX conversion rate at valuation date for period
 
-If NotionalReset is set to \emph{false} the quantity q  is calculated for each period as per:
+  If NotionalReset is set to \emph{false} the quantity of the underlying equity varies per period, and instead the
+  notional is taken to be the notional specified in the leg or - if a quantity is given - to be
 
-q = (Notional for the period) / (Equity Price at valuation date for period)
+  quantity x initial price x initial FX conversion rate
 
-Note that for the first period the NotionalReset \emph{true,false} flag will not have an impact as 
-(InitialNotional) = (Notional for the first period) , \\
-and (InitialPrice of the Equity) = (Equity Price at valuation date for the first period)
+  where initial price and inital FX conversion rate are the share price and FX conversion rate (if applicable) at the
+  first valuation date of the leg.
 
-Allowable values:  \emph{true} or  \emph{false}
+  Allowable values:  \emph{true} or  \emph{false}
 
 \item DividendFactor [Optional]: Factor of dividend to be included in return. Note that the DividendFactor is only relevant when the ReturnType is set to  \emph{Total}. It is not used if the ReturnType is set to \emph{Price}.
 
@@ -64,9 +75,6 @@ Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref
         <LegType>Equity</LegType>
         <Payer>false</Payer>
         <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>10000000</Notional>
-        </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>Following</PaymentConvention>
         <ScheduleData>
@@ -84,6 +92,7 @@ Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref
           </Rules>
         </ScheduleData>
         <EquityLegData>
+          <Quantity>1000.0</Quantity>
           <ReturnType>Price</ReturnType>
           <Underlying>
             <Type>Equity</Type>
