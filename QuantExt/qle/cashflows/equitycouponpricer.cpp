@@ -34,9 +34,13 @@ Rate EquityCouponPricer::swapletRate() const {
 
     // Dividends that are already fixed dividends + yield accrued over remaining period.
     // yield accrued = Forward without dividend yield - Forward with dividend yield
-    if (isTotalReturn_)
-        dividends = (equityCurve_->fixing(coupon_->fixingEndDate(), false, true) - end) +
+    if (isTotalReturn_) {
+        dividends = equityCurve_->fixing(coupon_->fixingEndDate(), false, true) -
+                    equityCurve_->fixing(coupon_->fixingEndDate(), false, false) -
+                    (equityCurve_->fixing(coupon_->fixingStartDate(), false, true) -
+                     equityCurve_->fixing(coupon_->fixingStartDate(), false, false)) +
                     equityCurve_->dividendsBetweenDates(coupon_->fixingStartDate(), coupon_->fixingEndDate());
+    }
 
     return ((end + dividends * dividendFactor_) * fxEnd - start * fxStart) / (start * fxStart);
 }
