@@ -45,6 +45,11 @@ namespace analytics {
  */
 class ReportWriter {
 public:
+    /*! Constructor.
+        \param nullString used to represent string values that are not applicable.
+    */
+    ReportWriter(const std::string& nullString = "#NA") : nullString_(nullString) {}
+
     virtual ~ReportWriter(){};
 
     virtual void writeNpv(ore::data::Report& report, const std::string& baseCurrency,
@@ -79,6 +84,11 @@ public:
 
     virtual void writeSensitivityReport(ore::data::Report& report, const boost::shared_ptr<SensitivityStream>& ss,
                                         QuantLib::Real outputThreshold = 0.0);
+
+    const std::string& nullString() const { return nullString_; }
+
+protected:
+    std::string nullString_;
 };
 } // namespace analytics
 } // namespace ore
