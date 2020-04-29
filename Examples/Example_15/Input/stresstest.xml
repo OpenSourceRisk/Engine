@@ -180,7 +180,8 @@
       </EquityVolatility>
     </EquityVolatilities>
     <SecuritySpreads />
-    
+    <RecoveryRates/>
+	<SurvivalProbabilities/>
   </StressTest><!-- end of stress test definition -->
 
   <StressTest id="twist">
@@ -220,6 +221,8 @@
 	<EquityVolatilities>
 	</EquityVolatilities>
     <SecuritySpreads />
+	<RecoveryRates/>
+	<SurvivalProbabilities/>
   </StressTest>
 
 </StressTesting>
