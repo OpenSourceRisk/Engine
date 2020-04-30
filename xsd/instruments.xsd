@@ -801,10 +801,10 @@
     <xs:all>
       <xs:element type="xs:string" name="Type"/>
       <xs:element type="xs:string" name="Name"/>
-      <xs:element type="xs:string" name="Currency" minOccurs="0"/>
-      <xs:element type="xs:float" name="Weight" minOccurs="0"/>
       <xs:element type="xs:string" name="IdentifierType" minOccurs="0"/>	
+      <xs:element type="xs:string" name="Currency" minOccurs="0"/>
       <xs:element type="xs:string" name="Exchange" minOccurs="0"/>	  
+      <xs:element type="xs:float" name="Weight" minOccurs="0"/>
       <xs:element type="xs:string" name="PriceType" minOccurs="0"/>
       <xs:element type="xs:int" name="FutureMonthOffset" minOccurs="0"/>
       <xs:element type="xs:int" name="DeliveryRollDays" minOccurs="0"/>
