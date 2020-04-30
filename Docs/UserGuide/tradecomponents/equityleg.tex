@@ -1,17 +1,14 @@
 \subsubsection{Equity Leg Data}
 \label{ss:equitylegdata}
 
-Listing \ref{lst:equitylegdata} shows an example of a leg of type Equity. The EquityLegData block contains the following
-elements:
+Listing \ref{lst:equitylegdata} shows an example of a leg of type Equity. Note that a resetting Equity Leg (NotionalReset set to  \emph{true}) must have either: \\
+a) a Quantity, or \\
+b) an InitialPrice and a Notional in the leg
+
+The EquityLegData block contains the following elements:
 
 \begin{itemize}
-\item Quantity: The number of shares. Optional. If given, no notional must be specified on the equity leg. If not given,
-  a notional must be specified and the quantity is computed from the initial notional of the leg as
-
-  quantity = initial notional / (initial price * initial FX conversion rate)
-
-  where the initial price is the share price on the first valuation date and the fx rate is conversion rate from the equity
-  currency to the leg currency on the first valuation date (if applicable).
+\item Quantity[Optional]: The number of shares. Either a notional or the quantity must be given for the leg, but not both at the same time.
 
   Allowable values: Any positive real number
 
@@ -20,7 +17,7 @@ elements:
 Allowable values:  \emph{Price} or  \emph{Total}
 
 \item Name: The identifier of the underlying equity or equity index.
- 
+
 Allowable values: See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data}. \\
 
 \item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
@@ -31,17 +28,27 @@ Allowable values: Any positive real number
 
 \item NotionalReset [Optional]: Defaults to \emph{true}.  Notional resets only affect the equity leg. If NotionalReset
   is set to \emph{true} the quantity or number of shares of the underlying equity is fixed for all the coupons on the
-  equity leg and the notional for a period is computed as
+  equity leg and the Notional for a period is computed as
 
-  notional = quantity x share price at valuation date for period x FX conversion rate at valuation date for period
+  Notional = Quantity x (share price at valuation date for period) x (FX conversion rate at valuation date for period)
 
-  If NotionalReset is set to \emph{false} the quantity of the underlying equity varies per period, and instead the
-  notional is taken to be the notional specified in the leg or - if a quantity is given - to be
+  Notice that either a) the Quantity or b) a Notional and an explicit InitialPrice must be given in the leg data for a
+  resettable leg. In the latter case the Quantity is computed as
 
-  quantity x initial price x initial FX conversion rate
+  Quantity = Notional / InitialPrice
 
-  where initial price and inital FX conversion rate are the share price and FX conversion rate (if applicable) at the
-  first valuation date of the leg.
+  No FX conversion is allowed if the Quantity has to be derived from the Notional and the InitialPrice.
+
+  If NotionalReset is set to \emph{false} the quantity of the underlying equity varies per period, as per:
+  
+  Quantity = Notional / (Equity Price at valuation date for the period)
+
+For the first period, the InitialPrice is the Equity Price at valuation date.
+Here, the Notional is taken to be the Notional specified in the leg or - if the Quantity is given - to be
+
+  Notional = Quantity x InitialPrice
+
+  where again the InitialPrice must be explicitly given in the leg data and no FX conversion is allowed in this case.
 
   Allowable values:  \emph{true} or  \emph{false}
 
@@ -66,7 +73,7 @@ Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref
 \item FXIndexCalendar [Optional]: Calendar for FX Index.
 
 %Allowable values:  Any positive real number.
-\end{itemize} 
+\end{itemize}
 
 \begin{listing}[H]
 %\hrule\medskip

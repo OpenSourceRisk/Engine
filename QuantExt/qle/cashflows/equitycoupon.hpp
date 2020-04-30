@@ -91,6 +91,8 @@ public:
     Real initialPrice() const;
     //! Number of equity shares held
     Real quantity() const { return quantity_; }
+    //! FX conversion rate (or 1.0 if not applicable)
+    Real fxRate() const;
     //! This function is called for other coupon types
     Date fixingDate() const {
         QL_FAIL("Equity Coupons have 2 fixings, not 1.");

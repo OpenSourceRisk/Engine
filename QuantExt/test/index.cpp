@@ -39,6 +39,7 @@
 #include <qle/indexes/ibor/idridrfix.hpp>
 #include <qle/indexes/ibor/idrjibor.hpp>
 #include <qle/indexes/ibor/ilstelbor.hpp>
+#include <qle/indexes/ibor/inrmiborois.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
 #include <qle/indexes/ibor/krwcd.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
@@ -96,6 +97,7 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
                            { IDRIdrfix(pd), "IDR-IDRFIX", Indonesia().name(), IDRCurrency().name() },
                            { IDRJibor(pd), "IDR-JIBOR", Indonesia().name(), IDRCurrency().name() },
                            { ILSTelbor(pd), "ILS-TELBOR", QuantExt::Israel(QuantExt::Israel::Telbor).name(), ILSCurrency().name() },
+                           { INRMiborOis(), "INR-MIBOROIS", India().name(), INRCurrency().name() },
                            { INRMifor(pd), "INR-MIFOR", India().name(), INRCurrency().name() },
                            { MXNTiie(pd), "MXN-TIIE", Mexico().name(), MXNCurrency().name() },
                            { NOKNibor(pd), "NOK-NIBOR", Norway().name(), NOKCurrency().name() },

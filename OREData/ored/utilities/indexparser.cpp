@@ -56,6 +56,7 @@
 #include <qle/indexes/ibor/idridrfix.hpp>
 #include <qle/indexes/ibor/idrjibor.hpp>
 #include <qle/indexes/ibor/ilstelbor.hpp>
+#include <qle/indexes/ibor/inrmiborois.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
 #include <qle/indexes/ibor/krwcd.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
@@ -259,7 +260,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         { "NOK-NOWA", boost::make_shared<Nowa>() },
         { "CLP-CAMARA", boost::make_shared<CLPCamara>() },
         { "NZD-OCR", boost::make_shared<Nzocr>() },
-        { "PLN-POLONIA", boost::make_shared<PLNPolonia>() }
+        { "PLN-POLONIA", boost::make_shared<PLNPolonia>() },
+        { "INR-MIBOROIS", boost::make_shared<INRMiborOis>() }
     };
 
     // Map from our _unique internal name_ to an ibor index (the period does not matter here)
