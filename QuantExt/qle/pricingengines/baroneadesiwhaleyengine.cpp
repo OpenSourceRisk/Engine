@@ -84,7 +84,7 @@ Real BaroneAdesiWhaleyApproximationEngine::criticalPrice(
         QL_FAIL("unknown option type");
     }
 
-    Real maxIterations = 10;
+    Real maxIterations = 100;
     // Newton Raphson algorithm for finding critical price Si
     Real Q, LHS, RHS, bi;
     Real forwardSi = Si * dividendDiscount / riskFreeDiscount;
@@ -107,9 +107,9 @@ Real BaroneAdesiWhaleyApproximationEngine::criticalPrice(
             (1 - dividendDiscount *
                 cumNormalDist.derivative(d1) / std::sqrt(variance)) / Q;
         i = 0;
-        while (std::fabs(LHS - RHS) / payoff->strike() > tolerance) {
-            if (i > maxIterations)
-                QL_FAIL("Failed to determine critical price");
+        while ((std::fabs(LHS - RHS) / payoff->strike()) > tolerance) {
+            if (i < maxIterations)
+                QL_FAIL("Failed to find critical price after " << maxIterations << "iterations.");
             Si = (payoff->strike() + RHS - bi * Si) / (1 - bi);
             forwardSi = Si * dividendDiscount / riskFreeDiscount;
             d1 = (std::log(forwardSi / payoff->strike()) + 0.5*variance)
@@ -133,9 +133,9 @@ Real BaroneAdesiWhaleyApproximationEngine::criticalPrice(
             - (1 + dividendDiscount * cumNormalDist.derivative(-d1)
                 / std::sqrt(variance)) / Q;
         i = 0;
-        while (std::fabs(LHS - RHS) / payoff->strike() > tolerance) {
-            if (i > maxIterations)
-                QL_FAIL("Failed to determine critical price");
+        while ((std::fabs(LHS - RHS) / payoff->strike()) > tolerance) {
+            if (i < maxIterations)
+                QL_FAIL("Failed to find critical price after " << maxIterations << "iterations.");
             Si = (payoff->strike() - RHS + bi * Si) / (1 + bi);
             forwardSi = Si * dividendDiscount / riskFreeDiscount;
             d1 = (std::log(forwardSi / payoff->strike()) + 0.5*variance)
@@ -183,10 +183,24 @@ void BaroneAdesiWhaleyApproximationEngine::calculate() const {
     Real forwardPrice = spot * dividendDiscount / riskFreeDiscount;
     BlackCalculator black(payoff, forwardPrice, std::sqrt(variance),
         riskFreeDiscount);
+    bool useEuropeanPrice = ((dividendDiscount / riskFreeDiscount) >= 1.0 && payoff->optionType() == Option::Call) ||
+        (dividendDiscount < 1.0 && riskFreeDiscount >= 1.0 && payoff->optionType() == Option::Put);
 
-    if ((dividendDiscount >= 1.0 && riskFreeDiscount < 1.0 && payoff->optionType() == Option::Call) ||
-        // early exercise of the put option is never optimal
-        (dividendDiscount < 1.0 && riskFreeDiscount >= 1.0 && payoff->optionType() == Option::Put)) {
+    Real tolerance = 1e-6;
+    Real Sk = 0.0;
+    // try to deteremine the critical price for the american option
+    // in some case, for example r < 0, q < 0 it is never optimal to exercise early
+    // and we cannot solve for critical price, the newton raphson solver diverges
+    // with Si turning negative
+    try {
+        Sk = criticalPrice(payoff, riskFreeDiscount,
+            dividendDiscount, variance, tolerance);
+    } catch (...) {
+        // failed to calculate the critical price
+        useEuropeanPrice = true;
+    }
+
+    if (useEuropeanPrice) {
         // early exercise never optimal
         results_.value = black.value();
         results_.delta = black.delta(spot);
@@ -216,10 +230,7 @@ void BaroneAdesiWhaleyApproximationEngine::calculate() const {
         results_.itmCashProbability = black.itmCashProbability();
     } else {
         // early exercise can be optimal
-        CumulativeNormalDistribution cumNormalDist;
-        Real tolerance = 1e-6;
-        Real Sk = criticalPrice(payoff, riskFreeDiscount,
-            dividendDiscount, variance, tolerance);
+        CumulativeNormalDistribution cumNormalDist;        
         Real forwardSk = Sk * dividendDiscount / riskFreeDiscount;
         Real d1 = (std::log(forwardSk / payoff->strike()) + 0.5*variance)
             / std::sqrt(variance);
