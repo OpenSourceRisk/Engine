@@ -173,10 +173,9 @@ boost::shared_ptr<FxIndex> parseFxIndex(const string& s) {
 boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
-    QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3, "two or three tokens required in " << s << ": EQ-NAME(-CCY)");
+    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
     QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
-    return boost::make_shared<EquityIndex>(tokens[1], NullCalendar(),
-                                           tokens.size() == 3 ? parseCurrency(tokens[2]) : Currency());
+    return boost::make_shared<EquityIndex>(tokens[1], NullCalendar(), Currency());
 }
 
 bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index,

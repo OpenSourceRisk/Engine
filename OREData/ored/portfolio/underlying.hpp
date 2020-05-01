@@ -22,12 +22,12 @@ namespace data {
 
 class Underlying : public ore::data::XMLSerializable {
 public:
-    //! Default constructor
-    Underlying() {};
+    //! Default Constructor
+    Underlying() : nodeName_("Underlying"), basicUnderlyingNodeName_("Name"){};
 
-    //! Constructor with type
-    Underlying(const std::string& type, const std::string& name, const QuantLib::Real weight = QuantLib::Null<QuantLib::Real>()) :
-        type_(type), name_(name), weight_(weight) {};
+    //! Constructor with type, name, weight
+    Underlying(const std::string& type, const std::string& name,
+               const QuantLib::Real weight = QuantLib::Null<QuantLib::Real>());
 
     //! \name Serialisation
     //@{
@@ -35,8 +35,14 @@ public:
     virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
     //@}
 
+    //! \name Setters
     void setType(const string& type) { type_ = type; }
     void setName(const string& name) { name_ = name; }
+    void setWeight(const QuantLib::Real weight) { weight_ = weight; }
+    void setNodeName(const string& nodeName) { nodeName_ = nodeName; }
+    void setBasicUnderlyingNodeName(const string& basicUnderlyingNodeName) {
+        basicUnderlyingNodeName_ = basicUnderlyingNodeName;
+    }
 
     //! \name Inspectors
     //@{
@@ -47,39 +53,42 @@ public:
 
 protected:
     std::string type_, name_;
-    Real weight_;
+    Real weight_ = QuantLib::Null<QuantLib::Real>();
+    std::string nodeName_, basicUnderlyingNodeName_;
+    bool isBasic_ = false;
 };
 
 class BasicUnderlying : public Underlying {
 public:
-    //! Deault constructor
-    BasicUnderlying() { setType("Basic"); };
-    
-    //! Constructor with identifer infomation
-    BasicUnderlying(const std::string& name) : Underlying("Basic", name) {}
-    
+    //! Default Constructor
+    BasicUnderlying() : Underlying() {
+        setType("Basic");
+        isBasic_ = true;
+    };
+
+    //! Constructor with identifer
+    explicit BasicUnderlying(const std::string& name) : Underlying("Basic", name) { isBasic_ = true; }
+
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
     //@}
-
 };
 
 class EquityUnderlying : public Underlying {
 public:
     //! Default constructor
-    EquityUnderlying() { setType("Equity"); }
+    EquityUnderlying() : Underlying() { setType("Equity"); }
 
     //! Constructor with equity name
-    EquityUnderlying(const std::string& equityName) : Underlying("Equity", equityName) {};
+    explicit EquityUnderlying(const std::string& equityName) : Underlying("Equity", equityName) { isBasic_ = true; };
 
     //! Constructor with identifer infomation
-    EquityUnderlying( const std::string& name, 
-        const std::string& identifierType, const std::string& currency,        
-        const std::string& exchange, const QuantLib::Real weight = QuantLib::Null<QuantLib::Real>()) :
-        Underlying("Equity", name, weight), identifierType_(identifierType),
-        currency_(currency), exchange_(exchange) {
+    EquityUnderlying(const std::string& name, const std::string& identifierType, const std::string& currency,
+                     const std::string& exchange, const QuantLib::Real weight)
+        : Underlying("Equity", name, weight), identifierType_(identifierType), currency_(currency),
+          exchange_(exchange) {
         setEquityName();
     };
 
@@ -104,20 +113,20 @@ private:
 class CommodityUnderlying : public Underlying {
 public:
     //! Default Constructor
-    CommodityUnderlying() { setType("Equity"); }
-    
-    //! Constructor with identifer infomation
-    CommodityUnderlying(const std::string& name, const QuantLib::Real weight = QuantLib::Null<QuantLib::Real>(),
-        const std::string& priceType = "", const QuantLib::Size futureMonthOffset = QuantLib::Null<QuantLib::Size>(),
-        const QuantLib::Size deliveryRollDays = QuantLib::Null<QuantLib::Size>(), const std::string& deliveryRollCalendar = "")
-        : Underlying("Commodity", name, weight), priceType_(priceType), futureMonthOffset_(futureMonthOffset),
-        deliveryRollDays_(deliveryRollDays), deliveryRollCalendar_(deliveryRollCalendar) {}
+    CommodityUnderlying() : Underlying() { setType("Commodity"); }
 
-    const std::string& priceType() const { return priceType_; }                      
+    //! Constructor with identifer infomation
+    CommodityUnderlying(const std::string& name, const QuantLib::Real weight, const std::string& priceType,
+                        const QuantLib::Size futureMonthOffset, const QuantLib::Size deliveryRollDays,
+                        const std::string& deliveryRollCalendar)
+        : Underlying("Commodity", name, weight), priceType_(priceType), futureMonthOffset_(futureMonthOffset),
+          deliveryRollDays_(deliveryRollDays), deliveryRollCalendar_(deliveryRollCalendar) {}
+
+    const std::string& priceType() const { return priceType_; }
     QuantLib::Size futureMonthOffset() const { return futureMonthOffset_; }
     QuantLib::Size deliveryRollDays() const { return deliveryRollDays_; }
-    const std::string& deliveryRollCalendar() const { return deliveryRollCalendar_; } 
-    
+    const std::string& deliveryRollCalendar() const { return deliveryRollCalendar_; }
+
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
@@ -126,19 +135,19 @@ public:
 
 private:
     std::string priceType_;
-    QuantLib::Size futureMonthOffset_;
-    QuantLib::Size deliveryRollDays_;
+    QuantLib::Size futureMonthOffset_ = QuantLib::Null<QuantLib::Size>();
+    QuantLib::Size deliveryRollDays_ = QuantLib::Null<QuantLib::Size>();
     std::string deliveryRollCalendar_;
 };
 
 class FXUnderlying : public Underlying {
 public:
     //! Default Constructor
-    FXUnderlying() { setType("FX"); };
+    explicit FXUnderlying() : Underlying() { setType("FX"); };
 
     //! Constructor with identifer infomation
-    FXUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight = QuantLib::Null<QuantLib::Real>()) :
-        Underlying(type, name, weight) {};
+    FXUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
+        : Underlying(type, name, weight){};
 
     //! \name Serialisation
     //@{
@@ -149,12 +158,16 @@ public:
 
 class UnderlyingBuilder : public XMLSerializable {
 public:
+    explicit UnderlyingBuilder(const std::string& nodeName = "Underlying",
+                               const std::string& basicUnderlyingNodeName = "Name")
+        : nodeName_(nodeName), basicUnderlyingNodeName_(basicUnderlyingNodeName) {}
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) override;
 
     const boost::shared_ptr<Underlying>& underlying() { return underlying_; };
 
 private:
+    const std::string nodeName_, basicUnderlyingNodeName_;
     boost::shared_ptr<Underlying> underlying_;
 };
 
