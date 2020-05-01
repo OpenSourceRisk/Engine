@@ -183,7 +183,9 @@ void BaroneAdesiWhaleyApproximationEngine::calculate() const {
     Real forwardPrice = spot * dividendDiscount / riskFreeDiscount;
     BlackCalculator black(payoff, forwardPrice, std::sqrt(variance),
         riskFreeDiscount);
-    bool useEuropeanPrice = ((dividendDiscount / riskFreeDiscount) >= 1.0 && payoff->optionType() == Option::Call) ||
+    bool useEuropeanPrice = (payoff->optionType() == Option::Call &&
+        ((dividendDiscount >= 1.0 && riskFreeDiscount < 1.0) ||
+        (riskFreeDiscount >= 1.0 && (dividendDiscount / riskFreeDiscount) >= 1.0))) ||
         (dividendDiscount < 1.0 && riskFreeDiscount >= 1.0 && payoff->optionType() == Option::Put);
 
     Real tolerance = 1e-6;
