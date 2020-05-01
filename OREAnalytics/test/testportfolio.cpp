@@ -214,7 +214,8 @@ boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string p
     OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash", "", premium,
                       premiumCcy, premiumDate);
     // trade
-    boost::shared_ptr<Trade> trade(new ore::data::EquityOption(env, option, equityName, currency, strike, quantity));
+    boost::shared_ptr<Trade> trade(
+        new ore::data::EquityOption(env, option, EquityUnderlying(equityName), currency, strike, quantity));
     trade->id() = id;
 
     return trade;
@@ -231,8 +232,8 @@ boost::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size ex
     // envelope
     Envelope env("CP");
     // trade
-    boost::shared_ptr<Trade> trade(
-        new ore::data::EquityForward(env, longShort, equityName, currency, quantity, expiryDate, strike));
+    boost::shared_ptr<Trade> trade(new ore::data::EquityForward(env, longShort, EquityUnderlying(equityName), currency,
+                                                                quantity, expiryDate, strike));
     trade->id() = id;
 
     return trade;
