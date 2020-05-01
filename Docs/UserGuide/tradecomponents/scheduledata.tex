@@ -102,7 +102,7 @@ Allowable values and descriptions: See Table \ref{tab:rule} Rule. Defaults to \e
 
 \item EndOfMonth [Optional]: Specifies whether the date generation rule is different for end of month, so that the last date of each month is generated, regardless of number of days in the month.
 
-Allowable values: Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}. Defaults to \emph{false} if left blank or omitted. Must be set to \emph{false} or omitted if the date generation Rule is set to \emph{CDS} or \emph{CDS2015}.
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}. Defaults to \emph{false} if left blank or omitted. Must be set to \emph{false} or omitted if the date generation Rule is set to \emph{CDS} or \emph{CDS2015}.
 
 \item FirstDate [Optional]: Date for initial stub period. For date generation rules \emph{CDS} and \emph{CDS2015}, if given, this
   overwrites the first date of the schedule that is otherwise built from IMM dates.
@@ -142,7 +142,7 @@ Defaults to \emph{null} if omitted.
 \item EndOfMonth [Optional]: Specifies whether the end of month convention is applied when calculating reference periods
   for irregular periods when the day count convention is ActActICMA and the schedule is dates based.
 
-Allowable values: Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}. Defaults to \emph{false} if left blank or omitted.
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}. Defaults to \emph{false} if left blank or omitted.
 
 \item Dates: This is a sub-sub-node and contains child elements of type
   \lstinline!Date!. In this case the schedule dates are determined
