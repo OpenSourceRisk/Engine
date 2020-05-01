@@ -108,7 +108,7 @@ Real BaroneAdesiWhaleyApproximationEngine::criticalPrice(
                 cumNormalDist.derivative(d1) / std::sqrt(variance)) / Q;
         i = 0;
         while ((std::fabs(LHS - RHS) / payoff->strike()) > tolerance) {
-            if (i < maxIterations)
+            if (i > maxIterations)
                 QL_FAIL("Failed to find critical price after " << maxIterations << "iterations.");
             Si = (payoff->strike() + RHS - bi * Si) / (1 - bi);
             forwardSi = Si * dividendDiscount / riskFreeDiscount;
@@ -134,7 +134,7 @@ Real BaroneAdesiWhaleyApproximationEngine::criticalPrice(
                 / std::sqrt(variance)) / Q;
         i = 0;
         while ((std::fabs(LHS - RHS) / payoff->strike()) > tolerance) {
-            if (i < maxIterations)
+            if (i > maxIterations)
                 QL_FAIL("Failed to find critical price after " << maxIterations << "iterations.");
             Si = (payoff->strike() - RHS + bi * Si) / (1 + bi);
             forwardSi = Si * dividendDiscount / riskFreeDiscount;
