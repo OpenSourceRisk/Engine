@@ -134,8 +134,9 @@ struct CommonVars {
 
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(
-            env, issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr, issue, fixedLegData));
+        boost::shared_ptr<ore::data::Bond> bond(
+            new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr,
+                                              issue, fixedLegData)));
         return bond;
     }
 
@@ -149,8 +150,9 @@ struct CommonVars {
 
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(
-            env, issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr, issue, fixedLegData));
+        boost::shared_ptr<ore::data::Bond> bond(
+            new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr,
+                                              issue, fixedLegData)));
         return bond;
     }
 
@@ -164,8 +166,9 @@ struct CommonVars {
 
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(
-            env, issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr, issue, floatingLegData));
+        boost::shared_ptr<ore::data::Bond> bond(
+            new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr,
+                                              issue, floatingLegData)));
         return bond;
     }
 
@@ -183,8 +186,9 @@ struct CommonVars {
 
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(
-            env, issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr, issue, fixedLegData));
+        boost::shared_ptr<ore::data::Bond> bond(
+            new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr,
+                                              issue, fixedLegData)));
         return bond;
     }
 
@@ -202,16 +206,18 @@ struct CommonVars {
 
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(
-            env, issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr, issue, floatingLegData));
+        boost::shared_ptr<ore::data::Bond> bond(
+            new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr,
+                                              issue, floatingLegData)));
         return bond;
     }
 
     boost::shared_ptr<ore::data::Bond> makeZeroBond() {
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(
-            env, issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr, notional, end, ccy, issue));
+        boost::shared_ptr<ore::data::Bond> bond(
+            new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr,
+                                              notional, end, ccy, issue)));
         return bond;
     }
 
@@ -473,9 +479,9 @@ BOOST_AUTO_TEST_CASE(testMultiPhaseBond) {
     LegData legdata1(fixedLegRateData, vars.isPayer, vars.ccy, schedule1, vars.fixDC, vars.notionals);
     LegData legdata2(fixedLegRateData, vars.isPayer, vars.ccy, schedule2, vars.fixDC, vars.notionals);
     Envelope env("CP1");
-    boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, vars.issuerId, vars.creditCurveId, vars.securityId,
-                                                                vars.referenceCurveId, vars.settledays, vars.calStr,
-                                                                vars.issue, {legdata1, legdata2}));
+    boost::shared_ptr<ore::data::Bond> bond(
+        new ore::data::Bond(env, BondData(vars.issuerId, vars.creditCurveId, vars.securityId, vars.referenceCurveId,
+                                          vars.settledays, vars.calStr, vars.issue, {legdata1, legdata2})));
     bond->build(engineFactory);
     printBondSchedule(bond);
     auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
