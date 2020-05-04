@@ -75,11 +75,12 @@ public:
     const string& calendar() const { return calendar_; }
     const string& issueDate() const { return issueDate_; }
     const std::vector<LegData>& coupons() const { return coupons_; }
+    bool zeroBond() const { return zeroBond_; }
+    Real bondNotional() const { return bondNotional_; }
+    // these are only populated for zero bonds
     Real faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
     const string& currency() const { return currency_; }
-    bool zeroBond() const { return zeroBond_; }
-    Real bondNotional() const { return bondNotional_; }
 
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
