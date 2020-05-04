@@ -22,24 +22,42 @@ void populateFromBondReferenceData(std::string& issuerId, std::string& settlemen
         boost::dynamic_pointer_cast<BondReferenceDatum>(referenceDataManager->getData(BondReferenceDatum::TYPE, name));
     QL_REQUIRE(bondRefData, "could not cast to BondReferenceDatum, this is unexpected");
     DLOG("Got BondReferenceDatum for name " << name << " overwrite empty elements in trade");
-    if (issuerId.empty())
+    if (issuerId.empty()) {
         issuerId = bondRefData->bondData().issuerId;
-    if (settlementDays.empty())
+        TLOG("overwrite issuerId with '" << issuerId << "'");
+    }
+    if (settlementDays.empty()) {
         settlementDays = bondRefData->bondData().settlementDays;
-    if (calendar.empty())
+        TLOG("overwrite settlementDays with '" << settlementDays << "'");
+    }
+    if (calendar.empty()) {
         calendar = bondRefData->bondData().calendar;
-    if (issueDate.empty())
+        TLOG("overwrite calendar with '" << calendar << "'");
+    }
+    if (issueDate.empty()) {
         issueDate = bondRefData->bondData().issueDate;
-    if (creditCurveId.empty())
+        TLOG("overwrite issueDate with '" << issueDate << "'");
+    }
+    if (creditCurveId.empty()) {
         creditCurveId = bondRefData->bondData().creditCurveId;
-    if (referenceCurveId.empty())
+        TLOG("overwrite creditCurveId with '" << creditCurveId << "'");
+    }
+    if (referenceCurveId.empty()) {
         referenceCurveId = bondRefData->bondData().referenceCurveId;
-    if (incomeCurveId.empty())
+        TLOG("overwrite referenceCurveId with '" << referenceCurveId << "'");
+    }
+    if (incomeCurveId.empty()) {
         incomeCurveId = bondRefData->bondData().incomeCurveId;
-    if (volatilityCurveId.empty())
+        TLOG("overwrite incomeCurveId with '" << incomeCurveId << "'");
+    }
+    if (volatilityCurveId.empty()) {
         volatilityCurveId = bondRefData->bondData().volatilityCurveId;
-    if (coupons.empty())
+        TLOG("overwrite volatilityCurveId with '" << volatilityCurveId << "'");
+    }
+    if (coupons.empty()) {
         coupons = bondRefData->bondData().legData;
+        TLOG("overwrite coupons with " << coupons.size() << " LegData nodes");
+    }
 }
 
 } // namespace data
