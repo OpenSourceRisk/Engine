@@ -298,9 +298,9 @@ boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Siz
     string referenceCurveId = "BondCurve1";
     // envelope
     Envelope env("CP");
-    boost::shared_ptr<Trade> trade(new ore::data::Bond(env, issuerId, creditCurveId, securityId, referenceCurveId,
-                                                       settlementDays, calendar, notional, maturityDate, ccy,
-                                                       issueDate));
+    boost::shared_ptr<Trade> trade(
+        new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settlementDays,
+                                          calendar, notional, maturityDate, ccy, issueDate)));
     trade->id() = id;
 
     return trade;
