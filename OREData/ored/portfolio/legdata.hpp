@@ -713,7 +713,10 @@ public:
 
     //! \name modifiers
     //@{
+    vector<double>& notionals() { return notionals_; }
+    vector<string>& notionalDates() { return notionalDates_; }
     bool& isPayer() { return isPayer_; }
+    std::vector<Indexing>& indexing() { return indexing_; }
     //@}
 
 protected:

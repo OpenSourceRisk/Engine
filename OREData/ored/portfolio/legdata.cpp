@@ -22,6 +22,7 @@
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -1658,7 +1659,16 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             boost::shared_ptr<Index> index;
             string config = engineFactory->configuration(MarketContext::pricing);
             if (boost::starts_with(indexing.index(), "EQ-")) {
-                index = *engineFactory->market()->equityCurve(parseEquityIndex(indexing.index())->name(), config);
+                string eqName = indexing.index().substr(3);
+                // look whether we have a mapping in the reference data, if not continue with the current name
+                if (engineFactory->referenceData() != nullptr &&
+                    engineFactory->referenceData()->hasData("Equity", eqName)) {
+                    auto refData = engineFactory->referenceData()->getData("Equity", eqName);
+                    if (auto erd = boost::dynamic_pointer_cast<EquityReferenceDatum>(refData)) {
+                        eqName = erd->equityData().equityId;
+                    }
+                }
+                index = *engineFactory->market()->equityCurve(eqName, config);
             } else if (boost::starts_with(indexing.index(), "FX-")) {
                 auto tmp = parseFxIndex(indexing.index());
                 Currency ccy1 = tmp->targetCurrency();

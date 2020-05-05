@@ -37,8 +37,8 @@ using namespace QuantLib;
 class Indexing : public XMLSerializable {
 public:
     Indexing()
-        : hasData_(false), quantity_(0.0), initialFixing_(Null<Real>()), fixingDays_(0), inArrearsFixing_(false) {}
-    Indexing(const Real quantity, const std::string& index, const Real initialFixing = Null<Real>(),
+        : hasData_(false), quantity_(1.0), initialFixing_(Null<Real>()), fixingDays_(0), inArrearsFixing_(false) {}
+    Indexing(const std::string& index, const Real quantity = 1.0, const Real initialFixing = Null<Real>(),
              const ScheduleData& valuationSchedule = ScheduleData(), const Size fixingDays = 0,
              const string& fixingCalendar = "", const string& fixingConvention = "", const bool inArrearsFixing = false)
         : hasData_(true), quantity_(quantity), index_(index), initialFixing_(initialFixing),
@@ -56,6 +56,18 @@ public:
     const string& fixingCalendar() const { return fixingCalendar_; }
     const string& fixingConvention() const { return fixingConvention_; }
     bool inArrearsFixing() const { return inArrearsFixing_; }
+    //@}
+
+    //! \name Modifiers
+    //@{
+    Real& quantity() { return quantity_; }
+    string& index() { return index_; }
+    Real& initialFixing() { return initialFixing_; }
+    ScheduleData& valuationSchedule() { return valuationSchedule_; }
+    Size& fixingDays() { return fixingDays_; }
+    string& fixingCalendar() { return fixingCalendar_; }
+    string& fixingConvention() { return fixingConvention_; }
+    bool& inArrearsFixing() { return inArrearsFixing_; }
     //@}
 
     //! \name Serialisation

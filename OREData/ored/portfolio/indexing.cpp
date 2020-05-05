@@ -25,8 +25,13 @@ namespace data {
 
 void Indexing::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Indexing");
-    quantity_ = XMLUtils::getChildValueAsDouble(node, "Quantity", false); // defaults to 0.0
-    index_ = XMLUtils::getChildValue(node, "Index", true);
+    if(auto n = XMLUtils::getChildNode(node, "Quantity")) {
+        quantity_ = parseReal(XMLUtils::getNodeValue(n));
+    }
+    else {
+        quantity_ = 1.0;
+    }
+    index_ = XMLUtils::getChildValue(node, "Index", false);
     initialFixing_ = Null<Real>();
     if (auto n = XMLUtils::getChildNode(node, "InitialFixing"))
         initialFixing_ = parseReal(XMLUtils::getNodeValue(n));
