@@ -1,7 +1,7 @@
 \subsubsection{Underlying}
-\label{ss:underlying} 
+\label{ss:underlying}
 
-This trade component can be used to define the underlying entity for an Equity, Commodity or FX trade. It can be used for a single underlying, or within a basket with associated weight. 
+This trade component can be used to define the underlying entity for an Equity, Commodity or FX trade. It can be used for a single underlying, or within a basket with associated weight.
 For an equity underlying a string representation is used to match \lstinline!Underlying! node to requied configuration and reference data. The string representation is of the form {IdentifierType}:{Name}:{Currency}:{Exchange}, with all entries optional except for Name.
 
 
@@ -25,6 +25,55 @@ For an equity underlying a string representation is used to match \lstinline!Und
 \label{lst:underlying}
 \end{listing}
 
+An example structure of the \lstinline!Underlying! trade component node is shown in Listing \ref{lst:equnderlying} for
+an equity underlying, in Listing \ref{lst:fxunderlying} for an fx underlying and in Listing \ref{lst:communderlying} for
+a commodity underlying.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <Underlying>
+            <Type>Equity</Type>
+            <Name>.SPX</Name>
+            <Weight>1.0</Weight>
+            <IdentifierType>RIC</IdentifierType>
+        </Underlying>
+\end{minted}
+\caption{Equity Underlying}
+\label{lst:equnderlying}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <Underlying>
+          <Type>FX</Type>
+          <Name>ECB-EUR-USD</Name>
+          <Weight>1.0</Weight>
+        </Underlying>
+\end{minted}
+\caption{FX Underlying}
+\label{lst:fxunderlying}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <Underlying>
+          <Type>Commodity</Type>
+          <Name>NYMEX:CL</Name>
+          <Weight>1.0</Weight>
+          <PriceType>FutureSettlement</PriceType>
+          <FutureMonthOffset>0</FutureMonthOffset>
+          <DeliveryRollDays>0</DeliveryRollDays>
+          <DeliveryRollCalendar>TARGET</DeliveryRollCalendar>
+        </Underlying>
+\end{minted}
+\caption{Commodity Underlying}
+\label{lst:communderlying}
+\end{listing}
+
+
 The meanings and allowable values of the elements in the \lstinline!Underlying! node are as follows:
 
 \begin{itemize}
@@ -33,13 +82,19 @@ The meanings and allowable values of the elements in the \lstinline!Underlying! 
 The type of the Underlying asset, valid entries are \lstinline!Equity!, \lstinline!FX!, \lstinline!Commodity!.
 
 \item \lstinline!Name!:
-The name of the Underlying asset. \\
-Allowable values:  \\
-Equity: See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data} \\
-Fx: A string on the form SOURCE-CCY1-CCY2, where SOURCE is ECB (European Central Bank) for EUR pairs or TR20H (Thomson Reuters 20H) for USD pairs. For ECB CCY1 should always be EUR, and for TR20H CCY1 should always be USD, except for TR20H-GBP-USD, FX-TR20H-AUD-USD and FX-TR20H-NZD-USD. For the USD-EUR pair, ECB is used (ECB-EUR-USD). \\
-Commodity: An identifier specifying the commodity being referenced in the leg. 
-% The following needs to move into client-specific documentation of allowable values: 
-%The \lstinline!Name! is of the form \lstinline!Prefix:Identifier!. The \lstinline!Prefix! is either \lstinline!PM! for precious metal or a code representing the exchange on which the commodity is traded. For precious metals, the \lstinline!Identifier! is the precious metal code followed by the precious metal price currency. For future contracts, the \lstinline!Identifier! is the exchange code for the future contract. 
+  The name of the Underlying asset. \\
+  Allowable values:  \\
+
+  Equity: See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data} \\
+
+  Fx: A string on the form SOURCE-CCY1-CCY2, where SOURCE is ECB (European Central Bank) for EUR pairs or TR20H (Thomson
+  Reuters 20H) for USD pairs. For ECB CCY1 should always be EUR, and for TR20H CCY1 should always be USD, except for
+  TR20H-GBP-USD, FX-TR20H-AUD-USD and FX-TR20H-NZD-USD. For the USD-EUR pair, ECB is used (ECB-EUR-USD). See
+  \ref{tab:fxindex_data} \\
+
+  Commodity: An identifier specifying the commodity being referenced in the leg.
+% The following needs to move into client-specific documentation of allowable values:
+%The \lstinline!Name! is of the form \lstinline!Prefix:Identifier!. The \lstinline!Prefix! is either \lstinline!PM! for precious metal or a code representing the exchange on which the commodity is traded. For precious metals, the \lstinline!Identifier! is the precious metal code followed by the precious metal price currency. For future contracts, the \lstinline!Identifier! is the exchange code for the future contract.
 Table \ref{tab:commodity_data} lists the allowable values for \lstinline!Name! and gives a description. \\
 \item \lstinline!Weight! [Optional]:
 The relative weight of the underlying if part of a basket. For a single underlying this can be omitted or set to 1. A number between 0 and 1.
@@ -54,17 +109,18 @@ Only valid when type is Equity. The type of the identenfier being used, e.g RIC,
 Only valid when type is Equity. A string code representing the exchange the equity is traded on.
 
 \item \lstinline!PriceType! [Optional]:
-Only valid when type is Commodity. 
+Only valid when type is Commodity.  Spot or FutureSettlemment, depending on whether the Spot or a Future should be referenced.
 
 \item \lstinline!FutureMonthOffset! [Optional]:
-Only valid when type is Commodity.
+Only valid when type is Commodity. Only relevant for the FutureSettlement price type, in which case the the $N+1$th future with
+  expiry greater than ObservationDate for the given commodity underlying will be referenced.
 
 \item \lstinline!DeliveryRollDays! [Optional]:
-Only valid when type is Commodity.
+Only valid when type is Commodity. Optional, defaults to 0. The number of days the observation date is rolled forward before the
+  next future expiry is looked up.
 
 \item \lstinline!DeliveryRollCalendar! [Optional]:
-Only valid when type is Commodity.
+Only valid when type is Commodity. Optional, defaults to null calendar. The calendar used to roll forward the observation date.
 
 
 \end{itemize}
-

@@ -11,6 +11,12 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+Underlying::Underlying(const std::string& type, const std::string& name, const QuantLib::Real weight) : Underlying() {
+    type_ = type;
+    name_ = name;
+    weight_ = weight;
+};
+
 void Underlying::fromXML(XMLNode* node) {
     type_ = XMLUtils::getChildValue(node, "Type", true);
     name_ = XMLUtils::getChildValue(node, "Name", true);
@@ -21,7 +27,7 @@ void Underlying::fromXML(XMLNode* node) {
 }
 
 XMLNode* Underlying::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("Underlying");
+    XMLNode* node = doc.allocNode(nodeName_);
     XMLUtils::addChild(doc, node, "Type", type_);
     XMLUtils::addChild(doc, node, "Name", name_);
     if (weight_ != Null<Real>())
@@ -30,16 +36,17 @@ XMLNode* Underlying::toXML(XMLDocument& doc) {
 }
 
 void BasicUnderlying::fromXML(XMLNode* node) {
-    if (XMLUtils::getNodeName(node) == "Name") {
+    if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
         name_ = XMLUtils::getNodeValue(node);
+        isBasic_ = true;
     } else {
-        QL_FAIL("Need a Name node for BasicUnderlying.");
+        QL_FAIL("Need a " << basicUnderlyingNodeName_ << " node for BasicUnderlying.");
     }
     setType("Basic");
 }
 
 XMLNode* BasicUnderlying::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("Name", name_);
+    XMLNode* node = doc.allocNode(nodeName_, name_);
     return node;
 }
 
@@ -60,9 +67,10 @@ void EquityUnderlying::setEquityName() {
 }
 
 void EquityUnderlying::fromXML(XMLNode* node) {
-    if (XMLUtils::getNodeName(node) == "Name"){
+    if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
         name_ = XMLUtils::getNodeValue(node);
-    } else if (XMLUtils::getNodeName(node) == "Underlying") {
+        isBasic_ = true;
+    } else if (XMLUtils::getNodeName(node) == nodeName_) {
         Underlying::fromXML(node);
         QL_REQUIRE(type_ == "Equity", "Underlying must be of type 'Equity'.");
         identifierType_ = XMLUtils::getChildValue(node, "IdentifierType", false);
@@ -72,16 +80,17 @@ void EquityUnderlying::fromXML(XMLNode* node) {
             exchange_ = XMLUtils::getChildValue(node, "Exchange", false);
         }
         setEquityName();
+        isBasic_ = false;
     } else {
-        QL_FAIL("Need either a Name or Underlying node for EquityUnderlying.");
+        QL_FAIL("Need either a " << basicUnderlyingNodeName_ << " or " << nodeName_ << " for EquityUnderlying.");
     }
     setType("Equity");
 }
 
 XMLNode* EquityUnderlying::toXML(XMLDocument& doc) {
     XMLNode* node;
-    if (equityName_.empty()) {
-        node = doc.allocNode("Name", name_);
+    if (isBasic_) {
+        node = doc.allocNode(basicUnderlyingNodeName_, name_);
     } else {
         node = Underlying::toXML(doc);
         if (!identifierType_.empty())
@@ -95,9 +104,10 @@ XMLNode* EquityUnderlying::toXML(XMLDocument& doc) {
 }
 
 void CommodityUnderlying::fromXML(XMLNode* node) {
-    if (XMLUtils::getNodeName(node) == "Name") {
+    if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
         name_ = XMLUtils::getNodeValue(node);
-    } else if (XMLUtils::getNodeName(node) == "Underlying") {
+        isBasic_ = true;
+    } else if (XMLUtils::getNodeName(node) == nodeName_) {
         Underlying::fromXML(node);
         QL_REQUIRE(type_ == "Commodity", "Underlying must be of type 'Commodity'.");
         priceType_ = XMLUtils::getChildValue(node, "PriceType", false);
@@ -110,6 +120,7 @@ void CommodityUnderlying::fromXML(XMLNode* node) {
         else
             deliveryRollDays_ = Null<Size>();
         deliveryRollCalendar_ = XMLUtils::getChildValue(node, "DeliveryRollCalendar", false);
+        isBasic_ = false;
     } else {
         QL_FAIL("Need either a Name or Underlying node for CommodityUnderlying.");
     }
@@ -118,23 +129,29 @@ void CommodityUnderlying::fromXML(XMLNode* node) {
 
 XMLNode* CommodityUnderlying::toXML(XMLDocument& doc) {
     XMLNode* node;
-    node = Underlying::toXML(doc);
-    if (!priceType_.empty())
-        XMLUtils::addChild(doc, node, "PriceType", priceType_);
-    if (futureMonthOffset_ != Null<Size>())
-        XMLUtils::addChild(doc, node, "FutureMonthOffset", (int)futureMonthOffset_);
-    if (deliveryRollDays_ != Null<Size>())
-        XMLUtils::addChild(doc, node, "DeliveryRollDays", (int)deliveryRollDays_);
-    if (!deliveryRollCalendar_.empty())
-        XMLUtils::addChild(doc, node, "DeliveryRollCalendar", deliveryRollCalendar_);
+    if (isBasic_) {
+        node = doc.allocNode(basicUnderlyingNodeName_, name_);
+    } else {
+        node = Underlying::toXML(doc);
+        if (!priceType_.empty())
+            XMLUtils::addChild(doc, node, "PriceType", priceType_);
+        if (futureMonthOffset_ != Null<Size>())
+            XMLUtils::addChild(doc, node, "FutureMonthOffset", (int)futureMonthOffset_);
+        if (deliveryRollDays_ != Null<Size>())
+            XMLUtils::addChild(doc, node, "DeliveryRollDays", (int)deliveryRollDays_);
+        if (!deliveryRollCalendar_.empty())
+            XMLUtils::addChild(doc, node, "DeliveryRollCalendar", deliveryRollCalendar_);
+    }
     return node;
 }
 
 void FXUnderlying::fromXML(XMLNode* node) {
-    if (XMLUtils::getNodeName(node) == "Name") {
+    if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
         name_ = XMLUtils::getNodeValue(node);
-    } else if (XMLUtils::getNodeName(node) == "Underlying") {
+        isBasic_ = true;
+    } else if (XMLUtils::getNodeName(node) == nodeName_) {
         Underlying::fromXML(node);
+        isBasic_ = false;
     } else {
         QL_FAIL("Need either a Name or Underlying node for FXUnderlying.");
     }
@@ -143,16 +160,19 @@ void FXUnderlying::fromXML(XMLNode* node) {
 
 XMLNode* FXUnderlying::toXML(XMLDocument& doc) {
     XMLNode* node;
-    node = Underlying::toXML(doc);
+    if (isBasic_) {
+        node = doc.allocNode(basicUnderlyingNodeName_, name_);
+    } else {
+        node = Underlying::toXML(doc);
+    }
     return node;
 }
 
-void UnderlyingBuilder::fromXML(XMLNode* node) {    
-    if (XMLUtils::getNodeName(node) == "Name") {
+void UnderlyingBuilder::fromXML(XMLNode* node) {
+    if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
         underlying_ = boost::make_shared<BasicUnderlying>();
-    } else if (XMLUtils::getNodeName(node) == "Underlying") {
+    } else if (XMLUtils::getNodeName(node) == nodeName_) {
         string type = XMLUtils::getChildValue(node, "Type", true);
-
         if (type == "Equity")
             underlying_ = boost::make_shared<EquityUnderlying>();
         else if (type == "Commodity")
@@ -162,15 +182,16 @@ void UnderlyingBuilder::fromXML(XMLNode* node) {
         else {
             QL_FAIL("Unknown Underlying type " << type);
         }
-        underlying_->fromXML(node);
     } else {
-        QL_FAIL("Need either a Name or Underlying node for Underlying.");
+        QL_FAIL("Need either a " << basicUnderlyingNodeName_ << " or " << nodeName_ << " node for Underlying.");
     }
+    QL_REQUIRE(underlying_ != nullptr, "UnderlyingBuilder: underlying_ is null, this is unexpected");
+    underlying_->setNodeName(nodeName_);
+    underlying_->setBasicUnderlyingNodeName(basicUnderlyingNodeName_);
+    underlying_->fromXML(node);
 }
 
-XMLNode* UnderlyingBuilder::toXML(XMLDocument& doc) {
-    return NULL;
-}
+XMLNode* UnderlyingBuilder::toXML(XMLDocument& doc) { return NULL; }
 
 } // namespace data
-} // namespace oreplus
+} // namespace ore
