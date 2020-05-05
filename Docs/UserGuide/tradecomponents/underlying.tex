@@ -124,19 +124,19 @@ Only valid when \lstinline!Type! is  \emph{Equity}. The type of the identifier b
 
 Allowable values:  \emph{RIC}, \emph{ISIN}. Defaults to \emph{RIC}, if left blank or omitted, and \lstinline!Type!: is  \emph{Equity}.
 
-\item \lstinline!Currency! [Optional]: Only valid when \lstinline!Type! is  \emph{Equity}. The currency the underlying equity is quoted in. Used when \lstinline!IdentifierType!: is  \emph{ISIN}, to - together with the \lstinline!Exchange!  convert a given ISIN to a RIC code.  
+\item \lstinline!Currency! [Optional]: Only valid when \lstinline!Type! is  \emph{Equity}. The currency the underlying equity is quoted in. Used when \lstinline!IdentifierType! is  \emph{ISIN}, to - together with the \lstinline!Exchange!  convert a given ISIN to a RIC code.  
 
-Allowable values: See the \lstinline!Currency! section in Table \ref{tab:allow_stand_data}. Mandatory when \lstinline!IdentifierType!: is  \emph{ISIN}
+Allowable values: See the \lstinline!Currency! section in Table \ref{tab:allow_stand_data}. Mandatory when \lstinline!IdentifierType! is  \emph{ISIN}
 
 \item \lstinline!Exchange! [Optional]:
-Only valid when \lstinline!Type! is  \emph{Equity}. A string code representing the exchange the equity is traded on. Used when \lstinline!IdentifierType!: is  \emph{ISIN}, to - together with the \lstinline!Currency!  convert a given ISIN to a RIC code.  
+Only valid when \lstinline!Type! is  \emph{Equity}. A string code representing the exchange the equity is traded on. Used when \lstinline!IdentifierType! is  \emph{ISIN}, to - together with the \lstinline!Currency!  convert a given ISIN to a RIC code.  
 
-Allowable values: Typically the MIC code of the exchange itself, or the Operating/parent MIC code. Mandatory when \lstinline!IdentifierType!: is  \emph{ISIN}
+Allowable values: Typically the MIC code of the exchange itself, or the Operating/parent MIC code. Mandatory when \lstinline!IdentifierType! is  \emph{ISIN}
 
 \item \lstinline!PriceType! [Optional]:
 Only valid when  \lstinline!Type! is  \emph{Commodity}.  Whether the Spot or Future price is referenced. 
 
-Allowable values:  \emph{Spot}, \emph{FutureSettlemment}. Mandatory for when  \lstinline!Type! is  \emph{Commodity} .
+Allowable values:  \emph{Spot}, \emph{FutureSettlemment}. Mandatory when  \lstinline!Type! is  \emph{Commodity} .
 
 \item \lstinline!FutureMonthOffset! [Optional]:
 Only valid when  \lstinline!Type! is  \emph{Commodity}. Only relevant for the \emph{FutureSettlemment} price type, in which case the the $N+1$th future with
