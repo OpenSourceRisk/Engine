@@ -25,7 +25,7 @@ For an equity underlying a string representation is used to match \lstinline!Und
 \label{lst:underlying}
 \end{listing}
 
-An example structure of the \lstinline!Underlying! trade component node is shown in Listing \ref{lst:equnderlying} for
+Example structures of the \lstinline!Underlying! trade component node are shown in Listings \ref{lst:equnderlyingric} and \ref{lst:equnderlyingisin} for
 an equity underlying, in Listing \ref{lst:fxunderlying} for an fx underlying and in Listing \ref{lst:communderlying} for
 a commodity underlying.
 
@@ -39,8 +39,24 @@ a commodity underlying.
             <IdentifierType>RIC</IdentifierType>
         </Underlying>
 \end{minted}
-\caption{Equity Underlying}
-\label{lst:equnderlying}
+\caption{Equity Underlying - RIC}
+\label{lst:equnderlyingric}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <Underlying>
+            <Type>Equity</Type>
+            <Name>GB00BH4HKS39</Name>
+            <Weight>1.0</Weight>
+            <IdentifierType>ISIN</IdentifierType>
+            <Currency>GBP</Currency>
+	    <Exchange>XLON</Exchange>
+        </Underlying>
+\end{minted}
+\caption{Equity Underlying - ISIN}
+\label{lst:equnderlyingisin}
 \end{listing}
 
 \begin{listing}[H]
@@ -78,49 +94,65 @@ The meanings and allowable values of the elements in the \lstinline!Underlying! 
 
 \begin{itemize}
 
-\item \lstinline!Type!:
-The type of the Underlying asset, valid entries are \lstinline!Equity!, \lstinline!FX!, \lstinline!Commodity!.
+\item \lstinline!Type!: The type of the Underlying asset.
+
+  Allowable values:  \emph{Equity}, \emph{FX}, \emph{Commodity}.
 
 \item \lstinline!Name!:
-  The name of the Underlying asset. \\
-  Allowable values:  \\
+  The name of the Underlying asset. 
+  
+  Allowable values:  
 
   Equity: See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data} \\
 
   Fx: A string on the form SOURCE-CCY1-CCY2, where SOURCE is ECB (European Central Bank) for EUR pairs or TR20H (Thomson
   Reuters 20H) for USD pairs. For ECB CCY1 should always be EUR, and for TR20H CCY1 should always be USD, except for
-  TR20H-GBP-USD, FX-TR20H-AUD-USD and FX-TR20H-NZD-USD. For the USD-EUR pair, ECB is used (ECB-EUR-USD). See
-  \ref{tab:fxindex_data} \\
+  TR20H-GBP-USD, FX-TR20H-AUD-USD and FX-TR20H-NZD-USD. For the USD-EUR pair, ECB is used (ECB-EUR-USD). See Table
+  \ref{tab:fxindex_data}
 
   Commodity: An identifier specifying the commodity being referenced in the leg.
 % The following needs to move into client-specific documentation of allowable values:
 %The \lstinline!Name! is of the form \lstinline!Prefix:Identifier!. The \lstinline!Prefix! is either \lstinline!PM! for precious metal or a code representing the exchange on which the commodity is traded. For precious metals, the \lstinline!Identifier! is the precious metal code followed by the precious metal price currency. For future contracts, the \lstinline!Identifier! is the exchange code for the future contract.
 Table \ref{tab:commodity_data} lists the allowable values for \lstinline!Name! and gives a description. \\
 \item \lstinline!Weight! [Optional]:
-The relative weight of the underlying if part of a basket. For a single underlying this can be omitted or set to 1. A number between 0 and 1.
+The relative weight of the underlying if part of a basket. For a single underlying this can be omitted or set to 1. 
 
-\item \lstinline!Currency! [Optional]:
-The currency of the underlying. The \lstinline!Currency! section in Table \ref{tab:allow_stand_data} provides the allowable values.
+Allowable values: A number between 0 and 1. Defaults to 1 if left blank or omitted
 
 \item \lstinline!IdentifierType! [Optional]:
-Only valid when type is Equity. The type of the identenfier being used, e.g RIC, ISIN etc.
+Only valid when \lstinline!Type! is  \emph{Equity}. The type of the identifier being used.  
+
+Allowable values:  \emph{RIC}, \emph{ISIN}. Defaults to \emph{RIC}, if left blank or omitted, and \lstinline!Type!: is  \emph{Equity}.
+
+\item \lstinline!Currency! [Optional]: Only valid when \lstinline!Type! is  \emph{Equity}. The currency the underlying equity is quoted in. Used when \lstinline!IdentifierType! is  \emph{ISIN}, to - together with the \lstinline!Exchange!  convert a given ISIN to a RIC code.  
+
+Allowable values: See the \lstinline!Currency! section in Table \ref{tab:allow_stand_data}. Mandatory when \lstinline!IdentifierType! is  \emph{ISIN}
 
 \item \lstinline!Exchange! [Optional]:
-Only valid when type is Equity. A string code representing the exchange the equity is traded on.
+Only valid when \lstinline!Type! is  \emph{Equity}. A string code representing the exchange the equity is traded on. Used when \lstinline!IdentifierType! is  \emph{ISIN}, to - together with the \lstinline!Currency!  convert a given ISIN to a RIC code.  
+
+Allowable values: Typically the MIC code of the exchange itself, or the Operating/parent MIC code. Mandatory when \lstinline!IdentifierType! is  \emph{ISIN}
 
 \item \lstinline!PriceType! [Optional]:
-Only valid when type is Commodity.  Spot or FutureSettlemment, depending on whether the Spot or a Future should be referenced.
+Only valid when  \lstinline!Type! is  \emph{Commodity}.  Whether the Spot or Future price is referenced. 
+
+Allowable values:  \emph{Spot}, \emph{FutureSettlemment}. Mandatory when  \lstinline!Type! is  \emph{Commodity} .
 
 \item \lstinline!FutureMonthOffset! [Optional]:
-Only valid when type is Commodity. Only relevant for the FutureSettlement price type, in which case the the $N+1$th future with
+Only valid when  \lstinline!Type! is  \emph{Commodity}. Only relevant for the \emph{FutureSettlemment} price type, in which case the the $N+1$th future with
   expiry greater than ObservationDate for the given commodity underlying will be referenced.
 
+Allowable values:  An integer. Mandatory for when  \lstinline!Type! is  \emph{Commodity} and \lstinline!PriceType! is \emph{FutureSettlemment}.
+
 \item \lstinline!DeliveryRollDays! [Optional]:
-Only valid when type is Commodity. Optional, defaults to 0. The number of days the observation date is rolled forward before the
+Only valid when  \lstinline!Type! is  \emph{Commodity}.  The number of days the observation date is rolled forward before the
   next future expiry is looked up.
+  
+Allowable values: An integer. Defaults to 0 if left blank or omitted, and \lstinline!Type!: is  \emph{Commodity}.
 
 \item \lstinline!DeliveryRollCalendar! [Optional]:
-Only valid when type is Commodity. Optional, defaults to null calendar. The calendar used to roll forward the observation date.
+Only valid when  \lstinline!Type! is  \emph{Commodity}.  The calendar used to roll forward the observation date.
 
+Allowable values: See Table \ref{tab:calendar}. Defaults to the null calendar if left blank or omitted, and \lstinline!Type!: is  \emph{Commodity}.
 
 \end{itemize}

@@ -40,6 +40,12 @@ using boost::unit_test::framework::master_test_suite;
 #ifdef BOOST_MSVC
 #include <ql/auto_link.hpp>
 #include <qle/auto_link.hpp>
+#define BOOST_LIB_NAME boost_system
+#include <boost/config/auto_link.hpp>
+#define BOOST_LIB_NAME boost_timer
+#include <boost/config/auto_link.hpp>
+#define BOOST_LIB_NAME boost_chrono
+#include <boost/config/auto_link.hpp>
 #endif
 
 class QleGlobalFixture {
