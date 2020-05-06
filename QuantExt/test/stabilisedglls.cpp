@@ -23,6 +23,7 @@
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/types.hpp>
 #include <qle/math/stabilisedglls.hpp>
+#include <ql/version.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
@@ -1126,11 +1127,11 @@ BOOST_AUTO_TEST_CASE(test2DRegression) {
     }
 
 #if QL_HEX_VERSION > 0x01150000
-    std::vector<ext::function<Real(Array)> > basis =
+    std::vector<ext::function<Real(Array)> > basis = LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
 #else // QL 1.14 and below
-    std::vector<boost::function1<Real, Array> > basis =
+    std::vector<boost::function1<Real, Array> > basis = LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
 #endif
-        LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
+        
 
     StabilisedGLLS m(x, y, basis, StabilisedGLLS::MaxAbs);
     StabilisedGLLS mb(x, y, basis, StabilisedGLLS::MeanStdDev);

@@ -128,12 +128,13 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
     for (Size k = 0; k < trades.size(); k++) {
-        if (trades[k]->tradeType() == "Swaption" || trades[k]->tradeType() == "CapFloor") {
-            WLOG("cashflow for " << trades[k]->tradeType() << " " << trades[k]->id() << " skipped");
-            continue;
-        }
         try {
             const vector<Leg>& legs = trades[k]->legs();
+            if (legs.size() == 0) {
+                WLOG("cashflow report for " << trades[k]->tradeType() << " " << trades[k]->id()
+                                            << " skipped, no legs contained in trade.");
+                continue;
+            }
             for (size_t i = 0; i < legs.size(); i++) {
                 const QuantLib::Leg& leg = legs[i];
                 bool payer = trades[k]->legPayers()[i];

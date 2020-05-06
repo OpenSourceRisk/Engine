@@ -16,24 +16,24 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file france.hpp
-    \brief French calendar
+/*! \file austria.hpp
+    \brief Austrian calendar
 */
-#ifndef quantlib_france_calendar_hpp
+#ifndef quantlib_austria_calendar_hpp
 
-#ifndef quantext_french_calendar_hpp
-#define quantext_french_calendar_hpp
+#ifndef quantext_austrian_calendar_hpp
+#define quantext_austrian_calendar_hpp
 
 #include <ql/time/calendar.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
-class France : public Calendar {
+class Austria : public Calendar {
 private:
     class SettlementImpl : public Calendar::WesternImpl {
     public:
-        std::string name() const { return "French settlement"; }
+        std::string name() const { return "Austrian settlement"; }
         bool isBusinessDay(const Date&) const;
     };
 
@@ -41,7 +41,7 @@ public:
     enum Market {
         Settlement // generic settlement calendar
     };
-    France(Market m = Settlement);
+    Austria(Market m = Settlement);
 };
 
 } // namespace QuantExt

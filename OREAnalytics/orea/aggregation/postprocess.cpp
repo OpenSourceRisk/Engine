@@ -21,6 +21,7 @@
 #include <ored/utilities/vectorutils.hpp>
 #include <ql/errors.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
+#include <ql/version.hpp>
 
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
@@ -1099,12 +1100,13 @@ void PostProcess::dynamicInitialMargin() {
     LsmBasisSystem::PolynomType polynomType = LsmBasisSystem::Monomial;
     Size regressionDimension = dimRegressors_.empty() ? 1 : dimRegressors_.size();
     LOG("DIM regression dimension = " << regressionDimension);
+
 #if QL_HEX_VERSION > 0x01150000
-    std::vector<ext::function<Real(Array)>> v(
+    std::vector<ext::function<Real(Array)>> v(LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
 #else // QL 1.14 and below
-    std::vector<boost::function1<Real, Array>> v(
+    std::vector<boost::function1<Real, Array>> v(LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
 #endif
-        LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
+
     Real confidenceLevel = QuantLib::InverseCumulativeNormal()(dimQuantile_);
     LOG("DIM confidence level " << confidenceLevel);
 
