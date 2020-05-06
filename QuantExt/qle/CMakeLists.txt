@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt_SRC calendars/chile.cpp
+set(QuantExt_SRC calendars/austria.cpp
+calendars/chile.cpp
 calendars/colombia.cpp
 calendars/france.cpp
 calendars/malaysia.cpp
