@@ -25,13 +25,15 @@ namespace data {
 
 void Indexing::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Indexing");
-    if(auto n = XMLUtils::getChildNode(node, "Quantity")) {
+    if (auto n = XMLUtils::getChildNode(node, "Quantity")) {
         quantity_ = parseReal(XMLUtils::getNodeValue(n));
-    }
-    else {
+    } else {
         quantity_ = 1.0;
     }
     index_ = XMLUtils::getChildValue(node, "Index", false);
+    // defaults to 0
+    indexFixingDays_ = XMLUtils::getChildValueAsInt(node, "IndexFixingDays", false);
+    indexFixingCalendar_ = XMLUtils::getChildValue(node, "IndexFixingCalendar", false);
     initialFixing_ = Null<Real>();
     if (auto n = XMLUtils::getChildNode(node, "InitialFixing"))
         initialFixing_ = parseReal(XMLUtils::getNodeValue(n));
@@ -52,6 +54,8 @@ XMLNode* Indexing::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Indexing");
     XMLUtils::addChild(doc, node, "Quantity", quantity_);
     XMLUtils::addChild(doc, node, "Index", index_);
+    XMLUtils::addChild(doc, node, "IndexFixingDays", static_cast<int>(indexFixingDays_));
+    XMLUtils::addChild(doc, node, "IndexFixingCalendar", indexFixingCalendar_);
     if (initialFixing_ != Null<Real>())
         XMLUtils::addChild(doc, node, "InitialFixing", initialFixing_);
     if (valuationSchedule_.hasData()) {

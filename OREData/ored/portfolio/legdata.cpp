@@ -1652,6 +1652,7 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                    std::map<std::string, std::string>& qlToOREIndexNames) {
     for (auto const& indexing : data.indexing()) {
         if (indexing.hasData()) {
+            DLOG("apply indexing (index='" << indexing.index() << "') to leg of type " << data.legType());
             QL_REQUIRE(engineFactory, "applyIndexing: engineFactory required");
 
             // we allow indexing by equity, commodity and FX indices (technically any QuantLib::Index
@@ -1679,8 +1680,8 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                 std::string domestic = data.currency();
                 std::string foreign = ccy1.code() == domestic ? ccy2.code() : ccy1.code();
                 index = buildFxIndex(indexing.index(), domestic, foreign, engineFactory->market(),
-                                     engineFactory->configuration(MarketContext::pricing), indexing.fixingCalendar(),
-                                     indexing.fixingDays());
+                                     engineFactory->configuration(MarketContext::pricing), indexing.indexFixingCalendar(),
+                                     indexing.indexFixingDays());
             } else if (boost::starts_with(indexing.index(), "COMM-")) {
                 auto tmp = parseCommodityIndex(indexing.index());
                 index =
@@ -1689,6 +1690,8 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             } else {
                 QL_FAIL("invalid index '" << indexing.index() << "' in indexing data, expected EQ-, FX-, COMM- index");
             }
+
+            QL_REQUIRE(index, "applyIndexing(): index is null, this is unexpected");
 
             // apply the indexing
             IndexedCouponLeg indLeg(leg, indexing.quantity(), index);

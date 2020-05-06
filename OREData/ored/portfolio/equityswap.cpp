@@ -25,15 +25,10 @@
 namespace ore {
 namespace data {
 
-EquitySwap::EquitySwap(const Envelope& env, const vector<LegData>& legData) : Swap(env, legData, "EquitySwap") {
-    checkEquitySwap(legData);
-}
+EquitySwap::EquitySwap(const Envelope& env, const vector<LegData>& legData) : Swap(env, legData, "EquitySwap") {}
 
 EquitySwap::EquitySwap(const Envelope& env, const LegData& leg0, const LegData& leg1)
-    : Swap(env, leg0, leg1, "EquitySwap") {
-    vector<LegData> legData = {leg0, leg1};
-    checkEquitySwap(legData);
-}
+    : Swap(env, leg0, leg1, "EquitySwap") {}
 
 void EquitySwap::checkEquitySwap(const vector<LegData>& legData) {
     // An Equity Swap must have 2 legs - 1 an Equity Leg and the other an IR Leg either Fixed or Floating
@@ -51,6 +46,11 @@ void EquitySwap::checkEquitySwap(const vector<LegData>& legData) {
 }
 
 void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+
+    DLOG("EquitySwap::build() called for " << id());
+
+    checkEquitySwap(legData_);
+
     /* before we build the equity swap we modify the leg data according to these rules:
        1) if the IR leg has an indexing without an index given, we set this to the EQ index from the equity leg
        2) if the IR leg has an equity indexing, but no notional, we add a notional node with notional = 1
@@ -68,47 +68,51 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // loop over the indexings of the ir leg (if any) and modify them according to the rules above
 
-    Leg tmpEqLeg;
     auto eqLegData = boost::dynamic_pointer_cast<EquityLegData>(legData_[equityLegIndex_].concreteLegData());
     QL_REQUIRE(eqLegData, "could not cast to EquityLegData for equity leg in equity swap, this is unexpected");
+    std::vector<string> valuationDates;
 
     for (auto& i : legData_[irLegIndex_].indexing()) {
 
         // apply rule 1 from above
         if (i.hasData() && i.index().empty()) {
+            DLOG("adding index from equity leg '" << eqLegData->eqName() << "' to Indexing node on IR leg");
             i.index() = "EQ-" + eqLegData->eqName();
         }
 
         // apply rule 2 from above
         if (i.hasData() && boost::starts_with(i.index(), "EQ-")) {
             if (i.initialFixing() == Null<Real>() && eqLegData->initialPrice() != Null<Real>()) {
+                DLOG("adding initial fixing from equity leg (" << eqLegData->initialPrice()
+                                                               << ") to equity Indexing node on IR leg");
                 i.initialFixing() = eqLegData->initialPrice();
             }
         }
 
         // apply rule 3 from above
         if (i.hasData() && boost::starts_with(i.index(), "EQ-") && legData_[irLegIndex_].notionals().empty()) {
+            DLOG("adding notional = 1 to equity Indexing node on IR leg");
             legData_[irLegIndex_].notionals() = std::vector<Real>(1, 1.0);
         }
 
         // apply rule 4 from above
         if (i.hasData() && !i.valuationSchedule().hasData()) {
-            std::vector<string> dates;
+            DLOG("adding explicit valuation schedule to Indexing node (index = " << i.index() << ") on IR leg");
             // build the equity leg, if we don't have it yet
-            if (!tmpEqLeg.empty()) {
+            if (valuationDates.empty()) {
                 auto legBuilder = engineFactory->legBuilder(legData_[equityLegIndex_].legType());
                 RequiredFixings dummy;
-                tmpEqLeg = legBuilder->buildLeg(legData_[equityLegIndex_], engineFactory, dummy,
-                                                engineFactory->configuration(MarketContext::pricing));
+                Leg tmpEqLeg = legBuilder->buildLeg(legData_[equityLegIndex_], engineFactory, dummy,
+                                                    engineFactory->configuration(MarketContext::pricing));
+                for (Size i = 0; i < tmpEqLeg.size(); ++i) {
+                    auto eqCpn = boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(tmpEqLeg[i]);
+                    QL_REQUIRE(eqCpn, "EquitySwap::build(): expected EquityCoupon on equity leg, this is unexpected");
+                    valuationDates.push_back(ore::data::to_string(eqCpn->fixingStartDate()));
+                    if (i == tmpEqLeg.size() - 1)
+                        valuationDates.push_back(ore::data::to_string(eqCpn->fixingEndDate()));
+                }
             }
-            for (Size i = 0; i < tmpEqLeg.size(); ++i) {
-                auto eqCpn = boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(tmpEqLeg[i]);
-                QL_REQUIRE(eqCpn, "EquitySwap::build(): expected EquityCoupon on equity leg, this is unexpected");
-                dates.push_back(ore::data::to_string(eqCpn->fixingStartDate()));
-                if (i == tmpEqLeg.size() - 1)
-                    dates.push_back(ore::data::to_string(eqCpn->fixingEndDate()));
-            }
-            i.valuationSchedule() = ScheduleData(ScheduleDates("", "", "", dates, ""));
+            i.valuationSchedule() = ScheduleData(ScheduleDates("", "", "", valuationDates, ""));
             i.fixingDays() = 0;
             i.fixingCalendar() = "";
             i.fixingConvention() = "U";
