@@ -53,15 +53,20 @@ FX index and index fixing days and calendar.
     <LegData>
       <LegType>Floating</LegType>
       <Currency>USD</Currency>
+      <!-- Notionals node is not required, set to 1 internally -->
       ...
       <Indexings>
-        <Indexing>
+      <Indexing>
           <Quantity>1000</Quantity>
+          <!-- index RIC:.STOXX50E is taken from equity leg -->
+          <!-- initial fixing is taken from equity leg -->
+          <!-- valuation dates are taken from equity leg -->
         </Indexing>
         <Indexing>
           <Index>FX-ECB-EUR-USD</Index>
           <IndexFixingDays>2</IndexFixingDays>
           <IndexFixingCalendar>EUR,USD</IndexFixingCalendar>
+          <!-- valuation dates are taken from equity leg -->
         </Indexing>
       </Indexings>
     </LegData>
