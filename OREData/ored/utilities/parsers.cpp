@@ -463,6 +463,9 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
         // Try to split them up
         vector<string> calendarNames;
         split(calendarNames, s, boost::is_any_of(",()")); // , is delimiter, the brackets may arise if joint calendar
+        // if we have only one token, we won't make progress and exit here to avoid an infinite loop by calling
+        // parseCalendar() recursively below
+        QL_REQUIRE(calendarNames.size() > 1, "Cannot convert \"" << s << "\" to calendar");
         // now remove any leading strings indicating a joint calendar
         calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinHolidays"),
                             calendarNames.end());
