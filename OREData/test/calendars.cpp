@@ -21,6 +21,8 @@
 #include <ored/utilities/parsers.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <ql/time/calendars/all.hpp>
+#include <qle/calendars/austria.hpp>
+#include <qle/calendars/france.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/malaysia.hpp>
@@ -59,7 +61,9 @@ ostream& operator<<(ostream& os, const TestDatum& testDatum) {
 
 TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"EUR", TARGET()},
-                            {"CHF", QuantExt::Switzerland()},
+			    {"ATS", Austria()},
+                            {"FRF", France()},
+			    {"CHF", QuantExt::Switzerland()},
                             {"USD", UnitedStates()},
                             {"GBP", UnitedKingdom()},
                             {"CAD", Canada()},
