@@ -1,4 +1,5 @@
 \subsubsection{Equity Swap}
+\label{ss:equity_swap}
 
 An Equity Swap uses its own trade type  \emph{EquitySwap}, and is set up using a {\tt EquitySwapData} node with one leg of type  \emph{Equity} and one more leg that can be either \emph{Fixed} or  \emph{Floating}. Listing \ref{lst:equityswap} shows an example. The
 Equity leg contains an additional {\tt EquityLegData} block. See \ref{ss:equitylegdata} for details on the Equity leg specification.
@@ -24,4 +25,66 @@ Equity leg contains an additional {\tt EquityLegData} block. See \ref{ss:equityl
 \end{minted}
 \caption{Equity Swap Data}
 \label{lst:equityswap}
+\end{listing}
+
+If the equity swap has a resetting notional, typically the funding leg's notional will be aligned with the equity leg's
+notional. To achieve this, indexings on the floating leg can be used, see \ref{ss:indexings}. In the context of equity
+swaps the indexings can be defined in a simplified way:
+
+\begin{itemize}
+\item the Index node can be omitted in the Indexing definition for the equity price scaling on the funding leg, in which
+  case the equity index identifier is copied to the funding leg from the equity leg
+\item the Notionals node on the funding leg can be omitted, in which case it is filled with a single notional of 1
+\item the InitialFixing in the equity Indexing defintion is set to the equity leg InitialPrice if the latter is given
+  and the former is not given
+\item the valuation schedule for all indexings on the funding leg can be omitted, in which case the relevant fixing
+  dates from the equity leg are copied to the funding leg and the fields FixingDays, FixingCalendar, FixingConvention
+  and IsInArrears are reset to the default values to ensure that the equity leg's fixing dates are preserved
+\end{itemize}
+
+Listing \ref{lst:equityswap_reset} shows an example for an equity swap with notional reset, equity ccy = EUR and funding
+ccy = USD. The equity indexing definition on the funding leg only requires the Quantity, the FX indexing definition the
+FX index and index fixing days and calendar.
+
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <SwapData>
+    <LegData>
+      <LegType>Floating</LegType>
+      <Currency>USD</Currency>
+      ...
+      <Indexings>
+        <Indexing>
+          <Quantity>1000</Quantity>
+        </Indexing>
+        <Indexing>
+          <Index>FX-ECB-EUR-USD</Index>
+          <IndexFixingDays>2</IndexFixingDays>
+          <IndexFixingCalendar>EUR,USD</IndexFixingCalendar>
+        </Indexing>
+      </Indexings>
+    </LegData>
+    <LegData>
+      <LegType>Equity</LegType>
+      <Currency>USD</Currency>
+      ...
+      <EquityLegData>
+        <Quantity>1000</Quantity>
+        <Name>RIC:.STOXX50E</Name>
+        <InitialPrice>2937.36</InitialPrice>
+        <NotionalReset>true</NotionalReset>
+        <FXTerms>
+          <EquityCurrency>EUR</EquityCurrency>
+          <FXIndex>FX-ECB-EUR-USD</FXIndex>
+          <FXIndexFixingDays>2</FXIndexFixingDays>
+          <FXIndexCalendar>EUR,USD</FXIndexCalendar>
+        </FXTerms>
+      </EquityLegData>
+      ...
+    </LegData>
+  </SwapData>
+\end{minted}
+\caption{Equity Swap Data with notional reset and FX indexing}
+\label{lst:equityswap_reset}
 \end{listing}

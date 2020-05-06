@@ -1,0 +1,125 @@
+\subsubsection{Indexings}
+\label{ss:indexings}
+
+This trade component can be used as an optional node within the LegData component to scale the notional of the coupons
+of a leg by one or several index prices. This feature is typically used within equity swaps with notional reset to align
+the notional of the funding leg with the one from the equity leg for all return periods. See \ref{ss:equity_swap} for
+the specific usage in equity swaps. In what follows we describe the general structure of this component within an
+arbitrary LegData node. The Indexing component can be used in combination with the following leg types:
+
+\begin{itemize}
+\item Fixed
+\item Floating
+\item CMS
+\item CMSSpread
+\item DigitalCMSSpread
+\end{itemize}
+
+If specified the notional of the single coupons in the leg is scaled by one or several index prices and a quantity. The
+indices can be equity or FX indices. Notice that if notional exchanges are enabled on a leg with Indexings defined, the
+notional exchanges are {\em not} influenced by the indexing definitions. In general we assume that notional exchanges
+are not enabled in combination with indexings, but it is not forbidden technically. Listing \ref{lst:indexings} shows an
+example of an Floating leg indexed by both an equity price and a FX rate.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<LegData>
+    <LegType>Floating</LegType>
+    <Notionals> ... </Notionals>
+    <ScheduleData> ... </ScheduleData>
+    <Indexings>
+        <Indexing>
+            <Quantity>1000</Quantity>
+            <Index>EQ-RIC:.STOXX50E</Index>
+            <InitialFixing>2937.36</InitialFixing>
+            <ValuationSchedule>
+              <Dates>...</Dates>
+              <Rules>...</Rules>
+            </ValuationSchedule>
+            <FixingDays>0</FixingDays>
+            <FixingCalendar/>
+            <FixingConvention>U</FixingConvention>
+            <IsInArrears>false</IsInArrears>
+        </Indexing>
+        <Indexing>
+            <Index>FX-ECB-EUR-USD</Index>
+            <IndexFixingDays>2</IndexFixingDays>
+            <IndexFixingCalendar>EUR,USD</IndexFixingCalendar>
+            <InitialFixing>1.1469</InitialFixing>
+            <ValuationSchedule> ... </ValuationSchedule>
+            <FixingDays>0</FixingDays>
+            <FixingCalendar/>
+            <FixingConvention>U</FixingConvention>
+            <IsInArrears>false</IsInArrears>
+        </Indexing>
+    </Indexings>
+    <FloatingLegData> ... </FloatingLegData>
+</LegData>
+\end{minted}
+\caption{Indexings node}
+\label{lst:indexings}
+\end{listing}
+
+The meanings and allowable values of the elements in each of the \lstinline!Indexing! nodes are as follows:
+
+\begin{itemize}
+
+\item Quantity [Optional, defaults to 1]: The quantity that applies. For equity that should be the number of shares, for
+  FX it should be 1, i.e. for FX this field can be omitted. The notional of each coupon is
+  in general determined as\\
+  Original Coupon Notional x Quantity x Equity Price x FX Rate\\
+  depending on which indexing types are given. Typically, the original coupon notional will be set to 1.
+
+  Allowable values: any number.
+
+\item Index: The relevant index. This is either an equity or FX index. For an FX index, one of the currencies of the
+  index must match the leg currency. It is then ensured that the FX conversion is applied using the correct direction,
+  i.e. if the foreign currency of the index matches the leg currency, the reciprocals of the index fixings are used as a
+  multiplier.
+
+  Allowable values: This is ``FX-SOURCE-CCY1-CCY'' for FX, see \ref{ss:underlying} and \ref{tab:fxindex_data} for
+  details, or ``EQ-NAME'' for Equity with ``Name'' being the general string representation for equity underlyings
+  {IdentifierType}:{Name}:{Currency}:{Exchange}, see \ref{ss:underlying}.
+
+\item IndexFixingDays [Optional, defaults to 0]: fixing days of the index, this is only used for FX indices
+
+  Allowable values: non-negative whole number
+
+\item IndexFixingCalendar [Optional, defaults to NullCalendar (no holidays)]: fixing calendar of the index, this is only
+  used for FX indices
+
+  Allowable values: any valid calendar
+
+\item InitialFixing [Optional]: If given the index fixing value to apply on the fixing date of the first coupon. If not
+  given the value is read from the relevant fixing history.
+
+  Allowable values: any number
+
+\item ValuationSchedule [Optional]: If given the schedule from which the fixing dates are deduced. If not given, it
+  defaults to the original leg's schedule. The $i$th fixing date is derived from the $i$th (inArrears = false) or
+  $i+1$th (inArrears = true) date in the valuation schedule using the FixingDays, FixingCalendar and FixingConvention.
+
+  Allowable values: a valid schedule definition, see \ref{ss:schedule_data}
+
+\item FixingDays [Optional, defaults to 0]: If given defines the number of fixing days to apply when deriving the fixing
+  dates from the valuation schedule (see above).
+
+  Allowable values: any non-negative whole number
+
+\item FixingCalendar [Optional, defaults to NullCalendar (no holidays): If given defines the fixing calendar to use when
+  deriving the fixing dates from the valuation schedule (see above).
+
+  Allowable values: any valid calendar
+
+\item FixingConvention [Optional, defaults to Preceding]: If given defines the business day convention to use when
+  deriving the fixing dates from the valuation schedule (see above).
+
+  Allowable values: any valid business day convention (F, MF, P, MP, U)
+
+\item IsInArrears [Optional, defaults to false]: If true, the fixing dates are derived from the period end dates,
+  otherwise from the period start dates as described for ValuationSchedule above.
+
+  Allowable values: true, false
+
+\end{itemize}
