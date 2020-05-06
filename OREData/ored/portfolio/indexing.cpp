@@ -59,9 +59,9 @@ XMLNode* Indexing::toXML(XMLDocument& doc) {
     if (initialFixing_ != Null<Real>())
         XMLUtils::addChild(doc, node, "InitialFixing", initialFixing_);
     if (valuationSchedule_.hasData()) {
-        XMLNode* tmp = doc.allocNode("ValuationSchedule");
-        XMLUtils::appendNode(tmp, valuationSchedule_.toXML(doc));
-        XMLUtils::appendNode(node, tmp);
+        XMLNode* schedNode = valuationSchedule_.toXML(doc);
+        XMLUtils::setNodeName(doc, schedNode, "ValuationSchedule");
+        XMLUtils::appendNode(node, schedNode);
     }
     XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
     XMLUtils::addChild(doc, node, "FixingCalendar", fixingCalendar_);
