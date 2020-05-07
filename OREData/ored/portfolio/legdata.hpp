@@ -27,6 +27,7 @@
 #include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <ored/portfolio/indexing.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/indexparser.hpp>
 
@@ -45,6 +46,7 @@ using namespace QuantLib;
 using std::string;
 
 class EngineFactory;
+class Market;
 
 //! Serializable Additional Leg Data
 /*!
@@ -659,7 +661,8 @@ public:
     //! Default constructor
     LegData()
         : isPayer_(true), notionalInitialExchange_(false), notionalFinalExchange_(false),
-          notionalAmortizingExchange_(false), isNotResetXCCY_(true), foreignAmount_(0.0), fixingDays_(0) {}
+          notionalAmortizingExchange_(false), isNotResetXCCY_(true), foreignAmount_(0.0), fixingDays_(0),
+          indexingFromAssetLeg_(false) {}
 
     //! Constructor with concrete leg data
     LegData(const boost::shared_ptr<LegAdditionalData>& innerLegData, bool isPayer, const string& currency,
@@ -672,7 +675,8 @@ public:
             int fixingDays = 0, const string& fixingCalendar = "",
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
             const int paymentLag = 0, const std::string& paymentCalendar = "",
-            const std::vector<std::string>& paymentDates = std::vector<std::string>());
+            const std::vector<std::string>& paymentDates = std::vector<std::string>(),
+            const std::vector<Indexing>& indexing = {}, const bool indexingFromAssetLeg = false);
 
     //! \name Serialisation
     //@{
@@ -705,11 +709,17 @@ public:
     boost::shared_ptr<LegAdditionalData> concreteLegData() const { return concreteLegData_; }
     const std::set<std::string>& indices() const { return indices_; }
     const std::vector<std::string>& paymentDates() const { return paymentDates_; }
+    const std::vector<Indexing>& indexing() const { return indexing_; }
+    const bool indexingFromAssetLeg() const { return indexingFromAssetLeg_; }
     //@}
 
     //! \name modifiers
     //@{
+    vector<double>& notionals() { return notionals_; }
+    vector<string>& notionalDates() { return notionalDates_; }
     bool& isPayer() { return isPayer_; }
+    std::vector<Indexing>& indexing() { return indexing_; }
+    bool& indexingFromAssetLeg() { return indexingFromAssetLeg_; }
     //@}
 
 protected:
@@ -745,6 +755,8 @@ private:
     int paymentLag_;
     std::string paymentCalendar_;
     std::vector<std::string> paymentDates_;
+    std::vector<Indexing> indexing_;
+    bool indexingFromAssetLeg_;
 };
 
 //! \name Utilities for building QuantLib Legs
@@ -813,6 +825,10 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
 void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
                        const bool annuityAllowed = false, const std::vector<Real>& rates = std::vector<Real>());
 
+// apply indexing (if given in LegData) to existing leg
+void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                   std::map<std::string, std::string>& qlToOREIndexNames);
+
 // template implementations
 
 template <typename T>
@@ -880,6 +896,11 @@ vector<T> buildScheduledVectorNormalised(const vector<T>& values, const vector<s
                                          const T& defaultValue) {
     return normaliseToSchedule(buildScheduledVector(values, dates, schedule), schedule, defaultValue);
 }
+
+// build an FX Index needed by legbuilders / makeLeg methods
+boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
+                                                  const boost::shared_ptr<Market>& market, const string& configuration,
+                                                  const string& calendar, Size fixingDays = 0);
 
 } // namespace data
 } // namespace ore

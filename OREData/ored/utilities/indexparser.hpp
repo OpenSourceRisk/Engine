@@ -50,7 +50,10 @@ using ore::data::Convention;
 /*!
     \ingroup utilities
 */
-boost::shared_ptr<QuantExt::FxIndex> parseFxIndex(const string& s);
+boost::shared_ptr<QuantExt::FxIndex>
+parseFxIndex(const string& s, const Handle<Quote>& fxSpot = Handle<Quote>(),
+             const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
+             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>());
 
 //! Convert std::string to QuantLib::IborIndex
 /*!

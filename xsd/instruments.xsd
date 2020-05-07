@@ -77,6 +77,7 @@
     </xs:sequence>
   </xs:complexType>
 
+
   <xs:complexType name="swapData">
     <xs:sequence>
       <xs:element type="settlementType" name="Settlement" maxOccurs="1" minOccurs="0"/>
@@ -430,6 +431,21 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="indexingData">
+    <xs:sequence>
+      <xs:element type="xs:float" name="Quantity" minOccurs="0"/>
+      <xs:element type="xs:string" name="Index" minOccurs="0"/>
+      <xs:element type="xs:integer" name="IndexFixingDays" minOccurs="0"/>
+      <xs:element type="xs:string" name="IndexFixingCalendar" minOccurs="0"/>
+      <xs:element type="xs:float" name="InitialFixing" minOccurs="0"/>
+      <xs:element type="scheduleData" name="ValuationSchedule" minOccurs="0"/>
+      <xs:element type="xs:integer" name="FixingDays" minOccurs="0"/>
+      <xs:element type="xs:string" name="FixingCalendar" minOccurs="0"/>
+      <xs:element type="businessDayConvention" name="FixingConvention" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="legData">
     <xs:all>
       <xs:element type="xs:boolean" name="Payer"/>
@@ -469,6 +485,14 @@
         <xs:complexType>
           <xs:sequence>
             <xs:element type="date" name="PaymentDate" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Indexings" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:boolean" name="FromAssetLeg" minOccurs="0"/>
+            <xs:element type="indexingData" name="Indexing" minOccurs="0" maxOccurs="unbounded"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>

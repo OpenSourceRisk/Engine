@@ -161,13 +161,15 @@ void checkOneToOne(const map<string, boost::shared_ptr<OvernightIndex>>& onIndic
     }
 }
 
-boost::shared_ptr<FxIndex> parseFxIndex(const string& s) {
+boost::shared_ptr<FxIndex> parseFxIndex(const string& s, const Handle<Quote>& fxSpot,
+                                        const Handle<YieldTermStructure>& sourceYts,
+                                        const Handle<YieldTermStructure>& targetYts) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
     QL_REQUIRE(tokens.size() == 4, "four tokens required in " << s << ": FX-TAG-CCY1-CCY2");
     QL_REQUIRE(tokens[0] == "FX", "expected first token to be FX");
     return boost::make_shared<FxIndex>(tokens[0] + "/" + tokens[1], 0, parseCurrency(tokens[2]),
-                                       parseCurrency(tokens[3]), NullCalendar());
+                                       parseCurrency(tokens[3]), NullCalendar(), fxSpot, sourceYts, targetYts);
 }
 
 boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
