@@ -43,7 +43,8 @@ public:
                       const ScheduleData& valuationSchedule = ScheduleData(), const Size fixingDays = 0,
                       const string& fixingCalendar = "", const string& fixingConvention = "",
                       const bool inArrearsFixing = false)
-        : hasData_(true), quantity_(quantity), index_(index), initialFixing_(initialFixing),
+        : hasData_(true), quantity_(quantity), index_(index), indexFixingDays_(indexFixingDays),
+          indexFixingCalendar_(indexFixingCalendar), initialFixing_(initialFixing),
           valuationSchedule_(valuationSchedule), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar),
           fixingConvention_(fixingConvention), inArrearsFixing_(inArrearsFixing) {}
 

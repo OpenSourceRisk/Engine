@@ -512,14 +512,15 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
                  const double foreignAmount, const string& fxIndex, int fixingDays, const string& fixingCalendar,
                  const std::vector<AmortizationData>& amortizationData, const int paymentLag,
                  const string& paymentCalendar, const vector<string>& paymentDates,
-                 const std::vector<Indexing>& indexing)
+                 const std::vector<Indexing>& indexing, const bool indexingFromAssetLeg)
     : concreteLegData_(concreteLegData), isPayer_(isPayer), currency_(currency), schedule_(scheduleData),
       dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
       paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
       notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
       isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
       fxIndex_(fxIndex), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar), amortizationData_(amortizationData),
-      paymentLag_(paymentLag), paymentCalendar_(paymentCalendar), paymentDates_(paymentDates), indexing_(indexing) {
+      paymentLag_(paymentLag), paymentCalendar_(paymentCalendar), paymentDates_(paymentDates), indexing_(indexing),
+      indexingFromAssetLeg_(indexingFromAssetLeg) {
 
     indices_ = concreteLegData_->indices();
 
@@ -587,6 +588,11 @@ void LegData::fromXML(XMLNode* node) {
 
     tmp = XMLUtils::getChildNode(node, "Indexings");
     if (tmp) {
+        if(auto n = XMLUtils::getChildNode(tmp, "FromAssetLeg")) {
+            indexingFromAssetLeg_ = parseBool(XMLUtils::getNodeValue(n));
+        } else {
+            indexingFromAssetLeg_ = false;
+        }
         auto indexings = XMLUtils::getChildrenNodes(tmp, "Indexing");
         for (auto const& i : indexings) {
             indexing_.push_back(Indexing());
@@ -655,8 +661,10 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(node, amortisationsParentNode);
     }
 
-    if (!indexing_.empty()) {
+    if (!indexing_.empty() || indexingFromAssetLeg_) {
         XMLNode* indexingsNode = doc.allocNode("Indexings");
+        if(indexingFromAssetLeg_)
+            XMLUtils::addChild(doc, indexingsNode, "FromAssetLeg", indexingFromAssetLeg_);
         for (auto& i : indexing_) {
             if (i.hasData())
                 XMLUtils::appendNode(indexingsNode, i.toXML(doc));

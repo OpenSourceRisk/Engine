@@ -661,7 +661,8 @@ public:
     //! Default constructor
     LegData()
         : isPayer_(true), notionalInitialExchange_(false), notionalFinalExchange_(false),
-          notionalAmortizingExchange_(false), isNotResetXCCY_(true), foreignAmount_(0.0), fixingDays_(0) {}
+          notionalAmortizingExchange_(false), isNotResetXCCY_(true), foreignAmount_(0.0), fixingDays_(0),
+          indexingFromAssetLeg_(false) {}
 
     //! Constructor with concrete leg data
     LegData(const boost::shared_ptr<LegAdditionalData>& innerLegData, bool isPayer, const string& currency,
@@ -675,7 +676,7 @@ public:
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
             const int paymentLag = 0, const std::string& paymentCalendar = "",
             const std::vector<std::string>& paymentDates = std::vector<std::string>(),
-            const std::vector<Indexing>& indexing = {});
+            const std::vector<Indexing>& indexing = {}, const bool indexingFromAssetLeg = false);
 
     //! \name Serialisation
     //@{
@@ -709,6 +710,7 @@ public:
     const std::set<std::string>& indices() const { return indices_; }
     const std::vector<std::string>& paymentDates() const { return paymentDates_; }
     const std::vector<Indexing>& indexing() const { return indexing_; }
+    const bool indexingFromAssetLeg() const { return indexingFromAssetLeg_; }
     //@}
 
     //! \name modifiers
@@ -717,6 +719,7 @@ public:
     vector<string>& notionalDates() { return notionalDates_; }
     bool& isPayer() { return isPayer_; }
     std::vector<Indexing>& indexing() { return indexing_; }
+    bool& indexingFromAssetLeg() { return indexingFromAssetLeg_; }
     //@}
 
 protected:
@@ -753,6 +756,7 @@ private:
     std::string paymentCalendar_;
     std::vector<std::string> paymentDates_;
     std::vector<Indexing> indexing_;
+    bool indexingFromAssetLeg_;
 };
 
 //! \name Utilities for building QuantLib Legs

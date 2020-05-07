@@ -4,7 +4,7 @@
 The \lstinline!LegData! trade component node is used within the
 \lstinline!CapFloorData!,  \lstinline!SwapData! ,
 \lstinline!SwaptionData! and \lstinline!EquitySwapData! trade data containers. It contains a
-\lstinline!ScheduleData! trade component sub-node, an optional \lstinline!Indexings! sub-node and a sub-node that depends on
+\lstinline!ScheduleData! trade component sub-node, and a sub-node that depends on
 the value of the \lstinline!LegType! element, e.g.:  \lstinline!FixedLegData! for \lstinline!LegType! \emph{Fixed} or \lstinline!FloatingLegData! for \lstinline!LegType! \emph{Floating}. The
 \lstinline!LegData! node also includes a \lstinline!Notionals!
 sub-node  with \lstinline!Notional! child elements described below. An
@@ -26,9 +26,6 @@ example structure of a \lstinline!LegData! node of \lstinline!LegType!
                 <ScheduleData>
                     ...
                 </ScheduleData>
-                <Indexings>
-                    ...
-                </Indexings>
                 <FloatingLegData>
                     ...
                 </FloatingLegData>
@@ -190,13 +187,10 @@ Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to the null ca
 \end{listing}
 
 
-After the \lstinline!Notional! sub-node the \lstinline!LegData! node includes a \lstinline!ScheduleData! sub-node, an optional
-\lstinline!Indexings! sub-node and a sub-node based on the choice of \lstinline!LegType! as per below:
+After the \lstinline!Notional! sub-node the \lstinline!LegData! node includes a \lstinline!ScheduleData! sub-node, and a sub-node based on the choice of \lstinline!LegType! as per below:
 
 \item ScheduleData: This is a trade component sub-node outlined in section \ref{ss:schedule_data} Schedule Data and
 Dates.
-\item Indexings [Optional]: This is a trade component sub-node outlined in section \ref{ss:indexings}. It is optional
-  and applies only to certain leg types: Fixed, Floating, CMS, CMSSpread, DigitalCMSSpread
 \item FixedLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{fixed} It is
 outlined in section \ref{ss:fixedleg_data}.
 \item FloatingLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{floating} It is

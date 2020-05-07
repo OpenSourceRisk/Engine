@@ -4,8 +4,27 @@
 This trade component can be used as an optional node within the LegData component to scale the notional of the coupons
 of a leg by one or several index prices. This feature is typically used within equity swaps with notional reset to align
 the notional of the funding leg with the one from the equity leg for all return periods. See \ref{ss:equity_swap} for
-the specific usage in equity swaps. In what follows we describe the general structure of this component within an
-arbitrary LegData node. The Indexing component can be used in combination with the following leg types:
+the specific usage in equity swaps. Notice that typically it is sufficient to set the FromAssetLeg flag to true in the
+\verb+Indexings+ node definition, i.e.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<LegData>
+    <LegType>Floating</LegType>
+    <!-- no notionals node required -->
+    <ScheduleData> ... </ScheduleData>
+    <Indexings>
+        <FromAssetLeg>true</FromAssetLeg>
+    </Indexings>
+    <FloatingLegData> ... </FloatingLegData>
+</LegData>
+\end{minted}
+
+which will cause the trade builder to pull all the indexing details from the asset leg (the equity leg in an equity
+swap) and populate the indexing data on the funding leg accordingly. Notice that no definition of a \verb+Notionals+
+node is required in this case, this will also generated automatically.
+
+In what follows we will describe the full syntax of the Indexings node below for reference. The Indexing component can
+be used in combination with the following leg types:
 
 \begin{itemize}
 \item Fixed
@@ -29,6 +48,7 @@ example of an Floating leg indexed by both an equity price and a FX rate.
     <Notionals> ... </Notionals>
     <ScheduleData> ... </ScheduleData>
     <Indexings>
+        <FromAssetLeg>false</FromAssetLeg>
         <Indexing>
             <Quantity>1000</Quantity>
             <Index>EQ-RIC:.STOXX50E</Index>
@@ -61,7 +81,14 @@ example of an Floating leg indexed by both an equity price and a FX rate.
 \label{lst:indexings}
 \end{listing}
 
-The meanings and allowable values of the elements in each of the \lstinline!Indexing! nodes are as follows:
+The Indexings node contains the following elements:
+
+\begin{itemize}
+\item FromAssetLeg [Optional, defaults to false]: If true and the trade type supports this (e.g. equity swap) the trade
+  builder will add \verb+Indexing+ blocks automatically reflecting the necessary indexings (equity price and FX in the
+  case of an equity swap) from the notional reset feature of the asset leg. Also, the Notionals node of the leg will be
+  set to a single notional $1$.
+\item Indexing [Optional, an arbitrary number can be given]: Each Indexing node describes one indexing as follows:
 
 \begin{itemize}
 
@@ -121,5 +148,7 @@ The meanings and allowable values of the elements in each of the \lstinline!Inde
   otherwise from the period start dates as described for ValuationSchedule above.
 
   Allowable values: true, false
+
+\end{itemize}
 
 \end{itemize}

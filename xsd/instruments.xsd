@@ -491,6 +491,7 @@
       <xs:element name="Indexings" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
+            <xs:element type="xs:boolean" name="FromAssetLeg" minOccurs="0"/>
             <xs:element type="indexingData" name="Indexing" minOccurs="0" maxOccurs="unbounded"/>
           </xs:sequence>
         </xs:complexType>
