@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/utilities/calendaradjustmentconfig.hpp
-    \brief 
+    \brief Interface for calendar modifications, additional holidays and business days
     \ingroup utilities
 */
 
@@ -54,7 +54,7 @@ public:
     //! This method adds d to the list of business days for cal name.
     void addBusinessDays(const string& calname, const Date& d);
 
-    //! Returns all the holidays for a given calname
+    //! Returns all the holidays for a given cal name
     const set<Date>& getHolidays(const string& calname) const;
 
     //! Returns all the business days for a given calname

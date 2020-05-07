@@ -18,6 +18,7 @@
 
 /*! \file qle/termstructures/commodityaveragebasispricecurve.hpp
     \brief A commodity price curve created from an averaged base curve and a collection of basis quotes.
+    \ingroup termstructures
 */
 
 #ifndef quantext_commodity_average_basis_price_curve_hpp

@@ -141,11 +141,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         }
         try {
             const vector<Leg>& legs = trades[k]->legs();
-	    if (legs.size() == 0) {
-	        WLOG("cashflow report for " << trades[k]->tradeType() << " " << trades[k]->id()
-		     << " skipped, no legs contained in trade.");
-		continue;
-	    }
+	    // if (legs.size() == 0) {
+	    //     WLOG("cashflow report for " << trades[k]->tradeType() << " " << trades[k]->id()
+	    // 	     << " skipped, no legs contained in trade.");
+	    // 	continue;
+	    // }
             const Real multiplier = trades[k]->instrument()->multiplier();
             for (size_t i = 0; i < legs.size(); i++) {
                 const QuantLib::Leg& leg = legs[i];
