@@ -43,6 +43,8 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     instrument_->qlInstrument()->update();
     notional_ = amount_;
     notionalCurrency_ = currency_;
+    // the QL instrument reads the fixing in setupExpired() (bug?), so we don't add a payment date here to be safe
+    requiredFixings_.addFixingDate(fra->fixingDate(), index_);
 }
 
 void ForwardRateAgreement::fromXML(XMLNode* node) {
