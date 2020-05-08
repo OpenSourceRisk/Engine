@@ -25,6 +25,7 @@
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/indexes/commodityindex.hpp>
 
 #include <ql/cashflow.hpp>
@@ -327,7 +328,11 @@ void FixingDateGetter::visit(YoYInflationCoupon& c) {
                                                c.yoyIndex()->availabilityLag(), c.date());
 }
 
-void FixingDateGetter::visit(OvernightIndexedCoupon& c) {
+void FixingDateGetter::visit(QuantLib::OvernightIndexedCoupon& c) {
+    requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
+}
+
+void FixingDateGetter::visit(QuantExt::OvernightIndexedCoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
 }
 
