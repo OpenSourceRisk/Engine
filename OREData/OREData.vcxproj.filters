@@ -495,6 +495,9 @@
     <ClInclude Include="ored\portfolio\bondutils.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\indexing.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -870,6 +873,9 @@
       <Filter>marketdata</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\bondutils.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\indexing.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>
