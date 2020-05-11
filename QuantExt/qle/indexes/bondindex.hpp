@@ -57,7 +57,11 @@ public:
         - defaultCurve: defaults to zero hazard spread
         - recoveryRate: defaults to zero
         - securitySpread: defaults to zero
-        - incomCurve: defaults to the discountCurve
+        - incomCurve: defaults to the curve build as discountCurve + securitySpread
+
+        If conditionalOnSurvival is set to true, a projected fixing will be conditional
+        on survival until the associated bond settlement date, otherwise it will include
+        the default probability between today and the settlement date.
 
         The values that this index return are of the form 1.02 meaning 102% clean price.
     */
@@ -67,7 +71,8 @@ public:
               const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
               const Handle<Quote>& recoveryRate = Handle<Quote>(),
               const Handle<Quote>& securitySpread = Handle<Quote>(),
-              const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>());
+              const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
+              const bool conditionalOnSurvival = true);
 
     //! \name Index interface
     //@{
@@ -96,6 +101,7 @@ private:
     Handle<Quote> recoveryRate_;
     Handle<Quote> securitySpread_;
     Handle<YieldTermStructure> incomeCurve_;
+    bool conditionalOnSurvival_;
 
     boost::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
 };

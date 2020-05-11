@@ -33,10 +33,11 @@ namespace QuantExt {
 BondIndex::BondIndex(const std::string& securityName, const Calendar& fixingCalendar,
                      const boost::shared_ptr<QuantLib::Bond>& bond, const Handle<YieldTermStructure>& discountCurve,
                      const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
-                     const Handle<Quote>& securitySpread, const Handle<YieldTermStructure>& incomeCurve)
+                     const Handle<Quote>& securitySpread, const Handle<YieldTermStructure>& incomeCurve,
+                     const bool conditionalOnSurvival)
     : securityName_(securityName), fixingCalendar_(fixingCalendar), bond_(bond), discountCurve_(discountCurve),
       defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
-      incomeCurve_(incomeCurve) {
+      incomeCurve_(incomeCurve), conditionalOnSurvival_(conditionalOnSurvival) {
 
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(BondIndex::name()));
@@ -100,7 +101,8 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
     }
 
     // fall back on assuming that the bond can be priced by simply discounting its cashflows
-    return vanillaBondEngine_->calculateNpv(bond_->settlementDate(fixingDate), bond_->cashflows(), incomeCurve_) /
+    return vanillaBondEngine_->calculateNpv(bond_->settlementDate(fixingDate), bond_->cashflows(), incomeCurve_,
+                                            conditionalOnSurvival_) /
                bond_->notional(fixingDate) -
            bond_->accruedAmount(fixingDate) / 100.0;
 }
