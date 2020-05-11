@@ -17,71 +17,87 @@
 */
 
 /*! \file qle/indexes/bondindex.hpp
-    \brief Light-weight bond index class for holding clean bond price fixing histories,
-    without forwarding which is left to the respective engines.
+    \brief bond index class representing historical and forward bond clean prices
     \ingroup indexes
 */
 
-#ifndef quantext_bondindex_hpp
-#define quantext_bondindex_hpp
+#pragma once
 
 #include <ql/handle.hpp>
 #include <ql/index.hpp>
+#include <ql/instruments/bond.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 
 namespace QuantExt {
+
 using namespace QuantLib;
+
+class DiscountingRiskyBondEngine;
 
 //! Bond Index
 /*! \ingroup indexes */
 class BondIndex : public Index, public Observer {
 public:
-    /*! spot quote is interpreted as of today */
-    BondIndex(const std::string& name, const Calendar& fixingCalendar = NullCalendar());
+    /*! The fixing projection (fixingDate > today) assumes that the given bond is vanilla,
+        i.e. its present value can be calculated by discounting the cashflows retrieved
+        with Bond::cashflows().
+
+        If the bond has a pricing engine attached and today's fixing is projected, the
+        pricing engine's result will be used. Otherwise today's fixing will be calcuated
+        as projected fixings for dates > today, i.e. by simply discounting the bond's
+        cashflows.
+
+        If no bond is given, only historical fixings are returned by the index.
+
+        To compute projected fixings for dates > today, a discountCurve is required. The
+        other quotes and curves are optional and default as follows:
+        - defaultCurve: defaults to zero hazard spread
+        - recoveryRate: defaults to zero
+        - securitySpread: defaults to zero
+        - incomCurve: defaults to the discountCurve
+
+        The values that this index return are of the form 1.02 meaning 102% clean price.
+    */
+    BondIndex(const std::string& securityName, const Calendar& fixingCalendar = NullCalendar(),
+              const boost::shared_ptr<QuantLib::Bond>& bond = nullptr,
+              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+              const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
+              const Handle<Quote>& recoveryRate = Handle<Quote>(),
+              const Handle<Quote>& securitySpread = Handle<Quote>(),
+              const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>());
 
     //! \name Index interface
     //@{
-    std::string name() const;
-    Calendar fixingCalendar() const;
-    bool isValidFixingDate(const Date& fixingDate) const;
-    // Bond price fixing - only historical so far
-    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;
+    std::string name() const override;
+    Calendar fixingCalendar() const override;
+    bool isValidFixingDate(const Date& fixingDate) const override;
+    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
     //@}
+
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
-    //! \name Inspectors
-    //@{
-    std::string familyName() const { return familyName_; }
-    //@}
+
     //! \name Fixing calculations
     //@{
-    Real pastFixing(const Date& fixingDate) const;
+    Rate forecastFixing(const Date& fixingDate) const;
+    Rate pastFixing(const Date& fixingDate) const;
     //@}
-protected:
-    std::string familyName_;
-    std::string name_;
-
 private:
+    std::string securityName_;
     Calendar fixingCalendar_;
+    boost::shared_ptr<QuantLib::Bond> bond_;
+    Handle<YieldTermStructure> discountCurve_;
+    Handle<DefaultProbabilityTermStructure> defaultCurve_;
+    Handle<Quote> recoveryRate_;
+    Handle<Quote> securitySpread_;
+    Handle<YieldTermStructure> incomeCurve_;
+
+    boost::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
 };
 
-// inline definitions
-
-inline std::string BondIndex::name() const { return name_; }
-
-inline Calendar BondIndex::fixingCalendar() const { return fixingCalendar_; }
-
-inline bool BondIndex::isValidFixingDate(const Date& d) const { return fixingCalendar().isBusinessDay(d); }
-
-inline void BondIndex::update() { notifyObservers(); }
-
-inline Real BondIndex::pastFixing(const Date& fixingDate) const {
-    QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
-    return timeSeries()[fixingDate];
-}
 } // namespace QuantExt
-
-#endif
