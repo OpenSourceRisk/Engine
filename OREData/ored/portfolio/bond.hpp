@@ -123,6 +123,7 @@ public:
 
     //! inspectors
     const BondData bondData() const { return bondData_; }
+    // only available after build() was called
     const string& currency() const { return currency_; }
     // FIXE remove this, replace by bondData()->creditCurveId()
     const string& creditCurveId() const { return bondData_.creditCurveId(); }
