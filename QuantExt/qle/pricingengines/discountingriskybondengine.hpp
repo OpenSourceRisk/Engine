@@ -58,8 +58,10 @@ public:
                                Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
 
     void calculate() const;
-    // calculate the npv as of the npvDate, conditional on survival until the npvDate of the given cashflows
-    Real calculateNpv(Date npvDate, const Leg& cashflows) const;
+    /*! Calculate the npv as of the npvDate, conditional on survival until the npvDate; if an incomeCurve is given,
+      this is used to compound the npv from today to the npvDate, otherwise the disc */
+    Real calculateNpv(Date npvDate, const Leg& cashflows,
+                      const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>()) const;
     // inspectors
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; };
     Handle<DefaultProbabilityTermStructure> defaultCurve() const { return defaultCurve_; };
