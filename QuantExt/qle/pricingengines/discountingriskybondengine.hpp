@@ -58,10 +58,14 @@ public:
                                Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
 
     void calculate() const;
-    /*! Calculate the npv as of the npvDate, conditional on survival until the npvDate; if an incomeCurve is given,
-      this is used to compound the npv from today to the npvDate, otherwise the disc */
+    /*! Calculate the npv as of the npvDate.
+        - If conditionalOnSurvival is set to true, the npv is computed conditional on the survival until the npvDate,
+          otherwise the npv is including the default probability between today and the npvDate
+        - If an incomeCurve is given, this is used to compound the npv from today to the npvDate, otherwise the curve
+          built in the engine as discount curve + security Spread is used. */
     Real calculateNpv(Date npvDate, const Leg& cashflows,
-                      const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>()) const;
+                      const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
+                      const bool conditionalOnSurvival = true) const;
     // inspectors
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; };
     Handle<DefaultProbabilityTermStructure> defaultCurve() const { return defaultCurve_; };
