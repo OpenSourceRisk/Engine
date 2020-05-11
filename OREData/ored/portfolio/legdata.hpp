@@ -902,5 +902,9 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
                                                   const boost::shared_ptr<Market>& market, const string& configuration,
                                                   const string& calendar, Size fixingDays = 0);
 
+// join a vector of legs to a single leg, check if the legs have adjacent periods
+Leg joinLegs(const std::vector<Leg>& legs);
+
+
 } // namespace data
 } // namespace ore

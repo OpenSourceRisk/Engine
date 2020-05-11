@@ -1739,5 +1739,26 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
     return fxi;
 }
 
+Leg joinLegs(const std::vector<Leg>& legs) {
+    Leg masterLeg;
+    for (Size i = 0; i < legs.size(); ++i) {
+        // check if the periods of adjacent legs are consistent
+        if (i > 0) {
+            auto lcpn = boost::dynamic_pointer_cast<Coupon>(legs[i - 1].back());
+            auto fcpn = boost::dynamic_pointer_cast<Coupon>(legs[i].front());
+            QL_REQUIRE(lcpn, "joinLegs: expected coupon as last cashflow in leg #" << (i - 1));
+            QL_REQUIRE(fcpn, "joinLegs: expected coupon as first cashflow in leg #" << i);
+            QL_REQUIRE(lcpn->accrualEndDate() == fcpn->accrualStartDate(),
+                       "joinLegs: accrual end date of last coupon in leg #"
+                           << (i - 1) << " (" << lcpn->accrualEndDate()
+                           << ") is not equal to accrual start date of first coupon in leg #" << i << " ("
+                           << fcpn->accrualStartDate() << ")");
+        }
+        // copy legs together
+        masterLeg.insert(masterLeg.end(), legs[i].begin(), legs[i].end());
+    }
+    return masterLeg;
+}
+
 } // namespace data
 } // namespace ore

@@ -92,29 +92,6 @@ void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDa
                "settlement days not given, check bond trade xml and reference data for '" << securityId_ << "'");
 }
 
-namespace {
-Leg joinLegs(const std::vector<Leg>& legs) {
-    Leg masterLeg;
-    for (Size i = 0; i < legs.size(); ++i) {
-        // check if the periods of adjacent legs are consistent
-        if (i > 0) {
-            auto lcpn = boost::dynamic_pointer_cast<Coupon>(legs[i - 1].back());
-            auto fcpn = boost::dynamic_pointer_cast<Coupon>(legs[i].front());
-            QL_REQUIRE(lcpn, "joinLegs: expected coupon as last cashflow in leg #" << (i - 1));
-            QL_REQUIRE(fcpn, "joinLegs: expected coupon as first cashflow in leg #" << i);
-            QL_REQUIRE(lcpn->accrualEndDate() == fcpn->accrualStartDate(),
-                       "joinLegs: accrual end date of last coupon in leg #"
-                           << (i - 1) << " (" << lcpn->accrualEndDate()
-                           << ") is not equal to accrual start date of first coupon in leg #" << i << " ("
-                           << fcpn->accrualStartDate() << ")");
-        }
-        // copy legs together
-        masterLeg.insert(masterLeg.end(), legs[i].begin(), legs[i].end());
-    }
-    return masterLeg;
-}
-} // namespace
-
 void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Bond::build() called for trade " << id());
 
