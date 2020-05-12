@@ -292,6 +292,10 @@
       <xs:enumeration value="ACT/ACT.ISMA"/>
       <xs:enumeration value="Simple"/>
       <xs:enumeration value="Year"/>
+      <xs:enumeration value="A364"/>
+      <xs:enumeration value="Actual/364"/>
+      <xs:enumeration value="Act/364"/>
+      <xs:enumeration value="ACT/364"/>
     </xs:restriction>
   </xs:simpleType>
 
