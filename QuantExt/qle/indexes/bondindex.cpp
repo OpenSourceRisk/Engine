@@ -25,12 +25,13 @@
 
 namespace QuantExt {
 
-BondIndex::BondIndex(const std::string& securityName, const bool dirty, const Calendar& fixingCalendar,
-                     const boost::shared_ptr<QuantLib::Bond>& bond, const Handle<YieldTermStructure>& discountCurve,
+BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bool relative,
+                     const Calendar& fixingCalendar, const boost::shared_ptr<QuantLib::Bond>& bond,
+                     const Handle<YieldTermStructure>& discountCurve,
                      const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
                      const Handle<Quote>& securitySpread, const Handle<YieldTermStructure>& incomeCurve,
                      const bool conditionalOnSurvival)
-    : securityName_(securityName), dirty_(dirty), fixingCalendar_(fixingCalendar), bond_(bond),
+    : securityName_(securityName), dirty_(dirty), relative_(relative), fixingCalendar_(fixingCalendar), bond_(bond),
       discountCurve_(discountCurve), defaultCurve_(defaultCurve), recoveryRate_(recoveryRate),
       securitySpread_(securitySpread), incomeCurve_(incomeCurve), conditionalOnSurvival_(conditionalOnSurvival) {
 
@@ -87,33 +88,50 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
                "BondIndex::forecastFixing(): fixingDate (" << fixingDate << ") must be >= today (" << today << ")");
     QL_REQUIRE(bond_, "BondIndex::forecastFixing(): bond required");
 
-    // try to get the clean price from the bond itself
+    // on today, try to get the dirty absolute price from the bond itself
 
+    Real price = Null<Real>();
     if (fixingDate == today) {
         try {
-            return bond_->cleanPrice() / 100.0;
+            price = bond_->settlementValue();
         } catch (...) {
         }
     }
 
-    // fall back on assuming that the bond can be priced by simply discounting its cashflows
+    // for future dates or if the above did not work, assume that the bond can be priced by
+    // simply discounting its cashflows
 
-    if (close_enough(bond_->notional(fixingDate), 0.0))
-        return 0.0;
+    if (price == Null<Real>()) {
+        price = vanillaBondEngine_->calculateNpv(bond_->settlementDate(fixingDate), bond_->cashflows(), incomeCurve_,
+                                                 conditionalOnSurvival_);
+    }
 
-    return vanillaBondEngine_->calculateNpv(bond_->settlementDate(fixingDate), bond_->cashflows(), incomeCurve_,
-                                            conditionalOnSurvival_) /
-               bond_->notional(fixingDate) -
-           (dirty_ ? 0.0 : bond_->accruedAmount(fixingDate) / 100.0);
+    if (!dirty_) {
+        price -= bond_->accruedAmount(fixingDate) / 100.0 * bond_->notional(fixingDate);
+    }
+
+    if (relative_) {
+        if (close_enough(bond_->notional(fixingDate), 0.0))
+            price = 0.0;
+        else
+            price /= bond_->notional(fixingDate);
+    }
+
+    return price;
 }
 
 Real BondIndex::pastFixing(const Date& fixingDate) const {
     QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date for '" << name() << "'");
-    Real clean = timeSeries()[fixingDate];
-    if (!dirty_)
-        return clean;
-    QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for dirty prices");
-    return clean + bond_->accruedAmount(fixingDate) / 100.0;
+    Real price = timeSeries()[fixingDate];
+    if (dirty_) {
+        QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for dirty prices");
+        price += bond_->accruedAmount(fixingDate) / 100.0;
+    }
+    if (!relative_) {
+        QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for absolute prices");
+        price *= bond_->notional(fixingDate);
+    }
+    return price;
 }
 
 } // namespace QuantExt

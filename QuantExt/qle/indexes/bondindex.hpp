@@ -41,8 +41,17 @@ class DiscountingRiskyBondEngine;
 /*! \ingroup indexes */
 class BondIndex : public Index, public Observer {
 public:
-    /*! The values that this index return are of the form 1.02 meaning 102% clean price
-        or dirty price depending on the respective flag in the ctor.
+    /*! The values that this index return are of the form
+
+        - 1.02 meaning 102% price clean or dirty (depending on the flag dirty in the ctor) i.e.
+          the absolute bond clean or dirty NPV is divided by the current notional at the
+          fixing date
+        - 10020 meaning an absolute NPV in terms of the current notional of the underlying bond
+          at the fixing date, again clean or dirty depending on the flag dirty in the ctor,
+          here the notional would be 10000
+
+        The first form is returned if the flag relative in the ctor is set to true, the second
+        if this flag is set to false.
 
         The fixing projection (fixingDate > today) assumes that the given bond is vanilla,
         i.e. its present value can be calculated by discounting the cashflows retrieved
@@ -53,8 +62,9 @@ public:
         as projected fixings for dates > today, i.e. by simply discounting the bond's
         cashflows.
 
-        If no bond is given, only historical clean fixings are returned by the index,
-        otherwise an exception is thrown whenever a fixing is requested from the index.
+        If no bond is given, only historical fixings are returned by the index and only the
+        clean price mode and relative price mode are supported respectively. Otherwise
+        an exception is thrown whenever a fixing is requested from the index.
 
         To compute projected fixings for dates > today, a discountCurve is required. The
         other quotes and curves are optional and default as follows:
@@ -68,7 +78,7 @@ public:
         the default probability between today and the settlement date.
 
     */
-    BondIndex(const std::string& securityName, const bool dirty = false,
+    BondIndex(const std::string& securityName, const bool dirty = false, const bool relative = true,
               const Calendar& fixingCalendar = NullCalendar(), const boost::shared_ptr<QuantLib::Bond>& bond = nullptr,
               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
               const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
@@ -100,6 +110,7 @@ public:
     //@{
     const std::string& securityName() const { return securityName_; }
     bool dirty() const { return dirty_; }
+    bool relative() const { return relative_; }
     boost::shared_ptr<QuantLib::Bond> bond() const { return bond_; }
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; }
     Handle<DefaultProbabilityTermStructure> defaultCurve() const { return defaultCurve_; }
@@ -111,7 +122,7 @@ public:
 
 private:
     std::string securityName_;
-    bool dirty_;
+    bool dirty_, relative_;
     Calendar fixingCalendar_;
     boost::shared_ptr<QuantLib::Bond> bond_;
     Handle<YieldTermStructure> discountCurve_;

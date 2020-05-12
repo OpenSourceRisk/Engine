@@ -1741,7 +1741,8 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
 }
 
 boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
-                                                      const Calendar& fixingCalendar, const bool conditionalOnSurvival,
+                                                      const bool relative, const Calendar& fixingCalendar,
+                                                      const bool conditionalOnSurvival,
                                                       const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // build the bond, we would not need a full build with a pricing engine attached, but this is the easiest
@@ -1790,9 +1791,8 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
 
     // build and return the index
 
-    return boost::make_shared<QuantExt::BondIndex>(securityId, dirty, fixingCalendar, qlBond, discountCurve,
-                                                   defaultCurve, recovery, spread, incomeCurve,
-                                                   conditionalOnSurvival);
+    return boost::make_shared<QuantExt::BondIndex>(securityId, dirty, relative, fixingCalendar, qlBond, discountCurve,
+                                                   defaultCurve, recovery, spread, incomeCurve, conditionalOnSurvival);
 }
 
 Leg joinLegs(const std::vector<Leg>& legs) {
