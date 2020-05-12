@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
@@ -1737,6 +1738,61 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
     QL_REQUIRE(fxi, "Failed to build FXIndex " << fxIndex);
 
     return fxi;
+}
+
+boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
+                                                      const Calendar& fixingCalendar, const bool conditionalOnSurvival,
+                                                      const boost::shared_ptr<EngineFactory>& engineFactory) {
+
+    // build the bond, we would not need a full build with a pricing engine attached, but this is the easiest
+
+    BondData data = securityData;
+    data.populateFromBondReferenceData(engineFactory->referenceData());
+    Bond bond(Envelope(), data);
+    bond.build(engineFactory);
+    auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
+    QL_REQUIRE(qlBond, "buildBondIndex(): could not cast to QuantLib::Bond, this is unexpected");
+
+    // get the curves
+
+    string securityId = data.securityId();
+
+    Handle<YieldTermStructure> discountCurve = engineFactory->market()->yieldCurve(
+        data.referenceCurveId(), engineFactory->configuration(MarketContext::pricing));
+
+    Handle<DefaultProbabilityTermStructure> defaultCurve;
+    if (!data.creditCurveId().empty())
+        defaultCurve = engineFactory->market()->defaultCurve(data.creditCurveId(),
+                                                             engineFactory->configuration(MarketContext::pricing));
+
+    Handle<YieldTermStructure> incomeCurve;
+    if (!data.incomeCurveId().empty())
+        incomeCurve = engineFactory->market()->yieldCurve(data.incomeCurveId(),
+                                                          engineFactory->configuration(MarketContext::pricing));
+
+    Handle<Quote> recovery;
+    try {
+        recovery =
+            engineFactory->market()->recoveryRate(securityId, engineFactory->configuration(MarketContext::pricing));
+    } catch (...) {
+        ALOG("security specific recovery rate not found for security ID "
+             << securityId << ", falling back on the recovery rate for credit curve Id " << data.creditCurveId());
+        if (!data.creditCurveId().empty())
+            recovery = engineFactory->market()->recoveryRate(data.creditCurveId(),
+                                                             engineFactory->configuration(MarketContext::pricing));
+    }
+
+    Handle<Quote> spread;
+    try {
+        spread = engineFactory->market()->securitySpread(securityId, engineFactory->configuration(MarketContext::pricing));
+    } catch (...) {
+    }
+
+    // build and return the index
+
+    return boost::make_shared<QuantExt::BondIndex>(securityId, dirty, fixingCalendar, qlBond, discountCurve,
+                                                   defaultCurve, recovery, spread, incomeCurve,
+                                                   conditionalOnSurvival);
 }
 
 Leg joinLegs(const std::vector<Leg>& legs) {

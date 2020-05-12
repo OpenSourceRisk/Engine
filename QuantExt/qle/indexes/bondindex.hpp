@@ -17,7 +17,7 @@
 */
 
 /*! \file qle/indexes/bondindex.hpp
-    \brief bond index class representing historical and forward bond clean prices
+    \brief bond index class representing historical and forward bond prices
     \ingroup indexes
 */
 
@@ -41,7 +41,10 @@ class DiscountingRiskyBondEngine;
 /*! \ingroup indexes */
 class BondIndex : public Index, public Observer {
 public:
-    /*! The fixing projection (fixingDate > today) assumes that the given bond is vanilla,
+    /*! The values that this index return are of the form 1.02 meaning 102% clean price
+        or dirty price depending on the respective flag in the ctor.
+
+        The fixing projection (fixingDate > today) assumes that the given bond is vanilla,
         i.e. its present value can be calculated by discounting the cashflows retrieved
         with Bond::cashflows().
 
@@ -50,7 +53,8 @@ public:
         as projected fixings for dates > today, i.e. by simply discounting the bond's
         cashflows.
 
-        If no bond is given, only historical fixings are returned by the index.
+        If no bond is given, only historical clean fixings are returned by the index,
+        otherwise an exception is thrown whenever a fixing is requested from the index.
 
         To compute projected fixings for dates > today, a discountCurve is required. The
         other quotes and curves are optional and default as follows:
@@ -63,10 +67,9 @@ public:
         on survival until the associated bond settlement date, otherwise it will include
         the default probability between today and the settlement date.
 
-        The values that this index return are of the form 1.02 meaning 102% clean price.
     */
-    BondIndex(const std::string& securityName, const Calendar& fixingCalendar = NullCalendar(),
-              const boost::shared_ptr<QuantLib::Bond>& bond = nullptr,
+    BondIndex(const std::string& securityName, const bool dirty = false,
+              const Calendar& fixingCalendar = NullCalendar(), const boost::shared_ptr<QuantLib::Bond>& bond = nullptr,
               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
               const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
               const Handle<Quote>& recoveryRate = Handle<Quote>(),
@@ -92,8 +95,23 @@ public:
     Rate forecastFixing(const Date& fixingDate) const;
     Rate pastFixing(const Date& fixingDate) const;
     //@}
+
+    //! \name Inspectors
+    //@{
+    const std::string& securityName() const { return securityName_; }
+    bool dirty() const { return dirty_; }
+    boost::shared_ptr<QuantLib::Bond> bond() const { return bond_; }
+    Handle<YieldTermStructure> discountCurve() const { return discountCurve_; }
+    Handle<DefaultProbabilityTermStructure> defaultCurve() const { return defaultCurve_; }
+    Handle<Quote> recoveryRate() const { return recoveryRate_; }
+    Handle<Quote> securitySpread() const { return securitySpread_; }
+    Handle<YieldTermStructure> incomeCurve() const { return incomeCurve_; }
+    bool conditionalOnSurvival() const { return conditionalOnSurvival_; }
+    //@}
+
 private:
     std::string securityName_;
+    bool dirty_;
     Calendar fixingCalendar_;
     boost::shared_ptr<QuantLib::Bond> bond_;
     Handle<YieldTermStructure> discountCurve_;
