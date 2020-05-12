@@ -16,6 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file qle/termstructures/equityoptionsurfacestripper.hpp
+    \brief Imply equity vol surface from put/call price surfaces
+    \ingroup termstructures
+*/
+
 #ifndef quantext_equity_option_premium_curve_stripper_hpp
 #define quantext_equity_option_premium_curve_stripper_hpp
 

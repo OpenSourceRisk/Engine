@@ -813,7 +813,7 @@ void YieldCurve::buildFittedBondCurve() {
 
             QL_REQUIRE(referenceData_ != nullptr && referenceData_->hasData("Bond", securityID),
                        "bond reference data for '" << securityID << "' required to build fitted bond curve");
-            ore::data::Bond bond(Envelope(), securityID, 1.0);
+            ore::data::Bond bond(Envelope(), BondData(securityID, 1.0));
             bond.build(engineFactory);
             auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
             QL_REQUIRE(qlInstr != nullptr, "could not cast to QuantLib::Bond, this is unexpected");

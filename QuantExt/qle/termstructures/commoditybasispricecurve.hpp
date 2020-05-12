@@ -16,8 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/termstructures/commodityaveragebasispricecurve.hpp
-    \brief A commodity price curve created from an averaged base curve and a collection of basis quotes.
+/*! \file qle/termstructures/commoditybasispricecurve.hpp
+    \brief A commodity price curve created from a base price curve and a collection of basis quotes
+    \ingroup termstructures
 */
 
 #ifndef quantext_commodity_basis_price_curve_hpp

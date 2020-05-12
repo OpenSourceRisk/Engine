@@ -56,6 +56,7 @@
 #include <qle/indexes/ibor/idridrfix.hpp>
 #include <qle/indexes/ibor/idrjibor.hpp>
 #include <qle/indexes/ibor/ilstelbor.hpp>
+#include <qle/indexes/ibor/inrmiborois.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
 #include <qle/indexes/ibor/krwcd.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
@@ -160,22 +161,23 @@ void checkOneToOne(const map<string, boost::shared_ptr<OvernightIndex>>& onIndic
     }
 }
 
-boost::shared_ptr<FxIndex> parseFxIndex(const string& s) {
+boost::shared_ptr<FxIndex> parseFxIndex(const string& s, const Handle<Quote>& fxSpot,
+                                        const Handle<YieldTermStructure>& sourceYts,
+                                        const Handle<YieldTermStructure>& targetYts) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
     QL_REQUIRE(tokens.size() == 4, "four tokens required in " << s << ": FX-TAG-CCY1-CCY2");
     QL_REQUIRE(tokens[0] == "FX", "expected first token to be FX");
     return boost::make_shared<FxIndex>(tokens[0] + "/" + tokens[1], 0, parseCurrency(tokens[2]),
-                                       parseCurrency(tokens[3]), NullCalendar());
+                                       parseCurrency(tokens[3]), NullCalendar(), fxSpot, sourceYts, targetYts);
 }
 
 boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
-    QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3, "two or three tokens required in " << s << ": EQ-NAME(-CCY)");
+    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
     QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
-    return boost::make_shared<EquityIndex>(tokens[1], NullCalendar(),
-                                           tokens.size() == 3 ? parseCurrency(tokens[2]) : Currency());
+    return boost::make_shared<EquityIndex>(tokens[1], NullCalendar(), Currency());
 }
 
 bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index,
@@ -257,7 +259,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         { "NOK-NOWA", boost::make_shared<Nowa>() },
         { "CLP-CAMARA", boost::make_shared<CLPCamara>() },
         { "NZD-OCR", boost::make_shared<Nzocr>() },
-        { "PLN-POLONIA", boost::make_shared<PLNPolonia>() }
+        { "PLN-POLONIA", boost::make_shared<PLNPolonia>() },
+        { "INR-MIBOROIS", boost::make_shared<INRMiborOis>() }
     };
 
     // Map from our _unique internal name_ to an ibor index (the period does not matter here)
@@ -265,6 +268,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"AUD-BBSW", boost::make_shared<IborIndexParserWithPeriod<AUDbbsw>>()},
         {"AUD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<AUDLibor>>()},
         {"EUR-EURIBOR", boost::make_shared<IborIndexParserWithPeriod<Euribor>>()},
+	{"EUR-EURIBOR365", boost::make_shared<IborIndexParserWithPeriod<Euribor365>>()},
         {"CAD-CDOR", boost::make_shared<IborIndexParserWithPeriod<Cdor>>()},
         {"CNY-SHIBOR", boost::make_shared<IborIndexParserWithPeriod<Shibor>>()},
         {"CZK-PRIBOR", boost::make_shared<IborIndexParserWithPeriod<CZKPribor>>()},

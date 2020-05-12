@@ -16,6 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file qle/termstructures/equityforwardcurvestripper.hpp
+    \brief Imply equity forwards from option put/call partiy
+    \ingroup termstructures
+*/
+
 #ifndef quantext_equity_forward_curve_stripper_hpp
 #define quantext_equity_forward_curve_stripper_hpp
 

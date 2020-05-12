@@ -25,12 +25,14 @@ Allowable values:  Any positive real number.
 \item StartDate: The start date needs to be provided here, because the payment
   schedule can be given by a sequence of dates, possibly only a single
   date, in which case the start date remains unspecified.
+  
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}. 
 
-\item ObservationLag: The observation lag to be applied.
+\item ObservationLag: The observation lag to be applied. It's the amount of time from the fixing at the start or end of the period, moving backward in time, to the inflation index observation date (the inflation fixing). 
 
-Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y}. Interpolation lags are typically expressed in \emph{M}, months.
+Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y}. Interpolation lags are typically expressed in a positive number of  \emph{M}, months. Note that negative values are allowed, but mean that the inflation is observed forward in time from the period start/end date, which is unusual.  
 
-\item Interpolation: A flag indicating whether interpolation should be applied to inflation fixings.
+\item Interpolation: The type of interpolation that is applied to inflation fixings.
 
 Allowable values:  \emph{Linear, Flat, AsIndex} 
 

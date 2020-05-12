@@ -119,6 +119,7 @@
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/fxswap.hpp>
+#include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>

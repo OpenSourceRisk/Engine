@@ -33,6 +33,7 @@
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
 #include <qle/calendars/largejointcalendar.hpp>
+#include <qle/calendars/austria.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
@@ -209,6 +210,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"BEBR", Belgium()}, // Belgium, Brussels not in QL,
 
                                       // ISO 3166-1 Alpha-2 code
+                                      {"AT", Austria()},
                                       {"AR", Argentina()},
                                       {"AU", Australia()},
                                       {"BW", Botswana()},
@@ -260,6 +262,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       // ISO 3166-1 Alpha-3 code
                                       {"ARG", Argentina()},
                                       {"AUS", Australia()},
+				      {"ATS", Austria()},
                                       {"BWA", Botswana()},
                                       {"BRA", Brazil()},
                                       {"CAN", Canada()},

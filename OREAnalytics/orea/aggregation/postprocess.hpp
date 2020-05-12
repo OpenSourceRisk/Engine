@@ -39,7 +39,6 @@ namespace ore {
 namespace analytics {
 using namespace QuantLib;
 using namespace data;
-using namespace data;
 
 enum class AllocationMethod {
     None,

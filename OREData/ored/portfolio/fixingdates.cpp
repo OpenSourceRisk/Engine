@@ -24,6 +24,7 @@
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
+#include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/indexes/commodityindex.hpp>
 
@@ -372,8 +373,17 @@ void FixingDateGetter::visit(SubPeriodsCoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
 }
 
+void FixingDateGetter::visit(IndexedCoupon& c) {
+    // the coupon's index might be null if an initial fixing is provided
+    if(c.index())
+        requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.index()->name()), c.date());
+    QL_REQUIRE(c.underlying(), "FixingDateGetter::visit(IndexedCoupon): underlying() is null");
+    c.underlying()->accept(*this);
+}
+
 void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<FixingDateGetter>& fixingDateGetter) {
     for (auto const& c : leg) {
+        QL_REQUIRE(c, "addToRequiredFixings(), got null cashflow, this is unexpected");
         c->accept(*fixingDateGetter);
     }
 }
