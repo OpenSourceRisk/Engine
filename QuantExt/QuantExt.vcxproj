@@ -712,6 +712,7 @@
     <ClInclude Include="qle\termstructures\equityforwardcurvestripper.hpp" />
     <ClInclude Include="qle\termstructures\equityoptionsurfacestripper.hpp" />
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
+    <ClInclude Include="qle\termstructures\futurepricehelper.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
@@ -941,6 +942,7 @@
     <ClCompile Include="qle\termstructures\equityforwardcurvestripper.cpp" />
     <ClCompile Include="qle\termstructures\equityoptionsurfacestripper.cpp" />
     <ClCompile Include="qle\termstructures\flatcorrelation.cpp" />
+    <ClCompile Include="qle\termstructures\futurepricehelper.cpp" />
     <ClCompile Include="qle\termstructures\immfraratehelper.cpp" />
     <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp" />
     <ClCompile Include="qle\termstructures\fxvannavolgasmilesection.cpp" />
