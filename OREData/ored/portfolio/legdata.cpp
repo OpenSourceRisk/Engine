@@ -1681,8 +1681,14 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                 index =
                     parseCommodityIndex(indexing.index(), tmp->fixingCalendar(),
                                         engineFactory->market()->commodityPriceCurve(tmp->underlyingName(), config));
+            } else if(boost::starts_with(indexing.index(),"BOND-")) {
+                BondData bondData(parseBondIndex(indexing.index())->securityName(), 1.0);
+                index = buildBondIndex(bondData, indexing.indexIsDirty(), indexing.indexIsRelative(),
+                                       parseCalendar(indexing.indexFixingCalendar()),
+                                       indexing.indexIsConditionalOnSurvival(), engineFactory);
             } else {
-                QL_FAIL("invalid index '" << indexing.index() << "' in indexing data, expected EQ-, FX-, COMM- index");
+                QL_FAIL("invalid index '" << indexing.index()
+                                          << "' in indexing data, expected EQ-, FX-, COMM-, BOND- index");
             }
 
             QL_REQUIRE(index, "applyIndexing(): index is null, this is unexpected");

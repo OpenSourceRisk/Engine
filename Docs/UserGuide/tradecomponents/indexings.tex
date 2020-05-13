@@ -114,9 +114,24 @@ The Indexings node contains the following elements:
   Allowable values: non-negative whole number
 
 \item IndexFixingCalendar [Optional, defaults to NullCalendar (no holidays)]: fixing calendar of the index, this is only
-  used for FX indices
+  used for FX indices and Bond indices
 
   Allowable values: any valid calendar
+
+\item Dirty [Optional, defaults to true]: Only used for bond indices. Indicates whether to use dirty (true) or clean
+  (false) prices.
+
+  Allowable values: true, false
+
+\item Relative [Optional, defaults to true]: Only used for bond indices. Indicates whether to use relative (true) or
+  absolute prices (false).
+
+  Allowable values: true, false
+
+\item ConditionalOnSurvival [Optional, defaults to true]: Only used for bond indices. Indicates whether to forecast bond
+  prices conditional on survival (true) or including the default probability from today until the fixing date (false).
+
+  Allowable values: true, false
 
 \item InitialFixing [Optional]: If given the index fixing value to apply on the fixing date of the first coupon. If not
   given the value is read from the relevant fixing history.
