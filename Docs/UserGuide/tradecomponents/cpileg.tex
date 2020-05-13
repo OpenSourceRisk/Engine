@@ -6,8 +6,11 @@ inflation-linked redemption $I(t)/I_0\,N$. The final redemption can be
 subtracting the (un-inflated) notional $N$, i.e. $(I(t)/I_0-1)\,N$,
 see below.
 
-Listing \ref{lst:cpilegdata} shows an example for a leg of type CPI. The CPILegData block contains the following
-elements:
+Note that CPI legs with just a final redemption and no coupons, can be set up with a dates-based Schedule containing just a single date - representing the date of the final redemption flow. In this case \lstinline!NotionalFinalExchange! must be set to \emph{true}, otherwise the whole leg is empty, and the Rate is not used and can be set to any value. 
+
+Listing \ref{lst:cpilegdata} shows an example for a leg of type CPI with annual coupons, and \ref{lst:cpilegdatafinal} shows an example for a leg of type CPI with just the final redemption. 
+
+The  \lstinline!CPILegData! block contains the following elements:
 
 \begin{itemize}
 \item Index: The underlying zero inflation index.
@@ -112,7 +115,48 @@ Whether the leg cotains a final redemption flow at all or not depends on the
         <NakedOption>N</NakedOption>
       </LegData>
 \end{minted}
-\caption{CPI leg data}
+\caption{CPI leg data with capped annual coupons}
 \label{lst:cpilegdata}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <Payer>false</Payer>
+        <LegType>CPI</LegType>
+        <Currency>GBP</Currency>
+        <PaymentConvention>ModifiedFollowing</PaymentConvention>
+        <DayCounter>ActActISDA</DayCounter>
+        <Notionals>
+          <Notional>25000000.0</Notional>
+          <Exchanges>
+            <NotionalInitialExchange>false</NotionalInitialExchange>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
+          </Exchanges>
+        </Notionals>
+        <ScheduleData>
+          <Dates>
+            <Calendar>GBP</Calendar>
+            <Dates>
+              <Date>2020-08-17</Date>
+            </Dates>
+          </Dates>
+        </ScheduleData>
+        <CPILegData>
+          <Index>UKRPI</Index>
+          <Rates>
+            <Rate>1.0</Rate>
+          </Rates>
+          <BaseCPI>280.64</BaseCPI>
+          <StartDate>2018-08-19</StartDate>
+          <ObservationLag>2M</ObservationLag>
+          <Interpolated>false</Interpolated>
+          <SubtractInflationNotional>true</SubtractInflationNotional>
+        </CPILegData>
+      </LegData>
+\end{minted}
+\caption{CPI leg data with just the final redemption}
+\label{lst:cpilegdatafinal}
 \end{listing}
 
