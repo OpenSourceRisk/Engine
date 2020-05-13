@@ -870,11 +870,13 @@
     <ClInclude Include="qle\time\actual364.hpp">
       <Filter>time</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp" />
     <ClInclude Include="qle\indexes\ibor\inrmiborois.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\futurepricehelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
