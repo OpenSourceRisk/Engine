@@ -61,7 +61,7 @@ XMLNode* Indexing::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "IndexFixingCalendar", indexFixingCalendar_);
     XMLUtils::addChild(doc, node, "Dirty", indexIsDirty_);
     XMLUtils::addChild(doc, node, "Relative", indexIsRelative_);
-    XMLUtils::addChild(doc, node, "ConditionalOnSurvial", indexIsConditionalOnSurvival_);
+    XMLUtils::addChild(doc, node, "ConditionalOnSurvival", indexIsConditionalOnSurvival_);
     if (initialFixing_ != Null<Real>())
         XMLUtils::addChild(doc, node, "InitialFixing", initialFixing_);
     if (valuationSchedule_.hasData()) {
