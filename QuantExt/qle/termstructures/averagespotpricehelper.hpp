@@ -44,13 +44,14 @@ public:
                         start date if it is a pricing date according to the \p calendar.
         \param end      The end date of the averaging period. The averaging period includes the 
                         end date if it is a pricing date according to the \p calendar.
-        \param calendar The calendar used to determine pricing dates in the averaging period.
+        \param calendar The calendar used to determine pricing dates in the averaging period. If not provided, 
+                        the \p index calendar is used.
     */
     AverageSpotPriceHelper(const QuantLib::Handle<QuantLib::Quote>& price,
         const boost::shared_ptr<CommoditySpotIndex>& index,
         const QuantLib::Date& start,
         const QuantLib::Date& end,
-        const QuantLib::Calendar& calendar);
+        const QuantLib::Calendar& calendar = QuantLib::Calendar());
 
     /*! \param price    The average price.
         \param index    The commodity spot index.
@@ -58,13 +59,14 @@ public:
                         start date if it is a pricing date according to the \p calendar.
         \param end      The end date of the averaging period. The averaging period includes the
                         end date if it is a pricing date according to the \p calendar.
-        \param calendar The calendar used to determine pricing dates in the averaging period.
+        \param calendar The calendar used to determine pricing dates in the averaging period. If not provided, 
+                        the \p index calendar is used.
     */
     AverageSpotPriceHelper(QuantLib::Real price,
         const boost::shared_ptr<CommoditySpotIndex>& index,
         const QuantLib::Date& start,
         const QuantLib::Date& end,
-        const QuantLib::Calendar& calendar);
+        const QuantLib::Calendar& calendar = QuantLib::Calendar());
     //@}
 
     //! \name PriceHelper interface

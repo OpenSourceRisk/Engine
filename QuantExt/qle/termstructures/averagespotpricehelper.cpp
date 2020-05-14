@@ -60,10 +60,13 @@ void AverageSpotPriceHelper::init(const boost::shared_ptr<CommoditySpotIndex>& i
     indexClone->unregisterWith(termStructureHandle_);
     registerWith(indexClone);
 
+    // If no calendar supplied in the ctor, use the commodity index's calendar.
+    Calendar pricingCalendar = calendar == Calendar() ? index->fixingCalendar() : calendar;
+
     // Create the averaging cashflow referencing the commodity spot index. Need to specify all the defaults 
     // here just to amend the final default parameter i.e. set excludeStartDate to false.
     averageCashflow_ = boost::make_shared<CommodityIndexedAverageCashFlow>(1.0, start, end, end, indexClone,
-        calendar, 0.0, 1.0, false, 0, 0, nullptr, true, false);
+        pricingCalendar, 0.0, 1.0, false, 0, 0, nullptr, true, false);
 
     // Get the date index pairs involved in the averaging. The earliest date is the date of the first element 
     // and the latest date is the date of the last element.
