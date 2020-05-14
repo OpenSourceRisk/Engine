@@ -83,14 +83,14 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // add equity indexing
         QL_REQUIRE(eqLegData->quantity() != Null<Real>(),
                    "indexing can only be added to funding leg, if quantity is given on equity leg");
-        Indexing eqIndexing("EQ-" + eqLegData->eqName(), 0, "", eqLegData->quantity(), eqLegData->initialPrice(),
-                            valuationSchedule, 0, "", "U", false);
+        Indexing eqIndexing("EQ-" + eqLegData->eqName(), 0, "", false, false, false, eqLegData->quantity(),
+                            eqLegData->initialPrice(), valuationSchedule, 0, "", "U", false);
         legData_[irLegIndex_].indexing().push_back(eqIndexing);
 
         // add fx indexing, if applicable
         if (!eqLegData->fxIndex().empty()) {
-            Indexing fxIndexing(eqLegData->fxIndex(), eqLegData->fxIndexFixingDays(), eqLegData->fxIndexCalendar(), 1.0,
-                                Null<Real>(), valuationSchedule, 0, "", "U", false);
+            Indexing fxIndexing(eqLegData->fxIndex(), eqLegData->fxIndexFixingDays(), eqLegData->fxIndexCalendar(),
+                                false, false, false, 1.0, Null<Real>(), valuationSchedule, 0, "", "U", false);
             legData_[irLegIndex_].indexing().push_back(fxIndexing);
         }
 
