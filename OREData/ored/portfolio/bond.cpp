@@ -62,6 +62,7 @@ void BondData::fromXML(XMLNode* node) {
         coupons_.push_back(ld);
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
+    initialise();
 }
 
 XMLNode* BondData::toXML(XMLDocument& doc) {
@@ -83,13 +84,52 @@ XMLNode* BondData::toXML(XMLDocument& doc) {
     return bondNode;
 }
 
+void BondData::initialise() {
+
+    isPayer_ = false;
+
+    if (!zeroBond()) {
+
+        QL_REQUIRE(!coupons().empty(), "BondData::initialise(): no legs are given");
+
+        // fill currency, if not directly given (which is only the case for zero bonds)
+
+        for (Size i = 0; i < coupons().size(); ++i) {
+            if (i == 0)
+                currency_ = coupons()[i].currency();
+            else {
+                QL_REQUIRE(currency_ == coupons()[i].currency(),
+                           "leg #" << i << " currency (" << coupons()[i].currency()
+                                   << ") not equal to leg #0 currency (" << coupons()[0].currency());
+            }
+        }
+
+        // fill isPayer, FIXME zero bonds are always long
+
+        for (Size i = 0; i < coupons().size(); ++i) {
+            if (i == 0)
+                isPayer_ = coupons()[i].isPayer();
+            else {
+                QL_REQUIRE(isPayer_ == coupons()[i].isPayer(),
+                           "leg #" << i << " isPayer (" << std::boolalpha << coupons()[i].isPayer()
+                                   << ") not equal to leg #0 isPayer (" << coupons()[0].isPayer());
+            }
+        }
+    }
+}
+
 void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData) {
     ore::data::populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, creditCurveId_,
                                              referenceCurveId_, incomeCurveId_, volatilityCurveId_, coupons_,
                                              securityId_, referenceData);
     // plausibility check
+
     QL_REQUIRE(!settlementDays_.empty(),
                "settlement days not given, check bond trade xml and reference data for '" << securityId_ << "'");
+
+    // initialise data
+
+    initialise();
 }
 
 void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
@@ -104,25 +144,13 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Natural settlementDays = boost::lexical_cast<Natural>(bondData_.settlementDays());
     boost::shared_ptr<QuantLib::Bond> bond;
 
-    // FIXME: zero bonds are always long (firstLegIsPayer = false, mult = 1.0)
-    bool firstLegIsPayer = (bondData_.coupons().size() == 0) ? false : bondData_.coupons()[0].isPayer();
-    Real mult = bondData_.bondNotional() * (firstLegIsPayer ? -1.0 : 1.0);
+    Real mult = bondData_.bondNotional() * (bondData_.isPayer() ? -1.0 : 1.0);
     std::vector<Leg> separateLegs;
     if (bondData_.zeroBond()) { // Zero coupon bond
         bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, bondData_.faceAmount(),
                                                 parseDate(bondData_.maturityDate())));
-        currency_ = bondData_.currency();
     } else { // Coupon bond
         for (Size i = 0; i < bondData_.coupons().size(); ++i) {
-            bool legIsPayer = bondData_.coupons()[i].isPayer();
-            QL_REQUIRE(legIsPayer == firstLegIsPayer, "Bond legs must all have same pay/receive flag");
-            if (i == 0)
-                currency_ = bondData_.coupons()[i].currency();
-            else {
-                QL_REQUIRE(currency_ == bondData_.coupons()[i].currency(),
-                           "leg #" << i << " currency (" << bondData_.coupons()[i].currency()
-                                   << ") not equal to leg #0 currency (" << bondData_.coupons()[0].currency());
-            }
             Leg leg;
             auto configuration = builder->configuration(MarketContext::pricing);
             auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
@@ -136,22 +164,22 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             bond->registerWith(c);
     }
 
-    Currency currency = parseCurrency(currency_);
+    Currency currency = parseCurrency(bondData_.currency());
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
     bond->setPricingEngine(
         bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.securityId(), bondData_.referenceCurveId()));
     instrument_.reset(new VanillaInstrument(bond, mult));
 
-    npvCurrency_ = currency_;
+    npvCurrency_ = bondData_.currency();
     maturity_ = bond->cashflows().back()->date();
     notional_ = currentNotional(bond->cashflows());
-    notionalCurrency_ = currency_;
+    notionalCurrency_ = bondData_.currency();
 
     // Add legs (only 1)
     legs_ = {bond->cashflows()};
     legCurrencies_ = {npvCurrency_};
-    legPayers_ = {firstLegIsPayer};
+    legPayers_ = {bondData_.isPayer()};
 }
 
 void Bond::fromXML(XMLNode* node) {
