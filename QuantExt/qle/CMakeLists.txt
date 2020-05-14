@@ -137,6 +137,7 @@ processes/irlgm1fstateprocess.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
 termstructures/averageoisratehelper.cpp
+termstructures/averagespotpricehelper.cpp
 termstructures/basistwoswaphelper.cpp
 termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
@@ -390,6 +391,7 @@ quotes/exceptionquote.hpp
 quotes/logquote.hpp
 termstructures/aposurface.hpp
 termstructures/averageoisratehelper.hpp
+termstructures/averagespotpricehelper.hpp
 termstructures/basistwoswaphelper.hpp
 termstructures/blackinvertedvoltermstructure.hpp
 termstructures/blackmonotonevarvoltermstructure.hpp

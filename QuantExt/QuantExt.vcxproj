@@ -686,6 +686,7 @@
     <ClInclude Include="qle\quantext.hpp" />
     <ClInclude Include="qle\termstructures\aposurface.hpp" />
     <ClInclude Include="qle\termstructures\averageoisratehelper.hpp" />
+    <ClInclude Include="qle\termstructures\averagespotpricehelper.hpp" />
     <ClInclude Include="qle\termstructures\basistwoswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\blackinvertedvoltermstructure.hpp" />
     <ClInclude Include="qle\termstructures\blackmonotonevarvoltermstructure.hpp" />
@@ -915,6 +916,7 @@
     <ClCompile Include="qle\quotes\logquote.cpp" />
     <ClCompile Include="qle\termstructures\aposurface.cpp" />
     <ClCompile Include="qle\termstructures\averageoisratehelper.cpp" />
+    <ClCompile Include="qle\termstructures\averagespotpricehelper.cpp" />
     <ClCompile Include="qle\termstructures\basistwoswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancecurve3.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacemoneyness.cpp" />
