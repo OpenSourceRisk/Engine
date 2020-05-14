@@ -882,6 +882,9 @@
     <ClInclude Include="qle\termstructures\averagespotpricehelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\averagefuturepricehelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1517,6 +1520,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\averagespotpricehelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\averagefuturepricehelper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

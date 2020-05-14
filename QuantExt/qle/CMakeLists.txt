@@ -136,6 +136,7 @@ processes/crossassetstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
+termstructures/averagefuturepricehelper.cpp
 termstructures/averageoisratehelper.cpp
 termstructures/averagespotpricehelper.cpp
 termstructures/basistwoswaphelper.cpp
@@ -390,6 +391,7 @@ processes/irlgm1fstateprocess.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
 termstructures/aposurface.hpp
+termstructures/averagefuturepricehelper.hpp
 termstructures/averageoisratehelper.hpp
 termstructures/averagespotpricehelper.hpp
 termstructures/basistwoswaphelper.hpp
