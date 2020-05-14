@@ -58,7 +58,7 @@ public:
     CommodityBasisPriceCurve(const QuantLib::Date& referenceDate,
         const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
         const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-        const boost::shared_ptr<CommoditySpotIndex>& spotIndex,
+        const boost::shared_ptr<CommodityIndex>& index,
         const QuantLib::Handle<PriceTermStructure>& basePts,
         const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
         bool addBasis = true,
@@ -104,7 +104,7 @@ protected:
 private:
     std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> > basisData_;
     boost::shared_ptr<FutureExpiryCalculator> basisFec_;
-    boost::shared_ptr<CommoditySpotIndex> spotIndex_;
+    boost::shared_ptr<CommodityIndex> index_;
     QuantLib::Handle<PriceTermStructure> basePts_;
     boost::shared_ptr<FutureExpiryCalculator> baseFec_;
     bool addBasis_;
@@ -141,7 +141,7 @@ CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     const QuantLib::Date& referenceDate,
     const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
     const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-    const boost::shared_ptr<CommoditySpotIndex>& spotIndex,
+    const boost::shared_ptr<CommodityIndex>& index,
     const QuantLib::Handle<PriceTermStructure>& basePts,
     const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
     bool addBasis,
@@ -149,7 +149,7 @@ CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     const Interpolator& interpolator)
     : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), basePts->dayCounter()),
       QuantLib::InterpolatedCurve<Interpolator>(interpolator), basisData_(basisData), basisFec_(basisFec),
-      spotIndex_(spotIndex), basePts_(basePts), baseFec_(baseFec), addBasis_(addBasis), monthOffset_(monthOffset) {
+      index_(index), basePts_(basePts), baseFec_(baseFec), addBasis_(addBasis), monthOffset_(monthOffset) {
 
     using QuantLib::Date;
     using QuantLib::io::iso_date;
@@ -329,7 +329,7 @@ template <class Interpolator>
 boost::shared_ptr<CommodityIndexedCashFlow> CommodityBasisPriceCurve<Interpolator>::makeCashflow(
     const QuantLib::Date& start, const QuantLib::Date& end) const {
     
-    return boost::make_shared<CommodityIndexedCashFlow>(1.0, start, end, spotIndex_, 0, QuantLib::NullCalendar(),
+    return boost::make_shared<CommodityIndexedCashFlow>(1.0, start, end, index_, 0, QuantLib::NullCalendar(),
         QuantLib::Unadjusted, 0, QuantLib::NullCalendar(), 0.0, 1.0, false, true, true, true, 0, baseFec_);
 }
 

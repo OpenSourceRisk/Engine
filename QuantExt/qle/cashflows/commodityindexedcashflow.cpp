@@ -14,7 +14,7 @@ namespace QuantExt {
 CommodityIndexedCashFlow::CommodityIndexedCashFlow(Real quantity,
     const Date& pricingDate,
     const Date& paymentDate,
-    const ext::shared_ptr<CommoditySpotIndex>& index,
+    const ext::shared_ptr<CommodityIndex>& index,
     Real spread,
     Real gearing,
     bool useFuturePrice,
@@ -36,7 +36,7 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(Real quantity,
 CommodityIndexedCashFlow::CommodityIndexedCashFlow(Real quantity,
     const Date& startDate,
     const Date& endDate,
-    const ext::shared_ptr<CommoditySpotIndex>& index,
+    const ext::shared_ptr<CommodityIndex>& index,
     Natural paymentLag,
     const Calendar& paymentCalendar,
     BusinessDayConvention paymentConvention,
@@ -131,7 +131,7 @@ void CommodityIndexedCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator
     registerWith(index_);
 }
 
-CommodityIndexedLeg::CommodityIndexedLeg(const Schedule& schedule, const ext::shared_ptr<CommoditySpotIndex>& index)
+CommodityIndexedLeg::CommodityIndexedLeg(const Schedule& schedule, const ext::shared_ptr<CommodityIndex>& index)
     : schedule_(schedule), index_(index), paymentLag_(0), paymentCalendar_(NullCalendar()),
       paymentConvention_(Unadjusted), pricingLag_(0), pricingLagCalendar_(NullCalendar()),
       payInAdvance_(false), inArrears_(true), useFuturePrice_(false), useFutureExpiryDate_(true),

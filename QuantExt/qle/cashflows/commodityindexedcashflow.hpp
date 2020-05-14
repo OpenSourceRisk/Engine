@@ -27,7 +27,7 @@ public:
     CommodityIndexedCashFlow(QuantLib::Real quantity,
         const QuantLib::Date& pricingDate,
         const QuantLib::Date& paymentDate,
-        const ext::shared_ptr<CommoditySpotIndex>& index,
+        const ext::shared_ptr<CommodityIndex>& index,
         QuantLib::Real spread = 0.0,
         QuantLib::Real gearing = 1.0,
         bool useFuturePrice = false,
@@ -41,7 +41,7 @@ public:
     CommodityIndexedCashFlow(QuantLib::Real quantity,
         const QuantLib::Date& startDate,
         const QuantLib::Date& endDate,
-        const ext::shared_ptr<CommoditySpotIndex>& index,
+        const ext::shared_ptr<CommodityIndex>& index,
         QuantLib::Natural paymentLag,
         const QuantLib::Calendar& paymentCalendar,
         QuantLib::BusinessDayConvention paymentConvention,
@@ -110,7 +110,7 @@ private:
 class CommodityIndexedLeg {
 
 public:
-    CommodityIndexedLeg(const QuantLib::Schedule& schedule, const ext::shared_ptr<CommoditySpotIndex>& index);
+    CommodityIndexedLeg(const QuantLib::Schedule& schedule, const ext::shared_ptr<CommodityIndex>& index);
     CommodityIndexedLeg& withQuantities(QuantLib::Real quantity);
     CommodityIndexedLeg& withQuantities(const std::vector<QuantLib::Real>& quantities);
     CommodityIndexedLeg& withPaymentLag(QuantLib::Natural paymentLag);
@@ -137,7 +137,7 @@ public:
 
 private:
     Schedule schedule_;
-    ext::shared_ptr<CommoditySpotIndex> index_;
+    ext::shared_ptr<CommodityIndex> index_;
     std::vector<QuantLib::Real> quantities_;
     QuantLib::Natural paymentLag_;
     QuantLib::Calendar paymentCalendar_;

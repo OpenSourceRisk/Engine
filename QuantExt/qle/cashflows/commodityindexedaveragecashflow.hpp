@@ -34,7 +34,7 @@ public:
         const QuantLib::Date& startDate,
         const QuantLib::Date& endDate,
         const QuantLib::Date& paymentDate,
-        const ext::shared_ptr<CommoditySpotIndex>& spotIndex,
+        const ext::shared_ptr<CommodityIndex>& index,
         const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(),
         QuantLib::Real spread = 0.0,
         QuantLib::Real gearing = 1.0,
@@ -52,7 +52,7 @@ public:
         QuantLib::Natural paymentLag,
         QuantLib::Calendar paymentCalendar,
         QuantLib::BusinessDayConvention paymentConvention,
-        const ext::shared_ptr<CommoditySpotIndex>& spotIndex,
+        const ext::shared_ptr<CommodityIndex>& index,
         const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(),
         QuantLib::Real spread = 0.0,
         QuantLib::Real gearing = 1.0,
@@ -70,7 +70,7 @@ public:
     QuantLib::Real quantity() const { return quantity_; }
     const QuantLib::Date& startDate() const { return startDate_; }
     const QuantLib::Date& endDate() const { return endDate_; }
-    ext::shared_ptr<CommodityIndex> index() const { return spotIndex_; }
+    ext::shared_ptr<CommodityIndex> index() const { return index_; }
     QuantLib::Real spread() const { return spread_; }
     QuantLib::Real gearing() const { return gearing_; }
     bool useFuturePrice() const { return useFuturePrice_; }
@@ -80,9 +80,9 @@ public:
     /*! Return the index used to get the price for each pricing date in the period. The map keys are the pricing dates.
         For a given key date, the map value holds the commodity index used to give the price on that date. If the 
         averaging does not reference future contract settlement prices, i.e. \c useFirstFuture() is \c false, the 
-        commodity index is simply the commodity spot index passed in the constructor. If the averaging references 
-        future contract settlement prices, i.e. \c useFirstFuture() is \c true, the commodity index is the commodity 
-        future contract \em index relevant for that pricing date.
+        commodity index is simply the commodity spot index. If the averaging references future contract settlement 
+        prices, i.e. \c useFirstFuture() is \c true, the commodity index is the commodity future contract \em index 
+        relevant for that pricing date.
     */
     const std::map<QuantLib::Date, ext::shared_ptr<CommodityIndex> >& indices() const { return indices_; }
     //@}
@@ -112,7 +112,7 @@ private:
     QuantLib::Date startDate_;
     QuantLib::Date endDate_;
     QuantLib::Date paymentDate_;
-    ext::shared_ptr<CommodityIndex> spotIndex_;
+    ext::shared_ptr<CommodityIndex> index_;
     QuantLib::Calendar pricingCalendar_;
     QuantLib::Real spread_;
     QuantLib::Real gearing_;
@@ -131,7 +131,7 @@ private:
 class CommodityIndexedAverageLeg {
 
 public:
-    CommodityIndexedAverageLeg(const QuantLib::Schedule& schedule, const ext::shared_ptr<CommoditySpotIndex>& index);
+    CommodityIndexedAverageLeg(const QuantLib::Schedule& schedule, const ext::shared_ptr<CommodityIndex>& index);
     CommodityIndexedAverageLeg& withQuantities(QuantLib::Real quantity);
     CommodityIndexedAverageLeg& withQuantities(const std::vector<QuantLib::Real>& quantities);
     CommodityIndexedAverageLeg& withPaymentLag(QuantLib::Natural paymentLag);
@@ -158,7 +158,7 @@ public:
 
 private:
     Schedule schedule_;
-    ext::shared_ptr<CommoditySpotIndex> index_;
+    ext::shared_ptr<CommodityIndex> index_;
     std::vector<QuantLib::Real> quantities_;
     QuantLib::Natural paymentLag_;
     QuantLib::Calendar paymentCalendar_;

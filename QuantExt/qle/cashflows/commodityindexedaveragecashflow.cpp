@@ -25,7 +25,7 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(Real quantity,
     const Date& startDate,
     const Date& endDate,
     const Date& paymentDate,
-    const ext::shared_ptr<CommoditySpotIndex>& spotIndex,
+    const ext::shared_ptr<CommodityIndex>& index,
     const Calendar& pricingCalendar,
     QuantLib::Real spread,
     QuantLib::Real gearing,
@@ -39,7 +39,7 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(Real quantity,
       startDate_(startDate),
       endDate_(endDate),
       paymentDate_(paymentDate),
-      spotIndex_(spotIndex),
+      index_(index),
       pricingCalendar_(pricingCalendar),
       spread_(spread),
       gearing_(gearing),
@@ -57,7 +57,7 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(Real quantity,
     Natural paymentLag,
     Calendar paymentCalendar,
     BusinessDayConvention paymentConvention,
-    const ext::shared_ptr<CommoditySpotIndex>& spotIndex,
+    const ext::shared_ptr<CommodityIndex>& index,
     const Calendar& pricingCalendar,
     QuantLib::Real spread,
     QuantLib::Real gearing,
@@ -73,7 +73,7 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(Real quantity,
       startDate_(startDate),
       endDate_(endDate),
       paymentDate_(paymentDateOverride),
-      spotIndex_(spotIndex),
+      index_(index),
       pricingCalendar_(pricingCalendar),
       spread_(spread),
       gearing_(gearing),
@@ -120,7 +120,7 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
 
     // If pricing calendar is not set, use the index fixing calendar
     if (pricingCalendar_ == Calendar()) {
-        pricingCalendar_ = spotIndex_->fixingCalendar();
+        pricingCalendar_ = index_->fixingCalendar();
     }
     
     // If we are going to reference a future settlement price, check that we have a valid expiry calculator
@@ -164,9 +164,9 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
                 roll = deliveryDateRoll_ == 0 ? expiry :
                     pricingCalendar_.advance(expiry, -static_cast<Integer>(deliveryDateRoll_), Days);
             }
-            indices_[pdStart] = boost::make_shared<CommodityFuturesIndex>(spotIndex_, expiry);
+            indices_[pdStart] = boost::make_shared<CommodityFuturesIndex>(index_, expiry);
         } else {
-            indices_[pdStart] = spotIndex_;
+            indices_[pdStart] = index_;
         }
         registerWith(indices_[pdStart]);
         pdStart = pricingCalendar_.advance(pdStart, 1, Days);
@@ -174,7 +174,7 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
 }
 
 CommodityIndexedAverageLeg::CommodityIndexedAverageLeg(const Schedule& schedule,
-    const ext::shared_ptr<CommoditySpotIndex>& index)
+    const ext::shared_ptr<CommodityIndex>& index)
     : schedule_(schedule), index_(index), paymentLag_(0), paymentCalendar_(NullCalendar()),
       paymentConvention_(Unadjusted), pricingCalendar_(Calendar()), payInAdvance_(false), useFuturePrice_(false), 
       deliveryDateRoll_(0), futureMonthOffset_(0), payAtMaturity_(false), includeEndDate_(true),

@@ -54,7 +54,7 @@ public:
     CommodityAverageBasisPriceCurve(const QuantLib::Date& referenceDate,
         const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
         const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-        const boost::shared_ptr<CommoditySpotIndex>& spotIndex,
+        const boost::shared_ptr<CommodityIndex>& index,
         const QuantLib::Handle<PriceTermStructure>& basePts,
         const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
         bool addBasis = true,
@@ -99,7 +99,7 @@ protected:
 private:
     std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> > basisData_;
     boost::shared_ptr<FutureExpiryCalculator> basisFec_;
-    boost::shared_ptr<CommoditySpotIndex> spotIndex_;
+    boost::shared_ptr<CommodityIndex> index_;
     QuantLib::Handle<PriceTermStructure> basePts_;
     boost::shared_ptr<FutureExpiryCalculator> baseFec_;
     bool addBasis_;
@@ -127,14 +127,14 @@ CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     const QuantLib::Date& referenceDate,
     const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
     const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-    const boost::shared_ptr<CommoditySpotIndex>& spotIndex,
+    const boost::shared_ptr<CommodityIndex>& index,
     const QuantLib::Handle<PriceTermStructure>& basePts,
     const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
     bool addBasis,
     const Interpolator& interpolator)
     : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), basePts->dayCounter()),
       QuantLib::InterpolatedCurve<Interpolator>(interpolator), basisData_(basisData), basisFec_(basisFec),
-      spotIndex_(spotIndex), basePts_(basePts), baseFec_(baseFec), addBasis_(addBasis) {
+      index_(index), basePts_(basePts), baseFec_(baseFec), addBasis_(addBasis) {
 
     using QuantLib::Date;
     using QuantLib::io::iso_date;
@@ -207,7 +207,7 @@ CommodityAverageBasisPriceCurve<Interpolator>::CommodityAverageBasisPriceCurve(
     this->data_.resize(this->times_.size());
 
     // Populate the leg of cashflows.
-    baseLeg_ = CommodityIndexedAverageLeg(Schedule(expiries), spotIndex_)
+    baseLeg_ = CommodityIndexedAverageLeg(Schedule(expiries), index_)
         .withFutureExpiryCalculator(baseFec_)
         .useFuturePrice(true)
         .withQuantities(1.0);
