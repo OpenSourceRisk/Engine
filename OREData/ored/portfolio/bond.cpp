@@ -90,8 +90,6 @@ void BondData::initialise() {
 
     if (!zeroBond()) {
 
-        QL_REQUIRE(!coupons().empty(), "BondData::initialise(): no legs are given");
-
         // fill currency, if not directly given (which is only the case for zero bonds)
 
         for (Size i = 0; i < coupons().size(); ++i) {
@@ -122,14 +120,16 @@ void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDa
     ore::data::populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, creditCurveId_,
                                              referenceCurveId_, incomeCurveId_, volatilityCurveId_, coupons_,
                                              securityId_, referenceData);
-    // plausibility check
-
-    QL_REQUIRE(!settlementDays_.empty(),
-               "settlement days not given, check bond trade xml and reference data for '" << securityId_ << "'");
-
     // initialise data
 
     initialise();
+
+    // plausibility checks to check whether the reference data was set up at all
+
+    QL_REQUIRE(!settlementDays_.empty(),
+               "settlement days not given, check bond reference data for '" << securityId_ << "'");
+
+    QL_REQUIRE(!currency_.empty(), "currency not given, check bond reference data for '" << securityId_ << "'");
 }
 
 void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
