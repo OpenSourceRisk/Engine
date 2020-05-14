@@ -79,11 +79,6 @@ public:
     void update();
     //@}
 
-    //! \name LazyObject interface
-    //@{
-    void performCalculations() const;
-    //@}
-
     //! \name TermStructure interface
     //@{
     QuantLib::Date maxDate() const;
@@ -104,6 +99,11 @@ public:
     //@}
 
 protected:
+    //! \name LazyObject interface
+    //@{
+    void performCalculations() const;
+    //@}
+
     //! \name PriceTermStructure implementation
     //@{
     QuantLib::Real priceImpl(QuantLib::Time t) const;
