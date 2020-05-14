@@ -40,7 +40,7 @@ FuturePriceHelper::FuturePriceHelper(Real price, const Date& expiryDate)
 }
 
 Real FuturePriceHelper::impliedQuote() const {
-    QL_REQUIRE(termStructure_ != 0, "FuturePriceHelper term structure not set.");
+    QL_REQUIRE(termStructure_, "FuturePriceHelper term structure not set.");
     return termStructure_->price(pillarDate_);
 }
 
