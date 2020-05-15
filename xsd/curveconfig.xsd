@@ -127,6 +127,8 @@
       <xs:element type="smileType" name="SmileType" minOccurs="0" maxOccurs="1"/>
       <xs:element type="fxVolInterpolation" name="SmileInterpolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Deltas" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SmileDelta" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Expiries"/>
       <xs:element type="xs:string" name="FXSpotID" minOccurs="0" />
       <xs:element type="xs:string" name="FXForeignCurveID" minOccurs="0" />
@@ -344,8 +346,8 @@
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="RunningSpread" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -758,6 +760,7 @@
   <xs:complexType name="discountRatioType">
     <xs:sequence>
       <xs:element type="discountRatioTypeType" name="Type"/>
+      <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="discountRatioCurveElement" name="BaseCurve"/>
       <xs:element type="discountRatioCurveElement" name="NumeratorCurve"/>
       <xs:element type="discountRatioCurveElement" name="DenominatorCurve"/>
