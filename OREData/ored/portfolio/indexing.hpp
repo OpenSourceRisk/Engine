@@ -39,12 +39,14 @@ public:
     Indexing()
         : hasData_(false), quantity_(1.0), initialFixing_(Null<Real>()), fixingDays_(0), inArrearsFixing_(false) {}
     explicit Indexing(const std::string& index, const Size indexFixingDays = 0, const string& indexFixingCalendar = "",
-                      const Real quantity = 1.0, const Real initialFixing = Null<Real>(),
-                      const ScheduleData& valuationSchedule = ScheduleData(), const Size fixingDays = 0,
-                      const string& fixingCalendar = "", const string& fixingConvention = "",
+                      const bool indexIsDirty = false, const bool indexIsRelative = true,
+                      const bool indexIsConditionalOnSurvival = true, const Real quantity = 1.0,
+                      const Real initialFixing = Null<Real>(), const ScheduleData& valuationSchedule = ScheduleData(),
+                      const Size fixingDays = 0, const string& fixingCalendar = "", const string& fixingConvention = "",
                       const bool inArrearsFixing = false)
         : hasData_(true), quantity_(quantity), index_(index), indexFixingDays_(indexFixingDays),
-          indexFixingCalendar_(indexFixingCalendar), initialFixing_(initialFixing),
+          indexFixingCalendar_(indexFixingCalendar), indexIsDirty_(indexIsDirty), indexIsRelative_(indexIsRelative),
+          indexIsConditionalOnSurvival_(indexIsConditionalOnSurvival), initialFixing_(initialFixing),
           valuationSchedule_(valuationSchedule), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar),
           fixingConvention_(fixingConvention), inArrearsFixing_(inArrearsFixing) {}
 
@@ -53,8 +55,15 @@ public:
     bool hasData() const { return hasData_; }
     Real quantity() const { return quantity_; }
     const string& index() const { return index_; }
+    // only used for FX indices
     const Size indexFixingDays() const { return indexFixingDays_; }
+    // only used for FX, Bond indices
     const string& indexFixingCalendar() const { return indexFixingCalendar_; }
+    // only used for Bond indices
+    bool indexIsDirty() const { return indexIsDirty_; }
+    bool indexIsRelative() const { return indexIsRelative_; }
+    bool indexIsConditionalOnSurvival() const { return indexIsConditionalOnSurvival_; }
+    //
     Real initialFixing() const { return initialFixing_; }
     const ScheduleData& valuationSchedule() const { return valuationSchedule_; }
     Size fixingDays() const { return fixingDays_; }
@@ -67,8 +76,15 @@ public:
     //@{
     Real& quantity() { return quantity_; }
     string& index() { return index_; }
+    // only used for FX indices
     Size& indexFixingDays() { return indexFixingDays_; }
+    // only used for FX, Bond indices
     string& indexFixingCalendar() { return indexFixingCalendar_; }
+    // only used for Bond indices
+    bool& indexIsDirty() { return indexIsDirty_; }
+    bool& indexIsRelative() { return indexIsRelative_; }
+    bool& indexIsConditionalOnSurvival() { return indexIsConditionalOnSurvival_; }
+    //
     Real& initialFixing() { return initialFixing_; }
     ScheduleData& valuationSchedule() { return valuationSchedule_; }
     Size& fixingDays() { return fixingDays_; }
@@ -88,6 +104,9 @@ private:
     string index_;
     Size indexFixingDays_;
     string indexFixingCalendar_;
+    bool indexIsDirty_;
+    bool indexIsRelative_;
+    bool indexIsConditionalOnSurvival_;
     Real initialFixing_;
     ScheduleData valuationSchedule_;
     Size fixingDays_;

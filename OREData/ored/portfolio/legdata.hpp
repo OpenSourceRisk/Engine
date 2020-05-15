@@ -902,5 +902,16 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
                                                   const boost::shared_ptr<Market>& market, const string& configuration,
                                                   const string& calendar, Size fixingDays = 0);
 
+// build a Bond Index needed by legbuilders (populates bond data from bond reference data if required)
+class BondData;
+boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
+                                                      const bool relative, const Calendar& fixingCalendar,
+                                                      const bool conditionalOnSurvival,
+                                                      const boost::shared_ptr<EngineFactory>& engineFactory);
+
+// join a vector of legs to a single leg, check if the legs have adjacent periods
+Leg joinLegs(const std::vector<Leg>& legs);
+
+
 } // namespace data
 } // namespace ore
