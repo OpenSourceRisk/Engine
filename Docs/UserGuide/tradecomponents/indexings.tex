@@ -124,7 +124,9 @@ The Indexings node contains the following elements:
   Allowable values: true, false
 
 \item Relative [Optional, defaults to true]: Only used for bond indices. Indicates whether to use relative (true) or
-  absolute prices (false).
+  absolute prices (false). The absolute price is the dirty or clean npv as of the settlement date of the bond in
+  absolute ``dollar'' terms using the bond details (in particular the notional) from the reference data. The relative
+  price is the absolute price divided by the current notional as of the settlement date.
 
   Allowable values: true, false
 
