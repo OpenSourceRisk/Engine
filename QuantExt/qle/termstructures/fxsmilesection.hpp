@@ -33,6 +33,7 @@ using namespace QuantLib;
 //! \ingroup termstructures
 class FxSmileSection {
 public:
+    FxSmileSection() : spot_(0.0), rd_(0.0), rf_(0.0), t_(0.0) {}
     FxSmileSection(Real spot, Real rd, Real rf, Time t)
         : spot_(spot), rd_(rd), rf_(rf), t_(t) {}
     virtual ~FxSmileSection(){};
