@@ -885,6 +885,9 @@
     <ClInclude Include="qle\termstructures\averagefuturepricehelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\piecewisepricecurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

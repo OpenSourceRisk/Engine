@@ -728,6 +728,7 @@
     <ClInclude Include="qle\termstructures\piecewiseoptionletstripper.hpp" />
     <ClInclude Include="qle\termstructures\kinterpolatedyoyoptionletvolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\optionpricesurface.hpp" />
+    <ClInclude Include="qle\termstructures\piecewisepricecurve.hpp" />
     <ClInclude Include="qle\termstructures\pricecurve.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp" />
