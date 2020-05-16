@@ -158,7 +158,15 @@ boost::shared_ptr<FxSmileSection> BlackVolatilitySurfaceDelta::blackVolSmile(Tim
     }
 
     // now build smile from strikes and vols
-    return boost::make_shared<InterpolatedSmileSection>(spot, dDiscount, fDiscount, t, strikes, vols, interpolationMethod_, flatExtrapolation_);
+    QL_REQUIRE(!vols.empty(),
+               "BlackVolatilitySurfaceDelta::blackVolSmile(" << t << "): no strikes given, this is unexpected.");
+    if(vols.size() == 1) {
+        // handle the situation that we only have one strike (might occur for e.g. t=0)
+        return boost::make_shared<ConstantSmileSection>(vols.front());
+    } else {
+        // we have at least two strikes
+        return boost::make_shared<InterpolatedSmileSection>(spot, dDiscount, fDiscount, t, strikes, vols, interpolationMethod_, flatExtrapolation_);
+    }
 }
 
 boost::shared_ptr<FxSmileSection> BlackVolatilitySurfaceDelta::blackVolSmile(const Date& d) const {
