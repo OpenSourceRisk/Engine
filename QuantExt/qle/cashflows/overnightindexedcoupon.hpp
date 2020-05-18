@@ -80,7 +80,8 @@ namespace QuantExt {
                     bool telescopicValueDates = false,
                     bool includeSpread = false,
                     const Period& lookback = 0 * Days,
-                    const Natural rateCutoff = 0);
+                    const Natural rateCutoff = 0,
+                    const Natural fixingDays = Null<Size>());
         //! \name Inspectors
         //@{
         //! fixing dates for the rates to be compounded
@@ -137,6 +138,7 @@ namespace QuantExt {
         OvernightLeg& includeSpread(bool includeSpread);
         OvernightLeg& withLookback(const Period& lookback);
         OvernightLeg& withRateCutoff(const Natural rateCutoff);
+        OvernightLeg& withFixingDays(const Natural fixingDays);
         operator Leg() const;
       private:
         Schedule schedule_;
@@ -152,6 +154,7 @@ namespace QuantExt {
         bool includeSpread_;
         Period lookback_;
         Natural rateCutoff_;
+        Natural fixingDays_;
     };
 
 }

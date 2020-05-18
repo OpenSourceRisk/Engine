@@ -944,6 +944,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                 .withPaymentLag(paymentLag)
                 .withLookback(floatData->lookback())
                 .withRateCutoff(floatData->rateCutoff() == Null<Size>() ? 2 : floatData->rateCutoff())
+                .withFixingDays(floatData->fixingDays())
                 .withAverageONIndexedCouponPricer(couponPricer);
 
         return leg;
@@ -960,6 +961,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                       .withGearings(gearings)
                       .includeSpread(floatData->includeSpread())
                       .withLookback(floatData->lookback())
+                      .withFixingDays(floatData->fixingDays())
                       .withRateCutoff(floatData->rateCutoff() == Null<Size>() ? 0 : floatData->rateCutoff());
 
         // If the overnight index is BRL CDI, we need a special coupon pricer

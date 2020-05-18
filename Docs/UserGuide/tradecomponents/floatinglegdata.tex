@@ -156,18 +156,25 @@ in Listing \ref{lst:float_zero_coupon_leg_dates}. \begin{listing}[H]
 
 Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 
-\item FixingDays [Optional]: This is the fixing gap, i.e. the number of business days
-  before the period end date an index fixing is observed.   
+\item FixingDays [Optional]: The fixing gap. For Ibor coupons this is the number of business days before the accrual
+  period's {\em reference} date to observe the index fixing. Here, the accrual period reference date is the accrual
+  start date for an in advanced fixed coupon and the accrual end date for in arrears fixed coupon. \\
+  For overnight coupons this is the number of business days by which the value dates are shifted into the past to get
+  the fixing observation dates. In the context of the Ibor reform the FixingDays parameter is sometimes also called
+  ``obervation lag''.
 
-Allowable values:  Positive integers.  Defaults to the index's fixing days if blank or omitted.
+  Allowable values: A non-negative whole number.  Defaults to the index's fixing days if blank or omitted.
 
-\item Lookback [Optional]: A period by which the fixing schedule of (averaged, compounded) OIS legs is shifted into the
-  past.
+\item Lookback [Optional]: Only applicable to OIS legs. A period by which the value dates schedule of (averaged,
+  compounded) OIS legs is shifted into the past. On top of this the gap defined by the FixingDays is applied to get the
+  final fixing date for an original date in the OIS value dates schedule. In the context of the Ibor reform the Lookback
+  parameter is sometimes also called ``shift''. With this terminology, first the shift and then the observation lag is
+  applied to get the fixing date for an original value date of an overnight coupon.
 
-Allowable values: any valid period, e.g. 2D, 3M, 1Y
+  Allowable values: any valid period, e.g. 2D, 3M, 1Y
 
-\item RateCutoff [Optional]: The number of fixing dates at the end of the fixing period for which the fixing value is
-  held constant and set to the previous value. Only applicable to OIS legs, defaults to $0$ for compounded and $2$ for
+\item RateCutoff [Optional]: Only applicable to OIS legs. The number of fixing dates at the end of the fixing period for
+  which the fixing value is held constant and set to the previous value. Defaults to $0$ for compounded and $2$ for
   averaged OIS legs.
 
 Allowable values: any non-negative whole number

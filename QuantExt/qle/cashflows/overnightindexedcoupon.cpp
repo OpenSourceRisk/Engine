@@ -163,9 +163,11 @@ namespace QuantExt {
                     bool telescopicValueDates,
                     bool includeSpread,
                     const Period& lookback,
-                    const Natural rateCutoff)
+                    const Natural rateCutoff,
+                    const Natural fixingDays)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate,
-                         overnightIndex->fixingDays(), overnightIndex,
+                         fixingDays,
+                         overnightIndex,
                          gearing, spread,
                          refPeriodStart, refPeriodEnd,
                          dayCounter, false), includeSpread_(includeSpread),
@@ -226,13 +228,14 @@ namespace QuantExt {
 
         // fixing dates
         n_ = valueDates_.size()-1;
-        if (overnightIndex->fixingDays()==0) {
+        if (FloatingRateCoupon::fixingDays() == 0) {
             fixingDates_ = vector<Date>(valueDates_.begin(),
                                              valueDates_.end()-1);
         } else {
             fixingDates_.resize(n_);
-            for (Size i=0; i<n_; ++i)
-                fixingDates_[i] = overnightIndex->fixingDate(valueDates_[i]);
+            for (Size i = 0; i < n_; ++i)
+                fixingDates_[i] = overnightIndex->fixingCalendar().advance(
+                    valueDates_[i], -static_cast<Integer>(FloatingRateCoupon::fixingDays()), Days, Preceding);
         }
 
         // accrual (compounding) periods
@@ -269,11 +272,10 @@ namespace QuantExt {
         }
     }
 
-    OvernightLeg::OvernightLeg(const Schedule& schedule,
-                               const ext::shared_ptr<OvernightIndex>& i)
-    : schedule_(schedule), overnightIndex_(i), paymentCalendar_(schedule.calendar()),
-      paymentAdjustment_(Following), paymentLag_(0), telescopicValueDates_(false),
-      includeSpread_(false), lookback_(0 * Days), rateCutoff_(0) {}
+    OvernightLeg::OvernightLeg(const Schedule& schedule, const ext::shared_ptr<OvernightIndex>& i)
+        : schedule_(schedule), overnightIndex_(i), paymentCalendar_(schedule.calendar()), paymentAdjustment_(Following),
+          paymentLag_(0), telescopicValueDates_(false), includeSpread_(false), lookback_(0 * Days), rateCutoff_(0),
+          fixingDays_(Null<Size>()) {}
 
     OvernightLeg& OvernightLeg::withNotionals(Real notional) {
         notionals_ = vector<Real>(1, notional);
@@ -346,6 +348,11 @@ namespace QuantExt {
         return *this;
     }
 
+    OvernightLeg& OvernightLeg::withFixingDays(const Natural fixingDays) {
+        fixingDays_ = fixingDays;
+        return *this;
+    }
+
     OvernightLeg::operator Leg() const {
 
         QL_REQUIRE(!notionals_.empty(), "no notional given");
@@ -384,7 +391,8 @@ namespace QuantExt {
                                        telescopicValueDates_,
                                        includeSpread_,
                                        lookback_,
-                                       rateCutoff_)));
+                                       rateCutoff_,
+                                       fixingDays_)));
         }
         return cashflows;
     }
