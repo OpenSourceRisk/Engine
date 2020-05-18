@@ -220,6 +220,15 @@ public:
     bool nakedOption() const { return nakedOption_; }
     //@}
 
+    //! \name Modifiers
+    //@{
+    vector<double>& caps() { return caps_; }
+    vector<string>& capDates() { return capDates_; }
+    vector<double>& floors() { return floors_; }
+    vector<string>& floorDates() { return floorDates_; }
+    bool& nakedOption() { return nakedOption_; }
+    //@}
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
@@ -720,6 +729,7 @@ public:
     vector<double>& notionals() { return notionals_; }
     vector<string>& notionalDates() { return notionalDates_; }
     bool& isPayer() { return isPayer_; }
+    boost::shared_ptr<LegAdditionalData>& concreteLegData() { return concreteLegData_; }
     std::vector<Indexing>& indexing() { return indexing_; }
     bool& indexingFromAssetLeg() { return indexingFromAssetLeg_; }
     //@}

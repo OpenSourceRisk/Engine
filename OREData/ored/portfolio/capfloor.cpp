@@ -37,7 +37,10 @@ using namespace QuantLib;
 
 namespace ore {
 namespace data {
+
 void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+
+    DLOG("CapFloor::build() called for trade " << id());
 
     // Make sure the leg is floating or CMS
     QL_REQUIRE((legData_.legType() == "Floating") || (legData_.legType() == "CMS") || (legData_.legType() == "CPI") ||
@@ -62,61 +65,87 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<EngineBuilder> builder;
     std::string underlyingIndex, qlIndexName;
 
+    DLOG("Building cap/floor on leg of type " << legData_.legType());
     if (legData_.legType() == "Floating") {
-        builder = engineFactory->builder(tradeType_);
 
+        Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
         boost::shared_ptr<FloatingLegData> floatData =
             boost::dynamic_pointer_cast<FloatingLegData>(legData_.concreteLegData());
         QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << legData_.legType());
-        QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
-                   "CapFloor build error, Floating leg section must not have caps and floors");
-
         underlyingIndex = floatData->index();
         Handle<IborIndex> hIndex =
-            engineFactory->market()->iborIndex(underlyingIndex, builder->configuration(MarketContext::pricing));
+            engineFactory->market()->iborIndex(underlyingIndex, engineFactory->configuration(MarketContext::pricing));
         QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << underlyingIndex << " in market.");
         boost::shared_ptr<IborIndex> index = hIndex.currentLink();
         qlIndexName = index->name();
 
-        // We treat overnight and bma indices approximately as ibor indices and warn about this in the log
-        if (boost::dynamic_pointer_cast<OvernightIndex>(index) ||
-            boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index))
+        QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
+                   "CapFloor build error, Floating leg section must not have caps and floors");
+
+        bool isOnIndex = boost::dynamic_pointer_cast<OvernightIndex>(index) != nullptr;
+        bool isBmaIndex = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index) != nullptr;
+
+        if (!isOnIndex && !isBmaIndex) {
+            // for Ibor Indices we use caps/floors embedded in the leg, this is the preferred way to capture
+            // all features of the floating leg and to avoid maintaining duplicate code for the CapFloor
+            // instrument and pricing engine
+            LegData tmpLegData = legData_;
+            boost::shared_ptr<FloatingLegData> tmpFloatData = boost::make_shared<FloatingLegData>(*floatData);
+            tmpFloatData->floors() = floors_;
+            tmpFloatData->caps() = caps_;
+            tmpFloatData->nakedOption() = true;
+            tmpLegData.concreteLegData() = tmpFloatData;
+            legs_.push_back(engineFactory->legBuilder(tmpLegData.legType())
+                                ->buildLeg(tmpLegData, engineFactory, requiredFixings_,
+                                           engineFactory->configuration(MarketContext::pricing)));
+            // if both caps and floors are given, we have to use a payer leg, since in this case
+            // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
+            // and a short cap while we have documented a collar to be a short floor and long cap
+            auto swap =
+                boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
+            swap->setPricingEngine(
+                boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+            instrument_ = boost::make_shared<VanillaInstrument>(swap, multiplier);
+            maturity_ = CashFlows::maturityDate(legs_.front());
+        } else {
+            // for BMA and ON indices we use the QuantLib::CapFloor instrument
+            // we treat those indices as ibor indices and warn about this in the log
             ALOG("CapFloor trade " << id() << " on ON or BMA index '" << underlyingIndex
-                                   << "' built, will treat the index approximately as an ibor index");
+                 << "' built, will treat the index approximately as an ibor index");
+            builder = engineFactory->builder(tradeType_);
+            legs_.push_back(makeIborLeg(legData_, index, engineFactory));
 
-        legs_.push_back(makeIborLeg(legData_, index, engineFactory));
+            // If a vector of cap/floor rates are provided, ensure they align with the number of schedule periods
+            if (floors_.size() > 1) {
+                QL_REQUIRE(floors_.size() == legs_[0].size(),
+                           "The number of floor rates provided does not match the number of schedule periods");
+            }
 
-        // If a vector of cap/floor rates are provided, ensure they align with the number of schedule periods
-        if (floors_.size() > 1) {
-            QL_REQUIRE(floors_.size() == legs_[0].size(),
-                       "The number of floor rates provided does not match the number of schedule periods");
+            if (caps_.size() > 1) {
+                QL_REQUIRE(caps_.size() == legs_[0].size(),
+                           "The number of cap rates provided does not match the number of schedule periods");
+            }
+
+            // If one cap/floor rate is given, extend the vector to align with the number of schedule periods
+            if (floors_.size() == 1)
+                floors_.resize(legs_[0].size(), floors_[0]);
+
+            if (caps_.size() == 1)
+                caps_.resize(legs_[0].size(), caps_[0]);
+
+            // Create QL CapFloor instrument
+            boost::shared_ptr<QuantLib::CapFloor> capFloor =
+                boost::make_shared<QuantLib::CapFloor>(capFloorType, legs_[0], caps_, floors_);
+
+            boost::shared_ptr<CapFloorEngineBuilder> capFloorBuilder =
+                boost::dynamic_pointer_cast<CapFloorEngineBuilder>(builder);
+            capFloor->setPricingEngine(capFloorBuilder->engine(parseCurrency(legData_.currency())));
+
+            // Wrap the QL instrument in a vanilla instrument
+            instrument_ = boost::make_shared<VanillaInstrument>(capFloor, multiplier);
+
+            maturity_ = capFloor->maturityDate();
         }
-
-        if (caps_.size() > 1) {
-            QL_REQUIRE(caps_.size() == legs_[0].size(),
-                       "The number of cap rates provided does not match the number of schedule periods");
-        }
-
-        // If one cap/floor rate is given, extend the vector to align with the number of schedule periods
-        if (floors_.size() == 1)
-            floors_.resize(legs_[0].size(), floors_[0]);
-
-        if (caps_.size() == 1)
-            caps_.resize(legs_[0].size(), caps_[0]);
-
-        // Create QL CapFloor instrument
-        boost::shared_ptr<QuantLib::CapFloor> capFloor =
-            boost::make_shared<QuantLib::CapFloor>(capFloorType, legs_[0], caps_, floors_);
-
-        boost::shared_ptr<CapFloorEngineBuilder> capFloorBuilder =
-            boost::dynamic_pointer_cast<CapFloorEngineBuilder>(builder);
-        capFloor->setPricingEngine(capFloorBuilder->engine(parseCurrency(legData_.currency())));
-
-        // Wrap the QL instrument in a vanilla instrument
-        Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
-        instrument_ = boost::make_shared<VanillaInstrument>(capFloor, multiplier);
-
-        maturity_ = capFloor->maturityDate();
 
     } else if (legData_.legType() == "CMS") {
         builder = engineFactory->builder("Swap");
