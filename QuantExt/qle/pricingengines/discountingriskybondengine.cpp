@@ -80,7 +80,9 @@ void DiscountingRiskyBondEngine::calculate() const {
     }
 }
 
-Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate, const Leg& cashflows) const {
+Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate, const Leg& cashflows,
+                                              const Handle<YieldTermStructure>& incomeCurve,
+                                              const bool conditionalOnSurvival) const {
     Real npvValue = 0;
 
     // handle case where we wish to price simply with benchmark curve and scalar security spread
@@ -94,8 +96,8 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate, const Leg& cashflows
     Rate recoveryVal = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
 
     // compounding factors for npv date
-    Real dfSettl = discountCurve_->discount(npvDate);
-    Real spSettl = creditCurvePtr->survivalProbability(npvDate);
+    Real dfSettl = incomeCurve.empty() ? discountCurve_->discount(npvDate) : incomeCurve->discount(npvDate);
+    Real spSettl = conditionalOnSurvival ? creditCurvePtr->survivalProbability(npvDate) : 1.0;
 
     Size numCoupons = 0;
     bool hasLiveCashFlow = false;

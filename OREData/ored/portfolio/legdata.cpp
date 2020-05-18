@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
@@ -1680,8 +1681,14 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                 index =
                     parseCommodityIndex(indexing.index(), tmp->fixingCalendar(),
                                         engineFactory->market()->commodityPriceCurve(tmp->underlyingName(), config));
+            } else if(boost::starts_with(indexing.index(),"BOND-")) {
+                BondData bondData(parseBondIndex(indexing.index())->securityName(), 1.0);
+                index = buildBondIndex(bondData, indexing.indexIsDirty(), indexing.indexIsRelative(),
+                                       parseCalendar(indexing.indexFixingCalendar()),
+                                       indexing.indexIsConditionalOnSurvival(), engineFactory);
             } else {
-                QL_FAIL("invalid index '" << indexing.index() << "' in indexing data, expected EQ-, FX-, COMM- index");
+                QL_FAIL("invalid index '" << indexing.index()
+                                          << "' in indexing data, expected EQ-, FX-, COMM-, BOND- index");
             }
 
             QL_REQUIRE(index, "applyIndexing(): index is null, this is unexpected");
@@ -1737,6 +1744,82 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
     QL_REQUIRE(fxi, "Failed to build FXIndex " << fxIndex);
 
     return fxi;
+}
+
+boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
+                                                      const bool relative, const Calendar& fixingCalendar,
+                                                      const bool conditionalOnSurvival,
+                                                      const boost::shared_ptr<EngineFactory>& engineFactory) {
+
+    // build the bond, we would not need a full build with a pricing engine attached, but this is the easiest
+
+    BondData data = securityData;
+    data.populateFromBondReferenceData(engineFactory->referenceData());
+    Bond bond(Envelope(), data);
+    bond.build(engineFactory);
+    auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
+    QL_REQUIRE(qlBond, "buildBondIndex(): could not cast to QuantLib::Bond, this is unexpected");
+
+    // get the curves
+
+    string securityId = data.securityId();
+
+    Handle<YieldTermStructure> discountCurve = engineFactory->market()->yieldCurve(
+        data.referenceCurveId(), engineFactory->configuration(MarketContext::pricing));
+
+    Handle<DefaultProbabilityTermStructure> defaultCurve;
+    if (!data.creditCurveId().empty())
+        defaultCurve = engineFactory->market()->defaultCurve(data.creditCurveId(),
+                                                             engineFactory->configuration(MarketContext::pricing));
+
+    Handle<YieldTermStructure> incomeCurve;
+    if (!data.incomeCurveId().empty())
+        incomeCurve = engineFactory->market()->yieldCurve(data.incomeCurveId(),
+                                                          engineFactory->configuration(MarketContext::pricing));
+
+    Handle<Quote> recovery;
+    try {
+        recovery =
+            engineFactory->market()->recoveryRate(securityId, engineFactory->configuration(MarketContext::pricing));
+    } catch (...) {
+        ALOG("security specific recovery rate not found for security ID "
+             << securityId << ", falling back on the recovery rate for credit curve Id " << data.creditCurveId());
+        if (!data.creditCurveId().empty())
+            recovery = engineFactory->market()->recoveryRate(data.creditCurveId(),
+                                                             engineFactory->configuration(MarketContext::pricing));
+    }
+
+    Handle<Quote> spread;
+    try {
+        spread = engineFactory->market()->securitySpread(securityId, engineFactory->configuration(MarketContext::pricing));
+    } catch (...) {
+    }
+
+    // build and return the index
+
+    return boost::make_shared<QuantExt::BondIndex>(securityId, dirty, relative, fixingCalendar, qlBond, discountCurve,
+                                                   defaultCurve, recovery, spread, incomeCurve, conditionalOnSurvival);
+}
+
+Leg joinLegs(const std::vector<Leg>& legs) {
+    Leg masterLeg;
+    for (Size i = 0; i < legs.size(); ++i) {
+        // check if the periods of adjacent legs are consistent
+        if (i > 0) {
+            auto lcpn = boost::dynamic_pointer_cast<Coupon>(legs[i - 1].back());
+            auto fcpn = boost::dynamic_pointer_cast<Coupon>(legs[i].front());
+            QL_REQUIRE(lcpn, "joinLegs: expected coupon as last cashflow in leg #" << (i - 1));
+            QL_REQUIRE(fcpn, "joinLegs: expected coupon as first cashflow in leg #" << i);
+            QL_REQUIRE(lcpn->accrualEndDate() == fcpn->accrualStartDate(),
+                       "joinLegs: accrual end date of last coupon in leg #"
+                           << (i - 1) << " (" << lcpn->accrualEndDate()
+                           << ") is not equal to accrual start date of first coupon in leg #" << i << " ("
+                           << fcpn->accrualStartDate() << ")");
+        }
+        // copy legs together
+        masterLeg.insert(masterLeg.end(), legs[i].begin(), legs[i].end());
+    }
+    return masterLeg;
 }
 
 } // namespace data

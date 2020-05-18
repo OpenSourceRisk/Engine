@@ -25,7 +25,7 @@ namespace QuantExt {
 
 IndexedCoupon::IndexedCoupon(const boost::shared_ptr<Coupon>& c, const Real qty, const boost::shared_ptr<Index>& index,
                              const Date& fixingDate)
-    : Coupon(c->date(), c->nominal(), c->accrualStartDate(), c->accrualEndDate(), c->referencePeriodStart(),
+    : Coupon(c->date(), 0.0, c->accrualStartDate(), c->accrualEndDate(), c->referencePeriodStart(),
              c->referencePeriodEnd(), c->exCouponDate()),
       c_(c), qty_(qty), index_(index), fixingDate_(fixingDate), initialFixing_(Null<Real>()) {
     QL_REQUIRE(index, "IndexedCoupon: index is null");
