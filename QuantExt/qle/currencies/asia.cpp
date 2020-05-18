@@ -22,13 +22,6 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-// Kazakhstani tenge
-KZTCurrency::KZTCurrency() {
-    static boost::shared_ptr<Data> kztData(
-        new Data("Kazakhstani tenge", "KZT", 398, "KZT", "", 100, Rounding(), "1$.2f %3%"));
-    data_ = kztData;
-}
-
 // Qatari riyal
 QARCurrency::QARCurrency() {
     static boost::shared_ptr<Data> qarData(
