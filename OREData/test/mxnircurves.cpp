@@ -23,16 +23,19 @@
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
-#include <ored/portfolio/enginedata.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/toplevelfixture.hpp>
 
+#include <ql/cashflows/couponpricer.hpp>
+#include <ql/cashflows/cashflows.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/instruments/capfloor.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
+#include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
 
 using namespace ore::data;
 using namespace QuantLib;
@@ -145,11 +148,13 @@ BOOST_AUTO_TEST_CASE(testCapFloorStrip) {
     BOOST_TEST_MESSAGE("NPV using TodaysMarket is: " << npvTodaysMarket);
 
     // Price the same cap using the constant volatility from the market
-    auto cap = boost::dynamic_pointer_cast<CapFloor>(portfolio->trades()[0]->instrument()->qlInstrument());
-    BOOST_REQUIRE(cap);
-    auto engine = boost::make_shared<BlackCapFloorEngine>(market->discountCurve("MXN"), 0.20320);
-    cap->setPricingEngine(engine);
-    Real npvMarketVol = cap->NPV();
+    BOOST_REQUIRE(portfolio->trades()[0]);
+    BOOST_REQUIRE(portfolio->trades()[0]->legs().size() == 1);
+    auto pricer = boost::make_shared<BlackIborCouponPricer>(Handle<OptionletVolatilityStructure>(
+        boost::make_shared<ConstantOptionletVolatility>(0, NullCalendar(), Unadjusted, 0.20320, Actual365Fixed())));
+    Leg leg = portfolio->trades()[0]->legs().front();
+    setCouponPricer(leg, pricer);
+    Real npvMarketVol = CashFlows::npv(leg, **market->discountCurve("MXN"), false);
     BOOST_TEST_MESSAGE("NPV using the constant market volatility is: " << npvMarketVol);
 
     // Check the difference in the NPVs. Should be small if the stripping is working correctly.
