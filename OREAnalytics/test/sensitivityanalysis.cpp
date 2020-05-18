@@ -149,6 +149,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     data->engine("FxOption") = "AnalyticEuropeanEngine";
     data->model("CapFloor") = "IborCapModel";
     data->engine("CapFloor") = "IborCapEngine";
+    data->model("CapFlooredIborLeg") ="BlackOrBachelier";
+    data->engine("CapFlooredIborLeg") = "BlackIborCouponPricer";
     data->model("Bond") = "DiscountedCashflows";
     data->engine("Bond") = "DiscountingRiskyBondEngine";
     data->engineParameters("Bond")["TimestepPeriod"] = "6M";
