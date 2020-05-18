@@ -53,7 +53,7 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
                        .withConvention(overnightIndex->businessDayConvention())
                        .backwards();
     valueDates_ = sch.dates();
-    QL_ENSURE(valueDates_.size() - rateCutoff_ >= 2, "degenerate schedule");
+    QL_ENSURE(valueDates_.size() >= 2 + rateCutoff_, "degenerate schedule");
 
     // Populate the fixing dates.
     numPeriods_ = valueDates_.size() - 1;
