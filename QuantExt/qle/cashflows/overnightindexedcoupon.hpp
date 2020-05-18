@@ -79,7 +79,8 @@ namespace QuantExt {
                     const DayCounter& dayCounter = DayCounter(),
                     bool telescopicValueDates = false,
                     bool includeSpread = false,
-                    const Period& lookback = 0 * Days);
+                    const Period& lookback = 0 * Days,
+                    const Natural rateCutoff = 0);
         //! \name Inspectors
         //@{
         //! fixing dates for the rates to be compounded
@@ -94,11 +95,13 @@ namespace QuantExt {
         bool includeSpread() const { return includeSpread_; }
         //! lookback period
         const Period& lookback() const { return lookback_; }
+        //! rate cutoff
+        Natural rateCutoff() const { return rateCutoff_; }
         //@}
         //! \name FloatingRateCoupon interface
         //@{
         //! the date when the coupon is fully determined
-        Date fixingDate() const { return fixingDates_.back(); }
+        Date fixingDate() const { return fixingDates_[fixingDates_.size() - 1 - rateCutoff_]; }
         //@}
         //! \name Visitability
         //@{
@@ -111,6 +114,7 @@ namespace QuantExt {
         std::vector<Time> dt_;
         bool includeSpread_;
         Period lookback_;
+        Natural rateCutoff_;
     };
 
 
@@ -132,6 +136,7 @@ namespace QuantExt {
         OvernightLeg& withTelescopicValueDates(bool telescopicValueDates);
         OvernightLeg& includeSpread(bool includeSpread);
         OvernightLeg& withLookback(const Period& lookback);
+        OvernightLeg& withRateCutoff(const Natural rateCutoff);
         operator Leg() const;
       private:
         Schedule schedule_;
@@ -146,6 +151,7 @@ namespace QuantExt {
         bool telescopicValueDates_;
         bool includeSpread_;
         Period lookback_;
+        Natural rateCutoff_;
     };
 
 }

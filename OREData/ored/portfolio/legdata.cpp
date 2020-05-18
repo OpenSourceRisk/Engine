@@ -147,6 +147,10 @@ void FloatingLegData::fromXML(XMLNode* node) {
         lookback_ = parsePeriod(XMLUtils::getNodeValue(n));
     else
         lookback_ = 0 * Days;
+    if(auto n = XMLUtils::getChildNode(node, "RateCutoff"))
+        rateCutoff_ = parseInteger(XMLUtils::getNodeValue(n));
+    else
+        rateCutoff_ = Null<Size>();
     caps_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Caps", "Cap", "startDate", capDates_, &parseReal);
     floors_ =
         XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Floors", "Floor", "startDate", floorDates_, &parseReal);
@@ -169,6 +173,8 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
     if (lookback_ != 0 * Days)
         XMLUtils::addChild(doc, node, "Lookback", ore::data::to_string(lookback_));
+    if (rateCutoff_ != Null<Size>())
+        XMLUtils::addChild(doc, node, "RateCutoff", static_cast<int>(rateCutoff_));
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
@@ -928,31 +934,33 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
 
         boost::shared_ptr<QuantExt::AverageONIndexedCouponPricer> couponPricer =
             boost::make_shared<QuantExt::AverageONIndexedCouponPricer>();
-        QuantExt::AverageONLeg leg = QuantExt::AverageONLeg(schedule, index)
-                                         .withNotionals(notionals)
-                                         .withSpreads(spreads)
-                                         .withGearings(gearings)
-                                         .withPaymentDayCounter(dc)
-                                         .withPaymentAdjustment(bdc)
-                                         .withRateCutoff(2)
-                                         .withPaymentLag(paymentLag)
-                                         .withLookback(floatData->lookback())
-                                         .withAverageONIndexedCouponPricer(couponPricer);
+        QuantExt::AverageONLeg leg =
+            QuantExt::AverageONLeg(schedule, index)
+                .withNotionals(notionals)
+                .withSpreads(spreads)
+                .withGearings(gearings)
+                .withPaymentDayCounter(dc)
+                .withPaymentAdjustment(bdc)
+                .withPaymentLag(paymentLag)
+                .withLookback(floatData->lookback())
+                .withRateCutoff(floatData->rateCutoff() == Null<Size>() ? 2 : floatData->rateCutoff())
+                .withAverageONIndexedCouponPricer(couponPricer);
 
         return leg;
 
     } else {
 
         Leg leg = QuantExt::OvernightLeg(schedule, index)
-                               .withNotionals(notionals)
-                               .withSpreads(spreads)
-                               .withPaymentDayCounter(dc)
-                               .withPaymentAdjustment(bdc)
-                               .withPaymentCalendar(paymentCalendar)
-                               .withPaymentLag(paymentLag)
-                               .withGearings(gearings)
-                               .includeSpread(floatData->includeSpread())
-                               .withLookback(floatData->lookback());
+                      .withNotionals(notionals)
+                      .withSpreads(spreads)
+                      .withPaymentDayCounter(dc)
+                      .withPaymentAdjustment(bdc)
+                      .withPaymentCalendar(paymentCalendar)
+                      .withPaymentLag(paymentLag)
+                      .withGearings(gearings)
+                      .includeSpread(floatData->includeSpread())
+                      .withLookback(floatData->lookback())
+                      .withRateCutoff(floatData->rateCutoff() == Null<Size>() ? 0 : floatData->rateCutoff());
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(index);

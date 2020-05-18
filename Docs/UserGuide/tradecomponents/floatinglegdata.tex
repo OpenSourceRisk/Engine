@@ -166,6 +166,12 @@ Allowable values:  Positive integers.  Defaults to the index's fixing days if bl
 
 Allowable values: any valid period, e.g. 2D, 3M, 1Y
 
+\item RateCutoff [Optional]: The number of fixing dates at the end of the fixing period for which the fixing value is
+  held constant and set to the previous value. Only applicable to OIS legs, defaults to $0$ for compounded and $2$ for
+  averaged OIS legs.
+
+Allowable values: any non-negative whole number
+
 \item Spreads [Optional]: This node contains child elements of type
   \lstinline!Spread!. If the spread is constant over the life of the
   floating leg, only one spread value should be entered. If two or more

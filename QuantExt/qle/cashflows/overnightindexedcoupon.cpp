@@ -162,13 +162,14 @@ namespace QuantExt {
                     const DayCounter& dayCounter,
                     bool telescopicValueDates,
                     bool includeSpread,
-                    const Period& lookback)
+                    const Period& lookback,
+                    const Natural rateCutoff)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate,
                          overnightIndex->fixingDays(), overnightIndex,
                          gearing, spread,
                          refPeriodStart, refPeriodEnd,
                          dayCounter, false), includeSpread_(includeSpread),
-                         lookback_(lookback) {
+                         lookback_(lookback), rateCutoff_(rateCutoff) {
 
         Date valueStart = startDate;
         Date valueEnd = endDate;
@@ -221,7 +222,7 @@ namespace QuantExt {
                 valueDates_.push_back(tmp);
         }
 
-        QL_ENSURE(valueDates_.size()>=2, "degenerate schedule");
+        QL_ENSURE(valueDates_.size() >= 2 + rateCutoff_, "degenerate schedule");
 
         // fixing dates
         n_ = valueDates_.size()-1;
@@ -246,8 +247,15 @@ namespace QuantExt {
 
     const vector<Rate>& OvernightIndexedCoupon::indexFixings() const {
         fixings_.resize(n_);
-        for (Size i=0; i<n_; ++i)
+        Size i;
+        for (i = 0; i < n_ - rateCutoff_; ++i) {
             fixings_[i] = index_->fixing(fixingDates_[i]);
+        }
+        Rate cutoffFixing = fixings_[i - 1];
+        while (i < n_) {
+            fixings_[i] = cutoffFixing;
+            i++;
+        }
         return fixings_;
     }
 
@@ -265,7 +273,7 @@ namespace QuantExt {
                                const ext::shared_ptr<OvernightIndex>& i)
     : schedule_(schedule), overnightIndex_(i), paymentCalendar_(schedule.calendar()),
       paymentAdjustment_(Following), paymentLag_(0), telescopicValueDates_(false),
-      includeSpread_(false), lookback_(0 * Days) {}
+      includeSpread_(false), lookback_(0 * Days), rateCutoff_(0) {}
 
     OvernightLeg& OvernightLeg::withNotionals(Real notional) {
         notionals_ = vector<Real>(1, notional);
@@ -333,6 +341,11 @@ namespace QuantExt {
         return *this;
     }
 
+    OvernightLeg& OvernightLeg::withRateCutoff(const Natural rateCutoff) {
+        rateCutoff_ = rateCutoff;
+        return *this;
+    }
+
     OvernightLeg::operator Leg() const {
 
         QL_REQUIRE(!notionals_.empty(), "no notional given");
@@ -370,7 +383,8 @@ namespace QuantExt {
                                        paymentDayCounter_,
                                        telescopicValueDates_,
                                        includeSpread_,
-                                       lookback_)));
+                                       lookback_,
+                                       rateCutoff_)));
         }
         return cashflows;
     }
