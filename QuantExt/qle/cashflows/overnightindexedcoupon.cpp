@@ -52,12 +52,13 @@ namespace QuantExt {
 
         class OvernightIndexedCouponPricer : public FloatingRateCouponPricer {
           public:
-            void initialize(const FloatingRateCoupon& coupon) {
+
+            void initialize(const FloatingRateCoupon& coupon) override {
                 coupon_ = dynamic_cast<const OvernightIndexedCoupon*>(&coupon);
                 QL_ENSURE(coupon_, "wrong coupon type");
             }
-            Rate swapletRate() const {
 
+            std::pair<Real,Real> compute() const {
                 ext::shared_ptr<OvernightIndex> index =
                     ext::dynamic_pointer_cast<OvernightIndex>(coupon_->index());
 
@@ -67,7 +68,8 @@ namespace QuantExt {
                 Size n = dt.size(),
                      i = 0;
 
-                Real compoundFactor = 1.0;
+                Real swapletRate, effectiveSpread;
+                Real compoundFactor = 1.0, compoundFactorWithoutSpread = 1.0;
 
                 // already fixed part
                 Date today = Settings::instance().evaluationDate();
@@ -78,8 +80,10 @@ namespace QuantExt {
                     QL_REQUIRE(pastFixing != Null<Real>(),
                                "Missing " << index->name() <<
                                " fixing for " << fixingDates[i]);
-                    if(coupon_->includeSpread())
+                    if(coupon_->includeSpread()) {
+                        compoundFactorWithoutSpread *= (1.0 + pastFixing*dt[i]);
                         pastFixing += coupon_->spread();
+                    }
                     compoundFactor *= (1.0 + pastFixing*dt[i]);
                     ++i;
                 }
@@ -91,8 +95,10 @@ namespace QuantExt {
                         Rate pastFixing = IndexManager::instance().getHistory(
                                                 index->name())[fixingDates[i]];
                         if (pastFixing != Null<Real>()) {
-                            if(coupon_->includeSpread())
+                            if(coupon_->includeSpread()) {
+                                compoundFactorWithoutSpread *= (1.0 + pastFixing*dt[i]);
                                 pastFixing += coupon_->spread();
+                            }
                             compoundFactor *= (1.0 + pastFixing*dt[i]);
                             ++i;
                         } else {
@@ -119,6 +125,7 @@ namespace QuantExt {
                     compoundFactor *= startDiscount/endDiscount;
 
                     if(coupon_->includeSpread()) {
+                        compoundFactorWithoutSpread *= startDiscount/endDiscount;
                         // this is an approximation, see "Ester / Daily Spread Curve Setup in ORE":
                         // set tau to an average value
                         Real tau =
@@ -133,17 +140,30 @@ namespace QuantExt {
                                ? coupon_->accrualPeriod()
                                : coupon_->dayCounter().yearFraction(dates.front(), dates.back());
                 Rate rate = (compoundFactor - 1.0) / tau;
-                Rate result = coupon_->gearing() * rate;
-                if(!coupon_->includeSpread())
-                    result += coupon_->spread();
-                return result;
+                swapletRate = coupon_->gearing() * rate;
+                if(!coupon_->includeSpread()) {
+                    swapletRate += coupon_->spread();
+                    effectiveSpread = coupon_->spread();
+                }
+                else {
+                    effectiveSpread = swapletRate - (compoundFactorWithoutSpread - 1.0) / tau;
+                }
+                return std::make_pair(swapletRate, effectiveSpread);
             }
 
-            Real swapletPrice() const { QL_FAIL("swapletPrice not available");  }
-            Real capletPrice(Rate) const { QL_FAIL("capletPrice not available"); }
-            Rate capletRate(Rate) const { QL_FAIL("capletRate not available"); }
-            Real floorletPrice(Rate) const { QL_FAIL("floorletPrice not available"); }
-            Rate floorletRate(Rate) const { QL_FAIL("floorletRate not available"); }
+            Rate swapletRate() const override {
+                return compute().first;
+            }
+
+            Rate effectiveSpread() const {
+                return compute().second;
+            }
+
+            Real swapletPrice() const override { QL_FAIL("swapletPrice not available");  }
+            Real capletPrice(Rate) const override  { QL_FAIL("capletPrice not available"); }
+            Rate capletRate(Rate) const override  { QL_FAIL("capletRate not available"); }
+            Real floorletPrice(Rate) const override  { QL_FAIL("floorletPrice not available"); }
+            Rate floorletRate(Rate) const override  { QL_FAIL("floorletRate not available"); }
           protected:
             const OvernightIndexedCoupon* coupon_;
         };
@@ -270,6 +290,15 @@ namespace QuantExt {
         } else {
             FloatingRateCoupon::accept(v);
         }
+    }
+
+    Real OvernightIndexedCoupon::effectiveSpread() const {
+        if (!includeSpread_)
+            return spread();
+        auto p = boost::dynamic_pointer_cast<OvernightIndexedCouponPricer>(pricer());
+        QL_REQUIRE(p, "OvernightIndexedCoupon::effectiveSpread(): expected OvernightIndexedCouponPricer");
+        p->initialize(*this);
+        return p->effectiveSpread();
     }
 
     OvernightLeg::OvernightLeg(const Schedule& schedule, const ext::shared_ptr<OvernightIndex>& i)

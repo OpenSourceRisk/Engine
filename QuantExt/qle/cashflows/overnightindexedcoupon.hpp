@@ -94,6 +94,10 @@ namespace QuantExt {
         const std::vector<Date>& valueDates() const { return valueDates_; }
         //! include spread in compounding?
         bool includeSpread() const { return includeSpread_; }
+        /*! effective spread: if includeSpread = false, this is identical to spread(), otherwise
+          it is the difference between the coupon rate with the spread included in the compounding
+          and the coupon rate computed with a zero spread */
+        Real effectiveSpread() const;
         //! lookback period
         const Period& lookback() const { return lookback_; }
         //! rate cutoff
