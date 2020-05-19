@@ -22,6 +22,8 @@
 #include <qle/cashflows/brlcdicouponpricer.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 
+#include <ql/cashflows/overnightindexedcoupon.hpp>
+
 namespace QuantExt {
 
 namespace {
@@ -29,7 +31,8 @@ namespace {
 class PricerSetter : public AcyclicVisitor,
                      public Visitor<CashFlow>,
                      public Visitor<Coupon>,
-                     public Visitor<OvernightIndexedCoupon>,
+                     public Visitor<QuantLib::OvernightIndexedCoupon>,
+                     public Visitor<QuantExt::OvernightIndexedCoupon>,
                      public Visitor<CappedFlooredOvernightIndexedCoupon>,
                      public Visitor<AverageONIndexedCoupon>,
                      public Visitor<SubPeriodsCoupon> {
@@ -41,7 +44,8 @@ public:
 
     void visit(CashFlow& c);
     void visit(Coupon& c);
-    void visit(OvernightIndexedCoupon& c);
+    void visit(QuantLib::OvernightIndexedCoupon& c);
+    void visit(QuantExt::OvernightIndexedCoupon& c);
     void visit(CappedFlooredOvernightIndexedCoupon& c);
     void visit(AverageONIndexedCoupon& c);
     void visit(SubPeriodsCoupon& c);
@@ -55,7 +59,20 @@ void PricerSetter::visit(Coupon&) {
     // nothing to do
 }
 
-void PricerSetter::visit(OvernightIndexedCoupon& c) {
+void PricerSetter::visit(QuantLib::OvernightIndexedCoupon& c) {
+    // Special pricer for BRL CDI
+    boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(c.index());
+    if (brlCdiIndex) {
+        const boost::shared_ptr<BRLCdiCouponPricer> brlCdiCouponPricer =
+            boost::dynamic_pointer_cast<BRLCdiCouponPricer>(pricer_);
+        QL_REQUIRE(brlCdiCouponPricer, "Pricer not compatible with BRL CDI coupon");
+        c.setPricer(brlCdiCouponPricer);
+    } else {
+        c.setPricer(pricer_);
+    }
+}
+
+void PricerSetter::visit(QuantExt::OvernightIndexedCoupon& c) {
     // Special pricer for BRL CDI
     boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(c.index());
     if (brlCdiIndex) {
