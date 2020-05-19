@@ -236,6 +236,9 @@
     <ClInclude Include="ored\portfolio\builders\capfloorediborleg.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
     <ClInclude Include="ored\version.hpp" />
     <ClInclude Include="ored\utilities\to_string.hpp">
       <Filter>utilities</Filter>
@@ -687,6 +690,9 @@
       <Filter>portfolio\builders</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\builders\capfloorediborleg.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.cpp">
       <Filter>portfolio\builders</Filter>
     </ClCompile>
     <ClCompile Include="ored\utilities\to_string.cpp">

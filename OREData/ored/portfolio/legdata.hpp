@@ -777,7 +777,8 @@ Leg makeFixedLeg(const LegData& data);
 Leg makeZCFixedLeg(const LegData& data);
 Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                 const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
-Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index);
+Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index,
+               const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
 Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper);
 Leg makeSimpleLeg(const LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,

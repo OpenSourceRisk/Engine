@@ -68,6 +68,7 @@ portfolio/bond.cpp
 portfolio/bondutils.cpp
 portfolio/builders/capfloor.cpp
 portfolio/builders/capfloorediborleg.cpp
+portfolio/builders/capflooredovernightindexedcouponleg.cpp
 portfolio/builders/cms.cpp
 portfolio/builders/cmsspread.cpp
 portfolio/builders/commodityoption.cpp
@@ -211,6 +212,7 @@ portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
 portfolio/builders/capflooredcpileg.hpp
 portfolio/builders/capfloorediborleg.hpp
+portfolio/builders/capflooredovernightindexedcouponleg.hpp
 portfolio/builders/capflooredyoyleg.hpp
 portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp

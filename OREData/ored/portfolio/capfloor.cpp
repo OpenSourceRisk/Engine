@@ -85,10 +85,14 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         bool isOnIndex = boost::dynamic_pointer_cast<OvernightIndex>(index) != nullptr;
         bool isBmaIndex = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index) != nullptr;
 
-        if (!isOnIndex && !isBmaIndex) {
-            // for Ibor Indices we use caps/floors embedded in the leg, this is the preferred way to capture
-            // all features of the floating leg and to avoid maintaining duplicate code for the CapFloor
-            // instrument and pricing engine
+        if (!isBmaIndex && !(isOnIndex && floatData->isAveraged()) && !floatData->hasSubPeriods()) {
+            // For the cases where we support caps and floors in the regular way, we build a floating leg with
+            // the nakedOption flag set to true, this avoids maintaining all features in legs with associated
+            // coupon pricers and at the same time in the QuaantLib::CapFloor instrument and pricing engine.
+            // Supported cases are
+            // - Ibor coupon without sub periods (hasSubPeriods = false)
+            // - compounded ON coupon (isAveraged = false)
+            // The other cases are handled below.
             LegData tmpLegData = legData_;
             boost::shared_ptr<FloatingLegData> tmpFloatData = boost::make_shared<FloatingLegData>(*floatData);
             tmpFloatData->floors() = floors_;
@@ -108,10 +112,15 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             instrument_ = boost::make_shared<VanillaInstrument>(swap, multiplier);
             maturity_ = CashFlows::maturityDate(legs_.front());
         } else {
-            // for BMA and ON indices we use the QuantLib::CapFloor instrument
-            // we treat those indices as ibor indices and warn about this in the log
-            ALOG("CapFloor trade " << id() << " on ON or BMA index '" << underlyingIndex
-                 << "' built, will treat the index approximately as an ibor index");
+            // For the cases where we don't have regular cap / floor support we treat the index approximately as an Ibor index
+            // and build an QuantLib::CapFloor with associated pricing engine. These cases comprise:
+            // - BMA coupons
+            // - Ibor coupons with sub periods (hasSubPeriods = false)
+            // - averaged ON coupons (isAveraged = true)
+            ALOG("CapFloor trade " << id()
+                                   << " on a) BMA or b) sub periods Ibor or c) averaged ON underlying (index = '"
+                                   << underlyingIndex
+                                   << "') built, will treat the index approximately as an ibor index");
             builder = engineFactory->builder(tradeType_);
             legs_.push_back(makeIborLeg(legData_, index, engineFactory));
 

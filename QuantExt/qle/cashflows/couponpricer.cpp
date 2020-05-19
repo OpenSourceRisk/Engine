@@ -20,6 +20,7 @@
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
 #include <qle/cashflows/brlcdicouponpricer.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 
 namespace QuantExt {
 
@@ -29,6 +30,7 @@ class PricerSetter : public AcyclicVisitor,
                      public Visitor<CashFlow>,
                      public Visitor<Coupon>,
                      public Visitor<OvernightIndexedCoupon>,
+                     public Visitor<CappedFlooredOvernightIndexedCoupon>,
                      public Visitor<AverageONIndexedCoupon>,
                      public Visitor<SubPeriodsCoupon> {
 private:
@@ -40,6 +42,7 @@ public:
     void visit(CashFlow& c);
     void visit(Coupon& c);
     void visit(OvernightIndexedCoupon& c);
+    void visit(CappedFlooredOvernightIndexedCoupon& c);
     void visit(AverageONIndexedCoupon& c);
     void visit(SubPeriodsCoupon& c);
 };
@@ -63,6 +66,16 @@ void PricerSetter::visit(OvernightIndexedCoupon& c) {
     } else {
         c.setPricer(pricer_);
     }
+}
+
+void PricerSetter::visit(CappedFlooredOvernightIndexedCoupon& c) {
+    const boost::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> p =
+        boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCouponPricer>(pricer_);
+    // we can set a pricer for the capped floored on coupon or the underlying on coupon
+    if (p)
+        c.setPricer(p);
+    else
+        c.underlying()->accept(*this);
 }
 
 void PricerSetter::visit(AverageONIndexedCoupon& c) {

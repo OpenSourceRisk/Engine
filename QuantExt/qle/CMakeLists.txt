@@ -20,6 +20,7 @@ calendars/thailand.cpp
 calendars/wmr.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
+cashflows/blackovernightindexedcouponpricer.cpp
 cashflows/brlcdicouponpricer.cpp
 cashflows/commodityindexedaveragecashflow.cpp
 cashflows/commodityindexedcashflow.cpp
@@ -213,6 +214,7 @@ calendars/thailand.hpp
 calendars/wmr.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
+cashflows/blackovernightindexedcouponpricer.hpp
 cashflows/brlcdicouponpricer.hpp
 cashflows/commodityindexedaveragecashflow.hpp
 cashflows/commodityindexedcashflow.hpp
