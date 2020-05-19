@@ -269,7 +269,6 @@
     <ClCompile Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />
     <ClCompile Include="ored\portfolio\builders\cmsspread.cpp" />
-    <ClCompile Include="ored\portfolio\builders\commodityoption.cpp" />
     <ClCompile Include="ored\portfolio\builders\cpicapfloor.cpp" />
     <ClCompile Include="ored\portfolio\builders\swaption.cpp" />
     <ClCompile Include="ored\portfolio\builders\yoycapfloor.cpp" />

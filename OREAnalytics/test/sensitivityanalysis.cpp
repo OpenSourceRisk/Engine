@@ -172,7 +172,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     factory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
     factory->registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<CommodityOptionEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<CommodityEuropeanOptionEngineBuilder>());
 
     // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());

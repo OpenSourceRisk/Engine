@@ -57,7 +57,7 @@ public:
 protected:
     VanillaOptionTrade(AssetClass assetClassUnderlying)
         : Trade("VanillaOption"), assetClassUnderlying_(assetClassUnderlying), strike_(0), quantity_(0) {}
-    VanillaOptionTrade(Envelope& env, AssetClass assetClassUnderlying, OptionData option, string assetName,
+    VanillaOptionTrade(const Envelope& env, AssetClass assetClassUnderlying, OptionData option, string assetName,
                    string currency, double strike, double quantity)
         : Trade("VanillaOption", env), assetClassUnderlying_(assetClassUnderlying),
           option_(option), assetName_(assetName), currency_(currency), strike_(strike),

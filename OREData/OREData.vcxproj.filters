@@ -375,9 +375,6 @@
     <ClInclude Include="ored\portfolio\commodityoption.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\builders\commodityoption.hpp">
-      <Filter>portfolio\builders</Filter>
-    </ClInclude>
     <ClInclude Include="ored\portfolio\legbuilders.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
@@ -500,6 +497,9 @@
     </ClInclude>
     <ClInclude Include="ored\portfolio\indexing.hpp">
       <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\commodityoption.hpp">
+      <Filter>portfolio\builders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -790,9 +790,6 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\commodityoption.cpp">
       <Filter>portfolio</Filter>
-    </ClCompile>
-    <ClCompile Include="ored\portfolio\builders\commodityoption.cpp">
-      <Filter>portfolio\builders</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\legbuilders.cpp">
       <Filter>portfolio</Filter>

@@ -71,7 +71,6 @@ portfolio/builders/capfloorediborleg.cpp
 portfolio/builders/capflooredovernightindexedcouponleg.cpp
 portfolio/builders/cms.cpp
 portfolio/builders/cmsspread.cpp
-portfolio/builders/commodityoption.cpp
 portfolio/builders/cpicapfloor.cpp
 portfolio/builders/swaption.cpp
 portfolio/builders/yoycapfloor.cpp

@@ -178,7 +178,9 @@ void EngineFactory::addDefaultBuilders() {
 
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
-    registerBuilder(boost::make_shared<CommodityOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityEuropeanOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityAmericanOptionFDEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityAmericanOptionBAWEngineBuilder>());
 
     registerLegBuilder(boost::make_shared<FixedLegBuilder>());
     registerLegBuilder(boost::make_shared<ZeroCouponFixedLegBuilder>());
