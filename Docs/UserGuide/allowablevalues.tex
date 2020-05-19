@@ -314,6 +314,20 @@ conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: 
 
 \begin{table}[H]
 \centering
+  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+    \hline
+    \multicolumn{2}{|l|}{\tt Exchange} \\ \hline
+    \bfseries{Trade Data} & \bfseries{Allowable Values} \\
+    \hline
+    \lstinline!Exchange!  & Any string, typically a MIC code (provided it is the ID of an exchange in the market configuration) \\
+    \hline
+  \end{tabu}
+  \caption{Allowable Values for Exchange}
+  \label{tab:mic}
+\end{table}
+
+\begin{table}[H]
+\centering
   \begin{tabu} to 0.9\linewidth {| X[1,l,m] | X[1,l,m] |}
     \hline
     \multicolumn{2}{|l|}{Boolean nodes} \\
