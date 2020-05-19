@@ -224,8 +224,9 @@ If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \
   the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
   above.
 
-\item NakedOption [Optional]: Optional node, if \emph{true} the leg represents only the embedded floor, cap or collar. 
-By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
+\item NakedOption [Optional]: Optional node, if \emph{true} the leg represents only the embedded floor, cap or collar.
+  By convention the embedded floor (cap) are considered long if the leg is a receiver leg, otherwise short. For a
+  collar the floor is long and the cap is short if the leg is a receiver leg.
 
  Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
 
