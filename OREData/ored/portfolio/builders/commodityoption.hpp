@@ -34,7 +34,7 @@ namespace data {
 class CommodityEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
 public:
     CommodityEuropeanOptionEngineBuilder()
-        : EuropeanOptionEngineBuilder("BlackScholesMerton", { "CommodityOption" }, AssetClass::COM) {}
+        : EuropeanOptionEngineBuilder("BlackScholes", { "CommodityOption" }, AssetClass::COM) {}
 };
 
 /*! Engine builder for American commodity options using finite difference.
@@ -43,7 +43,7 @@ public:
 class CommodityAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
 public:
     CommodityAmericanOptionFDEngineBuilder()
-        : AmericanOptionFDEngineBuilder("BlackScholesMerton", { "CommodityOptionAmerican" }, 
+        : AmericanOptionFDEngineBuilder("BlackScholes", { "CommodityOptionAmerican" }, 
             AssetClass::COM, expiryDate_) {}
 };
 
@@ -53,7 +53,7 @@ public:
 class CommodityAmericanOptionBAWEngineBuilder : public AmericanOptionBAWEngineBuilder {
 public:
     CommodityAmericanOptionBAWEngineBuilder()
-        : AmericanOptionBAWEngineBuilder("BlackScholesMerton", { "CommodityOptionAmerican" }, AssetClass::COM) {}
+        : AmericanOptionBAWEngineBuilder("BlackScholes", { "CommodityOptionAmerican" }, AssetClass::COM) {}
 };
 
 }
