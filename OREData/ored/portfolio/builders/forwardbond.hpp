@@ -35,19 +35,18 @@
 namespace ore {
 namespace data {
 
-class fwdBondEngineBuilder
-    : public CachingPricingEngineBuilder<string, const string&, const Currency&, const string&, const string&, const string&,
-                                         const string&, const string&> {
+class fwdBondEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&, const string&,
+                                                                const string&, const string&, const string&> {
 protected:
     fwdBondEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"ForwardBond"}) {}
 
     virtual string keyImpl(const string& id, const Currency& ccy, const string& creditCurveId, const string& securityId,
-                           const string& referenceCurveId, const string& incomeCurveId,
-                           const string& adjustmentSpread) override {
+                           const string& referenceCurveId, const string& incomeCurveId) override {
 
         // id is _not_ part of the key
-        std::string returnString = ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId;
+        std::string returnString =
+            ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId + "_" + incomeCurveId;
 
         return returnString;
     }
@@ -62,8 +61,8 @@ public:
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& id, const Currency& ccy,
                                                         const string& creditCurveId, const string& securityId,
-                                                        const string& referenceCurveId, const string& incomeCurveId,
-                                                        const string& adjustmentSpread) override {
+                                                        const string& referenceCurveId,
+                                                        const string& incomeCurveId) override {
 
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
@@ -98,8 +97,8 @@ protected:
         }
         return boost::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, incomeTS, yts, bondSpread, dpts,
                                                                           recovery, tsperiod);
-    } //(currency, creditCurveId_, securityId_, referenceCurveId_,derivativeCurveId_,incomeCurveId_)
-};    // namespace data
+    }
+};
 
 } // namespace data
 } // namespace ore

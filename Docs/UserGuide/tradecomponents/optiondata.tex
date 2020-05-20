@@ -41,7 +41,7 @@ elements. An example structure of the \lstinline!OptionData! trade component nod
 The meanings and allowable values of the elements in the \lstinline!OptionData! node follow below.
 
 \begin{itemize}
-\item LongShort: Specifies whether the option position is \emph{long}  or \emph{short}.  Note that for Swaptions and Callable Swaps, setting \lstinline!LongShort! to \emph{short} makes the \lstinline!Payer! indicator on the underlying swap to be set from the perspective of the Counterparty. 
+\item LongShort: Specifies whether the option position is \emph{long}  or \emph{short}.  Note that for Swaptions, Callable Swaps, and Index CDS Options setting \lstinline!LongShort! to \emph{short} makes the \lstinline!Payer! indicator on the underlying Swap / Index CDS to be set from the perspective of the Counterparty. 
 
 Allowable values: \emph{Long, L} or \emph{Short, S}
 
@@ -58,9 +58,11 @@ The meaning of Call and Put values depend on the asset class of the option, see 
       \bfseries{Asset Class and Trade Type}  & \bfseries{Call / Put Specifications} \\  \hline
 Equity/ Commodity Option & \emph{Call}: The right to buy the underlying equity/commodity at the strike price.
 \newline \emph{Put}: The right to sell the underlying equity/commodity at the strike price. \\  \hline
- IR Swaption, CallableSwap, Commodity Swaption&  \emph{Call/Put} values are ignored, and the OptionType field is optional. Payer/Receiver swaption is determined in the Leg Data nodes of the underlying swap. \\ \hline
-FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the trade data node. 
+ IR Swaption, CallableSwap, Commodity Swaption&  \emph{Call/Put} values are ignored, and the OptionType field is optional. Payer/Receiver swaption is determined by the  \lstinline!Payer! fields in the Leg Data nodes of the underlying swap. \\ \hline
+FX Options (all variants) &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the trade data node. 
 \newline \emph{Put}: Bought and Sold currencies/amounts are switched compared to the trade data node.  \\ \hline
+Index CDS Option &  \emph{Call/Put} values are ignored, and the OptionType field is optional. The \lstinline!Payer! field in the underlying Index CDS leg  determines if the option is to buy or sell protection. \\ \hline
+
   \end{tabu}
   \caption{Specification of Option Type Call / Put}
   \label{tab:callput_specs}
@@ -81,9 +83,17 @@ FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined
 
 \item Style: The exercise style of the option. 
 
-  Allowable values: \emph{European} or \emph{American} or \emph{Bermudan}. Note that trade types IR Swaption and CallableSwap can have style
-  \emph{European} or \emph{Bermudan}, but not \emph{American}.  FX and Equity options trade can have styles \emph{European}
-  or \emph{American}, but not \emph{Bermudan}. Commodity Option, Commodity Swaption and Commodity Average Price Option must have style  \emph{European}. 
+  Allowable values: \emph{European} or \emph{American} or \emph{Bermudan}. 
+  
+  Note that trade types IR Swaption and CallableSwap can have style
+  \emph{European} or \emph{Bermudan}, but not \emph{American}.  
+  
+  FX, Equity and commodity options can have styles \emph{European}
+  or \emph{American}, but not \emph{Bermudan}. 
+  
+  Commodity Swaption and Commodity Average Price Options must have style \emph{European}. 
+  
+  Index CDS Options must have style  \emph{European}. 
 
 \item NoticePeriod [Optional]: The notice period defining the date (relative to the exercise date) on which the exercise
   decision has to be taken. If not given the notice period defaults to 0D, i.e. the notice date is identical to the
@@ -115,7 +125,10 @@ FX Options &  \emph{Call}: Bought and Sold currencies/amounts stay as determined
   indicates payoff at expiry, whereas \emph{false}  indicates payoff
   at exercise. Defaults to \emph{true}  if left blank or omitted. 
 
-Allowable values: \emph{true}, \emph{false} 
+Allowable values: \emph{true}, \emph{false} .
+
+Note that for \lstinline!IndexCreditDefaultSwapOption! PayOffAtExpiry must be set to \emph{false} as only payoff at exercise is supported.
+
 %TBC: Do not see payoffatexpiry used in either fxoption or swaption build() functions, to be logged as a bug.       
 
 \item ExerciseFees [Optional]: This node contains child elements of tpye ExerciseFee. Similar to a list of notionals

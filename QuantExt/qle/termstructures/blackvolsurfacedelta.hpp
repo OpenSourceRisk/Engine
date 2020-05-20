@@ -63,6 +63,22 @@ private:
     bool flatExtrapolation_;
 };
 
+class ConstantSmileSection : public FxSmileSection {
+public:
+    //! ctor
+    ConstantSmileSection(const Volatility vol) : vol_(vol) {}
+
+    Volatility volatility(Real strike) const override { return vol_; }
+
+    //! \name Inspectors
+    //@{
+    const Volatility volatility() const { return vol_; }
+    //@}
+
+private:
+    Volatility vol_;
+};
+
 //! Abstract Black volatility surface based on delta
 //!  \ingroup termstructures
 class BlackVolatilitySurfaceDelta : public BlackVolatilityTermStructure {

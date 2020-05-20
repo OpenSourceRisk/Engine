@@ -437,6 +437,9 @@
       <xs:element type="xs:string" name="Index" minOccurs="0"/>
       <xs:element type="xs:integer" name="IndexFixingDays" minOccurs="0"/>
       <xs:element type="xs:string" name="IndexFixingCalendar" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="Dirty" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="Relative" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="ConditionalOnSurvival" minOccurs="0"/>
       <xs:element type="xs:float" name="InitialFixing" minOccurs="0"/>
       <xs:element type="scheduleData" name="ValuationSchedule" minOccurs="0"/>
       <xs:element type="xs:integer" name="FixingDays" minOccurs="0"/>
