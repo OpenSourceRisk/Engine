@@ -43,6 +43,6 @@ void EquityForward::setupArguments(PricingEngine::arguments* args) const {
 
 void EquityForward::arguments::validate() const {
     QL_REQUIRE(quantity > 0, "quantity should be positive: " << quantity);
-    QL_REQUIRE(strike > 0, "strike should be positive: " << strike);
+    QL_REQUIRE(strike >= 0, "strike should be positive: " << strike);
 }
 } // namespace QuantExt
