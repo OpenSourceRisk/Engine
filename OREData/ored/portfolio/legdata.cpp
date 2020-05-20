@@ -945,7 +945,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                 .withPaymentAdjustment(bdc)
                 .withPaymentLag(paymentLag)
                 .withLookback(floatData->lookback())
-                .withRateCutoff(floatData->rateCutoff() == Null<Size>() ? 2 : floatData->rateCutoff())
+                .withRateCutoff(floatData->rateCutoff() == Null<Size>() ? 0 : floatData->rateCutoff())
                 .withFixingDays(floatData->fixingDays())
                 .withAverageONIndexedCouponPricer(couponPricer);
 
