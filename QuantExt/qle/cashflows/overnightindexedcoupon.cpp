@@ -67,20 +67,23 @@ namespace QuantExt {
                 const vector<Date>& fixingDates = coupon_->fixingDates();
                 const vector<Time>& dt = coupon_->dt();
 
-                Size n = dt.size(),
-                     i = 0;
+                Size n = dt.size();
+                Size i = 0;
+                QL_REQUIRE(coupon_->rateCutoff() < n,
+                           "rate cutoff (" << coupon_->rateCutoff()
+                                           << ") must be less than number of fixings in period (" << n << ")");
+                Size nCutoff = n - coupon_->rateCutoff();
 
                 Real compoundFactor = 1.0, compoundFactorWithoutSpread = 1.0;
 
                 // already fixed part
                 Date today = Settings::instance().evaluationDate();
-                while (i<n && fixingDates[i]<today) {
+                while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
                     // rate must have been fixed
-                    Rate pastFixing = IndexManager::instance().getHistory(
-                                                index->name())[fixingDates[i]];
+                    Rate pastFixing =
+                        IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
                     QL_REQUIRE(pastFixing != Null<Real>(),
-                               "Missing " << index->name() <<
-                               " fixing for " << fixingDates[i]);
+                               "Missing " << index->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
                     if(coupon_->includeSpread()) {
                         compoundFactorWithoutSpread *= (1.0 + pastFixing*dt[i]);
                         pastFixing += coupon_->spread();
@@ -90,11 +93,11 @@ namespace QuantExt {
                 }
 
                 // today is a border case
-                if (i<n && fixingDates[i] == today) {
+                if (i<n && fixingDates[std::min(i, nCutoff)] == today) {
                     // might have been fixed
                     try {
-                        Rate pastFixing = IndexManager::instance().getHistory(
-                                                index->name())[fixingDates[i]];
+                        Rate pastFixing =
+                            IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
                         if (pastFixing != Null<Real>()) {
                             if(coupon_->includeSpread()) {
                                 compoundFactorWithoutSpread *= (1.0 + pastFixing*dt[i]);
@@ -120,8 +123,25 @@ namespace QuantExt {
                                "null term structure set to this instance of "<<
                                index->name());
 
+                    // we know that nCutoff >= i because either
+                    // a) i = today, but if nCutoff < today, there is no forward part
+                    // b) i = today + 1bd, the we have a historical fixing available on today and if nCutoff = today
+                    //        again there is no forward part
+                    QL_REQUIRE(nCutoff >= i,
+                               "internal inconsistency: nCutoff (" << nCutoff << ") >= i (" << i << ") expected.");
+
+                    // handle the part until the rate cutoff (might be empty, i.e. startDiscount = endDiscount)
                     DiscountFactor startDiscount = curve->discount(dates[i]);
-                    DiscountFactor endDiscount = curve->discount(dates[n]);
+                    DiscountFactor endDiscount = curve->discount(dates[nCutoff]);
+
+                    // handle the rate cutoff period (if there is any, i.e. if nCutoff < n)
+                    if(nCutoff < n) {
+                        // forward discount factor for one calendar day on the cutoff date
+                        DiscountFactor discountCutoffDate =
+                            curve->discount(dates[nCutoff] + 1) / curve->discount(dates[nCutoff]);
+                        // keep the above forward discount factor constant during the cutoff period
+                        endDiscount *= std::pow(discountCutoffDate, dates[n] - dates[nCutoff]);
+                    }
 
                     compoundFactor *= startDiscount/endDiscount;
 
@@ -283,6 +303,10 @@ namespace QuantExt {
 
         setPricer(ext::shared_ptr<FloatingRateCouponPricer>(new
                                             OvernightIndexedCouponPricer));
+
+        // check that rate cutoff is < number of fixing dates
+        QL_REQUIRE(rateCutoff_ < n_,
+                   "rate cutoff (" << rateCutoff_ << ") must be less than number of fixings in period (" << n_ << ")");
     }
 
     const vector<Rate>& OvernightIndexedCoupon::indexFixings() const {

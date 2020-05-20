@@ -70,6 +70,11 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
     dt_.resize(numPeriods_);
     for (Size i = 0; i < numPeriods_; ++i)
         dt_[i] = dayCounter.yearFraction(valueDates_[i], valueDates_[i + 1]);
+
+    // check that rate cutoff is < number of fixing dates
+    QL_REQUIRE(rateCutoff_ < numPeriods_, "rate cutoff (" << rateCutoff_
+                                                          << ") must be less than number of fixings in period ("
+                                                          << numPeriods_ << ")");
 }
 
 const std::vector<Rate>& AverageONIndexedCoupon::indexFixings() const {
