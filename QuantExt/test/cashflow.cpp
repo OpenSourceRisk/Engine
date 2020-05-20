@@ -116,6 +116,7 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
     Currency ccy = USDCurrency();
     Natural fixingLag = 2;
     Real divFactor = 1.0;
+    Real initialPrice = 2090;
     Handle<YieldTermStructure> dividend(
         boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.01, dc))); // Dividend Curve
     Handle<YieldTermStructure> equityforecast(
@@ -135,15 +136,23 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
     EquityCoupon eq3(cfDate2, 1000000, cfDate1, cfDate2, 0, eqIndex, dc);
     // Total Return Coupon with fixing lag
     EquityCoupon eq4(cfDate2, 1000000, today, cfDate2, fixingLag, eqIndex, dc, true);
+    // Coupon with initial price set
+    EquityCoupon eq5(cfDate2, 1000000, today, cfDate2, 0, eqIndex, dc, false, 1.0, false, initialPrice);
+    // Coupon with initial price set and notional reset
+    EquityCoupon eq6(cfDate2, 1000000, today, cfDate2, 0, eqIndex, dc, false, 1.0, true, initialPrice, 1.0);
 
     boost::shared_ptr<EquityCouponPricer> pricer1(new EquityCouponPricer());
     boost::shared_ptr<EquityCouponPricer> pricer2(new EquityCouponPricer());
     boost::shared_ptr<EquityCouponPricer> pricer3(new EquityCouponPricer());
     boost::shared_ptr<EquityCouponPricer> pricer4(new EquityCouponPricer());
+    boost::shared_ptr<EquityCouponPricer> pricer5(new EquityCouponPricer());
+    boost::shared_ptr<EquityCouponPricer> pricer6(new EquityCouponPricer());
     eq1.setPricer(pricer1);
     eq2.setPricer(pricer2);
     eq3.setPricer(pricer3);
     eq4.setPricer(pricer4);
+    eq5.setPricer(pricer5);
+    eq6.setPricer(pricer6);
 
     // Price Return coupon
     Time dt = dc.yearFraction(today, cfDate2);
@@ -171,6 +180,20 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
     expectedAmount = nominal * (forward - eqIndex->fixing(fixingDate1)) / eqIndex->fixing(fixingDate1);
     BOOST_TEST_MESSAGE("Check Total Return fixing lag handling is correct.");
     BOOST_CHECK_CLOSE(eq4.amount(), expectedAmount, 1e-10);
+
+    // Coupon with initial price set
+    dt = dc.yearFraction(today, cfDate2);
+    forward = spot->value() * std::exp((0.02 - 0.01) * dt);
+    expectedAmount = nominal * (forward - initialPrice) / initialPrice;
+    BOOST_TEST_MESSAGE("Check Coupon with initial price set is correct.");
+    BOOST_CHECK_CLOSE(eq5.amount(), expectedAmount, 1e-10);
+
+    // Coupon with initial price set and notional reset
+    dt = dc.yearFraction(today, cfDate2);
+    forward = spot->value() * std::exp((0.02 - 0.01) * dt);
+    expectedAmount = initialPrice * (forward - initialPrice) / initialPrice;
+    BOOST_TEST_MESSAGE("Check Coupon with initial price set is correct.");
+    BOOST_CHECK_CLOSE(eq6.amount(), expectedAmount, 1e-10);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
