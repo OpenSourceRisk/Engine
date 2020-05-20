@@ -151,6 +151,7 @@ time/yearcounter.cpp)
 # hpp files, this list is maintained manually
 
 set(QuantExt_HDR auto_link.hpp
+calendars/austria.hpp
 calendars/chile.hpp
 calendars/colombia.hpp
 calendars/france.hpp
