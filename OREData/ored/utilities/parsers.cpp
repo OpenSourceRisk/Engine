@@ -157,8 +157,8 @@ Integer parseInteger(const string& s) {
 }
 
 bool parseBool(const string& s) {
-    static map<string, bool> b = {{"Y", true},  {"YES", true}, {"TRUE", true},   {"true", true},   {"1", true},
-                                  {"N", false}, {"NO", false}, {"FALSE", false}, {"false", false}, {"0", false}};
+    static map<string, bool> b = {{"Y", true},  {"YES", true}, {"TRUE", true}, {"True", true},  {"true", true},   {"1", true},
+                                  {"N", false}, {"NO", false}, {"FALSE", false}, {"False", false}, {"false", false}, {"0", false}};
 
     auto it = b.find(s);
     if (it != b.end()) {
