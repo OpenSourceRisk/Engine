@@ -843,6 +843,9 @@
     <ClInclude Include="qle\cashflows\overnightindexedcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
+    <ClInclude Include="qle\cashflows\blackovernightindexedcouponpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
     <ClInclude Include="qle\instruments\overnightindexfuture.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
@@ -1476,6 +1479,9 @@
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\overnightindexedcoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\blackovernightindexedcouponpricer.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
     <ClCompile Include="qle\instruments\overnightindexfuture.cpp">

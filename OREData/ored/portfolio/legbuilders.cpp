@@ -48,7 +48,7 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
     auto ois = boost::dynamic_pointer_cast<OvernightIndex>(index);
     Leg result;
     if (ois != nullptr)
-        result = makeOISLeg(data, ois);
+        result = makeOISLeg(data, ois, engineFactory);
     else {
         auto bma = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index);
         if (bma != nullptr)

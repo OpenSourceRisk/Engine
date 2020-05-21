@@ -25,6 +25,7 @@
 #include <qle/calendars/wmr.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/blackovernightindexedcouponpricer.hpp>
 #include <qle/cashflows/brlcdicouponpricer.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
