@@ -22,9 +22,17 @@ Allowable values: See \lstinline!Name! for equity trades in Table \ref{tab:equit
 
 \item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
 
-\item InitialPrice [Optional]: Initial Price of the equity, if not present, the first valuation date is used to determine the initial price. The Initial price is assumed to be in the currency of the underlying equity.
+\item InitialPrice [Optional]: Initial Price of the equity, if not present, the first valuation date is used to
+  determine the initial price. The Initial price can be either given in the currency of the equity or in the leg
+  currency, see InitialPriceCurrency.
 
 Allowable values: Any positive real number
+
+\item InitialPriceCurrency [Optional]: If an initial price is given, it can be either given in the original equity ccy
+  or the leg currency (if these are different). This field determines in which currency the initial price is given. If
+  omitted, it is assumed that the initial price is given in equity currency.
+
+Allowable values: A valid currency code, see \ref{tab:allow_stand_data}.
 
 \item NotionalReset [Optional]: Defaults to \emph{true}.  Notional resets only affect the equity leg. If NotionalReset
   is set to \emph{true} the quantity or number of shares of the underlying equity is fixed for all the coupons on the
