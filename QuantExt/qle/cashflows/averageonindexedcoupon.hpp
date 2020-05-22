@@ -50,7 +50,7 @@ public:
     AverageONIndexedCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                            const boost::shared_ptr<OvernightIndex>& overnightIndex, Real gearing = 1.0,
                            Spread spread = 0.0, Natural rateCutoff = 0, const DayCounter& dayCounter = DayCounter(),
-                           const Period& lookback = 0 * Days);
+                           const Period& lookback = 0 * Days, const Size fixingDays = Null<Size>());
     //! \name Inspectors
     //@{
     //! fixing dates for the rates to be averaged
@@ -102,6 +102,7 @@ public:
     AverageONLeg& withPaymentCalendar(const Calendar& calendar);
     AverageONLeg& withPaymentLag(Natural lag);
     AverageONLeg& withLookback(const Period& lookback);
+    AverageONLeg& withFixingDays(const Size fixingDays);
     AverageONLeg& withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
     operator Leg() const;
 
@@ -117,6 +118,7 @@ private:
     Calendar paymentCalendar_;
     Natural rateCutoff_;
     Period lookback_;
+    Natural fixingDays_;
     boost::shared_ptr<AverageONIndexedCouponPricer> couponPricer_;
 };
 

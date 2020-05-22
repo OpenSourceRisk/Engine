@@ -31,8 +31,8 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
                                                const Date& endDate,
                                                const boost::shared_ptr<OvernightIndex>& overnightIndex, Real gearing,
                                                Spread spread, Natural rateCutoff, const DayCounter& dayCounter,
-                                               const Period& lookback)
-    : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, overnightIndex->fixingDays(), overnightIndex,
+                                               const Period& lookback, const Size fixingDays)
+    : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex,
                          gearing, spread, Date(), Date(), dayCounter, false),
       rateCutoff_(rateCutoff), lookback_(lookback) {
 
@@ -53,22 +53,28 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
                        .withConvention(overnightIndex->businessDayConvention())
                        .backwards();
     valueDates_ = sch.dates();
-    QL_ENSURE(valueDates_.size() - rateCutoff_ >= 2, "degenerate schedule");
+    QL_ENSURE(valueDates_.size() >= 2 + rateCutoff_, "degenerate schedule");
 
     // Populate the fixing dates.
     numPeriods_ = valueDates_.size() - 1;
-    if (overnightIndex->fixingDays() == 0) {
+    if (FloatingRateCoupon::fixingDays() == 0) {
         fixingDates_ = std::vector<Date>(valueDates_.begin(), valueDates_.end() - 1);
     } else {
         fixingDates_.resize(numPeriods_);
         for (Size i = 0; i < numPeriods_; ++i)
-            fixingDates_[i] = overnightIndex->fixingDate(valueDates_[i]);
+            fixingDates_[i] = overnightIndex->fixingCalendar().advance(
+                valueDates_[i], -static_cast<Integer>(FloatingRateCoupon::fixingDays()), Days, Preceding);
     }
 
     // Populate the accrual periods.
     dt_.resize(numPeriods_);
     for (Size i = 0; i < numPeriods_; ++i)
         dt_[i] = dayCounter.yearFraction(valueDates_[i], valueDates_[i + 1]);
+
+    // check that rate cutoff is < number of fixing dates
+    QL_REQUIRE(rateCutoff_ < numPeriods_, "rate cutoff (" << rateCutoff_
+                                                          << ") must be less than number of fixings in period ("
+                                                          << numPeriods_ << ")");
 }
 
 const std::vector<Rate>& AverageONIndexedCoupon::indexFixings() const {
@@ -102,7 +108,7 @@ void AverageONIndexedCoupon::accept(AcyclicVisitor& v) {
 
 AverageONLeg::AverageONLeg(const Schedule& schedule, const boost::shared_ptr<OvernightIndex>& i)
     : schedule_(schedule), overnightIndex_(i), paymentAdjustment_(Following), paymentLag_(0),
-      paymentCalendar_(Calendar()), rateCutoff_(0), lookback_(0 * Days) {}
+      paymentCalendar_(Calendar()), rateCutoff_(0), lookback_(0 * Days), fixingDays_(Null<Size>()) {}
 
 AverageONLeg& AverageONLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -164,6 +170,11 @@ AverageONLeg& AverageONLeg::withLookback(const Period& lookback) {
     return *this;
 }
 
+AverageONLeg& AverageONLeg::withFixingDays(const Size fixingDays) {
+    fixingDays_ = fixingDays;
+    return *this;
+}
+
 AverageONLeg&
 AverageONLeg::withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer) {
     couponPricer_ = couponPricer;
@@ -192,9 +203,10 @@ AverageONLeg::operator Leg() const {
         endDate = schedule_.date(i + 1);
         paymentDate = calendar.advance(endDate, paymentLag_, Days, paymentAdjustment_);
 
-        boost::shared_ptr<AverageONIndexedCoupon> cashflow(new AverageONIndexedCoupon(
-            paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate, overnightIndex_,
-            detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), rateCutoff_, paymentDayCounter_, lookback_));
+        boost::shared_ptr<AverageONIndexedCoupon> cashflow(
+            new AverageONIndexedCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
+                                       overnightIndex_, detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0),
+                                       rateCutoff_, paymentDayCounter_, lookback_, fixingDays_));
 
         if (couponPricer_) {
             cashflow->setPricer(couponPricer_);

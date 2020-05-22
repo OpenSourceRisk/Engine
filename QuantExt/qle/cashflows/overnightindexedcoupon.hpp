@@ -45,8 +45,13 @@
 #pragma once
 
 #include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/cashflows/couponpricer.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/time/schedule.hpp>
+
+namespace QuantLib {
+class OptionletVolatilityStructure;
+}
 
 namespace QuantExt {
     using namespace QuantLib;
@@ -79,7 +84,9 @@ namespace QuantExt {
                     const DayCounter& dayCounter = DayCounter(),
                     bool telescopicValueDates = false,
                     bool includeSpread = false,
-                    const Period& lookback = 0 * Days);
+                    const Period& lookback = 0 * Days,
+                    const Natural rateCutoff = 0,
+                    const Natural fixingDays = Null<Size>());
         //! \name Inspectors
         //@{
         //! fixing dates for the rates to be compounded
@@ -92,13 +99,22 @@ namespace QuantExt {
         const std::vector<Date>& valueDates() const { return valueDates_; }
         //! include spread in compounding?
         bool includeSpread() const { return includeSpread_; }
+        /*! effectiveSpread and effectiveIndexFixing are set such that
+            coupon amount = notional * accrualPeriod * ( gearing * effectiveIndexFixing + effectiveSpread )
+            notice that
+            - gearing = 1 is required if includeSpread = true
+            - effectiveSpread = spread() if includeSpread = false */
+        Real effectiveSpread() const;
+        Real effectiveIndexFixing() const;
         //! lookback period
         const Period& lookback() const { return lookback_; }
+        //! rate cutoff
+        Natural rateCutoff() const { return rateCutoff_; }
         //@}
         //! \name FloatingRateCoupon interface
         //@{
         //! the date when the coupon is fully determined
-        Date fixingDate() const { return fixingDates_.back(); }
+        Date fixingDate() const { return fixingDates_[fixingDates_.size() - 1 - rateCutoff_]; }
         //@}
         //! \name Visitability
         //@{
@@ -111,8 +127,62 @@ namespace QuantExt {
         std::vector<Time> dt_;
         bool includeSpread_;
         Period lookback_;
+        Natural rateCutoff_;
     };
 
+    //! capped floored overnight indexed coupon
+    class CappedFlooredOvernightIndexedCoupon : public FloatingRateCoupon {
+    public:
+        CappedFlooredOvernightIndexedCoupon(const ext::shared_ptr<OvernightIndexedCoupon>& underlying,
+                                            Real cap = Null<Real>(), Real floor = Null<Real>(),
+                                            bool nakedOption = false);
+
+        //! \name Coupon interface
+        //@{
+        Rate rate() const override;
+        Rate convexityAdjustment() const override;
+        //@}
+        //! \name FloatingRateCoupon interface
+        //@{
+        Date fixingDate() const override { return underlying_->fixingDate(); }
+        //@}
+        //! cap
+        Rate cap() const { return cap_; }
+        //! floor
+        Rate floor() const { return floor_; }
+        //! effective cap of fixing
+        Rate effectiveCap() const;
+        //! effective floor of fixing
+        Rate effectiveFloor() const;
+        //@}
+        //! \name Observer interface
+        //@{
+        void update() override;
+        //@}
+        //! \name Visitability
+        //@{
+        virtual void accept(AcyclicVisitor&) override;
+
+        bool isCapped() const { return cap_ != Null<Real>(); }
+        bool isFloored() const { return floor_ != Null<Real>(); }
+
+        ext::shared_ptr<OvernightIndexedCoupon> underlying() const { return underlying_; }
+
+    protected:
+        ext::shared_ptr<OvernightIndexedCoupon> underlying_;
+        Rate cap_, floor_;
+        bool nakedOption_;
+    };
+
+    //! capped floored overnight indexed coupon pricer base class
+    class CappedFlooredOvernightIndexedCouponPricer : public FloatingRateCouponPricer {
+    public:
+        CappedFlooredOvernightIndexedCouponPricer(const Handle<OptionletVolatilityStructure>& v);
+        Handle<OptionletVolatilityStructure> capletVolatility() const;
+
+    private:
+        Handle<OptionletVolatilityStructure> capletVol_;
+    };
 
     //! helper class building a sequence of overnight coupons
     class OvernightLeg {
@@ -132,6 +202,13 @@ namespace QuantExt {
         OvernightLeg& withTelescopicValueDates(bool telescopicValueDates);
         OvernightLeg& includeSpread(bool includeSpread);
         OvernightLeg& withLookback(const Period& lookback);
+        OvernightLeg& withRateCutoff(const Natural rateCutoff);
+        OvernightLeg& withFixingDays(const Natural fixingDays);
+        OvernightLeg& withCaps(Rate cap);
+        OvernightLeg& withCaps(const std::vector<Rate>& caps);
+        OvernightLeg& withFloors(Rate floor);
+        OvernightLeg& withFloors(const std::vector<Rate>& floors);
+        OvernightLeg& withNakedOption(const bool nakedOption);
         operator Leg() const;
       private:
         Schedule schedule_;
@@ -146,6 +223,10 @@ namespace QuantExt {
         bool telescopicValueDates_;
         bool includeSpread_;
         Period lookback_;
+        Natural rateCutoff_;
+        Natural fixingDays_;
+        std::vector<Rate> caps_, floors_;
+        bool nakedOption_;
     };
 
 }
