@@ -248,11 +248,10 @@ EquityLeg::operator Leg() const {
             }
         }
 
-        boost::shared_ptr<EquityCoupon> cashflow(new EquityCoupon(
-            paymentDate, notionals_.empty() || notionalReset_ ? Null<Real>() : detail::get(notionals_, i, 0.0),
-            startDate, endDate, fixingDays_, equityCurve_, paymentDayCounter_, isTotalReturn_, dividendFactor_,
-            notionalReset_, initialPrice, quantity, fixingStartDate, fixingEndDate, Date(), Date(), Date(), fxIndex_,
-            initialPriceIsInTargetCcy));
+        boost::shared_ptr<EquityCoupon> cashflow(
+            new EquityCoupon(paymentDate, notional, startDate, endDate, fixingDays_, equityCurve_, paymentDayCounter_,
+                             isTotalReturn_, dividendFactor_, notionalReset_, initialPrice, quantity, fixingStartDate,
+                             fixingEndDate, Date(), Date(), Date(), fxIndex_, initialPriceIsInTargetCcy));
 
         boost::shared_ptr<EquityCouponPricer> pricer(new EquityCouponPricer);
         cashflow->setPricer(pricer);
