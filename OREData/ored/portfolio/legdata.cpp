@@ -428,6 +428,7 @@ void EquityLegData::fromXML(XMLNode* node) {
         initialPrice_ = XMLUtils::getChildValueAsDouble(node, "InitialPrice");
     else
         initialPrice_ = Null<Real>();
+    initialPriceCurrency_ = XMLUtils::getChildValue(node, "InitialPriceCurrency", false);
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");
     XMLNode* tmp = XMLUtils::getChildNode(node, "ValuationSchedule");
     if (tmp)
@@ -465,6 +466,8 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, equityUnderlying_.toXML(doc));
     if (initialPrice_ != Null<Real>())
         XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
+    if (!initialPriceCurrency_.empty())
+        XMLUtils::addChild(doc, node, "InitialPriceCurrency", initialPriceCurrency_);
     XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
 
     if (valuationSchedule_.hasData()) {
@@ -1492,6 +1495,15 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     bool isTotalReturn = eqLegData->returnType() == "Total";
     Real dividendFactor = eqLegData->dividendFactor();
     Real initialPrice = eqLegData->initialPrice();
+    bool initialPriceIsInTargetCcy = false;
+    if(!eqLegData->initialPriceCurrency().empty()) {
+        QL_REQUIRE(eqLegData->initialPriceCurrency() == data.currency() ||
+                       eqLegData->initialPriceCurrency() == eqLegData->eqCurrency() || eqLegData->eqCurrency().empty(),
+                   "initial price ccy (" << eqLegData->initialPriceCurrency() << ") must match either leg ccy ("
+                                         << data.currency() << ") or equity ccy (if given, got '"
+                                         << eqLegData->eqCurrency() << "')");
+        initialPriceIsInTargetCcy = eqLegData->initialPriceCurrency() == data.currency();
+    }
     bool notionalReset = eqLegData->notionalReset();
     Natural fixingDays = eqLegData->fixingDays();
     ScheduleData valuationData = eqLegData->valuationSchedule();
@@ -1510,6 +1522,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
                   .withTotalReturn(isTotalReturn)
                   .withDividendFactor(dividendFactor)
                   .withInitialPrice(initialPrice)
+                  .withInitialPriceIsInTargetCcy(initialPriceIsInTargetCcy)
                   .withNotionalReset(notionalReset)
                   .withFixingDays(fixingDays)
                   .withValuationSchedule(valuationSchedule);
