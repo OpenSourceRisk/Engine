@@ -336,6 +336,10 @@ void FixingDateGetter::visit(QuantExt::OvernightIndexedCoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
 }
 
+void FixingDateGetter::visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c) {
+    c.underlying()->accept(*this);
+}
+
 void FixingDateGetter::visit(AverageBMACoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
 }

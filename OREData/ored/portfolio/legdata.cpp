@@ -19,6 +19,7 @@
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
@@ -147,6 +148,10 @@ void FloatingLegData::fromXML(XMLNode* node) {
         lookback_ = parsePeriod(XMLUtils::getNodeValue(n));
     else
         lookback_ = 0 * Days;
+    if(auto n = XMLUtils::getChildNode(node, "RateCutoff"))
+        rateCutoff_ = parseInteger(XMLUtils::getNodeValue(n));
+    else
+        rateCutoff_ = Null<Size>();
     caps_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Caps", "Cap", "startDate", capDates_, &parseReal);
     floors_ =
         XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Floors", "Floor", "startDate", floorDates_, &parseReal);
@@ -169,6 +174,8 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
     if (lookback_ != 0 * Days)
         XMLUtils::addChild(doc, node, "Lookback", ore::data::to_string(lookback_));
+    if (rateCutoff_ != Null<Size>())
+        XMLUtils::addChild(doc, node, "RateCutoff", static_cast<int>(rateCutoff_));
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
@@ -904,12 +911,10 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     return tmpLeg;
 }
 
-Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index) {
+Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index,
+               const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer) {
     boost::shared_ptr<FloatingLegData> floatData = boost::dynamic_pointer_cast<FloatingLegData>(data.concreteLegData());
     QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << data.legType());
-
-    if (floatData->caps().size() > 0 || floatData->floors().size() > 0)
-        QL_FAIL("Caps and floors are not supported for OIS legs");
 
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
@@ -926,38 +931,60 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
 
     if (floatData->isAveraged()) {
 
+    if (floatData->caps().size() > 0 || floatData->floors().size() > 0)
+        QL_FAIL("Caps and floors are not supported for OIS averaged legs");
+
         boost::shared_ptr<QuantExt::AverageONIndexedCouponPricer> couponPricer =
             boost::make_shared<QuantExt::AverageONIndexedCouponPricer>();
-        QuantExt::AverageONLeg leg = QuantExt::AverageONLeg(schedule, index)
-                                         .withNotionals(notionals)
-                                         .withSpreads(spreads)
-                                         .withGearings(gearings)
-                                         .withPaymentDayCounter(dc)
-                                         .withPaymentAdjustment(bdc)
-                                         .withRateCutoff(2)
-                                         .withPaymentLag(paymentLag)
-                                         .withLookback(floatData->lookback())
-                                         .withAverageONIndexedCouponPricer(couponPricer);
+        QuantExt::AverageONLeg leg =
+            QuantExt::AverageONLeg(schedule, index)
+                .withNotionals(notionals)
+                .withSpreads(spreads)
+                .withGearings(gearings)
+                .withPaymentDayCounter(dc)
+                .withPaymentAdjustment(bdc)
+                .withPaymentLag(paymentLag)
+                .withLookback(floatData->lookback())
+                .withRateCutoff(floatData->rateCutoff() == Null<Size>() ? 0 : floatData->rateCutoff())
+                .withFixingDays(floatData->fixingDays())
+                .withAverageONIndexedCouponPricer(couponPricer);
 
         return leg;
 
     } else {
 
         Leg leg = QuantExt::OvernightLeg(schedule, index)
-                               .withNotionals(notionals)
-                               .withSpreads(spreads)
-                               .withPaymentDayCounter(dc)
-                               .withPaymentAdjustment(bdc)
-                               .withPaymentCalendar(paymentCalendar)
-                               .withPaymentLag(paymentLag)
-                               .withGearings(gearings)
-                               .includeSpread(floatData->includeSpread())
-                               .withLookback(floatData->lookback());
+                      .withNotionals(notionals)
+                      .withSpreads(spreads)
+                      .withPaymentDayCounter(dc)
+                      .withPaymentAdjustment(bdc)
+                      .withPaymentCalendar(paymentCalendar)
+                      .withPaymentLag(paymentLag)
+                      .withGearings(gearings)
+                      .includeSpread(floatData->includeSpread())
+                      .withLookback(floatData->lookback())
+                      .withFixingDays(floatData->fixingDays())
+                      .withRateCutoff(floatData->rateCutoff() == Null<Size>() ? 0 : floatData->rateCutoff())
+                      .withCaps(buildScheduledVectorNormalised<Real>(floatData->caps(), floatData->capDates(), schedule,
+                                                                     Null<Real>()))
+                      .withFloors(buildScheduledVectorNormalised<Real>(floatData->floors(), floatData->capDates(),
+                                                                       schedule, Null<Real>()))
+                      .withNakedOption(floatData->nakedOption());
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(index);
         if (brlCdiIndex)
             QuantExt::setCouponPricer(leg, boost::make_shared<BRLCdiCouponPricer>());
+
+        // if we have caps / floors, we need a pricer for that
+        if (attachPricer && (floatData->caps().size() > 0 || floatData->floors().size() > 0)) {
+            boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredOvernightIndexedCouponLeg");
+            QL_REQUIRE(builder, "No builder found for CapFlooredOvernightIndexedCouponLeg");
+            auto pricerBuilder =
+                boost::dynamic_pointer_cast<CapFlooredOvernightIndexedCouponLegEngineBuilder>(builder);
+            boost::shared_ptr<FloatingRateCouponPricer> pricer = pricerBuilder->engine(index->currency());
+            QuantExt::setCouponPricer(leg, pricer);
+        }
 
         return leg;
     }

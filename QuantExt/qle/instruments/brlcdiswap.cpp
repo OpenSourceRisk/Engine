@@ -56,7 +56,9 @@ BRLCdiSwap::BRLCdiSwap(Type type, Real nominal, const Date& startDate, const Dat
 
     // Set the pricer on the BRL CDI coupon
     QL_REQUIRE(legs_[1].size() == 1, "BRLCdiSwap expected exactly one overnight coupon");
-    boost::shared_ptr<OvernightIndexedCoupon> coupon = boost::dynamic_pointer_cast<OvernightIndexedCoupon>(legs_[1][0]);
+    boost::shared_ptr<QuantLib::OvernightIndexedCoupon> coupon =
+        boost::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(legs_[1][0]);
+    QL_REQUIRE(coupon, "BRLCdiSwap: expected QuantLib::OvernightIndexedCoupon");
     coupon->setPricer(boost::make_shared<BRLCdiCouponPricer>());
 }
 

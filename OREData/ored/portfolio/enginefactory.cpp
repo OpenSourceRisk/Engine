@@ -21,6 +21,7 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
@@ -154,6 +155,7 @@ void EngineFactory::addDefaultBuilders() {
 
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());
+    registerBuilder(boost::make_shared<CapFlooredOvernightIndexedCouponLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredYoYLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredCpiLegCouponEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredCpiLegCashFlowEngineBuilder>());
@@ -176,7 +178,9 @@ void EngineFactory::addDefaultBuilders() {
 
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
-    registerBuilder(boost::make_shared<CommodityOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityEuropeanOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityAmericanOptionFDEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityAmericanOptionBAWEngineBuilder>());
 
     registerLegBuilder(boost::make_shared<FixedLegBuilder>());
     registerLegBuilder(boost::make_shared<ZeroCouponFixedLegBuilder>());
