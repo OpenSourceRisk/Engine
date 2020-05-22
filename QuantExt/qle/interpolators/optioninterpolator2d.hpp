@@ -40,8 +40,8 @@ struct CloseEnoughComparator {
 class OptionInterpolatorBase {
 
 public:
-    // Destructor
-    virtual ~OptionInterpolatorBase() {}
+    // Destructor FIXME breaks unit tests
+    // virtual ~OptionInterpolatorBase() {}
     // default Constructor
     OptionInterpolatorBase(const QuantLib::Date& referenceDate) : referenceDate_(referenceDate){};
 
