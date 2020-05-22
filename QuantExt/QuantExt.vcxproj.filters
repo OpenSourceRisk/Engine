@@ -877,6 +877,9 @@
     <ClInclude Include="qle\indexes\ibor\inrmiborois.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1510,6 +1513,9 @@
     </ClCompile>
     <ClCompile Include="qle\time\actual364.cpp">
       <Filter>time</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\cashsettledeuropeanoption.cpp">
+      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
