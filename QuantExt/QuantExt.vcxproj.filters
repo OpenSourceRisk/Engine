@@ -880,6 +880,9 @@
     <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1516,6 +1519,9 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\cashsettledeuropeanoption.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
