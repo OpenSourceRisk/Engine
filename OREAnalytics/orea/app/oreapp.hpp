@@ -47,6 +47,9 @@ using namespace ore::data;
 class SensitivityScenarioData;
 class SensitivityAnalysis;
 
+//! Orchestrates the processes covered by ORE, data loading, analytics and reporting
+/*! \ingroup app
+*/
 class OREApp {
 public:
     //! Constructor
