@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <ored/utilities/serializationdate.hpp>
+#include <ored/utilities/serializationperiod.hpp>
 #include <ql/types.hpp>
 #include <ql/time/date.hpp>
 #include <boost/shared_ptr.hpp>
