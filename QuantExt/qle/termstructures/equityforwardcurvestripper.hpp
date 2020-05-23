@@ -50,8 +50,8 @@ public:
     //@}
     
 private:
-    const boost::shared_ptr<OptionPriceSurface>& callSurface_;
-    const boost::shared_ptr<OptionPriceSurface>& putSurface_;
+    const boost::shared_ptr<OptionPriceSurface> callSurface_;
+    const boost::shared_ptr<OptionPriceSurface> putSurface_;
     QuantLib::Handle<QuantLib::YieldTermStructure> forecastCurve_;
     QuantLib::Handle<QuantLib::Quote> equitySpot_;
     QuantLib::Exercise::Type type_;
