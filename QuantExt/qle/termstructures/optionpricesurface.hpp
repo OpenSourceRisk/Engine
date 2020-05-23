@@ -20,8 +20,7 @@
     \brief Surface to store option prices
  */
 
-#ifndef quantext_option_price_surface_hpp
-#define quantext_option_price_surface_hpp
+#pragma once
 
 #include <qle/interpolators/optioninterpolator2d.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
@@ -57,6 +56,3 @@ public:
 };
 
 } // namespace QuantExt
-
-#endif
-#pragma once
