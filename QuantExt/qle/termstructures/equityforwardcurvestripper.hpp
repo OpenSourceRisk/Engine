@@ -59,8 +59,9 @@ private:
     //! store the stripped forward rates
     mutable std::vector<QuantLib::Real> forwards_;
 
-    QuantLib::Real forwardFromPutCallParity(QuantLib::Date d, QuantLib::Real call, 
-        OptionPriceSurface& callSurface, OptionPriceSurface& putSurface) const;
+    QuantLib::Real forwardFromPutCallParity(QuantLib::Date d, QuantLib::Real call,
+                                            const OptionPriceSurface& callSurface,
+                                            const OptionPriceSurface& putSurface) const;
 };
 
 } // namespace QuantExt
