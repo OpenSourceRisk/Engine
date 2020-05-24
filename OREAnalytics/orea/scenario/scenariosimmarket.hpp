@@ -123,7 +123,7 @@ public:
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
                       const boost::shared_ptr<FixingManager>& fixingManager,
                       const std::string& configuration = Market::defaultConfiguration,
-		              const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
+                      const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                       const bool continueOnError = false);
 
@@ -156,7 +156,7 @@ public:
 
     //! is risk factor key simulated by this sim market instance?
     bool isSimulated(const RiskFactorKey::KeyType& factor) const;
-    
+
 protected:
     virtual void applyScenario(const boost::shared_ptr<Scenario>& scenario);
     void addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,

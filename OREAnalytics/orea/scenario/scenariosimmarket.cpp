@@ -83,7 +83,6 @@ void processException(bool continueOnError, const std::exception& e) {
         QL_FAIL(e.what());
     }
 }
-
 } // namespace
 
 namespace ore {
@@ -207,7 +206,7 @@ ScenarioSimMarket::ScenarioSimMarket(
     const std::string& configuration, const ore::data::CurveConfigurations& curveConfigs,
     const ore::data::TodaysMarketParameters& todaysMarketParams, const bool continueOnError)
     : SimMarket(conventions), parameters_(parameters), fixingManager_(fixingManager),
-      filter_(boost::make_shared<ScenarioFilter>()){
+      filter_(boost::make_shared<ScenarioFilter>()) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
