@@ -32,6 +32,7 @@ marketdata/defaultcurve.cpp
 marketdata/equitycurve.cpp
 marketdata/equityvolcurve.cpp
 marketdata/expiry.cpp
+marketdata/fittedbondcurvehelpermarket.cpp
 marketdata/fixings.cpp
 marketdata/fxspot.cpp
 marketdata/fxtriangulation.cpp
@@ -64,11 +65,12 @@ model/lgmbuilder.cpp
 model/lgmdata.cpp
 model/utilities.cpp
 portfolio/bond.cpp
+portfolio/bondutils.cpp
 portfolio/builders/capfloor.cpp
 portfolio/builders/capfloorediborleg.cpp
+portfolio/builders/capflooredovernightindexedcouponleg.cpp
 portfolio/builders/cms.cpp
 portfolio/builders/cmsspread.cpp
-portfolio/builders/commodityoption.cpp
 portfolio/builders/cpicapfloor.cpp
 portfolio/builders/swaption.cpp
 portfolio/builders/yoycapfloor.cpp
@@ -81,7 +83,6 @@ portfolio/enginedata.cpp
 portfolio/enginefactory.cpp
 portfolio/envelope.cpp
 portfolio/equityforward.cpp
-portfolio/equityidentifier.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
 portfolio/fixingdates.cpp
@@ -90,6 +91,7 @@ portfolio/forwardrateagreement.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
 portfolio/fxswap.cpp
+portfolio/indexing.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
 portfolio/legdatafactory.cpp
@@ -98,12 +100,15 @@ portfolio/nettingsetmanager.cpp
 portfolio/optiondata.cpp
 portfolio/optionwrapper.cpp
 portfolio/portfolio.cpp
+portfolio/referencedata.cpp
+portfolio/referencedatafactory.cpp
 portfolio/schedule.cpp
 portfolio/swap.cpp
 portfolio/swaption.cpp
 portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradefactory.cpp
+portfolio/underlying.cpp
 portfolio/vanillaoption.cpp
 report/csvreport.cpp
 utilities/calendaradjustmentconfig.cpp
@@ -162,6 +167,7 @@ marketdata/defaultcurve.hpp
 marketdata/equitycurve.hpp
 marketdata/equityvolcurve.hpp
 marketdata/expiry.hpp
+marketdata/fittedbondcurvehelpermarket.hpp
 marketdata/fixings.hpp
 marketdata/fxspot.hpp
 marketdata/fxtriangulation.hpp
@@ -199,11 +205,13 @@ model/modelbuilder.hpp
 model/structuredmodelerror.hpp
 model/utilities.hpp
 portfolio/bond.hpp
+portfolio/bondutils.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
 portfolio/builders/capflooredcpileg.hpp
 portfolio/builders/capfloorediborleg.hpp
+portfolio/builders/capflooredovernightindexedcouponleg.hpp
 portfolio/builders/capflooredyoyleg.hpp
 portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
@@ -229,7 +237,6 @@ portfolio/enginedata.hpp
 portfolio/enginefactory.hpp
 portfolio/envelope.hpp
 portfolio/equityforward.hpp
-portfolio/equityidentifier.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
 portfolio/fixingdates.hpp
@@ -238,6 +245,7 @@ portfolio/forwardrateagreement.hpp
 portfolio/fxforward.hpp
 portfolio/fxoption.hpp
 portfolio/fxswap.hpp
+portfolio/indexing.hpp
 portfolio/instrumentwrapper.hpp
 portfolio/legbuilders.hpp
 portfolio/legdata.hpp
@@ -247,6 +255,8 @@ portfolio/nettingsetmanager.hpp
 portfolio/optiondata.hpp
 portfolio/optionwrapper.hpp
 portfolio/portfolio.hpp
+portfolio/referencedata.hpp
+portfolio/referencedatafactory.hpp
 portfolio/schedule.hpp
 portfolio/structuredtradeerror.hpp
 portfolio/swap.hpp
@@ -254,6 +264,7 @@ portfolio/swaption.hpp
 portfolio/trade.hpp
 portfolio/tradeactions.hpp
 portfolio/tradefactory.hpp
+portfolio/underlying.hpp
 portfolio/vanillaoption.hpp
 report/csvreport.hpp
 report/inmemoryreport.hpp

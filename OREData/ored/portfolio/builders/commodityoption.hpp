@@ -17,37 +17,44 @@
 */
 
 /*! \file portfolio/builders/commodityoption.hpp
-    \brief Engine builder for commodity option
+    \brief Engine builder for commodity options
     \ingroup builders
 */
 
 #pragma once
 
-#include <ored/portfolio/builders/cachingenginebuilder.hpp>
-#include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/builders/vanillaoption.hpp>
 
 namespace ore {
 namespace data {
 
-//! Engine builder for commodity option
-/*! Pricing engines are cached by commodity and currency
-
+/*! Engine builder for European commodity options
     \ingroup builders
  */
-class CommodityOptionEngineBuilder
-    : public CachingPricingEngineBuilder<std::string, const std::string&, const QuantLib::Currency&> {
+class CommodityEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
 public:
-    CommodityOptionEngineBuilder()
-        : CachingEngineBuilder("BlackScholes", "AnalyticEuropeanEngine", {"CommodityOption"}) {}
-
-protected:
-    virtual std::string keyImpl(const std::string& commodityName, const QuantLib::Currency& ccy) override {
-        return commodityName + "/" + ccy.code();
-    }
-
-    virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& commodityName,
-                                                                  const QuantLib::Currency& ccy) override;
+    CommodityEuropeanOptionEngineBuilder()
+        : EuropeanOptionEngineBuilder("BlackScholes", { "CommodityOption" }, AssetClass::COM) {}
 };
 
-} // namespace data
-} // namespace ore
+/*! Engine builder for American commodity options using finite difference.
+    \ingroup builders
+ */
+class CommodityAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
+public:
+    CommodityAmericanOptionFDEngineBuilder()
+        : AmericanOptionFDEngineBuilder("BlackScholes", { "CommodityOptionAmerican" }, 
+            AssetClass::COM, expiryDate_) {}
+};
+
+/*! Engine builder for American commodity options using Barone-Adesi and Whaley approximation.
+    \ingroup builders
+ */
+class CommodityAmericanOptionBAWEngineBuilder : public AmericanOptionBAWEngineBuilder {
+public:
+    CommodityAmericanOptionBAWEngineBuilder()
+        : AmericanOptionBAWEngineBuilder("BlackScholes", { "CommodityOptionAmerican" }, AssetClass::COM) {}
+};
+
+}
+}

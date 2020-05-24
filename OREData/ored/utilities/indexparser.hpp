@@ -50,14 +50,18 @@ using ore::data::Convention;
 /*!
     \ingroup utilities
 */
-boost::shared_ptr<QuantExt::FxIndex> parseFxIndex(const string& s);
+boost::shared_ptr<QuantExt::FxIndex>
+parseFxIndex(const string& s, const Handle<Quote>& fxSpot = Handle<Quote>(),
+             const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
+             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>());
 
 //! Convert std::string to QuantLib::IborIndex
 /*!
     \ingroup utilities
 */
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s,
-                                            const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
+                                            const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>(),
+                                            const boost::shared_ptr<Convention>& c = nullptr);
 
 //! Convert std::string to QuantLib::IborIndex and return the tenor string component of the index
 /*! In some cases, after parsing the IborIndex, we would like to know the exact tenor string that was part of
@@ -73,13 +77,15 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s,
 */
 boost::shared_ptr<IborIndex> parseIborIndex(
     const std::string& strIndex, std::string& outTenor,
-    const QuantLib::Handle<QuantLib::YieldTermStructure>& h = QuantLib::Handle<QuantLib::YieldTermStructure>());
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& h = QuantLib::Handle<QuantLib::YieldTermStructure>(),
+    const boost::shared_ptr<Convention>& c = nullptr);
 
 //! Try to convert std::string to QuantLib::IborIndex
 /*!
     \ingroup utilities
 */
-bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index);
+bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index,
+                       const boost::shared_ptr<Convention>& c = nullptr);
 
 //! Return true if the \p indexName is that of a generic index, otherwise false
 /*!
@@ -106,7 +112,7 @@ boost::shared_ptr<QuantExt::EquityIndex> parseEquityIndex(const string& s);
 boost::shared_ptr<SwapIndex>
 parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = Handle<YieldTermStructure>(),
                const Handle<YieldTermStructure>& discounting = Handle<YieldTermStructure>(),
-               boost::shared_ptr<data::IRSwapConvention> convention = boost::shared_ptr<data::IRSwapConvention>());
+               boost::shared_ptr<Convention> convention = nullptr);
 
 //! Convert std::string to QuantLib::ZeroInflationIndex
 /*!
@@ -145,9 +151,9 @@ boost::shared_ptr<Index> parseIndex(const string& s, const Conventions& conventi
 //! Return true if the \p indexName is that of an overnight index, otherwise false
 /*! \ingroup utilities
  */
-bool isOvernightIndex(const std::string& indexName);
+bool isOvernightIndex(const std::string& indexName, const Conventions& conventions = Conventions());
 
-/*! In some cases, we allow multiple external index names to represent the same QuantLib index. This function returns
+/*! In some cases, we allow multiple external ibor index names to represent the same QuantLib index. This function returns
     the unique index name that we use internally to represent the QuantLib index.
 
     For example, we allow:

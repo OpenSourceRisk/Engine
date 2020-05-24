@@ -22,8 +22,9 @@ using namespace std;
 
 // Boost
 #include <boost/make_shared.hpp>
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 using namespace boost;
+using boost::timer::cpu_timer;
 
 // Boost.Test
 #define BOOST_TEST_MODULE OREDataTestSuite
@@ -47,6 +48,10 @@ using ore::test::getBaseDataPath;
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_regex
 #include <boost/config/auto_link.hpp>
+#define BOOST_LIB_NAME boost_timer
+#include <boost/config/auto_link.hpp>
+#define BOOST_LIB_NAME boost_chrono
+#include <boost/config/auto_link.hpp>
 #endif
 
 // Global base path variable
@@ -69,7 +74,8 @@ public:
 
     // Method called in destructor to log time taken
     void stopTimer() {
-        double seconds = t.elapsed();
+        t.stop();
+        double seconds = t.elapsed().wall * 1e-9;
         int hours = int(seconds / 3600);
         seconds -= hours * 3600;
         int minutes = int(seconds / 60);
@@ -84,7 +90,7 @@ public:
 
 private:
     // Timing the test run
-    boost::timer t;
+    cpu_timer t;
 };
 
 // Breaking change in 1.65.0

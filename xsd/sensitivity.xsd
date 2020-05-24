@@ -61,6 +61,12 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="survivalprobabilities">
+    <xs:sequence>
+      <xs:element type="survivalprobability" name="SurvivalProbability" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="indexcurves">
     <xs:sequence>
       <xs:element type="indexcurve" name="IndexCurve" maxOccurs="unbounded" minOccurs="0"/>
@@ -76,6 +82,12 @@
   <xs:complexType name="fxspots">
     <xs:sequence>
       <xs:element type="fxspot" name="FxSpot" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="recoveryrates">
+    <xs:sequence>
+      <xs:element type="recoveryrate" name="RecoverRate" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -193,6 +205,21 @@
     </xs:sequence>
   </xs:complexType>
 
+
+  <xs:complexType name="survivalprobability">
+    <xs:sequence>
+      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
+      <xs:element type="xs:string" name="ShiftTenors"/>
+      <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="name" use="required"/>
+  </xs:complexType>
+
+
   <xs:complexType name="discountcurve">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
@@ -265,6 +292,17 @@
       </xs:choice>
     </xs:sequence>
     <xs:attribute type="currencyPair" name="ccypair" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="recoveryrate">
+    <xs:sequence>
+      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="fxvolatility">

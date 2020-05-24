@@ -26,7 +26,7 @@
 using namespace std;
 
 // Boost
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 using namespace boost;
 
 // Boost.Test
@@ -40,6 +40,12 @@ using boost::unit_test::framework::master_test_suite;
 #ifdef BOOST_MSVC
 #include <ql/auto_link.hpp>
 #include <qle/auto_link.hpp>
+#define BOOST_LIB_NAME boost_system
+#include <boost/config/auto_link.hpp>
+#define BOOST_LIB_NAME boost_timer
+#include <boost/config/auto_link.hpp>
+#define BOOST_LIB_NAME boost_chrono
+#include <boost/config/auto_link.hpp>
 #endif
 
 class QleGlobalFixture {
@@ -50,7 +56,8 @@ public:
 
     // Method called in destructor to log time taken
     void stopTimer() {
-        double seconds = t.elapsed();
+        t.stop();
+        double seconds = t.elapsed().wall * 1e-9;
         int hours = int(seconds / 3600);
         seconds -= hours * 3600;
         int minutes = int(seconds / 60);
@@ -65,7 +72,7 @@ public:
 
 private:
     // Timing the test run
-    boost::timer t;
+    boost::timer::cpu_timer t;
 };
 
 // Breaking change in 1.65.0

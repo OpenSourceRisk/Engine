@@ -44,12 +44,6 @@ public:
 
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
-    //! Return no fixings for a CreditDefaultSwap
-    std::map<std::string, std::set<QuantLib::Date>> fixings(
-        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
-        return {};
-    }
-
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
 

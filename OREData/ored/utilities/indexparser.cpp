@@ -56,6 +56,7 @@
 #include <qle/indexes/ibor/idridrfix.hpp>
 #include <qle/indexes/ibor/idrjibor.hpp>
 #include <qle/indexes/ibor/ilstelbor.hpp>
+#include <qle/indexes/ibor/inrmiborois.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
 #include <qle/indexes/ibor/krwcd.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
@@ -73,7 +74,6 @@
 #include <qle/indexes/ibor/sekstibor.hpp>
 #include <qle/indexes/ibor/sgdsibor.hpp>
 #include <qle/indexes/ibor/sgdsor.hpp>
-#include <qle/indexes/ibor/sofr.hpp>
 #include <qle/indexes/ibor/skkbribor.hpp>
 #include <qle/indexes/ibor/thbbibor.hpp>
 #include <qle/indexes/ibor/tonar.hpp>
@@ -160,39 +160,43 @@ void checkOneToOne(const map<string, boost::shared_ptr<OvernightIndex>>& onIndic
     }
 }
 
-boost::shared_ptr<FxIndex> parseFxIndex(const string& s) {
+boost::shared_ptr<FxIndex> parseFxIndex(const string& s, const Handle<Quote>& fxSpot,
+                                        const Handle<YieldTermStructure>& sourceYts,
+                                        const Handle<YieldTermStructure>& targetYts) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
     QL_REQUIRE(tokens.size() == 4, "four tokens required in " << s << ": FX-TAG-CCY1-CCY2");
     QL_REQUIRE(tokens[0] == "FX", "expected first token to be FX");
     return boost::make_shared<FxIndex>(tokens[0] + "/" + tokens[1], 0, parseCurrency(tokens[2]),
-                                       parseCurrency(tokens[3]), NullCalendar());
+                                       parseCurrency(tokens[3]), NullCalendar(), fxSpot, sourceYts, targetYts);
 }
 
 boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
-    QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3, "two or three tokens required in " << s << ": EQ-NAME(-CCY)");
+    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
     QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
-    return boost::make_shared<EquityIndex>(tokens[1], NullCalendar(),
-                                           tokens.size() == 3 ? parseCurrency(tokens[2]) : Currency());
+    return boost::make_shared<EquityIndex>(tokens[1], NullCalendar(), Currency());
 }
 
-bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index) {
+bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index,
+                       const boost::shared_ptr<Convention>& c) {
     try {
-        index = parseIborIndex(s);
+        index = parseIborIndex(s, Handle<YieldTermStructure>(), c);
     } catch (...) {
         return false;
     }
     return true;
 }
 
-boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldTermStructure>& h) {
+boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldTermStructure>& h,
+                                            const boost::shared_ptr<Convention>& c) {
     string dummy;
-    return parseIborIndex(s, dummy, h);
+    return parseIborIndex(s, dummy, h, c);
 }
 
-boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, const Handle<YieldTermStructure>& h) {
+boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, const Handle<YieldTermStructure>& h,
+                                            const boost::shared_ptr<Convention>& c) {
 
     // Check the index string is of the required form before doing anything
     vector<string> tokens;
@@ -207,6 +211,32 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     } else {
         tenor = "";
     }
+
+    // if we have a convention given, set up the index using this convention, this overrides the parsing from
+    // hardcoded strings below if there is an overlap
+    if (c) {
+        QL_REQUIRE(c->id() == s, "ibor index convention id ('"
+                                     << c->id() << "') not matching ibor index string to parse ('" << s << "'");
+        Currency ccy = parseCurrency(tokens[0]);
+        if (auto conv = boost::dynamic_pointer_cast<OvernightIndexConvention>(c)) {
+            QL_REQUIRE(tenor.empty(), "no tenor allowed for convention based overnight index ('" << s << "')");
+            return boost::make_shared<OvernightIndex>(tokens[1], conv->settlementDays(), ccy,
+                                                      parseCalendar(conv->fixingCalendar()),
+                                                      parseDayCounter(conv->dayCounter()), h);
+
+        } else if (auto conv = boost::dynamic_pointer_cast<IborIndexConvention>(c)) {
+            QL_REQUIRE(!tenor.empty(), "no tenor given for convention based Ibor index ('" << s << "'");
+            return boost::make_shared<IborIndex>(tokens[1], parsePeriod(tenor), conv->settlementDays(), ccy,
+                                                 parseCalendar(conv->fixingCalendar()),
+                                                 parseBusinessDayConvention(conv->businessDayConvention()),
+                                                 conv->endOfMonth(), parseDayCounter(conv->dayCounter()), h);
+        } else {
+            QL_FAIL("invalid convention passed to parseIborIndex(): expected OvernightIndexConvention or "
+                    "IborIndexConvention");
+        }
+    }
+
+    // if we do not have a convention, look up the index in the hardcoded maps below
 
     // Map from our _unique internal name_ to an overnight index
     static map<string, boost::shared_ptr<OvernightIndex>> onIndices = {
@@ -228,7 +258,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         { "NOK-NOWA", boost::make_shared<Nowa>() },
         { "CLP-CAMARA", boost::make_shared<CLPCamara>() },
         { "NZD-OCR", boost::make_shared<Nzocr>() },
-        { "PLN-POLONIA", boost::make_shared<PLNPolonia>() }
+        { "PLN-POLONIA", boost::make_shared<PLNPolonia>() },
+        { "INR-MIBOROIS", boost::make_shared<INRMiborOis>() }
     };
 
     // Map from our _unique internal name_ to an ibor index (the period does not matter here)
@@ -236,6 +267,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"AUD-BBSW", boost::make_shared<IborIndexParserWithPeriod<AUDbbsw>>()},
         {"AUD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<AUDLibor>>()},
         {"EUR-EURIBOR", boost::make_shared<IborIndexParserWithPeriod<Euribor>>()},
+	{"EUR-EURIBOR365", boost::make_shared<IborIndexParserWithPeriod<Euribor365>>()},
         {"CAD-CDOR", boost::make_shared<IborIndexParserWithPeriod<Cdor>>()},
         {"CNY-SHIBOR", boost::make_shared<IborIndexParserWithPeriod<Shibor>>()},
         {"CZK-PRIBOR", boost::make_shared<IborIndexParserWithPeriod<CZKPribor>>()},
@@ -343,28 +375,35 @@ public:
 };
 
 boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldTermStructure>& f,
-                                            const Handle<YieldTermStructure>& d,
-                                            boost::shared_ptr<data::IRSwapConvention> convention) {
+                                            const Handle<YieldTermStructure>& d, boost::shared_ptr<Convention> convention) {
+
+    boost::shared_ptr<data::IRSwapConvention> irSwapConvention;
+    if (convention) {
+        irSwapConvention = boost::dynamic_pointer_cast<IRSwapConvention>(convention);
+        QL_REQUIRE(irSwapConvention, "expected swap convention in parseSwapIndex() for '" << convention->id() << "'");
+    }
 
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
 
-    QL_REQUIRE(tokens.size() == 3, "three tokens required in " << s << ": CCY-CMS-TENOR");
+    QL_REQUIRE(tokens.size() == 3 || tokens.size() == 4,
+               "three or four tokens required in " << s << ": CCY-CMS-TENOR or CCY-CMS-TAG-TENOR");
     QL_REQUIRE(tokens[0].size() == 3, "invalid currency code in " << s);
     QL_REQUIRE(tokens[1] == "CMS", "expected CMS as middle token in " << s);
 
-    Period p = parsePeriod(tokens[2]);
+    Period p = parsePeriod(tokens.back());
 
-    string familyName = tokens[0] + "LiborSwapIsdaFix";
+    // if no tag is given use LiborSwapIsdaFix as an (arbitrary) standard name
+    string familyName = tokens.size() == 4 ? tokens[0] + "-CMS-" + tokens[2] : tokens[0] + "LiborSwapIsdaFix";
     Currency ccy = parseCurrency(tokens[0]);
 
     boost::shared_ptr<IborIndex> index =
-        f.empty() || !convention ? boost::shared_ptr<IborIndex>() : convention->index()->clone(f);
+        f.empty() || !convention ? boost::shared_ptr<IborIndex>() : irSwapConvention->index()->clone(f);
     QuantLib::Natural settlementDays = index ? index->fixingDays() : 0;
-    QuantLib::Calendar calender = convention ? convention->fixedCalendar() : NullCalendar();
-    Period fixedLegTenor = convention ? Period(convention->fixedFrequency()) : Period(1, Months);
-    BusinessDayConvention fixedLegConvention = convention ? convention->fixedConvention() : ModifiedFollowing;
-    DayCounter fixedLegDayCounter = convention ? convention->fixedDayCounter() : ActualActual();
+    QuantLib::Calendar calender = convention ? irSwapConvention->fixedCalendar() : NullCalendar();
+    Period fixedLegTenor = convention ? Period(irSwapConvention->fixedFrequency()) : Period(1, Months);
+    BusinessDayConvention fixedLegConvention = convention ? irSwapConvention->fixedConvention() : ModifiedFollowing;
+    DayCounter fixedLegDayCounter = convention ? irSwapConvention->fixedDayCounter() : ActualActual();
 
     if (d.empty())
         return boost::make_shared<SwapIndex>(familyName, p, settlementDays, ccy, calender, fixedLegTenor,
@@ -469,18 +508,31 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
 
 boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& conventions) {
     boost::shared_ptr<QuantLib::Index> ret_idx;
-    try {
-        ret_idx = parseIborIndex(s);
-    } catch (...) {
+    // if we have an ibor index convention we parse s using this (and throw if we don't succeed)
+    if (conventions.has(s, Convention::Type::IborIndex) || conventions.has(s, Convention::Type::OvernightIndex)) {
+        ret_idx = parseIborIndex(s, Handle<YieldTermStructure>(), conventions.get(s));
+    } else {
+        // otherwise we try to parse the ibor index without conventions
+        try {
+            ret_idx = parseIborIndex(s, Handle<YieldTermStructure>(), nullptr);
+        } catch (...) {
+        }
     }
     if (!ret_idx) {
-        try {
+        // if we have a swap index convention we parse s using this (and throw if we don't succeed)
+        if (conventions.has(s, Convention::Type::SwapIndex)) {
             auto c = boost::dynamic_pointer_cast<SwapIndexConvention>(conventions.get(s));
-            QL_REQUIRE(c, "no swap index convention");
-            auto c2 = boost::dynamic_pointer_cast<IRSwapConvention>(conventions.get(c->conventions()));
-            QL_REQUIRE(c2, "no swap convention");
-            ret_idx = parseSwapIndex(s, Handle<YieldTermStructure>(), Handle<YieldTermStructure>(), c2);
-        } catch (...) {
+            QL_REQUIRE(conventions.has(c->conventions(), Convention::Type::Swap),
+                       "do not have swap conventions for '" << c->conventions()
+                                                            << "', required from swap index convention '" << s << "'");
+            ret_idx = parseSwapIndex(s, Handle<YieldTermStructure>(), Handle<YieldTermStructure>(),
+                                     conventions.get(c->conventions()));
+        } else {
+            // otherwise try to parse a swap index without conventions
+            try {
+                ret_idx = parseSwapIndex(s, Handle<YieldTermStructure>(), Handle<YieldTermStructure>(), nullptr);
+            } catch (...) {
+            }
         }
     }
     if (!ret_idx) {
@@ -517,10 +569,12 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
     return ret_idx;
 }
 
-bool isOvernightIndex(const string& indexName) {
+bool isOvernightIndex(const string& indexName, const Conventions& conventions) {
 
     boost::shared_ptr<IborIndex> index;
-    if (tryParseIborIndex(indexName, index)) {
+    if (tryParseIborIndex(indexName, index,
+                          conventions.has(indexName, Convention::Type::OvernightIndex) ? conventions.get(indexName)
+                                                                                       : nullptr)) {
         auto onIndex = boost::dynamic_pointer_cast<OvernightIndex>(index);
         if (onIndex)
             return true;
@@ -553,6 +607,7 @@ string internalIndexName(const string& indexName) {
 
     // Check if we have an overnight index
     // This covers cases like USD-FedFunds-1D and returns USD-FedFunds
+    // (no need to check convention based overnight indices, they are always of the form CCY-INDEX)
     if (isOvernightIndex(tmpName)) {
         Period p = parsePeriod(tokens[2]);
         QL_REQUIRE(p == 1 * Days,

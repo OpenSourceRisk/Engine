@@ -18,7 +18,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <test/oreatoplevelfixture.hpp>
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
@@ -83,6 +83,8 @@ using testsuite::buildCPIInflationSwap;
 using testsuite::buildYYInflationSwap;
 using testsuite::buildCommodityForward;
 using testsuite::buildCommodityOption;
+using boost::timer::cpu_timer;
+using boost::timer::default_places;
 
 void testPortfolioSensitivity(ObservationMode::Mode om) {
     SavedSettings backup;
@@ -147,6 +149,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     data->engine("FxOption") = "AnalyticEuropeanEngine";
     data->model("CapFloor") = "IborCapModel";
     data->engine("CapFloor") = "IborCapEngine";
+    data->model("CapFlooredIborLeg") ="BlackOrBachelier";
+    data->engine("CapFlooredIborLeg") = "BlackIborCouponPricer";
     data->model("Bond") = "DiscountedCashflows";
     data->engine("Bond") = "DiscountingRiskyBondEngine";
     data->engineParameters("Bond")["TimestepPeriod"] = "6M";
@@ -168,7 +172,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     factory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
     factory->registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<CommodityOptionEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<CommodityEuropeanOptionEngineBuilder>());
 
     // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
@@ -219,11 +223,11 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     ValuationEngine engine(today, dg, simMarket,
                            factory->modelBuilders()); // last argument required for model recalibration
     // run scenarios and fill the cube
-    boost::timer t;
+    cpu_timer t;
     boost::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(
         today, portfolio->ids(), vector<Date>(1, today), scenarioGenerator->samples());
     engine.buildCube(portfolio, cube, calculators);
-    double elapsed = t.elapsed();
+    t.stop();
 
     struct Results {
         string id;
@@ -811,7 +815,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                                                  << gamma << ", computed=" << gammaMap[p]);
     }
 
-    BOOST_TEST_MESSAGE("Cube generated in " << elapsed << " seconds");
+    BOOST_TEST_MESSAGE("Cube generated in " << t.format(default_places, "%w") << " seconds");
     ObservationMode::instance().setMode(backupMode);
     IndexManager::instance().clearHistories();
 }
@@ -1689,6 +1693,8 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     data->engine("FxOption") = "AnalyticEuropeanEngine";
     data->model("CapFloor") = "IborCapModel";
     data->engine("CapFloor") = "IborCapEngine";
+    data->model("CapFlooredIborLeg") ="BlackOrBachelier";
+    data->engine("CapFlooredIborLeg") = "BlackIborCouponPricer";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
     factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());

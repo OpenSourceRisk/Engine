@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceConstantVol) {
     Calendar cal = TARGET();
     DayCounter dc = ActualActual();
 
-    auto surface = QuantExt::BlackVarianceSurfaceSparse(today, cal, dates, strikes, vols, dc);
+    QuantExt::BlackVarianceSurfaceSparse surface(today, cal, dates, strikes, vols, dc);
 
     // Check we don't throw for all points and get a vol of 10%
     for (Time t = 0.2; t < 20; t += 0.2) {
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(testBalckVarianceEdgeCases) {
 
     Real strikeNeg = -1000;
     // at reference date
-    auto surface = QuantExt::BlackVarianceSurfaceSparse(today, cal, dates, strikes, vols, dc);
+    QuantExt::BlackVarianceSurfaceSparse surface(today, cal, dates, strikes, vols, dc);
     BOOST_CHECK_CLOSE(surface.blackVol(t, strike1), 0.1, 1e-12);
     BOOST_CHECK_CLOSE(surface.blackVol(t, strike2), 0.1, 1e-12);
     BOOST_CHECK_CLOSE(surface.blackVol(t, strike3), 0.1, 1e-12);
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(testBalckVarianceSinglePoint) {
     Calendar cal = TARGET();
     DayCounter dc = ActualActual();
 
-    auto surface = QuantExt::BlackVarianceSurfaceSparse(today, cal, dates, strikes, vols, dc);
+    QuantExt::BlackVarianceSurfaceSparse surface(today, cal, dates, strikes, vols, dc);
     
     // Check we don't throw for all points and get a vol of 10%
     for (Time t = 0.0; t < 20; t += 0.2) {

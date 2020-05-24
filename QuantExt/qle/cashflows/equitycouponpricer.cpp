@@ -26,17 +26,27 @@ Rate EquityCouponPricer::swapletRate() const {
     Real start = coupon_->initialPrice();
     Real end = equityCurve_->fixing(coupon_->fixingEndDate(), false, false);
 
-    // fx rates at start and end
-    Real fxStart = fxIndex_ ? fxIndex_->fixing(coupon_->fixingStartDate()) : 1.0;
+    // fx rates at start and end, at start we only convert if the initial price is not already in target ccy
+    Real fxStart =
+        fxIndex_ && !coupon_->initialPriceIsInTargetCcy() ? fxIndex_->fixing(coupon_->fixingStartDate()) : 1.0;
     Real fxEnd = fxIndex_ ? fxIndex_->fixing(coupon_->fixingEndDate()) : 1.0;
 
     Real dividends = 0.0;
 
     // Dividends that are already fixed dividends + yield accrued over remaining period.
     // yield accrued = Forward without dividend yield - Forward with dividend yield
-    if (isTotalReturn_)
-        dividends = (equityCurve_->fixing(coupon_->fixingEndDate(), false, true) - end) +
-                    equityCurve_->dividendsBetweenDates(coupon_->fixingStartDate(), coupon_->fixingEndDate());
+    if (isTotalReturn_) {
+        // projected dividends from today until the fixing end date
+        dividends = equityCurve_->fixing(coupon_->fixingEndDate(), false, true) -
+                    equityCurve_->fixing(coupon_->fixingEndDate(), false, false);
+        // subtract projected dividends from today until the fixing start date
+        if (coupon_->fixingStartDate() > Settings::instance().evaluationDate()) {
+            dividends -= (equityCurve_->fixing(coupon_->fixingStartDate(), false, true) -
+                          equityCurve_->fixing(coupon_->fixingStartDate(), false, false));
+        }
+        // add historical dividends
+        dividends += equityCurve_->dividendsBetweenDates(coupon_->fixingStartDate(), coupon_->fixingEndDate());
+    }
 
     return ((end + dividends * dividendFactor_) * fxEnd - start * fxStart) / (start * fxStart);
 }

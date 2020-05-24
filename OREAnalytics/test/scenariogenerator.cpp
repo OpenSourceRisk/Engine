@@ -64,7 +64,7 @@
 #include <ql/time/daycounters/thirty360.hpp>
 #include <test/testmarket.hpp>
 
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -73,6 +73,8 @@ using namespace ore::analytics;
 using namespace ore::data;
 using namespace ore;
 using testsuite::TestMarket;
+using boost::timer::cpu_timer;
+using boost::timer::default_places;
 
 namespace {
 
@@ -357,7 +359,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     Size samples = 10000;
     Real eur = 0.0, usd = 0.0, gbp = 0.0, eur2 = 0.0, usd2 = 0.0, gbp2 = 0.0, eur3 = 0.0;
 
-    boost::timer timer;
+    cpu_timer timer;
     for (Size i = 0; i < samples; i++) {
         for (Date d : grid->dates()) {
             boost::shared_ptr<Scenario> scenario = scenGen->next(d);
@@ -387,7 +389,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
             }
         }
     }
-    Real elapsed = timer.elapsed();
+    timer.stop();
 
     eur /= samples;
     gbp /= samples;
@@ -435,7 +437,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     BOOST_TEST_MESSAGE("GBP 10Y Discount in EUR: " << gbp2 << " vs " << gbpExpected2);
     BOOST_TEST_MESSAGE("USD 10Y Discount in EUR: " << usd2 << " vs " << usdExpected2);
     BOOST_TEST_MESSAGE("EUHICPXT CPI:  " << eur3 << " vs " << eurExpected3);
-    BOOST_TEST_MESSAGE("Simulation time " << elapsed);
+    BOOST_TEST_MESSAGE("Simulation time " << timer.format(default_places, "%w"));
 }
 
 BOOST_AUTO_TEST_CASE(testCrossAssetMersenneTwister) {
@@ -527,14 +529,15 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     Real usdExpected = d.market->fxSpot("USDEUR")->value() * d.market->discountCurve("USD")->discount(d2);
     Real usdExpected2 = d.market->fxSpot("USDEUR")->value() * d.market->discountCurve("USD")->discount(d1);
 
-    boost::timer timer;
+    cpu_timer timer;
     Real updateTime = 0.0;
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
     for (Size i = 0; i < samples; i++) {
         for (Date d : grid->dates()) {
-            timer.restart();
+            timer.resume();
             simMarket->update(d);
-            updateTime += timer.elapsed();
+            timer.stop();
+            updateTime += timer.elapsed().wall * 1e-9;
             if (d == grid->dates().back()) {
                 Real numeraire = simMarket->numeraire();
                 Real usdeurFX = simMarket->fxSpot("USDEUR")->value();
@@ -564,7 +567,6 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
             }
         }
     }
-    Real elapsed = timer.elapsed();
 
     eur /= samples;
     gbp /= samples;
@@ -602,7 +604,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     BOOST_TEST_MESSAGE("EUR " << QuantLib::io::iso_date(d1) << " Discount:        " << eur2 << " vs " << eurExpected2);
     BOOST_TEST_MESSAGE("GBP " << QuantLib::io::iso_date(d1) << " Discount in EUR: " << gbp2 << " vs " << gbpExpected2);
     BOOST_TEST_MESSAGE("USD " << QuantLib::io::iso_date(d1) << " Discount in EUR: " << usd2 << " vs " << usdExpected2);
-    BOOST_TEST_MESSAGE("Simulation time " << elapsed << ", update time " << updateTime);
+    BOOST_TEST_MESSAGE("Simulation time " << timer.format(default_places, "%w") << ", update time " << updateTime);
 }
 
 BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
@@ -672,7 +674,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     Handle<YieldTermStructure> usdIndexCurve(boost::make_shared<FlatForward>(d.referenceDate, 0.03, ActualActual()));
     Handle<YieldTermStructure> gbpIndexCurve(boost::make_shared<FlatForward>(d.referenceDate, 0.04, ActualActual()));
 
-    boost::timer timer;
+    cpu_timer timer;
 
     Real updateTime = 0.0;
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
@@ -680,9 +682,10 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
         Sample<MultiPath> path = pathGen.next();
         Size idx = 0;
         for (Date date : grid->dates()) {
-            timer.restart();
+            timer.resume();
             simMarket->update(date);
-            updateTime += timer.elapsed();
+            timer.stop();
+            updateTime += timer.elapsed().wall * 1e-9;
             // compare a sample of the simulated data with a parallel direct run of the model
             // sim market
             Real numeraire = simMarket->numeraire();
@@ -740,8 +743,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
                                                            << gbpIndex << ", model = " << gbpIndex_m);
         }
     }
-    Real elapsed = timer.elapsed();
-    BOOST_TEST_MESSAGE("Simulation time " << elapsed << ", update time " << updateTime);
+    BOOST_TEST_MESSAGE("Simulation time " << timer.format(default_places, "%w") << ", update time " << updateTime);
 }
 
 BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
@@ -836,14 +838,14 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     // collect discounted epe
     std::vector<Real> swap_eur_epe(grid->dates().size()), swap_usd_epe(grid->dates().size());
 
-    boost::timer timer;
+    cpu_timer timer;
 
     Real updateTime = 0.0;
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
     for (Size i = 0; i < samples; i++) {
         Size idx = 0;
         for (Date date : grid->dates()) {
-            timer.restart();
+            timer.resume();
             simMarket->update(date);
             // do not include the first payments (to be comparable with a standard swaption)
             // i.e. set a settlement lag that kills this payment
@@ -860,7 +862,8 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
             // take care of the instrument update ourselves
             swap_eur->update();
             swap_usd->update();
-            updateTime += timer.elapsed();
+            timer.stop();
+            updateTime += timer.elapsed().wall * 1e-9;
             Real numeraire = simMarket->numeraire();
             Real usdeurFX = simMarket->fxSpot("USDEUR")->value();
             // swap
@@ -869,8 +872,7 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
             idx++;
         }
     }
-    Real elapsed = timer.elapsed();
-    BOOST_TEST_MESSAGE("Simulation time " << elapsed << ", update time " << updateTime);
+    BOOST_TEST_MESSAGE("Simulation time " << timer.format(default_places, "%w") << ", update time " << updateTime);
 
     // compute summary statistics for swap
     Real tol_eur = 4.0E-4, tol_usd = 13.0E-4;
@@ -981,9 +983,8 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
 
     // collect discounted epe
     Real fxfwd_epe = 0.0, fxoption_epe = 0.0;
-    boost::timer timer;
+    cpu_timer timer;
 
-    Real updateTime = 0.0;
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
     for (Size i = 0; i < samples; i++) {
         for (Date date : grid->dates()) {
@@ -999,8 +1000,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
             }
         }
     }
-    Real elapsed = timer.elapsed();
-    BOOST_TEST_MESSAGE("Simulation time " << elapsed << ", update time " << updateTime);
+    BOOST_TEST_MESSAGE("Simulation time " << timer.format(default_places, "%w"));
 
     // compute summary statistics for swap
     Real tol = 1.5E-4;
@@ -1113,9 +1113,8 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
 
     // collect discounted epe
     std::vector<Real> fxfwd_epe(grid->dates().size(), 0.0);
-    boost::timer timer;
+    cpu_timer timer;
 
-    Real updateTime = 0.0;
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
     for (Size i = 0; i < samples; i++) {
         Size idx = 0;
@@ -1128,8 +1127,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
             fxfwd_epe[idx++] += std::max(fxfwd->NPV(), 0.0) / numeraire; // NPV is in EUR already by engine construction
         }
     }
-    Real elapsed = timer.elapsed();
-    BOOST_TEST_MESSAGE("Simulation time " << elapsed << ", update time " << updateTime);
+    BOOST_TEST_MESSAGE("Simulation time " << timer.format(default_places, "%w"));
 
     // compute summary statistics for swap
     Real tol = 3.0E-4;
@@ -1250,8 +1248,7 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
 
     // collect discounted epe
     Real cpiSwap_epe = 0.0;
-    boost::timer timer;
-    Real updateTime = 0.0;
+    cpu_timer timer;
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
     for (Size i = 0; i < samples; i++) {
         simMarket->update(grid->dates().back());
@@ -1263,8 +1260,7 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
 
         simMarket->fixingManager()->reset();
     }
-    Real elapsed = timer.elapsed();
-    BOOST_TEST_MESSAGE("Simulation time " << elapsed << ", update time " << updateTime);
+    BOOST_TEST_MESSAGE("Simulation time " << timer.format(default_places, "%w"));
 
     // compute summary statistics for swap
     Real tol = 3.0E-4;

@@ -35,7 +35,7 @@ LinkableCalibratedModel::LinkableCalibratedModel()
 
 class LinkableCalibratedModel::CalibrationFunction : public CostFunction {
 public:
-    CalibrationFunction(LinkableCalibratedModel* model, const vector<shared_ptr<CalibrationHelperBase> >& h,
+    CalibrationFunction(LinkableCalibratedModel* model, const vector<shared_ptr<CalibrationHelper> >& h,
                         const vector<Real>& weights, const Projection& projection)
         : model_(model, no_deletion), instruments_(h), weights_(weights), projection_(projection) {}
 
@@ -64,7 +64,7 @@ public:
 
 private:
     shared_ptr<LinkableCalibratedModel> model_;
-    const vector<shared_ptr<CalibrationHelperBase> >& instruments_;
+    const vector<shared_ptr<CalibrationHelper> >& instruments_;
     vector<Real> weights_;
     const Projection projection_;
 };
@@ -73,13 +73,13 @@ void LinkableCalibratedModel::calibrate(const vector<ext::shared_ptr<BlackCalibr
                                         OptimizationMethod& method, const EndCriteria& endCriteria,
                                         const Constraint& additionalConstraint, const vector<Real>& weights,
                                         const vector<bool>& fixParameters) {
-    vector<boost::shared_ptr<CalibrationHelperBase> > tmp(instruments.size());
+    vector<boost::shared_ptr<CalibrationHelper> > tmp(instruments.size());
     for (Size i = 0; i < instruments.size(); ++i)
-        tmp[i] = ext::static_pointer_cast<CalibrationHelperBase>(instruments[i]);
+        tmp[i] = ext::static_pointer_cast<CalibrationHelper>(instruments[i]);
     calibrate(tmp, method, endCriteria, additionalConstraint, weights, fixParameters);
 }
 
-void LinkableCalibratedModel::calibrate(const vector<shared_ptr<CalibrationHelperBase> >& instruments,
+void LinkableCalibratedModel::calibrate(const vector<shared_ptr<CalibrationHelper> >& instruments,
                                         OptimizationMethod& method, const EndCriteria& endCriteria,
                                         const Constraint& additionalConstraint, const vector<Real>& weights,
                                         const vector<bool>& fixParameters) {
@@ -111,14 +111,14 @@ void LinkableCalibratedModel::calibrate(const vector<shared_ptr<CalibrationHelpe
 
 Real LinkableCalibratedModel::value(const Array& params,
                                     const vector<boost::shared_ptr<BlackCalibrationHelper> >& instruments) {
-    vector<ext::shared_ptr<CalibrationHelperBase> > tmp(instruments.size());
+    vector<ext::shared_ptr<CalibrationHelper> > tmp(instruments.size());
     for (Size i = 0; i < instruments.size(); ++i)
-        tmp[i] = ext::static_pointer_cast<CalibrationHelperBase>(instruments[i]);
+        tmp[i] = ext::static_pointer_cast<CalibrationHelper>(instruments[i]);
     return value(params, tmp);
 }
 
 Real LinkableCalibratedModel::value(const Array& params,
-                                    const vector<shared_ptr<CalibrationHelperBase> >& instruments) {
+                                    const vector<shared_ptr<CalibrationHelper> >& instruments) {
     vector<Real> w = vector<Real>(instruments.size(), 1.0);
     Projection p(params);
     CalibrationFunction f(this, instruments, w, p);

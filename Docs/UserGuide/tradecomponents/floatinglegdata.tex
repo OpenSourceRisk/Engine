@@ -64,6 +64,90 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
 
 Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 
+A Zero Coupon Floating leg with compounding that includes spread can be set up using a rules-based schedule as shown
+in Listing \ref{lst:float_zero_coupon_leg_rules}. Note that the \lstinline!Tenor! in the rules-based schedule is not used when \lstinline!Rule! is set to \emph{Zero}.
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+            <LegData>
+                <LegType>Floating</LegType>
+                <Payer>false</Payer>
+                <Currency>USD</Currency>
+                <Notionals>
+                    <Notional>200000.0000</Notional>
+                </Notionals>
+                <DayCounter>A360</DayCounter>
+                <PaymentConvention>MF</PaymentConvention>
+                <ScheduleData>
+                    <Rules>
+                        <StartDate>2020-01-14</StartDate>
+                        <EndDate>2020-07-14</EndDate>
+                        <Tenor>3M</Tenor>
+                        <Calendar>USD</Calendar>
+                        <Convention>MF</Convention>
+                        <TermConvention>MF</TermConvention>
+                        <Rule>Zero</Rule>
+                    </Rules>
+                </ScheduleData>
+                <FloatingLegData>
+                    <Index>USD-LIBOR-3M</Index>
+                    <IsAveraged>false</IsAveraged>
+                    <HasSubPeriods>true</HasSubPeriods>
+                    <IncludeSpread>true</IncludeSpread>
+                    <Spreads>
+                        <Spread>0.006500</Spread>
+                    </Spreads>
+                    <IsInArrears>false</IsInArrears>
+                    <FixingDays>2</FixingDays>
+                </FloatingLegData>
+            </LegData>
+\end{minted}
+\caption{Zero Coupon Floating Leg - Rules-based}
+\label{lst:float_zero_coupon_leg_rules}
+\end{listing}
+
+A Zero Coupon Floating leg with compounding that includes spread can also be set up using a dates-based schedule with two dates (start and end) as shown
+in Listing \ref{lst:float_zero_coupon_leg_dates}. \begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+            <LegData>
+                <LegType>Floating</LegType>
+                <Payer>false</Payer>
+                <Currency>USD</Currency>
+                <Notionals>
+                    <Notional>200000.0000</Notional>
+                </Notionals>
+                <DayCounter>A360</DayCounter>
+                <PaymentConvention>MF</PaymentConvention>
+                <ScheduleData>
+                    <Dates>
+                        <Calendar>USD</Calendar>
+                        <Convention>MF</Convention>
+                        <Dates>
+                            <Date>2020-01-14</Date>
+                            <Date>2020-07-14</Date>
+                        </Dates>
+                    </Dates>
+                </ScheduleData>
+                <FloatingLegData>
+                    <Index>USD-LIBOR-3M</Index>
+                    <IsAveraged>false</IsAveraged>
+                    <HasSubPeriods>true</HasSubPeriods>
+                    <IncludeSpread>true</IncludeSpread>
+                    <Spreads>
+                        <Spread>0.006500</Spread>
+                    </Spreads>
+                    <IsInArrears>false</IsInArrears>
+                    <FixingDays>2</FixingDays>
+                </FloatingLegData>
+            </LegData>
+\end{minted}
+\caption{Zero Coupon Floating Leg - Dates-based}
+\label{lst:float_zero_coupon_leg_dates}
+\end{listing}
+
+
+
 \item IsInArrears [Optional]:  \emph{true} indicates that  fixing is in arrears,
   i.e. the fixing gap is calculated in relation to the current period
   end date.\\ \emph{false} indicates that  fixing is in advance,
@@ -72,15 +156,27 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
 
 Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 
-\item FixingDays [Optional]: This is the fixing gap, i.e. the number of days
-  before the period end date an index fixing is taken.   
+\item FixingDays [Optional]: The fixing gap. For Ibor coupons this is the number of business days before the accrual
+  period's {\em reference} date to observe the index fixing. Here, the accrual period reference date is the accrual
+  start date for an in advanced fixed coupon and the accrual end date for in arrears fixed coupon. \\
+  For overnight coupons this is the number of business days by which the value dates are shifted into the past to get
+  the fixing observation dates. In the context of the Ibor reform the FixingDays parameter is sometimes also called
+  ``obervation lag''.
 
-Allowable values:  Positive integers.  Defaults to the index's fixing days if blank or omitted.
+  Allowable values: A non-negative whole number.  Defaults to the index's fixing days if blank or omitted.
 
-\item Lookback [Optional]: A period by which the fixing schedule of (averaged, compounded) OIS legs is shifted into the
-  past.
+\item Lookback [Optional]: Only applicable to OIS legs. A period by which the value dates schedule of (averaged,
+  compounded) OIS legs is shifted into the past. On top of this the gap defined by the FixingDays is applied to get the
+  final fixing date for an original date in the OIS value dates schedule. In the context of the Ibor reform the Lookback
+  parameter is sometimes also called ``shift''. With this terminology, first the shift and then the observation lag is
+  applied to get the fixing date for an original value date of an overnight coupon.
 
-Allowable values: any valid period, e.g. 2D, 3M, 1Y
+  Allowable values: any valid period, e.g. 2D, 3M, 1Y
+
+\item RateCutoff [Optional]: Only applicable to OIS legs. The number of fixing dates at the end of the fixing period for
+  which the fixing value is held constant and set to the previous value. Defaults to $0$.
+
+Allowable values: any non-negative whole number
 
 \item Spreads [Optional]: This node contains child elements of type
   \lstinline!Spread!. If the spread is constant over the life of the
@@ -127,8 +223,9 @@ If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \
   the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
   above.
 
-\item NakedOption [Optional]: Optional node, if \emph{true} the leg represents only the embedded floor, cap or collar. 
-By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
+\item NakedOption [Optional]: Optional node, if \emph{true} the leg represents only the embedded floor, cap or collar.
+  By convention the embedded floor (cap) are considered long if the leg is a receiver leg, otherwise short. For a
+  collar the floor is long and the cap is short if the leg is a receiver leg.
 
  Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
 

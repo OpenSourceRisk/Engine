@@ -84,6 +84,9 @@ in section \ref{sec:bootstrap_config} are used.
     FinancialCubic & Monotonic Kruger cubic interpolation with second derivative at left and 
                      first derivative at right \\ \hline
     ConvexMonotone & Convex Monotone Interpolation (Hagan, West) \\ \hline
+    ExponentialSplines & Exponential Spline curve fitting, for Fitted Bond Curves only \\ \hline
+    NelsonSiegel & Nelson-Siegel curve fitting, for Fitted Bond Curves only \\ \hline
+    Svensson & Svensson curve fitting, for Fitted Bond Curves only \\ \hline
   \end{tabu}
   \caption{Allowable interpolation methods.}
   \label{tab:allow_interp_methods}
@@ -324,4 +327,79 @@ curves which are expressed as a spread over some reference yield curve.
 \end{minted}
 \caption{Zero spread yield curve segment}
 \label{lst:zero_spread_segment}
+\end{listing}
+
+
+\subsubsection*{Fitted Bond Segment}
+\label{sec:fitted_bond_segment}
+
+When the node name is \lstinline!FittedBond!, the \lstinline!Type! node has the only allowable value \emph{FittedBond},
+and the node has the structure shown in Listing \ref{lst:fitted_bond_segment}. This segment is used to build yield
+curves which are fitted to liquid bond prices. The segment has the following elements:
+
+\begin{itemize}
+\item Quotes: a list of bond price quotes, for each security in the list, reference data must be available
+\item IborIndexCurves: for each Ibor index that is required by one of the bonds to which the curve is fitted, a mapping
+  to an estimation curve for that index must be provided
+\item ExtrapolateFlat: if true, the parametric curve is extrapolated flat in the instantaneous forward rate before the
+  first and after the last maturity of the bonds in the calibration basket. This avoids unrealistic rates at the short
+  end or for long maturities in the resulting curve.
+\end{itemize}
+
+The \lstinline!BootstrapConfig! has the following interpretation for a fitted bond curve:
+
+\begin{itemize}
+\item Accuracy [Optional, defaults to 1E-12]: the desired accuracy expressed as a weighted rmse in the implied quote,
+  where 0.01 = 1 bp. Once this accuracy is reached in a calibration trial, the fit is accepted, no further calibration
+  trials re run. In general, this parameter should be set to a higher than the default value for fitted bond curves.
+\item GlobalAccuracy [Optional]: the acceptable accuracy. If the Accuracy is not reached in any calibration trial, but
+  the GloablAccuracy is met, the best fit among the calibration trials is selected as a result of the calibration. If
+  not given, the best calibration trial is compared to the Accuracy parameter instead.
+\item DontThrow [Optional, defaults to false]: If true, the best calibration is always accepted as a result, i.e. no
+  error is thrown even if the GlobalAccuracy is breached.
+\item MaxAttempts [Optional, defaults to 5]: The maximum number of calibration trials. Each calibration trial is run with a random calibratio
+  seed. Random calibration seeds are currently only supported for the NelsonSiegel interpolation method.
+\end{itemize}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <YieldCurve>
+      ...
+      <Segments>
+        <FittedBond>
+          <Type>FittedBond</Type>
+          <Quotes>
+            <Quote>BOND/PRICE/SECURITY_1</Quote>
+            <Quote>BOND/PRICE/SECURITY_2</Quote>
+            <Quote>BOND/PRICE/SECURITY_3</Quote>
+            <Quote>BOND/PRICE/SECURITY_4</Quote>
+            <Quote>BOND/PRICE/SECURITY_5</Quote>
+          </Quotes>
+          <!-- mapping of Ibor curves used in the bonds from which the curve is built -->
+          <IborIndexCurves>
+            <IborIndexCurve iborIndex="EUR-EURIBOR-6M">EUR-EURIBOR-6M</IborIndexCurve>
+          </IborIndexCurves>
+          <!-- flat extrapolation before first and after last bond maturity -->
+          <ExtrapolateFlat>true</ExtrapolateFlat>
+        </FittedBond>
+      </Segments>
+      <!-- NelsonSiegel, Svensson, ExponentialSplines -->
+      <InterpolationMethod>NelsonSiegel</InterpolationMethod>
+      <YieldCurveDayCounter>A365</YieldCurveDayCounter>
+      <Extrapolation>true</Extrapolation>
+      <BootstrapConfig>
+        <!-- desired accuracy (in implied quote) -->
+        <Accuracy>0.1</Accuracy>
+        <!-- tolerable accuracy -->
+        <GlobalAccuracy>0.5</GlobalAccuracy>
+        <!-- do not throw even if tolerable accuracy is breached -->
+        <DontThrow>false</DontThrow>
+        <!-- max calibration trials to reach desired accuracy -->
+        <MaxAttempts>20</MaxAttempts>
+      </BootstrapConfig>
+    </YieldCurve>
+\end{minted}
+\caption{Fitted bond yield curve segment}
+\label{lst:fitted_bond_segment}
 \end{listing}

@@ -7,11 +7,19 @@ A credit default swap, trade type \lstinline!CreditDefaultSwap!, is set up using
 \item CreditCurveId: The identifier of the reference entity defining the default curve used for pricing. For the allowable values, see \lstinline!Name! for credit trades - single name in Table \ref{tab:equity_credit_data}. A \lstinline!ReferenceInformation! node may be used in place of this \lstinline!CreditCurveId! node.
 \item \lstinline!ReferenceInformation!: This node may be used as an alternative to the \lstinline!CreditCurveId! node to specify the reference entity, tier, currency and documentation clause for the CDS. This in turn defines the credit curve used for pricing. The \lstinline!ReferenceInformation! node is described in further detail in Section \ref{ss:cds_reference_information}.
 \item SettlesAccrual [Optional]: Whether or not the accrued coupon is due in the event of a default. This defaults to \lstinline!true! if not provided.
+
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+
 \item ProtectionPaymentTime [Optional]: Controls the payment time of protection and premium accrual payments in case of
-  a default event. Defaults to \lstinline!atDefault!. Allowable values: \lstinline!atDefault!, \lstinline!atPeriodEnd!,
-  \lstinline!atMaturity!. Overrides the \lstinline!PaysAtDefaultTime! node
-\item PaysAtDefaultTime [Deprecated]: \lstinline!true! is equivalent to ProtectionPaymentTime = atDefault,
-  \lstinline!false! to ProtectionPaymentTime = atPeriodEnd. Overridden by the \lstinline!ProtectionPaymentTime! node if set
+  a default event. Defaults to \lstinline!atDefault!. 
+  
+Allowable values: \lstinline!atDefault!, \lstinline!atPeriodEnd!, \lstinline!atMaturity!. Overrides the \lstinline!PaysAtDefaultTime! node
+  
+\item PaysAtDefaultTime [Deprecated]: \emph{true} is equivalent to ProtectionPaymentTime = atDefault,
+  \emph{false} to ProtectionPaymentTime = atPeriodEnd. Overridden by the \lstinline!ProtectionPaymentTime! node if set
+  
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  
 \item ProtectionStart [Optional]: The first date where a default event will trigger the contract. This defaults to the first date in the schedule if it is not provided. Must be set to a date before or on the first date in the schedule.
 \item UpfrontDate [Optional]: Settlement date for the UpfrontFee if an UpfrontFee is provided. If an UpfrontFee is provided and it is non-zero, UpfrontDate is required. The UpfrontDate, if provided, must be on or after the ProtectionStart date.
 \item UpfrontFee [Optional]: The upfront payment, expressed as a rate, to be multiplied by notional amount. If an UpfrontDate is provided, an UpfrontFee must also be provided. The UpfrontFee cannot be left blank.
@@ -25,7 +33,7 @@ The \lstinline!LegData! block then defines the CDS premium leg structure. This p
 \begin{minted}[fontsize=\footnotesize]{xml}
     <CreditDefaultSwapData>
       <IssuerId>CPTY_A</IssuerId>
-      <CreditCurveId>ISIN:XS0982710740</CreditCurveId>
+      <CreditCurveId>RED:008CA0|SNRFOR|USD|MR14</CreditCurveId>
       <SettlesAccrual>Y</SettlesAccrual>
       <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
       <ProtectionStart>20160206</ProtectionStart>

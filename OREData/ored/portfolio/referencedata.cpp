@@ -17,6 +17,11 @@
 */
 
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/legdata.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
+
+using std::function;
 
 namespace ore {
 namespace data {
@@ -31,7 +36,82 @@ XMLNode* ReferenceDatum::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("ReferenceDatum");
     QL_REQUIRE(node, "Failed to create ReferenceDatum node");
     XMLUtils::addAttribute(doc, node, "id", id_);
-    XMLUtils::addChild(doc, node, "Type", type_);
+    return node;
+}
+
+ReferenceDatumRegister<ReferenceDatumBuilder<BondReferenceDatum>> BondReferenceDatum::reg_(TYPE);
+
+void BondReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    XMLNode* innerNode = XMLUtils::getChildNode(node, "BondReferenceData");
+    QL_REQUIRE(innerNode, "No BondReferenceData node");
+
+    bondData_.issuerId = XMLUtils::getChildValue(innerNode, "IssuerId", true);
+    bondData_.settlementDays = XMLUtils::getChildValue(innerNode, "SettlementDays", true);
+    bondData_.calendar = XMLUtils::getChildValue(innerNode, "Calendar", true);
+    bondData_.issueDate = XMLUtils::getChildValue(innerNode, "IssueDate", true);
+    bondData_.creditCurveId = XMLUtils::getChildValue(innerNode, "CreditCurveId", false);
+    bondData_.referenceCurveId = XMLUtils::getChildValue(innerNode, "ReferenceCurveId", true);
+    bondData_.incomeCurveId = XMLUtils::getChildValue(innerNode, "IncomeCurveId", false);
+    bondData_.volatilityCurveId = XMLUtils::getChildValue(innerNode, "VolatilityCurveId", false);
+
+    bondData_.legData.clear();
+    XMLNode* legNode = XMLUtils::getChildNode(innerNode, "LegData");
+    while (legNode != nullptr) {
+        LegData ld;
+        ld.fromXML(legNode);
+        bondData_.legData.push_back(ld);
+        legNode = XMLUtils::getNextSibling(legNode, "LegData");
+    }
+}
+
+XMLNode* BondReferenceDatum::toXML(XMLDocument& doc) {
+    XMLNode* node = ReferenceDatum::toXML(doc);
+    XMLNode* bondNode = doc.allocNode("BondReferenceData");
+    XMLUtils::appendNode(node, bondNode);
+    XMLUtils::addChild(doc, bondNode, "IssuerId", bondData_.issuerId);
+    XMLUtils::addChild(doc, bondNode, "SettlementDays", bondData_.issuerId);
+    XMLUtils::addChild(doc, bondNode, "Calendar", bondData_.issuerId);
+    XMLUtils::addChild(doc, bondNode, "IssueDate", bondData_.issuerId);
+    XMLUtils::addChild(doc, bondNode, "CreditCurveId", bondData_.issuerId);
+    XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", bondData_.issuerId);
+    XMLUtils::addChild(doc, bondNode, "VolatilityCurveId", bondData_.volatilityCurveId);
+    for (auto& bd : bondData_.legData)
+        XMLUtils::appendNode(bondNode, bd.toXML(doc));
+    return node;
+}
+
+ReferenceDatumRegister<ReferenceDatumBuilder<EquityReferenceDatum>> EquityReferenceDatum::reg_(TYPE);
+
+void EquityReferenceDatum::fromXML(XMLNode* node) {
+    ReferenceDatum::fromXML(node);
+    XMLNode* innerNode = XMLUtils::getChildNode(node, "EquityReferenceData");
+    QL_REQUIRE(innerNode, "No EquityReferenceData node");
+    equityData_.equityId = XMLUtils::getChildValue(innerNode, "EquityId", true);
+    equityData_.equityName = XMLUtils::getChildValue(innerNode, "EquityName", false);
+    equityData_.currency = XMLUtils::getChildValue(innerNode, "Currency", true);
+    equityData_.scalingFactor = XMLUtils::getChildValueAsInt(innerNode, "ScalingFactor", false);
+    equityData_.preferredISIN = XMLUtils::getChildValue(innerNode, "PreferredISIN", false);
+    equityData_.exchangeCode = XMLUtils::getChildValue(innerNode, "ExchangeCode", false);
+    equityData_.isIndex = XMLUtils::getChildValueAsBool(innerNode, "IsIndex", false);
+    string startDateStr = XMLUtils::getChildValue(innerNode, "EquityStartDate", false);
+    equityData_.equityStartDate = parseDate(startDateStr);
+    equityData_.proxyIdentifier = XMLUtils::getChildValue(innerNode, "ProxyIdentifier", false);
+}
+
+XMLNode* EquityReferenceDatum::toXML(XMLDocument& doc) {
+    XMLNode* node = ReferenceDatum::toXML(doc);
+    XMLNode* equityNode = doc.allocNode("EquityReferenceData");
+    XMLUtils::appendNode(node, equityNode);
+    XMLUtils::addChild(doc, equityNode, "EquityId", equityData_.equityId);
+    XMLUtils::addChild(doc, equityNode, "EquityName", equityData_.equityName);
+    XMLUtils::addChild(doc, equityNode, "Currency", equityData_.currency);
+    XMLUtils::addChild(doc, equityNode, "ScalingFactor", static_cast<int>(equityData_.scalingFactor));
+    XMLUtils::addChild(doc, equityNode, "PreferredISIN", equityData_.preferredISIN);
+    XMLUtils::addChild(doc, equityNode, "ExchangeCode", equityData_.exchangeCode);
+    XMLUtils::addChild(doc, equityNode, "IsIndex", equityData_.isIndex);
+    XMLUtils::addChild(doc, equityNode, "EquityStartDate", to_string(equityData_.equityStartDate));
+    XMLUtils::addChild(doc, equityNode, "ProxyIdentifier", equityData_.proxyIdentifier);
     return node;
 }
 
@@ -50,22 +130,24 @@ void BasicReferenceDataManager::fromXML(XMLNode* node) {
 
         QL_REQUIRE(!hasData(refDataType, id), "BasicReferenceDataManager already has " << refDataType << " with id " << id);
 
-        // TODO: this should be an extensible factory, for now we just hardcode the types...
-        boost::shared_ptr<ReferenceDatum> refData;
-            refData = boost::make_shared<BondReferenceDatum>(id);
-        else if (refDataType == CreditIndexReferenceDatum::TYPE)
-            refData = boost::make_shared<CreditIndexReferenceDatum>(id);
-        else if (refDataType == CreditReferenceDatum::TYPE)
-            refData = boost::make_shared<CreditReferenceDatum>(id);
-        else if (refDataType == EquityIndexReferenceDatum::TYPE)
-            refData = boost::make_shared<EquityIndexReferenceDatum>(id);
-        else {
-            QL_FAIL("Unknown type " << refDataType);
-        }
-
+        boost::shared_ptr<ReferenceDatum> refData = buildReferenceDatum(refDataType);        
         refData->fromXML(child);
+        // set the type and id at top level (is this needed?)
+        refData->setType(refDataType);
+        refData->setId(id);
         data_[make_pair(refDataType, id)] = refData;
     }
+}
+
+void BasicReferenceDataManager::add(const boost::shared_ptr<ReferenceDatum>& rd) {
+    // Add reference datum, it is overwritten if it is already present.
+    data_[make_pair(rd->type(), rd->id())] = rd;
+}
+
+boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildReferenceDatum(const string& refDataType) {
+    auto refData = ReferenceDatumFactory::instance().build(refDataType);
+    QL_REQUIRE(refData, "Reference data type " << refDataType << " has not been registered with the reference data factory.");
+    return refData;
 }
 
 XMLNode* BasicReferenceDataManager::toXML(XMLDocument& doc) {
@@ -77,7 +159,7 @@ bool BasicReferenceDataManager::hasData(const string& type, const string& id) co
     return data_.find(make_pair(type, id)) != data_.end();
 }
 
-boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id) const {
+boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id) {
     auto it = data_.find(make_pair(type, id));
     QL_REQUIRE(it != data_.end(), "No Reference data for " << type << " " << id);
     return it->second;

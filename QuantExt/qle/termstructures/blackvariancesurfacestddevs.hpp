@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file blackvariancesurfacesparse.hpp
+/*! \file blackvariancesurfacestddevs.hpp
  \brief Black volatility surface modelled as variance surface
  */
 

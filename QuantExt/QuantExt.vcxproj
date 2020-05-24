@@ -498,6 +498,7 @@
     <ClInclude Include="qle\calendars\france.hpp" />
     <ClInclude Include="qle\calendars\ice.hpp" />
     <ClInclude Include="qle\calendars\israel.hpp" />
+    <ClInclude Include="qle\calendars\largejointcalendar.hpp" />
     <ClInclude Include="qle\calendars\luxembourg.hpp" />
     <ClInclude Include="qle\calendars\malaysia.hpp" />
     <ClInclude Include="qle\calendars\netherlands.hpp" />
@@ -521,8 +522,10 @@
     <ClInclude Include="qle\cashflows\floatingannuitynominal.hpp" />
     <ClInclude Include="qle\cashflows\floatingratefxlinkednotionalcoupon.hpp" />
     <ClInclude Include="qle\cashflows\fxlinkedcashflow.hpp" />
+    <ClInclude Include="qle\cashflows\indexedcoupon.hpp" />
     <ClInclude Include="qle\cashflows\lognormalcmsspreadpricer.hpp" />
     <ClInclude Include="qle\cashflows\overnightindexedcoupon.hpp" />
+    <ClInclude Include="qle\cashflows\blackovernightindexedcouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\quantocouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\strippedcapflooredcpicoupon.hpp" />
     <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp" />
@@ -558,6 +561,7 @@
     <ClInclude Include="qle\indexes\ibor\idridrfix.hpp" />
     <ClInclude Include="qle\indexes\ibor\idrjibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\ilstelbor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\inrmiborois.hpp" />
     <ClInclude Include="qle\indexes\ibor\inrmifor.hpp" />
     <ClInclude Include="qle\indexes\ibor\krwcd.hpp" />
     <ClInclude Include="qle\indexes\ibor\krwkoribor.hpp" />
@@ -710,6 +714,7 @@
     <ClInclude Include="qle\termstructures\equityoptionsurfacestripper.hpp" />
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
+    <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
     <ClInclude Include="qle\termstructures\iterativebootstrap.hpp" />
     <ClInclude Include="qle\termstructures\optionletcurve.hpp" />
@@ -768,6 +773,7 @@
     <ClInclude Include="qle\termstructures\yoyoptionletvolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobserverstatic.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp" />
+    <ClInclude Include="qle\time\actual364.hpp" />
     <ClInclude Include="qle\time\futureexpirycalculator.hpp" />
     <ClInclude Include="qle\time\yearcounter.hpp" />
   </ItemGroup>
@@ -780,6 +786,7 @@
     <ClCompile Include="qle\calendars\france.cpp" />
     <ClCompile Include="qle\calendars\ice.cpp" />
     <ClCompile Include="qle\calendars\israel.cpp" />
+    <ClCompile Include="qle\calendars\largejointcalendar.cpp" />
     <ClCompile Include="qle\calendars\luxembourg.cpp" />
     <ClCompile Include="qle\calendars\malaysia.cpp" />
     <ClCompile Include="qle\calendars\netherlands.cpp" />
@@ -802,8 +809,10 @@
     <ClCompile Include="qle\cashflows\floatingannuitycoupon.cpp" />
     <ClCompile Include="qle\cashflows\floatingannuitynominal.cpp" />
     <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp" />
+    <ClCompile Include="qle\cashflows\indexedcoupon.cpp" />
     <ClCompile Include="qle\cashflows\lognormalcmsspreadpricer.cpp" />
     <ClCompile Include="qle\cashflows\overnightindexedcoupon.cpp" />
+    <ClCompile Include="qle\cashflows\blackovernightindexedcouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\quantocouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\strippedcapflooredcpicoupon.cpp" />
     <ClCompile Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.cpp" />
@@ -957,6 +966,7 @@
     <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp" />
     <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\yoyinflationoptionletvolstripper.cpp" />
+    <ClCompile Include="qle\time\actual364.cpp" />
     <ClCompile Include="qle\time\yearcounter.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

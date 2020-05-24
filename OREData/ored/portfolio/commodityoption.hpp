@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/commodityoption.hpp
+/*! \file ored/portfolio/commodityoption.hpp
     \brief Commodity option representation
     \ingroup tradedata
 */
@@ -24,7 +24,7 @@
 #pragma once
 
 #include <ored/portfolio/optiondata.hpp>
-#include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/vanillaoption.hpp>
 
 namespace ore {
 namespace data {
@@ -32,36 +32,20 @@ namespace data {
 //! Commodity option trade representation
 /*! \ingroup tradedata
  */
-class CommodityOption : public Trade {
+class CommodityOption : public VanillaOptionTrade {
 public:
     //! Default constructor
-    CommodityOption() : Trade("CommodityOption"), strike_(0.0), quantity_(0.0) {}
+    CommodityOption();
 
-    //! Constructor
+    //! Detailed constructor
     CommodityOption(const Envelope& env, const OptionData& optionData, const std::string& commodityName,
-                    const std::string& currency, QuantLib::Real strike, QuantLib::Real quantity);
+        const std::string& currency, QuantLib::Real strike, QuantLib::Real quantity);
 
     //! Build underlying instrument and link pricing engine
     void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
 
-    //! Return no fixings for a CommodityOption
-    std::map<std::string, std::set<QuantLib::Date>> fixings(
-        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
-        return {};
-    }
-
-
     //! Add underlying Commodity names
     std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
-
-    //! \name Inspectors
-    //@{
-    const OptionData& option() const { return optionData_; }
-    const std::string& commodityName() const { return commodityName_; }
-    const std::string& currency() const { return currency_; }
-    QuantLib::Real strike() const { return strike_; }
-    QuantLib::Real quantity() const { return quantity_; }
-    //@}
 
     //! \name Serialisation
     //@{
@@ -73,14 +57,7 @@ public:
     //@{
     bool hasCashflows() const override { return false; }
     //@}
-
-private:
-    OptionData optionData_;
-    std::string commodityName_;
-    std::string currency_;
-    QuantLib::Real strike_;
-    QuantLib::Real quantity_;
 };
 
-} // namespace data
-} // namespace ore
+}
+}

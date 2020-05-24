@@ -34,6 +34,9 @@ using namespace ore::data;
 using std::map;
 using std::string;
 
+//! Provides the input data and references to input files used in OREApp
+/*! \ingroup app
+*/
 class Parameters : public XMLSerializable {
 public:
     Parameters() {}

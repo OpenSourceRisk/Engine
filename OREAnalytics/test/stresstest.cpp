@@ -18,7 +18,6 @@
 
 #include <boost/test/unit_test.hpp>
 #include <test/oreatoplevelfixture.hpp>
-#include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -302,6 +301,8 @@ BOOST_AUTO_TEST_CASE(regression) {
     engineData->engine("FxOption") = "AnalyticEuropeanEngine";
     engineData->model("CapFloor") = "IborCapModel";
     engineData->engine("CapFloor") = "IborCapEngine";
+    engineData->model("CapFlooredIborLeg") ="BlackOrBachelier";
+    engineData->engine("CapFlooredIborLeg") = "BlackIborCouponPricer";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, simMarket);
     factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());

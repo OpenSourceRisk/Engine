@@ -22,7 +22,7 @@
  */
 #pragma once
 
-#include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/trade.hpp>
 
 namespace ore {
@@ -31,112 +31,44 @@ namespace data {
 class ForwardBond : public Trade {
 public:
     //! Default constructor
-    ForwardBond() : Trade("ForwardBond"), zeroBond_(false) {}
+    ForwardBond() : Trade("ForwardBond") {}
 
-    //! Constructor for coupon bonds
-    ForwardBond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,
-                string derivativeCurveId, string incomeCurveId, string settlementDays, string calendar,
-                string issueDate, string adjustmentSpread, string fwdMaturityDate, string payOff, string longInBond,
-                string settlementDirty, string compensationPayment, string compensationPaymentDate, LegData& coupons)
-        : Trade("ForwardBond", env), issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
-          referenceCurveId_(referenceCurveId), derivativeCurveId_(derivativeCurveId), incomeCurveId_(incomeCurveId),
-          settlementDays_(settlementDays), calendar_(calendar), issueDate_(issueDate),
-          adjustmentSpread_(adjustmentSpread), fwdMaturityDate_(fwdMaturityDate), payOff_(payOff),
+    //! Constructor taking an envelope and bond data
+    ForwardBond(Envelope env, const BondData& bondData, string fwdMaturityDate, string payOff, string longInBond,
+                string settlementDirty, string compensationPayment, string compensationPaymentDate)
+        : Trade("ForwardBond", env), bondData_(bondData), fwdMaturityDate_(fwdMaturityDate), payOff_(payOff),
           longInBond_(longInBond), settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
-          compensationPaymentDate_(compensationPaymentDate), coupons_(std::vector<LegData>{coupons}), faceAmount_(0),
-          maturityDate_(), currency_(), zeroBond_(false) {}
+          compensationPaymentDate_(compensationPaymentDate) {}
 
-    //! Constructor for coupon bonds with multiple phases (represented as legs)
-    ForwardBond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,
-                string derivativeCurveId, string incomeCurveId, string settlementDays, string calendar,
-                string issueDate, string adjustmentSpread, string fwdMaturityDate, string payOff, string longInBond,
-                string settlementDirty, string compensationPayment, string compensationPaymentDate,
-                const std::vector<LegData>& coupons)
-        : Trade("ForwardBond", env), issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
-          referenceCurveId_(referenceCurveId), derivativeCurveId_(derivativeCurveId), incomeCurveId_(incomeCurveId),
-          settlementDays_(settlementDays), calendar_(calendar), issueDate_(issueDate),
-          adjustmentSpread_(adjustmentSpread), fwdMaturityDate_(fwdMaturityDate), payOff_(payOff),
-          longInBond_(longInBond), settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
-          compensationPaymentDate_(compensationPaymentDate), coupons_(coupons), faceAmount_(0), maturityDate_(),
-          currency_(), zeroBond_(false) {}
-
-    //! Constructor for zero bonds
-    ForwardBond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,
-                string derivativeCurveId, string incomeCurveId, string settlementDays, string calendar, Real faceAmount,
-                string issueDate, string adjustmentSpread, string fwdMaturityDate, string payOff, string longInBond,
-                string settlementDirty, string compensationPayment, string compensationPaymentDate, string maturityDate,
-                string currency)
-        : Trade("ForwardBond", env), issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
-          referenceCurveId_(referenceCurveId), derivativeCurveId_(derivativeCurveId), incomeCurveId_(incomeCurveId),
-          settlementDays_(settlementDays), calendar_(calendar), issueDate_(issueDate),
-          adjustmentSpread_(adjustmentSpread), fwdMaturityDate_(fwdMaturityDate), payOff_(payOff),
-          longInBond_(longInBond), settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
-          compensationPaymentDate_(compensationPaymentDate), coupons_(), faceAmount_(faceAmount),
-          maturityDate_(maturityDate), currency_(currency), zeroBond_(true) {}
-
-    // Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
-    //! Return the fixings that will be requested to price the Bond given the \p settlementDate.
-    std::map<std::string, std::set<QuantLib::Date>>
-    fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const override;
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
 
-    const string& issuerId() const { return issuerId_; }
-    const string& creditCurveId() const { return creditCurveId_; }
-    const string& securityId() const { return securityId_; }
-    const string& referenceCurveId() const { return referenceCurveId_; }
-    const string& derivativeCurveId() const { return derivativeCurveId_; }
-    const string& incomeCurveId() const { return incomeCurveId_; }
-    const string& settlementDays() const { return settlementDays_; }
-    const string& calendar() const { return calendar_; }
-    const string& issueDate() const { return issueDate_; }
+    //! inspectors
+    const BondData bondData() const { return bondData_; }
+    // only available after build() was called
+    const string& currency() const { return currency_; }
+    // FIXE remove this, replace by bondData()->creditCurveId()
+    const string& creditCurveId() const { return bondData_.creditCurveId(); }
+
     const string& fwdMaturityDate() const { return fwdMaturityDate_; }
-    const std::vector<LegData>& coupons() const { return coupons_; }
-    const Real& faceAmount() const { return faceAmount_; }
     const string& payOff() const { return payOff_; }
     const string& longInBond() const { return longInBond_; }
     const string& settlementDirty() const { return settlementDirty_; }
     const string& compensationPayment() const { return compensationPayment_; }
     const string& compensationPaymentDate() const { return compensationPaymentDate_; }
-    const string& maturityDate() const { return maturityDate_; }
-    const string& currency() const { return currency_; }
-    const string& bondNotional() const { return bondNotional_; }
 
 protected:
-    string issuerId_;
-    string creditCurveId_;
-    string securityId_;
-    string referenceCurveId_;
-    string derivativeCurveId_;
-    string incomeCurveId_;
-    string settlementDays_;
-    string calendar_;
-    string issueDate_;
-    string adjustmentSpread_;
+    BondData bondData_;
+    string currency_;
+
     string fwdMaturityDate_;
     string payOff_;
     string longInBond_;
     string settlementDirty_;
     string compensationPayment_;
     string compensationPaymentDate_;
-    string bondNotional_;
-    std::vector<LegData> coupons_;
-    Real faceAmount_;
-    string maturityDate_;
-    string currency_;
-    bool zeroBond_;
-
-    /*! A bond may consist of multiple legs joined together to create a single leg. This member stores the
-       separate legs so that fixings can be retrieved later for legs that have fixings.
-   */
-    std::vector<QuantLib::Leg> separateLegs_;
-
-    /*! Set of pairs where first element of pair is the ORE index name and the second element of the pair is
-        the index of the leg, in separateLegs_, that contains that ORE index.
-    */
-    std::set<std::pair<std::string, QuantLib::Size>> nameIndexPairs_;
 };
 } // namespace data
 } // namespace ore

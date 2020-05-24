@@ -32,6 +32,8 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
+#include <qle/calendars/largejointcalendar.hpp>
+#include <qle/calendars/austria.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
@@ -48,13 +50,13 @@
 #include <qle/calendars/belgium.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/spain.hpp>
-#include <qle/calendars/austria.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
 #include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/time/actual364.hpp>
 
 #include <boost/lexical_cast.hpp>
 
@@ -188,7 +190,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"Belgium", Belgium()},
                                       {"Luxembourg", Luxembourg()},
                                       {"Spain", Spain()},
-                                      {"Austria", Austria()},
+                                      {"Austria", QuantExt::Austria()},
                                      
                                       // city specific calendars
                                       {"FRA", Germany(Germany::Settlement)},
@@ -207,6 +209,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"BEBR", Belgium()}, // Belgium, Brussels not in QL,
 
                                       // ISO 3166-1 Alpha-2 code
+                                      {"AT", QuantExt::Austria()},
                                       {"AR", Argentina()},
                                       {"AU", Australia()},
                                       {"BW", Botswana()},
@@ -218,7 +221,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"CZ", CzechRepublic()},
                                       {"DK", Denmark()},
                                       {"FI", Finland()},
-                                      {"FR", France()},
+                                      {"FR", QuantExt::France()},
                                       {"DE", Germany(Germany::Settlement)},
                                       {"HK", HongKong()},
                                       {"HU", Hungary()},
@@ -253,11 +256,12 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"BE", Belgium()},
                                       {"LU", Luxembourg()},
                                       {"ES", Spain()},
-                                      {"AT", Austria()},
+                                      {"AT", QuantExt::Austria()},
 
                                       // ISO 3166-1 Alpha-3 code
                                       {"ARG", Argentina()},
                                       {"AUS", Australia()},
+				      {"ATS", QuantExt::Austria()},
                                       {"BWA", Botswana()},
                                       {"BRA", Brazil()},
                                       {"CAN", Canada()},
@@ -267,7 +271,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"CZE", CzechRepublic()},
                                       {"DNK", Denmark()},
                                       {"FIN", Finland()},
-                                      // {"FRA", France()},
+                                      //{"FRA", QuantExt::France()},
                                       {"DEU", Germany(Germany::Settlement)},
                                       {"HKG", HongKong()},
                                       {"HUN", Hungary()},
@@ -302,7 +306,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"BEL", Belgium()},
                                       {"LUX", Luxembourg()},
                                       {"ESP", Spain()},
-                                      {"AUT", Austria()},
+                                      {"AUT", QuantExt::Austria()},
 
                                       // ISO 4217 Currency Alphabetic code
                                       {"ARS", Argentina()},
@@ -316,7 +320,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"COP", Colombia()},
                                       {"CZK", CzechRepublic()},
                                       {"DKK", Denmark()},
-                                      {"FRF", France()},
+                                      {"FRF", QuantExt::France()},
                                       {"HKD", HongKong()},
                                       {"HUF", Hungary()},
                                       {"INR", India()},
@@ -349,7 +353,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"USD", UnitedStates()},
                                       {"BEF", Belgium()},
                                       {"LUF", Luxembourg()},
-                                      {"ATS", Austria()},
+                                      {"ATS", QuantExt::Austria()},
 
                                       // fallback to TARGET for these emerging ccys
                                       {"AED", TARGET()},
@@ -458,13 +462,15 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
         // Try to split them up
         vector<string> calendarNames;
         split(calendarNames, s, boost::is_any_of(",()")); // , is delimiter, the brackets may arise if joint calendar
+        // if we have only one token, we won't make progress and exit here to avoid an infinite loop by calling
+        // parseCalendar() recursively below
+        QL_REQUIRE(calendarNames.size() > 1, "Cannot convert \"" << s << "\" to calendar");
         // now remove any leading strings indicating a joint calendar
         calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinHolidays"),
                             calendarNames.end());
         calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinBusinessDays"),
                             calendarNames.end());
         calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), ""), calendarNames.end());
-        QL_REQUIRE(calendarNames.size() > 1 && calendarNames.size() <= 4, "Cannot convert " << s << " to Calendar");
         // Populate a vector of calendars.
         vector<Calendar> calendars;
         for (Size i = 0; i < calendarNames.size(); i++) {
@@ -478,16 +484,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
             }
         }
 
-        switch (calendarNames.size()) {
-        case 2:
-            return JointCalendar(calendars[0], calendars[1]);
-        case 3:
-            return JointCalendar(calendars[0], calendars[1], calendars[2]);
-        case 4:
-            return JointCalendar(calendars[0], calendars[1], calendars[2], calendars[3]);
-        default:
-            QL_FAIL("Cannot convert \"" << s << "\" to Calendar");
-        }
+        return LargeJointCalendar(calendars);
     }
 }
 
@@ -569,7 +566,11 @@ DayCounter parseDayCounter(const string& s) {
                                         {"NL/365", Actual365Fixed(Actual365Fixed::NoLeap)},
                                         {"Actual/365 (JGB)", Actual365Fixed(Actual365Fixed::NoLeap)},
                                         {"Simple", SimpleDayCounter()},
-                                        {"Year", YearCounter()}
+                                        {"Year", YearCounter()},
+                                        {"A364", Actual364()},
+                                        {"Actual/364", Actual364()},
+                                        {"Act/364", Actual364()},
+                                        {"ACT/364", Actual364()}
     };
 
     auto it = m.find(s);

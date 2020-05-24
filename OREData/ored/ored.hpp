@@ -42,6 +42,7 @@
 #include <ored/marketdata/equitycurve.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/expiry.hpp>
+#include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
 #include <ored/marketdata/fixings.hpp>
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
@@ -79,11 +80,13 @@
 #include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
@@ -109,7 +112,6 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/equityforward.hpp>
-#include <ored/portfolio/equityidentifier.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityswap.hpp>
 #include <ored/portfolio/fixingdates.hpp>
@@ -118,6 +120,7 @@
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/fxswap.hpp>
+#include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
@@ -127,6 +130,8 @@
 #include <ored/portfolio/optiondata.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/referencedatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/swap.hpp>
@@ -134,6 +139,7 @@
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/tradeactions.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/report/csvreport.hpp>
 #include <ored/report/inmemoryreport.hpp>

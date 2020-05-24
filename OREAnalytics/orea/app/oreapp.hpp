@@ -38,6 +38,7 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/ored.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/referencedata.hpp>
 
 namespace ore {
 namespace analytics {
@@ -46,6 +47,9 @@ using namespace ore::data;
 class SensitivityScenarioData;
 class SensitivityAnalysis;
 
+//! Orchestrates the processes covered by ORE, data loading, analytics and reporting
+/*! \ingroup app
+*/
 class OREApp {
 public:
     //! Constructor
@@ -82,6 +86,8 @@ protected:
     void getConventions();
     //! load market parameters
     void getMarketParameters();
+    //! load reference data
+    void getReferenceData();
     //! build engine factory for a given market
     virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market,
                                                                 const string& groupName = "setup") const;
@@ -213,6 +219,7 @@ protected:
     boost::shared_ptr<Portfolio> portfolio_;         // portfolio linked to T0 market
     Conventions conventions_;
     TodaysMarketParameters marketParameters_;
+    boost::shared_ptr<ReferenceDataManager> referenceData_;
 
     boost::shared_ptr<ScenarioSimMarket> simMarket_; // sim market
     boost::shared_ptr<Portfolio> simPortfolio_;      // portfolio linked to sim market

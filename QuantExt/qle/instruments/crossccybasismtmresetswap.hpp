@@ -16,10 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file crossccybasisswap.hpp
-    \brief Cross currency basis swap instrument
-
-        \ingroup instruments
+/*! \file crossccybasismtmresetswap.hpp
+    \brief Cross currency basis swap instrument with MTM reset
+    \ingroup instruments
 */
 
 #ifndef quantext_cross_ccy_basis_mtmreset_swap_hpp

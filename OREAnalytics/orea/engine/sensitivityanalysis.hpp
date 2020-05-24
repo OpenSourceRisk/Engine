@@ -31,6 +31,7 @@
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/report/report.hpp>
 #include <ored/utilities/progressbar.hpp>
 
@@ -72,7 +73,9 @@ public:
         const bool nonShiftedBaseCurrencyConversion = false,
         std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
         std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
-        const bool continueOnError = false, const bool xccyDiscounting = false);
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        const bool continueOnError = false,
+        bool xccyDiscounting = false);
 
     virtual ~SensitivityAnalysis() {}
 
@@ -148,6 +151,7 @@ protected:
     bool nonShiftedBaseCurrencyConversion_;
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
+    boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
     // if true, the processing is continued even on build errors
     bool continueOnError_;
     //! the engine data (provided as input, needed to construct the engine factory)

@@ -41,6 +41,8 @@ using ore::data::YieldCurveConfigMap;
 using ore::data::Conventions;
 using ore::data::CurveConfigurations;
 
+class ReferenceDataManager;
+
 //! Wrapper class for building yield term structures
 /*!
   Given yield curve specification and its configuration
@@ -55,7 +57,16 @@ public:
     enum class InterpolationVariable { Zero, Discount, Forward };
 
     //! Supported interpolation methods
-    enum class InterpolationMethod { Linear, LogLinear, NaturalCubic, FinancialCubic, ConvexMonotone };
+    enum class InterpolationMethod {
+        Linear,
+        LogLinear,
+        NaturalCubic,
+        FinancialCubic,
+        ConvexMonotone,
+        ExponentialSplines, // fitted bond curves only
+        NelsonSiegel,       // fitted bond curves only
+        Svensson            // fitted bond curves only
+    };
 
     //! Constructor
     YieldCurve( //! Valuation date
@@ -74,7 +85,10 @@ public:
         const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves =
             map<string, boost::shared_ptr<YieldCurve>>(),
         //! FxTriangultion to get FX rate from cross if needed
-        const FXTriangulation& fxTriangulation = FXTriangulation());
+        const FXTriangulation& fxTriangulation = FXTriangulation(),
+        //! optional pointer to reference data, needed to build fitted bond curves
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr
+        );
 
     //! \name Inspectors
     //@{
@@ -103,6 +117,8 @@ private:
     void buildBootstrappedCurve();
     //! Build a yield curve that uses QuantExt::DiscountRatioModifiedCurve
     void buildDiscountRatioCurve();
+    //! Build a yield curve that uses QuantLib::FittedBondCurve
+    void buildFittedBondCurve();
     //! Return the yield curve with the given \p id from the requiredYieldCurves_ map
     boost::shared_ptr<YieldCurve> getYieldCurve(const std::string& ccy, const std::string& id) const;
 
@@ -112,6 +128,7 @@ private:
     InterpolationMethod interpolationMethod_;
     map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
     const FXTriangulation& fxTriangulation_;
+    const boost::shared_ptr<ReferenceDataManager> referenceData_;
 
     boost::shared_ptr<YieldTermStructure> piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instruments);
 

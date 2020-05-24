@@ -26,6 +26,7 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/model/modelbuilder.hpp>
 #include <ored/portfolio/enginedata.hpp>
+#include <ored/portfolio/legdata.hpp>
 
 #include <ql/pricingengine.hpp>
 #include <ql/utilities/disposable.hpp>
@@ -49,7 +50,7 @@ using QuantLib::Disposable;
 
 class Trade;
 class LegBuilder;
-class LegData;
+class ReferenceDataManager;
 
 /*! Market configuration contexts. Note that there is only one pricing context.
   If several are needed (for different trade types, different collateral
@@ -181,16 +182,28 @@ public:
         //! additional engine builders
         const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders = {},
         //! additional leg builders
-        const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders = {});
+        const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders = {},
+        //! optional pointer to reference data
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
 
     //! Return the market used by this EngineFactory
     const boost::shared_ptr<Market>& market() const { return market_; };
     //! Return the market configurations used by this EngineFactory
     const map<MarketContext, string>& configurations() const { return configurations_; };
+    //! Return a configuration (or the default one if key not found)
+    const string& configuration(const MarketContext& key) {
+        if (configurations_.count(key) > 0) {
+            return configurations_.at(key);
+        } else {
+            return Market::defaultConfiguration;
+        }
+    }
     //! Return the EngineData parameters
     const boost::shared_ptr<EngineData> engineData() const { return engineData_; };
     //! Register a builder with the factory
     void registerBuilder(const boost::shared_ptr<EngineBuilder>& builder);
+    //! Return the reference data used by this EngineFactory
+    const boost::shared_ptr<ReferenceDataManager>& referenceData() const { return referenceData_; };
 
     //! Get a builder by trade type
     /*! This will look up configured model/engine for that trade type
@@ -227,14 +240,16 @@ private:
     map<MarketContext, string> configurations_;
     map<tuple<string, string, set<string>>, boost::shared_ptr<EngineBuilder>> builders_;
     map<string, boost::shared_ptr<LegBuilder>> legBuilders_;
+    boost::shared_ptr<ReferenceDataManager> referenceData_;
 };
 
 //! Leg builder
+class RequiredFixings;
 class LegBuilder {
 public:
     LegBuilder(const string& legType) : legType_(legType) {}
     virtual ~LegBuilder() {}
-    virtual Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>&,
+    virtual Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>&, RequiredFixings& requiredFixings,
                          const string& configuration) const = 0;
     const string& legType() const { return legType_; }
 

@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file fxbspiecewiseconstantparametrization.hpp
-    \brief piecewise constant model parametrization
+/*! \file eqbsconstantparametrization.hpp
+    \brief Constant equity model parametrization
     \ingroup models
 */
 

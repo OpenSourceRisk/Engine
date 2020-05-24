@@ -18,7 +18,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <test/oreatoplevelfixture.hpp>
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -417,13 +417,14 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     ValuationEngine valEngine(today, dg, simMarket);
 
     // Calculate Cube
-    boost::timer t;
+    boost::timer::cpu_timer t;
     boost::shared_ptr<NPVCube> cube =
         boost::make_shared<DoublePrecisionInMemoryCube>(today, portfolio->ids(), dg->dates(), samples);
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
     calculators.push_back(boost::make_shared<NPVCalculator>(baseCcy));
     valEngine.buildCube(portfolio, cube, calculators);
-    double elapsed = t.elapsed();
+    t.stop();
+    double elapsed = t.elapsed().wall * 1e-9;
 
     BOOST_TEST_MESSAGE("Cube generated in " << elapsed << " seconds");
 

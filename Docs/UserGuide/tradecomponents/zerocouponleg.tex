@@ -1,24 +1,23 @@
 \subsubsection{ZeroCouponFixed Leg Data}
 \label{ss:zerolegdata}
 
-Listing \ref{lst:zerolegdata} shows an example for a leg of type Zero Coupon Fixed. The ZeroCouponFixedLegData block contains the following
-elements:
+Listing \ref{lst:zerolegdata} shows an example for a leg of type Zero Coupon Fixed. Note that if a rules-based schedule is used, the tenor will be ignored, and the single period will be formed by the start and the end date. If a dates-based schedule is used, the single period will be formed by the first and last dates, and any dates in between will be ignored. The ZeroCouponFixedLegData block contains the following elements:
 
 \begin{itemize}
 \item Rates: The fixed real rate(s) of the leg. While this can be a single value, a vector of values or a dated vector of
   values, the current ZeroCouponFixed leg requires only a single rate value to be passed. 
  
  Allowable values: Each rate element can take any  real number. The rate is
-  expressed in decimal form, e.g. 0.05 is a rate of 5\%.
+  expressed in decimal form, e.g. \emph{0.05} is a rate of 5\%.
 \item Compounding: The method of compounding applied to the rate.
 
-Allowable values: 'Simple' i.e. $(1 + r * t)$, or 'Compounded' i.e. $(1 + r)^t$
+Allowable values: \emph{Simple} i.e. $(1 + r * t)$, or \emph{Compounded} i.e. $(1 + r)^t$
 
-\item SubtractNotional: Optional boolean to decide whether the notional is
+\item SubtractNotional [Optional]:  Decides whether the notional is
   subtracted from the compounding factor,  i.e. $(1 + r * t)  - 1$
   respectively  $(1 + r)^t - 1$, or not, i.e. $(1 + r * t)$  respectively  $(1 + r)^t$
 
-Allowable values: true (Y) or false (N), default is true
+Allowable values: \emph{true},  \emph{Y} or \emph{false}, \emph{N}, defaults to \emph{true} if left blank or omitted. 
 
 \end{itemize}
 
