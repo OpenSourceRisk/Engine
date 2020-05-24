@@ -516,7 +516,7 @@ void SensitivityScenarioGenerator::generateDiscountXccyCurveScenarios(bool up) {
 
     for (auto c : sensitivityData_->discountXccyCurveShiftData()) {
         string ccy = c.first;
-        Size n_ten = simMarketData_->yieldCurveTenors(ccy).size();
+        Size n_ten = simMarketData_->xbsCurveTenors(ccy).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
         std::vector<Real> times(n_ten);
@@ -529,7 +529,7 @@ void SensitivityScenarioGenerator::generateDiscountXccyCurveScenarios(bool up) {
         Real quote = 0.0;
         bool valid = true;
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j];
+            Date d = asof + simMarketData_->xbsCurveTenors(ccy)[j];
             times[j] = dc.yearFraction(asof, d);
 
             RiskFactorKey key(RiskFactorKey::KeyType::DiscountXccyCurve, ccy, j);
@@ -539,8 +539,8 @@ void SensitivityScenarioGenerator::generateDiscountXccyCurveScenarios(bool up) {
         if (!valid)
             continue;
 
-        std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(ccy)
-            ? simMarketData_->yieldCurveTenors(ccy)
+        std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasXbsCurveTenors(ccy)
+            ? simMarketData_->xbsCurveTenors(ccy)
             : data.shiftTenors;
         checkShiftTenors(shiftTenors, data.shiftTenors, "Discount Curve " + ccy);
         std::vector<Time> shiftTimes(shiftTenors.size());
