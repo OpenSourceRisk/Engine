@@ -35,19 +35,6 @@ namespace data {
 void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     string name = equityName();
-    // Look up reference data, if the equity name exists in reference data, use the equityId
-    // if not continue with the current name
-    if (engineFactory->referenceData() != nullptr && engineFactory->referenceData()->hasData("Equity", name)) {
-        auto refData = engineFactory->referenceData()->getData("Equity", name);
-        // Check it's equity reference data
-        if (auto erd = boost::dynamic_pointer_cast<EquityReferenceDatum>(refData)) {
-            name = erd->equityData().equityId;
-
-            // check currency - if option currency and equity currency are different this is a quanto trade
-            QL_REQUIRE(currency_ == erd->equityData().currency, 
-                "Option Currency: " << currency_ << " does not match equity currency: " << erd->equityData().currency << ", EquityOption does not support quanto options.");
-        }
-    }
 
     // set the option assetname - may have changed after lookup
     assetName_ = name;
