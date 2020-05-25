@@ -13,15 +13,8 @@ void populateFromBondReferenceData(std::string& issuerId, std::string& settlemen
                                    std::string& issueDate, std::string& creditCurveId, std::string& referenceCurveId,
                                    std::string& incomeCurveId, std::string& volatilityCurveId,
                                    std::vector<LegData>& coupons, const std::string& name,
-                                   const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) {
-    if (!referenceDataManager || !referenceDataManager->hasData(BondReferenceDatum::TYPE, name)) {
-        DLOG("could not get BondReferenceDatum for name " << name << " leave data in trade unchanged");
-        return;
-    }
-    auto bondRefData =
-        boost::dynamic_pointer_cast<BondReferenceDatum>(referenceDataManager->getData(BondReferenceDatum::TYPE, name));
-    QL_REQUIRE(bondRefData, "could not cast to BondReferenceDatum, this is unexpected");
-    DLOG("Got BondReferenceDatum for name " << name << " overwrite empty elements in trade");
+                                   const boost::shared_ptr<BondReferenceDatum>& bondRefData) {
+    QL_REQUIRE(bondRefData, "populateFromBondReferenceData(): empty bond reference datum given");
     if (issuerId.empty())
         issuerId = bondRefData->bondData().issuerId;
     if (settlementDays.empty())
