@@ -24,9 +24,10 @@
 #include <oret/toplevelfixture.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/time/daycounters/all.hpp>
+#include <ql/time/calendars/france.hpp>
+#include <ql/time/calendars/austria.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
-#include <qle/calendars/france.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>

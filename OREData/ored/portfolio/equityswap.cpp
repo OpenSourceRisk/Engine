@@ -89,8 +89,14 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         // add fx indexing, if applicable
         if (!eqLegData->fxIndex().empty()) {
+            Real initialFxFixing = Null<Real>();
+            // if the eq leg has an initial price and this is in the eq leg currency, we do not want an FX conversion for this price
+            if (!eqLegData->initialPriceCurrency().empty() &&
+                eqLegData->initialPriceCurrency() == legData_[equityLegIndex_].currency() &&
+                eqLegData->initialPrice() != Null<Real>())
+                initialFxFixing = 1.0;
             Indexing fxIndexing(eqLegData->fxIndex(), eqLegData->fxIndexFixingDays(), eqLegData->fxIndexCalendar(),
-                                false, false, false, 1.0, Null<Real>(), valuationSchedule, 0, "", "U", false);
+                                false, false, false, 1.0, initialFxFixing, valuationSchedule, 0, "", "U", false);
             legData_[irLegIndex_].indexing().push_back(fxIndexing);
         }
 

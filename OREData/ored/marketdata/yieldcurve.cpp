@@ -30,6 +30,7 @@
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/imm.hpp>
+#include <ql/version.hpp>
 
 #include <ql/indexes/ibor/all.hpp>
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
@@ -852,10 +853,13 @@ void YieldCurve::buildFittedBondCurve() {
     }
 
     boost::shared_ptr<FittedBondDiscountCurve::FittingMethod> method;
+    
+#if QL_HEX_VERSION >= 0x01190000 || defined(QL_ORE_PATCH)
+    // will work in QL 1.19
     switch (interpolationMethod_) {
     case InterpolationMethod::ExponentialSplines:
         method = boost::make_shared<ExponentialSplinesFitting>(true, Array(), ext::shared_ptr<OptimizationMethod>(),
-                                                               Array(), minCutoffTime, maxCutoffTime);
+							       Array(), minCutoffTime, maxCutoffTime);
         break;
     case InterpolationMethod::NelsonSiegel:
         method = boost::make_shared<NelsonSiegelFitting>(Array(), ext::shared_ptr<OptimizationMethod>(), Array(),
@@ -868,7 +872,24 @@ void YieldCurve::buildFittedBondCurve() {
     default:
         QL_FAIL("unknown fitting method");
     }
-
+#else
+#pragma message("yieldcurve.cpp uses fitting method constructors without min/max cutoff time parameters")
+    switch (interpolationMethod_) {
+    case InterpolationMethod::ExponentialSplines:
+        method = boost::make_shared<ExponentialSplinesFitting>(true, Array(), ext::shared_ptr<OptimizationMethod>(),
+                                                               Array());
+        break;
+    case InterpolationMethod::NelsonSiegel:
+        method = boost::make_shared<NelsonSiegelFitting>(Array(), ext::shared_ptr<OptimizationMethod>(), Array());
+        break;
+    case InterpolationMethod::Svensson:
+        method = boost::make_shared<SvenssonFitting>(Array(), ext::shared_ptr<OptimizationMethod>(), Array());
+        break;
+    default:
+        QL_FAIL("unknown fitting method");
+    }
+#endif
+    
     boost::shared_ptr<FittedBondDiscountCurve> tmp, current;
     Real minError = QL_MAX_REAL;
     HaltonRsg halton(method->size(), 42);
