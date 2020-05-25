@@ -121,7 +121,7 @@ protected:
             // Check if we have a xccy discount curve for the currency and if not just use discount curve.
             try {
                 string xccyCurveName = "__XCCY__-" + ccyCode;
-                discount = market_->yieldCurve(ccyCode, config);
+                discount = market_->yieldCurve(xccyCurveName, config);
             } catch (const Error&) {
                 DLOG("Could not link " << ccyCode << " termstructure to xbs curve when building xccy engine " <<
                     " so just using " << ccyCode << " discount curve.");
