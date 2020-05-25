@@ -23,6 +23,7 @@
 #pragma once
 
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/trade.hpp>
 
 namespace ore {
@@ -92,7 +93,9 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
 
-    //! populate data from reference data
+    //! populate data from reference datum
+    void populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum);
+    //! look up reference datum in ref data manager and populate
     void populateFromBondReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData);
 
 private:

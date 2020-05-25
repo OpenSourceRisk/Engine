@@ -40,7 +40,7 @@ namespace data {
     */
 class ReferenceDatum : public XMLSerializable {
 public:
-    //! DEfault Constructor
+    //! Default Constructor
     ReferenceDatum() {}
     //! Base class constructor
     ReferenceDatum(const std::string& type, const std::string& id) : type_(type), id_(id) {}
@@ -81,7 +81,7 @@ class BondReferenceDatum : public ReferenceDatum {
 public:
     static constexpr const char* TYPE = "Bond";
 
-    struct BondData {
+    struct BondData : XMLSerializable {
         string issuerId;
         string settlementDays;
         string calendar;
@@ -91,9 +91,11 @@ public:
         string incomeCurveId;
         string volatilityCurveId;
         std::vector<LegData> legData;
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(ore::data::XMLDocument& doc) override;
     };
 
-    BondReferenceDatum() {}
+    BondReferenceDatum() { setType(TYPE); }
 
     BondReferenceDatum(const string& id) : ReferenceDatum(TYPE, id) {}
 
