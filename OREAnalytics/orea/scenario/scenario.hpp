@@ -47,7 +47,6 @@ public:
     enum class KeyType {
         None,
         DiscountCurve,
-        DiscountXccyCurve,
         YieldCurve,
         IndexCurve,
         SwaptionVolatility,

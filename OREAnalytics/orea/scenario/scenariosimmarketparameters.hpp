@@ -69,8 +69,6 @@ public:
     const string& yieldCurveDayCounter(const string& key) const;
     vector<string> yieldCurveNames() const { return paramsLookup(RiskFactorKey::KeyType::YieldCurve); }
     const map<string, string>& yieldCurveCurrencies() const { return yieldCurveCurrencies_; }
-    const vector<Period>& xbsCurveTenors(const string& key) const;
-    bool hasXbsCurveTenors(const string& key) const { return xbsCurveTenors_.count(key) > 0; }
     const vector<Period>& yieldCurveTenors(const string& key) const;
     bool hasYieldCurveTenors(const string& key) const { return yieldCurveTenors_.count(key) > 0; }
     vector<string> indices() const { return paramsLookup(RiskFactorKey::KeyType::IndexCurve); }
@@ -231,7 +229,6 @@ public:
     map<string, string>& yieldCurveCurrencies() { return yieldCurveCurrencies_; }
     void setYieldCurveDayCounters(const string& key, const string& p);
     void setYieldCurveTenors(const string& key, const vector<Period>& p);
-    void setXbsCurveTenors(const string& key, const vector<Period>& p);
     void setIndices(vector<string> names);
     map<string, string>& swapIndices() { return swapIndices_; }
     string& interpolation() { return interpolation_; }
@@ -396,7 +393,7 @@ private:
     map<string, string> yieldCurveDayCounters_;
     vector<string> ccys_; // may or may not include baseCcy;
     map<string, string> yieldCurveCurrencies_;
-    map<string, vector<Period>> yieldCurveTenors_, xbsCurveTenors_;
+    map<string, vector<Period>> yieldCurveTenors_;
     map<string, string> swapIndices_;
     string interpolation_;
     bool extrapolate_;

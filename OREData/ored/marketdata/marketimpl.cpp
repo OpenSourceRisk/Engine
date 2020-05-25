@@ -130,11 +130,6 @@ Handle<YieldTermStructure> MarketImpl::discountCurve(const string& key, const st
                                               "discount curve");
 }
 
-Handle<YieldTermStructure> MarketImpl::discountXccyCurve(const string& key, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::Discount, configuration,
-        "discount xccy curve");
-}
-
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const string& key, const string& configuration) const {
     return yieldCurve(YieldCurveType::Yield, key, configuration);
 }

@@ -165,10 +165,6 @@ const vector<Period>& ScenarioSimMarketParameters::yieldCurveTenors(const string
     return lookup(yieldCurveTenors_, key);
 }
 
-const vector<Period>& ScenarioSimMarketParameters::xbsCurveTenors(const string& key) const {
-    return lookup(xbsCurveTenors_, key);
-}
-
 const string& ScenarioSimMarketParameters::yieldCurveDayCounter(const string& key) const {
     return lookup(yieldCurveDayCounters_, key);
 }
@@ -362,10 +358,6 @@ const string& ScenarioSimMarketParameters::commodityVolDayCounter(const string& 
 
 void ScenarioSimMarketParameters::setYieldCurveTenors(const string& key, const std::vector<Period>& p) {
     yieldCurveTenors_[key] = p;
-}
-
-void ScenarioSimMarketParameters::setXbsCurveTenors(const string& key, const std::vector<Period>& p) {
-    xbsCurveTenors_[key] = p;
 }
 
 void ScenarioSimMarketParameters::setYieldCurveDayCounters(const string& key, const string& s) {

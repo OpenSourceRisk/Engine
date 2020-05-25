@@ -92,8 +92,6 @@ RiskFactorKey::KeyType yieldCurveRiskFactor(const ore::data::YieldCurveType y) {
 
     if (y == ore::data::YieldCurveType::Discount) {
         return RiskFactorKey::KeyType::DiscountCurve;
-    } else if (y == ore::data::YieldCurveType::DiscountXccy) {
-        return RiskFactorKey::KeyType::DiscountXccyCurve;
     } else if (y == ore::data::YieldCurveType::Yield) {
         return RiskFactorKey::KeyType::YieldCurve;
     } else if (y == ore::data::YieldCurveType::EquityDividend) {
@@ -107,8 +105,6 @@ ore::data::YieldCurveType riskFactorYieldCurve(const RiskFactorKey::KeyType rf) 
 
     if (rf == RiskFactorKey::KeyType::DiscountCurve) {
         return ore::data::YieldCurveType::Discount;
-    } else if (rf == RiskFactorKey::KeyType::DiscountXccyCurve) {
-        return ore::data::YieldCurveType::DiscountXccy;
     } else if (rf == RiskFactorKey::KeyType::YieldCurve) {
         return ore::data::YieldCurveType::Yield;
     } else if (rf == RiskFactorKey::KeyType::DividendYield) {
@@ -136,14 +132,7 @@ ReactionToTimeDecay parseDecayMode(const string& s) {
 void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
                                       const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
                                       const string& dayCounter, bool simulate) {
-    Handle<YieldTermStructure> wrapper;
-    if (rf == RiskFactorKey::KeyType::DiscountCurve) {
-        wrapper = initMarket->discountCurve(key, configuration);
-    } else if (rf == RiskFactorKey::KeyType::DiscountXccyCurve) {
-        wrapper = initMarket->discountXccyCurve(key, configuration);
-    } else {
-        wrapper = initMarket->yieldCurve(key, configuration);
-    }
+    Handle<YieldTermStructure> wrapper = initMarket->yieldCurve(riskFactorYieldCurve(rf), key, configuration);
     QL_REQUIRE(!wrapper.empty(), "yield curve not provided for " << key);
     QL_REQUIRE(tenors.front() > 0 * Days, "yield curve tenors must not include t=0");
     // include today

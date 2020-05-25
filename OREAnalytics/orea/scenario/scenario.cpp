@@ -31,8 +31,6 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
     switch (type) {
     case RiskFactorKey::KeyType::DiscountCurve:
         return out << "DiscountCurve";
-    case RiskFactorKey::KeyType::DiscountXccyCurve:
-        return out << "DiscountCurve";
     case RiskFactorKey::KeyType::YieldCurve:
         return out << "YieldCurve";
     case RiskFactorKey::KeyType::IndexCurve:
@@ -99,8 +97,6 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key) {
 RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
     if (str == "DiscountCurve")
         return RiskFactorKey::KeyType::DiscountCurve;
-    if (str == "DiscountXccyCurve")
-        return RiskFactorKey::KeyType::DiscountXccyCurve;
     else if (str == "YieldCurve")
         return RiskFactorKey::KeyType::YieldCurve;
     else if (str == "IndexCurve")

@@ -68,8 +68,6 @@ public:
                                           const string& configuration = Market::defaultConfiguration) const;
     Handle<YieldTermStructure> discountCurve(const string& ccy,
                                              const string& configuration = Market::defaultConfiguration) const;
-    Handle<YieldTermStructure> discountXccyCurve(const string& ccy,
-                                            const string& configuration = Market::defaultConfiguration) const;
     Handle<YieldTermStructure> yieldCurve(const string& name,
                                           const string& configuration = Market::defaultConfiguration) const;
     Handle<IborIndex> iborIndex(const string& indexName,

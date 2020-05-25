@@ -79,8 +79,6 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
     switch (keyType) {
     case RFType::DiscountCurve:
         return *discountCurveShiftData().at(name);
-    case RFType::DiscountXccyCurve:
-        return *discountXccyCurveShiftData().at(name);
     case RFType::IndexCurve:
         return *indexCurveShiftData().at(name);
     case RFType::YieldCurve:
@@ -142,19 +140,6 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
             discountCurveShiftData_[ccy] = boost::make_shared<CurveShiftData>(data);
-        }
-    }
-
-    LOG("Get discount Xccy curve sensitivity parameters");
-    XMLNode* discountXccyCurves = XMLUtils::getChildNode(node, "DiscountXccyCurves");
-    if (discountXccyCurves) {
-        for (XMLNode* child = XMLUtils::getChildNode(discountXccyCurves, "DiscountXccyCurve"); child;
-            child = XMLUtils::getNextSibling(child)) {
-            string ccy = XMLUtils::getAttribute(child, "ccy");
-            LOG("Discount curve for ccy " << ccy);
-            CurveShiftData data;
-            curveShiftDataFromXML(child, data);
-            discountXccyCurveShiftData_[ccy] = boost::make_shared<CurveShiftData>(data);
         }
     }
 
@@ -474,16 +459,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         XMLNode* parent = XMLUtils::addChild(doc, root, "DiscountCurves");
         for (const auto& kv : discountCurveShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "DiscountCurve");
-            XMLUtils::addAttribute(doc, node, "ccy", kv.first);
-            curveShiftDataToXML(doc, node, *kv.second);
-        }
-    }
-
-    if (!discountXccyCurveShiftData_.empty()) {
-        LOG("toXML for DiscountXccyCurves");
-        XMLNode* parent = XMLUtils::addChild(doc, root, "DiscountXccyCurves");
-        for (const auto& kv : discountXccyCurveShiftData_) {
-            XMLNode* node = XMLUtils::addChild(doc, parent, "DiscountXccyCurve");
             XMLUtils::addAttribute(doc, node, "ccy", kv.first);
             curveShiftDataToXML(doc, node, *kv.second);
         }

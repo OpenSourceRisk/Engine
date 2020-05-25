@@ -121,7 +121,6 @@ private:
     void generateScenarios();
     void generateYieldCurveScenarios(bool up);
     void generateDiscountCurveScenarios(bool up);
-    void generateDiscountXccyCurveScenarios(bool up);
     void generateIndexCurveScenarios(bool up);
     void generateFxScenarios(bool up);
     void generateEquityScenarios(bool up);
@@ -147,7 +146,6 @@ private:
     void generateGenericYieldVolScenarios(bool up, RiskFactorKey::KeyType rfType);
 
     ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up);
-    ScenarioDescription discountXccyScenarioDescription(string ccy, Size bucket, bool up);
     ScenarioDescription indexScenarioDescription(string index, Size bucket, bool up);
     ScenarioDescription yieldScenarioDescription(string name, Size bucket, bool up);
     ScenarioDescription fxScenarioDescription(string ccypair, bool up);

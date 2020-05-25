@@ -86,10 +86,6 @@ void SensitivityScenarioGenerator::generateScenarios() {
     if (sensitivityData_->computeGamma())
         generateDiscountCurveScenarios(false);
 
-    generateDiscountXccyCurveScenarios(true);
-    if (sensitivityData_->computeGamma())
-        generateDiscountXccyCurveScenarios(false);
-
     generateIndexCurveScenarios(true);
     if (sensitivityData_->computeGamma())
         generateIndexCurveScenarios(false);
@@ -502,90 +498,6 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
         } // end of shift curve tenors
     }
     LOG("Discount curve scenarios done");
-}
-
-void SensitivityScenarioGenerator::generateDiscountXccyCurveScenarios(bool up) {
-    Date asof = baseScenario_->asof();
-    // Log an ALERT if some currencies in simmarket are excluded from the list
-    for (auto sim_ccy : simMarketData_->ccys()) {
-        if (sensitivityData_->discountXccyCurveShiftData().find(sim_ccy) ==
-            sensitivityData_->discountXccyCurveShiftData().end()) {
-            ALOG("Currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
-        }
-    }
-
-    for (auto c : sensitivityData_->discountXccyCurveShiftData()) {
-        string ccy = c.first;
-        Size n_ten = simMarketData_->xbsCurveTenors(ccy).size();
-        // original curves' buffer
-        std::vector<Real> zeros(n_ten);
-        std::vector<Real> times(n_ten);
-        // buffer for shifted zero curves
-        std::vector<Real> shiftedZeros(n_ten);
-        SensitivityScenarioData::CurveShiftData data = *c.second;
-        ShiftType shiftType = parseShiftType(data.shiftType);
-        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(ccy));
-
-        Real quote = 0.0;
-        bool valid = true;
-        for (Size j = 0; j < n_ten; ++j) {
-            Date d = asof + simMarketData_->xbsCurveTenors(ccy)[j];
-            times[j] = dc.yearFraction(asof, d);
-
-            RiskFactorKey key(RiskFactorKey::KeyType::DiscountXccyCurve, ccy, j);
-            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, quote, continueOnError_);
-            zeros[j] = -std::log(quote) / times[j];
-        }
-        if (!valid)
-            continue;
-
-        std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasXbsCurveTenors(ccy)
-            ? simMarketData_->xbsCurveTenors(ccy)
-            : data.shiftTenors;
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Discount Curve " + ccy);
-        std::vector<Time> shiftTimes(shiftTenors.size());
-        for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
-        Real shiftSize = data.shiftSize;
-        QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
-
-        // Can we store a valid shift size?
-        bool validShiftSize = vectorEqual(times, shiftTimes);
-
-        for (Size j = 0; j < shiftTenors.size(); ++j) {
-
-            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
-            scenarioDescriptions_.push_back(discountXccyScenarioDescription(ccy, j, up));
-            DLOG("generate discount xccy curve scenario, ccy " << ccy << ", bucket " << j << ", up " << up << ", desc "
-                << scenarioDescriptions_.back());
-
-            // apply zero rate shift at tenor point j
-            applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros, true);
-
-            // store shifted discount curve in the scenario
-            for (Size k = 0; k < n_ten; ++k) {
-                RiskFactorKey key(RFType::DiscountXccyCurve, ccy, k);
-                if (!close_enough(shiftedZeros[k], zeros[k])) {
-                    Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
-                    scenario->add(key, shiftedDiscount);
-                }
-
-                // Possibly store valid shift size
-                if (validShiftSize && up && j == k) {
-                    shiftSizes_[key] = shiftedZeros[k] - zeros[k];
-                }
-            }
-
-            // Give the scenario a label
-            scenario->label(to_string(scenarioDescriptions_.back()));
-
-            // add this scenario to the scenario vector
-            scenarios_.push_back(scenario);
-            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
-
-        } // end of shift curve tenors
-    }
-    LOG("Discount Xccy curve scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
@@ -2289,25 +2201,6 @@ SensitivityScenarioGenerator::discountScenarioDescription(string ccy, Size bucke
     RiskFactorKey key(RiskFactorKey::KeyType::DiscountCurve, ccy, bucket);
     std::ostringstream o;
     o << sensitivityData_->discountCurveShiftData()[ccy]->shiftTenors[bucket];
-    string text = o.str();
-    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
-    ScenarioDescription desc(type, key, text);
-
-    if (up)
-        shiftSizes_[key] = 0.0;
-
-    return desc;
-}
-
-SensitivityScenarioGenerator::ScenarioDescription
-SensitivityScenarioGenerator::discountXccyScenarioDescription(string ccy, Size bucket, bool up) {
-    QL_REQUIRE(sensitivityData_->discountXccyCurveShiftData().find(ccy) != sensitivityData_->discountXccyCurveShiftData().end(),
-        "currency " << ccy << " not found in discount xccy shift data");
-    QL_REQUIRE(bucket < sensitivityData_->discountXccyCurveShiftData()[ccy]->shiftTenors.size(),
-        "bucket " << bucket << " out of range");
-    RiskFactorKey key(RiskFactorKey::KeyType::DiscountXccyCurve, ccy, bucket);
-    std::ostringstream o;
-    o << sensitivityData_->discountXccyCurveShiftData()[ccy]->shiftTenors[bucket];
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);

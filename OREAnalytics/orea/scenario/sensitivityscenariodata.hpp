@@ -93,9 +93,6 @@ public:
     const map<string, boost::shared_ptr<CurveShiftData>>& discountCurveShiftData() const {
         return discountCurveShiftData_;
     }
-    const map<string, boost::shared_ptr<CurveShiftData>>& discountXccyCurveShiftData() const {
-        return discountXccyCurveShiftData_;
-    }
     const map<string, boost::shared_ptr<CurveShiftData>>& indexCurveShiftData() const { return indexCurveShiftData_; }
     const map<string, boost::shared_ptr<CurveShiftData>>& yieldCurveShiftData() const { return yieldCurveShiftData_; }
     const map<string, SpotShiftData>& fxShiftData() const { return fxShiftData_; }
@@ -144,7 +141,6 @@ public:
     //! \name Setters
     //@{
     map<string, boost::shared_ptr<CurveShiftData>>& discountCurveShiftData() { return discountCurveShiftData_; }
-    map<string, boost::shared_ptr<CurveShiftData>>& discountXccyCurveShiftData() { return discountXccyCurveShiftData_; }
     map<string, boost::shared_ptr<CurveShiftData>>& indexCurveShiftData() { return indexCurveShiftData_; }
     map<string, boost::shared_ptr<CurveShiftData>>& yieldCurveShiftData() { return yieldCurveShiftData_; }
     map<string, SpotShiftData>& fxShiftData() { return fxShiftData_; }
@@ -210,7 +206,6 @@ protected:
     //@}
 
     map<string, boost::shared_ptr<CurveShiftData>> discountCurveShiftData_; // key: ccy
-    map<string, boost::shared_ptr<CurveShiftData>> discountXccyCurveShiftData_; // key: ccy
     map<string, boost::shared_ptr<CurveShiftData>> indexCurveShiftData_;    // key: indexName
     map<string, boost::shared_ptr<CurveShiftData>> yieldCurveShiftData_;    // key: yieldCurveName
     map<string, SpotShiftData> fxShiftData_;                                // key: ccy pair

@@ -200,20 +200,6 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             shiftMult = zeroRate;
         }
     } break;
-    case RiskFactorKey::KeyType::DiscountXccyCurve: {
-        string ccy = keylabel;
-        auto itr = sensiParams.discountXccyCurveShiftData().find(ccy);
-        QL_REQUIRE(itr != sensiParams.discountXccyCurveShiftData().end(), "shiftData not found for " << ccy);
-        shiftSize = itr->second->shiftSize;
-        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
-            Size keyIdx = key.index;
-            Period p = itr->second->shiftTenors[keyIdx];
-            Handle<YieldTermStructure> yts = simMarket->discountXccyCurve(ccy, marketConfiguration);
-            Time t = yts->dayCounter().yearFraction(asof, asof + p);
-            Real zeroRate = yts->zeroRate(t, Continuous);
-            shiftMult = zeroRate;
-        }
-    } break;
     case RiskFactorKey::KeyType::IndexCurve: {
         string idx = keylabel;
         auto itr = sensiParams.indexCurveShiftData().find(idx);

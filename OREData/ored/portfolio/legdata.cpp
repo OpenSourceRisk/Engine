@@ -26,6 +26,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <boost/make_shared.hpp>
@@ -1769,20 +1770,8 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
     Handle<YieldTermStructure> sorTS;
     Handle<YieldTermStructure> tarTS;
     if (useXbsCurves) {
-        try {
-            sorTS = market->discountXccyCurve(source, configuration);
-        } catch (const Error&) {
-            DLOG("Could not link " << source << " termstructure to xbs curve when building FX index " <<
-                fxIndex << " so just using " << source << " discount curve.");
-            sorTS = market->discountCurve(source, configuration);
-        }
-        try {
-            tarTS = market->discountXccyCurve(target, configuration);
-        } catch (const Error&) {
-            DLOG("Could not link " << target << " termstructure to xbs curve when building FX index " <<
-                fxIndex << " so just using " << target << " discount curve.");
-            tarTS = market->discountCurve(target, configuration);
-        }
+        sorTS = xccyYieldCurve(market, source, configuration);
+        tarTS = xccyYieldCurve(market, target, configuration);
     } else {
         sorTS = market->discountCurve(source, configuration);
         tarTS = market->discountCurve(target, configuration);

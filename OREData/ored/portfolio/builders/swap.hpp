@@ -27,6 +27,7 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
@@ -115,18 +116,8 @@ protected:
         std::string config = configuration(MarketContext::pricing);
         std::string baseCcyCode = base.code();
         for (Size i = 0; i < ccys.size(); ++i) {
-
-            Handle<YieldTermStructure> discount;
             string ccyCode = ccys[i].code();
-            // Check if we have a xccy discount curve for the currency and if not just use discount curve.
-            try {
-                discount = market_->discountXccyCurve(ccyCode, config);
-            } catch (const Error&) {
-                DLOG("Could not link " << ccyCode << " termstructure to xbs curve when building xccy engine " <<
-                    " so just using " << ccyCode << " discount curve.");
-                discount = market_->discountCurve(ccyCode, config);
-            }
-            discountCurves.push_back(discount);
+            discountCurves.push_back(xccyYieldCurve(market_, ccyCode, config));
             string pair = ccyCode + baseCcyCode;
             fxQuotes.push_back(market_->fxSpot(pair, config));
         }
