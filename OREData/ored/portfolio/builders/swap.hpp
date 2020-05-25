@@ -112,16 +112,23 @@ protected:
 
         std::vector<Handle<YieldTermStructure>> discountCurves;
         std::vector<Handle<Quote>> fxQuotes;
+        std::string config = configuration(MarketContext::pricing);
+        std::string baseCcyCode = base.code();
         for (Size i = 0; i < ccys.size(); ++i) {
 
             Handle<YieldTermStructure> discount;
-            if (ccys[i] == base)
-                discount = market_->discountCurve(ccys[i].code(), configuration(MarketContext::pricing));
-            else
-                discount = market_->discountXccyCurve(ccys[i].code(), configuration(MarketContext::pricing));
+            string ccyCode = ccys[i].code();
+            // Check if we have a xccy discount curve for the currency and if not just use discount curve.
+            try {
+                discount = market_->discountXccyCurve(ccyCode, config);
+            } catch (const Error&) {
+                DLOG("Could not link " << ccyCode << " termstructure to xbs curve when building xccy engine " <<
+                    " so just using " << ccyCode << " discount curve.");
+                discount = market_->discountCurve(ccyCode, config);
+            }
             discountCurves.push_back(discount);
-            string pair = ccys[i].code() + base.code();
-            fxQuotes.push_back(market_->fxSpot(pair, configuration(MarketContext::pricing)));
+            string pair = ccyCode + baseCcyCode;
+            fxQuotes.push_back(market_->fxSpot(pair, config));
         }
 
         return boost::make_shared<QuantExt::DiscountingCurrencySwapEngine>(discountCurves, fxQuotes, ccys, base);
