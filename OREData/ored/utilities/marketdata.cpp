@@ -26,10 +26,10 @@ using std::string;
 namespace ore {
 namespace data {
 
-const string xccyCurveNamePrefix = "__XCCY__-";
+const string xccyCurveNamePrefix = "__XCCY__";
 
 string xccyCurveName(const string& ccyCode) {
-    return xccyCurveNamePrefix + ccyCode;
+    return xccyCurveNamePrefix + "-" + ccyCode;
 }
 
 Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& market,
