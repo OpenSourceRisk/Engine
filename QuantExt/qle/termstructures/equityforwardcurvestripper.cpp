@@ -122,8 +122,8 @@ void EquityForwardCurveStripper::performCalculations() const {
         }
 
         // call and put surface to be used to find forward - updated for American
-        QuantExt::OptionPriceSurface callSurface = *callSurface_;
-        QuantExt::OptionPriceSurface putSurface = *putSurface_;
+        auto callSurface = callSurface_;
+        auto putSurface = putSurface_;
 
         Size maxIter = 100;
         Size j = 0;
@@ -213,23 +213,23 @@ void EquityForwardCurveStripper::performCalculations() const {
                 // must have at least one new strike otherwise continue with currenct price surfaces
                 if (newStrikes.size() > 0) {
                     // build call/put price surfaces with the new European prices
-                    callSurface = OptionPriceSurface(asof, dates, newStrikes, callPremiums, dc);
-                    putSurface = OptionPriceSurface(asof, dates, newStrikes, putPremiums, dc);
+                    callSurface = boost::make_shared<OptionPriceSurface>(asof, dates, newStrikes, callPremiums, dc);
+                    putSurface = boost::make_shared<OptionPriceSurface>(asof, dates, newStrikes, putPremiums, dc);
                 }
             }
 
             Real newForward = 0.0;
             // if our guess is below the first strike or after the last strike we just take the relevant strike
             if (forward <= strikes.front()) {
-                newForward = forwardFromPutCallParity(expiry, strikes.front(), callSurface, putSurface);
+                newForward = forwardFromPutCallParity(expiry, strikes.front(), *callSurface, *putSurface);
                 // if forward is still less than first strike we accept this
                 isForward = newForward <= strikes.front();
             } else if (forward >= strikes.back()) {
-                newForward = forwardFromPutCallParity(expiry, strikes.back(), callSurface, putSurface);
+                newForward = forwardFromPutCallParity(expiry, strikes.back(), *callSurface, *putSurface);
                 // if forward is still greater than last strike we accept this
                 isForward = newForward >= strikes.back();
             } else {
-                newForward = forwardFromPutCallParity(expiry, forward, callSurface, putSurface);
+                newForward = forwardFromPutCallParity(expiry, forward, *callSurface, *putSurface);
 
                 // check - has it moved by less that 0.1%
                 isForward = fabs((newForward - forward) / forward) < 0.001;
@@ -241,8 +241,8 @@ void EquityForwardCurveStripper::performCalculations() const {
     }
 }
 
-Real EquityForwardCurveStripper::forwardFromPutCallParity(Date d, Real strike, OptionPriceSurface& callSurface, 
-    OptionPriceSurface& putSurface) const {
+Real EquityForwardCurveStripper::forwardFromPutCallParity(Date d, Real strike, const OptionPriceSurface& callSurface,
+                                                          const OptionPriceSurface& putSurface) const {
     Real C = callSurface.price(d, strike);
     Real P = putSurface.price(d, strike);
     Real D = forecastCurve_->discount(d);

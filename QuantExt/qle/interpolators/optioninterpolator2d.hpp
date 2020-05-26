@@ -40,8 +40,10 @@ struct CloseEnoughComparator {
 class OptionInterpolatorBase {
 
 public:
+    // Destructor
+    virtual ~OptionInterpolatorBase() {}
     // default Constructor
-    OptionInterpolatorBase(const QuantLib::Date& referenceDate) : referenceDate_(referenceDate){};
+    explicit OptionInterpolatorBase(const QuantLib::Date& referenceDate) : referenceDate_(referenceDate){};
 
     //! virtual access methods
     virtual QuantLib::Real getValue(QuantLib::Time t, QuantLib::Real strike) const = 0;
@@ -85,6 +87,11 @@ public:
                          bool upperStrikeConstExtrap = true,
                          const InterpolatorStrike& interpolatorStrike = InterpolatorStrike(),
                          const InterpolatorExpiry& interpolatorExpiry = InterpolatorExpiry());
+
+    /* delete copy and copy assignment operators because of the stored Interpolation objects, which would
+       still point to the source object's data after the copy */
+    OptionInterpolator2d(const OptionInterpolator2d&) = delete;
+    OptionInterpolator2d& operator=(const OptionInterpolator2d&) = delete;
 
     //! Initialise
     void initialise(const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes,
