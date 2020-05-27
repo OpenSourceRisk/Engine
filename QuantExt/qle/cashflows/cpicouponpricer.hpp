@@ -73,12 +73,11 @@ class BlackCPICouponPricer : public CPICouponPricer {
 public:
     BlackCPICouponPricer(const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
                          const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
-    Handle<YieldTermStructure> yieldCurve() { return yts_; }
+    Handle<YieldTermStructure> yieldCurve() { return nominalTermStructure(); }
     Handle<CPIVolatilitySurface> volatility() { return capletVolatility(); }
     boost::shared_ptr<PricingEngine> engine() { return engine_; }
 
 private:
-    Handle<YieldTermStructure> yts_;
     // engine to price the underlying cap/floor
     boost::shared_ptr<PricingEngine> engine_;
 };
