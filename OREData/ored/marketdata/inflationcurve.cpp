@@ -154,7 +154,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 boost::shared_ptr<ZeroInflationTraits::helper> instrument =
                     boost::make_shared<ZeroCouponInflationSwapHelper>(quotes[i], conv->observationLag(), maturity,
                                                                       conv->fixCalendar(), conv->fixConvention(),
-                                                                      conv->dayCounter(), index);
+                                                                      conv->dayCounter(), index, nominalTs);
                 // The instrument gets registered to update on change of evaluation date. This triggers a
                 // rebootstrapping of the curve. In order to avoid this during simulation we unregister from the
                 // evaluationDate.
@@ -215,7 +215,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 boost::shared_ptr<YoYInflationTraits::helper> instrument =
                     boost::make_shared<YearOnYearInflationSwapHelper>(
                         Handle<Quote>(boost::make_shared<SimpleQuote>(effectiveQuote)), conv->observationLag(),
-                        maturity, conv->fixCalendar(), conv->fixConvention(), conv->dayCounter(), index);
+                        maturity, conv->fixCalendar(), conv->fixConvention(), conv->dayCounter(), index, nominalTs);
                 instrument->unregisterWith(Settings::instance().evaluationDate());
                 instruments.push_back(instrument);
             }

@@ -607,7 +607,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     cals.push_back(peru);
     Calendar joint1 = QuantExt::LargeJointCalendar(cals);
 
-    std::vector<Date> hol = Calendar::holidayList(joint1, Date(1, January, 2018), Date(31, December, 2018));
+    std::vector<Date> hol = joint1.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
 
     checkCalendars(expectedHolidays, hol);    
@@ -635,7 +635,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     cals.push_back(col);
     Calendar joint2 = QuantExt::LargeJointCalendar(cals);
 
-    hol = Calendar::holidayList(joint2, Date(1, January, 2018), Date(31, December, 2018));
+    hol = joint2.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
     checkCalendars(expectedHolidays, hol);    
 
@@ -658,7 +658,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     cals.push_back(phil);
     Calendar joint3 = QuantExt::LargeJointCalendar(cals);
 
-    hol = Calendar::holidayList(joint3, Date(1, January, 2018), Date(31, December, 2018));
+    hol = joint3.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
     checkCalendars(expectedHolidays, hol);    
 
@@ -681,7 +681,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     cals.push_back(thai);
     Calendar joint4 = QuantExt::LargeJointCalendar(cals);
 
-    hol = Calendar::holidayList(joint4, Date(1, January, 2018), Date(31, December, 2018));
+    hol = joint4.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
     checkCalendars(expectedHolidays, hol);
 
@@ -697,7 +697,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     cals.push_back(mal);
     Calendar joint5 = QuantExt::LargeJointCalendar(cals);
 
-    hol = Calendar::holidayList(joint5, Date(1, January, 2018), Date(31, December, 2018));
+    hol = joint5.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
     checkCalendars(expectedHolidays, hol);
     
@@ -715,7 +715,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     cals.push_back(chil);
     Calendar joint6 = QuantExt::LargeJointCalendar(cals);
 
-    hol = Calendar::holidayList(joint6, Date(1, January, 2018), Date(31, December, 2018));
+    hol = joint6.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
     checkCalendars(expectedHolidays, hol);
 
@@ -733,7 +733,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     cals.push_back(net);
     Calendar joint7 = QuantExt::LargeJointCalendar(cals);
 
-    hol = Calendar::holidayList(joint7, Date(1, January, 2018), Date(31, December, 2018));
+    hol = joint7.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
     checkCalendars(expectedHolidays, hol);
 
@@ -754,7 +754,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     cals.push_back(fre);
     Calendar joint8 = QuantExt::LargeJointCalendar(cals);
 
-    hol = Calendar::holidayList(joint8, Date(1, January, 2018), Date(31, December, 2018));
+    hol = joint8.holidayList(joint8, Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
     checkCalendars(expectedHolidays, hol);
 }

@@ -48,11 +48,11 @@ protected:
             market_->yoyCapFloorVol(indexName, configuration(MarketContext::pricing)).currentLink();
         Handle<QuantLib::YoYOptionletVolatilitySurface> hvol(vol->yoyVolSurface());
         if (vol->volatilityType() == VolatilityType::ShiftedLognormal && vol->displacement() == 0.0)
-            return boost::make_shared<QuantExt::BlackYoYInflationCouponPricer>(hvol);
+            return boost::make_shared<QuantLib::BlackYoYInflationCouponPricer>(hvol);
         else if (vol->volatilityType() == VolatilityType::ShiftedLognormal && vol->displacement() != 0.0)
-            return boost::make_shared<QuantExt::UnitDisplacedBlackYoYInflationCouponPricer>(hvol);
+            return boost::make_shared<QuantLib::UnitDisplacedBlackYoYInflationCouponPricer>(hvol);
         else if (vol->volatilityType() == VolatilityType::Normal)
-            return boost::make_shared<QuantExt::BachelierYoYInflationCouponPricer>(hvol);
+            return boost::make_shared<QuantLib::BachelierYoYInflationCouponPricer>(hvol);
         else
             QL_FAIL("Unknown VolatilityType of YoYOptionletVolatilitySurface");
     }
