@@ -754,7 +754,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     cals.push_back(fre);
     Calendar joint8 = QuantExt::LargeJointCalendar(cals);
 
-    hol = joint8.holidayList(joint8, Date(1, January, 2018), Date(31, December, 2018));
+    hol = joint8.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
     checkCalendars(expectedHolidays, hol);
 }
