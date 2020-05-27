@@ -142,8 +142,10 @@ public:
         for (Size i = 0; i < datesZCII.size(); i++) {
             Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100.0)));
             boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(
-                new ZeroCouponInflationSwapHelper(quote, Period(2, Months), datesZCII[i], UnitedKingdom(),
-                                                  ModifiedFollowing, ActualActual(), ii));
+                new ZeroCouponInflationSwapHelper(
+                    quote, Period(2, Months), datesZCII[i], UnitedKingdom(), ModifiedFollowing, ActualActual(), ii,
+                    yieldCurves_.at(make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP"))));
+            ;
             instruments.push_back(anInstrument);
         };
         // we can use historical or first ZCIIS for this
