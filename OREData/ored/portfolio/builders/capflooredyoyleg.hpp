@@ -28,6 +28,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/cashflows/couponpricer.hpp>
 #include <ql/cashflows/inflationcouponpricer.hpp>
 #include <ql/indexes/inflationindex.hpp>
+#include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 
 namespace ore {
@@ -48,11 +49,11 @@ protected:
             market_->yoyCapFloorVol(indexName, configuration(MarketContext::pricing)).currentLink();
         Handle<QuantLib::YoYOptionletVolatilitySurface> hvol(vol->yoyVolSurface());
         if (vol->volatilityType() == VolatilityType::ShiftedLognormal && vol->displacement() == 0.0)
-            return boost::make_shared<QuantLib::BlackYoYInflationCouponPricer>(hvol);
+            return boost::make_shared<QuantExt::BlackYoYInflationCouponPricer>(hvol);
         else if (vol->volatilityType() == VolatilityType::ShiftedLognormal && vol->displacement() != 0.0)
-            return boost::make_shared<QuantLib::UnitDisplacedBlackYoYInflationCouponPricer>(hvol);
+            return boost::make_shared<QuantExt::UnitDisplacedBlackYoYInflationCouponPricer>(hvol);
         else if (vol->volatilityType() == VolatilityType::Normal)
-            return boost::make_shared<QuantLib::BachelierYoYInflationCouponPricer>(hvol);
+            return boost::make_shared<QuantExt::BachelierYoYInflationCouponPricer>(hvol);
         else
             QL_FAIL("Unknown VolatilityType of YoYOptionletVolatilitySurface");
     }
