@@ -74,9 +74,9 @@ void YoYInflationOptionletVolStripper::performCalculations() {
             Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(ovs);
             if (type_ == ShiftedLognormal) {
                 if (displacement_ == 0.0) {
-                    pe = boost::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(yoyIndex_, hovs);
+                    pe = boost::make_shared<YoYInflationBlackCapFloorEngine>(yoyIndex_, hovs);
                 } else {
-                    pe = boost::make_shared<QuantExt::YoYInflationUnitDisplacedBlackCapFloorEngine>(yoyIndex_, hovs);
+                    pe = boost::make_shared<YoYInflationUnitDisplacedBlackCapFloorEngine>(yoyIndex_, hovs);
                 }
             } else if (type_ == Normal) {
                 pe = boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs);
