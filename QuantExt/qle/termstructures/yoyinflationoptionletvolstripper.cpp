@@ -20,10 +20,9 @@
 #include <ql/instruments/makeyoyinflationcapfloor.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
-#include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
-#include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
+#include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -80,7 +79,7 @@ void YoYInflationOptionletVolStripper::performCalculations() {
                     pe = boost::make_shared<QuantExt::YoYInflationUnitDisplacedBlackCapFloorEngine>(yoyIndex_, hovs);
                 }
             } else if (type_ == Normal) {
-                pe = boost::make_shared<QuantExt::YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs);
+                pe = boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs);
             } else {
                 QL_FAIL("unknown volatility type: " << type_);
             }
