@@ -43,7 +43,6 @@ public:
         const boost::shared_ptr<CapFloorTermVolCurve>& cftvc,
         const boost::shared_ptr<QuantLib::IborIndex>& index,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-        QuantLib::Real accuracy = 1.0e-12,
         bool flatFirstPeriod = true,
         const QuantLib::VolatilityType capFloorVolType = QuantLib::ShiftedLognormal,
         const QuantLib::Real capFloorVolDisplacement = 0.0,
@@ -58,7 +57,6 @@ public:
         const boost::shared_ptr<CapFloorTermVolCurve>& cftvc,
         const boost::shared_ptr<QuantLib::IborIndex>& index,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-        QuantLib::Real accuracy = 1.0e-12,
         bool flatFirstPeriod = true,
         const QuantLib::VolatilityType capFloorVolType = QuantLib::ShiftedLognormal,
         const QuantLib::Real capFloorVolDisplacement = 0.0,
@@ -117,9 +115,6 @@ private:
     //! The underlying ATM cap floor term volatility curve
     boost::shared_ptr<CapFloorTermVolCurve> cftvc_;
 
-    //! The accuracy to be used in the bootstrap
-    QuantLib::Real accuracy_;
-
     //! Flat optionlet volatility before first optionlet fixing date
     bool flatFirstPeriod_;
 
@@ -168,7 +163,6 @@ PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
     const boost::shared_ptr<CapFloorTermVolCurve>& cftvc,
     const boost::shared_ptr<QuantLib::IborIndex>& index,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-    QuantLib::Real accuracy,
     bool flatFirstPeriod,
     const QuantLib::VolatilityType capFloorVolType,
     const QuantLib::Real capFloorVolDisplacement,
@@ -178,7 +172,7 @@ PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
     const Interpolator& i,
     const Bootstrap<optionlet_curve>& bootstrap)
     : QuantLib::OptionletVolatilityStructure(settlementDays, cftvc->calendar(), cftvc->businessDayConvention(), 
-      cftvc->dayCounter()), cftvc_(cftvc), accuracy_(accuracy), flatFirstPeriod_(flatFirstPeriod), 
+      cftvc->dayCounter()), cftvc_(cftvc), flatFirstPeriod_(flatFirstPeriod), 
       capFloorVolType_(capFloorVolType), capFloorVolDisplacement_(capFloorVolDisplacement),
       volatilityType_(optionletVolType ? *optionletVolType : capFloorVolType),
       displacement_(optionletVolDisplacement ? *optionletVolDisplacement : 0.0),
@@ -189,7 +183,7 @@ PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
 
     curve_ = boost::make_shared<optionlet_curve>(
         settlementDays, helpers_, cftvc_->calendar(), cftvc_->businessDayConvention(), cftvc_->dayCounter(), 
-        volatilityType_, displacement_, flatFirstPeriod_, accuracy_, interpolator_, bootstrap_);
+        volatilityType_, displacement_, flatFirstPeriod_, interpolator_, bootstrap_);
 }
 
 template <class Interpolator, template <class> class Bootstrap>
@@ -198,7 +192,6 @@ PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
     const boost::shared_ptr<CapFloorTermVolCurve>& cftvc,
     const boost::shared_ptr<QuantLib::IborIndex>& index,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-    QuantLib::Real accuracy,
     bool flatFirstPeriod,
     const QuantLib::VolatilityType capFloorVolType,
     const QuantLib::Real capFloorVolDisplacement,
@@ -208,7 +201,7 @@ PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
     const Interpolator& i,
     const Bootstrap<optionlet_curve>& bootstrap)
     : QuantLib::OptionletVolatilityStructure(referenceDate, cftvc->calendar(), cftvc->businessDayConvention(),
-      cftvc->dayCounter()), cftvc_(cftvc), accuracy_(accuracy), flatFirstPeriod_(flatFirstPeriod), 
+      cftvc->dayCounter()), cftvc_(cftvc), flatFirstPeriod_(flatFirstPeriod), 
       capFloorVolType_(capFloorVolType), capFloorVolDisplacement_(capFloorVolDisplacement),
       volatilityType_(optionletVolType ? *optionletVolType : capFloorVolType),
       displacement_(optionletVolDisplacement ? *optionletVolDisplacement : 0.0),
@@ -219,7 +212,7 @@ PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
 
     curve_ = boost::make_shared<optionlet_curve>(
         referenceDate, helpers_, cftvc_->calendar(), cftvc_->businessDayConvention(), cftvc_->dayCounter(),
-        volatilityType_, displacement_, flatFirstPeriod_, accuracy_, interpolator_, bootstrap_);
+        volatilityType_, displacement_, flatFirstPeriod_, interpolator_, bootstrap_);
 }
 
 template <class Interpolator, template <class> class Bootstrap>

@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     for (Size i = 0; i < datesZCII.size(); i++) {
         Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100.0)));
         boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > anInstrument(new ZeroCouponInflationSwapHelper(
-            quote, Period(3, Months), datesZCII[i], TARGET(), ModifiedFollowing, Actual365Fixed(), ii));
+	    quote, Period(3, Months), datesZCII[i], TARGET(), ModifiedFollowing, Actual365Fixed(), ii, nominalTs));
         instruments.push_back(anInstrument);
     };
 

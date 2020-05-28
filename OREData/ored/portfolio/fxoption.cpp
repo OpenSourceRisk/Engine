@@ -37,6 +37,12 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Handle<BlackVolTermStructure> blackVol = engineFactory->market()->fxVol(ccyPairCode);
     LOG("Implied vol for " << tradeType_ << " on " << ccyPairCode << " with maturity " << maturity_ << " and strike " << strike_
                                         << " is " << blackVol->blackVol(maturity_, strike_));
+
+    Date expiryDate = parseDate(option_.exerciseDates().back());
+    npvCurrency_ = currency_;
+    notional_ = strike_ * quantity_;
+    notionalCurrency_ = currency_;
+    maturity_ = expiryDate;
 }
 
 void FxOption::fromXML(XMLNode* node) {

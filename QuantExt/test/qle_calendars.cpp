@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(testPeruvianCalendar) {
 
     Calendar c = Peru();
 
-    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2018), Date(31, December, 2018));
+    std::vector<Date> hol = c.holidayList(Date(1, January, 2018), Date(31, December, 2018));
 
     BOOST_CHECK(hol.size() == expectedHolidays.size());
 
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(testColombianCalendar) {
 
     Calendar c = Colombia();
 
-    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2018), Date(31, December, 2018));
+    std::vector<Date> hol = c.holidayList(Date(1, January, 2018), Date(31, December, 2018));
 
     BOOST_CHECK(hol.size() == expectedHolidays.size());
 
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(testPhilippineCalendar) {
 
     Calendar c = Philippines();
 
-    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2018), Date(31, December, 2018));
+    std::vector<Date> hol = c.holidayList(Date(1, January, 2018), Date(31, December, 2018));
 
     check::checkCalendars(expectedHolidays, hol);
 }
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(testThaiCalendar) {
 
     Calendar c = Thailand();
 
-    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2018), Date(31, December, 2018));
+    std::vector<Date> hol = c.holidayList(Date(1, January, 2018), Date(31, December, 2018));
 
     BOOST_CHECK(hol.size() == expectedHolidays.size());
 
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(testMalaysianCalendar) {
 
     Calendar c = Malaysia();
 
-    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2018), Date(31, December, 2018));
+    std::vector<Date> hol = c.holidayList(Date(1, January, 2018), Date(31, December, 2018));
 
     BOOST_CHECK(hol.size() == expectedHolidays.size());
 
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(testChileanCalendar) {
 
     Calendar c = Chile();
 
-    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2018), Date(31, December, 2018));
+    std::vector<Date> hol = c.holidayList(Date(1, January, 2018), Date(31, December, 2018));
 
     BOOST_CHECK(hol.size() == expectedHolidays.size());
 
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(testNetherlandianCalendar) {
 
     Calendar c = Netherlands();
 
-    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2018), Date(31, December, 2018));
+    std::vector<Date> hol = c.holidayList(Date(1, January, 2018), Date(31, December, 2018));
 
     BOOST_CHECK(hol.size() == expectedHolidays.size());
 
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(testFrenchCalendar) {
 
     Calendar c = France();
 
-    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2018), Date(31, December, 2018));
+    std::vector<Date> hol = c.holidayList(Date(1, January, 2018), Date(31, December, 2018));
 
     BOOST_CHECK(hol.size() == expectedHolidays.size());
 
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(testAustrianCalendar) {
 
     Calendar c = Austria();
 
-    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2020), Date(31, December, 2020));
+    std::vector<Date> hol = c.holidayList(Date(1, January, 2020), Date(31, December, 2020));
 
     BOOST_CHECK(hol.size() == expectedHolidays.size());
 
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(testSpanishCalendar) {
 
     Calendar c = Spain();
 
-    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2020), Date(31, December, 2020));
+    std::vector<Date> hol = c.holidayList(Date(1, January, 2020), Date(31, December, 2020));
 
     BOOST_CHECK(hol.size() == expectedHolidays.size());
 
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(testLuxembourgianCalendar) {
 
     Calendar c = Luxembourg();
 
-    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2020), Date(31, December, 2020));
+    std::vector<Date> hol = c.holidayList(Date(1, January, 2020), Date(31, December, 2020));
 
     BOOST_CHECK(hol.size() == expectedHolidays.size());
 
@@ -393,7 +393,7 @@ BOOST_AUTO_TEST_CASE(testBelgianCalendar) {
 
     Calendar c = Belgium();
 
-    std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2020), Date(31, December, 2020));
+    std::vector<Date> hol = c.holidayList(Date(1, January, 2020), Date(31, December, 2020));
 
     BOOST_CHECK(hol.size() == expectedHolidays.size());
 
