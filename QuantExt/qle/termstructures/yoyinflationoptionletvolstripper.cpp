@@ -85,15 +85,17 @@ void YoYInflationOptionletVolStripper::performCalculations() {
             }
             // calculate the cap price
             YoYInflationCapFloor cap =
-                YoYInflationCapFloor(MakeYoYInflationCapFloor(YoYInflationCapFloor::Cap, optionletTerms[i].length(),
-                                                              cal, yoyIndex_, obsLag, strikes[j])
-                                         .withPricingEngine(pe)
+                YoYInflationCapFloor(MakeYoYInflationCapFloor(YoYInflationCapFloor::Cap, yoyIndex_,
+							      optionletTerms[i].length(), cal, obsLag)
+				         .withStrike(strikes[j])
+				         .withPricingEngine(pe)
                                          .withNominal(10000));
             cPrice[j][i] = cap.NPV();
             // floor price
             YoYInflationCapFloor floor =
-                YoYInflationCapFloor(MakeYoYInflationCapFloor(YoYInflationCapFloor::Floor, optionletTerms[i].length(),
-                                                              cal, yoyIndex_, obsLag, strikes[j])
+                YoYInflationCapFloor(MakeYoYInflationCapFloor(YoYInflationCapFloor::Floor, yoyIndex_,
+							      optionletTerms[i].length(), cal, obsLag)
+				         .withStrike(strikes[j])
                                          .withPricingEngine(pe)
                                          .withNominal(10000));
             fPrice[j][i] = floor.NPV();
