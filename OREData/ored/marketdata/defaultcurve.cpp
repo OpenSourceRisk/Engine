@@ -175,8 +175,8 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof,
     typedef PiecewiseDefaultCurve<QuantExt::SurvivalProbability, LogLinear, QuantExt::IterativeBootstrap> SpCurve;
     ATTR_UNUSED typedef SpCurve::traits_type dummy;
     boost::shared_ptr<DefaultProbabilityTermStructure> tmp =
-        boost::make_shared<SpCurve>(asof, helpers, config.dayCounter(), accuracy, LogLinear(),
-            QuantExt::IterativeBootstrap<SpCurve>(globalAccuracy, dontThrow, maxAttempts,
+        boost::make_shared<SpCurve>(asof, helpers, config.dayCounter(), LogLinear(),
+            QuantExt::IterativeBootstrap<SpCurve>(accuracy, globalAccuracy, dontThrow, maxAttempts,
                 maxFactor, minFactor, dontThrowSteps));
 
     // As for yield curves we need to copy the piecewise curve because on eval date changes the relative date 
