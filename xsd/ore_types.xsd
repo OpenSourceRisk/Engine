@@ -506,6 +506,7 @@
   <xs:simpleType name="exerciseStyle">
     <xs:restriction base="xs:string">
       <xs:enumeration value="European"/>
+      <xs:enumeration value="Bermudan"/>
       <xs:enumeration value="American"/>
     </xs:restriction>
   </xs:simpleType>
@@ -576,6 +577,13 @@
     </xs:restriction>
   </xs:simpleType>
   
+  <xs:simpleType name="bondPriceType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Clean"/>
+      <xs:enumeration value="Dirty"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="strikeDeltaType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Spot"/>
