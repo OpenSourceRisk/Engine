@@ -1697,14 +1697,6 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             string config = engineFactory->configuration(MarketContext::pricing);
             if (boost::starts_with(indexing.index(), "EQ-")) {
                 string eqName = indexing.index().substr(3);
-                // look whether we have a mapping in the reference data, if not continue with the current name
-                if (engineFactory->referenceData() != nullptr &&
-                    engineFactory->referenceData()->hasData("Equity", eqName)) {
-                    auto refData = engineFactory->referenceData()->getData("Equity", eqName);
-                    if (auto erd = boost::dynamic_pointer_cast<EquityReferenceDatum>(refData)) {
-                        eqName = erd->equityData().equityId;
-                    }
-                }
                 index = *engineFactory->market()->equityCurve(eqName, config);
             } else if (boost::starts_with(indexing.index(), "FX-")) {
                 auto tmp = parseFxIndex(indexing.index());
