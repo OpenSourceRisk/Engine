@@ -75,7 +75,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // We have an FX Index to setup
             fxIndex = buildFxIndex(legData_[i].fxIndex(), legData_[i].currency(),
                 legData_[i].foreignCurrency(), market, configuration,
-                legData_[i].fixingCalendar(), legData_[i].fixingDays());            
+                legData_[i].fixingCalendar(), legData_[i].fixingDays(), true);
         }
 
         // build the leg

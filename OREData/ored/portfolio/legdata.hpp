@@ -916,7 +916,7 @@ vector<T> buildScheduledVectorNormalised(const vector<T>& values, const vector<s
 // build an FX Index needed by legbuilders / makeLeg methods
 boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
                                                   const boost::shared_ptr<Market>& market, const string& configuration,
-                                                  const string& calendar, Size fixingDays = 0);
+                                                  const string& calendar, Size fixingDays = 0, bool useXbsCurves = false);
 
 // build a Bond Index needed by legbuilders (populates bond data from bond reference data if required)
 class BondData;
