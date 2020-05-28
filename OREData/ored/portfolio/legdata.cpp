@@ -26,6 +26,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <boost/make_shared.hpp>
@@ -1696,14 +1697,6 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             string config = engineFactory->configuration(MarketContext::pricing);
             if (boost::starts_with(indexing.index(), "EQ-")) {
                 string eqName = indexing.index().substr(3);
-                // look whether we have a mapping in the reference data, if not continue with the current name
-                if (engineFactory->referenceData() != nullptr &&
-                    engineFactory->referenceData()->hasData("Equity", eqName)) {
-                    auto refData = engineFactory->referenceData()->getData("Equity", eqName);
-                    if (auto erd = boost::dynamic_pointer_cast<EquityReferenceDatum>(refData)) {
-                        eqName = erd->equityData().equityId;
-                    }
-                }
                 index = *engineFactory->market()->equityCurve(eqName, config);
             } else if (boost::starts_with(indexing.index(), "FX-")) {
                 auto tmp = parseFxIndex(indexing.index());
@@ -1755,7 +1748,7 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
 
 boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
                                                   const boost::shared_ptr<Market>& market, const string& configuration,
-                                                  const string& calendar, Size fixingDays) {
+                                                  const string& calendar, Size fixingDays, bool useXbsCurves) {
     // 1. Parse the index we have with no term structures
     boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
 
@@ -1763,8 +1756,19 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
     // and calendar from legData_[i].fxIndex()
     string source = fxIndexBase->sourceCurrency().code();
     string target = fxIndexBase->targetCurrency().code();
-    Handle<YieldTermStructure> sorTS = market->discountCurve(source, configuration);
-    Handle<YieldTermStructure> tarTS = market->discountCurve(target, configuration);
+
+    // If useXbsCurves is true, try to link the FX index to xccy based curves. There will be none if source or target
+    // is equal to the base currency of the run so we must use the try/catch.
+    Handle<YieldTermStructure> sorTS;
+    Handle<YieldTermStructure> tarTS;
+    if (useXbsCurves) {
+        sorTS = xccyYieldCurve(market, source, configuration);
+        tarTS = xccyYieldCurve(market, target, configuration);
+    } else {
+        sorTS = market->discountCurve(source, configuration);
+        tarTS = market->discountCurve(target, configuration);
+    }
+
     Handle<Quote> spot = market->fxSpot(source + target);
     Calendar cal = parseCalendar(calendar);
 

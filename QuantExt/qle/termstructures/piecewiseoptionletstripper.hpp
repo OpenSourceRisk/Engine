@@ -42,7 +42,6 @@ public:
         const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
         const boost::shared_ptr<QuantLib::IborIndex>& index,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-        QuantLib::Real accuracy = 1.0e-12,
         bool flatFirstPeriod = true,
         const QuantLib::VolatilityType capFloorVolType = QuantLib::ShiftedLognormal,
         const QuantLib::Real capFloorVolDisplacement = 0.0,
@@ -66,9 +65,6 @@ public:
     //@}
 
 private:
-    //! The accuracy to be used in the bootstrap
-    QuantLib::Real accuracy_;
-
     //! Flat optionlet volatility before first optionlet fixing date
     bool flatFirstPeriod_;
 
@@ -103,7 +99,6 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
     const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
     const boost::shared_ptr<QuantLib::IborIndex>& index,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-    QuantLib::Real accuracy,
     bool flatFirstPeriod,
     const QuantLib::VolatilityType capFloorVolType,
     const QuantLib::Real capFloorVolDisplacement,
@@ -115,7 +110,7 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
     : OptionletStripper(capFloorSurface, index, discount,
         optionletVolType ? *optionletVolType : capFloorVolType,
         optionletVolDisplacement ? *optionletVolDisplacement : 0.0),
-      accuracy_(accuracy), flatFirstPeriod_(flatFirstPeriod), capFloorVolType_(capFloorVolType),
+      flatFirstPeriod_(flatFirstPeriod), capFloorVolType_(capFloorVolType),
       capFloorVolDisplacement_(capFloorVolDisplacement), interpOnOptionlets_(interpOnOptionlets), 
       interpolator_(i), bootstrap_(bootstrap), strikeCurves_(nStrikes_), helpers_(nStrikes_) {
 
@@ -174,7 +169,7 @@ inline void PiecewiseOptionletStripper<Interpolator, Bootstrap>::performCalculat
         strikeCurves_[j] = boost::make_shared<optionlet_curve>(
             termVolSurface_->referenceDate(), helpers_[j], termVolSurface_->calendar(),
             termVolSurface_->businessDayConvention(), termVolSurface_->dayCounter(), volatilityType_,
-            displacement_, flatFirstPeriod_, accuracy_, interpolator_, bootstrap_);
+            displacement_, flatFirstPeriod_, interpolator_, bootstrap_);
     }
 
     // Populate the optionlet volatilities and standard deviations
