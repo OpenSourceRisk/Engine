@@ -302,14 +302,14 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
                 settlementDays, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
             ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<Linear> >(settlementDays, cftvc, 
-                iborIndex, testYieldCurves.discountEonia, accuracy, flatFirstPeriod, atmVolData.type, 
+                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type, 
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         } else {
             BOOST_TEST_MESSAGE("Using Linear interpolation with a fixed reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
                 referenceDate, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
             ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<Linear> >(referenceDate, cftvc,
-                iborIndex, testYieldCurves.discountEonia, accuracy, flatFirstPeriod, atmVolData.type,
+                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         }
         break;
@@ -319,14 +319,14 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<BackwardFlat> >(
                 settlementDays, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
             ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<BackwardFlat> >(settlementDays, cftvc,
-                iborIndex, testYieldCurves.discountEonia, accuracy, flatFirstPeriod, atmVolData.type,
+                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         } else {
             BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a fixed reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<BackwardFlat> >(
                 referenceDate, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
             ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<BackwardFlat> >(referenceDate, cftvc,
-                iborIndex, testYieldCurves.discountEonia, accuracy, flatFirstPeriod, atmVolData.type,
+                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         }
         break;
@@ -336,14 +336,14 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<LinearFlat> >(
                 settlementDays, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
             ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(settlementDays, cftvc,
-                iborIndex, testYieldCurves.discountEonia, accuracy, flatFirstPeriod, atmVolData.type,
+                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         } else {
             BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a fixed reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<LinearFlat> >(
                 referenceDate, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
             ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(referenceDate, cftvc,
-                iborIndex, testYieldCurves.discountEonia, accuracy, flatFirstPeriod, atmVolData.type,
+                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         }
         break;
@@ -353,14 +353,14 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
                 settlementDays, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
             ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<Cubic> >(settlementDays, cftvc,
-                iborIndex, testYieldCurves.discountEonia, accuracy, flatFirstPeriod, atmVolData.type,
+                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         } else {
             BOOST_TEST_MESSAGE("Using Cubic interpolation with a fixed reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
                 referenceDate, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
             ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<Cubic> >(referenceDate, cftvc,
-                iborIndex, testYieldCurves.discountEonia, accuracy, flatFirstPeriod, atmVolData.type,
+                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         }
         break;
@@ -370,14 +370,14 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<CubicFlat> >(
                 settlementDays, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
             ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<CubicFlat> >(settlementDays, cftvc,
-                iborIndex, testYieldCurves.discountEonia, accuracy, flatFirstPeriod, atmVolData.type,
+                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         } else {
             BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a fixed reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<CubicFlat> >(
                 referenceDate, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
             ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<CubicFlat> >(referenceDate, cftvc,
-                iborIndex, testYieldCurves.discountEonia, accuracy, flatFirstPeriod, atmVolData.type,
+                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         }
         break;
@@ -521,9 +521,9 @@ BOOST_FIXTURE_TEST_CASE(testAtmStrippingExceptions, CommonVars) {
     bool interpOnOptionlets = true;
     boost::shared_ptr<OptionletVolatilityStructure> ovCurve = 
         boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(settlementDays, cftvc, iborIndex, 
-            testYieldCurves.discountEonia, accuracy, true, type, displacement, curveVolatilityType, curveDisplacement,
+            testYieldCurves.discountEonia, true, type, displacement, curveVolatilityType, curveDisplacement,
             interpOnOptionlets, LinearFlat(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<LinearFlat,
-            QuantExt::IterativeBootstrap>::optionlet_curve>(globalAccuracy, dontThrow));
+            QuantExt::IterativeBootstrap>::optionlet_curve>(accuracy, globalAccuracy, dontThrow));
 
     // Checks
     Period oneYear = 1 * Years;
@@ -546,9 +546,9 @@ BOOST_FIXTURE_TEST_CASE(testAtmStrippingExceptions, CommonVars) {
     // Rebuild ovCurve with dontThrow set to true
     dontThrow = true;
     ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(settlementDays, cftvc, iborIndex,
-        testYieldCurves.discountEonia, accuracy, true, type, displacement, curveVolatilityType, curveDisplacement,
+        testYieldCurves.discountEonia, true, type, displacement, curveVolatilityType, curveDisplacement,
         interpOnOptionlets, LinearFlat(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<LinearFlat,
-        QuantExt::IterativeBootstrap>::optionlet_curve>(globalAccuracy, dontThrow));
+        QuantExt::IterativeBootstrap>::optionlet_curve>(accuracy, globalAccuracy, dontThrow));
 
     // Check bootstrap passes and check the values.
     // - the 1Y optionlet volatility should not have been affected

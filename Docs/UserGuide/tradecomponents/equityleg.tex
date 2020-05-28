@@ -70,17 +70,26 @@ Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref
 
 \item FixingDays [Optional]: The number of days before payment date for equity valuation. \emph{N.B.} Only used when no valuation schedule present. Defaults to \emph{0}.
 
-\item FXTerms [Optional]: Only present if the currency of the underlying equity is different from the leg: contains the following nodes:
+Allowable values: Any non-negative integer.
 
-\item EquityCurrency: Currency underlying equity is quoted in. Required if FXTerms present.
+\item FXTerms [Mandatory when leg and equity currencies differ]: For the case when the currency  the underlying equity is quoted in, is different from the leg currency.  The \lstinline!FXTerm! node contains the following elements:
+\begin{itemize}
+	\item EquityCurrency [Mandatory within \lstinline!FXTerms!]: Currency underlying equity is quoted in. Required if FXTerms is present.
 
-\item FXIndex: Name of the index for FX fixings, e.g. FX-TR20H-EUR-USD for Thomson Reuters 20:00 EURUSD FX fixing. Required if FXTerms present.
+	Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 
-\item FXIndexFixingDays [Optional]: Number of fixing days for FX Index, defaults to \emph{0}.
+	\item FXIndex [Mandatory within \lstinline!FXTerms!]: Name of the index for FX fixings for the leg vs equity currency pair, e.g. FX-TR20H-EUR-USD for Thomson Reuters 20:00 EURUSD FX fixing. Required if FXTerms present.
 
-\item FXIndexCalendar [Optional]: Calendar for FX Index.
+	Allowable values:  See Table \ref{tab:fxindex_data}
 
-%Allowable values:  Any positive real number.
+	\item FXIndexFixingDays [Optional]: Number of fixing days for FX Index, defaults to \emph{0}.
+
+	Allowable values: Any non-negative integer.
+
+	\item FXIndexCalendar [Optional]: Calendar for FX Index.
+
+	Allowable values: See Table \ref{tab:calendar} Calendar.
+\end{itemize}
 \end{itemize}
 
 \begin{listing}[H]

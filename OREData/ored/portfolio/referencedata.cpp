@@ -89,41 +89,6 @@ XMLNode* BondReferenceDatum::toXML(XMLDocument& doc) {
     return node;
 }
 
-ReferenceDatumRegister<ReferenceDatumBuilder<EquityReferenceDatum>> EquityReferenceDatum::reg_(TYPE);
-
-void EquityReferenceDatum::fromXML(XMLNode* node) {
-    ReferenceDatum::fromXML(node);
-    XMLNode* innerNode = XMLUtils::getChildNode(node, "EquityReferenceData");
-    QL_REQUIRE(innerNode, "No EquityReferenceData node");
-    equityData_.equityId = XMLUtils::getChildValue(innerNode, "EquityId", true);
-    equityData_.equityName = XMLUtils::getChildValue(innerNode, "EquityName", false);
-    equityData_.currency = XMLUtils::getChildValue(innerNode, "Currency", true);
-    equityData_.scalingFactor = XMLUtils::getChildValueAsInt(innerNode, "ScalingFactor", false);
-    equityData_.preferredISIN = XMLUtils::getChildValue(innerNode, "PreferredISIN", false);
-    equityData_.exchangeCode = XMLUtils::getChildValue(innerNode, "ExchangeCode", false);
-    equityData_.isIndex = XMLUtils::getChildValueAsBool(innerNode, "IsIndex", false);
-    string startDateStr = XMLUtils::getChildValue(innerNode, "EquityStartDate", false);
-    equityData_.equityStartDate = parseDate(startDateStr);
-    equityData_.proxyIdentifier = XMLUtils::getChildValue(innerNode, "ProxyIdentifier", false);
-}
-
-XMLNode* EquityReferenceDatum::toXML(XMLDocument& doc) {
-    XMLNode* node = ReferenceDatum::toXML(doc);
-    XMLNode* equityNode = doc.allocNode("EquityReferenceData");
-    XMLUtils::appendNode(node, equityNode);
-    XMLUtils::addChild(doc, equityNode, "EquityId", equityData_.equityId);
-    XMLUtils::addChild(doc, equityNode, "EquityName", equityData_.equityName);
-    XMLUtils::addChild(doc, equityNode, "Currency", equityData_.currency);
-    XMLUtils::addChild(doc, equityNode, "ScalingFactor", static_cast<int>(equityData_.scalingFactor));
-    XMLUtils::addChild(doc, equityNode, "PreferredISIN", equityData_.preferredISIN);
-    XMLUtils::addChild(doc, equityNode, "ExchangeCode", equityData_.exchangeCode);
-    XMLUtils::addChild(doc, equityNode, "IsIndex", equityData_.isIndex);
-    XMLUtils::addChild(doc, equityNode, "EquityStartDate", to_string(equityData_.equityStartDate));
-    XMLUtils::addChild(doc, equityNode, "ProxyIdentifier", equityData_.proxyIdentifier);
-    return node;
-}
-
-
 // BasicReferenceDataManager
 
 void BasicReferenceDataManager::fromXML(XMLNode* node) {
