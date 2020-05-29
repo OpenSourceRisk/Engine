@@ -157,29 +157,12 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
     QL_REQUIRE(eqData, "Wrong LegType, expected Equity");
     string eqName = eqData->eqName();
 
-    // Look up reference data, if the equity name exists in reference data, use the equityId
-    // if not continue with the current name
-    if (engineFactory->referenceData() != nullptr && engineFactory->referenceData()->hasData("Equity", eqName)) {
-        auto refData = engineFactory->referenceData()->getData("Equity", eqName);
-        // Check it's equity reference data
-        if (auto erd = boost::dynamic_pointer_cast<EquityReferenceDatum>(refData)) {
-            eqName = erd->equityData().equityId;
-
-            // check currency - if leg currency and equity currency are different check for FxTerms, or else fail
-            if (data.currency() != erd->equityData().currency) {
-                QL_REQUIRE(eqData->eqCurrency() == erd->equityData().currency,
-                           "Equity Currency provided, " << eqData->eqCurrency()
-                                                        << ", does not match equity currency from reference "
-                                                        << erd->equityData().currency);
-                QL_REQUIRE(!eqData->fxIndex().empty(), "Must from FXIndex for Equity Quanto Swap Leg");
-            }
-        }
-    }
     auto eqCurve = *engineFactory->market()->equityCurve(eqName, configuration);
 
     boost::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
     // if equity currency differs from the leg currency we need an FxIndex
-    if (eqData->eqCurrency() != "" && eqData->eqCurrency() != data.currency()) {
+    if ((eqData->eqCurrency() != "" && eqData->eqCurrency() != data.currency()) ||
+        (data.currency() != eqCurve->currency().code())) {
         QL_REQUIRE(eqData->fxIndex() != "",
                    "No FxIndex - if equity currency differs from leg currency an FxIndex must be provided");
 
