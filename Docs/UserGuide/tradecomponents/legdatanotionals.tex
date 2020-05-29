@@ -57,7 +57,7 @@ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 
 Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
 
-\item PaymentLag [optional]: The payment lag given as as number business days, applies to fixed, Ibor and OIS legs. PaymentLag is not supported for the CapFloor trade type.
+\item PaymentLag [optional]: The payment lag given as as number business days, applies to Fixed legs, and Floating legs with Ibor and OIS indices (but not to BMA/SIFMA indices). PaymentLag is also not supported for  CapFloor Floating legs that have Ibor coupons with sub periods (hasSubPeriods = \emph{true}), nor for CapFloor Floating legs with averaged ON coupons (isAveraged = \emph{true}).
 
 Allowable values: A non-negative whole number, if not given it defaults to zero.
 
