@@ -123,14 +123,14 @@ public:
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
                       const boost::shared_ptr<FixingManager>& fixingManager,
                       const std::string& configuration = Market::defaultConfiguration,
-		      const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
+                      const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                       const bool continueOnError = false);
 
     //! Set scenario generator
     boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
     //! Get scenario generator
-    const boost::shared_ptr<ScenarioGenerator>& scnearioGenerator() const { return scenarioGenerator_; }
+    const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() const { return scenarioGenerator_; }
 
     //! Set aggregation data
     boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() { return asd_; }

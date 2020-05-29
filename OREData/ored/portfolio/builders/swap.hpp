@@ -27,6 +27,7 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
@@ -112,10 +113,13 @@ protected:
 
         std::vector<Handle<YieldTermStructure>> discountCurves;
         std::vector<Handle<Quote>> fxQuotes;
+        std::string config = configuration(MarketContext::pricing);
+        std::string baseCcyCode = base.code();
         for (Size i = 0; i < ccys.size(); ++i) {
-            discountCurves.push_back(market_->discountCurve(ccys[i].code(), configuration(MarketContext::pricing)));
-            string pair = ccys[i].code() + base.code();
-            fxQuotes.push_back(market_->fxSpot(pair, configuration(MarketContext::pricing)));
+            string ccyCode = ccys[i].code();
+            discountCurves.push_back(xccyYieldCurve(market_, ccyCode, config));
+            string pair = ccyCode + baseCcyCode;
+            fxQuotes.push_back(market_->fxSpot(pair, config));
         }
 
         return boost::make_shared<QuantExt::DiscountingCurrencySwapEngine>(discountCurves, fxQuotes, ccys, base);

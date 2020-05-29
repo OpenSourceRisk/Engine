@@ -475,8 +475,8 @@
       <Currency>EUR</Currency>
       <ForecastingCurve>EUR-EONIA</ForecastingCurve>
       <Type>OptionPremium</Type>
-      <SpotQuote>EQUITY/PRICE/EQUITY_D/EUR</SpotQuote>
       <ExerciseStyle>European</ExerciseStyle>
+      <SpotQuote>EQUITY/PRICE/EQUITY_D/EUR</SpotQuote>
       <Quotes>
         <Quote>EQUITY_OPTION/PRICE/EQUITY_D/EUR/1Y/1000/C</Quote>
         <Quote>EQUITY_OPTION/PRICE/EQUITY_D/EUR/1Y/1000/P</Quote>
@@ -489,8 +489,8 @@
       <Currency>EUR</Currency>
       <ForecastingCurve>EUR-EONIA</ForecastingCurve>
       <Type>OptionPremium</Type>
-      <SpotQuote>EQUITY/PRICE/EQUITY_E/EUR</SpotQuote>
       <ExerciseStyle>American</ExerciseStyle>
+      <SpotQuote>EQUITY/PRICE/EQUITY_E/EUR</SpotQuote>
       <Quotes>
         <Quote>EQUITY_OPTION/PRICE/EQUITY_E/EUR/1Y/1000/C</Quote>
         <Quote>EQUITY_OPTION/PRICE/EQUITY_E/EUR/1Y/1000/P</Quote>

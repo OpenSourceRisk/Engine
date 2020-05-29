@@ -34,7 +34,7 @@
 
 namespace QuantExt {
 using namespace QuantLib;
-class CmsCapHelper : public LazyObject, public CalibrationHelperBase {
+class CmsCapHelper : public LazyObject, public CalibrationHelper {
 public:
     CmsCapHelper(Date asof, boost::shared_ptr<SwapIndex>& index1, boost::shared_ptr<SwapIndex>& index2,
                  const Handle<YieldTermStructure>& yts, const Handle<Quote>& price, const Handle<Quote>& correlation,

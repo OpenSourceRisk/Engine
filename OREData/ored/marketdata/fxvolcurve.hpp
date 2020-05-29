@@ -41,6 +41,7 @@ using ore::data::CurveConfigurations;
 // to get FX quote from container (map or FXTriangulation)
 class FXLookup {
 public:
+    virtual ~FXLookup() {}
     virtual Handle<Quote> fxPairLookup(const string& fxPair) const = 0;
 };
 

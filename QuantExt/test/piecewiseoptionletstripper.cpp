@@ -197,9 +197,9 @@ Handle<OptionletVolatilityStructure> createOvs(VolatilityType volatilityType,
     // Create the piecewise optionlet stripper
     VolatilityType ovType = Normal;
     boost::shared_ptr<QuantExt::OptionletStripper> pwos = boost::make_shared<PiecewiseOptionletStripper<TI> >(
-        cfts, vars.iborIndex, vars.testYieldCurves.discountEonia, vars.accuracy, flatFirstPeriod, 
+        cfts, vars.iborIndex, vars.testYieldCurves.discountEonia, flatFirstPeriod, 
         volatilityType, displacement, ovType, 0.0, interpOnOptionlet, TI(), QuantExt::IterativeBootstrap<
-        typename PiecewiseOptionletStripper<TI, QuantExt::IterativeBootstrap>::optionlet_curve>(vars.globalAccuracy));
+        typename PiecewiseOptionletStripper<TI, QuantExt::IterativeBootstrap>::optionlet_curve>(vars.accuracy, vars.globalAccuracy));
 
     // If true, we overlay ATM volatilities
     vector<Handle<Quote> > atmVolquotes(vars.testVols.atmTenors.size());
@@ -648,7 +648,7 @@ BOOST_FIXTURE_TEST_CASE(testCachedLinearFlat, CommonVars) {
 
     // Create the piecewise optionlet stripper
     boost::shared_ptr<QuantExt::OptionletStripper> pwos = boost::make_shared<PiecewiseOptionletStripper<LinearFlat> >(
-        cfts, iborIndex, testYieldCurves.discountEonia, accuracy, true, Normal, 0.0, Normal);
+        cfts, iborIndex, testYieldCurves.discountEonia, true, Normal, 0.0, Normal);
 
     // Create the OptionletVolatilityStructure
     Handle<OptionletVolatilityStructure> ovs = Handle<OptionletVolatilityStructure>(
@@ -721,7 +721,7 @@ BOOST_FIXTURE_TEST_CASE(testChangingCapFloorSurface, CommonVars) {
 
     // Create the piecewise optionlet stripper
     boost::shared_ptr<QuantExt::OptionletStripper> pwos = boost::make_shared<PiecewiseOptionletStripper<LinearFlat> >(
-        cfts, iborIndex, testYieldCurves.discountEonia, accuracy, true, Normal, 0.0, Normal);
+        cfts, iborIndex, testYieldCurves.discountEonia, true, Normal, 0.0, Normal);
 
     // Create the OptionletVolatilityStructure
     boost::shared_ptr<OptionletVolatilityStructure> ovs = 
