@@ -19,18 +19,21 @@
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
 #include <ql/exercise.hpp>
 #include <ql/event.hpp>
+#include <ql/settings.hpp>
 
 using QuantLib::BusinessDayConvention;
 using QuantLib::Calendar;
 using QuantLib::Date;
 using QuantLib::EuropeanExercise;
 using QuantLib::Index;
+using QuantLib::io::iso_date;
 using QuantLib::Natural;
 using QuantLib::Null;
 using QuantLib::Option;
 using QuantLib::PlainVanillaPayoff;
 using QuantLib::PricingEngine;
 using QuantLib::Real;
+using QuantLib::Settings;
 using QuantLib::StrikedTypePayoff;
 using QuantLib::VanillaOption;
 
@@ -69,8 +72,12 @@ CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type,
     Real priceAtExercise)
     : VanillaOption(boost::make_shared<PlainVanillaPayoff>(type, strike),
         boost::make_shared<EuropeanExercise>(expiryDate)), paymentDate_(paymentDate),
-        automaticExercise_(automaticExercise), underlying_(underlying), exercised_(exercised),
-        priceAtExercise_(priceAtExercise) {
+        automaticExercise_(automaticExercise), underlying_(underlying), exercised_(false),
+        priceAtExercise_(Null<Real>()) {
+
+    if (exercised)
+        exercise(priceAtExercise);
+    
     check(exercise_->lastDate(), paymentDate_, automaticExercise_, underlying_, exercised_, priceAtExercise_);
 }
 
@@ -86,8 +93,11 @@ CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type,
     Real priceAtExercise)
     : VanillaOption(boost::make_shared<PlainVanillaPayoff>(type, strike),
         boost::make_shared<EuropeanExercise>(expiryDate)), automaticExercise_(automaticExercise),
-        underlying_(underlying), exercised_(exercised), priceAtExercise_(priceAtExercise) {
+        underlying_(underlying), exercised_(false), priceAtExercise_(Null<Real>()) {
     
+    if (exercised)
+        exercise(priceAtExercise);
+
     // Derive payment date from exercise date using the lag, calendar and convention.
     paymentDate_ = paymentCalendar.advance(expiryDate, paymentLag * QuantLib::Days, paymentConvention);
 
@@ -117,10 +127,12 @@ void CashSettledEuropeanOption::setupArguments(PricingEngine::arguments* args) c
 }
 
 void CashSettledEuropeanOption::exercise(Real priceAtExercise) {
-    if (!exercised_) {
-        exercised_ = true;
-        QL_REQUIRE(priceAtExercise != Null<Real>(), "Cannot exercise with a null price.");
-    }
+    QL_REQUIRE(priceAtExercise != Null<Real>(), "Cannot exercise with a null price.");
+    QL_REQUIRE(Settings::instance().evaluationDate() >= exercise_->lastDate(), "European option cannot be " <<
+        "exercised before expiry date. Valuation date " << iso_date(Settings::instance().evaluationDate()) <<
+        " is before expiry date " << iso_date(exercise_->lastDate()) << ".");
+    exercised_ = true;
+    priceAtExercise_ = priceAtExercise;
 }
 
 const Date& CashSettledEuropeanOption::paymentDate() const {
