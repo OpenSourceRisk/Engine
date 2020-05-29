@@ -42,6 +42,7 @@ using QuantLib::Real;
 */
 class InstrumentWrapper {
 public:
+    InstrumentWrapper() : multiplier_(1.0) {}
     InstrumentWrapper(const boost::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier = 1.0,
                       const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
                           std::vector<boost::shared_ptr<QuantLib::Instrument>>(),
@@ -91,7 +92,9 @@ public:
     /*! The multiplier */
     const Real& multiplier() const { return multiplier_; }
     /*! additional instruments */
-    const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments() const { return additionalInstruments_; }
+    const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments() const {
+        return additionalInstruments_;
+    }
     /*! mutlipliers for additional instruments */
     const std::vector<Real>& additionalMultipliers() const { return additionalMultipliers_; }
     //@}
