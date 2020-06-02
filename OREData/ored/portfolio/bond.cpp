@@ -155,7 +155,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Date issueDate = parseDate(bondData_.issueDate());
     Calendar calendar = parseCalendar(bondData_.calendar());
-    Natural settlementDays = boost::lexical_cast<Natural>(bondData_.settlementDays());
+    QL_REQUIRE(!bondData_.settlementDays().empty(), "no bond settlement days given");
+    Natural settlementDays = parseInteger(bondData_.settlementDays());
     boost::shared_ptr<QuantLib::Bond> bond;
 
     Real mult = bondData_.bondNotional() * (bondData_.isPayer() ? -1.0 : 1.0);
