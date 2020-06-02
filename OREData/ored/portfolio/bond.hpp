@@ -134,7 +134,7 @@ public:
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
     //! inspectors
-    const BondData bondData() const { return bondData_; }
+    const BondData& bondData() const { return bondData_; }
     // FIXME can we remove the following inspectors and use bondData().XXX() instead?
     const string& currency() const { return bondData_.currency(); }
     const string& creditCurveId() const { return bondData_.creditCurveId(); }
