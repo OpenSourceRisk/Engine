@@ -1,8 +1,31 @@
 \subsubsection{Bond}
 \label{ss:bond}
 
-A vanilla Bond is set up using a {\tt BondData} block as shown in listing \ref{lst:bonddata}. The bond specific elements
-are
+A vanilla Bond is set up using a {\tt BondData} block as shown in listing \ref{lst:bonddata_refdata}. The details of the
+bond are read from the reference data in this case using the SecurityId as a key. The bond trade is fully specified by
+
+\begin{itemize}
+\item SecurityId: The id identifying the bond\\
+  Allowable Values: each valid bond identifier, usually this is of the form \verb+ISIN:XXNNNNNNNNNN+
+\item BondNotional: The bond notional, i.e. the number of bonds held\\
+  Allowable Values: a real number
+\end{itemize}
+
+in this case.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <BondData>
+      <SecurityId>ISIN:XS0982710740</SecurityId>
+      <BondNotional>100000000.0</BondNotional>
+    </BondData>
+\end{minted}
+\caption{Bond Data}
+\label{lst:bonddata_refdata}
+\end{listing}
+
+The bond details can also be inlined in the trade as shown in listing \ref{lst:bonddata}. The bond specific elements are
 
 \begin{itemize}
 \item IssuerId: A unique identifier for the issuer of the bond.
@@ -26,7 +49,7 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
     <BondData>
         <IssuerId>CPTY_C</IssuerId>
         <CreditCurveId>ISIN:XS0982710740</CreditCurveId>
-        <SecurityId>SECURITY_1</SecurityId>
+        <SecurityId>ISIN:XS0982710740</SecurityId>
         <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
