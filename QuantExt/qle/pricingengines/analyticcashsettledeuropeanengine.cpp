@@ -111,7 +111,7 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         // Populate this engine's results using the results from the underlying engine.
         const CashSettledEuropeanOption::results* underlyingResults = 
             dynamic_cast<const CashSettledEuropeanOption::results*>(underlyingEngine_.getResults());
-        QL_REQUIRE(underlyingArgs, "Underlying engine expected to have compatible results.");
+        QL_REQUIRE(underlyingResults, "Underlying engine expected to have compatible results.");
 
         results_.value = df_te_tp * underlyingResults->value;
         results_.delta = df_te_tp * underlyingResults->delta;
