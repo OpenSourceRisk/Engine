@@ -1533,6 +1533,7 @@ private:
         ar& ccy_;
         ar& expiry_;
         ar& strike_;
+        ar& isCall_;
     }
 };
 

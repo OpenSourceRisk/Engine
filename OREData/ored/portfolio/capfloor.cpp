@@ -115,7 +115,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // For the cases where we don't have regular cap / floor support we treat the index approximately as an Ibor index
             // and build an QuantLib::CapFloor with associated pricing engine. These cases comprise:
             // - BMA coupons
-            // - Ibor coupons with sub periods (hasSubPeriods = false)
+            // - Ibor coupons with sub periods (hasSubPeriods = true)
             // - averaged ON coupons (isAveraged = true)
             ALOG("CapFloor trade " << id()
                                    << " on a) BMA or b) sub periods Ibor or c) averaged ON underlying (index = '"
