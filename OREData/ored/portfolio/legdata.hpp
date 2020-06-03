@@ -47,6 +47,7 @@ using std::string;
 
 class EngineFactory;
 class Market;
+class RequiredFixings;
 
 //! Serializable Additional Leg Data
 /*!
@@ -843,7 +844,7 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 
 // apply indexing (if given in LegData) to existing leg
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                   std::map<std::string, std::string>& qlToOREIndexNames);
+                   std::map<std::string, std::string>& qlToOREIndexNames, RequiredFixings& requiredFixings);
 
 // template implementations
 
@@ -923,7 +924,8 @@ class BondData;
 boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
                                                       const bool relative, const Calendar& fixingCalendar,
                                                       const bool conditionalOnSurvival,
-                                                      const boost::shared_ptr<EngineFactory>& engineFactory);
+                                                      const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                      RequiredFixings& requiredFixings);
 
 // join a vector of legs to a single leg, check if the legs have adjacent periods
 Leg joinLegs(const std::vector<Leg>& legs);

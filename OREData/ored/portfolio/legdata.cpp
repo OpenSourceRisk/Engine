@@ -1685,7 +1685,7 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 }
 
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                   std::map<std::string, std::string>& qlToOREIndexNames) {
+                   std::map<std::string, std::string>& qlToOREIndexNames, RequiredFixings& requiredFixings) {
     for (auto const& indexing : data.indexing()) {
         if (indexing.hasData()) {
             DLOG("apply indexing (index='" << indexing.index() << "') to leg of type " << data.legType());
@@ -1716,10 +1716,11 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                     parseCommodityIndex(indexing.index(), tmp->fixingCalendar(),
                                         engineFactory->market()->commodityPriceCurve(tmp->underlyingName(), config));
             } else if(boost::starts_with(indexing.index(),"BOND-")) {
+                // if we build a bond index, we add the required fixings for the bond underlying
                 BondData bondData(parseBondIndex(indexing.index())->securityName(), 1.0);
                 index = buildBondIndex(bondData, indexing.indexIsDirty(), indexing.indexIsRelative(),
                                        parseCalendar(indexing.indexFixingCalendar()),
-                                       indexing.indexIsConditionalOnSurvival(), engineFactory);
+                                       indexing.indexIsConditionalOnSurvival(), engineFactory, requiredFixings);
             } else {
                 QL_FAIL("invalid index '" << indexing.index()
                                           << "' in indexing data, expected EQ-, FX-, COMM-, BOND- index");
@@ -1794,7 +1795,8 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
 boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
                                                       const bool relative, const Calendar& fixingCalendar,
                                                       const bool conditionalOnSurvival,
-                                                      const boost::shared_ptr<EngineFactory>& engineFactory) {
+                                                      const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                      RequiredFixings& requiredFixings) {
 
     // build the bond, we would not need a full build with a pricing engine attached, but this is the easiest
 
@@ -1802,6 +1804,14 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
     data.populateFromBondReferenceData(engineFactory->referenceData());
     Bond bond(Envelope(), data);
     bond.build(engineFactory);
+
+    RequiredFixings bondRequiredFixings = bond.requiredFixings();
+    if(dirty) {
+        // dirty prices require accrueds on past dates
+        bondRequiredFixings.unsetPayDates();
+    }
+    requiredFixings.addData(bondRequiredFixings);
+
     auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
     QL_REQUIRE(qlBond, "buildBondIndex(): could not cast to QuantLib::Bond, this is unexpected");
 
