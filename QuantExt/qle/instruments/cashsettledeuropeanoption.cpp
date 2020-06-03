@@ -115,7 +115,7 @@ void CashSettledEuropeanOption::setupArguments(PricingEngine::arguments* args) c
     CashSettledEuropeanOption::arguments* arguments = dynamic_cast<CashSettledEuropeanOption::arguments*>(args);
     
     // We have a VanillaOption engine that will ignore the deferred payment.
-    if (arguments)
+    if (!arguments)
         return;
     
     // Set up the arguments specific to cash settled european option.
