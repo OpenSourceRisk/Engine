@@ -88,6 +88,7 @@ public:
         string issueDate;
         string creditCurveId;
         string referenceCurveId;
+        string proxySecurityId;
         string incomeCurveId;
         string volatilityCurveId;
         std::vector<LegData> legData;

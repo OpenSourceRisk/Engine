@@ -11,9 +11,9 @@ namespace data {
 
 void populateFromBondReferenceData(std::string& issuerId, std::string& settlementDays, std::string& calendar,
                                    std::string& issueDate, std::string& creditCurveId, std::string& referenceCurveId,
-                                   std::string& incomeCurveId, std::string& volatilityCurveId,
-                                   std::vector<LegData>& coupons, const std::string& name,
-                                   const boost::shared_ptr<BondReferenceDatum>& bondRefData) {
+                                   std::string& proxySecurityId, std::string& incomeCurveId,
+                                   std::string& volatilityCurveId, std::vector<LegData>& coupons,
+                                   const std::string& name, const boost::shared_ptr<BondReferenceDatum>& bondRefData) {
     QL_REQUIRE(bondRefData, "populateFromBondReferenceData(): empty bond reference datum given");
     if (issuerId.empty())
         issuerId = bondRefData->bondData().issuerId;
@@ -27,6 +27,8 @@ void populateFromBondReferenceData(std::string& issuerId, std::string& settlemen
         creditCurveId = bondRefData->bondData().creditCurveId;
     if (referenceCurveId.empty())
         referenceCurveId = bondRefData->bondData().referenceCurveId;
+    if (proxySecurityId.empty())
+        proxySecurityId = bondRefData->bondData().proxySecurityId;
     if (incomeCurveId.empty())
         incomeCurveId = bondRefData->bondData().incomeCurveId;
     if (volatilityCurveId.empty())

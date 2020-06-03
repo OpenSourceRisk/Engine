@@ -49,6 +49,7 @@ ReferenceDatumRegister<ReferenceDatumBuilder<BondReferenceDatum>> BondReferenceD
      issueDate = XMLUtils::getChildValue(node, "IssueDate", true);
      creditCurveId = XMLUtils::getChildValue(node, "CreditCurveId", false);
      referenceCurveId = XMLUtils::getChildValue(node, "ReferenceCurveId", true);
+     proxySecurityId = XMLUtils::getChildValue(node, "ProxySecurityId", false);
      incomeCurveId = XMLUtils::getChildValue(node, "IncomeCurveId", false);
      volatilityCurveId = XMLUtils::getChildValue(node, "VolatilityCurveId", false);
 
@@ -70,6 +71,7 @@ XMLNode* BondReferenceDatum::BondData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "IssueDate", issuerId);
     XMLUtils::addChild(doc, node, "CreditCurveId", issuerId);
     XMLUtils::addChild(doc, node, "ReferenceCurveId", issuerId);
+    XMLUtils::addChild(doc, node, "ProxySecurityId", proxySecurityId);
     XMLUtils::addChild(doc, node, "VolatilityCurveId", volatilityCurveId);
     for (auto& bd : legData)
         XMLUtils::appendNode(node, bd.toXML(doc));
