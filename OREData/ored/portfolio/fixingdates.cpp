@@ -125,6 +125,28 @@ void RequiredFixings::addData(const RequiredFixings& requiredFixings) {
                                     requiredFixings.yoyInflationFixingDates_.end());
 }
 
+void RequiredFixings::unsetPayDates() {
+    // we can't modify the elements of a set directly, need to make a copy and reassign
+    std::set<FixingEntry> newFixingDates;
+    std::set<ZeroInflationFixingEntry> newZeroInflationFixingDates;
+    std::set<InflationFixingEntry> newYoYInflationFixingDates;
+    for (auto f : fixingDates_) {
+        std::get<2>(f) = Date::maxDate();
+        newFixingDates.insert(f);
+    }
+    for (auto f : zeroInflationFixingDates_) {
+        std::get<2>(std::get<0>(std::get<0>(f))) = Date::maxDate();
+        newZeroInflationFixingDates.insert(f);
+    }
+    for (auto f : yoyInflationFixingDates_) {
+        std::get<2>(std::get<0>(f)) = Date::maxDate();
+        newYoYInflationFixingDates.insert(f);
+    }
+    fixingDates_ = newFixingDates;
+    zeroInflationFixingDates_ = newZeroInflationFixingDates;
+    yoyInflationFixingDates_ = newYoYInflationFixingDates;
+}
+
 std::map<std::string, std::set<Date>> RequiredFixings::fixingDatesIndices(const Date& settlementDate) const {
 
     // If settlement date is an empty date, update to evaluation date.

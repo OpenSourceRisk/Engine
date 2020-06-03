@@ -118,6 +118,11 @@ public:
     /*! add data from another RequiredFixings instance */
     void addData(const RequiredFixings& requiredFixings);
 
+    /*! Set all pay dates to Date::maxDate(), fixingDatesIndices() will then not filter the required fixings by the given
+      settlement date any more. Needed by total return swaps on bonds for example, where a cashflow in a bond with past
+      payment date can still be relevant for the payment of the current return period. */
+    void unsetPayDates();
+
 private:
     // FixingEntry = indexName, fixingDate, payDate, alwaysAddIfPaysOnSettlement
     using FixingEntry = std::tuple<std::string, QuantLib::Date, QuantLib::Date, bool>;
