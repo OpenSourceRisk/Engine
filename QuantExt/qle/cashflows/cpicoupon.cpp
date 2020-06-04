@@ -138,7 +138,7 @@ void CappedFlooredCPICoupon::accept(AcyclicVisitor& v) {
 CappedFlooredCPICashFlow::CappedFlooredCPICashFlow(const ext::shared_ptr<CPICashFlow>& underlying, Date startDate,
                                                    Period observationLag, Rate cap, Rate floor)
     : CPICashFlow(underlying->notional(), boost::dynamic_pointer_cast<ZeroInflationIndex>(underlying->index()),
-                  startDate_, underlying->baseFixing(), underlying->fixingDate(), underlying->date(),
+                  startDate - observationLag, underlying->baseFixing(), underlying->fixingDate(), underlying->date(),
                   underlying->growthOnly(), underlying->interpolation(), underlying->frequency()),
       underlying_(underlying), startDate_(startDate), observationLag_(observationLag), isFloored_(false),
       isCapped_(false) {
@@ -382,7 +382,7 @@ CPILeg::operator Leg() const {
     Date fixingDate = paymentDate - observationLag_;
 
     ext::shared_ptr<CPICashFlow> xnl = ext::make_shared<CPICashFlow>(
-        detail::get(notionals_, n, 0.0), index_, startDate_, baseCPI_, fixingDate, paymentDate,
+        detail::get(notionals_, n, 0.0), index_, startDate_ - observationLag_, baseCPI_, fixingDate, paymentDate,
         subtractInflationNominal_, observationInterpolation_, index_->frequency());
 
     if (caps_.size() == 0 && floors_.size() == 0) {
