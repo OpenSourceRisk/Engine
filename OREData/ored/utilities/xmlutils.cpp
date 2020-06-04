@@ -580,14 +580,20 @@ vector<T> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent, const strin
 
 template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
                                     const vector<string>& values);
+// throws a warning currently, but that is ok, see the FIXME above in template <> void XMLUtils::addChildren(...)
 template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
                                     const vector<double>& values);
+template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
+                                    const vector<bool>& values);
 
 template void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, const string& names,
                                                   const string& name, const vector<string>& values,
                                                   const string& attrName, const vector<string>& attrs);
 template void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, const string& names,
                                                   const string& name, const vector<double>& values,
+                                                  const string& attrName, const vector<string>& attrs);
+template void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, const string& names,
+                                                  const string& name, const vector<bool>& values,
                                                   const string& attrName, const vector<string>& attrs);
 
 template void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, const string& names,
@@ -595,6 +601,9 @@ template void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* par
                                                   const vector<string>& attrNames, const vector<vector<string>>& attrs);
 template void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, const string& names,
                                                   const string& name, const vector<double>& values,
+                                                  const vector<string>& attrNames, const vector<vector<string>>& attrs);
+template void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, const string& names,
+                                                  const string& name, const vector<bool>& values,
                                                   const vector<string>& attrNames, const vector<vector<string>>& attrs);
 
 template void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names,
@@ -602,6 +611,9 @@ template void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLN
                                                           const string& attrName, const vector<string>& attrs);
 template void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names,
                                                           const string& name, const vector<double>& values,
+                                                          const string& attrName, const vector<string>& attrs);
+template void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names,
+                                                          const string& name, const vector<bool>& values,
                                                           const string& attrName, const vector<string>& attrs);
 
 template void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names,
@@ -610,6 +622,10 @@ template void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLN
                                                           const vector<vector<string>>& attrs);
 template void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names,
                                                           const string& name, const vector<double>& values,
+                                                          const vector<string>& attrNames,
+                                                          const vector<vector<string>>& attrs);
+template void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names,
+                                                          const string& name, const vector<bool>& values,
                                                           const vector<string>& attrNames,
                                                           const vector<vector<string>>& attrs);
 
@@ -623,5 +639,10 @@ template vector<double> XMLUtils::getChildrenValuesWithAttributes(XMLNode* paren
                                                                   const string& name, const string& attrName,
                                                                   vector<string>& attrs,
                                                                   std::function<double(string)> parser, bool mandatory);
+template vector<bool> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent, const string& names,
+                                                                const string& name, const string& attrName,
+                                                                vector<string>& attrs,
+                                                                std::function<bool(string)> parser, bool mandatory);
+
 } // namespace data
 } // namespace ore

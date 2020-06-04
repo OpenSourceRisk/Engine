@@ -23,6 +23,7 @@
 #pragma once
 
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/trade.hpp>
 
 namespace ore {
@@ -74,6 +75,7 @@ public:
     const string& creditCurveId() const { return creditCurveId_; }
     const string& securityId() const { return securityId_; }
     const string& referenceCurveId() const { return referenceCurveId_; }
+    const string& proxySecurityId() const { return proxySecurityId_; }
     const string& incomeCurveId() const { return incomeCurveId_; }
     const string& volatilityCurveId() const { return volatilityCurveId_; }
     const string& settlementDays() const { return settlementDays_; }
@@ -88,11 +90,16 @@ public:
     Real faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
 
+    //! returns effective security id (if proxy is given, this is returned, otherwise the original id)
+    const string& effectiveSecurityId() const { return proxySecurityId_.empty() ? securityId_ : proxySecurityId_; }
+
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
 
-    //! populate data from reference data
+    //! populate data from reference datum
+    void populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum);
+    //! look up reference datum in ref data manager and populate
     void populateFromBondReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData);
 
 private:
@@ -101,6 +108,7 @@ private:
     string creditCurveId_;
     string securityId_;
     string referenceCurveId_;
+    string proxySecurityId_;
     string incomeCurveId_;     // only used for bond derivatives
     string volatilityCurveId_; // only used for bond derivatives
     string settlementDays_;
@@ -131,7 +139,7 @@ public:
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
     //! inspectors
-    const BondData bondData() const { return bondData_; }
+    const BondData& bondData() const { return bondData_; }
     // FIXME can we remove the following inspectors and use bondData().XXX() instead?
     const string& currency() const { return bondData_.currency(); }
     const string& creditCurveId() const { return bondData_.creditCurveId(); }

@@ -1,8 +1,31 @@
 \subsubsection{Bond}
 \label{ss:bond}
 
-A vanilla Bond is set up using a {\tt BondData} block as shown in listing \ref{lst:bonddata}. The bond specific elements
-are
+A vanilla Bond is set up using a {\tt BondData} block as shown in listing \ref{lst:bonddata_refdata}. The details of the
+bond are read from the reference data in this case using the SecurityId as a key. The bond trade is fully specified by
+
+\begin{itemize}
+\item SecurityId: The id identifying the bond\\
+  Allowable Values: each valid bond identifier, usually this is of the form \verb+ISIN:XXNNNNNNNNNN+
+\item BondNotional: The bond notional, i.e. the number of bonds held\\
+  Allowable Values: a real number
+\end{itemize}
+
+in this case.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <BondData>
+      <SecurityId>ISIN:XS0982710740</SecurityId>
+      <BondNotional>100000000.0</BondNotional>
+    </BondData>
+\end{minted}
+\caption{Bond Data}
+\label{lst:bonddata_refdata}
+\end{listing}
+
+The bond details can also be inlined in the trade as shown in listing \ref{lst:bonddata}. The bond specific elements are
 
 \begin{itemize}
 \item IssuerId: A unique identifier for the issuer of the bond.
@@ -12,6 +35,11 @@ are
 %via the default curves block in {\tt  todaysmarket.xml}
 % \item LGD (optional): If given, this LGD is used for pricing, overriding the default LGD of the default curve
 \item SecurityId: A unique identifier for the security, this defines the security specific spread to be used for pricing.
+\item ProxySecurityId [Optional]: Only applicable to exotic bonds, which have the BondData block embedded as one of the
+  components typically. An identifier of a proxy security. If given, the security curve configuration, i.e. the security
+  spread and recovery rate of the proxy security will be used for the pricing of the exotic bond. Typically the ISIN of
+  a liquid vanilla bond of the same issuer and with comparable maturity as the convertible bond. The proxy security must
+  be a vanilla bond.
 \item ReferenceCurveId: The benchmark curve to be used for pricing, this must match a name of a yield curve or an index curve in the market data configuration.
 \item SettlementDays: The settlement delay applicable to the security.
 \item Calendar: The calendar associated to the settlement lag.
@@ -26,7 +54,8 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
     <BondData>
         <IssuerId>CPTY_C</IssuerId>
         <CreditCurveId>ISIN:XS0982710740</CreditCurveId>
-        <SecurityId>SECURITY_1</SecurityId>
+        <SecurityId>ISIN:XS0982710740</SecurityId>
+        <ProxySecurityId>ISIN:XS2000000000</ProxySecurityId>
         <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>

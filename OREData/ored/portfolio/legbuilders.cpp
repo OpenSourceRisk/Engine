@@ -29,7 +29,7 @@ Leg FixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engin
                               RequiredFixings& requiredFixings, const string& configuration) const {
     Leg leg =  makeFixedLeg(data);
     std::map<std::string, std::string> qlToOREIndexNames;
-    applyIndexing(leg, data, engineFactory, qlToOREIndexNames);
+    applyIndexing(leg, data, engineFactory, qlToOREIndexNames, requiredFixings);
     addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
     return leg;
 }
@@ -57,7 +57,7 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
             result = makeIborLeg(data, index, engineFactory);
     }
     std::map<std::string, std::string> qlToOREIndexNames;
-    applyIndexing(result, data, engineFactory, qlToOREIndexNames);
+    applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
     qlToOREIndexNames[index->name()] = indexName;
     addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
     return result;
@@ -100,7 +100,7 @@ Leg CMSLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineF
     auto index = *engineFactory->market()->swapIndex(swapIndexName, configuration);
     Leg result = makeCMSLeg(data, index, engineFactory);
     std::map<std::string, std::string> qlToOREIndexNames;
-    applyIndexing(result, data, engineFactory, qlToOREIndexNames);
+    applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
     qlToOREIndexNames[index->name()] = swapIndexName;
     addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
     return result;
@@ -117,7 +117,7 @@ Leg CMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<E
                                       "CMSSpread_" + index1->familyName() + "_" + index2->familyName(), index1, index2),
                                   engineFactory);
     std::map<std::string, std::string> qlToOREIndexNames;
-    applyIndexing(result, data, engineFactory, qlToOREIndexNames);
+    applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
     qlToOREIndexNames[index1->name()] = cmsSpreadData->swapIndex1();
     qlToOREIndexNames[index2->name()] = cmsSpreadData->swapIndex2();
     addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
@@ -141,7 +141,7 @@ Leg DigitalCMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::share
                                     "CMSSpread_" + index1->familyName() + "_" + index2->familyName(), index1, index2),
                                 engineFactory);
     std::map<std::string, std::string> qlToOREIndexNames;
-    applyIndexing(result, data, engineFactory, qlToOREIndexNames);
+    applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
     qlToOREIndexNames[index1->name()] = cmsSpreadData->swapIndex1();
     qlToOREIndexNames[index2->name()] = cmsSpreadData->swapIndex2();
     addToRequiredFixings(result,
