@@ -191,7 +191,7 @@ LegDataRegister<CPILegData> CPILegData::reg_("CPI");
 void CPILegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     index_ = XMLUtils::getChildValue(node, "Index", true);
-    startDate_ = XMLUtils::getChildValue(node, "StartDate", true);
+    startDate_ = XMLUtils::getChildValue(node, "StartDate", false);
     indices_.insert(index_);
     baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI", true);
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
@@ -1092,7 +1092,6 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     CPI::InterpolationType interpolationMethod = parseObservationInterpolation(cpiLegData->interpolation());
     vector<double> rates = buildScheduledVector(cpiLegData->rates(), cpiLegData->rateDates(), schedule);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    Date startDate = parseDate(cpiLegData->startDate());
 
     applyAmortization(notionals, data, schedule, false);
 
@@ -1105,12 +1104,24 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
                                   .withObservationInterpolation(interpolationMethod)
                                   .withSubtractInflationNominal(cpiLegData->subtractInflationNominal());
 
+    // the cpi leg uses the first schedule date as the start date, which only makes sense if there are at least
+    // two dates in the schedule, otherwise the only date in the schedule is the pay date of the cf and a a separate
+    // start date is expected; if both the separate start date and a schedule with more than one date is given
+    if (schedule.size() < 2) {
+        QL_REQUIRE(!cpiLegData->startDate().empty(),
+                   "makeCPILeg(): if only one schedule date is given, a StartDate must be given in addition");
+        cpiLeg.withStartDate(parseDate(cpiLegData->startDate()));
+    } else {
+        QL_REQUIRE(cpiLegData->startDate().empty() || parseDate(cpiLegData->startDate()) == schedule.dates().front(),
+                   "makeCPILeg(): first schedule date ("
+                       << schedule.dates().front() << ") must be identical to start date ("
+                       << parseDate(cpiLegData->startDate())
+                       << "), the start date can be omitted for schedules containing more than one date");
+    }
+
     bool couponCap = cpiLegData->caps().size() > 0;
     bool couponFloor = cpiLegData->floors().size() > 0;
     bool couponCapFloor = cpiLegData->caps().size() > 0 || cpiLegData->floors().size() > 0;
-
-    if (couponCapFloor)
-        cpiLeg.withStartDate(startDate);
 
     if (couponCap)
         cpiLeg.withCaps(buildScheduledVector(cpiLegData->caps(), cpiLegData->capDates(), schedule));
