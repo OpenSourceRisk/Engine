@@ -133,6 +133,7 @@ void CashSettledEuropeanOption::exercise(Real priceAtExercise) {
         " is before expiry date " << iso_date(exercise_->lastDate()) << ".");
     exercised_ = true;
     priceAtExercise_ = priceAtExercise;
+    update();
 }
 
 const Date& CashSettledEuropeanOption::paymentDate() const {
