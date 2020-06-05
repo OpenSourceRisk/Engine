@@ -65,6 +65,7 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
             // If we have manually exercised, we base the payoff on the value at exercise.
             QL_REQUIRE(arguments_.priceAtExercise != Null<Real>(), "Expect a valid price at exercise when option " <<
                 "has been manually exercised.");
+            payoffAmount = (*arguments_.payoff)(arguments_.priceAtExercise);
         }
 
         // Discount factor to payment date.
