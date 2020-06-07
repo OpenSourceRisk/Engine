@@ -84,14 +84,19 @@ example of an Floating leg indexed by both an equity price and a FX rate.
 The Indexings node contains the following elements:
 
 \begin{itemize}
-\item FromAssetLeg [Optional]: If \emph{true} and the trade type supports this (e.g. equity swap) the trade
-  builder will add \verb+Indexing+ blocks automatically reflecting the necessary indexings (equity price and FX in the
-  case of an equity swap) from the notional reset feature of the asset leg. Also, the Notionals node of the leg will be
-  set to a single notional $1$.
+\item \lstinline!FromAssetLeg! [Optional]: If \emph{true}, and the trade type supports this, the notionals on the funding leg (i.e. the leg with the \lstinline!FromAssetLeg! field) will be derived from the respective asset leg.  Internally, the trade builder will add \verb+Indexing+ blocks automatically reflecting the necessary indexings (equity price and FX in the  case of an equity swap) from the notional reset feature of the asset leg. Also, the Notionals node of the funding leg will internally be set to a single notional $1$.  The actual Notionals node in the XML on the funding leg is not required and can be omitted. 
+  
+\lstinline!FromAssetLeg! is supported for the following trade types:
+
+\begin{itemize}
+\item \lstinline!EquitySwap!: Setting \lstinline!FromAssetLeg! to \emph{true}, aligns the notionals for all return periods on the non-equity funding leg, to the equity leg by deriving equity price, quantity and FX from the equity leg. \\ Note that \lstinline!FromAssetLeg! is only supported for equity swaps where \lstinline!NotionalReset! is \emph{true} on the equity leg - \lstinline!FromAssetLeg!  is ignored otherwise.
+\item \lstinline!BondTRS!: Setting \lstinline!FromAssetLeg! to \emph{true}, aligns the notionals for all return periods on the funding leg (in the \lstinline!FundingData! block), to the total return leg (in the \lstinline!TotalReturnData! block) by deriving bond price, bond notional and FX from the total return leg, bond data and the reference bond. 
+\end{itemize}
+
   
     Allowable values: \emph{true}, \emph{false}. Defaults to \emph{false} if left blank or omitted. 
   
-\item Indexing [Optional, an arbitrary number can be given]: Each Indexing node describes one indexing as follows:
+\item \lstinline!Indexing! [Optional, an arbitrary number can be given]: Each Indexing node describes one indexing as follows:
 
 \begin{itemize}
 
@@ -114,7 +119,7 @@ The Indexings node contains the following elements:
 
 \item IndexFixingDays [Optional]: fixing days of the index, this is only used for FX indices
 
-  Allowable values: Non-negative whole number. Defaults to \emph{0} if left blank or omitted.
+  Allowable values: Non-negative whole numbers. Defaults to \emph{0} if left blank or omitted.
 
 \item IndexFixingCalendar [Optional]: Fixing calendar of the index, this is only used for FX indices and Bond indices
 
