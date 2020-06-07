@@ -1855,7 +1855,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         DLOG("Writing securities");
         XMLNode* secNode = XMLUtils::addChild(doc, marketNode, "Securities");
         XMLUtils::addChild(doc, secNode, "Simulate", securitySpreadsSimulate());
-        XMLUtils::addChildren(doc, secNode, "Securities", "Security", securities());
+        XMLUtils::addChildren(doc, secNode, "Names", "Name", securities());
     }
 
     // cprs
