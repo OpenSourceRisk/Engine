@@ -58,11 +58,12 @@ Allowable values: A valid bond identifier, typically the ISIN of the reference b
 \item ReferenceCurveId: The benchmark curve to be used for pricing. This is typically the main ibor index for the currency of the bond, and if no ibor index is available for the currency in question, a currency-specific benchmark curve can be used.
 
 Allowable values: 
-For currencies with available ibor indices:
+For currencies with available ibor indices: \\
 An alphanumeric string of the form [CCY]-[INDEX]-[TERM]. CCY, INDEX and TERM must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TERM must be an integer followed by D, W, M or Y. See Table \ref{tab:indices}. 
 
-For currencies without available ibor indices: 
+For currencies without available ibor indices:  \\
 An alphanumeric string of the form [CCY]BENCHMARK-[CCY]-TERM, matching a benchmark curve set up in the market data configuration.
+
 Examples: IDRBENCHMARK-IDR-3M, EGPBENCHMARK-EGP-3M, UAHBENCHMARK-UAH-3M, NGNBENCHMARK-NGN-3M
  
 \item SettlementDays: The settlement lag in number of business days applicable to the security.
