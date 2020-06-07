@@ -25,9 +25,9 @@ Allowable values:  See \lstinline!Inflation CPI Index! in Table \ref{tab:cpiinde
 
 Allowable values:  Any positive real number.
 
-\item StartDate: The start date needs to be provided here, because the payment
-  schedule can be given by a sequence of dates, possibly only a single
-  date, in which case the start date remains unspecified.
+\item StartDate [Optional]: The start date needs to be provided in case the schedule comprises only a single date. If
+  the schedule has at least two dates and a start date is given at the same time, the first schedule date must be
+  identical to the start date.
   
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}. 
 
