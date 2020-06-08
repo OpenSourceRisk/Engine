@@ -30,6 +30,7 @@ using QuantLib::Null;
 using QuantLib::PricingEngine;
 using QuantLib::YieldTermStructure;
 using QuantLib::Real;
+using QuantLib::Settings;
 using QuantLib::Time;
 using QuantLib::VanillaOption;
 
@@ -52,7 +53,8 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
     // Option expiry date.
     Date expiryDate = arguments_.exercise->lastDate();
     
-    if (simple_event(expiryDate).hasOccurred()) {
+    Date today = Settings::instance().evaluationDate();
+    if (expiryDate <= today) {
         
         // If expiry has occurred, we attempt to establish the payoff amount, if any, and discount it.
         Real payoffAmount = 0.0;
@@ -66,6 +68,9 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
             QL_REQUIRE(arguments_.priceAtExercise != Null<Real>(), "Expect a valid price at exercise when option " <<
                 "has been manually exercised.");
             payoffAmount = (*arguments_.payoff)(arguments_.priceAtExercise);
+        } else if (expiryDate == today) {
+            // Expiry date is today, not automatic exercise and hasn't been manually exercised - use spot.
+            payoffAmount = (*arguments_.payoff)(bsp_->x0());
         }
 
         // Discount factor to payment date.
