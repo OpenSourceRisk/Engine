@@ -89,6 +89,9 @@ private:
     boost::shared_ptr<QuantLib::Index> underlying_;
     bool exercised_;
     QuantLib::Real priceAtExercise_;
+
+    //! Shared initialisation
+    void init(bool exercised, QuantLib::Real priceAtExercise);
 };
 
 class CashSettledEuropeanOption::arguments : public QuantLib::VanillaOption::arguments {

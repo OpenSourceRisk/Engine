@@ -75,8 +75,7 @@ CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type,
         automaticExercise_(automaticExercise), underlying_(underlying), exercised_(false),
         priceAtExercise_(Null<Real>()) {
 
-    if (exercised)
-        exercise(priceAtExercise);
+    init(exercised, priceAtExercise);
     
     check(exercise_->lastDate(), paymentDate_, automaticExercise_, underlying_, exercised_, priceAtExercise_);
 }
@@ -95,13 +94,20 @@ CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type,
         boost::make_shared<EuropeanExercise>(expiryDate)), automaticExercise_(automaticExercise),
         underlying_(underlying), exercised_(false), priceAtExercise_(Null<Real>()) {
     
-    if (exercised)
-        exercise(priceAtExercise);
+    init(exercised, priceAtExercise);
 
     // Derive payment date from exercise date using the lag, calendar and convention.
     paymentDate_ = paymentCalendar.advance(expiryDate, paymentLag * QuantLib::Days, paymentConvention);
 
     check(exercise_->lastDate(), paymentDate_, automaticExercise_, underlying_, exercised_, priceAtExercise_);
+}
+
+void CashSettledEuropeanOption::init(bool exercised, Real priceAtExercise) {
+    if (exercised)
+        exercise(priceAtExercise);
+
+    if (automaticExercise_ && underlying_)
+        registerWith(underlying_);
 }
 
 bool CashSettledEuropeanOption::isExpired() const {
