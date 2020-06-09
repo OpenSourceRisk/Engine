@@ -17,8 +17,8 @@
 */
 
 /*! \file portfolio/builders/cpicapfloor.hpp
-    \brief
-    \ingroup builders
+  \brief builder that returns an engine to price a CPI cap or floor
+  \ingroup builders
 */
 
 #pragma once

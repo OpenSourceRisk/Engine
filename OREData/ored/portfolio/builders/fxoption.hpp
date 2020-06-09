@@ -17,7 +17,7 @@
 */
 
 /*! \file portfolio/builders/fxoption.hpp
-    \brief
+    \brief Engine builder for FX Options
     \ingroup builders
 */
 

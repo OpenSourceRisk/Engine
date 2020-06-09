@@ -17,7 +17,7 @@
 */
 
 /*! \file portfolio/builders/fxforward.hpp
-    \brief
+    \brief Engine builder for FX Forwards
     \ingroup builders
 */
 
