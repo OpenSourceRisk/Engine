@@ -97,7 +97,29 @@
       </xs:sequence>
     </xs:choice>
   </xs:complexType>
-
+  
+  <xs:complexType name="optionPaymentData">
+    <xs:choice>
+      <xs:element name="Dates">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="date" name="Date" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Rules">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:nonNegativeInteger" name="Lag"/>
+            <xs:element type="calendar" name="Calendar"/>
+            <xs:element type="businessDayConvention" name="Convention"/>
+            <xs:element type="optionPayRelativeTo" name="RelativeTo" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:complexType>
+  
   <xs:complexType name="optionData">
     <xs:all>
       <xs:element type="xs:string" name="LongShort"/>
@@ -140,6 +162,8 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element type="bool" name="AutomaticExercise" minOccurs="0"/>
+      <xs:element type="optionPaymentData" name="PaymentData" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 

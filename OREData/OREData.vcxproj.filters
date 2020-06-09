@@ -504,6 +504,9 @@
     <ClInclude Include="ored\utilities\marketdata.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\optionpaymentdata.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -886,6 +889,9 @@
     </ClCompile>
     <ClCompile Include="ored\utilities\marketdata.cpp">
       <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\optionpaymentdata.cpp">
+      <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

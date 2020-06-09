@@ -98,6 +98,7 @@ portfolio/legdatafactory.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetmanager.cpp
 portfolio/optiondata.cpp
+portfolio/optionpaymentdata.cpp
 portfolio/optionwrapper.cpp
 portfolio/portfolio.cpp
 portfolio/referencedata.cpp
@@ -254,6 +255,7 @@ portfolio/legdatafactory.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetmanager.hpp
 portfolio/optiondata.hpp
+portfolio/optionpaymentdata.hpp
 portfolio/optionwrapper.hpp
 portfolio/portfolio.hpp
 portfolio/referencedata.hpp
