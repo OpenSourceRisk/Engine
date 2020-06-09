@@ -248,6 +248,10 @@
       <xs:enumeration value="OldCDS"/>
       <xs:enumeration value="CDS"/>
       <xs:enumeration value="CDS2015"/>
+      <xs:enumeration value="ThirdThursday"/>
+      <xs:enumeration value="ThirdFriday"/>
+      <xs:enumeration value="MondayAfterThirdFriday"/>
+      <xs:enumeration value="TuesdayAfterThirdFriday"/>
     </xs:restriction>
   </xs:simpleType>
 
