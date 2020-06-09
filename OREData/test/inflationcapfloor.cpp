@@ -70,7 +70,7 @@ public:
             Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100)));
             boost::shared_ptr<YoYInflationTraits::helper> anInstrument =
                 boost::make_shared<YearOnYearInflationSwapHelper>(quote, Period(3, Months), datesZCII[i], cal, bdc, dc,
-                                                                  index);
+                                                                  index, nominalTs);
             instruments.push_back(anInstrument);
         };
         boost::shared_ptr<YoYInflationTermStructure> yoyTs = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(
@@ -175,8 +175,11 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
     boost::shared_ptr<YoYInflationCapFloor> qlCap(new YoYInflationCap(yyLeg, caps));
 
     Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(market->yoyCapFloorVol("EUHICPXT")->yoyVolSurface());
+    // Should we get this nominalTs from the index's inflation term structure or is this going to be deprecated as well?
+    // Or should we use the market discount curve here?
+    Handle<YieldTermStructure> nominalTs = market->yoyInflationIndex("EUHICPXT")->yoyInflationTermStructure()->nominalTermStructure();
     auto dscEngine = boost::make_shared<YoYInflationBachelierCapFloorEngine>(
-        market->yoyInflationIndex("EUHICPXT").currentLink(), hovs);
+	market->yoyInflationIndex("EUHICPXT").currentLink(), hovs, nominalTs);
     qlCap->setPricingEngine(dscEngine);
     BOOST_CHECK_CLOSE(yyCap->instrument()->NPV(), qlCap->NPV(), 1E-8); // this is 1E-10 rel diff
 }
