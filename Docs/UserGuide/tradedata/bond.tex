@@ -1,21 +1,83 @@
 \subsubsection{Bond}
 \label{ss:bond}
 
-A vanilla Bond is set up using a {\tt BondData} block as shown in listing \ref{lst:bonddata}. The bond specific elements
-are
+A Bond is set up using a {\tt BondData} block, and can be both a stand-alone instrument with trade type \emph{Bond}, or a trade component used by multiple bond derivative instruments.
+
+A Bond can be set up in a short version referencing an underlying bond static, or in a long version where the underlying bond details are specified explicitly.
+The short version is shown in listing \ref{lst:bonddata_refdata}. The details of the
+bond are read from the reference data in this case using the SecurityId as a key. The bond trade is fully specified by
 
 \begin{itemize}
-\item IssuerId: A unique identifier for the issuer of the bond.
-\item CreditCurveId: The identifier of the default curve used for pricing, which mustmatch a default curve id in the market data configuration.
+\item SecurityId: The id identifying the bond\\
+  Allowable Values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix, e.g.: \verb+ISIN:XXNNNNNNNNNN+
+\item BondNotional: The notional of the position in the reference bond, expressed in the currency of the bond\\
+  Allowable Values: Any non-negative real number
+\end{itemize}
+
+in this case.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <BondData>
+      <SecurityId>ISIN:XS0982710740</SecurityId>
+      <BondNotional>100000000.0</BondNotional>
+    </BondData>
+\end{minted}
+\caption{Bond Data}
+\label{lst:bonddata_refdata}
+\end{listing}
+
+For the long version, the bond details are inlined in the trade as shown in listing \ref{lst:bonddata}. The bond specific elements are
+
+\begin{itemize}
+\item IssuerId [Optional]: A text description of the issuer of the bond.  This is for informational purposes and not used for pricing.
+
+Allowable values: Any string. If left blank or omitted, the bond will not have any issuer description.
+
+\item CreditCurveId [Optional]: The unique identifier of the bond. This is used for pricing, and is required for bonds for which a credit - related margin component should be generated, and otherwise left blank. If left blank, the bond (and any bond derivatives using the bond as a trade component) will be  plain IR rather than a IR/CR. 
+
+Allowable values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix, e.g.: \verb+ISIN:XXNNNNNNNNNN+
+
 %Allowable values: 
 %See \lstinline!Name! for credit trades in Table \ref{tab:equity_credit_data}. \\
 %via the default curves block in {\tt  todaysmarket.xml}
 % \item LGD (optional): If given, this LGD is used for pricing, overriding the default LGD of the default curve
-\item SecurityId: A unique identifier for the security, this defines the security specific spread to be used for pricing.
-\item ReferenceCurveId: The benchmark curve to be used for pricing, this must match a name of a yield curve or an index curve in the market data configuration.
-\item SettlementDays: The settlement delay applicable to the security.
+\item SecurityId: The unique identifier of the bond.  This defines the security specific spread to be used for pricing.
+
+Allowable values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix, e.g.: \verb+ISIN:XXNNNNNNNNNN+
+
+\item ProxySecurityId [Optional]: Only applicable to exotic bonds, which have the BondData block embedded as one of the
+  components typically. An identifier of a proxy security. If given, the security curve configuration, i.e. the security
+  spread and recovery rate of the proxy security will be used for the pricing of the exotic bond. Typically the ISIN of
+  a liquid vanilla bond of the same issuer and with comparable maturity as the convertible bond. The proxy security must
+  be a vanilla bond.
+  
+  Allowable values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix, e.g.: \verb+ISIN:XXNNNNNNNNNN+
+  
+\item ReferenceCurveId: The benchmark curve to be used for pricing. This is typically the main ibor index for the currency of the bond, and if no ibor index is available for the currency in question, a currency-specific benchmark curve can be used.
+
+Allowable values: 
+For currencies with available ibor indices: \\
+An alphanumeric string of the form [CCY]-[INDEX]-[TERM]. CCY, INDEX and TERM must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TERM must be an integer followed by D, W, M or Y. See Table \ref{tab:indices}. 
+
+For currencies without available ibor indices:  \\
+An alphanumeric string of the form [CCY]BENCHMARK-[CCY]-TERM, matching a benchmark curve set up in the market data configuration.
+
+Examples: IDRBENCHMARK-IDR-3M, EGPBENCHMARK-EGP-3M, UAHBENCHMARK-UAH-3M, NGNBENCHMARK-NGN-3M
+ 
+\item SettlementDays: The settlement lag in number of business days applicable to the security.
+
+Allowable values: A non-negative integer.
+
 \item Calendar: The calendar associated to the settlement lag.
+
+Allowable values: See Table \ref{tab:calendar} Calendar.
+
 \item IssueDate: The issue date of the security.
+
+See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
 \end{itemize}
 
 A LegData block then defines the cashflow structure of the bond, this can be of type fixed, floating etc.
@@ -24,9 +86,10 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
     <BondData>
-        <IssuerId>CPTY_C</IssuerId>
+        <IssuerId>Ineos Group Holdings SA</IssuerId>
         <CreditCurveId>ISIN:XS0982710740</CreditCurveId>
-        <SecurityId>SECURITY_1</SecurityId>
+        <SecurityId>ISIN:XS0982710740</SecurityId>
+        <ProxySecurityId>ISIN:XS2000000000</ProxySecurityId>
         <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
@@ -42,4 +105,4 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
 \label{lst:bonddata}
 \end{listing}
 
-The bond pricing requires a recovery rate that can be specified per SecurityId in the market data configuration.
+%The bond pricing requires a recovery rate that can be specified per SecurityId in the market data configuration.

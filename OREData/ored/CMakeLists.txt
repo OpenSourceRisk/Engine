@@ -120,6 +120,7 @@ utilities/dategrid.cpp
 utilities/flowanalysis.cpp
 utilities/indexparser.cpp
 utilities/log.cpp
+utilities/marketdata.cpp
 utilities/osutils.cpp
 utilities/parsers.cpp
 utilities/progressbar.cpp
@@ -278,6 +279,7 @@ utilities/dategrid.hpp
 utilities/flowanalysis.hpp
 utilities/indexparser.hpp
 utilities/log.hpp
+utilities/marketdata.hpp
 utilities/osutils.hpp
 utilities/parsers.hpp
 utilities/progressbar.hpp

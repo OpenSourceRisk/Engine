@@ -40,7 +40,7 @@ namespace data {
     */
 class ReferenceDatum : public XMLSerializable {
 public:
-    //! DEfault Constructor
+    //! Default Constructor
     ReferenceDatum() {}
     //! Base class constructor
     ReferenceDatum(const std::string& type, const std::string& id) : type_(type), id_(id) {}
@@ -81,19 +81,22 @@ class BondReferenceDatum : public ReferenceDatum {
 public:
     static constexpr const char* TYPE = "Bond";
 
-    struct BondData {
+    struct BondData : XMLSerializable {
         string issuerId;
         string settlementDays;
         string calendar;
         string issueDate;
         string creditCurveId;
         string referenceCurveId;
+        string proxySecurityId;
         string incomeCurveId;
         string volatilityCurveId;
         std::vector<LegData> legData;
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(ore::data::XMLDocument& doc) override;
     };
 
-    BondReferenceDatum() {}
+    BondReferenceDatum() { setType(TYPE); }
 
     BondReferenceDatum(const string& id) : ReferenceDatum(TYPE, id) {}
 
@@ -108,41 +111,6 @@ public:
 private:
     BondData bondData_;
     static ReferenceDatumRegister<ReferenceDatumBuilder<BondReferenceDatum>> reg_;
-};
-
-class EquityReferenceDatum : public ReferenceDatum {
-public:
-    static constexpr const char* TYPE = "Equity";
-
-    struct EquityData {
-        std::string equityId;
-        std::string equityName;
-        std::string currency;
-        QuantLib::Size scalingFactor;
-        std::string preferredISIN;
-        std::string exchangeCode;
-        bool isIndex;
-        QuantLib::Date equityStartDate;
-        std::string proxyIdentifier;
-    };
-
-    EquityReferenceDatum() { setType(TYPE); }
-
-    EquityReferenceDatum(const string& id) : ReferenceDatum(TYPE, id) {}
-
-    EquityReferenceDatum(const string& id, const EquityData& equityData) : ReferenceDatum(TYPE, id), equityData_(equityData) {}
-
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
-
-    const EquityData& equityData() const { return equityData_; }
-    void setEquityData(const EquityData& equityData) { equityData_ = equityData; }
-
-protected:
-    EquityData equityData_;
-
-private:
-    static ReferenceDatumRegister<ReferenceDatumBuilder<EquityReferenceDatum>> reg_;
 };
 
 //! Interface for Reference Data lookups
@@ -165,6 +133,7 @@ private:
  */
 class ReferenceDataManager {
 public:
+    virtual ~ReferenceDataManager() {}
     virtual bool hasData(const string& type, const string& id) const = 0;
     virtual boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id) = 0;
     virtual void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
@@ -194,8 +163,6 @@ public:
 protected:
     map<pair<string, string>, boost::shared_ptr<ReferenceDatum>> data_;
 };
-
-
 
 } // namespace data
 } // namespace ore

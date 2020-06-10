@@ -50,7 +50,6 @@
 #include <qle/calendars/belgium.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/spain.hpp>
-#include <qle/calendars/austria.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
@@ -191,7 +190,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"Belgium", Belgium()},
                                       {"Luxembourg", Luxembourg()},
                                       {"Spain", Spain()},
-                                      {"Austria", Austria()},
+                                      {"Austria", QuantExt::Austria()},
                                      
                                       // city specific calendars
                                       {"FRA", Germany(Germany::Settlement)},
@@ -210,7 +209,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"BEBR", Belgium()}, // Belgium, Brussels not in QL,
 
                                       // ISO 3166-1 Alpha-2 code
-                                      {"AT", Austria()},
+                                      {"AT", QuantExt::Austria()},
                                       {"AR", Argentina()},
                                       {"AU", Australia()},
                                       {"BW", Botswana()},
@@ -222,7 +221,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"CZ", CzechRepublic()},
                                       {"DK", Denmark()},
                                       {"FI", Finland()},
-                                      {"FR", France()},
+                                      {"FR", QuantExt::France()},
                                       {"DE", Germany(Germany::Settlement)},
                                       {"HK", HongKong()},
                                       {"HU", Hungary()},
@@ -257,12 +256,12 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"BE", Belgium()},
                                       {"LU", Luxembourg()},
                                       {"ES", Spain()},
-                                      {"AT", Austria()},
+                                      {"AT", QuantExt::Austria()},
 
                                       // ISO 3166-1 Alpha-3 code
                                       {"ARG", Argentina()},
                                       {"AUS", Australia()},
-				      {"ATS", Austria()},
+				      {"ATS", QuantExt::Austria()},
                                       {"BWA", Botswana()},
                                       {"BRA", Brazil()},
                                       {"CAN", Canada()},
@@ -272,7 +271,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"CZE", CzechRepublic()},
                                       {"DNK", Denmark()},
                                       {"FIN", Finland()},
-                                      // {"FRA", France()},
+                                      //{"FRA", QuantExt::France()},
                                       {"DEU", Germany(Germany::Settlement)},
                                       {"HKG", HongKong()},
                                       {"HUN", Hungary()},
@@ -307,7 +306,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"BEL", Belgium()},
                                       {"LUX", Luxembourg()},
                                       {"ESP", Spain()},
-                                      {"AUT", Austria()},
+                                      {"AUT", QuantExt::Austria()},
 
                                       // ISO 4217 Currency Alphabetic code
                                       {"ARS", Argentina()},
@@ -321,7 +320,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"COP", Colombia()},
                                       {"CZK", CzechRepublic()},
                                       {"DKK", Denmark()},
-                                      {"FRF", France()},
+                                      {"FRF", QuantExt::France()},
                                       {"HKD", HongKong()},
                                       {"HUF", Hungary()},
                                       {"INR", India()},
@@ -354,7 +353,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"USD", UnitedStates()},
                                       {"BEF", Belgium()},
                                       {"LUF", Luxembourg()},
-                                      {"ATS", Austria()},
+                                      {"ATS", QuantExt::Austria()},
 
                                       // fallback to TARGET for these emerging ccys
                                       {"AED", TARGET()},

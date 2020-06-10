@@ -363,33 +363,33 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using Linear interpolation with a moving reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<Linear> >(
-                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
+                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod));
             } else {
                 BOOST_TEST_MESSAGE("Using Linear interpolation with a fixed reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<Linear> >(
-                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
+                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod));
             }
             break;
         case 1:
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a moving reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BackwardFlat> >(
-                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
+                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod));
             } else {
                 BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a fixed reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BackwardFlat> >(
-                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
+                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod));
             }
             break;
         case 2:
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a moving reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<LinearFlat> >(
-                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
+                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod));
             } else {
                 BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a fixed reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<LinearFlat> >(
-                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
+                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod));
             }
             break;
         case 3:
@@ -397,14 +397,14 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
                 BOOST_TEST_MESSAGE("Using Cubic interpolation with a moving reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<Cubic> >(
                     settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
-                    flatFirstPeriod, accuracy, Cubic(), QuantExt::IterativeBootstrap<PiecewiseOptionletCurve<
-                    Cubic, QuantExt::IterativeBootstrap>::this_curve>(globalAccuracy)));
+                    flatFirstPeriod, Cubic(), QuantExt::IterativeBootstrap<PiecewiseOptionletCurve<
+                    Cubic, QuantExt::IterativeBootstrap>::this_curve>(accuracy, globalAccuracy)));
             } else {
                 BOOST_TEST_MESSAGE("Using Cubic interpolation with a fixed reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<Cubic> >(
                     referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
-                    flatFirstPeriod, accuracy, Cubic(), QuantExt::IterativeBootstrap<PiecewiseOptionletCurve<
-                    Cubic, QuantExt::IterativeBootstrap>::this_curve>(globalAccuracy)));
+                    flatFirstPeriod, Cubic(), QuantExt::IterativeBootstrap<PiecewiseOptionletCurve<
+                    Cubic, QuantExt::IterativeBootstrap>::this_curve>(accuracy, globalAccuracy)));
             }
             break;
         case 4:
@@ -412,14 +412,14 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
                 BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a moving reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<CubicFlat> >(
                     settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
-                    flatFirstPeriod, accuracy, CubicFlat(), QuantExt::IterativeBootstrap<PiecewiseOptionletCurve<
-                    CubicFlat, QuantExt::IterativeBootstrap>::this_curve>(globalAccuracy)));
+                    flatFirstPeriod, CubicFlat(), QuantExt::IterativeBootstrap<PiecewiseOptionletCurve<
+                    CubicFlat, QuantExt::IterativeBootstrap>::this_curve>(accuracy, globalAccuracy)));
             } else {
                 BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a fixed reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<CubicFlat> >(
                     referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement,
-                    flatFirstPeriod, accuracy, CubicFlat(), QuantExt::IterativeBootstrap<PiecewiseOptionletCurve<
-                    CubicFlat, QuantExt::IterativeBootstrap>::this_curve>(globalAccuracy)));
+                    flatFirstPeriod, CubicFlat(), QuantExt::IterativeBootstrap<PiecewiseOptionletCurve<
+                    CubicFlat, QuantExt::IterativeBootstrap>::this_curve>(accuracy, globalAccuracy)));
             }
             break;
         default:
@@ -524,7 +524,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testCachedValues,
         BOOST_TEST_MESSAGE("Using Linear interpolation");
         boost::shared_ptr<PiecewiseOptionletCurve<Linear> > ovCurve =
             boost::make_shared<PiecewiseOptionletCurve<Linear> >(
-                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy);
+                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod);
         curveNodes = ovCurve->nodes();
         ovs = ovCurve;
         }
@@ -533,7 +533,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testCachedValues,
         BOOST_TEST_MESSAGE("Using BackwardFlat interpolation");
         boost::shared_ptr<PiecewiseOptionletCurve<BackwardFlat> > ovCurve =
             boost::make_shared<PiecewiseOptionletCurve<BackwardFlat> >(
-                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy);
+                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod);
         curveNodes = ovCurve->nodes();
         ovs = ovCurve;
         }
@@ -542,7 +542,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testCachedValues,
         BOOST_TEST_MESSAGE("Using LinearFlat interpolation");
         boost::shared_ptr<PiecewiseOptionletCurve<LinearFlat> > ovCurve =
             boost::make_shared<PiecewiseOptionletCurve<LinearFlat> >(
-                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy);
+                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod);
         curveNodes = ovCurve->nodes();
         ovs = ovCurve;
         }

@@ -64,7 +64,7 @@ template <class T>
 void addMinimalCurves(const char* nodeName, const map<string, boost::shared_ptr<T>>& m, map<string, boost::shared_ptr<T>>& n,
                     CurveSpec::CurveType curveType, const map<CurveSpec::CurveType, set<string>> configIds) {
     for (auto it : m) {
-        if ((configIds.count(curveType) && configIds.at(curveType).count(it.second->curveID()))) {
+        if ((configIds.count(curveType) && configIds.at(curveType).count(it.first))) {
             const string& id = it.second->curveID();
             n[id] = it.second;
         }

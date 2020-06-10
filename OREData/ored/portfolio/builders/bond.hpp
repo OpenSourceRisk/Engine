@@ -17,7 +17,7 @@
 */
 
 /*! \file portfolio/builders/bond.hpp
-\brief
+\brief builder that returns an engine to price a bond instrument
 \ingroup builders
 */
 

@@ -53,7 +53,7 @@ public:
                  Real initialPrice = Null<Real>(), Real quantity = Null<Real>(), const Date& fixingStartDate = Date(),
                  const Date& fixingEndDate = Date(), const Date& refPeriodStart = Date(),
                  const Date& refPeriodEnd = Date(), const Date& exCouponDate = Date(),
-                 const boost::shared_ptr<FxIndex>& fxIndex = nullptr);
+                 const boost::shared_ptr<FxIndex>& fxIndex = nullptr, const bool initialPriceIsInTargetCcy = false);
 
     //! \name CashFlow interface
     //@{
@@ -89,6 +89,8 @@ public:
     std::vector<Date> fixingDates() const;
     //! initial price
     Real initialPrice() const;
+    //! initial price is in target ccy (if applicable, i.e. if fxIndex != null, otherwise ignored)
+    bool initialPriceIsInTargetCcy() const;
     //! Number of equity shares held
     Real quantity() const { return quantity_; }
     //! FX conversion rate (or 1.0 if not applicable)
@@ -121,6 +123,7 @@ protected:
     Real dividendFactor_;
     bool notionalReset_;
     Real initialPrice_;
+    bool initialPriceIsInTargetCcy_;
     Real quantity_;
     Date fixingStartDate_;
     Date fixingEndDate_;
@@ -154,6 +157,7 @@ public:
     EquityLeg& withTotalReturn(bool);
     EquityLeg& withDividendFactor(Real);
     EquityLeg& withInitialPrice(Real);
+    EquityLeg& withInitialPriceIsInTargetCcy(bool);
     EquityLeg& withFixingDays(Natural);
     EquityLeg& withValuationSchedule(const Schedule& valuationSchedule);
     EquityLeg& withNotionalReset(bool);
@@ -170,6 +174,7 @@ private:
     Calendar paymentCalendar_;
     bool isTotalReturn_;
     Real initialPrice_;
+    bool initialPriceIsInTargetCcy_;
     Real dividendFactor_;
     Natural fixingDays_;
     Schedule valuationSchedule_;

@@ -74,26 +74,28 @@ void YoYInflationOptionletVolStripper::performCalculations() {
             Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(ovs);
             if (type_ == ShiftedLognormal) {
                 if (displacement_ == 0.0) {
-                    pe = boost::make_shared<YoYInflationBlackCapFloorEngine>(yoyIndex_, hovs);
+		    pe = boost::make_shared<YoYInflationBlackCapFloorEngine>(yoyIndex_, hovs, nominalTs_);
                 } else {
-                    pe = boost::make_shared<YoYInflationUnitDisplacedBlackCapFloorEngine>(yoyIndex_, hovs);
+		    pe = boost::make_shared<YoYInflationUnitDisplacedBlackCapFloorEngine>(yoyIndex_, hovs, nominalTs_);
                 }
             } else if (type_ == Normal) {
-                pe = boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs);
+	        pe = boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs, nominalTs_);
             } else {
                 QL_FAIL("unknown volatility type: " << type_);
             }
             // calculate the cap price
             YoYInflationCapFloor cap =
-                YoYInflationCapFloor(MakeYoYInflationCapFloor(YoYInflationCapFloor::Cap, optionletTerms[i].length(),
-                                                              cal, yoyIndex_, obsLag, strikes[j])
-                                         .withPricingEngine(pe)
+                YoYInflationCapFloor(MakeYoYInflationCapFloor(YoYInflationCapFloor::Cap, yoyIndex_,
+							      optionletTerms[i].length(), cal, obsLag)
+				         .withStrike(strikes[j])
+				         .withPricingEngine(pe)
                                          .withNominal(10000));
             cPrice[j][i] = cap.NPV();
             // floor price
             YoYInflationCapFloor floor =
-                YoYInflationCapFloor(MakeYoYInflationCapFloor(YoYInflationCapFloor::Floor, optionletTerms[i].length(),
-                                                              cal, yoyIndex_, obsLag, strikes[j])
+                YoYInflationCapFloor(MakeYoYInflationCapFloor(YoYInflationCapFloor::Floor, yoyIndex_,
+							      optionletTerms[i].length(), cal, obsLag)
+				         .withStrike(strikes[j])
                                          .withPricingEngine(pe)
                                          .withNominal(10000));
             fPrice[j][i] = floor.NPV();
@@ -144,7 +146,7 @@ void YoYInflationOptionletVolStripper::performCalculations() {
     Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(ovs);
 
     boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
-        boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs);
+		       boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs, nominalTs_);
 
     boost::shared_ptr<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear> > interpVolSurface =
       boost::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear> >(settDays, cal, bdc, dc, obsLag,

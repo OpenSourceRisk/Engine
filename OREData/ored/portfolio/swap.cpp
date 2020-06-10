@@ -75,7 +75,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // We have an FX Index to setup
             fxIndex = buildFxIndex(legData_[i].fxIndex(), legData_[i].currency(),
                 legData_[i].foreignCurrency(), market, configuration,
-                legData_[i].fixingCalendar(), legData_[i].fixingDays());            
+                legData_[i].fixingCalendar(), legData_[i].fixingDays(), true);
         }
 
         // build the leg
@@ -276,12 +276,10 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         legCurrencies_[i] = currencies[i].code();
 
     // set maturity
-    maturity_ = legs_[0].back()->date();
-    for (Size i = 1; i < legs_.size(); i++) {
-        QL_REQUIRE(legs_[i].size() > 0, "Leg " << i + 1 << " of " << legs_.size() << " is empty.");
-        Date d = legs_[i].back()->date();
-        if (d > maturity_)
-            maturity_ = d;
+    maturity_ = Date::minDate();
+    for (auto const& l : legs_) {
+        if (!l.empty())
+            maturity_ = std::max(maturity_, l.back()->date());
     }
 }
 

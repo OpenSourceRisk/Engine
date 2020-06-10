@@ -45,6 +45,7 @@ void BondData::fromXML(XMLNode* node) {
     creditCurveId_ = XMLUtils::getChildValue(node, "CreditCurveId", false);
     securityId_ = XMLUtils::getChildValue(node, "SecurityId", true);
     referenceCurveId_ = XMLUtils::getChildValue(node, "ReferenceCurveId", false);
+    proxySecurityId_ = XMLUtils::getChildValue(node, "ProxySecurityId", false);
     incomeCurveId_ = XMLUtils::getChildValue(node, "IncomeCurveId", false);
     volatilityCurveId_ = XMLUtils::getChildValue(node, "VolatilityCurveId", false);
     settlementDays_ = XMLUtils::getChildValue(node, "SettlementDays", false);
@@ -71,6 +72,8 @@ XMLNode* BondData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
     XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
     XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
+    if(!proxySecurityId_.empty())
+        XMLUtils::addChild(doc, bondNode, "ProxySecurityId", proxySecurityId_);
     if (!incomeCurveId_.empty())
         XMLUtils::addChild(doc, bondNode, "IncomeCurveId", incomeCurveId_);
     if (!volatilityCurveId_.empty())
@@ -116,10 +119,11 @@ void BondData::initialise() {
     }
 }
 
-void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData) {
+void BondData::populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum) {
+    DLOG("Got BondReferenceDatum for name " << securityId_ << " overwrite empty elements in trade");
     ore::data::populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, creditCurveId_,
-                                             referenceCurveId_, incomeCurveId_, volatilityCurveId_, coupons_,
-                                             securityId_, referenceData);
+                                             referenceCurveId_, proxySecurityId_, incomeCurveId_, volatilityCurveId_,
+                                             coupons_, securityId_, referenceDatum);
     // initialise data
 
     initialise();
@@ -132,6 +136,19 @@ void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDa
     QL_REQUIRE(!currency_.empty(), "currency not given, check bond reference data for '" << securityId_ << "'");
 }
 
+void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData) {
+
+    QL_REQUIRE(!securityId_.empty(), "BondData::populateFromBondReferenceData(): no security id given");
+    if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, securityId_)) {
+        DLOG("could not get BondReferenceDatum for name " << securityId_ << " leave data in trade unchanged");
+    } else {
+        auto bondRefData = boost::dynamic_pointer_cast<BondReferenceDatum>(
+            referenceData->getData(BondReferenceDatum::TYPE, securityId_));
+        QL_REQUIRE(bondRefData, "could not cast to BondReferenceDatum, this is unexpected");
+        populateFromBondReferenceData(bondRefData);
+    }
+}
+
 void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Bond::build() called for trade " << id());
 
@@ -141,7 +158,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Date issueDate = parseDate(bondData_.issueDate());
     Calendar calendar = parseCalendar(bondData_.calendar());
-    Natural settlementDays = boost::lexical_cast<Natural>(bondData_.settlementDays());
+    QL_REQUIRE(!bondData_.settlementDays().empty(), "no bond settlement days given");
+    Natural settlementDays = parseInteger(bondData_.settlementDays());
     boost::shared_ptr<QuantLib::Bond> bond;
 
     Real mult = bondData_.bondNotional() * (bondData_.isPayer() ? -1.0 : 1.0);

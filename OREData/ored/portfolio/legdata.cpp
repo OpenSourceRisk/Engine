@@ -26,6 +26,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <boost/make_shared.hpp>
@@ -190,7 +191,7 @@ LegDataRegister<CPILegData> CPILegData::reg_("CPI");
 void CPILegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     index_ = XMLUtils::getChildValue(node, "Index", true);
-    startDate_ = XMLUtils::getChildValue(node, "StartDate", true);
+    startDate_ = XMLUtils::getChildValue(node, "StartDate", false);
     indices_.insert(index_);
     baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI", true);
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
@@ -428,6 +429,7 @@ void EquityLegData::fromXML(XMLNode* node) {
         initialPrice_ = XMLUtils::getChildValueAsDouble(node, "InitialPrice");
     else
         initialPrice_ = Null<Real>();
+    initialPriceCurrency_ = XMLUtils::getChildValue(node, "InitialPriceCurrency", false);
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");
     XMLNode* tmp = XMLUtils::getChildNode(node, "ValuationSchedule");
     if (tmp)
@@ -465,6 +467,8 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, equityUnderlying_.toXML(doc));
     if (initialPrice_ != Null<Real>())
         XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
+    if (!initialPriceCurrency_.empty())
+        XMLUtils::addChild(doc, node, "InitialPriceCurrency", initialPriceCurrency_);
     XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
 
     if (valuationSchedule_.hasData()) {
@@ -1088,7 +1092,6 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     CPI::InterpolationType interpolationMethod = parseObservationInterpolation(cpiLegData->interpolation());
     vector<double> rates = buildScheduledVector(cpiLegData->rates(), cpiLegData->rateDates(), schedule);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    Date startDate = parseDate(cpiLegData->startDate());
 
     applyAmortization(notionals, data, schedule, false);
 
@@ -1101,12 +1104,24 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
                                   .withObservationInterpolation(interpolationMethod)
                                   .withSubtractInflationNominal(cpiLegData->subtractInflationNominal());
 
+    // the cpi leg uses the first schedule date as the start date, which only makes sense if there are at least
+    // two dates in the schedule, otherwise the only date in the schedule is the pay date of the cf and a a separate
+    // start date is expected; if both the separate start date and a schedule with more than one date is given
+    if (schedule.size() < 2) {
+        QL_REQUIRE(!cpiLegData->startDate().empty(),
+                   "makeCPILeg(): if only one schedule date is given, a StartDate must be given in addition");
+        cpiLeg.withStartDate(parseDate(cpiLegData->startDate()));
+    } else {
+        QL_REQUIRE(cpiLegData->startDate().empty() || parseDate(cpiLegData->startDate()) == schedule.dates().front(),
+                   "makeCPILeg(): first schedule date ("
+                       << schedule.dates().front() << ") must be identical to start date ("
+                       << parseDate(cpiLegData->startDate())
+                       << "), the start date can be omitted for schedules containing more than one date");
+    }
+
     bool couponCap = cpiLegData->caps().size() > 0;
     bool couponFloor = cpiLegData->floors().size() > 0;
     bool couponCapFloor = cpiLegData->caps().size() > 0 || cpiLegData->floors().size() > 0;
-
-    if (couponCapFloor)
-        cpiLeg.withStartDate(startDate);
 
     if (couponCap)
         cpiLeg.withCaps(buildScheduledVector(cpiLegData->caps(), cpiLegData->capDates(), schedule));
@@ -1455,7 +1470,8 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
                                                   .withLongPutOption(digitalCmsSpreadData->putPosition())
                                                   .withPutATM(digitalCmsSpreadData->isPutATMIncluded())
                                                   .withPutPayoffs(putPayoffs)
-                                                  .withReplication(boost::make_shared<DigitalReplication>());
+                                                  .withReplication(boost::make_shared<DigitalReplication>())
+                                                  .withNakedOption(cmsSpreadData->nakedOption());
 
     if (cmsSpreadData->caps().size() > 0 || cmsSpreadData->floors().size() > 0)
         QL_FAIL("caps/floors not supported in DigitalCMSSpreadOptions");
@@ -1491,6 +1507,15 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     bool isTotalReturn = eqLegData->returnType() == "Total";
     Real dividendFactor = eqLegData->dividendFactor();
     Real initialPrice = eqLegData->initialPrice();
+    bool initialPriceIsInTargetCcy = false;
+    if(!eqLegData->initialPriceCurrency().empty()) {
+        QL_REQUIRE(eqLegData->initialPriceCurrency() == data.currency() ||
+                       eqLegData->initialPriceCurrency() == eqLegData->eqCurrency() || eqLegData->eqCurrency().empty(),
+                   "initial price ccy (" << eqLegData->initialPriceCurrency() << ") must match either leg ccy ("
+                                         << data.currency() << ") or equity ccy (if given, got '"
+                                         << eqLegData->eqCurrency() << "')");
+        initialPriceIsInTargetCcy = eqLegData->initialPriceCurrency() == data.currency();
+    }
     bool notionalReset = eqLegData->notionalReset();
     Natural fixingDays = eqLegData->fixingDays();
     ScheduleData valuationData = eqLegData->valuationSchedule();
@@ -1509,6 +1534,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
                   .withTotalReturn(isTotalReturn)
                   .withDividendFactor(dividendFactor)
                   .withInitialPrice(initialPrice)
+                  .withInitialPriceIsInTargetCcy(initialPriceIsInTargetCcy)
                   .withNotionalReset(notionalReset)
                   .withFixingDays(fixingDays)
                   .withValuationSchedule(valuationSchedule);
@@ -1670,7 +1696,7 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 }
 
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                   std::map<std::string, std::string>& qlToOREIndexNames) {
+                   std::map<std::string, std::string>& qlToOREIndexNames, RequiredFixings& requiredFixings) {
     for (auto const& indexing : data.indexing()) {
         if (indexing.hasData()) {
             DLOG("apply indexing (index='" << indexing.index() << "') to leg of type " << data.legType());
@@ -1682,14 +1708,6 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             string config = engineFactory->configuration(MarketContext::pricing);
             if (boost::starts_with(indexing.index(), "EQ-")) {
                 string eqName = indexing.index().substr(3);
-                // look whether we have a mapping in the reference data, if not continue with the current name
-                if (engineFactory->referenceData() != nullptr &&
-                    engineFactory->referenceData()->hasData("Equity", eqName)) {
-                    auto refData = engineFactory->referenceData()->getData("Equity", eqName);
-                    if (auto erd = boost::dynamic_pointer_cast<EquityReferenceDatum>(refData)) {
-                        eqName = erd->equityData().equityId;
-                    }
-                }
                 index = *engineFactory->market()->equityCurve(eqName, config);
             } else if (boost::starts_with(indexing.index(), "FX-")) {
                 auto tmp = parseFxIndex(indexing.index());
@@ -1709,10 +1727,11 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                     parseCommodityIndex(indexing.index(), tmp->fixingCalendar(),
                                         engineFactory->market()->commodityPriceCurve(tmp->underlyingName(), config));
             } else if(boost::starts_with(indexing.index(),"BOND-")) {
+                // if we build a bond index, we add the required fixings for the bond underlying
                 BondData bondData(parseBondIndex(indexing.index())->securityName(), 1.0);
                 index = buildBondIndex(bondData, indexing.indexIsDirty(), indexing.indexIsRelative(),
                                        parseCalendar(indexing.indexFixingCalendar()),
-                                       indexing.indexIsConditionalOnSurvival(), engineFactory);
+                                       indexing.indexIsConditionalOnSurvival(), engineFactory, requiredFixings);
             } else {
                 QL_FAIL("invalid index '" << indexing.index()
                                           << "' in indexing data, expected EQ-, FX-, COMM-, BOND- index");
@@ -1741,7 +1760,7 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
 
 boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
                                                   const boost::shared_ptr<Market>& market, const string& configuration,
-                                                  const string& calendar, Size fixingDays) {
+                                                  const string& calendar, Size fixingDays, bool useXbsCurves) {
     // 1. Parse the index we have with no term structures
     boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
 
@@ -1749,8 +1768,19 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
     // and calendar from legData_[i].fxIndex()
     string source = fxIndexBase->sourceCurrency().code();
     string target = fxIndexBase->targetCurrency().code();
-    Handle<YieldTermStructure> sorTS = market->discountCurve(source, configuration);
-    Handle<YieldTermStructure> tarTS = market->discountCurve(target, configuration);
+
+    // If useXbsCurves is true, try to link the FX index to xccy based curves. There will be none if source or target
+    // is equal to the base currency of the run so we must use the try/catch.
+    Handle<YieldTermStructure> sorTS;
+    Handle<YieldTermStructure> tarTS;
+    if (useXbsCurves) {
+        sorTS = xccyYieldCurve(market, source, configuration);
+        tarTS = xccyYieldCurve(market, target, configuration);
+    } else {
+        sorTS = market->discountCurve(source, configuration);
+        tarTS = market->discountCurve(target, configuration);
+    }
+
     Handle<Quote> spot = market->fxSpot(source + target);
     Calendar cal = parseCalendar(calendar);
 
@@ -1776,7 +1806,8 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
 boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
                                                       const bool relative, const Calendar& fixingCalendar,
                                                       const bool conditionalOnSurvival,
-                                                      const boost::shared_ptr<EngineFactory>& engineFactory) {
+                                                      const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                      RequiredFixings& requiredFixings) {
 
     // build the bond, we would not need a full build with a pricing engine attached, but this is the easiest
 
@@ -1784,6 +1815,14 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
     data.populateFromBondReferenceData(engineFactory->referenceData());
     Bond bond(Envelope(), data);
     bond.build(engineFactory);
+
+    RequiredFixings bondRequiredFixings = bond.requiredFixings();
+    if(dirty) {
+        // dirty prices require accrueds on past dates
+        bondRequiredFixings.unsetPayDates();
+    }
+    requiredFixings.addData(bondRequiredFixings);
+
     auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
     QL_REQUIRE(qlBond, "buildBondIndex(): could not cast to QuantLib::Bond, this is unexpected");
 

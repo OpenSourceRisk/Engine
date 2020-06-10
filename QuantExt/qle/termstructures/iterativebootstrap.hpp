@@ -83,6 +83,8 @@ class IterativeBootstrap {
 
 public:
     /*! Constructor
+        \param accuracy       Accuracy for the bootstrap. If \c Null<Real>(), its value is taken from the 
+                              termstructure's accuracy. 
         \param globalAccuracy Accuracy for the global bootstrap stopping criterion. If it is set to 
                               \c Null<Real>(), its value is taken from the termstructure's accuracy.
         \param dontThrow      If set to \c true, the bootstrap doesn't throw and returns a <em>fall back</em> 
@@ -94,6 +96,7 @@ public:
                               for a fallback curve pillar value that gives the minimum bootstrap helper error. 
     */
     IterativeBootstrap(
+        QuantLib::Real accuracy = QuantLib::Null<QuantLib::Real>(),
         QuantLib::Real globalAccuracy = QuantLib::Null<QuantLib::Real>(),
         bool dontThrow = false,
         QuantLib::Size maxAttempts = 1,
@@ -113,6 +116,7 @@ private:
     mutable QuantLib::Size firstAliveHelper_, alive_;
     mutable std::vector<QuantLib::Real> previousData_;
     mutable std::vector<boost::shared_ptr<QuantLib::BootstrapError<Curve> > > errors_;
+    QuantLib::Real accuracy_;
     QuantLib::Real globalAccuracy_;
     bool dontThrow_;
     QuantLib::Size maxAttempts_;
@@ -122,10 +126,10 @@ private:
 };
 
 template <class Curve>
-IterativeBootstrap<Curve>::IterativeBootstrap(QuantLib::Real globalAccuracy, bool dontThrow,
+IterativeBootstrap<Curve>::IterativeBootstrap(QuantLib::Real accuracy, QuantLib::Real globalAccuracy, bool dontThrow,
     QuantLib::Size maxAttempts, QuantLib::Real maxFactor, QuantLib::Real minFactor, QuantLib::Size dontThrowSteps)
     : ts_(0), initialized_(false), validCurve_(false), loopRequired_(Interpolator::global), 
-      globalAccuracy_(globalAccuracy), dontThrow_(dontThrow), maxAttempts_(maxAttempts),
+      accuracy_(accuracy), globalAccuracy_(globalAccuracy), dontThrow_(dontThrow), maxAttempts_(maxAttempts),
       maxFactor_(maxFactor), minFactor_(minFactor), dontThrowSteps_(dontThrowSteps) {}
 
 template <class Curve>
@@ -235,7 +239,7 @@ void IterativeBootstrap<Curve>::calculate() const {
 
     const std::vector<QuantLib::Time>& times = ts_->times_;
     const std::vector<QuantLib::Real>& data = ts_->data_;
-    QuantLib::Real accuracy = ts_->accuracy_;
+    QuantLib::Real accuracy = accuracy_ != QuantLib::Null<QuantLib::Real>() ? accuracy_ : ts_->accuracy_;
     QuantLib::Real globalAccuracy = globalAccuracy_ == QuantLib::Null<QuantLib::Real>() ?
         accuracy : globalAccuracy_;
 

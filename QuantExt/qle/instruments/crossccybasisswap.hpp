@@ -48,9 +48,9 @@ public:
         holds the receive currency cashflows.
     */
     CrossCcyBasisSwap(Real payNominal, const Currency& payCurrency, const Schedule& paySchedule,
-                      const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real recNominal,
-                      const Currency& recCurrency, const Schedule& recSchedule,
-                      const boost::shared_ptr<IborIndex>& recIndex, Spread recSpread);
+                      const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real payGearing,
+		      Real recNominal, const Currency& recCurrency, const Schedule& recSchedule,
+                      const boost::shared_ptr<IborIndex>& recIndex, Spread recSpread, Real recGearing);
     //@}
     //! \name Instrument interface
     //@{
@@ -64,12 +64,14 @@ public:
     const Schedule& paySchedule() const { return paySchedule_; }
     const boost::shared_ptr<IborIndex>& payIndex() const { return payIndex_; }
     Spread paySpread() const { return paySpread_; }
+    Real payGearing() const { return payGearing_; }
 
     Real recNominal() const { return recNominal_; }
     const Currency& recCurrency() const { return recCurrency_; }
     const Schedule& recSchedule() const { return recSchedule_; }
     const boost::shared_ptr<IborIndex>& recIndex() const { return recIndex_; }
     Spread recSpread() const { return recSpread_; }
+    Real recGearing() const { return recGearing_; }
     //@}
 
     //! \name Additional interface
@@ -100,13 +102,15 @@ private:
     Schedule paySchedule_;
     boost::shared_ptr<IborIndex> payIndex_;
     Spread paySpread_;
-
+    Real payGearing_;
+  
     Real recNominal_;
     Currency recCurrency_;
     Schedule recSchedule_;
     boost::shared_ptr<IborIndex> recIndex_;
     Spread recSpread_;
-
+    Real recGearing_;
+  
     mutable Spread fairPaySpread_;
     mutable Spread fairRecSpread_;
 };

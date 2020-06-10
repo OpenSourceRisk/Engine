@@ -17,7 +17,7 @@
 */
 
 /*! \file portfolio/builders/yoycapfloor.hpp
-    \brief
+    \brief Engine builder for year-on-year inflation caps/floors
     \ingroup builders
 */
 
