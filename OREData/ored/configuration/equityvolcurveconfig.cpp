@@ -133,11 +133,14 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
             QL_FAIL("MoneynessSurface not currently supported for equity volatilities.");
         } else if ((n = XMLUtils::getChildNode(node, "ApoFutureSurface"))) {
             QL_FAIL("ApoFutureSurface not supported for equity volatilities.");
+        } else if ((n = XMLUtils::getChildNode(node, "ProxySurface"))) {
+           proxySurface_ = XMLUtils::getChildValue(node, "ProxySurface", true);
         } else {
             QL_FAIL("EquityVolatility node expects one child node with name in list: Constant,"
-                << " Curve, StrikeSurface.");
+                << " Curve, StrikeSurface, ProxySurface.");
         }
-        volatilityConfig_->fromXML(n);
+        if (proxySurface_.empty())
+            volatilityConfig_->fromXML(n);
     } else {
         QL_FAIL("Only ATM and Smile dimensions, or Volatility Config supported for EquityVolatility " << curveID_);
     }

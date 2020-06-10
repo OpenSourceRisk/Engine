@@ -71,8 +71,10 @@ public:
     const string& dayCounter() const { return dayCounter_; }
     const string& calendar() const { return calendar_; }
     const boost::shared_ptr<VolatilityConfig>& volatilityConfig() const { return volatilityConfig_; };
+    const string& proxySurface() const { return proxySurface_; }
     const string quoteStem() const;
     void populateQuotes();
+    bool isProxySurface() { return !proxySurface_.empty(); };
     //@}
 
     //! \name Setters
@@ -87,6 +89,7 @@ private:
     boost::shared_ptr<VolatilityConfig> volatilityConfig_;
     string dayCounter_;
     string calendar_;
+    string proxySurface_;
 };
 } // namespace data
 } // namespace ore

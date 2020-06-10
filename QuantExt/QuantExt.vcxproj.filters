@@ -873,9 +873,14 @@
     <ClInclude Include="qle\time\actual364.hpp">
       <Filter>time</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp" />
     <ClInclude Include="qle\indexes\ibor\inrmiborois.hpp">
       <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvolsurfaceproxy.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp">
+      <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1510,6 +1515,9 @@
     </ClCompile>
     <ClCompile Include="qle\time\actual364.cpp">
       <Filter>time</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvolsurfaceproxy.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
