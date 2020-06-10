@@ -119,8 +119,8 @@
 %\date{7 October 2016}
 %\date{28 April 2017}
 %\date{7 December 2017}
-%\date{13 June 2018}
-\date{20 March 2018}
+%\date{28 May 2019}
+\date{12 June 2020}
 \maketitle
 
 \newpage
@@ -137,6 +137,7 @@ Date & Author & Comment \\
 28 April 2017 & Quaternion  & updates for release 2\\
 7 December 2017 & Quaternion & updates for release 3\\
 20 March 2019 & Quaternion & updates for release 4\\
+12 June 2020 & Quaternion & updates for release 5\\
 \hline
 \end{supertabular}
 \end{center}
@@ -250,11 +251,11 @@ Commodity Options & Y & Y & N & N \\
 \hline
 CPI Swaps & Y & Y & N & Y \\
 \hline
-%CPI Caps/Floors & Y & Y & N \\
-%\hline
+CPI Caps/Floors & Y & Y & N \\
+\hline
 Year-on-Year Inflation Swaps & Y & Y & N & Y \\
-%\hline
-%Year-on-Year Inflation Caps/Floors & Y & Y & N & N\\
+\hline
+Year-on-Year Inflation Caps/Floors & Y & Y & N & N\\
 \hline
 Credit Default Swaps & Y & Y & N & N \\
 \hline
@@ -281,8 +282,6 @@ and lognormal processes for FX rates and EQ prices, Dodgeson-Kainth models for i
 \item Language bindings: \url{https://github.com/opensourcerisk/ore-swig}
 \item Follow ORE on Twitter {\tt @OpenSourceRisk} for updates on releases and events
 \end{itemize}
-%An ORE Book will follow in 2017 that will elaborate on the engine's design and make the connection between methodology
-%and implementation. It will be announced in due course on the channels mentioned above.
  
 \subsubsection*{Organisation of this document}
 
@@ -297,79 +296,138 @@ parametrisation and the structure of trade and market data input.
 \section{Release Notes}\label{sec:releasenotes}
 %========================================================
 
-This section summarises the high level changes between release 3 (December 2017) and 4 (March 2019).
+This section summarises the high level changes between release 4 (May 2019) and 5 (June 2020).
 
 \bigskip
 INSTRMENTS
 \begin{itemize}
-\item Commodity Forward and Option, see example \ref{example:24}
-\item Equity Swap, see extended example \ref{ex:equityderivatives}
-%\item YoY Inflation Cap/Floor trade builders added
-\item CMS Spread Option (Cap/Floor, Digital Cap/Floor), see example \ref{example:25}
+\item Add Inflation CPI and YoY Caps/Floors and capped/floored cash flows
+\item Add Forward Bond
+\item Add American Commodity Option
+\item Add reference data manager (handles Bond reference data as concrete example)
+\item Add underlying description (FX, Equity, Commodity)
+\item Add Settlement node to FX Forward, FX Swap and Swap instruments 
+\item Extend Equity Swap: legs, equity coupon with FX adjustment, resettable feature,
+  quantity vs initial notional
+\item Extend CDS: Allow fixed recovery, front or back stub periods, protection payment
+  timing at default/period end/maturity
+\item Allow floating coupons with sub periods, i.e. several fixings per coupon period
+  that are averaged or compounded
+\item Allow Caps/Floors on BMA/SIFMA and overnight indices
+\item Allow adding new leg types via a LegDataFactory
 \end{itemize}
 
 \bigskip
 MARKETS
+
 \begin{itemize}
-\item New calendars: Chile, Colombia, Malaysia, Peru, Philippines, Thailand 
-\item New IBOR indexes: CHF SARON, CLP CAMARA, COP IBR, DEM LIBOR, DKK OIS, NOWA, PHP PHIREF, RUB MOSPRIME, SEK SIOR, THB BIBOR 
-\item New inflation idexes and regions: DKCPI, SECPI
-\item Equity index added
+\item Currencies: 73 mapped
+\item Calendars: 88 mapped by country, city, ISO 10383 MIC, ISO 4217 currency code,
+  ISO 3166-1 Alpha 2 and 3 country codes
+\item Allow large joint calendars
+\item OIS indices: 19 mapped including USD-Prime, EUR-ESTER and USD-SOFR
+\item IBOR indices: 43 mapped using "hard coded" index names
+\item Inflation indices: 9 mapped
+\item Add IBOR and CMS indices that can be defined in conventions, so that they can be
+  added to ORE without code changes
 \end{itemize}
 
 \bigskip
 TERM STRUCTURES
+
 \begin{itemize}
-\item Cap/Floor smile volatility surface added
-\item Cross currency basis swap helper (with MtM Reset) added 
-\item Cross currency fixed vs. float swap helper added, see example \ref{example:29}
-\item Discount ratio curves added, see example \ref{example:28} 
-%\item Interpolated YoY inflation cap floor term price surface extens QuantLib's implementation to allow the choice of term structure directly from YoY swap quotes or from atm swap quotes stripped from cap/floor price surface
-%\item Optionlet stripper added (copy of the QL class that uses an QuantExt::CapFloorTermVolSurface to support BiLinearInterpolation)
-%\item Price term structure added
-%\item Default probability bootstrap traits added
-%\item YoY Inflation Optionlet (caplet/floorlet) volatility stripper added
-%\item YoY Inflation volatility surface extends QuantLib's implementation to include a volatility type and displacement
-\item Correlation term structure added (to support CMS spread products)
+\item Add fitted Bond yield curves
+\item When bootstrapping a default curve from CDS, allow for retries with widening of
+  search bounds. Avoids exceptions
+  for distressed CDS curves for example.
+\item Inflation cap/floor volatility surfaces cleaned up, inflation price surfaces removed
+  from the market interface
+\item Equity volatility surface changes, clean up and stripping from option premiums,
+  allow wildcard in strike/expiry config.
+\item Allow optional quotes in curve configurations
+\item New Equity forward curve stripper that allows a dividend yield to be determined from
+  equity option premiums
+\item ESTER/SOFR basic curve building
+\item New cap/floor optionlet stripper that uses an iterative bootstrap with configurable
+  interpolation/extrapolation
+  in expiry and strike direction.
+\item New CDS volatility configuration to allow for constant volatility, a volatility
+  curve or an expiry x strike surface
+\item Added Commodity basis price curve and average basis price curve
 \end{itemize}
 
 \bigskip
 ANALYTICS
+
 \begin{itemize}
-\item KVA added (thanks to Roland Kapl)
+\item Fix volatility conversion for lognormal swaption cubes in ScenarioSimMarket
+\item Cross Asset Model refactoring to allow alternative risk factor evolution models 
+\item Bermudan Swaption LGM calibration changes (allow to continue processing when
+  tolerance is breached, allow to thin out calibration grids)
+\item Improve performance of analytic LGM swaption engine by introducing a cache
+  (speeds up LGM calibration)
+\item Add Indexed coupon class
+\item Add CDS to stress testing capability
 \end{itemize}
 
 \bigskip
 UNIT TESTS
+
 \begin{itemize}
-\item Unit tests suites extended to 429 cases in total 
-\item Data driven tests added in ORE Data
-\item Now using boost's automated test suite creation and registration
+\item QuantExt unit test cases: 180 test functions, 3749 data-driven cases
+\item OREData unit tests: 135 test functions, 368 data-driven cases 
+\item OREAnalytics unit tests: 61 test functions and cases
+i.e. 609 test functions vs 429 in the previous release.
 \end{itemize}
+
+For example:\\
+{\tt ./quantext-test-suite} reports 3749 cases \\
+{\tt ./quantext-test-suite --list\_cases | grep test} lists 180 test functions
 
 \bigskip
 EXAMPLES
+
 \begin{itemize}
-\item ORE has 29 examples now vs 23 in the previous release
+\item Maintenance of inputs, ensure consistency of results with user guide
+\item Additional Prime Curve example
 \end{itemize}
 
 \bigskip
 USER GUIDE
+
 \begin{itemize}
-\item Extended to 186 pages
+\item Documentation of ongoing changes, new instruments, broader market coverage,
+  extended to over 250 pages
 \end{itemize}
 
 \bigskip
 BUILDING ORE
+
 \begin{itemize}
-\item CMake build system added, see end of section \ref{sec:build_ore}
+\item Discontinue automake builds
 \end{itemize}
 
 \bigskip
-LANGUAGE BINDINGS
+LANGUAGE BINDUNGS
+
 \begin{itemize}
-\item ORE SWIG projected added, to support ORE in Python, see \url{https://github.com/OpenSourceRisk/ORE-SWIG}
+\item Maintenance to ensure SWIG wrappers build with current ORE and QuantLib-SWIG 1.18,
+  rework all *.i files to use the SWIG wrapper of {\tt boost::shared\_ptr} following QuantLib-SWIG
 \end{itemize}
+
+\bigskip
+OTHER
+
+\begin{itemize}
+\item Fixing manager refactoring and bug fixes
+\item Clean up of log levels to reduce the volume of log messages
+\item Improved log messages when LGM calibration errors exceed tolerance
+\item LGM model builder bug fixes
+\item Builds with QuantLib Version 1.18
+\item Builds with Boost versions up to 1.72.0
+\end{itemize}
+
+
 
 %========================================================
 \section{ORE Data Flow}\label{sec:process}
@@ -480,7 +538,7 @@ executables:
 The release bundle does contain the ORE source code, which is sufficient to build ORE from sources manually as follows (if you build ORE for development purposes, we recommend using git though, see section \ref{sec:build_ore}):
 \begin{itemize}
 \item Set up Boost as described in section \ref{sec:boost}, unless already installed
-\item Set up QuantLib 1.11 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already
+\item Set up QuantLib 1.18 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already
   installed; QuantLib needs to be located in this project directory {\tt ORE-<VERSION>}. Alternatively, you can create a
   symbolic link named QuantLib here that points to the actual QuantLib directory
 \item Build QuantExt, OREData, OREAnalytics, App (in this order) as described in section \ref{sec:build}
@@ -494,8 +552,7 @@ doxygen.
 
 \subsection{Building ORE}\label{sec:build_ore}
 
-ORE's source code is hosted on github.com at \url{https://github.com/opensourcerisk/engine} using {\tt git}, a free and
-open source distributed version control system.
+ORE's source code is hosted at \url{https://github.com/opensourcerisk/engine}.
 
 \subsubsection{Git}
 
@@ -524,7 +581,7 @@ This will create a folder 'ore' in your current directory that contains the code
 \subsubsection{Boost}\label{sec:boost}
 
 QuantLib and ORE depend on the boost C++ libraries. Hence these need to be installed before building QuantLib and
-ORE. On all platforms the minimum required boost version is 1\_63 as of ORE release 4.
+ORE. On all platforms the minimum required boost version is 1\_63 as of ORE release 5.
 %Older versions may work on some platforms and system configurations, but were not tested.
 
 \subsubsection*{Windows}
@@ -568,7 +625,6 @@ Alternatively, compile all Boost libraries directly from the source code:
 
 \begin{enumerate}
 \item Download Boost from \cite{boost} and build following the instructions on the site
-%, any recent version should work
 \item Define the environment variable BOOST that points to the boost directory
 (so includes should be in BOOST and libs should be in BOOST/stage/lib)
 \end{enumerate}
@@ -592,122 +648,103 @@ C++ support under the Programming Languages features (disabled by default).
   'Microsoft.Cpp.x64.user' depending on whether you chose a Win32 or a x64 configuration. Click on this file to open the
   property pages. Select VC++ Directories and then add your boost directory to the 'Include Directories' entry. Likewise
   add your boost library directory to the 'Library Directories' entry. If for example your boost installation is in {\tt
-    C:{\bs}boost\_1\_57\_0} and the libraries reside in the {\tt stage{\bs}lib} subfolder, add {\tt
-    C:{\bs}boost\_1\_57\_0} to the 'Include Directories' entry and {\tt C:{\bs}boost\_1\_57\_0{\bs}stage{\bs} lib} to the
+    C:{\bs}boost\_1\_63\_0} and the libraries reside in the {\tt stage{\bs}lib} subfolder, add {\tt
+    C:{\bs}boost\_1\_63\_0} to the 'Include Directories' entry and {\tt C:{\bs}boost\_1\_63\_0{\bs}stage{\bs} lib} to the
   'Library Directories' entry. Press OK. 
-  (Alternatively, create and use an environment variable {\tt \%BOOST\%} pointing to your directory {\tt C:{\bs}boost\_1\_57\_0} instead of the directory itself.) 
+  (Alternatively, create and use an environment variable {\tt \%BOOST\%} pointing to your directory {\tt C:{\bs}boost\_1\_63\_0} instead of the directory itself.) 
   If you want to configure the boost paths for Win32 resp. x64 as well, repeat
   the previous step for 'Microsoft.Cpp. Win32.user' respectively 'Microsoft.Cpp.x64.user'. To complete the configuration
   just close the property manager window.
 
-  % \item Open any solution file and update path to Boost as described in sections 5 \& 6 in
-  %   \cite{quantlib-install}. You only need to do this for a single project as this will update the path to boost
-  %   across all projects and solutions on your machine. The paths should be set as follow (in case you compiled Boost
-  %   on your own, use the path specified using the --stagedir cmd argument):
+%\item Open each of the sub-projects and compile them in the following order: QuantLib, QuantExt, OREData, OREAnalytics
+%  and App. For each project, do the following:
 %
 %\begin{itemize}
-%\item Include Directories: [Boost Installation Folder]
-%\item Library Directories: [Boost Installation Folder]{\bs}libs
+%\item Switch to the correct platform (i.e. Win32 or x64) from the Configuration Manager. The selection should match the
+%  pre-compiled version of Boost. Trying to compile using a mixed configuration (e.g. Boost 64-bit and 32-bit QuantLib)
+%  will fail.
+%\item Compile the project: Build $\rightarrow$ Build Solution
+%\item Once the compilation is complete, run the test suite.
 %\end{itemize}
-%
-%\item Add the additional path to the Boost pre-compiled libraries to the linker setting:
-%
-%\begin{itemize}
-%\item 32-bit: [Boost Installation Folder]{\bs}lib32-msvc-14.0
-%\item 64-bit: [Boost Installation Folder]{\bs}lib64-msvc-14.0
-%\end{itemize}
-
-\item Open each of the sub-projects and compile them in the following order: QuantLib, QuantExt, OREData, OREAnalytics
-  and App. For each project, do the following:
-
-\begin{itemize}
-\item Switch to the correct platform (i.e. Win32 or x64) from the Configuration Manager. The selection should match the
-  pre-compiled version of Boost. Trying to compile using a mixed configuration (e.g. Boost 64-bit and 32-bit QuantLib)
-  will fail.
-\item Compile the project: Build $\rightarrow$ Build Solution
-\item Once the compilation is complete, run the test suite.
-\end{itemize}
-Alternatively, open the {\tt oreEverything\_*.sln} and build the entire solution (again, make sure to select the correct platform in the configuration manager first).
+\item Open the {\tt oreEverything\_*.sln} and build the entire solution (again, make sure to select the correct platform in the configuration manager first).
 \end{enumerate}
 
 \subsubsection*{Unix}
 
-\begin{enumerate}
+%\begin{enumerate}
+%
+%\item Build QuantLib as usual.
+%
+%{\tt\footnotesize
+%\% cd QuantLib \\
+%\% ./autogen.sh \\
+%\% ./configure --with-boost-include=\$BOOST --with-boost-lib=\$BOOST/stage/lib \\
+%\% make -j4 
+%}
+%
+%\item Build QuantExt
+%
+%{\tt\footnotesize
+%\% cd QuantExt \\
+%\% ./autogen.sh \\
+%\% ./configure \\
+%\% make -j4
+%}
+%
+%This will build both the QuantExt library and test suite.
+%
+%\item Run the test suite
+%
+%{\tt\footnotesize
+%\% ./test/quantext-test-suite 
+%}
+%
+%\item  Build OREData, OREAnalytics and their test suites. 
+%
+%Follow the same steps as for QuantExt.
+%To run the unit test suites, do 
+%
+%{\tt\footnotesize
+%\% ./test/ored-test-suite 
+%}
+%
+%and 
+%
+%{\tt\footnotesize
+%\% ./test/orea-test-suite 
+%}
+%
+%in the respective library directories.
+%
+%\item Build App/ore
+%
+%{\tt\footnotesize
+%\% cd App \\
+%\% ./autogen.sh \\
+%\% ./configure \\
+%\% make -j4
+%}
 
-\item Build QuantLib as usual.
+%Note: On Linux systems, the 'locale' settings can negatively affect the ORE process and output. To avoid this, we
+%recommend setting the environment variable {\tt LC\_NUMERIC} to {\tt C}, e.g. in a bash shell, do
+%
+%{\tt\footnotesize
+%\% export LC\_NUMERIC=C
+%}
+%
+%before running ORE or any of the examples below. This will suppress thousand separators in numbers when converted to
+%strings.
+%
+%\item Run Examples (see section \ref{sec:examples})
+%
+%{\tt\footnotesize
+%\% cd Examples/Example\_1 \\
+%\% python run.py 
+%}
+%
+%\end{enumerate}
 
-{\tt\footnotesize
-\% cd QuantLib \\
-\% ./autogen.sh \\
-\% ./configure --with-boost-include=\$BOOST --with-boost-lib=\$BOOST/stage/lib \\
-\% make -j4 
-}
-
-\item Build QuantExt
-
-{\tt\footnotesize
-\% cd QuantExt \\
-\% ./autogen.sh \\
-\% ./configure \\
-\% make -j4
-}
-
-This will build both the QuantExt library and test suite.
-
-\item Run the test suite
-
-{\tt\footnotesize
-\% ./test/quantext-test-suite 
-}
-
-\item  Build OREData, OREAnalytics and their test suites. 
-
-Follow the same steps as for QuantExt.
-To run the unit test suites, do 
-
-{\tt\footnotesize
-\% ./test/ored-test-suite 
-}
-
-and 
-
-{\tt\footnotesize
-\% ./test/orea-test-suite 
-}
-
-in the respective library directories.
-
-\item Build App/ore
-
-{\tt\footnotesize
-\% cd App \\
-\% ./autogen.sh \\
-\% ./configure \\
-\% make -j4
-}
-
-Note: On Linux systems, the 'locale' settings can negatively affect the ORE process and output. To avoid this, we
-recommend setting the environment variable {\tt LC\_NUMERIC} to {\tt C}, e.g. in a bash shell, do
-
-{\tt\footnotesize
-\% export LC\_NUMERIC=C
-}
-
-before running ORE or any of the examples below. This will suppress thousand separators in numbers when converted to
-strings.
-
-\item Run Examples (see section \ref{sec:examples})
-
-{\tt\footnotesize
-\% cd Examples/Example\_1 \\
-\% python run.py 
-}
-
-\end{enumerate}
-
-\subsubsection*{Building on Unix with CMake}
-
-Recent releases of ORE (since end of 2018) can be built with CMake on Unix systems, as follows.
+With the 5th release we have discontinued automake support so that ORE can only be built with CMake on Unix systems, as follows.
 
 \begin{enumerate}
 \item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
@@ -720,40 +757,54 @@ Alternatively, set environment variables {\tt BOOST\_ROOT} and {\tt BOOST\_LIBRA
 \medskip
 {\tt cmake ..} \\
 \medskip
-\item Build all ORE libraries including QuantLib by invoking \\
+\item Build all ORE libraries, QuantLib, as well as the doxygen API documentation for QuantExt, OREData and OREAnalytics, by invoking \\
 \medskip
 {\tt make -j4} \\
 \medskip
-\item Build all ORE libraries including QuantLib plus the API documentation for QuantExt, OREData and OREAnalytics, generated by
-doxygen, by invoking \\
+using four threads in this example.
 \medskip
-{\tt make all -j4} \\
-\medskip
-\item Alternatively the individual API documentation for each library can be built by invoking \\
-\medskip
-{\tt make doc\_quantext} \\
-\medskip
-{\tt make doc\_ored} \\
-\medskip
-{\tt make doc\_orea} \\
-\medskip
-\item Unset {\tt LD\_LIBRARY\_PATH} respectively {\tt DYLD\_LIBRARY\_PATH} before running the ORE executable or the test suites below, in order not to override the rpath information embedded into the libaries built with CMake
+%\item Alternatively the individual API documentation for each library can be built by invoking \\
+%\medskip
+%{\tt make doc\_quantext} \\
+%\medskip
+%{\tt make doc\_ored} \\
+%\medskip
+%{\tt make doc\_orea} \\
+%\medskip
 \item Run all test suites by invoking \\
 \medskip
 {\tt ctest -j4}
+\item Run Examples (see section \ref{sec:examples})
 \end{enumerate}
 
-Notice that if the boost libraries are not installed they might not be found during runtime because of a missing rpath
+Note: 
+\begin{itemize}
+\item If the boost libraries are not installed in a standard path they might not be found during runtime because of a missing rpath
 tag in their path. Run the script {\tt rename\_libs.sh} to set the rpath tag in all libraries located in {\tt
   \${BOOST}/stage/lib}.
+\item Unset {\tt LD\_LIBRARY\_PATH} respectively {\tt DYLD\_LIBRARY\_PATH} before running the ORE executable or the test suites, in order not to override the rpath information embedded into the libaries built with CMake
+\item On Linux systems, the 'locale' settings can negatively affect the ORE process and output. To avoid this, we
+recommend setting the environment variable {\tt LC\_NUMERIC} to {\tt C}, e.g. in a bash shell, do
 
-The .cpp and .hpp files included in the build process need to be explicitly specified in the various {\tt CMakeLists.txt} files in the project directory, as in the {\tt Makefile.am} files of the GNU build system. However for the CMake build system we have provided a python script (in {\tt Tools/update\_cmake\_files.py}) that automates this process. 
+{\tt\footnotesize
+\% export LC\_NUMERIC=C
+}
 
-The advantage of the CMake build system is that it builds fewer intermediate libraries and is hence significantly faster than the GNU automake based build. Moreover it can be extended to cover both Unix and Windows builds. 
+before running ORE or any of the examples below. This will suppress thousand separators in numbers when converted to
+strings.
+
+\item Generate {\tt CMakeLists.txt}:
+
+The .cpp and .hpp files included in the build process need to be explicitly specified in the various {\tt CMakeLists.txt} 
+files in the project directory. The python script (in {\tt Tools/update\_cmake\_files.py}) can be used to update all CMakeLists.txt files 
+automatically. 
+
+\end{itemize}
  
 \subsubsection*{Building on Windows with CMake}
 
-The same set of {\tt CMakeLists.txt} files allows building ORE on Windows. The following instructions use the {\tt Ninja} build system ({\url{ninja-build.org}) that covers the role of {\tt make} on Unix systems and calls the Visual Studio C++ compiler and linker. 
+One advantage of the CMake build system is that it covers both Unix and Windows builds. 
+The same set of {\tt CMakeLists.txt} files as above allows building ORE on Windows. The following instructions use the {\tt Ninja} build system ({\url{ninja-build.org}) that covers the role of {\tt make} on Unix systems and calls the Visual Studio C++ compiler and linker. 
 
 \begin{enumerate}
 \item Open a command prompt, change to directory C:{\textbackslash}Program Files (x86){\textbackslash}Microsoft Visual Studio 14.0{\textbackslash}VC and run\\
@@ -782,7 +833,8 @@ Ninja automatically utilizes all available threads, unless specified with the -j
 
 \subsection{Python and Jupyter}\label{sec:python}
 
-Python (version 3.5 or higher) is required to run the examples in section \ref{sec:examples} and plot exposure
+Python (version 3.5 or higher) is required to use the ORE Python language bindings in section \ref{sec:oreswig}, 
+or to run the examples in section \ref{sec:examples} and plot exposure
 evolutions. Moreover, we use Jupyter \cite{jupyter} in section \ref{sec:visualisation} to visualise simulation
 results. Both are part of the 'Anaconda Open Data Science Analytics Platform' \cite{Anaconda}. Anaconda installation
 instructions for Windows, OS X and Linux are available on the Anaconda site, with graphical installers for
@@ -814,6 +866,67 @@ With Python and Anaconda already installed, this can be done by running these co
 \item {\tt conda install -c conda-forge pythreejs}
 \end{itemize}
 Note that the bqplot installation requires the environment settings mentioned above.
+
+\subsection{Building ORE-SWIG}\label{sec:oreswig}
+
+Since release 4, ORE comes with Python and Java language bindings following the QuantLib-SWIG example.
+The ORE bindings extend the QuantLib SWIG wrappers and allow calling ORE functionality in the 
+QuantExt/OREData/OREAnalytics libraries alongside with functionality in QuantLib.  
+
+\medskip
+The ORE-SWIG source code is hosted in a separate git repository at \url{https://github.com/opensourcerisk/ore-swig}.
+
+\medskip
+To build the wrappers on Windows, Linux, mac OS
+\begin{enumerate}
+\item build ORE and QuantLib first, as shown in the previous section
+\item check out the ORE-SWIG repository into a project directory {\tt oreswig}, change into that directory
+\item pull in the QuantLib-SWIG project by running \\
+{\tt git submodule init} \\
+{\tt git submodule update}
+%\item Edit the top-level {\tt oreswig/CMakeLists.txt} and uncomment e.g. the line {\tt add\_subdirectory(OREAnalytics-SWIG/Python)} to build the OREAnalytics Python wrappers
+\item Create a subdirectrory {\tt build}, change into that directory and configure cmake and then build using Ninja as follows \\
+\medskip
+{\footnotesize
+{\tt cmake -G Ninja $\backslash$} \\
+\hspace{1cm} {\tt -D ORE=<ORE Root Directory> $\backslash$} \\
+\hspace{1cm} {\tt -D BOOST\_ROOT=<Top level boost include directory> $\backslash$}\\
+\hspace{1cm} {\tt -D BOOST\_LIBRARYDIR=<Location of the compiled boost libraries> $\backslash$}\\
+\hspace{1cm} {\tt -D PYTHON\_LIBRARY=<Full name including path to the 'libpython*' library> $\backslash$} \\
+\hspace{1cm} {\tt -D PYTHON\_INCLUDE\_DIR=<Directory that contains Python.h> $\backslash$} \\
+\hspace{1cm} {\tt ..} \\
+{\tt ninja} \\
+}
+\medskip
+On Linux or mac OS one can also use {\tt make} instead of {\tt ninja}. 
+In that case, omit the {\tt -G Ninja} part in the configuration. 
+
+\medskip
+By default this builds the OREAnalytics-Python bindings which include the wrapped parts of QuantLib, QuantExt, OREData and OREAnalytics.
+
+\item Try a Python example: Update your PYTHONPATH environment variable to include directory {\tt oreswig/build/OREAnalytics-SWIG/Python} which contains both the new python module and the associated native library loaded by the python module;
+change to the {\tt oreswig/OREAnalytics/Python/Examples} directory and run e.g.\\
+
+\medskip
+\centerline{\tt python ore.py}  
+
+There is also an IPython example in the same directory. To try it, launch 
+
+\medskip
+\centerline{\tt jupyter notebook}  
+
+wait for your browser to open, select {\tt ore.ipy} from the list of files and then run all cells.
+
+\item Try a Java example: Make sure that the line {\tt add\_subdirectory(OREAnalytics-SWIG/Java)} 
+is uncommented in the top-level CMakeLists.txt file when building; change to directory 
+{\tt ORE-SWIG/OREAnalytics-SWIG/Java/Examples} and run
+
+\medskip
+{\tt java -Djava.library.path=../../../build/OREAnalytics-SWIG/Java $\backslash$} \\
+\hspace{1cm} {\tt -jar ../../../build/OREAnalytics-SWIG/Java/ORERunner.jar $\backslash$}\\
+\hspace{1cm} {\tt Input/ore.xml}
+
+\end{enumerate}
 
 %========================================================
 \section{Examples}\label{sec:examples}
@@ -891,7 +1004,7 @@ Example & Description \\
 \hline
 29 & Curve Building using Fixed vs. Float Cross Currency Helpers\\
 \hline
-33 & USD-Prime Curve Building via Prime-LIBOR Basis Swap\\
+30 & USD-Prime Curve Building via Prime-LIBOR Basis Swap\\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -1981,11 +2094,11 @@ using {\tt python run.py} or ``directly'' calling {\tt ore[.exe] ore.xml}.
 
 % Missing examples 30, 31, 32
 %--------------------------------------------------------
-\subsection{USD-Prime Curve Building via Prime-LIBOR Basis Swap}% Example 33
-\label{example:33}
+\subsection{USD-Prime Curve Building via Prime-LIBOR Basis Swap}% Example 30
+\label{example:30}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_33} demonstrates the implementation of the USD-Prime index in the ORE.
+The example in folder {\tt Examples/Example\_30} demonstrates the implementation of the USD-Prime index in the ORE.
 The USD-Prime yield curve is built from USD-Prime vs USD 3M Libor basis swap quotes.
 The portfolio consists of two fair basis swaps (NPVs equal to 0):
 \begin{itemize}
@@ -1994,11 +2107,11 @@ The portfolio consists of two fair basis swaps (NPVs equal to 0):
 \end{itemize}
 
 In particular, it is confirmed that the bootstrapped curves USD-FedFunds and USD-Prime follow
-the 3\% rule observed on the market: {\tt U.S. Prime Rate = (The Fed Funds Target Rate + 3)}.
+the 3\% rule observed on the market: {\tt U.S. Prime Rate = (The Fed Funds Target Rate + 3\%)}.
 (See \url{http://www.fedprimerate.com/}.)
 
-Running ORE in directory {\tt Examples/Example\_33} with {\tt python run.py }
-yields the USD-Prime curve in {\tt Examples/Example\_33/Output/curves.csv.}
+Running ORE in directory {\tt Examples/Example\_30} with {\tt python run.py }
+yields the USD-Prime curve in {\tt Examples/Example\_30/Output/curves.csv.}
 
 \clearpage
 %========================================================
@@ -2940,6 +3053,7 @@ between the two index types, while different projection curves are used to forec
 The following is an excerpt of the Inflation Cap/Floor Volatility Surfaces blocks with ID 'default' from the sample example
 file:
 
+{
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -2948,10 +3062,17 @@ file:
         InflationCapFloorVolatility/EUHICPXT/EUHICPXT_YY_CF
     </InflationCapFloorVolatility>
   </YYInflationCapFloorVolatilities>
+
   <ZeroInflationCapFloorVolatilities id="default">
-    <ZeroInflationCapFloorVolatility name="UKRPI">InflationCapFloorVolatility/UKRPI/UKRPI_ZC_CF</ZeroInflationCapFloorVolatility>
-    <ZeroInflationCapFloorVolatility name="EUHICPXT">InflationCapFloorVolatility/EUHICPXT/EUHICPXT_ZC_CF</ZeroInflationCapFloorVolatility>
-    <ZeroInflationCapFloorVolatility name="USCPI">InflationCapFloorVolatility/USCPI/USCPI_ZC_CF</ZeroInflationCapFloorVolatility>
+    <ZeroInflationCapFloorVolatility name="UKRPI">
+        InflationCapFloorVolatility/UKRPI/UKRPI_ZC_CF
+    </ZeroInflationCapFloorVolatility>
+    <ZeroInflationCapFloorVolatility name="EUHICPXT">
+        InflationCapFloorVolatility/EUHICPXT/EUHICPXT_ZC_CF
+    </ZeroInflationCapFloorVolatility>
+    <ZeroInflationCapFloorVolatility name="USCPI">
+        InflationCapFloorVolatility/USCPI/USCPI_ZC_CF
+    </ZeroInflationCapFloorVolatility>
   </ZeroInflationCapFloorVolatilities>
 \end{minted}
 \caption{Inflation Cap/Floor Volatility Surfaces block with ID 'default'}
@@ -3639,7 +3760,7 @@ If no day counter is specified for a given riskfactor then the default Actual365
       <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
       <Interpolation>LogLinear</Interpolation>
       <Extrapolation>Y</Extrapolation>
-      <DayCounter>ACT/ACT</DayCounter> //Sets a new default for all yieldCurves 
+      <DayCounter>ACT/ACT</DayCounter> <!-- Sets a new default for all yieldCurves -->
     </Configuration>
   </YieldCurves>
   <Indices>
@@ -3716,11 +3837,11 @@ If no day counter is specified for a given riskfactor then the default Actual365
   </EquityVolatilities>
   ...
   <BenchmarkCurves>
-	<BenchmarkCurve>
+    <BenchmarkCurve>
       <Currency>EUR</Currency>
       <Name>BENCHMARK_EUR</Name>
-	</BenchmarkCurve>
-	...
+  </BenchmarkCurve>
+  ...
   </BenchmarkCurves>
   <Securities>
     <Simulate>true</Simulate>
@@ -4165,7 +4286,7 @@ Listing \ref{lst:swaptionvol_configuration} shows the configuration of Swaption 
   <SwaptionVolatility>
     <CurveId>EUR_SW_N</CurveId>
     <CurveDescription>EUR normal swaption volatilities</CurveDescription>
-    <!-- ATM (Smile not yet supported) -->
+    <!-- ATM, Smile -->
     <Dimension>ATM</Dimension>
     <!-- Normal or Lognormal or ShiftedLognormal -->
     <VolatilityType>Normal</VolatilityType>
@@ -4214,7 +4335,9 @@ in section \ref{sec:bootstrap_config} are used.
       <VolatilityType>Normal</VolatilityType>
       <!-- Linear, Flat, None -->
       <Extrapolation>Linear</Extrapolation>
-      <!-- Include ATM vol quotes also: True or False -->
+      <!-- Bilinear, BicubicSpline -->
+      <InterpolationMethod>Bilinear</InterpolationMethod>
+       <!-- Include ATM vol quotes also: True or False -->
       <IncludeAtm>FALSE</IncludeAtm>
       <!-- Day counter for date to time conversion -->
       <DayCounter>Actual/365 (Fixed)</DayCounter>
@@ -4225,6 +4348,12 @@ in section \ref{sec:bootstrap_config} are used.
       <Strikes>-0.01,0.0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1</Strikes>
       <IborIndex>EUR-EURIBOR-6M</IborIndex>
       <DiscountCurve>Yield/EUR/EUR1D</DiscountCurve>
+      <!-- OptionletVolatilities, TermVolatilities -->
+      <InterpolateOn>OptionletVolatilities</InterpolateOn>
+      <!-- Linear, LinearFlat, BackwardFlat, Cubic, CubicFlat -->
+      <TimeInterpolation>LinearFlat</TimeInterpolation>
+      <!-- Linear, LinearFlat, BackwardFlat, Cubic, CubicFlat -->
+      <StrikeInterpolation>LinearFlat</StrikeInterpolation>
       <BootstrapConfig>
         ...
       </BootstrapConfig>
@@ -4247,18 +4376,23 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
   <FXVolatility>
     <CurveId>EURUSD</CurveId>
     <CurveDescription />
-    <Dimension>ATM</Dimension> <!-- ATM, Smile -->
+    <!-- ATM, Smile -->
+    <Dimension>ATM</Dimension> 
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <FXSpotID>FX/EUR/USD</FXSpotID>
     <FXForeignCurveID>Yield/USD/USD1D</FXForeignCurveID>
     <FXDomesticCurveID>Yield/EUR/EUR1D</FXDomesticCurveID>
   </FXVolatility>
-    <FXVolatility>
+  
+  <FXVolatility>
     <CurveId>USDJPY</CurveId>
     <CurveDescription />
-    <Dimension>Smile</Dimension> <!-- ATM, Smile -->
-    <SmileType>Delta</SmileType> <!--VannaVolga, Delta -->
-    <SmileInterpolation>Linear</SmileInterpolation> <!-- VannaVolga1,VannaVolga2, Linear, Cubic -->
+    <!-- ATM, Smile -->
+    <Dimension>Smile</Dimension> 
+    <!-- VannaVolga, Delta -->
+    <SmileType>Delta</SmileType> 
+    <!-- VannaVolga1, VannaVolga2, Linear, Cubic -->
+    <SmileInterpolation>Linear</SmileInterpolation>
     <Conventions>FX-USD-JPY-OPTION-CONVENTIONS</Conventions>
     <Deltas>10P,20P,ATM,10C,20C</Deltas>
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
@@ -4295,7 +4429,8 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
     <CurveDescription>SP 500 equity price projection curve</CurveDescription>
     <Currency>USD</Currency>
     <ForecastingCurve>EUR1D</ForecastingCurve>
-    <Type>DividendYield</Type> <!-- DividendYield, ForwardPrice, OptionPremium -->
+    <!-- DividendYield, ForwardPrice, OptionPremium -->
+    <Type>DividendYield</Type> 
     <!-- Optional node, only used when Type is OptionPremium
     <ExerciseStyle>American</ExerciseStyle> -->
     <!-- Spot quote from the market data file -->
@@ -4333,8 +4468,10 @@ Listing \ref{lst:eqoptionvol_configuration} shows the configuration of equity vo
     <CurveId>SP5</CurveId>
     <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
     <Currency>USD</Currency>
-    <Dimension>Smile</Dimension><!-- Alternative: ATM -->
-    <QuoteType>ImpliedVolatility</QuoteType><!--Alternative: Premium -->
+    <!-- ATM, Smile --> 
+    <Dimension>Smile</Dimension>
+    <!-- ImpliedVolatility, Premium -->
+    <QuoteType>ImpliedVolatility</QuoteType>
     <Expiries>1M,5Y,10Y</Expiries>
     <!-- If Dimension is Smile: -->
     <Strikes>1932.8,2147.56,2254.939</Strikes>
@@ -4443,11 +4580,13 @@ floor price surface.
 \begin{minted}[fontsize=\footnotesize]{xml}
       <InflationCapFloorVolatility>
           <CurveId>EUHICPXT_ZC_CF</CurveId>
-          <CurveDescription>EUHICPXT CPI Cap/Floor vol surface derived from price quotes</CurveDescription>
+          <CurveDescription>
+              EUHICPXT CPI Cap/Floor vol surface derived from price quotes
+          </CurveDescription>
           <Type>ZC</Type>
           <QuoteType>Price</QuoteType>
-	  <VolatilityType>Normal</VolatilityType>
-	  <Extrapolation>Y</Extrapolation>
+          <VolatilityType>Normal</VolatilityType>
+          <Extrapolation>Y</Extrapolation>
           <DayCounter>ACT</DayCounter>
           <Calendar>TARGET</Calendar>
           <BusinessDayConvention>MF</BusinessDayConvention>
@@ -4460,7 +4599,7 @@ floor price surface.
           <Index>EUHICPXT</Index>
           <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
-	  <ObservationLag>3M</ObservationLag>
+          <ObservationLag>3M</ObservationLag>
           <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
       </InflationCapFloorVolatility>
 \end{minted}
