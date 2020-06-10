@@ -16,28 +16,25 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/blackvolsurfaceproxy.hpp>
+#include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 
 namespace QuantExt {
 
-BlackVolatilitySurfaceProxy::BlackVolatilitySurfaceProxy(const boost::shared_ptr<BlackVolTermStructure>& proxySurface,
-    const Handle<Quote>& spot, const Handle<Quote>& proxySpot)
+    EquityBlackVolatilitySurfaceProxy::EquityBlackVolatilitySurfaceProxy(const boost::shared_ptr<BlackVolTermStructure>& proxySurface,
+    const boost::shared_ptr<EquityIndex>& index, const boost::shared_ptr<EquityIndex>& proxyIndex)
     : BlackVolatilityTermStructure(0, proxySurface->calendar(), proxySurface->businessDayConvention(), proxySurface->dayCounter()),
-    proxySurface_(proxySurface), spot_(spot), proxySpot_(proxySpot) {
-
-    QL_REQUIRE(!spot.empty(), "No spot handle provided");
-    QL_REQUIRE(!proxySpot.empty(), "No proxy spot handle provided");
+    proxySurface_(proxySurface), index_(index), proxyIndex_(proxyIndex) {
 
     if (proxySurface->allowsExtrapolation())
         this->enableExtrapolation();
 
     registerWith(proxySurface);
-    registerWith(spot);
-    registerWith(proxySpot);
+    registerWith(index);
+    registerWith(proxyIndex);
 }
 
-Volatility BlackVolatilitySurfaceProxy::blackVolImpl(Time t, Real strike) const {
-    Real adjustedStrike = strike * proxySpot_->value() / spot_->value();
+Volatility EquityBlackVolatilitySurfaceProxy::blackVolImpl(Time t, Real strike) const {
+    Real adjustedStrike = strike * proxyIndex_->forecastFixing(t) / index_->forecastFixing(t);
     return proxySurface_->blackVol(t, adjustedStrike);
 }
 

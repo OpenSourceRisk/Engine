@@ -25,32 +25,44 @@
 #define quantext_blackvolsurfacewithatm_hpp
 
 #include <boost/shared_ptr.hpp>
-#include <ql/quote.hpp>
+#include <qle/indexes/equityindex.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
-//! Wrapper class for a BlackVolTermStructure that allows us to proxy one surface off another.
+//! Wrapper class for a BlackVolTermStructure that allows us to proxy one equity vol surface off another.
 /*! This class implements BlackVolatilityTermStructure and takes a surface (well, any BlackVolTermStructure) as an
-    input. It also that's Handles to two Quotes (spot and proxySpot), where spot is the current quote of the underlying 
-    for the surface being constructed and proxySpot is the current quote for the surface being proxied off.
+    input. It also takes Handles to two EquityIndices (index and proxyIndex), where index is the 'EquityIndex' of the underlying 
+    for the surface being constructed and proxyIndex is the 'EquityIndex' for the surface being proxied off.
 
-    The vol returned from the new surface is proxied from the base, adjusting to match ATM:
+    The vol returned from the new surface is proxied from the base, adjusting by the forward prices to match ATM:
 
     \f{eqnarray}{
-    \sigma_2(K,T) = \sigma_1(\frac{K}{S_2}*S_1,T)
+    \sigma_2(K,T) = \sigma_1(\frac{K}{F_2}*F_1,T)
     \f}
+
+    Where \n\n
+    \f$ \sigma_1 = \text{Volatility of underlying being proxied against}\f$ \n
+    \f$ \sigma_2 = \text{Volatility of underlying being proxied}\f$ \n
+    \f$ F_1 = \text{Forward at time T of the underlying being proxied against}\f$ \n
+    \f$ F_2 = \text{Forward at time T of the underlying being proxied}\f$ \n
+    \f$ T = \text{Time}\f$
+    \n
+
+    Note: This surface only proxies equity volatilities, this is because we are forced to look up the equity fixings
+    using time instead of date and use the forecastFixing method in an EquityIndex. A more general class could be developed
+    if need, using Index instead of EquityIndex, if the time lookup could be overcome.
 
     */
     //!\ingroup termstructures
 
-class BlackVolatilitySurfaceProxy : public BlackVolatilityTermStructure {
+class EquityBlackVolatilitySurfaceProxy : public BlackVolatilityTermStructure {
 public:
     //! Constructor. This is a floating term structure (settlement days is zero)
-    BlackVolatilitySurfaceProxy(const boost::shared_ptr<BlackVolTermStructure>& proxySurface, 
-        const Handle<Quote>& spot, const Handle<Quote>& proxySpot);
+    EquityBlackVolatilitySurfaceProxy(const boost::shared_ptr<BlackVolTermStructure>& proxySurface,
+        const boost::shared_ptr<EquityIndex>& index, const boost::shared_ptr<EquityIndex>& proxyIndex);
 
     //! \name TermStructure interface
     //@{
@@ -71,8 +83,8 @@ public:
     //! \name Inspectors
     //@{
     boost::shared_ptr<BlackVolTermStructure> proxySurface() const { return proxySurface_; }
-    Handle<Quote> spot() const { return spot_; }
-    Handle<Quote> proxySpot() const { return proxySpot_; }
+    boost::shared_ptr<EquityIndex> index() const { return index_; }
+    boost::shared_ptr<EquityIndex> proxyIndex() const { return proxyIndex_; }
     //@}
 
 protected:
@@ -81,7 +93,7 @@ protected:
 
 private:
     boost::shared_ptr<BlackVolTermStructure> proxySurface_;
-    Handle<Quote> spot_, proxySpot_;
+    boost::shared_ptr<EquityIndex> index_, proxyIndex_;
 };
 
 } // namespace QuantExt

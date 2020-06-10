@@ -58,6 +58,11 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
         // Set the Curve type - EquityFwd / OptionPrice / DividendYield
         curveType_ = config->type();
 
+        // declair spot and yields
+        Handle<Quote> equitySpot;
+        Handle<YieldTermStructure> forecastYieldTermStructure;
+        Handle<YieldTermStructure> dividendYieldTermStructure;
+
         // Set the Equity Forecast curve
         YieldCurveSpec ycspec(config->currency(), config->forecastingCurve());
         
@@ -68,7 +73,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
         QL_REQUIRE(itr != requiredYieldCurves.end(),
             "Yield Curve Spec - " << ycspec.name() << " - not found during equity curve build");
         boost::shared_ptr<YieldCurve> yieldCurve = itr->second;
-        forecastYieldTermStructure_ = yieldCurve->handle();
+        forecastYieldTermStructure = yieldCurve->handle();
 
         // Set the interpolation variables
         dividendInterpVariable_ = parseYieldCurveInterpolationVariable(config->dividendInterpolationVariable());
@@ -119,8 +124,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
                 boost::shared_ptr<EquitySpotQuote> q = boost::dynamic_pointer_cast<EquitySpotQuote>(md);
 
                 if (q->name() == config->equitySpotQuoteID()) {
-                    QL_REQUIRE(equitySpot_.empty(), "duplicate equity spot quote " << q->name() << " found.");
-                    equitySpot_ = Handle<Quote>(boost::make_shared<SimpleQuote>(q->quote()->value()));
+                    QL_REQUIRE(equitySpot.empty(), "duplicate equity spot quote " << q->name() << " found.");
+                    equitySpot = Handle<Quote>(boost::make_shared<SimpleQuote>(q->quote()->value()));
                 }
             }
 
@@ -208,7 +213,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
 
         // some checks on the quotes read
         LOG("EquityCurve: read " << quotesRead << " quotes of type " << config->type());
-        QL_REQUIRE(!equitySpot_.empty(), "Equity spot quote not found for " << config->curveID());
+        QL_REQUIRE(!equitySpot.empty(), "Equity spot quote not found for " << config->curveID());
 
         if (!wcFlag) {
             QL_REQUIRE(quotesRead == config->fwdQuotes().size(),
@@ -297,7 +302,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
 
                 DLOG("Stripping equity forwards from the option premium surfaces");
                 boost::shared_ptr<EquityForwardCurveStripper> efcs = boost::make_shared<EquityForwardCurveStripper>(callSurface, putSurface,
-                    forecastYieldTermStructure_, equitySpot_, config->exerciseStyle());
+                    forecastYieldTermStructure, equitySpot, config->exerciseStyle());
 
                 // set terms and quotes from the stripper
                 terms_ = efcs->expiries();
@@ -314,8 +319,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
             for (Size i = 0; i < quotes_.size(); i++) {
                 QL_REQUIRE(quotes_[i] > 0, "Invalid Fwd Price " << quotes_[i] << " for " << spec_.name());
                 Time t = dc_.yearFraction(asof, terms_[i]);
-                Rate ir_rate = forecastYieldTermStructure_->zeroRate(t, Continuous);
-                dividendRates.push_back(::log(equitySpot_->value() / quotes_[i]) / t + ir_rate);
+                Rate ir_rate = forecastYieldTermStructure->zeroRate(t, Continuous);
+                dividendRates.push_back(::log(equitySpot->value() / quotes_[i]) / t + ir_rate);
             }
         } else if (buildCurveType == EquityCurveConfig::Type::DividendYield) {
             DLOG("Building Equity Dividend Yield curve from Dividend Yield rates");
@@ -323,7 +328,10 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
         } else if (buildCurveType == EquityCurveConfig::Type::NoDividends) {
             DLOG("Building flat Equity Dividend Yield curve as no quotes provided");
             // Return a flat curve @ 0%
-            dividendYieldTermStructure_ = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(asof, 0.0, dc_));
+            dividendYieldTermStructure = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(asof, 0.0, dc_));
+            equityIndex_ = boost::make_shared<EquityIndex>(
+                spec.curveConfigID(), parseCalendar(config->currency()), parseCurrency(config->currency()),
+                equitySpot, forecastYieldTermStructure, dividendYieldTermStructure);
             return;
         } else
             QL_FAIL("Invalid Equity curve configuration type for " << spec_.name());
@@ -359,10 +367,10 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
             dates[0] = asof;
             rates[0] = rates[1];
             discounts[0] = 1.0;
-            if (forecastYieldTermStructure_->maxDate() > dates.back()) {
-                dates.push_back(forecastYieldTermStructure_->maxDate());
+            if (forecastYieldTermStructure->maxDate() > dates.back()) {
+                dates.push_back(forecastYieldTermStructure->maxDate());
                 rates.push_back(rates.back());
-                Time maxTime = dc_.yearFraction(asof, forecastYieldTermStructure_->maxDate());
+                Time maxTime = dc_.yearFraction(asof, forecastYieldTermStructure->maxDate());
                 discounts.push_back(
                     std::exp(-rates.back() * maxTime)); // flat zero extrapolation used to imply dividend DF
             }
@@ -375,7 +383,12 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
             }
             divCurve->enableExtrapolation();
         }
-        dividendYieldTermStructure_ = Handle<YieldTermStructure>(divCurve);
+        dividendYieldTermStructure = Handle<YieldTermStructure>(divCurve);
+
+        equityIndex_ = boost::make_shared<EquityIndex>(
+            spec.curveConfigID(), parseCalendar(config->currency()), parseCurrency(config->currency()),
+            equitySpot, forecastYieldTermStructure, dividendYieldTermStructure);
+
     }
     catch (std::exception& e) {
         QL_FAIL("equity curve building failed: " << e.what());

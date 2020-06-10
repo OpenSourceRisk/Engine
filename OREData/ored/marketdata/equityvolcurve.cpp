@@ -30,7 +30,7 @@
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
-#include <qle/termstructures/blackvolsurfaceproxy.hpp>
+#include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
 #include <qle/termstructures/equityoptionsurfacestripper.hpp>
 #include <regex>
@@ -476,10 +476,10 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
     auto proxyVolCurve = eqVolCurves.find(proxyVolSpec.name());
     QL_REQUIRE(proxyVolCurve != eqVolCurves.end(), "Failed to find equity vol curve for proxy " << proxyVolSpec.name() << ", when building equity vol curve " << spec.name());
 
-    vol_ = boost::make_shared<BlackVolatilitySurfaceProxy>(
+    vol_ = boost::make_shared<EquityBlackVolatilitySurfaceProxy>(
         proxyVolCurve->second->volTermStructure(),
-        curve->second->equitySpot(),
-        proxyCurve->second->equitySpot());
+        curve->second->equityIndex(),
+        proxyCurve->second->equityIndex());
 
 }
 

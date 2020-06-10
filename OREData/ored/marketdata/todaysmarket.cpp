@@ -572,17 +572,10 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             LOG("Adding EquityCurve (" << it.first << ") with spec " << *equityspec
                                                        << " to configuration " << configuration.first);
                             yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityDividend, it.first)] =
-                                itr->second->dividendYieldTermStructure();
-                            equitySpots_[make_pair(configuration.first, it.first)] = itr->second->equitySpot();
+                                itr->second->equityIndex()->equityDividendCurve();
+                            equitySpots_[make_pair(configuration.first, it.first)] = itr->second->equityIndex()->equitySpot();
 
-                            // set the equity index
-                            boost::shared_ptr<EquityCurveConfig> equityConfig =
-                                curveConfigs.equityCurveConfig(equityspec->curveConfigID());
-
-                            boost::shared_ptr<EquityIndex> eqCurve = boost::make_shared<EquityIndex>(
-                                it.first, parseCalendar(equityConfig->currency()), parseCurrency(equityConfig->currency()),
-                                itr->second->equitySpot(), itr->second->forecastingYieldTermStructure(), itr->second->dividendYieldTermStructure());
-                            equityCurves_[make_pair(configuration.first, it.first)] = Handle<EquityIndex>(eqCurve);
+                            equityCurves_[make_pair(configuration.first, it.first)] = Handle<EquityIndex>(itr->second->equityIndex());
                         }
                     }
                     break;
