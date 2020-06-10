@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016 - 2020 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -43,9 +43,9 @@
 #endif
 
 //! Version string
-#define OPEN_SOURCE_RISK_VERSION "1.8.4.1"
+#define OPEN_SOURCE_RISK_VERSION "1.8.5.0"
 
 //! Version number
-#define OPEN_SOURCE_RISK_VERSION_NUM 1080401
+#define OPEN_SOURCE_RISK_VERSION_NUM 1080500
 
 #endif
