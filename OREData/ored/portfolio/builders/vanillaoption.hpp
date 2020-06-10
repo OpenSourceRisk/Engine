@@ -31,6 +31,7 @@
 #include <ored/utilities/to_string.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
+#include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
@@ -154,6 +155,26 @@ protected:
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
         return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp, discountCurve);
+    }
+};
+
+/*! European cash-settled option engine builder
+    \ingroup builders
+ */
+class EuropeanCSOptionEngineBuilder : public VanillaOptionEngineBuilder {
+public:
+    EuropeanCSOptionEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
+        : VanillaOptionEngineBuilder(model, "AnalyticCashSettledEuropeanEngine", tradeTypes, assetClass, Date()) {}
+
+protected:
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+        const AssetClass& assetClassUnderlying, const Date& expiryDate) override {
+        string key = keyImpl(assetName, ccy, assetClassUnderlying, expiryDate);
+        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+            getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
+        Handle<YieldTermStructure> discountCurve =
+            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+        return boost::make_shared<QuantExt::AnalyticCashSettledEuropeanEngine>(gbsp, discountCurve);
     }
 };
 

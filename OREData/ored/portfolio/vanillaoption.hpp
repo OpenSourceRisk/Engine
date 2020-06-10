@@ -58,10 +58,11 @@ protected:
     VanillaOptionTrade(AssetClass assetClassUnderlying)
         : Trade("VanillaOption"), assetClassUnderlying_(assetClassUnderlying), strike_(0), quantity_(0) {}
     VanillaOptionTrade(const Envelope& env, AssetClass assetClassUnderlying, OptionData option, string assetName,
-                   string currency, double strike, double quantity)
+                   string currency, double strike, double quantity,
+                   const boost::shared_ptr<QuantLib::Index>& index = nullptr)
         : Trade("VanillaOption", env), assetClassUnderlying_(assetClassUnderlying),
           option_(option), assetName_(assetName), currency_(currency), strike_(strike),
-          quantity_(quantity) {}
+          quantity_(quantity), index_(index) {}
         
     AssetClass assetClassUnderlying_;
     OptionData option_;
@@ -69,6 +70,9 @@ protected:
     string currency_;
     double strike_;
     double quantity_;
+
+    //! An index is needed if the option is to be automatically exercised on expiry.
+    boost::shared_ptr<QuantLib::Index> index_;
 };
 } // namespace data
 } // namespace ore

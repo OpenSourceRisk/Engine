@@ -11,10 +11,11 @@
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/portfolio/builders/vanillaoption.hpp>
 #include <ored/utilities/log.hpp>
+#include <qle/instruments/cashsettledeuropeanoption.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 
-
 using namespace QuantLib;
+using QuantExt::CashSettledEuropeanOption;
 
 namespace ore {
 namespace data {
@@ -33,6 +34,10 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
     Date expiryDate = parseDate(option_.exerciseDates().front());
 
+    // Set the maturity date equal to the expiry date. It may get updated below if option is cash settled with 
+    // payment after expiry.
+    maturity_ = expiryDate;
+
     // Exercise
     boost::shared_ptr<Exercise> exercise;
     switch(exerciseType) {
@@ -48,15 +53,77 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
             QL_FAIL("Option Style " << option_.style() << " is not supported");
     }
 
-    // Vanilla European/American.
-    // If price adjustment is necessary we build a simple EU Option
-    boost::shared_ptr<QuantLib::Instrument> instrument;
+    // Create the instrument and the populate the name for the engine builder.
+    boost::shared_ptr<Instrument> vanilla;
+    string tradeTypeBuider = tradeType_;
+    Settlement::Type settlementType = parseSettlementType(option_.settlement());
+    if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
+        
+        // We have a European cash settled option.
 
-    // QL does not have an FXOption or EquityOption, so we add a vanilla one here and wrap
-    // it in a composite to get the notional in.
-    boost::shared_ptr<Instrument> vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+        // Get the payment date.
+        const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+        Date paymentDate = expiryDate;
+        if (opd) {
+            if (opd->rulesBased()) {
+                const Calendar& cal = opd->calendar();
+                QL_REQUIRE(cal != Calendar(), "Need a non-empty calendar for rules based payment date.");
+                paymentDate = cal.advance(expiryDate, opd->lag(), Days, opd->convention());
+            } else {
+                const vector<Date>& dates = opd->dates();
+                QL_REQUIRE(dates.size() == 1, "Need exactly one payment date for cash settled European option.");
+                paymentDate = dates[0];
+            }
+            QL_REQUIRE(paymentDate >= expiryDate, "Payment date must be greater than or equal to expiry date.");
+        }
 
-    string tradeTypeBuider = tradeType_ + (exerciseType == QuantLib::Exercise::Type::European ? "" : "American");
+        if (paymentDate > expiryDate) {
+            
+            // Build a QuantExt::CashSettledEuropeanOption if payment date is strictly greater than expiry.
+
+            // Has the option been marked as exercised
+            const boost::optional<OptionExerciseData>& oed = option_.exerciseData();
+            bool exercised = false;
+            Real exercisePrice = Null<Real>();
+            if (oed) {
+                QL_REQUIRE(oed->date() == expiryDate, "The supplied exercise date (" << io::iso_date(oed->date()) <<
+                    ") should equal the option's expiry date (" << io::iso_date(expiryDate) << ").");
+                exercised = true;
+                exercisePrice = oed->price();
+            }
+
+            // If automatic exercise, we will need an index fixing on the expiry date.
+            if (option_.automaticExercise()) {
+                string indexName = index_->name();
+                if (assetClassUnderlying_ == AssetClass::EQ)
+                    indexName = "EQ-" + indexName;
+                requiredFixings_.addFixingDate(expiryDate, indexName, paymentDate);
+            }
+
+            // Build the instrument
+            vanilla = boost::make_shared<CashSettledEuropeanOption>(type, strike_, expiryDate, paymentDate,
+                option_.automaticExercise(), index_, exercised, exercisePrice);
+
+            // Allow for a separate pricing engine that takes care of payment on a date after expiry. Do this by 
+            // appending 'EuropeanCS' to the trade type.
+            tradeTypeBuider = tradeType_ + "EuropeanCS";
+            
+            // Update the maturity date.
+            maturity_ = paymentDate;
+
+        } else {
+            // If payment date is not greater than expiry, build QuantLib::VanillaOption.
+            vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+        }
+
+    } else {
+        
+        // If not European or not cash settled, build QuantLib::VanillaOption.
+        vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+
+        tradeTypeBuider = tradeType_ + (exerciseType == QuantLib::Exercise::Type::European ? "" : "American");
+    }
+
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuider);
     QL_REQUIRE(builder, "No builder found for " << tradeTypeBuider);
     boost::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
@@ -86,7 +153,6 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
         new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
 
     npvCurrency_ = currency_;
-    maturity_ = expiryDate;
 
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity

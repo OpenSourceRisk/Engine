@@ -38,11 +38,16 @@ namespace QuantExt {
 
 AnalyticCashSettledEuropeanEngine::AnalyticCashSettledEuropeanEngine(
     const boost::shared_ptr<GeneralizedBlackScholesProcess>& bsp)
-    : underlyingEngine_(bsp), bsp_(bsp) {}
+    : underlyingEngine_(bsp), bsp_(bsp) {
+    registerWith(bsp_);
+}
 
 AnalyticCashSettledEuropeanEngine::AnalyticCashSettledEuropeanEngine(
     const boost::shared_ptr<GeneralizedBlackScholesProcess>& bsp, const Handle<YieldTermStructure>& discountCurve)
-    : underlyingEngine_(bsp, discountCurve), bsp_(bsp), discountCurve_(discountCurve) {}
+    : underlyingEngine_(bsp, discountCurve), bsp_(bsp), discountCurve_(discountCurve) {
+    registerWith(bsp_);
+    registerWith(discountCurve_);
+}
 
 void AnalyticCashSettledEuropeanEngine::calculate() const {
 

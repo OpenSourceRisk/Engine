@@ -62,7 +62,7 @@ public:
     //@{
     const std::vector<QuantLib::Date>& dates() const { return dates_; }
     QuantLib::Natural lag() const { return lag_; }
-    QuantLib::Calendar calendar() const { return calendar_; }
+    const QuantLib::Calendar& calendar() const { return calendar_; }
     QuantLib::BusinessDayConvention convention() const { return convention_; }
     RelativeTo relativeTo() const { return relativeTo_; }
     //@}

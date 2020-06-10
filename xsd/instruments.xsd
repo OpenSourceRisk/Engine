@@ -120,6 +120,15 @@
     </xs:choice>
   </xs:complexType>
   
+  <xs:complexType name="optionExerciseData">
+    <xs:complexType>
+      <xs:all>
+        <xs:element type="date" name="Date"/>
+        <xs:element type="xs:decimal" name="Price"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:complexType>
+  
   <xs:complexType name="optionData">
     <xs:all>
       <xs:element type="xs:string" name="LongShort"/>
@@ -163,6 +172,7 @@
         </xs:complexType>
       </xs:element>
       <xs:element type="bool" name="AutomaticExercise" minOccurs="0"/>
+      <xs:element type="optionExerciseData" name="ExerciseData" minOccurs="0"/>
       <xs:element type="optionPaymentData" name="PaymentData" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
@@ -672,6 +682,7 @@
       <xs:element type="xs:float" name="BoughtAmount"/>
       <xs:element type="currencyCode" name="SoldCurrency"/>
       <xs:element type="xs:float" name="SoldAmount"/>
+      <xs:element type="xs:string" name="FXIndex" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -729,6 +740,8 @@
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="xs:float" name="Strike"/>
       <xs:element type="xs:float" name="Quantity"/>
+      <xs:element type="bool" name="IsFuturePrice" minOccurs="0"/>
+      <xs:element type="date" name="FutureExpiryDate" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
