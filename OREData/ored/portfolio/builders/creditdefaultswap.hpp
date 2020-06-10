@@ -17,7 +17,7 @@
 */
 
 /*! \file portfolio/builders/creditdefaultswap.hpp
-\brief
+\brief Builder that returns an engine to price a credit default swap
 \ingroup builders
 */
 

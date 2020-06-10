@@ -17,7 +17,7 @@
 */
 
 /*! \file portfolio/builders/equityoption.hpp
-    \brief
+    \brief Engine builder for equity options
     \ingroup builders
 */
 

@@ -16,6 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file portfolio/builders/forwardbond.hpp
+    \brief Engine builder for forward bonds
+    \ingroup builders
+*/
+
 #pragma once
 
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
