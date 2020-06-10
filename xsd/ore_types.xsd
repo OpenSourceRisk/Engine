@@ -39,11 +39,13 @@
       <xs:enumeration value="Y"/>
       <xs:enumeration value="YES"/>
       <xs:enumeration value="TRUE"/>
+      <xs:enumeration value="True"/>
       <xs:enumeration value="true"/>
       <xs:enumeration value="1"/>
       <xs:enumeration value="N"/>
       <xs:enumeration value="NO"/>
       <xs:enumeration value="FALSE"/>
+      <xs:enumeration value="False"/>
       <xs:enumeration value="false"/>
       <xs:enumeration value="0"/>
       <xs:enumeration value=""/>
@@ -421,6 +423,7 @@
   <xs:simpleType name="exerciseStyle">
     <xs:restriction base="xs:string">
       <xs:enumeration value="European"/>
+      <xs:enumeration value="Bermudan"/>
       <xs:enumeration value="American"/>
     </xs:restriction>
   </xs:simpleType>
@@ -491,6 +494,13 @@
     </xs:restriction>
   </xs:simpleType>
   
+  <xs:simpleType name="bondPriceType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Clean"/>
+      <xs:enumeration value="Dirty"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="strikeDeltaType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Spot"/>

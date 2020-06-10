@@ -17,7 +17,7 @@
 */
 
 /*! \file portfolio/builders/vanillaoption.hpp
-    \brief
+    \brief Abstract engine builders for European and American Options
     \ingroup builders
 */
 

@@ -179,17 +179,18 @@
 
   <xs:complexType name="bondData">
     <xs:sequence>
-      <xs:element type="xs:string" name="IssuerId" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element type="xs:string" name="CreditCurveId" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element type="xs:string" name="SecurityId" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="xs:string" name="ReferenceCurveId" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element type="xs:string" name="IncomeCurveId" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element type="xs:string" name="VolatilityCurveId" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element type="xs:string" name="SettlementDays" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element type="xs:string" name="Calendar" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element type="xs:string" name="IssueDate" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element type="xs:string" name="BondNotional" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element type="xs:string" name="Payer" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="xs:string" name="IssuerId" minOccurs="0"/>
+      <xs:element type="xs:string" name="CreditCurveId" minOccurs="0"/>
+      <xs:element type="xs:string" name="SecurityId"/>
+      <xs:element type="xs:string" name="ReferenceCurveId" minOccurs="0"/>
+      <xs:element type="xs:string" name="ProxySecurityId" minOccurs="0"/>
+      <xs:element type="xs:string" name="IncomeCurveId" minOccurs="0"/>
+      <xs:element type="xs:string" name="VolatilityCurveId" minOccurs="0"/>
+      <xs:element type="xs:string" name="SettlementDays" minOccurs="0"/>
+      <xs:element type="xs:string" name="Calendar" minOccurs="0"/>
+      <xs:element type="xs:string" name="IssueDate" minOccurs="0"/>
+      <xs:element type="xs:string" name="BondNotional" minOccurs="0"/>
+      <xs:element type="xs:string" name="Payer" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
@@ -301,7 +302,7 @@
           </xs:complexType>
         </xs:element>
         <xs:element type="xs:float" name="BaseCPI" maxOccurs="1"/>
-        <xs:element type="date" name="StartDate" maxOccurs="1"/>
+        <xs:element type="date" name="StartDate" minOccurs="0"/>
         <xs:element type="xs:string" name="ObservationLag" maxOccurs="1"/>
         <xs:element type="xs:string" name="Interpolation" minOccurs="0" maxOccurs="1"/>
         <xs:element type="bool" name="Interpolated" minOccurs="0" maxOccurs="1"/>

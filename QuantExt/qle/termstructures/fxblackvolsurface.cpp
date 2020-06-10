@@ -77,6 +77,10 @@ boost::shared_ptr<FxSmileSection> FxBlackVolatilitySurface::blackVolSmile(Time t
         // flat RR + BF
         rr = rrCurve_(times_.front());
         bf = bfCurve_(times_.front());
+
+        // we account cases where the FxSmileSection requires t > 0 by using the first pillar point
+        QL_REQUIRE(t >= 0, "FxBlackVolatilitySurface::blackVolSmileImpl(): non-negative expiry time expected");
+        t = times_.front();
     } else if (t < times_.back()) {
         rr = rrCurve_(t, true);
         bf = bfCurve_(t, true);

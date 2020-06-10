@@ -191,7 +191,7 @@ LegDataRegister<CPILegData> CPILegData::reg_("CPI");
 void CPILegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     index_ = XMLUtils::getChildValue(node, "Index", true);
-    startDate_ = XMLUtils::getChildValue(node, "StartDate", true);
+    startDate_ = XMLUtils::getChildValue(node, "StartDate", false);
     indices_.insert(index_);
     baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI", true);
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
@@ -1092,7 +1092,6 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     CPI::InterpolationType interpolationMethod = parseObservationInterpolation(cpiLegData->interpolation());
     vector<double> rates = buildScheduledVector(cpiLegData->rates(), cpiLegData->rateDates(), schedule);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    Date startDate = parseDate(cpiLegData->startDate());
 
     applyAmortization(notionals, data, schedule, false);
 
@@ -1105,12 +1104,24 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
                                   .withObservationInterpolation(interpolationMethod)
                                   .withSubtractInflationNominal(cpiLegData->subtractInflationNominal());
 
+    // the cpi leg uses the first schedule date as the start date, which only makes sense if there are at least
+    // two dates in the schedule, otherwise the only date in the schedule is the pay date of the cf and a a separate
+    // start date is expected; if both the separate start date and a schedule with more than one date is given
+    if (schedule.size() < 2) {
+        QL_REQUIRE(!cpiLegData->startDate().empty(),
+                   "makeCPILeg(): if only one schedule date is given, a StartDate must be given in addition");
+        cpiLeg.withStartDate(parseDate(cpiLegData->startDate()));
+    } else {
+        QL_REQUIRE(cpiLegData->startDate().empty() || parseDate(cpiLegData->startDate()) == schedule.dates().front(),
+                   "makeCPILeg(): first schedule date ("
+                       << schedule.dates().front() << ") must be identical to start date ("
+                       << parseDate(cpiLegData->startDate())
+                       << "), the start date can be omitted for schedules containing more than one date");
+    }
+
     bool couponCap = cpiLegData->caps().size() > 0;
     bool couponFloor = cpiLegData->floors().size() > 0;
     bool couponCapFloor = cpiLegData->caps().size() > 0 || cpiLegData->floors().size() > 0;
-
-    if (couponCapFloor)
-        cpiLeg.withStartDate(startDate);
 
     if (couponCap)
         cpiLeg.withCaps(buildScheduledVector(cpiLegData->caps(), cpiLegData->capDates(), schedule));
@@ -1685,7 +1696,7 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 }
 
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                   std::map<std::string, std::string>& qlToOREIndexNames) {
+                   std::map<std::string, std::string>& qlToOREIndexNames, RequiredFixings& requiredFixings) {
     for (auto const& indexing : data.indexing()) {
         if (indexing.hasData()) {
             DLOG("apply indexing (index='" << indexing.index() << "') to leg of type " << data.legType());
@@ -1716,10 +1727,11 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                     parseCommodityIndex(indexing.index(), tmp->fixingCalendar(),
                                         engineFactory->market()->commodityPriceCurve(tmp->underlyingName(), config));
             } else if(boost::starts_with(indexing.index(),"BOND-")) {
+                // if we build a bond index, we add the required fixings for the bond underlying
                 BondData bondData(parseBondIndex(indexing.index())->securityName(), 1.0);
                 index = buildBondIndex(bondData, indexing.indexIsDirty(), indexing.indexIsRelative(),
                                        parseCalendar(indexing.indexFixingCalendar()),
-                                       indexing.indexIsConditionalOnSurvival(), engineFactory);
+                                       indexing.indexIsConditionalOnSurvival(), engineFactory, requiredFixings);
             } else {
                 QL_FAIL("invalid index '" << indexing.index()
                                           << "' in indexing data, expected EQ-, FX-, COMM-, BOND- index");
@@ -1794,7 +1806,8 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
 boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
                                                       const bool relative, const Calendar& fixingCalendar,
                                                       const bool conditionalOnSurvival,
-                                                      const boost::shared_ptr<EngineFactory>& engineFactory) {
+                                                      const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                      RequiredFixings& requiredFixings) {
 
     // build the bond, we would not need a full build with a pricing engine attached, but this is the easiest
 
@@ -1802,6 +1815,14 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
     data.populateFromBondReferenceData(engineFactory->referenceData());
     Bond bond(Envelope(), data);
     bond.build(engineFactory);
+
+    RequiredFixings bondRequiredFixings = bond.requiredFixings();
+    if(dirty) {
+        // dirty prices require accrueds on past dates
+        bondRequiredFixings.unsetPayDates();
+    }
+    requiredFixings.addData(bondRequiredFixings);
+
     auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
     QL_REQUIRE(qlBond, "buildBondIndex(): could not cast to QuantLib::Bond, this is unexpected");
 
