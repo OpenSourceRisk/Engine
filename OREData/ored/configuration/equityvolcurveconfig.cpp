@@ -156,9 +156,12 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Currency", ccy_);
     XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
     
-    XMLNode* n = volatilityConfig_->toXML(doc);
-    XMLUtils::appendNode(node, n);
-
+    if (proxySurface_.empty()) {
+        XMLNode* n = volatilityConfig_->toXML(doc);
+        XMLUtils::appendNode(node, n);
+    } else {
+        XMLUtils::addChild(doc, node, "ProxySurface", proxySurface_);
+    }
     if (calendar_ != "NullCalendar")
         XMLUtils::addChild(doc, node, "Calendar", calendar_);
     
