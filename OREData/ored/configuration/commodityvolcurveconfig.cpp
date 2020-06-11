@@ -133,9 +133,9 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "FutureConventions", futureConventionsId_);
     XMLUtils::addChild(doc, node, "OptionExpiryRollDays", static_cast<int>(optionExpiryRollDays_));
     if (!priceCurveId_.empty())
-        XMLUtils::addChild(doc, node, "PriceCurveId", futureConventionsId_);
+        XMLUtils::addChild(doc, node, "PriceCurveId", priceCurveId_);
     if (!yieldCurveId_.empty())
-        XMLUtils::addChild(doc, node, "YieldCurveId", futureConventionsId_);
+        XMLUtils::addChild(doc, node, "YieldCurveId", yieldCurveId_);
     
     return node;
 }

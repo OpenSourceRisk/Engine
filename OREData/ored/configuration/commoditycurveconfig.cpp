@@ -44,7 +44,7 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& 
     const string& yieldCurveId, bool extrapolation)
     : CurveConfig(curveId, curveDescription), type_(Type::CrossCurrency), currency_(currency), 
       basePriceCurveId_(basePriceCurveId), baseYieldCurveId_(baseYieldCurveId), yieldCurveId_(yieldCurveId), 
-      extrapolation_(extrapolation) {}
+      extrapolation_(extrapolation), addBasis_(true), monthOffset_(0) {}
 
 CommodityCurveConfig::CommodityCurveConfig(const string& curveId,
     const string& curveDescription,
@@ -145,8 +145,7 @@ XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
 
         if (!commoditySpotQuoteId_.empty())
             XMLUtils::addChild(doc, node, "SpotQuote", commoditySpotQuoteId_);
-        vector<string> forwardQuotes(quotes_.begin() + 1, quotes_.end());
-        XMLUtils::addChildren(doc, node, "Quotes", "Quote", forwardQuotes);
+        XMLUtils::addChildren(doc, node, "Quotes", "Quote", fwdQuotes_);
         XMLUtils::addChild(doc, node, "DayCounter", dayCountId_);
         XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
         XMLUtils::addChild(doc, node, "Conventions", conventionsId_);
