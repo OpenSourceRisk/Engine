@@ -58,7 +58,8 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     QL_REQUIRE(strike_ > 0, "Commodity option requires a positive strike");
 
     // Get the price curve for the commodity.
-    Handle<PriceTermStructure> priceCurve = engineFactory->market()->commodityPriceCurve(assetName_,
+    const boost::shared_ptr<Market>& market = engineFactory->market();
+    Handle<PriceTermStructure> priceCurve = market->commodityPriceCurve(assetName_,
         engineFactory->configuration(MarketContext::pricing));
     
     // Populate the index_ in case the option is automatic exercise.
@@ -87,6 +88,13 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     }
 
     VanillaOptionTrade::build(engineFactory);
+
+    // LOG the volatility if the trade expiry date is in the future.
+    if (expiryDate_ > Settings::instance().evaluationDate()) {
+        DLOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with expiry " << expiryDate_ <<
+            " and strike " << strike_ << " is " <<
+            market->commodityVolatility(assetName_)->blackVol(expiryDate_, strike_));
+    }
 }
 
 std::map<AssetClass, std::set<std::string>> CommodityOption::underlyingIndices() const {
