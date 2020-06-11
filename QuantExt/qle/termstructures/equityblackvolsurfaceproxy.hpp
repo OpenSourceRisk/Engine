@@ -56,7 +56,7 @@ using namespace QuantLib;
     if need, using Index instead of EquityIndex, if the time lookup could be overcome.
 
     */
-    //!\ingroup termstructures
+//!\ingroup termstructures
 
 class EquityBlackVolatilitySurfaceProxy : public BlackVolatilityTermStructure {
 public:
@@ -76,8 +76,8 @@ public:
 
     //! \name VolatilityTermStructure interface
     //@{
-    Rate minStrike() const { return proxySurface_->minStrike(); }
-    Rate maxStrike() const { return proxySurface_->maxStrike(); }
+    Rate minStrike() const;
+    Rate maxStrike() const;
     //@}
 
     //! \name Inspectors

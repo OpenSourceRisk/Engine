@@ -38,4 +38,12 @@ Volatility EquityBlackVolatilitySurfaceProxy::blackVolImpl(Time t, Real strike) 
     return proxySurface_->blackVol(t, adjustedStrike);
 }
 
+Rate EquityBlackVolatilitySurfaceProxy::minStrike() const { 
+    return proxySurface_->minStrike() * index_->equitySpot()->value() / proxyIndex_->equitySpot()->value();
+}
+
+Rate EquityBlackVolatilitySurfaceProxy::maxStrike() const {
+    return proxySurface_->maxStrike() * index_->equitySpot()->value() / proxyIndex_->equitySpot()->value();
+}
+
 } // namespace QuantExt
