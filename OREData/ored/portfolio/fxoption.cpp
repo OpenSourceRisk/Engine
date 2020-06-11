@@ -66,7 +66,7 @@ void FxOption::fromXML(XMLNode* node) {
     double soldAmount = XMLUtils::getChildValueAsDouble(fxNode, "SoldAmount", true);
     strike_ = soldAmount / boughtAmount;
     quantity_ = boughtAmount;
-    fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", true);
+    fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", false);
 }
 
 XMLNode* FxOption::toXML(XMLDocument& doc) {
