@@ -94,6 +94,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
             // If automatic exercise, we will need an index fixing on the expiry date.
             if (option_.automaticExercise()) {
+                QL_REQUIRE(index_, "Option trade " << id() << " has automatic exercise so we need a valid index.");
                 string indexName = index_->name();
                 if (assetClassUnderlying_ == AssetClass::EQ)
                     indexName = "EQ-" + indexName;

@@ -36,6 +36,11 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     const boost::shared_ptr<Market>& market = engineFactory->market();
 
+    if (option_.automaticExercise()) {
+        QL_REQUIRE(!fxIndex_.empty(), "FX option trade " << id() <<
+            " has automatic exercise so the FXIndex node needs to be populated.");
+    }
+
     // If we have a non-empty FX index string, parse it and attach curves from market.
     if (!fxIndex_.empty()) {
         // The strike is the number of units of sold currency (currency_) per unit of bought currency (assetName_).
