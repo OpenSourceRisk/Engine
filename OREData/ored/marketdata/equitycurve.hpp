@@ -28,7 +28,7 @@
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
-#include <qle/indexes/equityIndex.hpp>
+#include <qle/indexes/equityindex.hpp>
 
 namespace ore {
 namespace data {
