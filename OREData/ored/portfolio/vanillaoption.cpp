@@ -129,12 +129,23 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
         tradeTypeBuider = tradeType_ + (exerciseType == QuantLib::Exercise::Type::European ? "" : "American");
     }
 
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuider);
-    QL_REQUIRE(builder, "No builder found for " << tradeTypeBuider);
-    boost::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
-        boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
+    // Only try to set an engine on the option instrument if it is not expired. This avoids errors in 
+    // engine builders that rely on the expiry date being in the future e.g. AmericanOptionFDEngineBuilder.
+    string configuration = Market::defaultConfiguration;
+    if (!vanilla->isExpired()) {
+        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuider);
+        QL_REQUIRE(builder, "No builder found for " << tradeTypeBuider);
+        boost::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
+            boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
 
-    vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_));
+        vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_));
+
+        configuration = vanillaOptionBuilder->configuration(MarketContext::pricing);
+
+    } else {
+        DLOG("No engine attached for option on trade " << id() << " with expiry date " <<
+            io::iso_date(expiryDate_) << " because it is expired.");
+    }
 
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
@@ -150,8 +161,8 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
         Currency premiumCurrency = parseCurrency(option_.premiumCcy());
         Date premiumDate = parseDate(option_.premiumPayDate());
         addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, ccy,
-                   engineFactory, vanillaOptionBuilder->configuration(MarketContext::pricing));
-        DLOG("option premium added for asset option " << id());
+                   engineFactory, configuration);
+        DLOG("option premium added for vanilla option " << id());
     }
 
     instrument_ = boost::shared_ptr<InstrumentWrapper>(
