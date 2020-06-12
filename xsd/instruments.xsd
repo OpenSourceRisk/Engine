@@ -121,12 +121,10 @@
   </xs:complexType>
   
   <xs:complexType name="optionExerciseData">
-    <xs:complexType>
-      <xs:all>
-        <xs:element type="date" name="Date"/>
-        <xs:element type="xs:decimal" name="Price"/>
-      </xs:all>
-    </xs:complexType>
+    <xs:all>
+      <xs:element type="date" name="Date"/>
+      <xs:element type="xs:decimal" name="Price"/>
+    </xs:all>
   </xs:complexType>
   
   <xs:complexType name="optionData">
