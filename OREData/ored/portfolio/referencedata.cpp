@@ -126,8 +126,11 @@ boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildReferenceDatum
 }
 
 XMLNode* BasicReferenceDataManager::toXML(XMLDocument& doc) {
-    // TODO
-    return NULL;
+    XMLNode* node = doc.allocNode("ReferenceData");
+    for (const auto& kv : data_) {
+        XMLUtils::appendNode(node, kv.second->toXML(doc));
+    }
+    return node;
 }
 
 bool BasicReferenceDataManager::hasData(const string& type, const string& id) const {
