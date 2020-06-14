@@ -106,7 +106,7 @@ void CrossAssetModelBuilder::registerWithSubBuilders() {
 }
 
 bool CrossAssetModelBuilder::requiresRecalibration() const {
-    for (auto const b : subBuilders_)
+    for (auto const &b : subBuilders_)
         if (b->requiresRecalibration())
             return true;
     return marketObserver_->hasUpdated(false);
