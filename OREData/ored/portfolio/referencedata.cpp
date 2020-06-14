@@ -36,6 +36,7 @@ XMLNode* ReferenceDatum::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("ReferenceDatum");
     QL_REQUIRE(node, "Failed to create ReferenceDatum node");
     XMLUtils::addAttribute(doc, node, "id", id_);
+    XMLUtils::addChild(doc, node, "Type", type_);
     return node;
 }
 
