@@ -79,8 +79,7 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "PayoffType", payoffType_);
     if (style_ != "")
         XMLUtils::addChild(doc, node, "Style", style_);
-    // if (noticePeriod_ != "")
-        XMLUtils::addChild(doc, node, "NoticePeriod", noticePeriod_);
+    XMLUtils::addChild(doc, node, "NoticePeriod", noticePeriod_);
     if (noticeCalendar_ != "")
         XMLUtils::addChild(doc, node, "NoticeCalendar", noticeCalendar_);
     if (noticeConvention_ != "")

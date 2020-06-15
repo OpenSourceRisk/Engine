@@ -95,7 +95,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         LOG("CrossAssetModel is simulating FX vols");
         for (Size k = 0; k < simMarketConfig_->fxVolCcyPairs().size(); k++) {
             // Calculating the index is messy
-            const string& pair = simMarketConfig_->fxVolCcyPairs()[k];
+            const string pair = simMarketConfig_->fxVolCcyPairs()[k];
             LOG("Set up CrossAssetModelImpliedFxVolTermStructures for " << pair);
             QL_REQUIRE(pair.size() == 6, "Invalid ccypair " << pair);
             const string& domestic = pair.substr(0, 3);
@@ -124,7 +124,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         LOG("CrossAssetModel is simulating EQ vols");
         for (Size k = 0; k < simMarketConfig_->equityVolNames().size(); k++) {
             // Calculating the index is messy
-            const string& equityName = simMarketConfig_->equityVolNames()[k];
+            const string equityName = simMarketConfig_->equityVolNames()[k];
             LOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName);
             Size eqIndex = model->eqIndex(equityName);
             // eqVols_ are indexed by ccyPairs
@@ -293,7 +293,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         if (simMarketConfig_->simulateFXVols()) {
             const vector<Period>& expires = simMarketConfig_->fxVolExpiries();
             for (Size k = 0; k < simMarketConfig_->fxVolCcyPairs().size(); k++) {
-                const string& ccyPair = simMarketConfig_->fxVolCcyPairs()[k];
+                const string ccyPair = simMarketConfig_->fxVolCcyPairs()[k];
 
                 Size fxIndex = fxVols_[k]->fxIndex();
                 Real zFor = sample.value[fxIndex + 1][i + 1];
@@ -317,7 +317,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         if (simMarketConfig_->simulateEquityVols()) {
             const vector<Period>& expiries = simMarketConfig_->equityVolExpiries();
             for (Size k = 0; k < simMarketConfig_->equityVolNames().size(); k++) {
-                const string& equityName = simMarketConfig_->equityVolNames()[k];
+                const string equityName = simMarketConfig_->equityVolNames()[k];
 
                 Size eqIndex = eqVols_[k]->equityIndex();
                 Size eqCcyIdx = eqVols_[k]->eqCcyIndex();

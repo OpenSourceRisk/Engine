@@ -238,7 +238,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     // accrual period of the underlying; TODO handle exercises into broken periods?
     Date lastAccrualStartDate = Date::minDate();
     for (Size i = 0; i < 2; ++i) {
-        for (auto const c : swap->leg(i)) {
+        for (auto const &c : swap->leg(i)) {
             if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c))
                 lastAccrualStartDate = std::max(lastAccrualStartDate, cpn->accrualStartDate());
         }
@@ -297,7 +297,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
             if (feeType[i] == "Percentage") {
                 // get next float coupon after exercise to determine relevant notional
                 Real feeNotional = Null<Real>();
-                for (auto const c : swap->leg(1)) {
+                for (auto const &c : swap->leg(1)) {
                     if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
                         if (feeNotional == Null<Real>() && cpn->accrualStartDate() >= exerciseDates[i])
                             feeNotional = cpn->nominal();
