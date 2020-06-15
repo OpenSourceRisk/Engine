@@ -537,5 +537,12 @@
     </xs:restriction>
   </xs:simpleType>
   
+  <xs:simpleType name="optionPayRelativeTo">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Expiry"/>
+      <xs:enumeration value="Exercise"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
 </xs:schema>
 

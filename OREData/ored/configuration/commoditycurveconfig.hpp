@@ -44,7 +44,7 @@ public:
     //! \name Constructors/Destructors
     //@{
     //! Default constructor
-    CommodityCurveConfig() {}
+    CommodityCurveConfig() : type_(Type::Direct), extrapolation_(true), addBasis_(true), monthOffset_(0) {}
 
     //! Detailed constructor for Direct commodity curve configuration
     CommodityCurveConfig(const std::string& curveId, const std::string& curveDescription, const std::string& currency,

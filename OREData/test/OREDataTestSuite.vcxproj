@@ -669,6 +669,7 @@
     <ClCompile Include="inflationcapfloor.cpp" />
     <ClCompile Include="legdata.cpp" />
     <ClCompile Include="mxnircurves.cpp" />
+    <ClCompile Include="optionpaymentdata.cpp" />
     <ClCompile Include="ored_commodityforward.cpp" />
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="portfolio.cpp" />
