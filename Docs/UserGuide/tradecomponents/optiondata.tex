@@ -8,31 +8,37 @@ elements. An example structure of the \lstinline!OptionData! trade component nod
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-            <OptionData>
-                <LongShort>Long</LongShort>
-                <OptionType>Call</OptionType>
-                <Style>Bermudan</Style>
-                <NoticePeriod>5D</NoticePeriod>
-                <NoticeCalendar>TARGET</NoticeCalendar>
-                <NoticeConvention>F</NoticePeriod>
-                <Settlement>Cash</Settlement>
-                <SettlementMethod>CollateralizedCashPrice</SettlementMethod>
-                <PayOffAtExpiry>true</PayOffAtExpiry>
-                <ExerciseFees>
-                    <ExerciseFee type="Percentage">0.0020</ExerciseFee>
-                    <ExerciseFee type="Absolute" startDate="2020-04-20">25000</ExerciseFee>
-                </ExerciseFees>
-                <ExerciseFeeSettlementPeriod>2D</ExerciseFeeSettlementPeriod>
-                <ExerciseFeeSettlementConvention>F</ExerciseFeeSettlementConvention>
-                <ExerciseFeeSettlementCalendar>TARGET</ExerciseFeeSettlementCalendar>
-                <ExerciseDates>
-                    <ExerciseDate>2019-04-20</ExerciseDate>
-                    <ExerciseDate>2020-04-20</ExerciseDate>
-                </ExerciseDates>
-                <PremiumAmount>100000</PremiumAmount> 
-                <PremiumCurrency>EUR</PremiumCurrency>            
-                <PremiumPayDate>2018-05-07</PremiumPayDate>  
-            </OptionData>
+<OptionData>
+  <LongShort>Long</LongShort>
+  <OptionType>Call</OptionType>
+  <Style>Bermudan</Style>
+  <NoticePeriod>5D</NoticePeriod>
+  <NoticeCalendar>TARGET</NoticeCalendar>
+  <NoticeConvention>F</NoticePeriod>
+  <Settlement>Cash</Settlement>
+  <SettlementMethod>CollateralizedCashPrice</SettlementMethod>
+  <PayOffAtExpiry>true</PayOffAtExpiry>
+  <ExerciseFees>
+    <ExerciseFee type="Percentage">0.0020</ExerciseFee>
+    <ExerciseFee type="Absolute" startDate="2020-04-20">25000</ExerciseFee>
+  </ExerciseFees>
+  <ExerciseFeeSettlementPeriod>2D</ExerciseFeeSettlementPeriod>
+  <ExerciseFeeSettlementConvention>F</ExerciseFeeSettlementConvention>
+  <ExerciseFeeSettlementCalendar>TARGET</ExerciseFeeSettlementCalendar>
+  <ExerciseDates>
+    <ExerciseDate>2019-04-20</ExerciseDate>
+    <ExerciseDate>2020-04-20</ExerciseDate>
+  </ExerciseDates>
+  <PremiumAmount>100000</PremiumAmount>
+  <PremiumCurrency>EUR</PremiumCurrency>
+  <PremiumPayDate>2018-05-07</PremiumPayDate>
+  <AutomaticExercise>...</AutomaticExercise>
+  <ExerciseData>
+    <Date>...</Date>
+    <Price>...</Price>
+  </ExerciseData>
+  <PaymentData>...</PaymentData>
+</OptionData>
 \end{minted}
 \caption{Option data}
 \label{lst:option_data}
@@ -178,5 +184,51 @@ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
+\item AutomaticExercise [Optional]: Currently, this field is only used for vanilla European cash settled FX, equity and commodity options. It is a boolean flag indicating if \textit{Automatic Exercise} is applicable for the option trade. A value of \lstinline!true! indicates that \textit{Automatic Exercise} is applicable and a value of \lstinline!false! indicates that it is not.
+
+Allowable values: A boolean value given in Table \ref{tab:boolean_allowable}. If not provided, the default value is \lstinline!false!.
+
+\item ExerciseData [Optional]: Currently, this node is only used for vanilla European cash settled FX, equity and commodity options where \textit{Automatic Exercise} is not applicable. It has the structure shown in Listing \ref{lst:option_data} i.e.\ a child \lstinline!Date! and \lstinline!Price! node. It is used to supply the price at which an option was exercised and the date of exercise. For a European option, the supplied date clearly has to match the single option \lstinline!ExerciseDate!. It is needed where the cash settlement date is after the \lstinline!ExerciseDate!. If this node is not supplied, and the \lstinline!ExerciseDate! is in the past relative to the valuation date, the option is assumed to have expired unexercised.
+
+Allowable values: The \lstinline!Date! node should be a valid date as outlined in Table \ref{tab:allow_stand_data} and the \lstinline!Price! node should be a valid price as a real number.
+
+\item PaymentData [Optional]: Currently, this node is only used for vanilla European cash settled FX, equity and commodity options. It is used to supply the date on which the option is cash settled if it is exercised. There are two methods in which this data may be supplied:
+
+\begin{enumerate}
+\item
+The first method is an explicit list of dates as shown in Listing \ref{lst:dates_payment_data}. The \lstinline!Date! node should be a valid date as outlined in Table \ref{tab:allow_stand_data}. Obviously, for European options, there should be exactly one date supplied.
+
+\item
+The second method is a set of rules that are used to generate the settlement date relative to either the exercise date of the option or the expiry date of the option. The structure of the \lstinline!PaymentData! node in this case is given in Listing \ref{lst:rules_payment_data}. The optional \lstinline!RelativeTo! node must be either \lstinline!Expiry! or \lstinline!Exercise!. If it is \lstinline!Expiry!, the expiry date is taken as the base date from which the rules are applied. If it is \lstinline!Exercise!, the exercise date is taken as the base date from which the rules are applied. These two dates are the same in the case of a European option. If not provided, \lstinline!Expiry! is assumed. The \lstinline!Lag! node is a non-negative integer giving the number of days from the base date to the cash settlement date. The \lstinline!Calendar! gives the business day calendar for the cash settlement date and should be a valid calendar code as outlined in Table \ref{tab:calendar}. The \lstinline!Convention! gives the business day convention for the cash settlement date and should be a valid business day convention as outlined in Table \ref{tab:allow_stand_data}.
+
+\end{enumerate}
+
 \end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<PaymentData>
+  <Dates>
+    <Date>...</Date>
+  </Dates>
+</PaymentData>
+\end{minted}
+\caption{Dates based \lstinline!PaymentData!}
+\label{lst:dates_payment_data}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<PaymentData>
+  <Rules>
+    <Lag>...</Lag>
+    <Calendar>...</Calendar>
+    <Convention>...</Convention>
+    <RelativeTo>...</RelativeTo>
+  </Rules>
+</PaymentData>
+\end{minted}
+\caption{Rules based \lstinline!PaymentData!}
+\label{lst:rules_payment_data}
+\end{listing}
 

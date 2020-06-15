@@ -33,6 +33,7 @@ indices.cpp
 inflationcapfloor.cpp
 legdata.cpp
 mxnircurves.cpp
+optionpaymentdata.cpp
 ored_commodityforward.cpp
 parser.cpp
 portfolio.cpp

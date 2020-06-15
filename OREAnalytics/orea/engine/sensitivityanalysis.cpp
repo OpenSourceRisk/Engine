@@ -64,8 +64,8 @@ SensitivityAnalysis::SensitivityAnalysis(
       recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
       extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders), referenceData_(referenceData), 
-      continueOnError_(continueOnError), engineData_(engineData), portfolio_(portfolio),xccyDiscounting_(xccyDiscounting),
-      initialized_(false), computed_(false) {}
+      continueOnError_(continueOnError), engineData_(engineData), portfolio_(portfolio),
+      xccyDiscounting_(xccyDiscounting), initialized_(false), computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;

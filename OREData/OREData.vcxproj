@@ -159,6 +159,8 @@
     <ClInclude Include="ored\portfolio\nettingsetdefinition.hpp" />
     <ClInclude Include="ored\portfolio\nettingsetmanager.hpp" />
     <ClInclude Include="ored\portfolio\optiondata.hpp" />
+    <ClInclude Include="ored\portfolio\optionexercisedata.hpp" />
+    <ClInclude Include="ored\portfolio\optionpaymentdata.hpp" />
     <ClInclude Include="ored\portfolio\optionwrapper.hpp" />
     <ClInclude Include="ored\portfolio\portfolio.hpp" />
     <ClInclude Include="ored\portfolio\referencedata.hpp" />
@@ -297,6 +299,8 @@
     <ClCompile Include="ored\portfolio\nettingsetdefinition.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetmanager.cpp" />
     <ClCompile Include="ored\portfolio\optiondata.cpp" />
+    <ClCompile Include="ored\portfolio\optionexercisedata.cpp" />
+    <ClCompile Include="ored\portfolio\optionpaymentdata.cpp" />
     <ClCompile Include="ored\portfolio\optionwrapper.cpp" />
     <ClCompile Include="ored\portfolio\portfolio.cpp" />
     <ClCompile Include="ored\portfolio\referencedata.cpp" />

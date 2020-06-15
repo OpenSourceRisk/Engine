@@ -57,6 +57,7 @@ indexes/inflationindexwrapper.cpp
 indexes/region.cpp
 instruments/averageois.cpp
 instruments/brlcdiswap.cpp
+instruments/cashsettledeuropeanoption.cpp
 instruments/cdsoption.cpp
 instruments/commodityapo.cpp
 instruments/commodityforward.cpp
@@ -107,6 +108,7 @@ models/lgmimpliedyieldtermstructure.cpp
 models/linkablecalibratedmodel.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
+pricingengines/analyticcashsettledeuropeanengine.cpp
 pricingengines/analyticcclgmfxoptionengine.cpp
 pricingengines/analyticdkcpicapfloorengine.cpp
 pricingengines/analyticlgmcdsoptionengine.cpp
@@ -294,6 +296,7 @@ indexes/region.hpp
 indexes/secpi.hpp
 instruments/averageois.hpp
 instruments/brlcdiswap.hpp
+instruments/cashsettledeuropeanoption.hpp
 instruments/cdsoption.hpp
 instruments/commodityapo.hpp
 instruments/commodityforward.hpp
@@ -359,6 +362,7 @@ models/linkablecalibratedmodel.hpp
 models/parametrization.hpp
 models/piecewiseconstanthelper.hpp
 models/pseudoparameter.hpp
+pricingengines/analyticcashsettledeuropeanengine.hpp
 pricingengines/analyticcclgmfxoptionengine.hpp
 pricingengines/analyticdkcpicapfloorengine.hpp
 pricingengines/analyticlgmcdsoptionengine.hpp

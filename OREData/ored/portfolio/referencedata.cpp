@@ -36,6 +36,7 @@ XMLNode* ReferenceDatum::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("ReferenceDatum");
     QL_REQUIRE(node, "Failed to create ReferenceDatum node");
     XMLUtils::addAttribute(doc, node, "id", id_);
+    XMLUtils::addChild(doc, node, "Type", type_);
     return node;
 }
 
@@ -126,8 +127,11 @@ boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildReferenceDatum
 }
 
 XMLNode* BasicReferenceDataManager::toXML(XMLDocument& doc) {
-    // TODO
-    return NULL;
+    XMLNode* node = doc.allocNode("ReferenceData");
+    for (const auto& kv : data_) {
+        XMLUtils::appendNode(node, kv.second->toXML(doc));
+    }
+    return node;
 }
 
 bool BasicReferenceDataManager::hasData(const string& type, const string& id) const {
