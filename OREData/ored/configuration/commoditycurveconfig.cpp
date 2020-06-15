@@ -126,14 +126,16 @@ XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
 
     if (type_ == Type::Basis) {
 
-        XMLUtils::addChild(doc, node, "BasePriceCurve", basePriceCurveId_);
-        XMLUtils::addChild(doc, node, "BasePriceConventions", baseConventionsId_);
-        XMLUtils::addChildren(doc, node, "BasisQuotes", "Quote", fwdQuotes_);
-        XMLUtils::addChild(doc, node, "BasisConventions", conventionsId_);
-        XMLUtils::addChild(doc, node, "DayCounter", dayCountId_);
-        XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
-        XMLUtils::addChild(doc, node, "AddBasis", addBasis_);
-        XMLUtils::addChild(doc, node, "MonthOffset", static_cast<int>(monthOffset_));
+        XMLNode* basisNode = XMLUtils::addChild(doc, node, "BasisConfiguration");
+
+        XMLUtils::addChild(doc, basisNode, "BasePriceCurve", basePriceCurveId_);
+        XMLUtils::addChild(doc, basisNode, "BasePriceConventions", baseConventionsId_);
+        XMLUtils::addChildren(doc, basisNode, "BasisQuotes", "Quote", fwdQuotes_);
+        XMLUtils::addChild(doc, basisNode, "BasisConventions", conventionsId_);
+        XMLUtils::addChild(doc, basisNode, "DayCounter", dayCountId_);
+        XMLUtils::addChild(doc, basisNode, "InterpolationMethod", interpolationMethod_);
+        XMLUtils::addChild(doc, basisNode, "AddBasis", addBasis_);
+        XMLUtils::addChild(doc, basisNode, "MonthOffset", static_cast<int>(monthOffset_));
 
     } else if (type_ == Type::CrossCurrency) {
 
