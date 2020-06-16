@@ -150,6 +150,7 @@ void EngineFactory::addDefaultBuilders() {
 
     registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
     registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<FxEuropeanCSOptionEngineBuilder>());
     registerBuilder(boost::make_shared<FxAmericanOptionFDEngineBuilder>());
     registerBuilder(boost::make_shared<FxAmericanOptionBAWEngineBuilder>());
 
@@ -166,6 +167,7 @@ void EngineFactory::addDefaultBuilders() {
 
     registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityEuropeanCSOptionEngineBuilder>());
     registerBuilder(boost::make_shared<EquityAmericanOptionFDEngineBuilder>());
     registerBuilder(boost::make_shared<EquityAmericanOptionBAWEngineBuilder>());
 
@@ -179,6 +181,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityEuropeanOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityEuropeanCSOptionEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityAmericanOptionFDEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityAmericanOptionBAWEngineBuilder>());
 

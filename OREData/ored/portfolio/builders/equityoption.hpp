@@ -17,7 +17,7 @@
 */
 
 /*! \file portfolio/builders/equityoption.hpp
-    \brief
+    \brief Engine builder for equity options
     \ingroup builders
 */
 
@@ -37,6 +37,15 @@ class EquityEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
 public:
     EquityEuropeanOptionEngineBuilder()
         : EuropeanOptionEngineBuilder("BlackScholesMerton", {"EquityOption"}, AssetClass::EQ) {}
+};
+
+/*! Engine builder for European cash-settled equity options.
+    \ingroup builders
+ */
+class EquityEuropeanCSOptionEngineBuilder : public EuropeanCSOptionEngineBuilder {
+public:
+    EquityEuropeanCSOptionEngineBuilder()
+        : EuropeanCSOptionEngineBuilder("BlackScholesMerton", { "EquityOptionEuropeanCS" }, AssetClass::EQ) {}
 };
 
 //! Engine Builder for American Equity Options using Finite Difference Method

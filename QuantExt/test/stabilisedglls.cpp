@@ -1061,8 +1061,8 @@ BOOST_AUTO_TEST_CASE(testBigInputNumbers) {
     // transform data manually and compute effective coefficients
     Real scaling = 1E-12;
     std::vector<Real> xt(x.size()), yt(y.size());
-    std::transform(x.begin(), x.end(), xt.begin(), std::bind1st(std::multiplies<Real>(), scaling));
-    std::transform(y.begin(), y.end(), yt.begin(), std::bind1st(std::multiplies<Real>(), scaling));
+    std::transform(x.begin(), x.end(), xt.begin(), std::bind(std::multiplies<Real>(), std::placeholders::_1, scaling));
+    std::transform(y.begin(), y.end(), yt.begin(), std::bind(std::multiplies<Real>(), std::placeholders::_1, scaling));
     GeneralLinearLeastSquares m2(xt, yt, v);
     Real d0 = m2.coefficients()[0] / scaling;
     Real d1 = m2.coefficients()[1];

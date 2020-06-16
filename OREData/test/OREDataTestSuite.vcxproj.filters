@@ -136,5 +136,8 @@
     <ClCompile Include="fittedbondcurve.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="optionpaymentdata.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

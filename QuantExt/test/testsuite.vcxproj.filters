@@ -152,6 +152,9 @@
     <ClCompile Include="equityblackvolsurfaceproxy.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="analyticcashsettledeuropeanengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

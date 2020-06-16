@@ -17,7 +17,7 @@
 */
 
 /*! \file portfolio/builders/vanillaoption.hpp
-    \brief
+    \brief Abstract engine builders for European and American Options
     \ingroup builders
 */
 
@@ -31,6 +31,7 @@
 #include <ored/utilities/to_string.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
+#include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
@@ -157,6 +158,26 @@ protected:
     }
 };
 
+/*! European cash-settled option engine builder
+    \ingroup builders
+ */
+class EuropeanCSOptionEngineBuilder : public VanillaOptionEngineBuilder {
+public:
+    EuropeanCSOptionEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
+        : VanillaOptionEngineBuilder(model, "AnalyticCashSettledEuropeanEngine", tradeTypes, assetClass, Date()) {}
+
+protected:
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+        const AssetClass& assetClassUnderlying, const Date& expiryDate) override {
+        string key = keyImpl(assetName, ccy, assetClassUnderlying, expiryDate);
+        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+            getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
+        Handle<YieldTermStructure> discountCurve =
+            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+        return boost::make_shared<QuantExt::AnalyticCashSettledEuropeanEngine>(gbsp, discountCurve);
+    }
+};
+
 //! Abstract Engine Builder for American Vanilla Options
 /*! Pricing engines are cached by asset/currency
 
@@ -186,6 +207,8 @@ protected:
         Handle<YieldTermStructure> riskFreeRate =
             market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing));
         Time expiry = riskFreeRate->dayCounter().yearFraction(riskFreeRate->referenceDate(), expiryDate);
+        QL_REQUIRE(expiry > 0.0, "FdBlackScholesVanillaEngine expects a positive time to expiry but got " << expiry <<
+            " for an expiry date " << io::iso_date(expiryDate) << ".");
 
         FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
         Size tGrid = (Size)(ore::data::parseInteger(engineParameter("TimeGridPerYear")) * expiry);

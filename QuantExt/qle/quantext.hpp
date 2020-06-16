@@ -105,6 +105,7 @@
 #include <qle/indexes/secpi.hpp>
 #include <qle/instruments/averageois.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
+#include <qle/instruments/cashsettledeuropeanoption.hpp>
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/instruments/commodityapo.hpp>
 #include <qle/instruments/commodityforward.hpp>
@@ -170,6 +171,7 @@
 #include <qle/models/parametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
 #include <qle/models/pseudoparameter.hpp>
+#include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
 #include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>

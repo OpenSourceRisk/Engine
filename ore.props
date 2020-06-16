@@ -3,6 +3,9 @@
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
   </PropertyGroup>
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>$(ORE)\disable_selected.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '10.0'">v100</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '11.0'">v110</PlatformToolset>
