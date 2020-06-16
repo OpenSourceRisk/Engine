@@ -4314,7 +4314,7 @@ The meaning of each of the elements in Listing \ref{lst:swaptionvol_configuratio
 
 \begin{itemize}
 \item CurveId: Unique identifier of the swaption volatility structure
-\item CurveDescription: A description of the volatility structure. This field may be left blank.
+\item CurveDescription: A description of the volatility structure, may be left blank.
 \item Dimension: Distinguishes at-the-money matrices and full volatility cubes. \\ Allowable values: {\tt ATM, Smile}
 \item VolatilityType: Specifies the type of market volatility inputs. \\ 
 Allowable values: {\tt Normal, Lognormal, ShiftedLognormal} \\
@@ -4389,7 +4389,7 @@ in section \ref{sec:bootstrap_config} are used.
 
 \subsubsection{FX Volatility Structures}
 
-Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volatility structures.
+Listing \ref{lst:fxoptionvol_configuration} shows two examples of FX volatility structure configurations.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -4432,11 +4432,32 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
 \label{lst:fxoptionvol_configuration}
 \end{longlisting}
 
-The \lstinline!SmileInterpolation! is optional and only used when the \lstinline!Dimension! is set to \emph{Smile}. If  \lstinline!Dimension! is set to \emph{Smile} 
-and the  \lstinline!SmileType! is set to \emph{VannaVolga}, then Vanna Volga is used as per (Castagna \& Mercurio - 2006). \lstinline!SmileInterpolation! specifies which approximation to use for implied volatilities; \emph{VannaVolga1} or \emph{VannaVolga2} for (eq. 13) or (eq. 14)  respectively. The first approximation
-is less accurate for far OTM but is always defined. The second approximation is defined in most practical applications. \lstinline!SmileInterpolation! defaults to second approximation.
+The meaning of each of the elements in Listing \ref{lst:fxoptionvol_configuration} is given below. 
 
-If  \lstinline!Dimension! is set to \emph{Smile}  and the  \lstinline!SmileType! is set to \emph{Delta}, then Delta quotes are used to build a full surface using the deltas specified in \emph{Deltas} and the expiries in \emph{Expiries}. \lstinline!SmileInterpolation! specifies which interpolation method to use for implied volatilities; \emph{Linear} or \emph{Cubic}.
+\begin{itemize}
+\item CurveId: Unique identifier of the FX volatility structure
+\item CurveDescription: A description of the volatility structure, may be left blank.
+\item Dimension: Distinguishes at-the-money volatility curves from volatility surfaces. \\ 
+Allowable values: {\tt ATM, Smile}
+\item SmileType [Optional]: Required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\
+Allowable values: {\tt VannaVolga} as per (Castagna \& Mercurio - 2006) and {\tt Delta}, with default value {\tt VannaVolga} if left blank.
+\item SmileInterpolation [Optional]: Smile interpolation method applied, required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\
+Allowable values: 
+\begin{itemize}
+\item {\tt VannaVolga1} or {\tt VannaVolga2} in case of SmileType {\tt VannaVolga} with default VannaVolga2 if left blank.
+VannaVolga1/VannaVolga2 refer to the first/second approximation in (eq. 13) and (eq. 14) of the reference above.
+\item {\tt Linear} or {\tt Cubic} in case of SmileType {\tt Delta} with default {\tt Linear} if left blank
+\end{itemize}
+\item Conventions [Optional]: FX conventions object ID that is used to determine the at-the-money type and delta type of the volatility quotes, these default to {\tt AtmDeltaNeutral} and {\tt Spot} if the conventions ID is omitted or left blank
+\item Expiries: Option expiries in period form
+\item Deltas [Optional]: Strike grid, required in case of SmileType {\tt Delta} \\
+Allowable values: {\tt ATM, *P, *C}, see example in Listing \ref{lst:fxoptionvol_configuration}
+\item FXSpotID: ORE representation of the relevant FX spot quote in the form FX/CCY1/CCY2 
+\item FXForeignCurveID [Optional]: Yield curve, in ORE format Yield/CCY/ID, used as foreign yield curve in the Delta Surface object; this is hence required for SmileType Delta only, otherwise it can be omitted
+\item FXDomesticCurveID [Optional]: Yield curve, in ORE format Yield/CCY/ID, used as domestic yield curve in the Delta Surface object; this is hence required for SmileType Delta only, otherwise it can be omitted
+\item DayCounter: The term structure's day counter used in date to time conversions
+\item Calendar: The term structure's calendar used in option tenor to date conversions
+\end{itemize}
 
 \subsubsection{Equity Curve Structures}
 
@@ -4964,6 +4985,21 @@ Listing \ref{lst:basecorr_configuration} shows the configuration of a Base Corre
 \caption{Base Correlation Configuration}
 \label{lst:basecorr_configuration}
 \end{longlisting}
+
+The meaning of each of the elements in Listing \ref{lst:basecorr_configuration} is given below. 
+
+\begin{itemize}
+\item CurveId: Unique identifier of the base correlation structure
+\item CurveDescription: A description of the base correlation structure, may be left blank.
+\item Terms: Comma-separated list of tenors, sorted in increasing order, possibly a single term to represent a flat term structure in time-direction
+\item DetachmentPoints: Comma-separated list of equity tranche detachment points, sorted in increasing order\\
+Allowable values: Any positive number less than one
+\item SettlementDays: The floating term structure's settlement days argument used in the reference date calculation
+\item DayCounter: The term structure's day counter used in date to time conversions
+\item Calendar: The term structure's calendar used in tenor to date conversions
+\item BusinessDayConvention: The term structure's business day convention used in tenor to date conversion
+\item Extrapolate: Boolean to indicate whether the correlation curve shall be extrapolated or not
+\end{itemize}
 
 \subsubsection{FXSpots}
 
