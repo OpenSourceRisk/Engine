@@ -4277,7 +4277,7 @@ on the given pillars, and w.r.t. a a zero recovery rate. The interpolation is ba
 
 \subsubsection{Swaption Volatility Structures}
 
-Listing \ref{lst:swaptionvol_configuration} shows the configuration of Swaption volatility structures.
+Listing \ref{lst:swaptionvol_configuration} shows an example of a Swaption volatility structure configuration.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -4286,15 +4286,10 @@ Listing \ref{lst:swaptionvol_configuration} shows the configuration of Swaption 
   <SwaptionVolatility>
     <CurveId>EUR_SW_N</CurveId>
     <CurveDescription>EUR normal swaption volatilities</CurveDescription>
-    <!-- ATM, Smile -->
     <Dimension>ATM</Dimension>
-    <!-- Normal or Lognormal or ShiftedLognormal -->
     <VolatilityType>Normal</VolatilityType>
-    <!-- Flat, Linear, None -->
     <Extrapolation>Flat</Extrapolation>
-    <!-- Day counter for date to time conversion -->
     <DayCounter>Actual/365 (Fixed)</DayCounter>
-    <!--Calendar and Business day convention for option tenor to date conversion -->
     <Calendar>TARGET</Calendar>
     <BusinessDayConvention>Following</BusinessDayConvention>
     <!-- ATM matrix specification -->
@@ -4302,19 +4297,46 @@ Listing \ref{lst:swaptionvol_configuration} shows the configuration of Swaption 
     <SwapTenors>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</SwapTenors>
     <ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
     <SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
-    <!-- Smile specification (optional) -->
+    <!-- Smile section specification -->
     <SmileOptionTenors>6M,1Y,10Y</SmileOptionTenors>
     <SmileSwapTenors>2Y,5Y</SmileSwapTenors>
-    <SmileSpreads>-0.02,-0.01,0.01,0.02</SmileSpreads> <!-- i.e. strike spreads -->
+    <SmileSpreads>-0.02,-0.01,0.01,0.02</SmileSpreads>
   </SwaptionVolatility>
-  <SwaptionVolatility>
-    ...
-  </SwaptionVolatility>
+  ...
 </SwaptionVolatilities>
 \end{minted}
 \caption{Swaption volatility configuration}
 \label{lst:swaptionvol_configuration}
 \end{longlisting}
+
+The meaning of each of the elements in Listing \ref{lst:swaptionvol_configuration} is given below. 
+%If an element is labelled as 'Optional', then it may be excluded or included and left blank.
+
+\begin{itemize}
+\item CurveId: Unique identifier of the swaption volatility structure
+\item CurveDescription: A description of the volatility structure. This field may be left blank.
+\item Dimension: Distinguishes at-the-money matrices and full volatility cubes. \\ Allowable values: {\tt ATM, Smile}
+\item VolatilityType: Specifies the type of market volatility inputs. \\ 
+Allowable values: {\tt Normal, Lognormal, ShiftedLognormal} \\
+In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap tenor) has to be provided in the market data input. 
+\item Extrapolation: Specifies the extrapolation behaviour in all dimensions. \\ Allowable values: {\tt Linear, Flat, None}
+\item DayCounter: The term structure's day counter used in date to time conversions
+\item Calendar: The term structure's calendar used in option tenor to date conversions
+\item BusinessDayConvention: The term structure's business day convention used in option tenor to date conversion
+\item ATM Matrix specification, required for both Dimension choices:
+	\begin{itemize}
+	\item OptionTenors: Option expiry in period form
+	\item SwapTenors: Underlying Swap term in period form
+	\item ShortSwapIndexBase: Swap index (ORE naming convention, e.g. EUR-CMS-1Y) used to compute ATM strikes for tenors up to and including the tenor given in the index (1Y in this example)
+	\item SwapIndexBase: Swap index used to compute ATM strikes for tenors longer than the one defined by the short index 
+	\end{itemize}
+\item Smile section specification, this part is required when Dimension is set to {\tt Smile}, otherwise it can be omitted:
+	\begin{itemize}
+	\item SmileOptionTenors: Option expiries, in period form, where smile section data is to be taken into account
+	\item SmileSwapTenors: Underlying Swap term, in period form, where smile section data is to be taken into account
+	\item SmileSpreads: Strikes in smile direction expressed as strike spreads, relative to the ATM strike at the expiry/term point of the ATM matrix
+	\end{itemize}
+\end{itemize}
 
 \subsubsection{Cap/Floor Volatility Structures}
 
