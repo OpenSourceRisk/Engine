@@ -40,7 +40,10 @@ public:
         : SmileSection(optionTime, DayCounter(), atm->volatilityType(),
                        atm->volatilityType() == ShiftedLognormal ? atm->shift(optionTime, swapLength) : 0.0),
           atm_(atm), cube_(cube), swapLength_(swapLength), section_(cube_->smileSection(optionTime, swapLength_)),
-          atmStrike_(section_->atmLevel()) {}
+          atmStrike_(section_->atmLevel()) {
+        registerWith(atm);
+        registerWith(cube);
+    }
     Rate minStrike() const { return cube_->minStrike(); }
     Rate maxStrike() const { return cube_->maxStrike(); }
     Rate atmLevel() const { return Null<Real>(); }

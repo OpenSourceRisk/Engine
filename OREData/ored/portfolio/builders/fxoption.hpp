@@ -39,6 +39,15 @@ public:
         : EuropeanOptionEngineBuilder("GarmanKohlhagen", {"FxOption"}, AssetClass::FX) {}
 };
 
+/*! Engine builder for European cash-settled FX options.
+    \ingroup builders
+ */
+class FxEuropeanCSOptionEngineBuilder : public EuropeanCSOptionEngineBuilder {
+public:
+    FxEuropeanCSOptionEngineBuilder()
+        : EuropeanCSOptionEngineBuilder("GarmanKohlhagen", { "FxOptionEuropeanCS" }, AssetClass::FX) {}
+};
+
 //! Engine Builder for American Fx Options using Finite Difference Method
 /*! Pricing engines are cached by currency pair
 

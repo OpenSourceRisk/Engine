@@ -281,6 +281,111 @@ void orderCommodityVolatilities(vector<boost::shared_ptr<CurveSpec>>& curveSpecs
 }
 
 // Returns true if we can build this YieldCurveSpec with the given curve specs
+static bool canBuild(boost::shared_ptr<CurveSpec>& evcs, vector<boost::shared_ptr<EquityVolatilityCurveSpec>>& specs,
+    const CurveConfigurations& curveConfigs, map<string, string>& missingDependents,
+    map<string, string>& errors, bool continueOnError) {
+
+    string curveId = evcs->curveConfigID();
+    if (!curveConfigs.hasEquityVolCurveConfig(curveId)) {
+        string errMsg = "Can't get equity vol curve configuration for " + curveId;
+        if (continueOnError) {
+            errors[evcs->name()] = errMsg;
+            TLOG(errMsg);
+            return false;
+        } else {
+            QL_FAIL(errMsg);
+        }
+    }
+
+    boost::shared_ptr<EquityVolatilityCurveConfig> curveConfig = curveConfigs.equityVolCurveConfig(curveId);
+    if (curveConfig->isProxySurface()) {
+        // The base volatility surface ID is in the form of a spec i.e. CommodityVolatility/<CCY>/<COMM_NAME>
+        auto proxy = curveConfig->proxySurface();
+
+        // Check if we already have the base commodity volatility surface.
+        auto it = find_if(specs.begin(), specs.end(), [&proxy](const boost::shared_ptr<EquityVolatilityCurveSpec>& cs) {
+            return cs->curveConfigID() == proxy; });
+
+        if (it == specs.end()) {
+            DLOG("Required equity volatility curve " << proxy << " for " << curveId << " not available");
+            missingDependents[curveId] = proxy;
+            return false;
+        }
+    }
+ 
+    // We can build everything required
+    missingDependents[curveId] = "";
+    return true;
+}
+
+// Order the equity volatility curve specs
+// We assume that curveSpecs have already been ordered here via the top level order function below
+void orderEquityVolatilities(vector<boost::shared_ptr<CurveSpec>>& curveSpecs,
+    const CurveConfigurations& curveConfigs, map<string, string>& errors, bool continueOnError) {
+
+    // Get iterator to the first equity volatility curve spec in curveSpecs, if there is one.
+    auto firstEqIt = find_if(curveSpecs.begin(), curveSpecs.end(), [](const boost::shared_ptr<CurveSpec>& cs)
+    { return cs->baseType() == CurveSpec::CurveType::EquityVolatility; });
+
+    // If no equity volatility curve specs, there is nothing to do
+    if (firstEqIt == curveSpecs.end())
+        return;
+
+    // Get iterator to the last equity volatility curve spec in curveSpecs
+    auto lastEqRit = find_if(curveSpecs.rbegin(), curveSpecs.rend(), [](const boost::shared_ptr<CurveSpec>& cs)
+    { return cs->baseType() == CurveSpec::CurveType::EquityVolatility; });
+    auto lastEqIt = lastEqRit.base();
+
+    // Remove the equity volatility curve specs from the curveSpecs for ordering
+    vector<boost::shared_ptr<CurveSpec>> eqvCurveSpecs(firstEqIt, lastEqIt);
+    firstEqIt = curveSpecs.erase(firstEqIt, lastEqIt);
+
+    // Order the equity volatility curve specs in cvCurveSpecs
+    vector<boost::shared_ptr<EquityVolatilityCurveSpec>> orderedEqCurveSpecs;
+
+    // Map to sort the missing dependencies
+    map<string, string> missingDependents;
+
+    // Use same logic to populate orderedCvCurveSpecs as is used to populate sorted yield curve specs below
+    while (eqvCurveSpecs.size() > 0) {
+
+        // Record size of equity volatility curve specs before checking if any of them can build
+        Size n = eqvCurveSpecs.size();
+
+        // Check each curve remaining in cvCurveSpecs
+        auto it = eqvCurveSpecs.begin();
+        while (it != eqvCurveSpecs.end()) {
+            if (canBuild(*it, orderedEqCurveSpecs, curveConfigs, missingDependents, errors, continueOnError)) {
+                DLOG("Can build " << (*it)->curveConfigID());
+                auto eqSpec = boost::dynamic_pointer_cast<EquityVolatilityCurveSpec>(*it);
+                orderedEqCurveSpecs.push_back(eqSpec);
+                it = eqvCurveSpecs.erase(it);
+            } else {
+                DLOG("Cannot (yet) build " << (*it)->curveConfigID());
+                ++it;
+            }
+        }
+
+        // If eqvCurveSpecs has not been reduced in size after checking if any can build, we stop with error message
+        if (n == eqvCurveSpecs.size()) {
+            for (auto cs : eqvCurveSpecs) {
+                if (errors.count(cs->name()) > 0) {
+                    WLOG("Cannot build curve " << cs->curveConfigID() << " due to error: " << errors.at(cs->name()));
+                } else {
+                    WLOG("Cannot build curve " << cs->curveConfigID() << ", dependent curves missing");
+                    errors[cs->name()] = "dependent curves missing - " + missingDependents[cs->curveConfigID()];
+                }
+                ALOG(StructuredCurveErrorMessage(cs->curveConfigID(), "Cannot build curve", errors.at(cs->name())));
+            }
+            break;
+        }
+    }
+
+    // Insert the sorted commodity volatility specs back at the correct location in the original curveSpecs
+    curveSpecs.insert(firstEqIt, orderedEqCurveSpecs.begin(), orderedEqCurveSpecs.end());
+}
+
+// Returns true if we can build this YieldCurveSpec with the given curve specs
 static bool canBuild(boost::shared_ptr<YieldCurveSpec>& ycs, vector<boost::shared_ptr<YieldCurveSpec>>& specs,
                      const CurveConfigurations& curveConfigs, map<string, string>& missingDependents,
                      map<string, string>& errors, bool continueOnError) {
@@ -391,6 +496,9 @@ void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigur
 
     // Order the commodity volatility specs within the curveSpecs
     orderCommodityVolatilities(curveSpecs, curveConfigs, errors, continueOnError);
+
+    // Order the equity volatility specs within the curveSpecs
+    orderEquityVolatilities(curveSpecs, curveConfigs, errors, continueOnError);
 
     DLOG("Ordered Curves (" << curveSpecs.size() << ")")
     for (Size i = 0; i < curveSpecs.size(); ++i)

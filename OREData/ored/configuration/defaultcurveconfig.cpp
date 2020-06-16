@@ -46,7 +46,7 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curv
     }
     quotes_.insert(quotes_.begin(), recoveryRateQuote_);
 
-    if (type_ == Type::SpreadCDS && startDate_ != Date()) {
+    if (type_ != Type::SpreadCDS && startDate_ != Date()) {
         WLOG("'StartDate' is only used when type is 'SpreadCDS'");
     }
 }
