@@ -30,6 +30,7 @@
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
+#include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
 #include <qle/termstructures/equityoptionsurfacestripper.hpp>
 #include <regex>
@@ -42,34 +43,39 @@ namespace ore {
 namespace data {
 
 EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader,
-    const CurveConfigurations& curveConfigs, const Handle<EquityIndex>& eqIndex) {
+    const CurveConfigurations& curveConfigs, const Handle<EquityIndex>& eqIndex, 
+    const map<string, boost::shared_ptr<EquityCurve>>& requiredEquityCurves,
+    const map<string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves) {
 
     try {
         LOG("EquityVolCurve: start building equity volatility structure with ID " << spec.curveConfigID());
 
         auto config = *curveConfigs.equityVolCurveConfig(spec.curveConfigID());
-
-        QL_REQUIRE(config.quoteType() == MarketDatum::QuoteType::PRICE || config.quoteType() == MarketDatum::QuoteType::RATE_LNVOL,
-            "EquityVolCurve: Only lognormal volatilities and option premiums supported for equity volatility surfaces.");
-        
+ 
         calendar_ = parseCalendar(config.calendar());
         // if calendar is null use WeekdaysOnly
         if (calendar_ == NullCalendar())
             calendar_ = WeekendsOnly();
         dayCounter_ = parseDayCounter(config.dayCounter());
 
-        // Do different things depending on the type of volatility configured
-        boost::shared_ptr<VolatilityConfig> vc = config.volatilityConfig();
-        if (auto cvc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(vc)) {
-            buildVolatility(asof, config, *cvc, loader);
-        } else if (auto vcc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
-            buildVolatility(asof, config, *vcc, loader);
-        } else if (auto vssc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc)) {
-            buildVolatility(asof, config, *vssc, loader, eqIndex);
+        if (config.isProxySurface()) {
+            buildVolatility(asof, spec, curveConfigs, requiredEquityCurves, requiredEquityVolCurves);
         } else {
-            QL_FAIL("Unexpected VolatilityConfig in EquityVolatilityConfig");
-        }
+            QL_REQUIRE(config.quoteType() == MarketDatum::QuoteType::PRICE || config.quoteType() == MarketDatum::QuoteType::RATE_LNVOL,
+                "EquityVolCurve: Only lognormal volatilities and option premiums supported for equity volatility surfaces.");
 
+            // Do different things depending on the type of volatility configured
+            boost::shared_ptr<VolatilityConfig> vc = config.volatilityConfig();
+            if (auto cvc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(vc)) {
+                buildVolatility(asof, config, *cvc, loader);
+            } else if (auto vcc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
+                buildVolatility(asof, config, *vcc, loader);
+            } else if (auto vssc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc)) {
+                buildVolatility(asof, config, *vssc, loader, eqIndex);
+            } else {
+                QL_FAIL("Unexpected VolatilityConfig in EquityVolatilityConfig");
+            }
+        }
         DLOG("EquityVolCurve: finished building equity volatility structure with ID " << spec.curveConfigID());
 
     } catch (exception& e) {
@@ -444,6 +450,38 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     }
 }
 
+void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
+    const CurveConfigurations& curveConfigs,
+    const map<string, boost::shared_ptr<EquityCurve>>& eqCurves,
+    const map<string, boost::shared_ptr<EquityVolCurve>>& eqVolCurves) {
+
+    // get all the configurations and the curve needed for proxying
+    auto config = *curveConfigs.equityVolCurveConfig(spec.curveConfigID());
+
+    auto proxy = config.proxySurface();
+    auto eqConfig = *curveConfigs.equityCurveConfig(spec.curveConfigID());
+    auto proxyConfig = *curveConfigs.equityCurveConfig(proxy);
+    auto proxyVolConfig = *curveConfigs.equityVolCurveConfig(proxy);
+
+    // create dummy specs to look up the required curves
+    EquityCurveSpec eqSpec(eqConfig.currency(), spec.curveConfigID());
+    EquityCurveSpec proxySpec(proxyConfig.currency(), proxy);
+    EquityVolatilityCurveSpec proxyVolSpec(proxyVolConfig.ccy(), proxy);
+
+    // Get all necessary curves
+    auto curve = eqCurves.find(eqSpec.name());
+    QL_REQUIRE(curve != eqCurves.end(), "Failed to find equity curve, when building equity vol curve " << spec.name());
+    auto proxyCurve = eqCurves.find(proxySpec.name());
+    QL_REQUIRE(proxyCurve != eqCurves.end(), "Failed to find equity curve for proxy " << proxySpec.name() << ", when building equity vol curve " << spec.name());
+    auto proxyVolCurve = eqVolCurves.find(proxyVolSpec.name());
+    QL_REQUIRE(proxyVolCurve != eqVolCurves.end(), "Failed to find equity vol curve for proxy " << proxyVolSpec.name() << ", when building equity vol curve " << spec.name());
+
+    vol_ = boost::make_shared<EquityBlackVolatilitySurfaceProxy>(
+        proxyVolCurve->second->volTermStructure(),
+        curve->second->equityIndex(),
+        proxyCurve->second->equityIndex());
+
+}
 
 } // namespace data
 } // namespace ore

@@ -697,6 +697,7 @@
     <ClInclude Include="qle\termstructures\blackvariancesurfacesparse.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacestddevs.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacedelta.hpp" />
+    <ClInclude Include="qle\termstructures\equityblackvolsurfaceproxy.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
     <ClInclude Include="qle\termstructures\brlcdiratehelper.hpp" />
     <ClInclude Include="qle\termstructures\capfloorhelper.hpp" />
@@ -926,6 +927,7 @@
     <ClCompile Include="qle\termstructures\blackvariancesurfacesparse.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacestddevs.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacedelta.cpp" />
+    <ClCompile Include="qle\termstructures\equityblackvolsurfaceproxy.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />
     <ClCompile Include="qle\termstructures\brlcdiratehelper.cpp" />
     <ClCompile Include="qle\termstructures\capfloorhelper.cpp" />

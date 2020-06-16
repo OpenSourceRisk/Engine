@@ -27,6 +27,7 @@ discountingcommodityforwardengine.cpp
 discountratiomodifiedcurve.cpp
 dynamicblackvoltermstructure.cpp
 dynamicswaptionvolmatrix.cpp
+equityblackvolsurfaceproxy.cpp
 equityforwardcurvestripper.cpp
 fillemptymatrix.cpp
 forwardbond.cpp

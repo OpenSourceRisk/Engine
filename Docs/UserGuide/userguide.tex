@@ -4480,7 +4480,24 @@ term structure, which are then used together for projection of forward prices.
 
 \subsubsection{Equity Volatility Structures}
 
-Listing \ref{lst:eqoptionvol_configuration} shows the configuration of equity volatility structures.
+When configuring volatility structures for equities, there are four options:
+\begin{enumerate}
+\item a constant volatility for all expiries and strikes.
+\item a volatility curve with a dependency on expiry but no strike dimension.
+\item a volatility surface with an expiry and strike dimension.
+\item a proxy surface - point to another surface as a proxy.
+\end{enumerate}
+
+There are a number of fields common to all configurations:
+\begin{itemize}
+\item CurveId: Unique identifier for the curve.
+\item CurveDescription: A description of the curve. This field may be left blank.
+\item Currency: Currency of the equity.
+\item Calendar [Optional]: allowable value is any valid calendar. Defaults to \lstinline!NullCalendar!.
+\item DayCounter [Optional]: allowable value is any valid day counter. Defaults to \lstinline!A365!.
+\end{itemize}
+
+Listing \ref{lst:eqoptionvol_constant} shows the configuration of equity volatility structures with constant volatility. A node \lstinline!Constant! takes one \lstinline!Quote!, as described in Section \ref{md:equity_option_iv}, which is held constant for all strikes and expiries.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -4490,29 +4507,138 @@ Listing \ref{lst:eqoptionvol_configuration} shows the configuration of equity vo
     <CurveId>SP5</CurveId>
     <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
     <Currency>USD</Currency>
-    <!-- ATM, Smile --> 
-    <Dimension>Smile</Dimension>
-    <!-- ImpliedVolatility, Premium -->
-    <QuoteType>ImpliedVolatility</QuoteType>
-    <Expiries>1M,5Y,10Y</Expiries>
-    <!-- If Dimension is Smile: -->
-    <Strikes>1932.8,2147.56,2254.939</Strikes>
-    <TimeExtrapolation>Flat</TimeExtrapolation>
-    <StrikeExtrapolation>Flat</StrikeExtrapolation>
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <Constant>
+      <Quote>EQUITY_OPTION/RATE_LNVOL/SP5/USD/5Y/ATMF</Quote>
+    </Constant>
   </EquityVolatility>
   <EquityVolatility>
     ...
   </EquityVolatility>
 </EquityVolatilities>
 \end{minted}
-\caption{Equity option volatility configuration}
-\label{lst:eqoptionvol_configuration}
+\caption{Equity option volatility configuration - constant}
+\label{lst:eqoptionvol_constant}
 \end{longlisting}
 
+Secondly, the volatility curve configuration layout is given in Listing \ref{lst:eqoptionvol_curve}. With this curve construction the volatility is held constant in the strike direction, and quotes of varying expiry can be provided, for examlple if only ATM volatility quotes are available. The volatility quote IDs in the \lstinline!Quotes! node should be Equity option volatility quotes as described in Section \ref{md:equity_option_iv}. An explicit list of quotes can be provided, or a single quote with a wildcard replacing the expiry/strike. In the wildcard case, it will look for any matching quotes provided in the loader, and construct the curve from these. The \lstinline!Interpolation! node supports \lstinline!Linear!, \lstinline!Cubic! and \lstinline!LogLinear! interpolation. The \lstinline!Extrapolation! node supports either \lstinline!None! for no extrapolation or \lstinline!Flat! for flat extrapolation in the volatility.
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityVolatilities>
+  <EquityVolatility>
+    <CurveId>SP5</CurveId>
+    <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+    <Currency>USD</Currency>
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <Curve>
+      <QuoteType>ImpliedVolatility</QuoteType>
+      <VolatilityType>Lognormal</VolatilityType>
+      <Quotes>
+        <Quote>EQUITY_OPTION/RATE_LNVOL/SP5/USD/*</Quote>
+      </Quotes>
+      <Interpolation>LinearFlat</Interpolation>
+      <Extrapolation>Flat</Extrapolation>
+    </Curve>
+  </EquityVolatility>
+  <EquityVolatility>
+    ...
+  </EquityVolatility>
+</EquityVolatilities>
+\end{minted}
+\caption{Equity option volatility configuration - curve}
+\label{lst:eqoptionvol_curve}
+\end{longlisting}
+
+The volatility strike surface configuration layout is given in Listing \ref{lst:eqoptionvol_surface}. This allows a full surface of \lstinline!Strikes! and \lstinline!Expiries! to be defined. The following are the valid nodes:
+
 \begin{itemize}
-\item {\tt TimeExtrapolation}: Defaults to Flat if omitted. The method used for Extrapolation in the time direction. May take any of the values: Flat or UseInterpolator. For Surfaces built without wildcards this value is not configurable, all curves will have  UseInterpolator extrapolation.
-\item {\tt StrikeExtrapolation}: Defaults to Flat if omitted. The method used for Extrapolation in the strike direction. The values Flat or UseInterpolator are accepted.
+\item
+\lstinline!QuoteType!: either \lstinline!ImpliedVolatility! of \lstinline!Premium!, indicating the type of quotes provided in the market.
+
+\item
+\lstinline!ExerciseType! [Optional]: only valid when \lstinline!QuoteType! is \lstinline!Premium!. Valid types are \lstinline!European! and \lstinline!American!.
+
+\item
+\lstinline!VolatilityType! [Optional]: only valid when \lstinline!QuoteType! is \lstinline!ImpliedVolatility!. Valid types are \lstinline!Lognormal!, \lstinline!ShiftedLognormal! and \lstinline!Normal!.
+
+\item
+\lstinline!Strikes!: comma separated list of strikes, representing the absolute strike values for the option. In other words, A single wildcard character, \lstinline!*!, can be used here also to indicate that all strikes found in the market data for this equity volatility configuration should be used when building the equity volatility surface.
+
+\item
+\lstinline!Expiries!: comma separated list of expiry tenors and or expiry dates. A single wildcard character, \lstinline!*!, can be used here also to indicate that all expiries found in the market data for this equity volatility configuration should be used when building the equity volatility surface.
+
+\item
+\lstinline!TimeInterpolation!: interpolation in the option expiry direction. If either \lstinline!Strikes! or \lstinline!Expiries! are configured with a wildcard character, \lstinline!Linear! is used. If both \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, \lstinline!Linear! or \lstinline!Cubic! is allowed here but the value must agree with the value for \lstinline!StrikeInterpolation!.
+
+\item
+\lstinline!StrikeInterpolation!: interpolation in the strike direction. If either \lstinline!Strikes! or \lstinline!Expiries! are configured with a wildcard character, \lstinline!Linear! is used. If both \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, \lstinline!Linear! or \lstinline!Cubic! is allowed here but the value must agree with the value for \lstinline!TimeInterpolation!.
+
+\item
+\lstinline!Extrapolation!: boolean value. If \lstinline!true!, extrapolation is allowed. If \lstinline!false!, extrapolation is not allowed.
+
+\item
+\lstinline!TimeExtrapolation!: extrapolation in the option expiry direction. If both \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, the extrapolation in the time direction is flat in volatility regardless of the setting here. If either \lstinline!Strikes! or \lstinline!Expiries! are configured with a wildcard character, \lstinline!Linear!, \lstinline!UseInterpolator!, \lstinline!Flat! or \lstinline!None! are allowed. If \lstinline!Linear! or \lstinline!UseInterpolator! is specified, the extrapolation is linear. If \lstinline!Flat! is specified, the extrapolation is flat. If \lstinline!None! is specified, it is ignored and the extrapolation is flat since extrapolation in the time direction cannot be turned off in isolation i.e.\ extrapolation can only be turned off for the surface as a whole using the \lstinline!Extrapolation! flag.
+
+\item
+\lstinline!StrikeExtrapolation!: extrapolation in the strike direction. The allowable values are \lstinline!Linear!, \lstinline!UseInterpolator!, \lstinline!Flat! or \lstinline!None!. If \lstinline!Linear! or \lstinline!UseInterpolator! is specified, the extrapolation uses the strike interpolation setting for extrapolation i.e. linear or cubic in this case. If \lstinline!Flat! is specified, the extrapolation is flat. If \lstinline!None! is specified, it is ignored and the extrapolation is flat since extrapolation in the strike direction cannot be turned off in isolation i.e.\ extrapolation can only be turned off for the surface as a whole using the \lstinline!Extrapolation! flag.
+
 \end{itemize}
+
+When this configuration is used, the market is searched for quote strings of the form \lstinline!EQUITY_OPTION/PRICE/[NAME]/[CURRENCY]/[EXPIRY]/[STRIKE]! or \lstinline!EQUITY_OPTION/RATE_LNVOL/[NAME]/[CURRENCY]/[EXPIRY]/[STRIKE]!, depending on the \lstinline!QuoteType!. When both the \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, it is clear that the \lstinline![EXPIRY]! field is populated from the list of expiries in turn and the \lstinline![STRIKE]! field is populated from the list of strikes in turn. If there are $m$ expiries in the \lstinline!Expiries! list and $n$ strikes in the \lstinline!Strikes! list, there will be $m \times n$ quotes created and searched for in the market data. If \lstinline!Expiries! are configured via the wildcard character, \lstinline!*!, all quotes in the market data matching the pattern \lstinline!EQUITY_OPTION/RATE_LNVOL/[NAME]/[CURRENCY]/*/[STRIKE]!. Similarly for \lstinline!Strikes! configured via the wildcard character, \lstinline!*!.
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityVolatilities>
+  <EquityVolatility>
+    <CurveId>SP5</CurveId>
+    <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+    <Currency>USD</Currency>
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <StrikeSurface>
+      <QuoteType>Premium</QuoteType>
+      <ExerciseType>European</ExerciseType>
+      <Strikes>*</Strikes>
+      <Expiries>*</Expiries>
+      <TimeInterpolation>Linear</TimeInterpolation>
+      <StrikeInterpolation>Linear</StrikeInterpolation>
+      <Extrapolation>true</Extrapolation>
+      <TimeExtrapolation>UseInterpolator</TimeExtrapolation>
+      <StrikeExtrapolation>Flat</StrikeExtrapolation>
+    </StrikeSurface>
+  </EquityVolatility>
+  <EquityVolatility>
+    ...
+  </EquityVolatility>
+</EquityVolatilities>
+\end{minted}
+\caption{Equity option volatility configuration - strike surface}
+\label{lst:eqoptionvol_surface}
+\end{longlisting}
+
+Finally, the volatility proxy surface configuration layout is given in Listing \ref{lst:eqoptionvol_proxy}. This allows us to use any other surface as a proxy, in cases where there is no option data for a given equity. We provide a name in the \lstinline!ProxySurface! field, which must match the \lstinline!CurveId! of another configuration. The proxy surface looks up the volatility in the reference surface bases on moneyness.
+ 
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityVolatilities>
+  <EquityVolatility>
+    <CurveId>ABC</CurveId>
+    <CurveDescription>Lognormal option implied vols for APC - proxied from SP5</CurveDescription>
+    <Currency>USD</Currency>
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <ProxySurface>SP5</PROXYSurface>
+  </EquityVolatility>
+  <EquityVolatility>
+    ...
+  </EquityVolatility>
+</EquityVolatilities>
+\end{minted}
+\caption{Equity option volatility configuration - proxy surface}
+\label{lst:eqoptionvol_proxy}
+\end{longlisting}
 
 \subsubsection{Inflation Curves}
 

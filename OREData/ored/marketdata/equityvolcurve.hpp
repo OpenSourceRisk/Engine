@@ -51,7 +51,9 @@ public:
         EquityVolatilityCurveSpec spec, 
         const Loader& loader,
         const CurveConfigurations& curveConfigs,
-        const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex);
+        const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex,
+        const map<string, boost::shared_ptr<EquityCurve>>& requiredEquityCurves = {},
+        const map<string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves = {});
     //@}
 
     //! \name Inspectors
@@ -79,6 +81,14 @@ public:
         const VolatilityStrikeSurfaceConfig& vssc,
         const Loader& loader,
         const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex);
+
+    //! Build a volatility surface as a proxy from another volatility surface
+    void buildVolatility( 
+        const QuantLib::Date& asof, 
+        const EquityVolatilityCurveSpec& spec,
+        const CurveConfigurations& curveConfigs,
+        const map<string, boost::shared_ptr<EquityCurve>>& eqCurves,
+        const map<string, boost::shared_ptr<EquityVolCurve>>& eqVolCurves);
 
     const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() { return vol_; }
     //@}
