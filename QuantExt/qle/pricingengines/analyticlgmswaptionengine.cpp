@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ql/cashflows/iborcoupon.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/math/solvers1d/brent.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
@@ -115,14 +116,8 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         Size k = k1_;
         // The method reduces the problem to a one curve configuration w.r.t. the discount curve and
         // apply a correction for the discount curve / forwarding curve spread. Furthermore the method
-        // assumes that no historical fixings are present in the floating rate coupons. Therefore we
-        // set up a benchmark index "flatIbor" with forwarding curve = discounting curve and without
-        // historical fixings against which the correction is computed. We also ensure that the fixing
-        // dates are always >= today.
+        // assumes that no historical fixings are present in the floating rate coupons.
         auto index = arguments_.swap->iborIndex();
-        auto flatIbor = boost::make_shared<IborIndex>(
-            index->familyName() + " (no fixings)", index->tenor(), index->fixingDays(), index->currency(),
-            index->fixingCalendar(), index->businessDayConvention(), index->endOfMonth(), index->dayCounter(), c_);
         for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
             Real sum1 = 0.0, sum2 = 0.0;
             for (Size rr = 0; rr < ratio && k < arguments_.floatingCoupons.size(); ++rr, ++k) {
@@ -135,10 +130,37 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                     lambda1 = 1.0 - lambda2;
                 }
                 if (amount != Null<Real>()) {
-                    Date fixingDate =
-                        flatIbor->fixingCalendar().adjust(std::max(arguments_.floatingFixingDates[k], reference));
-                    Real flatAmount = flatIbor->fixing(fixingDate) *
-                                      arguments_.floatingAccrualTimes[k] * arguments_.nominal;
+                    Real flatAmount;
+                    if (IborCoupon::usingAtParCoupons()) {
+                        // if par coupons are used, we mimick the fixing estimation in IborCoupon; we make
+                        // sure that the estimation period does not start in the past and we do not use
+                        // historical fixings
+                        Date fixingValueDate = index->fixingCalendar().advance(arguments_.floatingFixingDates[k],
+                                                                               index->fixingDays(), Days);
+                        fixingValueDate = std::max(fixingValueDate, reference);
+                        auto cpn = boost::dynamic_pointer_cast<Coupon>(arguments_.swap->floatingLeg()[k]);
+                        QL_REQUIRE(cpn, "AnalyticalLgmSwaptionEngine::calculate(): coupon expected on underlying swap "
+                                        "floating leg, could not cast");
+                        Date nextFixingDate = index->fixingCalendar().advance(
+                            cpn->accrualEndDate(), -static_cast<Integer>(index->fixingDays()), Days);
+                        Date fixingEndDate = index->fixingCalendar().advance(nextFixingDate, index->fixingDays(), Days);
+                        fixingEndDate = std::max(fixingEndDate, fixingValueDate + 1);
+                        Real spanningTime = index->dayCounter().yearFraction(fixingValueDate, fixingEndDate);
+                        DiscountFactor disc1 = c_->discount(fixingValueDate);
+                        DiscountFactor disc2 = c_->discount(fixingEndDate);
+                        Real fixing = (disc1 / disc2 - 1.0) / spanningTime;
+                        flatAmount = fixing * arguments_.floatingAccrualTimes[k] * arguments_.nominal;
+                    } else {
+                        // if indexed coupons are used, we use a proper fixing, but make sure that the fixing date
+                        // is not in the past and we do not use a historical fixing for "today"
+                        auto flatIbor = boost::make_shared<IborIndex>(
+                            index->familyName() + " (no fixings)", index->tenor(), index->fixingDays(), index->currency(),
+                            index->fixingCalendar(), index->businessDayConvention(), index->endOfMonth(), index->dayCounter(), c_);
+                        Date fixingDate =
+                            flatIbor->fixingCalendar().adjust(std::max(arguments_.floatingFixingDates[k], reference));
+                        flatAmount =
+                            flatIbor->fixing(fixingDate) * arguments_.floatingAccrualTimes[k] * arguments_.nominal;
+                    }
                     Real correction = (amount - flatAmount) * c_->discount(arguments_.floatingPayDates[k]);
                     sum1 += lambda1 * correction;
                     sum2 += lambda2 * correction;
