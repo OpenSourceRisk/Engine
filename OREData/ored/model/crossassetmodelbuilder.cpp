@@ -115,7 +115,7 @@ bool CrossAssetModelBuilder::requiresRecalibration() const {
 void CrossAssetModelBuilder::performCalculations() const {
     // if any of the sub models requires a recalibration, we rebuilt the model
     // TODO we could do this more selectively
-    if (requiresRecalibration()) {
+    if (!dontCalibrate_ && requiresRecalibration()) {
         // reset market observer update flag
         marketObserver_->hasUpdated(true);
         // the cast is a bit ugly, but we pretty much know what we are doing here
