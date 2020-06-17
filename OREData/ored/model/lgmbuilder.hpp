@@ -62,7 +62,7 @@ public:
     std::string currency() { return data_->ccy(); }
     boost::shared_ptr<QuantExt::LGM> model() const;
     boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization() const;
-    RelinkableHandle<YieldTermStructure> discountCurve() { return discountCurve_; }
+    RelinkableHandle<YieldTermStructure> discountCurve() { return modelDiscountCurve_; }
     std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;
     //@}
 
@@ -106,7 +106,8 @@ private:
     mutable Array swaptionMaturities_;
     mutable Date swaptionBasketRefDate_;
 
-    RelinkableHandle<YieldTermStructure> discountCurve_;
+    RelinkableHandle<YieldTermStructure> modelDiscountCurve_;
+    Handle<YieldTermStructure> calibrationDiscountCurve_;
     Handle<QuantLib::SwaptionVolatilityStructure> svts_;
     Handle<SwapIndex> swapIndex_, shortSwapIndex_;
 
