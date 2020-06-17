@@ -708,22 +708,14 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"20_CommodityOption_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/3/5Y", -491152.228798501019, 9317.978340855800},
         {"20_CommodityOption_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/2/2Y", -491152.228798501019, -4256.075631047075},
         {"20_CommodityOption_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/3/5Y", -491152.228798501019, -9477.947397496144},
-        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/9/1Y/1.05", -491152.228798501019,
-         2631.321446832444},
         {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/12/1Y/1.1", -491152.228798501019,
-         -2953.560262204672},
-        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/11/5Y/1.05", -491152.228798501019,
-         41151.505618994124},
+         -337.120477382559},
         {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/14/5Y/1.1", -491152.228798501019,
-         -42848.872082053742},
-        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/9/1Y/1.05", -491152.228798501019,
-         -2592.135488447500},
+         -5055.174033740186},
         {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/12/1Y/1.1", -491152.228798501019,
-         2940.729887370544},
-        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/11/5Y/1.05", -491152.228798501019,
-         -37770.406281976204},
+         333.980691680335},
         {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/14/5Y/1.1", -491152.228798501019,
-         46207.778528712981}};
+         5053.576515255263}};
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {
