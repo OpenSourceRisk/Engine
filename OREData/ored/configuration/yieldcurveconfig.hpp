@@ -36,15 +36,15 @@
 
 namespace ore {
 namespace data {
-using std::string;
-using std::vector;
-using std::set;
-using std::pair;
-using std::map;
 using boost::optional;
 using ore::data::XMLNode;
 using QuantLib::AcyclicVisitor;
 using QuantLib::Real;
+using std::map;
+using std::pair;
+using std::set;
+using std::string;
+using std::vector;
 
 //! Base class for yield curve segments.
 /*!

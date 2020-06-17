@@ -25,9 +25,9 @@
 #define quantext_flat_extrapolation_hpp
 
 #include <ql/math/interpolation.hpp>
+#include <ql/math/interpolations/cubicinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
-#include <ql/math/interpolations/cubicinterpolation.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -123,16 +123,12 @@ public:
         QuantLib::Real leftConditionValue = 0.0,
         QuantLib::CubicInterpolation::BoundaryCondition rightCondition = QuantLib::CubicInterpolation::SecondDerivative,
         QuantLib::Real rightConditionValue = 0.0)
-        : da_(da),
-          monotonic_(monotonic),
-          leftType_(leftCondition),
-          rightType_(rightCondition),
-          leftValue_(leftConditionValue),
-          rightValue_(rightConditionValue) {}
+        : da_(da), monotonic_(monotonic), leftType_(leftCondition), rightType_(rightCondition),
+          leftValue_(leftConditionValue), rightValue_(rightConditionValue) {}
 
     template <class I1, class I2> Interpolation interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin) const {
-        return FlatExtrapolation(boost::make_shared<CubicInterpolation>(xBegin, xEnd, yBegin,
-            da_, monotonic_, leftType_, leftValue_, rightType_, rightValue_));
+        return FlatExtrapolation(boost::make_shared<CubicInterpolation>(
+            xBegin, xEnd, yBegin, da_, monotonic_, leftType_, leftValue_, rightType_, rightValue_));
     }
 
     static const bool global = true;

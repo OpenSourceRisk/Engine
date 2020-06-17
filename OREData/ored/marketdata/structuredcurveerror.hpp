@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/utilities/log.hpp>
 #include <boost/algorithm/string.hpp>
+#include <ored/utilities/log.hpp>
 
 namespace ore {
 namespace data {
@@ -32,22 +32,23 @@ namespace data {
 //! Utility class for Structured Curve errors, contains the curve ID
 class StructuredCurveErrorMessage : public StructuredErrorMessage {
 public:
-    StructuredCurveErrorMessage(const std::string& curveId,
-                                const std::string& exceptionType, const string& exceptionWhat = "")
-                                : curveId_(curveId), exceptionType_(exceptionType), exceptionWhat_(exceptionWhat) {}
+    StructuredCurveErrorMessage(const std::string& curveId, const std::string& exceptionType,
+                                const string& exceptionWhat = "")
+        : curveId_(curveId), exceptionType_(exceptionType), exceptionWhat_(exceptionWhat) {}
 
     const std::string& curveId() const { return curveId_; }
     const std::string& exceptionType() const { return exceptionType_; }
     const std::string& exceptionWhat() const { return exceptionWhat_; }
+
 protected:
     std::string json() const override {
-        return "{ \"errorType\":\"Curve\", \"curveId\":\"" + curveId_ + "\"," +
-               " \"exceptionType\":\"" + exceptionType_ + "\"," +
-               " \"exceptionMessage\":\"" + jsonify(exceptionWhat_) + "\"}";
+        return "{ \"errorType\":\"Curve\", \"curveId\":\"" + curveId_ + "\"," + " \"exceptionType\":\"" +
+               exceptionType_ + "\"," + " \"exceptionMessage\":\"" + jsonify(exceptionWhat_) + "\"}";
     }
+
 private:
     std::string curveId_, exceptionType_, exceptionWhat_;
 };
 
-}
-}
+} // namespace data
+} // namespace ore

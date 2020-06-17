@@ -31,17 +31,17 @@ using namespace ore::data;
 namespace {
 
 LegData premiumLegData() {
-    
-    ScheduleData scheduleData(ScheduleRules("2019-10-02", "2024-12-20", "3M",
-        "WeekendsOnly", "Following", "Unadjusted", "CDS2015"));
+
+    ScheduleData scheduleData(
+        ScheduleRules("2019-10-02", "2024-12-20", "3M", "WeekendsOnly", "Following", "Unadjusted", "CDS2015"));
 
     auto fixedLegData = boost::make_shared<FixedLegData>(vector<Real>(1, 0.01));
 
-    return LegData(fixedLegData, true, "EUR", scheduleData, "A360",
-        vector<Real>(1, 1000000), vector<string>(), "Following");
+    return LegData(fixedLegData, true, "EUR", scheduleData, "A360", vector<Real>(1, 1000000), vector<string>(),
+                   "Following");
 }
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
@@ -90,8 +90,7 @@ BOOST_AUTO_TEST_CASE(testConstructionWithExplicitCreditCurveId) {
     // Perform some checks
     BOOST_CHECK_EQUAL(cdsData.issuerId(), "DB");
     BOOST_CHECK(cdsData.settlesAccrual());
-    BOOST_CHECK_EQUAL(cdsData.protectionPaymentTime(),
-        QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault);
+    BOOST_CHECK_EQUAL(cdsData.protectionPaymentTime(), QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault);
     BOOST_CHECK_EQUAL(cdsData.protectionStart(), Date());
     BOOST_CHECK_EQUAL(cdsData.upfrontDate(), Date());
     BOOST_CHECK_EQUAL(cdsData.upfrontFee(), Null<Real>());
@@ -137,8 +136,7 @@ BOOST_AUTO_TEST_CASE(testConstructionWithCdsReferenceInformation) {
     // Perform some checks
     BOOST_CHECK_EQUAL(cdsData.issuerId(), "DB");
     BOOST_CHECK(cdsData.settlesAccrual());
-    BOOST_CHECK_EQUAL(cdsData.protectionPaymentTime(),
-        QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault);
+    BOOST_CHECK_EQUAL(cdsData.protectionPaymentTime(), QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault);
     BOOST_CHECK_EQUAL(cdsData.protectionStart(), Date());
     BOOST_CHECK_EQUAL(cdsData.upfrontDate(), Date());
     BOOST_CHECK_EQUAL(cdsData.upfrontFee(), Null<Real>());

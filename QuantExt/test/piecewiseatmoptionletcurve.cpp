@@ -16,23 +16,23 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include <boost/test/data/test_case.hpp>
-#include <boost/variant.hpp>
 #include <boost/assign.hpp>
+#include <boost/test/data/test_case.hpp>
+#include <boost/test/unit_test.hpp>
+#include <boost/variant.hpp>
 
 #include <test/capfloormarketdata.hpp>
-#include <test/yieldcurvemarketdata.hpp>
 #include <test/toplevelfixture.hpp>
+#include <test/yieldcurvemarketdata.hpp>
 
-#include <qle/termstructures/piecewiseatmoptionletcurve.hpp>
-#include <qle/termstructures/capfloorhelper.hpp>
-#include <qle/termstructures/capfloortermvolcurve.hpp>
-#include <qle/math/flatextrapolation.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/time/date.hpp>
+#include <qle/math/flatextrapolation.hpp>
+#include <qle/termstructures/capfloorhelper.hpp>
+#include <qle/termstructures/capfloortermvolcurve.hpp>
+#include <qle/termstructures/piecewiseatmoptionletcurve.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -40,35 +40,30 @@ using namespace boost::unit_test_framework;
 
 namespace bdata = boost::unit_test::data;
 typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
-using std::ostream;
-using std::boolalpha;
-using std::string;
-using std::map;
-using std::vector;
-using std::pair;
-using std::fixed;
-using std::setprecision;
 using boost::assign::list_of;
 using boost::assign::map_list_of;
+using std::boolalpha;
+using std::fixed;
+using std::map;
+using std::ostream;
+using std::pair;
+using std::setprecision;
+using std::string;
+using std::vector;
 
 namespace {
 
 // Variables to be used in the test
 struct CommonVars : public qle::test::TopLevelFixture {
-    
+
     // Constructor
     CommonVars()
-        : referenceDate(5, Feb, 2016),
-          settlementDays(0),
-          calendar(TARGET()),
-          bdc(Following),
-          dayCounter(Actual365Fixed()),
-          accuracy(1.0e-12),
-          tolerance(1.0e-10) {
-        
+        : referenceDate(5, Feb, 2016), settlementDays(0), calendar(TARGET()), bdc(Following),
+          dayCounter(Actual365Fixed()), accuracy(1.0e-12), tolerance(1.0e-10) {
+
         // Reference date
         Settings::instance().evaluationDate() = referenceDate;
-        
+
         // Set cap floor ibor index to EUR-EURIBOR-6M and attach a forwarding curve
         iborIndex = boost::make_shared<Euribor6M>(testYieldCurves.forward6M);
     }
@@ -105,11 +100,10 @@ struct AtmVolData {
 
 // Needed for data driven test case below as it writes out the VolatilityColumn
 ostream& operator<<(ostream& os, const AtmVolData& vc) {
-    return os << "Atm volatility data with volatility type: " << 
-        vc.type << ", shift: " << vc.displacement;
+    return os << "Atm volatility data with volatility type: " << vc.type << ", shift: " << vc.displacement;
 }
 
-// From the EUR cap floor test volatility data in file test/capfloormarketdata.hpp, create a vector of 
+// From the EUR cap floor test volatility data in file test/capfloormarketdata.hpp, create a vector of
 // AtmVolData which will be the data in the data driven test below
 vector<AtmVolData> generateAtmVolData() {
 
@@ -204,7 +198,7 @@ string to_string(const InterpolationType& interpolationType) {
     return result;
 }
 
-}
+} // namespace
 
 // Needed for BOOST_DATA_TEST_CASE below
 // https://stackoverflow.com/a/33965517/1771882
@@ -217,29 +211,28 @@ template <> struct print_log_value<boost::tuple<InterpolationType, bool> > {
         os << to_string(boost::get<0>(tp)) << ", " << boolalpha << boost::get<1>(tp);
     }
 };
-}
-}
+} // namespace tt_detail
+} // namespace test_tools
 
 namespace unit_test {
 namespace data {
 namespace monomorphic {
 // Registering InterpDataset as a dataset
-template <>
-struct is_dataset<InterpDataset> : boost::mpl::true_ {};
-}
-}
-}
+template <> struct is_dataset<InterpDataset> : boost::mpl::true_ {};
+} // namespace monomorphic
+} // namespace data
+} // namespace unit_test
 
-}
+} // namespace boost
 
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(PiecewiseAtmOptionletCurveTests)
 
-BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping, 
-    bdata::make(generateAtmVolData()) * InterpDataset() * bdata::make(isMovingValues) 
-    * bdata::make(flatFirstPeriodValues), atmVolData, interpSample, 
-    isMoving, flatFirstPeriod) {
+BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
+                       bdata::make(generateAtmVolData()) * InterpDataset() * bdata::make(isMovingValues) *
+                           bdata::make(flatFirstPeriodValues),
+                       atmVolData, interpSample, isMoving, flatFirstPeriod) {
 
     BOOST_TEST_MESSAGE("Testing piecewise optionlet stripping of ATM cap floor curve");
 
@@ -253,7 +246,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
     BOOST_TEST_MESSAGE("  Interp on optionlets: " << boolalpha << interpOnOptionlets);
     BOOST_TEST_MESSAGE("  Floating reference date: " << boolalpha << isMoving);
     BOOST_TEST_MESSAGE("  Flat first period: " << boolalpha << flatFirstPeriod);
-        
+
     // Store each cap floor instrument in the strike column and its NPV using the flat cap floor volatilities
     vector<boost::shared_ptr<CapFloor> > instruments(atmVolData.tenors.size());
     vector<Real> flatNpvs(atmVolData.tenors.size());
@@ -264,7 +257,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
 
     BOOST_TEST_MESSAGE("The input values at each tenor are:");
     for (Size i = 0; i < atmVolData.tenors.size(); i++) {
-        
+
         // Get the relevant quote value
         Real volatility = atmVolData.volatilities[i];
         volQuotes[i] = boost::make_shared<SimpleQuote>(volatility);
@@ -278,18 +271,18 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
             instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
                 testYieldCurves.discountEonia, volatility, dayCounter, atmVolData.displacement));
         } else {
-            instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
-                testYieldCurves.discountEonia, volatility, dayCounter));
+            instruments[i]->setPricingEngine(
+                boost::make_shared<BachelierCapFloorEngine>(testYieldCurves.discountEonia, volatility, dayCounter));
         }
         flatNpvs[i] = instruments[i]->NPV();
 
-        BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Strike, Volatility, Flat NPV) = (Cap, " << 
-            atmVolData.tenors[i] << ", " << atm << ", " << fixed << setprecision(13) << volatility << 
-            ", " << flatNpvs[i] << ")");
+        BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Strike, Volatility, Flat NPV) = (Cap, "
+                           << atmVolData.tenors[i] << ", " << atm << ", " << fixed << setprecision(13) << volatility
+                           << ", " << flatNpvs[i] << ")");
     }
 
     // Create the ATM optionlet curve, with the given interpolation type.
-    // Doesn't matter what interpolation we use here for the cap floor term surface so just use the same 
+    // Doesn't matter what interpolation we use here for the cap floor term surface so just use the same
     // interpolation as the optionlet curve being stripped
     VolatilityType curveVolatilityType = Normal;
     Real curveDisplacement = 0.0;
@@ -301,15 +294,15 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
             BOOST_TEST_MESSAGE("Using Linear interpolation with a moving reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
                 settlementDays, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
-            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<Linear> >(settlementDays, cftvc, 
-                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type, 
+            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<Linear> >(
+                settlementDays, cftvc, iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         } else {
             BOOST_TEST_MESSAGE("Using Linear interpolation with a fixed reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
                 referenceDate, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
-            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<Linear> >(referenceDate, cftvc,
-                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
+            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<Linear> >(
+                referenceDate, cftvc, iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         }
         break;
@@ -318,15 +311,15 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
             BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a moving reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<BackwardFlat> >(
                 settlementDays, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
-            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<BackwardFlat> >(settlementDays, cftvc,
-                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
+            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<BackwardFlat> >(
+                settlementDays, cftvc, iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         } else {
             BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a fixed reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<BackwardFlat> >(
                 referenceDate, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
-            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<BackwardFlat> >(referenceDate, cftvc,
-                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
+            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<BackwardFlat> >(
+                referenceDate, cftvc, iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         }
         break;
@@ -335,15 +328,15 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
             BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a moving reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<LinearFlat> >(
                 settlementDays, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
-            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(settlementDays, cftvc,
-                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
+            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(
+                settlementDays, cftvc, iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         } else {
             BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a fixed reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<LinearFlat> >(
                 referenceDate, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
-            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(referenceDate, cftvc,
-                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
+            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(
+                referenceDate, cftvc, iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         }
         break;
@@ -352,15 +345,15 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
             BOOST_TEST_MESSAGE("Using Cubic interpolation with a moving reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
                 settlementDays, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
-            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<Cubic> >(settlementDays, cftvc,
-                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
+            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<Cubic> >(
+                settlementDays, cftvc, iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         } else {
             BOOST_TEST_MESSAGE("Using Cubic interpolation with a fixed reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
                 referenceDate, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
-            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<Cubic> >(referenceDate, cftvc,
-                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
+            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<Cubic> >(
+                referenceDate, cftvc, iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         }
         break;
@@ -369,15 +362,15 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
             BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a moving reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<CubicFlat> >(
                 settlementDays, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
-            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<CubicFlat> >(settlementDays, cftvc,
-                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
+            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<CubicFlat> >(
+                settlementDays, cftvc, iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         } else {
             BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a fixed reference date");
             cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<CubicFlat> >(
                 referenceDate, calendar, bdc, atmVolData.tenors, volHandles, dayCounter, flatFirstPeriod);
-            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<CubicFlat> >(referenceDate, cftvc,
-                iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
+            ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<CubicFlat> >(
+                referenceDate, cftvc, iborIndex, testYieldCurves.discountEonia, flatFirstPeriod, atmVolData.type,
                 atmVolData.displacement, curveVolatilityType, curveDisplacement, interpOnOptionlets);
         }
         break;
@@ -393,18 +386,19 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
 
         // Price the instrument using the stripped optionlet structure
         if (ovCurve->volatilityType() == ShiftedLognormal) {
-            instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
-                testYieldCurves.discountEonia, hovs));
+            instruments[i]->setPricingEngine(
+                boost::make_shared<BlackCapFloorEngine>(testYieldCurves.discountEonia, hovs));
         } else {
-            instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
-                testYieldCurves.discountEonia, hovs));
+            instruments[i]->setPricingEngine(
+                boost::make_shared<BachelierCapFloorEngine>(testYieldCurves.discountEonia, hovs));
         }
         strippedNpv = instruments[i]->NPV();
 
-        BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Strike, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = (" <<
-            instruments[i]->type() << ", " << atmVolData.tenors[i] << ", " << instruments[i]->capRates()[0] << ", " << 
-            fixed << setprecision(13) << atmVolData.volatilities[i] << ", " << flatNpvs[i] << ", " << strippedNpv << 
-            ", " << (flatNpvs[i] - strippedNpv) << ")");
+        BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Strike, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = ("
+                           << instruments[i]->type() << ", " << atmVolData.tenors[i] << ", "
+                           << instruments[i]->capRates()[0] << ", " << fixed << setprecision(13)
+                           << atmVolData.volatilities[i] << ", " << flatNpvs[i] << ", " << strippedNpv << ", "
+                           << (flatNpvs[i] - strippedNpv) << ")");
 
         BOOST_CHECK_SMALL(fabs(flatNpvs[i] - strippedNpv), tolerance);
     }
@@ -419,14 +413,14 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
         instruments[idx]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
             testYieldCurves.discountEonia, bumpedVol, dayCounter, atmVolData.displacement));
     } else {
-        instruments[idx]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
-            testYieldCurves.discountEonia, bumpedVol, dayCounter));
+        instruments[idx]->setPricingEngine(
+            boost::make_shared<BachelierCapFloorEngine>(testYieldCurves.discountEonia, bumpedVol, dayCounter));
     }
     Real newFlatNpv = instruments[idx]->NPV();
-    BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Strike, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = (" <<
-        instruments[idx]->type() << ", " << atmVolData.tenors[idx] << ", " << instruments[idx]->capRates()[0] << 
-        ", " << fixed << setprecision(13) << bumpedVol << ", " << newFlatNpv << ", " <<
-        strippedNpv << ", " << (newFlatNpv - strippedNpv) << ")");
+    BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Strike, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = ("
+                       << instruments[idx]->type() << ", " << atmVolData.tenors[idx] << ", "
+                       << instruments[idx]->capRates()[0] << ", " << fixed << setprecision(13) << bumpedVol << ", "
+                       << newFlatNpv << ", " << strippedNpv << ", " << (newFlatNpv - strippedNpv) << ")");
     BOOST_CHECK_GT(newFlatNpv, flatNpvs[idx]);
     BOOST_CHECK_SMALL(fabs(newFlatNpv - strippedNpv), tolerance);
 
@@ -453,35 +447,36 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
             startDate = iborIndex->fixingCalendar().adjust(referenceDate);
             startDate = iborIndex->fixingCalendar().advance(startDate, iborIndex->fixingDays() * Days);
         }
-        instruments[i] = MakeCapFloor(CapFloor::Cap, atmVolData.tenors[i], iborIndex, 0.01)
-            .withEffectiveDate(startDate, true);
+        instruments[i] =
+            MakeCapFloor(CapFloor::Cap, atmVolData.tenors[i], iborIndex, 0.01).withEffectiveDate(startDate, true);
         Rate atm = instruments[i]->atmRate(**testYieldCurves.discountEonia);
-        instruments[i] = MakeCapFloor(CapFloor::Cap, atmVolData.tenors[i], iborIndex, atm)
-            .withEffectiveDate(startDate, true);
+        instruments[i] =
+            MakeCapFloor(CapFloor::Cap, atmVolData.tenors[i], iborIndex, atm).withEffectiveDate(startDate, true);
 
         if (atmVolData.type == ShiftedLognormal) {
             instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
                 testYieldCurves.discountEonia, volatility, dayCounter, atmVolData.displacement));
         } else {
-            instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
-                testYieldCurves.discountEonia, volatility, dayCounter));
+            instruments[i]->setPricingEngine(
+                boost::make_shared<BachelierCapFloorEngine>(testYieldCurves.discountEonia, volatility, dayCounter));
         }
         newFlatNpv = instruments[i]->NPV();
 
         // Price the instrument using the stripped optionlet structure
         if (ovCurve->volatilityType() == ShiftedLognormal) {
-            instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
-                testYieldCurves.discountEonia, hovs));
+            instruments[i]->setPricingEngine(
+                boost::make_shared<BlackCapFloorEngine>(testYieldCurves.discountEonia, hovs));
         } else {
-            instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
-                testYieldCurves.discountEonia, hovs));
+            instruments[i]->setPricingEngine(
+                boost::make_shared<BachelierCapFloorEngine>(testYieldCurves.discountEonia, hovs));
         }
         strippedNpv = instruments[i]->NPV();
 
-        BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Strike, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = (" <<
-            instruments[i]->type() << ", " << atmVolData.tenors[i] << ", " << instruments[i]->capRates()[0] << ", " <<
-            fixed << setprecision(13) << volQuotes[i]->value() << ", " << newFlatNpv << ", " << strippedNpv <<
-            ", " << (newFlatNpv - strippedNpv) << ")");
+        BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Strike, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = ("
+                           << instruments[i]->type() << ", " << atmVolData.tenors[i] << ", "
+                           << instruments[i]->capRates()[0] << ", " << fixed << setprecision(13)
+                           << volQuotes[i]->value() << ", " << newFlatNpv << ", " << strippedNpv << ", "
+                           << (newFlatNpv - strippedNpv) << ")");
 
         BOOST_CHECK_SMALL(fabs(newFlatNpv - strippedNpv), tolerance);
     }
@@ -519,11 +514,13 @@ BOOST_FIXTURE_TEST_CASE(testAtmStrippingExceptions, CommonVars) {
     VolatilityType curveVolatilityType = Normal;
     Real curveDisplacement = 0.0;
     bool interpOnOptionlets = true;
-    boost::shared_ptr<OptionletVolatilityStructure> ovCurve = 
-        boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(settlementDays, cftvc, iborIndex, 
-            testYieldCurves.discountEonia, true, type, displacement, curveVolatilityType, curveDisplacement,
-            interpOnOptionlets, LinearFlat(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<LinearFlat,
-            QuantExt::IterativeBootstrap>::optionlet_curve>(accuracy, globalAccuracy, dontThrow));
+    boost::shared_ptr<OptionletVolatilityStructure> ovCurve =
+        boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(
+            settlementDays, cftvc, iborIndex, testYieldCurves.discountEonia, true, type, displacement,
+            curveVolatilityType, curveDisplacement, interpOnOptionlets, LinearFlat(),
+            QuantExt::IterativeBootstrap<
+                PiecewiseAtmOptionletCurve<LinearFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
+                accuracy, globalAccuracy, dontThrow));
 
     // Checks
     Period oneYear = 1 * Years;
@@ -539,16 +536,18 @@ BOOST_FIXTURE_TEST_CASE(testAtmStrippingExceptions, CommonVars) {
     BOOST_CHECK_NO_THROW(eightYearVol = ovCurve->volatility(eightYears, 0.01, true));
     BOOST_TEST_MESSAGE("8Y vol: " << eightYearVol);
 
-    // Increase the 5Y volatility to introduce an exception. Can't bootstrap the 7Y and 10Y caps as a result 
+    // Increase the 5Y volatility to introduce an exception. Can't bootstrap the 7Y and 10Y caps as a result
     volQuotes[2]->setValue(2 * volQuotes[2]->value());
     BOOST_CHECK_THROW(ovCurve->volatility(fiveYears, 0.01, true), Error);
 
     // Rebuild ovCurve with dontThrow set to true
     dontThrow = true;
-    ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(settlementDays, cftvc, iborIndex,
-        testYieldCurves.discountEonia, true, type, displacement, curveVolatilityType, curveDisplacement,
-        interpOnOptionlets, LinearFlat(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<LinearFlat,
-        QuantExt::IterativeBootstrap>::optionlet_curve>(accuracy, globalAccuracy, dontThrow));
+    ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(
+        settlementDays, cftvc, iborIndex, testYieldCurves.discountEonia, true, type, displacement, curveVolatilityType,
+        curveDisplacement, interpOnOptionlets, LinearFlat(),
+        QuantExt::IterativeBootstrap<
+            PiecewiseAtmOptionletCurve<LinearFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
+            accuracy, globalAccuracy, dontThrow));
 
     // Check bootstrap passes and check the values.
     // - the 1Y optionlet volatility should not have been affected

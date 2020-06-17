@@ -33,9 +33,9 @@
 
 namespace ore {
 namespace data {
-using QuantLib::Date;
-using ore::data::CurveConfigurations;
 using ore::data::Conventions;
+using ore::data::CurveConfigurations;
+using QuantLib::Date;
 
 //! Wrapper class for building Swaption volatility structures
 /*!
@@ -64,36 +64,35 @@ private:
 
     //! Build a default curve from CDS spread quotes
     void buildCdsCurve(DefaultCurveConfig& config, const QuantLib::Date& asof, const DefaultCurveSpec& spec,
-        const Loader& loader, const Conventions& conventions,
-        std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+                       const Loader& loader, const Conventions& conventions,
+                       std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves);
 
     //! Build a default curve from hazard rate quotes
     void buildHazardRateCurve(DefaultCurveConfig& config, const QuantLib::Date& asof, const DefaultCurveSpec& spec,
-        const Loader& loader, const Conventions& conventions);
+                              const Loader& loader, const Conventions& conventions);
 
     //! Build a default curve implied from a spread over a benchmark curve
     void buildBenchmarkCurve(DefaultCurveConfig& config, const QuantLib::Date& asof, const DefaultCurveSpec& spec,
-        const Loader& loader, const Conventions& conventions,
-        std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+                             const Loader& loader, const Conventions& conventions,
+                             std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves);
 
     //! Get the quotes configured for a cds or hazard rate curve
-    std::map<QuantLib::Period, QuantLib::Real> getConfiguredQuotes(DefaultCurveConfig& config,
-        const QuantLib::Date& asof, const Loader& loader) const;
+    std::map<QuantLib::Period, QuantLib::Real>
+    getConfiguredQuotes(DefaultCurveConfig& config, const QuantLib::Date& asof, const Loader& loader) const;
 
     //! Get all quotes matching the given regex string, \p strRegex
-    std::map<QuantLib::Period, QuantLib::Real> getRegexQuotes(std::string strRegex,
-        const std::string& configId, DefaultCurveConfig::Type type,
-        const QuantLib::Date& asof, const Loader& loader) const;
+    std::map<QuantLib::Period, QuantLib::Real> getRegexQuotes(std::string strRegex, const std::string& configId,
+                                                              DefaultCurveConfig::Type type, const QuantLib::Date& asof,
+                                                              const Loader& loader) const;
 
     //! Get the explicit \p quotes
-    std::map<QuantLib::Period, QuantLib::Real> getExplicitQuotes(
-        const std::vector<std::pair<std::string, bool> >& quotes,
-        const std::string& configId, DefaultCurveConfig::Type type,
-        const QuantLib::Date& asof, const Loader& loader) const;
+    std::map<QuantLib::Period, QuantLib::Real>
+    getExplicitQuotes(const std::vector<std::pair<std::string, bool>>& quotes, const std::string& configId,
+                      DefaultCurveConfig::Type type, const QuantLib::Date& asof, const Loader& loader) const;
 
     //! Add \p tenor and \p marketDatum value to \p quotes with check for duplicate tenors
     void addQuote(std::map<QuantLib::Period, QuantLib::Real>& quotes, const QuantLib::Period& tenor,
-        const MarketDatum& marketDatum, const std::string& configId) const;
+                  const MarketDatum& marketDatum, const std::string& configId) const;
 };
 
 } // namespace data

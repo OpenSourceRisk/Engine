@@ -33,8 +33,8 @@
 
 namespace ore {
 namespace analytics {
-using std::vector;
 using QuantLib::TimeGrid;
+using std::vector;
 
 //! Scenario generator base class
 /*! \ingroup scenario

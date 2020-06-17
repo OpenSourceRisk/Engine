@@ -16,85 +16,52 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
+#include <boost/assign.hpp>
+#include <boost/bimap.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/bimap.hpp>
-#include <boost/assign.hpp>
 
+using boost::assign::list_of;
 using QuantLib::BusinessDayConvention;
 using QuantLib::Calendar;
 using QuantLib::DayCounter;
 using QuantLib::Natural;
 using std::ostream;
+using std::set;
 using std::string;
 using std::vector;
-using std::set;
-using boost::assign::list_of;
 
 namespace ore {
 namespace data {
 
 typedef boost::bimap<string, CapFloorVolatilityCurveConfig::VolatilityType> BmType;
-const BmType volatilityTypeMap = list_of<BmType::value_type>
-    ("Normal", CapFloorVolatilityCurveConfig::VolatilityType::Normal)
-    ("Lognormal", CapFloorVolatilityCurveConfig::VolatilityType::Lognormal)
-    ("ShiftedLognormal", CapFloorVolatilityCurveConfig::VolatilityType::ShiftedLognormal);
+const BmType volatilityTypeMap =
+    list_of<BmType::value_type>("Normal", CapFloorVolatilityCurveConfig::VolatilityType::Normal)(
+        "Lognormal", CapFloorVolatilityCurveConfig::VolatilityType::Lognormal)(
+        "ShiftedLognormal", CapFloorVolatilityCurveConfig::VolatilityType::ShiftedLognormal);
 
 // Allowable interpolation strings for time and strike interpolation
 // BackwardFlat is not allowed for strike interpolation but that is handled elsewhere.
-const set<string> validInterps = {
-    "Linear",
-    "LinearFlat",
-    "BackwardFlat",
-    "Cubic",
-    "CubicFlat"
-};
+const set<string> validInterps = {"Linear", "LinearFlat", "BackwardFlat", "Cubic", "CubicFlat"};
 
 CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
-    const string& curveID,
-    const string& curveDescription,
-    const VolatilityType& volatilityType,
-    bool extrapolate,
-    bool flatExtrapolation,
-    bool inlcudeAtm,
-    const vector<string>& tenors,
-    const vector<string>& strikes,
-    const DayCounter& dayCounter,
-    Natural settleDays,
-    const Calendar& calendar,
-    const BusinessDayConvention& businessDayConvention,
-    const string& iborIndex,
-    const string& discountCurve,
-    const string& interpolationMethod,
-    const string& interpolateOn,
-    const string& timeInterpolation,
-    const string& strikeInterpolation,
-    const vector<string>& atmTenors,
-    const BootstrapConfig& bootstrapConfig)
-    : CurveConfig(curveID, curveDescription),
-      volatilityType_(volatilityType),
-      extrapolate_(extrapolate),
-      flatExtrapolation_(flatExtrapolation),
-      includeAtm_(inlcudeAtm),
-      tenors_(tenors),
-      strikes_(strikes),
-      dayCounter_(dayCounter),
-      settleDays_(settleDays),
-      calendar_(calendar),
-      businessDayConvention_(businessDayConvention),
-      iborIndex_(iborIndex),
-      discountCurve_(discountCurve),
-      interpolationMethod_(interpolationMethod),
-      interpolateOn_(interpolateOn),
-      timeInterpolation_(timeInterpolation),
-      strikeInterpolation_(strikeInterpolation),
-      atmTenors_(atmTenors),
-      bootstrapConfig_(bootstrapConfig) {
-    
+    const string& curveID, const string& curveDescription, const VolatilityType& volatilityType, bool extrapolate,
+    bool flatExtrapolation, bool inlcudeAtm, const vector<string>& tenors, const vector<string>& strikes,
+    const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
+    const BusinessDayConvention& businessDayConvention, const string& iborIndex, const string& discountCurve,
+    const string& interpolationMethod, const string& interpolateOn, const string& timeInterpolation,
+    const string& strikeInterpolation, const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig)
+    : CurveConfig(curveID, curveDescription), volatilityType_(volatilityType), extrapolate_(extrapolate),
+      flatExtrapolation_(flatExtrapolation), includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes),
+      dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
+      businessDayConvention_(businessDayConvention), iborIndex_(iborIndex), discountCurve_(discountCurve),
+      interpolationMethod_(interpolationMethod), interpolateOn_(interpolateOn), timeInterpolation_(timeInterpolation),
+      strikeInterpolation_(strikeInterpolation), atmTenors_(atmTenors), bootstrapConfig_(bootstrapConfig) {
+
     // Set extrapolation string. "Linear" just means extrapolation allowed and non-flat.
     extrapolation_ = !extrapolate_ ? "None" : (flatExtrapolation_ ? "Flat" : "Linear");
 
@@ -109,7 +76,7 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
 }
 
 void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
-    
+
     XMLUtils::checkNode(node, "CapFloorVolatility");
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
@@ -189,7 +156,7 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
 }
 
 XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
-    
+
     XMLNode* node = doc.allocNode("CapFloorVolatility");
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
@@ -227,12 +194,13 @@ CftvsInterp CapFloorVolatilityCurveConfig::interpolationMethod() const {
 }
 
 string CapFloorVolatilityCurveConfig::toString(VolatilityType type) const {
-    QL_REQUIRE(volatilityTypeMap.right.count(type) > 0, "Volatility type (" << static_cast<int>(type) << ") is not valid");
+    QL_REQUIRE(volatilityTypeMap.right.count(type) > 0,
+               "Volatility type (" << static_cast<int>(type) << ") is not valid");
     return volatilityTypeMap.right.at(type);
 }
 
 void CapFloorVolatilityCurveConfig::populateQuotes() {
-    
+
     // Cap floor quotes are for the form:
     // CAPFLOOR/(RATE_LNVOL|RATE_NVOL|RATE_SLNVOL)/<CCY>/<TENOR>/<IBOR_TENOR>/<ATM>/<RELATIVE>/<STRIKE>
 
@@ -267,7 +235,7 @@ void CapFloorVolatilityCurveConfig::populateQuotes() {
 
 void CapFloorVolatilityCurveConfig::configureExtrapolation(const string& extrapolation) {
     QL_REQUIRE(extrapolation == "Linear" || extrapolation == "Flat" || extrapolation == "None",
-        "Extrapolation must be one of Linear, Flat or None");
+               "Extrapolation must be one of Linear, Flat or None");
     extrapolate_ = extrapolation == "None" ? false : true;
     flatExtrapolation_ = extrapolation == "Linear" ? false : true;
 }
@@ -279,16 +247,16 @@ void CapFloorVolatilityCurveConfig::configureVolatilityType(const std::string& t
 
 void CapFloorVolatilityCurveConfig::configureType() {
     type_ = tenors_.empty() ? Type::Atm : (includeAtm_ ? Type::SurfaceWithAtm : Type::Surface);
-    //type_ = strikes_.empty() ? Type::Atm : (includeAtm_ ? Type::SurfaceWithAtm : Type::Surface);
+    // type_ = strikes_.empty() ? Type::Atm : (includeAtm_ ? Type::SurfaceWithAtm : Type::Surface);
 }
 
 void CapFloorVolatilityCurveConfig::validate() const {
-    QL_REQUIRE(interpolateOn_ == "TermVolatilities" || interpolateOn_ == "OptionletVolatilities", 
-        "InterpolateOn (" << interpolateOn_ << ") must be TermVolatilities or OptionletVolatilities");
-    QL_REQUIRE(validInterps.count(timeInterpolation_) == 1, 
-        "TimeInterpolation, " << timeInterpolation_ << ", not recognised");
+    QL_REQUIRE(interpolateOn_ == "TermVolatilities" || interpolateOn_ == "OptionletVolatilities",
+               "InterpolateOn (" << interpolateOn_ << ") must be TermVolatilities or OptionletVolatilities");
+    QL_REQUIRE(validInterps.count(timeInterpolation_) == 1,
+               "TimeInterpolation, " << timeInterpolation_ << ", not recognised");
     QL_REQUIRE(validInterps.count(strikeInterpolation_) == 1,
-        "StrikeInterpolation, " << strikeInterpolation_ << ", not recognised");
+               "StrikeInterpolation, " << strikeInterpolation_ << ", not recognised");
     QL_REQUIRE(strikeInterpolation_ != "BackwardFlat", "BackwardFlat StrikeInterpolation is not allowed");
     if (!tenors_.empty()) {
         QL_REQUIRE(!strikes_.empty(), "Strikes cannot be empty when configuring a surface");
@@ -320,5 +288,5 @@ VolatilityType volatilityType(CapFloorVolatilityCurveConfig::VolatilityType type
     }
 }
 
-}
-}
+} // namespace data
+} // namespace ore

@@ -2,7 +2,7 @@
 // Do not edit
 
 #ifdef BOOST_MSVC
-#  include <orea/auto_link.hpp>
+#include <orea/auto_link.hpp>
 #endif
 
 #include <orea/aggregation/collateralaccount.hpp>

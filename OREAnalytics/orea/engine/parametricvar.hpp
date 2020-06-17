@@ -37,8 +37,8 @@
 
 namespace ore {
 namespace analytics {
-using QuantLib::Matrix;
 using QuantLib::Array;
+using QuantLib::Matrix;
 
 //! Parametric VaR Calculator
 /*! This class takes sensitivity data and a covariance matrix as an input and computes a parametric value at risk. The

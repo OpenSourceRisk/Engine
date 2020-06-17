@@ -36,8 +36,8 @@ namespace QuantExt {
 class BRLCdi : public QuantLib::OvernightIndex {
 public:
     BRLCdi(const QuantLib::Handle<QuantLib::YieldTermStructure>& h = QuantLib::Handle<QuantLib::YieldTermStructure>())
-        : QuantLib::OvernightIndex("BRL-CDI", 0, QuantLib::BRLCurrency(), 
-          QuantLib::Brazil(QuantLib::Brazil::Settlement), QuantLib::Business252(), h) {}
+        : QuantLib::OvernightIndex("BRL-CDI", 0, QuantLib::BRLCurrency(),
+                                   QuantLib::Brazil(QuantLib::Brazil::Settlement), QuantLib::Business252(), h) {}
 
     //! \name InterestRateIndex interface
     //@{

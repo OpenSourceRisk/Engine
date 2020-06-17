@@ -63,5 +63,5 @@ private:
     void init();
 };
 
-}
-}
+} // namespace data
+} // namespace ore

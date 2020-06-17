@@ -61,8 +61,9 @@ private:
 
     class ObjectiveFunction {
     public:
-        ObjectiveFunction(const boost::shared_ptr<QuantExt::OptionletStripper>&, const boost::shared_ptr<QuantLib::CapFloor>&,
-                          Real targetValue, const Handle<YieldTermStructure>& discount);
+        ObjectiveFunction(const boost::shared_ptr<QuantExt::OptionletStripper>&,
+                          const boost::shared_ptr<QuantLib::CapFloor>&, Real targetValue,
+                          const Handle<YieldTermStructure>& discount);
         Real operator()(Volatility spreadVol) const;
 
     private:

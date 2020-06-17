@@ -33,11 +33,11 @@ namespace data {
 
 //! Base class for reference data
 /*! Each reference datum object is a subclass of this base and has it's own accessor functions.
-    *  Instances of ReferenceDatum can be gotten from the ReferenceDataManager below, and then cast up as required.
-    *  Each instance should be uniquely identified by it's type (which defines it's subclass, e.g. "Bond" for
-    *  BondReferenceDatum) and it's id, which is a string. Here it can be any string but in applications there can be
-    *  a naming scheme like ISIN for Bonds.
-    */
+ *  Instances of ReferenceDatum can be gotten from the ReferenceDataManager below, and then cast up as required.
+ *  Each instance should be uniquely identified by it's type (which defines it's subclass, e.g. "Bond" for
+ *  BondReferenceDatum) and it's id, which is a string. Here it can be any string but in applications there can be
+ *  a naming scheme like ISIN for Bonds.
+ */
 class ReferenceDatum : public XMLSerializable {
 public:
     //! Default Constructor
@@ -52,7 +52,7 @@ public:
     //! getters
     const std::string& type() const { return type_; }
     const std::string& id() const { return id_; }
-    
+
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) override;
 
@@ -147,7 +147,7 @@ public:
 
     // Load extra data and append to this manger
     void appendData(const string& filename) { fromFile(filename); }
-    
+
     boost::shared_ptr<ReferenceDatum> buildReferenceDatum(const string& refDataType);
 
     void fromXML(XMLNode* node) override;

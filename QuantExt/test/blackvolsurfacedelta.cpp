@@ -19,11 +19,11 @@
 #include "toplevelfixture.hpp"
 #include <boost/make_shared.hpp>
 #include <boost/test/unit_test.hpp>
-#include <qle/termstructures/blackvolsurfacedelta.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/time/calendars/target.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <qle/termstructures/blackvolsurfacedelta.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_SUITE(BlackVolSurfaceDeltaTest)
 BOOST_AUTO_TEST_CASE(testBlackVolSurfaceDeltaConstantVol) {
 
     BOOST_TEST_MESSAGE("Testing QuantExt::BlackVolatilitySurfaceDelta...");
-    
+
     Volatility constVol = 0.10; // 10%
 
     Date refDate(1, Jan, 2010);
@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(testBlackVolSurfaceDeltaConstantVol) {
 
     // build a vol surface
     BOOST_TEST_MESSAGE("Build Surface");
-    BlackVolatilitySurfaceDelta surface(refDate, dates, putDeltas, callDeltas, hasAtm, blackVolMatrix, 
-                                        ActualActual(), TARGET(), spot, dts, fts);
+    BlackVolatilitySurfaceDelta surface(refDate, dates, putDeltas, callDeltas, hasAtm, blackVolMatrix, ActualActual(),
+                                        TARGET(), spot, dts, fts);
 
     // ask for volatility at lots of points, should be constVol at every point
     // make sure we ask for vols outside 25D and 2Y
@@ -68,7 +68,6 @@ BOOST_AUTO_TEST_CASE(testBlackVolSurfaceDeltaConstantVol) {
             BOOST_CHECK_EQUAL(vol, constVol);
         }
     }
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

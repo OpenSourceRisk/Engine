@@ -41,7 +41,7 @@ class SensitivityCube {
 public:
     typedef std::pair<RiskFactorKey, RiskFactorKey> crossPair;
     typedef ShiftScenarioGenerator::ScenarioDescription ShiftScenarioDescription;
-    
+
     struct FactorData {
         QuantLib::Size index;
         QuantLib::Real shiftSize;
@@ -91,9 +91,10 @@ public:
 
     //! Return the map of down risk factors to it's factor data
     const std::map<RiskFactorKey, SensitivityCube::FactorData>& downFactors() const { return downFactors_; };
-        
+
     //! Returns the set of pairs of risk factor keys for which a cross gamma is available
-    const std::map<crossPair, std::tuple<SensitivityCube::FactorData, SensitivityCube::FactorData, QuantLib::Size>>& crossFactors() const;
+    const std::map<crossPair, std::tuple<SensitivityCube::FactorData, SensitivityCube::FactorData, QuantLib::Size>>&
+    crossFactors() const;
 
     //! Returns the absolute shift size for given risk factor \p key
     QuantLib::Real shiftSize(const RiskFactorKey& riskFactorKey) const;
@@ -115,7 +116,7 @@ public:
 
     //! Get the trade delta for trade given the index of trade and risk factors in the cube
     QuantLib::Real delta(QuantLib::Size id, QuantLib::Size scenarioIdx) const;
-        
+
     //! Get the trade gamma for trade with ID \p tradeId and for the given risk factor key \p riskFactorKey
     QuantLib::Real gamma(const std::string& tradeId, const RiskFactorKey& riskFactorKey) const;
 
@@ -130,7 +131,8 @@ public:
     std::set<RiskFactorKey> relevantRiskFactors();
 
     //! Get the trade cross gamma for trade given the index of trade and risk factors in the cube
-    QuantLib::Real crossGamma(QuantLib::Size id, QuantLib::Size upIdx_1, QuantLib::Size upIdx_2, QuantLib::Size crossIdx) const;
+    QuantLib::Real crossGamma(QuantLib::Size id, QuantLib::Size upIdx_1, QuantLib::Size upIdx_2,
+                              QuantLib::Size crossIdx) const;
 
 private:
     //! Initialise method used by the constructors
@@ -150,7 +152,8 @@ private:
     std::map<ShiftScenarioDescription, QuantLib::Size> scenarioIdx_;
     boost::bimap<RiskFactorKey, FactorData> upFactors_;
     std::map<RiskFactorKey, FactorData> downFactors_;
-    // map of crossPair to tuple of (data of first \p RiskFactorKey, data of second \p RiskFactorKey, index of crossFactor)
+    // map of crossPair to tuple of (data of first \p RiskFactorKey, data of second \p RiskFactorKey, index of
+    // crossFactor)
     std::map<crossPair, std::tuple<FactorData, FactorData, QuantLib::Size>> crossFactors_;
 };
 

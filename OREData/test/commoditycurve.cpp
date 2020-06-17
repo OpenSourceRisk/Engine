@@ -17,8 +17,8 @@
 */
 
 #include <boost/make_shared.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
+#include <boost/test/unit_test.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/toplevelfixture.hpp>
 
@@ -47,50 +47,36 @@ namespace bdata = boost::unit_test::data;
 namespace {
 
 // List of curve configuration file names for data test case below
-vector<string> curveConfigFiles = {
-    "curveconfig_linear.xml",
-    "curveconfig_linear_flat.xml",
-    "curveconfig_loglinear.xml",
-    "curveconfig_loglinear_flat.xml",
-    "curveconfig_cubic.xml",
-    "curveconfig_cubic_flat.xml"
-};
+vector<string> curveConfigFiles = {"curveconfig_linear.xml",    "curveconfig_linear_flat.xml",
+                                   "curveconfig_loglinear.xml", "curveconfig_loglinear_flat.xml",
+                                   "curveconfig_cubic.xml",     "curveconfig_cubic_flat.xml"};
 
 // The expected commodity curve
-map<Date, Real> expectedCurve = {
-    { Date(29, Jul, 2019), 1417.8998900 },
-    { Date(30, Jul, 2019), 1417.9999450 },
-    { Date(31, Jul, 2019), 1418.1000000 },
-    { Date( 1, Aug, 2019), 1418.2000550 },
-    { Date(30, Aug, 2019), 1421.1016535 },
-    { Date(30, Sep, 2019), 1424.1312750 }
-};
+map<Date, Real> expectedCurve = {{Date(29, Jul, 2019), 1417.8998900}, {Date(30, Jul, 2019), 1417.9999450},
+                                 {Date(31, Jul, 2019), 1418.1000000}, {Date(1, Aug, 2019), 1418.2000550},
+                                 {Date(30, Aug, 2019), 1421.1016535}, {Date(30, Sep, 2019), 1424.1312750}};
 
 // Pillars for interpolated curve tests (purposely leave out elements below spot to test interpolation there)
-map<Date, Real> expectedInterpCurvePillars = {
-    { Date(31, Jul, 2019), 1418.1000000 },
-    { Date( 1, Aug, 2019), 1418.2000550 },
-    { Date(30, Aug, 2019), 1421.1016535 },
-    { Date(30, Sep, 2019), 1424.1312750 }
-};
+map<Date, Real> expectedInterpCurvePillars = {{Date(31, Jul, 2019), 1418.1000000},
+                                              {Date(1, Aug, 2019), 1418.2000550},
+                                              {Date(30, Aug, 2019), 1421.1016535},
+                                              {Date(30, Sep, 2019), 1424.1312750}};
 
-// Expected results for extrapolation below spot, interpolation and extrapolation beyond max date for the 
+// Expected results for extrapolation below spot, interpolation and extrapolation beyond max date for the
 // various interpolation methods
-vector<Date> offPillarDates = { Date(29, Jul, 2019), Date(15, Sep, 2019), Date(1, Nov, 2019) };
+vector<Date> offPillarDates = {Date(29, Jul, 2019), Date(15, Sep, 2019), Date(1, Nov, 2019)};
 
 map<string, vector<Real>> expectedInterpCurveOffPillars = {
-    { "curveconfig_linear.xml", { 1417.89989, 1422.6653291129, 1427.2586262258 } },
-    { "curveconfig_linear_flat.xml", { 1418.1, 1422.6653291129, 1424.131275 } },
-    { "curveconfig_loglinear.xml", { 1417.89991117635, 1422.66452345277, 1427.26540106042 } },
-    { "curveconfig_loglinear_flat.xml", { 1418.1, 1422.66452345277, 1424.131275 } },
-    { "curveconfig_cubic.xml", { 1417.89988981896, 1422.67192914531, 1427.25983144911 } },
-    { "curveconfig_cubic_flat.xml", { 1418.1, 1422.67192914531, 1424.131275 } }
-};
+    {"curveconfig_linear.xml", {1417.89989, 1422.6653291129, 1427.2586262258}},
+    {"curveconfig_linear_flat.xml", {1418.1, 1422.6653291129, 1424.131275}},
+    {"curveconfig_loglinear.xml", {1417.89991117635, 1422.66452345277, 1427.26540106042}},
+    {"curveconfig_loglinear_flat.xml", {1418.1, 1422.66452345277, 1424.131275}},
+    {"curveconfig_cubic.xml", {1417.89988981896, 1422.67192914531, 1427.25983144911}},
+    {"curveconfig_cubic_flat.xml", {1418.1, 1422.67192914531, 1424.131275}}};
 
+boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir,
+                                              const string& curveConfigFile = "curveconfig.xml") {
 
-boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir, 
-    const string& curveConfigFile = "curveconfig.xml") {
-    
     // As of date
     Date asof(29, Jul, 2019);
 
@@ -108,8 +94,8 @@ boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir,
 
     // Check commodity curve construction works
     boost::shared_ptr<CommodityCurve> curve;
-    BOOST_REQUIRE_NO_THROW(curve = boost::make_shared<CommodityCurve>(
-        asof, curveSpec, loader, curveConfigs, conventions));
+    BOOST_REQUIRE_NO_THROW(curve =
+                               boost::make_shared<CommodityCurve>(asof, curveSpec, loader, curveConfigs, conventions));
 
     return curve;
 }
@@ -139,16 +125,16 @@ void checkCurve(const boost::shared_ptr<PriceTermStructure>& priceCurve, const m
     }
 }
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CommodityCurveTests)
 
 BOOST_AUTO_TEST_CASE(testCommodityCurveTenorBasedOnTnPoints) {
-    
+
     BOOST_TEST_MESSAGE("Testing commodity curve building with tenor based points quotes including ON and TN");
-    
+
     boost::shared_ptr<CommodityCurve> curve = createCurve("tenor_based_on_tn_points");
     checkCurve(curve->commodityPriceCurve(), expectedCurve);
 }
@@ -185,16 +171,14 @@ struct BasisTestCase {
 };
 
 // List of basis test case directories for the data test case below.
-vector<BasisTestCase> basisTestCases = {
-    { Date(30, Sep, 2019), "wti_midland_cm", "NYMEX:FF" },
-    { Date(30, Sep, 2019), "wti_midland_tm", "NYMEX:WTT" },
-    { Date(30, Sep, 2019), "wti_midland_cm_base_ave", "NYMEX:FF" },
-    { Date(30, Sep, 2019), "houston_ship_channel", "ICE:HXS" },
-    { Date(23, Jan, 2020), "wti_midland_cm", "NYMEX:FF" },
-    { Date(23, Jan, 2020), "wti_midland_tm", "NYMEX:WTT" },
-    { Date(23, Jan, 2020), "wti_midland_cm_base_ave", "NYMEX:FF" },
-    { Date(23, Jan, 2020), "houston_ship_channel", "ICE:HXS" }
-};
+vector<BasisTestCase> basisTestCases = {{Date(30, Sep, 2019), "wti_midland_cm", "NYMEX:FF"},
+                                        {Date(30, Sep, 2019), "wti_midland_tm", "NYMEX:WTT"},
+                                        {Date(30, Sep, 2019), "wti_midland_cm_base_ave", "NYMEX:FF"},
+                                        {Date(30, Sep, 2019), "houston_ship_channel", "ICE:HXS"},
+                                        {Date(23, Jan, 2020), "wti_midland_cm", "NYMEX:FF"},
+                                        {Date(23, Jan, 2020), "wti_midland_tm", "NYMEX:WTT"},
+                                        {Date(23, Jan, 2020), "wti_midland_cm_base_ave", "NYMEX:FF"},
+                                        {Date(23, Jan, 2020), "houston_ship_channel", "ICE:HXS"}};
 
 // Needed for BOOST_DATA_TEST_CASE below as it writes out the case.
 ostream& operator<<(ostream& os, BasisTestCase testCase) {
@@ -207,7 +191,7 @@ BOOST_DATA_TEST_CASE(testCommodityBasisCurve, bdata::make(basisTestCases), basis
 
     Settings::instance().evaluationDate() = basisTestCase.asof;
     string dir = "basis/" + basisTestCase.name;
-    
+
     boost::shared_ptr<TodaysMarket> tm;
     BOOST_REQUIRE_NO_THROW(tm = createTodaysMarket(basisTestCase.asof, dir));
 
@@ -239,8 +223,8 @@ BOOST_DATA_TEST_CASE(testCommodityBasisCurve, bdata::make(basisTestCases), basis
     }
 
     vector<Date> calcPillarDates = pts->pillarDates();
-    BOOST_CHECK_EQUAL_COLLECTIONS(expPillarDates.begin(), expPillarDates.end(),
-        calcPillarDates.begin(), calcPillarDates.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(expPillarDates.begin(), expPillarDates.end(), calcPillarDates.begin(),
+                                  calcPillarDates.end());
 
     // Set up has flat extrapolation. Check it here.
     Real lastPrice = pts->price(calcPillarDates.back());

@@ -22,9 +22,6 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    PrimeIndex::PrimeIndex(const Handle<YieldTermStructure>& h)
-    : OvernightIndex("Prime", 0,
-                     USDCurrency(),
-                     UnitedStates(UnitedStates::FederalReserve),
-                     Actual360(), h) {}
-}
+PrimeIndex::PrimeIndex(const Handle<YieldTermStructure>& h)
+    : OvernightIndex("Prime", 0, USDCurrency(), UnitedStates(UnitedStates::FederalReserve), Actual360(), h) {}
+} // namespace QuantExt

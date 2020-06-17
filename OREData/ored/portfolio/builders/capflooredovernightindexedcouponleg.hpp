@@ -38,7 +38,8 @@ namespace data {
 class CapFlooredOvernightIndexedCouponLegEngineBuilder : public CachingCouponPricerBuilder<string, const Currency&> {
 public:
     CapFlooredOvernightIndexedCouponLegEngineBuilder()
-        : CachingEngineBuilder("BlackOrBachelier", "BlackOvernightIndexedCouponPricer", {"CapFlooredOvernightIndexedCouponLeg"}) {}
+        : CachingEngineBuilder("BlackOrBachelier", "BlackOvernightIndexedCouponPricer",
+                               {"CapFlooredOvernightIndexedCouponLeg"}) {}
 
 protected:
     virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }

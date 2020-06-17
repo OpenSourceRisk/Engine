@@ -18,8 +18,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
@@ -72,7 +72,7 @@ public:
         curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
     }
 
-    ~F() { }
+    ~F() {}
 };
 
 set<string> readQuotes(const string& filename) {

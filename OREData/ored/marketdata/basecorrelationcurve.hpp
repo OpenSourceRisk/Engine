@@ -31,8 +31,8 @@
 
 namespace ore {
 namespace data {
-using QuantLib::Date;
 using ore::data::CurveConfigurations;
+using QuantLib::Date;
 
 typedef QuantLib::BaseCorrelationTermStructure<QuantLib::BilinearInterpolation> BilinearBaseCorrelationTermStructure;
 

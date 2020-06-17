@@ -336,8 +336,9 @@ boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPay
     LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, floatSchedule,
                         floatDC, notionals);
     // fixed leg
-    LegData cpiLeg(boost::make_shared<CPILegData>(cpiIndex, startDate, baseRate, observationLag, (interpolated ? "Linear" : "Flat"), cpiRates), isPayer,
-                   ccy, cpiSchedule, cpiDC, notionals, vector<string>(), "F", false, true);
+    LegData cpiLeg(boost::make_shared<CPILegData>(cpiIndex, startDate, baseRate, observationLag,
+                                                  (interpolated ? "Linear" : "Flat"), cpiRates),
+                   isPayer, ccy, cpiSchedule, cpiDC, notionals, vector<string>(), "F", false, true);
 
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, cpiLeg));
@@ -348,7 +349,8 @@ boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPay
 
 boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
                                               Real spread, string floatFreq, string floatDC, string index,
-                                              string yyFreq, string yyDC, string yyIndex, string observationLag, Size fixDays) {
+                                              string yyFreq, string yyDC, string yyIndex, string observationLag,
+                                              Size fixDays) {
 
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
@@ -374,8 +376,8 @@ boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPaye
     LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, floatSchedule,
                         floatDC, notionals);
     // fixed leg
-    LegData yyLeg(boost::make_shared<YoYLegData>(yyIndex, observationLag, fixDays), isPayer, ccy,
-                  yySchedule, yyDC, notionals);
+    LegData yyLeg(boost::make_shared<YoYLegData>(yyIndex, observationLag, fixDays), isPayer, ccy, yySchedule, yyDC,
+                  notionals);
 
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, yyLeg));

@@ -45,7 +45,7 @@ public:
 class EquityEuropeanCSOptionEngineBuilder : public EuropeanCSOptionEngineBuilder {
 public:
     EquityEuropeanCSOptionEngineBuilder()
-        : EuropeanCSOptionEngineBuilder("BlackScholesMerton", { "EquityOptionEuropeanCS" }, AssetClass::EQ) {}
+        : EuropeanCSOptionEngineBuilder("BlackScholesMerton", {"EquityOptionEuropeanCS"}, AssetClass::EQ) {}
 };
 
 //! Engine Builder for American Equity Options using Finite Difference Method
@@ -56,8 +56,7 @@ public:
 class EquityAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
 public:
     EquityAmericanOptionFDEngineBuilder()
-        : AmericanOptionFDEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"},
-                                        AssetClass::EQ, expiryDate_) {}
+        : AmericanOptionFDEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ, expiryDate_) {}
 };
 
 //! Engine Builder for American Equity Options using Barone Adesi Whaley Approximation

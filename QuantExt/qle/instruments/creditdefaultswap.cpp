@@ -58,8 +58,10 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
       protectionPaymentTime_(protectionPaymentTime), claim_(claim),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
 
-    QL_REQUIRE((schedule.hasRule() && (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
-        protectionStart_ <= schedule[0], "protection can not start after accrual for (pre big bang-) CDS");
+    QL_REQUIRE((schedule.hasRule() &&
+                (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
+                   protectionStart_ <= schedule[0],
+               "protection can not start after accrual for (pre big bang-) CDS");
 
     leg_ = FixedRateLeg(schedule)
                .withNotionals(notional)
@@ -70,9 +72,9 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
     // acrual rebate
     if (schedule.hasRule() && (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) {
         Size i = 0;
-        while (leg_[i]->hasOccurred(protectionStart_, false)) ++i;
-        ext::shared_ptr<FixedRateCoupon> coupon =
-                ext::dynamic_pointer_cast<FixedRateCoupon>(leg_[i]);
+        while (leg_[i]->hasOccurred(protectionStart_, false))
+            ++i;
+        ext::shared_ptr<FixedRateCoupon> coupon = ext::dynamic_pointer_cast<FixedRateCoupon>(leg_[i]);
         // adjust to T+3 standard settlement, assuming that protection start
         // is set to T+1 for standard CDS
         Date rebateDate =
@@ -100,8 +102,10 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
       settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime), claim_(claim),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
 
-    QL_REQUIRE((schedule.hasRule() && (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
-        protectionStart_ <= schedule[0], "protection can not start after accrual for (pre big bang-) CDS");
+    QL_REQUIRE((schedule.hasRule() &&
+                (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
+                   protectionStart_ <= schedule[0],
+               "protection can not start after accrual for (pre big bang-) CDS");
 
     leg_ = FixedRateLeg(schedule)
                .withNotionals(notional)

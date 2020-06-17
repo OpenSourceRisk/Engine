@@ -22,10 +22,10 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/configuration/conventions.hpp>
-#include <qle/calendars/ice.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
+#include <qle/calendars/ice.hpp>
 
 using namespace std;
 using namespace boost::unit_test_framework;
@@ -153,12 +153,12 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionConstruction) {
     BOOST_TEST_MESSAGE("Testing commodity future convention construction with day of month based anchor day");
 
     // Check construction raises no errors
-    vector<string> prohibitedExpiries{ "2020-12-31", "2021-12-31", "2022-12-30" };
+    vector<string> prohibitedExpiries{"2020-12-31", "2021-12-31", "2022-12-30"};
     boost::shared_ptr<CommodityFutureConvention> convention;
     CommodityFutureConvention::DayOfMonth dayOfMonth("31");
-    BOOST_CHECK_NO_THROW(
-        convention = boost::make_shared<CommodityFutureConvention>("ICE:B", dayOfMonth, "Monthly", "ICE_FuturesEU",
-            "UK", 2, "Jan", "0", "Preceding", true, false, "3", prohibitedExpiries));
+    BOOST_CHECK_NO_THROW(convention = boost::make_shared<CommodityFutureConvention>(
+                             "ICE:B", dayOfMonth, "Monthly", "ICE_FuturesEU", "UK", 2, "Jan", "0", "Preceding", true,
+                             false, "3", prohibitedExpiries));
 
     // Check object
     BOOST_CHECK_EQUAL(convention->id(), "ICE:B");
@@ -175,9 +175,9 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionConstruction) {
     BOOST_CHECK(!convention->isAveraging());
     BOOST_CHECK_EQUAL(convention->optionExpiryOffset(), 3);
 
-    set<Date> expExpiries{ Date(31, Dec, 2020), Date(31, Dec, 2021), Date(30, Dec, 2022) };
+    set<Date> expExpiries{Date(31, Dec, 2020), Date(31, Dec, 2021), Date(30, Dec, 2022)};
     BOOST_CHECK_EQUAL_COLLECTIONS(convention->prohibitedExpiries().begin(), convention->prohibitedExpiries().end(),
-        expExpiries.begin(), expExpiries.end());
+                                  expExpiries.begin(), expExpiries.end());
 }
 
 BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionFromXml) {
@@ -225,9 +225,9 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionFromXml) {
     BOOST_CHECK(!convention->isAveraging());
     BOOST_CHECK_EQUAL(convention->optionExpiryOffset(), 3);
 
-    set<Date> expExpiries{ Date(31, Dec, 2020), Date(31, Dec, 2021), Date(30, Dec, 2022) };
+    set<Date> expExpiries{Date(31, Dec, 2020), Date(31, Dec, 2021), Date(30, Dec, 2022)};
     BOOST_CHECK_EQUAL_COLLECTIONS(convention->prohibitedExpiries().begin(), convention->prohibitedExpiries().end(),
-        expExpiries.begin(), expExpiries.end());
+                                  expExpiries.begin(), expExpiries.end());
 }
 
 BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionToXml) {
@@ -235,12 +235,12 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionToXml) {
     BOOST_TEST_MESSAGE("Testing writing of commodity future convention with day of month based anchor day to XML");
 
     // Construct the convention
-    vector<string> prohibitedExpiries{ "2020-12-31", "2021-12-31", "2022-12-30" };
+    vector<string> prohibitedExpiries{"2020-12-31", "2021-12-31", "2022-12-30"};
     boost::shared_ptr<CommodityFutureConvention> convention;
     CommodityFutureConvention::DayOfMonth dayOfMonth("31");
-    BOOST_CHECK_NO_THROW(
-        convention = boost::make_shared<CommodityFutureConvention>("ICE:B", dayOfMonth, "Monthly", "ICE_FuturesEU",
-            "UK", 2, "Jan", "0", "Preceding", true, false, "3", prohibitedExpiries));
+    BOOST_CHECK_NO_THROW(convention = boost::make_shared<CommodityFutureConvention>(
+                             "ICE:B", dayOfMonth, "Monthly", "ICE_FuturesEU", "UK", 2, "Jan", "0", "Preceding", true,
+                             false, "3", prohibitedExpiries));
 
     // Write the convention to a string
     string xml = convention->toXMLString();
@@ -262,7 +262,8 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionToXml) {
     BOOST_CHECK_EQUAL(convention->adjustBeforeOffset(), readConvention->adjustBeforeOffset());
     BOOST_CHECK_EQUAL(convention->isAveraging(), readConvention->isAveraging());
     BOOST_CHECK_EQUAL_COLLECTIONS(convention->prohibitedExpiries().begin(), convention->prohibitedExpiries().end(),
-        readConvention->prohibitedExpiries().begin(), readConvention->prohibitedExpiries().end());
+                                  readConvention->prohibitedExpiries().begin(),
+                                  readConvention->prohibitedExpiries().end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

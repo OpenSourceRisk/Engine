@@ -21,21 +21,20 @@
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/csvloader.hpp>
-#include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
-#include <ored/portfolio/enginefactory.hpp>
+#include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/toplevelfixture.hpp>
 
-#include <ql/cashflows/couponpricer.hpp>
 #include <ql/cashflows/cashflows.hpp>
-#include <ql/time/calendar.hpp>
-#include <ql/time/daycounter.hpp>
+#include <ql/cashflows/couponpricer.hpp>
 #include <ql/instruments/capfloor.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
+#include <ql/time/calendar.hpp>
+#include <ql/time/daycounter.hpp>
 
 using namespace ore::data;
 using namespace QuantLib;
@@ -63,8 +62,8 @@ BOOST_AUTO_TEST_CASE(testSingleCurrencyYieldCurveBootstrap) {
     CurveConfigurations curveConfigs;
     curveConfigs.fromFile(TEST_INPUT_FILE("curveconfig_01.xml"));
     CSVLoader loader(TEST_INPUT_FILE("market_01.txt"), TEST_INPUT_FILE("fixings.txt"), false);
-    boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
-        asof, todaysMarketParams, loader, curveConfigs, conventions, false);
+    boost::shared_ptr<TodaysMarket> market =
+        boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, conventions, false);
 
     // Portfolio to test market
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -74,7 +73,7 @@ BOOST_AUTO_TEST_CASE(testSingleCurrencyYieldCurveBootstrap) {
     portfolio->load(TEST_INPUT_FILE("mxn_ir_swap.xml"));
     portfolio->build(factory);
 
-    // The single trade in the portfolio is a MXN 10Y swap, i.e. 10 x 13 28D coupons, with nominal 100 million. The 
+    // The single trade in the portfolio is a MXN 10Y swap, i.e. 10 x 13 28D coupons, with nominal 100 million. The
     // rate on the swap is equal to the 10Y rate in the market file 'market_01.txt' so we should get an NPV of 0.
     BOOST_CHECK_EQUAL(portfolio->size(), 1);
     BOOST_CHECK_SMALL(portfolio->trades()[0]->instrument()->NPV(), 0.01);
@@ -95,8 +94,8 @@ BOOST_AUTO_TEST_CASE(testCrossCurrencyYieldCurveBootstrap) {
     CurveConfigurations curveConfigs;
     curveConfigs.fromFile(TEST_INPUT_FILE("curveconfig_02.xml"));
     CSVLoader loader(TEST_INPUT_FILE("market_02.txt"), TEST_INPUT_FILE("fixings.txt"), false);
-    boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
-        asof, todaysMarketParams, loader, curveConfigs, conventions, false);
+    boost::shared_ptr<TodaysMarket> market =
+        boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, conventions, false);
 
     // Portfolio to test market
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -106,8 +105,8 @@ BOOST_AUTO_TEST_CASE(testCrossCurrencyYieldCurveBootstrap) {
     portfolio->load(TEST_INPUT_FILE("mxn_usd_xccy_swap.xml"));
     portfolio->build(factory);
 
-    // The single trade in the portfolio is a USD/MXN 10Y cross currency basis swap, i.e. 10 x 13 28D coupons, with 
-    // nominal USD 100 million. The spread on the swap is equal to the 10Y basis spread in the market file 
+    // The single trade in the portfolio is a USD/MXN 10Y cross currency basis swap, i.e. 10 x 13 28D coupons, with
+    // nominal USD 100 million. The spread on the swap is equal to the 10Y basis spread in the market file
     // 'market_02.txt' so we should get an NPV of 0.
     BOOST_CHECK_EQUAL(portfolio->size(), 1);
     BOOST_CHECK_SMALL(portfolio->trades()[0]->instrument()->NPV(), 0.01);
@@ -128,8 +127,8 @@ BOOST_AUTO_TEST_CASE(testCapFloorStrip) {
     CurveConfigurations curveConfigs;
     curveConfigs.fromFile(TEST_INPUT_FILE("curveconfig_03.xml"));
     CSVLoader loader(TEST_INPUT_FILE("market_03.txt"), TEST_INPUT_FILE("fixings.txt"), false);
-    boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
-        asof, todaysMarketParams, loader, curveConfigs, conventions, false);
+    boost::shared_ptr<TodaysMarket> market =
+        boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, conventions, false);
 
     // Portfolio to test market
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -139,7 +138,7 @@ BOOST_AUTO_TEST_CASE(testCapFloorStrip) {
     portfolio->load(TEST_INPUT_FILE("mxn_ir_cap.xml"));
     portfolio->build(factory);
 
-    // The single trade in the portfolio is a MXN 10Y cap, i.e. 10 x 13 28D coupons (without first caplet), with 
+    // The single trade in the portfolio is a MXN 10Y cap, i.e. 10 x 13 28D coupons (without first caplet), with
     // nominal USD 100 million.
     BOOST_CHECK_EQUAL(portfolio->size(), 1);
 

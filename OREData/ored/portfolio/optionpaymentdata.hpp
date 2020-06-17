@@ -36,10 +36,7 @@ namespace data {
 class OptionPaymentData : public XMLSerializable {
 public:
     //! When we have payment rules, specifies what date the payment is relative to.
-    enum class RelativeTo {
-        Expiry,
-        Exercise
-    };
+    enum class RelativeTo { Expiry, Exercise };
 
     //! Default constructor
     OptionPaymentData();
@@ -48,13 +45,11 @@ public:
     OptionPaymentData(const std::vector<std::string>& dates);
 
     //! Constructor taking a set of payment rules.
-    OptionPaymentData(const std::string& lag,
-        const std::string& calendar,
-        const std::string& convention,
-        const std::string& relativeTo = "Expiry");
+    OptionPaymentData(const std::string& lag, const std::string& calendar, const std::string& convention,
+                      const std::string& relativeTo = "Expiry");
 
-    /*! Returns \c true if the OptionPaymentData was constructed using rules and \c false if it was constructed 
-        using explicit payment dates. 
+    /*! Returns \c true if the OptionPaymentData was constructed using rules and \c false if it was constructed
+        using explicit payment dates.
     */
     bool rulesBased() const { return rulesBased_; }
 
@@ -97,5 +92,5 @@ private:
 //! Print RelativeTo enum values.
 std::ostream& operator<<(std::ostream& out, const OptionPaymentData::RelativeTo& relativeTo);
 
-}
-}
+} // namespace data
+} // namespace ore

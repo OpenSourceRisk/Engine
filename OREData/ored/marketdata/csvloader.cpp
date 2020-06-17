@@ -41,8 +41,8 @@ CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename,
 CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fixingFiles, bool implyTodaysFixings)
     : CSVLoader(marketFiles, fixingFiles, {}, implyTodaysFixings) {}
 
-CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename,
-                     const string& dividendFilename, bool implyTodaysFixings)
+CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename, const string& dividendFilename,
+                     bool implyTodaysFixings)
     : implyTodaysFixings_(implyTodaysFixings) {
 
     // load market data
@@ -56,7 +56,7 @@ CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename,
     loadFile(fixingFilename, DataType::Fixing);
     LOG("CSVLoader loaded " << fixings_.size() << " fixings");
 
-     // load dividends
+    // load dividends
     if (dividendFilename != "") {
         loadFile(dividendFilename, DataType::Dividend);
         LOG("CSVLoader loaded " << dividends_.size() << " dividends");

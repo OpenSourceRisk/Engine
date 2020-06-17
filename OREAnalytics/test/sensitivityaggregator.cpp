@@ -17,22 +17,22 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <test/oreatoplevelfixture.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/engine/sensitivityinmemorystream.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <ql/math/comparison.hpp>
+#include <test/oreatoplevelfixture.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace std;
 
 using ore::analytics::RiskFactorKey;
-using ore::analytics::SensitivityRecord;
-using ore::analytics::SensitivityInMemoryStream;
 using ore::analytics::SensitivityAggregator;
-using std::set;
-using std::map;
+using ore::analytics::SensitivityInMemoryStream;
+using ore::analytics::SensitivityRecord;
 using std::function;
+using std::map;
+using std::set;
 
 using RFType = RiskFactorKey::KeyType;
 
@@ -160,12 +160,9 @@ BOOST_AUTO_TEST_CASE(testGeneralAggregationSetCategories) {
     // Categories for aggregator
     map<string, set<std::pair<std::string, QuantLib::Size>>> categories;
     // No aggregation, just single trade categories
-    set<pair<string, QuantLib::Size>> trades = {
-        make_pair("trade_001", 0), 
-        make_pair("trade_003", 1),
-        make_pair("trade_004", 2),
-        make_pair("trade_005", 3),
-        make_pair("trade_006", 4)};
+    set<pair<string, QuantLib::Size>> trades = {make_pair("trade_001", 0), make_pair("trade_003", 1),
+                                                make_pair("trade_004", 2), make_pair("trade_005", 3),
+                                                make_pair("trade_006", 4)};
 
     for (const auto& trade : trades) {
         categories[trade.first] = {trade};
@@ -205,22 +202,21 @@ BOOST_AUTO_TEST_CASE(testGeneralAggregationFunctionCategories) {
     // Category functions for aggregator
     map<string, function<bool(string)>> categories;
     // No aggregation, just single trade categories
-    set<pair<string, QuantLib::Size>> trades = {
-        make_pair("trade_001", 0),
-        make_pair("trade_003", 1),
-        make_pair("trade_004", 2),
-        make_pair("trade_005", 3),
-        make_pair("trade_006", 4) };
+    set<pair<string, QuantLib::Size>> trades = {make_pair("trade_001", 0), make_pair("trade_003", 1),
+                                                make_pair("trade_004", 2), make_pair("trade_005", 3),
+                                                make_pair("trade_006", 4)};
 
     for (const auto& trade : trades) {
         categories[trade.first] = [&trade](string tradeId) { return tradeId == trade.first; };
     }
     // Aggregate over all trades except trade_002
-    categories["all_except_002"] = [&trades](string tradeId) { 
+    categories["all_except_002"] = [&trades](string tradeId) {
         for (auto it = trades.begin(); it != trades.end(); ++it) {
-            if (it->first == tradeId) return true;
+            if (it->first == tradeId)
+                return true;
         }
-        return false; };
+        return false;
+    };
 
     // Create aggregator and call aggregate
     SensitivityAggregator sAgg(categories);

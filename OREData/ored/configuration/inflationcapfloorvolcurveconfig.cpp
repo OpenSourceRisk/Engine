@@ -154,7 +154,7 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         floorStrikes_ = XMLUtils::getChildrenValuesAsStrings(node, "FloorStrikes", true);
         QL_REQUIRE(!capStrikes_.empty() || !floorStrikes_.empty(),
                    "CapStrikes or FloorStrikes node should not be empty");
-	// Set strikes to the sorted union of cap and floor strikes 
+        // Set strikes to the sorted union of cap and floor strikes
         std::set<Real> strikeSet;
         for (Size i = 0; i < capStrikes_.size(); ++i)
             strikeSet.insert(parseReal(capStrikes_[i]));

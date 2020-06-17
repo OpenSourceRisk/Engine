@@ -48,9 +48,9 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : extrapolate_(false), swapVolIsCube_({ {"", false} }), swapVolSimulateATMOnly_(false), swapVolStrikeSpreads_({ {"", {0.0}} }),
-          equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), cprSimulate_(false),
-          correlationIsSurface_(false), correlationStrikes_({0.0}) {
+        : extrapolate_(false), swapVolIsCube_({{"", false}}), swapVolSimulateATMOnly_(false),
+          swapVolStrikeSpreads_({{"", {0.0}}}), equityIsSurface_(false), equityVolSimulateATMOnly_(true),
+          equityMoneyness_({1.0}), cprSimulate_(false), correlationIsSurface_(false), correlationStrikes_({0.0}) {
         setDefaults();
     }
 
@@ -105,21 +105,31 @@ public:
     bool capFloorVolIsAtm(const std::string& key) const;
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
 
-    bool simulateYoYInflationCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility); }
+    bool simulateYoYInflationCapFloorVols() const {
+        return paramsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility);
+    }
     vector<string> yoyInflationCapFloorVolNames() const {
         return paramsLookup(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility);
     }
     const string& yoyInflationCapFloorVolDayCounter(const string& key) const;
     const vector<Period>& yoyInflationCapFloorVolExpiries(const string& key) const;
-    bool hasYoYInflationCapFloorVolExpiries(const string& key) const { return yoyInflationCapFloorVolExpiries_.count(key) > 0; }
+    bool hasYoYInflationCapFloorVolExpiries(const string& key) const {
+        return yoyInflationCapFloorVolExpiries_.count(key) > 0;
+    }
     const vector<Real>& yoyInflationCapFloorVolStrikes(const std::string& key) const;
     const string& yoyInflationCapFloorVolDecayMode() const { return yoyInflationCapFloorVolDecayMode_; }
 
-    bool simulateZeroInflationCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility); }
-    vector<string> zeroInflationCapFloorVolNames() const { return paramsLookup(RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility); }
+    bool simulateZeroInflationCapFloorVols() const {
+        return paramsSimulate(RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility);
+    }
+    vector<string> zeroInflationCapFloorVolNames() const {
+        return paramsLookup(RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility);
+    }
     const string& zeroInflationCapFloorVolDayCounter(const string& key) const;
     const vector<Period>& zeroInflationCapFloorVolExpiries(const string& key) const;
-    bool hasZeroInflationCapFloorVolExpiries(const string& key) const { return zeroInflationCapFloorVolExpiries_.count(key) > 0; }
+    bool hasZeroInflationCapFloorVolExpiries(const string& key) const {
+        return zeroInflationCapFloorVolExpiries_.count(key) > 0;
+    }
     const vector<Real>& zeroInflationCapFloorVolStrikes(const string& key) const;
     const string& zeroInflationCapFloorVolDecayMode() const { return zeroInflationCapFloorVolDecayMode_; }
 
