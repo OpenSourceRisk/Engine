@@ -120,7 +120,7 @@
 %\date{28 April 2017}
 %\date{7 December 2017}
 %\date{28 May 2019}
-\date{12 June 2020}
+\date{19 June 2020}
 \maketitle
 
 \newpage
@@ -137,7 +137,7 @@ Date & Author & Comment \\
 28 April 2017 & Quaternion  & updates for release 2\\
 7 December 2017 & Quaternion & updates for release 3\\
 20 March 2019 & Quaternion & updates for release 4\\
-12 June 2020 & Quaternion & updates for release 5\\
+19 June 2020 & Quaternion & updates for release 5\\
 \hline
 \end{supertabular}
 \end{center}
@@ -307,6 +307,8 @@ INSTRMENTS
 \item Add reference data manager (handles Bond reference data as concrete example)
 \item Add underlying description (FX, Equity, Commodity)
 \item Add Settlement node to FX Forward, FX Swap and Swap instruments 
+\item Add lockout to overnight coupons
+\item Allow explicit payment dates for cash settled vanilla European options
 \item Extend Equity Swap: legs, equity coupon with FX adjustment, resettable feature,
   quantity vs initial notional
 \item Extend CDS: Allow fixed recovery, front or back stub periods, protection payment
@@ -343,7 +345,7 @@ TERM STRUCTURES
 \item Inflation cap/floor volatility surfaces cleaned up, inflation price surfaces removed
   from the market interface
 \item Equity volatility surface changes, clean up and stripping from option premiums,
-  allow wildcard in strike/expiry config.
+  allow wildcard in strike/expiry config, allow equity volatility surface proxies
 \item Allow optional quotes in curve configurations
 \item New Equity forward curve stripper that allows a dividend yield to be determined from
   equity option premiums
