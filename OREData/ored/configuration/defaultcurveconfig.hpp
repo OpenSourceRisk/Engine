@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/bootstrapconfig.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
@@ -33,13 +33,13 @@
 
 namespace ore {
 namespace data {
+using ore::data::XMLNode;
+using QuantLib::BusinessDayConvention;
+using QuantLib::Calendar;
+using QuantLib::DayCounter;
+using QuantLib::Period;
 using std::string;
 using std::vector;
-using ore::data::XMLNode;
-using QuantLib::Period;
-using QuantLib::DayCounter;
-using QuantLib::Calendar;
-using QuantLib::BusinessDayConvention;
 
 //! Default curve configuration
 /*!

@@ -16,35 +16,35 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
- /*! \file qle/pricingengines/analyticcashsettledeuropeanengine.hpp
-     \brief pricing engine for cash settled European vanilla options.
-     \ingroup engines
- */
+/*! \file qle/pricingengines/analyticcashsettledeuropeanengine.hpp
+    \brief pricing engine for cash settled European vanilla options.
+    \ingroup engines
+*/
 
 #ifndef quantext_analytic_cash_settled_european_engine_hpp
 #define quantext_analytic_cash_settled_european_engine_hpp
 
-#include <qle/instruments/cashsettledeuropeanoption.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
+#include <qle/instruments/cashsettledeuropeanoption.hpp>
 
 namespace QuantExt {
 
 //! Pricing engine for cash settled European vanilla options using analytical formulae
 /*! \ingroup engines
-*/
+ */
 class AnalyticCashSettledEuropeanEngine : public CashSettledEuropeanOption::engine {
 public:
     /*! The risk-free rate in the given process \p bsp is used for both forecasting and discounting.
-    */
+     */
     AnalyticCashSettledEuropeanEngine(const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& bsp);
 
-    /*! As usual, the risk-free rate from the given process \p bsp is used for forecasting the forward price. The 
+    /*! As usual, the risk-free rate from the given process \p bsp is used for forecasting the forward price. The
         \p discountCurve is used for discounting.
     */
     AnalyticCashSettledEuropeanEngine(const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& bsp,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve);
-    
+                                      const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve);
+
     //! \name PricingEngine interface
     //@{
     void calculate() const;
@@ -59,6 +59,6 @@ private:
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
 };
 
-}
+} // namespace QuantExt
 
 #endif

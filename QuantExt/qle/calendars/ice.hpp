@@ -95,22 +95,22 @@ private:
 
 public:
     enum Market {
-        FuturesUS,        /*!< ICE Futures U.S. Currency, Stock and Credit Index, 
-                               Metal, Nat Gas, Power, Oil and Environmental */
-        FuturesUS_1,      //!< ICE Futures U.S. Sugar, Cocoa, Coffee, Cotton and FCOJ
-        FuturesUS_2,      //!< ICE Futures U.S. Canola
-        FuturesEU,        //!< ICE Futures Europe
-        FuturesEU_1,      //!< ICE Futures Europe for contracts where 26 Dec is a holiday
-        EndexEnergy,      //!< ICE Endex European power and natural gas products
-        EndexEquities,    //!< ICE Endex European equities
-        SwapTradeUS,      //!< ICE Swap Trade U.S.
-        SwapTradeUK,      //!< ICE Swap Trade U.K.
-        FuturesSingapore  //!< ICE futures Singapore
+        FuturesUS,       /*!< ICE Futures U.S. Currency, Stock and Credit Index,
+                              Metal, Nat Gas, Power, Oil and Environmental */
+        FuturesUS_1,     //!< ICE Futures U.S. Sugar, Cocoa, Coffee, Cotton and FCOJ
+        FuturesUS_2,     //!< ICE Futures U.S. Canola
+        FuturesEU,       //!< ICE Futures Europe
+        FuturesEU_1,     //!< ICE Futures Europe for contracts where 26 Dec is a holiday
+        EndexEnergy,     //!< ICE Endex European power and natural gas products
+        EndexEquities,   //!< ICE Endex European equities
+        SwapTradeUS,     //!< ICE Swap Trade U.S.
+        SwapTradeUK,     //!< ICE Swap Trade U.K.
+        FuturesSingapore //!< ICE futures Singapore
     };
 
     ICE(Market market);
 };
 
-}
+} // namespace QuantExt
 
 #endif

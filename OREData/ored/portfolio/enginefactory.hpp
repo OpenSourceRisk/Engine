@@ -39,14 +39,14 @@
 
 namespace ore {
 namespace data {
+using ore::data::Market;
+using QuantLib::Disposable;
+using QuantLib::PricingEngine;
 using std::map;
+using std::pair;
 using std::set;
 using std::string;
-using std::pair;
 using std::tuple;
-using ore::data::Market;
-using QuantLib::PricingEngine;
-using QuantLib::Disposable;
 
 class Trade;
 class LegBuilder;

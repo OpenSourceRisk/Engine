@@ -27,7 +27,7 @@ namespace data {
 
 Leg FixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                               RequiredFixings& requiredFixings, const string& configuration) const {
-    Leg leg =  makeFixedLeg(data);
+    Leg leg = makeFixedLeg(data);
     std::map<std::string, std::string> qlToOREIndexNames;
     applyIndexing(leg, data, engineFactory, qlToOREIndexNames, requiredFixings);
     addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));

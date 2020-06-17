@@ -29,11 +29,11 @@
 
 namespace ore {
 namespace data {
-using std::string;
+using ore::data::XMLNode;
+using ore::data::XMLSerializable;
 using std::map;
 using std::set;
-using ore::data::XMLSerializable;
-using ore::data::XMLNode;
+using std::string;
 
 //! Serializable object holding generic trade data, reporting dimensions
 /*!

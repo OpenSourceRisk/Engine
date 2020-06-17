@@ -39,9 +39,12 @@ public:
     //! Default constructor
     EquityOption() : VanillaOptionTrade(AssetClass::EQ) { tradeType_ = "EquityOption"; }
     //! Constructor
-    EquityOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, string currency, double strike, double quantity)
-        : VanillaOptionTrade(env, AssetClass::EQ, option, equityUnderlying.name(),
-            currency, strike, quantity), equityUnderlying_(equityUnderlying) { tradeType_ = "EquityOption"; }
+    EquityOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, string currency, double strike,
+                 double quantity)
+        : VanillaOptionTrade(env, AssetClass::EQ, option, equityUnderlying.name(), currency, strike, quantity),
+          equityUnderlying_(equityUnderlying) {
+        tradeType_ = "EquityOption";
+    }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;

@@ -24,17 +24,17 @@
 #pragma once
 
 #include <ored/marketdata/marketdatum.hpp>
-#include <ql/time/date.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
+#include <ql/time/date.hpp>
 #include <ql/types.hpp>
 #include <string>
 
 namespace ore {
 namespace data {
-using std::string;
-using QuantLib::Real;
 using QuantLib::Date;
+using QuantLib::Real;
+using std::string;
 
 //! Function to parse a market datum
 /*! \ingroup marketdata

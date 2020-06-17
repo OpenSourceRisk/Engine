@@ -24,9 +24,9 @@
 
 #include <boost/filesystem.hpp>
 
-using boost::filesystem::path;
-using boost::filesystem::exists;
 using boost::filesystem::create_directories;
+using boost::filesystem::exists;
+using boost::filesystem::path;
 using std::string;
 
 #ifdef BOOST_MSVC
@@ -39,22 +39,23 @@ using std::string;
 // This is set during test suite setup in the Global fixture
 extern string basePath;
 
-// Expands to give the Boost path for the input directory for the test xpp file in which it is called 
+// Expands to give the Boost path for the input directory for the test xpp file in which it is called
 #define TEST_INPUT_PATH path(basePath) / "input" / path(__FILE__).stem()
 
-// Expands to give the Boost path for an input file, with name 'filename', for the test xpp file in which it is called 
+// Expands to give the Boost path for an input file, with name 'filename', for the test xpp file in which it is called
 #define TEST_INPUT_FILE_PATH(filename) TEST_INPUT_PATH / filename
 
 // Expands to give the Boost path for the output directory for the test xpp file in which it is called
 // If the path does not exist, then it is created
-#define TEST_OUTPUT_PATH \
-    []() { \
-        path outputPath = path(basePath) / "output" / path(__FILE__).stem(); \
-        if (!exists(outputPath)) create_directories(outputPath); \
-        return outputPath; \
+#define TEST_OUTPUT_PATH                                                                                               \
+    []() {                                                                                                             \
+        path outputPath = path(basePath) / "output" / path(__FILE__).stem();                                           \
+        if (!exists(outputPath))                                                                                       \
+            create_directories(outputPath);                                                                            \
+        return outputPath;                                                                                             \
     }()
 
-// Expands to give the Boost path for an output file, with name 'filename', for the test xpp file in which it is called 
+// Expands to give the Boost path for an output file, with name 'filename', for the test xpp file in which it is called
 #define TEST_OUTPUT_FILE_PATH(filename) TEST_OUTPUT_PATH / filename
 
 // Gives the string representation of the input path

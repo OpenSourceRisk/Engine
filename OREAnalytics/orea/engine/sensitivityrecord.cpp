@@ -22,9 +22,9 @@
 #include <ql/math/comparison.hpp>
 
 using QuantLib::close;
-using std::ostream;
 using std::boolalpha;
 using std::fixed;
+using std::ostream;
 using std::setprecision;
 
 namespace ore {
@@ -37,16 +37,16 @@ bool SensitivityRecord::operator==(const SensitivityRecord& sr) const {
 
 bool SensitivityRecord::operator<(const SensitivityRecord& sr) const {
     // Verbose, would be nice to use std::tie but want to use close on the shifts
-    
+
     if (key_1 != sr.key_1)
         return key_1 < sr.key_1;
-    
+
     if (key_2 != sr.key_2)
         return key_2 < sr.key_2;
 
     if (tradeId != sr.tradeId)
         return tradeId < sr.tradeId;
-    
+
     return false;
 }
 

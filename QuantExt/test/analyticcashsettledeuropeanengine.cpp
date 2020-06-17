@@ -17,17 +17,17 @@
 */
 
 #include "toplevelfixture.hpp"
-#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-#include <qle/indexes/commodityindex.hpp>
-#include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
-#include <qle/termstructures/pricecurve.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ql/currencies/america.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
+#include <qle/indexes/commodityindex.hpp>
+#include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
+#include <qle/termstructures/pricecurve.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
@@ -49,13 +49,12 @@ Handle<YieldTermStructure> flatYts(Rate r) {
 
 // Create a process for the tests
 boost::shared_ptr<GeneralizedBlackScholesProcess> getProcess(Rate spot, Volatility vol, Rate r, Rate q) {
-    
+
     // Set up the term structures
     Handle<Quote> spotQuote(boost::make_shared<SimpleQuote>(spot));
     Handle<YieldTermStructure> rTs = flatYts(r);
     Handle<YieldTermStructure> qTs = flatYts(q);
-    Handle<BlackVolTermStructure> volTs(boost::make_shared<BlackConstantVol>(
-        0, NullCalendar(), vol, Actual365Fixed()));
+    Handle<BlackVolTermStructure> volTs(boost::make_shared<BlackConstantVol>(0, NullCalendar(), vol, Actual365Fixed()));
 
     // Return the process
     return boost::make_shared<GeneralizedBlackScholesProcess>(spotQuote, qTs, rTs, volTs);
@@ -65,15 +64,15 @@ boost::shared_ptr<GeneralizedBlackScholesProcess> getProcess(Rate spot, Volatili
 Handle<PriceTermStructure> priceTs() {
     vector<Period> tenors{ 0 * Days, 1 * Years };
     vector<Real> prices{ 60.0, 69.0 };
-    return Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<Linear>>(
-        tenors, prices, Actual365Fixed(), USDCurrency()));
+    return Handle<PriceTermStructure>(
+        boost::make_shared<InterpolatedPriceCurve<Linear> >(tenors, prices, Actual365Fixed(), USDCurrency()));
 }
 
 // Return a map containing all of the CashSettledEuropeanOption results
 map<string, Real> results(const CashSettledEuropeanOption& option) {
-    
+
     map<string, Real> mp;
-    
+
     mp["npv"] = option.NPV();
     mp["delta"] = option.delta();
     mp["deltaForward"] = option.deltaForward();
@@ -86,13 +85,13 @@ map<string, Real> results(const CashSettledEuropeanOption& option) {
     mp["dividendRho"] = option.dividendRho();
     mp["strikeSensitivity"] = option.strikeSensitivity();
     mp["itmCashProbability"] = option.itmCashProbability();
-    
+
     return mp;
 }
 
 // Check option values on or after expiry date
 void checkOptionValues(CashSettledEuropeanOption& option, Rate r, Real exercisePrice, Real tolerance = 1e-12) {
-    
+
     // Discount factor from payment and time to payment date.
     auto yts = flatYts(r);
     DiscountFactor df_tp = yts->discount(option.paymentDate());
@@ -107,8 +106,8 @@ void checkOptionValues(CashSettledEuropeanOption& option, Rate r, Real exerciseP
     BOOST_REQUIRE(cashSettledResults.count("npv") == 1);
     for (const auto& kv : cashSettledResults) {
         BOOST_TEST_CONTEXT("With result " << kv.first) {
-            BOOST_TEST_MESSAGE("Value for " << kv.first << " with cash settlement is: " <<
-                fixed << setprecision(12) << kv.second);
+            BOOST_TEST_MESSAGE("Value for " << kv.first << " with cash settlement is: " << fixed << setprecision(12)
+                                            << kv.second);
             if (kv.first == "npv") {
                 BOOST_CHECK_SMALL(kv.second - df_tp * valueAtExpiry, tolerance);
             } else if (kv.first == "rho") {
@@ -133,7 +132,7 @@ void checkOptionValues(CashSettledEuropeanOption& option, Rate r, Real exerciseP
     }
 }
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
@@ -147,7 +146,7 @@ BOOST_DATA_TEST_CASE(testOptionBeforeExpiry, bdata::make(strikes) * bdata::make(
     BOOST_TEST_MESSAGE("Testing cash settled option pricing before expiry...");
 
     Settings::instance().evaluationDate() = Date(3, Jun, 2020);
-    
+
     // Create cash settled option instrument
     Date expiry(3, Sep, 2020);
     Date payment(7, Sep, 2020);
@@ -159,8 +158,8 @@ BOOST_DATA_TEST_CASE(testOptionBeforeExpiry, bdata::make(strikes) * bdata::make(
     Volatility vol = 0.30;
     Rate r = 0.02;
     Rate q = 0.01;
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<AnalyticCashSettledEuropeanEngine>(
-        getProcess(spot, vol, r, q));
+    boost::shared_ptr<PricingEngine> engine =
+        boost::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
 
     // Value the option accounting for cash settlement and store all results
     option.setPricingEngine(engine);
@@ -182,9 +181,9 @@ BOOST_DATA_TEST_CASE(testOptionBeforeExpiry, bdata::make(strikes) * bdata::make(
     BOOST_REQUIRE(cashSettledResults.count("npv") == 1);
     BOOST_REQUIRE(theoreticalResults.count("npv") == 1);
     for (const auto& kv : cashSettledResults) {
-        
+
         BOOST_TEST_CONTEXT("With result " << kv.first) {
-            
+
             auto it = theoreticalResults.find(kv.first);
             BOOST_CHECK(it != theoreticalResults.end());
 
@@ -194,10 +193,10 @@ BOOST_DATA_TEST_CASE(testOptionBeforeExpiry, bdata::make(strikes) * bdata::make(
 
             // Check the result is as expected by comparing to the results that do not account for delayed payment.
             Real theorResult = it->second;
-            BOOST_TEST_MESSAGE("Value for " << kv.first << " with cash settlement is: " <<
-                fixed << setprecision(12) << kv.second);
-            BOOST_TEST_MESSAGE("Value for " << kv.first << " ignoring cash settlement is: " <<
-                fixed << setprecision(12) << theorResult);
+            BOOST_TEST_MESSAGE("Value for " << kv.first << " with cash settlement is: " << fixed << setprecision(12)
+                                            << kv.second);
+            BOOST_TEST_MESSAGE("Value for " << kv.first << " ignoring cash settlement is: " << fixed << setprecision(12)
+                                            << theorResult);
 
             // Most results should be of the form cashSettledResult = DF(t_e, t_p) * theoreticalResult.
             // There are some exceptions dealt with below.
@@ -217,8 +216,8 @@ BOOST_DATA_TEST_CASE(testOptionBeforeExpiry, bdata::make(strikes) * bdata::make(
     }
 }
 
-BOOST_DATA_TEST_CASE(testOptionManualExerciseAfterExpiry, bdata::make(strikes) * bdata::make(optionTypes),
-    strike, optionType) {
+BOOST_DATA_TEST_CASE(testOptionManualExerciseAfterExpiry, bdata::make(strikes) * bdata::make(optionTypes), strike,
+                     optionType) {
 
     BOOST_TEST_MESSAGE("Testing cash settled manual exercise option pricing after expiry...");
 
@@ -235,8 +234,8 @@ BOOST_DATA_TEST_CASE(testOptionManualExerciseAfterExpiry, bdata::make(strikes) *
     Volatility vol = 0.30;
     Rate r = 0.02;
     Rate q = 0.01;
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<AnalyticCashSettledEuropeanEngine>(
-        getProcess(spot, vol, r, q));
+    boost::shared_ptr<PricingEngine> engine =
+        boost::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
 
     // Value the option accounting for cash settlement and store all results
     option.setPricingEngine(engine);
@@ -244,9 +243,7 @@ BOOST_DATA_TEST_CASE(testOptionManualExerciseAfterExpiry, bdata::make(strikes) *
 
     // Option has not been manually exercised so all results should be zero.
     for (const auto& kv : cashSettledResults) {
-        BOOST_TEST_CONTEXT("With result " << kv.first) {
-            BOOST_CHECK(close(kv.second, 0.0));
-        }
+        BOOST_TEST_CONTEXT("With result " << kv.first) { BOOST_CHECK(close(kv.second, 0.0)); }
     }
 
     // Manually exercise the option with an expiry value of 59.
@@ -261,7 +258,7 @@ BOOST_DATA_TEST_CASE(testOptionManualExerciseAfterExpiry, bdata::make(strikes) *
 vector<bool> irdes{ true, false };
 
 BOOST_DATA_TEST_CASE(testOptionManualExerciseOnExpiry,
-    bdata::make(strikes) * bdata::make(optionTypes) * bdata::make(irdes), strike, optionType, irde) {
+                     bdata::make(strikes) * bdata::make(optionTypes) * bdata::make(irdes), strike, optionType, irde) {
 
     BOOST_TEST_MESSAGE("Testing cash settled manual exercise option on expiry date...");
 
@@ -280,8 +277,8 @@ BOOST_DATA_TEST_CASE(testOptionManualExerciseOnExpiry,
     Volatility vol = 0.30;
     Rate r = 0.02;
     Rate q = 0.01;
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<AnalyticCashSettledEuropeanEngine>(
-        getProcess(spot, vol, r, q));
+    boost::shared_ptr<PricingEngine> engine =
+        boost::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
 
     // Set the pricing engine
     option.setPricingEngine(engine);
@@ -298,8 +295,8 @@ BOOST_DATA_TEST_CASE(testOptionManualExerciseOnExpiry,
     checkOptionValues(option, r, exercisePrice);
 }
 
-BOOST_DATA_TEST_CASE(testOptionManualExerciseOnPayment, bdata::make(strikes)* bdata::make(optionTypes),
-    strike, optionType) {
+BOOST_DATA_TEST_CASE(testOptionManualExerciseOnPayment, bdata::make(strikes) * bdata::make(optionTypes), strike,
+                     optionType) {
 
     BOOST_TEST_MESSAGE("Testing cash settled manual exercise option on payment date...");
 
@@ -315,8 +312,8 @@ BOOST_DATA_TEST_CASE(testOptionManualExerciseOnPayment, bdata::make(strikes)* bd
     Volatility vol = 0.30;
     Rate r = 0.02;
     Rate q = 0.01;
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<AnalyticCashSettledEuropeanEngine>(
-        getProcess(spot, vol, r, q));
+    boost::shared_ptr<PricingEngine> engine =
+        boost::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
 
     // Set the pricing engine
     option.setPricingEngine(engine);
@@ -339,14 +336,12 @@ BOOST_DATA_TEST_CASE(testOptionManualExerciseOnPayment, bdata::make(strikes)* bd
     // Check that all the values are zero, i.e. the expired state.
     map<string, Real> cashSettledResults = results(option);
     for (const auto& kv : cashSettledResults) {
-        BOOST_TEST_CONTEXT("With result " << kv.first) {
-            BOOST_CHECK(close(kv.second, 0.0));
-        }
+        BOOST_TEST_CONTEXT("With result " << kv.first) { BOOST_CHECK(close(kv.second, 0.0)); }
     }
 }
 
-BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseAfterExpiry, bdata::make(strikes) * bdata::make(optionTypes),
-    strike, optionType) {
+BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseAfterExpiry, bdata::make(strikes) * bdata::make(optionTypes), strike,
+                     optionType) {
 
     BOOST_TEST_MESSAGE("Testing cash settled automatic exercise option pricing after expiry...");
 
@@ -355,8 +350,8 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseAfterExpiry, bdata::make(strikes
     // Create index to be used in option.
     Date expiry(3, Sep, 2020);
     NullCalendar fixingCalendar;
-    boost::shared_ptr<Index> index = boost::make_shared<CommodityFuturesIndex>(
-        "TEST", expiry, fixingCalendar, priceTs());
+    boost::shared_ptr<Index> index =
+        boost::make_shared<CommodityFuturesIndex>("TEST", expiry, fixingCalendar, priceTs());
 
     // Add the expiry date fixing for the index.
     Real exercisePrice = 59.00;
@@ -372,8 +367,8 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseAfterExpiry, bdata::make(strikes
     Volatility vol = 0.30;
     Rate r = 0.02;
     Rate q = 0.01;
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<AnalyticCashSettledEuropeanEngine>(
-        getProcess(spot, vol, r, q));
+    boost::shared_ptr<PricingEngine> engine =
+        boost::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
 
     // Set the pricing engine
     option.setPricingEngine(engine);
@@ -383,7 +378,7 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseAfterExpiry, bdata::make(strikes
 }
 
 BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseOnExpiry,
-    bdata::make(strikes)* bdata::make(optionTypes) * bdata::make(irdes), strike, optionType, irde) {
+                     bdata::make(strikes) * bdata::make(optionTypes) * bdata::make(irdes), strike, optionType, irde) {
 
     BOOST_TEST_MESSAGE("Testing cash settled automatic exercise option pricing on expiry...");
 
@@ -395,8 +390,7 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseOnExpiry,
     Settings::instance().evaluationDate() = expiry;
     NullCalendar fixingCalendar;
     Handle<PriceTermStructure> pts = priceTs();
-    boost::shared_ptr<Index> index = boost::make_shared<CommodityFuturesIndex>(
-        "TEST", expiry, fixingCalendar, pts);
+    boost::shared_ptr<Index> index = boost::make_shared<CommodityFuturesIndex>("TEST", expiry, fixingCalendar, pts);
 
     // Create cash settled option instrument
     Date payment(7, Sep, 2020);
@@ -408,13 +402,13 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseOnExpiry,
     Volatility vol = 0.30;
     Rate r = 0.02;
     Rate q = 0.01;
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<AnalyticCashSettledEuropeanEngine>(
-        getProcess(spot, vol, r, q));
+    boost::shared_ptr<PricingEngine> engine =
+        boost::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
 
     // Set the pricing engine
     option.setPricingEngine(engine);
 
-    // We have not added a fixing for the index so it will be projected of the the price term structure above to 
+    // We have not added a fixing for the index so it will be projected of the the price term structure above to
     // give the payoff. So, we use that value here in our check initially.
     Real ptsPrice = pts->price(0.0);
     checkOptionValues(option, r, ptsPrice);
@@ -427,16 +421,16 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseOnExpiry,
     checkOptionValues(option, r, exercisePrice);
 }
 
-BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseOnPayment, bdata::make(strikes) * bdata::make(optionTypes),
-    strike, optionType) {
+BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseOnPayment, bdata::make(strikes) * bdata::make(optionTypes), strike,
+                     optionType) {
 
     BOOST_TEST_MESSAGE("Testing cash settled automatic exercise option pricing on payment date...");
 
     // Create index to be used in option.
     Date expiry(3, Sep, 2020);
     NullCalendar fixingCalendar;
-    boost::shared_ptr<Index> index = boost::make_shared<CommodityFuturesIndex>(
-        "TEST", expiry, fixingCalendar, priceTs());
+    boost::shared_ptr<Index> index =
+        boost::make_shared<CommodityFuturesIndex>("TEST", expiry, fixingCalendar, priceTs());
 
     // Add the expiry date fixing for the index.
     Real exercisePrice = 59.00;
@@ -453,8 +447,8 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseOnPayment, bdata::make(strikes) 
     Volatility vol = 0.30;
     Rate r = 0.02;
     Rate q = 0.01;
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<AnalyticCashSettledEuropeanEngine>(
-        getProcess(spot, vol, r, q));
+    boost::shared_ptr<PricingEngine> engine =
+        boost::make_shared<AnalyticCashSettledEuropeanEngine>(getProcess(spot, vol, r, q));
 
     // Set the pricing engine
     option.setPricingEngine(engine);
@@ -473,9 +467,7 @@ BOOST_DATA_TEST_CASE(testOptionAutomaticExerciseOnPayment, bdata::make(strikes) 
     // Check that all the values are zero, i.e. the expired state.
     map<string, Real> cashSettledResults = results(option);
     for (const auto& kv : cashSettledResults) {
-        BOOST_TEST_CONTEXT("With result " << kv.first) {
-            BOOST_CHECK(close(kv.second, 0.0));
-        }
+        BOOST_TEST_CONTEXT("With result " << kv.first) { BOOST_CHECK(close(kv.second, 0.0)); }
     }
 }
 

@@ -24,8 +24,8 @@
 #ifndef quantext_fx_vanna_volga_smile_section_hpp
 #define quantext_fx_vanna_volga_smile_section_hpp
 
-#include <ql/experimental/barrieroption/vannavolgainterpolation.hpp> 
-#include <ql/experimental/fx/blackdeltacalculator.hpp> 
+#include <ql/experimental/barrieroption/vannavolgainterpolation.hpp>
+#include <ql/experimental/fx/blackdeltacalculator.hpp>
 #include <qle/termstructures/fxsmilesection.hpp>
 
 namespace QuantExt {
@@ -40,10 +40,11 @@ using namespace QuantLib;
  */
 class VannaVolgaSmileSection : public FxSmileSection {
 public:
-    VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr, Volatility bf, bool firstApprox = false,
-                const DeltaVolQuote::AtmType& atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral,
-                const DeltaVolQuote::DeltaType& deltaType = DeltaVolQuote::DeltaType::Spot,
-                const Real delta = 0.25);
+    VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr, Volatility bf,
+                           bool firstApprox = false,
+                           const DeltaVolQuote::AtmType& atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral,
+                           const DeltaVolQuote::DeltaType& deltaType = DeltaVolQuote::DeltaType::Spot,
+                           const Real delta = 0.25);
 
     //! getters for unit test
     Real k_atm() const { return k_atm_; }

@@ -20,12 +20,12 @@
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
 #include <ored/marketdata/genericyieldvolcurve.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
-#include <ored/utilities/parsers.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -70,15 +70,13 @@ GenericYieldVolCurve::GenericYieldVolCurve(
         for (auto& p : config->quotes()) {
             // optional, because we do not require all spread quotes; we check below that we have all atm quotes
             boost::shared_ptr<MarketDatum> md = loader.get(std::make_pair(p, true), asof);
-            if(md == nullptr)
+            if (md == nullptr)
                 continue;
             Period expiry, term;
             if (md->quoteType() == volatilityType && matchAtmQuote(md, expiry, term)) {
                 quotesRead++;
-                Size i = std::find(optionTenors.begin(), optionTenors.end(), expiry) -
-                         optionTenors.begin();
-                Size j = std::find(underlyingTenors.begin(), underlyingTenors.end(), term) -
-                         underlyingTenors.begin();
+                Size i = std::find(optionTenors.begin(), optionTenors.end(), expiry) - optionTenors.begin();
+                Size j = std::find(underlyingTenors.begin(), underlyingTenors.end(), term) - underlyingTenors.begin();
                 QL_REQUIRE(i < config->optionTenors().size(),
                            "expiry " << expiry << " not in configuration, this is unexpected");
                 QL_REQUIRE(j < config->underlyingTenors().size(),
@@ -87,8 +85,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             }
             if (isSln && md->quoteType() == MarketDatum::QuoteType::SHIFT && matchShiftQuote(md, term)) {
                 shiftQuotesRead++;
-                Size j = std::find(underlyingTenors.begin(), underlyingTenors.end(), term) -
-                         underlyingTenors.begin();
+                Size j = std::find(underlyingTenors.begin(), underlyingTenors.end(), term) - underlyingTenors.begin();
                 QL_REQUIRE(j < config->underlyingTenors().size(),
                            "term " << term << " not in configuration, this is unexpected");
                 for (Size i = 0; i < shifts.rows(); ++i)
@@ -116,11 +113,12 @@ GenericYieldVolCurve::GenericYieldVolCurve(
 
         boost::shared_ptr<SwaptionVolatilityStructure> atm;
 
-        QL_REQUIRE(quotesRead > 0, "GenericYieldVolCurve: did not read any quotes, are option and swap tenors defined?");
+        QL_REQUIRE(quotesRead > 0,
+                   "GenericYieldVolCurve: did not read any quotes, are option and swap tenors defined?");
         if (quotesRead > 1) {
             atm = boost::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
-                asof, config->calendar(), config->businessDayConvention(), optionTenors,
-                underlyingTenors, vols, config->dayCounter(), config->flatExtrapolation(),
+                asof, config->calendar(), config->businessDayConvention(), optionTenors, underlyingTenors, vols,
+                config->dayCounter(), config->flatExtrapolation(),
                 config->volatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                     ? QuantLib::Normal
                     : QuantLib::ShiftedLognormal,
@@ -144,7 +142,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
         } else {
             LOG("Building Cube for config " << config->curveID());
             vector<Period> smileOptionTenors = parseVectorOfValues<Period>(config->smileOptionTenors(), &parsePeriod);
-            vector<Period> smileUnderlyingTenors = parseVectorOfValues<Period>(config->smileUnderlyingTenors(), &parsePeriod);
+            vector<Period> smileUnderlyingTenors =
+                parseVectorOfValues<Period>(config->smileUnderlyingTenors(), &parsePeriod);
             vector<Spread> spreads = parseVectorOfValues<Real>(config->smileSpreads(), &parseReal);
 
             // add smile spread 0, if not already existent

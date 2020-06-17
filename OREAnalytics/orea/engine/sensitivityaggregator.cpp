@@ -22,15 +22,16 @@
 #include <ql/errors.hpp>
 
 using ore::analytics::ScenarioFilter;
-using std::set;
-using std::map;
-using std::string;
 using std::function;
+using std::map;
+using std::set;
+using std::string;
 
 namespace ore {
 namespace analytics {
 
-SensitivityAggregator::SensitivityAggregator(const map<string, set<pair<string, Size>>>& categories) : setCategories_(categories) {
+SensitivityAggregator::SensitivityAggregator(const map<string, set<pair<string, Size>>>& categories)
+    : setCategories_(categories) {
 
     // Initialise the category functions
     for (const auto& kv : setCategories_) {

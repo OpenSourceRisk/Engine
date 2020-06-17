@@ -28,7 +28,7 @@
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
-#include <ql/experimental/fx/deltavolquote.hpp> 
+#include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
@@ -93,7 +93,7 @@ bool parseBool(const string& s);
   comma-delimited.
   \ingroup utilities
 */
-QuantLib::Calendar parseCalendar(const string& s, bool adjustCalendar=true);
+QuantLib::Calendar parseCalendar(const string& s, bool adjustCalendar = true);
 
 //! Convert text to QuantLib::Period
 /*!
@@ -256,18 +256,18 @@ enum class AssetClass { EQ, FX, COM, IR, INF, CR };
 */
 AssetClass parseAssetClass(const std::string& s);
 
-//! Convert text to QuantLib::DeltaVolQuote::AtmType 
-/*! 
-\ingroup utilities 
-*/ 
-QuantLib::DeltaVolQuote::AtmType parseAtmType(const std::string& s); 
- 
-//! Convert text to QuantLib::DeltaVolQuote::DeltaType 
-/*! 
-\ingroup utilities 
-*/ 
-QuantLib::DeltaVolQuote::DeltaType parseDeltaType(const std::string& s); 
- 
+//! Convert text to QuantLib::DeltaVolQuote::AtmType
+/*!
+\ingroup utilities
+*/
+QuantLib::DeltaVolQuote::AtmType parseAtmType(const std::string& s);
+
+//! Convert text to QuantLib::DeltaVolQuote::DeltaType
+/*!
+\ingroup utilities
+*/
+QuantLib::DeltaVolQuote::DeltaType parseDeltaType(const std::string& s);
+
 /*! Attempt to parse string \p str to \p obj of type \c T using \p parser
     \param[in]  str    The string we wish to parse.
     \param[out] obj    The resulting object if the parsing was successful.
@@ -277,8 +277,7 @@ QuantLib::DeltaVolQuote::DeltaType parseDeltaType(const std::string& s);
 
     \ingroup utilities
 */
-template <class T>
-bool tryParse(const std::string& str, T& obj, std::function<T(std::string)> parser) {
+template <class T> bool tryParse(const std::string& str, T& obj, std::function<T(std::string)> parser) {
     DLOG("tryParse: attempting to parse " << str);
     try {
         obj = parser(str);
@@ -290,11 +289,7 @@ bool tryParse(const std::string& str, T& obj, std::function<T(std::string)> pars
 }
 
 //! Enumeration for holding various extrapolation settings
-enum class Extrapolation {
-    None,
-    UseInterpolator,
-    Flat
-};
+enum class Extrapolation { None, UseInterpolator, Flat };
 
 //! Parse Extrapolation from string
 Extrapolation parseExtrapolation(const std::string& s);

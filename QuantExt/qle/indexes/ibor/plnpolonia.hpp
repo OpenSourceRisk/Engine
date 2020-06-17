@@ -35,7 +35,8 @@ using namespace QuantLib;
 //! PLN-POLONIA index
 /*! PLN-POLONIA rate published by NBP (National Bank of Poland).
 
-    See <http://www.nbp.pl/homen.aspx?f=/en/aktualnosci/2017/polonia.html>, data: <http://www.nbp.pl/Polonia/Stawka_POLONIA.xlsx>.
+    See <http://www.nbp.pl/homen.aspx?f=/en/aktualnosci/2017/polonia.html>, data:
+   <http://www.nbp.pl/Polonia/Stawka_POLONIA.xlsx>.
 
             \ingroup indexes
 */

@@ -52,11 +52,10 @@ public:
                                   const vector<string>& smileOptionTenors = vector<string>(),
                                   const vector<string>& smileSwapTenors = vector<string>(),
                                   const vector<string>& smileSpreads = vector<string>())
-        : GenericYieldVolatilityCurveConfig("Swap", "SwaptionVolatility", "SWAPTION", "", curveID,
-                                            curveDescription, "", dimension, volatilityType, extrapolate,
-                                            flatExtrapolation, optionTenors, swapTenors, dayCounter, calendar,
-                                            businessDayConvention, shortSwapIndexBase, swapIndexBase, smileOptionTenors,
-                                            smileSwapTenors, smileSpreads) {}
+        : GenericYieldVolatilityCurveConfig("Swap", "SwaptionVolatility", "SWAPTION", "", curveID, curveDescription, "",
+                                            dimension, volatilityType, extrapolate, flatExtrapolation, optionTenors,
+                                            swapTenors, dayCounter, calendar, businessDayConvention, shortSwapIndexBase,
+                                            swapIndexBase, smileOptionTenors, smileSwapTenors, smileSpreads) {}
 };
 
 } // namespace data

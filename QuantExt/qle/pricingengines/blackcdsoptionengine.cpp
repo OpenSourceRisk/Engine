@@ -37,8 +37,8 @@
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 
 #include <ql/cashflows/simplecashflow.hpp>
-#include <ql/math/solvers1d/brent.hpp>
 #include <ql/exercise.hpp>
+#include <ql/math/solvers1d/brent.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/quote.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -51,7 +51,7 @@ namespace QuantExt {
 
 namespace {
 
-Real swapRiskyAnnuity(const QuantExt::CreditDefaultSwap& swap, bool isClean=true) {
+Real swapRiskyAnnuity(const QuantExt::CreditDefaultSwap& swap, bool isClean = true) {
     Real price = std::abs(swap.couponLegNPV());
     if (isClean)
         price -= std::fabs(swap.accrualRebateNPV());
@@ -60,23 +60,19 @@ Real swapRiskyAnnuity(const QuantExt::CreditDefaultSwap& swap, bool isClean=true
 
 class PriceError {
 public:
-    PriceError(const Schedule& schedule,
-               const boost::shared_ptr<QuantExt::CreditDefaultSwap>& swapCoupon,
-               const Handle<YieldTermStructure> termStructure,
-               Real recovery,
-               SimpleQuote& hazardRateQuote,
+    PriceError(const Schedule& schedule, const boost::shared_ptr<QuantExt::CreditDefaultSwap>& swapCoupon,
+               const Handle<YieldTermStructure> termStructure, Real recovery, SimpleQuote& hazardRateQuote,
                SimpleQuote& spreadQuote, Real targetValue)
-        : schedule_(schedule), swapCoupon_(swapCoupon), termStructure_(termStructure),
-          recovery_(recovery), hazardRateQuote_(hazardRateQuote),
-          spreadQuote_(spreadQuote), targetValue_(targetValue) {}
+        : schedule_(schedule), swapCoupon_(swapCoupon), termStructure_(termStructure), recovery_(recovery),
+          hazardRateQuote_(hazardRateQuote), spreadQuote_(spreadQuote), targetValue_(targetValue) {}
 
     Real operator()(Real spread) const {
         spreadQuote_.setValue(spread);
 
-        QuantExt::CreditDefaultSwap swap_strike(
-            swapCoupon_->side(), 1.0, spread, schedule_, Following, Actual360(),
-            swapCoupon_->settlesAccrual(), swapCoupon_->protectionPaymentTime(), swapCoupon_->protectionStartDate(),
-            boost::shared_ptr<Claim>(), Actual360(true));
+        QuantExt::CreditDefaultSwap swap_strike(swapCoupon_->side(), 1.0, spread, schedule_, Following, Actual360(),
+                                                swapCoupon_->settlesAccrual(), swapCoupon_->protectionPaymentTime(),
+                                                swapCoupon_->protectionStartDate(), boost::shared_ptr<Claim>(),
+                                                Actual360(true));
 
         auto hz = swap_strike.impliedHazardRate(0.0, termStructure_, Actual360(), recovery_, 1e-6);
         hazardRateQuote_.setValue(hz);
@@ -94,16 +90,14 @@ private:
     SimpleQuote& hazardRateQuote_;
     SimpleQuote& spreadQuote_;
     Real targetValue_;
-
 };
 
-}
+} // namespace
 
 BlackCdsOptionEngine::BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>& probability,
                                            Real recoveryRate, const Handle<YieldTermStructure>& termStructure,
                                            const Handle<BlackVolTermStructure>& volatility)
-    : BlackCdsOptionEngineBase(termStructure, volatility),
-      probability_(probability), recoveryRate_(recoveryRate) {
+    : BlackCdsOptionEngineBase(termStructure, volatility), probability_(probability), recoveryRate_(recoveryRate) {
     registerWith(probability_);
     registerWith(termStructure_);
     registerWith(volatility_);
@@ -123,8 +117,8 @@ BlackCdsOptionEngineBase::BlackCdsOptionEngineBase(const Handle<YieldTermStructu
     : termStructure_(termStructure), volatility_(vol) {}
 
 void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Date& exerciseDate, const bool knocksOut,
-                                         CdsOption::results& results,
-                                         const Real strike, const CdsOption::StrikeType strikeType) const {
+                                         CdsOption::results& results, const Real strike,
+                                         const CdsOption::StrikeType strikeType) const {
 
     Date maturityDate = swap.coupons().front()->date();
     QL_REQUIRE(maturityDate > exerciseDate, "Underlying CDS should start after option maturity");
@@ -137,7 +131,6 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
     results.riskyAnnuity = swapRiskyAnnuity(swap, false) * swap.notional(); // with accural
     Real riskyAnnuity = swapRiskyAnnuity(swap);
     Real riskyAnnuityExp = riskyAnnuity / termStructure_->discount(exerciseDate);
-
 
     Option::Type callPut = (swap.side() == Protection::Buyer) ? Option::Call : Option::Put;
 
@@ -154,32 +147,29 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
             strikeSpread = strike;
             // Find the flat hazard rate
             Schedule schedule = MakeSchedule()
-                .from(swap.protectionStartDate())
-                .to(swap.protectionEndDate())
-                .withFrequency(Quarterly)
-                .withConvention(Following)
-                .withTerminationDateConvention(Unadjusted)
-                .withRule(DateGeneration::CDS2015);
+                                    .from(swap.protectionStartDate())
+                                    .to(swap.protectionEndDate())
+                                    .withFrequency(Quarterly)
+                                    .withConvention(Following)
+                                    .withTerminationDateConvention(Unadjusted)
+                                    .withRule(DateGeneration::CDS2015);
             auto swap_strike = boost::make_shared<QuantExt::CreditDefaultSwap>(
-            Protection::Buyer, 1e8, strike, schedule, Following, Actual360(),
-            swap.settlesAccrual(), swap.protectionPaymentTime(), swap.protectionStartDate(),
-            boost::shared_ptr<Claim>(), Actual360(true));
+                Protection::Buyer, 1e8, strike, schedule, Following, Actual360(), swap.settlesAccrual(),
+                swap.protectionPaymentTime(), swap.protectionStartDate(), boost::shared_ptr<Claim>(), Actual360(true));
             auto hz = swap_strike->impliedHazardRate(0.0, termStructure_, Actual360());
 
             // Re-create the underlying swap for risky annuity calculation
             auto swap_ra = boost::make_shared<QuantExt::CreditDefaultSwap>(
-            Protection::Buyer, 1, couponSpread, schedule, Following, Actual360(),
-            swap.settlesAccrual(), swap.protectionPaymentTime(), swap.protectionStartDate(),
-            boost::shared_ptr<Claim>(), Actual360(true));
+                Protection::Buyer, 1, couponSpread, schedule, Following, Actual360(), swap.settlesAccrual(),
+                swap.protectionPaymentTime(), swap.protectionStartDate(), boost::shared_ptr<Claim>(), Actual360(true));
 
             Handle<DefaultProbabilityTermStructure> dp(boost::make_shared<FlatHazardRate>(
-                termStructure_->referenceDate(),
-                Handle<Quote>(boost::make_shared<SimpleQuote>(hz)),
-                Actual365Fixed()));
+                termStructure_->referenceDate(), Handle<Quote>(boost::make_shared<SimpleQuote>(hz)), Actual365Fixed()));
             boost::shared_ptr<PricingEngine> swap_engine =
                 boost::make_shared<QuantExt::MidPointCdsEngine>(dp, recoveryRate(), termStructure_);
             swap_ra->setPricingEngine(swap_engine);
-            double riskAnnuityStrike = (std::fabs(swap_ra->couponLegNPV() - std::fabs(swap_ra->accrualRebateNPV()))) / couponSpread;
+            double riskAnnuityStrike =
+                (std::fabs(swap_ra->couponLegNPV() - std::fabs(swap_ra->accrualRebateNPV()))) / couponSpread;
 
             adjustedStrikeSpread += riskAnnuityStrike * (strikeSpread - couponSpread) /
                                     ((1 - defaultProbability(exerciseDate)) * riskyAnnuityExp);
@@ -187,27 +177,25 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
 
             // Use solver to find the equivalent spread quoted strike
             Schedule schedule = MakeSchedule()
-                .from(swap.protectionStartDate())
-                .to(swap.protectionEndDate())
-                .withFrequency(Quarterly)
-                .withConvention(Following)
-                .withTerminationDateConvention(Unadjusted)
-                .withRule(DateGeneration::CDS2015);
+                                    .from(swap.protectionStartDate())
+                                    .to(swap.protectionEndDate())
+                                    .withFrequency(Quarterly)
+                                    .withConvention(Following)
+                                    .withTerminationDateConvention(Unadjusted)
+                                    .withRule(DateGeneration::CDS2015);
 
             auto swap_coupon = boost::make_shared<QuantExt::CreditDefaultSwap>(
-                swap.side(), 1.0, couponSpread, schedule, Following, Actual360(),
-                swap.settlesAccrual(), swap.protectionPaymentTime(), swap.protectionStartDate(),
-            boost::shared_ptr<Claim>(), Actual360(true));
+                swap.side(), 1.0, couponSpread, schedule, Following, Actual360(), swap.settlesAccrual(),
+                swap.protectionPaymentTime(), swap.protectionStartDate(), boost::shared_ptr<Claim>(), Actual360(true));
 
             SimpleQuote spreadQuote;
             auto hazardRateQuote = boost::make_shared<SimpleQuote>();
             auto hazardRateQuoteHandle = Handle<Quote>(hazardRateQuote);
 
             Handle<DefaultProbabilityTermStructure> dp(boost::make_shared<FlatHazardRate>(
-                termStructure_->referenceDate(), hazardRateQuoteHandle,
-                Actual365Fixed()));
-                boost::shared_ptr<PricingEngine> swap_engine =
-            boost::make_shared<QuantExt::MidPointCdsEngine>(dp, recoveryRate(), termStructure_);
+                termStructure_->referenceDate(), hazardRateQuoteHandle, Actual365Fixed()));
+            boost::shared_ptr<PricingEngine> swap_engine =
+                boost::make_shared<QuantExt::MidPointCdsEngine>(dp, recoveryRate(), termStructure_);
             swap_coupon->setPricingEngine(swap_engine);
 
             PriceError f(schedule, swap_coupon, termStructure_, recoveryRate(), *hazardRateQuote, spreadQuote, strike);
@@ -222,9 +210,10 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
             QL_FAIL("unrecognised strike type " << strikeType);
         }
         Real stdDev = sqrt(volatility_->blackVariance(exerciseDate, strikeSpread, true));
-        results.value = swap.notional() * termStructure_->discount(exerciseDate) * (1 - defaultProbability(exerciseDate));
+        results.value =
+            swap.notional() * termStructure_->discount(exerciseDate) * (1 - defaultProbability(exerciseDate));
         results.value *= blackFormula(callPut, adjustedStrikeSpread, adjustedForwardSpread, stdDev, riskyAnnuity);
-     } else {
+    } else {
         // old methodology
 
         // Take into account the NPV from the upfront amount
@@ -242,11 +231,11 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
 
         // if a non knock-out payer option, add front end protection value
         if (swap.side() == Protection::Buyer && !knocksOut) {
-            Real frontEndProtection = callPut * swap.notional() * (1. - recoveryRate()) * defaultProbability(exerciseDate) *
-                                      termStructure_->discount(exerciseDate);
+            Real frontEndProtection = callPut * swap.notional() * (1. - recoveryRate()) *
+                                      defaultProbability(exerciseDate) * termStructure_->discount(exerciseDate);
             results.value += frontEndProtection;
         }
-     }
+    }
 }
 
 Handle<YieldTermStructure> BlackCdsOptionEngineBase::termStructure() { return termStructure_; }

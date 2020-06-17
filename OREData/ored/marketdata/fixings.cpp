@@ -59,8 +59,8 @@ void applyFixings(const vector<Fixing>& fixings, const data::Conventions& conven
         }
     }
     timer.stop();
-    LOG("Added " << count << " of " << fixings.size() << " fixings in " <<
-        timer.format(default_places, "%w") << " seconds");
+    LOG("Added " << count << " of " << fixings.size() << " fixings in " << timer.format(default_places, "%w")
+                 << " seconds");
 }
 
 void applyDividends(const vector<Fixing>& dividends) {
@@ -85,8 +85,8 @@ void applyDividends(const vector<Fixing>& dividends) {
         }
     }
     timer.stop();
-    DLOG("Added " << count << " of " << dividends.size() << " dividends in " <<
-        timer.format(default_places, "%w") << " seconds");
+    DLOG("Added " << count << " of " << dividends.size() << " dividends in " << timer.format(default_places, "%w")
+                  << " seconds");
 }
 
 } // namespace data

@@ -29,7 +29,7 @@
 namespace ore {
 namespace data {
 
-//! Engine Builder for CPI Caps, Floors and Collars 
+//! Engine Builder for CPI Caps, Floors and Collars
 /*! Pricing engines are cached by index name
   \ingroup builders
 */

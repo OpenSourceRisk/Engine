@@ -20,8 +20,8 @@
 #include <ored/marketdata/marketdatum.hpp>
 #include <ored/utilities/parsers.hpp>
 
-using boost::lexical_cast;
 using boost::bad_lexical_cast;
+using boost::lexical_cast;
 
 namespace ore {
 namespace data {
@@ -67,23 +67,16 @@ EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& na
     parseDateOrPeriod(expiry, tmpDate, tmpPeriod, tmpBool);
 }
 
-IndexCDSOptionQuote::IndexCDSOptionQuote(QuantLib::Real value,
-    const Date& asof,
-    const string& name,
-    const string& indexName,
-    const boost::shared_ptr<Expiry>& expiry,
-    const string& indexTerm,
-    const boost::shared_ptr<BaseStrike>& strike)
-    : MarketDatum(value, asof, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION),
-      indexName_(indexName),
-      expiry_(expiry),
-      indexTerm_(indexTerm),
-      strike_(strike) {}
+IndexCDSOptionQuote::IndexCDSOptionQuote(QuantLib::Real value, const Date& asof, const string& name,
+                                         const string& indexName, const boost::shared_ptr<Expiry>& expiry,
+                                         const string& indexTerm, const boost::shared_ptr<BaseStrike>& strike)
+    : MarketDatum(value, asof, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION), indexName_(indexName),
+      expiry_(expiry), indexTerm_(indexTerm), strike_(strike) {}
 
 namespace {
 Natural yearFromExpiryString(const std::string& expiry) {
     QL_REQUIRE(expiry.length() == 7, "The expiry string must be of "
-                                      "the form YYYY-MM");
+                                     "the form YYYY-MM");
     string strExpiryYear = expiry.substr(0, 4);
     Natural expiryYear;
     try {
@@ -96,7 +89,7 @@ Natural yearFromExpiryString(const std::string& expiry) {
 
 Month monthFromExpiryString(const std::string& expiry) {
     QL_REQUIRE(expiry.length() == 7, "The expiry string must be of "
-                                      "the form YYYY-MM");
+                                     "the form YYYY-MM");
     string strExpiryMonth = expiry.substr(5);
     Natural expiryMonth;
     try {
@@ -108,21 +101,13 @@ Month monthFromExpiryString(const std::string& expiry) {
 }
 } // namespace
 
-Natural MMFutureQuote::expiryYear() const {
-    return yearFromExpiryString(expiry_);
-}
+Natural MMFutureQuote::expiryYear() const { return yearFromExpiryString(expiry_); }
 
-Month MMFutureQuote::expiryMonth() const {
-    return monthFromExpiryString(expiry_);
-}
+Month MMFutureQuote::expiryMonth() const { return monthFromExpiryString(expiry_); }
 
-Natural OIFutureQuote::expiryYear() const {
-    return yearFromExpiryString(expiry_);
-}
+Natural OIFutureQuote::expiryYear() const { return yearFromExpiryString(expiry_); }
 
-Month OIFutureQuote::expiryMonth() const {
-    return monthFromExpiryString(expiry_);
-}
+Month OIFutureQuote::expiryMonth() const { return monthFromExpiryString(expiry_); }
 
 QuantLib::Size SeasonalityQuote::applyMonth() const {
     QL_REQUIRE(month_.length() == 3, "The month string must be of "
@@ -139,19 +124,12 @@ QuantLib::Size SeasonalityQuote::applyMonth() const {
     return applyMonth;
 }
 
-CommodityOptionQuote::CommodityOptionQuote(Real value,
-    const Date& asof,
-    const string& name,
-    QuoteType quoteType,
-    const string& commodityName,
-    const string& quoteCurrency,
-    const boost::shared_ptr<Expiry>& expiry,
-    const boost::shared_ptr<BaseStrike>& strike)
-    : MarketDatum(value, asof, name, quoteType, InstrumentType::COMMODITY_OPTION),
-      commodityName_(commodityName),
-      quoteCurrency_(quoteCurrency),
-      expiry_(expiry),
-      strike_(strike) {}
+CommodityOptionQuote::CommodityOptionQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
+                                           const string& commodityName, const string& quoteCurrency,
+                                           const boost::shared_ptr<Expiry>& expiry,
+                                           const boost::shared_ptr<BaseStrike>& strike)
+    : MarketDatum(value, asof, name, quoteType, InstrumentType::COMMODITY_OPTION), commodityName_(commodityName),
+      quoteCurrency_(quoteCurrency), expiry_(expiry), strike_(strike) {}
 
 CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
                                    const string& index1, const string& index2, const string& expiry,

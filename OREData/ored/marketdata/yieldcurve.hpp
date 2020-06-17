@@ -27,19 +27,19 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/market.hpp>
-#include <ored/marketdata/fxtriangulation.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
 namespace ore {
 namespace data {
 using namespace QuantLib;
-using ore::data::YieldCurveSegment;
-using ore::data::YieldCurveConfig;
-using ore::data::YieldCurveConfigMap;
 using ore::data::Conventions;
 using ore::data::CurveConfigurations;
+using ore::data::YieldCurveConfig;
+using ore::data::YieldCurveConfigMap;
+using ore::data::YieldCurveSegment;
 
 class ReferenceDataManager;
 
@@ -87,8 +87,7 @@ public:
         //! FxTriangultion to get FX rate from cross if needed
         const FXTriangulation& fxTriangulation = FXTriangulation(),
         //! optional pointer to reference data, needed to build fitted bond curves
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr
-        );
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
 
     //! \name Inspectors
     //@{
@@ -160,7 +159,6 @@ private:
 
     // get the fx spot from the string provided
     boost::shared_ptr<FXSpotQuote> getFxSpotQuote(string spotId);
-
 };
 
 //! Helper function for parsing interpolation method
@@ -176,20 +174,23 @@ vector<Date> pillarDates(const Handle<YieldTermStructure>& h);
 //! Templated function to build a YieldTermStructure and apply interpolation methods to it
 template <template <class> class CurveType>
 boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates,
-    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod);
+                                                      const DayCounter& dayCounter,
+                                                      YieldCurve::InterpolationMethod interpolationMethod);
 
 //! Create a Interpolated Zero Curve and apply interpolators
 boost::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
-    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod);
+                                                const DayCounter& dayCounter,
+                                                YieldCurve::InterpolationMethod interpolationMethod);
 
 //! Create a Interpolated Discount Curve and apply interpolators
 boost::shared_ptr<YieldTermStructure> discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs,
-    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod);
+                                                    const DayCounter& dayCounter,
+                                                    YieldCurve::InterpolationMethod interpolationMethod);
 
 //! Create a Interpolated Forward Curve and apply interpolators
 boost::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
-    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod);
-
+                                                   const DayCounter& dayCounter,
+                                                   YieldCurve::InterpolationMethod interpolationMethod);
 
 } // namespace data
 } // namespace ore

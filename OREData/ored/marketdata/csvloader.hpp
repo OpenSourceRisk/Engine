@@ -88,11 +88,7 @@ public:
     //@}
 
 private:
-    enum class DataType {
-        Market,
-        Fixing,
-        Dividend
-    };
+    enum class DataType { Market, Fixing, Dividend };
     void loadFile(const string&, DataType);
 
     bool implyTodaysFixings_;

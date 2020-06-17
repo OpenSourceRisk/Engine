@@ -44,37 +44,34 @@
 #include <ql/instruments/forward.hpp>
 
 namespace QuantExt {
-    using namespace QuantLib;
+using namespace QuantLib;
 
-    /*
-    Future on a compounded overnight index investment. Compatable with
-    SOFR futures and Sonia futures available on CME and ICE exchanges.
-    */
-    class OvernightIndexFuture : public Forward {
-    public:
-        OvernightIndexFuture(
-            const ext::shared_ptr<OvernightIndex>& overnightIndex,
-            const ext::shared_ptr<Payoff>& payoff,
-            const Date& valueDate,
-            const Date& maturityDate,
-            const Handle<YieldTermStructure>& discountCurve,
-            const Handle<Quote>& convexityAdjustment = Handle<Quote>());
+/*
+Future on a compounded overnight index investment. Compatable with
+SOFR futures and Sonia futures available on CME and ICE exchanges.
+*/
+class OvernightIndexFuture : public Forward {
+public:
+    OvernightIndexFuture(const ext::shared_ptr<OvernightIndex>& overnightIndex, const ext::shared_ptr<Payoff>& payoff,
+                         const Date& valueDate, const Date& maturityDate,
+                         const Handle<YieldTermStructure>& discountCurve,
+                         const Handle<Quote>& convexityAdjustment = Handle<Quote>());
 
-        //! returns spot value/price of an underlying financial instrument
-        virtual Real spotValue() const;
+    //! returns spot value/price of an underlying financial instrument
+    virtual Real spotValue() const;
 
-        //! NPV of income/dividends/storage-costs etc. of underlying instrument
-        virtual Real spotIncome(const Handle<YieldTermStructure>&) const;
+    //! NPV of income/dividends/storage-costs etc. of underlying instrument
+    virtual Real spotIncome(const Handle<YieldTermStructure>&) const;
 
-        virtual Real forwardValue() const;
+    virtual Real forwardValue() const;
 
-        Real convexityAdjustment() const;
+    Real convexityAdjustment() const;
 
-    protected:
-        ext::shared_ptr<OvernightIndex> overnightIndex_;
-        Handle<Quote> convexityAdjustment_;
-    };
+protected:
+    ext::shared_ptr<OvernightIndex> overnightIndex_;
+    Handle<Quote> convexityAdjustment_;
+};
 
-}
+} // namespace QuantExt
 
 #endif

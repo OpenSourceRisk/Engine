@@ -58,13 +58,12 @@ protected:
     VanillaOptionTrade(AssetClass assetClassUnderlying)
         : Trade("VanillaOption"), assetClassUnderlying_(assetClassUnderlying), strike_(0), quantity_(0) {}
     VanillaOptionTrade(const Envelope& env, AssetClass assetClassUnderlying, OptionData option, string assetName,
-                   string currency, double strike, double quantity,
-                   const boost::shared_ptr<QuantLib::Index>& index = nullptr,
-                   const std::string& indexName = "")
-        : Trade("VanillaOption", env), assetClassUnderlying_(assetClassUnderlying),
-          option_(option), assetName_(assetName), currency_(currency), strike_(strike),
-          quantity_(quantity), index_(index), indexName_(indexName) {}
-        
+                       string currency, double strike, double quantity,
+                       const boost::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "")
+        : Trade("VanillaOption", env), assetClassUnderlying_(assetClassUnderlying), option_(option),
+          assetName_(assetName), currency_(currency), strike_(strike), quantity_(quantity), index_(index),
+          indexName_(indexName) {}
+
     AssetClass assetClassUnderlying_;
     OptionData option_;
     string assetName_;

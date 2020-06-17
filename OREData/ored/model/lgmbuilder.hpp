@@ -37,7 +37,6 @@ namespace ore {
 namespace data {
 using namespace QuantLib;
 
-
 //! Builder for a Linear Gauss Markov model component
 /*!
   This class is a utility that turns a Linear Gauss Markov
@@ -65,7 +64,6 @@ public:
     RelinkableHandle<YieldTermStructure> discountCurve() { return modelDiscountCurve_; }
     std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;
     //@}
-
 
     //! \name ModelBuilder interface
     //@{

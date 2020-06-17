@@ -154,8 +154,9 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                         // if indexed coupons are used, we use a proper fixing, but make sure that the fixing date
                         // is not in the past and we do not use a historical fixing for "today"
                         auto flatIbor = boost::make_shared<IborIndex>(
-                            index->familyName() + " (no fixings)", index->tenor(), index->fixingDays(), index->currency(),
-                            index->fixingCalendar(), index->businessDayConvention(), index->endOfMonth(), index->dayCounter(), c_);
+                            index->familyName() + " (no fixings)", index->tenor(), index->fixingDays(),
+                            index->currency(), index->fixingCalendar(), index->businessDayConvention(),
+                            index->endOfMonth(), index->dayCounter(), c_);
                         Date fixingDate =
                             flatIbor->fixingCalendar().adjust(std::max(arguments_.floatingFixingDates[k], reference));
                         flatAmount =

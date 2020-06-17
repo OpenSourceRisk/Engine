@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(testParseCMSSpreadPriceQuoteCorrelationFromXml) {
     BOOST_CHECK_EQUAL(config.index1(), "EUR-CMS-10Y");
     BOOST_CHECK_EQUAL(config.index2(), "EUR-CMS-1Y");
     BOOST_CHECK_EQUAL_COLLECTIONS(quotes.begin(), quotes.end(), config.quotes().begin(), config.quotes().end());
-    BOOST_CHECK_EQUAL(config.extrapolate(), true);    
+    BOOST_CHECK_EQUAL(config.extrapolate(), true);
     BOOST_CHECK_EQUAL(config.conventions(), "EUR-CMS-10Y-1Y-CONVENTION");
     BOOST_CHECK_EQUAL(config.swaptionVolatility(), "EUR");
     BOOST_CHECK_EQUAL(config.discountCurve(), "EUR-EONIA");
@@ -173,7 +173,6 @@ BOOST_AUTO_TEST_CASE(testParseGenericCorrelationNullQuoteFromXml) {
 
     BOOST_CHECK_EQUAL(config.dayCounter().name(), "Actual/365 (Fixed)");
     BOOST_CHECK_EQUAL(config.calendar().name(), "TARGET");
-
 }
 BOOST_AUTO_TEST_SUITE_END()
 

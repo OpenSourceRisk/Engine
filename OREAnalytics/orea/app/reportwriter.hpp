@@ -30,11 +30,11 @@
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/engine/sensitivitystream.hpp>
-#include <ored/utilities/dategrid.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
+#include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <string>
 

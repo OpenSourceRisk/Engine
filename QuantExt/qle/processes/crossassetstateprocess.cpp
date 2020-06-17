@@ -39,7 +39,7 @@ inline void setValue(Matrix& m, const Real& value, const QuantExt::CrossAssetMod
     m[i][j] = m[j][i] = value;
 }
 inline void setValue(Array& a, const Real& value, const QuantExt::CrossAssetModel* model,
-                            const QuantExt::CrossAssetModelTypes::AssetType& t, const Size& i, const Size& offset = 0) {
+                     const QuantExt::CrossAssetModelTypes::AssetType& t, const Size& i, const Size& offset = 0) {
     a[model->pIdx(t, i, offset)] = value;
 }
 } // anonymous namespace

@@ -35,8 +35,8 @@ using boost::unit_test::framework::master_test_suite;
 #include <oret/basedatapath.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/oret.hpp>
-using ore::test::setupTestLogging;
 using ore::test::getBaseDataPath;
+using ore::test::setupTestLogging;
 
 #ifdef BOOST_MSVC
 #include <ored/auto_link.hpp>

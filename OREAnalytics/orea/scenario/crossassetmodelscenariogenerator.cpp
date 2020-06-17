@@ -169,7 +169,6 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             }
         }
     }
-
 }
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
@@ -380,7 +379,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                 scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + l], yoyRates[d_yinf[l]]);
             }
         }
-        
+
         // TODO: Further risk factor classes are added here
     }
     return scenarios;
