@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/crosscurrencypricetermstructure.hpp>
 #include <algorithm>
+#include <qle/termstructures/crosscurrencypricetermstructure.hpp>
 
 using QuantLib::Date;
 using QuantLib::Handle;
@@ -59,18 +59,14 @@ Time CrossCurrencyPriceTermStructure::maxTime() const {
     return min(basePriceTs_->maxTime(), min(baseCurrencyYts_->maxTime(), yts_->maxTime()));
 }
 
-Time CrossCurrencyPriceTermStructure::minTime() const {
-    return basePriceTs_->minTime();
-}
+Time CrossCurrencyPriceTermStructure::minTime() const { return basePriceTs_->minTime(); }
 
-vector<Date> CrossCurrencyPriceTermStructure::pillarDates() const {
-    return basePriceTs_->pillarDates();
-}
+vector<Date> CrossCurrencyPriceTermStructure::pillarDates() const { return basePriceTs_->pillarDates(); }
 
 QuantLib::Real CrossCurrencyPriceTermStructure::priceImpl(QuantLib::Time t) const {
     // Price in base currency times the FX forward, number of units of currency per unit of base currency.
-    return basePriceTs_->price(t, true) * fxSpot_->value() * 
-        baseCurrencyYts_->discount(t, true) / yts_->discount(t, true);
+    return basePriceTs_->price(t, true) * fxSpot_->value() * baseCurrencyYts_->discount(t, true) /
+           yts_->discount(t, true);
 }
 
 void CrossCurrencyPriceTermStructure::registration() {
@@ -80,4 +76,4 @@ void CrossCurrencyPriceTermStructure::registration() {
     registerWith(yts_);
 }
 
-}
+} // namespace QuantExt

@@ -18,8 +18,8 @@
 
 #include <ored/portfolio/legdatafactory.hpp>
 
-using std::string;
 using std::function;
+using std::string;
 
 namespace ore {
 namespace data {
@@ -35,5 +35,5 @@ void LegDataFactory::addBuilder(const string& legType, function<boost::shared_pt
     map_[legType] = builder;
 }
 
-}
-}
+} // namespace data
+} // namespace ore

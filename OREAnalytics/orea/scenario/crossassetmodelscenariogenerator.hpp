@@ -27,8 +27,8 @@
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <ored/utilities/dategrid.hpp>
 #include <ored/marketdata/market.hpp>
+#include <ored/utilities/dategrid.hpp>
 
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
@@ -74,8 +74,8 @@ private:
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
     boost::shared_ptr<ore::data::Market> initMarket_;
     const std::string configuration_;
-    std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_,
-        zeroInflationKeys_, yoyInflationKeys_;
+    std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_, zeroInflationKeys_,
+        yoyInflationKeys_;
     std::vector<RiskFactorKey> fxKeys_, eqKeys_, cpiKeys_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;

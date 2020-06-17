@@ -24,24 +24,14 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-BootstrapConfig::BootstrapConfig(
-    Real accuracy,
-    Real globalAccuracy,
-    bool dontThrow,
-    Size maxAttempts,
-    Real maxFactor,
-    Real minFactor,
-    Size dontThrowSteps)
-    : accuracy_(accuracy),
-      globalAccuracy_(globalAccuracy == Null<Real>() ? accuracy_ : globalAccuracy),
-      dontThrow_(dontThrow),
-      maxAttempts_(maxAttempts),
-      maxFactor_(maxFactor),
-      minFactor_(minFactor),
+BootstrapConfig::BootstrapConfig(Real accuracy, Real globalAccuracy, bool dontThrow, Size maxAttempts, Real maxFactor,
+                                 Real minFactor, Size dontThrowSteps)
+    : accuracy_(accuracy), globalAccuracy_(globalAccuracy == Null<Real>() ? accuracy_ : globalAccuracy),
+      dontThrow_(dontThrow), maxAttempts_(maxAttempts), maxFactor_(maxFactor), minFactor_(minFactor),
       dontThrowSteps_(dontThrowSteps) {}
 
 void BootstrapConfig::fromXML(XMLNode* node) {
-    
+
     XMLUtils::checkNode(node, "BootstrapConfig");
 
     accuracy_ = 1e-12;
@@ -87,7 +77,7 @@ void BootstrapConfig::fromXML(XMLNode* node) {
 }
 
 XMLNode* BootstrapConfig::toXML(XMLDocument& doc) {
-    
+
     XMLNode* node = doc.allocNode("BootstrapConfig");
     XMLUtils::addChild(doc, node, "Accuracy", accuracy_);
     XMLUtils::addChild(doc, node, "GlobalAccuracy", globalAccuracy_);
@@ -100,5 +90,5 @@ XMLNode* BootstrapConfig::toXML(XMLDocument& doc) {
     return node;
 }
 
-}
-}
+} // namespace data
+} // namespace ore

@@ -22,9 +22,9 @@
 
 #pragma once
 
-#include <ored/utilities/log.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/test/unit_test.hpp>
+#include <ored/utilities/log.hpp>
 
 using ore::data::Logger;
 
@@ -43,23 +43,21 @@ public:
     //! Constructor
     BoostTestLogger() : Logger("BoostTestLogger") {}
     //! The log callback
-    virtual void log(unsigned, const string& msg) {
-        BOOST_TEST_MESSAGE(msg);
-    }
+    virtual void log(unsigned, const string& msg) { BOOST_TEST_MESSAGE(msg); }
 };
 
 //! Gets passed the command line arguments from a unit test suite
 //! and sets up ORE logging if it is requested
 /*!
-    Specifying --ore_log_mask on its own turns on logging with a default 
+    Specifying --ore_log_mask on its own turns on logging with a default
     log mask of 255
     Optionally, you can specify the log mask using --ore_log_mask=<mask>
     \ingroup utilities
 */
 void setupTestLogging(int argc, char** argv) {
-    
+
     for (int i = 1; i < argc; ++i) {
-        
+
         // --ore_log_mask indicates we want ORE logging
         if (boost::starts_with(argv[i], "--ore_log_mask")) {
 
@@ -72,8 +70,7 @@ void setupTestLogging(int argc, char** argv) {
             }
 
             // Set up logging
-            boost::shared_ptr<ore::test::BoostTestLogger> logger =
-                boost::make_shared<ore::test::BoostTestLogger>();
+            boost::shared_ptr<ore::test::BoostTestLogger> logger = boost::make_shared<ore::test::BoostTestLogger>();
             ore::data::Log::instance().removeAllLoggers();
             ore::data::Log::instance().registerLogger(logger);
             ore::data::Log::instance().switchOn();
@@ -82,5 +79,5 @@ void setupTestLogging(int argc, char** argv) {
     }
 }
 
-}
-}
+} // namespace test
+} // namespace ore

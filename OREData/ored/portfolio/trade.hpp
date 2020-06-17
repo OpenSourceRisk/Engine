@@ -64,7 +64,7 @@ public:
     virtual void build(const boost::shared_ptr<EngineFactory>&) = 0;
 
     /*! Return the fixings that will be requested in order to price this Trade given the \p settlementDate.
-        
+
 
 
         If the \p settlementDate is not provided, the current evaluation date is taken as the settlement date.
@@ -81,7 +81,7 @@ public:
     /*! Return the full required fixing information */
     const RequiredFixings& requiredFixings() const { return requiredFixings_; }
 
-    virtual std::map<AssetClass, std::set<std::string>> underlyingIndices() const { return {};}
+    virtual std::map<AssetClass, std::set<std::string>> underlyingIndices() const { return {}; }
 
     //! \name Serialisation
     //@{
@@ -152,8 +152,8 @@ public:
     //! Utility to validate that everything that needs to be set in this base class is actually set
     void validate() const;
 
-    /*! Utility method indicating if the trade has cashflows for the cashflow report. The default implementation 
-        returns \c true so that a trade is automatically considered when cashflows are being written. To prevent a 
+    /*! Utility method indicating if the trade has cashflows for the cashflow report. The default implementation
+        returns \c true so that a trade is automatically considered when cashflows are being written. To prevent a
         trade from being asked for its cashflows, the method can be overridden to return \c false.
     */
     virtual bool hasCashflows() const { return true; }

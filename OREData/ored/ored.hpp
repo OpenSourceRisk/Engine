@@ -2,7 +2,7 @@
 // Do not edit
 
 #ifdef BOOST_MSVC
-#  include <ored/auto_link.hpp>
+#include <ored/auto_link.hpp>
 #endif
 
 #include <ored/configuration/basecorrelationcurveconfig.hpp>

@@ -38,16 +38,16 @@
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
-#include <ored/configuration/yieldvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
+#include <ored/configuration/yieldvolcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 namespace ore {
 namespace data {
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
+using ore::data::XMLSerializable;
 
 //! Container class for all Curve Configurations
 /*!
@@ -149,8 +149,7 @@ public:
     boost::shared_ptr<CommodityVolatilityConfig>& commodityVolatilityConfig(const std::string& curveID) {
         return commodityVolatilityConfigs_[curveID];
     };
-    const boost::shared_ptr<CommodityVolatilityConfig>&
-    commodityVolatilityConfig(const std::string& curveID) const;
+    const boost::shared_ptr<CommodityVolatilityConfig>& commodityVolatilityConfig(const std::string& curveID) const;
 
     bool hasCorrelationCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<CorrelationCurveConfig>& correlationCurveConfig(const std::string& curveID) {
@@ -158,19 +157,22 @@ public:
     };
     const boost::shared_ptr<CorrelationCurveConfig>& correlationCurveConfig(const std::string& curveID) const;
 
-    boost::shared_ptr<CurveConfigurations> minimalCurveConfig(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams, const std::set<std::string>& configurations = {""}) const;
+    boost::shared_ptr<CurveConfigurations>
+    minimalCurveConfig(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
+                       const std::set<std::string>& configurations = {""}) const;
 
     /*! Return the set of quotes that are required by the CurveConfig elements in CurveConfigurations.
 
         The set of quotes required by only those CurveConfig elements appearing
         in \p todaysMarketParams for the given configuration(s) is returned.
     */
-    std::set<string> quotes(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams, const std::set<std::string>& configurations = {""}) const;
+    std::set<string> quotes(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
+                            const std::set<std::string>& configurations = {""}) const;
     std::set<string> quotes() const;
 
-    std::set<string> conventions(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams, const std::set<std::string>& configurations = {""}) const;
+    std::set<string> conventions(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
+                                 const std::set<std::string>& configurations = {""}) const;
     std::set<string> conventions() const;
-
 
     /*! Return the Yields curves available */
     std::set<string> yieldCurveConfigIds();

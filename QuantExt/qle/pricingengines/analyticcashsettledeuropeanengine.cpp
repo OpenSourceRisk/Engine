@@ -16,23 +16,23 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <ql/event.hpp>
 #include <ql/exercise.hpp>
+#include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 
 using QuantLib::close;
 using QuantLib::Date;
 using QuantLib::DiscountFactor;
-using QuantLib::detail::simple_event;
 using QuantLib::GeneralizedBlackScholesProcess;
 using QuantLib::Handle;
 using QuantLib::Null;
 using QuantLib::PricingEngine;
-using QuantLib::YieldTermStructure;
 using QuantLib::Real;
 using QuantLib::Settings;
 using QuantLib::Time;
 using QuantLib::VanillaOption;
+using QuantLib::YieldTermStructure;
+using QuantLib::detail::simple_event;
 
 namespace QuantExt {
 
@@ -52,15 +52,15 @@ AnalyticCashSettledEuropeanEngine::AnalyticCashSettledEuropeanEngine(
 void AnalyticCashSettledEuropeanEngine::calculate() const {
 
     // Same logic as underlying engine for discount curve.
-    boost::shared_ptr<YieldTermStructure> dts = discountCurve_.empty() ? 
-        bsp_->riskFreeRate().currentLink() : discountCurve_.currentLink();
+    boost::shared_ptr<YieldTermStructure> dts =
+        discountCurve_.empty() ? bsp_->riskFreeRate().currentLink() : discountCurve_.currentLink();
 
     // Option expiry date.
     Date expiryDate = arguments_.exercise->lastDate();
-    
+
     Date today = Settings::instance().evaluationDate();
     if (expiryDate <= today) {
-        
+
         // If expiry has occurred, we attempt to establish the payoff amount, if any, and discount it.
         Real payoffAmount = 0.0;
         if (arguments_.automaticExercise) {
@@ -70,8 +70,8 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
             payoffAmount = (*arguments_.payoff)(indexValue);
         } else if (arguments_.exercised) {
             // If we have manually exercised, we base the payoff on the value at exercise.
-            QL_REQUIRE(arguments_.priceAtExercise != Null<Real>(), "Expect a valid price at exercise when option " <<
-                "has been manually exercised.");
+            QL_REQUIRE(arguments_.priceAtExercise != Null<Real>(), "Expect a valid price at exercise when option "
+                                                                       << "has been manually exercised.");
             payoffAmount = (*arguments_.payoff)(arguments_.priceAtExercise);
         } else if (expiryDate == today) {
             // Expiry date is today, not automatic exercise and hasn't been manually exercised - use spot.
@@ -90,7 +90,7 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
             results_.theta = -std::log(df_tp) / delta_tp * results_.value;
         }
         results_.thetaPerDay = results_.theta / 365.0;
-        
+
         // Remaining results are set to 0. Possibly not necessary but then they are Null<Real>().
         results_.delta = 0.0;
         results_.deltaForward = 0.0;
@@ -102,13 +102,13 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         results_.itmCashProbability = 0.0;
 
     } else {
-        
-        // If expiry has not occurred, we use the underlying engine and amend the results to account 
+
+        // If expiry has not occurred, we use the underlying engine and amend the results to account
         // for the deferred cash payment.
 
         // Prepare the underlying engine for the valuation.
         underlyingEngine_.reset();
-        VanillaOption::arguments* underlyingArgs = 
+        VanillaOption::arguments* underlyingArgs =
             dynamic_cast<VanillaOption::arguments*>(underlyingEngine_.getArguments());
         QL_REQUIRE(underlyingArgs, "Underlying engine expected to have vanilla option arguments.");
         underlyingArgs->exercise = arguments_.exercise;
@@ -118,9 +118,9 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         // Discount factor from payment date back to expiry date i.e. P(t_e, t_p) when rates are deterministic.
         DiscountFactor df_te_tp = dts->discount(arguments_.paymentDate) / dts->discount(expiryDate);
         Time delta_te_tp = dts->timeFromReference(arguments_.paymentDate) - dts->timeFromReference(expiryDate);
-        
+
         // Populate this engine's results using the results from the underlying engine.
-        const CashSettledEuropeanOption::results* underlyingResults = 
+        const CashSettledEuropeanOption::results* underlyingResults =
             dynamic_cast<const CashSettledEuropeanOption::results*>(underlyingEngine_.getResults());
         QL_REQUIRE(underlyingResults, "Underlying engine expected to have compatible results.");
 
@@ -141,4 +141,4 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
     }
 }
 
-}
+} // namespace QuantExt

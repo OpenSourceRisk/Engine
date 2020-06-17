@@ -22,12 +22,12 @@
 #include <ql/currencies/america.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/time/calendars/unitedstates.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
-#include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
+#include <ql/time/calendars/unitedstates.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(testEquityBlackVolSurfaceProxy) {
 
     BOOST_TEST_MESSAGE("Testing QuantExt::EquityBlackVolSurfaceProxy...");
 
-    // take an index and one of it's underlyings, proxy the underlyings vol surface off the 
+    // take an index and one of it's underlyings, proxy the underlyings vol surface off the
     // index vol surface, check that the forward ATM vols are the same
 
     Date today = Date(1, Jan, 2020);
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(testEquityBlackVolSurfaceProxy) {
     vols[0][3] = 0.42;
     vols[1][3] = 0.40;
     vols[2][3] = 0.43;
-    
+
     // spots for the index and underlying
     Handle<Quote> indexSpot = Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(1000)));
     Handle<Quote> underlyingSpot = Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(150)));
@@ -92,13 +92,13 @@ BOOST_AUTO_TEST_CASE(testEquityBlackVolSurfaceProxy) {
         boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), dc));
 
     // set up EquityIndexes for the index and underlying
-    boost::shared_ptr<EquityIndex> index = boost::make_shared<EquityIndex>
-        ("Index", UnitedStates(), USDCurrency(), indexSpot, indexForecast, indexDividend);
-    boost::shared_ptr<EquityIndex> underlying = boost::make_shared<EquityIndex>
-        ("Underlying", UnitedStates(), USDCurrency(), underlyingSpot, underlyingForecast, underlyingDividend);
+    boost::shared_ptr<EquityIndex> index = boost::make_shared<EquityIndex>("Index", UnitedStates(), USDCurrency(),
+                                                                           indexSpot, indexForecast, indexDividend);
+    boost::shared_ptr<EquityIndex> underlying = boost::make_shared<EquityIndex>(
+        "Underlying", UnitedStates(), USDCurrency(), underlyingSpot, underlyingForecast, underlyingDividend);
 
     // set up a vol surface for the index
-    boost::shared_ptr<BlackVolTermStructure> indexVolSurface = 
+    boost::shared_ptr<BlackVolTermStructure> indexVolSurface =
         boost::make_shared<BlackVarianceSurface>(today, UnitedStates(), dates, strikes, vols, dc);
 
     // set up a vol surface for the underlying, to be proxied from the index surface
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(testEquityBlackVolSurfaceProxy) {
         Real underlyingF = underlying->fixing(d);
         // vol from proxy surface
         Real underlyingVol = underlyingVolSurface->blackVol(d, underlyingF);
-        
+
         // index forward
         Real indexF = index->fixing(d);
         // vol from index surface
@@ -119,7 +119,6 @@ BOOST_AUTO_TEST_CASE(testEquityBlackVolSurfaceProxy) {
 
         BOOST_CHECK_CLOSE(underlyingVol, indexVol, 0.001);
     }
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

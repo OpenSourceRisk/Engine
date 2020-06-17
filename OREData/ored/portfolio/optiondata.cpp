@@ -56,7 +56,7 @@ void OptionData::fromXML(XMLNode* node) {
     automaticExercise_ = boost::none;
     if (XMLNode* n = XMLUtils::getChildNode(node, "AutomaticExercise"))
         automaticExercise_ = parseBool(XMLUtils::getNodeValue(n));
-    
+
     exerciseData_ = boost::none;
     if (XMLNode* n = XMLUtils::getChildNode(node, "ExerciseData")) {
         exerciseData_ = OptionExerciseData();
@@ -102,7 +102,7 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "ExerciseFeeSettlementConvention", exerciseFeeSettlementConvention_);
     XMLUtils::addChildren(doc, node, "ExercisePrices", "ExercisePrice", exercisePrices_);
     XMLUtils::addChildren(doc, node, "ExerciseDates", "ExerciseDate", exerciseDates_);
-    
+
     if (automaticExercise_)
         XMLUtils::addChild(doc, node, "AutomaticExercise", *automaticExercise_);
 

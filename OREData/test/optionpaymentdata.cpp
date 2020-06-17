@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(testDefaultConstruction) {
     BOOST_TEST_MESSAGE("Testing default construction...");
 
     OptionPaymentData opd;
-    
+
     BOOST_CHECK(!opd.rulesBased());
     BOOST_CHECK(opd.dates().empty());
     BOOST_CHECK_EQUAL(opd.lag(), 0);
@@ -50,10 +50,10 @@ BOOST_AUTO_TEST_CASE(testDatesBasedConstruction) {
 
     BOOST_TEST_MESSAGE("Testing dates based construction...");
 
-    vector<string> strDates{ "2020-06-08", "2020-09-08" };
+    vector<string> strDates{"2020-06-08", "2020-09-08"};
     OptionPaymentData opd(strDates);
-    
-    vector<Date> expDates{ Date(8, Jun, 2020), Date(8, Sep, 2020) };
+
+    vector<Date> expDates{Date(8, Jun, 2020), Date(8, Sep, 2020)};
     BOOST_CHECK(!opd.rulesBased());
     BOOST_CHECK_EQUAL_COLLECTIONS(opd.dates().begin(), opd.dates().end(), expDates.begin(), expDates.end());
     BOOST_CHECK_EQUAL(opd.lag(), 0);
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(testDatesBasedFromXml) {
     opd.fromXMLString(xml);
 
     // Check is as expected.
-    vector<Date> expDates{ Date(8, Jun, 2020), Date(8, Sep, 2020) };
+    vector<Date> expDates{Date(8, Jun, 2020), Date(8, Sep, 2020)};
     BOOST_CHECK(!opd.rulesBased());
     BOOST_CHECK_EQUAL_COLLECTIONS(opd.dates().begin(), opd.dates().end(), expDates.begin(), expDates.end());
     BOOST_CHECK_EQUAL(opd.lag(), 0);
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(testDatesBasedToXml) {
     BOOST_TEST_MESSAGE("Testing dates based toXML...");
 
     // Construct explicitly
-    vector<string> strDates{ "2020-06-08", "2020-09-08" };
+    vector<string> strDates{"2020-06-08", "2020-09-08"};
     OptionPaymentData inOpd(strDates);
 
     // Write to XML and read the result from XML to populate new object
@@ -103,8 +103,8 @@ BOOST_AUTO_TEST_CASE(testDatesBasedToXml) {
 
     // Check is as expected.
     BOOST_CHECK(!outOpd.rulesBased());
-    BOOST_CHECK_EQUAL_COLLECTIONS(outOpd.dates().begin(), outOpd.dates().end(),
-        inOpd.dates().begin(), inOpd.dates().end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(outOpd.dates().begin(), outOpd.dates().end(), inOpd.dates().begin(),
+                                  inOpd.dates().end());
     BOOST_CHECK_EQUAL(outOpd.lag(), 0);
     BOOST_CHECK_EQUAL(outOpd.calendar(), Calendar());
     BOOST_CHECK_EQUAL(outOpd.convention(), Following);

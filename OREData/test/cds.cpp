@@ -17,8 +17,8 @@
 */
 
 #include <boost/make_shared.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
@@ -28,8 +28,8 @@
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/indexparser.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <oret/datapaths.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
@@ -184,10 +184,7 @@ TradeInputs tradeInputs[] = {{"20170203", 0}, {"20170203", 0}, {"20210203", 0.01
 Real expNpvs[] = {0, 0, 0.050659, -0.05062};
 
 // List of trades that will feed the data-driven test below to check CDS trade building.
-vector<string> trades = {
-    "cds_minimal_with_rules",
-    "cds_minimal_with_dates"
-};
+vector<string> trades = {"cds_minimal_with_rules", "cds_minimal_with_dates"};
 
 } // namespace
 

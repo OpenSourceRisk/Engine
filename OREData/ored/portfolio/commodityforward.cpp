@@ -66,7 +66,7 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
 }
 
 std::map<AssetClass, std::set<std::string>> CommodityForward::underlyingIndices() const {
-    return { {AssetClass::COM, std::set<std::string>({ commodityName_ })} };
+    return {{AssetClass::COM, std::set<std::string>({commodityName_})}};
 }
 
 void CommodityForward::fromXML(XMLNode* node) {
@@ -94,7 +94,7 @@ XMLNode* CommodityForward::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, commodityDataNode, "Currency", currency_);
     XMLUtils::addChild(doc, commodityDataNode, "Strike", strike_);
     XMLUtils::addChild(doc, commodityDataNode, "Quantity", quantity_);
-    
+
     return node;
 }
 

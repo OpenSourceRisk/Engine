@@ -14,37 +14,39 @@
  contribution to risk analytics and model standardisation, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
-*/ 
+*/
 
 #include <qle/instruments/brlcdiswap.hpp>
 
-#include <qle/cashflows/brlcdicouponpricer.hpp>
-#include <qle/cashflows/couponpricer.hpp>
+#include <boost/assign/list_of.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
-#include <ql/time/schedule.hpp>
 #include <ql/time/daycounters/business252.hpp>
-#include <boost/assign/list_of.hpp>
+#include <ql/time/schedule.hpp>
+#include <qle/cashflows/brlcdicouponpricer.hpp>
+#include <qle/cashflows/couponpricer.hpp>
 
 using namespace QuantLib;
 using boost::assign::list_of;
-using std::vector;
 using std::pow;
+using std::vector;
 
 namespace QuantExt {
 
 // Reason for use of convert_to_container:
 // https://stackoverflow.com/a/17805923/1771882
-BRLCdiSwap::BRLCdiSwap(Type type, Real nominal, const Date& startDate, const Date& endDate, Rate fixedRate, 
-    const boost::shared_ptr<BRLCdi>& overnightIndex, Spread spread, bool telescopicValueDates) 
-    : OvernightIndexedSwap(type, nominal, Schedule(list_of(startDate)(endDate).convert_to_container<vector<Date> >(), 
-        NullCalendar(), QuantLib::Unadjusted, QuantLib::Unadjusted, 100 * Years), fixedRate, 
-        overnightIndex->dayCounter(), overnightIndex, spread, 0, ModifiedFollowing, overnightIndex->fixingCalendar(), 
-        telescopicValueDates), startDate_(startDate), endDate_(endDate), index_(overnightIndex) {
+BRLCdiSwap::BRLCdiSwap(Type type, Real nominal, const Date& startDate, const Date& endDate, Rate fixedRate,
+                       const boost::shared_ptr<BRLCdi>& overnightIndex, Spread spread, bool telescopicValueDates)
+    : OvernightIndexedSwap(type, nominal,
+                           Schedule(list_of(startDate)(endDate).convert_to_container<vector<Date> >(), NullCalendar(),
+                                    QuantLib::Unadjusted, QuantLib::Unadjusted, 100 * Years),
+                           fixedRate, overnightIndex->dayCounter(), overnightIndex, spread, 0, ModifiedFollowing,
+                           overnightIndex->fixingCalendar(), telescopicValueDates),
+      startDate_(startDate), endDate_(endDate), index_(overnightIndex) {
 
     // Need to overwrite the fixed leg with the correct fixed leg for a standard BRL CDI swap
     // Fixed leg is of the form: N [(1 + k) ^ \delta - 1]
-    // where \delta is the number of BRL business days in the period divided by 252 i.e. 
+    // where \delta is the number of BRL business days in the period divided by 252 i.e.
     // the day count fraction for the period on a Business252 basis.
     Time dcf = index_->dayCounter().yearFraction(startDate_, endDate_);
     Real fixedLegPayment = nominal * (pow(1.0 + fixedRate, dcf) - 1.0);
@@ -63,7 +65,7 @@ BRLCdiSwap::BRLCdiSwap(Type type, Real nominal, const Date& startDate, const Dat
 }
 
 Real BRLCdiSwap::fixedLegBPS() const {
-    
+
     calculate();
 
     static Spread basisPoint = 1.0e-4;
@@ -78,9 +80,9 @@ Real BRLCdiSwap::fixedLegBPS() const {
 }
 
 Real BRLCdiSwap::fairRate() const {
-    
+
     calculate();
-    
+
     if (!close(endDiscounts_[0], 0.0) && endDiscounts_[0] != Null<DiscountFactor>()) {
         DiscountFactor df = endDiscounts_[0];
         Time dcf = index_->dayCounter().yearFraction(startDate_, endDate_);
@@ -90,4 +92,4 @@ Real BRLCdiSwap::fairRate() const {
     QL_FAIL("BRLCdiSwap cannot calculate fair rate because end discount is not populated");
 }
 
-}
+} // namespace QuantExt

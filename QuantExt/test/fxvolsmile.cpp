@@ -264,16 +264,16 @@ BOOST_AUTO_TEST_CASE(testVannaVolgaFxVolSurface) {
         for (Time tt = 0.1; tt < 2; tt+= 0.05)
             cout << k << "," << tt << "," << volSurface.blackVol(tt, k) << endl;
      */
-    
+
     // Test if Null<Real>() or 0 strike returns atm vol
-    for(Size i = 0; i < len; i++) {
+    for (Size i = 0; i < len; i++) {
         Real vol = volSurface.blackVol(dates[i], Null<Real>());
         Real vol2 = volSurface.blackVol(dates[i], 0);
         if (fabs(vol - atm[i]) > 0.00001)
             BOOST_FAIL("Failed to get expected atm vol from surface: " << vol);
         if (fabs(vol2 - atm[i]) > 0.00001)
             BOOST_FAIL("Failed to get expected atm vol from surface: " << vol);
-    } 
+    }
 }
 
 BOOST_AUTO_TEST_CASE(testInvertedVolTermStructure) {

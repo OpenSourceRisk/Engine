@@ -39,11 +39,11 @@ using namespace QuantLib;
     In the latter case the constructor needs to be called with the futures expiry date.
     If the expiry date is set to Date(), the index is interpreted as spot index.
 
-    If it is spot index, the index name() is set to the underlying name passed to the constructor 
+    If it is spot index, the index name() is set to the underlying name passed to the constructor
     prefixed by "COMM-".
 
-    If it is a futures index, we set the name() to "COMM-" + underlyingName + "-" + "yyyy-mm", where "yyyy" 
-    is the expiry date's year and "mm" is the expiry date's month. The index forecast for fixing Date 
+    If it is a futures index, we set the name() to "COMM-" + underlyingName + "-" + "yyyy-mm", where "yyyy"
+    is the expiry date's year and "mm" is the expiry date's month. The index forecast for fixing Date
     yields the price curve's forecast to the futures expiry instead which is beyond the fixing date.
 
     \ingroup indexes

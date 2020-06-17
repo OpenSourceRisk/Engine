@@ -65,7 +65,7 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
                    "Smile tenors/strikes/spreads should only be set when dim=Smile");
     }
 
-    if(qualifier_ == "")
+    if (qualifier_ == "")
         qualifier_ = ccyFromSwapIndexBase();
 }
 
@@ -110,12 +110,12 @@ const vector<string>& GenericYieldVolatilityCurveConfig::quotes() {
 }
 
 string GenericYieldVolatilityCurveConfig::ccyFromSwapIndexBase() {
-        std::vector<string> tokens;
-        split(tokens, swapIndexBase_, boost::is_any_of("-"));
-        QL_REQUIRE(!tokens.empty() && tokens[0] != "",
-                   "GenericYieldVolatilityCurveConfig::fromXML(): can not derive qualifier from SwapIndexBase ("
-                       << swapIndexBase_ << ")");
-        return tokens[0];
+    std::vector<string> tokens;
+    split(tokens, swapIndexBase_, boost::is_any_of("-"));
+    QL_REQUIRE(!tokens.empty() && tokens[0] != "",
+               "GenericYieldVolatilityCurveConfig::fromXML(): can not derive qualifier from SwapIndexBase ("
+                   << swapIndexBase_ << ")");
+    return tokens[0];
 }
 
 void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
@@ -174,7 +174,7 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
     string bdc = XMLUtils::getChildValue(node, "BusinessDayConvention", true);
     businessDayConvention_ = parseBusinessDayConvention(bdc);
 
-    if(requireSwapIndexBases_ || dimension_ == Dimension::Smile) {
+    if (requireSwapIndexBases_ || dimension_ == Dimension::Smile) {
         shortSwapIndexBase_ = XMLUtils::getChildValue(node, "ShortSwapIndexBase", true);
         swapIndexBase_ = XMLUtils::getChildValue(node, "SwapIndexBase", true);
     }
@@ -182,16 +182,17 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
     // smile data
     if (dimension_ == Dimension::Smile) {
         smileOptionTenors_ = XMLUtils::getChildrenValuesAsStrings(node, "SmileOptionTenors", true);
-        smileUnderlyingTenors_ = XMLUtils::getChildrenValuesAsStrings(node, "Smile" + underlyingLabel_ + "Tenors", true);
+        smileUnderlyingTenors_ =
+            XMLUtils::getChildrenValuesAsStrings(node, "Smile" + underlyingLabel_ + "Tenors", true);
         smileSpreads_ = XMLUtils::getChildrenValuesAsStrings(node, "SmileSpreads", true);
     }
 
     // read qualifier from explicit field
-    if(qualifierLabel_ != "")
+    if (qualifierLabel_ != "")
         qualifier_ = XMLUtils::getChildValue(node, qualifierLabel_, true);
 
     // derive qualifier (=ccy) from swapIndexBase if not given explicitly
-    if(qualifier_ == "")
+    if (qualifier_ == "")
         qualifier_ = ccyFromSwapIndexBase();
 }
 
@@ -199,7 +200,7 @@ XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(rootNodeLabel_);
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-    if(qualifierLabel_ != "")
+    if (qualifierLabel_ != "")
         XMLUtils::addChild(doc, node, qualifierLabel_, qualifier_);
 
     if (dimension_ == Dimension::ATM) {

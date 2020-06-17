@@ -53,8 +53,7 @@ public:
     LgmScenarioGenerator(boost::shared_ptr<QuantExt::LGM> model,
                          boost::shared_ptr<QuantExt::MultiPathGeneratorBase> multiPathGenerator,
                          boost::shared_ptr<ScenarioFactory> scenarioFactory,
-                         boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig, Date today,
-                         DateGrid grid);
+                         boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig, Date today, DateGrid grid);
     //! Destructor
     ~LgmScenarioGenerator(){};
     std::vector<boost::shared_ptr<Scenario>> nextPath();

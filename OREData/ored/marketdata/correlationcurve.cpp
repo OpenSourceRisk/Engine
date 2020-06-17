@@ -161,8 +161,8 @@ void CorrelationCurve::calibrateCMSSpreadCorrelations(
 
     for (Size i = 0; i < prices.size(); i++) {
         boost::shared_ptr<QuantExt::CmsCapHelper> inst = boost::make_shared<QuantExt::CmsCapHelper>(
-            asof, index1, index2, yts, prices[i], correlations[i], optionTenors[i], forwardStart, spotDays,
-            cmsTenor, fixingDays, calendar, dcount, bdc, pricer, cmsPricer);
+            asof, index1, index2, yts, prices[i], correlations[i], optionTenors[i], forwardStart, spotDays, cmsTenor,
+            fixingDays, calendar, dcount, bdc, pricer, cmsPricer);
         instruments.push_back(inst);
     }
 

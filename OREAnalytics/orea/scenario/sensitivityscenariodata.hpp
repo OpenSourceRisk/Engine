@@ -30,15 +30,15 @@
 
 namespace ore {
 namespace analytics {
+using ore::data::XMLNode;
+using ore::data::XMLSerializable;
+using ore::data::XMLUtils;
 using QuantLib::Period;
 using QuantLib::Rate;
-using std::vector;
-using std::string;
-using std::pair;
 using std::map;
-using ore::data::XMLSerializable;
-using ore::data::XMLNode;
-using ore::data::XMLUtils;
+using std::pair;
+using std::string;
+using std::vector;
 
 //! Description of sensitivity shift scenarios
 /*! \ingroup scenario
@@ -205,25 +205,26 @@ protected:
     void volShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const VolShiftData& data) const;
     //@}
 
-    map<string, boost::shared_ptr<CurveShiftData>> discountCurveShiftData_; // key: ccy
-    map<string, boost::shared_ptr<CurveShiftData>> indexCurveShiftData_;    // key: indexName
-    map<string, boost::shared_ptr<CurveShiftData>> yieldCurveShiftData_;    // key: yieldCurveName
-    map<string, SpotShiftData> fxShiftData_;                                // key: ccy pair
+    map<string, boost::shared_ptr<CurveShiftData>> discountCurveShiftData_;     // key: ccy
+    map<string, boost::shared_ptr<CurveShiftData>> indexCurveShiftData_;        // key: indexName
+    map<string, boost::shared_ptr<CurveShiftData>> yieldCurveShiftData_;        // key: yieldCurveName
+    map<string, SpotShiftData> fxShiftData_;                                    // key: ccy pair
     map<string, boost::shared_ptr<CapFloorVolShiftData>> capFloorVolShiftData_; // key: ccy
-    map<string, GenericYieldVolShiftData> swaptionVolShiftData_;            // key: ccy
-    map<string, GenericYieldVolShiftData> yieldVolShiftData_;               // key: securityId
-    map<string, VolShiftData> fxVolShiftData_;                              // key: ccy pair
-    map<string, CdsVolShiftData> cdsVolShiftData_;                          // key: ccy pair
+    map<string, GenericYieldVolShiftData> swaptionVolShiftData_;                // key: ccy
+    map<string, GenericYieldVolShiftData> yieldVolShiftData_;                   // key: securityId
+    map<string, VolShiftData> fxVolShiftData_;                                  // key: ccy pair
+    map<string, CdsVolShiftData> cdsVolShiftData_;                              // key: ccy pair
     map<string, BaseCorrelationShiftData> baseCorrelationShiftData_;
     map<string, boost::shared_ptr<CurveShiftData>> zeroInflationCurveShiftData_; // key: inflation index name
     map<string, boost::shared_ptr<CurveShiftData>> yoyInflationCurveShiftData_;  // key: yoy inflation index name
-    map<string, boost::shared_ptr<CapFloorVolShiftData>> yoyInflationCapFloorVolShiftData_;  // key: inflation index name
-    map<string, boost::shared_ptr<CapFloorVolShiftData>> zeroInflationCapFloorVolShiftData_;  // key: inflation index name
+    map<string, boost::shared_ptr<CapFloorVolShiftData>> yoyInflationCapFloorVolShiftData_; // key: inflation index name
+    map<string, boost::shared_ptr<CapFloorVolShiftData>>
+        zeroInflationCapFloorVolShiftData_; // key: inflation index name
     map<string, string> creditCcys_;
-    map<string, boost::shared_ptr<CurveShiftData>> creditCurveShiftData_;         // key: credit name
-    map<string, SpotShiftData> equityShiftData_;                                  // key: equity name
-    map<string, VolShiftData> equityVolShiftData_;                                // key: equity name
-    map<string, boost::shared_ptr<CurveShiftData>> dividendYieldShiftData_;       // key: equity name
+    map<string, boost::shared_ptr<CurveShiftData>> creditCurveShiftData_;   // key: credit name
+    map<string, SpotShiftData> equityShiftData_;                            // key: equity name
+    map<string, VolShiftData> equityVolShiftData_;                          // key: equity name
+    map<string, boost::shared_ptr<CurveShiftData>> dividendYieldShiftData_; // key: equity name
     map<string, std::string> commodityCurrencies_;
     map<string, boost::shared_ptr<CurveShiftData>> commodityCurveShiftData_;
     map<string, VolShiftData> correlationShiftData_;

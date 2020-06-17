@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 using QuantLib::Handle;
 using QuantLib::YieldTermStructure;
@@ -28,18 +28,16 @@ namespace data {
 
 const string xccyCurveNamePrefix = "__XCCY__";
 
-string xccyCurveName(const string& ccyCode) {
-    return xccyCurveNamePrefix + "-" + ccyCode;
-}
+string xccyCurveName(const string& ccyCode) { return xccyCurveNamePrefix + "-" + ccyCode; }
 
-Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& market,
-    const string& ccyCode, const string& configuration) {
+Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& market, const string& ccyCode,
+                                          const string& configuration) {
     bool dummy;
     return xccyYieldCurve(market, ccyCode, dummy, configuration);
 }
 
-Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& market,
-    const string& ccyCode, bool& outXccyExists, const string& configuration) {
+Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& market, const string& ccyCode,
+                                          bool& outXccyExists, const string& configuration) {
 
     Handle<YieldTermStructure> curve;
     string xccyCurve = xccyCurveName(ccyCode);
@@ -47,8 +45,8 @@ Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& marke
     try {
         curve = market->yieldCurve(xccyCurve, configuration);
     } catch (const Error&) {
-        DLOG("Could not link " << ccyCode << " termstructure to cross currency yield curve " << xccyCurve <<
-            " so just using " << ccyCode << " discount curve.");
+        DLOG("Could not link " << ccyCode << " termstructure to cross currency yield curve " << xccyCurve
+                               << " so just using " << ccyCode << " discount curve.");
         curve = market->discountCurve(ccyCode, configuration);
         outXccyExists = false;
     }
@@ -56,5 +54,5 @@ Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& marke
     return curve;
 }
 
-}
-}
+} // namespace data
+} // namespace ore

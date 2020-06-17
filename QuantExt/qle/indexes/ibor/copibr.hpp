@@ -33,11 +33,11 @@ namespace QuantExt {
 using namespace QuantLib;
 
 //! COP-IBR index
-/*! COP-IBR is used in the COP-IBR-OIS-COMPOUND floating rate as outlined in Supplement number 31 to the 2006 ISDA 
+/*! COP-IBR is used in the COP-IBR-OIS-COMPOUND floating rate as outlined in Supplement number 31 to the 2006 ISDA
     Definitions.
-    
-    COP-IBR is the overnight Colombian Peso money market reference rate <em>Indicador Bancario de Referencia</em> as 
-    determined by the Banco de la Republica de Colombia and published at approximately 11:00 a.m. Bogota time on 
+
+    COP-IBR is the overnight Colombian Peso money market reference rate <em>Indicador Bancario de Referencia</em> as
+    determined by the Banco de la Republica de Colombia and published at approximately 11:00 a.m. Bogota time on
     www.banrep.gov.co/series-estadisticas/see_tas_inter_ibr.htm.
 */
 
@@ -47,6 +47,6 @@ public:
         : OvernightIndex("COP-IBR", 0, COPCurrency(), Colombia(), Actual360(), h) {}
 };
 
-}
+} // namespace QuantExt
 
 #endif

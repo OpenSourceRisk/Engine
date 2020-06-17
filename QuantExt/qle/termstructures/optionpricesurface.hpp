@@ -22,11 +22,11 @@
 
 #pragma once
 
-#include <qle/interpolators/optioninterpolator2d.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/termstructure.hpp>
-#include <ql/time/date.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/time/date.hpp>
+#include <qle/interpolators/optioninterpolator2d.hpp>
 
 namespace QuantExt {
 
@@ -36,12 +36,12 @@ class OptionPriceSurface : public QuantLib::TermStructure,
                            public OptionInterpolator2d<QuantLib::Linear, QuantLib::Linear> {
 
 public:
-    OptionPriceSurface(const QuantLib::Date& referenceDate, 
-        const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes, 
-        const std::vector<QuantLib::Real>& prices, const QuantLib::DayCounter& dayCounter, 
-        const QuantLib::Calendar& calendar = QuantLib::NullCalendar()) : 
-        QuantLib::TermStructure(referenceDate, calendar, dayCounter),
-        OptionInterpolator2d<QuantLib::Linear, QuantLib::Linear>(referenceDate, dayCounter, dates, strikes, prices) {};
+    OptionPriceSurface(const QuantLib::Date& referenceDate, const std::vector<QuantLib::Date>& dates,
+                       const std::vector<QuantLib::Real>& strikes, const std::vector<QuantLib::Real>& prices,
+                       const QuantLib::DayCounter& dayCounter,
+                       const QuantLib::Calendar& calendar = QuantLib::NullCalendar())
+        : QuantLib::TermStructure(referenceDate, calendar, dayCounter),
+          OptionInterpolator2d<QuantLib::Linear, QuantLib::Linear>(referenceDate, dayCounter, dates, strikes, prices){};
 
     //! \name TermStructure interface
     //@{
@@ -52,7 +52,6 @@ public:
 
     QuantLib::Real price(QuantLib::Time t, QuantLib::Real strike) const { return getValue(t, strike); };
     QuantLib::Real price(QuantLib::Date d, QuantLib::Real strike) const { return getValue(d, strike); };
-
 };
 
 } // namespace QuantExt

@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <algorithm>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
-#include <algorithm>
 
 using namespace boost;
 using QuantLib::Size;
@@ -34,8 +34,8 @@ namespace data {
 
 // Returns true if we can build this commodity curve spec with the given yield curve specs and commodity curve specs
 bool canBuild(boost::shared_ptr<CurveSpec>& spec, vector<boost::shared_ptr<YieldCurveSpec>>& yieldSpecs,
-    vector<boost::shared_ptr<CurveSpec>>& commoditySpecs, const CurveConfigurations& curveConfigs,
-    map<string, string>& missingDependents, map<string, string>& errors, bool continueOnError) {
+              vector<boost::shared_ptr<CurveSpec>>& commoditySpecs, const CurveConfigurations& curveConfigs,
+              map<string, string>& missingDependents, map<string, string>& errors, bool continueOnError) {
 
     // Check if we have the commodity curve configuration for the current commodity curve spec
     string curveId = spec->curveConfigID();
@@ -52,7 +52,7 @@ bool canBuild(boost::shared_ptr<CurveSpec>& spec, vector<boost::shared_ptr<Yield
 
     // Get the commodity curve configuration
     boost::shared_ptr<CommodityCurveConfig> curveConfig = curveConfigs.commodityCurveConfig(curveId);
-    
+
     // If it is direct, we can build it so just return true
     if (curveConfig->type() == CommodityCurveConfig::Type::Direct) {
         missingDependents[curveId] = "";
@@ -62,34 +62,36 @@ bool canBuild(boost::shared_ptr<CurveSpec>& spec, vector<boost::shared_ptr<Yield
     // If it is cross currency type, need to check the two yield curves.
     if (curveConfig->type() == CommodityCurveConfig::Type::CrossCurrency) {
 
-        // 1. check if we have the base yield curve 
-        auto ycIt = find_if(yieldSpecs.begin(), yieldSpecs.end(),
-            [&curveConfig](const boost::shared_ptr<YieldCurveSpec>& ycs) {
-            return ycs->curveConfigID() == curveConfig->baseYieldCurveId(); });
+        // 1. check if we have the base yield curve
+        auto ycIt =
+            find_if(yieldSpecs.begin(), yieldSpecs.end(), [&curveConfig](const boost::shared_ptr<YieldCurveSpec>& ycs) {
+                return ycs->curveConfigID() == curveConfig->baseYieldCurveId();
+            });
         if (ycIt == yieldSpecs.end()) {
             DLOG("Required yield curve " << curveConfig->baseYieldCurveId() << " for " << curveId << " not available");
             missingDependents[curveId] = curveConfig->baseYieldCurveId();
             return false;
         }
 
-        // 2. check if we have the commodity curve currency yield curve 
-        ycIt = find_if(yieldSpecs.begin(), yieldSpecs.end(),
-            [&curveConfig](const boost::shared_ptr<YieldCurveSpec>& ycs) {
-            return ycs->curveConfigID() == curveConfig->yieldCurveId(); });
+        // 2. check if we have the commodity curve currency yield curve
+        ycIt =
+            find_if(yieldSpecs.begin(), yieldSpecs.end(), [&curveConfig](const boost::shared_ptr<YieldCurveSpec>& ycs) {
+                return ycs->curveConfigID() == curveConfig->yieldCurveId();
+            });
         if (ycIt == yieldSpecs.end()) {
             DLOG("Required yield curve " << curveConfig->yieldCurveId() << " for " << curveId << " not available");
             missingDependents[curveId] = curveConfig->yieldCurveId();
             return false;
         }
-
     }
 
     // If it is cross currency or basis type, need to check the base price curve.
 
     // 3. check if we already have the base commodity curve
-    auto it = find_if(commoditySpecs.begin(), commoditySpecs.end(),
-        [&curveConfig](const boost::shared_ptr<CurveSpec>& cs) {
-        return cs->curveConfigID() == curveConfig->basePriceCurveId(); });
+    auto it =
+        find_if(commoditySpecs.begin(), commoditySpecs.end(), [&curveConfig](const boost::shared_ptr<CurveSpec>& cs) {
+            return cs->curveConfigID() == curveConfig->basePriceCurveId();
+        });
     if (it == commoditySpecs.end()) {
         DLOG("Required commodity curve " << curveConfig->basePriceCurveId() << " for " << curveId << " not available");
         missingDependents[curveId] = curveConfig->basePriceCurveId();
@@ -103,9 +105,9 @@ bool canBuild(boost::shared_ptr<CurveSpec>& spec, vector<boost::shared_ptr<Yield
 
 // Returns true if we can build this commodity volatility curve spec with the given commodity volatility curve specs
 // This is solely to account for commodity volatility structures that depend on other commodity volatility structures.
-bool canBuild(boost::shared_ptr<CurveSpec>& spec, vector<boost::shared_ptr<CurveSpec>>& cvSpecs, 
-    const CurveConfigurations& curveConfigs, map<string, string>& missingDependents, map<string, string>& errors,
-    bool continueOnError) {
+bool canBuild(boost::shared_ptr<CurveSpec>& spec, vector<boost::shared_ptr<CurveSpec>>& cvSpecs,
+              const CurveConfigurations& curveConfigs, map<string, string>& missingDependents,
+              map<string, string>& errors, bool continueOnError) {
 
     // Check if we have the commodity volatility curve configuration for the current commodity curve spec
     string curveId = spec->curveConfigID();
@@ -123,7 +125,7 @@ bool canBuild(boost::shared_ptr<CurveSpec>& spec, vector<boost::shared_ptr<Curve
     // Get the commodity curve configuration
     auto cvConfig = curveConfigs.commodityVolatilityConfig(curveId);
 
-    // Currently, the only surface we have to check is the ApoFutureSurface as it is the only one that depends on 
+    // Currently, the only surface we have to check is the ApoFutureSurface as it is the only one that depends on
     // another commodity volatility surface.
     if (auto vapo = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(cvConfig->volatilityConfig())) {
 
@@ -132,10 +134,12 @@ bool canBuild(boost::shared_ptr<CurveSpec>& spec, vector<boost::shared_ptr<Curve
 
         // Check if we already have the base commodity volatility surface.
         auto it = find_if(cvSpecs.begin(), cvSpecs.end(), [&vSpec](const boost::shared_ptr<CurveSpec>& cs) {
-            return cs->curveConfigID() == vSpec->curveConfigID(); });
-        
+            return cs->curveConfigID() == vSpec->curveConfigID();
+        });
+
         if (it == cvSpecs.end()) {
-            DLOG("Required commodity volatility curve " << vSpec->curveConfigID() << " for " << curveId << " not available");
+            DLOG("Required commodity volatility curve " << vSpec->curveConfigID() << " for " << curveId
+                                                        << " not available");
             missingDependents[curveId] = vSpec->curveConfigID();
             return false;
         }
@@ -147,20 +151,23 @@ bool canBuild(boost::shared_ptr<CurveSpec>& spec, vector<boost::shared_ptr<Curve
 
 // Order the commodity curve specs
 // We assume that curveSpecs have already been ordered here via the top level order function below
-void orderCommodity(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, vector<boost::shared_ptr<YieldCurveSpec>>& ycSpecs,
-    const CurveConfigurations& curveConfigs, map<string, string>& errors, bool continueOnError) {
+void orderCommodity(vector<boost::shared_ptr<CurveSpec>>& curveSpecs,
+                    vector<boost::shared_ptr<YieldCurveSpec>>& ycSpecs, const CurveConfigurations& curveConfigs,
+                    map<string, string>& errors, bool continueOnError) {
 
     // Get iterator to the first commodity curve spec in curveSpecs, if there is one
-    auto firstCommIt = find_if(curveSpecs.begin(), curveSpecs.end(), 
-        [](const boost::shared_ptr<CurveSpec>& cs) { return cs->baseType() == CurveSpec::CurveType::Commodity; });
+    auto firstCommIt = find_if(curveSpecs.begin(), curveSpecs.end(), [](const boost::shared_ptr<CurveSpec>& cs) {
+        return cs->baseType() == CurveSpec::CurveType::Commodity;
+    });
 
     // If no commodity curve specs, there is nothing to do
     if (firstCommIt == curveSpecs.end())
         return;
 
     // Get iterator to the last commodity curve spec in curveSpecs
-    auto lastCommRit = find_if(curveSpecs.rbegin(), curveSpecs.rend(),
-        [](const boost::shared_ptr<CurveSpec>& cs) { return cs->baseType() == CurveSpec::CurveType::Commodity; });
+    auto lastCommRit = find_if(curveSpecs.rbegin(), curveSpecs.rend(), [](const boost::shared_ptr<CurveSpec>& cs) {
+        return cs->baseType() == CurveSpec::CurveType::Commodity;
+    });
     auto lastCommIt = lastCommRit.base();
 
     // Remove the commodity curve specs from the curveSpecs for ordering
@@ -182,7 +189,8 @@ void orderCommodity(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, vector<boo
         // Check each curve remaining in cvCurveSpecs
         auto it = commCurveSpecs.begin();
         while (it != commCurveSpecs.end()) {
-            if (canBuild(*it, ycSpecs, orderedCommCurveSpecs, curveConfigs, missingDependents, errors, continueOnError)) {
+            if (canBuild(*it, ycSpecs, orderedCommCurveSpecs, curveConfigs, missingDependents, errors,
+                         continueOnError)) {
                 DLOG("Can build " << (*it)->curveConfigID());
                 orderedCommCurveSpecs.push_back(*it);
                 it = commCurveSpecs.erase(it);
@@ -211,25 +219,28 @@ void orderCommodity(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, vector<boo
     curveSpecs.insert(firstCommIt, orderedCommCurveSpecs.begin(), orderedCommCurveSpecs.end());
 }
 
-// TODO: align all of this logic instead of having all of these copy/paste functions. There was a ticket where this 
+// TODO: align all of this logic instead of having all of these copy/paste functions. There was a ticket where this
 //       was done via Boost Graph in a more succint way.
 
 // Order the commodity volatility curve specs
 // We assume that curveSpecs have already been ordered here via the top level order function below
 void orderCommodityVolatilities(vector<boost::shared_ptr<CurveSpec>>& curveSpecs,
-    const CurveConfigurations& curveConfigs, map<string, string>& errors, bool continueOnError) {
+                                const CurveConfigurations& curveConfigs, map<string, string>& errors,
+                                bool continueOnError) {
 
     // Get iterator to the first commodity volatility curve spec in curveSpecs, if there is one.
-    auto firstCommIt = find_if(curveSpecs.begin(), curveSpecs.end(), [](const boost::shared_ptr<CurveSpec>& cs) 
-        { return cs->baseType() == CurveSpec::CurveType::CommodityVolatility; });
+    auto firstCommIt = find_if(curveSpecs.begin(), curveSpecs.end(), [](const boost::shared_ptr<CurveSpec>& cs) {
+        return cs->baseType() == CurveSpec::CurveType::CommodityVolatility;
+    });
 
     // If no commodity volatility curve specs, there is nothing to do
     if (firstCommIt == curveSpecs.end())
         return;
 
     // Get iterator to the last commodity volatility curve spec in curveSpecs
-    auto lastCommRit = find_if(curveSpecs.rbegin(), curveSpecs.rend(), [](const boost::shared_ptr<CurveSpec>& cs) 
-        { return cs->baseType() == CurveSpec::CurveType::CommodityVolatility; });
+    auto lastCommRit = find_if(curveSpecs.rbegin(), curveSpecs.rend(), [](const boost::shared_ptr<CurveSpec>& cs) {
+        return cs->baseType() == CurveSpec::CurveType::CommodityVolatility;
+    });
     auto lastCommIt = lastCommRit.base();
 
     // Remove the commodity volatility curve specs from the curveSpecs for ordering
@@ -282,8 +293,8 @@ void orderCommodityVolatilities(vector<boost::shared_ptr<CurveSpec>>& curveSpecs
 
 // Returns true if we can build this YieldCurveSpec with the given curve specs
 static bool canBuild(boost::shared_ptr<CurveSpec>& evcs, vector<boost::shared_ptr<EquityVolatilityCurveSpec>>& specs,
-    const CurveConfigurations& curveConfigs, map<string, string>& missingDependents,
-    map<string, string>& errors, bool continueOnError) {
+                     const CurveConfigurations& curveConfigs, map<string, string>& missingDependents,
+                     map<string, string>& errors, bool continueOnError) {
 
     string curveId = evcs->curveConfigID();
     if (!curveConfigs.hasEquityVolCurveConfig(curveId)) {
@@ -304,7 +315,8 @@ static bool canBuild(boost::shared_ptr<CurveSpec>& evcs, vector<boost::shared_pt
 
         // Check if we already have the base commodity volatility surface.
         auto it = find_if(specs.begin(), specs.end(), [&proxy](const boost::shared_ptr<EquityVolatilityCurveSpec>& cs) {
-            return cs->curveConfigID() == proxy; });
+            return cs->curveConfigID() == proxy;
+        });
 
         if (it == specs.end()) {
             DLOG("Required equity volatility curve " << proxy << " for " << curveId << " not available");
@@ -312,7 +324,7 @@ static bool canBuild(boost::shared_ptr<CurveSpec>& evcs, vector<boost::shared_pt
             return false;
         }
     }
- 
+
     // We can build everything required
     missingDependents[curveId] = "";
     return true;
@@ -320,20 +332,22 @@ static bool canBuild(boost::shared_ptr<CurveSpec>& evcs, vector<boost::shared_pt
 
 // Order the equity volatility curve specs
 // We assume that curveSpecs have already been ordered here via the top level order function below
-void orderEquityVolatilities(vector<boost::shared_ptr<CurveSpec>>& curveSpecs,
-    const CurveConfigurations& curveConfigs, map<string, string>& errors, bool continueOnError) {
+void orderEquityVolatilities(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigurations& curveConfigs,
+                             map<string, string>& errors, bool continueOnError) {
 
     // Get iterator to the first equity volatility curve spec in curveSpecs, if there is one.
-    auto firstEqIt = find_if(curveSpecs.begin(), curveSpecs.end(), [](const boost::shared_ptr<CurveSpec>& cs)
-    { return cs->baseType() == CurveSpec::CurveType::EquityVolatility; });
+    auto firstEqIt = find_if(curveSpecs.begin(), curveSpecs.end(), [](const boost::shared_ptr<CurveSpec>& cs) {
+        return cs->baseType() == CurveSpec::CurveType::EquityVolatility;
+    });
 
     // If no equity volatility curve specs, there is nothing to do
     if (firstEqIt == curveSpecs.end())
         return;
 
     // Get iterator to the last equity volatility curve spec in curveSpecs
-    auto lastEqRit = find_if(curveSpecs.rbegin(), curveSpecs.rend(), [](const boost::shared_ptr<CurveSpec>& cs)
-    { return cs->baseType() == CurveSpec::CurveType::EquityVolatility; });
+    auto lastEqRit = find_if(curveSpecs.rbegin(), curveSpecs.rend(), [](const boost::shared_ptr<CurveSpec>& cs) {
+        return cs->baseType() == CurveSpec::CurveType::EquityVolatility;
+    });
     auto lastEqIt = lastEqRit.base();
 
     // Remove the equity volatility curve specs from the curveSpecs for ordering

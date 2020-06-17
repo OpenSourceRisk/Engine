@@ -20,10 +20,10 @@
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
-#include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/builders/commodityforward.hpp>
@@ -82,7 +82,7 @@ EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, co
                              const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
                              const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders,
                              const boost::shared_ptr<ReferenceDataManager>& referenceData)
-    : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData){
+    : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData) {
     LOG("Building EngineFactory");
 
     addDefaultBuilders();

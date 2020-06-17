@@ -23,9 +23,9 @@
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 
 using QuantExt::CrossCcySwapEngine;
-using QuantLib::YieldTermStructure;
-using QuantLib::FixedRateCoupon;
 using QuantLib::close;
+using QuantLib::FixedRateCoupon;
+using QuantLib::YieldTermStructure;
 
 namespace QuantExt {
 

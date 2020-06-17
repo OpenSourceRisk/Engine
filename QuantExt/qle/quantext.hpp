@@ -2,7 +2,7 @@
 // Do not edit
 
 #ifdef BOOST_MSVC
-#  include <qle/auto_link.hpp>
+#include <qle/auto_link.hpp>
 #endif
 
 #include <qle/calendars/austria.hpp>

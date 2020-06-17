@@ -24,18 +24,11 @@ using QuantLib::Date;
 using QuantLib::Time;
 
 namespace QuantExt {
-    
-    Date::serial_type Actual364::Impl::dayCount(const Date& d1,
-                                                const Date& d2) const {
-        return d2 - d1;
-    }
 
-    Time Actual364::Impl::yearFraction(const Date& d1,
-                                       const Date& d2,
-                                       const Date&,
-                                       const Date&) const {
-        return daysBetween(d1, d2) / 364.0;
-    }
+Date::serial_type Actual364::Impl::dayCount(const Date& d1, const Date& d2) const { return d2 - d1; }
 
+Time Actual364::Impl::yearFraction(const Date& d1, const Date& d2, const Date&, const Date&) const {
+    return daysBetween(d1, d2) / 364.0;
 }
 
+} // namespace QuantExt

@@ -55,7 +55,7 @@ bool Spain::SettlementImpl::isBusinessDay(const Date& date) const {
         || (d == 8 && m == December)
         // Christmas
         || (d == 25 && m == December))
-        
+
         return false;
     return true;
 }

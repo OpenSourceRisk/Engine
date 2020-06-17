@@ -28,26 +28,16 @@ namespace data {
 
 CommodityVolatilityConfig::CommodityVolatilityConfig() {}
 
-CommodityVolatilityConfig::CommodityVolatilityConfig(
-    const string& curveId,
-    const string& curveDescription,
-    const std::string& currency,
-    const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
-    const string& dayCounter,
-    const string& calendar,
-    const std::string& futureConventionsId,
-    QuantLib::Natural optionExpiryRollDays,
-    const std::string& priceCurveId,
-    const std::string& yieldCurveId)
-    : CurveConfig(curveId, curveDescription),
-      currency_(currency),
-      volatilityConfig_(volatilityConfig),
-      dayCounter_(dayCounter),
-      calendar_(calendar),
-      futureConventionsId_(futureConventionsId),
-      optionExpiryRollDays_(optionExpiryRollDays),
-      priceCurveId_(priceCurveId),
-      yieldCurveId_(yieldCurveId) {
+CommodityVolatilityConfig::CommodityVolatilityConfig(const string& curveId, const string& curveDescription,
+                                                     const std::string& currency,
+                                                     const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                                                     const string& dayCounter, const string& calendar,
+                                                     const std::string& futureConventionsId,
+                                                     QuantLib::Natural optionExpiryRollDays,
+                                                     const std::string& priceCurveId, const std::string& yieldCurveId)
+    : CurveConfig(curveId, curveDescription), currency_(currency), volatilityConfig_(volatilityConfig),
+      dayCounter_(dayCounter), calendar_(calendar), futureConventionsId_(futureConventionsId),
+      optionExpiryRollDays_(optionExpiryRollDays), priceCurveId_(priceCurveId), yieldCurveId_(yieldCurveId) {
     populateQuotes();
 }
 
@@ -123,7 +113,7 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
-    
+
     XMLNode* n = volatilityConfig_->toXML(doc);
     XMLUtils::appendNode(node, n);
 
@@ -136,15 +126,15 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "PriceCurveId", priceCurveId_);
     if (!yieldCurveId_.empty())
         XMLUtils::addChild(doc, node, "YieldCurveId", yieldCurveId_);
-    
+
     return node;
 }
 
 void CommodityVolatilityConfig::populateQuotes() {
-    
+
     // The quotes depend on the type of volatility structure that has been configured.
     if (auto vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(volatilityConfig_)) {
-        quotes_ = { vc->quote() };
+        quotes_ = {vc->quote()};
     } else if (auto vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(volatilityConfig_)) {
         quotes_ = vc->quotes();
     } else if (auto vc = boost::dynamic_pointer_cast<VolatilitySurfaceConfig>(volatilityConfig_)) {
@@ -159,5 +149,5 @@ void CommodityVolatilityConfig::populateQuotes() {
     }
 }
 
-}
-}
+} // namespace data
+} // namespace ore

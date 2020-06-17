@@ -27,8 +27,8 @@
 #include <ql/termstructures/volatility/optionlet/optionletstripper.hpp>
 
 using namespace QuantLib;
-using std::min;
 using std::max;
+using std::min;
 using std::vector;
 
 namespace QuantExt {
@@ -61,7 +61,7 @@ boost::shared_ptr<SmileSection> StrippedOptionletAdapter2::smileSectionImpl(Time
 }
 
 Volatility StrippedOptionletAdapter2::volatilityImpl(Time length, Rate strike) const {
-    
+
     calculate();
 
     vector<Volatility> vol(nInterpolations_);

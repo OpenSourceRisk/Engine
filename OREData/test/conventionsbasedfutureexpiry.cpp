@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
+#include <boost/test/unit_test.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/toplevelfixture.hpp>
 
@@ -35,14 +35,9 @@ namespace bdata = boost::unit_test::data;
 namespace {
 
 // List of commodity names for data test case below
-vector<string> commodityNames = {
-    "ice_brent",
-    "ice_brent_old",
-    "nymex_cl",
-    "ice_cig_basis"
-};
+vector<string> commodityNames = {"ice_brent", "ice_brent_old", "nymex_cl", "ice_cig_basis"};
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
@@ -67,9 +62,9 @@ BOOST_DATA_TEST_CASE(testExpiryDates, bdata::make(commodityNames), commodityName
     filename = commodityName + "_expiries.csv";
     CSVFileReader reader(TEST_INPUT_FILE(filename), true, ",");
     BOOST_REQUIRE_EQUAL(reader.numberOfColumns(), 3);
-    
+
     while (reader.next()) {
-        
+
         // Get the contract date and the expected expiry date from the file
         Date contractDate = parseDate(reader.get(0));
         Date expExpiryDate = parseDate(reader.get(1));
@@ -93,7 +88,6 @@ BOOST_DATA_TEST_CASE(testExpiryDates, bdata::make(commodityNames), commodityName
             BOOST_CHECK_EQUAL(expOptionExpiry, optionExpiry);
         }
     }
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

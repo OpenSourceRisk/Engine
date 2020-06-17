@@ -12,58 +12,44 @@
 
 #include <ql/cashflow.hpp>
 #include <ql/patterns/visitor.hpp>
+#include <ql/time/schedule.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
-#include <ql/time/schedule.hpp>
 
 namespace QuantExt {
 
 /*! Cash flow dependent on the average of commodity spot prices or futures settlement prices over a period.
-    
-    The cash flow takes a start date and an end date. The set of valid pricing dates is determined from and including 
-    the start date to but excluding the end date. The cash flow amount is then the arithmetic average of the commodity 
-    spot prices or next commodity future settlement prices on each valid pricing date times the quantity. The next 
-    commodity future is determined relative to each pricing date so the settlement prices for multiple commodity 
+
+    The cash flow takes a start date and an end date. The set of valid pricing dates is determined from and including
+    the start date to but excluding the end date. The cash flow amount is then the arithmetic average of the commodity
+    spot prices or next commodity future settlement prices on each valid pricing date times the quantity. The next
+    commodity future is determined relative to each pricing date so the settlement prices for multiple commodity
     contracts may be involved in the averaging.
 */
 class CommodityIndexedAverageCashFlow : public CashFlow, public Observer {
 
 public:
     //! Constructor taking an explicit \p paymentDate
-    CommodityIndexedAverageCashFlow(QuantLib::Real quantity,
-        const QuantLib::Date& startDate,
-        const QuantLib::Date& endDate,
-        const QuantLib::Date& paymentDate,
-        const ext::shared_ptr<CommoditySpotIndex>& spotIndex,
-        const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(),
-        QuantLib::Real spread = 0.0,
-        QuantLib::Real gearing = 1.0,
-        bool useFuturePrice = false,
-        QuantLib::Natural deliveryDateRoll = 0,
-        QuantLib::Natural futureMonthOffset = 0,
-        const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
-        bool includeEndDate = true,
-        bool excludeStartDate = true);
+    CommodityIndexedAverageCashFlow(QuantLib::Real quantity, const QuantLib::Date& startDate,
+                                    const QuantLib::Date& endDate, const QuantLib::Date& paymentDate,
+                                    const ext::shared_ptr<CommoditySpotIndex>& spotIndex,
+                                    const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(),
+                                    QuantLib::Real spread = 0.0, QuantLib::Real gearing = 1.0,
+                                    bool useFuturePrice = false, QuantLib::Natural deliveryDateRoll = 0,
+                                    QuantLib::Natural futureMonthOffset = 0,
+                                    const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
+                                    bool includeEndDate = true, bool excludeStartDate = true);
 
     //! Constructor that deduces payment date from \p endDate using payment conventions
-    CommodityIndexedAverageCashFlow(QuantLib::Real quantity,
-        const QuantLib::Date& startDate,
-        const QuantLib::Date& endDate,
-        QuantLib::Natural paymentLag,
-        QuantLib::Calendar paymentCalendar,
-        QuantLib::BusinessDayConvention paymentConvention,
-        const ext::shared_ptr<CommoditySpotIndex>& spotIndex,
-        const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(),
-        QuantLib::Real spread = 0.0,
-        QuantLib::Real gearing = 1.0,
-        bool payInAdvance = false,
-        bool useFuturePrice = false,
-        QuantLib::Natural deliveryDateRoll = 0,
-        QuantLib::Natural futureMonthOffset = 0,
-        const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
-        bool includeEndDate = true,
-        bool excludeStartDate = true,
-        const QuantLib::Date& paymentDateOverride = Date());
+    CommodityIndexedAverageCashFlow(
+        QuantLib::Real quantity, const QuantLib::Date& startDate, const QuantLib::Date& endDate,
+        QuantLib::Natural paymentLag, QuantLib::Calendar paymentCalendar,
+        QuantLib::BusinessDayConvention paymentConvention, const ext::shared_ptr<CommoditySpotIndex>& spotIndex,
+        const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(), QuantLib::Real spread = 0.0,
+        QuantLib::Real gearing = 1.0, bool payInAdvance = false, bool useFuturePrice = false,
+        QuantLib::Natural deliveryDateRoll = 0, QuantLib::Natural futureMonthOffset = 0,
+        const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr, bool includeEndDate = true,
+        bool excludeStartDate = true, const QuantLib::Date& paymentDateOverride = Date());
 
     //! \name Inspectors
     //@{
@@ -78,10 +64,10 @@ public:
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
 
     /*! Return the index used to get the price for each pricing date in the period. The map keys are the pricing dates.
-        For a given key date, the map value holds the commodity index used to give the price on that date. If the 
-        averaging does not reference future contract settlement prices, i.e. \c useFirstFuture() is \c false, the 
-        commodity index is simply the commodity spot index passed in the constructor. If the averaging references 
-        future contract settlement prices, i.e. \c useFirstFuture() is \c true, the commodity index is the commodity 
+        For a given key date, the map value holds the commodity index used to give the price on that date. If the
+        averaging does not reference future contract settlement prices, i.e. \c useFirstFuture() is \c false, the
+        commodity index is simply the commodity spot index passed in the constructor. If the averaging references
+        future contract settlement prices, i.e. \c useFirstFuture() is \c true, the commodity index is the commodity
         future contract \em index relevant for that pricing date.
     */
     const std::map<QuantLib::Date, ext::shared_ptr<CommodityIndex> > indices() const { return indices_; }
@@ -146,7 +132,8 @@ public:
     CommodityIndexedAverageLeg& useFuturePrice(bool flag = false);
     CommodityIndexedAverageLeg& withDeliveryDateRoll(QuantLib::Natural deliveryDateRoll);
     CommodityIndexedAverageLeg& withFutureMonthOffset(QuantLib::Natural futureMonthOffset);
-    CommodityIndexedAverageLeg& withFutureExpiryCalculator(const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr);
+    CommodityIndexedAverageLeg&
+    withFutureExpiryCalculator(const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr);
     CommodityIndexedAverageLeg& payAtMaturity(bool flag = false);
     CommodityIndexedAverageLeg& includeEndDate(bool flag = true);
     CommodityIndexedAverageLeg& excludeStartDate(bool flag = true);
@@ -179,6 +166,6 @@ private:
     std::vector<QuantLib::Date> paymentDates_;
 };
 
-}
+} // namespace QuantExt
 
 #endif

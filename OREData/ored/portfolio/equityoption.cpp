@@ -46,8 +46,9 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
     // LOG the volatility if the trade expiry date is in the future.
     if (expiryDate_ > Settings::instance().evaluationDate()) {
-        DLOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with expiry " << expiryDate_ <<
-            " and strike " << strike_ << " is " << market->equityVol(assetName_)->blackVol(expiryDate_, strike_));
+        DLOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with expiry " << expiryDate_
+                                << " and strike " << strike_ << " is "
+                                << market->equityVol(assetName_)->blackVol(expiryDate_, strike_));
     }
 }
 
@@ -80,7 +81,7 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
 }
 
 std::map<AssetClass, std::set<std::string>> EquityOption::underlyingIndices() const {
-    return { {AssetClass::EQ, std::set<std::string>({equityName()})} };
+    return {{AssetClass::EQ, std::set<std::string>({equityName()})}};
 }
 
 } // namespace data

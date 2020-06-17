@@ -16,16 +16,16 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <oret/datapaths.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
@@ -147,24 +147,22 @@ namespace {
 // We have a set of files under ars_in_usd/failing and a set under ars_in_usd/passing:
 // - failing: has the old QuantLib::IterativeBootstrap parameters i.e. 1 attempt with hard bounds
 // - passing: has the default QuantExt::IterativeBootstrap parameters i.e. 5 attempts with widening bounds
-vector<string> curveConfigFiles = {
-    "discount_linear.xml",
-    "discount_loglinear.xml",
-    "discount_natural_cubic.xml",
-    "discount_financial_cubic.xml",
-    "zero_linear.xml",
-    "zero_natural_cubic.xml",
-    "zero_financial_cubic.xml",
-    "forward_linear.xml",
-    "forward_natural_cubic.xml",
-    "forward_financial_cubic.xml",
-    "forward_convex_monotone.xml"
-};
+vector<string> curveConfigFiles = {"discount_linear.xml",
+                                   "discount_loglinear.xml",
+                                   "discount_natural_cubic.xml",
+                                   "discount_financial_cubic.xml",
+                                   "zero_linear.xml",
+                                   "zero_natural_cubic.xml",
+                                   "zero_financial_cubic.xml",
+                                   "forward_linear.xml",
+                                   "forward_natural_cubic.xml",
+                                   "forward_financial_cubic.xml",
+                                   "forward_convex_monotone.xml"};
 
 // Construct and hold the arguments needed to construct a TodaysMarket.
 struct TodaysMarketArguments {
     TodaysMarketArguments(const string& inputDir, const string& curveConfigFile) {
-        
+
         asof = Date(25, Sep, 2019);
         Settings::instance().evaluationDate() = asof;
 
@@ -189,9 +187,9 @@ struct TodaysMarketArguments {
     CSVLoader loader;
 };
 
-// Used to check that the exception message contains the expected message string, expMsg. 
+// Used to check that the exception message contains the expected message string, expMsg.
 struct ExpErrorPred {
-    
+
     ExpErrorPred(const string& msg) : expMsg(msg) {}
 
     bool operator()(const Error& ex) {
@@ -202,7 +200,7 @@ struct ExpErrorPred {
     string expMsg;
 };
 
-}
+} // namespace
 
 // Test ARS-IN-USD failures using the old QuantLib::IterativeBootstrap parameters
 BOOST_DATA_TEST_CASE(testBootstrapARSinUSDFailures, bdata::make(curveConfigFiles), curveConfigFile) {
@@ -212,9 +210,10 @@ BOOST_DATA_TEST_CASE(testBootstrapARSinUSDFailures, bdata::make(curveConfigFiles
     TodaysMarketArguments tma("ars_in_usd", "failing/" + curveConfigFile);
 
     boost::shared_ptr<TodaysMarket> todaysMarket;
-    BOOST_CHECK_EXCEPTION(todaysMarket = boost::make_shared<TodaysMarket>(tma.asof,
-        tma.todaysMarketParameters, tma.loader, tma.curveConfigs, tma.conventions, false, false), Error,
-        ExpErrorPred("yield curve building failed for curve ARS-IN-USD"));
+    BOOST_CHECK_EXCEPTION(todaysMarket =
+                              boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
+                                                               tma.curveConfigs, tma.conventions, false, false),
+                          Error, ExpErrorPred("yield curve building failed for curve ARS-IN-USD"));
 }
 
 // Test ARS-IN-USD passes using the new QuantExt::IterativeBootstrap parameters
@@ -225,9 +224,10 @@ BOOST_DATA_TEST_CASE(testBootstrapARSinUSDPasses, bdata::make(curveConfigFiles),
     TodaysMarketArguments tma("ars_in_usd", "passing/" + curveConfigFile);
 
     boost::shared_ptr<TodaysMarket> todaysMarket;
-    BOOST_REQUIRE_NO_THROW(todaysMarket = boost::make_shared<TodaysMarket>(tma.asof,
-        tma.todaysMarketParameters, tma.loader, tma.curveConfigs, tma.conventions, false, false));
-    
+    BOOST_REQUIRE_NO_THROW(todaysMarket =
+                               boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
+                                                                tma.curveConfigs, tma.conventions, false, false));
+
     Handle<YieldTermStructure> yts = todaysMarket->discountCurve("ARS");
     BOOST_TEST_MESSAGE("Discount: " << std::fixed << std::setprecision(14) << yts->discount(1.0));
 }
