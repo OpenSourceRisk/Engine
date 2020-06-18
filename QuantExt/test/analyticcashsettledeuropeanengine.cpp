@@ -17,8 +17,10 @@
 */
 
 #include "toplevelfixture.hpp"
-#include <boost/test/data/test_case.hpp>
+// clang-format off
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+// clang-format on
 #include <ql/currencies/america.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/quotes/simplequote.hpp>
