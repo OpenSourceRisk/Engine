@@ -1714,14 +1714,15 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 LOG("Simulating commodity volatilites for "
                                     << name << " using BlackVarianceSurfaceMoneynessSpot.");
                                 bool stickyStrike = true;
+                                bool flatExtrapMoneyness = true;
                                 newVol =
                                     Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceSurfaceMoneynessSpot>(
                                         baseVol->calendar(), spot, expiryTimes, moneyness, quotes, dayCounter,
-                                        stickyStrike));
+                                        stickyStrike, flatExtrapMoneyness));
                             }
 
                         } else {
-                            string decayModeString = parameters->equityVolDecayMode();
+                            string decayModeString = parameters->commodityVolDecayMode();
                             DLOG("Deterministic commodity volatilities with decay mode " << decayModeString << " for "
                                                                                          << name);
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
