@@ -24,8 +24,8 @@
 #define quantext_correlation_term_structure_hpp
 
 #include <ql/math/comparison.hpp>
-#include <ql/termstructure.hpp>
 #include <ql/quote.hpp>
+#include <ql/termstructure.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -91,6 +91,7 @@ public:
     Real value() const override;
     bool isValid() const override;
     void update() override;
+
 private:
     Handle<CorrelationTermStructure> correlation_;
     const Time t_;

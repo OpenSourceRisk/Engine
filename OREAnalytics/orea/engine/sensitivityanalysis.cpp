@@ -28,8 +28,8 @@
 #include <ql/instruments/forwardrateagreement.hpp>
 #include <ql/instruments/makeois.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
-#include <ql/math/solvers1d/newtonsafe.hpp>
 #include <ql/math/comparison.hpp>
+#include <ql/math/solvers1d/newtonsafe.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
@@ -57,13 +57,13 @@ SensitivityAnalysis::SensitivityAnalysis(
     const bool recalibrateModels, const CurveConfigurations& curveConfigs,
     const TodaysMarketParameters& todaysMarketParams, const bool nonShiftedBaseCurrencyConversion,
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
-    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders, 
+    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
     const boost::shared_ptr<ReferenceDataManager>& referenceData, const bool continueOnError, bool xccyDiscounting)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
       recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
-      extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders), referenceData_(referenceData), 
+      extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders), referenceData_(referenceData),
       continueOnError_(continueOnError), engineData_(engineData), portfolio_(portfolio),
       xccyDiscounting_(xccyDiscounting), initialized_(false), computed_(false) {}
 
@@ -120,9 +120,9 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
 void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact) {
 
     LOG("Initialise sim market for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
-        << ")");
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_, curveConfigs_, todaysMarketParams_, 
-        continueOnError_);
+                                                                           << ")");
+    simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_,
+                                                       curveConfigs_, todaysMarketParams_, continueOnError_);
 
     LOG("Sim market initialised for sensitivity analysis");
 
@@ -147,8 +147,8 @@ SensitivityAnalysis::buildFactory(const std::vector<boost::shared_ptr<EngineBuil
                                   const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders) const {
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = marketConfiguration_;
-    boost::shared_ptr<EngineFactory> factory =
-        boost::make_shared<EngineFactory>(engineData_, simMarket_, configurations, extraBuilders, extraLegBuilders, referenceData_);
+    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
+        engineData_, simMarket_, configurations, extraBuilders, extraLegBuilders, referenceData_);
     return factory;
 }
 
@@ -444,7 +444,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             Period p_exp = expiries[expIdx];
             Size strIdx = keyIdx % strikes.size();
             Real strike = strikes[strIdx];
-            Handle<CPIVolatilitySurface> vts = simMarket->cpiInflationCapFloorVolatilitySurface(name, marketConfiguration);
+            Handle<CPIVolatilitySurface> vts =
+                simMarket->cpiInflationCapFloorVolatilitySurface(name, marketConfiguration);
             Real vol = vts->volatility(p_exp, strike, vts->observationLag());
             shiftMult = vol;
         }

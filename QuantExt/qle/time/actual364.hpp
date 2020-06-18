@@ -27,30 +27,26 @@
 
 namespace QuantExt {
 
-    //! Actual364 day counter 
-    /*! This day counter computes a day count fraction using 
-        364 base days.
+//! Actual364 day counter
+/*! This day counter computes a day count fraction using
+    364 base days.
 
-        \ingroup daycounters
-    */
-    class Actual364 : public QuantLib::DayCounter {
-      public:
-        Actual364()
-        : QuantLib::DayCounter(boost::shared_ptr<DayCounter::Impl>(
-                                             new Actual364::Impl())){}
-      private:
-        class Impl : public DayCounter::Impl {
-          public:
-            std::string name() const { return "Actual/364"; }
-            QuantLib::Date::serial_type dayCount(const QuantLib::Date& d1,
-						 const QuantLib::Date& d2) const;
-	    QuantLib::Time yearFraction(const QuantLib::Date& d1,
-					const QuantLib::Date& d2,
-					const QuantLib::Date&,
-					const QuantLib::Date&) const;
-        };
+    \ingroup daycounters
+*/
+class Actual364 : public QuantLib::DayCounter {
+public:
+    Actual364() : QuantLib::DayCounter(boost::shared_ptr<DayCounter::Impl>(new Actual364::Impl())) {}
+
+private:
+    class Impl : public DayCounter::Impl {
+    public:
+        std::string name() const { return "Actual/364"; }
+        QuantLib::Date::serial_type dayCount(const QuantLib::Date& d1, const QuantLib::Date& d2) const;
+        QuantLib::Time yearFraction(const QuantLib::Date& d1, const QuantLib::Date& d2, const QuantLib::Date&,
+                                    const QuantLib::Date&) const;
     };
+};
 
-}
+} // namespace QuantExt
 
 #endif

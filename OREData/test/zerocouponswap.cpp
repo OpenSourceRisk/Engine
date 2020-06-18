@@ -87,7 +87,6 @@ public:
                                          0.9855, 0.9849, 0.9842, 0.9836, 0.9743, 0.9634, 0.9510, 0.9361,
                                          0.9192, 0.9011, 0.8822, 0.8637, 0.7792, 0.7079};
 
-
         // build GBP discount curve
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")] =
             intDiscCurve(datesGBP, dfsGBP, ActualActual(), UnitedKingdom());
@@ -96,9 +95,7 @@ public:
         Handle<IborIndex> hGBP = Handle<IborIndex>(
             parseIborIndex("GBP-LIBOR-6M", intDiscCurve(datesGBP, dfsGBP, ActualActual(), UnitedKingdom())));
         iborIndices_[make_pair(Market::defaultConfiguration, "GBP-LIBOR-6M")] = hGBP;
-
     }
-
 
 private:
     Handle<YieldTermStructure> intDiscCurve(vector<Date> dates, vector<DiscountFactor> dfs, DayCounter dc,
@@ -160,7 +157,7 @@ BOOST_AUTO_TEST_CASE(testZeroCouponSwapPrice) {
     Real rate = 0.02;
     vector<Real> rates;
     rates.push_back(rate);
-    
+
     // Schedule
     string conv = "MF";
     string rule = "Zero";
@@ -171,8 +168,8 @@ BOOST_AUTO_TEST_CASE(testZeroCouponSwapPrice) {
     // GBP Libor Leg
     bool isPayerLibor = true;
     string indexLibor = "GBP-LIBOR-6M";
-    LegData leg(boost::make_shared<ZeroCouponFixedLegData>(rates), isPayerLibor, "GBP",
-                     scheduleData, "Year", notional, vector<string>(), paymentConvention);
+    LegData leg(boost::make_shared<ZeroCouponFixedLegData>(rates), isPayerLibor, "GBP", scheduleData, "Year", notional,
+                vector<string>(), paymentConvention);
 
     // Build swap trades
     vector<LegData> legData;

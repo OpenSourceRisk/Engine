@@ -357,8 +357,8 @@ BOOST_AUTO_TEST_CASE(testUsualNormalStrippingWithAtm) {
                                vars.yieldCurves.discountEonia, Normal));
 
     // Overlay normal ATM curve
-    boost::shared_ptr<QuantExt::OptionletStripper> stripper =
-        boost::make_shared<QuantExt::OptionletStripper2>(tempStripper, atmVolCurve, vars.yieldCurves.discountEonia, Normal);
+    boost::shared_ptr<QuantExt::OptionletStripper> stripper = boost::make_shared<QuantExt::OptionletStripper2>(
+        tempStripper, atmVolCurve, vars.yieldCurves.discountEonia, Normal);
 
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
@@ -537,8 +537,8 @@ BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStrippingWithAtm) {
             Normal, 0.0, false, ShiftedLognormal, vars.vols.shift_1));
 
     // Overlay shifted lognormal ATM curve
-    boost::shared_ptr<QuantExt::OptionletStripper> stripper =
-        boost::make_shared<QuantExt::OptionletStripper2>(tempStripper, atmVolCurve, vars.yieldCurves.discountEonia, Normal);
+    boost::shared_ptr<QuantExt::OptionletStripper> stripper = boost::make_shared<QuantExt::OptionletStripper2>(
+        tempStripper, atmVolCurve, vars.yieldCurves.discountEonia, Normal);
 
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);

@@ -39,9 +39,9 @@ public:
 
     //! Detailed constructor
     CommodityOption(const Envelope& env, const OptionData& optionData, const std::string& commodityName,
-        const std::string& currency, QuantLib::Real strike, QuantLib::Real quantity,
-        const boost::optional<bool>& isFuturePrice = boost::none,
-        const QuantLib::Date& futureExpiryDate = QuantLib::Date());
+                    const std::string& currency, QuantLib::Real strike, QuantLib::Real quantity,
+                    const boost::optional<bool>& isFuturePrice = boost::none,
+                    const QuantLib::Date& futureExpiryDate = QuantLib::Date());
 
     //! Build underlying instrument and link pricing engine
     void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
@@ -67,16 +67,16 @@ public:
     //@}
 
 private:
-    /*! Indicates if the option underlying is a commodity future settlement price, \c true, or a spot price \c false. 
+    /*! Indicates if the option underlying is a commodity future settlement price, \c true, or a spot price \c false.
         If not explicitly set, it is assumed to be \c true.
     */
     boost::optional<bool> isFuturePrice_;
 
-    /*! An explicit expiry date for the underlying future contract. This can be used if the option trade references a 
+    /*! An explicit expiry date for the underlying future contract. This can be used if the option trade references a
         future contract settlement price and the option's expiry date does not match the future contract expiry date.
     */
     QuantLib::Date futureExpiryDate_;
 };
 
-}
-}
+} // namespace data
+} // namespace ore

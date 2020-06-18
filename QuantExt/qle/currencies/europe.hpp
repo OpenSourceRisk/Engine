@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file qle/currencies/europe.hpp
     \brief Extend QuantLib European currencies
     \ingroup currencies

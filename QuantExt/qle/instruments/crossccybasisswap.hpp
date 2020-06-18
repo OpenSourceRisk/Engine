@@ -48,8 +48,8 @@ public:
         holds the receive currency cashflows.
     */
     CrossCcyBasisSwap(Real payNominal, const Currency& payCurrency, const Schedule& paySchedule,
-                      const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real payGearing,
-		      Real recNominal, const Currency& recCurrency, const Schedule& recSchedule,
+                      const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real payGearing, Real recNominal,
+                      const Currency& recCurrency, const Schedule& recSchedule,
                       const boost::shared_ptr<IborIndex>& recIndex, Spread recSpread, Real recGearing);
     //@}
     //! \name Instrument interface
@@ -103,14 +103,14 @@ private:
     boost::shared_ptr<IborIndex> payIndex_;
     Spread paySpread_;
     Real payGearing_;
-  
+
     Real recNominal_;
     Currency recCurrency_;
     Schedule recSchedule_;
     boost::shared_ptr<IborIndex> recIndex_;
     Spread recSpread_;
     Real recGearing_;
-  
+
     mutable Spread fairPaySpread_;
     mutable Spread fairRecSpread_;
 };

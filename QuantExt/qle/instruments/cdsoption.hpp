@@ -73,7 +73,8 @@ public:
     enum StrikeType { Price, Spread };
 
     CdsOption(const boost::shared_ptr<CreditDefaultSwap>& swap, const boost::shared_ptr<Exercise>& exercise,
-              bool knocksOut = true, const Real strike = Null<Real>(), const StrikeType strikeType = StrikeType::Spread);
+              bool knocksOut = true, const Real strike = Null<Real>(),
+              const StrikeType strikeType = StrikeType::Spread);
 
     //! \name Instrument interface
     //@{

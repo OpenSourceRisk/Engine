@@ -25,8 +25,7 @@ namespace QuantExt {
 
 PriceTermStructureAdapter::PriceTermStructureAdapter(const boost::shared_ptr<PriceTermStructure>& priceCurve,
                                                      const boost::shared_ptr<YieldTermStructure>& discount,
-                                                     Natural spotDays,
-                                                     const Calendar& spotCalendar)
+                                                     Natural spotDays, const Calendar& spotCalendar)
     : priceCurve_(priceCurve), discount_(discount), spotDays_(spotDays), spotCalendar_(spotCalendar) {
 
     QL_REQUIRE(

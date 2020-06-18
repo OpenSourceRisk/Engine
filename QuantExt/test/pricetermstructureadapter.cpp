@@ -20,12 +20,12 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/test/unit_test.hpp>
+#include <ql/currencies/america.hpp>
 #include <ql/math/interpolations/all.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/zerocurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <ql/currencies/america.hpp>
 
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
@@ -157,8 +157,7 @@ BOOST_AUTO_TEST_CASE(testFloatingDiscountFixedPrice) {
         boost::make_shared<InterpolatedPriceCurve<Linear> >(asof, dates, prices, td.dayCounter, td.currency);
 
     // Check construction of adapted price curve passes => reference dates same on construction
-    BOOST_REQUIRE_NO_THROW(
-        PriceTermStructureAdapter(fixedReferencePriceCurve, floatReferenceDiscountCurve));
+    BOOST_REQUIRE_NO_THROW(PriceTermStructureAdapter(fixedReferencePriceCurve, floatReferenceDiscountCurve));
 
     // Construct adapted price curve
     PriceTermStructureAdapter adaptedPriceCurve(fixedReferencePriceCurve, floatReferenceDiscountCurve);

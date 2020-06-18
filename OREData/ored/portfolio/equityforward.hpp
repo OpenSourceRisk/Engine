@@ -38,10 +38,10 @@ using std::string;
 class EquityForward : public Trade {
 public:
     EquityForward() : Trade("EquityForward") {}
-    EquityForward(Envelope& env, string longShort, EquityUnderlying equityUnderlying, string currency, double quantity, string maturityDate,
-                  double strike)
-        : Trade("EquityForward", env), longShort_(longShort), equityUnderlying_(equityUnderlying), currency_(currency), quantity_(quantity),
-          maturityDate_(maturityDate), strike_(strike) {}
+    EquityForward(Envelope& env, string longShort, EquityUnderlying equityUnderlying, string currency, double quantity,
+                  string maturityDate, double strike)
+        : Trade("EquityForward", env), longShort_(longShort), equityUnderlying_(equityUnderlying), currency_(currency),
+          quantity_(quantity), maturityDate_(maturityDate), strike_(strike) {}
 
     void build(const boost::shared_ptr<EngineFactory>&) override;
 

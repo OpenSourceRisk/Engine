@@ -17,7 +17,6 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <test/oreatoplevelfixture.hpp>
 #include <boost/timer/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -58,6 +57,7 @@
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <oret/toplevelfixture.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
 
@@ -69,22 +69,22 @@ using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
-using testsuite::TestMarket;
-using testsuite::buildSwap;
-using testsuite::buildEuropeanSwaption;
-using testsuite::TestConfigurationObjects;
-using testsuite::buildBermudanSwaption;
-using testsuite::buildFxOption;
-using testsuite::buildCap;
-using testsuite::buildFloor;
-using testsuite::buildZeroBond;
-using testsuite::buildEquityOption;
-using testsuite::buildCPIInflationSwap;
-using testsuite::buildYYInflationSwap;
-using testsuite::buildCommodityForward;
-using testsuite::buildCommodityOption;
 using boost::timer::cpu_timer;
 using boost::timer::default_places;
+using testsuite::buildBermudanSwaption;
+using testsuite::buildCap;
+using testsuite::buildCommodityForward;
+using testsuite::buildCommodityOption;
+using testsuite::buildCPIInflationSwap;
+using testsuite::buildEquityOption;
+using testsuite::buildEuropeanSwaption;
+using testsuite::buildFloor;
+using testsuite::buildFxOption;
+using testsuite::buildSwap;
+using testsuite::buildYYInflationSwap;
+using testsuite::buildZeroBond;
+using testsuite::TestConfigurationObjects;
+using testsuite::TestMarket;
 
 void testPortfolioSensitivity(ObservationMode::Mode om) {
     SavedSettings backup;
@@ -149,7 +149,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     data->engine("FxOption") = "AnalyticEuropeanEngine";
     data->model("CapFloor") = "IborCapModel";
     data->engine("CapFloor") = "IborCapEngine";
-    data->model("CapFlooredIborLeg") ="BlackOrBachelier";
+    data->model("CapFlooredIborLeg") = "BlackOrBachelier";
     data->engine("CapFlooredIborLeg") = "BlackIborCouponPricer";
     data->model("Bond") = "DiscountedCashflows";
     data->engine("Bond") = "DiscountingRiskyBondEngine";
@@ -214,7 +214,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     portfolio->build(factory);
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
-    
+
     // build the scenario valuation engine
     boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>(
         "1,0W"); // TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
@@ -1693,7 +1693,7 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     data->engine("FxOption") = "AnalyticEuropeanEngine";
     data->model("CapFloor") = "IborCapModel";
     data->engine("CapFloor") = "IborCapEngine";
-    data->model("CapFlooredIborLeg") ="BlackOrBachelier";
+    data->model("CapFlooredIborLeg") = "BlackOrBachelier";
     data->engine("CapFlooredIborLeg") = "BlackIborCouponPricer";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
     factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());

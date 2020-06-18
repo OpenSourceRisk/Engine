@@ -94,8 +94,8 @@ public:
     // do we need these?
     boost::shared_ptr<QuantLib::BMAIndex> bma() const { return bma_; }
 
-    operator QuantLib::BMAIndex&() { return *bma_; }
-    operator QuantLib::BMAIndex*() { return &*bma_; }
+    operator QuantLib::BMAIndex &() { return *bma_; }
+    operator QuantLib::BMAIndex *() { return &*bma_; }
 
 private:
     boost::shared_ptr<QuantLib::BMAIndex> bma_;

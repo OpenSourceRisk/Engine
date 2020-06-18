@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <ored/configuration/volatilityconfig.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
@@ -27,7 +28,6 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ored/configuration/volatilityconfig.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/actual360.hpp>
@@ -752,7 +752,8 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     configs->equityCurveConfig("SP5") = boost::make_shared<EquityCurveConfig>(
         "SP5", "", "USD1D", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes);
 
-    vector<string> eqVolQuotes = { "EQUITY_OPTION/RATE_LNVOL/SP5/USD/1Y/ATMF", "EQUITY_OPTION/RATE_LNVOL/SP5/USD/2018-02-26/ATMF" };
+    vector<string> eqVolQuotes = {"EQUITY_OPTION/RATE_LNVOL/SP5/USD/1Y/ATMF",
+                                  "EQUITY_OPTION/RATE_LNVOL/SP5/USD/2018-02-26/ATMF"};
     boost::shared_ptr<VolatilityCurveConfig> vcc =
         boost::make_shared<VolatilityCurveConfig>(eqVolQuotes, "Flat", "Flat");
 

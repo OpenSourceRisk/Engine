@@ -20,18 +20,18 @@
 #include <boost/test/unit_test.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/calendars/austria.hpp>
-#include <qle/calendars/france.hpp>
+#include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
+#include <qle/calendars/france.hpp>
+#include <qle/calendars/israel.hpp>
+#include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
-#include <qle/calendars/thailand.hpp>
-#include <qle/calendars/israel.hpp>
 #include <qle/calendars/spain.hpp>
-#include <qle/calendars/luxembourg.hpp>
-#include <qle/calendars/belgium.hpp>
+#include <qle/calendars/thailand.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -303,12 +303,12 @@ BOOST_AUTO_TEST_CASE(testAustrianCalendar) {
     expectedHolidays.push_back(Date(21, May, 2020));
     expectedHolidays.push_back(Date(1, June, 2020));
     expectedHolidays.push_back(Date(11, June, 2020));
-    //expectedHolidays.push_back(Date(15, August, 2020)); //Saturday
+    // expectedHolidays.push_back(Date(15, August, 2020)); //Saturday
     expectedHolidays.push_back(Date(26, October, 2020));
-    //expectedHolidays.push_back(Date(1, November, 2020)); //Sunday
+    // expectedHolidays.push_back(Date(1, November, 2020)); //Sunday
     expectedHolidays.push_back(Date(8, December, 2020));
     expectedHolidays.push_back(Date(25, December, 2020));
-    //expectedHolidays.push_back(Date(26, December, 2020)); //Saturday
+    // expectedHolidays.push_back(Date(26, December, 2020)); //Saturday
 
     Calendar c = Austria();
 
@@ -329,11 +329,11 @@ BOOST_AUTO_TEST_CASE(testSpanishCalendar) {
     expectedHolidays.push_back(Date(6, January, 2020));
     expectedHolidays.push_back(Date(10, April, 2020));
     expectedHolidays.push_back(Date(1, May, 2020));
-    //expectedHolidays.push_back(Date(15, August, 2020)); //Saturday
+    // expectedHolidays.push_back(Date(15, August, 2020)); //Saturday
     expectedHolidays.push_back(Date(12, October, 2020));
-    //expectedHolidays.push_back(Date(1, November, 2020)); //Sunday
-    //expectedHolidays.push_back(Date(6, December, 2020));  //Sunday
-    expectedHolidays.push_back(Date(8, December, 2020)); 
+    // expectedHolidays.push_back(Date(1, November, 2020)); //Sunday
+    // expectedHolidays.push_back(Date(6, December, 2020));  //Sunday
+    expectedHolidays.push_back(Date(8, December, 2020));
     expectedHolidays.push_back(Date(25, December, 2020));
 
     Calendar c = Spain();
@@ -354,14 +354,14 @@ BOOST_AUTO_TEST_CASE(testLuxembourgianCalendar) {
     expectedHolidays.push_back(Date(1, January, 2020));
     expectedHolidays.push_back(Date(13, April, 2020));
     expectedHolidays.push_back(Date(1, May, 2020));
-    //expectedHolidays.push_back(Date(9, May, 2020)); //Saturday
+    // expectedHolidays.push_back(Date(9, May, 2020)); //Saturday
     expectedHolidays.push_back(Date(21, May, 2020));
     expectedHolidays.push_back(Date(1, June, 2020));
     expectedHolidays.push_back(Date(23, June, 2020));
-    //expectedHolidays.push_back(Date(15, August, 2020)); //Saturday
-    //expectedHolidays.push_back(Date(1, November, 2020)); //Sunday
+    // expectedHolidays.push_back(Date(15, August, 2020)); //Saturday
+    // expectedHolidays.push_back(Date(1, November, 2020)); //Sunday
     expectedHolidays.push_back(Date(25, December, 2020));
-    //expectedHolidays.push_back(Date(26, December, 2020)); //Saturday
+    // expectedHolidays.push_back(Date(26, December, 2020)); //Saturday
 
     Calendar c = Luxembourg();
 
@@ -379,15 +379,15 @@ BOOST_AUTO_TEST_CASE(testBelgianCalendar) {
     std::vector<Date> expectedHolidays;
 
     expectedHolidays.push_back(Date(1, January, 2020));
-    //expectedHolidays.push_back(Date(12, April, 2020)); //Sunday
+    // expectedHolidays.push_back(Date(12, April, 2020)); //Sunday
     expectedHolidays.push_back(Date(13, April, 2020));
     expectedHolidays.push_back(Date(1, May, 2020));
     expectedHolidays.push_back(Date(21, May, 2020));
-    //expectedHolidays.push_back(Date(31, May, 2020)); //Sunday
+    // expectedHolidays.push_back(Date(31, May, 2020)); //Sunday
     expectedHolidays.push_back(Date(1, June, 2020));
     expectedHolidays.push_back(Date(21, July, 2020));
-    //expectedHolidays.push_back(Date(15, August, 2020)); //Saturday
-    //expectedHolidays.push_back(Date(1, November, 2020)); //Sunday
+    // expectedHolidays.push_back(Date(15, August, 2020)); //Saturday
+    // expectedHolidays.push_back(Date(1, November, 2020)); //Sunday
     expectedHolidays.push_back(Date(11, November, 2020));
     expectedHolidays.push_back(Date(25, December, 2020));
 
@@ -399,7 +399,6 @@ BOOST_AUTO_TEST_CASE(testBelgianCalendar) {
 
     check::checkCalendars(expectedHolidays, hol);
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -41,8 +41,10 @@ public:
     FxOption(Envelope& env, OptionData option, string boughtCurrency, double boughtAmount, string soldCurrency,
              double soldAmount, const std::string& fxIndex = "")
         : VanillaOptionTrade(env, AssetClass::FX, option, boughtCurrency, soldCurrency, soldAmount / boughtAmount,
-            boughtAmount), fxIndex_(fxIndex)
-          { tradeType_ = "FxOption"; }
+                             boughtAmount),
+          fxIndex_(fxIndex) {
+        tradeType_ = "FxOption";
+    }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;

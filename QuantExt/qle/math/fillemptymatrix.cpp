@@ -22,7 +22,6 @@
 namespace QuantExt {
 using namespace std;
 
-
 static void fillMatrixImpl(Matrix& mat, Real blank) {
 
     // define entire axis
@@ -33,8 +32,8 @@ static void fillMatrixImpl(Matrix& mat, Real blank) {
 
     // loop over rows and interpolate
     for (Size i = 0; i < mat.rows(); i++) {
-        vector<Real> y;                        // values for the expiries we have
-        vector<Real> x;                        // the required 'tics' on axis to interpolate
+        vector<Real> y;                      // values for the expiries we have
+        vector<Real> x;                      // the required 'tics' on axis to interpolate
         vector<Real> yDesired(xAxis.size()); // interpolated y over defined x_axis
 
         // flat extrapolate short end
@@ -106,12 +105,12 @@ void fillIncompleteMatrix(Matrix& mat, bool interpRows = true, Real blank = QL_N
 
     if (!isFull) {
         if (mat.columns() == 1 && mat.rows() == 1) {
-           QL_FAIL("1 X 1 empty matrix given to fill.");    // !is_full and 1 X 1 matrix.
-        } 
+            QL_FAIL("1 X 1 empty matrix given to fill."); // !is_full and 1 X 1 matrix.
+        }
         if (interpRows) {
             QL_REQUIRE(mat.columns() > 1, "Too few columns in matrix to interpolate within rows.")
             fillMatrixImpl(mat, blank);
-        }else {
+        } else {
             QL_REQUIRE(mat.rows() > 1, "Too few rows in matrix to interpolate within columns.");
             Matrix m2 = transpose(mat);
             fillMatrixImpl(m2, blank);

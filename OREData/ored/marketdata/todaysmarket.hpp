@@ -70,8 +70,7 @@ public:
         //! Optional Load Fixings
         bool loadFixings = true,
         //! Optional reference data manager, needed to build fitted bond curves
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr
-        );
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
 };
 } // namespace data
 } // namespace ore

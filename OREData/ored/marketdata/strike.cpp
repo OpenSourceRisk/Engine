@@ -32,25 +32,17 @@ using std::vector;
 namespace ore {
 namespace data {
 
-bool operator==(const BaseStrike& lhs, const BaseStrike& rhs) {
-    return lhs.equal_to(rhs);
-}
+bool operator==(const BaseStrike& lhs, const BaseStrike& rhs) { return lhs.equal_to(rhs); }
 
 AbsoluteStrike::AbsoluteStrike() {}
 
 AbsoluteStrike::AbsoluteStrike(Real strike) : strike_(strike) {}
 
-Real AbsoluteStrike::strike() const {
-    return strike_;
-}
+Real AbsoluteStrike::strike() const { return strike_; }
 
-void AbsoluteStrike::fromString(const string& strStrike) {
-    strike_ = parseReal(strStrike);
-}
+void AbsoluteStrike::fromString(const string& strStrike) { strike_ = parseReal(strStrike); }
 
-string AbsoluteStrike::toString() const {
-    return to_string(strike_);
-}
+string AbsoluteStrike::toString() const { return to_string(strike_); }
 
 bool AbsoluteStrike::equal_to(const BaseStrike& other) const {
     if (const AbsoluteStrike* p = dynamic_cast<const AbsoluteStrike*>(&other)) {
@@ -65,26 +57,20 @@ DeltaStrike::DeltaStrike() : deltaType_(DeltaVolQuote::Spot), optionType_(Option
 DeltaStrike::DeltaStrike(DeltaVolQuote::DeltaType deltaType, Option::Type optionType, Real delta)
     : deltaType_(deltaType), optionType_(optionType), delta_(delta) {}
 
-DeltaVolQuote::DeltaType DeltaStrike::deltaType() const {
-    return deltaType_;
-}
+DeltaVolQuote::DeltaType DeltaStrike::deltaType() const { return deltaType_; }
 
-Option::Type DeltaStrike::optionType() const {
-    return optionType_;
-}
+Option::Type DeltaStrike::optionType() const { return optionType_; }
 
-Real DeltaStrike::delta() const {
-    return delta_;
-}
+Real DeltaStrike::delta() const { return delta_; }
 
 void DeltaStrike::fromString(const string& strStrike) {
-    
+
     // Expect strStrike of form: DEL / Spot|Fwd|PaSpot|PaFwd / Call|Put / DELTA_VALUE
     vector<string> tokens;
     boost::split(tokens, strStrike, boost::is_any_of("/"));
     QL_REQUIRE(tokens.size() == 4, "DeltaStrike::fromString expects 4 tokens.");
     QL_REQUIRE(tokens[0] == "DEL", "DeltaStrike::fromString expects 1st token to equal 'DEL'.");
-    
+
     deltaType_ = parseDeltaType(tokens[1]);
     optionType_ = parseOptionType(tokens[2]);
     delta_ = parseReal(tokens[3]);
@@ -113,13 +99,9 @@ AtmStrike::AtmStrike(DeltaVolQuote::AtmType atmType, boost::optional<DeltaVolQuo
     check();
 }
 
-DeltaVolQuote::AtmType AtmStrike::atmType() const {
-    return atmType_;
-}
+DeltaVolQuote::AtmType AtmStrike::atmType() const { return atmType_; }
 
-boost::optional<DeltaVolQuote::DeltaType> AtmStrike::deltaType() const {
-    return deltaType_;
-}
+boost::optional<DeltaVolQuote::DeltaType> AtmStrike::deltaType() const { return deltaType_; }
 
 void AtmStrike::fromString(const string& strStrike) {
 
@@ -143,13 +125,13 @@ void AtmStrike::fromString(const string& strStrike) {
 }
 
 string AtmStrike::toString() const {
-    
+
     // Write strike of form:
     // "ATM / AtmSpot|AtmFwd|AtmDeltaNeutral|AtmVegaMax|AtmGammaMax|AtmPutCall50"
     // with an optional following "/ DEL / Spot|Fwd|PaSpot|PaFwd" if delta type is populated.
     ostringstream oss;
     oss << "ATM/" << atmType_;
-    
+
     if (deltaType_) {
         oss << "/DEL/" << (*deltaType_);
     }
@@ -159,10 +141,8 @@ string AtmStrike::toString() const {
 
 bool AtmStrike::equal_to(const BaseStrike& other) const {
     if (const AtmStrike* p = dynamic_cast<const AtmStrike*>(&other)) {
-        return !(atmType_ != p->atmType() ||
-            (deltaType_ && !p->deltaType()) ||
-            (!deltaType_ && p->deltaType()) ||
-            *deltaType_ != *p->deltaType());
+        return !(atmType_ != p->atmType() || (deltaType_ && !p->deltaType()) || (!deltaType_ && p->deltaType()) ||
+                 *deltaType_ != *p->deltaType());
     } else {
         return false;
     }
@@ -176,8 +156,8 @@ void AtmStrike::check() const {
         QL_REQUIRE(!deltaType_, "If AtmStrike type is not AtmDeltaNeutral, delta type should not be given.");
     }
     if (atmType_ == DeltaVolQuote::AtmPutCall50) {
-        QL_REQUIRE(deltaType_ && *deltaType_ == DeltaVolQuote::Fwd, 
-            "If AtmStrike type is AtmPutCall50, delta type must be AtmFwd.");
+        QL_REQUIRE(deltaType_ && *deltaType_ == DeltaVolQuote::Fwd,
+                   "If AtmStrike type is AtmPutCall50, delta type must be AtmFwd.");
     }
 }
 
@@ -185,13 +165,9 @@ MoneynessStrike::MoneynessStrike() : type_(Type::Spot) {}
 
 MoneynessStrike::MoneynessStrike(Type type, Real moneyness) : type_(type), moneyness_(moneyness) {}
 
-MoneynessStrike::Type MoneynessStrike::type() const {
-    return type_;
-}
+MoneynessStrike::Type MoneynessStrike::type() const { return type_; }
 
-Real MoneynessStrike::moneyness() const {
-    return moneyness_;
-}
+Real MoneynessStrike::moneyness() const { return moneyness_; }
 
 void MoneynessStrike::fromString(const string& strStrike) {
 
@@ -221,9 +197,7 @@ bool MoneynessStrike::equal_to(const BaseStrike& other) const {
     }
 }
 
-ostream& operator<<(ostream& os, const BaseStrike& strike) {
-    return os << strike.toString();
-}
+ostream& operator<<(ostream& os, const BaseStrike& strike) { return os << strike.toString(); }
 
 ostream& operator<<(ostream& os, DeltaVolQuote::DeltaType type) {
     switch (type) {
@@ -283,7 +257,7 @@ MoneynessStrike::Type parseMoneynessType(const string& type) {
 }
 
 boost::shared_ptr<BaseStrike> parseBaseStrike(const string& strStrike) {
-    
+
     boost::shared_ptr<BaseStrike> strike;
 
     // Expect strStrike to either:
@@ -309,8 +283,8 @@ boost::shared_ptr<BaseStrike> parseBaseStrike(const string& strStrike) {
     return strike;
 }
 
-}
-}
+} // namespace data
+} // namespace ore
 
 BOOST_CLASS_EXPORT_GUID(ore::data::AbsoluteStrike, "AbsoluteStrike");
 BOOST_CLASS_EXPORT_GUID(ore::data::DeltaStrike, "DeltaStrike");

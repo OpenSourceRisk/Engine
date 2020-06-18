@@ -23,19 +23,19 @@
 
 #pragma once
 
+#include <boost/shared_ptr.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/volatilityconfig.hpp>
-#include <boost/shared_ptr.hpp>
 
 namespace ore {
 namespace data {
 
 /*! CDS and index CDS volatility configuration
-    
-    If there is a need for different volatility surfaces for different terms, we expect the term to be 
-    a suffix on the curve configuration ID e.g. "-5Y" for a 5Y CDS, "-10Y" for a 10Y CDS etc. This term 
-    will be used to differentiate between market volatility quotes when building volatility structures. If 
-    the parsing of the term from the ID is not needed, it can be turned off below by setting \c parseTerm 
+
+    If there is a need for different volatility surfaces for different terms, we expect the term to be
+    a suffix on the curve configuration ID e.g. "-5Y" for a 5Y CDS, "-10Y" for a 10Y CDS etc. This term
+    will be used to differentiate between market volatility quotes when building volatility structures. If
+    the parsing of the term from the ID is not needed, it can be turned off below by setting \c parseTerm
     to \c false in the constructors.
 
     \ingroup configuration
@@ -44,18 +44,13 @@ class CDSVolatilityCurveConfig : public CurveConfig {
 public:
     //! Default constructor
     CDSVolatilityCurveConfig(bool parseTerm = false);
-    
+
     //! Detailed constructor
-    CDSVolatilityCurveConfig(
-        const std::string& curveId,
-        const std::string& curveDescription,
-        const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
-        const std::string& dayCounter = "A365",
-        const std::string& calendar = "NullCalendar",
-        const std::string& strikeType = "",
-        const std::string& quoteName = "",
-        QuantLib::Real strikeFactor = 1.0,
-        bool parseTerm = false);
+    CDSVolatilityCurveConfig(const std::string& curveId, const std::string& curveDescription,
+                             const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                             const std::string& dayCounter = "A365", const std::string& calendar = "NullCalendar",
+                             const std::string& strikeType = "", const std::string& quoteName = "",
+                             QuantLib::Real strikeFactor = 1.0, bool parseTerm = false);
 
     //! \name Inspectors
     //@{
@@ -97,11 +92,11 @@ private:
     std::string quoteStem() const;
 };
 
-/*! Given an \p id of the form \c name-tenor, parse and return a pair of strings where the first element of the pair 
-    is the name and the second element is the tenor. A check is made that the tenor can be parsed as a 
+/*! Given an \p id of the form \c name-tenor, parse and return a pair of strings where the first element of the pair
+    is the name and the second element is the tenor. A check is made that the tenor can be parsed as a
     QuantLib::Period. If the parse is not successful, the pair of strings that are returned are empty.
 */
 std::pair<std::string, std::string> extractTermFromId(const std::string& id);
 
-}
-}
+} // namespace data
+} // namespace ore

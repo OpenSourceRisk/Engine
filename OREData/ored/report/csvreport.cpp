@@ -68,9 +68,11 @@ private:
 
     // Shared implementation to include the quote character.
     void fprintString(const string& s) const {
-        if (quoteChar_ != '\0') fputc(quoteChar_, fp_);
+        if (quoteChar_ != '\0')
+            fputc(quoteChar_, fp_);
         fprintf(fp_, "%s", s.c_str());
-        if (quoteChar_ != '\0') fputc(quoteChar_, fp_);
+        if (quoteChar_ != '\0')
+            fputc(quoteChar_, fp_);
     }
 
     FILE* fp_;
@@ -79,8 +81,8 @@ private:
     string null_;
 };
 
-CSVFileReport::CSVFileReport(const string& filename, const char sep, const bool commentCharacter,
-    char quoteChar, const string& nullString)
+CSVFileReport::CSVFileReport(const string& filename, const char sep, const bool commentCharacter, char quoteChar,
+                             const string& nullString)
     : filename_(filename), sep_(sep), commentCharacter_(commentCharacter), quoteChar_(quoteChar),
       nullString_(nullString), i_(0), fp_(NULL) {
     fp_ = fopen(filename_.c_str(), "w+");

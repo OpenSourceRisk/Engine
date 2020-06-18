@@ -19,13 +19,13 @@
 #include <qle/cashflows/brlcdicouponpricer.hpp>
 
 using namespace QuantLib;
-using std::vector;
 using std::pow;
+using std::vector;
 
 namespace QuantExt {
 
-// The code here is very similar to QuantLib::OvernightIndexedCouponPricer. That class is in 
-// an anonymous namespace so could not extend it. The altered code is to take account of the fact 
+// The code here is very similar to QuantLib::OvernightIndexedCouponPricer. That class is in
+// an anonymous namespace so could not extend it. The altered code is to take account of the fact
 // that the BRL CDI coupon accrues as (1 + DI) ^ (1 / 252)
 Rate BRLCdiCouponPricer::swapletRate() const {
 
@@ -85,9 +85,7 @@ void BRLCdiCouponPricer::initialize(const FloatingRateCoupon& coupon) {
     QL_REQUIRE(index_, "BRLCdiCouponPricer epxects the coupon's index to be BRLCdi");
 }
 
-Real BRLCdiCouponPricer::swapletPrice() const {
-    QL_FAIL("swapletPrice not implemented for BRLCdiCouponPricer");
-}
+Real BRLCdiCouponPricer::swapletPrice() const { QL_FAIL("swapletPrice not implemented for BRLCdiCouponPricer"); }
 
 Real BRLCdiCouponPricer::capletPrice(Rate effectiveCap) const {
     QL_FAIL("capletPrice not implemented for BRLCdiCouponPricer");
@@ -105,4 +103,4 @@ Real BRLCdiCouponPricer::floorletRate(Rate effectiveFloor) const {
     QL_FAIL("floorletRate not implemented for BRLCdiCouponPricer");
 }
 
-}
+} // namespace QuantExt

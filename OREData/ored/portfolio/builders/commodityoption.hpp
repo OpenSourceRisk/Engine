@@ -34,7 +34,7 @@ namespace data {
 class CommodityEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
 public:
     CommodityEuropeanOptionEngineBuilder()
-        : EuropeanOptionEngineBuilder("BlackScholes", { "CommodityOption" }, AssetClass::COM) {}
+        : EuropeanOptionEngineBuilder("BlackScholes", {"CommodityOption"}, AssetClass::COM) {}
 };
 
 /*! Engine builder for European cash-settled commodity options
@@ -43,7 +43,7 @@ public:
 class CommodityEuropeanCSOptionEngineBuilder : public EuropeanCSOptionEngineBuilder {
 public:
     CommodityEuropeanCSOptionEngineBuilder()
-        : EuropeanCSOptionEngineBuilder("BlackScholes", { "CommodityOptionEuropeanCS" }, AssetClass::COM) {}
+        : EuropeanCSOptionEngineBuilder("BlackScholes", {"CommodityOptionEuropeanCS"}, AssetClass::COM) {}
 };
 
 /*! Engine builder for American commodity options using finite difference.
@@ -52,8 +52,7 @@ public:
 class CommodityAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
 public:
     CommodityAmericanOptionFDEngineBuilder()
-        : AmericanOptionFDEngineBuilder("BlackScholes", { "CommodityOptionAmerican" }, 
-            AssetClass::COM, expiryDate_) {}
+        : AmericanOptionFDEngineBuilder("BlackScholes", {"CommodityOptionAmerican"}, AssetClass::COM, expiryDate_) {}
 };
 
 /*! Engine builder for American commodity options using Barone-Adesi and Whaley approximation.
@@ -62,8 +61,8 @@ public:
 class CommodityAmericanOptionBAWEngineBuilder : public AmericanOptionBAWEngineBuilder {
 public:
     CommodityAmericanOptionBAWEngineBuilder()
-        : AmericanOptionBAWEngineBuilder("BlackScholes", { "CommodityOptionAmerican" }, AssetClass::COM) {}
+        : AmericanOptionBAWEngineBuilder("BlackScholes", {"CommodityOptionAmerican"}, AssetClass::COM) {}
 };
 
-}
-}
+} // namespace data
+} // namespace ore

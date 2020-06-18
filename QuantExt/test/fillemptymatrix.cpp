@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(testSingleEntry) {
 
 BOOST_AUTO_TEST_CASE(testEmptyMatrix) {
     BOOST_TEST_MESSAGE("testing empty matrices");
-    
+
     Matrix m;
     BOOST_CHECK_THROW(fillIncompleteMatrix(m, true, -1), QuantLib::Error);
     BOOST_CHECK_THROW(fillIncompleteMatrix(m, false, -1), QuantLib::Error);
@@ -286,10 +286,8 @@ BOOST_AUTO_TEST_CASE(testSingleRowCol) {
     BOOST_CHECK_THROW(fillIncompleteMatrix(tmp_row, false, -1), QuantLib::Error);
     BOOST_CHECK_THROW(fillIncompleteMatrix(tmp_col, true, -1), QuantLib::Error);
 
-
     BOOST_CHECK_NO_THROW(fillIncompleteMatrix(tmp_row, true, -1));
     BOOST_CHECK_NO_THROW(fillIncompleteMatrix(tmp_col, false, -1));
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -257,7 +257,7 @@ private:
 
 //! Yield volatility curve description
 /*! \ingroup curves
-*/
+ */
 class YieldVolatilityCurveSpec : public CurveSpec {
 public:
     //! \name Constructors

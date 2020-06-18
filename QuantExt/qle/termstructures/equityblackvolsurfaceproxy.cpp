@@ -20,10 +20,12 @@
 
 namespace QuantExt {
 
-    EquityBlackVolatilitySurfaceProxy::EquityBlackVolatilitySurfaceProxy(const boost::shared_ptr<BlackVolTermStructure>& proxySurface,
-    const boost::shared_ptr<EquityIndex>& index, const boost::shared_ptr<EquityIndex>& proxyIndex)
-    : BlackVolatilityTermStructure(0, proxySurface->calendar(), proxySurface->businessDayConvention(), proxySurface->dayCounter()),
-    proxySurface_(proxySurface), index_(index), proxyIndex_(proxyIndex) {
+EquityBlackVolatilitySurfaceProxy::EquityBlackVolatilitySurfaceProxy(
+    const boost::shared_ptr<BlackVolTermStructure>& proxySurface, const boost::shared_ptr<EquityIndex>& index,
+    const boost::shared_ptr<EquityIndex>& proxyIndex)
+    : BlackVolatilityTermStructure(0, proxySurface->calendar(), proxySurface->businessDayConvention(),
+                                   proxySurface->dayCounter()),
+      proxySurface_(proxySurface), index_(index), proxyIndex_(proxyIndex) {
 
     if (proxySurface->allowsExtrapolation())
         this->enableExtrapolation();
@@ -38,7 +40,7 @@ Volatility EquityBlackVolatilitySurfaceProxy::blackVolImpl(Time t, Real strike) 
     return proxySurface_->blackVol(t, adjustedStrike);
 }
 
-Rate EquityBlackVolatilitySurfaceProxy::minStrike() const { 
+Rate EquityBlackVolatilitySurfaceProxy::minStrike() const {
     return proxySurface_->minStrike() * index_->equitySpot()->value() / proxyIndex_->equitySpot()->value();
 }
 

@@ -34,8 +34,10 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
                                  const DayCounter& dayCounter,
                                  const Handle<DefaultProbabilityTermStructure>& probability, const Real recoveryRate,
                                  const Handle<YieldTermStructure>& termStructure, const Rate spread, const Rate upfront,
-                                 const bool settlesAccrual, const CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime, const Date protectionStart,
-                                 const Date upfrontDate, const boost::shared_ptr<Claim>& claim,
+                                 const bool settlesAccrual,
+                                 const CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime,
+                                 const Date protectionStart, const Date upfrontDate,
+                                 const boost::shared_ptr<Claim>& claim,
                                  const BlackCalibrationHelper::CalibrationErrorType errorType)
     : BlackCalibrationHelper(volatility, termStructure, errorType), blackVol_(boost::make_shared<SimpleQuote>(0.0)) {
 

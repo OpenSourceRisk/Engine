@@ -30,7 +30,7 @@
 namespace QuantExt {
 
 /*! Vanilla cash settled European options allowing for deferred payment and automatic exercise.
-    
+
     \ingroup instruments
 */
 class CashSettledEuropeanOption : public QuantLib::VanillaOption {
@@ -39,28 +39,19 @@ public:
     class engine;
 
     /*! Constructor for cash settled vanilla European option.
-    */
-    CashSettledEuropeanOption(QuantLib::Option::Type type,
-        QuantLib::Real strike,
-        const QuantLib::Date& expiryDate,
-        const QuantLib::Date& paymentDate,
-        bool automaticExercise,
-        const boost::shared_ptr<QuantLib::Index>& underlying = nullptr,
-        bool exercised = false,
-        QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>());
+     */
+    CashSettledEuropeanOption(QuantLib::Option::Type type, QuantLib::Real strike, const QuantLib::Date& expiryDate,
+                              const QuantLib::Date& paymentDate, bool automaticExercise,
+                              const boost::shared_ptr<QuantLib::Index>& underlying = nullptr, bool exercised = false,
+                              QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>());
 
     /*! Constructor for cash settled vanilla European option.
-    */
-    CashSettledEuropeanOption(QuantLib::Option::Type type,
-        QuantLib::Real strike,
-        const QuantLib::Date& expiryDate,
-        QuantLib::Natural paymentLag,
-        const QuantLib::Calendar& paymentCalendar,
-        QuantLib::BusinessDayConvention paymentConvention,
-        bool automaticExercise,
-        const boost::shared_ptr<QuantLib::Index>& underlying = nullptr,
-        bool exercised = false,
-        QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>());
+     */
+    CashSettledEuropeanOption(QuantLib::Option::Type type, QuantLib::Real strike, const QuantLib::Date& expiryDate,
+                              QuantLib::Natural paymentLag, const QuantLib::Calendar& paymentCalendar,
+                              QuantLib::BusinessDayConvention paymentConvention, bool automaticExercise,
+                              const boost::shared_ptr<QuantLib::Index>& underlying = nullptr, bool exercised = false,
+                              QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>());
 
     //! \name Instrument interface
     //@{
@@ -107,10 +98,9 @@ public:
 };
 
 //! Engine
-class CashSettledEuropeanOption::engine : 
-    public QuantLib::GenericEngine<CashSettledEuropeanOption::arguments, CashSettledEuropeanOption::results> {
-};
+class CashSettledEuropeanOption::engine
+    : public QuantLib::GenericEngine<CashSettledEuropeanOption::arguments, CashSettledEuropeanOption::results> {};
 
-}
+} // namespace QuantExt
 
 #endif

@@ -32,8 +32,8 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
                                                const boost::shared_ptr<OvernightIndex>& overnightIndex, Real gearing,
                                                Spread spread, Natural rateCutoff, const DayCounter& dayCounter,
                                                const Period& lookback, const Size fixingDays)
-    : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex,
-                         gearing, spread, Date(), Date(), dayCounter, false),
+    : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex, gearing, spread, Date(),
+                         Date(), dayCounter, false),
       rateCutoff_(rateCutoff), lookback_(lookback) {
 
     Date valueStart = startDate;

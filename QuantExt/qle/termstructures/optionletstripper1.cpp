@@ -98,11 +98,12 @@ void OptionletStripper1::performCalculations() const {
     }
 
     for (Size j = 0; j < nStrikes_; ++j) {
-        // using out-of-the-money options - but these are not always out of the money, for different tenors we may need to switch
+        // using out-of-the-money options - but these are not always out of the money, for different tenors we may need
+        // to switch
         CapFloor::Type capFloorType = strikes[j] < switchStrike_ ? CapFloor::Floor : CapFloor::Cap;
 
-        // we do this with the above to keep the variables capFloors_ etc consistant, but really its the optionletStdDevs_ below
-        // that we want.
+        // we do this with the above to keep the variables capFloors_ etc consistant, but really its the
+        // optionletStdDevs_ below that we want.
         Real previousCapFloorPrice = 0.0;
         for (Size i = 0; i < nOptionletTenors_; ++i) {
 
@@ -133,8 +134,8 @@ void OptionletStripper1::performCalculations() const {
     }
 }
 
-
-bool OptionletStripper1::stripOptionlets(std::vector<Real>& out, CapFloor::Type capFloorType, Size j, const Handle<YieldTermStructure>& discountCurve, Real firstGuess) const {
+bool OptionletStripper1::stripOptionlets(std::vector<Real>& out, CapFloor::Type capFloorType, Size j,
+                                         const Handle<YieldTermStructure>& discountCurve, Real firstGuess) const {
 
     Real strike = termVolSurface_->strikes()[j];
 
@@ -146,7 +147,7 @@ bool OptionletStripper1::stripOptionlets(std::vector<Real>& out, CapFloor::Type 
 
         // we have capFloorVols_[i][j] & volQuotes_[i][j]
         CapFloor capFloor = MakeCapFloor(capFloorType, capFloorLengths_[i], iborIndex_, strike, -0 * Days)
-                   .withPricingEngine(capFloorEngines_[i][j]);
+                                .withPricingEngine(capFloorEngines_[i][j]);
         Real capFloorPrice = capFloor.NPV();
         Real optionletPrice = std::max(0.0, capFloorPrice - previousCapFloorPrice);
         previousCapFloorPrice = capFloorPrice;
@@ -155,13 +156,12 @@ bool OptionletStripper1::stripOptionlets(std::vector<Real>& out, CapFloor::Type 
         DiscountFactor optionletAnnuity = optionletAccrualPeriods_[i] * d;
         try {
             if (volatilityType_ == ShiftedLognormal) {
-                out[i] = blackFormulaImpliedStdDev(
-                    optionletType, strike, atmOptionletRate_[i], optionletPrice, optionletAnnuity,
-                    displacement_, firstGuess, accuracy_, maxIter_);
+                out[i] = blackFormulaImpliedStdDev(optionletType, strike, atmOptionletRate_[i], optionletPrice,
+                                                   optionletAnnuity, displacement_, firstGuess, accuracy_, maxIter_);
             } else if (volatilityType_ == Normal) {
                 out[i] = std::sqrt(optionletTimes_[i]) *
-                    bachelierBlackFormulaImpliedVol(optionletType, strike, atmOptionletRate_[i],
-                        optionletTimes_[i], optionletPrice, optionletAnnuity);
+                         bachelierBlackFormulaImpliedVol(optionletType, strike, atmOptionletRate_[i],
+                                                         optionletTimes_[i], optionletPrice, optionletAnnuity);
             } else {
                 QL_FAIL("Unknown target volatility type: " << volatilityType_);
             }

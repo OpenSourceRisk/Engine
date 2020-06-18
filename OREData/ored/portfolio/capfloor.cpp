@@ -112,8 +112,8 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             instrument_ = boost::make_shared<VanillaInstrument>(swap, multiplier);
             maturity_ = CashFlows::maturityDate(legs_.front());
         } else {
-            // For the cases where we don't have regular cap / floor support we treat the index approximately as an Ibor index
-            // and build an QuantLib::CapFloor with associated pricing engine. These cases comprise:
+            // For the cases where we don't have regular cap / floor support we treat the index approximately as an Ibor
+            // index and build an QuantLib::CapFloor with associated pricing engine. These cases comprise:
             // - BMA coupons
             // - Ibor coupons with sub periods (hasSubPeriods = true)
             // - averaged ON coupons (isAveraged = true)
@@ -232,7 +232,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         // Create QL CPI CapFloor instruments and add to a composite
         boost::shared_ptr<CompositeInstrument> composite = boost::make_shared<CompositeInstrument>();
-	bool legIsPayer = legData_.isPayer();
+        bool legIsPayer = legData_.isPayer();
         maturity_ = Date::minDate();
         for (Size i = 0; i < legs_[0].size(); ++i) {
             DLOG("Create composite " << i);
@@ -263,7 +263,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                     conv, caps_[i], zeroIndex, observationLag, interpolation);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 composite->add(capfloor, sign * gearing);
-	        // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
+                // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
                 //                                << " sign*gearing=" << sign * gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
                 // if (coupon) {
@@ -288,7 +288,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                     conv, floors_[i], zeroIndex, observationLag, interpolation);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 composite->add(capfloor, sign * gearing);
-	        // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
+                // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
                 //                                << " sign*gearing=" << sign * gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
             }
@@ -310,8 +310,8 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         underlyingIndex = yyData->index();
         Handle<YoYInflationIndex> yoyIndex;
         // look for yoy inflation index
-        yoyIndex = engineFactory->market()->yoyInflationIndex(underlyingIndex,
-                                                              builder->configuration(MarketContext::pricing));
+        yoyIndex =
+            engineFactory->market()->yoyInflationIndex(underlyingIndex, builder->configuration(MarketContext::pricing));
         qlIndexName = yoyIndex->name();
 
         // we must have either an yoy or a zero inflation index in the market, if no yoy curve, get teh zero
@@ -374,7 +374,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // add required fixings
     auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_,
                                                     std::map<string, string>{{qlIndexName, underlyingIndex}});
-    for(auto const& l : legs_)
+    for (auto const& l : legs_)
         addToRequiredFixings(l, fdg);
 
     // Fill in remaining Trade member data

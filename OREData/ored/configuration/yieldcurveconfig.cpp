@@ -23,10 +23,10 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 
-using QuantLib::Visitor;
-using QuantLib::Size;
-using ore::data::XMLUtils;
 using boost::iequals;
+using ore::data::XMLUtils;
+using QuantLib::Size;
+using QuantLib::Visitor;
 
 namespace ore {
 namespace data {
@@ -280,12 +280,13 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
         bootstrapConfig_.fromXML(n);
     }
 
-    // Tolerance is deprecated in favour of Accuracy in BootstrapConfig. However, if it is 
+    // Tolerance is deprecated in favour of Accuracy in BootstrapConfig. However, if it is
     // still provided, use it as the accuracy and global accuracy in the bootstrap.
     if (XMLUtils::getChildNode(node, "Tolerance")) {
         Real accuracy = XMLUtils::getChildValueAsDouble(node, "Tolerance", false);
-        bootstrapConfig_ = BootstrapConfig(accuracy, accuracy, bootstrapConfig_.dontThrow(),
-            bootstrapConfig_.maxAttempts(), bootstrapConfig_.maxFactor(), bootstrapConfig_.minFactor());
+        bootstrapConfig_ =
+            BootstrapConfig(accuracy, accuracy, bootstrapConfig_.dontThrow(), bootstrapConfig_.maxAttempts(),
+                            bootstrapConfig_.maxFactor(), bootstrapConfig_.minFactor());
     }
 
     populateRequiredYieldCurveIDs();
@@ -346,27 +347,27 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
     typeID_ = XMLUtils::getChildValue(node, "Type", true);
     string name = XMLUtils::getNodeName(node);
     if (name == "DiscountRatio") {
-    } else if (name =="AverageOIS") {
-         XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
-         if (quotesNode) {
-              for (XMLNode* child = XMLUtils::getChildNode(quotesNode, "CompositeQuote"); child;
-                  child = XMLUtils::getNextSibling(child)) {
-                  quotes_.push_back(quote(XMLUtils::getChildValue(child, "RateQuote", true)));
-                  quotes_.push_back(quote(XMLUtils::getChildValue(child, "SpreadQuote", true)));
-              }
-         } else {
-             QL_FAIL("No Quotes in segment. Remove segment or add quotes.");
-         }
+    } else if (name == "AverageOIS") {
+        XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
+        if (quotesNode) {
+            for (XMLNode* child = XMLUtils::getChildNode(quotesNode, "CompositeQuote"); child;
+                 child = XMLUtils::getNextSibling(child)) {
+                quotes_.push_back(quote(XMLUtils::getChildValue(child, "RateQuote", true)));
+                quotes_.push_back(quote(XMLUtils::getChildValue(child, "SpreadQuote", true)));
+            }
+        } else {
+            QL_FAIL("No Quotes in segment. Remove segment or add quotes.");
+        }
     } else {
-         quotes_.clear();
-         XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
-         if (quotesNode) {
-              for (auto n : XMLUtils::getChildrenNodes(quotesNode, "Quote")) {
-                  string attr = XMLUtils::getAttribute(n, "optional"); // return "" if not present
-                  bool opt = (!attr.empty() && parseBool(attr));
-                  quotes_.emplace_back(quote(XMLUtils::getNodeValue(n), opt));
-              }
-         }         
+        quotes_.clear();
+        XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
+        if (quotesNode) {
+            for (auto n : XMLUtils::getChildrenNodes(quotesNode, "Quote")) {
+                string attr = XMLUtils::getAttribute(n, "optional"); // return "" if not present
+                bool opt = (!attr.empty() && parseBool(attr));
+                quotes_.emplace_back(quote(XMLUtils::getNodeValue(n), opt));
+            }
+        }
     }
     type_ = parseYieldCurveSegment(typeID_);
     conventionsID_ = XMLUtils::getChildValue(node, "Conventions", false);
@@ -380,7 +381,7 @@ XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) {
         // Special case handling for AverageOIS where the quotes are stored as pairs
         // Spread and Rate.
         if (type_ == YieldCurveSegment::Type::AverageOIS) {
-            QL_REQUIRE(quotes_.size()%2==0,"Invalid quotes vector should be even")
+            QL_REQUIRE(quotes_.size() % 2 == 0, "Invalid quotes vector should be even")
             for (Size i = 0; i < quotes_.size(); i = i + 2) {
                 string rateQuote = quotes_[i].first;
                 string spreadQuote = quotes_[i + 1].first;

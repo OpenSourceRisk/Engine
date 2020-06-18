@@ -28,12 +28,12 @@ StructuredAnalyticsErrorMessage::StructuredAnalyticsErrorMessage(const string& t
 
 const string& StructuredAnalyticsErrorMessage::type() const { return type_; }
 
-const string& StructuredAnalyticsErrorMessage::what() const { return what_;  }
+const string& StructuredAnalyticsErrorMessage::what() const { return what_; }
 
 string StructuredAnalyticsErrorMessage::json() const {
-    return "{ \"errorType\":\"Analytics\", \"exceptionType\":\"" + type_ + "\"," +
-            " \"exceptionMessage\":\"" + jsonify(what_) + "\"}";
+    return "{ \"errorType\":\"Analytics\", \"exceptionType\":\"" + type_ + "\"," + " \"exceptionMessage\":\"" +
+           jsonify(what_) + "\"}";
 }
 
-}
-}
+} // namespace analytics
+} // namespace ore

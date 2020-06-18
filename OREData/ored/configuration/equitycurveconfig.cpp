@@ -34,8 +34,8 @@ EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveD
                                      bool extrapolation, const QuantLib::Exercise::Type& exerciseStyle)
     : CurveConfig(curveID, curveDescription), fwdQuotes_(fwdQuotes), forecastingCurve_(forecastingCurve),
       currency_(currency), type_(type), equitySpotQuoteID_(equitySpotQuote), dayCountID_(dayCountID),
-      divInterpVariable_(dividendInterpVariable), divInterpMethod_(dividendInterpMethod),
-      extrapolation_(extrapolation), exerciseStyle_(exerciseStyle) {
+      divInterpVariable_(dividendInterpVariable), divInterpMethod_(dividendInterpMethod), extrapolation_(extrapolation),
+      exerciseStyle_(exerciseStyle) {
     quotes_ = fwdQuotes;
     quotes_.insert(quotes_.begin(), equitySpotQuote);
 }

@@ -1130,8 +1130,8 @@ BOOST_AUTO_TEST_CASE(test2DRegression) {
     std::vector<ext::function<Real(Array)> > basis =
         LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
 #else // QL 1.14 and below
-     std::vector<boost::function1<Real, Array> > basis =
-         LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
+    std::vector<boost::function1<Real, Array> > basis =
+        LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
 #endif
 
     StabilisedGLLS m(x, y, basis, StabilisedGLLS::MaxAbs);

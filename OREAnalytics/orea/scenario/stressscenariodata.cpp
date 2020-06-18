@@ -41,21 +41,20 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 
         LOG("Load stress test label " << test.label);
 
-		LOG("Get recovery rate shift parameters");
-        XMLNode* recoveryRates= XMLUtils::getChildNode(testCase, "RecoveryRates");
+        LOG("Get recovery rate shift parameters");
+        XMLNode* recoveryRates = XMLUtils::getChildNode(testCase, "RecoveryRates");
         test.recoveryRateShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(recoveryRates, "RecoveryRate"); child;
-			child = XMLUtils::getNextSibling(child)) {
+             child = XMLUtils::getNextSibling(child)) {
             string isin = XMLUtils::getAttribute(child, "id");
             LOG("Loading stress parameters for recovery rate for " << isin);
             SpotShiftData data;
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
             test.recoveryRateShifts[isin] = data;
-
         }
 
-		LOG("Get survival probability shift parameters");
+        LOG("Get survival probability shift parameters");
         XMLNode* survivalProbability = XMLUtils::getChildNode(testCase, "SurvivalProbabilities");
         QL_REQUIRE(survivalProbability, "Survival Probabilities node not found");
         test.survivalProbabilityShifts.clear();
@@ -245,8 +244,6 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             test.securitySpreadShifts[bond] = data;
         }
-
-
 
         data_.push_back(test);
 

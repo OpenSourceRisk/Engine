@@ -24,19 +24,19 @@
 #pragma once
 
 #include <boost/make_shared.hpp>
-#include <ored/portfolio/underlying.hpp>
+#include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
-#include <ored/portfolio/indexing.hpp>
-#include <ored/utilities/parsers.hpp>
+#include <ored/portfolio/underlying.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/parsers.hpp>
 
 #include <ql/cashflow.hpp>
 #include <ql/experimental/coupons/swapspreadindex.hpp>
 #include <ql/indexes/iborindex.hpp>
+#include <ql/position.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/equityindex.hpp>
-#include <ql/position.hpp>
 
 #include <vector>
 
@@ -607,7 +607,7 @@ public:
     Natural fxIndexFixingDays() const { return fxIndexFixingDays_; }
     const string& fxIndexCalendar() const { return fxIndexCalendar_; }
     bool notionalReset() const { return notionalReset_; }
-    Real quantity() const { return quantity_; } // might be null
+    Real quantity() const { return quantity_; }                                  // might be null
     const string& initialPriceCurrency() const { return initialPriceCurrency_; } // might be empty
     //@}
 
@@ -798,7 +798,7 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
                      const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
 Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                             const boost::shared_ptr<EngineFactory>& engineFactory);
-Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityIndex>& equityCurve, 
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityIndex>& equityCurve,
                   const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
 Real currentNotional(const Leg& leg);
 
@@ -917,7 +917,8 @@ vector<T> buildScheduledVectorNormalised(const vector<T>& values, const vector<s
 // build an FX Index needed by legbuilders / makeLeg methods
 boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
                                                   const boost::shared_ptr<Market>& market, const string& configuration,
-                                                  const string& calendar, Size fixingDays = 0, bool useXbsCurves = false);
+                                                  const string& calendar, Size fixingDays = 0,
+                                                  bool useXbsCurves = false);
 
 // build a Bond Index needed by legbuilders (populates bond data from bond reference data if required)
 class BondData;
@@ -929,7 +930,6 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
 
 // join a vector of legs to a single leg, check if the legs have adjacent periods
 Leg joinLegs(const std::vector<Leg>& legs);
-
 
 } // namespace data
 } // namespace ore

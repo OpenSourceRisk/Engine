@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/portfolio/builders/cachingenginebuilder.hpp
-  \brief Abstract template engine builder class 
+  \brief Abstract template engine builder class
   \ingroup builders
 */
 

@@ -32,9 +32,9 @@
 
 namespace ore {
 namespace data {
-using QuantLib::Date;
-using ore::data::CurveConfigurations;
 using ore::data::Conventions;
+using ore::data::CurveConfigurations;
+using QuantLib::Date;
 
 //! Wrapper class for building Equity curves (spot quote, yield term structure, risk free IR term structure)
 /*!
@@ -60,7 +60,7 @@ private:
     EquityCurveConfig::Type curveType_;
     vector<Real> quotes_;
     vector<Date> terms_;
-    DayCounter dc_;    
+    DayCounter dc_;
     YieldCurve::InterpolationVariable dividendInterpVariable_;
     YieldCurve::InterpolationMethod dividendInterpMethod_;
     boost::shared_ptr<QuantExt::EquityIndex> equityIndex_;

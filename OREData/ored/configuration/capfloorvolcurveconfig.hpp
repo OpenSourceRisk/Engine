@@ -23,14 +23,14 @@
 
 #pragma once
 
-#include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/bootstrapconfig.hpp>
-#include <qle/termstructures/capfloortermvolsurface.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
+#include <qle/termstructures/capfloortermvolsurface.hpp>
 
 namespace ore {
 namespace data {
@@ -51,26 +51,14 @@ public:
 
     //! Detailed constructor
     CapFloorVolatilityCurveConfig(
-        const std::string& curveID,
-        const std::string& curveDescription,
-        const VolatilityType& volatilityType,
-        bool extrapolate,
-        bool flatExtrapolation,
-        bool inlcudeAtm,
-        const std::vector<std::string>& tenors,
-        const std::vector<std::string>& strikes,
-        const QuantLib::DayCounter& dayCounter,
-        QuantLib::Natural settleDays,
-        const QuantLib::Calendar& calendar,
-        const QuantLib::BusinessDayConvention& businessDayConvention,
-        const std::string& iborIndex,
-        const std::string& discountCurve,
-        const std::string& interpolationMethod = "BicubicSpline",
-        const std::string& interpolateOn = "TermVolatilities",
-        const std::string& timeInterpolation = "LinearFlat",
-        const std::string& strikeInterpolation = "LinearFlat",
-        const std::vector<std::string>& atmTenors = {},
-        const BootstrapConfig& bootstrapConfig = BootstrapConfig());
+        const std::string& curveID, const std::string& curveDescription, const VolatilityType& volatilityType,
+        bool extrapolate, bool flatExtrapolation, bool inlcudeAtm, const std::vector<std::string>& tenors,
+        const std::vector<std::string>& strikes, const QuantLib::DayCounter& dayCounter, QuantLib::Natural settleDays,
+        const QuantLib::Calendar& calendar, const QuantLib::BusinessDayConvention& businessDayConvention,
+        const std::string& iborIndex, const std::string& discountCurve,
+        const std::string& interpolationMethod = "BicubicSpline", const std::string& interpolateOn = "TermVolatilities",
+        const std::string& timeInterpolation = "LinearFlat", const std::string& strikeInterpolation = "LinearFlat",
+        const std::vector<std::string>& atmTenors = {}, const BootstrapConfig& bootstrapConfig = BootstrapConfig());
 
     //! \name XMLSerializable interface
     //@{
@@ -125,7 +113,7 @@ private:
     BootstrapConfig bootstrapConfig_;
     Type type_;
     std::string extrapolation_;
-    
+
     //! Populate the quotes vector
     void populateQuotes();
 
@@ -147,11 +135,11 @@ private:
     void validate() const;
 };
 
-//! Imply market datum quote type from CapFloorVolatilityCurveConfig::VolatilityType 
+//! Imply market datum quote type from CapFloorVolatilityCurveConfig::VolatilityType
 std::string quoteType(CapFloorVolatilityCurveConfig::VolatilityType type);
 
-//! Imply QuantLib::VolatilityType from CapFloorVolatilityCurveConfig::VolatilityType 
+//! Imply QuantLib::VolatilityType from CapFloorVolatilityCurveConfig::VolatilityType
 QuantLib::VolatilityType volatilityType(CapFloorVolatilityCurveConfig::VolatilityType type);
 
-}
-}
+} // namespace data
+} // namespace ore
