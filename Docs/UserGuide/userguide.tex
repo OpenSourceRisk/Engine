@@ -4196,7 +4196,7 @@ configuration determines the composition of
 This file also contains other market objects such as FXSpots, Security Spreads and Security Rates which are necessary
 for the construction of a market.
  
-\include{yieldcurves}
+\include{curve_configurations/yieldcurves}
 
 \subsubsection{Default Curves}
 
@@ -4340,54 +4340,7 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
 	\end{itemize}
 \end{itemize}
 
-\subsubsection{Cap/Floor Volatility Structures}
-
-Listing \ref{lst:capfloorvol_configuration} shows the configuration of Cap/Floor volatility structures.
-
-The \lstinline!BootstrapConfig! node is optional and holds configuration details for the iterative bootstrap 
-that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described 
-in section \ref{sec:bootstrap_config} are used.
-
-\begin{longlisting}
-%\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{xml}
-  <CapFloorVolatilities>
-    <CapFloorVolatility>
-      <CurveId>EUR_CF_N</CurveId>
-      <CurveDescription>EUR normal cap floor volatilities</CurveDescription>
-      <!-- Normal, Lognormal or ShiftedLognormal -->
-      <VolatilityType>Normal</VolatilityType>
-      <!-- Linear, Flat, None -->
-      <Extrapolation>Linear</Extrapolation>
-      <!-- Bilinear, BicubicSpline -->
-      <InterpolationMethod>Bilinear</InterpolationMethod>
-       <!-- Include ATM vol quotes also: True or False -->
-      <IncludeAtm>FALSE</IncludeAtm>
-      <!-- Day counter for date to time conversion -->
-      <DayCounter>Actual/365 (Fixed)</DayCounter>
-      <!--Calendar and Business day convention for cap/floor term to date conversion -->
-      <Calendar>TARGET</Calendar>
-      <BusinessDayConvention>Following</BusinessDayConvention>
-      <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Tenors>
-      <Strikes>-0.01,0.0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1</Strikes>
-      <IborIndex>EUR-EURIBOR-6M</IborIndex>
-      <DiscountCurve>Yield/EUR/EUR1D</DiscountCurve>
-      <!-- OptionletVolatilities, TermVolatilities -->
-      <InterpolateOn>OptionletVolatilities</InterpolateOn>
-      <!-- Linear, LinearFlat, BackwardFlat, Cubic, CubicFlat -->
-      <TimeInterpolation>LinearFlat</TimeInterpolation>
-      <!-- Linear, LinearFlat, BackwardFlat, Cubic, CubicFlat -->
-      <StrikeInterpolation>LinearFlat</StrikeInterpolation>
-      <BootstrapConfig>
-        ...
-      </BootstrapConfig>
-    </CapFloorVolatility>
-    ...
-  </CapFloorVolatilities>
-\end{minted}
-\caption{Cap/Floor volatility configuration}
-\label{lst:capfloorvol_configuration}
-\end{longlisting}
+\include{curve_configurations/capfloorvolatility}
 
 \subsubsection{FX Volatility Structures}
 
