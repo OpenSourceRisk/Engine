@@ -191,8 +191,8 @@ termstructures/swaptionvolatilityconverter.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
-time/yearcounter.cpp
-time/actual364.cpp)
+time/actual364.cpp
+time/yearcounter.cpp)
 
 # hpp files, this list is maintained manually
 
@@ -268,6 +268,7 @@ indexes/ibor/hufbubor.hpp
 indexes/ibor/idridrfix.hpp
 indexes/ibor/idrjibor.hpp
 indexes/ibor/ilstelbor.hpp
+indexes/ibor/inrmiborois.hpp
 indexes/ibor/inrmifor.hpp
 indexes/ibor/krwcd.hpp
 indexes/ibor/krwkoribor.hpp
@@ -483,9 +484,9 @@ termstructures/yoyinflationoptionletvolstripper.hpp
 termstructures/yoyoptionletvolatilitysurface.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp
+time/actual364.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
-time/actual364.hpp
 version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
