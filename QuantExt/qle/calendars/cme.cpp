@@ -23,14 +23,14 @@ using namespace QuantLib;
 namespace QuantExt {
 
 CME::CME() {
-    
+
     // All calendar instances share the same implementation instance
     static ext::shared_ptr<QuantLib::Calendar::Impl> impl(new Impl);
     impl_ = impl;
 }
 
 bool CME::Impl::isBusinessDay(const Date& date) const {
-    
+
     Weekday w = date.weekday();
     Day d = date.dayOfMonth();
     Month m = date.month();
@@ -57,10 +57,10 @@ bool CME::Impl::isBusinessDay(const Date& date) const {
         // Thanksgiving Day (fourth Thursday in November)
         || ((d >= 22 && d <= 28) && w == Thursday && m == November)
         // Christmas (Monday if Sunday or Friday if Saturday)
-        || ((d == 25 || (d == 26 && w == Monday) || (d == 24 && w == Friday)) && m == December)
-        ) return false;
+        || ((d == 25 || (d == 26 && w == Monday) || (d == 24 && w == Friday)) && m == December))
+        return false;
 
     return true;
 }
 
-}
+} // namespace QuantExt

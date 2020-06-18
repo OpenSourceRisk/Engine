@@ -29,25 +29,17 @@ using std::string;
 namespace ore {
 namespace data {
 
-bool operator==(const Expiry& lhs, const Expiry& rhs) {
-    return lhs.equal_to(rhs);
-}
+bool operator==(const Expiry& lhs, const Expiry& rhs) { return lhs.equal_to(rhs); }
 
 ExpiryDate::ExpiryDate() {}
 
 ExpiryDate::ExpiryDate(const Date& expiryDate) : expiryDate_(expiryDate) {}
 
-const Date& ExpiryDate::expiryDate() const {
-    return expiryDate_;
-}
+const Date& ExpiryDate::expiryDate() const { return expiryDate_; }
 
-void ExpiryDate::fromString(const string& strExpiryDate) {
-    expiryDate_ = parseDate(strExpiryDate);
-}
+void ExpiryDate::fromString(const string& strExpiryDate) { expiryDate_ = parseDate(strExpiryDate); }
 
-string ExpiryDate::toString() const {
-    return to_string(expiryDate_);
-}
+string ExpiryDate::toString() const { return to_string(expiryDate_); }
 
 bool ExpiryDate::equal_to(const Expiry& other) const {
     if (const ExpiryDate* p = dynamic_cast<const ExpiryDate*>(&other)) {
@@ -61,17 +53,11 @@ ExpiryPeriod::ExpiryPeriod() {}
 
 ExpiryPeriod::ExpiryPeriod(const Period& expiryPeriod) : expiryPeriod_(expiryPeriod) {}
 
-const Period& ExpiryPeriod::expiryPeriod() const {
-    return expiryPeriod_;
-}
+const Period& ExpiryPeriod::expiryPeriod() const { return expiryPeriod_; }
 
-void ExpiryPeriod::fromString(const string& strExpiryPeriod) {
-    expiryPeriod_ = parsePeriod(strExpiryPeriod);
-}
+void ExpiryPeriod::fromString(const string& strExpiryPeriod) { expiryPeriod_ = parsePeriod(strExpiryPeriod); }
 
-string ExpiryPeriod::toString() const {
-    return to_string(expiryPeriod_);
-}
+string ExpiryPeriod::toString() const { return to_string(expiryPeriod_); }
 
 bool ExpiryPeriod::equal_to(const Expiry& other) const {
     if (const ExpiryPeriod* p = dynamic_cast<const ExpiryPeriod*>(&other)) {
@@ -83,9 +69,7 @@ bool ExpiryPeriod::equal_to(const Expiry& other) const {
 
 FutureContinuationExpiry::FutureContinuationExpiry(QuantLib::Natural expiryIndex) : expiryIndex_(expiryIndex) {}
 
-QuantLib::Natural FutureContinuationExpiry::expiryIndex() const {
-    return expiryIndex_;
-}
+QuantLib::Natural FutureContinuationExpiry::expiryIndex() const { return expiryIndex_; }
 
 void FutureContinuationExpiry::fromString(const string& strIndex) {
     QL_REQUIRE(strIndex.size() > 1, "Future continuation expiry must have at least 2 characters");
@@ -93,9 +77,7 @@ void FutureContinuationExpiry::fromString(const string& strIndex) {
     expiryIndex_ = parseInteger(strIndex.substr(1));
 }
 
-string FutureContinuationExpiry::toString() const {
-    return "c" + to_string(expiryIndex_);
-}
+string FutureContinuationExpiry::toString() const { return "c" + to_string(expiryIndex_); }
 
 bool FutureContinuationExpiry::equal_to(const Expiry& other) const {
     if (const FutureContinuationExpiry* p = dynamic_cast<const FutureContinuationExpiry*>(&other)) {
@@ -105,9 +87,7 @@ bool FutureContinuationExpiry::equal_to(const Expiry& other) const {
     }
 }
 
-ostream& operator<<(ostream& os, const Expiry& expiry) {
-    return os << expiry.toString();
-}
+ostream& operator<<(ostream& os, const Expiry& expiry) { return os << expiry.toString(); }
 
 boost::shared_ptr<Expiry> parseExpiry(const string& strExpiry) {
 
@@ -130,8 +110,8 @@ boost::shared_ptr<Expiry> parseExpiry(const string& strExpiry) {
     }
 }
 
-}
-}
+} // namespace data
+} // namespace ore
 
 BOOST_CLASS_EXPORT_GUID(ore::data::ExpiryDate, "ExpiryDate");
 BOOST_CLASS_EXPORT_GUID(ore::data::ExpiryPeriod, "ExpiryPeriod");

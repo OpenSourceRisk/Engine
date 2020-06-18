@@ -27,7 +27,11 @@ namespace data {
 
 Leg FixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                               RequiredFixings& requiredFixings, const string& configuration) const {
-    return makeFixedLeg(data);
+    Leg leg = makeFixedLeg(data);
+    std::map<std::string, std::string> qlToOREIndexNames;
+    applyIndexing(leg, data, engineFactory, qlToOREIndexNames, requiredFixings);
+    addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
+    return leg;
 }
 
 Leg ZeroCouponFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -44,7 +48,7 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
     auto ois = boost::dynamic_pointer_cast<OvernightIndex>(index);
     Leg result;
     if (ois != nullptr)
-        result = makeOISLeg(data, ois);
+        result = makeOISLeg(data, ois, engineFactory);
     else {
         auto bma = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index);
         if (bma != nullptr)
@@ -52,8 +56,10 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
         else
             result = makeIborLeg(data, index, engineFactory);
     }
-    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(
-                                     requiredFixings, std::map<string, string>{{index->name(), indexName}}));
+    std::map<std::string, std::string> qlToOREIndexNames;
+    applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
+    qlToOREIndexNames[index->name()] = indexName;
+    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
     return result;
 }
 
@@ -93,8 +99,10 @@ Leg CMSLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineF
     string swapIndexName = cmsData->swapIndex();
     auto index = *engineFactory->market()->swapIndex(swapIndexName, configuration);
     Leg result = makeCMSLeg(data, index, engineFactory);
-    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(
-                                     requiredFixings, std::map<string, string>{{index->name(), swapIndexName}}));
+    std::map<std::string, std::string> qlToOREIndexNames;
+    applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
+    qlToOREIndexNames[index->name()] = swapIndexName;
+    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
     return result;
 }
 
@@ -108,10 +116,11 @@ Leg CMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<E
                                   boost::make_shared<QuantLib::SwapSpreadIndex>(
                                       "CMSSpread_" + index1->familyName() + "_" + index2->familyName(), index1, index2),
                                   engineFactory);
-    addToRequiredFixings(result,
-                         boost::make_shared<FixingDateGetter>(
-                             requiredFixings, std::map<string, string>{{index1->name(), cmsSpreadData->swapIndex1()},
-                                                                       {index2->name(), cmsSpreadData->swapIndex2()}}));
+    std::map<std::string, std::string> qlToOREIndexNames;
+    applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
+    qlToOREIndexNames[index1->name()] = cmsSpreadData->swapIndex1();
+    qlToOREIndexNames[index2->name()] = cmsSpreadData->swapIndex2();
+    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
     return result;
 }
 
@@ -131,6 +140,10 @@ Leg DigitalCMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::share
                                 boost::make_shared<QuantLib::SwapSpreadIndex>(
                                     "CMSSpread_" + index1->familyName() + "_" + index2->familyName(), index1, index2),
                                 engineFactory);
+    std::map<std::string, std::string> qlToOREIndexNames;
+    applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
+    qlToOREIndexNames[index1->name()] = cmsSpreadData->swapIndex1();
+    qlToOREIndexNames[index2->name()] = cmsSpreadData->swapIndex2();
     addToRequiredFixings(result,
                          boost::make_shared<FixingDateGetter>(
                              requiredFixings, std::map<string, string>{{index1->name(), cmsSpreadData->swapIndex1()},
@@ -144,29 +157,12 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
     QL_REQUIRE(eqData, "Wrong LegType, expected Equity");
     string eqName = eqData->eqName();
 
-    // Look up reference data, if the equity name exists in reference data, use the equityId
-    // if not continue with the current name
-    if (engineFactory->referenceData() != nullptr && engineFactory->referenceData()->hasData("Equity", eqName)) {
-        auto refData = engineFactory->referenceData()->getData("Equity", eqName);
-        // Check it's equity reference data
-        if (auto erd = boost::dynamic_pointer_cast<EquityReferenceDatum>(refData)) {
-            eqName = erd->equityData().equityId;
-
-            // check currency - if leg currency and equity currency are different check for FxTerms, or else fail
-            if (data.currency() != erd->equityData().currency) {
-                QL_REQUIRE(eqData->eqCurrency() == erd->equityData().currency,
-                           "Equity Currency provided, " << eqData->eqCurrency()
-                                                        << ", does not match equity currency from reference "
-                                                        << erd->equityData().currency);
-                QL_REQUIRE(!eqData->fxIndex().empty(), "Must from FXIndex for Equity Quanto Swap Leg");
-            }
-        }
-    }
     auto eqCurve = *engineFactory->market()->equityCurve(eqName, configuration);
 
     boost::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
     // if equity currency differs from the leg currency we need an FxIndex
-    if (eqData->eqCurrency() != "" && eqData->eqCurrency() != data.currency()) {
+    if ((eqData->eqCurrency() != "" && eqData->eqCurrency() != data.currency()) ||
+        (data.currency() != eqCurve->currency().code())) {
         QL_REQUIRE(eqData->fxIndex() != "",
                    "No FxIndex - if equity currency differs from leg currency an FxIndex must be provided");
 
@@ -181,40 +177,6 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
                     std::map<string, string>{{eqCurve->name(), "EQ-" + eqName},
                                              {fxIndex != nullptr ? fxIndex->name() : "na", eqData->fxIndex()}}));
     return result;
-}
-
-boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
-                                                  const boost::shared_ptr<Market>& market, const string& configuration,
-                                                  const string& calendar, Size fixingDays) {
-    // 1. Parse the index we have with no term structures
-    boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
-
-    // get market data objects - we set up the index using source/target, fixing days
-    // and calendar from legData_[i].fxIndex()
-    string source = fxIndexBase->sourceCurrency().code();
-    string target = fxIndexBase->targetCurrency().code();
-    Handle<YieldTermStructure> sorTS = market->discountCurve(source, configuration);
-    Handle<YieldTermStructure> tarTS = market->discountCurve(target, configuration);
-    Handle<Quote> spot = market->fxSpot(source + target);
-    Calendar cal = parseCalendar(calendar);
-
-    // Now check the ccy and foreignCcy from the legdata, work out if we need to invert or not
-    bool invertFxIndex = false;
-    if (domestic == target && foreign == source) {
-        invertFxIndex = false;
-    } else if (domestic == source && foreign == target) {
-        invertFxIndex = true;
-    } else {
-        QL_FAIL("Cannot combine FX Index " << fxIndex << " with reset ccy " << domestic << " and reset foreignCurrency "
-                                           << foreign);
-    }
-
-    auto fxi = boost::make_shared<FxIndex>(fxIndexBase->familyName(), fixingDays, fxIndexBase->sourceCurrency(),
-                                           fxIndexBase->targetCurrency(), cal, spot, sorTS, tarTS, invertFxIndex);
-
-    QL_REQUIRE(fxi, "Failed to build FXIndex " << fxIndex);
-
-    return fxi;
 }
 
 } // namespace data

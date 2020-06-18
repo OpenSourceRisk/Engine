@@ -17,8 +17,8 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <ored/marketdata/expiry.hpp>
+#include <oret/toplevelfixture.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(testContinuationExpiry) {
     BOOST_REQUIRE_NO_THROW(parsedExpiry = parseExpiry(strExpiry));
 
     // Check that we get back a FutureContinuationExpiry
-    boost::shared_ptr<FutureContinuationExpiry> castExpiry = 
+    boost::shared_ptr<FutureContinuationExpiry> castExpiry =
         boost::dynamic_pointer_cast<FutureContinuationExpiry>(parsedExpiry);
     BOOST_CHECK(castExpiry);
 

@@ -42,24 +42,24 @@
 #include <boost/optional.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
-#include <boost/serialization/serialization.hpp>
 #include <boost/serialization/optional.hpp>
+#include <boost/serialization/serialization.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
 namespace ore {
 namespace data {
-using std::string;
-using QuantLib::Real;
-using QuantLib::Size;
 using QuantLib::Date;
-using QuantLib::Period;
-using QuantLib::Quote;
-using QuantLib::SimpleQuote;
-using QuantLib::Handle;
 using QuantLib::DayCounter;
-using QuantLib::Natural;
+using QuantLib::Handle;
 using QuantLib::Month;
 using QuantLib::Months;
+using QuantLib::Natural;
+using QuantLib::Period;
+using QuantLib::Quote;
+using QuantLib::Real;
+using QuantLib::SimpleQuote;
+using QuantLib::Size;
+using std::string;
 
 //! Base market data class
 /*!
@@ -507,7 +507,6 @@ private:
     }
 };
 
-
 //! Basis Swap data class
 /*!
   This class holds single market points of type
@@ -663,9 +662,9 @@ public:
     CrossCcyFixFloatSwapQuote() {}
     //! Constructor
     CrossCcyFixFloatSwapQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name,
-                              QuoteType quoteType, const string& floatCurrency,
-                              const QuantLib::Period& floatTenor, const string& fixedCurrency,
-                              const QuantLib::Period& fixedTenor, const QuantLib::Period& maturity)
+                              QuoteType quoteType, const string& floatCurrency, const QuantLib::Period& floatTenor,
+                              const string& fixedCurrency, const QuantLib::Period& fixedTenor,
+                              const QuantLib::Period& maturity)
         : MarketDatum(value, asof, name, quoteType, InstrumentType::CC_FIX_FLOAT_SWAP), floatCurrency_(floatCurrency),
           floatTenor_(floatTenor), fixedCurrency_(fixedCurrency), fixedTenor_(fixedTenor), maturity_(maturity) {}
 
@@ -706,12 +705,11 @@ private:
 class CdsQuote : public MarketDatum {
 public:
     CdsQuote() {}
-     //! Constructor
-    CdsQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
-             const string& underlyingName, const string& seniority,
-             const string& ccy, Period term, const string& docClause = "")
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS),
-          underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy), term_(term), docClause_(docClause) {}
+    //! Constructor
+    CdsQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& underlyingName,
+             const string& seniority, const string& ccy, Period term, const string& docClause = "")
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS), underlyingName_(underlyingName),
+          seniority_(seniority), ccy_(ccy), term_(term), docClause_(docClause) {}
 
     //! \name Inspectors
     //@{
@@ -1153,8 +1151,8 @@ private:
   - unit currency
   - currency
   - expiry
-  - "strike" (25 delta butterfly "25BF", 25 delta risk reversal "25RR", atm straddle ATM, or individual delta put/call quotes)
-  we do not yet support ATMF.
+  - "strike" (25 delta butterfly "25BF", 25 delta risk reversal "25RR", atm straddle ATM, or individual delta put/call
+  quotes) we do not yet support ATMF.
 
   \ingroup marketdata
 */
@@ -1168,8 +1166,9 @@ public:
           expiry_(expiry), strike_(strike) {
 
         Strike s = parseStrike(strike);
-        QL_REQUIRE(s.type == Strike::Type::DeltaCall || s.type == Strike::Type::DeltaPut 
-                || s.type == Strike::Type::ATM || s.type == Strike::Type::BF || s.type == Strike::Type::RR, "Unsupported FXOptionQuote strike (" << strike << ")");
+        QL_REQUIRE(s.type == Strike::Type::DeltaCall || s.type == Strike::Type::DeltaPut ||
+                       s.type == Strike::Type::ATM || s.type == Strike::Type::BF || s.type == Strike::Type::RR,
+                   "Unsupported FXOptionQuote strike (" << strike << ")");
     }
 
     //! \name Inspectors
@@ -1533,6 +1532,7 @@ private:
         ar& ccy_;
         ar& expiry_;
         ar& strike_;
+        ar& isCall_;
     }
 };
 
@@ -1606,24 +1606,20 @@ class IndexCDSOptionQuote : public MarketDatum {
 public:
     //! Default constructor
     IndexCDSOptionQuote() {}
-    
+
     //! Detailed constructor
     /*! \param value     The volatility value
         \param asof      The quote date
         \param name      The quote name
         \param indexName The name of the CDS index
         \param expiry    Expiry object defining the quote's expiry
-        \param indexTerm The term of the underlying CDS index e.g. 3Y, 5Y, 7Y, 10Y etc. If not given, defaults to 
+        \param indexTerm The term of the underlying CDS index e.g. 3Y, 5Y, 7Y, 10Y etc. If not given, defaults to
                          an empty string. Assumed here that the term is encoded in \c indexName.
         \param strike    Strike object defining the quote's strike. If not given, assumed that quote is ATM.
     */
-    IndexCDSOptionQuote(QuantLib::Real value,
-        const QuantLib::Date& asof,
-        const std::string& name,
-        const std::string& indexName,
-        const boost::shared_ptr<Expiry>& expiry,
-        const std::string& indexTerm = "",
-        const boost::shared_ptr<BaseStrike>& strike = nullptr);
+    IndexCDSOptionQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name,
+                        const std::string& indexName, const boost::shared_ptr<Expiry>& expiry,
+                        const std::string& indexTerm = "", const boost::shared_ptr<BaseStrike>& strike = nullptr);
 
     //! \name Inspectors
     //@{
@@ -1692,8 +1688,8 @@ public:
     CommodityForwardQuote() {}
     //! Date based commodity forward constructor
     CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
-        QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
-        const QuantLib::Date& expiryDate)
+                          QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
+                          const QuantLib::Date& expiryDate)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), commodityName_(commodityName),
           quoteCurrency_(quoteCurrency), expiryDate_(expiryDate), tenorBased_(false) {
         QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
@@ -1701,8 +1697,8 @@ public:
 
     //! Tenor based commodity forward constructor
     CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
-        QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
-        const QuantLib::Period& tenor, boost::optional<QuantLib::Period> startTenor = boost::none)
+                          QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
+                          const QuantLib::Period& tenor, boost::optional<QuantLib::Period> startTenor = boost::none)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), commodityName_(commodityName),
           quoteCurrency_(quoteCurrency), tenor_(tenor), startTenor_(startTenor), tenorBased_(true) {
         QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
@@ -1712,20 +1708,20 @@ public:
     //@{
     const std::string& commodityName() const { return commodityName_; }
     const std::string& quoteCurrency() const { return quoteCurrency_; }
-    
+
     //! The commodity forward's expiry if the quote is date based
     const QuantLib::Date& expiryDate() const { return expiryDate_; }
-    
+
     //! The commodity forward's tenor if the quote is tenor based
     const QuantLib::Period& tenor() const { return tenor_; }
-    
-    /*! The period between the as of date and the date from which the forward tenor is applied. This is generally the 
+
+    /*! The period between the as of date and the date from which the forward tenor is applied. This is generally the
         spot tenor which is indicated by \c boost::none but there are special cases:
         - overnight forward: \c startTenor will be <code>0 * Days</code> and \c tenor will be <code>1 * Days</code>
         - tom-next forward: \c startTenor will be <code>1 * Days</code> and \c tenor will be <code>1 * Days</code>
     */
     const boost::optional<QuantLib::Period>& startTenor() const { return startTenor_; }
-    
+
     //! Returns \c true if the forward is tenor based and \c false if forward is date based
     bool tenorBased() const { return tenorBased_; }
     //@}
@@ -1767,14 +1763,9 @@ public:
         \param expiry        Expiry object defining the quote's expiry
         \param strike        Strike object defining the quote's strike
     */
-    CommodityOptionQuote(QuantLib::Real value,
-        const QuantLib::Date& asof,
-        const std::string& name,
-        QuoteType quoteType,
-        const std::string& commodityName,
-        const std::string& quoteCurrency,
-        const boost::shared_ptr<Expiry>& expiry,
-        const boost::shared_ptr<BaseStrike>& strike);
+    CommodityOptionQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name, QuoteType quoteType,
+                         const std::string& commodityName, const std::string& quoteCurrency,
+                         const boost::shared_ptr<Expiry>& expiry, const boost::shared_ptr<BaseStrike>& strike);
 
     //! \name Inspectors
     //@{

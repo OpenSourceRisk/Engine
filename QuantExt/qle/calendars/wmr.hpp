@@ -37,7 +37,7 @@ private:
 
 public:
     enum Market {
-        Settlement,     //!< generic settlement calendar
+        Settlement, //!< generic settlement calendar
     };
     Wmr(Market market = Settlement);
 };

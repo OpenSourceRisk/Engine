@@ -43,6 +43,8 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     instrument_->qlInstrument()->update();
     notional_ = amount_;
     notionalCurrency_ = currency_;
+    // the QL instrument reads the fixing in setupExpired() (bug?), so we don't add a payment date here to be safe
+    requiredFixings_.addFixingDate(fra->fixingDate(), index_);
 }
 
 void ForwardRateAgreement::fromXML(XMLNode* node) {
@@ -55,12 +57,12 @@ void ForwardRateAgreement::fromXML(XMLNode* node) {
     longShort_ = XMLUtils::getChildValue(fNode, "LongShort", true);
     strike_ = XMLUtils::getChildValueAsDouble(fNode, "Strike", true);
     amount_ = XMLUtils::getChildValueAsDouble(fNode, "Notional", true);
-    }
+}
 
 XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fNode = doc.allocNode("ForwardRateAgreementData");
-    XMLUtils::appendNode(node, fNode);        
+    XMLUtils::appendNode(node, fNode);
     XMLUtils::addChild(doc, fNode, "StartDate", startDate_);
     XMLUtils::addChild(doc, fNode, "EndDate", endDate_);
     XMLUtils::addChild(doc, fNode, "Currency", currency_);

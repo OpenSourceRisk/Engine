@@ -93,8 +93,8 @@ public:
         @param protectionPaymentTime timing of protection and default accrual payments
         @param protectionStart  The first date where a default
                                 event will trigger the contract.
-        @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to 
-                                     allow for possibility of including maturity date in the last 
+        @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to
+                                     allow for possibility of including maturity date in the last
                                      period's coupon accrual which is standard.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate spread, const Schedule& schedule,

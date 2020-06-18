@@ -88,9 +88,9 @@
 namespace ore {
 namespace analytics {
 using namespace QuantLib;
-using std::vector;
 using std::map;
 using std::string;
+using std::vector;
 
 //! Map a yield curve type to a risk factor key type
 RiskFactorKey::KeyType yieldCurveRiskFactor(const ore::data::YieldCurveType y);
@@ -114,7 +114,7 @@ public:
     //! Constructor
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
-                      const std::string& configuration = Market::defaultConfiguration, 
+                      const std::string& configuration = Market::defaultConfiguration,
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                       const bool continueOnError = false);
@@ -123,14 +123,14 @@ public:
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
                       const boost::shared_ptr<FixingManager>& fixingManager,
                       const std::string& configuration = Market::defaultConfiguration,
-		      const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
+                      const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                       const bool continueOnError = false);
 
     //! Set scenario generator
     boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
     //! Get scenario generator
-    const boost::shared_ptr<ScenarioGenerator>& scnearioGenerator() const { return scenarioGenerator_; }
+    const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() const { return scenarioGenerator_; }
 
     //! Set aggregation data
     boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() { return asd_; }
@@ -162,14 +162,14 @@ protected:
     void addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
                        const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
                        const std::string& dc, bool simulate = true);
-    
+
     /*! Given a yield curve spec ID, \p yieldSpecId, return the corresponding yield term structure
     from the \p market. If \p market is `nullptr`, then the yield term structure is taken from
     this ScenarioSimMarket instance.
     */
-    QuantLib::Handle<QuantLib::YieldTermStructure> getYieldCurve(const std::string& yieldSpecId,
-        const ore::data::TodaysMarketParameters& todaysMarketParams, const std::string& configuration,
-        const boost::shared_ptr<ore::data::Market>& market = nullptr) const;
+    QuantLib::Handle<QuantLib::YieldTermStructure>
+    getYieldCurve(const std::string& yieldSpecId, const ore::data::TodaysMarketParameters& todaysMarketParams,
+                  const std::string& configuration, const boost::shared_ptr<ore::data::Market>& market = nullptr) const;
 
     const boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
     boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;

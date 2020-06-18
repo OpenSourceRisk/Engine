@@ -81,9 +81,9 @@ BOOST_AUTO_TEST_CASE(testStandardCurves) {
     Settings::instance().evaluationDate() = today + 3 * Months;
     BOOST_TEST_MESSAGE("Changed evaluation date to " << Settings::instance().evaluationDate());
 
-    BOOST_CHECK(!close(curve.discount(discountDate), baseCurve->discount(discountDate) *
-                                                         numCurve->discount(discountDate) /
-                                                         denCurve->discount(discountDate)));
+    BOOST_CHECK(
+        !close(curve.discount(discountDate), baseCurve->discount(discountDate) * numCurve->discount(discountDate) /
+                                                 denCurve->discount(discountDate)));
     Time t = dc.yearFraction(curve.referenceDate(), discountDate);
     BOOST_CHECK(close(curve.discount(discountDate),
                       baseCurve->discount(discountDate) * numCurve->discount(discountDate) / denCurve->discount(t)));

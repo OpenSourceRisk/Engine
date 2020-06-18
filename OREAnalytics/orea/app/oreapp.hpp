@@ -37,8 +37,8 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/ored.hpp>
-#include <ored/portfolio/tradefactory.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/tradefactory.hpp>
 
 namespace ore {
 namespace analytics {
@@ -47,6 +47,9 @@ using namespace ore::data;
 class SensitivityScenarioData;
 class SensitivityAnalysis;
 
+//! Orchestrates the processes covered by ORE, data loading, analytics and reporting
+/*! \ingroup app
+ */
 class OREApp {
 public:
     //! Constructor

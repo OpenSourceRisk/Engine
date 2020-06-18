@@ -47,14 +47,11 @@ public:
 
     void checkEquitySwap(const vector<LegData>& legData);
 
-    //! Build QuantLib/QuantExt instrument, link pricing engine
-    // virtual void build(const boost::shared_ptr<EngineFactory>&);
+    //! Trade interface
+    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
-    //! \name Serialisation
-    //@{
-    // virtual void fromXML(XMLNode* node);
-    // virtual XMLNode* toXML(XMLDocument& doc);
-    //@}
+private:
+    Size equityLegIndex_, irLegIndex_;
 };
 } // namespace data
 } // namespace ore

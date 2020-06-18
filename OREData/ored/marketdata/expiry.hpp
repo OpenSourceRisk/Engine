@@ -23,9 +23,11 @@
 
 #pragma once
 
-#include <ql/types.hpp>
-#include <ql/time/date.hpp>
 #include <boost/shared_ptr.hpp>
+#include <ored/utilities/serializationdate.hpp>
+#include <ored/utilities/serializationperiod.hpp>
+#include <ql/time/date.hpp>
+#include <ql/types.hpp>
 #include <string>
 
 #include <boost/serialization/base_object.hpp>
@@ -34,7 +36,7 @@ namespace ore {
 namespace data {
 
 /*! Abstract base class to hold information that describes an expiry.
-*/
+ */
 class Expiry {
 public:
     virtual ~Expiry() {}
@@ -59,7 +61,7 @@ private:
 };
 
 /*! Expiry consisting of an explicit expiry date
-*/
+ */
 class ExpiryDate : public Expiry {
 public:
     //! Default constructor.
@@ -95,7 +97,7 @@ private:
 };
 
 /*! Expiry consisting of a period
-*/
+ */
 class ExpiryPeriod : public Expiry {
 public:
     //! Default constructor.
@@ -131,7 +133,7 @@ private:
 };
 
 /*! Expiry represented by a future continuation index
-*/
+ */
 class FutureContinuationExpiry : public Expiry {
 public:
     //! Constructor with optional explicit future continuation index.
@@ -140,7 +142,7 @@ public:
     //! Return the future continuation expiry index.
     QuantLib::Natural expiryIndex() const;
 
-    /*! Populate FutureContinuationExpiry object from \p strIndex which should be of the form \c c<Index> where 
+    /*! Populate FutureContinuationExpiry object from \p strIndex which should be of the form \c c<Index> where
         Index is a positive integer. An exception is thrown if \p strIndex is not of this form.
     */
     void fromString(const std::string& strIndex) override;
@@ -169,5 +171,5 @@ std::ostream& operator<<(std::ostream& os, const Expiry& expiry);
 //! Parse an Expiry from its string representation, \p strExpiry.
 boost::shared_ptr<Expiry> parseExpiry(const std::string& strExpiry);
 
-}
-}
+} // namespace data
+} // namespace ore

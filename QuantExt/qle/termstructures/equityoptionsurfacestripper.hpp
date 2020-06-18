@@ -16,16 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file qle/termstructures/equityoptionsurfacestripper.hpp
+    \brief Imply equity vol surface from put/call price surfaces
+    \ingroup termstructures
+*/
+
 #ifndef quantext_equity_option_premium_curve_stripper_hpp
 #define quantext_equity_option_premium_curve_stripper_hpp
 
 #include <ql/exercise.hpp>
 #include <ql/patterns/lazyobject.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <qle/termstructures/optionpricesurface.hpp>
-#include <qle/interpolators/optioninterpolator2d.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/interpolators/optioninterpolator2d.hpp>
+#include <qle/termstructures/optionpricesurface.hpp>
 
 namespace QuantExt {
 
@@ -33,14 +38,12 @@ class EquityOptionSurfaceStripper : public QuantLib::LazyObject {
 
 public:
     EquityOptionSurfaceStripper(const boost::shared_ptr<OptionInterpolatorBase>& callSurface,
-        const boost::shared_ptr<OptionInterpolatorBase>& putSurface,
-        const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex,
-        const Calendar& calendar,
-        const DayCounter& dayCounter,
-        QuantLib::Exercise::Type type = QuantLib::Exercise::European,
-        bool lowerStrikeConstExtrap = true,
-        bool upperStrikeConstExtrap = true,
-        bool timeFlatExtrapolation = false);
+                                const boost::shared_ptr<OptionInterpolatorBase>& putSurface,
+                                const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex, const Calendar& calendar,
+                                const DayCounter& dayCounter,
+                                QuantLib::Exercise::Type type = QuantLib::Exercise::European,
+                                bool lowerStrikeConstExtrap = true, bool upperStrikeConstExtrap = true,
+                                bool timeFlatExtrapolation = false);
 
     //! \name LazyObject interface
     //@{
@@ -55,17 +58,18 @@ private:
     QuantLib::Handle<QuantExt::EquityIndex> eqIndex_;
     const Calendar& calendar_;
     const DayCounter& dayCounter_;
-    QuantLib::Exercise::Type type_; 
+    QuantLib::Exercise::Type type_;
     bool lowerStrikeConstExtrap_;
     bool upperStrikeConstExtrap_;
     bool timeFlatExtrapolation_;
 
     QuantLib::Real implyVol(QuantLib::Date expiry, QuantLib::Real strike, QuantLib::Option::Type type,
-        boost::shared_ptr<QuantLib::PricingEngine> engine, boost::shared_ptr<QuantLib::SimpleQuote> volQuote) const;
-    
+                            boost::shared_ptr<QuantLib::PricingEngine> engine,
+                            boost::shared_ptr<QuantLib::SimpleQuote> volQuote) const;
+
     mutable boost::shared_ptr<QuantLib::BlackVolTermStructure> volSurface_;
 };
 
 } // namespace QuantExt
-# endif
+#endif
 #pragma once

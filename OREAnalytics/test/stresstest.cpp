@@ -17,7 +17,6 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <test/oreatoplevelfixture.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -54,6 +53,7 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
 
@@ -65,12 +65,12 @@ using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
-using testsuite::TestMarket;
-using testsuite::buildSwap;
 using testsuite::buildCap;
+using testsuite::buildEuropeanSwaption;
 using testsuite::buildFloor;
 using testsuite::buildFxOption;
-using testsuite::buildEuropeanSwaption;
+using testsuite::buildSwap;
+using testsuite::TestMarket;
 
 boost::shared_ptr<data::Conventions> stressConv() {
     boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
@@ -118,8 +118,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
     simMarketData->setYieldCurveDayCounters("", "ACT/ACT");
 
     simMarketData->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
-    simMarketData->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years,  3 * Years,
-                                        5 * Years,  7 * Years, 10 * Years, 20 * Years});
+    simMarketData->setSwapVolExpiries(
+        "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
     simMarketData->setSwapVolCcys({"EUR", "GBP", "USD", "CHF", "JPY"});
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->setSimulateSwapVols(true); // false;
@@ -301,6 +301,8 @@ BOOST_AUTO_TEST_CASE(regression) {
     engineData->engine("FxOption") = "AnalyticEuropeanEngine";
     engineData->model("CapFloor") = "IborCapModel";
     engineData->engine("CapFloor") = "IborCapEngine";
+    engineData->model("CapFlooredIborLeg") = "BlackOrBachelier";
+    engineData->engine("CapFlooredIborLeg") = "BlackIborCouponPricer";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, simMarket);
     factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());

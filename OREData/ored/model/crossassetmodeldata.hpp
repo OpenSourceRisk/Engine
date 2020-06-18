@@ -41,10 +41,10 @@
 namespace ore {
 namespace data {
 using namespace QuantLib;
-using std::string;
 using std::map;
-using std::vector;
 using std::pair;
+using std::string;
+using std::vector;
 
 //! Cross Asset Model Parameters
 /*! CrossAssetModelData comprises the specification of how to build and calibrate

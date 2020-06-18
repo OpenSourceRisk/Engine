@@ -18,9 +18,9 @@
 
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
-#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/errors.hpp>
@@ -206,7 +206,7 @@ map<string, set<Date>> Portfolio::fixings(const Date& settlementDate) const {
 }
 
 std::map<AssetClass, std::set<std::string>> Portfolio::underlyingIndices() {
-    
+
     if (!underlyingIndicesCache_.empty())
         return underlyingIndicesCache_;
 

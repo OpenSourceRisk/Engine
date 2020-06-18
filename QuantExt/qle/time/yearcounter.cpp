@@ -18,28 +18,25 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/time/yearcounter.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/time/yearcounter.hpp>
 
 using QuantLib::Date;
 using QuantLib::Time;
 
 namespace QuantExt {
-    namespace { QuantLib::DayCounter underlyingDCF = QuantLib::ActualActual(); }
-    
-    Date::serial_type YearCounter::Impl::dayCount(const Date& d1,
-                                                       const Date& d2) const {
-        return underlyingDCF.dayCount(d1,d2);
-    }
-
-    Time YearCounter::Impl::yearFraction(const Date& d1,
-                                              const Date& d2,
-                                              const Date&,
-                                              const Date&) const {
-        Time t = underlyingDCF.yearFraction(d1,d2);
-
-        return std::floor(0.5 + t); //rounding to the nearest integer
-    }
-
+namespace {
+QuantLib::DayCounter underlyingDCF = QuantLib::ActualActual();
 }
 
+Date::serial_type YearCounter::Impl::dayCount(const Date& d1, const Date& d2) const {
+    return underlyingDCF.dayCount(d1, d2);
+}
+
+Time YearCounter::Impl::yearFraction(const Date& d1, const Date& d2, const Date&, const Date&) const {
+    Time t = underlyingDCF.yearFraction(d1, d2);
+
+    return std::floor(0.5 + t); // rounding to the nearest integer
+}
+
+} // namespace QuantExt

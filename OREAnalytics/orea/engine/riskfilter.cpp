@@ -63,17 +63,26 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
     } else {
         switch (riskTypeIndex_) {
         case 1:
-            allowed_type = {RiskFactorKey::KeyType::DiscountCurve,      RiskFactorKey::KeyType::YieldCurve,
-                            RiskFactorKey::KeyType::IndexCurve,         RiskFactorKey::KeyType::FXSpot,
-                            RiskFactorKey::KeyType::EquitySpot,         RiskFactorKey::KeyType::DividendYield,      
-                            RiskFactorKey::KeyType::SurvivalProbability,RiskFactorKey::KeyType::RecoveryRate,       
-                            RiskFactorKey::KeyType::CPIIndex,           RiskFactorKey::KeyType::ZeroInflationCurve, 
-                            RiskFactorKey::KeyType::YoYInflationCurve,  RiskFactorKey::KeyType::SecuritySpread};
+            allowed_type = {RiskFactorKey::KeyType::DiscountCurve,
+                            RiskFactorKey::KeyType::YieldCurve,
+                            RiskFactorKey::KeyType::IndexCurve,
+                            RiskFactorKey::KeyType::FXSpot,
+                            RiskFactorKey::KeyType::EquitySpot,
+                            RiskFactorKey::KeyType::DividendYield,
+                            RiskFactorKey::KeyType::SurvivalProbability,
+                            RiskFactorKey::KeyType::RecoveryRate,
+                            RiskFactorKey::KeyType::CPIIndex,
+                            RiskFactorKey::KeyType::ZeroInflationCurve,
+                            RiskFactorKey::KeyType::YoYInflationCurve,
+                            RiskFactorKey::KeyType::SecuritySpread};
             break;
         case 2:
-            allowed_type = {RiskFactorKey::KeyType::SwaptionVolatility, RiskFactorKey::KeyType::OptionletVolatility,
-                            RiskFactorKey::KeyType::FXVolatility, RiskFactorKey::KeyType::EquityVolatility,
-                            RiskFactorKey::KeyType::CDSVolatility, RiskFactorKey::KeyType::YieldVolatility,
+            allowed_type = {RiskFactorKey::KeyType::SwaptionVolatility,
+                            RiskFactorKey::KeyType::OptionletVolatility,
+                            RiskFactorKey::KeyType::FXVolatility,
+                            RiskFactorKey::KeyType::EquityVolatility,
+                            RiskFactorKey::KeyType::CDSVolatility,
+                            RiskFactorKey::KeyType::YieldVolatility,
                             RiskFactorKey::KeyType::YoYInflationCapFloorVolatility};
             break;
         case 3:
@@ -90,10 +99,11 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
         std::set<RiskFactorKey::KeyType> allowed_class;
         switch (riskClassIndex_) {
         case 1:
-            allowed_class = {RiskFactorKey::KeyType::DiscountCurve,       RiskFactorKey::KeyType::YieldCurve,
-                             RiskFactorKey::KeyType::IndexCurve,          RiskFactorKey::KeyType::SwaptionVolatility,
-                             RiskFactorKey::KeyType::OptionletVolatility, RiskFactorKey::KeyType::SecuritySpread, 
-                             RiskFactorKey::KeyType::YieldVolatility,     RiskFactorKey::KeyType::YoYInflationCapFloorVolatility};
+            allowed_class = {
+                RiskFactorKey::KeyType::DiscountCurve,       RiskFactorKey::KeyType::YieldCurve,
+                RiskFactorKey::KeyType::IndexCurve,          RiskFactorKey::KeyType::SwaptionVolatility,
+                RiskFactorKey::KeyType::OptionletVolatility, RiskFactorKey::KeyType::SecuritySpread,
+                RiskFactorKey::KeyType::YieldVolatility,     RiskFactorKey::KeyType::YoYInflationCapFloorVolatility};
             break;
         case 2:
             allowed_class = {RiskFactorKey::KeyType::CPIIndex, RiskFactorKey::KeyType::ZeroInflationCurve,
@@ -104,7 +114,7 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
                              RiskFactorKey::KeyType::CDSVolatility, RiskFactorKey::KeyType::BaseCorrelation};
             break;
         case 4:
-            allowed_class = {RiskFactorKey::KeyType::EquitySpot, RiskFactorKey::KeyType::EquityVolatility, 
+            allowed_class = {RiskFactorKey::KeyType::EquitySpot, RiskFactorKey::KeyType::EquityVolatility,
                              RiskFactorKey::KeyType::DividendYield};
             break;
         case 5:

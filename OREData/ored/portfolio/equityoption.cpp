@@ -34,29 +34,22 @@ namespace data {
 
 void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
-    string name = equityName();
-    // Look up reference data, if the equity name exists in reference data, use the equityId
-    // if not continue with the current name
-    if (engineFactory->referenceData() != nullptr && engineFactory->referenceData()->hasData("Equity", name)) {
-        auto refData = engineFactory->referenceData()->getData("Equity", name);
-        // Check it's equity reference data
-        if (auto erd = boost::dynamic_pointer_cast<EquityReferenceDatum>(refData)) {
-            name = erd->equityData().equityId;
+    // Set the assetName_ as it may have changed after lookup
+    assetName_ = equityName();
 
-            // check currency - if option currency and equity currency are different this is a quanto trade
-            QL_REQUIRE(currency_ == erd->equityData().currency, 
-                "Option Currency: " << currency_ << " does not match equity currency: " << erd->equityData().currency << ", EquityOption does not support quanto options.");
-        }
-    }
+    // Populate the index_ in case the option is automatic exercise.
+    const boost::shared_ptr<Market>& market = engineFactory->market();
+    index_ = *market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing));
 
-    // set the option assetname - may have changed after lookup
-    assetName_ = name;
-
+    // Build the trade using the shared functionality in the base class.
     VanillaOptionTrade::build(engineFactory);
 
-    Handle<BlackVolTermStructure> blackVol = engineFactory->market()->equityVol(assetName_);
-    LOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with maturity " << maturity_ << " and strike " << strike_
-                                        << " is " << blackVol->blackVol(maturity_, strike_));
+    // LOG the volatility if the trade expiry date is in the future.
+    if (expiryDate_ > Settings::instance().evaluationDate()) {
+        DLOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with expiry " << expiryDate_
+                                << " and strike " << strike_ << " is "
+                                << market->equityVol(assetName_)->blackVol(expiryDate_, strike_));
+    }
 }
 
 void EquityOption::fromXML(XMLNode* node) {
@@ -88,7 +81,7 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
 }
 
 std::map<AssetClass, std::set<std::string>> EquityOption::underlyingIndices() const {
-    return { {AssetClass::EQ, std::set<std::string>({equityName()})} };
+    return {{AssetClass::EQ, std::set<std::string>({equityName()})}};
 }
 
 } // namespace data

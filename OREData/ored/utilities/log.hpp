@@ -49,9 +49,9 @@
 #endif
 
 #include <iomanip>
+#include <ored/utilities/osutils.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <sstream>
-#include <ored/utilities/osutils.hpp>
 
 namespace ore {
 namespace data {
@@ -361,7 +361,7 @@ public:
     ~LoggerStream();
 
     //! cast this LoggerStream as a ostream&
-    operator std::ostream&() { return ss_; }
+    operator std::ostream &() { return ss_; }
 
 private:
     unsigned mask_;
@@ -388,21 +388,20 @@ class StructuredErrorMessage {
 public:
     virtual ~StructuredErrorMessage() {}
     static constexpr const char* name = "StructuredErrorMessage";
-    
+
     //! return a string for the log file
     std::string msg() const { return string(name) + string(" ") + json(); }
+
 protected:
     // This should return a structured string, ideally in JSON, and should contain a field
     // errorType
     virtual std::string json() const = 0;
 
     // utility function to delimate string for json, handles \" and \\ and control characters
-    std::string jsonify (const std::string& s) const;
+    std::string jsonify(const std::string& s) const;
 };
 
-inline std::ostream& operator<<(std::ostream& out, const StructuredErrorMessage& sem) {
-    return out << sem.msg();
-}
+inline std::ostream& operator<<(std::ostream& out, const StructuredErrorMessage& sem) { return out << sem.msg(); }
 
 } // namespace data
 } // namespace ore

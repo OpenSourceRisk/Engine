@@ -33,14 +33,14 @@ using namespace QuantLib;
 //! \ingroup termstructures
 class FxSmileSection {
 public:
-    FxSmileSection(Real spot, Real rd, Real rf, Time t)
-        : spot_(spot), rd_(rd), rf_(rf), t_(t) {}
+    FxSmileSection() : spot_(0.0), rd_(0.0), rf_(0.0), t_(0.0) {}
+    FxSmileSection(Real spot, Real rd, Real rf, Time t) : spot_(spot), rd_(rd), rf_(rf), t_(t) {}
     virtual ~FxSmileSection(){};
 
     virtual Volatility volatility(Real strike) const = 0;
 
-    DiscountFactor domesticDiscount() const { return exp(-rd_*t_); }
-    DiscountFactor foreignDiscount() const { return exp(-rf_*t_); } 
+    DiscountFactor domesticDiscount() const { return exp(-rd_ * t_); }
+    DiscountFactor foreignDiscount() const { return exp(-rf_ * t_); }
 
 protected:
     Real spot_;

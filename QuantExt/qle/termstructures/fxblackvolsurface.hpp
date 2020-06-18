@@ -110,12 +110,14 @@ public:
                                        const std::vector<Volatility>& atmVols, const std::vector<Volatility>& rr,
                                        const std::vector<Volatility>& bf, const DayCounter& dc, const Calendar& cal,
                                        const Handle<Quote>& fx, const Handle<YieldTermStructure>& dom,
-                                       const Handle<YieldTermStructure>& fore, bool requireMonotoneVariance = true, const bool firstApprox = false,
+                                       const Handle<YieldTermStructure>& fore, bool requireMonotoneVariance = true,
+                                       const bool firstApprox = false,
                                        const DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral,
                                        const DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot,
                                        const Real delta = 0.25)
-        : FxBlackVolatilitySurface(refDate, dates, atmVols, rr, bf, dc, cal, fx, dom, fore,
-                                   requireMonotoneVariance, atmType, deltaType, delta), firstApprox_(firstApprox) {}
+        : FxBlackVolatilitySurface(refDate, dates, atmVols, rr, bf, dc, cal, fx, dom, fore, requireMonotoneVariance,
+                                   atmType, deltaType, delta),
+          firstApprox_(firstApprox) {}
 
 protected:
     bool firstApprox_;
@@ -123,8 +125,8 @@ protected:
     virtual boost::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,
                                                                 Volatility rr, Volatility bf) const {
         QL_REQUIRE(t > 0, "FxBlackVannaVolgaVolatilitySurface::blackVolSmileImpl(): positive expiry time expected");
-        return boost::shared_ptr<FxSmileSection>(new VannaVolgaSmileSection(spot, rd, rf, t, atm, rr, bf, firstApprox_,
-                                                                            atmType_, deltaType_, delta_));
+        return boost::shared_ptr<FxSmileSection>(
+            new VannaVolgaSmileSection(spot, rd, rf, t, atm, rr, bf, firstApprox_, atmType_, deltaType_, delta_));
     }
 };
 } // namespace QuantExt

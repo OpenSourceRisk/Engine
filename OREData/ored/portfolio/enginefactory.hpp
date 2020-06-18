@@ -39,14 +39,14 @@
 
 namespace ore {
 namespace data {
+using ore::data::Market;
+using QuantLib::Disposable;
+using QuantLib::PricingEngine;
 using std::map;
+using std::pair;
 using std::set;
 using std::string;
-using std::pair;
 using std::tuple;
-using ore::data::Market;
-using QuantLib::PricingEngine;
-using QuantLib::Disposable;
 
 class Trade;
 class LegBuilder;
@@ -190,6 +190,14 @@ public:
     const boost::shared_ptr<Market>& market() const { return market_; };
     //! Return the market configurations used by this EngineFactory
     const map<MarketContext, string>& configurations() const { return configurations_; };
+    //! Return a configuration (or the default one if key not found)
+    const string& configuration(const MarketContext& key) {
+        if (configurations_.count(key) > 0) {
+            return configurations_.at(key);
+        } else {
+            return Market::defaultConfiguration;
+        }
+    }
     //! Return the EngineData parameters
     const boost::shared_ptr<EngineData> engineData() const { return engineData_; };
     //! Register a builder with the factory

@@ -2,7 +2,7 @@
 // Do not edit
 
 #ifdef BOOST_MSVC
-#  include <qle/auto_link.hpp>
+#include <qle/auto_link.hpp>
 #endif
 
 #include <qle/calendars/austria.hpp>
@@ -25,6 +25,7 @@
 #include <qle/calendars/wmr.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/blackovernightindexedcouponpricer.hpp>
 #include <qle/cashflows/brlcdicouponpricer.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
@@ -37,6 +38,7 @@
 #include <qle/cashflows/floatingannuitynominal.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/quantocouponpricer.hpp>
@@ -104,6 +106,7 @@
 #include <qle/indexes/secpi.hpp>
 #include <qle/instruments/averageois.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
+#include <qle/instruments/cashsettledeuropeanoption.hpp>
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/instruments/commodityapo.hpp>
 #include <qle/instruments/commodityforward.hpp>
@@ -169,6 +172,7 @@
 #include <qle/models/parametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
 #include <qle/models/pseudoparameter.hpp>
+#include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
 #include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
@@ -233,6 +237,7 @@
 #include <qle/termstructures/dynamicstype.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/dynamicyoyoptionletvolatilitystructure.hpp>
+#include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
 #include <qle/termstructures/equityoptionsurfacestripper.hpp>
 #include <qle/termstructures/equityvolconstantspread.hpp>

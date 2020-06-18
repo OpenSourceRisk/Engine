@@ -36,21 +36,24 @@
 
 namespace ore {
 namespace data {
-using std::string;
-using QuantLib::IborIndex;
-using QuantLib::SwapIndex;
-using QuantLib::Index;
-using QuantLib::ZeroInflationIndex;
-using QuantLib::Handle;
-using QuantLib::YieldTermStructure;
-using QuantLib::ZeroInflationTermStructure;
 using ore::data::Convention;
+using QuantLib::Handle;
+using QuantLib::IborIndex;
+using QuantLib::Index;
+using QuantLib::SwapIndex;
+using QuantLib::YieldTermStructure;
+using QuantLib::ZeroInflationIndex;
+using QuantLib::ZeroInflationTermStructure;
+using std::string;
 
 //! Convert std::string to QuantExt::FxIndex
 /*!
     \ingroup utilities
 */
-boost::shared_ptr<QuantExt::FxIndex> parseFxIndex(const string& s);
+boost::shared_ptr<QuantExt::FxIndex>
+parseFxIndex(const string& s, const Handle<Quote>& fxSpot = Handle<Quote>(),
+             const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
+             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>());
 
 //! Convert std::string to QuantLib::IborIndex
 /*!
@@ -126,18 +129,17 @@ parseZeroInflationIndex(const string& s, bool isInterpolated = false,
 boost::shared_ptr<QuantExt::BondIndex> parseBondIndex(const string& s);
 
 /*! Convert std::string to QuantExt::ComodityIndex
-    
+
     This function can be used to parse commodity spot \e indices or commodity future \e indices:
     - for spot \e indices, the \p name is of the form <tt>COMM-EXCHANGE:COMMODITY</tt>
-    - for future \e indices, the \p name is of the form <tt>COMM-EXCHANGE:CONTRACT:YYYY-MM</tt> or 
+    - for future \e indices, the \p name is of the form <tt>COMM-EXCHANGE:CONTRACT:YYYY-MM</tt> or
       <tt>COMM-EXCHANGE:CONTRACT:YYYY-MM-DD</tt>
 
     \ingroup utilities
  */
-boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const std::string& name,
-    const QuantLib::Calendar& cal = QuantLib::NullCalendar(),
-    const QuantLib::Handle<QuantExt::PriceTermStructure>& ts = 
-        QuantLib::Handle<QuantExt::PriceTermStructure>());
+boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(
+    const std::string& name, const QuantLib::Calendar& cal = QuantLib::NullCalendar(),
+    const QuantLib::Handle<QuantExt::PriceTermStructure>& ts = QuantLib::Handle<QuantExt::PriceTermStructure>());
 
 //! Convert std::string to QuantLib::Index
 /*!
@@ -150,8 +152,8 @@ boost::shared_ptr<Index> parseIndex(const string& s, const Conventions& conventi
  */
 bool isOvernightIndex(const std::string& indexName, const Conventions& conventions = Conventions());
 
-/*! In some cases, we allow multiple external ibor index names to represent the same QuantLib index. This function returns
-    the unique index name that we use internally to represent the QuantLib index.
+/*! In some cases, we allow multiple external ibor index names to represent the same QuantLib index. This function
+   returns the unique index name that we use internally to represent the QuantLib index.
 
     For example, we allow:
     - \c USD-FedFunds-1D and \c USD-FedFunds externally but we use \c USD-FedFunds internally

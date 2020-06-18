@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug (static runtime)|Win32">
@@ -117,6 +117,7 @@
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
     <ClInclude Include="ored\portfolio\builders\capflooredcpileg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloorediborleg.hpp" />
+    <ClInclude Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capflooredyoyleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\cms.hpp" />
     <ClInclude Include="ored\portfolio\builders\cmsspread.hpp" />
@@ -150,6 +151,7 @@
     <ClInclude Include="ored\portfolio\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\fxswap.hpp" />
+    <ClInclude Include="ored\portfolio\indexing.hpp" />
     <ClInclude Include="ored\portfolio\instrumentwrapper.hpp" />
     <ClInclude Include="ored\portfolio\legbuilders.hpp" />
     <ClInclude Include="ored\portfolio\legdata.hpp" />
@@ -157,6 +159,8 @@
     <ClInclude Include="ored\portfolio\nettingsetdefinition.hpp" />
     <ClInclude Include="ored\portfolio\nettingsetmanager.hpp" />
     <ClInclude Include="ored\portfolio\optiondata.hpp" />
+    <ClInclude Include="ored\portfolio\optionexercisedata.hpp" />
+    <ClInclude Include="ored\portfolio\optionpaymentdata.hpp" />
     <ClInclude Include="ored\portfolio\optionwrapper.hpp" />
     <ClInclude Include="ored\portfolio\portfolio.hpp" />
     <ClInclude Include="ored\portfolio\referencedata.hpp" />
@@ -182,6 +186,7 @@
     <ClInclude Include="ored\utilities\flowanalysis.hpp" />
     <ClInclude Include="ored\utilities\indexparser.hpp" />
     <ClInclude Include="ored\utilities\log.hpp" />
+    <ClInclude Include="ored\utilities\marketdata.hpp" />
     <ClInclude Include="ored\utilities\osutils.hpp" />
     <ClInclude Include="ored\utilities\parsers.hpp" />
     <ClInclude Include="ored\utilities\progressbar.hpp" />
@@ -264,9 +269,9 @@
     <ClCompile Include="ored\portfolio\bondutils.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloor.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloorediborleg.cpp" />
+    <ClCompile Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />
     <ClCompile Include="ored\portfolio\builders\cmsspread.cpp" />
-    <ClCompile Include="ored\portfolio\builders\commodityoption.cpp" />
     <ClCompile Include="ored\portfolio\builders\cpicapfloor.cpp" />
     <ClCompile Include="ored\portfolio\builders\swaption.cpp" />
     <ClCompile Include="ored\portfolio\builders\yoycapfloor.cpp" />
@@ -287,12 +292,15 @@
     <ClCompile Include="ored\portfolio\fxforward.cpp" />
     <ClCompile Include="ored\portfolio\fxoption.cpp" />
     <ClCompile Include="ored\portfolio\fxswap.cpp" />
+    <ClCompile Include="ored\portfolio\indexing.cpp" />
     <ClCompile Include="ored\portfolio\legbuilders.cpp" />
     <ClCompile Include="ored\portfolio\legdata.cpp" />
     <ClCompile Include="ored\portfolio\legdatafactory.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetdefinition.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetmanager.cpp" />
     <ClCompile Include="ored\portfolio\optiondata.cpp" />
+    <ClCompile Include="ored\portfolio\optionexercisedata.cpp" />
+    <ClCompile Include="ored\portfolio\optionpaymentdata.cpp" />
     <ClCompile Include="ored\portfolio\optionwrapper.cpp" />
     <ClCompile Include="ored\portfolio\portfolio.cpp" />
     <ClCompile Include="ored\portfolio\referencedata.cpp" />
@@ -315,6 +323,7 @@
     <ClCompile Include="ored\utilities\flowanalysis.cpp" />
     <ClCompile Include="ored\utilities\indexparser.cpp" />
     <ClCompile Include="ored\utilities\log.cpp" />
+    <ClCompile Include="ored\utilities\marketdata.cpp" />
     <ClCompile Include="ored\utilities\osutils.cpp" />
     <ClCompile Include="ored\utilities\parsers.cpp" />
     <ClCompile Include="ored\utilities\progressbar.cpp" />
@@ -401,28 +410,28 @@
     <_ProjectFileVersion>11.0.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\lib\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\lib\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\lib\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\lib\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">.\lib\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">.\lib\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">.\lib\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">.\lib\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">OREData-$(qlCompilerTag)-mt-sgd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">OREData-$(qlCompilerTag)-x64-mt-sgd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">OREData-$(qlCompilerTag)-mt-gd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">OREData-$(qlCompilerTag)-x64-mt-gd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">OREData-$(qlCompilerTag)-mt-s</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">OREData-$(qlCompilerTag)-x64-mt-s</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">OREData-$(qlCompilerTag)-mt</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">OREData-$(qlCompilerTag)-x64-mt</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">OREData-mt-sgd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">OREData-x64-mt-sgd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">OREData-mt-gd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">OREData-x64-mt-gd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">OREData-mt-s</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">OREData-x64-mt-s</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">OREData-mt</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">OREData-x64-mt</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -440,18 +449,18 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>$(additionalWarning)  %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -485,18 +494,18 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>$(additionalWarning)  %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -527,19 +536,19 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>$(additionalWarning) /bigobj  %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -570,19 +579,19 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>$(additionalWarning)  /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -616,13 +625,13 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
@@ -661,13 +670,13 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
@@ -703,19 +712,19 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>$(additionalWarning) /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -746,19 +755,19 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\OREData.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>$(additionalWarning) /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>

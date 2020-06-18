@@ -20,6 +20,7 @@ calendars/thailand.cpp
 calendars/wmr.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
+cashflows/blackovernightindexedcouponpricer.cpp
 cashflows/brlcdicouponpricer.cpp
 cashflows/commodityindexedaveragecashflow.cpp
 cashflows/commodityindexedcashflow.cpp
@@ -31,6 +32,7 @@ cashflows/equitycouponpricer.cpp
 cashflows/floatingannuitycoupon.cpp
 cashflows/floatingannuitynominal.cpp
 cashflows/fxlinkedcashflow.cpp
+cashflows/indexedcoupon.cpp
 cashflows/lognormalcmsspreadpricer.cpp
 cashflows/overnightindexedcoupon.cpp
 cashflows/quantocouponpricer.cpp
@@ -55,6 +57,7 @@ indexes/inflationindexwrapper.cpp
 indexes/region.cpp
 instruments/averageois.cpp
 instruments/brlcdiswap.cpp
+instruments/cashsettledeuropeanoption.cpp
 instruments/cdsoption.cpp
 instruments/commodityapo.cpp
 instruments/commodityforward.cpp
@@ -105,6 +108,7 @@ models/lgmimpliedyieldtermstructure.cpp
 models/linkablecalibratedmodel.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
+pricingengines/analyticcashsettledeuropeanengine.cpp
 pricingengines/analyticcclgmfxoptionengine.cpp
 pricingengines/analyticdkcpicapfloorengine.cpp
 pricingengines/analyticlgmcdsoptionengine.cpp
@@ -160,6 +164,7 @@ termstructures/dynamiccpivolatilitystructure.cpp
 termstructures/dynamicoptionletvolatilitystructure.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
 termstructures/dynamicyoyoptionletvolatilitystructure.cpp
+termstructures/equityblackvolsurfaceproxy.cpp
 termstructures/equityforwardcurvestripper.cpp
 termstructures/equityoptionsurfacestripper.cpp
 termstructures/flatcorrelation.cpp
@@ -212,6 +217,7 @@ calendars/thailand.hpp
 calendars/wmr.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
+cashflows/blackovernightindexedcouponpricer.hpp
 cashflows/brlcdicouponpricer.hpp
 cashflows/commodityindexedaveragecashflow.hpp
 cashflows/commodityindexedcashflow.hpp
@@ -224,6 +230,7 @@ cashflows/floatingannuitycoupon.hpp
 cashflows/floatingannuitynominal.hpp
 cashflows/floatingratefxlinkednotionalcoupon.hpp
 cashflows/fxlinkedcashflow.hpp
+cashflows/indexedcoupon.hpp
 cashflows/lognormalcmsspreadpricer.hpp
 cashflows/overnightindexedcoupon.hpp
 cashflows/quantocouponpricer.hpp
@@ -291,6 +298,7 @@ indexes/region.hpp
 indexes/secpi.hpp
 instruments/averageois.hpp
 instruments/brlcdiswap.hpp
+instruments/cashsettledeuropeanoption.hpp
 instruments/cdsoption.hpp
 instruments/commodityapo.hpp
 instruments/commodityforward.hpp
@@ -356,6 +364,7 @@ models/linkablecalibratedmodel.hpp
 models/parametrization.hpp
 models/piecewiseconstanthelper.hpp
 models/pseudoparameter.hpp
+pricingengines/analyticcashsettledeuropeanengine.hpp
 pricingengines/analyticcclgmfxoptionengine.hpp
 pricingengines/analyticdkcpicapfloorengine.hpp
 pricingengines/analyticlgmcdsoptionengine.hpp
@@ -420,6 +429,7 @@ termstructures/dynamicoptionletvolatilitystructure.hpp
 termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
 termstructures/dynamicyoyoptionletvolatilitystructure.hpp
+termstructures/equityblackvolsurfaceproxy.hpp
 termstructures/equityforwardcurvestripper.hpp
 termstructures/equityoptionsurfacestripper.hpp
 termstructures/equityvolconstantspread.hpp

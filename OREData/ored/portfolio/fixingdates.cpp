@@ -23,6 +23,8 @@
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/indexes/commodityindex.hpp>
 
@@ -121,6 +123,28 @@ void RequiredFixings::addData(const RequiredFixings& requiredFixings) {
                                      requiredFixings.zeroInflationFixingDates_.end());
     yoyInflationFixingDates_.insert(requiredFixings.yoyInflationFixingDates_.begin(),
                                     requiredFixings.yoyInflationFixingDates_.end());
+}
+
+void RequiredFixings::unsetPayDates() {
+    // we can't modify the elements of a set directly, need to make a copy and reassign
+    std::set<FixingEntry> newFixingDates;
+    std::set<ZeroInflationFixingEntry> newZeroInflationFixingDates;
+    std::set<InflationFixingEntry> newYoYInflationFixingDates;
+    for (auto f : fixingDates_) {
+        std::get<2>(f) = Date::maxDate();
+        newFixingDates.insert(f);
+    }
+    for (auto f : zeroInflationFixingDates_) {
+        std::get<2>(std::get<0>(std::get<0>(f))) = Date::maxDate();
+        newZeroInflationFixingDates.insert(f);
+    }
+    for (auto f : yoyInflationFixingDates_) {
+        std::get<2>(std::get<0>(f)) = Date::maxDate();
+        newYoYInflationFixingDates.insert(f);
+    }
+    fixingDates_ = newFixingDates;
+    zeroInflationFixingDates_ = newZeroInflationFixingDates;
+    yoyInflationFixingDates_ = newYoYInflationFixingDates;
 }
 
 std::map<std::string, std::set<Date>> RequiredFixings::fixingDatesIndices(const Date& settlementDate) const {
@@ -326,9 +350,15 @@ void FixingDateGetter::visit(YoYInflationCoupon& c) {
                                                c.yoyIndex()->availabilityLag(), c.date());
 }
 
-void FixingDateGetter::visit(OvernightIndexedCoupon& c) {
+void FixingDateGetter::visit(QuantLib::OvernightIndexedCoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
 }
+
+void FixingDateGetter::visit(QuantExt::OvernightIndexedCoupon& c) {
+    requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
+}
+
+void FixingDateGetter::visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c) { c.underlying()->accept(*this); }
 
 void FixingDateGetter::visit(AverageBMACoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
@@ -336,8 +366,10 @@ void FixingDateGetter::visit(AverageBMACoupon& c) {
 
 void FixingDateGetter::visit(CmsSpreadCoupon& c) {
     // Enforce fixing to be added even if coupon pays on settlement.
-    requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.swapSpreadIndex()->swapIndex1()->name()), c.date(), true);
-    requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.swapSpreadIndex()->swapIndex2()->name()), c.date(), true);
+    requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.swapSpreadIndex()->swapIndex1()->name()), c.date(),
+                                   true);
+    requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.swapSpreadIndex()->swapIndex2()->name()), c.date(),
+                                   true);
 }
 
 void FixingDateGetter::visit(DigitalCoupon& c) { c.underlying()->accept(*this); }
@@ -367,8 +399,17 @@ void FixingDateGetter::visit(SubPeriodsCoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
 }
 
+void FixingDateGetter::visit(IndexedCoupon& c) {
+    // the coupon's index might be null if an initial fixing is provided
+    if (c.index())
+        requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.index()->name()), c.date());
+    QL_REQUIRE(c.underlying(), "FixingDateGetter::visit(IndexedCoupon): underlying() is null");
+    c.underlying()->accept(*this);
+}
+
 void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<FixingDateGetter>& fixingDateGetter) {
     for (auto const& c : leg) {
+        QL_REQUIRE(c, "addToRequiredFixings(), got null cashflow, this is unexpected");
         c->accept(*fixingDateGetter);
     }
 }

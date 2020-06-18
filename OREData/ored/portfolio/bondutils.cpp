@@ -11,18 +11,11 @@ namespace data {
 
 void populateFromBondReferenceData(std::string& issuerId, std::string& settlementDays, std::string& calendar,
                                    std::string& issueDate, std::string& creditCurveId, std::string& referenceCurveId,
-                                   std::string& incomeCurveId, std::string& volatilityCurveId,
-                                   std::vector<LegData>& coupons, const std::string& name,
-                                   const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) {
-    if (!referenceDataManager || !referenceDataManager->hasData(BondReferenceDatum::TYPE, name)) {
-        DLOG("could not get BondReferenceDatum for name " << name << " leave data in trade unchanged");
-        return;
-    }
-    auto bondRefData =
-        boost::dynamic_pointer_cast<BondReferenceDatum>(referenceDataManager->getData(BondReferenceDatum::TYPE, name));
-    QL_REQUIRE(bondRefData, "could not cast to BondReferenceDatum, this is unexpected");
-    DLOG("Got BondReferenceDatum for name " << name << " overwrite empty elements in trade");
-    if (issuerId.empty()) {
+                                   std::string& proxySecurityId, std::string& incomeCurveId,
+                                   std::string& volatilityCurveId, std::vector<LegData>& coupons,
+                                   const std::string& name, const boost::shared_ptr<BondReferenceDatum>& bondRefData) {
+    QL_REQUIRE(bondRefData, "populateFromBondReferenceData(): empty bond reference datum given");
+    if (issuerId.empty())
         issuerId = bondRefData->bondData().issuerId;
         TLOG("overwrite issuerId with '" << issuerId << "'");
     }
@@ -46,7 +39,11 @@ void populateFromBondReferenceData(std::string& issuerId, std::string& settlemen
         referenceCurveId = bondRefData->bondData().referenceCurveId;
         TLOG("overwrite referenceCurveId with '" << referenceCurveId << "'");
     }
-    if (incomeCurveId.empty()) {
+    if (proxySecurityId.empty()) {
+        proxySecurityId = bondRefData->bondData().proxySecurityId;
+        TLOG("overwrite proxySecurityId with '" << proxySecurityId << "'");
+    }
+    if (incomeCurveId.empty())
         incomeCurveId = bondRefData->bondData().incomeCurveId;
         TLOG("overwrite incomeCurveId with '" << incomeCurveId << "'");
     }

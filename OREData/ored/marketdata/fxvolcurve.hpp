@@ -34,13 +34,14 @@
 
 namespace ore {
 namespace data {
-using QuantLib::Date;
-using QuantLib::BlackVolTermStructure;
 using ore::data::CurveConfigurations;
+using QuantLib::BlackVolTermStructure;
+using QuantLib::Date;
 
 // to get FX quote from container (map or FXTriangulation)
 class FXLookup {
 public:
+    virtual ~FXLookup() {}
     virtual Handle<Quote> fxPairLookup(const string& fxPair) const = 0;
 };
 
@@ -57,12 +58,11 @@ public:
     //! Detailed constructor
     FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
                const std::map<string, boost::shared_ptr<FXSpot>>& fxSpots,
-               const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, 
-               const Conventions& conventions);
+               const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const Conventions& conventions);
     //! Detailed constructor
     FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-               const ore::data::FXTriangulation& fxSpots, const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, 
-               const Conventions& conventions);
+               const ore::data::FXTriangulation& fxSpots,
+               const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const Conventions& conventions);
     //@}
 
     //! \name Inspectors
@@ -76,16 +76,18 @@ private:
     boost::shared_ptr<BlackVolTermStructure> vol_;
 
     void init(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-              const FXLookup& fxSpots, const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, 
-              const Conventions& conventions); 
+              const FXLookup& fxSpots, const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+              const Conventions& conventions);
 
     void buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
-                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const Conventions& conventions);
-    
+                              boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                              const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                              const Conventions& conventions);
+
     void buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
-                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const Conventions& conventions);
+                                   boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                                   const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                                   const Conventions& conventions);
 };
 } // namespace data
 } // namespace ore

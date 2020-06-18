@@ -48,7 +48,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         npvCurrency_ = soldCurrency_;
         notional_ = soldAmount_;
-	notionalCurrency_ = soldCurrency_;
+        notionalCurrency_ = soldCurrency_;
         maturity_ = maturityDate;
 
     } catch (std::exception&) {

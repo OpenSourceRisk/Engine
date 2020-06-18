@@ -31,11 +31,11 @@
 
 namespace ore {
 namespace data {
+using ore::data::XMLNode;
+using QuantLib::DayCounter;
+using QuantLib::Period;
 using std::string;
 using std::vector;
-using ore::data::XMLNode;
-using QuantLib::Period;
-using QuantLib::DayCounter;
 
 //! Equity volatility structure configuration
 /*!
@@ -48,13 +48,9 @@ public:
     //! Default constructor
     EquityVolatilityCurveConfig() {}
     //! Detailed constructor
-    EquityVolatilityCurveConfig(
-        const string& curveID,
-        const string& curveDescription,
-        const string& currency,
-        const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
-        const string& dayCounter = "A365",
-        const string& calendar = "NullCalendar");
+    EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
+                                const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                                const string& dayCounter = "A365", const string& calendar = "NullCalendar");
     //@}
 
     //! \name Serialisation
@@ -71,8 +67,10 @@ public:
     const string& dayCounter() const { return dayCounter_; }
     const string& calendar() const { return calendar_; }
     const boost::shared_ptr<VolatilityConfig>& volatilityConfig() const { return volatilityConfig_; };
+    const string& proxySurface() const { return proxySurface_; }
     const string quoteStem() const;
     void populateQuotes();
+    bool isProxySurface() { return !proxySurface_.empty(); };
     //@}
 
     //! \name Setters
@@ -82,11 +80,11 @@ public:
     //@}
 
 private:
-    
     string ccy_;
     boost::shared_ptr<VolatilityConfig> volatilityConfig_;
     string dayCounter_;
     string calendar_;
+    string proxySurface_;
 };
 } // namespace data
 } // namespace ore

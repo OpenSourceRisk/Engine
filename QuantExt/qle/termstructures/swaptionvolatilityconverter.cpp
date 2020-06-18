@@ -151,8 +151,9 @@ boost::shared_ptr<SwaptionVolatilityStructure> SwaptionVolatilityConverter::conv
     Handle<SwaptionVolatilityStructure> atmStructure;
     if (calendar.empty() || optionTenors.empty()) {
         // Original matrix was created with fixed option dates
-        atmStructure = Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolatilityMatrix>(
-            asof_, optionDates, swapTenors, volatilities, Actual365Fixed(), extrapolation, targetType_, targetShifts_));
+        atmStructure = Handle<SwaptionVolatilityStructure>(
+            boost::make_shared<SwaptionVolatilityMatrix>(asof_, calendar, bdc, optionDates, swapTenors, volatilities,
+                                                         Actual365Fixed(), extrapolation, targetType_, targetShifts_));
     } else {
         atmStructure = Handle<SwaptionVolatilityStructure>(boost::shared_ptr<SwaptionVolatilityMatrix>(
             new SwaptionVolatilityMatrix(asof_, calendar, bdc, optionTenors, swapTenors, volatilities, Actual365Fixed(),

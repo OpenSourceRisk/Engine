@@ -1,11 +1,11 @@
 \subsubsection{Credit Default Swap}
 
-A credit default swap, trade type \lstinline!CreditDefaultSwap!, is set up using a \lstinline!CreditDefaultSwapData! block as shown in listing \ref{lst:cdsdata} or \ref{lst:cdsdata_with_ref_info}. The elements have the following meaning:
+A credit default swap, trade type \lstinline!CreditDefaultSwap!, is set up using a \lstinline!CreditDefaultSwapData! block as shown in listing \ref{lst:cdsdata} or \ref{lst:cdsdata_with_ref_info}. The \lstinline!CreditDefaultSwapData! block must include either a \lstinline!CreditCurveId! element or a \lstinline!ReferenceInformation! node. The elements have the following meaning:
 
 \begin{itemize}
 \item IssuerId [Optional]: An identifier for the reference entity of the CDS. For informational purposes and not used for pricing.
-\item CreditCurveId: The identifier of the reference entity defining the default curve used for pricing. For the allowable values, see \lstinline!Name! for credit trades - single name in Table \ref{tab:equity_credit_data}. A \lstinline!ReferenceInformation! node may be used in place of this \lstinline!CreditCurveId! node.
-\item \lstinline!ReferenceInformation!: This node may be used as an alternative to the \lstinline!CreditCurveId! node to specify the reference entity, tier, currency and documentation clause for the CDS. This in turn defines the credit curve used for pricing. The \lstinline!ReferenceInformation! node is described in further detail in Section \ref{ss:cds_reference_information}.
+\item CreditCurveId: The identifier of the reference entity defining the default curve used for pricing. For the allowable values, see \lstinline!CreditCurveId! for credit trades - single name in Table \ref{tab:equity_credit_data}. A \lstinline!ReferenceInformation! node may be used in place of this \lstinline!CreditCurveId! node.
+\item ReferenceInformation: This node may be used as an alternative to the \lstinline!CreditCurveId! node to specify the reference entity, tier, currency and documentation clause for the CDS. This in turn defines the credit curve used for pricing. The \lstinline!ReferenceInformation! node is described in further detail in Section \ref{ss:cds_reference_information}.
 \item SettlesAccrual [Optional]: Whether or not the accrued coupon is due in the event of a default. This defaults to \lstinline!true! if not provided.
 
 Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.

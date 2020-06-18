@@ -37,8 +37,8 @@
 
 namespace ore {
 namespace analytics {
-using QuantLib::Size;
 using QuantLib::Real;
+using QuantLib::Size;
 using std::map;
 using std::string;
 using std::vector;

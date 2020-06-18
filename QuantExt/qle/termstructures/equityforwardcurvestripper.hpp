@@ -16,6 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file qle/termstructures/equityforwardcurvestripper.hpp
+    \brief Imply equity forwards from option put/call partiy
+    \ingroup termstructures
+*/
+
 #ifndef quantext_equity_forward_curve_stripper_hpp
 #define quantext_equity_forward_curve_stripper_hpp
 
@@ -30,9 +35,10 @@ class EquityForwardCurveStripper : public QuantLib::LazyObject {
 
 public:
     EquityForwardCurveStripper(const boost::shared_ptr<OptionPriceSurface>& callSurface,
-        const boost::shared_ptr<OptionPriceSurface>& putSurface,
-        QuantLib::Handle<QuantLib::YieldTermStructure>& forecastCurve, QuantLib::Handle<QuantLib::Quote>& equitySpot,
-        QuantLib::Exercise::Type type = QuantLib::Exercise::European);
+                               const boost::shared_ptr<OptionPriceSurface>& putSurface,
+                               QuantLib::Handle<QuantLib::YieldTermStructure>& forecastCurve,
+                               QuantLib::Handle<QuantLib::Quote>& equitySpot,
+                               QuantLib::Exercise::Type type = QuantLib::Exercise::European);
 
     //! return the expiries
     const std::vector<QuantLib::Date> expiries() const;
@@ -43,10 +49,10 @@ public:
     //@{
     void performCalculations() const;
     //@}
-    
+
 private:
-    const boost::shared_ptr<OptionPriceSurface>& callSurface_;
-    const boost::shared_ptr<OptionPriceSurface>& putSurface_;
+    const boost::shared_ptr<OptionPriceSurface> callSurface_;
+    const boost::shared_ptr<OptionPriceSurface> putSurface_;
     QuantLib::Handle<QuantLib::YieldTermStructure> forecastCurve_;
     QuantLib::Handle<QuantLib::Quote> equitySpot_;
     QuantLib::Exercise::Type type_;
@@ -54,9 +60,10 @@ private:
     //! store the stripped forward rates
     mutable std::vector<QuantLib::Real> forwards_;
 
-    QuantLib::Real forwardFromPutCallParity(QuantLib::Date d, QuantLib::Real call, 
-        OptionPriceSurface& callSurface, OptionPriceSurface& putSurface) const;
+    QuantLib::Real forwardFromPutCallParity(QuantLib::Date d, QuantLib::Real call,
+                                            const OptionPriceSurface& callSurface,
+                                            const OptionPriceSurface& putSurface) const;
 };
 
 } // namespace QuantExt
-# endif
+#endif

@@ -30,12 +30,12 @@
 
 namespace ore {
 namespace data {
-using std::vector;
-using std::string;
-using std::pair;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
+using ore::data::XMLSerializable;
 using ore::data::XMLUtils;
+using std::pair;
+using std::string;
+using std::vector;
 
 //! Market Configuration structure
 /*!

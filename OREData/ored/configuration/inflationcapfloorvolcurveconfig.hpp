@@ -31,14 +31,14 @@
 
 namespace ore {
 namespace data {
-using std::string;
-using std::vector;
 using ore::data::XMLNode;
-using QuantLib::Period;
+using QuantLib::BusinessDayConvention;
+using QuantLib::Calendar;
 using QuantLib::DayCounter;
 using QuantLib::Natural;
-using QuantLib::Calendar;
-using QuantLib::BusinessDayConvention;
+using QuantLib::Period;
+using std::string;
+using std::vector;
 
 //! Inflation CapFloor volatility curve configuration class
 /*! \ingroup configuration
@@ -54,7 +54,7 @@ public:
                                            const QuoteType& quoteType, const VolatilityType& volatilityType,
                                            const bool extrapolate, const vector<string>& tenors,
                                            const vector<string>& capStrikes, const vector<string>& floorStrikes,
-					   const vector<string>& strikes, const DayCounter& dayCounter,
+                                           const vector<string>& strikes, const DayCounter& dayCounter,
                                            Natural settleDays, const Calendar& calendar,
                                            const BusinessDayConvention& businessDayConvention, const string& index,
                                            const string& indexCurve, const string& yieldTermStructure,

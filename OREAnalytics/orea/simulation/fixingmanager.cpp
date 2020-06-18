@@ -21,17 +21,19 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
+
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/experimental/coupons/cmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/digitalcmsspreadcoupon.hpp>
-#include <qle/cashflows/averageonindexedcoupon.hpp>
-#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
-#include <qle/cashflows/fxlinkedcashflow.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -103,7 +105,7 @@ void FixingManager::processCashFlows(const boost::shared_ptr<QuantLib::CashFlow>
         }
 
         // A2 indices with native fixings, but no only on the standard fixing date
-        auto on = boost::dynamic_pointer_cast<OvernightIndexedCoupon>(frc);
+        auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(frc);
         if (on) {
             for (auto const& d : on->fixingDates())
                 fixingMap_[on->index()].insert(d);

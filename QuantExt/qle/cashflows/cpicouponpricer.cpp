@@ -45,9 +45,9 @@ BlackCPICashFlowPricer::BlackCPICashFlowPricer(const Handle<CPIVolatilitySurface
 
 BlackCPICouponPricer::BlackCPICouponPricer(const Handle<CPIVolatilitySurface>& vol,
                                            const Handle<YieldTermStructure>& yts)
-    : CPICouponPricer(vol), yts_(yts) {
-    if (yts_.empty())
-        yts_ = Handle<YieldTermStructure>(
+    : CPICouponPricer(vol, yts) {
+    if (nominalTermStructure_.empty())
+        nominalTermStructure_ = Handle<YieldTermStructure>(
             boost::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
     engine_ = boost::make_shared<CPIBlackCapFloorEngine>(yieldCurve(), volatility());
 }

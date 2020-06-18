@@ -23,8 +23,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <map>
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
@@ -32,31 +32,31 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
-#include <qle/calendars/largejointcalendar.hpp>
+#include <qle/calendars/austria.hpp>
+#include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>
+#include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
+#include <qle/calendars/ice.hpp>
 #include <qle/calendars/israel.hpp>
+#include <qle/calendars/largejointcalendar.hpp>
+#include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
+#include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/thailand.hpp>
 #include <qle/calendars/wmr.hpp>
-#include <qle/calendars/ice.hpp>
-#include <qle/calendars/cme.hpp>
-#include <qle/calendars/belgium.hpp>
-#include <qle/calendars/luxembourg.hpp>
-#include <qle/calendars/spain.hpp>
-#include <qle/calendars/austria.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
 #include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
-#include <qle/time/yearcounter.hpp>
 #include <qle/time/actual364.hpp>
+#include <qle/time/yearcounter.hpp>
 
 #include <boost/lexical_cast.hpp>
 
@@ -156,8 +156,9 @@ Integer parseInteger(const string& s) {
 }
 
 bool parseBool(const string& s) {
-    static map<string, bool> b = {{"Y", true},  {"YES", true}, {"TRUE", true},   {"true", true},   {"1", true},
-                                  {"N", false}, {"NO", false}, {"FALSE", false}, {"false", false}, {"0", false}};
+    static map<string, bool> b = {{"Y", true},      {"YES", true},    {"TRUE", true},   {"True", true},
+                                  {"true", true},   {"1", true},      {"N", false},     {"NO", false},
+                                  {"FALSE", false}, {"False", false}, {"false", false}, {"0", false}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -168,272 +169,275 @@ bool parseBool(const string& s) {
 }
 
 Calendar parseCalendar(const string& s, bool adjustCalendar) {
-    static map<string, Calendar> m = {{"TGT", TARGET()},
-                                      {"TARGET", TARGET()},
+    static map<string, Calendar> m = {
+        {"TGT", TARGET()},
+        {"TARGET", TARGET()},
 
-                                      // Country-Description
-                                      {"CN-IB", China(China::IB)},
-                                      {"US-FED", UnitedStates(UnitedStates::FederalReserve)},
-                                      {"US-GOV", UnitedStates(UnitedStates::GovernmentBond)},
-                                      {"US-NERC", UnitedStates(UnitedStates::NERC)},
-                                      {"US-NYSE", UnitedStates(UnitedStates::NYSE)},
-                                      {"US-SET", UnitedStates(UnitedStates::Settlement)},
+        // Country-Description
+        {"CN-IB", China(China::IB)},
+        {"US-FED", UnitedStates(UnitedStates::FederalReserve)},
+        {"US-GOV", UnitedStates(UnitedStates::GovernmentBond)},
+        {"US-NERC", UnitedStates(UnitedStates::NERC)},
+        {"US-NYSE", UnitedStates(UnitedStates::NYSE)},
+        {"US-SET", UnitedStates(UnitedStates::Settlement)},
 
-                                      // Country full name to Settlement/Default
-                                      {"Australia", Australia()},
-                                      {"Canada", Canada()},
-                                      {"Denmark", Denmark()},
-                                      {"Japan", Japan()},
-                                      {"Norway", Norway()},
-                                      {"Switzerland", QuantExt::Switzerland()},
-                                      {"Sweden", Sweden()},
-                                      {"Belgium", Belgium()},
-                                      {"Luxembourg", Luxembourg()},
-                                      {"Spain", Spain()},
-                                      {"Austria", Austria()},
-                                     
-                                      // city specific calendars
-                                      {"FRA", Germany(Germany::Settlement)},
+        // Country full name to Settlement/Default
+        {"Australia", Australia()},
+        {"Canada", Canada()},
+        {"Denmark", Denmark()},
+        {"Japan", Japan()},
+        {"Norway", Norway()},
+        {"Switzerland", QuantExt::Switzerland()},
+        {"Sweden", Sweden()},
+        {"Belgium", Belgium()},
+        {"Luxembourg", Luxembourg()},
+        {"Spain", Spain()},
+        {"Austria", QuantExt::Austria()},
 
-                                      // Country City
-                                      {"CATO", Canada()},
-                                      {"CHZU", QuantExt::Switzerland()},
-                                      {"JPTO", Japan()},
-                                      {"GBLO", UnitedKingdom()},
-                                      {"SEST", Sweden()},
-                                      {"TRIS", Turkey()},
-                                      {"USNY", UnitedStates()},
+        // city specific calendars
+        {"FRA", Germany(Germany::Settlement)},
 
-                                      // ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
-                                      {"EUTA", TARGET()},
-                                      {"BEBR", Belgium()}, // Belgium, Brussels not in QL,
+        // Country City
+        {"CATO", Canada()},
+        {"CHZU", QuantExt::Switzerland()},
+        {"JPTO", Japan()},
+        {"GBLO", UnitedKingdom()},
+        {"SEST", Sweden()},
+        {"TRIS", Turkey()},
+        {"USNY", UnitedStates()},
 
-                                      // ISO 3166-1 Alpha-2 code
-                                      {"AR", Argentina()},
-                                      {"AU", Australia()},
-                                      {"BW", Botswana()},
-                                      {"BR", Brazil()},
-                                      {"CA", Canada()},
-                                      {"CL", Chile()},
-                                      {"CN", China()},
-                                      {"CO", Colombia()},
-                                      {"CZ", CzechRepublic()},
-                                      {"DK", Denmark()},
-                                      {"FI", Finland()},
-                                      {"FR", France()},
-                                      {"DE", Germany(Germany::Settlement)},
-                                      {"HK", HongKong()},
-                                      {"HU", Hungary()},
-                                      {"IS", Iceland()},
-                                      {"IN", India()},
-                                      {"ID", Indonesia()},
-                                      {"IL", QuantLib::Israel()},
-                                      {"IT", Italy()},
-                                      {"JP", Japan()},
-                                      {"MX", Mexico()},
-                                      {"MY", Malaysia()},
-                                      {"NL", Netherlands()},
-                                      {"NO", Norway()},
-                                      {"NZ", NewZealand()},
-                                      {"PE", Peru()},
-                                      {"PH", Philippines()},
-                                      {"PL", Poland()},
-                                      {"RO", Romania()},
-                                      {"RU", Russia()},
-                                      // {"SA", SaudiArabic()}
-                                      {"SG", Singapore()},
-                                      {"ZA", SouthAfrica()},
-                                      {"KR", SouthKorea(SouthKorea::Settlement)},
-                                      {"SE", Sweden()},
-                                      {"CH", QuantExt::Switzerland()},
-                                      {"TW", Taiwan()},
-                                      {"TH", QuantExt::Thailand()},
-                                      {"TR", Turkey()},
-                                      {"UA", Ukraine()},
-                                      {"GB", UnitedKingdom()},
-                                      {"US", UnitedStates()},
-                                      {"BE", Belgium()},
-                                      {"LU", Luxembourg()},
-                                      {"ES", Spain()},
-                                      {"AT", Austria()},
+        // ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
+        {"EUTA", TARGET()},
+        {"BEBR", Belgium()}, // Belgium, Brussels not in QL,
 
-                                      // ISO 3166-1 Alpha-3 code
-                                      {"ARG", Argentina()},
-                                      {"AUS", Australia()},
-                                      {"BWA", Botswana()},
-                                      {"BRA", Brazil()},
-                                      {"CAN", Canada()},
-                                      {"CHL", Chile()},
-                                      {"CHN", China()},
-                                      {"COL", Colombia()},
-                                      {"CZE", CzechRepublic()},
-                                      {"DNK", Denmark()},
-                                      {"FIN", Finland()},
-                                      // {"FRA", France()},
-                                      {"DEU", Germany(Germany::Settlement)},
-                                      {"HKG", HongKong()},
-                                      {"HUN", Hungary()},
-                                      {"ISL", Iceland()},
-                                      {"IND", India()},
-                                      {"IDN", Indonesia()},
-                                      {"ISR", QuantLib::Israel()},
-                                      {"ITA", Italy()},
-                                      {"JPN", Japan()},
-                                      {"MEX", Mexico()},
-                                      {"MYS", Malaysia()},
-                                      {"NLD", Netherlands()},
-                                      {"NOR", Norway()},
-                                      {"NZL", NewZealand()},
-                                      {"PER", Peru()},
-                                      {"PHL", Philippines()},
-                                      {"POL", Poland()},
-                                      {"ROU", Romania()},
-                                      {"RUS", Russia()},
-                                      {"SAU", SaudiArabia()},
-                                      {"SGP", Singapore()},
-                                      {"ZAF", SouthAfrica()},
-                                      {"KOR", SouthKorea(SouthKorea::Settlement)},
-                                      {"SWE", Sweden()},
-                                      {"CHE", QuantExt::Switzerland()},
-                                      {"TWN", Taiwan()},
-                                      {"THA", QuantExt::Thailand()},
-                                      {"TUR", Turkey()},
-                                      {"UKR", Ukraine()},
-                                      {"GBR", UnitedKingdom()},
-                                      {"USA", UnitedStates()},
-                                      {"BEL", Belgium()},
-                                      {"LUX", Luxembourg()},
-                                      {"ESP", Spain()},
-                                      {"AUT", Austria()},
+        // ISO 3166-1 Alpha-2 code
+        {"AT", QuantExt::Austria()},
+        {"AR", Argentina()},
+        {"AU", Australia()},
+        {"BW", Botswana()},
+        {"BR", Brazil()},
+        {"CA", Canada()},
+        {"CL", Chile()},
+        {"CN", China()},
+        {"CO", Colombia()},
+        {"CZ", CzechRepublic()},
+        {"DK", Denmark()},
+        {"FI", Finland()},
+        {"FR", QuantExt::France()},
+        {"DE", Germany(Germany::Settlement)},
+        {"HK", HongKong()},
+        {"HU", Hungary()},
+        {"IS", Iceland()},
+        {"IN", India()},
+        {"ID", Indonesia()},
+        {"IL", QuantLib::Israel()},
+        {"IT", Italy()},
+        {"JP", Japan()},
+        {"MX", Mexico()},
+        {"MY", Malaysia()},
+        {"NL", Netherlands()},
+        {"NO", Norway()},
+        {"NZ", NewZealand()},
+        {"PE", Peru()},
+        {"PH", Philippines()},
+        {"PL", Poland()},
+        {"RO", Romania()},
+        {"RU", Russia()},
+        // {"SA", SaudiArabic()}
+        {"SG", Singapore()},
+        {"ZA", SouthAfrica()},
+        {"KR", SouthKorea(SouthKorea::Settlement)},
+        {"SE", Sweden()},
+        {"CH", QuantExt::Switzerland()},
+        {"TW", Taiwan()},
+        {"TH", QuantExt::Thailand()},
+        {"TR", Turkey()},
+        {"UA", Ukraine()},
+        {"GB", UnitedKingdom()},
+        {"US", UnitedStates()},
+        {"BE", Belgium()},
+        {"LU", Luxembourg()},
+        {"ES", Spain()},
+        {"AT", QuantExt::Austria()},
 
-                                      // ISO 4217 Currency Alphabetic code
-                                      {"ARS", Argentina()},
-                                      {"AUD", Australia()},
-                                      {"BWP", Botswana()},
-                                      {"BRL", Brazil()},
-                                      {"CAD", Canada()},
-                                      {"CLP", Chile()},
-                                      {"CNH", China()},
-                                      {"CNY", China()},
-                                      {"COP", Colombia()},
-                                      {"CZK", CzechRepublic()},
-                                      {"DKK", Denmark()},
-                                      {"FRF", France()},
-                                      {"HKD", HongKong()},
-                                      {"HUF", Hungary()},
-                                      {"INR", India()},
-                                      {"IDR", Indonesia()},
-                                      {"ILS", QuantLib::Israel()},
-                                      {"ISK", Iceland()},
-                                      {"ITL", Italy()},
-                                      {"JPY", Japan()},
-                                      {"MXN", Mexico()},
-                                      {"MYR", Malaysia()},
-                                      {"NOK", Norway()},
-                                      {"NZD", NewZealand()},
-                                      {"PEN", Peru()},
-                                      {"PHP", Philippines()},
-                                      {"PLN", Poland()},
-                                      {"RON", Romania()},
-                                      {"RUB", Russia()},
-                                      {"SAR", SaudiArabia()},
-                                      {"SGD", Singapore()},
-                                      {"ZAR", SouthAfrica()},
-                                      {"KRW", SouthKorea(SouthKorea::Settlement)},
-                                      {"SEK", Sweden()},
-                                      {"CHF", QuantExt::Switzerland()},
-                                      {"EUR", TARGET()},
-                                      {"TWD", Taiwan()},
-                                      {"THB", QuantExt::Thailand()},
-                                      {"TRY", Turkey()},
-                                      {"UAH", Ukraine()},
-                                      {"GBP", UnitedKingdom()},
-                                      {"USD", UnitedStates()},
-                                      {"BEF", Belgium()},
-                                      {"LUF", Luxembourg()},
-                                      {"ATS", Austria()},
+        // ISO 3166-1 Alpha-3 code
+        {"ARG", Argentina()},
+        {"AUS", Australia()},
+        {"ATS", QuantExt::Austria()},
+        {"BWA", Botswana()},
+        {"BRA", Brazil()},
+        {"CAN", Canada()},
+        {"CHL", Chile()},
+        {"CHN", China()},
+        {"COL", Colombia()},
+        {"CZE", CzechRepublic()},
+        {"DNK", Denmark()},
+        {"FIN", Finland()},
+        //{"FRA", QuantExt::France()},
+        {"DEU", Germany(Germany::Settlement)},
+        {"HKG", HongKong()},
+        {"HUN", Hungary()},
+        {"ISL", Iceland()},
+        {"IND", India()},
+        {"IDN", Indonesia()},
+        {"ISR", QuantLib::Israel()},
+        {"ITA", Italy()},
+        {"JPN", Japan()},
+        {"MEX", Mexico()},
+        {"MYS", Malaysia()},
+        {"NLD", Netherlands()},
+        {"NOR", Norway()},
+        {"NZL", NewZealand()},
+        {"PER", Peru()},
+        {"PHL", Philippines()},
+        {"POL", Poland()},
+        {"ROU", Romania()},
+        {"RUS", Russia()},
+        {"SAU", SaudiArabia()},
+        {"SGP", Singapore()},
+        {"ZAF", SouthAfrica()},
+        {"KOR", SouthKorea(SouthKorea::Settlement)},
+        {"SWE", Sweden()},
+        {"CHE", QuantExt::Switzerland()},
+        {"TWN", Taiwan()},
+        {"THA", QuantExt::Thailand()},
+        {"TUR", Turkey()},
+        {"UKR", Ukraine()},
+        {"GBR", UnitedKingdom()},
+        {"USA", UnitedStates()},
+        {"BEL", Belgium()},
+        {"LUX", Luxembourg()},
+        {"ESP", Spain()},
+        {"AUT", QuantExt::Austria()},
 
-                                      // fallback to TARGET for these emerging ccys
-                                      {"AED", TARGET()},
-                                      {"BHD", TARGET()},
-                                      {"CLF", TARGET()},
-                                      {"EGP", TARGET()},
-                                      {"KWD", TARGET()},
-                                      {"KZT", TARGET()},
-                                      {"MAD", TARGET()},
-                                      {"MXV", TARGET()},
-                                      {"NGN", TARGET()},
-                                      {"OMR", TARGET()},
-                                      {"PKR", TARGET()},
-                                      {"QAR", TARGET()},
-                                      {"UYU", TARGET()},
-                                      {"TND", TARGET()},
-                                      {"VND", TARGET()},
+        // ISO 4217 Currency Alphabetic code
+        {"ARS", Argentina()},
+        {"AUD", Australia()},
+        {"BWP", Botswana()},
+        {"BRL", Brazil()},
+        {"CAD", Canada()},
+        {"CLP", Chile()},
+        {"CNH", China()},
+        {"CNY", China()},
+        {"COP", Colombia()},
+        {"CZK", CzechRepublic()},
+        {"DKK", Denmark()},
+        {"FRF", QuantExt::France()},
+        {"HKD", HongKong()},
+        {"HUF", Hungary()},
+        {"INR", India()},
+        {"IDR", Indonesia()},
+        {"ILS", QuantLib::Israel()},
+        {"ISK", Iceland()},
+        {"ITL", Italy()},
+        {"JPY", Japan()},
+        {"MXN", Mexico()},
+        {"MYR", Malaysia()},
+        {"NOK", Norway()},
+        {"NZD", NewZealand()},
+        {"PEN", Peru()},
+        {"PHP", Philippines()},
+        {"PLN", Poland()},
+        {"RON", Romania()},
+        {"RUB", Russia()},
+        {"SAR", SaudiArabia()},
+        {"SGD", Singapore()},
+        {"ZAR", SouthAfrica()},
+        {"KRW", SouthKorea(SouthKorea::Settlement)},
+        {"SEK", Sweden()},
+        {"CHF", QuantExt::Switzerland()},
+        {"EUR", TARGET()},
+        {"TWD", Taiwan()},
+        {"THB", QuantExt::Thailand()},
+        {"TRY", Turkey()},
+        {"UAH", Ukraine()},
+        {"GBP", UnitedKingdom()},
+        {"USD", UnitedStates()},
+        {"BEF", Belgium()},
+        {"LUF", Luxembourg()},
+        {"ATS", QuantExt::Austria()},
 
-                                      // ISO 10383 MIC Exchange
-                                      {"BVMF", Brazil(Brazil::Exchange)},
-                                      {"XTSE", Canada(Canada::TSX)},
-                                      {"XSHG", China(China::SSE)},
-                                      {"XFRA", Germany(Germany::FrankfurtStockExchange)},
-                                      {"XETR", Germany(Germany::Xetra)},
-                                      {"ECAG", Germany(Germany::Eurex)},
-                                      {"EUWA", Germany(Germany::Euwax)},
-                                      {"XJKT", Indonesia(Indonesia::JSX)},
-                                      {"XIDX", Indonesia(Indonesia::IDX)},
-                                      {"XTAE", QuantLib::Israel(QuantLib::Israel::TASE)},
-                                      {"XMIL", Italy(Italy::Exchange)},
-                                      {"MISX", Russia(Russia::MOEX)},
-                                      {"XKRX", SouthKorea(SouthKorea::KRX)},
-                                      {"XSWX", QuantExt::Switzerland(QuantExt::Switzerland::SIX)},
-                                      {"XLON", UnitedKingdom(UnitedKingdom::Exchange)},
-                                      {"XLME", UnitedKingdom(UnitedKingdom::Metals)},
-                                      {"XNYS", UnitedStates(UnitedStates::NYSE)},
+        // fallback to TARGET for these emerging ccys
+        {"AED", TARGET()},
+        {"BHD", TARGET()},
+        {"CLF", TARGET()},
+        {"EGP", TARGET()},
+        {"KWD", TARGET()},
+        {"KZT", TARGET()},
+        {"MAD", TARGET()},
+        {"MXV", TARGET()},
+        {"NGN", TARGET()},
+        {"OMR", TARGET()},
+        {"PKR", TARGET()},
+        {"QAR", TARGET()},
+        {"UYU", TARGET()},
+        {"TND", TARGET()},
+        {"VND", TARGET()},
 
-                                      // Other / Legacy
-                                      {"DEN", Denmark()}, // TODO: consider remove it, not ISO
-                                      {"Telbor", QuantExt::Israel(QuantExt::Israel::Telbor)},
-                                      {"London stock exchange", UnitedKingdom(UnitedKingdom::Exchange)},
-                                      {"LNB", UnitedKingdom()},
-                                      {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},
-                                      {"NGL", Netherlands()},
-                                      {"NYB", UnitedStates()},
-                                      {"SA", SouthAfrica()}, // TODO: consider remove it, not ISO & confuses with Saudi Arabia
-                                      {"SS", Sweden()}, // TODO: consider remove it, not ISO & confuses with South Sudan
-                                      {"SYB", Australia()},
-                                      {"TKB", Japan()},
-                                      {"TRB", Canada()},
-                                      {"UK", UnitedKingdom()},
-                                      {"UK settlement", UnitedKingdom()},
-                                      {"US settlement", UnitedStates(UnitedStates::Settlement)},
-                                      {"US with Libor impact", UnitedStates(UnitedStates::LiborImpact)},
-                                      {"WMR", Wmr()},
-                                      {"ZUB", QuantExt::Switzerland()},
-                                      
-                                      // ICE exchange calendars
-                                      { "ICE_FuturesUS", ICE(ICE::FuturesUS) },
-                                      { "ICE_FuturesUS_1", ICE(ICE::FuturesUS_1) },
-                                      { "ICE_FuturesUS_2", ICE(ICE::FuturesUS_2) },
-                                      { "ICE_FuturesEU", ICE(ICE::FuturesEU) },
-                                      { "ICE_FuturesEU_1", ICE(ICE::FuturesEU_1) },
-                                      { "ICE_EndexEnergy", ICE(ICE::EndexEnergy) },
-                                      { "ICE_EndexEquities", ICE(ICE::EndexEquities) },
-                                      { "ICE_SwapTradeUS", ICE(ICE::SwapTradeUS) },
-                                      { "ICE_SwapTradeUK", ICE(ICE::SwapTradeUK) },
-                                      { "ICE_FuturesSingapore", ICE(ICE::FuturesSingapore) },
-                                      // CME exchange calendar
-                                      { "CME", CME() },
-                                      
-                                      // Simple calendars
-                                      {"WeekendsOnly", WeekendsOnly()},
-                                      {"UNMAPPED", WeekendsOnly()},
-                                      {"NullCalendar", NullCalendar()},
-                                      {"", NullCalendar()}};
+        // ISO 10383 MIC Exchange
+        {"BVMF", Brazil(Brazil::Exchange)},
+        {"XTSE", Canada(Canada::TSX)},
+        {"XSHG", China(China::SSE)},
+        {"XFRA", Germany(Germany::FrankfurtStockExchange)},
+        {"XETR", Germany(Germany::Xetra)},
+        {"ECAG", Germany(Germany::Eurex)},
+        {"EUWA", Germany(Germany::Euwax)},
+        {"XJKT", Indonesia(Indonesia::JSX)},
+        {"XIDX", Indonesia(Indonesia::IDX)},
+        {"XTAE", QuantLib::Israel(QuantLib::Israel::TASE)},
+        {"XMIL", Italy(Italy::Exchange)},
+        {"MISX", Russia(Russia::MOEX)},
+        {"XKRX", SouthKorea(SouthKorea::KRX)},
+        {"XSWX", QuantExt::Switzerland(QuantExt::Switzerland::SIX)},
+        {"XLON", UnitedKingdom(UnitedKingdom::Exchange)},
+        {"XLME", UnitedKingdom(UnitedKingdom::Metals)},
+        {"XNYS", UnitedStates(UnitedStates::NYSE)},
+
+        // Other / Legacy
+        {"DEN", Denmark()}, // TODO: consider remove it, not ISO
+        {"Telbor", QuantExt::Israel(QuantExt::Israel::Telbor)},
+        {"London stock exchange", UnitedKingdom(UnitedKingdom::Exchange)},
+        {"LNB", UnitedKingdom()},
+        {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},
+        {"NGL", Netherlands()},
+        {"NYB", UnitedStates()},
+        {"SA", SouthAfrica()}, // TODO: consider remove it, not ISO & confuses with Saudi Arabia
+        {"SS", Sweden()},      // TODO: consider remove it, not ISO & confuses with South Sudan
+        {"SYB", Australia()},
+        {"TKB", Japan()},
+        {"TRB", Canada()},
+        {"UK", UnitedKingdom()},
+        {"UK settlement", UnitedKingdom()},
+        {"US settlement", UnitedStates(UnitedStates::Settlement)},
+        {"US with Libor impact", UnitedStates(UnitedStates::LiborImpact)},
+        {"WMR", Wmr()},
+        {"ZUB", QuantExt::Switzerland()},
+
+        // ICE exchange calendars
+        {"ICE_FuturesUS", ICE(ICE::FuturesUS)},
+        {"ICE_FuturesUS_1", ICE(ICE::FuturesUS_1)},
+        {"ICE_FuturesUS_2", ICE(ICE::FuturesUS_2)},
+        {"ICE_FuturesEU", ICE(ICE::FuturesEU)},
+        {"ICE_FuturesEU_1", ICE(ICE::FuturesEU_1)},
+        {"ICE_EndexEnergy", ICE(ICE::EndexEnergy)},
+        {"ICE_EndexEquities", ICE(ICE::EndexEquities)},
+        {"ICE_SwapTradeUS", ICE(ICE::SwapTradeUS)},
+        {"ICE_SwapTradeUK", ICE(ICE::SwapTradeUK)},
+        {"ICE_FuturesSingapore", ICE(ICE::FuturesSingapore)},
+        // CME exchange calendar
+        {"CME", CME()},
+
+        // Simple calendars
+        {"WeekendsOnly", WeekendsOnly()},
+        {"UNMAPPED", WeekendsOnly()},
+        {"NullCalendar", NullCalendar()},
+        {"", NullCalendar()}};
     static bool isInitialised = false;
     if (!isInitialised) {
-        //extend the static map to include quantlib map names 
-        //allCals should be set, but it doesn't know how to order calendar
+        // extend the static map to include quantlib map names
+        // allCals should be set, but it doesn't know how to order calendar
         vector<Calendar> allCals;
-        for (auto it : m) 
+        for (auto it : m)
             allCals.push_back(it.second);
         for (auto cal : allCals)
             m[cal.name()] = cal;
@@ -444,7 +448,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
     if (it != m.end()) {
         Calendar cal = it->second;
         if (adjustCalendar) {
-            //add custom holidays from populated calendar adjustments
+            // add custom holidays from populated calendar adjustments
             const CalendarAdjustmentConfig& config = CalendarAdjustments::instance().config();
             for (auto h : config.getHolidays(s)) {
                 cal.addHoliday(h);
@@ -452,14 +456,16 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
             for (auto b : config.getBusinessDays(s)) {
                 cal.removeHoliday(b);
             }
-
         }
-         return cal;
+        return cal;
 
     } else {
         // Try to split them up
         vector<string> calendarNames;
         split(calendarNames, s, boost::is_any_of(",()")); // , is delimiter, the brackets may arise if joint calendar
+        // if we have only one token, we won't make progress and exit here to avoid an infinite loop by calling
+        // parseCalendar() recursively below
+        QL_REQUIRE(calendarNames.size() > 1, "Cannot convert \"" << s << "\" to calendar");
         // now remove any leading strings indicating a joint calendar
         calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinHolidays"),
                             calendarNames.end());
@@ -565,8 +571,7 @@ DayCounter parseDayCounter(const string& s) {
                                         {"A364", Actual364()},
                                         {"Actual/364", Actual364()},
                                         {"Act/364", Actual364()},
-                                        {"ACT/364", Actual364()}
-    };
+                                        {"ACT/364", Actual364()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -671,7 +676,10 @@ Compounding parseCompounding(const string& s) {
 
 Position::Type parsePositionType(const std::string& s) {
     static map<string, Position::Type> m = {
-        {"Long", Position::Long}, {"Short", Position::Short}, {"L", Position::Long}, {"S", Position::Short},
+        {"Long", Position::Long},
+        {"Short", Position::Short},
+        {"L", Position::Long},
+        {"S", Position::Short},
     };
 
     auto it = m.find(s);
@@ -716,7 +724,9 @@ Settlement::Method parseSettlementMethod(const std::string& s) {
 
 Exercise::Type parseExerciseType(const std::string& s) {
     static map<string, Exercise::Type> m = {
-        {"European", Exercise::European}, {"Bermudan", Exercise::Bermudan}, {"American", Exercise::American},
+        {"European", Exercise::European},
+        {"Bermudan", Exercise::Bermudan},
+        {"American", Exercise::American},
     };
 
     auto it = m.find(s);
@@ -806,15 +816,9 @@ SobolRsg::DirectionIntegers parseSobolRsgDirectionIntegers(const std::string& s)
 
 Weekday parseWeekday(const string& s) {
 
-    static map<string, Weekday> m = {
-        { "Sun", Weekday::Sunday },
-        { "Mon", Weekday::Monday },
-        { "Tue", Weekday::Tuesday },
-        { "Wed", Weekday::Wednesday },
-        { "Thu", Weekday::Thursday },
-        { "Fri", Weekday::Friday },
-        { "Sat", Weekday::Saturday }
-    };
+    static map<string, Weekday> m = {{"Sun", Weekday::Sunday},    {"Mon", Weekday::Monday},   {"Tue", Weekday::Tuesday},
+                                     {"Wed", Weekday::Wednesday}, {"Thu", Weekday::Thursday}, {"Fri", Weekday::Friday},
+                                     {"Sat", Weekday::Saturday}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -826,20 +830,10 @@ Weekday parseWeekday(const string& s) {
 
 Month parseMonth(const string& s) {
 
-    static map<string, Month> m = {
-        { "Jan", Month::January },
-        { "Feb", Month::February },
-        { "Mar", Month::March },
-        { "Apr", Month::April },
-        { "May", Month::May },
-        { "Jun", Month::June },
-        { "Jul", Month::July },
-        { "Aug", Month::August },
-        { "Sep", Month::September },
-        { "Oct", Month::October },
-        { "Nov", Month::November },
-        { "Dec", Month::December }
-    };
+    static map<string, Month> m = {{"Jan", Month::January}, {"Feb", Month::February}, {"Mar", Month::March},
+                                   {"Apr", Month::April},   {"May", Month::May},      {"Jun", Month::June},
+                                   {"Jul", Month::July},    {"Aug", Month::August},   {"Sep", Month::September},
+                                   {"Oct", Month::October}, {"Nov", Month::November}, {"Dec", Month::December}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -890,28 +884,21 @@ SequenceType parseSequenceType(const std::string& s) {
 }
 
 QuantLib::CPI::InterpolationType parseObservationInterpolation(const std::string& s) {
-    static map<string, CPI::InterpolationType> seq = {{"Flat", CPI::Flat},
-						      {"Linear", CPI::Linear},
-						      {"AsIndex", CPI::AsIndex}};
+    static map<string, CPI::InterpolationType> seq = {
+        {"Flat", CPI::Flat}, {"Linear", CPI::Linear}, {"AsIndex", CPI::AsIndex}};
     auto it = seq.find(s);
     if (it != seq.end())
         return it->second;
     else
         QL_FAIL("observation interpolation type \"" << s << "\" not recognised");
-
 }
 
 FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
     static std::map<std::string, FdmSchemeDesc> m = {
-            {"Hundsdorfer", FdmSchemeDesc::Hundsdorfer()},
-            {"Douglas", FdmSchemeDesc::Douglas()},
-            {"CraigSneyd", FdmSchemeDesc::CraigSneyd()},
-            {"ModifiedCraigSneyd", FdmSchemeDesc::ModifiedCraigSneyd()},
-            {"ImplicitEuler", FdmSchemeDesc::ImplicitEuler()},
-            {"ExplicitEuler", FdmSchemeDesc::ExplicitEuler()},
-            {"MethodOfLines", FdmSchemeDesc::MethodOfLines()},
-            {"TrBDF2", FdmSchemeDesc::TrBDF2()}
-    };
+        {"Hundsdorfer", FdmSchemeDesc::Hundsdorfer()},     {"Douglas", FdmSchemeDesc::Douglas()},
+        {"CraigSneyd", FdmSchemeDesc::CraigSneyd()},       {"ModifiedCraigSneyd", FdmSchemeDesc::ModifiedCraigSneyd()},
+        {"ImplicitEuler", FdmSchemeDesc::ImplicitEuler()}, {"ExplicitEuler", FdmSchemeDesc::ExplicitEuler()},
+        {"MethodOfLines", FdmSchemeDesc::MethodOfLines()}, {"TrBDF2", FdmSchemeDesc::TrBDF2()}};
 
     auto it = m.find(s);
     if (it != m.end())
@@ -921,54 +908,46 @@ FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
 }
 
 AssetClass parseAssetClass(const std::string& s) {
-    static map<string, AssetClass> assetClasses = {
-        {"EQ", AssetClass::EQ},
-        {"FX", AssetClass::FX},
-        {"COM", AssetClass::COM},
-        {"IR", AssetClass::IR},
-        {"INF", AssetClass::INF},
-        {"CR", AssetClass::CR}
-    };
+    static map<string, AssetClass> assetClasses = {{"EQ", AssetClass::EQ},   {"FX", AssetClass::FX},
+                                                   {"COM", AssetClass::COM}, {"IR", AssetClass::IR},
+                                                   {"INF", AssetClass::INF}, {"CR", AssetClass::CR}};
     auto it = assetClasses.find(s);
     if (it != assetClasses.end()) {
         return it->second;
-    }
-    else {
+    } else {
         QL_FAIL("AssetClass \"" << s << "\" not recognized");
     }
 }
 
-DeltaVolQuote::AtmType parseAtmType(const std::string& s) { 
-    static map<string, DeltaVolQuote::AtmType> m = { 
-        {"AtmNull", DeltaVolQuote::AtmNull}, 
-        {"AtmSpot", DeltaVolQuote::AtmSpot}, 
-        {"AtmFwd", DeltaVolQuote::AtmFwd}, 
-        {"AtmDeltaNeutral", DeltaVolQuote::AtmDeltaNeutral}, 
-        {"AtmVegaMax", DeltaVolQuote::AtmVegaMax}, 
-        {"AtmGammaMax", DeltaVolQuote::AtmGammaMax}, 
-        {"AtmPutCall50", DeltaVolQuote::AtmPutCall50} 
-    }; 
- 
-    auto it = m.find(s); 
-    if (it != m.end()) { 
-        return it->second; 
-    } else { 
-        QL_FAIL("ATM type \"" << s << "\" not recognized"); 
-    } 
-} 
- 
-DeltaVolQuote::DeltaType parseDeltaType(const std::string& s) { 
-    static map<string, DeltaVolQuote::DeltaType> m = {{"Spot", DeltaVolQuote::Spot}, 
-                                                      {"Fwd", DeltaVolQuote::Fwd}, 
-                                                      {"PaSpot", DeltaVolQuote::PaSpot}, 
-                                                      {"PaFwd", DeltaVolQuote::PaFwd}}; 
- 
-    auto it = m.find(s); 
-    if (it != m.end()) { 
-        return it->second; 
-    } else { 
-        QL_FAIL("Delta type \"" << s << "\" not recognized"); 
-    } 
+DeltaVolQuote::AtmType parseAtmType(const std::string& s) {
+    static map<string, DeltaVolQuote::AtmType> m = {{"AtmNull", DeltaVolQuote::AtmNull},
+                                                    {"AtmSpot", DeltaVolQuote::AtmSpot},
+                                                    {"AtmFwd", DeltaVolQuote::AtmFwd},
+                                                    {"AtmDeltaNeutral", DeltaVolQuote::AtmDeltaNeutral},
+                                                    {"AtmVegaMax", DeltaVolQuote::AtmVegaMax},
+                                                    {"AtmGammaMax", DeltaVolQuote::AtmGammaMax},
+                                                    {"AtmPutCall50", DeltaVolQuote::AtmPutCall50}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("ATM type \"" << s << "\" not recognized");
+    }
+}
+
+DeltaVolQuote::DeltaType parseDeltaType(const std::string& s) {
+    static map<string, DeltaVolQuote::DeltaType> m = {{"Spot", DeltaVolQuote::Spot},
+                                                      {"Fwd", DeltaVolQuote::Fwd},
+                                                      {"PaSpot", DeltaVolQuote::PaSpot},
+                                                      {"PaFwd", DeltaVolQuote::PaFwd}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Delta type \"" << s << "\" not recognized");
+    }
 }
 
 //! Parse Extrapolation from string
@@ -997,6 +976,6 @@ std::ostream& operator<<(std::ostream& os, Extrapolation extrap) {
         QL_FAIL("Unknown Extrapolation");
     }
 }
- 
+
 } // namespace data
 } // namespace ore

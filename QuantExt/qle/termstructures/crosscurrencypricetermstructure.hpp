@@ -23,13 +23,13 @@
 #ifndef quantext_cross_currency_price_term_structure_hpp
 #define quantext_cross_currency_price_term_structure_hpp
 
-#include <qle/termstructures/pricetermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <qle/termstructures/pricetermstructure.hpp>
 
 namespace QuantExt {
 
 //! Cross currency price term structure
-/*! This class creates a price term structure in a given currency using an already constructed price term structure 
+/*! This class creates a price term structure in a given currency using an already constructed price term structure
     in a different currency.
 
     \ingroup termstructures
@@ -41,7 +41,7 @@ public:
     /*! Fixed reference date based price term structure.
         \param referenceDate   This price term structure's reference date.
         \param basePriceTs     The price term structure in base currency units.
-        \param fxSpot          The number of units of this price term structure's currency per unit of the base price 
+        \param fxSpot          The number of units of this price term structure's currency per unit of the base price
                                term structure's currency.
         \param baseCurrencyYts The yield term structure for the base currency.
         \param yts             The yield term structure for this price term structure's currency.
@@ -88,7 +88,7 @@ public:
     //@{
     //! The price term structure in base currency
     const QuantLib::Handle<PriceTermStructure>& basePriceTs() const { return basePriceTs_; }
-    
+
     //! The FX spot rate, number of units of this price term structure's currency per unit of the base currency
     const QuantLib::Handle<QuantLib::Quote>& fxSpot() const { return fxSpot_; }
 
@@ -114,6 +114,6 @@ private:
     QuantLib::Currency currency_;
 };
 
-}
+} // namespace QuantExt
 
 #endif

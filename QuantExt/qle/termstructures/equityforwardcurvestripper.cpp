@@ -16,8 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
-#include <qle/termstructures/equityforwardcurvestripper.hpp>
 #include <ql/instruments/impliedvolatility.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <ql/math/solvers1d/brent.hpp>
@@ -25,7 +23,12 @@
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
+#include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
+#include <qle/termstructures/equityforwardcurvestripper.hpp>
 
+#include <iostream>
+
+using std::set;
 using std::vector;
 using namespace QuantLib;
 
@@ -33,20 +36,17 @@ namespace {
 
 class PriceError {
 public:
-    PriceError(const VanillaOption& option,
-        SimpleQuote& vol,
-        Real targetValue);
+    PriceError(const VanillaOption& option, SimpleQuote& vol, Real targetValue);
     Real operator()(Volatility x) const;
+
 private:
     const VanillaOption& option_;
     SimpleQuote& vol_;
     Real targetValue_;
 };
 
-PriceError::PriceError(const VanillaOption& option,
-    SimpleQuote& vol,
-    Real targetValue)
-    : option_(option), vol_(vol), targetValue_(targetValue) {};
+PriceError::PriceError(const VanillaOption& option, SimpleQuote& vol, Real targetValue)
+    : option_(option), vol_(vol), targetValue_(targetValue){};
 
 Real PriceError::operator()(Volatility x) const {
     vol_.setValue(x);
@@ -60,23 +60,27 @@ Real PriceError::operator()(Volatility x) const {
     return npv - targetValue_;
 }
 
-}
+} // namespace
 
 namespace QuantExt {
 
-EquityForwardCurveStripper::EquityForwardCurveStripper(
-    const boost::shared_ptr<OptionPriceSurface>& callSurface,
-    const boost::shared_ptr<OptionPriceSurface>& putSurface,
-    Handle<YieldTermStructure>& forecastCurve, Handle<QuantLib::Quote>& equitySpot,
-    Exercise::Type type) :
-    callSurface_(callSurface), putSurface_(putSurface), forecastCurve_(forecastCurve), equitySpot_(equitySpot), type_(type), 
-    forwards_(callSurface_->expiries().size()) {
+EquityForwardCurveStripper::EquityForwardCurveStripper(const boost::shared_ptr<OptionPriceSurface>& callSurface,
+                                                       const boost::shared_ptr<OptionPriceSurface>& putSurface,
+                                                       Handle<YieldTermStructure>& forecastCurve,
+                                                       Handle<QuantLib::Quote>& equitySpot, Exercise::Type type)
+    : callSurface_(callSurface), putSurface_(putSurface), forecastCurve_(forecastCurve), equitySpot_(equitySpot),
+      type_(type), forwards_(callSurface_->expiries().size()) {
 
-    // the call and put surfaces should have the same expiries/strikes/reference date/day counters, some checks to ensure this
-    QL_REQUIRE(callSurface_->strikes() == putSurface_->strikes(), "Mismatch between Call and Put strikes in EquityForwardCurveStripper");
-    QL_REQUIRE(callSurface_->expiries() == putSurface_->expiries(), "Mismatch between Call and Put expiries in EquityForwardCurveStripper");
-    QL_REQUIRE(callSurface_->referenceDate() == putSurface_->referenceDate(), "Mismatch between Call and Put reference dates in EquityForwardCurveStripper");
-    QL_REQUIRE(callSurface_->dayCounter() == putSurface_->dayCounter(), "Mismatch between Call and Put day counters in EquityForwardCurveStripper");
+    // the call and put surfaces should have the same expiries/strikes/reference date/day counters, some checks to
+    // ensure this
+    QL_REQUIRE(callSurface_->strikes() == putSurface_->strikes(),
+               "Mismatch between Call and Put strikes in EquityForwardCurveStripper");
+    QL_REQUIRE(callSurface_->expiries() == putSurface_->expiries(),
+               "Mismatch between Call and Put expiries in EquityForwardCurveStripper");
+    QL_REQUIRE(callSurface_->referenceDate() == putSurface_->referenceDate(),
+               "Mismatch between Call and Put reference dates in EquityForwardCurveStripper");
+    QL_REQUIRE(callSurface_->dayCounter() == putSurface_->dayCounter(),
+               "Mismatch between Call and Put day counters in EquityForwardCurveStripper");
 
     // register with all market data
     registerWith(callSurface);
@@ -105,7 +109,7 @@ void EquityForwardCurveStripper::performCalculations() const {
         }
 
         // we make a first guess at the forward price
-        // strikes are ordered, lowest to highest, we take the first guess as midpoint of 2 strikes 
+        // strikes are ordered, lowest to highest, we take the first guess as midpoint of 2 strikes
         // where (C-P) goes from positive to negative
         Real forward = strikes.back();
         for (Size k = 0; k < strikes.size(); k++) {
@@ -119,8 +123,8 @@ void EquityForwardCurveStripper::performCalculations() const {
         }
 
         // call and put surface to be used to find forward - updated for American
-        QuantExt::OptionPriceSurface callSurface = *callSurface_;
-        QuantExt::OptionPriceSurface putSurface = *putSurface_;
+        auto callSurface = callSurface_;
+        auto putSurface = putSurface_;
 
         Size maxIter = 100;
         Size j = 0;
@@ -128,6 +132,14 @@ void EquityForwardCurveStripper::performCalculations() const {
         while (!isForward && j < maxIter) {
 
             if (type_ == Exercise::American) {
+
+                // we take the strike either side of our forward guess, this is sufficient because
+                // we construct new price surfaces but only ask for the price at the forward from these
+                vector<Real> amerStrikes(2);
+                auto it_lower = std::lower_bound(strikes.begin(), strikes.end(), forward);
+                amerStrikes[1] = *it_lower;
+                amerStrikes[0] = *std::prev(it_lower);
+
                 // for American options we first get the implied vol from the American premiums
                 // we use these to construct the European prices in order to apply put call parity
 
@@ -142,30 +154,32 @@ void EquityForwardCurveStripper::performCalculations() const {
 
                 // term structures needed to get implied vol
                 boost::shared_ptr<SimpleQuote> volQuote = boost::make_shared<SimpleQuote>(0.1);
-                Handle<BlackVolTermStructure> volTs(boost::make_shared<BlackConstantVol>(asof, cal, Handle<Quote>(volQuote), dc));
+                Handle<BlackVolTermStructure> volTs(
+                    boost::make_shared<BlackConstantVol>(asof, cal, Handle<Quote>(volQuote), dc));
                 Handle<YieldTermStructure> divTs(boost::make_shared<FlatForward>(asof, q, dc));
 
                 // a black scholes process
-                boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<BlackScholesMertonProcess>(
-                    equitySpot_, divTs, forecastCurve_, volTs);
-                boost::shared_ptr<PricingEngine> engine = boost::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
+                boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+                    boost::make_shared<BlackScholesMertonProcess>(equitySpot_, divTs, forecastCurve_, volTs);
+                boost::shared_ptr<PricingEngine> engine =
+                    boost::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
 
-                vector<vector<Volatility> > vols(2, vector<Volatility>(strikes.size()));
+                vector<vector<Volatility> > vols(2, vector<Volatility>(amerStrikes.size()));
                 vector<Option::Type> types;
                 types.push_back(Option::Call);
                 types.push_back(Option::Put);
 
                 for (Size l = 0; l < types.size(); l++) {
-                    for (Size k = 0; k < strikes.size(); k++) {
+                    for (Size k = 0; k < amerStrikes.size(); k++) {
                         // create an american option for current strike/expiry and type
-                        boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(types[l], strikes[k]));
+                        boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(types[l], amerStrikes[k]));
                         boost::shared_ptr<Exercise> exercise = boost::make_shared<AmericanExercise>(expiry);
                         VanillaOption option(payoff, exercise);
                         option.setPricingEngine(engine);
 
                         // option.setPricingEngine(engine);
-                        Real targetPrice = types[l] == Option::Call ? callSurface_->price(expiry, strikes[k]) :
-                            putSurface_->price(expiry, strikes[k]);
+                        Real targetPrice = types[l] == Option::Call ? callSurface_->price(expiry, amerStrikes[k])
+                                                                    : putSurface_->price(expiry, amerStrikes[k]);
 
                         // calculate the implied volatility using a solver
                         try {
@@ -184,14 +198,16 @@ void EquityForwardCurveStripper::performCalculations() const {
                 vector<Date> dates;
                 vector<Real> callPremiums, putPremiums;
 
-                for (Size k = 0; k < strikes.size(); k++) {
+                for (Size k = 0; k < amerStrikes.size(); k++) {
                     if (vols[0][k] != 0.0 && vols[1][k] != 0.0) {
                         // get the european option prices for each strike
-                        Real call = blackFormula(Option::Call, strikes[k], forward, vols[0][k] * sqrt(t), forecastCurve_->discount(t));
-                        Real put = blackFormula(Option::Put, strikes[k], forward, vols[1][k] * sqrt(t), forecastCurve_->discount(t));
+                        Real call = blackFormula(Option::Call, amerStrikes[k], forward, vols[0][k] * sqrt(t),
+                                                 forecastCurve_->discount(t));
+                        Real put = blackFormula(Option::Put, amerStrikes[k], forward, vols[1][k] * sqrt(t),
+                                                forecastCurve_->discount(t));
 
                         if (call && put) {
-                            newStrikes.push_back(strikes[k]);
+                            newStrikes.push_back(amerStrikes[k]);
                             dates.push_back(expiry);
                             callPremiums.push_back(call);
                             putPremiums.push_back(put);
@@ -201,25 +217,24 @@ void EquityForwardCurveStripper::performCalculations() const {
                 // throw away any strikes where the vol is zero for either put or call
                 // must have at least one new strike otherwise continue with currenct price surfaces
                 if (newStrikes.size() > 0) {
-                    strikes = newStrikes;
                     // build call/put price surfaces with the new European prices
-                    callSurface = OptionPriceSurface(asof, dates, strikes, callPremiums, dc);
-                    putSurface = OptionPriceSurface(asof, dates, strikes, putPremiums, dc);
+                    callSurface = boost::make_shared<OptionPriceSurface>(asof, dates, newStrikes, callPremiums, dc);
+                    putSurface = boost::make_shared<OptionPriceSurface>(asof, dates, newStrikes, putPremiums, dc);
                 }
             }
 
             Real newForward = 0.0;
             // if our guess is below the first strike or after the last strike we just take the relevant strike
             if (forward <= strikes.front()) {
-                newForward = forwardFromPutCallParity(expiry, strikes.front(), callSurface, putSurface);
+                newForward = forwardFromPutCallParity(expiry, strikes.front(), *callSurface, *putSurface);
                 // if forward is still less than first strike we accept this
                 isForward = newForward <= strikes.front();
             } else if (forward >= strikes.back()) {
-                newForward = forwardFromPutCallParity(expiry, strikes.back(), callSurface, putSurface);
+                newForward = forwardFromPutCallParity(expiry, strikes.back(), *callSurface, *putSurface);
                 // if forward is still greater than last strike we accept this
                 isForward = newForward >= strikes.back();
             } else {
-                newForward = forwardFromPutCallParity(expiry, forward, callSurface, putSurface);
+                newForward = forwardFromPutCallParity(expiry, forward, *callSurface, *putSurface);
 
                 // check - has it moved by less that 0.1%
                 isForward = fabs((newForward - forward) / forward) < 0.001;
@@ -231,8 +246,8 @@ void EquityForwardCurveStripper::performCalculations() const {
     }
 }
 
-Real EquityForwardCurveStripper::forwardFromPutCallParity(Date d, Real strike, OptionPriceSurface& callSurface, 
-    OptionPriceSurface& putSurface) const {
+Real EquityForwardCurveStripper::forwardFromPutCallParity(Date d, Real strike, const OptionPriceSurface& callSurface,
+                                                          const OptionPriceSurface& putSurface) const {
     Real C = callSurface.price(d, strike);
     Real P = putSurface.price(d, strike);
     Real D = forecastCurve_->discount(d);
@@ -250,4 +265,4 @@ const vector<Real> EquityForwardCurveStripper::forwards() const {
     return forwards_;
 }
 
-}
+} // namespace QuantExt

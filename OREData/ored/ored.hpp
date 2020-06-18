@@ -2,7 +2,7 @@
 // Do not edit
 
 #ifdef BOOST_MSVC
-#  include <ored/auto_link.hpp>
+#include <ored/auto_link.hpp>
 #endif
 
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
@@ -86,6 +86,7 @@
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
@@ -119,6 +120,7 @@
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/fxswap.hpp>
+#include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
@@ -126,6 +128,8 @@
 #include <ored/portfolio/nettingsetdefinition.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/optiondata.hpp>
+#include <ored/portfolio/optionexercisedata.hpp>
+#include <ored/portfolio/optionpaymentdata.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
@@ -151,6 +155,7 @@
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>

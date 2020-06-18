@@ -68,9 +68,9 @@ portfolio/bond.cpp
 portfolio/bondutils.cpp
 portfolio/builders/capfloor.cpp
 portfolio/builders/capfloorediborleg.cpp
+portfolio/builders/capflooredovernightindexedcouponleg.cpp
 portfolio/builders/cms.cpp
 portfolio/builders/cmsspread.cpp
-portfolio/builders/commodityoption.cpp
 portfolio/builders/cpicapfloor.cpp
 portfolio/builders/swaption.cpp
 portfolio/builders/yoycapfloor.cpp
@@ -91,12 +91,15 @@ portfolio/forwardrateagreement.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
 portfolio/fxswap.cpp
+portfolio/indexing.cpp
 portfolio/legbuilders.cpp
 portfolio/legdata.cpp
 portfolio/legdatafactory.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetmanager.cpp
 portfolio/optiondata.cpp
+portfolio/optionexercisedata.cpp
+portfolio/optionpaymentdata.cpp
 portfolio/optionwrapper.cpp
 portfolio/portfolio.cpp
 portfolio/referencedata.cpp
@@ -119,6 +122,7 @@ utilities/dategrid.cpp
 utilities/flowanalysis.cpp
 utilities/indexparser.cpp
 utilities/log.cpp
+utilities/marketdata.cpp
 utilities/osutils.cpp
 utilities/parsers.cpp
 utilities/progressbar.cpp
@@ -210,6 +214,7 @@ portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
 portfolio/builders/capflooredcpileg.hpp
 portfolio/builders/capfloorediborleg.hpp
+portfolio/builders/capflooredovernightindexedcouponleg.hpp
 portfolio/builders/capflooredyoyleg.hpp
 portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
@@ -243,6 +248,7 @@ portfolio/forwardrateagreement.hpp
 portfolio/fxforward.hpp
 portfolio/fxoption.hpp
 portfolio/fxswap.hpp
+portfolio/indexing.hpp
 portfolio/instrumentwrapper.hpp
 portfolio/legbuilders.hpp
 portfolio/legdata.hpp
@@ -250,6 +256,8 @@ portfolio/legdatafactory.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetmanager.hpp
 portfolio/optiondata.hpp
+portfolio/optionexercisedata.hpp
+portfolio/optionpaymentdata.hpp
 portfolio/optionwrapper.hpp
 portfolio/portfolio.hpp
 portfolio/referencedata.hpp
@@ -275,6 +283,7 @@ utilities/dategrid.hpp
 utilities/flowanalysis.hpp
 utilities/indexparser.hpp
 utilities/log.hpp
+utilities/marketdata.hpp
 utilities/osutils.hpp
 utilities/parsers.hpp
 utilities/progressbar.hpp

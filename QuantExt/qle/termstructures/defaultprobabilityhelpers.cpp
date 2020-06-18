@@ -40,8 +40,8 @@
 #include <qle/pricingengines/midpointcdsengine.hpp>
 #include <qle/termstructures/defaultprobabilityhelpers.hpp>
 
-#include <ql/utilities/null_deleter.hpp>
 #include <ql/time/daycounters/actual360.hpp>
+#include <ql/utilities/null_deleter.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -148,7 +148,7 @@ void SpreadCdsHelper::resetEngine() {
     DayCounter lastPeriodDayCounter = dayCounter_ == standardDayCounter ? Actual360(true) : dayCounter_;
 
     swap_ = boost::shared_ptr<QuantExt::CreditDefaultSwap>(new QuantExt::CreditDefaultSwap(
-        Protection::Buyer, 100.0, 0.01, schedule_, paymentConvention_, dayCounter_, settlesAccrual_, 
+        Protection::Buyer, 100.0, 0.01, schedule_, paymentConvention_, dayCounter_, settlesAccrual_,
         protectionPaymentTime_, protectionStart_, boost::shared_ptr<Claim>(), lastPeriodDayCounter));
 
     swap_->setPricingEngine(

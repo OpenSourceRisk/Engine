@@ -50,10 +50,13 @@ class StrippedCappedFlooredCoupon;
 
 namespace QuantExt {
 class AverageONIndexedCoupon;
+class OvernightIndexedCoupon;
+class CappedFlooredOvernightIndexedCoupon;
 class EquityCoupon;
 class FloatingRateFXLinkedNotionalCoupon;
 class FXLinkedCashFlow;
 class SubPeriodsCoupon;
+class IndexedCoupon;
 } // namespace QuantExt
 
 namespace ore {
@@ -115,6 +118,11 @@ public:
     /*! add data from another RequiredFixings instance */
     void addData(const RequiredFixings& requiredFixings);
 
+    /*! Set all pay dates to Date::maxDate(), fixingDatesIndices() will then not filter the required fixings by the
+      given settlement date any more. Needed by total return swaps on bonds for example, where a cashflow in a bond with
+      past payment date can still be relevant for the payment of the current return period. */
+    void unsetPayDates();
+
 private:
     // FixingEntry = indexName, fixingDate, payDate, alwaysAddIfPaysOnSettlement
     using FixingEntry = std::tuple<std::string, QuantLib::Date, QuantLib::Date, bool>;
@@ -151,6 +159,8 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantLib::CPICoupon>,
                          public QuantLib::Visitor<QuantLib::YoYInflationCoupon>,
                          public QuantLib::Visitor<QuantLib::OvernightIndexedCoupon>,
+                         public QuantLib::Visitor<QuantExt::OvernightIndexedCoupon>,
+                         public QuantLib::Visitor<QuantExt::CappedFlooredOvernightIndexedCoupon>,
                          public QuantLib::Visitor<QuantLib::AverageBMACoupon>,
                          public QuantLib::Visitor<QuantLib::CmsSpreadCoupon>,
                          public QuantLib::Visitor<QuantLib::DigitalCoupon>,
@@ -159,7 +169,8 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantExt::EquityCoupon>,
                          public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon>,
                          public QuantLib::Visitor<QuantExt::FXLinkedCashFlow>,
-                         public QuantLib::Visitor<QuantExt::SubPeriodsCoupon> {
+                         public QuantLib::Visitor<QuantExt::SubPeriodsCoupon>,
+                         public QuantLib::Visitor<QuantExt::IndexedCoupon> {
 
 public:
     //! Constructor
@@ -180,6 +191,8 @@ public:
     void visit(QuantLib::CPICoupon& c);
     void visit(QuantLib::YoYInflationCoupon& c);
     void visit(QuantLib::OvernightIndexedCoupon& c);
+    void visit(QuantExt::OvernightIndexedCoupon& c);
+    void visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c);
     void visit(QuantLib::AverageBMACoupon& c);
     void visit(QuantLib::CmsSpreadCoupon& c);
     void visit(QuantLib::DigitalCoupon& c);
@@ -189,6 +202,7 @@ public:
     void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c);
     void visit(QuantExt::FXLinkedCashFlow& c);
     void visit(QuantExt::SubPeriodsCoupon& c);
+    void visit(QuantExt::IndexedCoupon& c);
     //@}
 
 protected:

@@ -113,7 +113,7 @@ ostream& operator<<(ostream& out, const CdsDocClause& cdsDocClause) {
 }
 
 CdsReferenceInformation::CdsReferenceInformation(const string& referenceEntityId, CdsTier tier,
-    const Currency& currency, CdsDocClause docClause)
+                                                 const Currency& currency, CdsDocClause docClause)
     : referenceEntityId_(referenceEntityId), tier_(tier), currency_(currency), docClause_(docClause) {
     populateId();
 }
@@ -173,31 +173,20 @@ bool tryParseCdsInformation(const string& strInfo, CdsReferenceInformation& cdsI
     return true;
 }
 
-CreditDefaultSwapData::CreditDefaultSwapData(const string& issuerId,
-    const CdsReferenceInformation& referenceInformation,
-    const LegData& leg,
-    bool settlesAccrual,
-    const QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime,
-    const Date& protectionStart,
-    const Date& upfrontDate,
-    Real upfrontFee,
-    Real recoveryRate,
+CreditDefaultSwapData::CreditDefaultSwapData(
+    const string& issuerId, const CdsReferenceInformation& referenceInformation, const LegData& leg,
+    bool settlesAccrual, const QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime,
+    const Date& protectionStart, const Date& upfrontDate, Real upfrontFee, Real recoveryRate,
     const std::string& referenceObligation)
-    : issuerId_(issuerId),
-      leg_(leg),
-      settlesAccrual_(settlesAccrual),
-      protectionPaymentTime_(protectionPaymentTime),
-      protectionStart_(protectionStart),
-      upfrontDate_(upfrontDate),
-      upfrontFee_(upfrontFee),
-      recoveryRate_(recoveryRate),
-      referenceObligation_(referenceObligation),
+    : issuerId_(issuerId), leg_(leg), settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime),
+      protectionStart_(protectionStart), upfrontDate_(upfrontDate), upfrontFee_(upfrontFee),
+      recoveryRate_(recoveryRate), referenceObligation_(referenceObligation),
       referenceInformation_(referenceInformation) {}
 
 void CreditDefaultSwapData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CreditDefaultSwapData");
     issuerId_ = XMLUtils::getChildValue(node, "IssuerId", false);
-    
+
     // May get an explicit CreditCurveId node. If so, we use it. Otherwise, we must have ReferenceInformation node.
     XMLNode* tmp = XMLUtils::getChildNode(node, "CreditCurveId");
     if (tmp) {
@@ -210,20 +199,20 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
         referenceInformation_ = ref;
         creditCurveId_ = ref.id();
     }
-    
-    settlesAccrual_ = XMLUtils::getChildValueAsBool(node, "SettlesAccrual", false);       // default = Y
-    protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atDefault;         // set default
+
+    settlesAccrual_ = XMLUtils::getChildValueAsBool(node, "SettlesAccrual", false); // default = Y
+    protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atDefault;   // set default
     // for backwards compatibility only
-    if(auto c = XMLUtils::getChildNode(node, "PaysAtDefaultTime"))
+    if (auto c = XMLUtils::getChildNode(node, "PaysAtDefaultTime"))
         if (!parseBool(XMLUtils::getNodeValue(c)))
             protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd;
     // new node overrides deprecated one, if both should be given
-    if(auto c = XMLUtils::getChildNode(node, "ProtectionPaymentTime")) {
-        if(XMLUtils::getNodeValue(c) == "atDefault")
+    if (auto c = XMLUtils::getChildNode(node, "ProtectionPaymentTime")) {
+        if (XMLUtils::getNodeValue(c) == "atDefault")
             protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atDefault;
-        else if(XMLUtils::getNodeValue(c) == "atPeriodEnd")
+        else if (XMLUtils::getNodeValue(c) == "atPeriodEnd")
             protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd;
-        else if(XMLUtils::getNodeValue(c) == "atMaturity")
+        else if (XMLUtils::getNodeValue(c) == "atMaturity")
             protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atMaturity;
         else {
             QL_FAIL("protection payment time '" << XMLUtils::getNodeValue(c)
@@ -250,8 +239,8 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
 
     if (upfrontDate_ == Date()) {
         QL_REQUIRE(close_enough(upfrontFee_, 0.0) || upfrontFee_ == Null<Real>(),
-            "CreditDefaultSwapData::fromXML(): UpfronFee (" << upfrontFee_ <<
-            ") must be empty or zero if no upfront date is given");
+                   "CreditDefaultSwapData::fromXML(): UpfronFee ("
+                       << upfrontFee_ << ") must be empty or zero if no upfront date is given");
         upfrontFee_ = Null<Real>();
     }
 
@@ -298,7 +287,7 @@ XMLNode* CreditDefaultSwapData::toXML(XMLDocument& doc) {
     }
     if (upfrontFee_ != Null<Real>())
         XMLUtils::addChild(doc, node, "UpfrontFee", upfrontFee_);
-    
+
     if (recoveryRate_ != Null<Real>())
         XMLUtils::addChild(doc, node, "FixedRecoveryRate", recoveryRate_);
 

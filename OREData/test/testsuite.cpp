@@ -35,8 +35,8 @@ using boost::unit_test::framework::master_test_suite;
 #include <oret/basedatapath.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/oret.hpp>
-using ore::test::setupTestLogging;
 using ore::test::getBaseDataPath;
+using ore::test::setupTestLogging;
 
 #ifdef BOOST_MSVC
 #include <ored/auto_link.hpp>
@@ -47,6 +47,10 @@ using ore::test::getBaseDataPath;
 #define BOOST_LIB_NAME boost_serialization
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_regex
+#include <boost/config/auto_link.hpp>
+#define BOOST_LIB_NAME boost_timer
+#include <boost/config/auto_link.hpp>
+#define BOOST_LIB_NAME boost_chrono
 #include <boost/config/auto_link.hpp>
 #endif
 

@@ -24,29 +24,28 @@
 #ifndef quantext_black_variance_surface_delta_hpp
 #define quantext_black_variance_surface_delta_hpp
 
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
-#include <ql/math/interpolation.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
-#include <ql/time/daycounter.hpp>
-#include <ql/time/calendar.hpp>
+#include <ql/math/interpolation.hpp>
 #include <ql/math/matrix.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
+#include <ql/time/calendar.hpp>
+#include <ql/time/daycounter.hpp>
 #include <qle/termstructures/fxsmilesection.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
-
 class InterpolatedSmileSection : public FxSmileSection {
 public:
     //! Supported interpolation methods
     enum class InterpolationMethod { Linear, NaturalCubic, FinancialCubic };
- 
+
     //! ctor
-    InterpolatedSmileSection (Real spot, Real rd, Real rf, Time t,
-                              const std::vector<Real>& strikes, const std::vector<Volatility>& vols,
-                              InterpolationMethod method, bool flatExtrapolation = false);
+    InterpolatedSmileSection(Real spot, Real rd, Real rf, Time t, const std::vector<Real>& strikes,
+                             const std::vector<Volatility>& vols, InterpolationMethod method,
+                             bool flatExtrapolation = false);
 
     Volatility volatility(Real strike) const override;
 
@@ -63,20 +62,36 @@ private:
     bool flatExtrapolation_;
 };
 
+class ConstantSmileSection : public FxSmileSection {
+public:
+    //! ctor
+    ConstantSmileSection(const Volatility vol) : vol_(vol) {}
+
+    Volatility volatility(Real strike) const override { return vol_; }
+
+    //! \name Inspectors
+    //@{
+    const Volatility volatility() const { return vol_; }
+    //@}
+
+private:
+    Volatility vol_;
+};
+
 //! Abstract Black volatility surface based on delta
 //!  \ingroup termstructures
 class BlackVolatilitySurfaceDelta : public BlackVolatilityTermStructure {
 public:
-    BlackVolatilitySurfaceDelta(Date referenceDate, const std::vector<Date>& dates,
-                                const std::vector<Real>& putDeltas, const std::vector<Real>& callDeltas, bool hasAtm,
-                                const Matrix& blackVolMatrix, const DayCounter& dayCounter, const Calendar& cal,
-                                const Handle<Quote>& spot, const Handle<YieldTermStructure>& domesticTS,
+    BlackVolatilitySurfaceDelta(Date referenceDate, const std::vector<Date>& dates, const std::vector<Real>& putDeltas,
+                                const std::vector<Real>& callDeltas, bool hasAtm, const Matrix& blackVolMatrix,
+                                const DayCounter& dayCounter, const Calendar& cal, const Handle<Quote>& spot,
+                                const Handle<YieldTermStructure>& domesticTS,
                                 const Handle<YieldTermStructure>& foreignTS,
                                 DeltaVolQuote::DeltaType dt = DeltaVolQuote::DeltaType::Spot,
                                 DeltaVolQuote::AtmType at = DeltaVolQuote::AtmType::AtmDeltaNeutral,
                                 boost::optional<QuantLib::DeltaVolQuote::DeltaType> atmDeltaType = boost::none,
-                                InterpolatedSmileSection::InterpolationMethod interpolationMethod
-                                    = InterpolatedSmileSection::InterpolationMethod::Linear,
+                                InterpolatedSmileSection::InterpolationMethod interpolationMethod =
+                                    InterpolatedSmileSection::InterpolationMethod::Linear,
                                 bool flatExtrapolation = true);
 
     //! \name TermStructure interface
@@ -92,7 +107,7 @@ public:
     //@{
     virtual void accept(AcyclicVisitor&);
     //@}
-    
+
     //! \name Inspectors
     //@{
     const std::vector<QuantLib::Date>& dates() const { return dates_; }
@@ -118,7 +133,7 @@ private:
     std::vector<Real> putDeltas_;
     std::vector<Real> callDeltas_;
     bool hasAtm_;
-    std::vector<boost::shared_ptr<BlackVarianceCurve>> interpolators_;
+    std::vector<boost::shared_ptr<BlackVarianceCurve> > interpolators_;
 
     Handle<Quote> spot_;
     Handle<YieldTermStructure> domesticTS_;
@@ -133,7 +148,6 @@ private:
 
     // calculate forward for time $t$
     Real forward(Time t) const;
-    
 };
 
 // inline definitions

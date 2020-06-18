@@ -17,21 +17,18 @@
 */
 
 #include <ored/utilities/calendaradjustmentconfig.hpp>
-#include <string>
-#include <ql/time/calendar.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ql/time/calendar.hpp>
+#include <string>
 namespace ore {
 namespace data {
 
- CalendarAdjustmentConfig::CalendarAdjustmentConfig(){
-
-}
+CalendarAdjustmentConfig::CalendarAdjustmentConfig() {}
 
 void CalendarAdjustmentConfig::addHolidays(const string& calname, const Date& d) {
     additionalHolidays_[normalisedName(calname)].insert(d);
 }
-
 
 void CalendarAdjustmentConfig::addBusinessDays(const string& calname, const Date& d) {
     additionalBusinessDays_[normalisedName(calname)].insert(d);
@@ -59,27 +56,25 @@ const set<Date>& CalendarAdjustmentConfig::getBusinessDays(const string& calname
 
 set<string> CalendarAdjustmentConfig::getCalendars() const {
     set<string> cals;
-    for (auto it: additionalHolidays_) {
+    for (auto it : additionalHolidays_) {
         cals.insert(it.first);
     }
-    for (auto it: additionalBusinessDays_) {
+    for (auto it : additionalBusinessDays_) {
         cals.insert(it.first);
     }
     return cals;
 }
 
-string CalendarAdjustmentConfig::normalisedName(const string& c) const {
-    return parseCalendar(c,false).name();
-}
+string CalendarAdjustmentConfig::normalisedName(const string& c) const { return parseCalendar(c, false).name(); }
 
-void CalendarAdjustmentConfig::append(const CalendarAdjustmentConfig&  c) {
+void CalendarAdjustmentConfig::append(const CalendarAdjustmentConfig& c) {
     for (auto it : c.getCalendars()) {
-        for (auto h : c.getHolidays(it)){
+        for (auto h : c.getHolidays(it)) {
             addHolidays(it, h);
         }
         for (auto b : c.getBusinessDays(it)) {
             addBusinessDays(it, b);
-        }        
+        }
     }
 };
 
@@ -108,12 +103,12 @@ XMLNode* CalendarAdjustmentConfig::toXML(XMLDocument& doc) {
             XMLUtils::addChild(doc, ahd, "Date", to_string(hol));
         }
         XMLNode* abd = XMLUtils::addChild(doc, calendarNode, "AdditionalBusinessDays");
-        for (auto bd: getBusinessDays(cal)) {
+        for (auto bd : getBusinessDays(cal)) {
             XMLUtils::addChild(doc, abd, "Date", to_string(bd));
         }
     }
     return node;
 }
 
-}
-}
+} // namespace data
+} // namespace ore

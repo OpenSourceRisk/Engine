@@ -83,14 +83,11 @@ public:
     YoYInflationCouponPricer2(const Handle<YieldTermStructure>& nominalTs,
                               const Handle<QuantLib::YoYOptionletVolatilitySurface>& capletVol =
                                   Handle<QuantLib::YoYOptionletVolatilitySurface>())
-        : YoYInflationCouponPricer(capletVol), nominalTs_(nominalTs) {}
+        : YoYInflationCouponPricer(capletVol, nominalTs) {}
     //! \name InflationCouponPricer interface
     //@{
     virtual void initialize(const InflationCoupon&);
     //@}
-
-protected:
-    const Handle<YieldTermStructure> nominalTs_;
 };
 
 } // namespace QuantExt

@@ -56,11 +56,11 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
 }
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
                  const Calendar& fixingCalendar, const Handle<Quote> fxQuote,
-                 const Handle<YieldTermStructure>& sourceYts, const Handle<YieldTermStructure>& targetYts, 
+                 const Handle<YieldTermStructure>& sourceYts, const Handle<YieldTermStructure>& targetYts,
                  bool inverseIndex)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
-      sourceYts_(sourceYts), targetYts_(targetYts), fxQuote_(fxQuote), useQuote_(true),
-      fixingCalendar_(fixingCalendar), inverseIndex_(inverseIndex) {
+      sourceYts_(sourceYts), targetYts_(targetYts), fxQuote_(fxQuote), useQuote_(true), fixingCalendar_(fixingCalendar),
+      inverseIndex_(inverseIndex) {
 
     std::ostringstream tmp;
     tmp << familyName_ << " " << sourceCurrency_.code() << "/" << targetCurrency_.code();
@@ -113,6 +113,7 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     if (!useQuote_) {
         rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
     } else {
+        QL_REQUIRE(!fxQuote_.empty(), "FxIndex::forecastFixing(): fx quote required");
         rate = fxQuote_->value();
     }
 
