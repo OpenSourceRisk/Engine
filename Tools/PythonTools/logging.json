@@ -1,0 +1,41 @@
+
+{
+  "version": 1,
+  "formatters":
+  {
+    "simple":
+    {
+      "format": "%(asctime)s %(process)d [%(levelname)s] %(name)s.%(funcName)s: %(message)s"
+    }
+  },
+  "handlers":
+  {
+    "console":
+    {
+      "level": "INFO",
+      "formatter": "simple",
+      "class": "logging.StreamHandler",
+      "stream": "ext://sys.stdout"
+    },
+    "file_handler":
+    {
+      "level": "INFO",
+      "formatter": "simple",
+      "class": "logging.FileHandler",
+      "filename": "testing.log",
+      "mode": "w"
+    }
+  },
+  "loggers":
+  {
+    "compare_files":
+    {
+      "level": "INFO"
+    }
+  },
+  "root":
+  {
+    "level": "INFO",
+    "handlers": ["console"]
+  }
+}
