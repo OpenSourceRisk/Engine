@@ -49,7 +49,7 @@ public:
     //! Default constructor
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolIsCube_({ {"", false} }), swapVolSimulateATMOnly_(false), swapVolStrikeSpreads_({ {"", {0.0}} }),
-          equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), cprSimulate_(false),
+          equityVolSimulateATMOnly_(true), equityMoneyness_({ {"", {1.0}} }), equityStandardDevs_({ {"", {1.0}} }), cprSimulate_(false),
           correlationIsSurface_(false), correlationStrikes_({0.0}) {
         setDefaults();
     }
@@ -160,13 +160,13 @@ public:
     const vector<Real>& fxVolStdDevs() const;
 
     bool simulateEquityVols() const { return paramsSimulate(RiskFactorKey::KeyType::EquityVolatility); }
-    bool equityVolIsSurface() const { return equityIsSurface_; }
     bool simulateEquityVolATMOnly() const { return equityVolSimulateATMOnly_; }
-    const vector<Period>& equityVolExpiries() const { return equityVolExpiries_; }
+    const vector<Period>& equityVolExpiries(const string& key) const;
     const string& equityVolDayCounter(const string& key) const;
     const string& equityVolDecayMode() const { return equityVolDecayMode_; }
     vector<string> equityVolNames() const { return paramsLookup(RiskFactorKey::KeyType::EquityVolatility); }
-    const vector<Real>& equityVolMoneyness() const { return equityMoneyness_; }
+    const vector<Real>& equityVolMoneyness(const string& key) const;
+    const vector<Real>& equityVolStandardDevs(const string& key) const;
 
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
@@ -311,12 +311,12 @@ public:
     void setFxVolDayCounters(const string& key, const string& p);
 
     void setSimulateEquityVols(bool simulate);
-    bool& equityVolIsSurface() { return equityIsSurface_; }
-    bool& simulateEquityVolATMOnly() { return equityVolSimulateATMOnly_; }
-    vector<Period>& equityVolExpiries() { return equityVolExpiries_; }
-    string& equityVolDecayMode() { return equityVolDecayMode_; }
+    void setSimulateEquityVolATMOnly(bool simulateATMOnly) { equityVolSimulateATMOnly_ = simulateATMOnly; }
+    void setEquityVolExpiries(const string& name, const vector<Period>& expiries);
+    void setEquityVolDecayMode(const string& val) { equityVolDecayMode_ = val; }
     void setEquityVolNames(vector<string> names);
-    vector<Real>& equityVolMoneyness() { return equityMoneyness_; }
+    void setEquityVolMoneyness(const string&name, const vector<Real>& moneyness);
+    void setEquityVolStandardDevs(const string&name, const vector<Real>& standardDevs);
     void setEquityVolDayCounters(const string& key, const string& p);
 
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
@@ -447,12 +447,13 @@ private:
     map<string, vector<Real>> fxMoneyness_;
     map<string, vector<Real>> fxStandardDevs_;
 
-    bool equityIsSurface_;
     bool equityVolSimulateATMOnly_;
-    vector<Period> equityVolExpiries_;
+    map<string, bool> equityUseMoneyness_;
+    map<string, vector<Period>> equityVolExpiries_;
     map<string, string> equityVolDayCounters_;
     string equityVolDecayMode_;
-    vector<Real> equityMoneyness_;
+    map<string, vector<Real>> equityMoneyness_;
+    map<string, vector<Real>> equityStandardDevs_;
 
     vector<string> additionalScenarioDataIndices_;
     vector<string> additionalScenarioDataCcys_;
