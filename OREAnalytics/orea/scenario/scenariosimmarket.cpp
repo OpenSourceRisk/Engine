@@ -680,10 +680,10 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                             for (Size i = 0; i < optionTenors.size(); ++i) {
 
-                                if (iborIndex) {
+                                if (parameters_->capFloorVolAdjustOptionletPillars() && iborIndex) {
                                     // If we ask for cap pillars at tenors t_i for i = 1,...,N, we should attempt to
                                     // place the optionlet pillars at the fixing date of the last optionlet in the cap
-                                    // with tenor t_i
+                                    // with tenor t_i, if capFloorVolAdjustOptionletPillars is true.
                                     QL_REQUIRE(optionTenors[i] > iborIndex->tenor(),
                                                "The cap floor tenor must be greater than the ibor index tenor");
                                     boost::shared_ptr<CapFloor> capFloor =
@@ -692,6 +692,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     DLOG("Option [tenor, date] pair is [" << optionTenors[i] << ", "
                                                                           << io::iso_date(optionDates[i]) << "]");
                                 } else {
+                                    // Otherwise, just place the optionlet pillars at the configured tenors.
                                     optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
                                 }
 
