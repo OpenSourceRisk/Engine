@@ -189,10 +189,9 @@ BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStripping) {
                                                              vars.dayCounter);
 
     // Create shifted lognormal stripped optionlet surface and Black engine
-    boost::shared_ptr<QuantExt::OptionletStripper> stripper =
-        boost::shared_ptr<OptionletStripper1>(new OptionletStripper1(
-            volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
-            Normal, 0.0, false, ShiftedLognormal, vars.vols.shift_1));
+    boost::shared_ptr<QuantExt::OptionletStripper> stripper = boost::shared_ptr<OptionletStripper1>(
+        new OptionletStripper1(volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter,
+                               vars.yieldCurves.discountEonia, Normal, 0.0, ShiftedLognormal, vars.vols.shift_1));
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
     ovs->enableExtrapolation();
@@ -242,10 +241,9 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormalStripping) {
                                                              vars.dayCounter);
 
     // Create normal stripped optionlet surface and Bachelier engine
-    boost::shared_ptr<QuantExt::OptionletStripper> stripper =
-        boost::shared_ptr<OptionletStripper1>(new OptionletStripper1(
-            volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
-            ShiftedLognormal, vars.vols.shift_2, false, Normal, 0.0));
+    boost::shared_ptr<QuantExt::OptionletStripper> stripper = boost::shared_ptr<OptionletStripper1>(
+        new OptionletStripper1(volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter,
+                               vars.yieldCurves.discountEonia, ShiftedLognormal, vars.vols.shift_2, Normal, 0.0));
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
     ovs->enableExtrapolation();
@@ -298,7 +296,7 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormalStripping) {
     boost::shared_ptr<QuantExt::OptionletStripper> stripper =
         boost::shared_ptr<OptionletStripper1>(new OptionletStripper1(
             volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
-            ShiftedLognormal, vars.vols.shift_2, false, ShiftedLognormal, vars.vols.shift_1));
+            ShiftedLognormal, vars.vols.shift_2, ShiftedLognormal, vars.vols.shift_1));
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
     ovs->enableExtrapolation();
@@ -531,10 +529,9 @@ BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStrippingWithAtm) {
         vars.settlementDays, vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.nAtmVols, vars.dayCounter));
 
     // Create shifted lognormal stripped optionlet surface
-    boost::shared_ptr<QuantExt::OptionletStripper1> tempStripper =
-        boost::shared_ptr<OptionletStripper1>(new OptionletStripper1(
-            volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
-            Normal, 0.0, false, ShiftedLognormal, vars.vols.shift_1));
+    boost::shared_ptr<QuantExt::OptionletStripper1> tempStripper = boost::shared_ptr<OptionletStripper1>(
+        new OptionletStripper1(volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter,
+                               vars.yieldCurves.discountEonia, Normal, 0.0, ShiftedLognormal, vars.vols.shift_1));
 
     // Overlay shifted lognormal ATM curve
     boost::shared_ptr<QuantExt::OptionletStripper> stripper = boost::make_shared<QuantExt::OptionletStripper2>(
@@ -618,10 +615,9 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormalStrippingWithAtm) {
         vars.settlementDays, vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.slnAtmVols_1, vars.dayCounter));
 
     // Create normal stripped optionlet surface
-    boost::shared_ptr<QuantExt::OptionletStripper1> tempStripper =
-        boost::shared_ptr<OptionletStripper1>(new OptionletStripper1(
-            volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
-            ShiftedLognormal, vars.vols.shift_1, false, Normal, 0.0));
+    boost::shared_ptr<QuantExt::OptionletStripper1> tempStripper = boost::shared_ptr<OptionletStripper1>(
+        new OptionletStripper1(volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter,
+                               vars.yieldCurves.discountEonia, ShiftedLognormal, vars.vols.shift_1, Normal, 0.0));
 
     // Overlay shifted lognormal ATM curve
     boost::shared_ptr<QuantExt::OptionletStripper> stripper = boost::make_shared<QuantExt::OptionletStripper2>(
@@ -708,7 +704,7 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormalStrippingWithAtm) {
     boost::shared_ptr<QuantExt::OptionletStripper1> tempStripper =
         boost::shared_ptr<OptionletStripper1>(new OptionletStripper1(
             volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
-            ShiftedLognormal, vars.vols.shift_1, false, ShiftedLognormal, vars.vols.shift_2));
+            ShiftedLognormal, vars.vols.shift_1, ShiftedLognormal, vars.vols.shift_2));
 
     // Overlay shifted lognormal ATM curve
     boost::shared_ptr<QuantExt::OptionletStripper> stripper = boost::make_shared<QuantExt::OptionletStripper2>(
@@ -790,7 +786,7 @@ BOOST_AUTO_TEST_CASE(testNormalToLognormalGivesError) {
     // Create shifted lognormal stripped optionlet surface and Black engine
     boost::shared_ptr<QuantExt::OptionletStripper> stripper = boost::shared_ptr<OptionletStripper1>(
         new QuantExt::OptionletStripper1(volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter,
-                                         vars.yieldCurves.discountEonia, Normal, 0.0, false, ShiftedLognormal, 0.0));
+                                         vars.yieldCurves.discountEonia, Normal, 0.0, ShiftedLognormal, 0.0));
 
     // Error due to negative strike in input matrix
     BOOST_CHECK_THROW(stripper->recalculate(), QuantLib::Error);
@@ -816,7 +812,7 @@ BOOST_AUTO_TEST_CASE(testNormalToLognormalModifiedGivesError) {
     // Create shifted lognormal stripped optionlet surface and Black engine
     boost::shared_ptr<QuantExt::OptionletStripper> stripper = boost::shared_ptr<OptionletStripper1>(
         new QuantExt::OptionletStripper1(volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter,
-                                         vars.yieldCurves.discountEonia, Normal, 0.0, false, ShiftedLognormal, 0.0));
+                                         vars.yieldCurves.discountEonia, Normal, 0.0, ShiftedLognormal, 0.0));
 
     // Error due to forward rates being negative
     BOOST_CHECK_THROW(stripper->recalculate(), QuantLib::Error);
@@ -848,7 +844,7 @@ BOOST_AUTO_TEST_CASE(testNormalToLognormalWithPositiveForwards) {
     // Create shifted lognormal stripped optionlet surface and Black engine
     boost::shared_ptr<QuantExt::OptionletStripper> stripper = boost::shared_ptr<OptionletStripper1>(
         new QuantExt::OptionletStripper1(volSurface, iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter,
-                                         vars.yieldCurves.discountEonia, Normal, 0.0, false, ShiftedLognormal, 0.0));
+                                         vars.yieldCurves.discountEonia, Normal, 0.0, ShiftedLognormal, 0.0));
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
     ovs->enableExtrapolation();
