@@ -765,14 +765,6 @@ Alternatively, set environment variables {\tt BOOST\_ROOT} and {\tt BOOST\_LIBRA
 \medskip
 using four threads in this example.
 \medskip
-%\item Alternatively the individual API documentation for each library can be built by invoking \\
-%\medskip
-%{\tt make doc\_quantext} \\
-%\medskip
-%{\tt make doc\_ored} \\
-%\medskip
-%{\tt make doc\_orea} \\
-%\medskip
 \item Run all test suites by invoking \\
 \medskip
 {\tt ctest -j4}
@@ -902,6 +894,23 @@ To build the wrappers on Windows, Linux, mac OS
 \medskip
 On Linux or mac OS one can also use {\tt make} instead of {\tt ninja}. 
 In that case, omit the {\tt -G Ninja} part in the configuration. 
+
+\medskip
+To build on Windows using CMake and an existing Visual Studio installation you can e.g. run
+this from the top-level oreswig directory
+
+{\footnotesize
+{\tt mkdir builddir $\backslash$} \\
+{\tt cmake -G "Visual Studio 15 2017" $\backslash$}\\
+\hspace{1cm} {\tt -A x64 $\backslash$}\\
+\hspace{1cm} {\tt -D SWIG\_DIR=C:$\backslash$dev$\backslash$swigwin$\backslash$Lib $\backslash$}\\
+\hspace{1cm} {\tt -D SWIG\_EXECUTABLE=C:$\backslash$dev$\backslash$swigwin$\backslash$swig.exe $\backslash$}\\
+\hspace{1cm} {\tt -D ORE:PATHNAME=C:$\backslash$dev$\backslash$ORE$\backslash$master $\backslash$}\\
+\hspace{1cm} {\tt -D BOOST\_ROOT=C:$\backslash$dev$\backslash$boost $\backslash$}\\
+\hspace{1cm} {\tt -S OREAnalytics-SWIG/Python $\backslash$}\\
+\hspace{1cm} {\tt -B builddir $\backslash$}\\
+{\tt cmake --build builddir -v}
+}
 
 \medskip
 By default this builds the OREAnalytics-Python bindings which include the wrapped parts of QuantLib, QuantExt, OREData and OREAnalytics.
