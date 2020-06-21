@@ -49,9 +49,9 @@ public:
     //! Default constructor
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolIsCube_({{"", false}}), swapVolSimulateATMOnly_(false),
-          capFloorVolAdjustOptionletPillars_(false), swapVolStrikeSpreads_({{"", {0.0}}}),
-          equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}),
-          cprSimulate_(false), correlationIsSurface_(false), correlationStrikes_({0.0}) {
+          capFloorVolAdjustOptionletPillars_(false), capFloorVolUseCapAtm_(false),
+          swapVolStrikeSpreads_({{"", {0.0}}}), equityIsSurface_(false), equityVolSimulateATMOnly_(true), 
+          equityMoneyness_({1.0}), cprSimulate_(false), correlationIsSurface_(false), correlationStrikes_({0.0}) {
         setDefaults();
     }
 
@@ -110,6 +110,10 @@ public:
         \c capFloorVolExpiries are the pillars for the optionlet structure.
     */
     bool capFloorVolAdjustOptionletPillars() const { return capFloorVolAdjustOptionletPillars_; }
+    /*! If \c true, use ATM cap rate when \c capFloorVolIsAtm is \c true when querying the todaysmarket optionlet 
+        volatility structure at the confirgured expiries. Otherwise, use the index forward rate.
+    */
+    bool capFloorVolUseCapAtm() const { return capFloorVolUseCapAtm_; }
 
     bool simulateYoYInflationCapFloorVols() const {
         return paramsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility);
@@ -280,6 +284,9 @@ public:
     void setCapFloorVolAdjustOptionletPillars(bool capFloorVolAdjustOptionletPillars) {
         capFloorVolAdjustOptionletPillars_ = capFloorVolAdjustOptionletPillars;
     }
+    void setCapFloorVolUseCapAtm(bool capFloorVolUseCapAtm) {
+        capFloorVolUseCapAtm_ = capFloorVolUseCapAtm;
+    }
 
     void setSimulateYoYInflationCapFloorVols(bool simulate);
     void setYoYInflationCapFloorVolNames(vector<string> names);
@@ -436,6 +443,7 @@ private:
     map<std::string, bool> capFloorVolIsAtm_;
     string capFloorVolDecayMode_;
     bool capFloorVolAdjustOptionletPillars_;
+    bool capFloorVolUseCapAtm_;
 
     map<string, string> yoyInflationCapFloorVolDayCounters_;
     map<string, vector<Period>> yoyInflationCapFloorVolExpiries_;

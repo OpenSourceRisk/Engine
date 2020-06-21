@@ -740,5 +740,69 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     LOG("Sensitivity report finished");
 }
 
+void ReportWriter::writeAtmOptionletVolatilities(Report& report,
+    const ScenarioSimMarket& ssm, const SensitivityScenarioData& ssd) {
+
+    LOG("Start writing ATM optionlet volatility curves report.");
+
+    // Report headers
+    report.addColumn("currency", string());
+    report.addColumn("expiry", string());
+    report.addColumn("volatility", double(), 12);
+
+    // Report body
+    // Loop over cap floor volatility shift data in ssd.
+    // This indicates the cap floor volatility curves that we are bumping.
+    for (const auto& kv : ssd.capFloorVolShiftData()) {
+
+        string ccy = kv.first;
+        DLOG("writeAtmOptionletVolatilities: generating optionlet curve for currency " << ccy);
+
+        // Get the ATM optionlet data from scenario sim market on the shift expiries.
+        map<Date, Volatility> data = getOptionletCurve(ccy, ssm, kv.second);
+
+        for (const auto& p : data) {
+            report.next();
+            report.add(ccy);
+            report.add(to_string(p.first));
+            report.add(p.second);
+        }
+    }
+
+    report.end();
+
+    LOG("Finished writing ATM optionlet volatility curves report.");
+
+}
+
+map<Date, Volatility> getOptionletCurve(const string& ccy, const ScenarioSimMarket& ssm,
+    const boost::shared_ptr<SensitivityScenarioData::CapFloorVolShiftData>& sd,
+    boost::shared_ptr<IborIndex> iborIndex) {
+
+    // The ssm should have an OptionletVolatilityStructure for the currency.
+    auto ovs = ssm.capFloorVol(ccy);
+
+    // Get the index string for the cap floor structure from the curve configurations.
+    string iborIndexName = sd->indexName;
+
+    // Get the Ibor Index from ssm.
+    iborIndex = *ssm.iborIndex(iborIndexName);
+
+    // For each tenor in cap floor vol shift data for this currency, get the optionlet volatility at that 
+    // tenor and at a strike equal to the forward ibor rate.
+    map<Date, Volatility> data;
+    for (const auto& tenor : sd->shiftExpiries) {
+        Date fixingDate = ovs->optionDateFromTenor(tenor);
+        Rate forward = iborIndex->fixing(fixingDate);
+        Volatility vol = ovs->volatility(fixingDate, forward);
+        data[fixingDate] = vol;
+        TLOG("getOptionletCurve: added (date,vol) = " << "(" << io::iso_date(fixingDate) << "," << std::fixed <<
+            std::setprecision(9) << vol << ") for currency " << ccy << ". (tenor,forward) = " << "(" <<
+            tenor << "," << forward << ").");
+    }
+
+    return data;
+}
+
 } // namespace analytics
 } // namespace ore

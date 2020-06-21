@@ -701,11 +701,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 if (isAtm) {
                                     QL_REQUIRE(!strIborIndex.empty(), "Expected cap floor vol curve config for "
                                                                           << name << " to have an ibor index name");
-                                    initMarket->iborIndex(strIborIndex, configuration);
-                                    boost::shared_ptr<CapFloor> cap = MakeCapFloor(
-                                        CapFloor::Cap, optionTenors[i],
-                                        *initMarket->iborIndex(strIborIndex, configuration), 0.0, 0 * Days);
-                                    strike = cap->atmRate(**initMarket->discountCurve(name, configuration));
+                                    auto iborIndex = *initMarket->iborIndex(strIborIndex, configuration);
+                                    if (parameters_->capFloorVolUseCapAtm()) {
+                                        boost::shared_ptr<CapFloor> cap = MakeCapFloor(
+                                            CapFloor::Cap, optionTenors[i], iborIndex, 0.0, 0 * Days);
+                                        strike = cap->atmRate(**initMarket->discountCurve(name, configuration));
+                                    } else {
+                                        strike = iborIndex->fixing(optionDates[i]);
+                                    }
                                 }
 
                                 for (Size j = 0; j < strikes.size(); ++j) {

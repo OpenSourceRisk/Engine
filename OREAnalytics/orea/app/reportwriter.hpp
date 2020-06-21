@@ -85,10 +85,28 @@ public:
     virtual void writeSensitivityReport(ore::data::Report& report, const boost::shared_ptr<SensitivityStream>& ss,
                                         QuantLib::Real outputThreshold = 0.0);
 
+    /*! Write report containing ATM optionlet volatilities from \p ssm for all currencies where \p ssd has defined cap
+        floor volatility shifts. The report contains the columns: currency, expiry_date, volatility.
+    */
+    virtual void writeAtmOptionletVolatilities(ore::data::Report& report,
+        const ore::analytics::ScenarioSimMarket& ssm,
+        const ore::analytics::SensitivityScenarioData& ssd);
+
     const std::string& nullString() const { return nullString_; }
 
 protected:
     std::string nullString_;
 };
+
+/*! Helper function to extract the ATM optionlet data for currency \p ccy from \p ssm on the expiries provided by
+    the cap floor volatility shift data for the currency \p sd. The \p iborIndex is populated with the underlying
+    IborIndex for the cap floor structure from \p ssm.
+*/
+std::map<QuantLib::Date, QuantLib::Volatility> getOptionletCurve(
+    const std::string& ccy,
+    const ore::analytics::ScenarioSimMarket& ssm,
+    const boost::shared_ptr<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>& sd,
+    boost::shared_ptr<QuantLib::IborIndex> iborIndex = nullptr);
+
 } // namespace analytics
 } // namespace ore

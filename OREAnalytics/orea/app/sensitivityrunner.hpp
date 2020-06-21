@@ -74,7 +74,8 @@ public:
                                       boost::shared_ptr<Portfolio>& sensiPortfolio);
 
     //! Write out some standard sensitivities reports
-    virtual void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis);
+    virtual void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis,
+        const boost::shared_ptr<SensitivityScenarioData>& sensiData);
 
 protected:
     boost::shared_ptr<Parameters> params_;

@@ -571,6 +571,7 @@
               </xs:complexType>
             </xs:element>
             <xs:element type="bool" name="AdjustOptionletPillars" maxOccurs="1" minOccurs="0"/>
+            <xs:element type="bool" name="UseCapAtm" maxOccurs="1" minOccurs="0"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>

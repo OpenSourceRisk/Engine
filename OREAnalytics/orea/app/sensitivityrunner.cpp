@@ -66,7 +66,7 @@ void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market,
         referenceData_, continueOnError_);
     sensiAnalysis->generateSensitivities();
 
-    sensiOutputReports(sensiAnalysis);
+    sensiOutputReports(sensiAnalysis, sensiData);
 
     LOG("Sensitivity analysis completed");
     MEM_LOG;
@@ -103,7 +103,8 @@ void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarket
     DLOG("sensiInputInitialize done");
 }
 
-void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis) {
+void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis,
+    const boost::shared_ptr<SensitivityScenarioData>& sensiData) {
 
     string outputPath = params_->get("setup", "outputPath");
     Real sensiThreshold = parseReal(params_->get("sensitivity", "outputSensitivityThreshold"));
@@ -119,6 +120,15 @@ void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAn
     outputFile = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
     CSVFileReport sensiReport(outputFile);
     ReportWriter().writeSensitivityReport(sensiReport, ss, sensiThreshold);
+
+    // If an output file name has been provided for ATM optionlet volatilies.
+    if (params_->has("sensitivity", "atmOptionletVolsFile")) {
+        string outputPath = params_->get("setup", "outputPath");
+        string f = outputPath + "/" + params_->get("sensitivity", "atmOptionletVolsFile");
+        CSVFileReport report(f, ',', false);
+        ReportWriter().writeAtmOptionletVolatilities(report, *sensiAnalysis->simMarket(), *sensiData);
+    }
+
 }
 
 } // namespace analytics
