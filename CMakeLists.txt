@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.8)
 
 project(ORE CXX)
 
+option(BUILD_DOC "Build documentation" ON)
+
 include(CTest)
 
 include("cmake/commonSettings.cmake")
