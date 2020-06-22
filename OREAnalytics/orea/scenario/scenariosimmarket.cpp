@@ -1007,6 +1007,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     forTS = discountCurve(forCcy);
                                     domTS = discountCurve(domCcy);
                                 }
+                                // set up a FX Index
+                                boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>(name, 0, spot, forCcy, domCcy, cal, forTS, domTS);
+
                                 bool stickyStrike = true;
                                 bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
 
@@ -1017,7 +1020,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 } else { // standard deviations
                                     fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
                                         new BlackVarianceSurfaceStdDevs(cal, spot, times, parameters->fxVolStdDevs(name), quotes, 
-                                            dc, forTS, domTS, stickyStrike, flatExtrapolation));
+                                            dc, fxIndex, stickyStrike, flatExtrapolation));
                                 }
                                 
                             } else {
@@ -1062,62 +1065,136 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     try {
                         Handle<BlackVolTermStructure> wrapper = initMarket->equityVol(name, configuration);
-
                         Handle<BlackVolTermStructure> evh;
 
                         if (param.second.first) {
-                            Handle<Quote> spot = equitySpots_[make_pair(Market::defaultConfiguration, name)];
-                            Size n = parameters->equityVolMoneyness().size();
-                            Size m = parameters->equityVolExpiries().size();
-                            vector<vector<Handle<Quote>>> quotes(n, vector<Handle<Quote>>(m, Handle<Quote>()));
+                            auto eqCurve = equityCurve(name, Market::defaultConfiguration);
+                            Handle<Quote> spot = eqCurve->equitySpot();
+                            auto expiries = parameters->equityVolExpiries(name);
+                            
+                            Size m = expiries.size();
+                            vector<vector<Handle<Quote>>> quotes;
                             vector<Time> times(m);
+                            vector<Date> dates(m);
                             Calendar cal = wrapper->calendar();
                             DayCounter dc = ore::data::parseDayCounter(parameters->equityVolDayCounter(name));
                             bool atmOnly = parameters->simulateEquityVolATMOnly();
+                            
+                            boost::shared_ptr<BlackVolTermStructure> eqVolCurve;
 
-                            for (Size i = 0; i < n; i++) {
-                                Real mon = parameters->equityVolMoneyness()[i];
-                                // strike
-                                Real k = atmOnly ? Null<Real>() : spot->value() * mon;
+                            if (parameters->equityVolIsSurface(name)) {
+                                vector<Real> strikes;
+                                strikes = parameters->equityUseMoneyness(name) ? parameters->equityVolMoneyness(name) :
+                                    parameters->equityVolStandardDevs(name);
+                                Size n = strikes.size();
+                                quotes.resize(n, vector<Handle<Quote>>(m, Handle<Quote>()));
 
+                                if (parameters->equityUseMoneyness(name)) { // moneyness surface
+                                    for (Size j = 0; j < m; j++) {
+                                        auto eqForward = eqCurve->fixing(dates[j]);
+                                        for (Size i = 0; i < n; i++) {
+                                            Real mon = strikes[i];
+                                            // strike
+                                            Real k = eqForward * mon;
+                                        
+                                            // Index is expires then moneyness. TODO: is this the best?
+                                            Size idx = i * m + j;
+                                            times[j] = dc.yearFraction(asof_, asof_ + expiries[j]);
+                                            Volatility vol = wrapper->blackVol(asof_ + expiries[j], k);
+                                            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                                            simDataTmp.emplace(std::piecewise_construct,
+                                                std::forward_as_tuple(param.first, name, idx),
+                                                std::forward_as_tuple(q));
+                                            quotes[i][j] = Handle<Quote>(q);
+                                        }
+                                    }
+                                    LOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << name);
+                                    // If true, the strikes are fixed, if false they move with the spot handle
+                                    // Should probably be false, but some people like true for sensi runs.
+                                    bool stickyStrike = true;
+
+                                    eqVolCurve =
+                                        boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceSurfaceMoneynessSpot(
+                                            cal, spot, times, parameters->equityVolMoneyness(name), quotes, dc, stickyStrike));
+                                    eqVolCurve->enableExtrapolation();
+
+                                } else { // standard deviations surface
+
+                                    // times (for fwds)
+                                    for (Size i = 0; i < n; i++) {
+                                        Date date = asof_ + expiries[i];
+                                        times.push_back(wrapper->timeFromReference(date));
+                                        dates.push_back(date);
+                                    }
+
+                                    //forwards
+                                    vector<Real> fwds;
+                                    vector<Real> atmVols;                                    
+                                    for (Size i = 0; i < expiries.size(); i++) {
+                                        auto eqForward = eqCurve->fixing(dates[i]);
+                                        fwds.push_back(eqForward);
+                                        atmVols.push_back(wrapper->blackVol(dates[i], eqForward));
+                                        DLOG("atmVol(s) is " << atmVols.back() << " on date " << dates[i]);
+                                    }
+
+                                    // interpolations
+                                    Interpolation forwardCurve = Linear().interpolate(times.begin(), times.end(), fwds.begin());
+                                    Interpolation atmVolCurve = Linear().interpolate(times.begin(), times.end(), atmVols.begin());
+
+                                    // populate quotes
+                                    BlackVarianceSurfaceStdDevs::populateVolMatrix(wrapper, quotes,
+                                        expiries, strikes, forwardCurve, atmVolCurve);
+
+                                    // add to simDataTemp
+                                    for (Size i = 0; i < m; i++) {
+                                        for (Size j = 0; j < n; j++) {
+                                            Size idx = j * n + i;
+                                            boost::shared_ptr<Quote> q = quotes[j][i].currentLink();
+                                            boost::shared_ptr<SimpleQuote> sq = boost::dynamic_pointer_cast<SimpleQuote>(q);
+                                            QL_REQUIRE(sq, "Quote is not a SimpleQuote"); // why do we need this?
+                                            simDataTmp.emplace(std::piecewise_construct,
+                                                std::forward_as_tuple(param.first, name, idx),
+                                                std::forward_as_tuple(sq));
+                                        }
+                                    }
+                                    // If true, the strikes are fixed, if false they move with the spot handle
+                                    // Should probably be false, but some people like true for sensi runs.
+                                    bool stickyStrike = true;
+                                    bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
+                                    eqVolCurve = boost::shared_ptr<BlackVolTermStructure>(
+                                        new BlackVarianceSurfaceStdDevs(cal, spot, times, parameters->equityVolStandardDevs(name), 
+                                            quotes, dc, eqCurve.currentLink(), stickyStrike, flatExtrapolation));
+                                }
+                            } else { // not a surface - case for ATM or simulateATMOnly
+                                quotes.resize(1, vector<Handle<Quote>>(m, Handle<Quote>()));
+                                // Only need ATM quotes in this case
                                 for (Size j = 0; j < m; j++) {
                                     // Index is expires then moneyness. TODO: is this the best?
-                                    Size idx = i * m + j;
-                                    times[j] = dc.yearFraction(asof_, asof_ + parameters->equityVolExpiries()[j]);
-                                    Volatility vol = wrapper->blackVol(asof_ + parameters->equityVolExpiries()[j], k);
+                                    Size idx = j;
+                                    auto eqForward = eqCurve->fixing(dates[j]);
+                                    Volatility vol = wrapper->blackVol(dates[j], eqForward);
                                     boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                                     simDataTmp.emplace(std::piecewise_construct,
-                                                       std::forward_as_tuple(param.first, name, idx),
-                                                       std::forward_as_tuple(q));
-                                    quotes[i][j] = Handle<Quote>(q);
+                                        std::forward_as_tuple(param.first, name, idx),
+                                        std::forward_as_tuple(q));
+                                    quotes[0][j] = Handle<Quote>(q);
                                 }
-                            }
-                            boost::shared_ptr<BlackVolTermStructure> eqVolCurve;
-                            if (!parameters->simulateEquityVolATMOnly()) {
-                                LOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << name);
-                                // If true, the strikes are fixed, if false they move with the spot handle
-                                // Should probably be false, but some people like true for sensi runs.
-                                bool stickyStrike = true;
 
-                                eqVolCurve =
-                                    boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceSurfaceMoneynessSpot(
-                                        cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
-                                eqVolCurve->enableExtrapolation();
-                            } else {
-                                LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << name);
-                                eqVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
-                                    0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false));
-                            }
+                                LOG("ATM EQ Vols (BlackVarianceCurve3) for " << name);
+                                eqVolCurve = boost::make_shared<BlackVarianceCurve3>(
+                                    0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false);
+                                
+                                // if we have a surface but are only simulating atm vols we wrap the atm curve and the full
+                                // t0 surface
+                                if (parameters->simulateEquityVolATMOnly()) {
+                                    LOG("Simulating EQ Vols (EquityVolatilityConstantSpread) for " << name);
+                                    eqVolCurve = boost::make_shared<EquityVolatilityConstantSpread>(
+                                        Handle<BlackVolTermStructure>(eqVolCurve), wrapper);
+                                }
 
-                            // if we have a surface but are only simulating atm vols we wrap the atm curve and the full
-                            // t0 surface
-                            if (parameters->equityVolIsSurface() && parameters->simulateEquityVolATMOnly()) {
-                                LOG("Simulating EQ Vols (EquityVolatilityConstantSpread) for " << name);
-                                evh = Handle<BlackVolTermStructure>(boost::make_shared<EquityVolatilityConstantSpread>(
-                                    Handle<BlackVolTermStructure>(eqVolCurve), wrapper));
-                            } else {
-                                evh = Handle<BlackVolTermStructure>(eqVolCurve);
-                            }
+                            }                            
+                            evh = Handle<BlackVolTermStructure>(eqVolCurve);
+                            
                         } else {
                             string decayModeString = parameters->equityVolDecayMode();
                             DLOG("Deterministic EQ Vols with decay mode " << decayModeString << " for " << name);

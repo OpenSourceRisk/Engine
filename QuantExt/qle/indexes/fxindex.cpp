@@ -117,7 +117,7 @@ Real FxIndex::forecastFixing(const Time& fixingTime) const {
         rate = fxQuote_->value();
     }
     
-    // compute the forecast applying the usual no arbitrage principle
+    // TODO: Add a time based adjusement for settlement days
     Real forward = rate * sourceYts_->discount(fixingTime)  /
         sourceYts_->discount(fixingTime);
     return forward;

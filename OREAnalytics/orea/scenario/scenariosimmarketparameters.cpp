@@ -715,6 +715,14 @@ void ScenarioSimMarketParameters::setSimulateCprs(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::CPR, simulate);
 }
 
+void ScenarioSimMarketParameters::setEquityUseMoneyness(const string& name, bool useMoneyness) {
+    equityUseMoneyness_[name] = useMoneyness;
+}
+
+void ScenarioSimMarketParameters::setEquityVolIsSurface(const string& name, bool isSurface) {
+    equityVolIsSurface_[name] = isSurface;
+}
+
 void ScenarioSimMarketParameters::setEquityVolExpiries(const string& name, const vector<Period>& expiries) {
     equityVolExpiries_[name] = expiries;
 }
@@ -725,6 +733,14 @@ void ScenarioSimMarketParameters::setEquityVolMoneyness(const string&name, const
 
 void ScenarioSimMarketParameters::setEquityVolStandardDevs(const string&name, const vector<Real>& standardDevs) {
     equityStandardDevs_[name] = standardDevs;
+}
+
+bool ScenarioSimMarketParameters::equityUseMoneyness(const string& key) const {
+    return lookup(equityUseMoneyness_, key);
+}
+
+bool ScenarioSimMarketParameters::equityVolIsSurface(const string& key) const {
+    return lookup(equityVolIsSurface_, key);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::equityVolExpiries(const string& key) const {
@@ -1385,33 +1401,38 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             "equities '" << join(namesCheck, ",") << "' and no default expiry set has been given");
 
         XMLNode* eqSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
+        setEquityVolIsSurface("", false);
+        setSimulateEquityVolATMOnly(false);
         if (eqSurfaceNode) {
             XMLNode* atmOnlyNode = XMLUtils::getChildNode(eqSurfaceNode, "SimulateATMOnly");
+            // if set to true we will simulate ATM only for any surfaces without an explicit surface defined
+            // adding a default surface of moneyness or standard deviations below will supersede this
             if (atmOnlyNode) {
                 equityVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(eqSurfaceNode, "SimulateATMOnly", true);
-            } else {
-                equityVolSimulateATMOnly_ = false;
             }
-            if (!equityVolSimulateATMOnly_) {
-                for (XMLNode* child = XMLUtils::getChildNode(eqSurfaceNode, "Moneyness"); child;
-                    child = XMLUtils::getNextSibling(child, "Moneyness")) {
-                    string label = XMLUtils::getAttribute(child, "name"); // will be "" if no attr
-                    equityMoneyness_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
-                    equityUseMoneyness_[label] = true;
+            for (XMLNode* child = XMLUtils::getChildNode(eqSurfaceNode, "Moneyness"); child;
+                child = XMLUtils::getNextSibling(child, "Moneyness")) {
+                string label = XMLUtils::getAttribute(child, "name"); // will be "" if no attr
+                setEquityVolMoneyness(label, XMLUtils::getNodeValueAsDoublesCompact(child));
+                setEquityUseMoneyness(label, true);
+                if (equityVolMoneyness(label).size() > 1) {
+                    setEquityVolIsSurface(label, true);
                 }
-                for (XMLNode* child = XMLUtils::getChildNode(eqSurfaceNode, "StandardDeviations"); child;
-                    child = XMLUtils::getNextSibling(child, "StandardDeviations")) {
-                    string label = XMLUtils::getAttribute(child, "name"); // will be "" if no attr
-                    // We cannot have both moneyness and standard deviations for any label (inclding the default of ""
-                    // Throw error if this occurs
-                    if (equityMoneyness_.find(label) != equityMoneyness_.end()){
-                        QL_FAIL("Equity Volatility simulation parameters - both moneyness and standard deviations provided for label " << label);
-                    } else {
-                        equityStandardDevs_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
-                        equityUseMoneyness_[label] = false;
+            }
+            for (XMLNode* child = XMLUtils::getChildNode(eqSurfaceNode, "StandardDeviations"); child;
+                child = XMLUtils::getNextSibling(child, "StandardDeviations")) {
+                string label = XMLUtils::getAttribute(child, "name"); // will be "" if no attr
+                // We cannot have both moneyness and standard deviations for any label (inclding the default of ""
+                // Throw error if this occurs
+                if (equityMoneyness_.find(label) != equityMoneyness_.end()){
+                    QL_FAIL("Equity Volatility simulation parameters - both moneyness and standard deviations provided for label " << label);
+                } else {
+                    setEquityVolStandardDevs(label, XMLUtils::getNodeValueAsDoublesCompact(child));
+                    setEquityUseMoneyness(label, false);
+                    if (equityVolStandardDevs(label).size() > 1) {
+                        setEquityVolIsSurface(label, true);
                     }
                 }
-
             }
         } else {
             DLOG("No surface provided, all equity volatilities will be taken as ATM.");

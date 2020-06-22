@@ -49,8 +49,8 @@ public:
     //! Default constructor
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolIsCube_({ {"", false} }), swapVolSimulateATMOnly_(false), swapVolStrikeSpreads_({ {"", {0.0}} }),
-          equityVolSimulateATMOnly_(true), equityMoneyness_({ {"", {1.0}} }), equityStandardDevs_({ {"", {1.0}} }), cprSimulate_(false),
-          correlationIsSurface_(false), correlationStrikes_({0.0}) {
+          equityVolSimulateATMOnly_(false), equityMoneyness_({ {"", {1.0}} }), equityStandardDevs_({ {"", {1.0}} }),
+          equityVolIsSurface_({ {"", false} }), cprSimulate_(false), correlationIsSurface_(false), correlationStrikes_({0.0}) {
         setDefaults();
     }
 
@@ -161,6 +161,8 @@ public:
 
     bool simulateEquityVols() const { return paramsSimulate(RiskFactorKey::KeyType::EquityVolatility); }
     bool simulateEquityVolATMOnly() const { return equityVolSimulateATMOnly_; }
+    bool equityUseMoneyness(const string& key) const;
+    bool equityVolIsSurface(const string& key) const;
     const vector<Period>& equityVolExpiries(const string& key) const;
     const string& equityVolDayCounter(const string& key) const;
     const string& equityVolDecayMode() const { return equityVolDecayMode_; }
@@ -312,6 +314,8 @@ public:
 
     void setSimulateEquityVols(bool simulate);
     void setSimulateEquityVolATMOnly(bool simulateATMOnly) { equityVolSimulateATMOnly_ = simulateATMOnly; }
+    void setEquityUseMoneyness(const string& name, bool useMoneyness);
+    void setEquityVolIsSurface(const string& name, bool isSurface);
     void setEquityVolExpiries(const string& name, const vector<Period>& expiries);
     void setEquityVolDecayMode(const string& val) { equityVolDecayMode_ = val; }
     void setEquityVolNames(vector<string> names);
@@ -449,6 +453,7 @@ private:
 
     bool equityVolSimulateATMOnly_;
     map<string, bool> equityUseMoneyness_;
+    map<string, bool> equityVolIsSurface_;
     map<string, vector<Period>> equityVolExpiries_;
     map<string, string> equityVolDayCounters_;
     string equityVolDecayMode_;
