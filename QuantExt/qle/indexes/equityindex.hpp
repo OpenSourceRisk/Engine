@@ -25,17 +25,17 @@
 #define quantext_equityindex_hpp
 
 #include <ql/handle.hpp>
-#include <ql/index.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/currency.hpp>
+#include <qle/indexes/eqfxindexbase.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
 //! Equity Index
 /*! \ingroup indexes */
-class EquityIndex : public Index, public Observer {
+class EquityIndex : public EqFxIndexBase {
 public:
     /*! spot quote is interpreted as of today */
     EquityIndex(const std::string& familyName, const Calendar& fixingCalendar,

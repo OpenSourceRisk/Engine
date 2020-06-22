@@ -881,12 +881,15 @@
     </ClInclude>
     <ClInclude Include="qle\termstructures\equityblackvolsurfaceproxy.hpp">
       <Filter>termstructures</Filter>
-	</ClInclude>
+    </ClInclude>
     <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp">
       <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\eqfxindexbase.hpp">
+      <Filter>indexes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

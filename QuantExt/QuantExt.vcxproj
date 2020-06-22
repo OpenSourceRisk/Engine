@@ -541,6 +541,7 @@
     <ClInclude Include="qle\indexes\cacpi.hpp" />
     <ClInclude Include="qle\indexes\commodityindex.hpp" />
     <ClInclude Include="qle\indexes\dkcpi.hpp" />
+    <ClInclude Include="qle\indexes\eqfxindexbase.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
     <ClInclude Include="qle\indexes\genericiborindex.hpp" />
