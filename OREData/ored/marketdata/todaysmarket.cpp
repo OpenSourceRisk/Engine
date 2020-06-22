@@ -370,7 +370,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         itr = requiredDefaultCurves.insert(make_pair(defaultspec->name(), defaultCurve)).first;
                     }
 
-                    for (const auto it : params.mapping(MarketObject::DefaultCurve, configuration.first)) {
+                    for (const auto& it : params.mapping(MarketObject::DefaultCurve, configuration.first)) {
                         if (it.second == spec->name()) {
                             LOG("Adding DefaultCurve (" << it.first << ") with spec " << *defaultspec
                                                         << " to configuration " << configuration.first);
@@ -462,7 +462,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     } catch (QuantLib::Error& e) {
                         LOG(e.what());
                     }
-                    for (const auto it : zcInfMap) {
+                    for (const auto& it : zcInfMap) {
                         if (it.second == spec->name()) {
                             LOG("Adding ZeroInflationIndex (" << it.first << ") with spec " << *inflationspec
                                                               << " to configuration " << configuration.first);
@@ -484,7 +484,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     } catch (QuantLib::Error& e) {
                         LOG(e.what());
                     }
-                    for (const auto it : yyInfMap) {
+                    for (const auto& it : yyInfMap) {
                         if (it.second == spec->name()) {
                             LOG("Adding YoYInflationIndex (" << it.first << ") with spec " << *inflationspec
                                                              << " to configuration " << configuration.first);
@@ -525,7 +525,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     } catch (QuantLib::Error& e) {
                         LOG(e.what());
                     }
-                    for (const auto it : zcInfMap) {
+                    for (const auto& it : zcInfMap) {
                         if (it.second == spec->name()) {
                             LOG("Adding InflationCapFloorVol (" << it.first << ") with spec " << *infcapfloorspec
                                                                 << " to configuration " << configuration.first);
@@ -540,7 +540,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     } catch (QuantLib::Error& e) {
                         LOG(e.what());
                     }
-                    for (const auto it : yyInfMap) {
+                    for (const auto& it : yyInfMap) {
                         if (it.second == spec->name()) {
                             LOG("Adding YoYOptionletVolatilitySurface (" << it.first << ") with spec "
                                                                          << *infcapfloorspec << " to configuration "
@@ -567,7 +567,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         itr = requiredEquityCurves.insert(make_pair(equityspec->name(), equityCurve)).first;
                     }
 
-                    for (const auto it : params.mapping(MarketObject::EquityCurve, configuration.first)) {
+                    for (const auto& it : params.mapping(MarketObject::EquityCurve, configuration.first)) {
                         if (it.second == spec->name()) {
                             LOG("Adding EquityCurve (" << it.first << ") with spec " << *equityspec
                                                        << " to configuration " << configuration.first);
@@ -682,7 +682,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             requiredCommodityCurves.insert(make_pair(commodityCurveSpec->name(), commodityCurve)).first;
                     }
 
-                    for (const auto it : params.mapping(MarketObject::CommodityCurve, configuration.first)) {
+                    for (const auto& it : params.mapping(MarketObject::CommodityCurve, configuration.first)) {
                         if (it.second == commodityCurveSpec->name()) {
                             LOG("Adding CommodityCurve, " << it.first << ", with spec " << *commodityCurveSpec
                                                           << " to configuration " << configuration.first);
@@ -752,7 +752,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         itr = requiredCorrelationCurves.insert(make_pair(corrspec->name(), corrCurve)).first;
                     }
 
-                    for (const auto it : params.mapping(MarketObject::Correlation, configuration.first)) {
+                    for (const auto& it : params.mapping(MarketObject::Correlation, configuration.first)) {
                         if (it.second == spec->name()) {
                             LOG("Adding CorrelationCurve (" << it.first << ") with spec " << *corrspec
                                                             << " to configuration " << configuration.first);

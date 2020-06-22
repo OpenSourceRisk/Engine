@@ -33,15 +33,15 @@ namespace QuantExt {
 OptionletStripper1::OptionletStripper1(const shared_ptr<QuantExt::CapFloorTermVolSurface>& termVolSurface,
                                        const shared_ptr<IborIndex>& index, Rate switchStrike, Real accuracy,
                                        Natural maxIter, const Handle<YieldTermStructure>& discount,
-                                       const VolatilityType type, const Real displacement, bool dontThrow,
+                                       const VolatilityType type, const Real displacement,
                                        const optional<VolatilityType> targetVolatilityType,
-                                       const optional<Real> targetDisplacement, Real dontThrowMinVol)
+                                       const optional<Real> targetDisplacement)
     : OptionletStripper(termVolSurface, index, discount, targetVolatilityType ? *targetVolatilityType : type,
                         targetDisplacement ? *targetDisplacement : displacement),
       volQuotes_(nOptionletTenors_, std::vector<shared_ptr<SimpleQuote> >(nStrikes_)),
       floatingSwitchStrike_(switchStrike == Null<Rate>() ? true : false), capFlooMatrixNotInitialized_(true),
-      switchStrike_(switchStrike), accuracy_(accuracy), maxIter_(maxIter), dontThrow_(dontThrow),
-      dontThrowMinVol_(dontThrowMinVol), inputVolatilityType_(type), inputDisplacement_(displacement) {
+      switchStrike_(switchStrike), accuracy_(accuracy), maxIter_(maxIter), inputVolatilityType_(type),
+      inputDisplacement_(displacement) {
 
     capFloorPrices_ = Matrix(nOptionletTenors_, nStrikes_);
     optionletPrices_ = Matrix(nOptionletTenors_, nStrikes_);
