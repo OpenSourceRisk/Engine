@@ -642,7 +642,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             // We use this to convert Period to Date below to sample from `wrapper`
                             boost::shared_ptr<IborIndex> iborIndex;
                             Date spotDate;
-                            Calendar capCalendar;
+                            Calendar iborCalendar;
                             string strIborIndex;
                             Natural settleDays = 0;
                             if (curveConfigs.hasCapFloorVolCurveConfig(name)) {
@@ -652,10 +652,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 settleDays = config->settleDays();
                                 strIborIndex = config->iborIndex();
                                 if (tryParseIborIndex(strIborIndex, iborIndex)) {
-                                    capCalendar = iborIndex->fixingCalendar();
+                                    iborCalendar = iborIndex->fixingCalendar();
                                     Natural settlementDays = iborIndex->fixingDays();
-                                    spotDate = capCalendar.adjust(asof_);
-                                    spotDate = capCalendar.advance(spotDate, settlementDays * Days);
+                                    spotDate = iborCalendar.adjust(asof_);
+                                    spotDate = iborCalendar.advance(spotDate, settlementDays * Days);
                                 }
                             }
 
