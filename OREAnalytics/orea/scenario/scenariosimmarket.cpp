@@ -694,6 +694,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 } else {
                                     // Otherwise, just place the optionlet pillars at the configured tenors.
                                     optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
+                                    if (iborCalendar != Calendar()) {
+                                        // In case the original cap floor surface has the incorrect calendar configured.
+                                        optionDates[i] = iborCalendar.adjust(optionDates[i]);
+                                    }
                                 }
 
                                 // If ATM, use initial market's discount curve and ibor index to calculate ATM rate
