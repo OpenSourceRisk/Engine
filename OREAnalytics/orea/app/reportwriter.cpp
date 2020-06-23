@@ -34,8 +34,27 @@
 
 using ore::data::to_string;
 using QuantLib::Date;
+using QuantLib::TermStructure;
+using QuantLib::Size;
 using std::string;
 using std::vector;
+using std::make_pair;
+
+namespace {
+
+// Some term structures throw when asked for settlement days. Just return 0.0 here in this instance.
+Size getSettlementDays(const boost::shared_ptr<TermStructure>& ts) {
+    Size settlementDays = 0;
+    try {
+        settlementDays = ts->settlementDays();
+    } catch (const std::exception&) {
+        // Do nothing
+    }
+
+    return settlementDays;
+}
+
+}
 
 namespace ore {
 namespace analytics {
@@ -740,38 +759,113 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     LOG("Sensitivity report finished");
 }
 
-void ReportWriter::writeAtmOptionletVolatilities(Report& report,
+void ReportWriter::writeVolatilities(Report& report,
     const ScenarioSimMarket& ssm, const SensitivityScenarioData& ssd) {
 
-    LOG("Start writing ATM optionlet volatility curves report.");
+    LOG("Start writing scenario simulation market volatilities report.");
 
     // Report headers
-    report.addColumn("currency", string());
+    report.addColumn("factor_type", string());
+    report.addColumn("factor_name", string());
     report.addColumn("expiry", string());
+    report.addColumn("term", string());
     report.addColumn("volatility", double(), 12);
+    report.addColumn("volatility_type", string());
+    report.addColumn("settlement_days", Size());
+    report.addColumn("calendar", string());
+    report.addColumn("daycounter", string());
+    report.addColumn("convention", string());
+    report.addColumn("shift", double(), 12);
 
-    // Report body
-    // Loop over cap floor volatility shift data in ssd.
-    // This indicates the cap floor volatility curves that we are bumping.
+    // Optionlet volatilities.
+    string factorType = to_string(RiskFactorKey::KeyType::OptionletVolatility);
     for (const auto& kv : ssd.capFloorVolShiftData()) {
 
         string ccy = kv.first;
-        DLOG("writeAtmOptionletVolatilities: generating optionlet curve for currency " << ccy);
+        DLOG("writeVolatilities: reporting ATM optionlet curve for currency " << ccy);
+
+        // Get metadata from the scenario simulation market structure.
+        auto ovs = ssm.capFloorVol(ccy);
+        string emptyTerm;
+        string volatilityType = to_string(ovs->volatilityType());
+        Size settlementDays = getSettlementDays(*ovs);
+        string calendar = ovs->calendar().name();
+        string daycounter = ovs->dayCounter().name();
+        string convention = to_string(ovs->businessDayConvention());
+        Real dummyShift = 0.0;
 
         // Get the ATM optionlet data from scenario sim market on the shift expiries.
         map<Date, Volatility> data = getOptionletCurve(ccy, ssm, kv.second);
 
         for (const auto& p : data) {
             report.next();
+            report.add(factorType);
             report.add(ccy);
             report.add(to_string(p.first));
+            report.add(emptyTerm);
             report.add(p.second);
+            report.add(volatilityType);
+            report.add(settlementDays);
+            report.add(calendar);
+            report.add(daycounter);
+            report.add(convention);
+            report.add(dummyShift);
+        }
+    }
+
+    // Swaption volatilities.
+    factorType = to_string(RiskFactorKey::KeyType::SwaptionVolatility);
+    for (const auto& kv : ssd.swaptionVolShiftData()) {
+
+        string ccy = kv.first;
+        DLOG("writeVolatilities: reporting ATM swaption surface for currency " << ccy);
+
+        // Get metadata from the scenario simulation market structure.
+        auto svs = ssm.swaptionVol(ccy);
+        string volatilityType = to_string(svs->volatilityType());
+        Size settlementDays = getSettlementDays(*svs);
+        string calendar = svs->calendar().name();
+        string daycounter = svs->dayCounter().name();
+        string convention = to_string(svs->businessDayConvention());
+
+        // Get the ATM swaption data from scenario sim market on the expiries and terms defined in kv.second.
+        Matrix shifts;
+        Matrix vols = getSwaptionMatrix(ccy, ssm, kv.second, shifts);
+
+        // Check that the matrices line up with expiries and terms in kv.second.
+        vector<Period> expiries = kv.second.shiftExpiries;
+        vector<Period> terms = kv.second.shiftTerms;
+        QL_REQUIRE(expiries.size() == vols.rows(), "Mismatch between number of expiries and rows in vol matrix.");
+        QL_REQUIRE(terms.size() == vols.columns(), "Mismatch between number of terms and columns in vol matrix.");
+        QL_REQUIRE(expiries.size() == shifts.rows(), "Mismatch between number of expiries and rows in shift matrix.");
+        QL_REQUIRE(terms.size() == shifts.columns(), "Mismatch between number of terms and columns in shift matrix.");
+
+        // Write out the report rows.
+        for (Size i = 0; i < expiries.size(); i++) {
+            for (Size j = 0; j < terms.size(); j++) {
+                
+                string expiry = to_string(expiries[i]);
+                string term = to_string(terms[j]);
+                
+                report.next();
+                report.add(factorType);
+                report.add(ccy);
+                report.add(expiry);
+                report.add(term);
+                report.add(vols[i][j]);
+                report.add(volatilityType);
+                report.add(settlementDays);
+                report.add(calendar);
+                report.add(daycounter);
+                report.add(convention);
+                report.add(shifts[i][j]);
+            }
         }
     }
 
     report.end();
 
-    LOG("Finished writing ATM optionlet volatility curves report.");
+    LOG("Finished writing scenario simulation market volatilities report.");
 
 }
 
@@ -802,6 +896,34 @@ map<Date, Volatility> getOptionletCurve(const string& ccy, const ScenarioSimMark
     }
 
     return data;
+}
+
+Matrix getSwaptionMatrix(const string& ccy, const ScenarioSimMarket& ssm,
+    const SensitivityScenarioData::GenericYieldVolShiftData& sd, Matrix& shifts) {
+
+    // The ssm should have a SwaptionVolatilityStructure for the currency.
+    auto svs = ssm.swaptionVol(ccy);
+
+    // Set strike to Null<Real>() to get the ATM volatility (by convention).
+    Real strike = Null<Real>();
+
+    // For each expiry tenor and swap tenor in the swaption vol shift data for this currency, get the ATM swaption 
+    // volatility at that tenor and expiry and possibly the shift.
+    Matrix data(sd.shiftExpiries.size(), sd.shiftTerms.size(), 0.0);
+    shifts = data;
+    for (Size i = 0; i < sd.shiftExpiries.size(); i++) {
+        for (Size j = 0; j < sd.shiftTerms.size(); j++) {
+            Period tenor = sd.shiftExpiries[i];
+            Period term = sd.shiftTerms[j];
+            data[i][j] = svs->volatility(tenor, term, strike);
+            shifts[i][j] = svs->shift(tenor, term);
+            TLOG("getSwaptionMatrix: added (tenor,term,vol,shift) = " << "(" << tenor << "," << term << "," << std::fixed <<
+                std::setprecision(9) << data[i][j] << "," << shifts[i][j] << ") for currency " << ccy << ".");
+        }
+    }
+
+    return data;
+
 }
 
 } // namespace analytics

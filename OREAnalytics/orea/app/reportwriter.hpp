@@ -85,10 +85,9 @@ public:
     virtual void writeSensitivityReport(ore::data::Report& report, const boost::shared_ptr<SensitivityStream>& ss,
                                         QuantLib::Real outputThreshold = 0.0);
 
-    /*! Write report containing ATM optionlet volatilities from \p ssm for all currencies where \p ssd has defined cap
-        floor volatility shifts. The report contains the columns: currency, expiry_date, volatility.
+    /*! Write report containing volatilities from \p ssm using information from \p ssd.
     */
-    virtual void writeAtmOptionletVolatilities(ore::data::Report& report,
+    virtual void writeVolatilities(ore::data::Report& report,
         const ore::analytics::ScenarioSimMarket& ssm,
         const ore::analytics::SensitivityScenarioData& ssd);
 
@@ -99,7 +98,7 @@ protected:
 };
 
 /*! Helper function to extract the ATM optionlet data for currency \p ccy from \p ssm on the expiries provided by
-    the cap floor volatility shift data for the currency \p sd. The \p iborIndex is populated with the underlying
+    the cap floor volatility shift data \p sd for that currency. The \p iborIndex is populated with the underlying
     IborIndex for the cap floor structure from \p ssm.
 */
 std::map<QuantLib::Date, QuantLib::Volatility> getOptionletCurve(
@@ -107,6 +106,16 @@ std::map<QuantLib::Date, QuantLib::Volatility> getOptionletCurve(
     const ore::analytics::ScenarioSimMarket& ssm,
     const boost::shared_ptr<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>& sd,
     boost::shared_ptr<QuantLib::IborIndex> iborIndex = nullptr);
+
+/*! Helper function to extract the ATM swaption matrix for currency \p ccy from \p ssm on the expiries and underlying 
+    tenors provided by the swaption volatility shift data \p sd for that currency. Each row of the matrix is for a 
+    configured expiry and contains a column for each configured tenor. The \p outShifts matrix is populated with 
+    shifts when the swaption volatility structure is shifted Lognormal.
+*/
+QuantLib::Matrix getSwaptionMatrix(const std::string& ccy,
+    const ore::analytics::ScenarioSimMarket& ssm,
+    const ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData& sd,
+    QuantLib::Matrix& outShifts);
 
 } // namespace analytics
 } // namespace ore
