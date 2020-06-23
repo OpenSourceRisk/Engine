@@ -23,10 +23,15 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <ql/time/date.hpp>
+
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/marketdatum.hpp>
-#include <ql/time/date.hpp>
+#include <ored/utilities/serializationdate.hpp>
+
+#include <boost/serialization/serialization.hpp>
+#include <boost/shared_ptr.hpp>
+
 #include <vector>
 
 namespace ore {
@@ -45,7 +50,17 @@ struct Fixing {
     QuantLib::Real fixing;
 
     //! Constructor
+    Fixing() {}
     Fixing(const QuantLib::Date& d, const std::string& s, const QuantLib::Real f) : date(d), name(s), fixing(f) {}
+
+private:
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
+        ar& date;
+        ar& name;
+        ar& fixing;
+    }
 };
 
 //! Utility to write a vector of fixings in the QuantLib index manager's fixing history

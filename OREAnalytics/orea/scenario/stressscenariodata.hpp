@@ -76,16 +76,18 @@ public:
 
     struct StressTestData {
         string label;
-        map<string, CurveShiftData> discountCurveShifts;     // by currency code
-        map<string, CurveShiftData> indexCurveShifts;        // by index name
-        map<string, CurveShiftData> yieldCurveShifts;        // by yield curve name
-        map<string, SpotShiftData> fxShifts;                 // by currency pair
-        map<string, VolShiftData> fxVolShifts;               // by currency pair
-        map<string, SpotShiftData> equityShifts;             // by equity
-        map<string, VolShiftData> equityVolShifts;           // by equity
-        map<string, CapFloorVolShiftData> capVolShifts;      // by currency
-        map<string, SwaptionVolShiftData> swaptionVolShifts; // by currency
-        map<string, SpotShiftData> securitySpreadShifts;     // by bond/security
+        map<string, CurveShiftData> discountCurveShifts;       // by currency code
+        map<string, CurveShiftData> indexCurveShifts;          // by index name
+        map<string, CurveShiftData> yieldCurveShifts;          // by yield curve name
+        map<string, SpotShiftData> fxShifts;                   // by currency pair
+        map<string, VolShiftData> fxVolShifts;                 // by currency pair
+        map<string, SpotShiftData> equityShifts;               // by equity
+        map<string, VolShiftData> equityVolShifts;             // by equity
+        map<string, CapFloorVolShiftData> capVolShifts;        // by currency
+        map<string, SwaptionVolShiftData> swaptionVolShifts;   // by currency
+        map<string, SpotShiftData> securitySpreadShifts;       // by bond/security
+        map<string, SpotShiftData> recoveryRateShifts;         // by underlying name
+        map<string, CurveShiftData> survivalProbabilityShifts; // by underlying name
     };
 
     //! Default constructor

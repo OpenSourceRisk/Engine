@@ -36,9 +36,9 @@ namespace data {
 using namespace QuantLib;
 using ore::data::Convention;
 using ore::data::Conventions;
-using std::string;
 using std::map;
 using std::pair;
+using std::string;
 using std::tuple;
 
 // TODO: rename class
@@ -84,7 +84,7 @@ public:
 
     //! Yield volatility
     Handle<QuantLib::SwaptionVolatilityStructure>
-        yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const;
+    yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const;
 
     //! FX
     Handle<Quote> fxSpot(const string& ccypair, const string& configuration = Market::defaultConfiguration) const;
@@ -119,9 +119,9 @@ public:
     yoyInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const;
 
     //! CPI Inflation Cap Floor Price Surfaces
-    virtual Handle<CPICapFloorTermPriceSurface>
-    cpiInflationCapFloorPriceSurface(const string& indexName,
-                                     const string& configuration = Market::defaultConfiguration) const;
+    // virtual Handle<CPICapFloorTermPriceSurface>
+    // cpiInflationCapFloorPriceSurface(const string& indexName,
+    //                                  const string& configuration = Market::defaultConfiguration) const;
 
     //! Inflation Cap Floor Volatility Surfaces
     virtual Handle<CPIVolatilitySurface>
@@ -129,9 +129,9 @@ public:
                                           const string& configuration = Market::defaultConfiguration) const;
 
     //! YoY Inflation Cap Floor Price Surfaces
-    virtual Handle<YoYCapFloorTermPriceSurface>
-    yoyInflationCapFloorPriceSurface(const string& indexName,
-                                     const string& configuration = Market::defaultConfiguration) const;
+    // virtual Handle<YoYCapFloorTermPriceSurface>
+    // yoyInflationCapFloorPriceSurface(const string& indexName,
+    //                                  const string& configuration = Market::defaultConfiguration) const;
 
     //! Equity curves
     Handle<Quote> equitySpot(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
@@ -158,9 +158,6 @@ public:
                                                       const string& configuration = Market::defaultConfiguration) const;
 
     //! Commodity curves
-    QuantLib::Handle<QuantLib::Quote> commoditySpot(const string& commodityName,
-                                                    const string& configuration = Market::defaultConfiguration) const;
-
     QuantLib::Handle<QuantExt::PriceTermStructure>
     commodityPriceCurve(const string& commodityName, const string& configuration = Market::defaultConfiguration) const;
 
@@ -206,15 +203,12 @@ protected:
     map<pair<string, string>, Handle<QuantExt::YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;
     map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
     map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;
-    map<pair<string, string>, Handle<CPICapFloorTermPriceSurface>> cpiInflationCapFloorPriceSurfaces_;
     map<pair<string, string>, Handle<CPIVolatilitySurface>> cpiInflationCapFloorVolatilitySurfaces_;
-    map<pair<string, string>, Handle<YoYCapFloorTermPriceSurface>> yoyInflationCapFloorPriceSurfaces_;
     map<pair<string, string>, Handle<Quote>> equitySpots_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
     map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
     map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>> correlationCurves_;
-    map<pair<string, string>, QuantLib::Handle<QuantLib::Quote>> commoditySpots_;
     map<pair<string, string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
     map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;

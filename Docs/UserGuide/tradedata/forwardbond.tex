@@ -1,0 +1,70 @@
+\subsubsection{Forward Bond}
+\label{ss:forwardbond}
+
+A Forward Bond is set up using a {\tt ForwardBondData} block as shown below. The specific elements
+are
+
+\begin{itemize}
+   \item BondData: A {\tt BondData} block specifying the underlying bond as described in section~\ref{ss:bond}. A long
+     position must be taken in the bond, i.e.~({\tt Payer}) flag must be set to ({\tt true}). The bond data block
+     contains an additional field for forward bonds
+     \begin{itemize}
+     \item IncomeCurveId: The benchmark curve to be used for compounding, this must match a name of a curve in the yield
+       curves or index curve block in {\tt todaysmarket.xml}. It is optional to provide this curve. If left out the
+       market reference yield curve from {\tt todaysmarket.xml} is used for compounding.
+     \end{itemize}
+   \item SettlementData: The entity defining the terms of settlement:
+   \begin{itemize}
+       \item ForwardMaturityDate: The date of maturity of the forward contract.
+       \item Amount: The settlement amount transferred at forward maturity in return for the bond.
+       \item SettlementDirty: A flag that determines whether  the settlement amount {({\tt Amount})} reflects a clean ({\tt false}) or dirty ({\tt true}) price.
+   \end{itemize}
+   % \item LGD (optional): If given, this LGD is used for pricing, overriding the default LGD of the default curve
+   \item PremiumData: The entity defining the terms of a potential premium payment. This node is optional. If left out it is assumed that no premium is paid.
+   \begin{itemize}
+       \item Date: The date when a premium is paid.
+       \item Amount: The amount transferred as a premium.
+   \end{itemize}
+   \item LongInForward: A flag that determines whether the forward contract is entered in long ({\tt true}) or short ({\tt false}) position.
+ \end{itemize}
+
+   \begin{minted}[fontsize=\small]{xml}
+   <ForwardBondData>
+     <BondData>
+      ...
+      <IncomeCurveId>BENCHMARKINCOME-EUR<IncomeCurveId>
+     </BondData>
+     <SettlementData>
+       <Amount>1000000.00</Amount>
+       <ForwardMaturityDate>20160808</ForwardMaturityDate>
+       <SettlementDirty>true</SettlementDirty>
+     </SettlementData>
+     <PremiumData>
+       <Amount>1000.00</Amount>
+       <Date>20160808</Date>
+     </PremiumData>
+     <LongInForward>true</LongInForward>
+   </ForwardBondData>
+   \end{minted}
+
+%incomeCurveId_ = XMLUtils::getChildValue(fwdBondNode, "IncomeCurveId", false);
+
+As for the ordinary bond the forward bond pricing requires a recovery rate that can be specified in ORE per SecurityId.
+
+\subsubsection*{Forward Bond - Pricing Engine configuration}
+
+The configuration for the pricing engine of the forward bond is identical to the ordinary bond.%, cf.~Section~\ref{BondEngineConfig}.
+The pricing engine called by forward bond products is the {\tt DiscountingForwardBondEngine}, see below for a configuration example.
+
+%\hrule\medskip
+   \begin{minted}[fontsize=\small]{xml}
+   <Product type="ForwardBond">
+   <Model>DiscountedCashflows</Model>
+   <ModelParameters></ModelParameters>
+   <Engine>DiscountingForwardBondEngine</Engine>
+   <EngineParameters>
+    <Parameter name="TimestepPeriod">3M</Parameter>
+   </EngineParameters>
+   </Product>
+   \end{minted}
+%\caption{Bond Data}

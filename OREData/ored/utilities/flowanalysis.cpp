@@ -30,8 +30,8 @@
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 using namespace std;
-using QuantLib::Real;
 using QuantLib::Date;
+using QuantLib::Real;
 
 namespace ore {
 namespace data {

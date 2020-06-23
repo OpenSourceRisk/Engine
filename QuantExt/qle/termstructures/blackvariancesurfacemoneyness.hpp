@@ -24,6 +24,7 @@
 #ifndef quantext_black_variance_surface_moneyness_hpp
 #define quantext_black_variance_surface_moneyness_hpp
 
+#include <ql/math/interpolation.hpp>
 #include <ql/math/interpolations/interpolation2d.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
@@ -35,7 +36,13 @@ namespace QuantExt {
 using namespace QuantLib;
 
 //! Abstract Black volatility surface based on moneyness (moneyness defined in subclasses)
-//!  \ingroup termstructures
+/*! \todo times should not be in the interface here. There should be a Dates based constructor and a Periods
+          based constructor. This would cover the cases of fixed expiry options and options specified in terms
+          of tenors. The times should be calculated internally in the class. What is maxDate() when you use times
+          in the interface?
+
+    \ingroup termstructures
+*/
 class BlackVarianceSurfaceMoneyness : public LazyObject, public BlackVarianceTermStructure {
 public:
     /*! Moneyness can be defined here as spot moneyness, i.e. K/S
@@ -44,11 +51,16 @@ public:
     BlackVarianceSurfaceMoneyness(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
                                   const std::vector<Real>& moneyness,
                                   const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-                                  const DayCounter& dayCounter, bool stickyStrike);
+                                  const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness = false);
+
+    //! Moneyness variance surface with a fixed reference date.
+    BlackVarianceSurfaceMoneyness(const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot,
+                                  const std::vector<Time>& times, const std::vector<Real>& moneyness,
+                                  const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
+                                  const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness = false);
 
     //! \name TermStructure interface
     //@{
-    DayCounter dayCounter() const { return dayCounter_; }
     Date maxDate() const { return Date::maxDate(); }
     //@}
     //! \name VolatilityTermStructure interface
@@ -68,18 +80,26 @@ public:
     //@{
     virtual void accept(AcyclicVisitor&);
     //@}
+
+    //! \name Inspectors
+    //@{
+    std::vector<QuantLib::Real> moneyness() const { return moneyness_; }
+    //@}
+
 protected:
     virtual Real moneyness(Time t, Real strike) const = 0;
     bool stickyStrike_;
     Handle<Quote> spot_;
     std::vector<Time> times_;
+    std::vector<Real> moneyness_;
+    bool flatExtrapMoneyness_;
 
 private:
+    // Shared initialisation
+    void init();
+
     Real blackVarianceMoneyness(Time t, Real moneyness) const;
     virtual Real blackVarianceImpl(Time t, Real strike) const;
-    DayCounter dayCounter_;
-    Date maxDate_;
-    std::vector<Real> moneyness_;
     std::vector<std::vector<Handle<Quote> > > quotes_;
     mutable Matrix variances_;
     mutable Interpolation2D varianceSurface_;
@@ -104,7 +124,15 @@ public:
     BlackVarianceSurfaceMoneynessSpot(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
                                       const std::vector<Real>& moneyness,
                                       const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-                                      const DayCounter& dayCounter, bool stickyStrike = false);
+                                      const DayCounter& dayCounter, bool stickyStrike = false,
+                                      bool flatExtrapMoneyness = false);
+
+    //! Spot moneyness variance surface with a fixed reference date.
+    BlackVarianceSurfaceMoneynessSpot(const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot,
+                                      const std::vector<Time>& times, const std::vector<Real>& moneyness,
+                                      const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
+                                      const DayCounter& dayCounter, bool stickyStrike = false,
+                                      bool flatExtrapMoneyness = false);
 
 private:
     virtual Real moneyness(Time t, Real strike) const;
@@ -119,14 +147,26 @@ public:
                                          const std::vector<Real>& moneyness,
                                          const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
                                          const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
-                                         const Handle<YieldTermStructure>& domTS, bool stickyStrike = false);
+                                         const Handle<YieldTermStructure>& domTS, bool stickyStrike = false,
+                                         bool flatExtrapMoneyness = false);
+
+    //! Forward moneyness variance surface with a fixed reference date.
+    BlackVarianceSurfaceMoneynessForward(const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot,
+                                         const std::vector<Time>& times, const std::vector<Real>& moneyness,
+                                         const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
+                                         const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
+                                         const Handle<YieldTermStructure>& domTS, bool stickyStrike = false,
+                                         bool flatExtrapMoneyness = false);
 
 private:
+    // Shared initialisation
+    void init();
+
     virtual Real moneyness(Time t, Real strike) const;
     Handle<YieldTermStructure> forTS_; // calculates fwd if StickyStrike==false
     Handle<YieldTermStructure> domTS_;
     std::vector<Real> forwards_; // cache fwd values if StickyStrike==true
-    Interpolation forwardCurve_;
+    QuantLib::Interpolation forwardCurve_;
 };
 
 } // namespace QuantExt

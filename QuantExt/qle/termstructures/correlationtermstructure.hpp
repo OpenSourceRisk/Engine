@@ -24,6 +24,7 @@
 #define quantext_correlation_term_structure_hpp
 
 #include <ql/math/comparison.hpp>
+#include <ql/quote.hpp>
 #include <ql/termstructure.hpp>
 
 namespace QuantExt {
@@ -67,6 +68,36 @@ protected:
     //! Extra time range check for minimum time, then calls TermStructure::checkRange
     void checkRange(Time t, bool extrapolate) const;
 };
+
+//! Wrapper class that inverts the correlation
+class NegativeCorrelationTermStructure : public CorrelationTermStructure {
+public:
+    NegativeCorrelationTermStructure(const Handle<CorrelationTermStructure>& c);
+    Date maxDate() const override { return c_->maxDate(); }
+    const Date& referenceDate() const override { return c_->referenceDate(); }
+    Calendar calendar() const override { return c_->calendar(); }
+    Natural settlementDays() const override { return c_->settlementDays(); }
+
+private:
+    virtual Real correlationImpl(Time t, Real strike) const override;
+    Handle<CorrelationTermStructure> c_;
+};
+
+//! Wrapper class that extracts a value at a given time from the term strucuture
+class CorrelationValue : public Observer, public Quote {
+public:
+    CorrelationValue(const Handle<CorrelationTermStructure>& correlation, const Time t,
+                     const Real strike = Null<Real>());
+    Real value() const override;
+    bool isValid() const override;
+    void update() override;
+
+private:
+    Handle<CorrelationTermStructure> correlation_;
+    const Time t_;
+    const Real strike_;
+};
+
 } // namespace QuantExt
 
 #endif

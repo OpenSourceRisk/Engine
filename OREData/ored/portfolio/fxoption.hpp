@@ -23,8 +23,7 @@
 
 #pragma once
 
-#include <ored/portfolio/optiondata.hpp>
-#include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/vanillaoption.hpp>
 
 namespace ore {
 namespace data {
@@ -34,32 +33,29 @@ using std::string;
 /*!
   \ingroup tradedata
 */
-class FxOption : public Trade {
+class FxOption : public VanillaOptionTrade {
 public:
     //! Default constructor
-    FxOption() : Trade("FxOption"), boughtAmount_(0.0), soldAmount_(0.0) {}
+    FxOption() : VanillaOptionTrade(AssetClass::FX) { tradeType_ = "FxOption"; }
     //! Constructor
     FxOption(Envelope& env, OptionData option, string boughtCurrency, double boughtAmount, string soldCurrency,
-             double soldAmount)
-        : Trade("FxOption", env), option_(option), boughtCurrency_(boughtCurrency), boughtAmount_(boughtAmount),
-          soldCurrency_(soldCurrency), soldAmount_(soldAmount) {}
+             double soldAmount, const std::string& fxIndex = "")
+        : VanillaOptionTrade(env, AssetClass::FX, option, boughtCurrency, soldCurrency, soldAmount / boughtAmount,
+                             boughtAmount),
+          fxIndex_(fxIndex) {
+        tradeType_ = "FxOption";
+    }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
 
-    //! Return no fixings for an FxOption.
-    std::map<std::string, std::set<QuantLib::Date>> fixings(
-        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
-        return {};
-    }
-
     //! \name Inspectors
     //@{
-    const OptionData& option() const { return option_; }
-    const string& boughtCurrency() const { return boughtCurrency_; }
-    double boughtAmount() const { return boughtAmount_; }
-    const string& soldCurrency() const { return soldCurrency_; }
-    double soldAmount() const { return soldAmount_; }
+    const string& boughtCurrency() const { return assetName_; }
+    double boughtAmount() const { return quantity_; }
+    const string& soldCurrency() const { return currency_; }
+    double soldAmount() const { return strike_ * quantity_; }
+    const std::string& fxIndex() const { return fxIndex_; }
     //@}
 
     //! \name Serialisation
@@ -67,12 +63,10 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
+
 private:
-    OptionData option_;
-    string boughtCurrency_;
-    double boughtAmount_;
-    string soldCurrency_;
-    double soldAmount_;
+    //! If the option has automatic exercise, need an FX index for settlement.
+    std::string fxIndex_;
 };
 } // namespace data
 } // namespace ore

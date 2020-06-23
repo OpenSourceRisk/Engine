@@ -62,7 +62,7 @@ public:
           allowSmile_(allowSmile), requireSwapIndexBases_(requireSwapIndexBases) {}
     //! Detailed constructor
     GenericYieldVolatilityCurveConfig(const std::string& underlyingLabel, const std::string& rootNodeLabel,
-                                      const std::string& marketDatumInstrumentLabel, const std::string& qualifierLabel,                                      
+                                      const std::string& marketDatumInstrumentLabel, const std::string& qualifierLabel,
                                       const string& curveID, const string& curveDescription, const string& qualifier,
                                       const Dimension& dimension, const VolatilityType& volatilityType,
                                       const bool extrapolate, const bool flatExtrapolation,
@@ -107,7 +107,7 @@ public:
     string& qualifier() { return qualifier_; }
     Dimension& dimension() { return dimension_; }
     VolatilityType& volatilityType() { return volatilityType_; }
-    bool& extrapolate()  { return extrapolate_; }
+    bool& extrapolate() { return extrapolate_; }
     bool& flatExtrapolation() { return flatExtrapolation_; }
     vector<string>& optionTenors() { return optionTenors_; }
     vector<string>& underlyingTenors() { return underlyingTenors_; }

@@ -35,9 +35,9 @@
 
 namespace ore {
 namespace analytics {
-using QuantLib::Size;
-using QuantLib::Real;
 using QuantLib::Date;
+using QuantLib::Real;
+using QuantLib::Size;
 using std::vector;
 
 //! InMemoryCube stores the cube in memory using nested STL vectors

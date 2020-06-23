@@ -7,6 +7,7 @@ app/oreapp.cpp
 app/parameters.cpp
 app/reportwriter.cpp
 app/sensitivityrunner.cpp
+app/structuredanalyticserror.cpp
 cube/cubewriter.cpp
 cube/sensitivitycube.cpp
 engine/filteredsensitivitystream.cpp
@@ -36,7 +37,6 @@ scenario/shiftscenariogenerator.cpp
 scenario/simplescenario.cpp
 scenario/stressscenariodata.cpp
 scenario/stressscenariogenerator.cpp
-simulation/dategrid.cpp
 simulation/fixingmanager.cpp
 simulation/simmarket.cpp)
 
@@ -49,6 +49,7 @@ app/oreapp.hpp
 app/parameters.hpp
 app/reportwriter.hpp
 app/sensitivityrunner.hpp
+app/structuredanalyticserror.hpp
 auto_link.hpp
 cube/cubewriter.hpp
 cube/inmemorycube.hpp
@@ -89,7 +90,6 @@ scenario/simplescenario.hpp
 scenario/simplescenariofactory.hpp
 scenario/stressscenariodata.hpp
 scenario/stressscenariogenerator.hpp
-simulation/dategrid.hpp
 simulation/fixingmanager.hpp
 simulation/simmarket.hpp
 version.hpp)

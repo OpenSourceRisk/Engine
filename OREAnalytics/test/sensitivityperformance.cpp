@@ -16,14 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include <test/oreatoplevelfixture.hpp>
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
 #include <boost/test/unit_test.hpp>
 #include <oret/toplevelfixture.hpp>
+#include <test/oreatoplevelfixture.hpp>
 
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -65,6 +64,8 @@ using namespace boost::unit_test_framework;
 using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
+using boost::timer::cpu_timer;
+using boost::timer::default_places;
 
 namespace {
 
@@ -124,16 +125,17 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
 
-    simMarketData->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years};
-    simMarketData->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
-                                        5 * Years,  7 * Years, 10 * Years, 20 * Years};
+    simMarketData->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
+    simMarketData->setSwapVolExpiries(
+        "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
     simMarketData->setSwapVolCcys({"EUR", "GBP", "USD", "CHF", "JPY"});
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->setSimulateSwapVols(true); // false;
     simMarketData->setSwapVolDayCounters("", "ACT/ACT");
 
-    simMarketData->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    simMarketData->fxVolDecayMode() = "ConstantVariance";
+    simMarketData->setFxVolExpiries(
+        vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
+    simMarketData->setFxVolDecayMode(string("ConstantVariance"));
     simMarketData->setSimulateFXVols(true); // false;
     simMarketData->setFxVolCcyPairs({"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"});
     simMarketData->setFxVolDayCounters("", "ACT/ACT");
@@ -145,7 +147,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->setCapFloorVolCcys({"EUR", "USD"});
     simMarketData->setCapFloorVolExpiries(
         "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
-    simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
+    simMarketData->setCapFloorVolStrikes("", {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06});
     simMarketData->setCapFloorVolDayCounters("", "ACT/ACT");
 
     return simMarketData;
@@ -173,31 +175,31 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5Big
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
 
-    simMarketData->swapVolTerms() = {
-        3 * Months,  4 * Months,  5 * Months,  6 * Months,  9 * Months,  10 * Months, 11 * Months, 1 * Years,
-        13 * Months, 14 * Months, 15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
-        21 * Months, 22 * Months, 23 * Months, 2 * Years,   25 * Months, 26 * Months, 27 * Months, 28 * Months,
-        29 * Months, 30 * Months, 31 * Months, 32 * Months, 3 * Years,   40 * Months, 41 * Months, 42 * Months,
-        43 * Months, 44 * Months, 4 * Years,   52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
-        5 * Years,   64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months, 6 * Years,   76 * Months,
-        77 * Months, 78 * Months, 79 * Months, 80 * Months, 7 * Years,   88 * Months, 89 * Months, 90 * Months,
-        91 * Months, 92 * Months, 10 * Years,  15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years};
-    simMarketData->swapVolExpiries() = {
-        1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,  6 * Months,
-        9 * Months,  10 * Months, 11 * Months, 1 * Years,   13 * Months, 14 * Months, 15 * Months, 16 * Months,
-        17 * Months, 18 * Months, 19 * Months, 20 * Months, 21 * Months, 22 * Months, 23 * Months, 2 * Years,
-        25 * Months, 26 * Months, 27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
-        3 * Years,   40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months, 4 * Years,   52 * Months,
-        53 * Months, 54 * Months, 55 * Months, 56 * Months, 5 * Years,   64 * Months, 65 * Months, 66 * Months,
-        67 * Months, 68 * Months, 6 * Years,   76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
-        7 * Years,   88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months, 10 * Years,  15 * Years,
-        20 * Years,  25 * Years,  30 * Years,  50 * Years};
+    simMarketData->setSwapVolTerms(
+        "", {3 * Months,  4 * Months,  5 * Months,  6 * Months,  9 * Months,  10 * Months, 11 * Months, 1 * Years,
+             13 * Months, 14 * Months, 15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
+             21 * Months, 22 * Months, 23 * Months, 2 * Years,   25 * Months, 26 * Months, 27 * Months, 28 * Months,
+             29 * Months, 30 * Months, 31 * Months, 32 * Months, 3 * Years,   40 * Months, 41 * Months, 42 * Months,
+             43 * Months, 44 * Months, 4 * Years,   52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
+             5 * Years,   64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months, 6 * Years,   76 * Months,
+             77 * Months, 78 * Months, 79 * Months, 80 * Months, 7 * Years,   88 * Months, 89 * Months, 90 * Months,
+             91 * Months, 92 * Months, 10 * Years,  15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years});
+    simMarketData->setSwapVolExpiries(
+        "", {1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,  6 * Months,
+             9 * Months,  10 * Months, 11 * Months, 1 * Years,   13 * Months, 14 * Months, 15 * Months, 16 * Months,
+             17 * Months, 18 * Months, 19 * Months, 20 * Months, 21 * Months, 22 * Months, 23 * Months, 2 * Years,
+             25 * Months, 26 * Months, 27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
+             3 * Years,   40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months, 4 * Years,   52 * Months,
+             53 * Months, 54 * Months, 55 * Months, 56 * Months, 5 * Years,   64 * Months, 65 * Months, 66 * Months,
+             67 * Months, 68 * Months, 6 * Years,   76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
+             7 * Years,   88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months, 10 * Years,  15 * Years,
+             20 * Years,  25 * Years,  30 * Years,  50 * Years});
     simMarketData->setSwapVolCcys({"EUR", "GBP", "USD", "CHF", "JPY"});
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->setSimulateSwapVols(true); // false;
     simMarketData->setSwapVolDayCounters("", "ACT/ACT");
 
-    simMarketData->fxVolExpiries() = {
+    vector<Period> tmpFxVolExpiries = {
         1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,  6 * Months,
         9 * Months,  10 * Months, 11 * Months, 1 * Years,   13 * Months, 14 * Months, 15 * Months, 16 * Months,
         17 * Months, 18 * Months, 19 * Months, 20 * Months, 21 * Months, 22 * Months, 23 * Months, 2 * Years,
@@ -207,7 +209,9 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5Big
         67 * Months, 68 * Months, 6 * Years,   76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
         7 * Years,   88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months, 10 * Years,  15 * Years,
         20 * Years,  25 * Years,  30 * Years,  50 * Years};
-    simMarketData->fxVolDecayMode() = "ConstantVariance";
+
+    simMarketData->setFxVolExpiries(tmpFxVolExpiries);
+    simMarketData->setFxVolDecayMode(string("ConstantVariance"));
     simMarketData->setSimulateFXVols(true); // false;
     simMarketData->setFxVolCcyPairs({"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"});
     simMarketData->setFxVolDayCounters("", "ACT/ACT");
@@ -226,7 +230,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5Big
              5 * Years,   64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months, 6 * Years,   76 * Months,
              77 * Months, 78 * Months, 79 * Months, 80 * Months, 7 * Years,   88 * Months, 89 * Months, 90 * Months,
              91 * Months, 92 * Months, 10 * Years,  15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years});
-    simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
+    simMarketData->setCapFloorVolStrikes("", {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06});
     simMarketData->setCapFloorVolDayCounters("", "ACT/ACT");
 
     return simMarketData;
@@ -346,10 +350,12 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
     sensiData->swaptionVolShiftData()["JPY"] = swvsData;
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
-    sensiData->capFloorVolShiftData()["EUR"] = cfvsData;
-    sensiData->capFloorVolShiftData()["EUR"].indexName = "EUR-EURIBOR-6M";
-    sensiData->capFloorVolShiftData()["USD"] = cfvsData;
-    sensiData->capFloorVolShiftData()["USD"].indexName = "USD-LIBOR-3M";
+    sensiData->capFloorVolShiftData()["EUR"] =
+        boost::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+    sensiData->capFloorVolShiftData()["EUR"]->indexName = "EUR-EURIBOR-6M";
+    sensiData->capFloorVolShiftData()["USD"] =
+        boost::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+    sensiData->capFloorVolShiftData()["USD"]->indexName = "USD-LIBOR-3M";
 
     return sensiData;
 }
@@ -426,10 +432,12 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     sensiData->swaptionVolShiftData()["JPY"] = swvsData;
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
-    sensiData->capFloorVolShiftData()["EUR"] = cfvsData;
-    sensiData->capFloorVolShiftData()["EUR"].indexName = "EUR-EURIBOR-6M";
-    sensiData->capFloorVolShiftData()["USD"] = cfvsData;
-    sensiData->capFloorVolShiftData()["USD"].indexName = "USD-LIBOR-3M";
+    sensiData->capFloorVolShiftData()["EUR"] =
+        boost::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+    sensiData->capFloorVolShiftData()["EUR"]->indexName = "EUR-EURIBOR-6M";
+    sensiData->capFloorVolShiftData()["USD"] =
+        boost::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+    sensiData->capFloorVolShiftData()["USD"]->indexName = "USD-LIBOR-3M";
 
     return sensiData;
 }
@@ -535,8 +543,8 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
 
 void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bool crossGammas,
                       ObservationMode::Mode om) {
-    boost::timer t_base;
-    t_base.restart();
+    cpu_timer t_base;
+    t_base.start();
     Size portfolioSize = bigPortfolio ? 100 : 1;
     string om_str = (om == ObservationMode::Mode::None)
                         ? "None"
@@ -592,12 +600,13 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
 
     boost::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize);
 
-    boost::timer t2;
-    t2.restart();
+    cpu_timer t2;
+    t2.start();
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
         portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions, false);
     sa->generateSensitivities();
-    Real elapsed = t2.elapsed();
+    t2.stop();
+    Real elapsed = t2.elapsed().wall * 1e-9;
     Size numScenarios = sa->scenarioGenerator()->samples();
     Size scenarioSize = sa->scenarioGenerator()->scenarios().front()->keys().size();
     BOOST_TEST_MESSAGE("number of scenarios=" << numScenarios);
@@ -608,8 +617,9 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     BOOST_TEST_MESSAGE("Memory usage - " << os::getMemoryUsage());
 
     ObservationMode::instance().setMode(backupOm);
+    t_base.stop();
 
-    BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
+    BOOST_TEST_MESSAGE("total time = " << t_base.format(default_places, "%w") << " seconds");
 }
 } // namespace
 

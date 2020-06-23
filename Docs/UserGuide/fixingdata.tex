@@ -79,7 +79,7 @@ used (Table \ref{tab:IR_indices}).
 \hline
 \textbf{Index Component} & \textbf{Allowable Values} \\
 \hline
-CCY-INDEX                & \textit{\begin{tabular}[c]{@{}l@{}}EUR-EONIA\\ EUR-EURIBOR\\ EUR-LIBOR\\ USD-FedFunds\\ 
+CCY-INDEX                & \textit{\begin{tabular}[c]{@{}l@{}}EUR-EONIA\\ EUR-EURIBOR\\ EUR-LIBOR\\ USD-FedFunds\\ USD-Prime\\
 USD-LIBOR\\ GBP-SONIA\\ GBP-LIBOR\\ JPY-TONAR\\ JPY-LIBOR\\ CHF-LIBOR\\ CHF-TOIS\\ AUD-LIBOR\\ AUD-BBSW\\ CAD-CDOR\\ 
 CAD-BA\\ CAD-LIBOR\\ SEK-STIBOR\\ SEK-LIBOR\\ DKK-LIBOR\\ DKK-CIBOR\\ SGD-SIBOR\\ HKD-HIBOR \\CZK-PRIBOR\\ HUF-BUBOR\\ 
 IDR-IDRFIX\\ INR-MIFOR\\ JPY-TIBOR\\ KRW-KORIBOR\\ MXN-TIIE\\ MYR-KLIBOR\\ NOK-NIBOR\\ NZD-BKBM\\ PLN-WIBOR\\ 
@@ -101,13 +101,15 @@ If the interest rate index is for an overnight rate (e.g. EONIA), then the third
 \centering
 \begin{tabular}{|l|l|}
 \hline
-\multicolumn{2}{|l|}{\textbf{IR Swap Index of form CCY-CMS-TENOR:}} \\ 
+\multicolumn{2}{|l|}{\textbf{IR Swap Index of form CCY-CMS-TENOR or CCY-CMS-TAG-TENOR:}} \\
 \hline
 \textbf{Index Component} & \textbf{Allowable Values} \\
 \hline
 CCY               & Any supported currency code \\ 
 \hline
 CMS				  & Must be ``CMS'' (to denote a swap index) \\
+\hline
+TAG				  & An optional tag that allows to define several CMS indices per currency \\
 \hline
 TENOR             & An integer followed by \emph{D, W, M or Y} \\
 \hline

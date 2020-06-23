@@ -153,6 +153,10 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
     }
 
     ls_ << " : ";
+
+    // log pid if given
+    if (pid_ > 0)
+        ls_ << " [" << pid_ << "] ";
 }
 
 void Log::log(unsigned m) {
@@ -167,7 +171,7 @@ void Log::log(unsigned m) {
 LoggerStream::LoggerStream(unsigned mask, const char* filename, unsigned lineNo)
     : mask_(mask), filename_(filename), lineNo_(lineNo), ss_() {
     QL_REQUIRE(mask == ORE_ALERT || mask == ORE_CRITICAL || mask == ORE_ERROR || mask == ORE_WARNING ||
-                   mask == ORE_NOTICE || mask == ORE_DEBUG,
+                   mask == ORE_NOTICE || mask == ORE_DEBUG || mask == ORE_DATA,
                "Invalid log mask " << mask);
 }
 
@@ -183,7 +187,7 @@ LoggerStream::~LoggerStream() {
     }
 }
 
-string StructuredErrorMessage::jsonify (const string& s) const {
+string StructuredErrorMessage::jsonify(const string& s) const {
     string str = s;
     boost::replace_all(str, "\\", "\\\\"); // do this before the below otherwise we get \\"
     boost::replace_all(str, "\"", "\\\"");

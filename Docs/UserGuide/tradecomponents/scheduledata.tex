@@ -1,0 +1,179 @@
+\subsubsection{Schedule Data (Rules and Dates)}\label{ss:schedule_data}
+
+The \lstinline!ScheduleData! trade component node is used within the \lstinline!LegData! trade component. The Schedule can either be
+rules based (at least one sub-node Rules exists) or dates based (at least one \lstinline!Dates! sub-node exists,
+where the schedule is determined directly by \lstinline!Date! child elements). In rules based schedules, the schedule dates are generated from a
+set of rules based on the entries of the sub-node Rules, having the elements StartDate, EndDate, Tenor, Calendar, Convention, TermConvention, and Rule.
+Example structures of \lstinline!ScheduleData! nodes based on rules
+respectively dates are shown in Listing \ref{lst:schedule_data_true} and Listing \ref{lst:schedule_data_false}, respectively.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+              <ScheduleData>
+                    <Rules>
+                        <StartDate>2013-02-01</StartDate>
+                        <EndDate>2030-02-01</EndDate>
+                        <Tenor>1Y</Tenor>
+                        <Calendar>UK</Calendar>
+                        <Convention>MF</Convention>
+                        <TermConvention>MF</TermConvention>
+                        <Rule>Forward</Rule>
+                    </Rules>
+              </ScheduleData>
+\end{minted}
+\caption{Schedule data, rules based}
+\label{lst:schedule_data_true}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+               <ScheduleData>
+                <Dates>
+                 <Calendar>NYB</Calendar>
+                 <Convention>Following</Convention>
+                 <Tenor>3M</Tenor>
+                 <EndOfMonth>false</EndOfMonth>
+                    <Dates>
+                        <Date>2012-01-06</Date>
+                        <Date>2012-04-10</Date>
+                        <Date>2012-07-06</Date>
+                        <Date>2012-10-08</Date>
+                        <Date>2013-01-07</Date>
+                        <Date>2013-04-08</Date>
+                    </Dates>
+                 </Dates> 
+                </ScheduleData>
+\end{minted}
+\caption{Schedule data, date based}
+\label{lst:schedule_data_false}
+\end{listing}
+
+The ScheduleData section can contain any number and combination of
+{\tt <Dates>} and {\tt <Rules>} sections. The resulting schedule will
+then be an ordered concatenation of individual schedules.
+ 
+\medskip
+The meanings and allowable values of the elements in a {\tt <Rules>} based section of the  \lstinline!ScheduleData! node follow below.
+
+\begin{itemize}
+  % \item IsRulesBased: Determines whether the schedule is set by specifying dates directly, or by specifying rules that
+  %   generate the schedule. If \emph{true}, the following entries are required: StartDate, EndDate, Tenor, Calendar,
+  %   Convention, TermConvention, and Rule.  If false the Dates sub-node is required. \\ Allowable values: \emph{true,
+  %   false}
+\item Rules: a sub-node that determines whether the schedule is set by specifying rules that
+generate the schedule. If existing, the following entries are required: StartDate, EndDate, Tenor, Calendar, 
+Convention, TermConvention, and Rule. If not existing, the Dates
+sub-node is required.
+\item StartDate:  The schedule start date.  
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item EndDate: The schedule end date.  
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item Tenor: The tenor used to generate schedule dates. 
+
+Allowable values: A string where the last character must be D or W or
+M or Y.  The characters before that must be a positive integer. \\D
+$=$ Day, W $=$ Week, M $=$ Month, Y $=$ Year
+
+\item Calendar: The calendar used to generate schedule  dates. 
+
+Allowable values: See Table \ref{tab:calendar} Calendar.
+
+\item Convention: Determines the adjustment of the schedule dates with
+  regards to the selected calendar. 
+
+Allowable values: See \lstinline!Roll Convention! in Table
+\ref{tab:allow_stand_data}.
+
+\item TermConvention: Determines the adjustment of the final schedule
+  date with regards to the selected calendar. 
+
+Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
+
+\item Rule [Optional]: Rule for the generation of the schedule using given
+  start and end dates, tenor, calendar and business day conventions. 
+
+Allowable values and descriptions: See Table \ref{tab:rule} Rule. Defaults to \emph{Forward} if omitted. Cannot be left blank.
+
+\item EndOfMonth [Optional]: Specifies whether the date generation rule is different for end of month, so that the last date of each month is generated, regardless of number of days in the month.
+
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}. Defaults to \emph{false} if left blank or omitted. Must be set to \emph{false} or omitted if the date generation Rule is set to \emph{CDS} or \emph{CDS2015}.
+
+\item FirstDate [Optional]: Date for initial stub period. For date generation rules \emph{CDS} and \emph{CDS2015}, if given, this
+  overwrites the first date of the schedule that is otherwise built from IMM dates.
+
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item LastDate [Optional]: Date for final stub period. For date generation rules \emph{CDS} and \emph{CDS2015}, if given, this
+  overwrites the last date of the schedule that is otherwise built from IMM dates.
+
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\end{itemize}
+
+\medskip
+The meanings and allowable values of the elements in a {\tt <Dates>} based section of the  \lstinline!ScheduleData! node follow below.
+
+\begin{itemize}
+
+\item Dates: a sub-node that determines that the schedule is set by specifying schedule dates explicitly. 
+
+\item Calendar [Optional]: Calendar used to determine payment dates, and also to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based. 
+
+Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to \emph{NullCalendar} if omitted, i.e. no holidays at all, not even on weekends.
+
+\item Convention [Optional]: Roll Convention to determine payment dates, and also used to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based.
+
+Allowable values: See \lstinline!Roll Convention! in Table
+\ref{tab:allow_stand_data}. Defaults to \emph{Unadjusted} if omitted.
+
+\item Tenor [Optional]: Tenor used to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based.
+
+Allowable values: A string where the last character must be D or W or
+M or Y.  The characters before that must be a positive integer. \\D
+$=$ Day, W $=$ Week, M $=$ Month, Y $=$ Year
+
+Defaults to \emph{null} if omitted.
+
+\item EndOfMonth [Optional]: Specifies whether the end of month convention is applied when calculating reference periods
+  for irregular periods when the day count convention is ActActICMA and the schedule is dates based.
+
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}. Defaults to \emph{false} if left blank or omitted.
+
+\item Dates: This is a sub-sub-node and contains child elements of type
+  \lstinline!Date!. In this case the schedule dates are determined
+  directly by the \lstinline!Date! child elements.  At least two
+  \lstinline!Date! child elements must be provided. Note that if no calendar and roll convention is given, the specified dates must be given as adjusted dates.    
+
+  Allowable values: Each \lstinline!Date!  child element can take the allowable values listed in \lstinline!Date! in
+  Table \ref{tab:allow_stand_data}.
+
+\end{itemize}
+
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{6cm}|}
+\hline
+\multicolumn{2}{|l|}{\lstinline!Rule!}                    \\ \hline
+\textbf{Allowable Values}                   & \textbf{Effect}                       \\ \hline
+\emph{Backward}   &   Backward from termination date to effective date.   \\ \hline
+\emph{Forward}   &   Forward from effective date to termination date.  \\ \hline
+\emph{Zero}   &   No intermediate dates between effective date and termination date.  \\ \hline
+\emph{ThirdWednesday}   &   All dates but effective date and
+                          termination date are taken to be on the
+                          third Wednesday of their month (with forward calculation.) \\ \hline
+\emph{Twentieth}   &   All dates but the effective date are taken to be the twentieth of their month (used for CDS schedules in emerging markets.)  The termination date is also modified. \\ \hline
+\emph{TwentiethIMM}   &   All dates but the effective date are  taken to be the twentieth of an IMM month (used for CDS schedules.)  The termination date is also modified. \\ \hline
+\emph{OldCDS}   &   Same as TwentiethIMM with unrestricted date ends and long/short stub coupon period (old CDS convention).\\ \hline
+CDS   &   Credit derivatives standard rule defined in 'Big Bang' changes in 2009. \\ \hline
+CDS2015   &   Credit derivatives standard rule updated in 2015. Same as  \emph{CDS} but with termination dates adjusted to 20th June and 20th December. \\ \hline
+\end{tabular}
+  \caption{Allowable Values for Rule}
+  \label{tab:rule}
+\end{table}

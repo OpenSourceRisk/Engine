@@ -780,14 +780,6 @@
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
     <Index>THB-BIBOR-6M</Index>
-  </Swap>
-  <Swap>
-    <Id>COP-3M-SWAP</Id>
-    <FixedCalendar>COP</FixedCalendar>
-    <FixedFrequency>Quarterly</FixedFrequency>
-    <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>ACT/360</FixedDayCounter>
-    <Index>COP-IBR-3M</Index>
   </Swap>  
   <Swap>
     <Id>PHP-3M-SWAP</Id>
@@ -1075,7 +1067,7 @@
   <BMABasisSwap>
     <Id>USD-LIBOR-SIFMA-3M-BASIS-CONVENTIONS</Id>
     <LiborIndex>USD-LIBOR-3M</LiborIndex>
-    <BMAIndex>USD-SIFMA-1W</BMAIndex>
+    <BMAIndex>USD-SIFMA</BMAIndex>
   </BMABasisSwap>
   <!-- FX Forwards -->
   <FX>
@@ -1546,4 +1538,114 @@
     <DayCounter>A360</DayCounter>
     <RollConvention>MF</RollConvention>
   </CmsSpreadOption>
+  <FxOption> 
+    <Id>FX-EUR-USD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>Fwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-GBP-USD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>Fwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-AUD-USD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>Fwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-NZD-USD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>Fwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-USD-CAD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-USD-CHF-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-USD-JPY-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-EUR-GBP-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-EUR-AUD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-EUR-CAD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-EUR-CHF-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-EUR-JPY-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-GBP-AUD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-GBP-CAD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-GBP-CHF-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-GBP-JPY-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-AUD-NZD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-AUD-CAD-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-AUD-JPY-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-NZD-JPY-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-CAD-JPY-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
+  <FxOption> 
+    <Id>FX-CHF-JPY-OPTION-CONVENTIONS</Id> 
+    <AtmType>AtmDeltaNeutral</AtmType> 
+    <DeltaType>PaFwd</DeltaType> 
+  </FxOption> 
 </Conventions>

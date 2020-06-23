@@ -18,6 +18,7 @@
 
 #include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
+#include <ql/currencies/all.hpp>
 #include <ql/currency.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
@@ -47,8 +48,9 @@ static CcyTestData currencyData[] = {
     // American currencies
     { MXVCurrency(), "Mexican Unidad de Inversion", "MXV", 979 },
     { CLFCurrency(), "Unidad de Fomento (funds code)", "CLF", 990 },
+    { UYUCurrency(), "Uruguayan peso", "UYU", 858 },
     // Asian currencies
-    { KZTCurrency(), "Kazakhstani tenge", "KZT", 398 },
+    { KZTCurrency(), "Kazakstanti Tenge", "KZT", 398 }, // note the typo in the QuantLib KZT
     { QARCurrency(), "Qatari riyal", "QAR", 634 },
     { BHDCurrency(), "Bahraini dinar", "BHD", 48 },
     { OMRCurrency(), "Omani rial", "OMR", 512 },

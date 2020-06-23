@@ -16,10 +16,10 @@ put = []
 for line in npv.readlines():
     if "CALL" in line:
         line_list = line.split(',')
-        call=([[0,line_list[6]],[line_list[3], line_list[6]]])
+        call=([[0.0,float(line_list[6])],[float(line_list[3]), float(line_list[6])]])
     if "PUT" in line:
         line_list = line.split(',')
-        put=([[0, line_list[6]],[line_list[3],line_list[6]]])
+        put=([[0.0, float(line_list[6])],[float(line_list[3]), float(line_list[6])]])
 
 oreex.print_headline("Plot results: Simulated exposures vs analytical option prices")
 

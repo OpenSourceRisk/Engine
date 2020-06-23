@@ -37,12 +37,12 @@ class FloatingRateFXLinkedNotionalCoupon : public FloatingRateCoupon, public FXL
 public:
     //! FloatingRateFXLinkedNotionalCoupon
     FloatingRateFXLinkedNotionalCoupon(const Date& fxFixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex,
-                                       bool invertFxIndex, const boost::shared_ptr<FloatingRateCoupon>& underlying)
+                                       const boost::shared_ptr<FloatingRateCoupon>& underlying)
         : FloatingRateCoupon(underlying->date(), Null<Real>(), underlying->accrualStartDate(),
                              underlying->accrualEndDate(), underlying->fixingDays(), underlying->index(),
                              underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(),
                              underlying->referencePeriodEnd(), underlying->dayCounter(), underlying->isInArrears()),
-          FXLinked(fxFixingDate, foreignAmount, fxIndex, invertFxIndex), underlying_(underlying) {
+          FXLinked(fxFixingDate, foreignAmount, fxIndex), underlying_(underlying) {
         registerWith(FXLinked::fxIndex());
         registerWith(underlying_);
     }
@@ -63,6 +63,9 @@ public:
     //@{
     void accept(AcyclicVisitor&);
     //@}
+
+    //! more inspectors
+    boost::shared_ptr<FloatingRateCoupon> underlying() const { return underlying_; }
 
 private:
     const boost::shared_ptr<FloatingRateCoupon> underlying_;

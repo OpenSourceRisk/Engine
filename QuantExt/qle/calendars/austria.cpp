@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2020 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -48,18 +48,18 @@ bool Austria::SettlementImpl::isBusinessDay(const Date& date) const {
         // Whit Monday
         || (dd == em + 49)
         // Corpus Christi
-        || (dd == em + 61)
+        || (dd == em + 59)
         // Assumption Day
         || (d == 15 && m == August)
         // National Day
         || (d == 26 && m == October)
-        // All Saints' Day
+        // All Saints
         || (d == 1 && m == November)
-        // Maria Conception
+        // Conception Day
         || (d == 8 && m == December)
         // Christmas
         || (d == 25 && m == December)
-        // Boxing Day
+        // St Stephens Day
         || (d == 26 && m == December))
         return false;
     return true;

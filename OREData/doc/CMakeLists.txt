@@ -1,3 +1,6 @@
+# first we can indicate the documentation build as an option and set it to ON by default
+# option(BUILD_DOC "Build documentation" ON)
+
 # check if Doxygen is installed
 find_package(Doxygen)
 if (DOXYGEN_FOUND AND BUILD_DOC)
@@ -15,6 +18,6 @@ if (DOXYGEN_FOUND AND BUILD_DOC)
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM )
-else (DOXYGEN_FOUND)
+else (DOXYGEN_FOUND AND BUILD_DOC)
   message("Doxygen need to be installed to generate the doxygen documentation")
-endif (DOXYGEN_FOUND)
+endif (DOXYGEN_FOUND AND BUILD_DOC)

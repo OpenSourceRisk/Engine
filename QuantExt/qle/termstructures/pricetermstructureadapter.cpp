@@ -23,24 +23,37 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-PriceTermStructureAdapter::PriceTermStructureAdapter(const boost::shared_ptr<Quote>& spotQuote,
-                                                     const boost::shared_ptr<PriceTermStructure>& priceCurve,
-                                                     const boost::shared_ptr<YieldTermStructure>& discount)
-    : spotQuote_(spotQuote), priceCurve_(priceCurve), discount_(discount) {
+PriceTermStructureAdapter::PriceTermStructureAdapter(const boost::shared_ptr<PriceTermStructure>& priceCurve,
+                                                     const boost::shared_ptr<YieldTermStructure>& discount,
+                                                     Natural spotDays, const Calendar& spotCalendar)
+    : priceCurve_(priceCurve), discount_(discount), spotDays_(spotDays), spotCalendar_(spotCalendar) {
 
     QL_REQUIRE(
         priceCurve_->referenceDate() == discount_->referenceDate(),
         "PriceTermStructureAdapter: The reference date of the discount curve and price curve should be the same");
 
-    registerWith(spotQuote_);
     registerWith(priceCurve_);
     registerWith(discount_);
 }
 
+PriceTermStructureAdapter::PriceTermStructureAdapter(const boost::shared_ptr<PriceTermStructure>& priceCurve,
+                                                     const boost::shared_ptr<YieldTermStructure>& discount,
+                                                     const Handle<Quote>& spotQuote)
+    : priceCurve_(priceCurve), discount_(discount), spotDays_(0), spotQuote_(spotQuote) {
+
+    QL_REQUIRE(
+        priceCurve_->referenceDate() == discount_->referenceDate(),
+        "PriceTermStructureAdapter: The reference date of the discount curve and price curve should be the same");
+
+    registerWith(priceCurve_);
+    registerWith(discount_);
+    registerWith(spotQuote_);
+}
+
 Date PriceTermStructureAdapter::maxDate() const {
-    // Take the max of the two underlying curves' max date
+    // Take the min of the two underlying curves' max date
     // Extrapolation will be determined by each underlying curve individually
-    return max(priceCurve_->maxDate(), discount_->maxDate());
+    return min(priceCurve_->maxDate(), discount_->maxDate());
 }
 
 const Date& PriceTermStructureAdapter::referenceDate() const {
@@ -52,18 +65,29 @@ const Date& PriceTermStructureAdapter::referenceDate() const {
 
 DayCounter PriceTermStructureAdapter::dayCounter() const { return priceCurve_->dayCounter(); }
 
-const boost::shared_ptr<Quote>& PriceTermStructureAdapter::spotQuote() const { return spotQuote_; }
-
 const boost::shared_ptr<PriceTermStructure>& PriceTermStructureAdapter::priceCurve() const { return priceCurve_; }
 
 const boost::shared_ptr<YieldTermStructure>& PriceTermStructureAdapter::discount() const { return discount_; }
 
+Natural PriceTermStructureAdapter::spotDays() const { return spotDays_; }
+
+const Calendar& PriceTermStructureAdapter::spotCalendar() const { return spotCalendar_; }
+
 DiscountFactor PriceTermStructureAdapter::discountImpl(Time t) const {
+    if (t == 0.0)
+        return 1.0;
     // Returns discount factor exp(-s(t) * t) where s(t) is defined such that
     // FP(0, t) = S(0) exp([z(t) - s(t)] t)
-    Real forwardPrice = priceCurve_->price(t);
-    DiscountFactor discount = discount_->discount(t);
-    return discount * forwardPrice / spotQuote_->value();
+    Real spotPrice;
+    if (spotQuote_.empty()) {
+        Time spotTime = timeFromReference(spotCalendar_.advance(referenceDate(), spotDays_ * Days));
+        spotPrice = priceCurve_->price(spotTime, true);
+    } else {
+        spotPrice = spotQuote_->value();
+    }
+    Real forwardPrice = priceCurve_->price(t, true);
+    DiscountFactor discount = discount_->discount(t, true);
+    return discount * forwardPrice / spotPrice;
 }
 
 } // namespace QuantExt

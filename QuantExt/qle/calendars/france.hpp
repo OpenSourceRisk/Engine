@@ -19,7 +19,6 @@
 /*! \file france.hpp
     \brief French calendar
 */
-#ifndef quantlib_france_calendar_hpp
 
 #ifndef quantext_french_calendar_hpp
 #define quantext_french_calendar_hpp
@@ -45,7 +44,5 @@ public:
 };
 
 } // namespace QuantExt
-
-#endif
 
 #endif

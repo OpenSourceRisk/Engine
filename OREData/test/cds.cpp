@@ -17,16 +17,20 @@
 */
 
 #include <boost/make_shared.hpp>
+// clang-format off
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
+// clang-format on
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <oret/datapaths.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
@@ -39,6 +43,7 @@ using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
+using ore::test::TopLevelFixture;
 
 namespace bdata = boost::unit_test::data;
 
@@ -101,7 +106,8 @@ struct CommonVars {
         boost::shared_ptr<FixedLegData> fixedLegRateData = boost::make_shared<FixedLegData>(vector<double>(1, rate));
         LegData fixedLegData(fixedLegRateData, isPayer, ccy, fixedSchedule, fixDC, notionals);
 
-        CreditDefaultSwapData cd(issuerId, creditCurveId, fixedLegData, false, true);
+        CreditDefaultSwapData cd(issuerId, creditCurveId, fixedLegData, false,
+                                 QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault);
         Envelope env("CP1");
 
         boost::shared_ptr<ore::data::CreditDefaultSwap> cds(new ore::data::CreditDefaultSwap(env, cd));
@@ -179,6 +185,9 @@ TradeInputs tradeInputs[] = {{"20170203", 0}, {"20170203", 0}, {"20210203", 0.01
 // Expected NPVs given the market and trade inputs above
 Real expNpvs[] = {0, 0, 0.050659, -0.05062};
 
+// List of trades that will feed the data-driven test below to check CDS trade building.
+vector<string> trades = {"cds_minimal_with_rules", "cds_minimal_with_dates"};
+
 } // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
@@ -189,6 +198,34 @@ BOOST_DATA_TEST_CASE(testCreditDefaultSwap, bdata::make(marketInputs) ^ bdata::m
                      mkt, trd, exp) {
 
     BOOST_CHECK_CLOSE(cdsNpv(mkt, trd), exp, 0.01);
+}
+
+BOOST_DATA_TEST_CASE_F(TopLevelFixture, testCreditDefaultSwapBuilding, bdata::make(trades), trade) {
+
+    BOOST_TEST_MESSAGE("Test the building of various CDS trades from XML");
+
+    Settings::instance().evaluationDate() = Date(3, Feb, 2016);
+
+    // Read in the trade
+    Portfolio p;
+    string portfolioFile = "trades/" + trade + ".xml";
+    p.load(TEST_INPUT_FILE(portfolioFile));
+    BOOST_REQUIRE_MESSAGE(p.size() == 1, "Expected portfolio to contain a single trade");
+
+    // Use the test market
+    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(0.02, 0.4, 0.05);
+
+    // Engine data
+    boost::shared_ptr<EngineData> ed = boost::make_shared<EngineData>();
+    ed->model("CreditDefaultSwap") = "DiscountedCashflows";
+    ed->engine("CreditDefaultSwap") = "MidPointCdsEngine";
+
+    // Test that the trade builds and prices without error
+    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(ed, market);
+    BOOST_CHECK_NO_THROW(p.build(engineFactory));
+    Real npv;
+    BOOST_CHECK_NO_THROW(npv = p.trades().at(0)->instrument()->NPV());
+    BOOST_TEST_MESSAGE("CDS NPV is: " << npv);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

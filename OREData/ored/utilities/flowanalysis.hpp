@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/utilities/flowanalysis.hpp
-    \brief
+    \brief Extended QuantLib flow analysis
     \ingroup utilities
 */
 #pragma once

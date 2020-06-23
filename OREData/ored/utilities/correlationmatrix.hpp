@@ -25,6 +25,7 @@
 
 #include <map>
 #include <ql/math/matrix.hpp>
+#include <ql/quote.hpp>
 
 namespace ore {
 namespace data {
@@ -44,6 +45,7 @@ public:
     void reset() { data_.clear(); }
 
     void addCorrelation(const std::string& factor1, const std::string& factor2, Real correlation);
+    void addCorrelation(const std::string& factor1, const std::string& factor2, const Handle<Quote>& correlation);
 
     //! Return a matrix for an IR/FX model, assumes ccys[0] is the base.
     /*! Returns an (2n-1)*(2n-1) matrix for an IR/FX model.
@@ -91,10 +93,10 @@ public:
     static void checkMatrix(const Matrix& m);
 
     //! Get the correlation between two factors
-    Real lookup(const std::string& f1, const std::string& f2);
+    Handle<Quote> lookup(const std::string& f1, const std::string& f2);
 
     //! Get the raw data map
-    const std::map<std::pair<std::string, std::string>, Real>& data() { return data_; }
+    const std::map<std::pair<std::string, std::string>, Handle<Quote>>& data() { return data_; }
 
 private:
     Disposable<Matrix> correlationMatrixImpl(const std::vector<std::string>& ccys, std::vector<std::string>& factors);
@@ -120,7 +122,7 @@ private:
     Disposable<Matrix> extendMatrix(const Matrix& mat, Size n);
     Disposable<Matrix> extendCorrelationMatrix(const Matrix& mat, const std::vector<std::string>& names,
                                                std::vector<std::string>& factors, const std::string& prefix);
-    std::map<key, Real> data_;
+    std::map<key, Handle<Quote>> data_;
 };
 } // namespace data
 } // namespace ore

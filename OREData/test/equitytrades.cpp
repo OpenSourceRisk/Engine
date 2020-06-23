@@ -25,17 +25,16 @@
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <oret/toplevelfixture.hpp>
-#include <qle/indexes/equityindex.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/indexes/equityindex.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
-using namespace ore::data;
 using namespace ore::data;
 
 namespace {
@@ -64,8 +63,10 @@ public:
             flatRateYts(0.05);
 
         // add equity curve
-        equityCurves_[make_pair(Market::defaultConfiguration, "zzzCorp")] = Handle<EquityIndex>(boost::make_shared<EquityIndex>("zzzCorp", TARGET(), parseCurrency("EUR"),
-            equitySpot("zzzCorp"), yieldCurve(YieldCurveType::Discount, "EUR"), yieldCurve(YieldCurveType::EquityDividend, "zzzCorp")));
+        equityCurves_[make_pair(Market::defaultConfiguration, "zzzCorp")] =
+            Handle<EquityIndex>(boost::make_shared<EquityIndex>(
+                "zzzCorp", TARGET(), parseCurrency("EUR"), equitySpot("zzzCorp"),
+                yieldCurve(YieldCurveType::Discount, "EUR"), yieldCurve(YieldCurveType::EquityDividend, "zzzCorp")));
 
         // build equity vols
         equityVols_[make_pair(Market::defaultConfiguration, "zzzCorp")] = flatRateFxv(0.20);
@@ -110,11 +111,11 @@ BOOST_AUTO_TEST_CASE(testEquityTradePrices) {
     OptionData putDataPremium("Short", "Put", "European", true, vector<string>(1, exp_str), "Cash", "", 1.0, "EUR",
                               exp_str);
     Envelope env("CP1");
-    EquityOption eqCall(env, callData, "zzzCorp", "EUR", 95.0, 1.0);
-    EquityOption eqCallPremium(env, callDataPremium, "zzzCorp", "EUR", 95.0, 1.0);
-    EquityOption eqPut(env, putData, "zzzCorp", "EUR", 95.0, 1.0);
-    EquityOption eqPutPremium(env, putDataPremium, "zzzCorp", "EUR", 95.0, 1.0);
-    ore::data::EquityForward eqFwd(env, "Long", "zzzCorp", "EUR", 1.0, exp_str, 95.0);
+    EquityOption eqCall(env, callData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
+    EquityOption eqCallPremium(env, callDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
+    EquityOption eqPut(env, putData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
+    EquityOption eqPutPremium(env, putDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
+    ore::data::EquityForward eqFwd(env, "Long", EquityUnderlying("zzzCorp"), "EUR", 1.0, exp_str, 95.0);
 
     Real expectedNPV_Put = -2.4648;           // negative for sold option
     Real expectedNPV_Put_Premium = -1.513558; // less negative due to received premium of 1 EUR at expiry
@@ -126,7 +127,7 @@ BOOST_AUTO_TEST_CASE(testEquityTradePrices) {
     engineData->model("EquityForward") = "DiscountedCashflows";
     engineData->engine("EquityForward") = "DiscountingEquityForwardEngine";
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-    engineFactory->registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
+    engineFactory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
     engineFactory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
 
     eqCall.build(engineFactory);

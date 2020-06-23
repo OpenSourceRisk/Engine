@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ql/handle.hpp>
 #include <ql/quote.hpp>
@@ -38,7 +39,7 @@ namespace data {
 class FXSpot {
 public:
     //! Constructor
-    FXSpot(const Date& asof, FXSpotSpec spec, const Loader& loader);
+    FXSpot(const Date& asof, FXSpotSpec spec, const FXTriangulation& fxTriangulation);
 
     //! Inspector
     Handle<Quote> handle() const { return spot_; }

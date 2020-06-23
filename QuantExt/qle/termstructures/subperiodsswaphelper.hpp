@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file subperiodsswap.hpp
+/*! \file subperiodsswaphelper.hpp
     \brief Single currency sub periods swap helper
     \ingroup termstructures
 */

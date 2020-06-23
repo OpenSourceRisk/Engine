@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file region.hpp
+/*! \file qle/indexes/region.hpp
     \brief Region, i.e. geographical area, specification
 */
 
@@ -37,6 +37,12 @@ public:
 class DenmarkRegion : public QuantLib::Region {
 public:
     DenmarkRegion();
+};
+
+//! Canada as geographical/economic region
+class CanadaRegion : public QuantLib::Region {
+public:
+    CanadaRegion();
 };
 
 } // namespace QuantExt

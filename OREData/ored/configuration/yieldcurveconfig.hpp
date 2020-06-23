@@ -27,6 +27,7 @@
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
 #include <map>
+#include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/patterns/visitor.hpp>
@@ -35,15 +36,15 @@
 
 namespace ore {
 namespace data {
-using std::string;
-using std::vector;
-using std::set;
-using std::pair;
-using std::map;
 using boost::optional;
 using ore::data::XMLNode;
 using QuantLib::AcyclicVisitor;
 using QuantLib::Real;
+using std::map;
+using std::pair;
+using std::set;
+using std::string;
+using std::vector;
 
 //! Base class for yield curve segments.
 /*!
@@ -68,7 +69,8 @@ public:
         FXForward,
         CrossCcyBasis,
         CrossCcyFixFloat,
-        DiscountRatio
+        DiscountRatio,
+        FittedBond
     };
     //! Default destructor
     virtual ~YieldCurveSegment() {}
@@ -414,6 +416,47 @@ private:
     std::string denominatorCurveCurrency_;
 };
 
+//! FittedBond yield curve segment
+/*!
+  A bond segment is used to build a yield curve from liquid bond quotes.
+
+  \ingroup configuration
+*/
+class FittedBondYieldCurveSegment : public YieldCurveSegment {
+public:
+    //! \name Constructors/Destructors
+    //@{
+    //! Default constructor
+    FittedBondYieldCurveSegment() {}
+    //! Detailed constructor
+    FittedBondYieldCurveSegment(const string& typeID, const vector<string>& quotes,
+                                const map<string, string>& iborIndexCurves, const bool extrapolateFlat,
+                                const Size calibrationTrials);
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const map<string, string>& iborIndexCurves() const { return iborIndexCurves_; }
+    const bool extrapolateFlat() const { return extrapolateFlat_; }
+    const Size calibrationTrials() const { return calibrationTrials_; }
+    //@}
+
+    //! \name Visitability
+    //@{
+    virtual void accept(AcyclicVisitor&);
+    //@}
+
+private:
+    map<string, string> iborIndexCurves_;
+    bool extrapolateFlat_;
+    Size calibrationTrials_;
+};
+
 //! Yield Curve configuration
 /*!
   Wrapper class containing all yield curve segments needed to build a yield curve.
@@ -430,7 +473,8 @@ public:
     YieldCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                      const string& discountCurveID, const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments,
                      const string& interpolationVariable = "Discount", const string& interpolationMethod = "LogLinear",
-                     const string& zeroDayCounter = "A365", bool extrapolation = true, Real tolerance = 1.0e-12);
+                     const string& zeroDayCounter = "A365", bool extrapolation = true,
+                     const BootstrapConfig& bootstrapConfig = BootstrapConfig());
     //! Default destructor
     virtual ~YieldCurveConfig() {}
     //@}
@@ -450,7 +494,7 @@ public:
     const string& interpolationMethod() const { return interpolationMethod_; }
     const string& zeroDayCounter() const { return zeroDayCounter_; }
     bool extrapolation() const { return extrapolation_; }
-    Real tolerance() const { return tolerance_; }
+    const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
     const set<string>& requiredYieldCurveIDs() const { return requiredYieldCurveIDs_; }
     //@}
 
@@ -460,7 +504,7 @@ public:
     string& interpolationMethod() { return interpolationMethod_; }
     string& zeroDayCounter() { return zeroDayCounter_; }
     bool& extrapolation() { return extrapolation_; }
-    Real& tolerance() { return tolerance_; }
+    void setBootstrapConfig(const BootstrapConfig& bootstrapConfig) { bootstrapConfig_ = bootstrapConfig; }
     //@}
 
     const vector<string>& quotes() override;
@@ -479,7 +523,7 @@ private:
     string interpolationMethod_;
     string zeroDayCounter_;
     bool extrapolation_;
-    Real tolerance_;
+    BootstrapConfig bootstrapConfig_;
 };
 
 // Map form curveID to YieldCurveConfig

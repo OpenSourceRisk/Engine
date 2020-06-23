@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file tenorbasisswap.hpp
+/*! \file tenorbasisswaphelper.hpp
     \brief Single currency tenor basis swap helper
     \ingroup termstructures
 */

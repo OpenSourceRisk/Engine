@@ -28,39 +28,48 @@ namespace {
 
 // container class to link the enum in the header with the various XML strings
 struct MarketObjectMetaInfo {
-  MarketObject obj;
-  string name; // AKA marketObjectStrings
-  string xmlName; // AKA marketObjectXMLNames
-  pair<string, string> xmlSingleName; // AKA marketObjectXMLNamesSingle
+    MarketObject obj;
+    string name;                        // AKA marketObjectStrings
+    string xmlName;                     // AKA marketObjectXMLNames
+    pair<string, string> xmlSingleName; // AKA marketObjectXMLNamesSingle
 };
 
 // Note the order of elements in this array MUST respect the XML Schema
 static const vector<MarketObjectMetaInfo> marketObjectData = {
-    { MarketObject::YieldCurve,                        "YieldCurve",                         "YieldCurves",                       { "YieldCurve",       "name" } },
-    { MarketObject::DiscountCurve,                     "DiscountCurve",                      "DiscountingCurves",                 { "DiscountingCurve", "currency" } },
-    { MarketObject::IndexCurve,                        "IndexCurve",                         "IndexForwardingCurves",             { "Index", "name"} },
-    { MarketObject::SwapIndexCurve,                    "SwapIndexCurve",                     "SwapIndexCurves",                   { "SwapIndex", "name" }},
-    { MarketObject::ZeroInflationCurve,                "ZeroInflationCurve",                 "ZeroInflationIndexCurves",          { "ZeroInflationIndexCurve", "name" } },
-    { MarketObject::ZeroInflationCapFloorVol,          "ZeroInflationCapFloorVol",           "ZeroInflationCapFloorVolatilities", { "ZeroInflationCapFloorVolatility", "name" } },
-    { MarketObject::YoYInflationCurve,                 "YoYInflationCurve",                  "YYInflationIndexCurves",            { "YYInflationIndexCurve", "name" } },
-    { MarketObject::FXSpot,                            "FXSpot",                             "FxSpots",                           { "FxSpot", "pair" } },
-    { MarketObject::BaseCorrelation,                   "BaseCorrelation",                    "BaseCorrelations",                  { "BaseCorrelation", "name" } },
-    { MarketObject::FXVol,                             "FXVol",                              "FxVolatilities",                    { "FxVolatility", "pair" } },
-    { MarketObject::SwaptionVol,                       "SwaptionVol",                        "SwaptionVolatilities",              { "SwaptionVolatility", "currency" } },
-    { MarketObject::YieldVol,                          "YieldVol",                           "YieldVolatilities",                 { "YieldVolatility", "name" } },
-    { MarketObject::CapFloorVol,                       "CapFloorVol",                        "CapFloorVolatilities",              { "CapFloorVolatility", "currency" } },
-    { MarketObject::CDSVol,                            "CDSVol",                             "CDSVolatilities",                   { "CDSVolatility", "name" } },
-    { MarketObject::DefaultCurve,                      "DefaultCurve",                       "DefaultCurves",                     { "DefaultCurve", "name" } },
-    { MarketObject::InflationCapFloorPriceSurface,     "InflationCapFloorPriceSurface",      "InflationCapFloorPriceSurfaces",    { "InflationCapFloorPriceSurface", "name" } },
-    { MarketObject::YoYInflationCapFloorPriceSurface,  "YoYInflationCapFloorPriceSurface",   "YYInflationCapFloorPriceSurfaces",  { "YYInflationCapFloorPriceSurface", "name" } },
-    { MarketObject::YoYInflationCapFloorVol,           "YoYInflationCapFloorVol",            "YYInflationCapFloorVolatilities",   { "YYInflationCapFloorVolatility", "name" } },
-    { MarketObject::EquityCurve,                       "EquityCurves",                       "EquityCurves",                      { "EquityCurve", "name" } },
-    { MarketObject::EquityVol,                         "EquityVols",                         "EquityVolatilities",                { "EquityVolatility", "name" } },
-    { MarketObject::Security,                          "Securities",                         "Securities",                        { "Security", "name" } },
-    { MarketObject::CommodityCurve,                    "CommodityCurves",                    "CommodityCurves",                   { "CommodityCurve", "name" } },
-    { MarketObject::CommodityVolatility,               "CommodityVolatilities",              "CommodityVolatilities",             { "CommodityVolatility", "name" } },
-    { MarketObject::Correlation,                       "Correlation",                        "Correlations",                      { "Correlation", "name" } }
-};
+    {MarketObject::YieldCurve, "YieldCurve", "YieldCurves", {"YieldCurve", "name"}},
+    {MarketObject::DiscountCurve, "DiscountCurve", "DiscountingCurves", {"DiscountingCurve", "currency"}},
+    {MarketObject::IndexCurve, "IndexCurve", "IndexForwardingCurves", {"Index", "name"}},
+    {MarketObject::SwapIndexCurve, "SwapIndexCurve", "SwapIndexCurves", {"SwapIndex", "name"}},
+    {MarketObject::ZeroInflationCurve,
+     "ZeroInflationCurve",
+     "ZeroInflationIndexCurves",
+     {"ZeroInflationIndexCurve", "name"}},
+    {MarketObject::ZeroInflationCapFloorVol,
+     "ZeroInflationCapFloorVol",
+     "ZeroInflationCapFloorVolatilities",
+     {"ZeroInflationCapFloorVolatility", "name"}},
+    {MarketObject::YoYInflationCurve, "YoYInflationCurve", "YYInflationIndexCurves", {"YYInflationIndexCurve", "name"}},
+    {MarketObject::FXSpot, "FXSpot", "FxSpots", {"FxSpot", "pair"}},
+    {MarketObject::BaseCorrelation, "BaseCorrelation", "BaseCorrelations", {"BaseCorrelation", "name"}},
+    {MarketObject::FXVol, "FXVol", "FxVolatilities", {"FxVolatility", "pair"}},
+    {MarketObject::SwaptionVol, "SwaptionVol", "SwaptionVolatilities", {"SwaptionVolatility", "currency"}},
+    {MarketObject::YieldVol, "YieldVol", "YieldVolatilities", {"YieldVolatility", "name"}},
+    {MarketObject::CapFloorVol, "CapFloorVol", "CapFloorVolatilities", {"CapFloorVolatility", "currency"}},
+    {MarketObject::CDSVol, "CDSVol", "CDSVolatilities", {"CDSVolatility", "name"}},
+    {MarketObject::DefaultCurve, "DefaultCurve", "DefaultCurves", {"DefaultCurve", "name"}},
+    {MarketObject::YoYInflationCapFloorVol,
+     "YoYInflationCapFloorVol",
+     "YYInflationCapFloorVolatilities",
+     {"YYInflationCapFloorVolatility", "name"}},
+    {MarketObject::EquityCurve, "EquityCurves", "EquityCurves", {"EquityCurve", "name"}},
+    {MarketObject::EquityVol, "EquityVols", "EquityVolatilities", {"EquityVolatility", "name"}},
+    {MarketObject::Security, "Securities", "Securities", {"Security", "name"}},
+    {MarketObject::CommodityCurve, "CommodityCurves", "CommodityCurves", {"CommodityCurve", "name"}},
+    {MarketObject::CommodityVolatility,
+     "CommodityVolatilities",
+     "CommodityVolatilities",
+     {"CommodityVolatility", "name"}},
+    {MarketObject::Correlation, "Correlation", "Correlations", {"Correlation", "name"}}};
 
 } // anonymous namespace
 
@@ -78,11 +87,34 @@ MarketConfiguration::MarketConfiguration() {
     }
 }
 
-void TodaysMarketParameters::fromXML(XMLNode* node) {
+string MarketConfiguration::operator()(const MarketObject o) const {
+    QL_REQUIRE(marketObjectIds_.find(o) != marketObjectIds_.end(),
+               "MarketConfiguration: did not find MarketObject " << o << " (this is unexpected)");
+    return marketObjectIds_.at(o);
+}
 
+void MarketConfiguration::setId(const MarketObject o, const string& id) {
+    if (id != "")
+        marketObjectIds_[o] = id;
+}
+
+void MarketConfiguration::add(const MarketConfiguration& o) {
+    // overwrite if already existent
+    for (auto const& x : o.marketObjectIds_)
+        marketObjectIds_[x.first] = x.second;
+}
+
+void TodaysMarketParameters::addConfiguration(const string& id, const MarketConfiguration& configuration) {
+    configurations_[id].add(configuration);
+}
+
+void TodaysMarketParameters::clear() {
     // clear data members
     configurations_.clear();
     marketObjects_.clear();
+}
+
+void TodaysMarketParameters::fromXML(XMLNode* node) {
 
     // add default configuration (may be overwritten below)
     MarketConfiguration defaultConfig;
@@ -95,7 +127,8 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
         if (XMLUtils::getNodeName(n) == "Configuration") {
             MarketConfiguration tmp;
             for (Size i = 0; i < marketObjectData.size(); ++i) {
-                tmp.setId(marketObjectData[i].obj, XMLUtils::getChildValue(n, marketObjectData[i].xmlName + "Id", false));
+                tmp.setId(marketObjectData[i].obj,
+                          XMLUtils::getChildValue(n, marketObjectData[i].xmlName + "Id", false));
                 addConfiguration(XMLUtils::getAttribute(n, "id"), tmp);
             }
         } else {
@@ -120,8 +153,9 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                         addMarketObject(MarketObject::SwapIndexCurve, id, swapIndices);
 
                     } else {
-                        auto mp = XMLUtils::getChildrenAttributesAndValues(n, marketObjectData[i].xmlSingleName.first,
-                                                                           marketObjectData[i].xmlSingleName.second, false);
+                        auto mp =
+                            XMLUtils::getChildrenAttributesAndValues(n, marketObjectData[i].xmlSingleName.first,
+                                                                     marketObjectData[i].xmlSingleName.second, false);
                         Size nc = XMLUtils::getChildrenNodes(n, "").size();
                         QL_REQUIRE(mp.size() == nc, "could not recognise " << (nc - mp.size()) << " sub nodes under "
                                                                            << marketObjectData[i].xmlName);
@@ -201,12 +235,57 @@ vector<string> TodaysMarketParameters::curveSpecs(const string& configuration) c
     for (Size i = 0; i < marketObjectData.size(); ++i) {
         MarketObject mo = marketObjectData[i].obj;
         // swap indices have to be exlcuded here...
-        if (mo != MarketObject::SwapIndexCurve &&
-            marketObjects_.find(mo) != marketObjects_.end()) {
+        if (mo != MarketObject::SwapIndexCurve && marketObjects_.find(mo) != marketObjects_.end()) {
             curveSpecs(marketObjects_.at(mo), marketObjectId(mo, configuration), specs);
         }
     }
     return specs;
+}
+
+void TodaysMarketParameters::addMarketObject(const MarketObject o, const string& id,
+                                             const map<string, string>& assignments) {
+
+    // check that we do not have an inconcsistent mapping within one market object
+    auto mo = marketObjects_.find(o);
+    if (mo != marketObjects_.end()) {
+        auto mp = mo->second.find(id);
+        if (mp != mo->second.end()) {
+            for (auto const& m : mp->second) {
+                auto a = assignments.find(m.first);
+                if (a != assignments.end()) {
+                    QL_REQUIRE(m.first != a->first || m.second == a->second,
+                               "TodaysMarketParameters, inconsistent mapping is added for market object type "
+                                   << o << ", id " << id << ": " << a->first << " " << a->second << ", but have "
+                                   << m.first << " " << m.second << " already.");
+                }
+            }
+        }
+    }
+
+    // check that we do not have an overlap of names for yield curves and index curves
+    if (o == MarketObject::YieldCurve || o == MarketObject::IndexCurve) {
+        auto mo =
+            marketObjects_.find(o == MarketObject::YieldCurve ? MarketObject::IndexCurve : MarketObject::YieldCurve);
+        if (mo != marketObjects_.end()) {
+            auto mp = mo->second.find(id);
+            if (mp != mo->second.end()) {
+                for (auto const& m : mp->second) {
+                    auto a = assignments.find(m.first);
+                    QL_REQUIRE(a == assignments.end(),
+                               "TodaysMarketParameters, overlap between YieldCurve and IndexCurve names, try to add "
+                               "mapping for market object type "
+                                   << o << ", id " << id << ": " << a->first << " " << a->second << ", but have "
+                                   << m.first << " " << m.second << " already in other market object's mappnig");
+                }
+            }
+        }
+    }
+
+    // add the mapping
+    marketObjects_[o][id] = assignments;
+    for (auto s : assignments)
+        DLOG("TodaysMarketParameters, add market objects of type " << o << ": " << id << " " << s.first << " "
+                                                                   << s.second);
 }
 
 } // namespace data
