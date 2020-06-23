@@ -26,7 +26,7 @@ add_link_directory_if_exists("${QUANTLIB_SOURCE_DIR}/build/ql")
 add_link_directory_if_exists("${QUANTEXT_SOURCE_DIR}/build/qle")
 
 add_subdirectory("ored")
-add_subdirectory("doc")
+#add_subdirectory("doc")
 add_subdirectory("test")
 
 
