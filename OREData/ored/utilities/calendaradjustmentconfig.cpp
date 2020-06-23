@@ -102,7 +102,6 @@ void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
         string baseCalendar = XMLUtils::getChildValue(calnode, "BaseCalendar", false);
         if (baseCalendar != "")
             continue;
-        
         Calendar cal = parseCalendar(calname);
 
         vector<string> holidayDates = XMLUtils::getChildrenValues(calnode, "AdditionalHolidays", "Date");
@@ -124,7 +123,6 @@ void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
         string baseCalendar = XMLUtils::getChildValue(calnode, "BaseCalendar", false);
         if (baseCalendar == "")
             continue;
-        
         Calendar cal = parseCalendar(baseCalendar, calname);
 
         vector<string> holidayDates = XMLUtils::getChildrenValues(calnode, "AdditionalHolidays", "Date");
@@ -150,7 +148,7 @@ XMLNode* CalendarAdjustmentConfig::toXML(XMLDocument& doc) {
     for (auto cal : getCalendars()) {
         XMLNode* calendarNode = XMLUtils::addChild(doc, node, "Calendar");
         XMLUtils::addAttribute(doc, calendarNode, "name", cal);
-        if (getBaseCalendar(cal) != "");
+        if (getBaseCalendar(cal) != "")
             XMLUtils::addChild(doc, calendarNode, "BaseCalendar", getBaseCalendar(cal));
         XMLNode* ahd = XMLUtils::addChild(doc, calendarNode, "AdditionalHolidays");
         for (auto hol : getHolidays(cal)) {

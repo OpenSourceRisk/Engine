@@ -78,22 +78,6 @@ private:
 
     string normalisedName(const string&) const;
 };
-//! global config
-class CalendarAdjustments : public QuantLib::Singleton<CalendarAdjustments> {
-    friend class QuantLib::Singleton<CalendarAdjustments>;
-
-public:
-    //! get the global config
-    const CalendarAdjustmentConfig& config() const { return config_; }
-
-    //! set the global config
-    void setConfig(const CalendarAdjustmentConfig& c) { config_ = c; }
-
-private:
-    CalendarAdjustmentConfig config_;
-
-    CalendarAdjustments() {}
-};
 
 } // namespace data
 } // namespace ore

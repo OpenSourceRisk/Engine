@@ -254,7 +254,6 @@ void OREApp::readSetup() {
         string calendarAdjustmentFile = inputPath_ + "/" + params_->get("setup", "calendarAdjustment");
         LOG("Load calendarAdjustment from file" << calendarAdjustmentFile);
         calendarAdjustments.fromFile(calendarAdjustmentFile);
-        CalendarAdjustments::instance().setConfig(calendarAdjustments);
     }
 
     writeInitialReports_ = true;
