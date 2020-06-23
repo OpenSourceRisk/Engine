@@ -100,8 +100,12 @@ void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
     for (auto calnode : XMLUtils::getChildrenNodes(node, "Calendar")) {
         string calname = XMLUtils::getAttribute(calnode, "name");
         string baseCalendar = XMLUtils::getChildValue(calnode, "BaseCalendar", false);
-        if (baseCalendar != "")
+        if (baseCalendar != "") {
+            // we check here if the baseCalendar is in the map before the new calendars are added
+            // this is because we don't want any new calendars to be defined in terms of other new calendars
+            parseCalendar(baseCalendar);
             continue;
+        }
         Calendar cal = parseCalendar(calname);
 
         vector<string> holidayDates = XMLUtils::getChildrenValues(calnode, "AdditionalHolidays", "Date");
