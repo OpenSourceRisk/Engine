@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(testCalendarAdjustmentRealCalendars) {
     // and check that the holidays match the expected ones
     for (auto expectedHolidays : loadExpectedHolidays()) {
         vector<Date> qcalHols;
-        qcalHols = parseCalendar(expectedHolidays.calendarName, true).holidayList(startDate, endDate, false);
+        qcalHols = parseCalendar(expectedHolidays.calendarName).holidayList(startDate, endDate, false);
         BOOST_CHECK_EQUAL_COLLECTIONS(qcalHols.begin(), qcalHols.end(), expectedHolidays.holidays.begin(),
                                       expectedHolidays.holidays.end());
     }
