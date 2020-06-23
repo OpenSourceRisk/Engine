@@ -449,7 +449,6 @@ Calendar parseCalendar(const string& s, const string& newName) {
     if (it != m.end()) {
         Calendar cal = it->second;
         if (newName != "") {
-            QL_REQUIRE(m.find(newName) == m.end(), "trying to add duplicate calendar name: " << newName);
             Calendar newCal = AmendedCalendar(cal, newName);
             m[newName] = newCal;
             return newCal;

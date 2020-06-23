@@ -87,7 +87,7 @@
             <Date>2019-06-20</Date>
         </AdditionalBusinessDays>
     </Calendar>
-    <Calendar name= "FRA_extended">
+    <Calendar name= "FRA_amended">
         <BaseCalendar>FRA</BaseCalendar>
         <AdditionalHolidays>
             <Date>2019-06-20</Date>
