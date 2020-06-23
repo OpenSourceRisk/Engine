@@ -1,8 +1,8 @@
 ARG boost_version=latest
-FROM build_env_boost:${boost_version}
+FROM build_env_boost_debug:${boost_version}
 
 MAINTAINER Quaternion Risk Management
-LABEL Description="Build QuantLib and add to the Boost build environment"
+LABEL Description="Build debug version of QuantLib and add to the Boost build environment"
 
 # Argument for number of cores to use while building
 ARG num_cores
@@ -15,7 +15,7 @@ COPY QuantLib /ore/QuantLib
 RUN cd /ore/QuantLib \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && mkdir -p build.ql && cd build.ql \
-  && cmake .. \
+  && cmake .. -DCMAKE_BUILD_TYPE=Debug \
   && make -j ${num_cores} \
   && make install \
   && cd / \

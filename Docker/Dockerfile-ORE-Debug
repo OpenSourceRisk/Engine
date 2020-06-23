@@ -1,8 +1,8 @@
 ARG quantlib_version=latest
-FROM env_quantlib:${quantlib_version}
+FROM env_quantlib_debug:${quantlib_version}
 
 MAINTAINER Quaternion Risk Management
-LABEL Description="Build ORE and add to the QuantLib build environment"
+LABEL Description="Build debug version of ORE and add to the QuantLib build environment"
 
 # Argument for number of cores to use while building
 ARG num_cores
@@ -23,7 +23,7 @@ RUN cd /ore \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && cp Docker/CMakeLists_ORE.txt CMakeLists.txt \
   && mkdir -p build.ore && cd build.ore \
-  && cmake .. -DBUILD_DOC=OFF\
+  && cmake .. -DBUILD_DOC=OFF -DCMAKE_BUILD_TYPE=Debug \
   && make -j ${num_cores} \
   && make install \
   && cd / \
