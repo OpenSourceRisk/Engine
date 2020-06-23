@@ -851,19 +851,28 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
             ALOG("Equity " << sim_equity << " in simmarket is not included in sensitivities analysis");
         }
     }
-    Size n_eqvol_exp = simMarketData_->equityVolExpiries().size();
-    Size n_eqvol_strikes = simMarketData_->equityVolIsSurface() ? simMarketData_->equityVolMoneyness().size() : 1;
-
-    // [strike] x [expiry]
-    vector<vector<Real>> values(n_eqvol_strikes, vector<Real>(n_eqvol_exp, 0.0));
-    vector<Real> times(n_eqvol_exp);
-
-    // buffer for shifted vols
-    vector<vector<Real>> shiftedValues(n_eqvol_strikes, vector<Real>(n_eqvol_exp, 0.0));
-
+    
     for (auto e : sensitivityData_->equityVolShiftData()) {
         string equity = e.first;
         SensitivityScenarioData::VolShiftData data = e.second;
+
+        Size n_eqvol_exp = simMarketData_->equityVolExpiries(equity).size();
+        Size n_eqvol_strikes;
+        if (!simMarketData_->equityVolIsSurface(equity)) {
+            n_eqvol_strikes = 1;
+        } else if (simMarketData_->equityUseMoneyness(equity)) {
+            n_eqvol_strikes = simMarketData_->equityVolMoneyness(equity).size();
+        } else {
+            n_eqvol_strikes = simMarketData_->equityVolStandardDevs(equity).size();
+        }
+
+        // [strike] x [expiry]
+        vector<vector<Real>> values(n_eqvol_strikes, vector<Real>(n_eqvol_exp, 0.0));
+        vector<Real> times(n_eqvol_exp);
+
+        // buffer for shifted vols
+        vector<vector<Real>> shiftedValues(n_eqvol_strikes, vector<Real>(n_eqvol_exp, 0.0));
+
         ShiftType shiftType = parseShiftType(data.shiftType);
         vector<Period> shiftTenors = data.shiftExpiries;
         vector<Time> shiftTimes(shiftTenors.size());
@@ -872,7 +881,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
         DayCounter dc = parseDayCounter(simMarketData_->equityVolDayCounter(equity));
         bool valid = true;
         for (Size j = 0; j < n_eqvol_exp; ++j) {
-            Date d = asof + simMarketData_->equityVolExpiries()[j];
+            Date d = asof + simMarketData_->equityVolExpiries(equity)[j];
             times[j] = dc.yearFraction(asof, d);
             for (Size k = 0; k < n_eqvol_strikes; k++) {
                 Size idx = k * n_eqvol_exp + j;

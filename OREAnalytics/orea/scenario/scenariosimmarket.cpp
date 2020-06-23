@@ -1008,7 +1008,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     domTS = discountCurve(domCcy);
                                 }
                                 // set up a FX Index
-                                boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>(name, 0, spot, forCcy, domCcy, cal, forTS, domTS);
+                                boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>(name, 0, parseCurrency(forCcy), 
+                                    parseCurrency(domCcy), cal, spot, forTS, domTS);
 
                                 bool stickyStrike = true;
                                 bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
