@@ -44,7 +44,7 @@ public:
     Portfolio() {}
 
     //! Add a trade to the portfoliio
-    void add(const boost::shared_ptr<Trade>& trade);
+    void add(const boost::shared_ptr<Trade>& trade, const bool checkForDuplicateIds = true);
 
     //! Check if a trade id is already in the porfolio
     bool has(const string& id);
@@ -66,14 +66,17 @@ public:
 
     //! Load using a default or user supplied TradeFactory, existing trades are kept
     void load(const std::string& fileName,
-              const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
+              const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>(),
+              const bool checkForDuplicateIds = true);
 
     //! Load from an XML string using a default or user supplied TradeFactory, existing trades are kept
     void loadFromXMLString(const std::string& xmlString,
-                           const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
+                           const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>(),
+                           const bool checkForDuplicateIds = true);
 
     //! Load from XML Node
-    void fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
+    void fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>(),
+                 const bool checkForDuplicateIds = true);
 
     //! Save portfolio to an XML file
     void save(const std::string& fileName) const;
