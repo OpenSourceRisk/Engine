@@ -45,6 +45,66 @@
           "threshold": 0.0
         }
       },
+      "simm_par_sensitivity.csv": {
+        "keys": [
+          "TradeId",
+          "IsPar",
+          "Factor_1",
+          "ShiftSize_1",
+          "Factor_2",
+          "ShiftSize_2",
+          "Currency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Base NPV",
+              "Delta"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": null
+          }
+        ]
+      },
+      "simm_scenario.csv": {
+        "keys": [
+          "TradeId",
+          "Factor",
+          "Up/Down"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Base NPV",
+              "Scenario NPV",
+              "Difference"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": null
+          }
+        ]
+      },
+      "simm_sensitivity.csv": {
+        "keys": [
+          "TradeId",
+          "IsPar",
+          "Factor_1",
+          "ShiftSize_1",
+          "Factor_2",
+          "ShiftSize_2",
+          "Currency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Base NPV",
+              "Delta"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": null
+          }
+        ]
+      },
       "crif.csv": {
         "keys": [
           "TradeID",
