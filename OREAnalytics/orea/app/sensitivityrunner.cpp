@@ -50,23 +50,25 @@ void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market,
     LOG("Running sensitivity analysis");
 
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
-    boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
+    sensiData_ = boost::make_shared<SensitivityScenarioData>();
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     boost::shared_ptr<Portfolio> sensiPortfolio = boost::make_shared<Portfolio>();
     string marketConfiguration = params_->get("markets", "sensitivity");
 
-    sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio);
+    sensiInputInitialize(simMarketData, sensiData_, engineData, sensiPortfolio);
 
     bool recalibrateModels =
         params_->has("sensitivity", "recalibrateModels") && parseBool(params_->get("sensitivity", "recalibrateModels"));
 
     boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
-        sensiPortfolio, market, marketConfiguration, engineData, simMarketData, sensiData, conventions,
+        sensiPortfolio, market, marketConfiguration, engineData, simMarketData, sensiData_, conventions,
         recalibrateModels, curveConfigs, todaysMarketParams, false, extraEngineBuilders_, extraLegBuilders_,
         referenceData_, continueOnError_);
     sensiAnalysis->generateSensitivities();
 
-    sensiOutputReports(sensiAnalysis, sensiData);
+    simMarket_ = sensiAnalysis->simMarket();
+
+    sensiOutputReports(sensiAnalysis);
 
     LOG("Sensitivity analysis completed");
     MEM_LOG;
@@ -103,8 +105,7 @@ void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarket
     DLOG("sensiInputInitialize done");
 }
 
-void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis,
-    const boost::shared_ptr<SensitivityScenarioData>& sensiData) {
+void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis) {
 
     string outputPath = params_->get("setup", "outputPath");
     Real sensiThreshold = parseReal(params_->get("sensitivity", "outputSensitivityThreshold"));
@@ -120,15 +121,6 @@ void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAn
     outputFile = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
     CSVFileReport sensiReport(outputFile);
     ReportWriter().writeSensitivityReport(sensiReport, ss, sensiThreshold);
-
-    // If an output file name has been provided for ATM optionlet volatilies.
-    if (params_->has("sensitivity", "atmOptionletVolsFile")) {
-        string outputPath = params_->get("setup", "outputPath");
-        string f = outputPath + "/" + params_->get("sensitivity", "atmOptionletVolsFile");
-        CSVFileReport report(f, ',', false);
-        ReportWriter().writeAtmOptionletVolatilities(report, *sensiAnalysis->simMarket(), *sensiData);
-    }
-
 }
 
 } // namespace analytics

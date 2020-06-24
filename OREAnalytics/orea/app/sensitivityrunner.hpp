@@ -74,8 +74,13 @@ public:
                                       boost::shared_ptr<Portfolio>& sensiPortfolio);
 
     //! Write out some standard sensitivities reports
-    virtual void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis,
-        const boost::shared_ptr<SensitivityScenarioData>& sensiData);
+    virtual void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis);
+
+    //! \name Inspectors
+    //@{
+    const boost::shared_ptr<ScenarioSimMarket>& simMarket() const { return simMarket_; }
+    const boost::shared_ptr<SensitivityScenarioData>& sensiData() const { return sensiData_; }
+    //@}
 
 protected:
     boost::shared_ptr<Parameters> params_;
@@ -84,6 +89,12 @@ protected:
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
     boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
     const bool continueOnError_;
+
+    //! Scenario simulation market that is bumped for the sensitivity run.
+    boost::shared_ptr<ScenarioSimMarket> simMarket_;
+
+    //! Sensitivity configuration data used for the sensitivity run.
+    boost::shared_ptr<SensitivityScenarioData> sensiData_;
 };
 
 } // namespace analytics
