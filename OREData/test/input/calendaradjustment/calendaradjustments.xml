@@ -141,4 +141,26 @@
         </AdditionalHolidays>
         <AdditionalBusinessDays/>
     </Calendar>
+    <!-- we check that calendars with the same baseCalendar don't affect each other-->
+    <Calendar name= "WeekendsOnly_1">
+        <BaseCalendar>WeekendsOnly</BaseCalendar>
+        <AdditionalHolidays>
+            <Date>2019-06-20</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+    <Calendar name= "WeekendsOnly_2">
+        <BaseCalendar>WeekendsOnly</BaseCalendar>
+        <AdditionalHolidays>
+            <Date>2019-06-21</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+    <Calendar name= "WeekendsOnly_3">
+        <BaseCalendar>WeekendsOnly</BaseCalendar>
+        <AdditionalHolidays>
+            <Date>2019-06-24</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
 </CalendarAdjustments>
