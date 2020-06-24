@@ -93,7 +93,7 @@ BUILDING ORE
 LANGUAGE BINDUNGS
 
 - Maintenance to ensure SWIG wrappers build with current ORE and QuantLib-SWIG 1.18,
-  rework all *.i files to use the SWIG wrapper of {\tt boost::shared\_ptr} following
+  rework all *.i files to use the SWIG wrapper of boost::shared_ptr following
   QuantLib-SWIG
 
 OTHER
