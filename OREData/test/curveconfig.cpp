@@ -18,8 +18,10 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
+// clang-format off
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
+// clang-format on
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
@@ -29,7 +31,6 @@
 #include <ored/configuration/equityvolcurveconfig.hpp>
 #include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
-#include <ored/configuration/inflationcapfloorpricesurfaceconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
@@ -65,11 +66,15 @@ public:
     CurveConfigurations curveConfigs;
 
     F() {
+
+        // Clear previous output if any.
+        clearOutput(TEST_OUTPUT_PATH);
+
         // Read curve configurations from file
         curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
     }
 
-    ~F() { clearOutput(TEST_OUTPUT_PATH); }
+    ~F() {}
 };
 
 set<string> readQuotes(const string& filename) {
@@ -89,6 +94,7 @@ set<string> readQuotes(const string& filename) {
 vector<pair<string, string>> files = {
     make_pair("todays_market_only_ir.xml", "expected_quotes_only_ir.csv"),
     make_pair("todays_market_with_fx_vol_smile.xml", "expected_quotes_with_fx_vol_smile.csv"),
+    make_pair("todays_market_with_fx_vol_smile_delta.xml", "expected_quotes_with_fx_vol_smile_delta.csv"),
     make_pair("todays_market_with_fx_vol_atm.xml", "expected_quotes_with_fx_vol_atm.csv"),
     make_pair("todays_market_single_config_gbp.xml", "expected_quotes_tmp_single_gbp.csv")};
 

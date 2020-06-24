@@ -41,6 +41,37 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 
         LOG("Load stress test label " << test.label);
 
+        LOG("Get recovery rate shift parameters");
+        XMLNode* recoveryRates = XMLUtils::getChildNode(testCase, "RecoveryRates");
+        test.recoveryRateShifts.clear();
+        for (XMLNode* child = XMLUtils::getChildNode(recoveryRates, "RecoveryRate"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string isin = XMLUtils::getAttribute(child, "id");
+            LOG("Loading stress parameters for recovery rate for " << isin);
+            SpotShiftData data;
+            data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            test.recoveryRateShifts[isin] = data;
+        }
+
+        LOG("Get survival probability shift parameters");
+        XMLNode* survivalProbability = XMLUtils::getChildNode(testCase, "SurvivalProbabilities");
+        QL_REQUIRE(survivalProbability, "Survival Probabilities node not found");
+        test.survivalProbabilityShifts.clear();
+        for (XMLNode* child = XMLUtils::getChildNode(survivalProbability, "SurvivalProbability"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string name = XMLUtils::getAttribute(child, "name");
+            LOG("Loading stress parameters for survival probability for " << name);
+            CurveShiftData data;
+            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
+            data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+            QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
+                       "number of tenors and shifts does not match in survival probability stress data");
+            QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in survival probability stress data");
+            test.survivalProbabilityShifts[name] = data;
+        }
+
         LOG("Get discount curve shift parameters");
         XMLNode* discountCurves = XMLUtils::getChildNode(testCase, "DiscountCurves");
         QL_REQUIRE(discountCurves, "DiscountCurves node not found");

@@ -218,8 +218,12 @@ void outputCoupons(boost::shared_ptr<ore::data::Swap> cmsSwap) {
     Leg leg = cmsSwap->legs().at(0);
     for (auto cf : leg) {
         boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
-        BOOST_TEST_MESSAGE("Coupon Date: " << frc->date() << "; Rate: " << frc->rate()
-                                           << "; DayCount: " << frc->dayCounter());
+        if (frc) {
+            BOOST_TEST_MESSAGE("Coupon Date: " << frc->date() << "; Rate: " << frc->rate()
+                                               << "; DayCount: " << frc->dayCounter());
+        } else {
+            BOOST_TEST_MESSAGE("Coupon Date: " << cf->date() << " - not a floating rate coupon!");
+        }
     }
 };
 } // namespace
@@ -270,14 +274,14 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
     // and NPV(digital put option == NPV(option with spread = payoff)
 
     {
-        double strike = 1;
+        double strike = 1.0;
         double pay = 0.0001;
         boost::shared_ptr<ore::data::Swap> cmsDigitalSwapCall =
             vars.makeDigitalCmsSpreadOption(true, vector<double>(1, strike), vector<double>(1, pay));
         boost::shared_ptr<ore::data::Swap> cmsDigitalSwapPut =
             vars.makeDigitalCmsSpreadOption(false, vector<double>(1, strike), vector<double>(1, pay));
         boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadOption(vector<double>(1, pay));
-        boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadOption(vector<double>(1, 0));
+        boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadOption(vector<double>(1, 0.0));
         cmsDigitalSwapCall->build(engineFactory);
         cmsDigitalSwapPut->build(engineFactory);
         cmsSwap1->build(engineFactory);

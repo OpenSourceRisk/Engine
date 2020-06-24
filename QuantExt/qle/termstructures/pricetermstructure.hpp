@@ -23,7 +23,9 @@
 #ifndef quantext_price_term_structure_hpp
 #define quantext_price_term_structure_hpp
 
+#include <ql/currency.hpp>
 #include <ql/math/comparison.hpp>
+#include <ql/quote.hpp>
 #include <ql/termstructure.hpp>
 
 namespace QuantExt {
@@ -59,6 +61,12 @@ public:
     //! The minimum time for which the curve can return values
     virtual QuantLib::Time minTime() const;
 
+    //! The currency in which prices are expresed
+    virtual const QuantLib::Currency& currency() const = 0;
+
+    //! The pillar dates for the PriceTermStructure
+    virtual std::vector<QuantLib::Date> pillarDates() const = 0;
+
 protected:
     /*! \name Calculations
 
@@ -73,6 +81,28 @@ protected:
     //! Extra time range check for minimum time, then calls TermStructure::checkRange
     void checkRange(QuantLib::Time t, bool extrapolate) const;
 };
+
+//! Helper class so that the spot price can be pulled from the price curve each time the spot price is requested.
+class DerivedPriceQuote : public QuantLib::Quote, public QuantLib::Observer {
+
+public:
+    DerivedPriceQuote(const QuantLib::Handle<PriceTermStructure>& priceTs);
+
+    //! \name Quote interface
+    //@{
+    QuantLib::Real value() const;
+    bool isValid() const;
+    //@}
+
+    //! \name Observer interface
+    //@{
+    void update();
+    //@}
+
+private:
+    QuantLib::Handle<PriceTermStructure> priceTs_;
+};
+
 } // namespace QuantExt
 
 #endif

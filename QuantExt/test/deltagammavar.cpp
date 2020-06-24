@@ -21,7 +21,6 @@
 #include <boost/make_shared.hpp>
 #include <boost/math/distributions/chi_squared.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/timer.hpp>
 #include <qle/math/deltagammavar.hpp>
 
 using namespace QuantLib;

@@ -18,9 +18,9 @@
 
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
-#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/errors.hpp>
@@ -128,6 +128,8 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     while (trade != trades_.end()) {
         try {
             (*trade)->build(engineFactory);
+            TLOG("Required Fixings for trade " << (*trade)->id() << ":");
+            TLOGGERSTREAM << (*trade)->requiredFixings();
             ++trade;
         } catch (std::exception& e) {
             ALOG(StructuredTradeErrorMessage(*trade, "Error building trade", e.what()));
@@ -201,6 +203,33 @@ map<string, set<Date>> Portfolio::fixings(const Date& settlementDate) const {
     }
 
     return result;
+}
+
+std::map<AssetClass, std::set<std::string>> Portfolio::underlyingIndices() {
+
+    if (!underlyingIndicesCache_.empty())
+        return underlyingIndicesCache_;
+
+    map<AssetClass, std::set<std::string>> result;
+
+    for (const auto& t : trades_) {
+        auto underlyings = t->underlyingIndices();
+        for (const auto& kv : underlyings) {
+            result[kv.first].insert(kv.second.begin(), kv.second.end());
+        }
+    }
+    underlyingIndicesCache_ = result;
+    return underlyingIndicesCache_;
+}
+
+std::set<std::string> Portfolio::underlyingIndices(AssetClass assetClass) {
+
+    std::map<AssetClass, std::set<std::string>> indices = underlyingIndices();
+    auto it = indices.find(assetClass);
+    if (it != indices.end()) {
+        return it->second;
+    }
+    return std::set<std::string>();
 }
 
 } // namespace data

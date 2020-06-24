@@ -33,6 +33,14 @@ Strike parseStrike(const std::string& s) {
     boost::regex m3("^(\\+|\\-)?([0-9]+[.]?[0-9]*)");
     boost::regex m4("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(d|D)");
     boost::regex m4b("(d|D)");
+    boost::regex m5("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(c|C)");
+    boost::regex m5b("^(c|C)");
+    boost::regex m6("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(p|P)");
+    boost::regex m6b("^(p|P)");
+    boost::regex m7("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(bf|BF)");
+    boost::regex m7b("^(bf|BF)");
+    boost::regex m8("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(rr|RR)");
+    boost::regex m8b("^(rr|RR)");
     Strike result;
     if (boost::regex_match(s, m1)) {
         result.type = Strike::Type::ATM;
@@ -57,6 +65,26 @@ Strike parseStrike(const std::string& s) {
     if (boost::regex_match(s, m4)) {
         result.type = Strike::Type::Delta;
         result.value = parseReal(regex_replace(s, m4b, std::string("")));
+        return result;
+    }
+    if (boost::regex_match(s, m5)) {
+        result.type = Strike::Type::DeltaCall;
+        result.value = parseReal(regex_replace(s, m5b, std::string("")));
+        return result;
+    }
+    if (boost::regex_match(s, m6)) {
+        result.type = Strike::Type::DeltaPut;
+        result.value = parseReal(regex_replace(s, m6b, std::string("")));
+        return result;
+    }
+    if (boost::regex_match(s, m7)) {
+        result.type = Strike::Type::BF;
+        result.value = parseReal(regex_replace(s, m7b, std::string("")));
+        return result;
+    }
+    if (boost::regex_match(s, m8)) {
+        result.type = Strike::Type::RR;
+        result.value = parseReal(regex_replace(s, m8b, std::string("")));
         return result;
     }
     QL_FAIL("could not parse strike given by " << s);
@@ -92,5 +120,45 @@ std::ostream& operator<<(std::ostream& out, const Strike& s) {
     }
     return out;
 }
+
+namespace {
+Strike normaliseStrike(const Strike& s) {
+    if (s.type == Strike::Type::ATM_Offset && QuantLib::close_enough(s.value, 0.0))
+        return Strike({Strike::Type::ATM, 0.0});
+    if (s.type == Strike::Type::ATMF_Moneyness && QuantLib::close_enough(s.value, 1.0))
+        return Strike({Strike::Type::ATMF, 0.0});
+    if (s.type == Strike::Type::ATM_Moneyness && QuantLib::close_enough(s.value, 1.0))
+        return Strike({Strike::Type::ATM, 0.0});
+    return s;
+}
+} // anonymous namespace
+
+bool operator==(const Strike& s1, const Strike& s2) {
+    Strike tmp1 = normaliseStrike(s1);
+    Strike tmp2 = normaliseStrike(s2);
+    return (tmp1.type == tmp2.type && QuantLib::close_enough(tmp1.value, tmp2.value));
+}
+
+QuantLib::Real computeAbsoluteStrike(const Strike& s, const QuantLib::Real atm, const QuantLib::Real atmf) {
+    switch (s.type) {
+    case Strike::Type::ATM:
+        return atm;
+    case Strike::Type::ATMF:
+        return atmf;
+    case Strike::Type::ATM_Offset:
+        return atm + s.value;
+    case Strike::Type::Absolute:
+        return s.value;
+    case Strike::Type::Delta:
+        QL_FAIL("can not compute absolute strike for type delta");
+    case Strike::Type::ATMF_Moneyness:
+        return atmf * s.value;
+    case Strike::Type::ATM_Moneyness:
+        return atm * s.value;
+    default:
+        QL_FAIL("can not compute strike for unknown type " << s);
+    }
+}
+
 } // namespace data
 } // namespace ore

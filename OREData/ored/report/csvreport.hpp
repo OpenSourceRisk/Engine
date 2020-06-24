@@ -38,22 +38,31 @@ class ReportTypePrinter;
 class CSVFileReport : public Report {
 public:
     /*! Create a report with the given filename, will throw if it cannot open the file.
-     *  sep is the separator which defaults to a comma
-     */
-    CSVFileReport(const string& filename, const char sep = ',', const bool commentCharacter = true);
+        \param filename         name of the csv file that is created
+        \param sep              seperator character for the csv file. It defaults to a comma.
+        \param commentCharacter if \c true, the first row starts with the \c # character.
+        \param quoteChar        character to use to quote strings. If not provided, strings are not quoted.
+        \param nullString       string used to represent \c QuantLib::Null values or infinite values. If not provided,
+                                this defaults to \c \#N/A.
+    */
+    CSVFileReport(const string& filename, const char sep = ',', const bool commentCharacter = true,
+                  char quoteChar = '\0', const std::string& nullString = "#N/A");
     ~CSVFileReport();
 
     Report& addColumn(const string& name, const ReportType& rt, Size precision = 0) override;
     Report& next() override;
     Report& add(const ReportType& rt) override;
     void end() override;
+    void flush() override;
 
 private:
     std::vector<ReportType> columnTypes_;
     std::vector<ReportTypePrinter> printers_;
-    string filename_;
+    std::string filename_;
     char sep_;
     bool commentCharacter_;
+    char quoteChar_;
+    std::string nullString_;
     Size i_;
     FILE* fp_;
 };

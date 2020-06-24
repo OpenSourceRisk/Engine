@@ -51,15 +51,21 @@ public:
     Disposable<Array> initialValues() const;
     Disposable<Array> drift(Time t, const Array& x) const;
     Disposable<Matrix> diffusion(Time t, const Array& x) const;
+    Disposable<Array> evolve(Time t0, const Array& x0, Time dt, const Array& dw) const;
 
     /*! specific members */
-    void flushCache() const;
+    virtual void flushCache() const;
 
 protected:
+    virtual Disposable<Array> marginalDiffusion(Time t, const Array& x) const;
     virtual Disposable<Matrix> diffusionImpl(Time t, const Array& x) const;
+    virtual Disposable<Array> marginalDiffusionImpl(Time t, const Array& x) const;
+    void updateSqrtCorrelation() const;
 
     const CrossAssetModel* const model_;
+    const discretization disc_;
     SalvagingAlgorithm::Type salvaging_;
+    mutable Matrix sqrtCorrelation_;
 
     class ExactDiscretization : public StochasticProcess::discretization {
     public:
@@ -105,7 +111,7 @@ protected:
         }
     };
 
-    mutable boost::unordered_map<double, Array, cache_hasher> cache_m_;
+    mutable boost::unordered_map<double, Array, cache_hasher> cache_m_, cache_md_;
     mutable boost::unordered_map<double, Matrix, cache_hasher> cache_v_, cache_d_;
 }; // CrossAssetStateProcess
 

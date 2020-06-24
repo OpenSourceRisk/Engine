@@ -57,14 +57,10 @@ public:
                             const boost::shared_ptr<QuantLib::IborIndex>& spreadIndex,
                             const Handle<YieldTermStructure>& flatDiscountCurve,
                             const Handle<YieldTermStructure>& spreadDiscountCurve, bool eom = false,
-                            bool flatIsDomestic = true,
-                            boost::optional<QuantLib::Period> flatTenor = boost::none,
-                            boost::optional<QuantLib::Period> spreadTenor = boost::none,
-							Real spreadOnFlatLeg = 0.0,
-							Real flatGearing = 1.0,
-							Real spreadGearing = 0.0,
-							const Calendar& flatCalendar = Calendar(),
-							const Calendar& spreadCalendar = Calendar());
+                            bool flatIsDomestic = true, boost::optional<QuantLib::Period> flatTenor = boost::none,
+                            boost::optional<QuantLib::Period> spreadTenor = boost::none, Real spreadOnFlatLeg = 0.0,
+                            Real flatGearing = 1.0, Real spreadGearing = 1.0, const Calendar& flatCalendar = Calendar(),
+                            const Calendar& spreadCalendar = Calendar());
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const;
@@ -95,11 +91,11 @@ protected:
     bool flatIsDomestic_;
     QuantLib::Period flatTenor_;
     QuantLib::Period spreadTenor_;
-	Real spreadOnFlatLeg_;
-	Real flatGearing_;
-	Real spreadGearing_;
-	Calendar flatCalendar_;
-	Calendar spreadCalendar_;
+    Real spreadOnFlatLeg_;
+    Real flatGearing_;
+    Real spreadGearing_;
+    Calendar flatCalendar_;
+    Calendar spreadCalendar_;
 
     Currency flatLegCurrency_;
     Currency spreadLegCurrency_;

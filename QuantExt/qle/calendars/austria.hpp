@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2020 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -19,7 +19,6 @@
 /*! \file austria.hpp
     \brief Austrian calendar
 */
-#ifndef quantlib_austria_calendar_hpp
 
 #ifndef quantext_austrian_calendar_hpp
 #define quantext_austrian_calendar_hpp
@@ -45,7 +44,5 @@ public:
 };
 
 } // namespace QuantExt
-
-#endif
 
 #endif

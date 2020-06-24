@@ -17,7 +17,6 @@
 */
 
 #include <boost/lexical_cast.hpp>
-#include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <orea/engine/valuationengine.hpp>
@@ -55,13 +54,13 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                        const boost::shared_ptr<ore::data::EngineData>& engineData,
                        boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                        const boost::shared_ptr<StressTestScenarioData>& stressData, const Conventions& conventions,
-                       const CurveConfigurations& curveConfigs,
-                       const TodaysMarketParameters& todaysMarketParams,
+                       const CurveConfigurations& curveConfigs, const TodaysMarketParameters& todaysMarketParams,
                        boost::shared_ptr<ScenarioFactory> scenarioFactory, bool continueOnError) {
 
     LOG("Build Simulation Market");
     boost::shared_ptr<ScenarioSimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(market, simMarketData, conventions, Market::defaultConfiguration, curveConfigs, todaysMarketParams, continueOnError);
+        boost::make_shared<ScenarioSimMarket>(market, simMarketData, conventions, Market::defaultConfiguration,
+                                              curveConfigs, todaysMarketParams, continueOnError);
 
     LOG("Build Stress Scenario Generator");
     Date asof = market->asofDate();
@@ -88,7 +87,7 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
         "1,0W"); // TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
     calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData->baseCcy()));
-    ValuationEngine engine(asof, dg, simMarket);
+    ValuationEngine engine(asof, dg, simMarket, factory->modelBuilders());
     LOG("Run Stress Scenarios");
     /*ostringstream o;
     o.str("");

@@ -1,4 +1,21 @@
 <CurveConfiguration>
+  <CapFloorVolatilities>
+    <CapFloorVolatility>
+      <CurveId>MXN</CurveId>
+      <CurveDescription/>
+      <VolatilityType>Lognormal</VolatilityType>
+      <Extrapolation>Flat</Extrapolation>
+      <InterpolationMethod>Bilinear</InterpolationMethod>
+      <IncludeAtm>FALSE</IncludeAtm>
+      <DayCounter>A365F</DayCounter>
+      <Calendar>MXN</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <Tenors>52W,104W,156W,208W,260W,364W,520W</Tenors>
+      <Strikes>0.07,0.08,0.09</Strikes>
+      <IborIndex>MXN-TIIE-28D</IborIndex>
+      <DiscountCurve>Yield/MXN/MXN-TIIE-28D</DiscountCurve>
+    </CapFloorVolatility>
+  </CapFloorVolatilities>
   <YieldCurves>
     <YieldCurve>
       <CurveId>MXN-TIIE-28D</CurveId>
@@ -33,21 +50,4 @@
       </Segments>
     </YieldCurve>
   </YieldCurves>
-  <CapFloorVolatilities>
-    <CapFloorVolatility>
-      <CurveId>MXN</CurveId>
-      <CurveDescription/>
-      <VolatilityType>Lognormal</VolatilityType>
-      <Extrapolation>Flat</Extrapolation>
-      <InterpolationMethod>Bilinear</InterpolationMethod>
-      <IncludeAtm>FALSE</IncludeAtm>
-      <DayCounter>A365F</DayCounter>
-      <Calendar>MXN</Calendar>
-      <BusinessDayConvention>Following</BusinessDayConvention>
-      <Tenors>52W,104W,156W,208W,260W,364W,520W</Tenors>
-      <Strikes>0.07,0.08,0.09</Strikes>
-      <IborIndex>MXN-TIIE-28D</IborIndex>
-      <DiscountCurve>Yield/MXN/MXN-TIIE-28D</DiscountCurve>
-    </CapFloorVolatility>
-  </CapFloorVolatilities>
 </CurveConfiguration>

@@ -18,8 +18,7 @@
 
 #include "testmarket.hpp"
 #include <boost/test/unit_test.hpp>
-#include <test/oreatoplevelfixture.hpp>
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -53,6 +52,7 @@
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <test/oreatoplevelfixture.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -61,6 +61,8 @@ using namespace boost::unit_test_framework;
 using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
+using boost::timer::cpu_timer;
+using boost::timer::default_places;
 
 using testsuite::TestMarket;
 
@@ -178,14 +180,15 @@ void simulation(string dateGridString, bool checkFixings) {
     parameters->interpolation() = "LogLinear";
     parameters->extrapolate() = true;
 
-    parameters->swapVolTerms() = {6 * Months, 1 * Years};
-    parameters->swapVolExpiries() = {1 * Years, 2 * Years};
+    parameters->setSwapVolTerms("", {6 * Months, 1 * Years});
+    parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});
     parameters->setSwapVolCcys(ccys);
     parameters->swapVolDecayMode() = "ForwardVariance";
     parameters->setSimulateSwapVols(false);
 
-    parameters->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    parameters->fxVolDecayMode() = "ConstantVariance";
+    parameters->setFxVolExpiries(
+        vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
+    parameters->setFxVolDecayMode(string("ConstantVariance"));
     parameters->setSimulateFXVols(false);
 
     parameters->setFxVolCcyPairs({"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"});
@@ -263,15 +266,15 @@ void simulation(string dateGridString, bool checkFixings) {
     fxConfigs.push_back(boost::make_shared<FxBsData>("JPY", "EUR", calibrationType, true, ParamType::Piecewise,
                                                      sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 
-    std::map<std::pair<std::string, std::string>, Real> corr;
-    corr[std::make_pair("IR:EUR", "IR:USD")] = 0.6;
+    std::map<std::pair<std::string, std::string>, Handle<Quote>> corr;
+    corr[std::make_pair("IR:EUR", "IR:USD")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.6));
 
     boost::shared_ptr<CrossAssetModelData> config(boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, corr));
 
     // Model Builder & Model
     // model builder
-    boost::shared_ptr<CrossAssetModelBuilder> modelBuilder(new CrossAssetModelBuilder(initMarket));
-    boost::shared_ptr<QuantExt::CrossAssetModel> model = modelBuilder->build(config);
+    boost::shared_ptr<CrossAssetModelBuilder> modelBuilder(new CrossAssetModelBuilder(initMarket, config));
+    boost::shared_ptr<QuantExt::CrossAssetModel> model = *modelBuilder->model();
     modelBuilder = NULL;
 
     // Path generator
@@ -312,15 +315,15 @@ void simulation(string dateGridString, bool checkFixings) {
     ValuationEngine valEngine(today, dg, simMarket);
 
     // Calculate Cube
-    boost::timer t;
+    cpu_timer t;
     boost::shared_ptr<NPVCube> cube =
         boost::make_shared<DoublePrecisionInMemoryCube>(today, portfolio->ids(), dg->dates(), samples);
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
     calculators.push_back(boost::make_shared<NPVCalculator>(baseCcy));
     valEngine.buildCube(portfolio, cube, calculators);
-    double elapsed = t.elapsed();
+    t.stop();
 
-    BOOST_TEST_MESSAGE("Cube generated in " << elapsed << " seconds");
+    BOOST_TEST_MESSAGE("Cube generated in " << t.format(default_places, "%w") << " seconds");
 
     map<string, vector<Real>> referenceFixings;
     // First 10 EUR-EURIBOR-6M fixings at dateIndex 5, date grid 11,1Y

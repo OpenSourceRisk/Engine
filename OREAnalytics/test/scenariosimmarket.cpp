@@ -17,7 +17,6 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <test/oreatoplevelfixture.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/configuration/conventions.hpp>
@@ -31,6 +30,7 @@
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <test/testmarket.hpp>
 
 #include <ql/indexes/ibor/all.hpp>
@@ -70,8 +70,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->extrapolate() = true;
     parameters->setYieldCurveDayCounters("", "ACT/ACT");
 
-    parameters->swapVolTerms() = {6 * Months, 1 * Years};
-    parameters->swapVolExpiries() = {1 * Years, 2 * Years};
+    parameters->setSwapVolTerms("", {6 * Months, 1 * Years});
+    parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});
     parameters->setSwapVolCcys({"EUR", "USD"});
     parameters->swapVolDecayMode() = "ForwardVariance";
     parameters->setSwapVolDayCounters("", "ACT/ACT");
@@ -81,8 +81,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->setDefaultCurveDayCounters("", "ACT/ACT");
 
     parameters->setSimulateFXVols(false);
-    parameters->fxVolExpiries() = {2 * Years, 3 * Years, 4 * Years};
-    parameters->fxVolDecayMode() = "ConstantVariance";
+    parameters->setFxVolExpiries(vector<Period>{2 * Years, 3 * Years, 4 * Years});
+    parameters->setFxVolDecayMode(string("ConstantVariance"));
     parameters->setSimulateEquityVols(false);
     parameters->setFxVolDayCounters("", "ACT/ACT");
 
@@ -161,8 +161,8 @@ void testSwaptionVolCurve(boost::shared_ptr<ore::data::Market>& initMarket,
     for (const auto& ccy : parameters->ccys()) {
         Handle<QuantLib::SwaptionVolatilityStructure> simCurve = simMarket->swaptionVol(ccy);
         Handle<QuantLib::SwaptionVolatilityStructure> initCurve = initMarket->swaptionVol(ccy);
-        for (const auto& maturity : parameters->swapVolExpiries()) {
-            for (const auto& tenor : parameters->swapVolTerms()) {
+        for (const auto& maturity : parameters->swapVolExpiries("")) {
+            for (const auto& tenor : parameters->swapVolTerms("")) {
                 BOOST_CHECK_CLOSE(simCurve->volatility(maturity, tenor, 0.0, true),
                                   initCurve->volatility(maturity, tenor, 0.0, true), 1e-12);
             }

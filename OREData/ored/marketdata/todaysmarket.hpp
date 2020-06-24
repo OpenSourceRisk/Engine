@@ -35,6 +35,8 @@
 namespace ore {
 namespace data {
 
+class ReferenceDataManager;
+
 // TODO: rename class
 //! Today's Market
 /*!
@@ -66,7 +68,9 @@ public:
         //! Continue even if build errors occur
         const bool continueOnError = false,
         //! Optional Load Fixings
-        bool loadFixings = true);
+        bool loadFixings = true,
+        //! Optional reference data manager, needed to build fitted bond curves
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
 };
 } // namespace data
 } // namespace ore

@@ -39,18 +39,24 @@ Rate AverageONIndexedCouponPricer::swapletRate() const {
     std::vector<Time> accrualFractions = coupon_->dt();
     Size numPeriods = accrualFractions.size();
     Real accumulatedRate = 0;
+    QL_REQUIRE(coupon_->rateCutoff() < numPeriods,
+               "rate cutoff (" << coupon_->rateCutoff() << ") must be less than number of fixings in period ("
+                               << numPeriods << ")");
+    Size nCutoff = numPeriods - coupon_->rateCutoff();
 
     if (approximationType_ == Takada) {
         Size i = 0;
         Date valuationDate = Settings::instance().evaluationDate();
         // Deal with past fixings.
-        while (i < numPeriods && fixingDates[i] < valuationDate) {
-            Rate pastFixing = overnightIndex_->fixing(fixingDates[i]);
+        while (i < numPeriods && fixingDates[std::min(i, nCutoff)] < valuationDate) {
+            Rate pastFixing = overnightIndex_->fixing(fixingDates[std::min(i, nCutoff)]);
+            QL_REQUIRE(pastFixing != Null<Real>(),
+                       "Missing " << overnightIndex_->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
             accumulatedRate += pastFixing * accrualFractions[i];
             ++i;
         }
         // Use valuation date's fixing also if available.
-        if (i < numPeriods && fixingDates[i] == valuationDate) {
+        if (i < numPeriods && fixingDates[std::min(i, nCutoff)] == valuationDate) {
             Rate valuationDateFixing = IndexManager::instance().getHistory(overnightIndex_->name())[valuationDate];
             if (valuationDateFixing != Null<Real>()) {
                 accumulatedRate += valuationDateFixing * accrualFractions[i];
@@ -63,10 +69,29 @@ Rate AverageONIndexedCouponPricer::swapletRate() const {
             QL_REQUIRE(!projectionCurve.empty(),
                        "Null term structure set to this instance of " << overnightIndex_->name());
 
+            // we know that nCutoff >= i because either
+            // a) i = today, but if nCutoff < today, there is no forward part
+            // b) i = today + 1bd, the we have a historical fixing available on today and if nCutoff = today
+            //        again there is no forward part
+            QL_REQUIRE(nCutoff >= i,
+                       "internal inconsistency: nCutoff (" << nCutoff << ") >= i (" << i << ") expected.");
+
+            // handle the part until the rate cutoff (might be empty, i.e. startForecast = endForecast)
             Date startForecast = coupon_->valueDates()[i];
-            Date endForecast = coupon_->valueDates()[numPeriods];
+            Date endForecast = coupon_->valueDates()[nCutoff];
             DiscountFactor startDiscount = projectionCurve->discount(startForecast);
             DiscountFactor endDiscount = projectionCurve->discount(endForecast);
+
+            // handle the rate cutoff period (if there is any, i.e. if nCutoff < n)
+            if (nCutoff < numPeriods) {
+                // forward discount factor for one calendar day on the cutoff date
+                DiscountFactor discountCutoffDate = projectionCurve->discount(coupon_->valueDates()[nCutoff] + 1) /
+                                                    projectionCurve->discount(coupon_->valueDates()[nCutoff]);
+                // keep the above forward discount factor constant during the cutoff period
+                endDiscount *=
+                    std::pow(discountCutoffDate, coupon_->valueDates()[numPeriods] - coupon_->valueDates()[nCutoff]);
+            }
+
             accumulatedRate += log(startDiscount / endDiscount);
         }
     } else if (approximationType_ == None) {
@@ -78,7 +103,10 @@ Rate AverageONIndexedCouponPricer::swapletRate() const {
         QL_FAIL("Invalid Approximation for AverageONIndexedCouponPricer");
     }
     // Return factor * rate + spread
-    Rate rate = gearing_ * accumulatedRate / accrualPeriod_ + spread_;
+    Rate tau = coupon_->lookback() == 0 * Days
+                   ? accrualPeriod_
+                   : coupon_->dayCounter().yearFraction(coupon_->valueDates().front(), coupon_->valueDates().back());
+    Rate rate = gearing_ * accumulatedRate / tau + spread_;
     return rate;
 }
 

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug (static runtime)|Win32">
@@ -113,28 +113,28 @@
     <_ProjectFileVersion>11.0.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\lib\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\lib\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\lib\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\lib\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">.\lib\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">.\lib\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">.\lib\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">.\lib\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">QuantExt-$(qlCompilerTag)-mt-sgd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">QuantExt-$(qlCompilerTag)-x64-mt-sgd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">QuantExt-$(qlCompilerTag)-mt-gd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">QuantExt-$(qlCompilerTag)-x64-mt-gd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">QuantExt-$(qlCompilerTag)-mt-s</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">QuantExt-$(qlCompilerTag)-x64-mt-s</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">QuantExt-$(qlCompilerTag)-mt</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">QuantExt-$(qlCompilerTag)-x64-mt</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">QuantExt-mt-sgd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">QuantExt-x64-mt-sgd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">QuantExt-mt-gd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">QuantExt-x64-mt-gd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">QuantExt-mt-s</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">QuantExt-x64-mt-s</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">QuantExt-mt</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">QuantExt-x64-mt</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -152,13 +152,13 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
@@ -197,13 +197,13 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
@@ -239,13 +239,13 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -282,13 +282,13 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -328,13 +328,13 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
@@ -373,13 +373,13 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
@@ -415,13 +415,13 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -458,13 +458,13 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <PrecompiledHeaderOutputFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\QuantExt.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <BrowseInformation>
       </BrowseInformation>
-      <BrowseInformationFile>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\</BrowseInformationFile>
+      <BrowseInformationFile>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\</BrowseInformationFile>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -491,34 +491,55 @@
   <ItemGroup>
     <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\calendars\austria.hpp" />
+    <ClInclude Include="qle\calendars\belgium.hpp" />
     <ClInclude Include="qle\calendars\chile.hpp" />
+    <ClInclude Include="qle\calendars\cme.hpp" />
     <ClInclude Include="qle\calendars\colombia.hpp" />
     <ClInclude Include="qle\calendars\france.hpp" />
+    <ClInclude Include="qle\calendars\ice.hpp" />
+    <ClInclude Include="qle\calendars\israel.hpp" />
+    <ClInclude Include="qle\calendars\largejointcalendar.hpp" />
+    <ClInclude Include="qle\calendars\luxembourg.hpp" />
     <ClInclude Include="qle\calendars\malaysia.hpp" />
     <ClInclude Include="qle\calendars\netherlands.hpp" />
     <ClInclude Include="qle\calendars\peru.hpp" />
     <ClInclude Include="qle\calendars\philippines.hpp" />
+    <ClInclude Include="qle\calendars\spain.hpp" />
     <ClInclude Include="qle\calendars\thailand.hpp" />
+    <ClInclude Include="qle\calendars\switzerland.hpp" />
+    <ClInclude Include="qle\calendars\wmr.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcoupon.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\brlcdicouponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\commodityindexedaveragecashflow.hpp" />
+    <ClInclude Include="qle\cashflows\commodityindexedcashflow.hpp" />
     <ClInclude Include="qle\cashflows\couponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\cpicoupon.hpp" />
+    <ClInclude Include="qle\cashflows\cpicouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\equitycoupon.hpp" />
     <ClInclude Include="qle\cashflows\equitycouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\floatingannuitycoupon.hpp" />
     <ClInclude Include="qle\cashflows\floatingannuitynominal.hpp" />
     <ClInclude Include="qle\cashflows\floatingratefxlinkednotionalcoupon.hpp" />
     <ClInclude Include="qle\cashflows\fxlinkedcashflow.hpp" />
+    <ClInclude Include="qle\cashflows\indexedcoupon.hpp" />
     <ClInclude Include="qle\cashflows\lognormalcmsspreadpricer.hpp" />
+    <ClInclude Include="qle\cashflows\overnightindexedcoupon.hpp" />
+    <ClInclude Include="qle\cashflows\blackovernightindexedcouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\quantocouponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\strippedcapflooredcpicoupon.hpp" />
     <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscoupon.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscouponpricer.hpp" />
     <ClInclude Include="qle\currencies\africa.hpp" />
     <ClInclude Include="qle\currencies\america.hpp" />
     <ClInclude Include="qle\currencies\asia.hpp" />
+    <ClInclude Include="qle\currencies\europe.hpp" />
     <ClInclude Include="qle\currencies\metals.hpp" />
     <ClInclude Include="qle\indexes\bmaindexwrapper.hpp" />
+    <ClInclude Include="qle\indexes\bondindex.hpp" />
+    <ClInclude Include="qle\indexes\cacpi.hpp" />
+    <ClInclude Include="qle\indexes\commodityindex.hpp" />
     <ClInclude Include="qle\indexes\dkcpi.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
@@ -534,9 +555,13 @@
     <ClInclude Include="qle\indexes\ibor\demlibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\dkkcibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\dkkois.hpp" />
+    <ClInclude Include="qle\indexes\ibor\ester.hpp" />
     <ClInclude Include="qle\indexes\ibor\hkdhibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\hufbubor.hpp" />
     <ClInclude Include="qle\indexes\ibor\idridrfix.hpp" />
+    <ClInclude Include="qle\indexes\ibor\idrjibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\ilstelbor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\inrmiborois.hpp" />
     <ClInclude Include="qle\indexes\ibor\inrmifor.hpp" />
     <ClInclude Include="qle\indexes\ibor\krwcd.hpp" />
     <ClInclude Include="qle\indexes\ibor\krwkoribor.hpp" />
@@ -547,6 +572,7 @@
     <ClInclude Include="qle\indexes\ibor\nzdbkbm.hpp" />
     <ClInclude Include="qle\indexes\ibor\phpphiref.hpp" />
     <ClInclude Include="qle\indexes\ibor\plnwibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\primeindex.hpp" />
     <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp" />
     <ClInclude Include="qle\indexes\ibor\saibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\seksior.hpp" />
@@ -554,6 +580,7 @@
     <ClInclude Include="qle\indexes\ibor\sgdsibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\sgdsor.hpp" />
     <ClInclude Include="qle\indexes\ibor\skkbribor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\sofr.hpp" />
     <ClInclude Include="qle\indexes\ibor\thbbibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\tonar.hpp" />
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
@@ -564,6 +591,7 @@
     <ClInclude Include="qle\instruments\averageois.hpp" />
     <ClInclude Include="qle\instruments\brlcdiswap.hpp" />
     <ClInclude Include="qle\instruments\cdsoption.hpp" />
+    <ClInclude Include="qle\instruments\commodityapo.hpp" />
     <ClInclude Include="qle\instruments\commodityforward.hpp" />
     <ClInclude Include="qle\instruments\creditdefaultswap.hpp" />
     <ClInclude Include="qle\instruments\crossccybasismtmresetswap.hpp" />
@@ -574,16 +602,22 @@
     <ClInclude Include="qle\instruments\deposit.hpp" />
     <ClInclude Include="qle\instruments\equityforward.hpp" />
     <ClInclude Include="qle\instruments\fixedbmaswap.hpp" />
+    <ClInclude Include="qle\instruments\forwardbond.hpp" />
     <ClInclude Include="qle\instruments\fxforward.hpp" />
     <ClInclude Include="qle\instruments\impliedbondspread.hpp" />
     <ClInclude Include="qle\instruments\makeaverageois.hpp" />
     <ClInclude Include="qle\instruments\makecds.hpp" />
     <ClInclude Include="qle\instruments\oibasisswap.hpp" />
     <ClInclude Include="qle\instruments\oiccbasisswap.hpp" />
+    <ClInclude Include="qle\instruments\overnightindexfuture.hpp" />
     <ClInclude Include="qle\instruments\payment.hpp" />
+    <ClInclude Include="qle\instruments\rebatedexercise.hpp" />
     <ClInclude Include="qle\instruments\subperiodsswap.hpp" />
     <ClInclude Include="qle\instruments\tenorbasisswap.hpp" />
+    <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp" />
+    <ClInclude Include="qle\interpolators\optioninterpolator2d.hpp" />
     <ClInclude Include="qle\math\deltagammavar.hpp" />
+    <ClInclude Include="qle\math\fillemptymatrix.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
     <ClInclude Include="qle\math\nadarayawatson.hpp" />
     <ClInclude Include="qle\math\stabilisedglls.hpp" />
@@ -621,12 +655,15 @@
     <ClInclude Include="qle\models\parametrization.hpp" />
     <ClInclude Include="qle\models\piecewiseconstanthelper.hpp" />
     <ClInclude Include="qle\models\pseudoparameter.hpp" />
+    <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcclgmfxoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticdkcpicapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticlgmcdsoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp" />
+    <ClInclude Include="qle\pricingengines\baroneadesiwhaleyengine.hpp" />
     <ClInclude Include="qle\pricingengines\blackcdsoptionengine.hpp" />
+    <ClInclude Include="qle\pricingengines\commodityapoengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpibacheliercapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpiblackcapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpicapfloorengines.hpp" />
@@ -635,9 +672,12 @@
     <ClInclude Include="qle\pricingengines\discountingcommodityforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingcurrencyswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingequityforwardengine.hpp" />
+    <ClInclude Include="qle\pricingengines\discountingforwardbondengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingfxforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp" />
+    <ClInclude Include="qle\pricingengines\inflationcapfloorengines.hpp" />
+    <ClInclude Include="qle\pricingengines\lgmconvolutionsolver.hpp" />
     <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp" />
     <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp" />
@@ -647,24 +687,48 @@
     <ClInclude Include="qle\quotes\exceptionquote.hpp" />
     <ClInclude Include="qle\quotes\logquote.hpp" />
     <ClInclude Include="qle\quantext.hpp" />
+    <ClInclude Include="qle\termstructures\aposurface.hpp" />
     <ClInclude Include="qle\termstructures\averageoisratehelper.hpp" />
     <ClInclude Include="qle\termstructures\basistwoswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\blackinvertedvoltermstructure.hpp" />
+    <ClInclude Include="qle\termstructures\blackmonotonevarvoltermstructure.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancecurve3.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacemoneyness.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacesparse.hpp" />
+    <ClInclude Include="qle\termstructures\blackvariancesurfacestddevs.hpp" />
+    <ClInclude Include="qle\termstructures\blackvolsurfacedelta.hpp" />
+    <ClInclude Include="qle\termstructures\equityblackvolsurfaceproxy.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
     <ClInclude Include="qle\termstructures\brlcdiratehelper.hpp" />
+    <ClInclude Include="qle\termstructures\capfloorhelper.hpp" />
+    <ClInclude Include="qle\termstructures\capfloortermvolcurve.hpp" />
     <ClInclude Include="qle\termstructures\capfloortermvolsurface.hpp" />
+    <ClInclude Include="qle\termstructures\commodityaveragebasispricecurve.hpp" />
+    <ClInclude Include="qle\termstructures\commoditybasispricecurve.hpp" />
+    <ClInclude Include="qle\termstructures\constantyoyinflationoptionletvolatility.hpp" />
     <ClInclude Include="qle\termstructures\correlationtermstructure.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasismtmresetswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\crossccyfixfloatswaphelper.hpp" />
+    <ClInclude Include="qle\termstructures\crosscurrencypricetermstructure.hpp" />
     <ClInclude Include="qle\termstructures\discountratiomodifiedcurve.hpp" />
+    <ClInclude Include="qle\termstructures\dynamiccpivolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.hpp" />
+    <ClInclude Include="qle\termstructures\equityforwardcurvestripper.hpp" />
+    <ClInclude Include="qle\termstructures\equityoptionsurfacestripper.hpp" />
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
+    <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
+    <ClInclude Include="qle\termstructures\iterativebootstrap.hpp" />
+    <ClInclude Include="qle\termstructures\optionletcurve.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripper.hpp" />
+    <ClInclude Include="qle\termstructures\optionletstripperwithatm.hpp" />
+    <ClInclude Include="qle\termstructures\overnightindexfutureratehelper.hpp" />
+    <ClInclude Include="qle\termstructures\piecewiseatmoptionletcurve.hpp" />
+    <ClInclude Include="qle\termstructures\piecewiseoptionletcurve.hpp" />
+    <ClInclude Include="qle\termstructures\piecewiseoptionletstripper.hpp" />
+    <ClInclude Include="qle\termstructures\kinterpolatedyoyoptionletvolatilitysurface.hpp" />
+    <ClInclude Include="qle\termstructures\optionpricesurface.hpp" />
     <ClInclude Include="qle\termstructures\pricecurve.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp" />
@@ -695,6 +759,8 @@
     <ClInclude Include="qle\termstructures\spreadedsmilesection.hpp" />
     <ClInclude Include="qle\termstructures\spreadedswaptionvolatility.hpp" />
     <ClInclude Include="qle\termstructures\staticallycorrectedyieldtermstructure.hpp" />
+    <ClInclude Include="qle\termstructures\strippedoptionletadapter.hpp" />
+    <ClInclude Include="qle\termstructures\strippedcpivolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\strippedoptionletadapter2.hpp" />
     <ClInclude Include="qle\termstructures\strippedyoyinflationoptionletvol.hpp" />
     <ClInclude Include="qle\termstructures\subperiodsswaphelper.hpp" />
@@ -710,44 +776,70 @@
     <ClInclude Include="qle\termstructures\yoyoptionletvolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobserverstatic.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp" />
+    <ClInclude Include="qle\time\actual364.hpp" />
+    <ClInclude Include="qle\time\futureexpirycalculator.hpp" />
     <ClInclude Include="qle\time\yearcounter.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="qle\calendars\austria.cpp" />
+    <ClCompile Include="qle\calendars\belgium.cpp" />
     <ClCompile Include="qle\calendars\chile.cpp" />
+    <ClCompile Include="qle\calendars\cme.cpp" />
     <ClCompile Include="qle\calendars\colombia.cpp" />
     <ClCompile Include="qle\calendars\france.cpp" />
+    <ClCompile Include="qle\calendars\ice.cpp" />
+    <ClCompile Include="qle\calendars\israel.cpp" />
+    <ClCompile Include="qle\calendars\largejointcalendar.cpp" />
+    <ClCompile Include="qle\calendars\luxembourg.cpp" />
     <ClCompile Include="qle\calendars\malaysia.cpp" />
     <ClCompile Include="qle\calendars\netherlands.cpp" />
     <ClCompile Include="qle\calendars\peru.cpp" />
     <ClCompile Include="qle\calendars\philippines.cpp" />
+    <ClCompile Include="qle\calendars\spain.cpp" />
     <ClCompile Include="qle\calendars\thailand.cpp" />
+    <ClCompile Include="qle\calendars\switzerland.cpp" />
+    <ClCompile Include="qle\calendars\wmr.cpp" />
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp" />
     <ClCompile Include="qle\cashflows\averageonindexedcouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\brlcdicouponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\commodityindexedaveragecashflow.cpp" />
+    <ClCompile Include="qle\cashflows\commodityindexedcashflow.cpp" />
     <ClCompile Include="qle\cashflows\couponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\cpicoupon.cpp" />
+    <ClCompile Include="qle\cashflows\cpicouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\equitycoupon.cpp" />
     <ClCompile Include="qle\cashflows\equitycouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\floatingannuitycoupon.cpp" />
     <ClCompile Include="qle\cashflows\floatingannuitynominal.cpp" />
     <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp" />
+    <ClCompile Include="qle\cashflows\indexedcoupon.cpp" />
     <ClCompile Include="qle\cashflows\lognormalcmsspreadpricer.cpp" />
+    <ClCompile Include="qle\cashflows\overnightindexedcoupon.cpp" />
+    <ClCompile Include="qle\cashflows\blackovernightindexedcouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\quantocouponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\strippedcapflooredcpicoupon.cpp" />
     <ClCompile Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscoupon.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscouponpricer.cpp" />
     <ClCompile Include="qle\currencies\africa.cpp" />
     <ClCompile Include="qle\currencies\america.cpp" />
     <ClCompile Include="qle\currencies\asia.cpp" />
+    <ClCompile Include="qle\currencies\europe.cpp" />
     <ClCompile Include="qle\currencies\metals.cpp" />
+    <ClCompile Include="qle\indexes\bondindex.cpp" />
+    <ClCompile Include="qle\indexes\commodityindex.cpp" />
     <ClCompile Include="qle\indexes\equityindex.cpp" />
     <ClCompile Include="qle\indexes\fxindex.cpp" />
     <ClCompile Include="qle\indexes\ibor\brlcdi.cpp" />
+    <ClCompile Include="qle\indexes\ibor\ester.cpp" />
+    <ClCompile Include="qle\indexes\ibor\primeindex.cpp" />
+    <ClCompile Include="qle\indexes\ibor\sofr.cpp" />
     <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />
     <ClCompile Include="qle\indexes\region.cpp" />
     <ClCompile Include="qle\instruments\averageois.cpp" />
     <ClCompile Include="qle\instruments\brlcdiswap.cpp" />
     <ClCompile Include="qle\instruments\cdsoption.cpp" />
+    <ClCompile Include="qle\instruments\commodityapo.cpp" />
     <ClCompile Include="qle\instruments\commodityforward.cpp" />
     <ClCompile Include="qle\instruments\creditdefaultswap.cpp" />
     <ClCompile Include="qle\instruments\crossccybasismtmresetswap.cpp" />
@@ -758,16 +850,21 @@
     <ClCompile Include="qle\instruments\deposit.cpp" />
     <ClCompile Include="qle\instruments\equityforward.cpp" />
     <ClCompile Include="qle\instruments\fixedbmaswap.cpp" />
+    <ClCompile Include="qle\instruments\forwardbond.cpp" />
     <ClCompile Include="qle\instruments\fxforward.cpp" />
     <ClCompile Include="qle\instruments\impliedbondspread.cpp" />
     <ClCompile Include="qle\instruments\makeaverageois.cpp" />
     <ClCompile Include="qle\instruments\makecds.cpp" />
     <ClCompile Include="qle\instruments\oibasisswap.cpp" />
     <ClCompile Include="qle\instruments\oiccbasisswap.cpp" />
+    <ClCompile Include="qle\instruments\overnightindexfuture.cpp" />
     <ClCompile Include="qle\instruments\payment.cpp" />
+    <ClCompile Include="qle\instruments\rebatedexercise.cpp" />
     <ClCompile Include="qle\instruments\subperiodsswap.cpp" />
     <ClCompile Include="qle\instruments\tenorbasisswap.cpp" />
+    <ClCompile Include="qle\instruments\cashsettledeuropeanoption.cpp" />
     <ClCompile Include="qle\math\deltagammavar.cpp" />
+    <ClCompile Include="qle\math\fillemptymatrix.cpp" />
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
     <ClCompile Include="qle\models\cdsoptionhelper.cpp" />
     <ClCompile Include="qle\models\cmscaphelper.cpp" />
@@ -792,12 +889,15 @@
     <ClCompile Include="qle\models\linkablecalibratedmodel.cpp" />
     <ClCompile Include="qle\models\parametrization.cpp" />
     <ClCompile Include="qle\models\piecewiseconstanthelper.cpp" />
+    <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticcclgmfxoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticdkcpicapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticlgmcdsoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticxassetlgmeqoptionengine.cpp" />
+    <ClCompile Include="qle\pricingengines\baroneadesiwhaleyengine.cpp" />
     <ClCompile Include="qle\pricingengines\blackcdsoptionengine.cpp" />
+    <ClCompile Include="qle\pricingengines\commodityapoengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpibacheliercapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpiblackcapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpicapfloorengines.cpp" />
@@ -806,9 +906,12 @@
     <ClCompile Include="qle\pricingengines\discountingcommodityforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingcurrencyswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingequityforwardengine.cpp" />
+    <ClCompile Include="qle\pricingengines\discountingforwardbondengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingfxforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp" />
+    <ClCompile Include="qle\pricingengines\inflationcapfloorengines.cpp" />
+    <ClCompile Include="qle\pricingengines\lgmconvolutionsolver.cpp" />
     <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp" />
     <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\oiccbasisswapengine.cpp" />
@@ -816,25 +919,35 @@
     <ClCompile Include="qle\processes\crossassetstateprocess.cpp" />
     <ClCompile Include="qle\processes\irlgm1fstateprocess.cpp" />
     <ClCompile Include="qle\quotes\logquote.cpp" />
+    <ClCompile Include="qle\termstructures\aposurface.cpp" />
     <ClCompile Include="qle\termstructures\averageoisratehelper.cpp" />
     <ClCompile Include="qle\termstructures\basistwoswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancecurve3.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacemoneyness.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacesparse.cpp" />
+    <ClCompile Include="qle\termstructures\blackvariancesurfacestddevs.cpp" />
+    <ClCompile Include="qle\termstructures\blackvolsurfacedelta.cpp" />
+    <ClCompile Include="qle\termstructures\equityblackvolsurfaceproxy.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />
     <ClCompile Include="qle\termstructures\brlcdiratehelper.cpp" />
+    <ClCompile Include="qle\termstructures\capfloorhelper.cpp" />
     <ClCompile Include="qle\termstructures\capfloortermvolsurface.cpp" />
+    <ClCompile Include="qle\termstructures\constantyoyinflationoptionletvolatility.cpp" />
     <ClCompile Include="qle\termstructures\correlationtermstructure.cpp" />
     <ClCompile Include="qle\termstructures\crossccybasismtmresetswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\crossccybasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\crossccyfixfloatswaphelper.cpp" />
+    <ClCompile Include="qle\termstructures\crosscurrencypricetermstructure.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionlet.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionletadapter.cpp" />
     <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp" />
     <ClCompile Include="qle\termstructures\discountratiomodifiedcurve.cpp" />
+    <ClCompile Include="qle\termstructures\dynamiccpivolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\dynamicoptionletvolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.cpp" />
+    <ClCompile Include="qle\termstructures\equityforwardcurvestripper.cpp" />
+    <ClCompile Include="qle\termstructures\equityoptionsurfacestripper.cpp" />
     <ClCompile Include="qle\termstructures\flatcorrelation.cpp" />
     <ClCompile Include="qle\termstructures\immfraratehelper.cpp" />
     <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp" />
@@ -846,6 +959,7 @@
     <ClCompile Include="qle\termstructures\optionletstripper.cpp" />
     <ClCompile Include="qle\termstructures\optionletstripper1.cpp" />
     <ClCompile Include="qle\termstructures\optionletstripper2.cpp" />
+    <ClCompile Include="qle\termstructures\overnightindexfutureratehelper.cpp" />
     <ClCompile Include="qle\termstructures\pricetermstructure.cpp" />
     <ClCompile Include="qle\termstructures\pricetermstructureadapter.cpp" />
     <ClCompile Include="qle\termstructures\spreadedoptionletvolatility.cpp" />
@@ -858,6 +972,7 @@
     <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp" />
     <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\yoyinflationoptionletvolstripper.cpp" />
+    <ClCompile Include="qle\time\actual364.cpp" />
     <ClCompile Include="qle\time\yearcounter.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -62,12 +62,13 @@ public:
         iborIndices_[make_pair(Market::defaultConfiguration, "USD-LIBOR-3M")] = hUSD;
 
         // build SP5 Equity Curve
-        hSP5 = Handle<EquityIndex>(
-            boost::shared_ptr<EquityIndex>(new EquityIndex("SP5", UnitedStates(), parseCurrency("USD"), spotSP5, forecastSP5, dividendSP5)));
+        hSP5 = Handle<EquityIndex>(boost::shared_ptr<EquityIndex>(
+            new EquityIndex("SP5", UnitedStates(), parseCurrency("USD"), spotSP5, forecastSP5, dividendSP5)));
         equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = hSP5;
 
         // add fixings
         hUSD->addFixing(Date(14, July, 2016), 0.035);
+        hUSD->addFixing(Date(18, October, 2016), 0.037);
     }
 
     Handle<IborIndex> hUSD;
@@ -106,22 +107,23 @@ struct CommonVars {
     vector<double> spread;
 
     // utilities
-    boost::shared_ptr<ore::data::Swap> makeEquitySwap(string returnType) {
+    boost::shared_ptr<ore::data::Swap> makeEquitySwap(string returnType, bool notionalReset = false) {
         ScheduleData floatSchedule(ScheduleRules(start, end, floattenor, calStr, conv, conv, rule));
         ScheduleData eqSchedule(ScheduleRules(start, end, eqtenor, calStr, conv, conv, rule));
 
         // build EquitySwap
         LegData floatLegData(boost::make_shared<FloatingLegData>(index, days, isinarrears, spread), !isPayer, ccy,
                              floatSchedule, fixDC, notionals);
-        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, dividendFactor, eqName, initialPrice, false, settlementDays),
+        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, dividendFactor, EquityUnderlying(eqName),
+                                                            initialPrice, notionalReset, settlementDays),
                           isPayer, ccy, eqSchedule, fixDC, notionals);
 
         Envelope env("CP1");
-        boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, floatLegData, eqLegData));
+        boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, eqLegData, floatLegData));
         return swap;
     }
 
-    boost::shared_ptr<QuantLib::Swap> qlEquitySwap(string returnType) {
+    boost::shared_ptr<QuantLib::Swap> qlEquitySwap(string returnType, bool notionalReset = false) {
 
         boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
         // check Equity swap NPV against pure QL pricing
@@ -143,7 +145,7 @@ struct CommonVars {
                         .withPaymentAdjustment(parseBusinessDayConvention(conv))
                         .withTotalReturn(returnType == "Total")
                         .withInitialPrice(initialPrice)
-                        .withNotionalReset(false);
+                        .withNotionalReset(notionalReset);
 
         boost::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(floatLeg, eqLeg));
         return swap;
@@ -244,6 +246,51 @@ BOOST_AUTO_TEST_CASE(testEquitySwapTotalReturn) {
     portfolio->build(engineFactory);
 
     boost::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap("Total");
+
+    auto dscEngine = boost::make_shared<DiscountingSwapEngine>(market->discountCurve("USD"));
+    qlSwap->setPricingEngine(dscEngine);
+    BOOST_TEST_MESSAGE("Leg 1 NPV: ORE = "
+                       << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(0)
+                       << " QL = " << qlSwap->legNPV(0));
+    BOOST_TEST_MESSAGE("Leg 2 NPV: ORE = "
+                       << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(1)
+                       << " QL = " << qlSwap->legNPV(1));
+    BOOST_CHECK_CLOSE(eqSwap->instrument()->NPV(), qlSwap->NPV(), 1E-8);
+}
+
+BOOST_AUTO_TEST_CASE(testEquitySwapNotionalReset) {
+
+    BOOST_TEST_MESSAGE("Testing Equity Swap Notional Reset...");
+
+    // build market
+    boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
+    Date today = market->asofDate();
+    // Move on 4 months so we during next period, check we can get a notional
+    Settings::instance().evaluationDate() = today + Period(4, Months);
+
+    CommonVars vars;
+    boost::shared_ptr<ore::data::Swap> eqSwap = vars.makeEquitySwap("Total", true);
+
+    // engine data and factory
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    engineData->model("Swap") = "DiscountedCashflows";
+    engineData->engine("Swap") = "DiscountingSwapEngine";
+    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    engineFactory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
+
+    // build swaps and portfolio
+    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    eqSwap->id() = "EQ_Swap";
+
+    portfolio->add(eqSwap);
+    portfolio->build(engineFactory);
+
+    boost::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap("Total", true);
+
+    BOOST_TEST_MESSAGE("Initial notional = " << eqSwap->notional());
+
+    // Add equity fixing after portfolio build, this allows us to test notional without fixing
+    market->equityCurve("SP5")->addFixing(Date(18, October, 2016), 2100);
 
     auto dscEngine = boost::make_shared<DiscountingSwapEngine>(market->discountCurve("USD"));
     qlSwap->setPricingEngine(dscEngine);

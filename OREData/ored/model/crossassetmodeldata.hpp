@@ -41,10 +41,10 @@
 namespace ore {
 namespace data {
 using namespace QuantLib;
-using std::string;
 using std::map;
-using std::vector;
 using std::pair;
+using std::string;
+using std::vector;
 
 //! Cross Asset Model Parameters
 /*! CrossAssetModelData comprises the specification of how to build and calibrate
@@ -67,7 +67,7 @@ public:
         //! Vector of FX model specifications
         const vector<boost::shared_ptr<FxBsData>>& fxConfigs,
         //! Correlation map, key is a pair of factors labeled as IR:EUR, IR:GBP, FX:GBPEUR, FX:USDEUR,
-        const map<pair<string, string>, Real>& c,
+        const map<pair<string, string>, Handle<Quote>>& c,
         //! Bootstrap tolerance used in model calibration
         Real tolerance = 1e-4)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(std::vector<boost::shared_ptr<EqBsData>>()),
@@ -86,7 +86,7 @@ public:
         //! Vector of EQ model specifications
         const std::vector<boost::shared_ptr<EqBsData>>& eqConfigs,
         //! Correlation map, key is a pair of factors labeled as IR:EUR, IR:GBP, FX:GBPEUR, EQ:Apple,
-        const std::map<std::pair<std::string, std::string>, Real>& c,
+        const std::map<std::pair<std::string, std::string>, Handle<Quote>>& c,
         //! Bootstrap tolerance used in model calibration
         Real tolerance = 1e-4)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs), correlations_(c),
@@ -107,7 +107,7 @@ public:
         //! Vector of INF model specifications
         const std::vector<boost::shared_ptr<InfDkData>>& infConfigs,
         //! Correlation map, key is a pair of factors labeled as IR:EUR, IR:GBP, FX:GBPEUR, EQ:Apple,
-        const std::map<std::pair<std::string, std::string>, Real>& c,
+        const std::map<std::pair<std::string, std::string>, Handle<Quote>>& c,
         //! Bootstrap tolerance used in model calibration
         Real tolerance = 1e-4)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs), infConfigs_(infConfigs),
@@ -136,7 +136,7 @@ public:
     const vector<boost::shared_ptr<FxBsData>>& fxConfigs() const { return fxConfigs_; }
     const vector<boost::shared_ptr<EqBsData>>& eqConfigs() const { return eqConfigs_; }
     const vector<boost::shared_ptr<InfDkData>>& infConfigs() const { return infConfigs_; }
-    const map<pair<string, string>, Real>& correlations() const { return correlations_; }
+    const map<pair<string, string>, Handle<Quote>>& correlations() const { return correlations_; }
     Real bootstrapTolerance() const { return bootstrapTolerance_; }
     //@}
 
@@ -150,7 +150,7 @@ public:
     vector<boost::shared_ptr<FxBsData>>& fxConfigs() { return fxConfigs_; }
     vector<boost::shared_ptr<EqBsData>>& eqConfigs() { return eqConfigs_; }
     vector<boost::shared_ptr<InfDkData>>& infConfigs() { return infConfigs_; }
-    map<pair<string, string>, Real>& correlations() { return correlations_; }
+    map<pair<string, string>, Handle<Quote>>& correlations() { return correlations_; }
     Real& bootstrapTolerance() { return bootstrapTolerance_; }
     //@}
 
@@ -178,6 +178,13 @@ private:
     //! helper to convert INF data, possibly including defaults, into an EQ config vector
     void buildInfConfigs(std::map<std::string, boost::shared_ptr<InfDkData>>& infMap);
 
+    //
+    struct HandleComp {
+        bool operator()(const Handle<Quote>& x, const Handle<Quote>& y) const {
+            return x.currentLink() == y.currentLink();
+        }
+    };
+
     string domesticCurrency_;
     vector<std::string> currencies_;
     vector<std::string> equities_;
@@ -186,7 +193,7 @@ private:
     vector<boost::shared_ptr<FxBsData>> fxConfigs_;
     vector<boost::shared_ptr<EqBsData>> eqConfigs_;
     vector<boost::shared_ptr<InfDkData>> infConfigs_;
-    map<pair<string, string>, Real> correlations_;
+    map<pair<string, string>, Handle<Quote>> correlations_;
     Real bootstrapTolerance_;
 };
 } // namespace data

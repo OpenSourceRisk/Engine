@@ -49,7 +49,8 @@ class AverageONIndexedCoupon : public FloatingRateCoupon {
 public:
     AverageONIndexedCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                            const boost::shared_ptr<OvernightIndex>& overnightIndex, Real gearing = 1.0,
-                           Spread spread = 0.0, Natural rateCutoff = 0, const DayCounter& dayCounter = DayCounter());
+                           Spread spread = 0.0, Natural rateCutoff = 0, const DayCounter& dayCounter = DayCounter(),
+                           const Period& lookback = 0 * Days, const Size fixingDays = Null<Size>());
     //! \name Inspectors
     //@{
     //! fixing dates for the rates to be averaged
@@ -62,6 +63,8 @@ public:
     const std::vector<Date>& valueDates() const { return valueDates_; }
     //! rate cutoff associated with the coupon
     Natural rateCutoff() const { return rateCutoff_; }
+    //! lookback period
+    const Period& lookback() const { return lookback_; }
     //@}
     //! \name FloatingRateCoupon interface
     //@{
@@ -78,6 +81,7 @@ private:
     Size numPeriods_;
     std::vector<Time> dt_;
     Natural rateCutoff_;
+    Period lookback_;
 };
 
 //! helper class building a sequence of overnight coupons
@@ -96,6 +100,9 @@ public:
     AverageONLeg& withSpreads(const std::vector<Spread>& spreads);
     AverageONLeg& withRateCutoff(Natural rateCutoff);
     AverageONLeg& withPaymentCalendar(const Calendar& calendar);
+    AverageONLeg& withPaymentLag(Natural lag);
+    AverageONLeg& withLookback(const Period& lookback);
+    AverageONLeg& withFixingDays(const Size fixingDays);
     AverageONLeg& withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
     operator Leg() const;
 
@@ -105,10 +112,13 @@ private:
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     BusinessDayConvention paymentAdjustment_;
+    Natural paymentLag_;
     std::vector<Real> gearings_;
     std::vector<Spread> spreads_;
     Calendar paymentCalendar_;
     Natural rateCutoff_;
+    Period lookback_;
+    Natural fixingDays_;
     boost::shared_ptr<AverageONIndexedCouponPricer> couponPricer_;
 };
 

@@ -33,15 +33,15 @@ namespace QuantExt {
 OptionletStripper1::OptionletStripper1(const shared_ptr<QuantExt::CapFloorTermVolSurface>& termVolSurface,
                                        const shared_ptr<IborIndex>& index, Rate switchStrike, Real accuracy,
                                        Natural maxIter, const Handle<YieldTermStructure>& discount,
-                                       const VolatilityType type, const Real displacement, bool dontThrow,
+                                       const VolatilityType type, const Real displacement,
                                        const optional<VolatilityType> targetVolatilityType,
-                                       const optional<Real> targetDisplacement, Real dontThrowMinVol)
+                                       const optional<Real> targetDisplacement)
     : OptionletStripper(termVolSurface, index, discount, targetVolatilityType ? *targetVolatilityType : type,
                         targetDisplacement ? *targetDisplacement : displacement),
       volQuotes_(nOptionletTenors_, std::vector<shared_ptr<SimpleQuote> >(nStrikes_)),
       floatingSwitchStrike_(switchStrike == Null<Rate>() ? true : false), capFlooMatrixNotInitialized_(true),
-      switchStrike_(switchStrike), accuracy_(accuracy), maxIter_(maxIter), dontThrow_(dontThrow),
-      dontThrowMinVol_(dontThrowMinVol), inputVolatilityType_(type), inputDisplacement_(displacement) {
+      switchStrike_(switchStrike), accuracy_(accuracy), maxIter_(maxIter), inputVolatilityType_(type),
+      inputDisplacement_(displacement) {
 
     capFloorPrices_ = Matrix(nOptionletTenors_, nStrikes_);
     optionletPrices_ = Matrix(nOptionletTenors_, nStrikes_);
@@ -58,22 +58,7 @@ OptionletStripper1::OptionletStripper1(const shared_ptr<QuantExt::CapFloorTermVo
 void OptionletStripper1::performCalculations() const {
 
     // update dates
-    const Date& referenceDate = termVolSurface_->referenceDate();
-    const DayCounter& dc = termVolSurface_->dayCounter();
-    shared_ptr<BlackCapFloorEngine> dummy(new BlackCapFloorEngine( // discounting does not matter here
-        iborIndex_->forwardingTermStructure(), 0.20, dc));
-    for (Size i = 0; i < nOptionletTenors_; ++i) {
-        CapFloor temp = MakeCapFloor(CapFloor::Cap, capFloorLengths_[i], iborIndex_,
-                                     0.04, // dummy strike
-                                     0 * Days)
-                            .withPricingEngine(dummy);
-        shared_ptr<FloatingRateCoupon> lFRC = temp.lastFloatingRateCoupon();
-        optionletDates_[i] = lFRC->fixingDate();
-        optionletPaymentDates_[i] = lFRC->date();
-        optionletAccrualPeriods_[i] = lFRC->accrualPeriod();
-        optionletTimes_[i] = dc.yearFraction(referenceDate, optionletDates_[i]);
-        atmOptionletRate_[i] = lFRC->indexFixing();
-    }
+    populateDates();
 
     if (floatingSwitchStrike_) {
         Rate averageAtmOptionletRate = 0.0;
@@ -87,6 +72,7 @@ void OptionletStripper1::performCalculations() const {
         discount_.empty() ? iborIndex_->forwardingTermStructure() : discount_;
 
     const std::vector<Rate>& strikes = termVolSurface_->strikes();
+    DayCounter dc = termVolSurface_->dayCounter();
     // initialize CapFloorMatrix
     if (capFlooMatrixNotInitialized_) {
         for (Size i = 0; i < nOptionletTenors_; ++i) {
@@ -112,11 +98,12 @@ void OptionletStripper1::performCalculations() const {
     }
 
     for (Size j = 0; j < nStrikes_; ++j) {
-        // using out-of-the-money options - but these are not always out of the money, for different tenors we may need to switch
+        // using out-of-the-money options - but these are not always out of the money, for different tenors we may need
+        // to switch
         CapFloor::Type capFloorType = strikes[j] < switchStrike_ ? CapFloor::Floor : CapFloor::Cap;
 
-        // we do this with the above to keep the variables capFloors_ etc consistant, but really its the optionletStdDevs_ below
-        // that we want.
+        // we do this with the above to keep the variables capFloors_ etc consistant, but really its the
+        // optionletStdDevs_ below that we want.
         Real previousCapFloorPrice = 0.0;
         for (Size i = 0; i < nOptionletTenors_; ++i) {
 
@@ -147,8 +134,8 @@ void OptionletStripper1::performCalculations() const {
     }
 }
 
-
-bool OptionletStripper1::stripOptionlets(std::vector<Real>& out, CapFloor::Type capFloorType, Size j, const Handle<YieldTermStructure>& discountCurve, Real firstGuess) const {
+bool OptionletStripper1::stripOptionlets(std::vector<Real>& out, CapFloor::Type capFloorType, Size j,
+                                         const Handle<YieldTermStructure>& discountCurve, Real firstGuess) const {
 
     Real strike = termVolSurface_->strikes()[j];
 
@@ -160,7 +147,7 @@ bool OptionletStripper1::stripOptionlets(std::vector<Real>& out, CapFloor::Type 
 
         // we have capFloorVols_[i][j] & volQuotes_[i][j]
         CapFloor capFloor = MakeCapFloor(capFloorType, capFloorLengths_[i], iborIndex_, strike, -0 * Days)
-                   .withPricingEngine(capFloorEngines_[i][j]);
+                                .withPricingEngine(capFloorEngines_[i][j]);
         Real capFloorPrice = capFloor.NPV();
         Real optionletPrice = std::max(0.0, capFloorPrice - previousCapFloorPrice);
         previousCapFloorPrice = capFloorPrice;
@@ -169,13 +156,12 @@ bool OptionletStripper1::stripOptionlets(std::vector<Real>& out, CapFloor::Type 
         DiscountFactor optionletAnnuity = optionletAccrualPeriods_[i] * d;
         try {
             if (volatilityType_ == ShiftedLognormal) {
-                out[i] = blackFormulaImpliedStdDev(
-                    optionletType, strike, atmOptionletRate_[i], optionletPrice, optionletAnnuity,
-                    displacement_, firstGuess, accuracy_, maxIter_);
+                out[i] = blackFormulaImpliedStdDev(optionletType, strike, atmOptionletRate_[i], optionletPrice,
+                                                   optionletAnnuity, displacement_, firstGuess, accuracy_, maxIter_);
             } else if (volatilityType_ == Normal) {
                 out[i] = std::sqrt(optionletTimes_[i]) *
-                    bachelierBlackFormulaImpliedVol(optionletType, strike, atmOptionletRate_[i],
-                        optionletTimes_[i], optionletPrice, optionletAnnuity);
+                         bachelierBlackFormulaImpliedVol(optionletType, strike, atmOptionletRate_[i],
+                                                         optionletTimes_[i], optionletPrice, optionletAnnuity);
             } else {
                 QL_FAIL("Unknown target volatility type: " << volatilityType_);
             }

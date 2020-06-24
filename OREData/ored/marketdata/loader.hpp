@@ -87,6 +87,11 @@ public:
         static std::vector<Fixing> noFixings;
         return noFixings;
     }
+
+private:
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) {}
 };
 } // namespace data
 } // namespace ore

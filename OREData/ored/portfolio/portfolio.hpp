@@ -102,16 +102,21 @@ public:
     //! Compute set of portfolios
     std::set<std::string> portfolioIds() const;
 
-    /*! Return the fixings that will be requested in order to price every Trade in this Portfolio given 
+    /*! Return the fixings that will be requested in order to price every Trade in this Portfolio given
         the \p settlementDate. The map key is the ORE name of the index and the map value is the set of fixing dates.
 
         \warning This method will return an empty map if the Portfolio has not been built.
     */
-    std::map<std::string, std::set<QuantLib::Date>> fixings(
-        const QuantLib::Date& settlementDate = QuantLib::Date()) const;
+    std::map<std::string, std::set<QuantLib::Date>>
+    fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const;
+
+    /*! Returns the names of the underlying instruments for each asset class */
+    std::map<AssetClass, std::set<std::string>> underlyingIndices();
+    std::set<std::string> underlyingIndices(AssetClass assetClass);
 
 private:
     std::vector<boost::shared_ptr<Trade>> trades_;
+    std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
 };
 } // namespace data
 } // namespace ore

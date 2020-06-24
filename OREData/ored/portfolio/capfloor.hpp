@@ -40,10 +40,6 @@ public:
         : Trade("CapFloor", env), longShort_(longShort), legData_(leg), caps_(caps), floors_(floors) {}
 
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
-    
-    //! Return the fixings that will be requested to price the CapFloor given the \p settlementDate.
-    std::map<std::string, std::set<QuantLib::Date>> fixings(
-        const QuantLib::Date& settlementDate = QuantLib::Date()) const override;
 
     //! Inspectors
     //@{
@@ -56,14 +52,16 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
 
+    //! \name Trade
+    //@{
+    bool hasCashflows() const override { return false; }
+    //@}
+
 private:
     string longShort_;
     LegData legData_;
     vector<double> caps_;
     vector<double> floors_;
-
-    //! Store the name of the underlying floating leg index
-    std::string underlyingIndex_;
 };
 } // namespace data
 } // namespace ore

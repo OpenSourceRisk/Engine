@@ -98,7 +98,7 @@ public:
     //! \name Yield volatilities
     //@{
     virtual Handle<SwaptionVolatilityStructure>
-        yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const = 0;
+    yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Foreign Exchange
@@ -147,20 +147,10 @@ public:
     virtual Handle<YoYInflationIndex>
     yoyInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const = 0;
 
-    //! Inflation Cap Floor Price Surfaces
-    virtual Handle<CPICapFloorTermPriceSurface>
-    cpiInflationCapFloorPriceSurface(const string& indexName,
-                                     const string& configuration = Market::defaultConfiguration) const = 0;
-
-    //! Inflation Cap Floor Volatility Surfaces
+    //! CPI Inflation Cap Floor Volatility Surfaces
     virtual Handle<CPIVolatilitySurface>
     cpiInflationCapFloorVolatilitySurface(const string& indexName,
                                           const string& configuration = Market::defaultConfiguration) const = 0;
-
-    //! Inflation Cap Floor Price Surfaces
-    virtual Handle<YoYCapFloorTermPriceSurface>
-    yoyInflationCapFloorPriceSurface(const string& indexName,
-                                     const string& configuration = Market::defaultConfiguration) const = 0;
 
     //! \name Equity curves
     //@{
@@ -194,10 +184,6 @@ public:
 
     //! \name Commodity price curves
     //@{
-    virtual QuantLib::Handle<QuantLib::Quote>
-    commoditySpot(const std::string& commodityName,
-                  const std::string& configuration = Market::defaultConfiguration) const = 0;
-
     virtual QuantLib::Handle<QuantExt::PriceTermStructure>
     commodityPriceCurve(const std::string& commodityName,
                         const std::string& configuration = Market::defaultConfiguration) const = 0;

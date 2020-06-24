@@ -142,8 +142,10 @@ public:
         for (Size i = 0; i < datesZCII.size(); i++) {
             Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100.0)));
             boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(
-                new ZeroCouponInflationSwapHelper(quote, Period(2, Months), datesZCII[i], UnitedKingdom(),
-                                                  ModifiedFollowing, ActualActual(), ii));
+                new ZeroCouponInflationSwapHelper(
+                    quote, Period(2, Months), datesZCII[i], UnitedKingdom(), ModifiedFollowing, ActualActual(), ii,
+                    yieldCurves_.at(make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP"))));
+            ;
             instruments.push_back(anInstrument);
         };
         // we can use historical or first ZCIIS for this
@@ -246,8 +248,9 @@ BOOST_AUTO_TEST_CASE(testCPISwapPrice) {
     string CPIlag = "2M";
     std::vector<double> fixedRate(1, 0.02);
     bool interpolated = false;
-    LegData legCPI(boost::make_shared<CPILegData>(indexCPI, baseCPI, CPIlag, interpolated, fixedRate), isPayerCPI,
-                   "GBP", scheduleCPI, dc, notional, vector<string>(), paymentConvention, false, true);
+    LegData legCPI(
+        boost::make_shared<CPILegData>(indexCPI, start, baseCPI, CPIlag, (interpolated ? "Linear" : "Flat"), fixedRate),
+        isPayerCPI, "GBP", scheduleCPI, dc, notional, vector<string>(), paymentConvention, false, true);
 
     // Build swap trades
     boost::shared_ptr<Trade> CPIswap(new ore::data::Swap(env, legLibor, legCPI));

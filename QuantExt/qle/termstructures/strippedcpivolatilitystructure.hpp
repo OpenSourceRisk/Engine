@@ -23,6 +23,7 @@
 #ifndef quantext_stripped_cpi_volatility_structure_hpp
 #define quantext_stripped_cpi_volatility_structure_hpp
 
+#include <iostream>
 #include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/math/solvers1d/brent.hpp>
 #include <ql/termstructures/volatility/inflation/constantcpivolatility.hpp>
@@ -81,6 +82,21 @@ private:
     QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const;
 
     bool chooseFloor(QuantLib::Real strike, QuantLib::Real atmRate) const;
+
+    // Same logic as in CPIVolatilitySurface::volatility(const Date& ....) to compute the relevant time
+    // that is used for calling voaltilityImpl resp. the interpolator. It would be better to move this up
+    // in the hierarchy to CPIVolatilitySurface as this is needed in both InterpolatedCPIVolatilitySurface
+    // and StrippedCPIVolatilitySurface.
+    QuantLib::Time inflationTime(const QuantLib::Date& date) const {
+        QuantLib::Real t;
+        if (indexIsInterpolated_)
+            t = timeFromReference(date - observationLag_);
+        else {
+            std::pair<QuantLib::Date, QuantLib::Date> dd = inflationPeriod(date - observationLag_, frequency_);
+            t = timeFromReference(dd.first);
+        }
+        return t;
+    }
 
     class ObjectiveFunction {
     public:
@@ -148,7 +164,7 @@ template <class Interpolator2D> void StrippedCPIVolatilitySurface<Interpolator2D
     QuantLib::Date startDate = QuantLib::Settings::instance().evaluationDate();
     for (QuantLib::Size i = 0; i < strikes_.size(); i++) {
         for (QuantLib::Size j = 0; j < maturities_.size(); j++) {
-            QuantLib::Date maturityDate = startDate + maturities_[j];
+            QuantLib::Date maturityDate = optionDateFromTenor(maturities_[j]);
             QuantLib::Real atmRate = index_->zeroInflationTermStructure()->zeroRate(maturityDate);
             bool useFloor = chooseFloor(strikes_[i], atmRate);
 
@@ -161,21 +177,18 @@ template <class Interpolator2D> void StrippedCPIVolatilitySurface<Interpolator2D
                 QuantLib::Real found = solver.solve(func, solverTolerance_, guess, lowerVolBound_, upperVolBound_);
                 volData_[i][j] = found;
             } catch (std::exception& e) {
-                QL_FAIL("failed to find implied vol for " << (useFloor ? "Floor" : "Cap") << " with strike "
-                                                          << strikes_[i] << " and maturity " << maturities_[j]
-                                                          << ", because: " << e.what());
+                QL_FAIL("failed to find implied vol for "
+                        << (useFloor ? "Floor" : "Cap") << " with strike " << strikes_[i] << " and maturity "
+                        << maturities_[j] << ", because: " << e.what() << " "
+                        << QuantLib::io::iso_date(startDate + maturities_[j]) << " " << maturityDate);
             }
         }
     }
 
     maturityTimes_.clear();
-    QuantLib::Date today = QuantLib::Settings::instance().evaluationDate();
-    QuantLib::Period obs(0, QuantLib::Days);
     for (QuantLib::Size i = 0; i < maturities_.size(); i++) {
-        QuantLib::Date d = today + maturities_[i];
-        maturityTimes_.push_back(timeFromReference(d));
-        // maturityTimes_.push_back(timeFromReference(priceSurface_->cpiOptionDateFromTenor(maturities_[i])));
-        // maturityTimes_.push_back(timeFromBase(d, obs));
+        QuantLib::Date d = optionDateFromTenor(maturities_[i]);
+        maturityTimes_.push_back(inflationTime(d));
     }
 
     vols_ = interpolator2d_.interpolate(maturityTimes_.begin(), maturityTimes_.end(), strikes_.begin(), strikes_.end(),
@@ -273,8 +286,8 @@ StrippedCPIVolatilitySurface<Interpolator2D>::ObjectiveFunction::ObjectiveFuncti
 }
 
 template <class Interpolator2D>
-QuantLib::Real StrippedCPIVolatilitySurface<Interpolator2D>::ObjectiveFunction::
-operator()(QuantLib::Volatility guess) const {
+QuantLib::Real
+StrippedCPIVolatilitySurface<Interpolator2D>::ObjectiveFunction::operator()(QuantLib::Volatility guess) const {
     boost::shared_ptr<QuantLib::ConstantCPIVolatility> vol = boost::make_shared<QuantLib::ConstantCPIVolatility>(
         guess, priceSurface_->settlementDays(), priceSurface_->calendar(), priceSurface_->businessDayConvention(),
         priceSurface_->dayCounter(), priceSurface_->observationLag(), priceSurface_->frequency(),

@@ -38,7 +38,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     boost::shared_ptr<QuantExt::CrossAssetModel> model,
     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator,
     boost::shared_ptr<ScenarioFactory> scenarioFactory, boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
-    Date today, boost::shared_ptr<ore::analytics::DateGrid> grid, boost::shared_ptr<ore::data::Market> initMarket,
+    Date today, boost::shared_ptr<DateGrid> grid, boost::shared_ptr<ore::data::Market> initMarket,
     const std::string& configuration)
     : ScenarioPathGenerator(today, grid->dates(), grid->timeGrid()), model_(model), pathGenerator_(pathGenerator),
       scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig), initMarket_(initMarket),
@@ -95,7 +95,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         LOG("CrossAssetModel is simulating FX vols");
         for (Size k = 0; k < simMarketConfig_->fxVolCcyPairs().size(); k++) {
             // Calculating the index is messy
-            const string& pair = simMarketConfig_->fxVolCcyPairs()[k];
+            const string pair = simMarketConfig_->fxVolCcyPairs()[k];
             LOG("Set up CrossAssetModelImpliedFxVolTermStructures for " << pair);
             QL_REQUIRE(pair.size() == 6, "Invalid ccypair " << pair);
             const string& domestic = pair.substr(0, 3);
@@ -115,7 +115,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     Size n_eq = model_->components(EQ);
     eqKeys_.reserve(n_eq);
     for (Size k = 0; k < n_eq; k++) {
-        const string& eqName = model_->eqbs(k)->eqName();
+        const string& eqName = model_->eqbs(k)->name();
         eqKeys_.emplace_back(RiskFactorKey::KeyType::EquitySpot, eqName);
     }
 
@@ -124,7 +124,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         LOG("CrossAssetModel is simulating EQ vols");
         for (Size k = 0; k < simMarketConfig_->equityVolNames().size(); k++) {
             // Calculating the index is messy
-            const string& equityName = simMarketConfig_->equityVolNames()[k];
+            const string equityName = simMarketConfig_->equityVolNames()[k];
             LOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName);
             Size eqIndex = model->eqIndex(equityName);
             // eqVols_ are indexed by ccyPairs
@@ -169,7 +169,6 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             }
         }
     }
-
 }
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
@@ -293,7 +292,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         if (simMarketConfig_->simulateFXVols()) {
             const vector<Period>& expires = simMarketConfig_->fxVolExpiries();
             for (Size k = 0; k < simMarketConfig_->fxVolCcyPairs().size(); k++) {
-                const string& ccyPair = simMarketConfig_->fxVolCcyPairs()[k];
+                const string ccyPair = simMarketConfig_->fxVolCcyPairs()[k];
 
                 Size fxIndex = fxVols_[k]->fxIndex();
                 Real zFor = sample.value[fxIndex + 1][i + 1];
@@ -317,7 +316,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         if (simMarketConfig_->simulateEquityVols()) {
             const vector<Period>& expiries = simMarketConfig_->equityVolExpiries();
             for (Size k = 0; k < simMarketConfig_->equityVolNames().size(); k++) {
-                const string& equityName = simMarketConfig_->equityVolNames()[k];
+                const string equityName = simMarketConfig_->equityVolNames()[k];
 
                 Size eqIndex = eqVols_[k]->equityIndex();
                 Size eqCcyIdx = eqVols_[k]->eqCcyIndex();
@@ -380,7 +379,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                 scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + l], yoyRates[d_yinf[l]]);
             }
         }
-        
+
         // TODO: Further risk factor classes are added here
     }
     return scenarios;

@@ -17,45 +17,56 @@
 */
 
 /*! \file portfolio/builders/fxoption.hpp
-    \brief
+    \brief Engine builder for FX Options
     \ingroup builders
 */
 
 #pragma once
 
-#include <boost/make_shared.hpp>
-#include <ored/portfolio/builders/cachingenginebuilder.hpp>
-#include <ored/portfolio/enginefactory.hpp>
-#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
-#include <ql/processes/blackscholesprocess.hpp>
+#include <ored/portfolio/builders/vanillaoption.hpp>
 
 namespace ore {
 namespace data {
 
-//! Engine Builder for European FX Options
+//! Engine Builder for European Fx Option Options
+/*! Pricing engines are cached by currency pair/currency
+
+    \ingroup builders
+ */
+class FxEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
+public:
+    FxEuropeanOptionEngineBuilder() : EuropeanOptionEngineBuilder("GarmanKohlhagen", {"FxOption"}, AssetClass::FX) {}
+};
+
+/*! Engine builder for European cash-settled FX options.
+    \ingroup builders
+ */
+class FxEuropeanCSOptionEngineBuilder : public EuropeanCSOptionEngineBuilder {
+public:
+    FxEuropeanCSOptionEngineBuilder()
+        : EuropeanCSOptionEngineBuilder("GarmanKohlhagen", {"FxOptionEuropeanCS"}, AssetClass::FX) {}
+};
+
+//! Engine Builder for American Fx Options using Finite Difference Method
 /*! Pricing engines are cached by currency pair
 
     \ingroup builders
  */
-class FxOptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
+class FxAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
 public:
-    FxOptionEngineBuilder() : CachingEngineBuilder("GarmanKohlhagen", "AnalyticEuropeanEngine", {"FxOption"}) {}
+    FxAmericanOptionFDEngineBuilder()
+        : AmericanOptionFDEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX, expiryDate_) {}
+};
 
-protected:
-    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
-        return forCcy.code() + domCcy.code();
-    }
+//! Engine Builder for American Fx Options using Barone Adesi Whaley Approximation
+/*! Pricing engines are cached by currency pair
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
-        string pair = keyImpl(forCcy, domCcy);
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
-            market_->fxSpot(pair, configuration(MarketContext::pricing)),
-            market_->discountCurve(forCcy.code(),
-                                   configuration(MarketContext::pricing)), // dividend yield ~ foreign yield
-            market_->discountCurve(domCcy.code(), configuration(MarketContext::pricing)),
-            market_->fxVol(pair, configuration(MarketContext::pricing)));
-        return boost::make_shared<AnalyticEuropeanEngine>(gbsp);
-    }
+    \ingroup builders
+ */
+class FxAmericanOptionBAWEngineBuilder : public AmericanOptionBAWEngineBuilder {
+public:
+    FxAmericanOptionBAWEngineBuilder()
+        : AmericanOptionBAWEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX) {}
 };
 
 } // namespace data

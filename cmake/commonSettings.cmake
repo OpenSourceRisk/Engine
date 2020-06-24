@@ -3,13 +3,14 @@ include(CheckCXXCompilerFlag)
 # add compiler flag, if not already present
 macro(add_compiler_flag flag supportsFlag)
   check_cxx_compiler_flag(${flag} ${supportsFlag})
-	if(${supportsFlag} AND NOT "${CMAKE_CXX_FLAGS}" MATCHES "${flag}")
-  	  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}")
-	endif()
+    if(${supportsFlag} AND NOT "${CMAKE_CXX_FLAGS}" MATCHES "${flag}")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}")
+    endif()
 endmacro()
 
-# use CXX 11
+# use CXX 11 and std::unique_ptr in QuantLib (instead of std::auto_ptr, which is deprecated in C++11)
 set(CMAKE_CXX_STANDARD 11)
+add_compiler_flag("-D QL_USE_STD_UNIQUE_PTR" supports_D_QL_USE_STD_UNIQUE_PTR)
 
 # On single-configuration builds, select a default build type that gives the same compilation flags as a default autotools build.
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -17,38 +18,42 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 if(MSVC)
-	# build static libs always
-	set(BUILD_STATIC_LIBS ON)
+    # build static libs always
+    set(BUILD_STATIC_LIBS ON)
 
-	# link against static boost libraries
-	set(Boost_USE_STATIC_LIBS ON)
+    # link against static boost libraries
+    set(Boost_USE_STATIC_LIBS ON)
 
-	add_compiler_flag("-D_SCL_SECURE_NO_DEPRECATE" supports_D_SCL_SECURE_NO_DEPRECATE)
-	add_compiler_flag("-D_CRT_SECURE_NO_DEPRECATE" supports_D_CRT_SECURE_NO_DEPRECATE)
-	add_compiler_flag("/bigobj" supports_bigobj)
-	add_compiler_flag("/W3" supports_w3)
+    add_compiler_flag("-D_SCL_SECURE_NO_DEPRECATE" supports_D_SCL_SECURE_NO_DEPRECATE)
+    add_compiler_flag("-D_CRT_SECURE_NO_DEPRECATE" supports_D_CRT_SECURE_NO_DEPRECATE)
+    add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)
+    add_compiler_flag("/bigobj" supports_bigobj)
+    add_compiler_flag("/W3" supports_w3)
 
 else()
-	# build shared libs always
-	set(BUILD_SHARED_LIBS ON)
+    # build shared libs always
+    set(BUILD_SHARED_LIBS ON)
 
-	# link against dynamic boost libraries
-	add_definitions(-DBOOST_ALL_DYN_LINK)
-	add_definitions(-DBOOST_TEST_DYN_LINK)
+    # link against dynamic boost libraries
+    add_definitions(-DBOOST_ALL_DYN_LINK)
+    add_definitions(-DBOOST_TEST_DYN_LINK)
 
-	# switch off blas debug for build types release
-	if(NOT("${CMAKE_BUILD_TYPE}" STREQUAL "Debug"))
-  	  add_definitions(-DBOOST_UBLAS_NDEBUG)
-	endif()
+    # avoid a crash in valgrind that sometimes occurs if this flag is not defined
+    add_definitions(-DBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS)
 
-	# customize compiler warnings
-	add_compiler_flag("-Wall" supportsWall)
-    # deactivate temporarily since ql 1.14 throws this in calibrationhelper.hpp
-	# add_compiler_flag("-Wnon-virtual-dtor" supportsNonVirtualDtor)
-	add_compiler_flag("-Wno-expansion-to-defined" supportsNoExpansionToDefined)
-	add_compiler_flag("-Wsign-compare" supportsSignCompare)
-	add_compiler_flag("-Wsometimes-uninitialized" supportsSometimesUninitialized)
-	add_compiler_flag("-Wmaybe-uninitialized" supportsMaybeUninitialized)
+    # switch off blas debug for build types release
+    if(NOT("${CMAKE_BUILD_TYPE}" STREQUAL "Debug"))
+      add_definitions(-DBOOST_UBLAS_NDEBUG)
+    endif()
+
+    # customize compiler warnings
+    add_compiler_flag("-Wall" supportsWall)
+    add_compiler_flag("-Wnon-virtual-dtor" supportsNonVirtualDtor)
+    add_compiler_flag("-Wsign-compare" supportsSignCompare)
+    add_compiler_flag("-Wsometimes-uninitialized" supportsSometimesUninitialized)
+    add_compiler_flag("-Wmaybe-uninitialized" supportsMaybeUninitialized)
+    add_compiler_flag("-Wno-unknown-pragmas" supportsNoUnknownPragmas)
+    add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)
 endif()
 
 # set library locations
@@ -58,6 +63,20 @@ get_filename_component(OREDATA_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREData"
 get_filename_component(OREANALYTICS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREAnalytics" ABSOLUTE)
 get_filename_component(ORETEST_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ORETest" ABSOLUTE)
 get_filename_component(RAPIDXML_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ThirdPartyLibs/rapidxml-1.13" ABSOLUTE)
+
+get_filename_component(QUANTEXTPLUS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../QuantExtPlus" ABSOLUTE)
+get_filename_component(OREDATAPLUS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREDataPlus" ABSOLUTE)
+get_filename_component(OREANALYTICSPLUS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREAnalyticsPlus" ABSOLUTE)
+get_filename_component(OPENSSL_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/openssl" ABSOLUTE)
+get_filename_component(OREPLUSLICENSE_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/License" ABSOLUTE)
+get_filename_component(OREPLUSAMC_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/AMC" ABSOLUTE)
+get_filename_component(OREPLUSBASE_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/Base" ABSOLUTE)
+get_filename_component(OREPLUSCREDIT_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/Credit" ABSOLUTE)
+get_filename_component(OREPLUSSENSITIVITY_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/Sensitivity" ABSOLUTE)
+get_filename_component(OREPLUSFORMULABASEDCOUPON_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/FormulaBasedCoupon" ABSOLUTE)
+get_filename_component(OREPLUSSCRIPTEDTRADE_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/ScriptedTrade" ABSOLUTE)
+option(OREPLUS_LICENSE "Enable ORE+ Licensing" OFF)
+
 
 # convenience function that adds a link directory dir, but only if it exists
 function(add_link_directory_if_exists dir)
@@ -74,25 +93,6 @@ macro(get_library_name LIB_NAME OUTPUT_NAME)
 
     # MSVC: Give built library different names following code in 'ql/autolink.hpp'
     if(MSVC)
-
-        # - toolset
-        # ...taken from FindBoost.cmake
-        if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.10)
-            set(LIB_TOOLSET "-vc141")
-        elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19)
-            set(LIB_TOOLSET "-vc140")
-        elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 18)
-            set(LIB_TOOLSET "-vc120")
-        elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17)
-            set(LIB_TOOLSET "-vc110")
-        elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16)
-            set(LIB_TOOLSET "-vc100")
-        elseif(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15)
-            set(LIB_TOOLSET "-vc90")
-        else()
-            message(FATAL_ERROR "Compiler below vc90 is not supported")
-        endif()
-        #message(STATUS " - Toolset: ${LIB_TOOLSET}")
 
         # - platform
         if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
@@ -113,7 +113,7 @@ macro(get_library_name LIB_NAME OUTPUT_NAME)
         endif()
         #message(STATUS " - Linkage opt: ${LIB_RT_OPT}")
 
-        set(${OUTPUT_NAME} "${LIB_NAME}${LIB_TOOLSET}${LIB_PLATFORM}${LIB_THREAD_OPT}${LIB_RT_OPT}")
+        set(${OUTPUT_NAME} "${LIB_NAME}${LIB_PLATFORM}${LIB_THREAD_OPT}${LIB_RT_OPT}")
     else()
         set(${OUTPUT_NAME} ${LIB_NAME})
     endif()

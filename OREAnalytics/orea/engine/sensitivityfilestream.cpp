@@ -27,9 +27,9 @@
 using ore::analytics::deconstructFactor;
 using ore::data::parseBool;
 using ore::data::parseReal;
+using std::getline;
 using std::string;
 using std::vector;
-using std::getline;
 
 namespace ore {
 namespace analytics {
@@ -71,7 +71,8 @@ SensitivityRecord SensitivityFileStream::next() {
         // Try to parse line in to a SensitivityRecord
         DLOG("Processing line number " << lineNo_ << ": " << line);
         vector<string> entries;
-        boost::split(entries, line, [this](char c) { return c == delim_; }, boost::token_compress_off);
+        boost::split(
+            entries, line, [this](char c) { return c == delim_; }, boost::token_compress_off);
         return processRecord(entries);
     }
 
@@ -107,7 +108,7 @@ SensitivityRecord SensitivityFileStream::processRecord(const vector<string>& ent
     sr.currency = entries[6];
     sr.baseNpv = parseReal(entries[7]);
     sr.delta = parseReal(entries[8]);
-    sr.gamma = parseReal(entries[9]);
+    tryParseReal(entries[9], sr.gamma); // might be #N/A, if not computed
 
     return sr;
 }

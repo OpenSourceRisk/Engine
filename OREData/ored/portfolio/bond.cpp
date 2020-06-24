@@ -20,6 +20,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
@@ -37,150 +38,176 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-namespace {
-Leg joinLegs(const std::vector<Leg>& legs) {
-    Leg masterLeg;
-    for (Size i = 0; i < legs.size(); ++i) {
-        // check if the periods of adjacent legs are consistent
-        if (i > 0) {
-            auto lcpn = boost::dynamic_pointer_cast<Coupon>(legs[i - 1].back());
-            auto fcpn = boost::dynamic_pointer_cast<Coupon>(legs[i].front());
-            QL_REQUIRE(lcpn, "joinLegs: expected coupon as last cashflow in leg #" << (i - 1));
-            QL_REQUIRE(fcpn, "joinLegs: expected coupon as first cashflow in leg #" << i);
-            QL_REQUIRE(lcpn->accrualEndDate() == fcpn->accrualStartDate(),
-                       "joinLegs: accrual end date of last coupon in leg #"
-                           << (i - 1) << " (" << lcpn->accrualEndDate()
-                           << ") is not equal to accrual start date of first coupon in leg #" << i << " ("
-                           << fcpn->accrualStartDate() << ")");
-        }
-        // copy legs together
-        masterLeg.insert(masterLeg.end(), legs[i].begin(), legs[i].end());
+void BondData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "BondData");
+    QL_REQUIRE(node, "No BondData Node");
+    issuerId_ = XMLUtils::getChildValue(node, "IssuerId", false);
+    creditCurveId_ = XMLUtils::getChildValue(node, "CreditCurveId", false);
+    securityId_ = XMLUtils::getChildValue(node, "SecurityId", true);
+    referenceCurveId_ = XMLUtils::getChildValue(node, "ReferenceCurveId", false);
+    proxySecurityId_ = XMLUtils::getChildValue(node, "ProxySecurityId", false);
+    incomeCurveId_ = XMLUtils::getChildValue(node, "IncomeCurveId", false);
+    volatilityCurveId_ = XMLUtils::getChildValue(node, "VolatilityCurveId", false);
+    settlementDays_ = XMLUtils::getChildValue(node, "SettlementDays", false);
+    calendar_ = XMLUtils::getChildValue(node, "Calendar", false);
+    issueDate_ = XMLUtils::getChildValue(node, "IssueDate", false);
+    if (auto n = XMLUtils::getChildNode(node, "BondNotional")) {
+        bondNotional_ = parseReal(XMLUtils::getNodeValue(n));
+    } else {
+        bondNotional_ = 1.0;
     }
-    return masterLeg;
+    XMLNode* legNode = XMLUtils::getChildNode(node, "LegData");
+    while (legNode != nullptr) {
+        LegData ld;
+        ld.fromXML(legNode);
+        coupons_.push_back(ld);
+        legNode = XMLUtils::getNextSibling(legNode, "LegData");
+    }
+    initialise();
 }
-} // namespace
+
+XMLNode* BondData::toXML(XMLDocument& doc) {
+    XMLNode* bondNode = doc.allocNode("BondData");
+    XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
+    XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
+    XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
+    XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
+    if (!proxySecurityId_.empty())
+        XMLUtils::addChild(doc, bondNode, "ProxySecurityId", proxySecurityId_);
+    if (!incomeCurveId_.empty())
+        XMLUtils::addChild(doc, bondNode, "IncomeCurveId", incomeCurveId_);
+    if (!volatilityCurveId_.empty())
+        XMLUtils::addChild(doc, bondNode, "VolatilityCurveId", volatilityCurveId_);
+    XMLUtils::addChild(doc, bondNode, "SettlementDays", settlementDays_);
+    XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
+    XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
+    XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
+    for (auto& c : coupons_)
+        XMLUtils::appendNode(bondNode, c.toXML(doc));
+    return bondNode;
+}
+
+void BondData::initialise() {
+
+    isPayer_ = false;
+
+    if (!zeroBond()) {
+
+        // fill currency, if not directly given (which is only the case for zero bonds)
+
+        for (Size i = 0; i < coupons().size(); ++i) {
+            if (i == 0)
+                currency_ = coupons()[i].currency();
+            else {
+                QL_REQUIRE(currency_ == coupons()[i].currency(),
+                           "leg #" << i << " currency (" << coupons()[i].currency()
+                                   << ") not equal to leg #0 currency (" << coupons()[0].currency());
+            }
+        }
+
+        // fill isPayer, FIXME zero bonds are always long
+
+        for (Size i = 0; i < coupons().size(); ++i) {
+            if (i == 0)
+                isPayer_ = coupons()[i].isPayer();
+            else {
+                QL_REQUIRE(isPayer_ == coupons()[i].isPayer(),
+                           "leg #" << i << " isPayer (" << std::boolalpha << coupons()[i].isPayer()
+                                   << ") not equal to leg #0 isPayer (" << coupons()[0].isPayer());
+            }
+        }
+    }
+}
+
+void BondData::populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum) {
+    DLOG("Got BondReferenceDatum for name " << securityId_ << " overwrite empty elements in trade");
+    ore::data::populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, creditCurveId_,
+                                             referenceCurveId_, proxySecurityId_, incomeCurveId_, volatilityCurveId_,
+                                             coupons_, securityId_, referenceDatum);
+    // initialise data
+
+    initialise();
+
+    // plausibility checks to check whether the reference data was set up at all
+
+    QL_REQUIRE(!settlementDays_.empty(),
+               "settlement days not given, check bond reference data for '" << securityId_ << "'");
+
+    QL_REQUIRE(!currency_.empty(), "currency not given, check bond reference data for '" << securityId_ << "'");
+}
+
+void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData) {
+
+    QL_REQUIRE(!securityId_.empty(), "BondData::populateFromBondReferenceData(): no security id given");
+    if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, securityId_)) {
+        DLOG("could not get BondReferenceDatum for name " << securityId_ << " leave data in trade unchanged");
+    } else {
+        auto bondRefData = boost::dynamic_pointer_cast<BondReferenceDatum>(
+            referenceData->getData(BondReferenceDatum::TYPE, securityId_));
+        QL_REQUIRE(bondRefData, "could not cast to BondReferenceDatum, this is unexpected");
+        populateFromBondReferenceData(bondRefData);
+    }
+}
 
 void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Bond::build() called for trade " << id());
 
-    // Clear the separateLegs_ member here. Should be done in reset() but it is not virtual
-    separateLegs_.clear();
-
     const boost::shared_ptr<Market> market = engineFactory->market();
-
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
+    bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
-    Date issueDate = parseDate(issueDate_);
-    Calendar calendar = parseCalendar(calendar_);
-    Natural settlementDays = boost::lexical_cast<Natural>(settlementDays_);
+    Date issueDate = parseDate(bondData_.issueDate());
+    Calendar calendar = parseCalendar(bondData_.calendar());
+    QL_REQUIRE(!bondData_.settlementDays().empty(), "no bond settlement days given");
+    Natural settlementDays = parseInteger(bondData_.settlementDays());
     boost::shared_ptr<QuantLib::Bond> bond;
 
-    // FIXME: zero bonds are always long (firstLegIsPayer = false, mult = 1.0)
-    bool firstLegIsPayer = (coupons_.size() == 0) ? false : coupons_[0].isPayer();
-    Real mult = firstLegIsPayer ? -1.0 : 1.0;
-    if (zeroBond_) { // Zero coupon bond
-        bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, parseDate(maturityDate_)));
+    Real mult = bondData_.bondNotional() * (bondData_.isPayer() ? -1.0 : 1.0);
+    std::vector<Leg> separateLegs;
+    if (bondData_.zeroBond()) { // Zero coupon bond
+        bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, bondData_.faceAmount(),
+                                                parseDate(bondData_.maturityDate())));
     } else { // Coupon bond
-        for (Size i = 0; i < coupons_.size(); ++i) {
-            bool legIsPayer = coupons_[i].isPayer();
-            QL_REQUIRE(legIsPayer == firstLegIsPayer, "Bond legs must all have same pay/receive flag");
-            if (i == 0)
-                currency_ = coupons_[i].currency();
-            else {
-                QL_REQUIRE(currency_ == coupons_[i].currency(), "leg #" << i << " currency (" << coupons_[i].currency()
-                                                                        << ") not equal to leg #0 currency ("
-                                                                        << coupons_[0].currency());
-            }
+        for (Size i = 0; i < bondData_.coupons().size(); ++i) {
             Leg leg;
             auto configuration = builder->configuration(MarketContext::pricing);
-            auto legBuilder = engineFactory->legBuilder(coupons_[i].legType());
-            leg = legBuilder->buildLeg(coupons_[i], engineFactory, configuration);
-            separateLegs_.push_back(leg);
-            
-            // Initialise the set of [index name, leg] index pairs
-            for (const auto& index : coupons_[i].indices()) {
-                nameIndexPairs_.insert(make_pair(index, separateLegs_.size() - 1));
-            }
-
+            auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
+            leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration);
+            separateLegs.push_back(leg);
         } // for coupons_
-        Leg leg = joinLegs(separateLegs_);
+        Leg leg = joinLegs(separateLegs);
         bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
         // workaround, QL doesn't register a bond with its leg's cashflows
         for (auto const& c : leg)
             bond->registerWith(c);
     }
 
-    Currency currency = parseCurrency(currency_);
+    Currency currency = parseCurrency(bondData_.currency());
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
-    bond->setPricingEngine(bondBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_));
+    bond->setPricingEngine(
+        bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.securityId(), bondData_.referenceCurveId()));
     instrument_.reset(new VanillaInstrument(bond, mult));
 
-    npvCurrency_ = currency_;
+    npvCurrency_ = bondData_.currency();
     maturity_ = bond->cashflows().back()->date();
     notional_ = currentNotional(bond->cashflows());
+    notionalCurrency_ = bondData_.currency();
 
     // Add legs (only 1)
     legs_ = {bond->cashflows()};
     legCurrencies_ = {npvCurrency_};
-    legPayers_ = {firstLegIsPayer};
-}
-
-map<string, set<Date>> Bond::fixings(const Date& settlementDate) const {
-
-    map<string, set<Date>> result;
-
-    for (const auto& nameIndexPair : nameIndexPairs_) {
-        // For clarity
-        string indexName = nameIndexPair.first;
-        Size legNumber = nameIndexPair.second;
-
-        // Get the set of fixing dates for the  [index name, leg index] pair
-        set<Date> dates = fixingDates(separateLegs_[legNumber], settlementDate);
-
-        // Update the results with the fixing dates.
-        if (!dates.empty()) result[indexName].insert(dates.begin(), dates.end());
-    }
-
-    return result;
+    legPayers_ = {bondData_.isPayer()};
 }
 
 void Bond::fromXML(XMLNode* node) {
     Trade::fromXML(node);
-    XMLNode* bondNode = XMLUtils::getChildNode(node, "BondData");
-    QL_REQUIRE(bondNode, "No BondData Node");
-    issuerId_ = XMLUtils::getChildValue(bondNode, "IssuerId", true);
-    creditCurveId_ =
-        XMLUtils::getChildValue(bondNode, "CreditCurveId", false); // issuer credit term structure not mandatory
-    securityId_ = XMLUtils::getChildValue(bondNode, "SecurityId", true);
-    referenceCurveId_ = XMLUtils::getChildValue(bondNode, "ReferenceCurveId", true);
-    settlementDays_ = XMLUtils::getChildValue(bondNode, "SettlementDays", true);
-    calendar_ = XMLUtils::getChildValue(bondNode, "Calendar", true);
-    issueDate_ = XMLUtils::getChildValue(bondNode, "IssueDate", true);
-    XMLNode* legNode = XMLUtils::getChildNode(bondNode, "LegData");
-    while (legNode != nullptr) {
-        auto ld = createLegData();
-        ld->fromXML(legNode);
-        coupons_.push_back(*boost::static_pointer_cast<LegData>(ld));
-        legNode = XMLUtils::getNextSibling(legNode, "LegData");
-    }
+    bondData_.fromXML(XMLUtils::getChildNode(node, "BondData"));
 }
-
-boost::shared_ptr<LegData> Bond::createLegData() const { return boost::make_shared<LegData>(); }
 
 XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
-    XMLNode* bondNode = doc.allocNode("BondData");
-    XMLUtils::appendNode(node, bondNode);
-    XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
-    XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
-    XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
-    XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
-    XMLUtils::addChild(doc, bondNode, "SettlementDays", settlementDays_);
-    XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
-    XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
-    for (auto& c : coupons_)
-        XMLUtils::appendNode(bondNode, c.toXML(doc));
+    XMLUtils::appendNode(node, bondData_.toXML(doc));
     return node;
 }
 } // namespace data

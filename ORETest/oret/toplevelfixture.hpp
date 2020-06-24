@@ -22,15 +22,15 @@
 
 #pragma once
 
-#include <ql/indexes/indexmanager.hpp>
-#include <ql/settings.hpp>
-#include <ql/patterns/observable.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/test/unit_test.hpp>
+#include <ql/indexes/indexmanager.hpp>
+#include <ql/patterns/observable.hpp>
+#include <ql/settings.hpp>
 
 using QuantLib::IndexManager;
-using QuantLib::SavedSettings;
 using QuantLib::ObservableSettings;
+using QuantLib::SavedSettings;
 
 namespace ore {
 namespace test {
@@ -64,5 +64,5 @@ public:
         IndexManager::instance().clearHistories();
     }
 };
-}
-}
+} // namespace test
+} // namespace ore
