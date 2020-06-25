@@ -798,7 +798,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Calendar cal = ore::data::parseCalendar(parameters->defaultCurveCalendar(name));
                         // FIXME riskmarket uses SurvivalProbabilityCurve but this isn't added to ore
                         boost::shared_ptr<DefaultProbabilityTermStructure> defaultCurve(
-                            new QuantExt::SurvivalProbabilityCurve<Linear>(dates, quotes, dc, cal));
+                            new QuantExt::SurvivalProbabilityCurve<LogLinear>(dates, quotes, dc, cal));
                         Handle<DefaultProbabilityTermStructure> dch(defaultCurve);
 
                         dch->enableExtrapolation();

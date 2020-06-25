@@ -52,7 +52,8 @@ private:
     };
 
 public:
-    LargeJointCalendar(const std::vector<QuantLib::Calendar>&, QuantLib::JointCalendarRule = QuantLib::JoinHolidays);
+    explicit LargeJointCalendar(const std::vector<QuantLib::Calendar>&,
+                                QuantLib::JointCalendarRule = QuantLib::JoinHolidays);
 };
 
 } // namespace QuantExt
