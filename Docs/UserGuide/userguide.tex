@@ -4180,6 +4180,7 @@ A sample {\tt calendaradjustment.xml} file can be found in the Global example in
 
 If the parameter `BaseCalendar' is provided then a new calendar will be created using the specified calendar as a base, and adding any `AdditionalHolidays' or `AdditionalBusinessDays'. In the example below a new calendar `Japan\_amended' is being created, it will include any additional holidays/business days specified in the original `Japan' calendar plus one additional date.
 
+ If a new calendar is added in this way and the schema is being used to validate XML input, the corresponding calendar name must be added to the `calendar' type in the file ore_types.xsd.
 \begin{longlisting}
 %\hrule\medskip
   \begin{minted}[fontsize=\scriptsize]{xml}
