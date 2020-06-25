@@ -57,7 +57,7 @@ using namespace QuantLib;
            const DayCounter& dc,
            const Period &lag,
            const ext::shared_ptr<YoYCapFloorTermPriceSurface> &capFloorPrices,
-           const ext::shared_ptr<YoYInflationCapFloorEngine> &pricer,
+           const ext::shared_ptr<QuantLib::YoYInflationCapFloorEngine> &pricer,
            const ext::shared_ptr<YoYOptionletStripper> &yoyOptionletStripper,
            const Real slope,
            const Interpolator1D &interpolator = Interpolator1D());
@@ -76,7 +76,7 @@ using namespace QuantLib;
         virtual void performCalculations() const;
 
         ext::shared_ptr<YoYCapFloorTermPriceSurface> capFloorPrices_;
-        ext::shared_ptr<YoYInflationCapFloorEngine> yoyInflationCouponPricer_;
+        ext::shared_ptr<QuantLib::YoYInflationCapFloorEngine> yoyInflationCouponPricer_;
         ext::shared_ptr<YoYOptionletStripper> yoyOptionletStripper_;
 
         mutable Interpolator1D factory1D_;
@@ -101,7 +101,7 @@ using namespace QuantLib;
          const DayCounter& dc,
          const Period &lag,
          const ext::shared_ptr<YoYCapFloorTermPriceSurface> &capFloorPrices,
-         const ext::shared_ptr<YoYInflationCapFloorEngine> &pricer,
+         const ext::shared_ptr<QuantLib::YoYInflationCapFloorEngine> &pricer,
          const ext::shared_ptr<YoYOptionletStripper> &yoyOptionletStripper,
          const Real slope,
          const Interpolator1D &interpolator)
