@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file crossccybasisswaphelper.hpp
-    \brief Cross currency basis swap helper
+/*! \file crossccybasismtmresetswaphelper.hpp
+    \brief Cross currency basis swap helper with MTM reset
     \ingroup termstructures
 */
 

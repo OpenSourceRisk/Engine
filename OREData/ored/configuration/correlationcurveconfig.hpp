@@ -128,5 +128,15 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t);
+
+// Correlation pairs ordering, by convention we use pairs Index1:Index2 with
+// Index2 < Index1, where the ordering on index names is defined via
+// 1) CMS > Ibor > FX > EQ > COM
+// 2) Tenor
+// 3) currency / name (alphabetical)
+// Eg. EUR-CMS-10Y:GBP-LIBOR-6M, GBP-LIBOR-6M:FX-ECB-EUR-USD,
+// EUR-CMS-10Y:EUR-CMS-2Y, GBP-CMS-10Y:EUR-CMS-2Y
+bool indexNameLessThan(const std::string& index1, const std::string& index2);
+
 } // namespace data
 } // namespace ore

@@ -48,4 +48,12 @@ MADCurrency::MADCurrency() {
         new Data("Moroccan dirham", "MAD", 504, "MAD", "", 100, Rounding(), "1$.2f %3%"));
     data_ = madData;
 }
+
+// Kenyan shilling
+KESCurrency::KESCurrency() {
+    static boost::shared_ptr<Data> kesData(
+        new Data("Kenyan shilling", "KES", 404, "KES", "", 100, Rounding(), "1$.2f %3%"));
+    data_ = kesData;
+}
+
 } // namespace QuantExt

@@ -21,17 +21,19 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
+
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/experimental/coupons/cmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/digitalcmsspreadcoupon.hpp>
-#include <qle/cashflows/averageonindexedcoupon.hpp>
-#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
-#include <qle/cashflows/fxlinkedcashflow.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -103,7 +105,7 @@ void FixingManager::processCashFlows(const boost::shared_ptr<QuantLib::CashFlow>
         }
 
         // A2 indices with native fixings, but no only on the standard fixing date
-        auto on = boost::dynamic_pointer_cast<OvernightIndexedCoupon>(frc);
+        auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(frc);
         if (on) {
             for (auto const& d : on->fixingDates())
                 fixingMap_[on->index()].insert(d);
@@ -227,6 +229,11 @@ void FixingManager::applyFixings(Date start, Date end) {
 
         if (needFixings) {
             Rate currentFixing = m.first->fixing(currentFixingDate);
+            // if we read the fixing from an inverted FxIndex we have to undo the inversion
+            if (auto f = boost::dynamic_pointer_cast<FxIndex>(m.first)) {
+                if (f->inverseIndex())
+                    currentFixing = 1.0 / currentFixing;
+            }
             TimeSeries<Real> history;
             for (auto const& d : fixingDates) {
                 if (d >= fixStart && d < fixEnd) {

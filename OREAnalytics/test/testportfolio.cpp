@@ -214,7 +214,8 @@ boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string p
     OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash", "", premium,
                       premiumCcy, premiumDate);
     // trade
-    boost::shared_ptr<Trade> trade(new ore::data::EquityOption(env, option, equityName, currency, strike, quantity));
+    boost::shared_ptr<Trade> trade(
+        new ore::data::EquityOption(env, option, EquityUnderlying(equityName), currency, strike, quantity));
     trade->id() = id;
 
     return trade;
@@ -231,8 +232,8 @@ boost::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size ex
     // envelope
     Envelope env("CP");
     // trade
-    boost::shared_ptr<Trade> trade(
-        new ore::data::EquityForward(env, longShort, equityName, currency, quantity, expiryDate, strike));
+    boost::shared_ptr<Trade> trade(new ore::data::EquityForward(env, longShort, EquityUnderlying(equityName), currency,
+                                                                quantity, expiryDate, strike));
     trade->id() = id;
 
     return trade;
@@ -297,9 +298,9 @@ boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Siz
     string referenceCurveId = "BondCurve1";
     // envelope
     Envelope env("CP");
-    boost::shared_ptr<Trade> trade(new ore::data::Bond(env, issuerId, creditCurveId, securityId, referenceCurveId,
-                                                       settlementDays, calendar, notional, maturityDate, ccy,
-                                                       issueDate));
+    boost::shared_ptr<Trade> trade(
+        new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settlementDays,
+                                          calendar, notional, maturityDate, ccy, issueDate)));
     trade->id() = id;
 
     return trade;
@@ -335,8 +336,9 @@ boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPay
     LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, floatSchedule,
                         floatDC, notionals);
     // fixed leg
-    LegData cpiLeg(boost::make_shared<CPILegData>(cpiIndex, baseRate, observationLag, interpolated, cpiRates), isPayer,
-                   ccy, cpiSchedule, cpiDC, notionals, vector<string>(), "F", false, true);
+    LegData cpiLeg(boost::make_shared<CPILegData>(cpiIndex, startDate, baseRate, observationLag,
+                                                  (interpolated ? "Linear" : "Flat"), cpiRates),
+                   isPayer, ccy, cpiSchedule, cpiDC, notionals, vector<string>(), "F", false, true);
 
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, cpiLeg));
@@ -347,7 +349,8 @@ boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPay
 
 boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
                                               Real spread, string floatFreq, string floatDC, string index,
-                                              string yyFreq, string yyDC, string yyIndex, string observationLag, Size fixDays) {
+                                              string yyFreq, string yyDC, string yyIndex, string observationLag,
+                                              Size fixDays) {
 
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
@@ -373,8 +376,8 @@ boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPaye
     LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, floatSchedule,
                         floatDC, notionals);
     // fixed leg
-    LegData yyLeg(boost::make_shared<YoYLegData>(yyIndex, observationLag, fixDays), isPayer, ccy,
-                  yySchedule, yyDC, notionals);
+    LegData yyLeg(boost::make_shared<YoYLegData>(yyIndex, observationLag, fixDays), isPayer, ccy, yySchedule, yyDC,
+                  notionals);
 
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, yyLeg));

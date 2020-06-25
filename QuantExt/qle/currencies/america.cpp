@@ -35,4 +35,11 @@ CLFCurrency::CLFCurrency() {
         new Data("Unidad de Fomento (funds code)", "CLF", 990, "CLF", "", 1, Rounding(), "1$.2f %3%"));
     data_ = clfData;
 }
+
+// Uruguayan peso
+UYUCurrency::UYUCurrency() {
+    static boost::shared_ptr<Data> uyuData(
+        new Data("Uruguayan peso", "UYU", 858, "UYU", "", 1, Rounding(), "1$.2f %3%"));
+    data_ = uyuData;
+}
 } // namespace QuantExt

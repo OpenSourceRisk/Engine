@@ -36,15 +36,18 @@ namespace QuantExt {
 
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
                  const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts,
-                 const Handle<YieldTermStructure>& targetYts)
+                 const Handle<YieldTermStructure>& targetYts, bool inverseIndex)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
-      sourceYts_(sourceYts), targetYts_(targetYts), fixingCalendar_(fixingCalendar) {
+      sourceYts_(sourceYts), targetYts_(targetYts), useQuote_(false), fixingCalendar_(fixingCalendar),
+      inverseIndex_(inverseIndex) {
 
     std::ostringstream tmp;
     tmp << familyName_ << " " << sourceCurrency_.code() << "/" << targetCurrency_.code();
     name_ = tmp.str();
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(name()));
+    registerWith(sourceYts_);
+    registerWith(targetYts_);
 
     // we should register with the exchange rate manager
     // to be notified of changes in the spot exchange rate
@@ -53,20 +56,20 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
 }
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
                  const Calendar& fixingCalendar, const Handle<Quote> fxQuote,
-                 const Handle<YieldTermStructure>& sourceYts, const Handle<YieldTermStructure>& targetYts)
+                 const Handle<YieldTermStructure>& sourceYts, const Handle<YieldTermStructure>& targetYts,
+                 bool inverseIndex)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
-      sourceYts_(sourceYts), targetYts_(targetYts), fxQuote_(fxQuote), useQuote_(true),
-      fixingCalendar_(fixingCalendar) {
+      sourceYts_(sourceYts), targetYts_(targetYts), fxQuote_(fxQuote), useQuote_(true), fixingCalendar_(fixingCalendar),
+      inverseIndex_(inverseIndex) {
 
     std::ostringstream tmp;
     tmp << familyName_ << " " << sourceCurrency_.code() << "/" << targetCurrency_.code();
     name_ = tmp.str();
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(name()));
-    // we should register with the exchange rate manager
-    // to be notified of changes in the spot exchange rate
-    // however currently exchange rates are not quotes anyway
-    // so this is to be revisited later
+    registerWith(fxQuote_);
+    registerWith(sourceYts_);
+    registerWith(targetYts_);
 }
 
 Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
@@ -75,28 +78,30 @@ Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
 
     Date today = Settings::instance().evaluationDate();
 
-    if (fixingDate > today || (fixingDate == today && forecastTodaysFixing))
-        return forecastFixing(fixingDate);
-
     Real result = Null<Decimal>();
 
-    if (fixingDate < today || Settings::instance().enforcesTodaysHistoricFixings()) {
-        // must have been fixed
-        // do not catch exceptions
-        result = pastFixing(fixingDate);
-        QL_REQUIRE(result != Null<Real>(), "Missing " << name() << " fixing for " << fixingDate);
-    } else {
-        try {
-            // might have been fixed
+    if (fixingDate > today || (fixingDate == today && forecastTodaysFixing))
+        result = forecastFixing(fixingDate);
+
+    if (result == Null<Real>()) {
+        if (fixingDate < today || Settings::instance().enforcesTodaysHistoricFixings()) {
+            // must have been fixed
+            // do not catch exceptions
             result = pastFixing(fixingDate);
-        } catch (Error&) {
-            ; // fall through and forecast
+            QL_REQUIRE(result != Null<Real>(), "Missing " << name() << " fixing for " << fixingDate);
+        } else {
+            try {
+                // might have been fixed
+                result = pastFixing(fixingDate);
+            } catch (Error&) {
+                ; // fall through and forecast
+            }
+            if (result == Null<Real>())
+                result = forecastFixing(fixingDate);
         }
-        if (result == Null<Real>())
-            return forecastFixing(fixingDate);
     }
 
-    return result;
+    return inverseIndex_ ? 1.0 / result : result;
 }
 
 Real FxIndex::forecastFixing(const Date& fixingDate) const {
@@ -108,6 +113,7 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     if (!useQuote_) {
         rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
     } else {
+        QL_REQUIRE(!fxQuote_.empty(), "FxIndex::forecastFixing(): fx quote required");
         rate = fxQuote_->value();
     }
 

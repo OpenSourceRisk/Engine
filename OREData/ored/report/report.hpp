@@ -31,11 +31,11 @@
 
 namespace ore {
 namespace data {
-using std::string;
-using QuantLib::Size;
-using QuantLib::Real;
 using QuantLib::Date;
 using QuantLib::Period;
+using QuantLib::Real;
+using QuantLib::Size;
+using std::string;
 
 /*! Abstract Report interface class
  *
@@ -70,6 +70,8 @@ public:
     virtual Report& next() = 0;
     virtual Report& add(const ReportType& rt) = 0;
     virtual void end() = 0;
+    // make sure that (possibly) buffered output data is written to the result object (e.g. a file)
+    virtual void flush() {}
 };
 } // namespace data
 } // namespace ore

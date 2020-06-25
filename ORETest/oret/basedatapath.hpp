@@ -22,15 +22,15 @@
 
 #pragma once
 
-#include <ql/errors.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
+#include <ql/errors.hpp>
 #include <string>
 
-using boost::filesystem::path;
 using boost::filesystem::exists;
 using boost::filesystem::is_directory;
+using boost::filesystem::path;
 using std::string;
 
 #ifdef BOOST_MSVC
@@ -43,14 +43,6 @@ using std::string;
 namespace ore {
 namespace test {
 
-// Default value for base data path used in function below
-#ifdef BOOST_MSVC
-string initialPath = "..";
-#else
-string initialPath = ".";
-#endif
-
-
 /*! Gets passed the command line arguments from a unit test suite
     and checks if a base data path has been provided
 
@@ -59,13 +51,13 @@ string initialPath = ".";
     the tests. Any output from the tests will be added to child 'output'
     directory under this base data path.
 
-    A default base data path of ".." and "." on Windows and Unix respectively 
+    A default base data path of ".." and "." on Windows and Unix respectively
     is returned.
 */
 string getBaseDataPath(int argc, char** argv) {
 
     // Default initial value for the base data path
-    // Allows a standard run on Unix or Windows from the executable directory without having 
+    // Allows a standard run on Unix or Windows from the executable directory without having
     // to specify a base_data_path on the command line
 #ifdef BOOST_MSVC
     string strPath = "..";
@@ -86,13 +78,12 @@ string getBaseDataPath(int argc, char** argv) {
 
     // Test that we have a valid path and it contains an 'input' folder
     path p(strPath);
-    QL_REQUIRE(is_directory(p), "Test set up failed: the path '" <<
-        strPath << "' is not a directory");
-    QL_REQUIRE(is_directory(p / path("input")), "Test set up failed: the path '" <<
-        strPath << "' does not contain an 'input' directory");
+    QL_REQUIRE(is_directory(p), "Test set up failed: the path '" << strPath << "' is not a directory");
+    QL_REQUIRE(is_directory(p / path("input")),
+               "Test set up failed: the path '" << strPath << "' does not contain an 'input' directory");
 
     return strPath;
 }
 
-}
-}
+} // namespace test
+} // namespace ore

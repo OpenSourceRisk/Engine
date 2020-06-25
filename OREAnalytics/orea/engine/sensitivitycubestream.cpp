@@ -31,8 +31,9 @@ namespace analytics {
 using crossPair = SensitivityCube::crossPair;
 
 SensitivityCubeStream::SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, const string& currency)
-    : cube_(cube), currency_(currency), upRiskFactor_(cube_->upFactors().begin()), downRiskFactor_(cube_->downFactors().begin()),
-      itCrossPair_(cube_->crossFactors().begin()), tradeIdx_(cube_->tradeIdx().begin()) {}
+    : cube_(cube), currency_(currency), upRiskFactor_(cube_->upFactors().begin()),
+      downRiskFactor_(cube_->downFactors().begin()), itCrossPair_(cube_->crossFactors().begin()),
+      tradeIdx_(cube_->tradeIdx().begin()) {}
 
 SensitivityRecord SensitivityCubeStream::next() {
 
@@ -57,15 +58,19 @@ SensitivityRecord SensitivityCubeStream::next() {
         // Are there more deltas and gammas for current trade ID
         if (upRiskFactor_ != cube_->upFactors().end()) {
             Size usrx = upRiskFactor_->right.index;
-            Size dsrx = downRiskFactor_->second.index;
             sr.key_1 = upRiskFactor_->left;
             sr.desc_1 = upRiskFactor_->right.factorDesc;
             sr.shift_1 = upRiskFactor_->right.shiftSize;
             sr.delta = cube_->delta(tradeIdx, usrx);
-            sr.gamma = cube_->gamma(tradeIdx, usrx, dsrx);
+            if (downRiskFactor_ != cube_->downFactors().end()) {
+                Size dsrx = downRiskFactor_->second.index;
+                sr.gamma = cube_->gamma(tradeIdx, usrx, dsrx);
+                downRiskFactor_++;
+            } else {
+                sr.gamma = Null<Real>(); // marks na result
+            }
 
             upRiskFactor_++;
-            downRiskFactor_++;
 
             TLOG("Next record is: " << sr);
             return sr;

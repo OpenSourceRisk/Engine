@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file lgmimpliedyieldtermstructure.hpp
-    \brief yield term structure implied by a LGM model
+/*! \file staticallycorrectedyieldtermstructure.hpp
+    \brief Statically corrected yield term structure
     \ingroup termstructures
 */
 

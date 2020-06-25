@@ -55,6 +55,7 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     DLOG("Get model data");
     auto calibration = parseCalibrationType(modelParameter("Calibration"));
     auto calibrationStrategy = parseCalibrationStrategy(modelParameter("CalibrationStrategy"));
+    std::string referenceCalibrationGrid = modelParameter("ReferenceCalibrationGrid", "", false, "");
     Real lambda = parseReal(modelParameter("Reversion", ccy));
     vector<Real> sigma = parseListOfValues<Real>(modelParameter("Volatility"), &parseReal);
     vector<Real> sigmaTimes = parseListOfValues<Real>(modelParameter("VolatilityTimes", "", false), &parseReal);
@@ -64,6 +65,8 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     Real tolerance = parseReal(modelParameter("Tolerance"));
     auto reversionType = parseReversionType(modelParameter("ReversionType"));
     auto volatilityType = parseVolatilityType(modelParameter("VolatilityType"));
+    bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
+                                      parseBool(globalParameters_.at("ContinueOnCalibrationError"));
 
     auto data = boost::make_shared<IrLgmData>();
 
@@ -142,7 +145,8 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     // Build and calibrate model
     DLOG("Build LGM model");
     boost::shared_ptr<LgmBuilder> calib =
-        boost::make_shared<LgmBuilder>(market_, data, configuration(MarketContext::irCalibration), tolerance);
+        boost::make_shared<LgmBuilder>(market_, data, configuration(MarketContext::irCalibration), tolerance,
+                                       continueOnCalibrationError, referenceCalibrationGrid);
 
     // In some cases, we do not want to calibrate the model
     boost::shared_ptr<QuantExt::LGM> model;

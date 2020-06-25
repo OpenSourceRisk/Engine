@@ -39,7 +39,6 @@ namespace ore {
 namespace analytics {
 using namespace QuantLib;
 using namespace data;
-using namespace data;
 
 enum class AllocationMethod {
     None,
@@ -158,10 +157,10 @@ public:
         Real kvaOurPdFloor = 0.03,
         //! Their KVA PD floor
         Real kvaTheirPdFloor = 0.03,
-	//! Our KVA CVA Risk Weight
-	Real kvaOurCvaRiskWeight = 0.05,
-	//! Their KVA CVA Risk Weight,
-	Real kvaTheirCvaRiskWeight = 0.05);
+        //! Our KVA CVA Risk Weight
+        Real kvaOurCvaRiskWeight = 0.05,
+        //! Their KVA CVA Risk Weight,
+        Real kvaTheirCvaRiskWeight = 0.05);
 
     //! Return list of Trade IDs in the portfolio
     const vector<string>& tradeIds() { return tradeIds_; }
@@ -286,7 +285,7 @@ private:
                     const vector<vector<Real>>& nettingSetValue, Real nettingSetValueToday,
                     const Date& nettingSetMaturity);
 
-    void updateNettingSetKVA();   
+    void updateNettingSetKVA();
     void updateStandAloneXVA();
     void updateAllocatedXVA();
 

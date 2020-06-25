@@ -30,28 +30,22 @@ namespace {
 void no_deletion(YieldTermStructure*) {}
 } // namespace
 
-CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX,
-                                                 Natural settlementDays, const Calendar& settlementCalendar,
-                                                 const Period& swapTenor, BusinessDayConvention rollConvention,
-                                                 const boost::shared_ptr<QuantLib::IborIndex>& flatIndex,
-                                                 const boost::shared_ptr<QuantLib::IborIndex>& spreadIndex,
-                                                 const Handle<YieldTermStructure>& flatDiscountCurve,
-                                                 const Handle<YieldTermStructure>& spreadDiscountCurve, bool eom,
-                                                 bool flatIsDomestic, boost::optional<Period> flatTenor,
-                                                 boost::optional<Period> spreadTenor,
-												 Real spreadOnFlatLeg,
-												 Real flatGearing,
-												 Real spreadGearing,
-												 const Calendar& flatCalendar,
-												 const Calendar& spreadCalendar)
+CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
+    const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX, Natural settlementDays,
+    const Calendar& settlementCalendar, const Period& swapTenor, BusinessDayConvention rollConvention,
+    const boost::shared_ptr<QuantLib::IborIndex>& flatIndex, const boost::shared_ptr<QuantLib::IborIndex>& spreadIndex,
+    const Handle<YieldTermStructure>& flatDiscountCurve, const Handle<YieldTermStructure>& spreadDiscountCurve,
+    bool eom, bool flatIsDomestic, boost::optional<Period> flatTenor, boost::optional<Period> spreadTenor,
+    Real spreadOnFlatLeg, Real flatGearing, Real spreadGearing, const Calendar& flatCalendar,
+    const Calendar& spreadCalendar)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       flatIndex_(flatIndex), spreadIndex_(spreadIndex), flatDiscountCurve_(flatDiscountCurve),
       spreadDiscountCurve_(spreadDiscountCurve), eom_(eom), flatIsDomestic_(flatIsDomestic),
-      flatTenor_(flatTenor ? *flatTenor : flatIndex_->tenor()), 
-      spreadTenor_(spreadTenor ? *spreadTenor : spreadIndex_->tenor()),
-	  spreadOnFlatLeg_(spreadOnFlatLeg), flatGearing_(flatGearing), spreadGearing_(spreadGearing), 
-	  flatCalendar_(flatCalendar), spreadCalendar_(spreadCalendar) {
+      flatTenor_(flatTenor ? *flatTenor : flatIndex_->tenor()),
+      spreadTenor_(spreadTenor ? *spreadTenor : spreadIndex_->tenor()), spreadOnFlatLeg_(spreadOnFlatLeg),
+      flatGearing_(flatGearing), spreadGearing_(spreadGearing), flatCalendar_(flatCalendar),
+      spreadCalendar_(spreadCalendar) {
 
     flatLegCurrency_ = flatIndex_->currency();
     spreadLegCurrency_ = spreadIndex_->currency();
@@ -64,10 +58,11 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(const Handle<Quote>& spreadQuot
     QL_REQUIRE(!(flatIndexHasCurve && spreadIndexHasCurve && haveFlatDiscountCurve && haveSpreadDiscountCurve),
                "Have all curves, "
                "nothing to solve for.");
-	if( flatCalendar_.empty() )
-		flatCalendar_ = settlementCalendar;
-	if( spreadCalendar_.empty() )
-		spreadCalendar_ = settlementCalendar;
+
+    if (flatCalendar_.empty())
+        flatCalendar_ = settlementCalendar;
+    if (spreadCalendar_.empty())
+        spreadCalendar_ = settlementCalendar;
 
     /* Link the curve being bootstrapped to the index if the index has
        no projection curve */
@@ -130,9 +125,9 @@ void CrossCcyBasisSwapHelper::initializeDates() {
     }
 
     /* Arbitrarily set the spread leg as the pay leg */
-    swap_ = boost::shared_ptr<CrossCcyBasisSwap>(
-        new CrossCcyBasisSwap(spreadLegNominal, spreadLegCurrency_, spreadLegSchedule, spreadIndex_, 0.0, spreadGearing_,
-                              flatLegNominal, flatLegCurrency_, flatLegSchedule, flatIndex_, spreadOnFlatLeg_, flatGearing_));
+    swap_ = boost::shared_ptr<CrossCcyBasisSwap>(new CrossCcyBasisSwap(
+        spreadLegNominal, spreadLegCurrency_, spreadLegSchedule, spreadIndex_, 0.0, spreadGearing_, flatLegNominal,
+        flatLegCurrency_, flatLegSchedule, flatIndex_, 0.0, flatGearing_));
 
     boost::shared_ptr<PricingEngine> engine;
     if (flatIsDomestic_) {

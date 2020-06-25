@@ -37,6 +37,7 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/ored.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/tradefactory.hpp>
 
 namespace ore {
@@ -46,6 +47,9 @@ using namespace ore::data;
 class SensitivityScenarioData;
 class SensitivityAnalysis;
 
+//! Orchestrates the processes covered by ORE, data loading, analytics and reporting
+/*! \ingroup app
+ */
 class OREApp {
 public:
     //! Constructor
@@ -82,6 +86,8 @@ protected:
     void getConventions();
     //! load market parameters
     void getMarketParameters();
+    //! load reference data
+    void getReferenceData();
     //! build engine factory for a given market
     virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market,
                                                                 const string& groupName = "setup") const;
@@ -89,24 +95,31 @@ protected:
     boost::shared_ptr<TradeFactory> buildTradeFactory() const;
     //! build portfolio for a given market
     boost::shared_ptr<Portfolio> buildPortfolio(const boost::shared_ptr<EngineFactory>& factory);
+    //! load portfolio from file(s)
+    boost::shared_ptr<Portfolio> loadPortfolio();
 
     //! generate NPV cube
-    void generateNPVCube();
+    virtual void generateNPVCube();
     //! get an instance of an aggregationScenarioData class
     virtual void initAggregationScenarioData();
     //! get an instance of a cube class
-    virtual void initCube();
+    virtual void initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids);
     //! build an NPV cube
     virtual void buildNPVCube();
+    //! initialise NPV cube generation
+    void initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio);
     //! load simMarketData
     boost::shared_ptr<ScenarioSimMarketParameters> getSimMarketData();
     //! load scenarioGeneratorData
     boost::shared_ptr<ScenarioGeneratorData> getScenarioGeneratorData();
+    //! build CAM
+    boost::shared_ptr<QuantExt::CrossAssetModel> buildCam(boost::shared_ptr<Market> market,
+                                                          const bool continueOnCalibrationError);
     //! build scenarioGenerator
     virtual boost::shared_ptr<ScenarioGenerator>
     buildScenarioGenerator(boost::shared_ptr<Market> market,
                            boost::shared_ptr<ScenarioSimMarketParameters> simMarketData,
-                           boost::shared_ptr<ScenarioGeneratorData> sgd);
+                           boost::shared_ptr<ScenarioGeneratorData> sgd, const bool continueOnCalibrationError);
 
     //! load in scenarioData
     virtual void loadScenarioData();
@@ -127,7 +140,7 @@ protected:
     //! write out DIM reports
     void writeDIMReport();
     //! write out cube
-    void writeCube();
+    void writeCube(boost::shared_ptr<NPVCube> cube);
     //! write out scenarioData
     void writeScenarioData();
     //! write out base scenario
@@ -168,11 +181,12 @@ protected:
     //! Add extra leg builders
     virtual std::vector<boost::shared_ptr<LegBuilder>> getExtraLegBuilders() const { return {}; };
     //! Add extra trade builders
-    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> getExtraTradeBuilders() const { return {}; };
+    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>>
+    getExtraTradeBuilders(const boost::shared_ptr<TradeFactory>& = {}) const {
+        return {};
+    };
     //! Get fixing manager
-    virtual boost::shared_ptr<FixingManager> getFixingManager() {
-        return boost::make_shared<FixingManager>(asof_);
-    }
+    virtual boost::shared_ptr<FixingManager> getFixingManager() { return boost::make_shared<FixingManager>(asof_); }
     //! Get parametric var calculator
     virtual boost::shared_ptr<ParametricVarCalculator>
     buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
@@ -205,6 +219,7 @@ protected:
     boost::shared_ptr<Portfolio> portfolio_;         // portfolio linked to T0 market
     Conventions conventions_;
     TodaysMarketParameters marketParameters_;
+    boost::shared_ptr<ReferenceDataManager> referenceData_;
 
     boost::shared_ptr<ScenarioSimMarket> simMarket_; // sim market
     boost::shared_ptr<Portfolio> simPortfolio_;      // portfolio linked to sim market

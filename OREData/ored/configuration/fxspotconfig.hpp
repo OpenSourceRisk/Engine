@@ -30,10 +30,10 @@
 
 namespace ore {
 namespace data {
-using std::string;
-using std::vector;
 using ore::data::XMLNode;
 using QuantLib::Currency;
+using std::string;
+using std::vector;
 
 //! FXSpot configuration
 /*!

@@ -49,9 +49,9 @@
 #endif
 
 #include <iomanip>
+#include <ored/utilities/osutils.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <sstream>
-#include <ored/utilities/osutils.hpp>
 
 namespace ore {
 namespace data {
@@ -272,6 +272,9 @@ public:
     void switchOn() { enabled_ = true; }
     void switchOff() { enabled_ = false; }
 
+    //! if a PID is set for the logger, messages are tagged with [1234] if pid = 1234
+    void setPid(const int pid) { pid_ = pid; }
+
 private:
     Log();
 
@@ -279,6 +282,8 @@ private:
     bool enabled_;
     unsigned mask_;
     std::ostringstream ls_;
+
+    int pid_ = 0;
 };
 
 /*!
@@ -356,7 +361,7 @@ public:
     ~LoggerStream();
 
     //! cast this LoggerStream as a ostream&
-    operator std::ostream&() { return ss_; }
+    operator std::ostream &() { return ss_; }
 
 private:
     unsigned mask_;
@@ -365,9 +370,13 @@ private:
     std::stringstream ss_;
 };
 
+#define ALOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_ALERT, __FILE__, __LINE__))
+#define CLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_CRITICAL, __FILE__, __LINE__))
+#define ELOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_ERROR, __FILE__, __LINE__))
+#define WLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_WARNING, __FILE__, __LINE__))
 #define LOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_NOTICE, __FILE__, __LINE__))
 #define DLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_DEBUG, __FILE__, __LINE__))
-
+#define TLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_DATA, __FILE__, __LINE__))
 
 //! Utility class for having structured Error messages
 // This can be used directly in log messages, e.g.
@@ -377,22 +386,22 @@ private:
 // .... StructuredErrorMessage { "errorType":"Trade", "tradeId":"foo", "tradeType":"SWAP" }
 class StructuredErrorMessage {
 public:
+    virtual ~StructuredErrorMessage() {}
     static constexpr const char* name = "StructuredErrorMessage";
-    
+
     //! return a string for the log file
     std::string msg() const { return string(name) + string(" ") + json(); }
+
 protected:
     // This should return a structured string, ideally in JSON, and should contain a field
     // errorType
     virtual std::string json() const = 0;
 
     // utility function to delimate string for json, handles \" and \\ and control characters
-    std::string jsonify (const std::string& s) const;
+    std::string jsonify(const std::string& s) const;
 };
 
-inline std::ostream& operator<<(std::ostream& out, const StructuredErrorMessage& sem) {
-    return out << sem.msg();
-}
+inline std::ostream& operator<<(std::ostream& out, const StructuredErrorMessage& sem) { return out << sem.msg(); }
 
 } // namespace data
 } // namespace ore

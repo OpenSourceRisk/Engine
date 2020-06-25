@@ -33,18 +33,20 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curv
                                        const std::vector<std::pair<std::string, bool>>& cdsQuotes, bool extrapolation,
                                        const string& benchmarkCurveID, const string& sourceCurveID,
                                        const std::vector<string>& pillars, const Calendar& calendar, const Size spotLag,
-                                       const Date& startDate)
+                                       const Date& startDate, const BootstrapConfig& bootstrapConfig,
+                                       QuantLib::Real runningSpread)
     : CurveConfig(curveID, curveDescription), cdsQuotes_(cdsQuotes), currency_(currency), type_(type),
       discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
       conventionID_(conventionID), extrapolation_(extrapolation), benchmarkCurveID_(benchmarkCurveID),
-      sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar), spotLag_(spotLag), startDate_(startDate) {
+      sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar), spotLag_(spotLag), startDate_(startDate),
+      bootstrapConfig_(bootstrapConfig), runningSpread_(runningSpread) {
 
     for (const auto& kv : cdsQuotes) {
         quotes_.push_back(kv.first);
     }
     quotes_.insert(quotes_.begin(), recoveryRateQuote_);
 
-    if (type_ == Type::SpreadCDS && startDate_ != Date()) {
+    if (type_ != Type::SpreadCDS && startDate_ != Date()) {
         WLOG("'StartDate' is only used when type is 'SpreadCDS'");
     }
 }
@@ -65,6 +67,8 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         type_ = Type::SpreadCDS;
     } else if (type == "HazardRate") {
         type_ = Type::HazardRate;
+    } else if (type == "Price") {
+        type_ = Type::Price;
     } else if (type == "Benchmark") {
         type_ = Type::Benchmark;
     } else {
@@ -106,11 +110,26 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         // Read the optional start date
         string d = XMLUtils::getChildValue(node, "StartDate", false);
         if (d != "") {
-            if (type_ == Type::SpreadCDS) {
+            if (type_ == Type::SpreadCDS || type_ == Type::Price) {
                 startDate_ = parseDate(d);
             } else {
-                WLOG("'StartDate' is only used when type is 'SpreadCDS'");
+                WLOG("'StartDate' is only used when type is 'SpreadCDS' or 'Price'");
             }
+        }
+
+        string s = XMLUtils::getChildValue(node, "RunningSpread", false);
+        QL_REQUIRE(s != "" || type_ != Type::Price, "'RunningSpread' required when type is 'Price'")
+        if (s != "") {
+            if (type_ == Type::Price) {
+                runningSpread_ = parseReal(s);
+            } else {
+                WLOG("'RunningSpread' is only used when type is 'Price'");
+            }
+        }
+
+        // Optional bootstrap configuration
+        if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
+            bootstrapConfig_.fromXML(n);
         }
     }
 }
@@ -122,8 +141,14 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
 
-    if (type_ == Type::SpreadCDS || type_ == Type::HazardRate) {
-        XMLUtils::addChild(doc, node, "Type", type_ == Type::SpreadCDS ? "SpreadCDS" : "HazardRate");
+    if (type_ == Type::SpreadCDS || type_ == Type::HazardRate || type_ == Type::Price) {
+        if (type_ == Type::SpreadCDS) {
+            XMLUtils::addChild(doc, node, "Type", "SpreadCDS");
+        } else if (type_ == Type::HazardRate) {
+            XMLUtils::addChild(doc, node, "Type", "HazardRate");
+        } else {
+            XMLUtils::addChild(doc, node, "Type", "Price");
+        }
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
         XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
         XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
@@ -150,6 +175,11 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
 
     if (startDate_ != Date())
         XMLUtils::addChild(doc, node, "StartDate", to_string(startDate_));
+
+    if (runningSpread_ != QuantLib::Null<Real>())
+        XMLUtils::addChild(doc, node, "RunningSpread", to_string(runningSpread_));
+
+    XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
 
     return node;
 }

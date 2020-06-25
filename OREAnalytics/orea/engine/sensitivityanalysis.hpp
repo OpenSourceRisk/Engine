@@ -31,6 +31,7 @@
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/report/report.hpp>
 #include <ored/utilities/progressbar.hpp>
 
@@ -72,7 +73,8 @@ public:
         const bool nonShiftedBaseCurrencyConversion = false,
         std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
         std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
-        const bool continueOnError = false);
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr, const bool continueOnError = false,
+        bool xccyDiscounting = false);
 
     virtual ~SensitivityAnalysis() {}
 
@@ -127,7 +129,7 @@ protected:
     virtual void initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact = {});
 
     //! build valuation calculators for valuation engine
-    std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
+    virtual std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
 
     boost::shared_ptr<ore::data::Market> market_;
     std::string marketConfiguration_;
@@ -148,12 +150,15 @@ protected:
     bool nonShiftedBaseCurrencyConversion_;
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
+    boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
     // if true, the processing is continued even on build errors
     bool continueOnError_;
     //! the engine data (provided as input, needed to construct the engine factory)
     boost::shared_ptr<EngineData> engineData_;
     //! the portfolio (provided as input)
     boost::shared_ptr<Portfolio> portfolio_;
+    //! use separate discount curves for xccy curves
+    bool xccyDiscounting_;
     //! initializationFlag
     bool initialized_, computed_;
     //! model builders

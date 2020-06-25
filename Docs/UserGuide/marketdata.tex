@@ -314,6 +314,37 @@ Example:
 \item {MM\_FUTURE/PRICE/EUR/2018-06/LIF3ME/3M}
 \end{itemize}
 
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Overnight Index Futures Price}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
+  \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{OI\_FUTURE} & \\ \hline
+    Quote Type & \emph{PRICE} & \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Overnight Index Future price\\ \hline
+    Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
+    Contract & String & Contract name\\ \hline
+    Term & An integer followed by D, W, M or Y & Underlying Term\\ \hline
+  % date rule & {\tt string} &  \\
+  \end{tabular}
+  \caption{Money Market Futures Price}
+  \label{tab:mmfp_quote}
+\end{table}
+
+Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule such as 3rd
+Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly, but
+defined in the futures contract.
+
+\medskip
+Example: Three Months SOFR Futures (DEC 2019):
+\begin{itemize}
+\item {OI\_FUTURE/PRICE/USD/2019-12/CME:SR3Z2019/3M}
+\end{itemize}
+
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 %\subsection{Equity Futures Price}
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -519,14 +550,15 @@ Example:
 
 \begin{table}[H]
 \centering
-  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \begin{tabular}{|p{3.4cm}|p{3.8cm}|p{6.3cm}|}
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
     Instrument Type & \emph{BASIS\_SWAP} & \\ \hline
     Quote Type & \emph{BASIS\_SPREAD} & \\ \hline
     Flat tenor & An integer followed by D, W, M or Y & Zero spread leg's index tenor\\ \hline
     Tenor & An integer followed by D, W, M or Y & Non-zero spread leg's index tenor\\ \hline
-    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the basis swap spread\\ \hline
+    Currency & See \lstinline!Currency! in Table~\ref{tab:allow_stand_data}& Currency of the basis swap spread\\ \hline
+    Optional Identifier & String & Basis swap name\\ \hline
     Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\ \hline
   \end{tabular}
   \caption{Basis Swap Spread}
@@ -535,9 +567,12 @@ Example:
 
 
 \medskip
-Example:
+Examples:
 \begin{itemize}
 \item {BASIS\_SWAP/BASIS\_SPREAD/6M/3M/CHF/10Y}
+\item {BASIS\_SWAP/BASIS\_SPREAD/3M/1D/USD/2Y}
+\item {BASIS\_SWAP/BASIS\_SPREAD/3M/1D/USD/LIBOR\_PRIME/2Y}
+\item {BASIS\_SWAP/BASIS\_SPREAD/3M/1D/USD/LIBOR\_FEDFUNDS/2Y}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -616,6 +651,27 @@ Example:
 \begin{itemize}
 \item {RECOVERY\_RATE/RATE/GE/SeniorUnsec/EUR}
 \end{itemize}
+
+\subsection{CDS Option Implied Volatility}
+\label{md:cds_option_iv}
+
+A CDS option implied volatility quote can take any one of the following four forms:
+
+\begin{enumerate}
+\item \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[EXPIRY]!
+\item \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[EXPIRY]/[STRIKE]!
+\item \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[TERM]/[EXPIRY]!
+\item \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[TERM]/[EXPIRY]/[STRIKE]!
+\end{enumerate}
+
+The terms in the quote string have the following interpretations:
+\begin{itemize}
+\item The \lstinline![NAME]! is the name of the CDS reference entity or index CDS.
+\item The \lstinline![EXPIRY]! is the expiry of the CDS option and may be a tenor or an explicit date.
+\item The \lstinline![TERM]! is optional and gives the term of the underlying CDS or index CDS. This should be a tenor e.g.\ 3Y, 5Y, etc.
+\item The \lstinline![STRIKE]! is optional and gives the strike of the CDS or index CDS option.
+\end{itemize}
+
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Security Recovery Rate}\label{md:sec_rec_rates}
@@ -793,7 +849,7 @@ Example:
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Cap/Floor Implied Volatility}\label{ss:capfloor_impl_vol_quote}
+\subsection{Cap Floor Implied Volatility}\label{ss:capfloor_impl_vol_quote}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \begin{table}[H]
@@ -802,24 +858,24 @@ Example:
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
     Instrument Type & \emph{CAPFLOOR} & \\ \hline
-    Quote Type & \emph{RATE\_LNVOL} & \\ \hline
-    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Cap/Floor volatility\\ \hline
-    Term & An integer followed by D, W, M or Y & Period from start to expiry \\ \hline
-    IndexTenor & An integer followed by D, W, M or Y & Underlying index tenor \\ \hline
-    Atm & \emph{1, 0} & ATM volatility quote if true (1), otherwise (0) smile quote\\ \hline
-    Relative & \emph{1, 0} & Relative quote (to be added to atm vol) if true (1), otherwise (0) absolute quote\\ \hline
-    Strike & Real number & Strike rate\\ \hline
+    Quote Type & \lstinline!RATE_LNVOL!, \lstinline!RATE_NVOL!, \lstinline!RATE_SLNVOL! & Lognormal quoted volatility, normal quoted volatility, shifted lognormal quoted volatility. \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the cap floor volatility. \\ \hline
+    Term & A valid tenor string & Period from start to cap or floor maturity. \\ \hline
+    IndexTenor & A valid tenor string & Underlying index tenor e.g.\ \lstinline!3M! for \lstinline!EUR-EURIBOR-3M!. \\ \hline
+    ATM & \lstinline!1! or \lstinline!0! & True, i.e.\ \lstinline!1!, for an ATM quote and false, i.e.\ \lstinline!0!, for an absolute strike quote. \\ \hline
+    Relative & \lstinline!1! or \lstinline!0! & Should be set to \lstinline!1! for an ATM quote and to \lstinline!0! for an absolute strike quote. \\ \hline
+    Strike & Real number & Strike of cap or floor. Should be set to \lstinline!0! for an ATM quote. \\ \hline
   \end{tabular}
-  \caption{Cap/Floor Implied Volatility}
+  \caption{Cap floor implied volatility quote}
   \label{tab:capfloor_implvol_quote}
 \end{table}
 
+If a cap floor shift quote needs to be provided, i.e. in the case of a shifted lognormal surface, the quote is of the form \lstinline!CAPFLOOR/SHIFT/Currency/IndexTenor! where the meaning of \lstinline!Currency! and \lstinline!IndexTenor! are given in Table \ref{tab:capfloor_implvol_quote}.
 
-\medskip
-Examples:
+We have the following examples of cap floor implied volatility quotes:
 \begin{itemize}
-\item {CAPFLOOR/RATE\_LNVOL/EUR/10Y/6M/0/0/0.0350} (smile, absolute, strike 3.5\%)
-\item {CAPFLOOR/RATE\_LNVOL/EUR/10Y/6M/1/0/0.0000} (atm, absolute, irrelevant strike)
+\item \lstinline!CAPFLOOR/RATE_LNVOL/EUR/10Y/6M/1/1/0!: 10Y ATM cap floor implied lognormal volatility quote where the index tenor is 6M.
+\item \lstinline!CAPFLOOR/RATE_LNVOL/EUR/10Y/6M/0/0/0.035!: 10Y 3.5\% strike cap floor implied lognormal volatility quote where the index tenor is 6M.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -926,6 +982,7 @@ Examples:
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Equity Option Implied Volatility}
+\label{md:equity_option_iv}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \begin{table}[H]
@@ -953,6 +1010,37 @@ Example:
 \begin{itemize}
 	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/6M/ATMF}
 	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/2018-06-30/ATMF}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Equity Option Premium}
+\label{md:equity_option_premium}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+		\hline
+		{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+        Instrument Type & \emph{EQUITY\_OPTION} & \\ \hline
+        Quote Type & \emph{PRICE} & \\ \hline
+        Name & String & Identifying name of the equity \\ \hline
+        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ \hline
+        Expiry & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ \hline
+        Strike & {\tt ATMF}, or else any {\tt Real} & strike price \\ \hline
+	\end{tabular}
+	\caption{Equity Option Premium}
+	\label{tab:eqpremvol_quote}
+\end{table}
+
+Premiums are quoted as a function of strike price - either at-the-money forward ({\tt ATMF}) or else a specified 
+real number, corresponding to the absolute strike value.
+
+\medskip
+Example:
+\begin{itemize}
+	\item {EQUITY\_OPTION/PRICE/SP5/USD/6M/ATMF}
+	\item {EQUITY\_OPTION/PRICE/SP5/USD/2018-06-30/2000}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

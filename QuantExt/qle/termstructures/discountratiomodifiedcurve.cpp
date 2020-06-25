@@ -18,14 +18,14 @@
 
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
 
-using QuantLib::Handle;
-using QuantLib::YieldTermStructure;
-using QuantLib::DayCounter;
 using QuantLib::Calendar;
-using QuantLib::Natural;
 using QuantLib::Date;
-using QuantLib::Time;
+using QuantLib::DayCounter;
 using QuantLib::DiscountFactor;
+using QuantLib::Handle;
+using QuantLib::Natural;
+using QuantLib::Time;
+using QuantLib::YieldTermStructure;
 
 namespace QuantExt {
 

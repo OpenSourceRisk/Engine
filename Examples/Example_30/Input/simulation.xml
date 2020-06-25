@@ -6,32 +6,17 @@
       <Currency>USD</Currency>
     </Currencies>
     <YieldCurves>
-      <Configuration>
-        <Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+      <Configuration curve="">
+        <Tenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</Tenors>
         <Interpolation>LogLinear</Interpolation>
-        <Extrapolation>Y</Extrapolation>
+        <Extrapolation>true</Extrapolation>
+        <DayCounter>A365</DayCounter>
       </Configuration>
     </YieldCurves>
     <Indices>
-      <Index>USD-LIBOR-3M</Index>
       <Index>USD-FedFunds</Index>
+      <Index>USD-LIBOR-3M</Index>
+      <Index>USD-Prime</Index>
     </Indices>
-    <Equities>
-      <Names>
-        <Name>SP5</Name>
-      </Names>
-      <DividendTenors>6M,1Y,2Y</DividendTenors>
-      <ForecastTenors>6M,1Y,2Y</ForecastTenors>
-    </Equities>
-    <AggregationScenarioDataCurrencies>
-      <Currency>USD</Currency>
-    </AggregationScenarioDataCurrencies>
-
-    <AggregationScenarioDataIndices>
-      <Index>USD-FedFunds</Index>
-      <Index>USD-LIBOR-3M</Index>
-    </AggregationScenarioDataIndices>
-    
   </Market>
-
 </Simulation>

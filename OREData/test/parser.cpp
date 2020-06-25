@@ -23,11 +23,29 @@
 #include <ored/utilities/strike.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <ql/math/comparison.hpp>
+#include <ql/time/calendars/austria.hpp>
+#include <ql/time/calendars/france.hpp>
 #include <ql/time/daycounters/all.hpp>
+#include <qle/calendars/chile.hpp>
+#include <qle/calendars/colombia.hpp>
+#include <qle/calendars/israel.hpp>
+#include <qle/calendars/largejointcalendar.hpp>
+#include <qle/calendars/malaysia.hpp>
+#include <qle/calendars/netherlands.hpp>
+#include <qle/calendars/peru.hpp>
+#include <qle/calendars/philippines.hpp>
+#include <qle/calendars/thailand.hpp>
 
 using namespace QuantLib;
+using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
+
+using ore::data::CommodityForwardQuote;
+using ore::data::CommoditySpotQuote;
+using ore::data::FXOptionQuote;
+using ore::data::MarketDatum;
+using ore::data::parseMarketDatum;
 
 namespace {
 
@@ -112,6 +130,14 @@ void checkStrikeParser(const std::string& s, const ore::data::Strike::Type expec
         BOOST_FAIL("unexpected strike value parsed from input string " << s);
     }
     return;
+}
+
+void checkCalendars(const std::set<Date>& expectedHolidays, const std::vector<Date>& testHolidays) {
+
+    for (auto eh : expectedHolidays) {
+        if (std::find(testHolidays.begin(), testHolidays.end(), eh) == testHolidays.end())
+            BOOST_FAIL("expected holiday was " << eh << " not found ");
+    }
 }
 
 } // namespace
@@ -221,7 +247,14 @@ BOOST_AUTO_TEST_CASE(testStrikeParsing) {
     checkStrikeParser("+10.0D", ore::data::Strike::Type::Delta, 10.0);
     checkStrikeParser("-25D", ore::data::Strike::Type::Delta, -25.0);
     checkStrikeParser("-25.0D", ore::data::Strike::Type::Delta, -25.0);
-
+    checkStrikeParser("10C", ore::data::Strike::Type::DeltaCall, 10.0);
+    checkStrikeParser("10c", ore::data::Strike::Type::DeltaCall, 10.0);
+    checkStrikeParser("20P", ore::data::Strike::Type::DeltaPut, 20.0);
+    checkStrikeParser("20p", ore::data::Strike::Type::DeltaPut, 20.0);
+    checkStrikeParser("25BF", ore::data::Strike::Type::BF, 25.0);
+    checkStrikeParser("25bf", ore::data::Strike::Type::BF, 25.0);
+    checkStrikeParser("25RR", ore::data::Strike::Type::RR, 25.0);
+    checkStrikeParser("25rr", ore::data::Strike::Type::RR, 25.0);
     BOOST_CHECK(true);
 }
 
@@ -354,6 +387,376 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
         BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "CORRELATION/PRICE/INDEX1/INDEX2/6X/0.1", value),
                           QuantLib::Error);
     }
+
+    BOOST_TEST_MESSAGE("Testing commodity spot market datum parsing...");
+
+    // test normal parsing
+    {
+        Date d(29, Jul, 2019);
+        Real value = 1418.1;
+
+        string input = "COMMODITY/PRICE/PM:XAUUSD/USD";
+
+        boost::shared_ptr<MarketDatum> datum = parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == MarketDatum::InstrumentType::COMMODITY_SPOT);
+        BOOST_CHECK(datum->quoteType() == MarketDatum::QuoteType::PRICE);
+
+        boost::shared_ptr<CommoditySpotQuote> q = boost::dynamic_pointer_cast<CommoditySpotQuote>(datum);
+
+        BOOST_CHECK(q->commodityName() == "PM:XAUUSD");
+        BOOST_CHECK(q->quoteCurrency() == "USD");
+    }
+
+    // test possible exceptions
+    {
+        Date d(29, Jul, 2019);
+        Real value = 1418.1;
+
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_SPOT/PRICE/PM:XAUUSD/USD", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY/RATE/PM:XAUUSD/USD", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY/PRICE/USD", value), Error);
+    }
+
+    BOOST_TEST_MESSAGE("Testing commodity forward market datum parsing...");
+
+    // test normal parsing
+    {
+        Date d(29, Jul, 2019);
+        Real value = 300.16535;
+
+        // Tenor based quote
+        string input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/1M";
+        boost::shared_ptr<MarketDatum> datum = parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == MarketDatum::InstrumentType::COMMODITY_FWD);
+        BOOST_CHECK(datum->quoteType() == MarketDatum::QuoteType::PRICE);
+
+        boost::shared_ptr<CommodityForwardQuote> q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->commodityName() == "PM:XAUUSD");
+        BOOST_CHECK(q->quoteCurrency() == "USD");
+        BOOST_CHECK(q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date());
+        BOOST_CHECK(q->tenor() == 1 * Months);
+        BOOST_CHECK(q->startTenor() == boost::none);
+
+        // Date based quote
+        input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2019-08-30";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->commodityName() == "PM:XAUUSD");
+        BOOST_CHECK(q->quoteCurrency() == "USD");
+        BOOST_CHECK(!q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date(30, Aug, 2019));
+        BOOST_CHECK(q->tenor() == Period());
+        BOOST_CHECK(q->startTenor() == boost::none);
+
+        // Special tenor based quotes
+
+        // Overnight
+        input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/ON";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date());
+        BOOST_CHECK(q->tenor() == 1 * Days);
+        BOOST_CHECK(q->startTenor() == 0 * Days);
+
+        // Tom-next
+        input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/TN";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date());
+        BOOST_CHECK(q->tenor() == 1 * Days);
+        BOOST_CHECK(q->startTenor() == 1 * Days);
+
+        // Spot-next
+        input = "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/SN";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<CommodityForwardQuote>(datum);
+        BOOST_CHECK(q->tenorBased());
+        BOOST_CHECK(q->expiryDate() == Date());
+        BOOST_CHECK(q->tenor() == 1 * Days);
+        BOOST_CHECK(q->startTenor() == boost::none);
+    }
+
+    // test possible exceptions
+    {
+        Date d(29, Jul, 2019);
+        Real value = 300.16535;
+
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_FORWARD/PRICE/PM:XAUUSD/USD/1M", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_FWD/RATE/PM:XAUUSD/USD/1M", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_FWD/PRICE/USD/1M", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2019-12", value), Error);
+    }
+
+    BOOST_TEST_MESSAGE("Testing fx option market datum parsing...");
+
+    // test normal parsing
+    {
+        Date d(29, Jul, 2019);
+        Real value = 1.234;
+
+        // ATM quote
+        string input = "FX_OPTION/RATE_LNVOL/EUR/USD/1M/ATM";
+        boost::shared_ptr<MarketDatum> datum = parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == MarketDatum::InstrumentType::FX_OPTION);
+        BOOST_CHECK(datum->quoteType() == MarketDatum::QuoteType::RATE_LNVOL);
+
+        boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(1, Months));
+        BOOST_CHECK(q->strike() == "ATM");
+
+        // Butterfly quote
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/25BF";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "25BF");
+
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/10BF";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "10BF");
+
+        // Risk Reversal quote
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/25RR";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "25RR");
+
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/10RR";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "10RR");
+
+        // Strike based quote
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/10C";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "10C");
+
+        input = "FX_OPTION/RATE_LNVOL/EUR/USD/2M/20P";
+        datum = parseMarketDatum(d, input, value);
+        q = boost::dynamic_pointer_cast<FXOptionQuote>(datum);
+        BOOST_CHECK(q->unitCcy() == "EUR");
+        BOOST_CHECK(q->ccy() == "USD");
+        BOOST_CHECK(q->expiry() == Period(2, Months));
+        BOOST_CHECK(q->strike() == "20P");
+
+        // test possible exceptions
+        {
+            Date d(29, Jul, 2019);
+            Real value = 300.16535;
+
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/ATMF", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/BBFF", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/1LRR", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M/10D", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M", value), Error);
+            BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/2019-12", value), Error);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testJointCalendar) {
+
+    std::vector<Calendar> cals;
+    std::set<Date> expectedHolidays;
+    // add peruvian holidays
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(29, March, 2018));
+    expectedHolidays.insert(Date(30, March, 2018));
+    expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(29, June, 2018));
+    expectedHolidays.insert(Date(27, July, 2018));
+    expectedHolidays.insert(Date(30, August, 2018));
+    expectedHolidays.insert(Date(31, August, 2018));
+    expectedHolidays.insert(Date(8, October, 2018));
+    expectedHolidays.insert(Date(1, November, 2018));
+    expectedHolidays.insert(Date(2, November, 2018));
+    expectedHolidays.insert(Date(25, December, 2018));
+
+    Calendar peru = QuantExt::Peru();
+
+    cals.push_back(peru);
+    Calendar joint1 = QuantExt::LargeJointCalendar(cals);
+
+    std::vector<Date> hol = joint1.holidayList(Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+
+    checkCalendars(expectedHolidays, hol);
+
+    // add columbian holidays
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(8, January, 2018));
+    expectedHolidays.insert(Date(19, March, 2018));
+    expectedHolidays.insert(Date(29, March, 2018));
+    expectedHolidays.insert(Date(30, March, 2018));
+    expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(14, May, 2018));
+    expectedHolidays.insert(Date(4, June, 2018));
+    expectedHolidays.insert(Date(11, June, 2018));
+    expectedHolidays.insert(Date(2, July, 2018));
+    expectedHolidays.insert(Date(20, July, 2018));
+    expectedHolidays.insert(Date(7, August, 2018));
+    expectedHolidays.insert(Date(20, August, 2018));
+    expectedHolidays.insert(Date(15, October, 2018));
+    expectedHolidays.insert(Date(5, November, 2018));
+    expectedHolidays.insert(Date(12, November, 2018));
+    expectedHolidays.insert(Date(25, December, 2018));
+
+    Calendar col = Colombia();
+    cals.push_back(col);
+    Calendar joint2 = QuantExt::LargeJointCalendar(cals);
+
+    hol = joint2.holidayList(Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+    checkCalendars(expectedHolidays, hol);
+
+    // add philippines holidays
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(2, January, 2018));
+    expectedHolidays.insert(Date(29, March, 2018));
+    expectedHolidays.insert(Date(30, March, 2018));
+    expectedHolidays.insert(Date(9, April, 2018));
+    expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(12, June, 2018));
+    expectedHolidays.insert(Date(21, August, 2018));
+    expectedHolidays.insert(Date(27, August, 2018));
+    expectedHolidays.insert(Date(1, November, 2018));
+    expectedHolidays.insert(Date(30, November, 2018));
+    expectedHolidays.insert(Date(25, December, 2018));
+    expectedHolidays.insert(Date(31, December, 2018));
+
+    Calendar phil = Philippines();
+    cals.push_back(phil);
+    Calendar joint3 = QuantExt::LargeJointCalendar(cals);
+
+    hol = joint3.holidayList(Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+    checkCalendars(expectedHolidays, hol);
+
+    // add thailand holidays
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(2, January, 2018));
+    expectedHolidays.insert(Date(6, April, 2018));
+    expectedHolidays.insert(Date(13, April, 2018));
+    expectedHolidays.insert(Date(16, April, 2018));
+    expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(30, July, 2018));
+    expectedHolidays.insert(Date(13, August, 2018));
+    expectedHolidays.insert(Date(15, October, 2018));
+    expectedHolidays.insert(Date(23, October, 2018));
+    expectedHolidays.insert(Date(5, December, 2018));
+    expectedHolidays.insert(Date(10, December, 2018));
+    expectedHolidays.insert(Date(31, December, 2018));
+
+    Calendar thai = Thailand();
+    cals.push_back(thai);
+    Calendar joint4 = QuantExt::LargeJointCalendar(cals);
+
+    hol = joint4.holidayList(Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+    checkCalendars(expectedHolidays, hol);
+
+    // add malaysia holidays
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(1, February, 2018));
+    expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(31, August, 2018));
+    expectedHolidays.insert(Date(17, September, 2018));
+    expectedHolidays.insert(Date(25, December, 2018));
+
+    Calendar mal = Malaysia();
+    cals.push_back(mal);
+    Calendar joint5 = QuantExt::LargeJointCalendar(cals);
+
+    hol = joint5.holidayList(Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+    checkCalendars(expectedHolidays, hol);
+
+    // add chilean calendar
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(30, March, 2018));
+    expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(21, May, 2018));
+    expectedHolidays.insert(Date(16, July, 2018));
+    expectedHolidays.insert(Date(15, August, 2018));
+    expectedHolidays.insert(Date(1, November, 2018));
+    expectedHolidays.insert(Date(25, December, 2018));
+
+    Calendar chil = Chile();
+    cals.push_back(chil);
+    Calendar joint6 = QuantExt::LargeJointCalendar(cals);
+
+    hol = joint6.holidayList(Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+    checkCalendars(expectedHolidays, hol);
+
+    // add netherlands calendar
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(30, March, 2018));
+    expectedHolidays.insert(Date(2, April, 2018));
+    expectedHolidays.insert(Date(27, April, 2018));
+    expectedHolidays.insert(Date(10, May, 2018));
+    expectedHolidays.insert(Date(21, May, 2018));
+    expectedHolidays.insert(Date(25, December, 2018));
+    expectedHolidays.insert(Date(26, December, 2018));
+
+    Calendar net = Netherlands();
+    cals.push_back(net);
+    Calendar joint7 = QuantExt::LargeJointCalendar(cals);
+
+    hol = joint7.holidayList(Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+    checkCalendars(expectedHolidays, hol);
+
+    // add French calendar
+    expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(30, March, 2018));
+    expectedHolidays.insert(Date(2, April, 2018));
+    expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(8, May, 2018));
+    expectedHolidays.insert(Date(10, May, 2018));
+    expectedHolidays.insert(Date(21, May, 2018));
+    expectedHolidays.insert(Date(15, August, 2018));
+    expectedHolidays.insert(Date(1, November, 2018));
+    expectedHolidays.insert(Date(25, December, 2018));
+    expectedHolidays.insert(Date(26, December, 2018));
+
+    Calendar fre = France();
+    cals.push_back(fre);
+    Calendar joint8 = QuantExt::LargeJointCalendar(cals);
+
+    hol = joint8.holidayList(Date(1, January, 2018), Date(31, December, 2018));
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+    checkCalendars(expectedHolidays, hol);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

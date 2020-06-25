@@ -20,6 +20,9 @@
       <xs:element type="equityspots" name="EquitySpots" minOccurs="0"/>
       <xs:element type="equityvolatilities" name="EquityVolatilities" minOccurs="0"/>
       <xs:element type="securityspreads" name="SecuritySpreads"/>
+      <xs:element type="recoveryrates" name="RecoveryRates"/>
+      <xs:element type="survivalprobabilities" name="SurvivalProbabilities"/>
+	  
     </xs:sequence>
     <xs:attribute type="xs:string" name="id" use="required"/>
   </xs:complexType>

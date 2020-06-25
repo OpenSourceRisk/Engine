@@ -50,7 +50,7 @@ public:
     CrossCcyBasisSwap(Real payNominal, const Currency& payCurrency, const Schedule& paySchedule,
                       const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real payGearing, Real recNominal,
                       const Currency& recCurrency, const Schedule& recSchedule,
-                      const boost::shared_ptr<IborIndex>& recIndex, Spread recSpread, Real recGearing );
+                      const boost::shared_ptr<IborIndex>& recIndex, Spread recSpread, Real recGearing);
     //@}
     //! \name Instrument interface
     //@{

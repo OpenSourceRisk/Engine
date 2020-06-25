@@ -26,14 +26,15 @@
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
 
 #include <qle/termstructures/pricetermstructure.hpp>
 
 namespace QuantExt {
 
 //! Adapter class for turning a PriceTermStructure in to a YieldTermStructure
-/*! This class takes a spot quote, a price term structure and an input yield
-    curve and constructs a yield curve such that the discount factor
+/*! This class takes a price term structure and an input yield curve and constructs
+    a yield curve such that the discount factor
     \f$ P_p(0, t) \f$ at time \f$ t \f$ is given by:
     \f[
     P_p(0, t) = \exp(-s(t) t)
@@ -44,14 +45,22 @@ namespace QuantExt {
     \f]
     Here, \f$ \Pi(0, t) \f$ is the forward price of the underlying from the
     input price curve, \f$ S(0) \f$ is its spot price and \f$ z(t) \f$ is the
-    continuously compounded zero rate from the input yield curve.
+    continuously compounded zero rate from the input yield curve. The spot price is
+    determined from the price curve at time 0 by default. There are optional
+    parameters that allow using a price at a time other than 0 for the spot price.
 */
 class PriceTermStructureAdapter : public QuantLib::YieldTermStructure {
 
 public:
-    PriceTermStructureAdapter(const boost::shared_ptr<QuantLib::Quote>& spotQuote,
-                              const boost::shared_ptr<PriceTermStructure>& priceCurve,
-                              const boost::shared_ptr<QuantLib::YieldTermStructure>& discount);
+    PriceTermStructureAdapter(const boost::shared_ptr<PriceTermStructure>& priceCurve,
+                              const boost::shared_ptr<QuantLib::YieldTermStructure>& discount,
+                              QuantLib::Natural spotDays = 0,
+                              const QuantLib::Calendar& spotCalendar = QuantLib::NullCalendar());
+
+    // Alternative ctor where the spot quote handle is explicitly set
+    PriceTermStructureAdapter(const boost::shared_ptr<PriceTermStructure>& priceCurve,
+                              const boost::shared_ptr<QuantLib::YieldTermStructure>& discount,
+                              const QuantLib::Handle<QuantLib::Quote>& spotQuote);
 
     //! \name TermStructure interface
     //@{
@@ -62,9 +71,10 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<QuantLib::Quote>& spotQuote() const;
     const boost::shared_ptr<PriceTermStructure>& priceCurve() const;
     const boost::shared_ptr<QuantLib::YieldTermStructure>& discount() const;
+    QuantLib::Natural spotDays() const;
+    const QuantLib::Calendar& spotCalendar() const;
     //@}
 
 protected:
@@ -74,9 +84,11 @@ protected:
     //@}
 
 private:
-    boost::shared_ptr<QuantLib::Quote> spotQuote_;
     boost::shared_ptr<PriceTermStructure> priceCurve_;
     boost::shared_ptr<QuantLib::YieldTermStructure> discount_;
+    QuantLib::Natural spotDays_;
+    QuantLib::Calendar spotCalendar_;
+    QuantLib::Handle<QuantLib::Quote> spotQuote_;
 };
 
 } // namespace QuantExt
