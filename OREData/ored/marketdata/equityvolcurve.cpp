@@ -53,9 +53,9 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         auto config = *curveConfigs.equityVolCurveConfig(spec.curveConfigID());
  
         calendar_ = parseCalendar(config.calendar());
-        // if calendar is null use WeekdaysOnly
+        // if calendar is null use currency
         if (calendar_ == NullCalendar())
-            calendar_ = WeekendsOnly();
+            calendar_ = parseCalendar(config.ccy());
         dayCounter_ = parseDayCounter(config.dayCounter());
 
         if (config.isProxySurface()) {

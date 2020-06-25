@@ -154,6 +154,12 @@ void ScenarioSimMarketParameters::setDefaults() {
     fxStandardDevs_[""] = { 0.0 };
     hasFxPairWithSurface_ = false;
     useMoneyness_[""] = true; // moneyness vs stdDevs - default to moneyness
+    // Defaults for equity
+    setSimulateEquityVolATMOnly(false);
+    setEquityVolIsSurface("", false);
+    setEquityUseMoneyness("", false);
+    setEquityVolMoneyness("", { 1.0 });
+    setEquityVolStandardDevs("", { 0.0 });
 }
 
 void ScenarioSimMarketParameters::reset() {
@@ -1920,16 +1926,15 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
             XMLNode* eqSurfaceNode = XMLUtils::addChild(doc, eqVolatilitiesNode, "Surface");
             if (equityVolSimulateATMOnly_) {
                 XMLUtils::addChild(doc, eqSurfaceNode, "SimulateATMOnly", equityVolSimulateATMOnly_);
-            } else {
-                for (auto it = equityMoneyness_.begin(); it != equityMoneyness_.end(); it++) {
-                    XMLUtils::addGenericChildAsList(doc, eqVolatilitiesNode, "Moneyness", equityMoneyness_[it->first], "name",
-                        it->first);
-                }
-                for (auto it = equityStandardDevs_.begin(); it != equityStandardDevs_.end(); it++) {
-                    XMLUtils::addGenericChildAsList(doc, eqVolatilitiesNode, "StandardDeviations", equityStandardDevs_[it->first], "name",
-                        it->first);
-                }
             }
+            for (auto it = equityMoneyness_.begin(); it != equityMoneyness_.end(); it++) {
+                XMLUtils::addGenericChildAsList(doc, eqSurfaceNode, "Moneyness", equityMoneyness_[it->first], "name",
+                    it->first);
+            }
+            for (auto it = equityStandardDevs_.begin(); it != equityStandardDevs_.end(); it++) {
+                XMLUtils::addGenericChildAsList(doc, eqSurfaceNode, "StandardDeviations", equityStandardDevs_[it->first], "name",
+                    it->first);
+            }            
         }
         if (equityVolDayCounters_.size() > 0) {
             XMLNode* node = XMLUtils::addChild(doc, eqVolatilitiesNode, "DayCounters");

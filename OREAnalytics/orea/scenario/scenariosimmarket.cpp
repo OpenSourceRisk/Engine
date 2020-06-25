@@ -1081,6 +1081,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DayCounter dc = ore::data::parseDayCounter(parameters->equityVolDayCounter(name));
                             bool atmOnly = parameters->simulateEquityVolATMOnly();
                             
+                            for (Size k = 0; k < m; k++) {
+                                dates[k] = cal.advance(asof_, expiries[k]);
+                                times[k] = dc.yearFraction(asof_, dates[k]);
+                            }
+
                             boost::shared_ptr<BlackVolTermStructure> eqVolCurve;
 
                             if (parameters->equityVolIsSurface(name)) {
@@ -1098,9 +1103,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             // strike
                                             Real k = eqForward * mon;
                                         
-                                            // Index is expires then moneyness. TODO: is this the best?
                                             Size idx = i * m + j;
-                                            times[j] = dc.yearFraction(asof_, asof_ + expiries[j]);
                                             Volatility vol = wrapper->blackVol(asof_ + expiries[j], k);
                                             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                                             simDataTmp.emplace(std::piecewise_construct,
@@ -1120,14 +1123,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     eqVolCurve->enableExtrapolation();
 
                                 } else { // standard deviations surface
-
-                                    // times (for fwds)
-                                    for (Size i = 0; i < n; i++) {
-                                        Date date = asof_ + expiries[i];
-                                        times.push_back(wrapper->timeFromReference(date));
-                                        dates.push_back(date);
-                                    }
-
                                     //forwards
                                     vector<Real> fwds;
                                     vector<Real> atmVols;                                    
@@ -1149,7 +1144,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     // add to simDataTemp
                                     for (Size i = 0; i < m; i++) {
                                         for (Size j = 0; j < n; j++) {
-                                            Size idx = j * n + i;
+                                            Size idx = j * m + i;
                                             boost::shared_ptr<Quote> q = quotes[j][i].currentLink();
                                             boost::shared_ptr<SimpleQuote> sq = boost::dynamic_pointer_cast<SimpleQuote>(q);
                                             QL_REQUIRE(sq, "Quote is not a SimpleQuote"); // why do we need this?

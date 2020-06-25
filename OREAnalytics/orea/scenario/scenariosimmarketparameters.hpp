@@ -49,8 +49,7 @@ public:
     //! Default constructor
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolIsCube_({ {"", false} }), swapVolSimulateATMOnly_(false), swapVolStrikeSpreads_({ {"", {0.0}} }),
-          equityVolSimulateATMOnly_(false), equityMoneyness_({ {"", {1.0}} }), equityStandardDevs_({ {"", {1.0}} }),
-          equityVolIsSurface_({ {"", false} }), cprSimulate_(false), correlationIsSurface_(false), correlationStrikes_({0.0}) {
+          cprSimulate_(false), correlationIsSurface_(false), correlationStrikes_({0.0}) {
         setDefaults();
     }
 

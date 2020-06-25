@@ -485,13 +485,13 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->setEquityDividendTenors("Lufthansa", {6 * Months, 1 * Years, 2 * Years});
 
     simMarketData->setSimulateEquityVols(true);
-    simMarketData->equityVolDecayMode() = "ForwardVariance";
+    simMarketData->setEquityVolDecayMode("ForwardVariance");
     simMarketData->setEquityVolNames({"SP5", "Lufthansa"});
-    simMarketData->equityVolExpiries() = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
-                                          5 * Years,  7 * Years, 10 * Years, 20 * Years};
-    simMarketData->equityVolIsSurface() = false;
-    simMarketData->simulateEquityVolATMOnly() = true;
-    simMarketData->equityVolMoneyness() = {1};
+    simMarketData->setEquityVolExpiries("", {6 * Months, 1 * Years, 2 * Years,  3 * Years,
+                                          5 * Years,  7 * Years, 10 * Years, 20 * Years});
+    simMarketData->setEquityVolIsSurface("", false);
+    simMarketData->setSimulateEquityVolATMOnly(true);
+    simMarketData->setEquityVolMoneyness("", {1});
     simMarketData->setEquityVolDayCounters("", "ACT/ACT");
 
     simMarketData->setZeroInflationIndices({"UKRPI"});

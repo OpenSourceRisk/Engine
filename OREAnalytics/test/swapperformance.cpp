@@ -303,8 +303,8 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     parameters->setFxVolCcyPairs({"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"});
     parameters->setFxCcyPairs({"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"});
 
-    parameters->equityVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    parameters->equityVolDecayMode() = "ConstantVariance";
+    parameters->setEquityVolExpiries("", {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
+    parameters->setEquityVolDecayMode("ConstantVariance");
     parameters->setEquityVolDayCounters("", "ACT/ACT");
     parameters->setSimulateEquityVols(false);
 
