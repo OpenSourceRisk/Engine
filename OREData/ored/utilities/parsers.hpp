@@ -93,7 +93,7 @@ bool parseBool(const string& s);
   comma-delimited.
   \ingroup utilities
 */
-QuantLib::Calendar parseCalendar(const string& s, bool adjustCalendar = true);
+QuantLib::Calendar parseCalendar(const string& s, const string& newName = "");
 
 //! Convert text to QuantLib::Period
 /*!
