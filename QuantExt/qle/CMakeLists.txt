@@ -47,7 +47,6 @@ currencies/europe.cpp
 currencies/metals.cpp
 indexes/bondindex.cpp
 indexes/commodityindex.cpp
-indexes/eqfxindexbase.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
 indexes/ibor/brlcdi.cpp
@@ -249,6 +248,7 @@ indexes/bondindex.hpp
 indexes/cacpi.hpp
 indexes/commodityindex.hpp
 indexes/dkcpi.hpp
+indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
