@@ -25,9 +25,9 @@
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 
 using namespace std;
-using std::string;
-using std::map;
 using std::make_pair;
+using std::map;
+using std::string;
 
 using namespace QuantLib;
 
@@ -116,7 +116,8 @@ lookup(const map<tuple<string, string, string>, Handle<QuantExt::CorrelationTerm
 
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, const string& key,
                                                   const string& configuration) const {
-    // we allow for standard (i.e. not convention based) ibor index names as keys and return the index forward curve in case of a match
+    // we allow for standard (i.e. not convention based) ibor index names as keys and return the index forward curve in
+    // case of a match
     boost::shared_ptr<IborIndex> notUsed;
     if (tryParseIborIndex(key, notUsed)) {
         return iborIndex(key, configuration)->forwardingTermStructure();
@@ -155,11 +156,10 @@ const string MarketImpl::swapIndexBase(const string& key, const string& configur
     return lookup<pair<string, string>>(swaptionIndexBases_, key, configuration, "swap index base").second;
 }
 
-Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(
-    const string& key,
-    const string& configuration) const {
-    return lookup<Handle<QuantLib::SwaptionVolatilityStructure>>
-        (yieldVolCurves_, key, configuration, "yield volatility curve");
+Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(const string& key,
+                                                                   const string& configuration) const {
+    return lookup<Handle<QuantLib::SwaptionVolatilityStructure>>(yieldVolCurves_, key, configuration,
+                                                                 "yield volatility curve");
 }
 
 Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configuration) const {
@@ -382,7 +382,7 @@ void MarketImpl::refresh(const string& configuration) {
                 it->second.insert(*x.second->yoyInflationTermStructure());
             }
         }
-	for (auto& x : cpiInflationCapFloorVolatilitySurfaces_) {
+        for (auto& x : cpiInflationCapFloorVolatilitySurfaces_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }

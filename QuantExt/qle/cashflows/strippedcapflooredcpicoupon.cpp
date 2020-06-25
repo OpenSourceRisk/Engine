@@ -47,9 +47,7 @@ StrippedCappedFlooredCPICoupon::StrippedCappedFlooredCPICoupon(
     registerWith(underlying);
 }
 
-Rate StrippedCappedFlooredCPICoupon::rate() const {
-    return underlying_->rate() - underlying_->underlying()->rate();
-}
+Rate StrippedCappedFlooredCPICoupon::rate() const { return underlying_->rate() - underlying_->underlying()->rate(); }
 
 Rate StrippedCappedFlooredCPICoupon::cap() const {
     QL_FAIL("not implemented");

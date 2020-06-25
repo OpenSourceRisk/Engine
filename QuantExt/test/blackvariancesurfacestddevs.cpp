@@ -49,13 +49,12 @@ BOOST_AUTO_TEST_CASE(testFlatSurface) {
     vector<Real> stdDevs = { -1.0, -0.5, 0, 0.5, 1.0 };
     Volatility flatVol = 0.12;
     Handle<Quote> flatVolQ = Handle<Quote>(boost::make_shared<SimpleQuote>(flatVol));
-    vector<vector<Handle<Quote> > > blackVolMatrix(
-        stdDevs.size(), vector<Handle<Quote> > (times.size(), flatVolQ));
+    vector<vector<Handle<Quote> > > blackVolMatrix(stdDevs.size(), vector<Handle<Quote> >(times.size(), flatVolQ));
     DayCounter dc = ActualActual();
-    Handle<YieldTermStructure> forTS(boost::make_shared<FlatForward>(
-        today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), ActualActual()));
-    Handle<YieldTermStructure> domTS(boost::make_shared<FlatForward>(
-        today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), ActualActual()));
+    Handle<YieldTermStructure> forTS(
+        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), ActualActual()));
+    Handle<YieldTermStructure> domTS(
+        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), ActualActual()));
 
     boost::shared_ptr<QuantExt::FxIndex> fxIndex = boost::make_shared<QuantExt::FxIndex>("dummy", 2, Currency(),
         Currency(), cal, spot, forTS, domTS);
@@ -66,11 +65,10 @@ BOOST_AUTO_TEST_CASE(testFlatSurface) {
         // spot is 100 so strikes should range from (say) 70 to 150
         for (Real k = 70; k < 150; k += 0.5) {
             Volatility vol = surface.blackVol(t, k);
-            //BOOST_TEST_MESSAGE("BlackVarianceSurfaceStdDevs vol for t=" << t << " and k=" << k << " is " << vol);
+            // BOOST_TEST_MESSAGE("BlackVarianceSurfaceStdDevs vol for t=" << t << " and k=" << k << " is " << vol);
             BOOST_CHECK_CLOSE(vol, flatVol, 1e-12);
         }
     }
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

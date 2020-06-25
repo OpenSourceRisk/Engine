@@ -236,8 +236,7 @@ EquityLeg::operator Leg() const {
             if (!notionals_.empty()) {
                 notional = detail::get(notionals_, i, 0.0);
                 QL_REQUIRE(quantity_ == Null<Real>(), "EquityLeg: notional and quantity are given at the same time");
-            }
-            else {
+            } else {
                 QL_REQUIRE(fxIndex_ == nullptr,
                            "EquityLeg: can not compute notional from quantity when fx conversion is required");
                 QL_REQUIRE(quantity_ != Null<Real>(),

@@ -25,11 +25,11 @@
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <oret/toplevelfixture.hpp>
-#include <qle/indexes/equityindex.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/indexes/equityindex.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -63,8 +63,10 @@ public:
             flatRateYts(0.05);
 
         // add equity curve
-        equityCurves_[make_pair(Market::defaultConfiguration, "zzzCorp")] = Handle<EquityIndex>(boost::make_shared<EquityIndex>("zzzCorp", TARGET(), parseCurrency("EUR"),
-            equitySpot("zzzCorp"), yieldCurve(YieldCurveType::Discount, "EUR"), yieldCurve(YieldCurveType::EquityDividend, "zzzCorp")));
+        equityCurves_[make_pair(Market::defaultConfiguration, "zzzCorp")] =
+            Handle<EquityIndex>(boost::make_shared<EquityIndex>(
+                "zzzCorp", TARGET(), parseCurrency("EUR"), equitySpot("zzzCorp"),
+                yieldCurve(YieldCurveType::Discount, "EUR"), yieldCurve(YieldCurveType::EquityDividend, "zzzCorp")));
 
         // build equity vols
         equityVols_[make_pair(Market::defaultConfiguration, "zzzCorp")] = flatRateFxv(0.20);

@@ -33,8 +33,8 @@ boost::shared_ptr<PricingEngine> YoYCapFloorEngineBuilder::engineImpl(const stri
     Handle<QuantExt::YoYOptionletVolatilitySurface> ovs =
         market_->yoyCapFloorVol(indexName, configuration(MarketContext::pricing));
     if (ovs.empty())
-        return boost::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(*yoyTs,
-                                                                   Handle<QuantLib::YoYOptionletVolatilitySurface>());
+        return boost::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(
+            *yoyTs, Handle<QuantLib::YoYOptionletVolatilitySurface>());
     Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(ovs->yoyVolSurface());
     switch (ovs->volatilityType()) {
     case ShiftedLognormal:

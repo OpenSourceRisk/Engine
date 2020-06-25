@@ -34,10 +34,10 @@
 
 namespace ore {
 namespace data {
+using ore::data::Conventions;
+using ore::data::CurveConfigurations;
 using QuantLib::Date;
 using QuantLib::InflationTermStructure;
-using ore::data::CurveConfigurations;
-using ore::data::Conventions;
 using namespace data;
 
 //! Wrapper class for building inflation curves

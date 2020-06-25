@@ -177,9 +177,8 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
     LOG("Discount curve stress scenarios done");
 }
 
-
 void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioData::StressTestData& std,
-                                                       boost::shared_ptr<Scenario>& scenario) {
+                                                           boost::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
 
     for (auto d : std.survivalProbabilityShifts) {
@@ -220,7 +219,8 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
         // store shifted discount curve in the scenario
         for (Size k = 0; k < n_ten; ++k) {
             Real shiftedSurvivalProbability = exp(-shiftedZeros[k] * times[k]);
-            scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SurvivalProbability, name, k), shiftedSurvivalProbability);
+            scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SurvivalProbability, name, k),
+                          shiftedSurvivalProbability);
         }
     }
     LOG("Default Curve stress scenarios done");
@@ -521,7 +521,7 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
         vector<Real> volStrikes = simMarketData_->capFloorVolStrikes(ccy);
         // Strikes may be empty which indicates that the optionlet structure in the simulation market is an ATM curve
         if (volStrikes.empty()) {
-            volStrikes = { 0.0 };
+            volStrikes = {0.0};
         }
         Size n_cfvol_strikes = volStrikes.size();
 
@@ -593,7 +593,7 @@ void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::St
 }
 
 void StressScenarioGenerator::addRecoveryRateShifts(StressTestScenarioData::StressTestData& std,
-	boost::shared_ptr<Scenario>& scenario) {
+                                                    boost::shared_ptr<Scenario>& scenario) {
     for (auto d : std.recoveryRateShifts) {
         string isin = d.first;
         StressTestScenarioData::SpotShiftData data = d.second;
@@ -601,13 +601,12 @@ void StressScenarioGenerator::addRecoveryRateShifts(StressTestScenarioData::Stre
         bool relShift = (type == ShiftType::Relative);
         Real size = data.shiftSize;
 
-		RiskFactorKey key(RiskFactorKey::KeyType::RecoveryRate, isin);
+        RiskFactorKey key(RiskFactorKey::KeyType::RecoveryRate, isin);
         Real base_recoveryRate = baseScenario_->get(key);
-                Real new_recoveryRate = relShift ? base_recoveryRate * (1.0 + size) : (base_recoveryRate + size);
+        Real new_recoveryRate = relShift ? base_recoveryRate * (1.0 + size) : (base_recoveryRate + size);
         scenario->add(RiskFactorKey(RiskFactorKey::KeyType::RecoveryRate, isin), new_recoveryRate);
-	}
+    }
 }
-
 
 } // namespace analytics
 } // namespace ore

@@ -29,16 +29,16 @@ namespace data {
 
 FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                  const Dimension& dimension, const vector<string>& expiries,
-                                                 const vector<string>& strikes,
-                                                 const string& fxSpotID, const string& fxForeignCurveID,
-                                                 const string& fxDomesticCurveID, const DayCounter& dayCounter,
-                                                 const Calendar& calendar, const SmileInterpolation& interp, 
-                                                 const string& conventionsID, const QuantLib::Natural& smileDelta)
+                                                 const vector<string>& strikes, const string& fxSpotID,
+                                                 const string& fxForeignCurveID, const string& fxDomesticCurveID,
+                                                 const DayCounter& dayCounter, const Calendar& calendar,
+                                                 const SmileInterpolation& interp, const string& conventionsID,
+                                                 const QuantLib::Natural& smileDelta)
 
     : CurveConfig(curveID, curveDescription), dimension_(dimension), expiries_(expiries), dayCounter_(dayCounter),
       calendar_(calendar), fxSpotID_(fxSpotID), fxForeignYieldCurveID_(fxForeignCurveID),
-      fxDomesticYieldCurveID_(fxDomesticCurveID), conventionsID_(conventionsID), 
-      smileDelta_(smileDelta), smileInterpolation_(interp) {
+      fxDomesticYieldCurveID_(fxDomesticCurveID), conventionsID_(conventionsID), smileDelta_(smileDelta),
+      smileInterpolation_(interp) {
     populateRequiredYieldCurveIDs();
 }
 
@@ -83,12 +83,12 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
     if (dim == "ATM") {
         dimension_ = Dimension::ATM;
     } else if (dim == "Smile") {
-        
-        conventionsID_ = XMLUtils::getChildValue(node, "Conventions", false); 
+
+        conventionsID_ = XMLUtils::getChildValue(node, "Conventions", false);
         string smileType = XMLUtils::getChildValue(node, "SmileType");
         if (smileType == "" || smileType == "VannaVolga") {
             dimension_ = Dimension::SmileVannaVolga;
-        
+
             // only read smile interpolation method if dimension is smile.
             if (smileInterp == "") {
                 smileInterpolation_ = SmileInterpolation::VannaVolga2; // default to VannaVolga 2nd approximation
@@ -100,15 +100,15 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
                 QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
             }
 
-            string sDelta = XMLUtils::getChildValue(node, "SmileDelta"); 
-            if (sDelta == "") 
-                sDelta = "25"; 
-            smileDelta_ = parseInteger(sDelta); 
+            string sDelta = XMLUtils::getChildValue(node, "SmileDelta");
+            if (sDelta == "")
+                sDelta = "25";
+            smileDelta_ = parseInteger(sDelta);
         } else if (smileType == "Delta") {
             dimension_ = Dimension::SmileDelta;
             // only read smile interpolation method if dimension is smile.
             if (smileInterp == "" || smileInterp == "Linear") {
-                smileInterpolation_ = SmileInterpolation::Linear; 
+                smileInterpolation_ = SmileInterpolation::Linear;
             } else if (smileInterp == "Cubic") {
                 smileInterpolation_ = SmileInterpolation::Cubic;
             } else {
@@ -116,14 +116,14 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
             }
             deltas_ = XMLUtils::getChildrenValuesAsStrings(node, "Deltas", true);
 
-            //check that these are valid deltas
+            // check that these are valid deltas
             for (auto d : deltas_) {
-                QL_REQUIRE( d == "ATM" || d.back() == 'P' || d.back() == 'C', "this is not a valid value for delta, " << d);
+                QL_REQUIRE(d == "ATM" || d.back() == 'P' || d.back() == 'C',
+                           "this is not a valid value for delta, " << d);
                 if (d != "ATM") {
-                    parseReal(d.substr(0, d.size()-1));
+                    parseReal(d.substr(0, d.size() - 1));
                 }
             }
-
         }
     } else {
         QL_FAIL("Dimension " << dim << " not supported yet");
@@ -157,8 +157,8 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
         } else {
             QL_FAIL("Unknown SmileInterpolation in FXVolatilityCurveConfig::toXML()");
         }
-        XMLUtils::addChild(doc, node, "SmileDelta", to_string(smileDelta_)); 
-        XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_)); 
+        XMLUtils::addChild(doc, node, "SmileDelta", to_string(smileDelta_));
+        XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_));
     } else if (dimension_ == Dimension::SmileDelta) {
         XMLUtils::addChild(doc, node, "Dimension", "Smile");
         XMLUtils::addChild(doc, node, "SmileType", "Delta");
@@ -170,7 +170,7 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
         } else {
             QL_FAIL("Unknown SmileInterpolation in FXVolatilityCurveConfig::toXML()");
         }
-        XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_)); 
+        XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_));
         XMLUtils::addGenericChildAsList(doc, node, "Deltas", deltas_);
     } else {
         QL_FAIL("Unkown Dimension in FXVolatilityCurveConfig::toXML()");
@@ -193,7 +193,7 @@ void FXVolatilityCurveConfig::populateRequiredYieldCurveIDs() {
         std::vector<string> domTokens, forTokens;
         split(domTokens, fxDomesticYieldCurveID_, boost::is_any_of("/"));
         split(forTokens, fxForeignYieldCurveID_, boost::is_any_of("/"));
-               
+
         if (domTokens.size() == 3 && domTokens[0] == "Yield") {
             requiredYieldCurveIDs_.insert(domTokens[2]);
         } else if (domTokens.size() == 1) {
@@ -210,7 +210,6 @@ void FXVolatilityCurveConfig::populateRequiredYieldCurveIDs() {
             QL_FAIL("Cannot determine the required foreign yield curve for fx vol curve " << curveID_);
         }
     }
-
 }
 } // namespace data
 } // namespace ore

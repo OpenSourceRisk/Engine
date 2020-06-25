@@ -43,11 +43,8 @@ public:
     CDSVolCurve() {}
 
     //! Detailed constructor
-    CDSVolCurve(
-        QuantLib::Date asof,
-        CDSVolatilityCurveSpec spec,
-        const Loader& loader,
-        const CurveConfigurations& curveConfigs);
+    CDSVolCurve(QuantLib::Date asof, CDSVolatilityCurveSpec spec, const Loader& loader,
+                const CurveConfigurations& curveConfigs);
     //@}
 
     //! \name Inspectors
@@ -63,40 +60,28 @@ private:
     QuantLib::DayCounter dayCounter_;
 
     //! Build a volatility structure from a single constant volatlity quote
-    void buildVolatility(
-        const QuantLib::Date& asof,
-        const CDSVolatilityCurveConfig& vc,
-        const ConstantVolatilityConfig& cvc,
-        const Loader& loader);
+    void buildVolatility(const QuantLib::Date& asof, const CDSVolatilityCurveConfig& vc,
+                         const ConstantVolatilityConfig& cvc, const Loader& loader);
 
     //! Build a volatility curve from a 1-D curve of volatlity quotes
-    void buildVolatility(
-        const QuantLib::Date& asof,
-        const CDSVolatilityCurveConfig& vc,
-        const VolatilityCurveConfig& vcc,
-        const Loader& loader);
+    void buildVolatility(const QuantLib::Date& asof, const CDSVolatilityCurveConfig& vc,
+                         const VolatilityCurveConfig& vcc, const Loader& loader);
 
     //! Build a volatility surface from a collection of expiry and absolute strike pairs.
-    void buildVolatility(
-        const QuantLib::Date& asof,
-        CDSVolatilityCurveConfig& vc,
-        const VolatilityStrikeSurfaceConfig& vssc,
-        const Loader& loader);
+    void buildVolatility(const QuantLib::Date& asof, CDSVolatilityCurveConfig& vc,
+                         const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader);
 
     /*! Build a volatility surface from a collection of expiry and absolute strike pairs where the strikes and
         expiries are both explicitly configured i.e. where wild cards are not used for either the strikes or
         the expiries.
     */
-    void buildVolatilityExplicit(
-        const QuantLib::Date& asof,
-        CDSVolatilityCurveConfig& vc,
-        const VolatilityStrikeSurfaceConfig& vssc,
-        const Loader& loader,
-        const std::vector<QuantLib::Real>& configuredStrikes);
+    void buildVolatilityExplicit(const QuantLib::Date& asof, CDSVolatilityCurveConfig& vc,
+                                 const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
+                                 const std::vector<QuantLib::Real>& configuredStrikes);
 
     //! Get an explicit expiry date from a CDS option quote's Expiry
     QuantLib::Date getExpiry(const QuantLib::Date& asof, const boost::shared_ptr<Expiry>& expiry) const;
 };
 
-}
-}
+} // namespace data
+} // namespace ore

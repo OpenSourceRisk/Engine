@@ -46,8 +46,7 @@ public:
                string noticeConvention = "", const vector<string>& exerciseFeeDates = vector<string>(),
                const vector<string>& exerciseFeeTypes = vector<string>(), string exerciseFeeSettlementPeriod = "",
                string exerciseFeeSettlementCalendar = "", string exerciseFeeSettlementConvention = "",
-               string payoffType = "",
-               const boost::optional<bool>& automaticExercise = boost::none,
+               string payoffType = "", const boost::optional<bool>& automaticExercise = boost::none,
                const boost::optional<OptionExerciseData>& exerciseData = boost::none,
                const boost::optional<OptionPaymentData>& paymentData = boost::none)
         : longShort_(longShort), callPut_(callPut), payoffType_(payoffType), style_(style),

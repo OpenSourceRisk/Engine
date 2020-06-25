@@ -24,9 +24,7 @@ namespace QuantExt {
 FXLinked::FXLinked(const Date& fxFixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex)
     : fxFixingDate_(fxFixingDate), foreignAmount_(foreignAmount), fxIndex_(fxIndex) {}
 
-Real FXLinked::fxRate() const {
-    return fxIndex_->fixing(fxFixingDate_);
-}
+Real FXLinked::fxRate() const { return fxIndex_->fixing(fxFixingDate_); }
 
 FXLinkedCashFlow::FXLinkedCashFlow(const Date& cashFlowDate, const Date& fxFixingDate, Real foreignAmount,
                                    boost::shared_ptr<FxIndex> fxIndex)

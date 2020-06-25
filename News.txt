@@ -12,6 +12,8 @@ INSTRUMENTS
 - Add reference data manager (handles Bond reference data as concrete example)
 - Add underlying description (FX, Equity, Commodity)
 - Add Settlement node to FX Forward, FX Swap and Swap instruments 
+- Add lockout to overnight coupons
+- Allow explicit payment dates for cash settled vanilla European options
 - Extend Equity Swap: legs, equity coupon with FX adjustment, resettable feature,
   quantity vs initial notional
 - Extend CDS: Allow fixed recovery, front or back stub periods, protection payment
@@ -37,19 +39,17 @@ TERM STRUCTURES
 
 - Add fitted Bond yield curves
 - When bootstrapping a default curve from CDS, allow for retries with widening of
-  search bounds. Avoids exceptions
-  for distressed CDS curves for example.
+  search bounds. Avoids exceptions for distressed CDS curves for example.
 - Inflation cap/floor volatility surfaces cleaned up, inflation price surfaces removed
   from the market interface
 - Equity volatility surface changes, clean up and stripping from option premiums,
-  allow wildcard in strike/expiry config.
+  allow wildcard in strike/expiry config, add Equity volatility surface proxies
 - Allow optional quotes in curve configurations
 - New Equity forward curve stripper that allows a dividend yield to be determined from
   equity option premiums
 - ESTER/SOFR basic curve building
 - New cap/floor optionlet stripper that uses an iterative bootstrap with configurable
-  interpolation/extrapolation
-  in expiry and strike direction.
+  interpolation/extrapolation in expiry and strike direction.
 - New CDS volatility configuration to allow for constant volatility, a volatility
   curve or an expiry x strike surface
 - Added Commodity basis price curve and average basis price curve
@@ -93,7 +93,7 @@ BUILDING ORE
 LANGUAGE BINDUNGS
 
 - Maintenance to ensure SWIG wrappers build with current ORE and QuantLib-SWIG 1.18,
-  rework all *.i files to use the SWIG wrapper of {\tt boost::shared\_ptr} following
+  rework all *.i files to use the SWIG wrapper of boost::shared_ptr following
   QuantLib-SWIG
 
 OTHER

@@ -57,9 +57,9 @@ public:
           directionIntegers_(SobolRsg::JoeKuoD7) {}
 
     //! Constructor
-    ScenarioGeneratorData(CrossAssetStateProcess::discretization discretization,
-                          boost::shared_ptr<DateGrid> dateGrid, SequenceType sequenceType, long seed,
-                          Size samples, SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
+    ScenarioGeneratorData(CrossAssetStateProcess::discretization discretization, boost::shared_ptr<DateGrid> dateGrid,
+                          SequenceType sequenceType, long seed, Size samples,
+                          SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                           SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7)
         : discretization_(discretization), grid_(dateGrid), sequenceType_(sequenceType), seed_(seed), samples_(samples),
           ordering_(ordering), directionIntegers_(directionIntegers) {}

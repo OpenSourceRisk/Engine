@@ -28,9 +28,9 @@
 
 namespace ore {
 namespace data {
+using ore::data::XMLNode;
 using std::string;
 using std::vector;
-using ore::data::XMLNode;
 
 //! Security configuration
 /*!

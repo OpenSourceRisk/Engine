@@ -30,9 +30,10 @@ boost::shared_ptr<ReferenceDatum> ReferenceDatumFactory::build(const string& ref
     return it->second()->build();
 }
 
-void ReferenceDatumFactory::addBuilder(const string& refDatumType, std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder) {
+void ReferenceDatumFactory::addBuilder(const string& refDatumType,
+                                       std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder) {
     map_[refDatumType] = builder;
 }
 
-} // data
-} // ore
+} // namespace data
+} // namespace ore

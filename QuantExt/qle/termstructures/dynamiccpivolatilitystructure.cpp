@@ -51,9 +51,9 @@ void DynamicCPIVolatilitySurface::update() { TermStructure::update(); }
 
 Volatility DynamicCPIVolatilitySurface::volatilityImpl(Time length, Rate strike) const {
     if (decayMode_ == ConstantVariance) {
-      // FIXME!
-      Date m = referenceDate() + int(floor(365.25*length))*Days;
-      return source_->volatility(m, strike, source_->observationLag());
+        // FIXME!
+        Date m = referenceDate() + int(floor(365.25 * length)) * Days;
+        return source_->volatility(m, strike, source_->observationLag());
     }
 
     // TODO: check validity of ForwardVariance option before using it.

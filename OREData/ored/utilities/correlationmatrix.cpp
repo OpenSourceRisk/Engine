@@ -18,8 +18,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
-#include <ql/quotes/simplequote.hpp>
 #include <ql/quotes/derivedquote.hpp>
+#include <ql/quotes/simplequote.hpp>
 
 using namespace std;
 

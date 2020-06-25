@@ -51,25 +51,18 @@ public:
                          const std::vector<std::string>& quotes, const std::string& commoditySpotQuote = "",
                          const std::string& dayCountId = "A365", const std::string& interpolationMethod = "Linear",
                          bool extrapolation = true, const std::string& conventionsId = "");
-    
+
     //! Detailed constructor for CrossCurrency commodity curve configuration
     CommodityCurveConfig(const std::string& curveId, const std::string& curveDescription, const std::string& currency,
-        const std::string& basePriceCurveId, const std::string& baseYieldCurveId,
-        const std::string& yieldCurveId, bool extrapolation = true);
+                         const std::string& basePriceCurveId, const std::string& baseYieldCurveId,
+                         const std::string& yieldCurveId, bool extrapolation = true);
 
     //! Detailed constructor for Basis commodity curve configuration
-    CommodityCurveConfig(const std::string& curveId,
-        const std::string& curveDescription,
-        const std::string& currency,
-        const std::string& basePriceCurveId,
-        const std::string& baseConventionsId,
-        const std::vector<std::string>& basisQuotes,
-        const std::string& basisConventionsId,
-        const std::string& dayCountId = "A365",
-        const std::string& interpolationMethod = "Linear",
-        bool extrapolation = true,
-        bool addBasis = true,
-        QuantLib::Natural monthOffset = 0);
+    CommodityCurveConfig(const std::string& curveId, const std::string& curveDescription, const std::string& currency,
+                         const std::string& basePriceCurveId, const std::string& baseConventionsId,
+                         const std::vector<std::string>& basisQuotes, const std::string& basisConventionsId,
+                         const std::string& dayCountId = "A365", const std::string& interpolationMethod = "Linear",
+                         bool extrapolation = true, bool addBasis = true, QuantLib::Natural monthOffset = 0);
     //@}
 
     //! \name Serialisation

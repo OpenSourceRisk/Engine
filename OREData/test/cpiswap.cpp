@@ -248,8 +248,9 @@ BOOST_AUTO_TEST_CASE(testCPISwapPrice) {
     string CPIlag = "2M";
     std::vector<double> fixedRate(1, 0.02);
     bool interpolated = false;
-    LegData legCPI(boost::make_shared<CPILegData>(indexCPI, start, baseCPI, CPIlag, (interpolated ? "Linear" : "Flat"), fixedRate), isPayerCPI,
-                   "GBP", scheduleCPI, dc, notional, vector<string>(), paymentConvention, false, true);
+    LegData legCPI(
+        boost::make_shared<CPILegData>(indexCPI, start, baseCPI, CPIlag, (interpolated ? "Linear" : "Flat"), fixedRate),
+        isPayerCPI, "GBP", scheduleCPI, dc, notional, vector<string>(), paymentConvention, false, true);
 
     // Build swap trades
     boost::shared_ptr<Trade> CPIswap(new ore::data::Swap(env, legLibor, legCPI));

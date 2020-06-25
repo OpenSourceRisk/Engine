@@ -28,41 +28,34 @@
 
 namespace QuantExt {
 
-    using namespace QuantLib;
+using namespace QuantLib;
 
-    //! Constant surface, no K or T dependence.
-    class ConstantYoYOptionletVolatility
-        : public QuantLib::YoYOptionletVolatilitySurface {
-    public:
-        //! \name Constructor
-        //@{
-        //! calculate the reference date based on the global evaluation date
-        ConstantYoYOptionletVolatility(const Handle<Quote>& volatility,
-                                       Natural settlementDays,
-                                       const Calendar&,
-                                       BusinessDayConvention bdc,
-                                       const DayCounter& dc,
-                                       const Period &observationLag,
-                                       Frequency frequency,
-                                       bool indexIsInterpolated);
-        //@}
-        virtual ~ConstantYoYOptionletVolatility() {}
+//! Constant surface, no K or T dependence.
+class ConstantYoYOptionletVolatility : public QuantLib::YoYOptionletVolatilitySurface {
+public:
+    //! \name Constructor
+    //@{
+    //! calculate the reference date based on the global evaluation date
+    ConstantYoYOptionletVolatility(const Handle<Quote>& volatility, Natural settlementDays, const Calendar&,
+                                   BusinessDayConvention bdc, const DayCounter& dc, const Period& observationLag,
+                                   Frequency frequency, bool indexIsInterpolated);
+    //@}
+    virtual ~ConstantYoYOptionletVolatility() {}
 
-        //! \name Limits
-        //@{
-        virtual Date maxDate() const { return Date::maxDate(); }
-        //! the minimum strike for which the term structure can return vols
-        virtual Real minStrike() const { return -QL_MAX_REAL; }
-        //! the maximum strike for which the term structure can return vols
-        virtual Real maxStrike() const { return QL_MAX_REAL; }
-        //@}
+    //! \name Limits
+    //@{
+    virtual Date maxDate() const { return Date::maxDate(); }
+    //! the minimum strike for which the term structure can return vols
+    virtual Real minStrike() const { return -QL_MAX_REAL; }
+    //! the maximum strike for which the term structure can return vols
+    virtual Real maxStrike() const { return QL_MAX_REAL; }
+    //@}
 
-    protected:
-        //! implements the actual volatility calculation in derived classes
-        virtual Volatility volatilityImpl(Time length, Rate strike) const;
+protected:
+    //! implements the actual volatility calculation in derived classes
+    virtual Volatility volatilityImpl(Time length, Rate strike) const;
 
-        Handle<Quote> volatility_;
-    };
+    Handle<Quote> volatility_;
+};
 
 } // namespace QuantExt
-

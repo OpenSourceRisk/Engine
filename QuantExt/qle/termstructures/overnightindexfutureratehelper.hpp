@@ -40,67 +40,57 @@
 #ifndef quantext_overnightindexfutureratehelper_hpp
 #define quantext_overnightindexfutureratehelper_hpp
 
-#include <qle/instruments/overnightindexfuture.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
+#include <qle/instruments/overnightindexfuture.hpp>
 
 namespace QuantExt {
 
-    using namespace QuantLib;
+using namespace QuantLib;
 
-    //! RateHelper for bootstrapping over overnight compounding futures
-    class OvernightIndexFutureRateHelper : public RateHelper {
-    public:
-        OvernightIndexFutureRateHelper(
-          const Handle<Quote>& price,
-          // first day of reference period
-          const Date& valueDate,
-          // delivery date
-          const Date& maturityDate,
-          const ext::shared_ptr<OvernightIndex>& overnightIndex,
-          const Handle<Quote>& convexityAdjustment = Handle<Quote>());
+//! RateHelper for bootstrapping over overnight compounding futures
+class OvernightIndexFutureRateHelper : public RateHelper {
+public:
+    OvernightIndexFutureRateHelper(const Handle<Quote>& price,
+                                   // first day of reference period
+                                   const Date& valueDate,
+                                   // delivery date
+                                   const Date& maturityDate, const ext::shared_ptr<OvernightIndex>& overnightIndex,
+                                   const Handle<Quote>& convexityAdjustment = Handle<Quote>());
 
-        //! \name RateHelper interface
-        //@{
-        Real impliedQuote() const;
-        void setTermStructure(YieldTermStructure*);
-        //@}
-        //! \name Visitability
-        //@{
-        void accept(AcyclicVisitor&);
-        //@}
-        Real convexityAdjustment() const;
-    private:
-        ext::shared_ptr<OvernightIndexFuture> future_;
-        RelinkableHandle<YieldTermStructure> termStructureHandle_;
-    };
+    //! \name RateHelper interface
+    //@{
+    Real impliedQuote() const;
+    void setTermStructure(YieldTermStructure*);
+    //@}
+    //! \name Visitability
+    //@{
+    void accept(AcyclicVisitor&);
+    //@}
+    Real convexityAdjustment() const;
 
-    /*!
-    RateHelper for bootstrapping over CME SOFR futures
+private:
+    ext::shared_ptr<OvernightIndexFuture> future_;
+    RelinkableHandle<YieldTermStructure> termStructureHandle_;
+};
 
-    Compounds with overnight SOFR rates from the third Wednesday of the
-    reference month/year (inclusive) to the third Wednesday of the month
-    one Month/Quarter later (exclusive).
+/*!
+RateHelper for bootstrapping over CME SOFR futures
 
-    Requires index history populated when reference period starts in the past.
-    */
-    class SofrFutureRateHelper : public OvernightIndexFutureRateHelper {
-    public:
-        SofrFutureRateHelper(
-            const Handle<Quote>& price,
-            Month referenceMonth,
-            Year referenceYear,
-            Frequency referenceFreq,
-            const ext::shared_ptr<OvernightIndex>& overnightIndex,
-            const Handle<Quote>& convexityAdjustment = Handle<Quote>());
-        SofrFutureRateHelper(
-            Real price,
-            Month referenceMonth,
-            Year referenceYear,
-            Frequency referenceFreq,
-            const ext::shared_ptr<OvernightIndex>& overnightIndex,
-            Real convexityAdjustment = 0);
-    };
+Compounds with overnight SOFR rates from the third Wednesday of the
+reference month/year (inclusive) to the third Wednesday of the month
+one Month/Quarter later (exclusive).
 
-}
+Requires index history populated when reference period starts in the past.
+*/
+class SofrFutureRateHelper : public OvernightIndexFutureRateHelper {
+public:
+    SofrFutureRateHelper(const Handle<Quote>& price, Month referenceMonth, Year referenceYear, Frequency referenceFreq,
+                         const ext::shared_ptr<OvernightIndex>& overnightIndex,
+                         const Handle<Quote>& convexityAdjustment = Handle<Quote>());
+    SofrFutureRateHelper(Real price, Month referenceMonth, Year referenceYear, Frequency referenceFreq,
+                         const ext::shared_ptr<OvernightIndex>& overnightIndex, Real convexityAdjustment = 0);
+};
+
+} // namespace QuantExt
 
 #endif

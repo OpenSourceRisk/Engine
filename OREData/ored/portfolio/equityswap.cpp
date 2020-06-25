@@ -90,7 +90,8 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // add fx indexing, if applicable
         if (!eqLegData->fxIndex().empty()) {
             Real initialFxFixing = Null<Real>();
-            // if the eq leg has an initial price and this is in the eq leg currency, we do not want an FX conversion for this price
+            // if the eq leg has an initial price and this is in the eq leg currency, we do not want an FX conversion
+            // for this price
             if (!eqLegData->initialPriceCurrency().empty() &&
                 eqLegData->initialPriceCurrency() == legData_[equityLegIndex_].currency() &&
                 eqLegData->initialPrice() != Null<Real>())
@@ -101,7 +102,7 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
 
         // set notional node to 1.0
-        legData_[irLegIndex_].notionals() = std::vector<Real>(1,1.0);
+        legData_[irLegIndex_].notionals() = std::vector<Real>(1, 1.0);
         legData_[irLegIndex_].notionalDates() = std::vector<std::string>();
 
         // reset flag that told us to pull the indexing information from the equity leg

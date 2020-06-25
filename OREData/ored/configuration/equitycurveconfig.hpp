@@ -32,13 +32,13 @@
 
 namespace ore {
 namespace data {
+using ore::data::XMLNode;
+using QuantLib::BusinessDayConvention;
+using QuantLib::Calendar;
+using QuantLib::DayCounter;
+using QuantLib::Period;
 using std::string;
 using std::vector;
-using ore::data::XMLNode;
-using QuantLib::Period;
-using QuantLib::DayCounter;
-using QuantLib::Calendar;
-using QuantLib::BusinessDayConvention;
 
 //! Equity curve configuration
 /*!
@@ -55,7 +55,8 @@ public:
                       const string& currency, const Type& type, const string& equitySpotQuote,
                       const vector<string>& quotes, const string& dayCountID = "",
                       const string& dividendInterpVariable = "Zero", const string& dividendInterpMethod = "Linear",
-                      bool extrapolation = true, const QuantLib::Exercise::Type& exerciseStyle = QuantLib::Exercise::Type::European);
+                      bool extrapolation = true,
+                      const QuantLib::Exercise::Type& exerciseStyle = QuantLib::Exercise::Type::European);
     //! Default constructor
     EquityCurveConfig() {}
     //@}
@@ -109,7 +110,7 @@ private:
 std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t);
 std::ostream& operator<<(std::ostream& out, QuantLib::Exercise::Type t);
 
-EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str); 
+EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str);
 
 } // namespace data
 } // namespace ore

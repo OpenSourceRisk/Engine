@@ -28,8 +28,8 @@
 #include <orea/simulation/simmarket.hpp>
 #include <ored/model/modelbuilder.hpp>
 #include <ored/portfolio/portfolio.hpp>
-#include <ored/utilities/progressbar.hpp>
 #include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/progressbar.hpp>
 
 #include <map>
 #include <set>

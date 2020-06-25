@@ -87,9 +87,7 @@ string getSystemDetails() {
 
 string getMemoryUsage() { return memoryString(getMemoryUsageBytes()); }
 
-string getPeakMemoryUsage() { 
-    return memoryString(getPeakMemoryUsageBytes());
-}
+string getPeakMemoryUsage() { return memoryString(getPeakMemoryUsageBytes()); }
 
 // -------------------------------------
 // ---- Windows stuff
@@ -255,7 +253,7 @@ unsigned long long getMemoryUsageBytes() {
     struct mach_task_basic_info info;
     mach_msg_type_number_t infoCount = MACH_TASK_BASIC_INFO_COUNT;
     if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info, &infoCount) != KERN_SUCCESS)
-        return 0ULL;  /* Can't access? */
+        return 0ULL; /* Can't access? */
     return (unsigned long long)info.resident_size;
 }
 
@@ -329,10 +327,10 @@ unsigned long long getMemoryUsageBytes() {
     unsigned long long rss = 0ULL;
     FILE* fp = NULL;
     if ((fp = fopen("/proc/self/statm", "r")) == NULL)
-        return 0ULL;  /* Can't open? */
+        return 0ULL; /* Can't open? */
     if (fscanf(fp, "%*s%llu", &rss) != 1) {
         fclose(fp);
-        return 0ULL;  /* Can't read? */
+        return 0ULL; /* Can't read? */
     }
     fclose(fp);
     return (unsigned long long)rss * (unsigned long long)sysconf(_SC_PAGESIZE);

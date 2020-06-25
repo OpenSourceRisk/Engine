@@ -36,9 +36,9 @@ namespace data {
 using namespace QuantLib;
 using ore::data::Convention;
 using ore::data::Conventions;
-using std::string;
 using std::map;
 using std::pair;
+using std::string;
 using std::tuple;
 
 // TODO: rename class
@@ -84,7 +84,7 @@ public:
 
     //! Yield volatility
     Handle<QuantLib::SwaptionVolatilityStructure>
-        yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const;
+    yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const;
 
     //! FX
     Handle<Quote> fxSpot(const string& ccypair, const string& configuration = Market::defaultConfiguration) const;

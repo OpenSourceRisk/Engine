@@ -25,11 +25,11 @@ namespace ore {
 namespace data {
 
 ConventionsBasedFutureExpiry::ConventionsBasedFutureExpiry(const CommodityFutureConvention& convention,
-    Size maxIterations)
+                                                           Size maxIterations)
     : convention_(convention), maxIterations_(maxIterations) {}
 
-Date ConventionsBasedFutureExpiry::nextExpiry(bool includeExpiry, const Date& referenceDate,
-    Natural offset, bool forOption) {
+Date ConventionsBasedFutureExpiry::nextExpiry(bool includeExpiry, const Date& referenceDate, Natural offset,
+                                              bool forOption) {
 
     // Set the date relative to which we are calculating the next expiry
     Date today = referenceDate == Date() ? Settings::instance().evaluationDate() : referenceDate;
@@ -75,19 +75,19 @@ Date ConventionsBasedFutureExpiry::priorExpiry(bool includeExpiry, const Date& r
         counter--;
         expiry = nextExpiry(true, baseDate, 0, forOption);
     }
-    QL_REQUIRE(expiry < today, "Expected that expiry " << io::iso_date(expiry) <<
-        " would be less than reference date " << io::iso_date(today) << ".");
+    QL_REQUIRE(expiry < today, "Expected that expiry " << io::iso_date(expiry) << " would be less than reference date "
+                                                       << io::iso_date(today) << ".");
 
     return expiry;
 }
 
-Date ConventionsBasedFutureExpiry::expiryDate(Month contractMonth,
-    Year contractYear, Natural monthOffset, bool forOption) {
+Date ConventionsBasedFutureExpiry::expiryDate(Month contractMonth, Year contractYear, Natural monthOffset,
+                                              bool forOption) {
     return expiry(contractMonth, contractYear, monthOffset, forOption);
 }
 
-Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear, 
-    QuantLib::Natural monthOffset, bool forOption) const {
+Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear, QuantLib::Natural monthOffset,
+                                          bool forOption) const {
 
     Date expiry;
 
@@ -136,8 +136,8 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
 
     // If we want the option contract expiry, do the extra work here.
     if (forOption) {
-        expiry = convention_.expiryCalendar().advance(expiry, 
-            -static_cast<Integer>(convention_.optionExpiryOffset()), Days);
+        expiry =
+            convention_.expiryCalendar().advance(expiry, -static_cast<Integer>(convention_.optionExpiryOffset()), Days);
 
         // If expiry date is one of the prohibited dates, move to preceding business day
         while (convention_.prohibitedExpiries().count(expiry) > 0) {
@@ -162,5 +162,5 @@ Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate, bool fo
     return expiryDate;
 }
 
-}
-}
+} // namespace data
+} // namespace ore

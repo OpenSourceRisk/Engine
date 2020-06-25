@@ -38,8 +38,7 @@ public:
     ForwardRateAgreement(Envelope& env, string longShort, string currency, string startDate, string endDate,
                          string index, double strike, double amount)
         : Trade("ForwardRateAgreement", env), longShort_(longShort), currency_(currency), startDate_(startDate),
-          endDate_(endDate), index_(index), strike_(strike), amount_(amount) {
-    }
+          endDate_(endDate), index_(index), strike_(strike), amount_(amount) {}
     void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
 
     virtual void fromXML(XMLNode* node) override;

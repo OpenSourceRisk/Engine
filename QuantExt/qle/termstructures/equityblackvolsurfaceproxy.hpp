@@ -25,17 +25,17 @@
 #define quantext_blackvolsurfacewithatm_hpp
 
 #include <boost/shared_ptr.hpp>
-#include <qle/indexes/equityindex.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <qle/indexes/equityindex.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
 //! Wrapper class for a BlackVolTermStructure that allows us to proxy one equity vol surface off another.
 /*! This class implements BlackVolatilityTermStructure and takes a surface (well, any BlackVolTermStructure) as an
-    input. It also takes Handles to two EquityIndices (index and proxyIndex), where index is the 'EquityIndex' of the underlying 
-    for the surface being constructed and proxyIndex is the 'EquityIndex' for the surface being proxied off.
+    input. It also takes Handles to two EquityIndices (index and proxyIndex), where index is the 'EquityIndex' of the
+   underlying for the surface being constructed and proxyIndex is the 'EquityIndex' for the surface being proxied off.
 
     The vol returned from the new surface is proxied from the base, adjusting by the forward prices to match ATM:
 
@@ -52,8 +52,8 @@ using namespace QuantLib;
     \n
 
     Note: This surface only proxies equity volatilities, this is because we are forced to look up the equity fixings
-    using time instead of date and use the forecastFixing method in an EquityIndex. A more general class could be developed
-    if need, using Index instead of EquityIndex, if the time lookup could be overcome.
+    using time instead of date and use the forecastFixing method in an EquityIndex. A more general class could be
+   developed if need, using Index instead of EquityIndex, if the time lookup could be overcome.
 
     */
 //!\ingroup termstructures
@@ -62,7 +62,8 @@ class EquityBlackVolatilitySurfaceProxy : public BlackVolatilityTermStructure {
 public:
     //! Constructor. This is a floating term structure (settlement days is zero)
     EquityBlackVolatilitySurfaceProxy(const boost::shared_ptr<BlackVolTermStructure>& proxySurface,
-        const boost::shared_ptr<EquityIndex>& index, const boost::shared_ptr<EquityIndex>& proxyIndex);
+                                      const boost::shared_ptr<EquityIndex>& index,
+                                      const boost::shared_ptr<EquityIndex>& proxyIndex);
 
     //! \name TermStructure interface
     //@{
