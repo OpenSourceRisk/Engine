@@ -234,6 +234,9 @@ protected:
 
     ore::data::CurveConfigurations curveConfigs_;
 
+    //! Populated if a sensitivity analysis is performed.
+    boost::shared_ptr<SensitivityRunner> sensitivityRunner_;
+
 private:
     virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }
 };

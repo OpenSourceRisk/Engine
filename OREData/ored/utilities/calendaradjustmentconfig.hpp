@@ -52,6 +52,9 @@ public:
     //! This method adds d to the list of business days for cal name.
     void addBusinessDays(const string& calname, const Date& d);
 
+    //! This method adds s as a base calendar for cal name.
+    void addBaseCalendar(const string& calname, const string& d);
+
     //! Returns all the holidays for a given cal name
     const set<Date>& getHolidays(const string& calname) const;
 
@@ -60,6 +63,8 @@ public:
 
     set<string> getCalendars() const;
 
+    const string& getBaseCalendar(const string& calname) const;
+
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
 
@@ -67,26 +72,11 @@ public:
     void append(const CalendarAdjustmentConfig& c);
 
 private:
+    map<string, string> baseCalendars_;
     map<string, set<Date>> additionalHolidays_;
     map<string, set<Date>> additionalBusinessDays_;
 
     string normalisedName(const string&) const;
-};
-//! global config
-class CalendarAdjustments : public QuantLib::Singleton<CalendarAdjustments> {
-    friend class QuantLib::Singleton<CalendarAdjustments>;
-
-public:
-    //! get the global config
-    const CalendarAdjustmentConfig& config() const { return config_; }
-
-    //! set the global config
-    void setConfig(const CalendarAdjustmentConfig& c) { config_ = c; }
-
-private:
-    CalendarAdjustmentConfig config_;
-
-    CalendarAdjustments() {}
 };
 
 } // namespace data

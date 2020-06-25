@@ -41,6 +41,7 @@
 #include <qle/calendars/ice.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/largejointcalendar.hpp>
+#include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/netherlands.hpp>
@@ -168,7 +169,7 @@ bool parseBool(const string& s) {
     }
 }
 
-Calendar parseCalendar(const string& s, bool adjustCalendar) {
+Calendar parseCalendar(const string& s, const string& newName) {
     static map<string, Calendar> m = {
         {"TGT", TARGET()},
         {"TARGET", TARGET()},
@@ -447,18 +448,13 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
     auto it = m.find(s);
     if (it != m.end()) {
         Calendar cal = it->second;
-        if (adjustCalendar) {
-            // add custom holidays from populated calendar adjustments
-            const CalendarAdjustmentConfig& config = CalendarAdjustments::instance().config();
-            for (auto h : config.getHolidays(s)) {
-                cal.addHoliday(h);
-            }
-            for (auto b : config.getBusinessDays(s)) {
-                cal.removeHoliday(b);
-            }
+        if (newName != "") {
+            Calendar newCal = AmendedCalendar(cal, newName);
+            m[newName] = newCal;
+            return newCal;
+        } else {
+            return cal;
         }
-        return cal;
-
     } else {
         // Try to split them up
         vector<string> calendarNames;
@@ -477,7 +473,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
         for (Size i = 0; i < calendarNames.size(); i++) {
             boost::trim(calendarNames[i]);
             try {
-                calendars.push_back(parseCalendar(calendarNames[i], adjustCalendar));
+                calendars.push_back(parseCalendar(calendarNames[i]));
             } catch (std::exception& e) {
                 QL_FAIL("Cannot convert \"" << s << "\" to Calendar [exception:" << e.what() << "]");
             } catch (...) {
@@ -974,6 +970,17 @@ std::ostream& operator<<(std::ostream& os, Extrapolation extrap) {
         return os << "Flat";
     default:
         QL_FAIL("Unknown Extrapolation");
+    }
+}
+
+VolatilityType parseVolatilityQuoteType(const string& s) {
+
+    if (s == "Normal") {
+        return Normal;
+    } else if (s == "ShiftedLognormal") {
+        return ShiftedLognormal;
+    } else {
+        QL_FAIL("Unknown volatility quote type " << s);
     }
 }
 
