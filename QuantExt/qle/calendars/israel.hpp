@@ -31,6 +31,9 @@ namespace QuantExt {
 //! Israel calendar
 /*! Extend Israel calendar to cover TELBOR publication dates as described at:
     https://www.boi.org.il/en/Markets/TelborMarket/Documents/telbordef_eng.pdf
+    Telbor holidays 2019, 2020:
+    https://www.boi.org.il/en/Markets/TelborMarket/Documents/NoTelborRates2019.pdf
+    https://www.boi.org.il/en/Markets/TelborMarket/Documents/NoTelborRates2020.pdf
 
     \ingroup calendars
 */
