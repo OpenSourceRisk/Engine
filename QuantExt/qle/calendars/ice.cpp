@@ -16,15 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/calendars/ice.hpp>
 #include <ql/shared_ptr.hpp>
+#include <qle/calendars/ice.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
 ICE::ICE(ICE::Market market) {
-    
+
     // All calendar instances on the same market share the same implementation instance
     static ext::shared_ptr<QuantLib::Calendar::Impl> futuresUSImpl(new ICE::FuturesUSImpl);
     static ext::shared_ptr<QuantLib::Calendar::Impl> futuresUSImpl_1(new ICE::FuturesUSImpl_1);
@@ -36,7 +36,7 @@ ICE::ICE(ICE::Market market) {
     static ext::shared_ptr<QuantLib::Calendar::Impl> swapTradeUSImpl(new ICE::SwapTradeUSImpl);
     static ext::shared_ptr<QuantLib::Calendar::Impl> swapTradeUKImpl(new ICE::SwapTradeUKImpl);
     static ext::shared_ptr<QuantLib::Calendar::Impl> futuresSingaporeImpl(new ICE::FuturesSingaporeImpl);
-    
+
     switch (market) {
     case FuturesUS:
         impl_ = futuresUSImpl;
@@ -74,23 +74,23 @@ ICE::ICE(ICE::Market market) {
 }
 
 bool ICE::FuturesUSImpl::isBusinessDay(const Date& date) const {
-    
+
     Weekday w = date.weekday();
     Day d = date.dayOfMonth();
     Month m = date.month();
     Year y = date.year();
-    
+
     Day dd = date.dayOfYear();
     Day em = easterMonday(y);
-    
+
     if (isWeekend(w)
         // New Year's Day (possibly moved to Monday if on Sunday)
         || ((d == 1 || (d == 2 && w == Monday)) && m == January)
         // Good Friday
         || (dd == em - 3)
         // Christmas (Monday if Sunday or Friday if Saturday)
-        || ((d == 25 || (d == 26 && w == Monday) || (d == 24 && w == Friday)) && m == December)
-        ) return false;
+        || ((d == 25 || (d == 26 && w == Monday) || (d == 24 && w == Friday)) && m == December))
+        return false;
 
     return true;
 }
@@ -114,8 +114,8 @@ bool ICE::FuturesUSImpl_1::isBusinessDay(const Date& date) const {
         // Labor Day (first Monday in September)
         || (d <= 7 && w == Monday && m == September)
         // Thanksgiving Day (fourth Thursday in November)
-        || ((d >= 22 && d <= 28) && w == Thursday && m == November)
-        ) return false;
+        || ((d >= 22 && d <= 28) && w == Thursday && m == November))
+        return false;
 
     return true;
 }
@@ -140,14 +140,14 @@ bool ICE::FuturesUSImpl_2::isBusinessDay(const Date& date) const {
         // Second Monday of October (Thanksgiving Day Canada)
         || (d > 7 && d <= 14 && w == Monday && m == October)
         // Boxing Day Canada (Monday if Sunday, Tuesday if Monday i.e. xmas day is Sunday)
-        || ((d == 26 || (d == 27 && (w == Monday ||  w == Tuesday))) && m == December)
-        ) return false;
+        || ((d == 26 || (d == 27 && (w == Monday || w == Tuesday))) && m == December))
+        return false;
 
     return true;
 }
 
 bool ICE::FuturesEUImpl::isBusinessDay(const Date& date) const {
-    
+
     Weekday w = date.weekday();
     Day d = date.dayOfMonth();
     Month m = date.month();
@@ -155,15 +155,15 @@ bool ICE::FuturesEUImpl::isBusinessDay(const Date& date) const {
 
     Day dd = date.dayOfYear();
     Day em = easterMonday(y);
-    
+
     if (isWeekend(w)
         // New Year's Day (Monday if on Sunday)
         || ((d == 1 || (d == 2 && w == Monday)) && m == January)
         // Good Friday
         || (dd == em - 3)
         // Christmas (Monday if Sunday)
-        || ((d == 25 || (d == 26 && w == Monday)) && m == December)
-        ) return false;
+        || ((d == 25 || (d == 26 && w == Monday)) && m == December))
+        return false;
 
     return true;
 }
@@ -176,8 +176,8 @@ bool ICE::FuturesEUImpl_1::isBusinessDay(const Date& date) const {
 
     if (!FuturesEUImpl::isBusinessDay(date)
         // 26 Dec (Monday off if Sunday or Saturday is 26 Dec, Tuesday off if Monday is 26 Dec)
-        || ((d == 26 || ((d == 27 || d == 28) && w == Monday) || (d == 27 && w == Tuesday)) && m == December)
-        ) return false;
+        || ((d == 26 || ((d == 27 || d == 28) && w == Monday) || (d == 27 && w == Tuesday)) && m == December))
+        return false;
 
     return true;
 }
@@ -202,8 +202,8 @@ bool ICE::EndexEnergyImpl::isBusinessDay(const Date& date) const {
         // Christmas (Monday if Sunday)
         || ((d == 25 || (d == 26 && w == Monday)) && m == December)
         // 26 Dec (Monday if Sunday)
-        || ((d == 26 || (d == 27 && w == Monday)) && m == December)
-        ) return false;
+        || ((d == 26 || (d == 27 && w == Monday)) && m == December))
+        return false;
 
     return true;
 }
@@ -230,8 +230,8 @@ bool ICE::EndexEquitiesImpl::isBusinessDay(const Date& date) const {
         // Christmas (Monday if Sunday)
         || ((d == 25 || (d == 26 && w == Monday)) && m == December)
         // 26 Dec (Monday if Sunday)
-        || ((d == 26 || (d == 27 && w == Monday)) && m == December)
-        ) return false;
+        || ((d == 26 || (d == 27 && w == Monday)) && m == December))
+        return false;
 
     return true;
 }
@@ -268,8 +268,8 @@ bool ICE::SwapTradeUSImpl::isBusinessDay(const Date& date) const {
         // Thanksgiving Day (fourth Thursday in November)
         || ((d >= 22 && d <= 28) && w == Thursday && m == November)
         // Christmas (Monday if Sunday)
-        || ((d == 25 || (d == 26 && w == Monday)) && m == December)
-        ) return false;
+        || ((d == 25 || (d == 26 && w == Monday)) && m == December))
+        return false;
 
     return true;
 }
@@ -298,8 +298,8 @@ bool ICE::SwapTradeUKImpl::isBusinessDay(const Date& date) const {
         // Christmas (Monday if Sunday)
         || ((d == 25 || (d == 26 && w == Monday)) && m == December)
         // 26 Dec (Monday if Sunday)
-        || ((d == 26 || (d == 27 && w == Monday)) && m == December)
-        ) return false;
+        || ((d == 26 || (d == 27 && w == Monday)) && m == December))
+        return false;
 
     return true;
 }
@@ -320,10 +320,10 @@ bool ICE::FuturesSingaporeImpl::isBusinessDay(const Date& date) const {
         // Good Friday
         || (dd == em - 3)
         // Christmas (Monday if Sunday)
-        || ((d == 25 || (d == 26 && w == Monday)) && m == December)
-        ) return false;
+        || ((d == 25 || (d == 26 && w == Monday)) && m == December))
+        return false;
 
     return true;
 }
 
-}
+} // namespace QuantExt

@@ -17,7 +17,8 @@
 */
 
 /*! \file ored/portfolio/builders/cachingenginebuilder.hpp
-    \ingroup builders
+  \brief Abstract template engine builder class
+  \ingroup builders
 */
 
 #pragma once

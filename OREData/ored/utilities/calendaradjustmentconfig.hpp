@@ -23,30 +23,28 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
 #include <map>
-#include <vector>
+#include <ored/utilities/xmlutils.hpp>
+#include <ql/patterns/singleton.hpp>
+#include <ql/time/calendar.hpp>
+#include <ql/time/date.hpp>
+#include <ql/utilities/dataparsers.hpp>
 #include <set>
 #include <string>
-#include <ql/time/date.hpp>
-#include <ql/time/calendar.hpp>
-#include <ql/utilities/dataparsers.hpp>
-#include <ql/patterns/singleton.hpp>
+#include <vector>
 
 namespace ore {
 namespace data {
-using std::string;
-using std::vector;
+using QuantLib::Calendar;
+using QuantLib::Date;
 using std::map;
 using std::set;
 using std::string;
-using QuantLib::Date;
-using QuantLib::Calendar; 
+using std::vector;
 
 class CalendarAdjustmentConfig : public XMLSerializable {
 public:
-    
-    //default constructor 
+    // default constructor
     CalendarAdjustmentConfig();
     //! This method adds d to the list of holidays for cal name.
     void addHolidays(const string& calname, const Date& d);
@@ -54,13 +52,18 @@ public:
     //! This method adds d to the list of business days for cal name.
     void addBusinessDays(const string& calname, const Date& d);
 
+    //! This method adds s as a base calendar for cal name.
+    void addBaseCalendar(const string& calname, const string& d);
+
     //! Returns all the holidays for a given cal name
     const set<Date>& getHolidays(const string& calname) const;
 
     //! Returns all the business days for a given calname
     const set<Date>& getBusinessDays(const string& calname) const;
 
-    set<string> getCalendars() const; 
+    set<string> getCalendars() const;
+
+    const string& getBaseCalendar(const string& calname) const;
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
@@ -69,31 +72,12 @@ public:
     void append(const CalendarAdjustmentConfig& c);
 
 private:
+    map<string, string> baseCalendars_;
     map<string, set<Date>> additionalHolidays_;
     map<string, set<Date>> additionalBusinessDays_;
 
     string normalisedName(const string&) const;
-
-};
-//! global config
-class CalendarAdjustments : public QuantLib::Singleton<CalendarAdjustments> {
-    friend class QuantLib::Singleton<CalendarAdjustments>;
-public:
-    //! get the global config
-    const CalendarAdjustmentConfig& config() const {
-        return config_;
-    }
-
-    //! set the global config
-   void setConfig(const CalendarAdjustmentConfig& c) {
-        config_ = c;
-    }
-
-private:
-    CalendarAdjustmentConfig config_;
-
-    CalendarAdjustments() {}
 };
 
-}
-}
+} // namespace data
+} // namespace ore

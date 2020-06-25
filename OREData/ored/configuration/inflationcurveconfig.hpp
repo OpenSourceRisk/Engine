@@ -33,14 +33,14 @@
 
 namespace ore {
 namespace data {
-using std::string;
-using std::vector;
 using ore::data::XMLNode;
-using QuantLib::Period;
+using QuantLib::Calendar;
 using QuantLib::Date;
 using QuantLib::DayCounter;
-using QuantLib::Calendar;
 using QuantLib::Frequency;
+using QuantLib::Period;
+using std::string;
+using std::vector;
 
 class InflationCurveConfig : public CurveConfig {
 public:

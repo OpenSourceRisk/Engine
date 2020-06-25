@@ -80,12 +80,13 @@ void Trade::addPayment(std::vector<boost::shared_ptr<Instrument>>& addInstrument
 }
 
 void Trade::validate() const {
-    QL_REQUIRE(id_ !="", "Trade id has not been set.");
-    QL_REQUIRE(tradeType_ !="", "Trade id has not been set.");
-    QL_REQUIRE(instrument_ || legs_.size()>0, "Trade " << id_ << " requires either QuantLib instruments or legs to be created.");
+    QL_REQUIRE(id_ != "", "Trade id has not been set.");
+    QL_REQUIRE(tradeType_ != "", "Trade id has not been set.");
+    QL_REQUIRE(instrument_ || legs_.size() > 0,
+               "Trade " << id_ << " requires either QuantLib instruments or legs to be created.");
     QL_REQUIRE(npvCurrency_ != "", "NPV currency has not been set for trade " << id_ << ".");
-    //QL_REQUIRE(notional_ != Null<Real>(), "Notional has not been set for trade " << id_ << ".");
-    //QL_REQUIRE(notionalCurrency_ != "", "Notional currency has not been set for trade " << id_ << ".");
+    // QL_REQUIRE(notional_ != Null<Real>(), "Notional has not been set for trade " << id_ << ".");
+    // QL_REQUIRE(notionalCurrency_ != "", "Notional currency has not been set for trade " << id_ << ".");
     QL_REQUIRE(maturity_ != Null<Date>(), "Maturity not set for trade " << id_ << ".");
     QL_REQUIRE(!envelope_.empty(), "Envelope not set for trade " << id_ << ".");
     if (legs_.size() > 0) {
@@ -94,7 +95,7 @@ void Trade::validate() const {
         QL_REQUIRE(legs_.size() == legCurrencies_.size(),
                    "Inconsistent number of leg currencies for legs in trade " << id_ << ".");
     }
-} 
+}
 
 } // namespace data
 } // namespace ore

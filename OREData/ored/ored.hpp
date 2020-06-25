@@ -2,7 +2,7 @@
 // Do not edit
 
 #ifdef BOOST_MSVC
-#  include <ored/auto_link.hpp>
+#include <ored/auto_link.hpp>
 #endif
 
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
@@ -128,6 +128,8 @@
 #include <ored/portfolio/nettingsetdefinition.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/optiondata.hpp>
+#include <ored/portfolio/optionexercisedata.hpp>
+#include <ored/portfolio/optionpaymentdata.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>

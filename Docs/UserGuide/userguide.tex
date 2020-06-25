@@ -119,8 +119,8 @@
 %\date{7 October 2016}
 %\date{28 April 2017}
 %\date{7 December 2017}
-%\date{13 June 2018}
-\date{20 March 2018}
+%\date{28 May 2019}
+\date{19 June 2020}
 \maketitle
 
 \newpage
@@ -137,6 +137,7 @@ Date & Author & Comment \\
 28 April 2017 & Quaternion  & updates for release 2\\
 7 December 2017 & Quaternion & updates for release 3\\
 20 March 2019 & Quaternion & updates for release 4\\
+19 June 2020 & Quaternion & updates for release 5\\
 \hline
 \end{supertabular}
 \end{center}
@@ -203,7 +204,7 @@ and {\bf derivative value adjustments}
 for portfolios with netting, variation and initial margin agreements. 
 
 \medskip
-The sensitivity framework yields further {\bf market risk measures} such as ORE's parametric Value at Risk which takes deltas, vegas, gammas and cross gammas into account. This may be used to benchmark initial margin models such ISDA'S Standard Initial Margin Model. \\
+The sensitivity framework yields further {\bf market risk measures} such as ORE's parametric Value at Risk which takes deltas, vegas, gammas and cross gammas into account. This may be used to benchmark initial margin models such ISDA's Standard Initial Margin Model. \\
 
 \medskip
 Subsequent ORE releases will also compute {\bf regulatory capital charges} for counterparty credit risk under the new standardised approach (SA-CCR), and the Monte Carlo based market risk measures will be complemented by parametric methods, e.g. for benchmarking various initial margin calculation models applied in cleared and non-cleared derivatives business.
@@ -214,7 +215,7 @@ Subsequent ORE releases will also compute {\bf regulatory capital charges} for c
 %releases from Q1 2017 onwards will extend the derivative product and the risk factor range to Inflation, Credit, Equity
 %and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products
 %(loans and bonds) and related portfolio analytics.
-The product coverage of the fourth release of ORE in March 2018 is sketched in the following table.
+The product coverage of the fifth release of ORE in June 2020 is sketched in the following table.
 \begin{table}[hbt]
 \scriptsize
 \begin{center}
@@ -250,11 +251,11 @@ Commodity Options & Y & Y & N & N \\
 \hline
 CPI Swaps & Y & Y & N & Y \\
 \hline
-%CPI Caps/Floors & Y & Y & N \\
-%\hline
+CPI Caps/Floors & Y & Y & N \\
+\hline
 Year-on-Year Inflation Swaps & Y & Y & N & Y \\
-%\hline
-%Year-on-Year Inflation Caps/Floors & Y & Y & N & N\\
+\hline
+Year-on-Year Inflation Caps/Floors & Y & Y & N & N\\
 \hline
 Credit Default Swaps & Y & Y & N & N \\
 \hline
@@ -270,7 +271,7 @@ Future releases will further extend the product range and analytics coverage ind
 \medskip The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em
   Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX/INF/EQ risk factor evolution is based on
 a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates
-and lognormal processes for FX rates and EQ prices, Dodgeson-Kainth models for inflation. The model components are calibrated to cross currency discounting and forward curves, Swaptions, FX Options, EQ Options and CPI caps/floors.
+and lognormal processes for FX rates and EQ prices, Dodgson-Kainth models for inflation. The model components are calibrated to cross currency discounting and forward curves, Swaptions, FX Options, EQ Options and CPI caps/floors.
 
 \subsubsection*{Further Resources}
 \begin{itemize}
@@ -281,8 +282,6 @@ and lognormal processes for FX rates and EQ prices, Dodgeson-Kainth models for i
 \item Language bindings: \url{https://github.com/opensourcerisk/ore-swig}
 \item Follow ORE on Twitter {\tt @OpenSourceRisk} for updates on releases and events
 \end{itemize}
-%An ORE Book will follow in 2017 that will elaborate on the engine's design and make the connection between methodology
-%and implementation. It will be announced in due course on the channels mentioned above.
  
 \subsubsection*{Organisation of this document}
 
@@ -297,88 +296,149 @@ parametrisation and the structure of trade and market data input.
 \section{Release Notes}\label{sec:releasenotes}
 %========================================================
 
-This section summarises the high level changes between release 3 (December 2017) and 4 (March 2019).
+This section summarises the high level changes between release 4 (May 2019) and 5 (June 2020).
 
 \bigskip
-INSTRMENTS
+INSTRUMENTS
 \begin{itemize}
-\item Commodity Forward and Option, see example \ref{example:24}
-\item Equity Swap, see extended example \ref{ex:equityderivatives}
-%\item YoY Inflation Cap/Floor trade builders added
-\item CMS Spread Option (Cap/Floor, Digital Cap/Floor), see example \ref{example:25}
+\item Add Inflation CPI and YoY Caps/Floors and capped/floored cash flows
+\item Add Forward Bond
+\item Add American Commodity Option
+\item Add reference data manager (handles Bond reference data as concrete example)
+\item Add underlying description (FX, Equity, Commodity)
+\item Add Settlement node to FX Forward, FX Swap and Swap instruments 
+\item Add lockout to overnight coupons
+\item Allow explicit payment dates for cash settled vanilla European options
+\item Extend Equity Swap: legs, equity coupon with FX adjustment, resettable feature,
+  quantity vs initial notional
+\item Extend CDS: Allow fixed recovery, front or back stub periods, protection payment
+  timing at default/period end/maturity
+\item Allow floating coupons with sub periods, i.e. several fixings per coupon period
+  that are averaged or compounded
+\item Allow Caps/Floors on BMA/SIFMA and overnight indices
+\item Allow adding new leg types via a LegDataFactory
 \end{itemize}
 
 \bigskip
 MARKETS
+
 \begin{itemize}
-\item New calendars: Chile, Colombia, Malaysia, Peru, Philippines, Thailand 
-\item New IBOR indexes: CHF SARON, CLP CAMARA, COP IBR, DEM LIBOR, DKK OIS, NOWA, PHP PHIREF, RUB MOSPRIME, SEK SIOR, THB BIBOR 
-\item New inflation idexes and regions: DKCPI, SECPI
-\item Equity index added
+\item Currencies: 73 mapped
+\item Calendars: 88 mapped by country, city, ISO 10383 MIC, ISO 4217 currency code,
+  ISO 3166-1 Alpha 2 and 3 country codes
+\item Allow large joint calendars
+\item OIS indices: 19 mapped including USD-Prime, EUR-ESTER and USD-SOFR
+\item IBOR indices: 43 mapped using "hard coded" index names
+\item Inflation indices: 9 mapped
+\item Add IBOR and CMS indices that can be defined in conventions, so that they can be
+  added to ORE without code changes
 \end{itemize}
 
 \bigskip
 TERM STRUCTURES
+
 \begin{itemize}
-\item Cap/Floor smile volatility surface added
-\item Cross currency basis swap helper (with MtM Reset) added 
-\item Cross currency fixed vs. float swap helper added, see example \ref{example:29}
-\item Discount ratio curves added, see example \ref{example:28} 
-%\item Interpolated YoY inflation cap floor term price surface extens QuantLib's implementation to allow the choice of term structure directly from YoY swap quotes or from atm swap quotes stripped from cap/floor price surface
-%\item Optionlet stripper added (copy of the QL class that uses an QuantExt::CapFloorTermVolSurface to support BiLinearInterpolation)
-%\item Price term structure added
-%\item Default probability bootstrap traits added
-%\item YoY Inflation Optionlet (caplet/floorlet) volatility stripper added
-%\item YoY Inflation volatility surface extends QuantLib's implementation to include a volatility type and displacement
-\item Correlation term structure added (to support CMS spread products)
+\item Add fitted Bond yield curves
+\item When bootstrapping a default curve from CDS, allow for retries with widening of
+  search bounds. Avoids exceptions
+  for distressed CDS curves for example.
+\item Inflation cap/floor volatility surfaces cleaned up, inflation price surfaces removed
+  from the market interface
+\item Equity volatility surface changes, clean up and stripping from option premiums,
+  allow wildcard in strike/expiry config, allow equity volatility surface proxies
+\item Allow optional quotes in curve configurations
+\item New Equity forward curve stripper that allows a dividend yield to be determined from
+  equity option premiums
+\item ESTER/SOFR basic curve building
+\item New cap/floor optionlet stripper that uses an iterative bootstrap with configurable
+  interpolation/extrapolation
+  in expiry and strike direction.
+\item New CDS volatility configuration to allow for constant volatility, a volatility
+  curve or an expiry x strike surface
+\item Added Commodity basis price curve and average basis price curve
 \end{itemize}
 
 \bigskip
 ANALYTICS
+
 \begin{itemize}
-\item KVA added (thanks to Roland Kapl)
+\item Fix volatility conversion for lognormal swaption cubes in ScenarioSimMarket
+\item Cross Asset Model refactoring to allow alternative risk factor evolution models 
+\item Bermudan Swaption LGM calibration changes (allow to continue processing when
+  tolerance is breached, allow to thin out calibration grids)
+\item Improve performance of analytic LGM swaption engine by introducing a cache
+  (speeds up LGM calibration)
+\item Add Indexed coupon class
+\item Add CDS to stress testing capability
 \end{itemize}
 
 \bigskip
 UNIT TESTS
+
 \begin{itemize}
-\item Unit tests suites extended to 429 cases in total 
-\item Data driven tests added in ORE Data
-\item Now using boost's automated test suite creation and registration
+\item QuantExt unit test cases: 180 test functions, 3749 data-driven cases
+\item OREData unit tests: 135 test functions, 368 data-driven cases 
+\item OREAnalytics unit tests: 61 test functions and cases
+i.e. 609 test functions vs 429 in the previous release.
 \end{itemize}
+
+For example:\\
+{\tt ./quantext-test-suite} reports 3749 cases \\
+{\tt ./quantext-test-suite --list\_cases | grep test} lists 180 test functions
 
 \bigskip
 EXAMPLES
+
 \begin{itemize}
-\item ORE has 29 examples now vs 23 in the previous release
+\item Maintenance of inputs, ensure consistency of results with user guide
+\item Additional Prime Curve example
 \end{itemize}
 
 \bigskip
 USER GUIDE
+
 \begin{itemize}
-\item Extended to 186 pages
+\item Documentation of ongoing changes, new instruments, broader market coverage,
+  extended to over 250 pages
 \end{itemize}
 
 \bigskip
 BUILDING ORE
+
 \begin{itemize}
-\item CMake build system added, see end of section \ref{sec:build_ore}
+\item Discontinue automake builds
 \end{itemize}
 
 \bigskip
-LANGUAGE BINDINGS
+LANGUAGE BINDUNGS
+
 \begin{itemize}
-\item ORE SWIG projected added, to support ORE in Python, see \url{https://github.com/OpenSourceRisk/ORE-SWIG}
+\item Maintenance to ensure SWIG wrappers build with current ORE and QuantLib-SWIG 1.18,
+  rework all *.i files to use the SWIG wrapper of {\tt boost::shared\_ptr} following QuantLib-SWIG
 \end{itemize}
+
+\bigskip
+OTHER
+
+\begin{itemize}
+\item Fixing manager refactoring and bug fixes
+\item Clean up of log levels to reduce the volume of log messages
+\item Improved log messages when LGM calibration errors exceed tolerance
+\item LGM model builder bug fixes
+\item Builds with QuantLib Version 1.18
+\item Builds with Boost versions up to 1.72.0
+\end{itemize}
+
+
 
 %========================================================
 \section{ORE Data Flow}\label{sec:process}
 %========================================================
 
 The core processing steps followed in ORE to produce risk analytics results are sketched in Figure \ref{fig_process}.
-All ORE calculations and output are generated in three fundamental process steps as indicated in the three boxes in the
+All ORE calculations and outputs are generated in three fundamental process steps as indicated in the three boxes in the
 upper part of the figure. In each of these steps appropriate data (described below) is loaded and results are generated,
-either in form of a human readable report, or in an intermediate step as pure data files (e.g. NPV data, exposure data).
+either in the form of a human readable report, or in an intermediate step as pure data files (e.g. NPV data, exposure data).
 \begin{figure}[h]
 \begin{center}
 \includegraphics[scale=0.6]{process.pdf}
@@ -422,7 +482,7 @@ cube data:
 \item computing various XVAs including CVA, DVA, FVA, MVA for all netting sets, with and without taking collateral
   (variation and initial margin) into account, on demand with allocation to the trade level.
 \end{itemize}
-The output of this process step are XVA reports and the 'net' NPV cube, i.e. after aggregation, netting and collateral. \\
+The outputs of this process step are XVA reports and the 'net' NPV cube, i.e. after aggregation, netting and collateral. \\
 
 The example section \ref{sec:examples} demonstrates for representative product types how the described processing steps
 can be combined in a simple batch process which produces the mentioned reports, output files and exposure evolution
@@ -460,6 +520,7 @@ When unpacked, it creates a directory {\tt ORE-<VERSION>} with the following fil
 \item {\tt FrontEnd/}
 \item {\tt OREAnalytics/}
 \item {\tt OREData/}
+\item {\tt ORETest/}
 \item {\tt QuantExt/}
 \item {\tt ThirdPartyLibs/}
 \item {\tt tools/}
@@ -480,11 +541,11 @@ executables:
 The release bundle does contain the ORE source code, which is sufficient to build ORE from sources manually as follows (if you build ORE for development purposes, we recommend using git though, see section \ref{sec:build_ore}):
 \begin{itemize}
 \item Set up Boost as described in section \ref{sec:boost}, unless already installed
-\item Set up QuantLib 1.11 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already
+\item Set up QuantLib 1.18 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already
   installed; QuantLib needs to be located in this project directory {\tt ORE-<VERSION>}. Alternatively, you can create a
   symbolic link named QuantLib here that points to the actual QuantLib directory
 \item Build QuantExt, OREData, OREAnalytics, App (in this order) as described in section \ref{sec:build}
-\item Note that ThirdPartyLibs does not need to be built, it contains RapdidXml, header only code for reading and
+\item Note that ThirdPartyLibs does not need to be built, it contains RapidXml, header only code for reading and
   writing XML files
 \item Move on to section \ref{sec:python} and the examples in section \ref{sec:examples}.
 \end{itemize}
@@ -494,8 +555,7 @@ doxygen.
 
 \subsection{Building ORE}\label{sec:build_ore}
 
-ORE's source code is hosted on github.com at \url{https://github.com/opensourcerisk/engine} using {\tt git}, a free and
-open source distributed version control system.
+ORE's source code is hosted at \url{https://github.com/opensourcerisk/engine}.
 
 \subsubsection{Git}
 
@@ -521,10 +581,16 @@ This will create a folder 'ore' in your current directory that contains the code
 
 \end{enumerate}
 
+Note that one can also run 
+
+{\footnotesize \tt\% git clone --recurse-submodules https://github.com/opensourcerisk/engine.git ore}
+
+in step 2, which also performs the steps in 3.
+
 \subsubsection{Boost}\label{sec:boost}
 
 QuantLib and ORE depend on the boost C++ libraries. Hence these need to be installed before building QuantLib and
-ORE. On all platforms the minimum required boost version is 1\_63 as of ORE release 4.
+ORE. On all platforms the minimum required boost version is 1\_63 as of ORE release 5.
 %Older versions may work on some platforms and system configurations, but were not tested.
 
 \subsubsection*{Windows}
@@ -536,8 +602,7 @@ ORE. On all platforms the minimum required boost version is 1\_63 as of ORE rele
 \item 32-bit: \cite{boost-binaries}{\bs}VERSION{\bs}boost\_VERSION-msvc-14.0-32.exe{\bs}download 
 \item 64-bit: \cite{boost-binaries}{\bs}VERSION{\bs}boost\_VERSION-msvc-14.0-64.exe{\bs}download
 \end{itemize}
-\item Start the installation file and choose an installation folder. Take a note of that folder as it will be needed
-  later on.
+\item Start the installation file and choose an installation folder (the ``boost root directory''). Take a note of that folder as it will be needed later on.   
 \item Finish the installation by clicking Next a couple of times.
 \end{enumerate}
     
@@ -568,7 +633,6 @@ Alternatively, compile all Boost libraries directly from the source code:
 
 \begin{enumerate}
 \item Download Boost from \cite{boost} and build following the instructions on the site
-%, any recent version should work
 \item Define the environment variable BOOST that points to the boost directory
 (so includes should be in BOOST and libs should be in BOOST/stage/lib)
 \end{enumerate}
@@ -591,123 +655,104 @@ C++ support under the Programming Languages features (disabled by default).
   you expand, they all contain the same configuration file. You should now see 'Microsoft.Cpp.Win32.user' respectively
   'Microsoft.Cpp.x64.user' depending on whether you chose a Win32 or a x64 configuration. Click on this file to open the
   property pages. Select VC++ Directories and then add your boost directory to the 'Include Directories' entry. Likewise
-  add your boost library directory to the 'Library Directories' entry. If for example your boost installation is in {\tt
-    C:{\bs}boost\_1\_57\_0} and the libraries reside in the {\tt stage{\bs}lib} subfolder, add {\tt
-    C:{\bs}boost\_1\_57\_0} to the 'Include Directories' entry and {\tt C:{\bs}boost\_1\_57\_0{\bs}stage{\bs} lib} to the
+  add your boost library directory (the directory that contains the *.lib files) to the 'Library Directories' entry. If for example your boost installation is in {\tt
+    C:{\bs}boost\_1\_63\_0} and the libraries reside in the {\tt stage{\bs}lib} subfolder, add {\tt
+    C:{\bs}boost\_1\_63\_0} to the 'Include Directories' entry and {\tt C:{\bs}boost\_1\_63\_0{\bs}stage{\bs} lib} to the
   'Library Directories' entry. Press OK. 
-  (Alternatively, create and use an environment variable {\tt \%BOOST\%} pointing to your directory {\tt C:{\bs}boost\_1\_57\_0} instead of the directory itself.) 
+  (Alternatively, create and use an environment variable {\tt \%BOOST\%} pointing to your directory {\tt C:{\bs}boost\_1\_63\_0} instead of the directory itself.) 
   If you want to configure the boost paths for Win32 resp. x64 as well, repeat
   the previous step for 'Microsoft.Cpp. Win32.user' respectively 'Microsoft.Cpp.x64.user'. To complete the configuration
   just close the property manager window.
 
-  % \item Open any solution file and update path to Boost as described in sections 5 \& 6 in
-  %   \cite{quantlib-install}. You only need to do this for a single project as this will update the path to boost
-  %   across all projects and solutions on your machine. The paths should be set as follow (in case you compiled Boost
-  %   on your own, use the path specified using the --stagedir cmd argument):
+%\item Open each of the sub-projects and compile them in the following order: QuantLib, QuantExt, OREData, OREAnalytics
+%  and App. For each project, do the following:
 %
 %\begin{itemize}
-%\item Include Directories: [Boost Installation Folder]
-%\item Library Directories: [Boost Installation Folder]{\bs}libs
+%\item Switch to the correct platform (i.e. Win32 or x64) from the Configuration Manager. The selection should match the
+%  pre-compiled version of Boost. Trying to compile using a mixed configuration (e.g. Boost 64-bit and 32-bit QuantLib)
+%  will fail.
+%\item Compile the project: Build $\rightarrow$ Build Solution
+%\item Once the compilation is complete, run the test suite.
 %\end{itemize}
-%
-%\item Add the additional path to the Boost pre-compiled libraries to the linker setting:
-%
-%\begin{itemize}
-%\item 32-bit: [Boost Installation Folder]{\bs}lib32-msvc-14.0
-%\item 64-bit: [Boost Installation Folder]{\bs}lib64-msvc-14.0
-%\end{itemize}
-
-\item Open each of the sub-projects and compile them in the following order: QuantLib, QuantExt, OREData, OREAnalytics
-  and App. For each project, do the following:
-
-\begin{itemize}
-\item Switch to the correct platform (i.e. Win32 or x64) from the Configuration Manager. The selection should match the
-  pre-compiled version of Boost. Trying to compile using a mixed configuration (e.g. Boost 64-bit and 32-bit QuantLib)
-  will fail.
-\item Compile the project: Build $\rightarrow$ Build Solution
-\item Once the compilation is complete, run the test suite.
-\end{itemize}
-Alternatively, open the {\tt oreEverything\_*.sln} and build the entire solution (again, make sure to select the correct platform in the configuration manager first).
+\item Open the {\tt oreEverything\_*.sln} and build the entire solution (again, make sure to select the correct platform in the configuration manager first).
 \end{enumerate}
 
 \subsubsection*{Unix}
 
-\begin{enumerate}
+%\begin{enumerate}
+%
+%\item Build QuantLib as usual.
+%
+%{\tt\footnotesize
+%\% cd QuantLib \\
+%\% ./autogen.sh \\
+%\% ./configure --with-boost-include=\$BOOST --with-boost-lib=\$BOOST/stage/lib \\
+%\% make -j4 
+%}
+%
+%\item Build QuantExt
+%
+%{\tt\footnotesize
+%\% cd QuantExt \\
+%\% ./autogen.sh \\
+%\% ./configure \\
+%\% make -j4
+%}
+%
+%This will build both the QuantExt library and test suite.
+%
+%\item Run the test suite
+%
+%{\tt\footnotesize
+%\% ./test/quantext-test-suite 
+%}
+%
+%\item  Build OREData, OREAnalytics and their test suites. 
+%
+%Follow the same steps as for QuantExt.
+%To run the unit test suites, do 
+%
+%{\tt\footnotesize
+%\% ./test/ored-test-suite 
+%}
+%
+%and 
+%
+%{\tt\footnotesize
+%\% ./test/orea-test-suite 
+%}
+%
+%in the respective library directories.
+%
+%\item Build App/ore
+%
+%{\tt\footnotesize
+%\% cd App \\
+%\% ./autogen.sh \\
+%\% ./configure \\
+%\% make -j4
+%}
 
-\item Build QuantLib as usual.
+%Note: On Linux systems, the 'locale' settings can negatively affect the ORE process and output. To avoid this, we
+%recommend setting the environment variable {\tt LC\_NUMERIC} to {\tt C}, e.g. in a bash shell, do
+%
+%{\tt\footnotesize
+%\% export LC\_NUMERIC=C
+%}
+%
+%before running ORE or any of the examples below. This will suppress thousand separators in numbers when converted to
+%strings.
+%
+%\item Run Examples (see section \ref{sec:examples})
+%
+%{\tt\footnotesize
+%\% cd Examples/Example\_1 \\
+%\% python run.py 
+%}
+%
+%\end{enumerate}
 
-{\tt\footnotesize
-\% cd QuantLib \\
-\% ./autogen.sh \\
-\% ./configure --with-boost-include=\$BOOST --with-boost-lib=\$BOOST/stage/lib \\
-\% make -j4 
-}
-
-\item Build QuantExt
-
-{\tt\footnotesize
-\% cd QuantExt \\
-\% ./autogen.sh \\
-\% ./configure \\
-\% make -j4
-}
-
-This will build both the QuantExt library and test suite.
-
-\item Run the test suite
-
-{\tt\footnotesize
-\% ./test/quantext-test-suite 
-}
-
-\item  Build OREData, OREAnalytics and their test suites. 
-
-Follow the same steps as for QuantExt.
-To run the unit test suites, do 
-
-{\tt\footnotesize
-\% ./test/ored-test-suite 
-}
-
-and 
-
-{\tt\footnotesize
-\% ./test/orea-test-suite 
-}
-
-in the respective library directories.
-
-\item Build App/ore
-
-{\tt\footnotesize
-\% cd App \\
-\% ./autogen.sh \\
-\% ./configure \\
-\% make -j4
-}
-
-Note: On Linux systems, the 'locale' settings can negatively affect the ORE process and output. To avoid this, we
-recommend setting the environment variable {\tt LC\_NUMERIC} to {\tt C}, e.g. in a bash shell, do
-
-{\tt\footnotesize
-\% export LC\_NUMERIC=C
-}
-
-before running ORE or any of the examples below. This will suppress thousand separators in numbers when converted to
-strings.
-
-\item Run Examples (see section \ref{sec:examples})
-
-{\tt\footnotesize
-\% cd Examples/Example\_1 \\
-\% python run.py 
-}
-
-\end{enumerate}
-
-\subsubsection*{Building on Unix with CMake}
-
-Recent releases of ORE (since end of 2018) can be built with CMake on Unix systems, as follows.
+With the 5th release we have discontinued automake support so that ORE can only be built with CMake on Unix systems, as follows.
 
 \begin{enumerate}
 \item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
@@ -720,40 +765,46 @@ Alternatively, set environment variables {\tt BOOST\_ROOT} and {\tt BOOST\_LIBRA
 \medskip
 {\tt cmake ..} \\
 \medskip
-\item Build all ORE libraries including QuantLib by invoking \\
+\item Build all ORE libraries, QuantLib, as well as the doxygen API documentation for QuantExt, OREData and OREAnalytics, by invoking \\
 \medskip
 {\tt make -j4} \\
 \medskip
-\item Build all ORE libraries including QuantLib plus the API documentation for QuantExt, OREData and OREAnalytics, generated by
-doxygen, by invoking \\
+using four threads in this example.
 \medskip
-{\tt make all -j4} \\
-\medskip
-\item Alternatively the individual API documentation for each library can be built by invoking \\
-\medskip
-{\tt make doc\_quantext} \\
-\medskip
-{\tt make doc\_ored} \\
-\medskip
-{\tt make doc\_orea} \\
-\medskip
-\item Unset {\tt LD\_LIBRARY\_PATH} respectively {\tt DYLD\_LIBRARY\_PATH} before running the ORE executable or the test suites below, in order not to override the rpath information embedded into the libaries built with CMake
 \item Run all test suites by invoking \\
 \medskip
 {\tt ctest -j4}
+\item Run Examples (see section \ref{sec:examples})
 \end{enumerate}
 
-Notice that if the boost libraries are not installed they might not be found during runtime because of a missing rpath
+Note: 
+\begin{itemize}
+\item If the boost libraries are not installed in a standard path they might not be found during runtime because of a missing rpath
 tag in their path. Run the script {\tt rename\_libs.sh} to set the rpath tag in all libraries located in {\tt
   \${BOOST}/stage/lib}.
+\item Unset {\tt LD\_LIBRARY\_PATH} respectively {\tt DYLD\_LIBRARY\_PATH} before running the ORE executable or the test suites, in order not to override the rpath information embedded into the libaries built with CMake
+\item On Linux systems, the 'locale' settings can negatively affect the ORE process and output. To avoid this, we
+recommend setting the environment variable {\tt LC\_NUMERIC} to {\tt C}, e.g. in a bash shell, do
 
-The .cpp and .hpp files included in the build process need to be explicitly specified in the various {\tt CMakeLists.txt} files in the project directory, as in the {\tt Makefile.am} files of the GNU build system. However for the CMake build system we have provided a python script (in {\tt Tools/update\_cmake\_files.py}) that automates this process. 
+{\tt\footnotesize
+\% export LC\_NUMERIC=C
+}
 
-The advantage of the CMake build system is that it builds fewer intermediate libraries and is hence significantly faster than the GNU automake based build. Moreover it can be extended to cover both Unix and Windows builds. 
+before running ORE or any of the examples below. This will suppress thousand separators in numbers when converted to
+strings.
+
+\item Generate {\tt CMakeLists.txt}:
+
+The .cpp and .hpp files included in the build process need to be explicitly specified in the various {\tt CMakeLists.txt} 
+files in the project directory. The python script (in {\tt Tools/update\_cmake\_files.py}) can be used to update all CMakeLists.txt files 
+automatically. 
+
+\end{itemize}
  
 \subsubsection*{Building on Windows with CMake}
 
-The same set of {\tt CMakeLists.txt} files allows building ORE on Windows. The following instructions use the {\tt Ninja} build system ({\url{ninja-build.org}) that covers the role of {\tt make} on Unix systems and calls the Visual Studio C++ compiler and linker. 
+One advantage of the CMake build system is that it covers both Unix and Windows builds. 
+The same set of {\tt CMakeLists.txt} files as above allows building ORE on Windows. The following instructions use the {\tt Ninja} build system ({\url{ninja-build.org}) that covers the role of {\tt make} on Unix systems and calls the Visual Studio C++ compiler and linker. 
 
 \begin{enumerate}
 \item Open a command prompt, change to directory C:{\textbackslash}Program Files (x86){\textbackslash}Microsoft Visual Studio 14.0{\textbackslash}VC and run\\
@@ -782,7 +833,8 @@ Ninja automatically utilizes all available threads, unless specified with the -j
 
 \subsection{Python and Jupyter}\label{sec:python}
 
-Python (version 3.5 or higher) is required to run the examples in section \ref{sec:examples} and plot exposure
+Python (version 3.5 or higher) is required to use the ORE Python language bindings in section \ref{sec:oreswig}, 
+or to run the examples in section \ref{sec:examples} and plot exposure
 evolutions. Moreover, we use Jupyter \cite{jupyter} in section \ref{sec:visualisation} to visualise simulation
 results. Both are part of the 'Anaconda Open Data Science Analytics Platform' \cite{Anaconda}. Anaconda installation
 instructions for Windows, OS X and Linux are available on the Anaconda site, with graphical installers for
@@ -814,6 +866,84 @@ With Python and Anaconda already installed, this can be done by running these co
 \item {\tt conda install -c conda-forge pythreejs}
 \end{itemize}
 Note that the bqplot installation requires the environment settings mentioned above.
+
+\subsection{Building ORE-SWIG}\label{sec:oreswig}
+
+Since release 4, ORE comes with Python and Java language bindings following the QuantLib-SWIG example.
+The ORE bindings extend the QuantLib SWIG wrappers and allow calling ORE functionality in the 
+QuantExt/OREData/OREAnalytics libraries alongside with functionality in QuantLib.  
+
+\medskip
+The ORE-SWIG source code is hosted in a separate git repository at \url{https://github.com/opensourcerisk/ore-swig}.
+
+\medskip
+To build the wrappers on Windows, Linux, mac OS
+\begin{enumerate}
+\item build ORE and QuantLib first, as shown in the previous section
+\item check out the ORE-SWIG repository into a project directory {\tt oreswig}, change into that directory
+\item pull in the QuantLib-SWIG project by running \\
+{\tt git submodule init} \\
+{\tt git submodule update}
+%\item Edit the top-level {\tt oreswig/CMakeLists.txt} and uncomment e.g. the line {\tt add\_subdirectory(OREAnalytics-SWIG/Python)} to build the OREAnalytics Python wrappers
+\item Create a subdirectrory {\tt build}, change into that directory and configure cmake and then build using Ninja as follows \\
+\medskip
+{\footnotesize
+{\tt cmake -G Ninja $\backslash$} \\
+\hspace{1cm} {\tt -D ORE=<ORE Root Directory> $\backslash$} \\
+\hspace{1cm} {\tt -D BOOST\_ROOT=<Top level boost include directory> $\backslash$}\\
+\hspace{1cm} {\tt -D BOOST\_LIBRARYDIR=<Location of the compiled boost libraries> $\backslash$}\\
+\hspace{1cm} {\tt -D PYTHON\_LIBRARY=<Full name including path to the 'libpython*' library> $\backslash$} \\
+\hspace{1cm} {\tt -D PYTHON\_INCLUDE\_DIR=<Directory that contains Python.h> $\backslash$} \\
+\hspace{1cm} {\tt ..} \\
+{\tt ninja} \\
+}
+\medskip
+On Linux or mac OS one can also use {\tt make} instead of {\tt ninja}. 
+In that case, omit the {\tt -G Ninja} part in the configuration. 
+
+\medskip
+To build on Windows using CMake and an existing Visual Studio installation you can e.g. run
+this from the top-level oreswig directory
+
+{\footnotesize
+{\tt mkdir build $\backslash$} \\
+{\tt cmake -G "Visual Studio 15 2017" $\backslash$}\\
+\hspace{1cm} {\tt -A x64 $\backslash$}\\
+\hspace{1cm} {\tt -D SWIG\_DIR=C:$\backslash$dev$\backslash$swigwin$\backslash$Lib $\backslash$}\\
+\hspace{1cm} {\tt -D SWIG\_EXECUTABLE=C:$\backslash$dev$\backslash$swigwin$\backslash$swig.exe $\backslash$}\\
+\hspace{1cm} {\tt -D ORE:PATHNAME=C:$\backslash$dev$\backslash$ORE$\backslash$master $\backslash$}\\
+\hspace{1cm} {\tt -D BOOST\_ROOT=C:$\backslash$dev$\backslash$boost $\backslash$}\\
+\hspace{1cm} {\tt -S OREAnalytics-SWIG/Python $\backslash$}\\
+\hspace{1cm} {\tt -B build $\backslash$}\\
+{\tt cmake --build build -v}
+}
+
+\medskip
+By default this builds the OREAnalytics-Python bindings which include the wrapped parts of QuantLib, QuantExt, OREData and OREAnalytics.
+
+\item Try a Python example: Update your PYTHONPATH environment variable to include directory {\tt oreswig/build/OREAnalytics-SWIG/Python} which contains both the new python module and the associated native library loaded by the python module;
+change to the {\tt oreswig/OREAnalytics/Python/Examples} directory and run e.g.\\
+
+\medskip
+\centerline{\tt python ore.py}  
+
+There is also an IPython example in the same directory. To try it, launch 
+
+\medskip
+\centerline{\tt jupyter notebook}  
+
+wait for your browser to open, select {\tt ore.ipy} from the list of files and then run all cells.
+
+\item Try a Java example: Make sure that the line {\tt add\_subdirectory(OREAnalytics-SWIG/Java)} 
+is uncommented in the top-level CMakeLists.txt file when building; change to directory 
+{\tt ORE-SWIG/OREAnalytics-SWIG/Java/Examples} and run
+
+\medskip
+{\tt java -Djava.library.path=../../../build/OREAnalytics-SWIG/Java $\backslash$} \\
+\hspace{1cm} {\tt -jar ../../../build/OREAnalytics-SWIG/Java/ORERunner.jar $\backslash$}\\
+\hspace{1cm} {\tt Input/ore.xml}
+
+\end{enumerate}
 
 %========================================================
 \section{Examples}\label{sec:examples}
@@ -891,7 +1021,7 @@ Example & Description \\
 \hline
 29 & Curve Building using Fixed vs. Float Cross Currency Helpers\\
 \hline
-33 & USD-Prime Curve Building via Prime-LIBOR Basis Swap\\
+30 & USD-Prime Curve Building via Prime-LIBOR Basis Swap\\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -971,7 +1101,7 @@ File Name & Description \\
 \end{table}
 
 Note: When building ORE from sources on Windows platforms, make sure that you copy your {\tt ore.exe} to the binary
-directory {\tt bin/win32/} respectively {\tt bin/x64/}. Otherwise the examples may be run using the pre-compiled
+directory {\tt App/bin/win32/} respectively {\tt App/bin/x64/}. Otherwise the examples may be run using the pre-compiled
 executables which come with the ORE release.
 
 %--------------------------------------------------------
@@ -1123,7 +1253,7 @@ Swap are shown in figure \ref{fig_4}.
 \end{center}
 \caption{European callable Swap represented as a package consisiting of non-callable Swap and Swaption. The Swaption has
   physical delivery and offsets all future Swap cash flows if exercised. The exposure evolution of the package is shown
-  here as 'EPE NettingSet' (green line). This is covered by the pink line, the exposure evolution of the same Swap but
+  here as 'EPE Netting Set' (green line). This is covered by the pink line, the exposure evolution of the same Swap but
   with maturity on the exercise date. The graphs match perfectly here, because the example Swap is deep in the money and
   exercise probability is close to one. Simulation with 5000 paths and quarterly time steps.}
 \label{fig_4}
@@ -1164,7 +1294,7 @@ Floor and a long Collar that exactly offsets the netted Cap and Floor.
 \end{figure}
 
 Further three test portfolios are provided as part of this example. Run the example and inspect the respective output
-directories {\tt Examples/Example\_7/Output/portfolio\_\#}. Note that these directories have to be present/created
+directories {\tt Examples/Example\_6/Output/portfolio\_\#}. Note that these directories have to be present/created
 before running the batch with {\tt python run.py}.
 
 %--------------------------------------------------------
@@ -1205,6 +1335,7 @@ Recall that the FX Option value $NPV(t)$ as of time $0 \leq t \leq T$ satisfies
 \frac{NPV(t)}{N(t)} &= \mbox{Nominal}\times\E_t\left[\frac{(X(T) - K)^+}{N(T)}\right]\\
 NPV(0) &= \E\left[\frac{NPV(t)}{N(t)}\right] = \E\left[\frac{NPV^+(t)}{N(t)} \right]= \EPE(t) 
 \end{align*}
+where $N(t)$ denotes the numeraire asset.
 One would therefore expect a flat exposure evolution up to option expiry. The deviation from this in ORE's simulation is
 due to the pricing approach chosen here under scenarios. A Black FX option pricer is used with deterministic Black
 volatility derived from today's volatility structure (pushed or rolled forward, see section \ref{sec:sim_market}). The
@@ -1981,11 +2112,11 @@ using {\tt python run.py} or ``directly'' calling {\tt ore[.exe] ore.xml}.
 
 % Missing examples 30, 31, 32
 %--------------------------------------------------------
-\subsection{USD-Prime Curve Building via Prime-LIBOR Basis Swap}% Example 33
-\label{example:33}
+\subsection{USD-Prime Curve Building via Prime-LIBOR Basis Swap}% Example 30
+\label{example:30}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_33} demonstrates the implementation of the USD-Prime index in the ORE.
+The example in folder {\tt Examples/Example\_30} demonstrates the implementation of the USD-Prime index in the ORE.
 The USD-Prime yield curve is built from USD-Prime vs USD 3M Libor basis swap quotes.
 The portfolio consists of two fair basis swaps (NPVs equal to 0):
 \begin{itemize}
@@ -1994,11 +2125,11 @@ The portfolio consists of two fair basis swaps (NPVs equal to 0):
 \end{itemize}
 
 In particular, it is confirmed that the bootstrapped curves USD-FedFunds and USD-Prime follow
-the 3\% rule observed on the market: {\tt U.S. Prime Rate = (The Fed Funds Target Rate + 3)}.
+the 3\% rule observed on the market: {\tt U.S. Prime Rate = (The Fed Funds Target Rate + 3\%)}.
 (See \url{http://www.fedprimerate.com/}.)
 
-Running ORE in directory {\tt Examples/Example\_33} with {\tt python run.py }
-yields the USD-Prime curve in {\tt Examples/Example\_33/Output/curves.csv.}
+Running ORE in directory {\tt Examples/Example\_30} with {\tt python run.py }
+yields the USD-Prime curve in {\tt Examples/Example\_30/Output/curves.csv.}
 
 \clearpage
 %========================================================
@@ -2940,6 +3071,7 @@ between the two index types, while different projection curves are used to forec
 The following is an excerpt of the Inflation Cap/Floor Volatility Surfaces blocks with ID 'default' from the sample example
 file:
 
+{
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -2948,10 +3080,17 @@ file:
         InflationCapFloorVolatility/EUHICPXT/EUHICPXT_YY_CF
     </InflationCapFloorVolatility>
   </YYInflationCapFloorVolatilities>
+
   <ZeroInflationCapFloorVolatilities id="default">
-    <ZeroInflationCapFloorVolatility name="UKRPI">InflationCapFloorVolatility/UKRPI/UKRPI_ZC_CF</ZeroInflationCapFloorVolatility>
-    <ZeroInflationCapFloorVolatility name="EUHICPXT">InflationCapFloorVolatility/EUHICPXT/EUHICPXT_ZC_CF</ZeroInflationCapFloorVolatility>
-    <ZeroInflationCapFloorVolatility name="USCPI">InflationCapFloorVolatility/USCPI/USCPI_ZC_CF</ZeroInflationCapFloorVolatility>
+    <ZeroInflationCapFloorVolatility name="UKRPI">
+        InflationCapFloorVolatility/UKRPI/UKRPI_ZC_CF
+    </ZeroInflationCapFloorVolatility>
+    <ZeroInflationCapFloorVolatility name="EUHICPXT">
+        InflationCapFloorVolatility/EUHICPXT/EUHICPXT_ZC_CF
+    </ZeroInflationCapFloorVolatility>
+    <ZeroInflationCapFloorVolatility name="USCPI">
+        InflationCapFloorVolatility/USCPI/USCPI_ZC_CF
+    </ZeroInflationCapFloorVolatility>
   </ZeroInflationCapFloorVolatilities>
 \end{minted}
 \caption{Inflation Cap/Floor Volatility Surfaces block with ID 'default'}
@@ -3639,7 +3778,7 @@ If no day counter is specified for a given riskfactor then the default Actual365
       <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
       <Interpolation>LogLinear</Interpolation>
       <Extrapolation>Y</Extrapolation>
-      <DayCounter>ACT/ACT</DayCounter> //Sets a new default for all yieldCurves 
+      <DayCounter>ACT/ACT</DayCounter> <!-- Sets a new default for all yieldCurves -->
     </Configuration>
   </YieldCurves>
   <Indices>
@@ -3716,11 +3855,11 @@ If no day counter is specified for a given riskfactor then the default Actual365
   </EquityVolatilities>
   ...
   <BenchmarkCurves>
-	<BenchmarkCurve>
+    <BenchmarkCurve>
       <Currency>EUR</Currency>
       <Name>BENCHMARK_EUR</Name>
-	</BenchmarkCurve>
-	...
+  </BenchmarkCurve>
+  ...
   </BenchmarkCurves>
   <Securities>
     <Simulate>true</Simulate>
@@ -4046,7 +4185,22 @@ A sample {\tt calendaradjustment.xml} file can be found in the Global example in
 \caption{Calendar Adjustment}\label{lst:calendar_adjustment}
 \end{longlisting}
 
+If the parameter `BaseCalendar' is provided then a new calendar will be created using the specified calendar as a base, and adding any `AdditionalHolidays' or `AdditionalBusinessDays'. In the example below a new calendar `Japan\_amended' is being created, it will include any additional holidays/business days specified in the original `Japan' calendar plus one additional date.
 
+ If a new calendar is added in this way and the schema is being used to validate XML input, the corresponding calendar name must be added to the `calendar' type in the file ore_types.xsd.
+\begin{longlisting}
+%\hrule\medskip
+  \begin{minted}[fontsize=\scriptsize]{xml}
+<CalendarAdjustments>
+  <Calendar name="Japan\_amended">
+    <BaseCalendar>Japan</BaseCalendar>
+    <AdditionalHolidays>
+      <Date>2020-04-06</Date>
+    </AdditionalHolidays>
+</CalendarAdjustments>
+  \end{minted}
+\caption{Calendar Adjustment creating a new calendar}\label{lst:calendar_adjustment_2}
+\end{longlisting}
 %--------------------------------------------------------
 \subsection{Curves: {\tt curveconfig.xml}}\label{sec:curveconfig}
 %--------------------------------------------------------
@@ -4073,7 +4227,7 @@ configuration determines the composition of
 This file also contains other market objects such as FXSpots, Security Spreads and Security Rates which are necessary
 for the construction of a market.
  
-\include{yieldcurves}
+\include{curve_configurations/yieldcurves}
 
 \subsubsection{Default Curves}
 
@@ -4156,7 +4310,7 @@ on the given pillars, and w.r.t. a a zero recovery rate. The interpolation is ba
 
 \subsubsection{Swaption Volatility Structures}
 
-Listing \ref{lst:swaptionvol_configuration} shows the configuration of Swaption volatility structures.
+Listing \ref{lst:swaptionvol_configuration} shows an example of a Swaption volatility structure configuration.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -4165,15 +4319,10 @@ Listing \ref{lst:swaptionvol_configuration} shows the configuration of Swaption 
   <SwaptionVolatility>
     <CurveId>EUR_SW_N</CurveId>
     <CurveDescription>EUR normal swaption volatilities</CurveDescription>
-    <!-- ATM (Smile not yet supported) -->
     <Dimension>ATM</Dimension>
-    <!-- Normal or Lognormal or ShiftedLognormal -->
     <VolatilityType>Normal</VolatilityType>
-    <!-- Flat, Linear, None -->
     <Extrapolation>Flat</Extrapolation>
-    <!-- Day counter for date to time conversion -->
     <DayCounter>Actual/365 (Fixed)</DayCounter>
-    <!--Calendar and Business day convention for option tenor to date conversion -->
     <Calendar>TARGET</Calendar>
     <BusinessDayConvention>Following</BusinessDayConvention>
     <!-- ATM matrix specification -->
@@ -4181,64 +4330,52 @@ Listing \ref{lst:swaptionvol_configuration} shows the configuration of Swaption 
     <SwapTenors>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</SwapTenors>
     <ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
     <SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
-    <!-- Smile specification (optional) -->
+    <!-- Smile section specification -->
     <SmileOptionTenors>6M,1Y,10Y</SmileOptionTenors>
     <SmileSwapTenors>2Y,5Y</SmileSwapTenors>
-    <SmileSpreads>-0.02,-0.01,0.01,0.02</SmileSpreads> <!-- i.e. strike spreads -->
+    <SmileSpreads>-0.02,-0.01,0.01,0.02</SmileSpreads>
   </SwaptionVolatility>
-  <SwaptionVolatility>
-    ...
-  </SwaptionVolatility>
+  ...
 </SwaptionVolatilities>
 \end{minted}
 \caption{Swaption volatility configuration}
 \label{lst:swaptionvol_configuration}
 \end{longlisting}
 
-\subsubsection{Cap/Floor Volatility Structures}
+The meaning of each of the elements in Listing \ref{lst:swaptionvol_configuration} is given below. 
+%If an element is labelled as 'Optional', then it may be excluded or included and left blank.
 
-Listing \ref{lst:capfloorvol_configuration} shows the configuration of Cap/Floor volatility structures.
+\begin{itemize}
+\item CurveId: Unique identifier of the swaption volatility structure
+\item CurveDescription: A description of the volatility structure, may be left blank.
+\item Dimension: Distinguishes at-the-money matrices and full volatility cubes. \\ Allowable values: {\tt ATM, Smile}
+\item VolatilityType: Specifies the type of market volatility inputs. \\ 
+Allowable values: {\tt Normal, Lognormal, ShiftedLognormal} \\
+In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap tenor) has to be provided in the market data input. 
+\item Extrapolation: Specifies the extrapolation behaviour in all dimensions. \\ Allowable values: {\tt Linear, Flat, None}
+\item DayCounter: The term structure's day counter used in date to time conversions
+\item Calendar: The term structure's calendar used in option tenor to date conversions
+\item BusinessDayConvention: The term structure's business day convention used in option tenor to date conversion
+\item ATM Matrix specification, required for both Dimension choices:
+	\begin{itemize}
+	\item OptionTenors: Option expiry in period form
+	\item SwapTenors: Underlying Swap term in period form
+	\item ShortSwapIndexBase: Swap index (ORE naming convention, e.g. EUR-CMS-1Y) used to compute ATM strikes for tenors up to and including the tenor given in the index (1Y in this example)
+	\item SwapIndexBase: Swap index used to compute ATM strikes for tenors longer than the one defined by the short index 
+	\end{itemize}
+\item Smile section specification, this part is required when Dimension is set to {\tt Smile}, otherwise it can be omitted:
+	\begin{itemize}
+	\item SmileOptionTenors: Option expiries, in period form, where smile section data is to be taken into account
+	\item SmileSwapTenors: Underlying Swap term, in period form, where smile section data is to be taken into account
+	\item SmileSpreads: Strikes in smile direction expressed as strike spreads, relative to the ATM strike at the expiry/term point of the ATM matrix
+	\end{itemize}
+\end{itemize}
 
-The \lstinline!BootstrapConfig! node is optional and holds configuration details for the iterative bootstrap 
-that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described 
-in section \ref{sec:bootstrap_config} are used.
-
-\begin{longlisting}
-%\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{xml}
-  <CapFloorVolatilities>
-    <CapFloorVolatility>
-      <CurveId>EUR_CF_N</CurveId>
-      <CurveDescription>EUR normal cap floor volatilities</CurveDescription>
-      <!-- Normal, Lognormal or ShiftedLognormal -->
-      <VolatilityType>Normal</VolatilityType>
-      <!-- Linear, Flat, None -->
-      <Extrapolation>Linear</Extrapolation>
-      <!-- Include ATM vol quotes also: True or False -->
-      <IncludeAtm>FALSE</IncludeAtm>
-      <!-- Day counter for date to time conversion -->
-      <DayCounter>Actual/365 (Fixed)</DayCounter>
-      <!--Calendar and Business day convention for cap/floor term to date conversion -->
-      <Calendar>TARGET</Calendar>
-      <BusinessDayConvention>Following</BusinessDayConvention>
-      <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Tenors>
-      <Strikes>-0.01,0.0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1</Strikes>
-      <IborIndex>EUR-EURIBOR-6M</IborIndex>
-      <DiscountCurve>Yield/EUR/EUR1D</DiscountCurve>
-      <BootstrapConfig>
-        ...
-      </BootstrapConfig>
-    </CapFloorVolatility>
-    ...
-  </CapFloorVolatilities>
-\end{minted}
-\caption{Cap/Floor volatility configuration}
-\label{lst:capfloorvol_configuration}
-\end{longlisting}
+\include{curve_configurations/capfloorvolatility}
 
 \subsubsection{FX Volatility Structures}
 
-Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volatility structures.
+Listing \ref{lst:fxoptionvol_configuration} shows two examples of FX volatility structure configurations.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -4247,18 +4384,23 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
   <FXVolatility>
     <CurveId>EURUSD</CurveId>
     <CurveDescription />
-    <Dimension>ATM</Dimension> <!-- ATM, Smile -->
+    <!-- ATM, Smile -->
+    <Dimension>ATM</Dimension> 
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <FXSpotID>FX/EUR/USD</FXSpotID>
     <FXForeignCurveID>Yield/USD/USD1D</FXForeignCurveID>
     <FXDomesticCurveID>Yield/EUR/EUR1D</FXDomesticCurveID>
   </FXVolatility>
-    <FXVolatility>
+  
+  <FXVolatility>
     <CurveId>USDJPY</CurveId>
     <CurveDescription />
-    <Dimension>Smile</Dimension> <!-- ATM, Smile -->
-    <SmileType>Delta</SmileType> <!--VannaVolga, Delta -->
-    <SmileInterpolation>Linear</SmileInterpolation> <!-- VannaVolga1,VannaVolga2, Linear, Cubic -->
+    <!-- ATM, Smile -->
+    <Dimension>Smile</Dimension> 
+    <!-- VannaVolga, Delta -->
+    <SmileType>Delta</SmileType> 
+    <!-- VannaVolga1, VannaVolga2, Linear, Cubic -->
+    <SmileInterpolation>Linear</SmileInterpolation>
     <Conventions>FX-USD-JPY-OPTION-CONVENTIONS</Conventions>
     <Deltas>10P,20P,ATM,10C,20C</Deltas>
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
@@ -4276,11 +4418,32 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
 \label{lst:fxoptionvol_configuration}
 \end{longlisting}
 
-The \lstinline!SmileInterpolation! is optional and only used when the \lstinline!Dimension! is set to \emph{Smile}. If  \lstinline!Dimension! is set to \emph{Smile} 
-and the  \lstinline!SmileType! is set to \emph{VannaVolga}, then Vanna Volga is used as per (Castagna \& Mercurio - 2006). \lstinline!SmileInterpolation! specifies which approximation to use for implied volatilities; \emph{VannaVolga1} or \emph{VannaVolga2} for (eq. 13) or (eq. 14)  respectively. The first approximation
-is less accurate for far OTM but is always defined. The second approximation is defined in most practical applications. \lstinline!SmileInterpolation! defaults to second approximation.
+The meaning of each of the elements in Listing \ref{lst:fxoptionvol_configuration} is given below. 
 
-If  \lstinline!Dimension! is set to \emph{Smile}  and the  \lstinline!SmileType! is set to \emph{Delta}, then Delta quotes are used to build a full surface using the deltas specified in \emph{Deltas} and the expiries in \emph{Expiries}. \lstinline!SmileInterpolation! specifies which interpolation method to use for implied volatilities; \emph{Linear} or \emph{Cubic}.
+\begin{itemize}
+\item CurveId: Unique identifier of the FX volatility structure
+\item CurveDescription: A description of the volatility structure, may be left blank.
+\item Dimension: Distinguishes at-the-money volatility curves from volatility surfaces. \\ 
+Allowable values: {\tt ATM, Smile}
+\item SmileType [Optional]: Required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\
+Allowable values: {\tt VannaVolga} as per (Castagna \& Mercurio - 2006) and {\tt Delta}, with default value {\tt VannaVolga} if left blank.
+\item SmileInterpolation [Optional]: Smile interpolation method applied, required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\
+Allowable values: 
+\begin{itemize}
+\item {\tt VannaVolga1} or {\tt VannaVolga2} in case of SmileType {\tt VannaVolga} with default VannaVolga2 if left blank.
+VannaVolga1/VannaVolga2 refer to the first/second approximation in (eq. 13) and (eq. 14) of the reference above.
+\item {\tt Linear} or {\tt Cubic} in case of SmileType {\tt Delta} with default {\tt Linear} if left blank
+\end{itemize}
+\item Conventions [Optional]: FX conventions object ID that is used to determine the at-the-money type and delta type of the volatility quotes, these default to {\tt AtmDeltaNeutral} and {\tt Spot} if the conventions ID is omitted or left blank
+\item Expiries: Option expiries in period form
+\item Deltas [Optional]: Strike grid, required in case of SmileType {\tt Delta} \\
+Allowable values: {\tt ATM, *P, *C}, see example in Listing \ref{lst:fxoptionvol_configuration}
+\item FXSpotID: ORE representation of the relevant FX spot quote in the form FX/CCY1/CCY2 
+\item FXForeignCurveID [Optional]: Yield curve, in ORE format Yield/CCY/ID, used as foreign yield curve in the Delta Surface object; this is hence required for SmileType Delta only, otherwise it can be omitted
+\item FXDomesticCurveID [Optional]: Yield curve, in ORE format Yield/CCY/ID, used as domestic yield curve in the Delta Surface object; this is hence required for SmileType Delta only, otherwise it can be omitted
+\item DayCounter: The term structure's day counter used in date to time conversions
+\item Calendar: The term structure's calendar used in option tenor to date conversions
+\end{itemize}
 
 \subsubsection{Equity Curve Structures}
 
@@ -4295,9 +4458,10 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
     <CurveDescription>SP 500 equity price projection curve</CurveDescription>
     <Currency>USD</Currency>
     <ForecastingCurve>EUR1D</ForecastingCurve>
-    <Type>DividendYield</Type> <!-- DividendYield, ForwardPrice, OptionPremium -->
-    <!-- Optional node, only used when Type is OptionPremium
-    <ExerciseStyle>American</ExerciseStyle> -->
+    <!-- DividendYield, ForwardPrice, OptionPremium -->
+    <Type>DividendYield</Type> 
+    <!-- Optional node, only used when Type is OptionPremium -->
+    <ExerciseStyle>American</ExerciseStyle>
     <!-- Spot quote from the market data file -->
     <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> 
     <Quotes>
@@ -4323,7 +4487,24 @@ term structure, which are then used together for projection of forward prices.
 
 \subsubsection{Equity Volatility Structures}
 
-Listing \ref{lst:eqoptionvol_configuration} shows the configuration of equity volatility structures.
+When configuring volatility structures for equities, there are four options:
+\begin{enumerate}
+\item a constant volatility for all expiries and strikes.
+\item a volatility curve with a dependency on expiry but no strike dimension.
+\item a volatility surface with an expiry and strike dimension.
+\item a proxy surface - point to another surface as a proxy.
+\end{enumerate}
+
+There are a number of fields common to all configurations:
+\begin{itemize}
+\item CurveId: Unique identifier for the curve.
+\item CurveDescription: A description of the curve. This field may be left blank.
+\item Currency: Currency of the equity.
+\item Calendar [Optional]: allowable value is any valid calendar. Defaults to \lstinline!NullCalendar!.
+\item DayCounter [Optional]: allowable value is any valid day counter. Defaults to \lstinline!A365!.
+\end{itemize}
+
+Listing \ref{lst:eqoptionvol_constant} shows the configuration of equity volatility structures with constant volatility. A node \lstinline!Constant! takes one \lstinline!Quote!, as described in Section \ref{md:equity_option_iv}, which is held constant for all strikes and expiries.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -4333,27 +4514,138 @@ Listing \ref{lst:eqoptionvol_configuration} shows the configuration of equity vo
     <CurveId>SP5</CurveId>
     <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
     <Currency>USD</Currency>
-    <Dimension>Smile</Dimension><!-- Alternative: ATM -->
-    <QuoteType>ImpliedVolatility</QuoteType><!--Alternative: Premium -->
-    <Expiries>1M,5Y,10Y</Expiries>
-    <!-- If Dimension is Smile: -->
-    <Strikes>1932.8,2147.56,2254.939</Strikes>
-    <TimeExtrapolation>Flat</TimeExtrapolation>
-    <StrikeExtrapolation>Flat</StrikeExtrapolation>
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <Constant>
+      <Quote>EQUITY_OPTION/RATE_LNVOL/SP5/USD/5Y/ATMF</Quote>
+    </Constant>
   </EquityVolatility>
   <EquityVolatility>
     ...
   </EquityVolatility>
 </EquityVolatilities>
 \end{minted}
-\caption{Equity option volatility configuration}
-\label{lst:eqoptionvol_configuration}
+\caption{Equity option volatility configuration - constant}
+\label{lst:eqoptionvol_constant}
 \end{longlisting}
 
+Secondly, the volatility curve configuration layout is given in Listing \ref{lst:eqoptionvol_curve}. With this curve construction the volatility is held constant in the strike direction, and quotes of varying expiry can be provided, for examlple if only ATM volatility quotes are available. The volatility quote IDs in the \lstinline!Quotes! node should be Equity option volatility quotes as described in Section \ref{md:equity_option_iv}. An explicit list of quotes can be provided, or a single quote with a wildcard replacing the expiry/strike. In the wildcard case, it will look for any matching quotes provided in the loader, and construct the curve from these. The \lstinline!Interpolation! node supports \lstinline!Linear!, \lstinline!Cubic! and \lstinline!LogLinear! interpolation. The \lstinline!Extrapolation! node supports either \lstinline!None! for no extrapolation or \lstinline!Flat! for flat extrapolation in the volatility.
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityVolatilities>
+  <EquityVolatility>
+    <CurveId>SP5</CurveId>
+    <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+    <Currency>USD</Currency>
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <Curve>
+      <QuoteType>ImpliedVolatility</QuoteType>
+      <VolatilityType>Lognormal</VolatilityType>
+      <Quotes>
+        <Quote>EQUITY_OPTION/RATE_LNVOL/SP5/USD/*</Quote>
+      </Quotes>
+      <Interpolation>LinearFlat</Interpolation>
+      <Extrapolation>Flat</Extrapolation>
+    </Curve>
+  </EquityVolatility>
+  <EquityVolatility>
+    ...
+  </EquityVolatility>
+</EquityVolatilities>
+\end{minted}
+\caption{Equity option volatility configuration - curve}
+\label{lst:eqoptionvol_curve}
+\end{longlisting}
+
+The volatility strike surface configuration layout is given in Listing \ref{lst:eqoptionvol_surface}. This allows a full surface of \lstinline!Strikes! and \lstinline!Expiries! to be defined. The following are the valid nodes:
+
 \begin{itemize}
-\item {\tt TimeExtrapolation}: Defaults to Flat if omitted. The method used for Extrapolation in the time direction. May take any of the values: Flat or UseInterpolator. For Surfaces built without wildcards this value is not configurable, all curves will have  UseInterpolator extrapolation.
-\item {\tt StrikeExtrapolation}: Defaults to Flat if omitted. The method used for Extrapolation in the strike direction. The values Flat or UseInterpolator are accepted.
+\item
+\lstinline!QuoteType!: either \lstinline!ImpliedVolatility! of \lstinline!Premium!, indicating the type of quotes provided in the market.
+
+\item
+\lstinline!ExerciseType! [Optional]: only valid when \lstinline!QuoteType! is \lstinline!Premium!. Valid types are \lstinline!European! and \lstinline!American!.
+
+\item
+\lstinline!VolatilityType! [Optional]: only valid when \lstinline!QuoteType! is \lstinline!ImpliedVolatility!. Valid types are \lstinline!Lognormal!, \lstinline!ShiftedLognormal! and \lstinline!Normal!.
+
+\item
+\lstinline!Strikes!: comma separated list of strikes, representing the absolute strike values for the option. In other words, A single wildcard character, \lstinline!*!, can be used here also to indicate that all strikes found in the market data for this equity volatility configuration should be used when building the equity volatility surface.
+
+\item
+\lstinline!Expiries!: comma separated list of expiry tenors and or expiry dates. A single wildcard character, \lstinline!*!, can be used here also to indicate that all expiries found in the market data for this equity volatility configuration should be used when building the equity volatility surface.
+
+\item
+\lstinline!TimeInterpolation!: interpolation in the option expiry direction. If either \lstinline!Strikes! or \lstinline!Expiries! are configured with a wildcard character, \lstinline!Linear! is used. If both \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, \lstinline!Linear! or \lstinline!Cubic! is allowed here but the value must agree with the value for \lstinline!StrikeInterpolation!.
+
+\item
+\lstinline!StrikeInterpolation!: interpolation in the strike direction. If either \lstinline!Strikes! or \lstinline!Expiries! are configured with a wildcard character, \lstinline!Linear! is used. If both \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, \lstinline!Linear! or \lstinline!Cubic! is allowed here but the value must agree with the value for \lstinline!TimeInterpolation!.
+
+\item
+\lstinline!Extrapolation!: boolean value. If \lstinline!true!, extrapolation is allowed. If \lstinline!false!, extrapolation is not allowed.
+
+\item
+\lstinline!TimeExtrapolation!: extrapolation in the option expiry direction. If both \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, the extrapolation in the time direction is flat in volatility regardless of the setting here. If either \lstinline!Strikes! or \lstinline!Expiries! are configured with a wildcard character, \lstinline!Linear!, \lstinline!UseInterpolator!, \lstinline!Flat! or \lstinline!None! are allowed. If \lstinline!Linear! or \lstinline!UseInterpolator! is specified, the extrapolation is linear. If \lstinline!Flat! is specified, the extrapolation is flat. If \lstinline!None! is specified, it is ignored and the extrapolation is flat since extrapolation in the time direction cannot be turned off in isolation i.e.\ extrapolation can only be turned off for the surface as a whole using the \lstinline!Extrapolation! flag.
+
+\item
+\lstinline!StrikeExtrapolation!: extrapolation in the strike direction. The allowable values are \lstinline!Linear!, \lstinline!UseInterpolator!, \lstinline!Flat! or \lstinline!None!. If \lstinline!Linear! or \lstinline!UseInterpolator! is specified, the extrapolation uses the strike interpolation setting for extrapolation i.e. linear or cubic in this case. If \lstinline!Flat! is specified, the extrapolation is flat. If \lstinline!None! is specified, it is ignored and the extrapolation is flat since extrapolation in the strike direction cannot be turned off in isolation i.e.\ extrapolation can only be turned off for the surface as a whole using the \lstinline!Extrapolation! flag.
+
 \end{itemize}
+
+When this configuration is used, the market is searched for quote strings of the form \lstinline!EQUITY_OPTION/PRICE/[NAME]/[CURRENCY]/[EXPIRY]/[STRIKE]! or \lstinline!EQUITY_OPTION/RATE_LNVOL/[NAME]/[CURRENCY]/[EXPIRY]/[STRIKE]!, depending on the \lstinline!QuoteType!. When both the \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, it is clear that the \lstinline![EXPIRY]! field is populated from the list of expiries in turn and the \lstinline![STRIKE]! field is populated from the list of strikes in turn. If there are $m$ expiries in the \lstinline!Expiries! list and $n$ strikes in the \lstinline!Strikes! list, there will be $m \times n$ quotes created and searched for in the market data. If \lstinline!Expiries! are configured via the wildcard character, \lstinline!*!, all quotes in the market data matching the pattern \lstinline!EQUITY_OPTION/RATE_LNVOL/[NAME]/[CURRENCY]/*/[STRIKE]!. Similarly for \lstinline!Strikes! configured via the wildcard character, \lstinline!*!.
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityVolatilities>
+  <EquityVolatility>
+    <CurveId>SP5</CurveId>
+    <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+    <Currency>USD</Currency>
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <StrikeSurface>
+      <QuoteType>Premium</QuoteType>
+      <ExerciseType>European</ExerciseType>
+      <Strikes>*</Strikes>
+      <Expiries>*</Expiries>
+      <TimeInterpolation>Linear</TimeInterpolation>
+      <StrikeInterpolation>Linear</StrikeInterpolation>
+      <Extrapolation>true</Extrapolation>
+      <TimeExtrapolation>UseInterpolator</TimeExtrapolation>
+      <StrikeExtrapolation>Flat</StrikeExtrapolation>
+    </StrikeSurface>
+  </EquityVolatility>
+  <EquityVolatility>
+    ...
+  </EquityVolatility>
+</EquityVolatilities>
+\end{minted}
+\caption{Equity option volatility configuration - strike surface}
+\label{lst:eqoptionvol_surface}
+\end{longlisting}
+
+Finally, the volatility proxy surface configuration layout is given in Listing \ref{lst:eqoptionvol_proxy}. This allows us to use any other surface as a proxy, in cases where there is no option data for a given equity. We provide a name in the \lstinline!ProxySurface! field, which must match the \lstinline!CurveId! of another configuration. The proxy surface looks up the volatility in the reference surface bases on moneyness.
+ 
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityVolatilities>
+  <EquityVolatility>
+    <CurveId>ABC</CurveId>
+    <CurveDescription>Lognormal option implied vols for APC - proxied from SP5</CurveDescription>
+    <Currency>USD</Currency>
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <ProxySurface>SP5</PROXYSurface>
+  </EquityVolatility>
+  <EquityVolatility>
+    ...
+  </EquityVolatility>
+</EquityVolatilities>
+\end{minted}
+\caption{Equity option volatility configuration - proxy surface}
+\label{lst:eqoptionvol_proxy}
+\end{longlisting}
 
 \subsubsection{Inflation Curves}
 
@@ -4443,11 +4735,13 @@ floor price surface.
 \begin{minted}[fontsize=\footnotesize]{xml}
       <InflationCapFloorVolatility>
           <CurveId>EUHICPXT_ZC_CF</CurveId>
-          <CurveDescription>EUHICPXT CPI Cap/Floor vol surface derived from price quotes</CurveDescription>
+          <CurveDescription>
+              EUHICPXT CPI Cap/Floor vol surface derived from price quotes
+          </CurveDescription>
           <Type>ZC</Type>
           <QuoteType>Price</QuoteType>
-	  <VolatilityType>Normal</VolatilityType>
-	  <Extrapolation>Y</Extrapolation>
+          <VolatilityType>Normal</VolatilityType>
+          <Extrapolation>Y</Extrapolation>
           <DayCounter>ACT</DayCounter>
           <Calendar>TARGET</Calendar>
           <BusinessDayConvention>MF</BusinessDayConvention>
@@ -4460,7 +4754,7 @@ floor price surface.
           <Index>EUHICPXT</Index>
           <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
-	  <ObservationLag>3M</ObservationLag>
+          <ObservationLag>3M</ObservationLag>
           <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
       </InflationCapFloorVolatility>
 \end{minted}
@@ -4677,6 +4971,21 @@ Listing \ref{lst:basecorr_configuration} shows the configuration of a Base Corre
 \caption{Base Correlation Configuration}
 \label{lst:basecorr_configuration}
 \end{longlisting}
+
+The meaning of each of the elements in Listing \ref{lst:basecorr_configuration} is given below. 
+
+\begin{itemize}
+\item CurveId: Unique identifier of the base correlation structure
+\item CurveDescription: A description of the base correlation structure, may be left blank.
+\item Terms: Comma-separated list of tenors, sorted in increasing order, possibly a single term to represent a flat term structure in time-direction
+\item DetachmentPoints: Comma-separated list of equity tranche detachment points, sorted in increasing order\\
+Allowable values: Any positive number less than one
+\item SettlementDays: The floating term structure's settlement days argument used in the reference date calculation
+\item DayCounter: The term structure's day counter used in date to time conversions
+\item Calendar: The term structure's calendar used in tenor to date conversions
+\item BusinessDayConvention: The term structure's business day convention used in tenor to date conversion
+\item Extrapolate: Boolean to indicate whether the correlation curve shall be extrapolated or not
+\end{itemize}
 
 \subsubsection{FXSpots}
 

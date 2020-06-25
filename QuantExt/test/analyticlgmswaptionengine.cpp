@@ -91,12 +91,10 @@ using namespace QuantExt;
 
 namespace {
 struct F : public qle::test::TopLevelFixture {
-    F() {
-        Settings::instance().evaluationDate() = Date(20, March, 2019);
-    }
+    F() { Settings::instance().evaluationDate() = Date(20, March, 2019); }
     ~F() {}
 };
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 

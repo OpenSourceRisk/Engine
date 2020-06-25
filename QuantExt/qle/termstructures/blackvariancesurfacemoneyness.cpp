@@ -15,13 +15,13 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-#include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
+#include <boost/make_shared.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/forwardcurve.hpp>
 #include <ql/utilities/dataformatters.hpp>
-#include <boost/make_shared.hpp>
+#include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 
 using namespace std;
 
@@ -37,22 +37,11 @@ BlackVarianceSurfaceMoneyness::BlackVarianceSurfaceMoneyness(
 }
 
 BlackVarianceSurfaceMoneyness::BlackVarianceSurfaceMoneyness(
-    const Date& referenceDate,
-    const Calendar& cal,
-    const Handle<Quote>& spot,
-    const std::vector<Time>& times,
-    const std::vector<Real>& moneyness,
-    const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-    const DayCounter& dayCounter,
-    bool stickyStrike,
-    bool flatExtrapMoneyness)
-    : BlackVarianceTermStructure(referenceDate, cal, Following, dayCounter),
-      stickyStrike_(stickyStrike),
-      spot_(spot),
-      times_(times),
-      moneyness_(moneyness),
-      flatExtrapMoneyness_(flatExtrapMoneyness),
-      quotes_(blackVolMatrix) {
+    const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
+    const std::vector<Real>& moneyness, const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
+    const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness)
+    : BlackVarianceTermStructure(referenceDate, cal, Following, dayCounter), stickyStrike_(stickyStrike), spot_(spot),
+      times_(times), moneyness_(moneyness), flatExtrapMoneyness_(flatExtrapMoneyness), quotes_(blackVolMatrix) {
     init();
 }
 
@@ -91,19 +80,20 @@ void BlackVarianceSurfaceMoneyness::init() {
 
     // Check times_ and register with quotes
     for (Size j = 1; j < times_.size(); j++) {
-        
-        QL_REQUIRE(times_[j] > times_[j - 1], "Times must be sorted and unique but found that the " <<
-            io::ordinal(j) << " time, " << times_[j] << ", is not greater than the " <<
-            io::ordinal(j - 1) << " time, " << times_[j - 1] << ".");
-        
+
+        QL_REQUIRE(times_[j] > times_[j - 1], "Times must be sorted and unique but found that the "
+                                                  << io::ordinal(j) << " time, " << times_[j]
+                                                  << ", is not greater than the " << io::ordinal(j - 1) << " time, "
+                                                  << times_[j - 1] << ".");
+
         for (Size i = 0; i < moneyness_.size(); i++) {
             registerWith(quotes_[i][j - 1]);
         }
     }
 
-    varianceSurface_ = Bilinear().interpolate(
-        times_.begin(), times_.end(), moneyness_.begin(), moneyness_.end(), variances_);
-    
+    varianceSurface_ =
+        Bilinear().interpolate(times_.begin(), times_.end(), moneyness_.begin(), moneyness_.end(), variances_);
+
     notifyObservers();
 }
 
@@ -128,21 +118,15 @@ BlackVarianceSurfaceMoneynessSpot::BlackVarianceSurfaceMoneynessSpot(
     const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& moneyness,
     const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix, const DayCounter& dayCounter, bool stickyStrike,
     bool flatExtrapMoneyness)
-    : BlackVarianceSurfaceMoneyness(cal, spot, times, moneyness, blackVolMatrix, dayCounter,
-        stickyStrike, flatExtrapMoneyness) {}
+    : BlackVarianceSurfaceMoneyness(cal, spot, times, moneyness, blackVolMatrix, dayCounter, stickyStrike,
+                                    flatExtrapMoneyness) {}
 
 BlackVarianceSurfaceMoneynessSpot::BlackVarianceSurfaceMoneynessSpot(
-    const Date& referenceDate,
-    const Calendar& cal,
-    const Handle<Quote>& spot,
-    const std::vector<Time>& times,
-    const std::vector<Real>& moneyness,
-    const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-    const DayCounter& dayCounter,
-    bool stickyStrike,
-    bool flatExtrapMoneyness)
-    : BlackVarianceSurfaceMoneyness(referenceDate, cal, spot, times, moneyness, blackVolMatrix,
-        dayCounter, stickyStrike, flatExtrapMoneyness) {}
+    const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
+    const std::vector<Real>& moneyness, const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
+    const DayCounter& dayCounter, bool stickyStrike, bool flatExtrapMoneyness)
+    : BlackVarianceSurfaceMoneyness(referenceDate, cal, spot, times, moneyness, blackVolMatrix, dayCounter,
+                                    stickyStrike, flatExtrapMoneyness) {}
 
 Real BlackVarianceSurfaceMoneynessSpot::moneyness(Time, Real strike) const {
     if (strike == Null<Real>() || strike == 0) {
@@ -163,31 +147,27 @@ Real BlackVarianceSurfaceMoneynessSpot::moneyness(Time, Real strike) const {
 BlackVarianceSurfaceMoneynessForward::BlackVarianceSurfaceMoneynessForward(
     const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& moneyness,
     const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix, const DayCounter& dayCounter,
-    const Handle<YieldTermStructure>& forTS, const Handle<YieldTermStructure>& domTS, bool stickyStrike, bool flatExtrapMoneyness)
-    : BlackVarianceSurfaceMoneyness(cal, spot, times, moneyness, blackVolMatrix, dayCounter,
-        stickyStrike, flatExtrapMoneyness), forTS_(forTS), domTS_(domTS) {
+    const Handle<YieldTermStructure>& forTS, const Handle<YieldTermStructure>& domTS, bool stickyStrike,
+    bool flatExtrapMoneyness)
+    : BlackVarianceSurfaceMoneyness(cal, spot, times, moneyness, blackVolMatrix, dayCounter, stickyStrike,
+                                    flatExtrapMoneyness),
+      forTS_(forTS), domTS_(domTS) {
     init();
 }
 
 BlackVarianceSurfaceMoneynessForward::BlackVarianceSurfaceMoneynessForward(
-    const Date& referenceDate,
-    const Calendar& cal,
-    const Handle<Quote>& spot,
-    const std::vector<Time>& times,
-    const std::vector<Real>& moneyness,
-    const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-    const DayCounter& dayCounter,
-    const Handle<YieldTermStructure>& forTS,
-    const Handle<YieldTermStructure>& domTS,
-    bool stickyStrike,
-    bool flatExtrapMoneyness)
+    const Date& referenceDate, const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
+    const std::vector<Real>& moneyness, const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
+    const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS, const Handle<YieldTermStructure>& domTS,
+    bool stickyStrike, bool flatExtrapMoneyness)
     : BlackVarianceSurfaceMoneyness(referenceDate, cal, spot, times, moneyness, blackVolMatrix, dayCounter,
-        stickyStrike, flatExtrapMoneyness), forTS_(forTS), domTS_(domTS) {
+                                    stickyStrike, flatExtrapMoneyness),
+      forTS_(forTS), domTS_(domTS) {
     init();
 }
 
 void BlackVarianceSurfaceMoneynessForward::init() {
-    
+
     if (!stickyStrike_) {
         QL_REQUIRE(!forTS_.empty(), "foreign discount curve required for atmf surface");
         QL_REQUIRE(!domTS_.empty(), "domestic discount curve required for atmf surface");
@@ -205,7 +185,7 @@ void BlackVarianceSurfaceMoneynessForward::init() {
 
 Real BlackVarianceSurfaceMoneynessForward::moneyness(Time t, Real strike) const {
     Real fwd;
-    Real reqMoneyness;  // for flat extrapolation
+    Real reqMoneyness; // for flat extrapolation
     if (strike == Null<Real>() || strike == 0)
         return 1.0;
     else {

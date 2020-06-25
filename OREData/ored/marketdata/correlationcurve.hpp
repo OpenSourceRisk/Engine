@@ -35,8 +35,8 @@
 
 namespace ore {
 namespace data {
-using QuantLib::Date;
 using ore::data::CurveConfigurations;
+using QuantLib::Date;
 
 //! Wrapper class for building correlation structures
 /*!

@@ -39,12 +39,10 @@ public:
     BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal,
                                const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes,
                                const std::vector<QuantLib::Volatility>& volatilities,
-                               const QuantLib::DayCounter& dayCounter,
-                               bool lowerStrikeConstExtrap = true,
-                               bool upperStrikeConstExtrap = true,
-                               bool timeFlatExtrapolation = false);
+                               const QuantLib::DayCounter& dayCounter, bool lowerStrikeConstExtrap = true,
+                               bool upperStrikeConstExtrap = true, bool timeFlatExtrapolation = false);
 
-    enum class TimeInterpolationMethod { Linear, Flat};
+    enum class TimeInterpolationMethod { Linear, Flat };
     //! \name TermStructure interface
     //@{
     QuantLib::Date maxDate() const { return QuantLib::Date::maxDate(); }
@@ -56,7 +54,7 @@ public:
     QuantLib::Real minStrike() const { return 0; }
     QuantLib::Real maxStrike() const { return QL_MAX_REAL; }
     //@}
-    
+
     //! \name Visitability
     //@{
     virtual void accept(QuantLib::AcyclicVisitor&);
@@ -64,14 +62,15 @@ public:
 
 protected:
     virtual QuantLib::Real blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const;
-                                       
+
     bool timeFlatExtrapolation_;
 };
 
 // inline definitions
 
 inline void BlackVarianceSurfaceSparse::accept(QuantLib::AcyclicVisitor& v) {
-    QuantLib::Visitor<BlackVarianceSurfaceSparse>* v1 = dynamic_cast<QuantLib::Visitor<BlackVarianceSurfaceSparse>*>(&v);
+    QuantLib::Visitor<BlackVarianceSurfaceSparse>* v1 =
+        dynamic_cast<QuantLib::Visitor<BlackVarianceSurfaceSparse>*>(&v);
     if (v1 != 0)
         v1->visit(*this);
     else

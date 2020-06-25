@@ -286,8 +286,8 @@ StrippedCPIVolatilitySurface<Interpolator2D>::ObjectiveFunction::ObjectiveFuncti
 }
 
 template <class Interpolator2D>
-QuantLib::Real StrippedCPIVolatilitySurface<Interpolator2D>::ObjectiveFunction::
-operator()(QuantLib::Volatility guess) const {
+QuantLib::Real
+StrippedCPIVolatilitySurface<Interpolator2D>::ObjectiveFunction::operator()(QuantLib::Volatility guess) const {
     boost::shared_ptr<QuantLib::ConstantCPIVolatility> vol = boost::make_shared<QuantLib::ConstantCPIVolatility>(
         guess, priceSurface_->settlementDays(), priceSurface_->calendar(), priceSurface_->businessDayConvention(),
         priceSurface_->dayCounter(), priceSurface_->observationLag(), priceSurface_->frequency(),

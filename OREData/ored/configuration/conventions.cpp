@@ -34,8 +34,8 @@
 
 using namespace QuantLib;
 using namespace std;
-using QuantExt::SubPeriodsCoupon;
 using boost::lexical_cast;
+using QuantExt::SubPeriodsCoupon;
 
 namespace {
 
@@ -380,8 +380,7 @@ void OvernightIndexConvention::build() {
     // just a check really that the id is consistent with the ibor index name rules
     vector<string> tokens;
     split(tokens, id_, boost::is_any_of("-"));
-    QL_REQUIRE(tokens.size() == 2,
-               "Two tokens required in OvernightIndexConvention " << id_ << ": CCY-INDEX");
+    QL_REQUIRE(tokens.size() == 2, "Two tokens required in OvernightIndexConvention " << id_ << ": CCY-INDEX");
 }
 
 SwapIndexConvention::SwapIndexConvention(const string& id, const string& conventions)
@@ -1110,21 +1109,12 @@ XMLNode* CmsSpreadOptionConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
-CommodityForwardConvention::CommodityForwardConvention(
-    const string& id,
-    const string& spotDays,
-    const string& pointsFactor,
-    const string& advanceCalendar,
-    const string& spotRelative,
-    BusinessDayConvention bdc,
-    bool outright)
-    : Convention(id, Type::CommodityForward),
-      bdc_(bdc),
-      outright_(outright),
-      strSpotDays_(spotDays),
-      strPointsFactor_(pointsFactor),
-      strAdvanceCalendar_(advanceCalendar),
-      strSpotRelative_(spotRelative) {
+CommodityForwardConvention::CommodityForwardConvention(const string& id, const string& spotDays,
+                                                       const string& pointsFactor, const string& advanceCalendar,
+                                                       const string& spotRelative, BusinessDayConvention bdc,
+                                                       bool outright)
+    : Convention(id, Type::CommodityForward), bdc_(bdc), outright_(outright), strSpotDays_(spotDays),
+      strPointsFactor_(pointsFactor), strAdvanceCalendar_(advanceCalendar), strSpotRelative_(spotRelative) {
     build();
 }
 
@@ -1145,12 +1135,12 @@ void CommodityForwardConvention::fromXML(XMLNode* node) {
     strPointsFactor_ = XMLUtils::getChildValue(node, "PointsFactor", false);
     strAdvanceCalendar_ = XMLUtils::getChildValue(node, "AdvanceCalendar", false);
     strSpotRelative_ = XMLUtils::getChildValue(node, "SpotRelative", false);
-    
+
     bdc_ = Following;
     if (XMLNode* n = XMLUtils::getChildNode(node, "BusinessDayConvention")) {
         bdc_ = parseBusinessDayConvention(XMLUtils::getNodeValue(n));
     }
-    
+
     outright_ = true;
     if (XMLNode* n = XMLUtils::getChildNode(node, "Outright")) {
         outright_ = parseBool(XMLUtils::getNodeValue(n));
@@ -1173,94 +1163,48 @@ XMLNode* CommodityForwardConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
-CommodityFutureConvention::CommodityFutureConvention(const string& id,
-    const DayOfMonth& dayOfMonth,
-    const string& contractFrequency,
-    const string& calendar,
-    const string& expiryCalendar,
-    Natural expiryMonthLag,
-    const string& oneContractMonth,
-    const string& offsetDays,
-    const string& bdc,
-    bool adjustBeforeOffset,
-    bool isAveraging,
-    const string& optionExpiryOffset,
-    const vector<string>& prohibitedExpiries)
-    : Convention(id, Type::CommodityFuture),
-      anchorType_(AnchorType::DayOfMonth),
-      strDayOfMonth_(dayOfMonth.dayOfMonth_),
-      strContractFrequency_(contractFrequency),
-      strCalendar_(calendar),
-      strExpiryCalendar_(expiryCalendar),
-      expiryMonthLag_(expiryMonthLag),
-      strOneContractMonth_(oneContractMonth),
-      strOffsetDays_(offsetDays),
-      strBdc_(bdc),
-      adjustBeforeOffset_(adjustBeforeOffset),
-      isAveraging_(isAveraging),
-      strOptionExpiryOffset_(optionExpiryOffset),
+CommodityFutureConvention::CommodityFutureConvention(const string& id, const DayOfMonth& dayOfMonth,
+                                                     const string& contractFrequency, const string& calendar,
+                                                     const string& expiryCalendar, Natural expiryMonthLag,
+                                                     const string& oneContractMonth, const string& offsetDays,
+                                                     const string& bdc, bool adjustBeforeOffset, bool isAveraging,
+                                                     const string& optionExpiryOffset,
+                                                     const vector<string>& prohibitedExpiries)
+    : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::DayOfMonth),
+      strDayOfMonth_(dayOfMonth.dayOfMonth_), strContractFrequency_(contractFrequency), strCalendar_(calendar),
+      strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag), strOneContractMonth_(oneContractMonth),
+      strOffsetDays_(offsetDays), strBdc_(bdc), adjustBeforeOffset_(adjustBeforeOffset), isAveraging_(isAveraging),
+      strOptionExpiryOffset_(optionExpiryOffset), strProhibitedExpiries_(prohibitedExpiries) {
+    build();
+}
+
+CommodityFutureConvention::CommodityFutureConvention(const string& id, const string& nth, const string& weekday,
+                                                     const string& contractFrequency, const string& calendar,
+                                                     const string& expiryCalendar, Natural expiryMonthLag,
+                                                     const string& oneContractMonth, const string& offsetDays,
+                                                     const string& bdc, bool adjustBeforeOffset, bool isAveraging,
+                                                     const string& optionExpiryOffset,
+                                                     const vector<string>& prohibitedExpiries)
+    : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::NthWeekday), strNth_(nth), strWeekday_(weekday),
+      strContractFrequency_(contractFrequency), strCalendar_(calendar), strExpiryCalendar_(expiryCalendar),
+      expiryMonthLag_(expiryMonthLag), strOneContractMonth_(oneContractMonth), strOffsetDays_(offsetDays), strBdc_(bdc),
+      adjustBeforeOffset_(adjustBeforeOffset), isAveraging_(isAveraging), strOptionExpiryOffset_(optionExpiryOffset),
       strProhibitedExpiries_(prohibitedExpiries) {
     build();
 }
 
-CommodityFutureConvention::CommodityFutureConvention(const string& id,
-    const string& nth,
-    const string& weekday,
-    const string& contractFrequency,
-    const string& calendar,
-    const string& expiryCalendar,
-    Natural expiryMonthLag,
-    const string& oneContractMonth,
-    const string& offsetDays,
-    const string& bdc,
-    bool adjustBeforeOffset,
-    bool isAveraging,
-    const string& optionExpiryOffset,
-    const vector<string>& prohibitedExpiries)
-    : Convention(id, Type::CommodityFuture),
-      anchorType_(AnchorType::NthWeekday),
-      strNth_(nth),
-      strWeekday_(weekday),
-      strContractFrequency_(contractFrequency),
-      strCalendar_(calendar),
-      strExpiryCalendar_(expiryCalendar),
-      expiryMonthLag_(expiryMonthLag),
-      strOneContractMonth_(oneContractMonth),
-      strOffsetDays_(offsetDays),
-      strBdc_(bdc),
-      adjustBeforeOffset_(adjustBeforeOffset),
-      isAveraging_(isAveraging),
-      strOptionExpiryOffset_(optionExpiryOffset),
-      strProhibitedExpiries_(prohibitedExpiries) {
-    build();
-}
-
-CommodityFutureConvention::CommodityFutureConvention(const string& id,
-    const CalendarDaysBefore& calendarDaysBefore,
-    const string& contractFrequency,
-    const string& calendar,
-    const string& expiryCalendar,
-    Natural expiryMonthLag,
-    const string& oneContractMonth,
-    const string& offsetDays,
-    const string& bdc,
-    bool adjustBeforeOffset,
-    bool isAveraging,
-    const string& optionExpiryOffset,
-    const vector<string>& prohibitedExpiries)
-    : Convention(id, Type::CommodityFuture),
-      anchorType_(AnchorType::CalendarDaysBefore),
-      strCalendarDaysBefore_(calendarDaysBefore.calendarDaysBefore_),
-      strContractFrequency_(contractFrequency),
-      strCalendar_(calendar),
-      strExpiryCalendar_(expiryCalendar),
-      expiryMonthLag_(expiryMonthLag),
-      strOneContractMonth_(oneContractMonth),
-      strOffsetDays_(offsetDays),
-      strBdc_(bdc),
-      adjustBeforeOffset_(adjustBeforeOffset),
-      isAveraging_(isAveraging),
-      strOptionExpiryOffset_(optionExpiryOffset),
+CommodityFutureConvention::CommodityFutureConvention(const string& id, const CalendarDaysBefore& calendarDaysBefore,
+                                                     const string& contractFrequency, const string& calendar,
+                                                     const string& expiryCalendar, Natural expiryMonthLag,
+                                                     const string& oneContractMonth, const string& offsetDays,
+                                                     const string& bdc, bool adjustBeforeOffset, bool isAveraging,
+                                                     const string& optionExpiryOffset,
+                                                     const vector<string>& prohibitedExpiries)
+    : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::CalendarDaysBefore),
+      strCalendarDaysBefore_(calendarDaysBefore.calendarDaysBefore_), strContractFrequency_(contractFrequency),
+      strCalendar_(calendar), strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag),
+      strOneContractMonth_(oneContractMonth), strOffsetDays_(offsetDays), strBdc_(bdc),
+      adjustBeforeOffset_(adjustBeforeOffset), isAveraging_(isAveraging), strOptionExpiryOffset_(optionExpiryOffset),
       strProhibitedExpiries_(prohibitedExpiries) {
     build();
 }
@@ -1296,11 +1240,11 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
     if (XMLNode* n = XMLUtils::getChildNode(node, "ExpiryMonthLag")) {
         expiryMonthLag_ = parseInteger(XMLUtils::getNodeValue(n));
     }
-    
+
     strOneContractMonth_ = XMLUtils::getChildValue(node, "OneContractMonth", false);
     strOffsetDays_ = XMLUtils::getChildValue(node, "OffsetDays", false);
     strBdc_ = XMLUtils::getChildValue(node, "BusinessDayConvention", false);
-    
+
     adjustBeforeOffset_ = true;
     if (XMLNode* n = XMLUtils::getChildNode(node, "AdjustBeforeOffset")) {
         adjustBeforeOffset_ = parseBool(XMLUtils::getNodeValue(n));
@@ -1355,7 +1299,7 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "AdjustBeforeOffset", adjustBeforeOffset_);
     XMLUtils::addChild(doc, node, "IsAveraging", isAveraging_);
-    
+
     if (!strOptionExpiryOffset_.empty())
         XMLUtils::addChild(doc, node, "OptionExpiryOffset", strOptionExpiryOffset_);
 
@@ -1369,7 +1313,7 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
 }
 
 void CommodityFutureConvention::build() {
-    
+
     if (anchorType_ == AnchorType::DayOfMonth) {
         dayOfMonth_ = lexical_cast<Natural>(strDayOfMonth_);
     } else if (anchorType_ == AnchorType::CalendarDaysBefore) {
@@ -1381,9 +1325,9 @@ void CommodityFutureConvention::build() {
 
     // Only allow quaterly and monthly contract frequencies for now.
     contractFrequency_ = parseFrequency(strContractFrequency_);
-    QL_REQUIRE(contractFrequency_ == Quarterly || contractFrequency_ == Monthly, 
-        "Contract frequency should be quarterly or monthly but got " << contractFrequency_);
-    
+    QL_REQUIRE(contractFrequency_ == Quarterly || contractFrequency_ == Monthly,
+               "Contract frequency should be quarterly or monthly but got " << contractFrequency_);
+
     calendar_ = parseCalendar(strCalendar_);
     expiryCalendar_ = strExpiryCalendar_.empty() ? calendar_ : parseCalendar(strExpiryCalendar_);
 
@@ -1397,38 +1341,38 @@ void CommodityFutureConvention::build() {
     }
 }
 
-FxOptionConvention::FxOptionConvention(const string& id, const string& atmType, const string& deltaType) 
-    : Convention(id, Type::FxOption), strAtmType_(atmType), strDeltaType_(deltaType) { 
-    build(); 
-} 
- 
-void FxOptionConvention::build() { 
-    atmType_ = parseAtmType(strAtmType_); 
-    deltaType_ = parseDeltaType(strDeltaType_); 
-} 
- 
-void FxOptionConvention::fromXML(XMLNode* node) { 
- 
-    XMLUtils::checkNode(node, "FxOption"); 
-    type_ = Type::FxOption; 
-    id_ = XMLUtils::getChildValue(node, "Id", true); 
- 
-    // Get string values from xml 
-    strAtmType_ = XMLUtils::getChildValue(node, "AtmType", true); 
-    strDeltaType_ = XMLUtils::getChildValue(node, "DeltaType", true); 
-    build(); 
-} 
- 
-XMLNode* FxOptionConvention::toXML(XMLDocument& doc) { 
- 
-    XMLNode* node = doc.allocNode("FxOption"); 
-    XMLUtils::addChild(doc, node, "Id", id_); 
-    XMLUtils::addChild(doc, node, "AtmType", strAtmType_); 
-    XMLUtils::addChild(doc, node, "DeltaType", strDeltaType_); 
- 
-    return node; 
-} 
- 
+FxOptionConvention::FxOptionConvention(const string& id, const string& atmType, const string& deltaType)
+    : Convention(id, Type::FxOption), strAtmType_(atmType), strDeltaType_(deltaType) {
+    build();
+}
+
+void FxOptionConvention::build() {
+    atmType_ = parseAtmType(strAtmType_);
+    deltaType_ = parseDeltaType(strDeltaType_);
+}
+
+void FxOptionConvention::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "FxOption");
+    type_ = Type::FxOption;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+
+    // Get string values from xml
+    strAtmType_ = XMLUtils::getChildValue(node, "AtmType", true);
+    strDeltaType_ = XMLUtils::getChildValue(node, "DeltaType", true);
+    build();
+}
+
+XMLNode* FxOptionConvention::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("FxOption");
+    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "AtmType", strAtmType_);
+    XMLUtils::addChild(doc, node, "DeltaType", strDeltaType_);
+
+    return node;
+}
+
 void Conventions::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "Conventions");
@@ -1480,7 +1424,7 @@ void Conventions::fromXML(XMLNode* node) {
             convention = boost::make_shared<CommodityForwardConvention>();
         } else if (childName == "CommodityFuture") {
             convention = boost::make_shared<CommodityFutureConvention>();
-        } else if (childName == "FxOption") { 
+        } else if (childName == "FxOption") {
             convention = boost::make_shared<FxOptionConvention>();
         } else if (childName == "IborIndex") {
             convention = boost::make_shared<IborIndexConvention>();

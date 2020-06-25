@@ -72,7 +72,7 @@ XMLNode* BondData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
     XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
     XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
-    if(!proxySecurityId_.empty())
+    if (!proxySecurityId_.empty())
         XMLUtils::addChild(doc, bondNode, "ProxySecurityId", proxySecurityId_);
     if (!incomeCurveId_.empty())
         XMLUtils::addChild(doc, bondNode, "IncomeCurveId", incomeCurveId_);

@@ -43,6 +43,6 @@ public:
     CME();
 };
 
-}
+} // namespace QuantExt
 
 #endif

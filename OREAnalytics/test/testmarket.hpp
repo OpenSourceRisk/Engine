@@ -37,8 +37,8 @@
 
 using namespace QuantLib;
 using namespace ore::data;
-using std::vector;
 using std::pair;
+using std::vector;
 
 namespace testsuite {
 

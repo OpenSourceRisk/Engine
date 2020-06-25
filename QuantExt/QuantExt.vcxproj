@@ -499,6 +499,7 @@
     <ClInclude Include="qle\calendars\ice.hpp" />
     <ClInclude Include="qle\calendars\israel.hpp" />
     <ClInclude Include="qle\calendars\largejointcalendar.hpp" />
+    <ClInclude Include="qle\calendars\amendedcalendar.hpp" />
     <ClInclude Include="qle\calendars\luxembourg.hpp" />
     <ClInclude Include="qle\calendars\malaysia.hpp" />
     <ClInclude Include="qle\calendars\netherlands.hpp" />
@@ -614,6 +615,7 @@
     <ClInclude Include="qle\instruments\rebatedexercise.hpp" />
     <ClInclude Include="qle\instruments\subperiodsswap.hpp" />
     <ClInclude Include="qle\instruments\tenorbasisswap.hpp" />
+    <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp" />
     <ClInclude Include="qle\interpolators\optioninterpolator2d.hpp" />
     <ClInclude Include="qle\math\deltagammavar.hpp" />
     <ClInclude Include="qle\math\fillemptymatrix.hpp" />
@@ -654,6 +656,7 @@
     <ClInclude Include="qle\models\parametrization.hpp" />
     <ClInclude Include="qle\models\piecewiseconstanthelper.hpp" />
     <ClInclude Include="qle\models\pseudoparameter.hpp" />
+    <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcclgmfxoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticdkcpicapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticlgmcdsoptionengine.hpp" />
@@ -695,6 +698,7 @@
     <ClInclude Include="qle\termstructures\blackvariancesurfacesparse.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacestddevs.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacedelta.hpp" />
+    <ClInclude Include="qle\termstructures\equityblackvolsurfaceproxy.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
     <ClInclude Include="qle\termstructures\brlcdiratehelper.hpp" />
     <ClInclude Include="qle\termstructures\capfloorhelper.hpp" />
@@ -787,6 +791,7 @@
     <ClCompile Include="qle\calendars\ice.cpp" />
     <ClCompile Include="qle\calendars\israel.cpp" />
     <ClCompile Include="qle\calendars\largejointcalendar.cpp" />
+    <ClCompile Include="qle\calendars\amendedcalendar.cpp" />
     <ClCompile Include="qle\calendars\luxembourg.cpp" />
     <ClCompile Include="qle\calendars\malaysia.cpp" />
     <ClCompile Include="qle\calendars\netherlands.cpp" />
@@ -859,6 +864,7 @@
     <ClCompile Include="qle\instruments\rebatedexercise.cpp" />
     <ClCompile Include="qle\instruments\subperiodsswap.cpp" />
     <ClCompile Include="qle\instruments\tenorbasisswap.cpp" />
+    <ClCompile Include="qle\instruments\cashsettledeuropeanoption.cpp" />
     <ClCompile Include="qle\math\deltagammavar.cpp" />
     <ClCompile Include="qle\math\fillemptymatrix.cpp" />
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
@@ -885,6 +891,7 @@
     <ClCompile Include="qle\models\linkablecalibratedmodel.cpp" />
     <ClCompile Include="qle\models\parametrization.cpp" />
     <ClCompile Include="qle\models\piecewiseconstanthelper.cpp" />
+    <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticcclgmfxoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticdkcpicapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticlgmcdsoptionengine.cpp" />
@@ -922,6 +929,7 @@
     <ClCompile Include="qle\termstructures\blackvariancesurfacesparse.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacestddevs.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacedelta.cpp" />
+    <ClCompile Include="qle\termstructures\equityblackvolsurfaceproxy.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />
     <ClCompile Include="qle\termstructures\brlcdiratehelper.cpp" />
     <ClCompile Include="qle\termstructures\capfloorhelper.cpp" />

@@ -48,7 +48,7 @@ protected:
     //@{
     Volatility volatilityImpl(Time length, Rate strike) const;
     //@}
-  
+
     //! \name VolatilityTermStructure interface
     //@{
     Rate minStrike() const;

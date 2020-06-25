@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/strippedoptionletadapter2.hpp>
-#include <ql/termstructures/volatility/optionlet/strippedoptionlet.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <ql/time/calendars/unitedstates.hpp>
-#include <test/toplevelfixture.hpp>
 #include <boost/test/unit_test.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/volatility/optionlet/strippedoptionlet.hpp>
+#include <ql/time/calendars/unitedstates.hpp>
+#include <qle/termstructures/strippedoptionletadapter2.hpp>
+#include <test/toplevelfixture.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -32,7 +32,7 @@ using std::vector;
 
 namespace {
 
-// Fixture to create an optionlet surface that is used in the tests 
+// Fixture to create an optionlet surface that is used in the tests
 class F : public TopLevelFixture {
 public:
     Date asof;
@@ -43,7 +43,7 @@ public:
     boost::shared_ptr<StrippedOptionlet> optionletSurface;
 
     F() : expiries(2), strikes(2), dc(Actual365Fixed()), vols(2) {
-        
+
         // Set the evaluation date
         asof = Date(17, Apr, 2019);
         Settings::instance().evaluationDate() = asof;
@@ -69,14 +69,14 @@ public:
         // clang-format on
 
         // Create the optionlet surface
-        optionletSurface = boost::make_shared<StrippedOptionlet>(settlementDays, calendar, 
-            bdc, dummyIborIndex, expiries, strikes, vols, dc, type);
+        optionletSurface = boost::make_shared<StrippedOptionlet>(settlementDays, calendar, bdc, dummyIborIndex,
+                                                                 expiries, strikes, vols, dc, type);
     }
 
     ~F() {}
 };
 
-}
+} // namespace
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(StrippedOptionletAdapterTwoTests)
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_SUITE(StrippedOptionletAdapterTwoTests)
 BOOST_FIXTURE_TEST_CASE(testFlatExtrapAfterLastExpiry, F) {
 
     // Set up optionlet adapter with flat extrapolation
-    boost::shared_ptr<StrippedOptionletAdapter2> adapter = 
+    boost::shared_ptr<StrippedOptionletAdapter2> adapter =
         boost::make_shared<StrippedOptionletAdapter2>(optionletSurface, true);
 
     // Pick a date 1Y after the max date

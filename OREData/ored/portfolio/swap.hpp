@@ -39,11 +39,13 @@ public:
     Swap(const string swapType = "Swap") : Trade(swapType) {}
 
     //! Constructor with vector of LegData
-    Swap(const Envelope& env, const vector<LegData>& legData, const string swapType = "Swap", const std::string settlement = "Physical")
+    Swap(const Envelope& env, const vector<LegData>& legData, const string swapType = "Swap",
+         const std::string settlement = "Physical")
         : Trade(swapType, env), legData_(legData), settlement_(settlement) {}
 
     //! Constructor with two legs
-    Swap(const Envelope& env, const LegData& leg0, const LegData& leg1, const string swapType = "Swap", const std::string settlement = "Physical")
+    Swap(const Envelope& env, const LegData& leg0, const LegData& leg1, const string swapType = "Swap",
+         const std::string settlement = "Physical")
         : Trade(swapType, env), legData_({leg0, leg1}), settlement_(settlement) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
@@ -54,7 +56,7 @@ public:
 
     //! Settlement Type can be set to "Cash" for NDF. Default value is "Physical"
     const string& settlement() const { return settlement_; }
-    
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;

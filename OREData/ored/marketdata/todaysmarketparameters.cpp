@@ -28,37 +28,48 @@ namespace {
 
 // container class to link the enum in the header with the various XML strings
 struct MarketObjectMetaInfo {
-  MarketObject obj;
-  string name; // AKA marketObjectStrings
-  string xmlName; // AKA marketObjectXMLNames
-  pair<string, string> xmlSingleName; // AKA marketObjectXMLNamesSingle
+    MarketObject obj;
+    string name;                        // AKA marketObjectStrings
+    string xmlName;                     // AKA marketObjectXMLNames
+    pair<string, string> xmlSingleName; // AKA marketObjectXMLNamesSingle
 };
 
 // Note the order of elements in this array MUST respect the XML Schema
 static const vector<MarketObjectMetaInfo> marketObjectData = {
-    { MarketObject::YieldCurve,                        "YieldCurve",                         "YieldCurves",                       { "YieldCurve",       "name" } },
-    { MarketObject::DiscountCurve,                     "DiscountCurve",                      "DiscountingCurves",                 { "DiscountingCurve", "currency" } },
-    { MarketObject::IndexCurve,                        "IndexCurve",                         "IndexForwardingCurves",             { "Index", "name"} },
-    { MarketObject::SwapIndexCurve,                    "SwapIndexCurve",                     "SwapIndexCurves",                   { "SwapIndex", "name" }},
-    { MarketObject::ZeroInflationCurve,                "ZeroInflationCurve",                 "ZeroInflationIndexCurves",          { "ZeroInflationIndexCurve", "name" } },
-    { MarketObject::ZeroInflationCapFloorVol,          "ZeroInflationCapFloorVol",           "ZeroInflationCapFloorVolatilities", { "ZeroInflationCapFloorVolatility", "name" } },
-    { MarketObject::YoYInflationCurve,                 "YoYInflationCurve",                  "YYInflationIndexCurves",            { "YYInflationIndexCurve", "name" } },
-    { MarketObject::FXSpot,                            "FXSpot",                             "FxSpots",                           { "FxSpot", "pair" } },
-    { MarketObject::BaseCorrelation,                   "BaseCorrelation",                    "BaseCorrelations",                  { "BaseCorrelation", "name" } },
-    { MarketObject::FXVol,                             "FXVol",                              "FxVolatilities",                    { "FxVolatility", "pair" } },
-    { MarketObject::SwaptionVol,                       "SwaptionVol",                        "SwaptionVolatilities",              { "SwaptionVolatility", "currency" } },
-    { MarketObject::YieldVol,                          "YieldVol",                           "YieldVolatilities",                 { "YieldVolatility", "name" } },
-    { MarketObject::CapFloorVol,                       "CapFloorVol",                        "CapFloorVolatilities",              { "CapFloorVolatility", "currency" } },
-    { MarketObject::CDSVol,                            "CDSVol",                             "CDSVolatilities",                   { "CDSVolatility", "name" } },
-    { MarketObject::DefaultCurve,                      "DefaultCurve",                       "DefaultCurves",                     { "DefaultCurve", "name" } },
-    { MarketObject::YoYInflationCapFloorVol,           "YoYInflationCapFloorVol",            "YYInflationCapFloorVolatilities",   { "YYInflationCapFloorVolatility", "name" } },
-    { MarketObject::EquityCurve,                       "EquityCurves",                       "EquityCurves",                      { "EquityCurve", "name" } },
-    { MarketObject::EquityVol,                         "EquityVols",                         "EquityVolatilities",                { "EquityVolatility", "name" } },
-    { MarketObject::Security,                          "Securities",                         "Securities",                        { "Security", "name" } },
-    { MarketObject::CommodityCurve,                    "CommodityCurves",                    "CommodityCurves",                   { "CommodityCurve", "name" } },
-    { MarketObject::CommodityVolatility,               "CommodityVolatilities",              "CommodityVolatilities",             { "CommodityVolatility", "name" } },
-    { MarketObject::Correlation,                       "Correlation",                        "Correlations",                      { "Correlation", "name" } }
-};
+    {MarketObject::YieldCurve, "YieldCurve", "YieldCurves", {"YieldCurve", "name"}},
+    {MarketObject::DiscountCurve, "DiscountCurve", "DiscountingCurves", {"DiscountingCurve", "currency"}},
+    {MarketObject::IndexCurve, "IndexCurve", "IndexForwardingCurves", {"Index", "name"}},
+    {MarketObject::SwapIndexCurve, "SwapIndexCurve", "SwapIndexCurves", {"SwapIndex", "name"}},
+    {MarketObject::ZeroInflationCurve,
+     "ZeroInflationCurve",
+     "ZeroInflationIndexCurves",
+     {"ZeroInflationIndexCurve", "name"}},
+    {MarketObject::ZeroInflationCapFloorVol,
+     "ZeroInflationCapFloorVol",
+     "ZeroInflationCapFloorVolatilities",
+     {"ZeroInflationCapFloorVolatility", "name"}},
+    {MarketObject::YoYInflationCurve, "YoYInflationCurve", "YYInflationIndexCurves", {"YYInflationIndexCurve", "name"}},
+    {MarketObject::FXSpot, "FXSpot", "FxSpots", {"FxSpot", "pair"}},
+    {MarketObject::BaseCorrelation, "BaseCorrelation", "BaseCorrelations", {"BaseCorrelation", "name"}},
+    {MarketObject::FXVol, "FXVol", "FxVolatilities", {"FxVolatility", "pair"}},
+    {MarketObject::SwaptionVol, "SwaptionVol", "SwaptionVolatilities", {"SwaptionVolatility", "currency"}},
+    {MarketObject::YieldVol, "YieldVol", "YieldVolatilities", {"YieldVolatility", "name"}},
+    {MarketObject::CapFloorVol, "CapFloorVol", "CapFloorVolatilities", {"CapFloorVolatility", "currency"}},
+    {MarketObject::CDSVol, "CDSVol", "CDSVolatilities", {"CDSVolatility", "name"}},
+    {MarketObject::DefaultCurve, "DefaultCurve", "DefaultCurves", {"DefaultCurve", "name"}},
+    {MarketObject::YoYInflationCapFloorVol,
+     "YoYInflationCapFloorVol",
+     "YYInflationCapFloorVolatilities",
+     {"YYInflationCapFloorVolatility", "name"}},
+    {MarketObject::EquityCurve, "EquityCurves", "EquityCurves", {"EquityCurve", "name"}},
+    {MarketObject::EquityVol, "EquityVols", "EquityVolatilities", {"EquityVolatility", "name"}},
+    {MarketObject::Security, "Securities", "Securities", {"Security", "name"}},
+    {MarketObject::CommodityCurve, "CommodityCurves", "CommodityCurves", {"CommodityCurve", "name"}},
+    {MarketObject::CommodityVolatility,
+     "CommodityVolatilities",
+     "CommodityVolatilities",
+     {"CommodityVolatility", "name"}},
+    {MarketObject::Correlation, "Correlation", "Correlations", {"Correlation", "name"}}};
 
 } // anonymous namespace
 
@@ -116,7 +127,8 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
         if (XMLUtils::getNodeName(n) == "Configuration") {
             MarketConfiguration tmp;
             for (Size i = 0; i < marketObjectData.size(); ++i) {
-                tmp.setId(marketObjectData[i].obj, XMLUtils::getChildValue(n, marketObjectData[i].xmlName + "Id", false));
+                tmp.setId(marketObjectData[i].obj,
+                          XMLUtils::getChildValue(n, marketObjectData[i].xmlName + "Id", false));
                 addConfiguration(XMLUtils::getAttribute(n, "id"), tmp);
             }
         } else {
@@ -141,8 +153,9 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                         addMarketObject(MarketObject::SwapIndexCurve, id, swapIndices);
 
                     } else {
-                        auto mp = XMLUtils::getChildrenAttributesAndValues(n, marketObjectData[i].xmlSingleName.first,
-                                                                           marketObjectData[i].xmlSingleName.second, false);
+                        auto mp =
+                            XMLUtils::getChildrenAttributesAndValues(n, marketObjectData[i].xmlSingleName.first,
+                                                                     marketObjectData[i].xmlSingleName.second, false);
                         Size nc = XMLUtils::getChildrenNodes(n, "").size();
                         QL_REQUIRE(mp.size() == nc, "could not recognise " << (nc - mp.size()) << " sub nodes under "
                                                                            << marketObjectData[i].xmlName);
@@ -222,8 +235,7 @@ vector<string> TodaysMarketParameters::curveSpecs(const string& configuration) c
     for (Size i = 0; i < marketObjectData.size(); ++i) {
         MarketObject mo = marketObjectData[i].obj;
         // swap indices have to be exlcuded here...
-        if (mo != MarketObject::SwapIndexCurve &&
-            marketObjects_.find(mo) != marketObjects_.end()) {
+        if (mo != MarketObject::SwapIndexCurve && marketObjects_.find(mo) != marketObjects_.end()) {
             curveSpecs(marketObjects_.at(mo), marketObjectId(mo, configuration), specs);
         }
     }

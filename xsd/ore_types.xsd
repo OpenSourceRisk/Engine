@@ -39,11 +39,13 @@
       <xs:enumeration value="Y"/>
       <xs:enumeration value="YES"/>
       <xs:enumeration value="TRUE"/>
+      <xs:enumeration value="True"/>
       <xs:enumeration value="true"/>
       <xs:enumeration value="1"/>
       <xs:enumeration value="N"/>
       <xs:enumeration value="NO"/>
       <xs:enumeration value="FALSE"/>
+      <xs:enumeration value="False"/>
       <xs:enumeration value="false"/>
       <xs:enumeration value="0"/>
       <xs:enumeration value=""/>
@@ -158,9 +160,8 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType name="calendar">
+<xs:simpleType name="calendar">
     <xs:restriction base="xs:string">
-    <!-- Removing these for now while we think about Joint Calendars, we allow any string for now -->
     <xs:pattern value="(JoinHolidays\(|JoinBusinessDays\()?((,)?(, )?(^)?(TGT|TARGET|CN-IB|US-FED|US-GOV|US-NERC|US-NYSE|US-SET|Australia|Canada|Denmark|Japan|Norway|Switzerland|Sweden|Belgium|Luxembourg|Spain|Austria|FRA|CATO|CHZU|JPTO|GBLO|SEST|TRIS|USNY|EUTA|BEBR|AT|AR|AU|BW|BR|CA|CL|CN|CO|CZ|DK|FI|FR|DE|HK|HU|IS|IN|ID|IL|IT|JP|MX|MY|NL|NO|NZ|PE|PH|PL|RO|RU|SG|ZA|KR|SE|CH|TW|TH|TR|UA|GB|US|BE|LU|ES|AT|ARG|AUS|ATS|BWA|BRA|CAN|CHL|CHN|COL|CZE|DNK|FIN|DEU|HKG|HUN|ISL|IND|IDN|ISR|ITA|JPN|MEX|MYS|NLD|NOR|NZL|PER|PHL|POL|ROU|RUS|SAU|SGP|ZAF|KOR|SWE|CHE|TWN|THA|TUR|UKR|GBR|USA|BEL|LUX|ESP|AUT|ARS|AUD|BWP|BRL|CAD|CLP|CNH|CNY|COP|CZK|DKK|FRF|HKD|HUF|INR|IDR|ILS|ISK|ITL|JPY|MXN|MYR|NOK|NZD|PEN|PHP|PLN|RON|RUB|SAR|SGD|ZAR|KRW|SEK|CHF|EUR|TWD|THB|TRY|UAH|GBP|USD|BEF|LUF|ATS|AED|BHD|CLF|EGP|KWD|KZT|MAD|MXV|NGN|OMR|PKR|QAR|UYU|TND|VND|BVMF|XTSE|XSHG|XFRA|XETR|ECAG|EUWA|XJKT|XIDX|XTAE|XMIL|MISX|XKRX|XSWX|XLON|XLME|XNYS|DEN|Telbor|London stock exchange|LNB|New York stock exchange|NGL|NYB|SA|SS|SYB|TKB|TRB|UK|UK settlement|US settlement|US with Libor impact|WMR|ZUB|ICE_FuturesUS|ICE_FuturesUS_1|ICE_FuturesUS_2|ICE_FuturesEU|ICE_FuturesEU_1|ICE_EndexEnergy|ICE_EndexEquities|ICE_SwapTradeUS|ICE_SwapTradeUK|ICE_FuturesSingapore|CME|WeekendsOnly|UNMAPPED|NullCalendar))*(\))?"/>
     </xs:restriction>
   </xs:simpleType>
@@ -175,23 +176,32 @@
       <xs:enumeration value="Actual/365 (fixed)"/>
       <xs:enumeration value="ACT/365.FIXED"/>
       <xs:enumeration value="ACT/365"/>
+      <xs:enumeration value="ACT/365L"/>
       <xs:enumeration value="T360"/>
       <xs:enumeration value="30/360"/>
       <xs:enumeration value="30/360 (Bond Basis)"/>
       <xs:enumeration value="ACT/nACT"/>
       <xs:enumeration value="30E/360 (Eurobond Basis)"/>
       <xs:enumeration value="30E/360"/>
+      <xs:enumeration value="30E/360.ISDA"/>
       <xs:enumeration value="30/360 (Italian)"/>
       <xs:enumeration value="ActActISDA"/>
+      <xs:enumeration value="ACT/ACT.ISDA"/>
       <xs:enumeration value="Actual/Actual (ISDA)"/>
       <xs:enumeration value="ActualActual (ISDA)"/>
       <xs:enumeration value="ACT/ACT"/>
-      <xs:enumeration value="ACT/ACT.ISDA"/>
+      <xs:enumeration value="ACT29"/>
       <xs:enumeration value="ACT"/>
       <xs:enumeration value="ActActISMA"/>
       <xs:enumeration value="Actual/Actual (ISMA)"/>
       <xs:enumeration value="ActualActual (ISMA)"/>
+      <xs:enumeration value="ACT/ACT.ISMA"/>
+      <xs:enumeration value="ActActICMA"/>
+      <xs:enumeration value="Actual/Actual (ICMA)"/>
+      <xs:enumeration value="ActualActual (ICMA)"/>
+      <xs:enumeration value="ACT/ACT.ICMA"/>
       <xs:enumeration value="ActActAFB"/>
+      <xs:enumeration value="ACT/ACT.AFB"/>
       <xs:enumeration value="Actual/Actual (AFB)"/>
       <xs:enumeration value="1/1"/>
       <xs:enumeration value="BUS/252"/>
@@ -200,11 +210,6 @@
       <xs:enumeration value="Act/365 (NL)"/>
       <xs:enumeration value="NL/365"/>
       <xs:enumeration value="Actual/365 (JGB)"/>
-      <xs:enumeration value="ACT/365L"/>
-      <xs:enumeration value="30E/360.ISDA"/>
-      <xs:enumeration value="ACT/ACT.ISDA"/>
-      <xs:enumeration value="ACT/ACT.AFB"/>
-      <xs:enumeration value="ACT/ACT.ISMA"/>
       <xs:enumeration value="Simple"/>
       <xs:enumeration value="Year"/>
       <xs:enumeration value="A364"/>
@@ -248,6 +253,10 @@
       <xs:enumeration value="OldCDS"/>
       <xs:enumeration value="CDS"/>
       <xs:enumeration value="CDS2015"/>
+      <xs:enumeration value="ThirdThursday"/>
+      <xs:enumeration value="ThirdFriday"/>
+      <xs:enumeration value="MondayAfterThirdFriday"/>
+      <xs:enumeration value="TuesdayAfterThirdFriday"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -532,6 +541,13 @@
     </xs:annotation>
     <xs:restriction base="xs:decimal">
       <xs:minInclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="optionPayRelativeTo">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Expiry"/>
+      <xs:enumeration value="Exercise"/>
     </xs:restriction>
   </xs:simpleType>
   

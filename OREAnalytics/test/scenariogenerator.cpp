@@ -17,7 +17,6 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <test/oreatoplevelfixture.hpp>
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
 #include <orea/scenario/lgmscenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
@@ -32,6 +31,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <oret/toplevelfixture.hpp>
+#include <test/oreatoplevelfixture.hpp>
 
 #include <qle/instruments/fxforward.hpp>
 #include <qle/models/crossassetmodel.hpp>
@@ -72,9 +72,9 @@ using namespace boost::unit_test_framework;
 using namespace ore::analytics;
 using namespace ore::data;
 using namespace ore;
-using testsuite::TestMarket;
 using boost::timer::cpu_timer;
 using boost::timer::default_places;
+using testsuite::TestMarket;
 
 namespace {
 

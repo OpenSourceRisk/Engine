@@ -20,7 +20,7 @@
 
 #include <orea/app/reportwriter.hpp>
 
-//FIXME: including all is slow and bad
+// FIXME: including all is slow and bad
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -32,10 +32,10 @@
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <stdio.h>
 
+using ore::data::to_string;
+using QuantLib::Date;
 using std::string;
 using std::vector;
-using QuantLib::Date;
-using ore::data::to_string;
 
 namespace ore {
 namespace analytics {
@@ -652,7 +652,8 @@ void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const
     report.end();
 }
 
-void ReportWriter::writeScenarioReport(ore::data::Report& report, const boost::shared_ptr<SensitivityCube>& sensitivityCube,
+void ReportWriter::writeScenarioReport(ore::data::Report& report,
+                                       const boost::shared_ptr<SensitivityCube>& sensitivityCube,
                                        Real outputThreshold) {
 
     LOG("Writing Scenario report");
@@ -686,11 +687,10 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report, const boost::s
                 report.add(baseNpv);
                 report.add(scenarioNpv);
                 report.add(difference);
-            }
-            else if (!std::isfinite(difference)) {
+            } else if (!std::isfinite(difference)) {
                 // TODO: is this needed?
                 ALOG("sensitivity scenario for trade " << tradeId << ", factor " << scenarioDescription.factors()
-                    << " is not finite (" << difference << ")");
+                                                       << " is not finite (" << difference << ")");
             }
         }
     }

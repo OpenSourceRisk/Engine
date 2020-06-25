@@ -873,9 +873,20 @@
     <ClInclude Include="qle\time\actual364.hpp">
       <Filter>time</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp" />
     <ClInclude Include="qle\indexes\ibor\inrmiborois.hpp">
       <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\equityblackvolsurfaceproxy.hpp">
+      <Filter>termstructures</Filter>
+	</ClInclude>
+    <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp">
+      <Filter>pricingengines</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1510,6 +1521,15 @@
     </ClCompile>
     <ClCompile Include="qle\time\actual364.cpp">
       <Filter>time</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\equityblackvolsurfaceproxy.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\cashsettledeuropeanoption.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

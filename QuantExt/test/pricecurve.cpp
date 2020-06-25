@@ -20,10 +20,10 @@
 #include <boost/make_shared.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <ql/currencies/america.hpp>
 #include <ql/math/interpolations/all.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <ql/currencies/america.hpp>
 
 #include <qle/termstructures/pricecurve.hpp>
 

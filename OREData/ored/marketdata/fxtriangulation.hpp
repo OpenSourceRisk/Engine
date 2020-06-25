@@ -30,8 +30,8 @@
 
 namespace ore {
 namespace data {
-using QuantLib::Quote;
 using QuantLib::Handle;
+using QuantLib::Quote;
 
 //! Intelligent FX price repository
 /*! FX Triangulation is an intelligent price repository that will attempt to calculate FX spot values

@@ -10,12 +10,12 @@
 #ifndef quantext_instruments_commodityapo_hpp
 #define quantext_instruments_commodityapo_hpp
 
-#include <ql/option.hpp>
 #include <ql/instruments/swaption.hpp>
+#include <ql/option.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
-#include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
+#include <qle/cashflows/commodityindexedcashflow.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -82,7 +82,8 @@ public:
 };
 
 //! base class for APO engines
-class CommodityAveragePriceOption::engine : public GenericEngine<CommodityAveragePriceOption::arguments, CommodityAveragePriceOption::results> {};
+class CommodityAveragePriceOption::engine
+    : public GenericEngine<CommodityAveragePriceOption::arguments, CommodityAveragePriceOption::results> {};
 
 } // namespace QuantExt
 

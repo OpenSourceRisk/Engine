@@ -18,8 +18,8 @@
 
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ql/errors.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ql/errors.hpp>
 
 using namespace ore::data;
 
@@ -132,7 +132,7 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
         XMLNode* seasonalityNode = XMLUtils::addChild(doc, node, "Seasonality");
         std::ostringstream dateStr, sFreq;
         dateStr << QuantLib::io::iso_date(seasonalityBaseDate_);
-        sFreq <<  seasonalityFrequency_;
+        sFreq << seasonalityFrequency_;
         XMLUtils::addChild(doc, seasonalityNode, "BaseDate", dateStr.str());
         XMLUtils::addChild(doc, seasonalityNode, "Frequency", sFreq.str());
         XMLUtils::addChildren(doc, seasonalityNode, "Factors", "Factor", seasonalityFactors_);

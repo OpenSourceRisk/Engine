@@ -21,9 +21,9 @@
 #include <ql/errors.hpp>
 #include <stdio.h>
 
+using QuantLib::Date;
 using std::string;
 using std::vector;
-using QuantLib::Date;
 
 namespace ore {
 namespace analytics {

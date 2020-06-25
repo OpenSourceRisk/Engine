@@ -24,7 +24,7 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
-#include <ql/experimental/fx/deltavolquote.hpp> 
+#include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
@@ -33,10 +33,10 @@
 
 namespace ore {
 namespace data {
-using std::string;
-using std::map;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
+using ore::data::XMLSerializable;
+using std::map;
+using std::string;
 using namespace QuantLib;
 
 //! Abstract base class for convention objects
@@ -885,8 +885,7 @@ public:
     //! Default constructor
     CrossCcyFixFloatSwapConvention() : conventions_(nullptr) {}
     //! Constructor taking conventions only
-    explicit CrossCcyFixFloatSwapConvention(const Conventions* conventions)
-        : conventions_(conventions) {}
+    explicit CrossCcyFixFloatSwapConvention(const Conventions* conventions) : conventions_(conventions) {}
     //! Detailed constructor
     CrossCcyFixFloatSwapConvention(const std::string& id, const std::string& settlementDays,
                                    const std::string& settlementCalendar, const std::string& settlementConvention,
@@ -1176,16 +1175,11 @@ public:
     //@{
     //! Default constructor
     CommodityForwardConvention() {}
-    
+
     //! Detailed constructor
-    CommodityForwardConvention(
-        const string& id,
-        const string& spotDays = "",
-        const string& pointsFactor = "",
-        const string& advanceCalendar = "",
-        const string& spotRelative = "",
-        BusinessDayConvention bdc = Following,
-        bool outright = true);
+    CommodityForwardConvention(const string& id, const string& spotDays = "", const string& pointsFactor = "",
+                               const string& advanceCalendar = "", const string& spotRelative = "",
+                               BusinessDayConvention bdc = Following, bool outright = true);
     //@}
 
     //! \name Inspectors
@@ -1226,7 +1220,7 @@ private:
 class CommodityFutureConvention : public Convention {
 public:
     /*! The anchor day type of commodity future convention
-    */
+     */
     enum class AnchorType { DayOfMonth, NthWeekday, CalendarDaysBefore };
 
     //! Classes to differentiate constructors below
@@ -1246,52 +1240,33 @@ public:
     //@{
     //! Default constructor
     CommodityFutureConvention() {}
-    
+
     //! Day of month based constructor
-    CommodityFutureConvention(const std::string& id,
-        const DayOfMonth& dayOfMonth,
-        const std::string& contractFrequency,
-        const std::string& calendar,
-        const std::string& expiryCalendar = "",
-        QuantLib::Natural expiryMonthLag = 0,
-        const std::string& oneContractMonth = "",
-        const std::string& offsetDays = "",
-        const std::string& bdc = "",
-        bool adjustBeforeOffset = true,
-        bool isAveraging = false,
-        const std::string& optionExpiryOffset = "",
-        const std::vector<std::string>& prohibitedExpiries = {});
+    CommodityFutureConvention(const std::string& id, const DayOfMonth& dayOfMonth, const std::string& contractFrequency,
+                              const std::string& calendar, const std::string& expiryCalendar = "",
+                              QuantLib::Natural expiryMonthLag = 0, const std::string& oneContractMonth = "",
+                              const std::string& offsetDays = "", const std::string& bdc = "",
+                              bool adjustBeforeOffset = true, bool isAveraging = false,
+                              const std::string& optionExpiryOffset = "",
+                              const std::vector<std::string>& prohibitedExpiries = {});
 
     //! N-th weekday based constructor
-    CommodityFutureConvention(const std::string& id,
-        const std::string& nth,
-        const std::string& weekday,
-        const std::string& contractFrequency,
-        const std::string& calendar,
-        const std::string& expiryCalendar = "",
-        QuantLib::Natural expiryMonthLag = 0,
-        const std::string& oneContractMonth = "",
-        const std::string& offsetDays = "",
-        const std::string& bdc = "",
-        bool adjustBeforeOffset = true,
-        bool isAveraging = false,
-        const std::string& optionExpiryOffset = "",
-        const std::vector<std::string>& prohibitedExpiries = {});
+    CommodityFutureConvention(const std::string& id, const std::string& nth, const std::string& weekday,
+                              const std::string& contractFrequency, const std::string& calendar,
+                              const std::string& expiryCalendar = "", QuantLib::Natural expiryMonthLag = 0,
+                              const std::string& oneContractMonth = "", const std::string& offsetDays = "",
+                              const std::string& bdc = "", bool adjustBeforeOffset = true, bool isAveraging = false,
+                              const std::string& optionExpiryOffset = "",
+                              const std::vector<std::string>& prohibitedExpiries = {});
 
     //! Calendar days before based constructor
-    CommodityFutureConvention(const std::string& id,
-        const CalendarDaysBefore& calendarDaysBefore,
-        const std::string& contractFrequency,
-        const std::string& calendar,
-        const std::string& expiryCalendar = "",
-        QuantLib::Natural expiryMonthLag = 0,
-        const std::string& oneContractMonth = "",
-        const std::string& offsetDays = "",
-        const std::string& bdc = "",
-        bool adjustBeforeOffset = true,
-        bool isAveraging = false,
-        const std::string& optionExpiryOffset = "",
-        const std::vector<std::string>& prohibitedExpiries = {});
+    CommodityFutureConvention(const std::string& id, const CalendarDaysBefore& calendarDaysBefore,
+                              const std::string& contractFrequency, const std::string& calendar,
+                              const std::string& expiryCalendar = "", QuantLib::Natural expiryMonthLag = 0,
+                              const std::string& oneContractMonth = "", const std::string& offsetDays = "",
+                              const std::string& bdc = "", bool adjustBeforeOffset = true, bool isAveraging = false,
+                              const std::string& optionExpiryOffset = "",
+                              const std::vector<std::string>& prohibitedExpiries = {});
     //@}
 
     //! \name Inspectors
@@ -1355,38 +1330,38 @@ private:
     std::vector<std::string> strProhibitedExpiries_;
 };
 
-//! Container for storing FX Option conventions 
-/*! 
-\ingroup marketdata 
-*/ 
-class FxOptionConvention : public Convention { 
-public: 
-    //! \name Constructors 
-    //@{ 
-    FxOptionConvention() {} 
-    FxOptionConvention(const string& id, const string& atmType, const string& deltaType); 
-    //@} 
- 
-    //! \name Inspectors 
-    //@{ 
-    const DeltaVolQuote::AtmType& atmType() const { return atmType_; } 
-    const DeltaVolQuote::DeltaType& deltaType() const { return deltaType_; } 
-    //@} 
- 
-    //! \name Serialisation 
-    //@{ 
-    virtual void fromXML(XMLNode* node); 
-    virtual XMLNode* toXML(XMLDocument& doc); 
-    virtual void build(); 
-    //@} 
-private: 
-    DeltaVolQuote::AtmType atmType_; 
-    DeltaVolQuote::DeltaType deltaType_; 
- 
-    // Strings to store the inputs 
-    string strAtmType_; 
-    string strDeltaType_; 
-}; 
- 
+//! Container for storing FX Option conventions
+/*!
+\ingroup marketdata
+*/
+class FxOptionConvention : public Convention {
+public:
+    //! \name Constructors
+    //@{
+    FxOptionConvention() {}
+    FxOptionConvention(const string& id, const string& atmType, const string& deltaType);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const DeltaVolQuote::AtmType& atmType() const { return atmType_; }
+    const DeltaVolQuote::DeltaType& deltaType() const { return deltaType_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void build();
+    //@}
+private:
+    DeltaVolQuote::AtmType atmType_;
+    DeltaVolQuote::DeltaType deltaType_;
+
+    // Strings to store the inputs
+    string strAtmType_;
+    string strDeltaType_;
+};
+
 } // namespace data
 } // namespace ore

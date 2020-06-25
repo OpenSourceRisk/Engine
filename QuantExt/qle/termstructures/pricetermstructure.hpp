@@ -23,10 +23,10 @@
 #ifndef quantext_price_term_structure_hpp
 #define quantext_price_term_structure_hpp
 
-#include <ql/math/comparison.hpp>
-#include <ql/termstructure.hpp>
-#include <ql/quote.hpp>
 #include <ql/currency.hpp>
+#include <ql/math/comparison.hpp>
+#include <ql/quote.hpp>
+#include <ql/termstructure.hpp>
 
 namespace QuantExt {
 

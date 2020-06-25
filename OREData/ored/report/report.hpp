@@ -31,11 +31,11 @@
 
 namespace ore {
 namespace data {
-using std::string;
-using QuantLib::Size;
-using QuantLib::Real;
 using QuantLib::Date;
 using QuantLib::Period;
+using QuantLib::Real;
+using QuantLib::Size;
+using std::string;
 
 /*! Abstract Report interface class
  *

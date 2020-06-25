@@ -98,7 +98,7 @@ public:
     //! \name Yield volatilities
     //@{
     virtual Handle<SwaptionVolatilityStructure>
-        yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const = 0;
+    yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Foreign Exchange

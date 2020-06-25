@@ -32,8 +32,8 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
-#include <ored/model/modelbuilder.hpp>
 #include <ored/model/marketobserver.hpp>
+#include <ored/model/modelbuilder.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 namespace ore {

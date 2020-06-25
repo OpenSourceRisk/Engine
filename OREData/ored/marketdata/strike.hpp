@@ -62,7 +62,7 @@ private:
 };
 
 /*! Strike implementation where the strike is described by a single number that represents the absolute strike level.
-*/
+ */
 class AbsoluteStrike : public BaseStrike {
 public:
     //! Default constructor.
@@ -79,7 +79,7 @@ public:
     */
     void fromString(const std::string& strStrike) override;
 
-    /*! Writes the AbsoluteStrike object to string. This returns the string representation of 
+    /*! Writes the AbsoluteStrike object to string. This returns the string representation of
         the absolute strike number.
     */
     std::string toString() const override;
@@ -98,7 +98,7 @@ private:
 };
 
 /*! Strike implementation where the strike is described by a delta type, an option type and a delta level.
-*/
+ */
 class DeltaStrike : public BaseStrike {
 public:
     //! Default constructor.
@@ -120,15 +120,15 @@ public:
     //@}
 
     /*! Populate DeltaStrike object from \p strStrike.
-        
-        The \p strStrike is expected to be of the form `DEL / Spot|Fwd|PaSpot|PaFwd / Call|Put / DELTA_VALUE`. An 
+
+        The \p strStrike is expected to be of the form `DEL / Spot|Fwd|PaSpot|PaFwd / Call|Put / DELTA_VALUE`. An
         exception is thrown if \p strStrike is not of this form and cannot be parsed properly.
     */
     void fromString(const std::string& strStrike) override;
 
     /*! Writes the DeltaStrike object to string.
-    
-        The string representation of the DeltaStrike object is of the form 
+
+        The string representation of the DeltaStrike object is of the form
         `DEL / Spot|Fwd|PaSpot|PaFwd / Call|Put / DELTA_VALUE`.
     */
     std::string toString() const override;
@@ -151,7 +151,7 @@ private:
 };
 
 /*! Strike implementation for an at-the-money strike of various types.
-*/
+ */
 class AtmStrike : public BaseStrike {
 public:
     //! Default constructor.
@@ -164,13 +164,13 @@ public:
         - if \p atmType is \c AtmPutCall50, \p deltaType must be \c DeltaVolQuote::Fwd.
     */
     AtmStrike(QuantLib::DeltaVolQuote::AtmType atmType,
-        boost::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType = boost::none);
+              boost::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType = boost::none);
 
     //! \name Inspectors
     //@{
     //! Return the ATM type
     QuantLib::DeltaVolQuote::AtmType atmType() const;
-    
+
     //! Return the delta type
     boost::optional<QuantLib::DeltaVolQuote::DeltaType> deltaType() const;
     //@}
@@ -178,8 +178,8 @@ public:
     /*! Populate AtmStrike object from \p strStrike.
 
         The \p strStrike is expected to be of the form:
-        `ATM / AtmSpot|AtmFwd|AtmDeltaNeutral|AtmVegaMax|AtmGammaMax|AtmPutCall50` followed by an optional 
-        `/ DEL / Spot|Fwd|PaSpot|PaFwd` to specify the delta if it is needed. An exception is thrown if \p strStrike 
+        `ATM / AtmSpot|AtmFwd|AtmDeltaNeutral|AtmVegaMax|AtmGammaMax|AtmPutCall50` followed by an optional
+        `/ DEL / Spot|Fwd|PaSpot|PaFwd` to specify the delta if it is needed. An exception is thrown if \p strStrike
         is not of this form and cannot be parsed properly.
     */
     void fromString(const std::string& strStrike) override;
@@ -187,7 +187,7 @@ public:
     /*! Writes the AtmStrike object to string.
 
         The string representation of the DeltaStrike object is of the form
-        `ATM / AtmSpot|AtmFwd|AtmDeltaNeutral|AtmVegaMax|AtmGammaMax|AtmPutCall50` followed by an optional 
+        `ATM / AtmSpot|AtmFwd|AtmDeltaNeutral|AtmVegaMax|AtmGammaMax|AtmPutCall50` followed by an optional
         `/ DEL / Spot|Fwd|PaSpot|PaFwd` if the delta type has been populated.
     */
     std::string toString() const override;
@@ -212,19 +212,16 @@ private:
 };
 
 /*! Strike implementation where the strike is described by a moneyness type and a moneyness level.
-*/
+ */
 class MoneynessStrike : public BaseStrike {
 public:
     /*! The MoneynessStrike type.
-        - When the moneyness type is \c Spot, the moneyness level will be interpreted as the implicit strike divided 
+        - When the moneyness type is \c Spot, the moneyness level will be interpreted as the implicit strike divided
           by the spot value.
-        - When the moneyness type is \c Forward, the moneyness level will be interpreted as the implicit strike 
+        - When the moneyness type is \c Forward, the moneyness level will be interpreted as the implicit strike
           divided by the forward value.
     */
-    enum class Type {
-        Spot,
-        Forward
-    };
+    enum class Type { Spot, Forward };
 
     //! Default constructor.
     MoneynessStrike();
@@ -287,5 +284,5 @@ MoneynessStrike::Type parseMoneynessType(const std::string& type);
 //! Parse a Strike from its string representation, \p strStrike.
 boost::shared_ptr<BaseStrike> parseBaseStrike(const std::string& strStrike);
 
-}
-}
+} // namespace data
+} // namespace ore

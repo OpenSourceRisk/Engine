@@ -31,10 +31,10 @@
 
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
+#include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
-#include <ored/utilities/calendaradjustmentconfig.hpp>
 
 #include <orea/app/oreapp.hpp>
 
@@ -143,7 +143,8 @@ int OREApp::run() {
 
             // We reset this here because the date grid building in sensitivity analysis depends on it.
             Settings::instance().evaluationDate() = asof_;
-            getSensitivityRunner()->runSensitivityAnalysis(market_, conventions_, curveConfigs_, marketParameters_);
+            sensitivityRunner_ = getSensitivityRunner();
+            sensitivityRunner_->runSensitivityAnalysis(market_, conventions_, curveConfigs_, marketParameters_);
             out_ << "OK" << endl;
         } else {
             LOG("skip sensitivity analysis");
@@ -254,9 +255,8 @@ void OREApp::readSetup() {
         string calendarAdjustmentFile = inputPath_ + "/" + params_->get("setup", "calendarAdjustment");
         LOG("Load calendarAdjustment from file" << calendarAdjustmentFile);
         calendarAdjustments.fromFile(calendarAdjustmentFile);
-        CalendarAdjustments::instance().setConfig(calendarAdjustments);
     }
-   
+
     writeInitialReports_ = true;
     simulate_ = (params_->hasGroup("simulation") && params_->get("simulation", "active") == "Y") ? true : false;
     buildSimMarket_ = true;
@@ -481,7 +481,7 @@ void OREApp::writeInitialReports() {
     if (params_->hasGroup("cashflow") && params_->get("cashflow", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("cashflow", "outputFileName");
         CSVFileReport cashflowReport(fileName);
-	getReportWriter()->writeCashflow(cashflowReport, portfolio_, market_);
+        getReportWriter()->writeCashflow(cashflowReport, portfolio_, market_);
         out_ << "OK" << endl;
     } else {
         LOG("skip cashflow generation");
@@ -533,9 +533,9 @@ void OREApp::runStressTest() {
 
     LOG("Build Stress Test");
     string marketConfiguration = params_->get("markets", "pricing");
-    boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
-        portfolio, market_, marketConfiguration, engineData, simMarketData, stressData, 
-        conventions_, curveConfigs_, marketParameters_);
+    boost::shared_ptr<StressTest> stressTest =
+        boost::make_shared<StressTest>(portfolio, market_, marketConfiguration, engineData, simMarketData, stressData,
+                                       conventions_, curveConfigs_, marketParameters_);
 
     string outputFile = outputPath_ + "/" + params_->get("stress", "scenarioOutputFile");
     Real threshold = parseReal(params_->get("stress", "outputThreshold"));
@@ -620,8 +620,8 @@ void OREApp::writeBaseScenario() {
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     simMarketData->fromFile(marketConfigFile);
 
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_, marketConfiguration, 
-        curveConfigs_, marketParameters_, continueOnError_);
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_, marketConfiguration,
+                                                           curveConfigs_, marketParameters_, continueOnError_);
     boost::shared_ptr<Scenario> scenario = simMarket->baseScenario();
     QL_REQUIRE(scenario->asof() == today, "dates do not match");
 
@@ -704,12 +704,11 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
                                        parseBool(continueOnCalErr->second));
         simMarket_->scenarioGenerator() = sg;
 
-
         LOG("Build portfolio linked to sim market");
         Size n = portfolio->size();
         portfolio->build(simFactory);
         simPortfolio_ = portfolio;
-        if(simPortfolio_->size() != n) {
+        if (simPortfolio_->size() != n) {
             ALOG("There were errors during the sim portfolio building - check the sim market setup? Could build "
                  << simPortfolio_->size() << " trades out of " << n);
         }
@@ -893,7 +892,7 @@ void OREApp::runPostProcessor() {
         fvaLendingCurve, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
         dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation,
         kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor,
-	kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight);
+        kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight);
 }
 
 void OREApp::writeXVAReports() {
@@ -903,15 +902,15 @@ void OREApp::writeXVAReports() {
 
     bool exposureByTrade = true;
     if (params_->has("xva", "exposureProfilesByTrade"))
-        exposureByTrade = parseBool(params_->get("xva", "exposureProfilesByTrade"));    
+        exposureByTrade = parseBool(params_->get("xva", "exposureProfilesByTrade"));
     if (exposureByTrade) {
         for (auto t : postProcess_->tradeIds()) {
-	    ostringstream o;
-	    o << outputPath_ << "/exposure_trade_" << t << ".csv";
-	    string tradeExposureFile = o.str();
-	    CSVFileReport tradeExposureReport(tradeExposureFile);
-	    getReportWriter()->writeTradeExposures(tradeExposureReport, postProcess_, t);
-	}
+            ostringstream o;
+            o << outputPath_ << "/exposure_trade_" << t << ".csv";
+            string tradeExposureFile = o.str();
+            CSVFileReport tradeExposureReport(tradeExposureFile);
+            getReportWriter()->writeTradeExposures(tradeExposureReport, postProcess_, t);
+        }
     }
     for (auto n : postProcess_->nettingSetIds()) {
         ostringstream o1;

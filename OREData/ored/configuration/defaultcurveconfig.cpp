@@ -38,15 +38,15 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curv
     : CurveConfig(curveID, curveDescription), cdsQuotes_(cdsQuotes), currency_(currency), type_(type),
       discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
       conventionID_(conventionID), extrapolation_(extrapolation), benchmarkCurveID_(benchmarkCurveID),
-      sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar), spotLag_(spotLag),
-      startDate_(startDate), bootstrapConfig_(bootstrapConfig), runningSpread_(runningSpread) {
+      sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar), spotLag_(spotLag), startDate_(startDate),
+      bootstrapConfig_(bootstrapConfig), runningSpread_(runningSpread) {
 
     for (const auto& kv : cdsQuotes) {
         quotes_.push_back(kv.first);
     }
     quotes_.insert(quotes_.begin(), recoveryRateQuote_);
 
-    if (type_ == Type::SpreadCDS && startDate_ != Date()) {
+    if (type_ != Type::SpreadCDS && startDate_ != Date()) {
         WLOG("'StartDate' is only used when type is 'SpreadCDS'");
     }
 }
@@ -118,7 +118,7 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         }
 
         string s = XMLUtils::getChildValue(node, "RunningSpread", false);
-        QL_REQUIRE(s != "" || type_ != Type::Price, "'RunningSpread' required when type is 'Price'" )
+        QL_REQUIRE(s != "" || type_ != Type::Price, "'RunningSpread' required when type is 'Price'")
         if (s != "") {
             if (type_ == Type::Price) {
                 runningSpread_ = parseReal(s);

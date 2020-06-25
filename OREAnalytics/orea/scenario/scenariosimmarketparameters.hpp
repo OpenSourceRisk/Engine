@@ -48,9 +48,10 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : extrapolate_(false), swapVolIsCube_({ {"", false} }), swapVolSimulateATMOnly_(false), swapVolStrikeSpreads_({ {"", {0.0}} }),
-          equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), cprSimulate_(false),
-          correlationIsSurface_(false), correlationStrikes_({0.0}) {
+        : extrapolate_(false), swapVolIsCube_({{"", false}}), swapVolSimulateATMOnly_(false),
+          swapVolStrikeSpreads_({{"", {0.0}}}), capFloorVolAdjustOptionletPillars_(false),
+          capFloorVolUseCapAtm_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true), 
+          equityMoneyness_({1.0}), cprSimulate_(false), correlationIsSurface_(false), correlationStrikes_({0.0}) {
         setDefaults();
     }
 
@@ -104,22 +105,41 @@ public:
     const vector<QuantLib::Rate>& capFloorVolStrikes(const std::string& key) const;
     bool capFloorVolIsAtm(const std::string& key) const;
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
+    /*! If \c true, the \c capFloorVolExpiries are interpreted as cap maturities and the pillars for the optionlet 
+        structure are set equal to the fixing date of the last optionlet on the cap. If \c false, the 
+        \c capFloorVolExpiries are the pillars for the optionlet structure.
+    */
+    bool capFloorVolAdjustOptionletPillars() const { return capFloorVolAdjustOptionletPillars_; }
+    /*! If \c true, use ATM cap rate when \c capFloorVolIsAtm is \c true when querying the todaysmarket optionlet 
+        volatility structure at the confirgured expiries. Otherwise, use the index forward rate.
+    */
+    bool capFloorVolUseCapAtm() const { return capFloorVolUseCapAtm_; }
 
-    bool simulateYoYInflationCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility); }
+    bool simulateYoYInflationCapFloorVols() const {
+        return paramsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility);
+    }
     vector<string> yoyInflationCapFloorVolNames() const {
         return paramsLookup(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility);
     }
     const string& yoyInflationCapFloorVolDayCounter(const string& key) const;
     const vector<Period>& yoyInflationCapFloorVolExpiries(const string& key) const;
-    bool hasYoYInflationCapFloorVolExpiries(const string& key) const { return yoyInflationCapFloorVolExpiries_.count(key) > 0; }
+    bool hasYoYInflationCapFloorVolExpiries(const string& key) const {
+        return yoyInflationCapFloorVolExpiries_.count(key) > 0;
+    }
     const vector<Real>& yoyInflationCapFloorVolStrikes(const std::string& key) const;
     const string& yoyInflationCapFloorVolDecayMode() const { return yoyInflationCapFloorVolDecayMode_; }
 
-    bool simulateZeroInflationCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility); }
-    vector<string> zeroInflationCapFloorVolNames() const { return paramsLookup(RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility); }
+    bool simulateZeroInflationCapFloorVols() const {
+        return paramsSimulate(RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility);
+    }
+    vector<string> zeroInflationCapFloorVolNames() const {
+        return paramsLookup(RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility);
+    }
     const string& zeroInflationCapFloorVolDayCounter(const string& key) const;
     const vector<Period>& zeroInflationCapFloorVolExpiries(const string& key) const;
-    bool hasZeroInflationCapFloorVolExpiries(const string& key) const { return zeroInflationCapFloorVolExpiries_.count(key) > 0; }
+    bool hasZeroInflationCapFloorVolExpiries(const string& key) const {
+        return zeroInflationCapFloorVolExpiries_.count(key) > 0;
+    }
     const vector<Real>& zeroInflationCapFloorVolStrikes(const string& key) const;
     const string& zeroInflationCapFloorVolDecayMode() const { return zeroInflationCapFloorVolDecayMode_; }
 
@@ -261,6 +281,12 @@ public:
     void setCapFloorVolIsAtm(const std::string& key, bool isAtm);
     string& capFloorVolDecayMode() { return capFloorVolDecayMode_; }
     void setCapFloorVolDayCounters(const string& key, const string& p);
+    void setCapFloorVolAdjustOptionletPillars(bool capFloorVolAdjustOptionletPillars) {
+        capFloorVolAdjustOptionletPillars_ = capFloorVolAdjustOptionletPillars;
+    }
+    void setCapFloorVolUseCapAtm(bool capFloorVolUseCapAtm) {
+        capFloorVolUseCapAtm_ = capFloorVolUseCapAtm;
+    }
 
     void setSimulateYoYInflationCapFloorVols(bool simulate);
     void setYoYInflationCapFloorVolNames(vector<string> names);
@@ -416,6 +442,8 @@ private:
     map<std::string, std::vector<QuantLib::Rate>> capFloorVolStrikes_;
     map<std::string, bool> capFloorVolIsAtm_;
     string capFloorVolDecayMode_;
+    bool capFloorVolAdjustOptionletPillars_;
+    bool capFloorVolUseCapAtm_;
 
     map<string, string> yoyInflationCapFloorVolDayCounters_;
     map<string, vector<Period>> yoyInflationCapFloorVolExpiries_;

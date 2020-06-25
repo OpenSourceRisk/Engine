@@ -16,26 +16,26 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/strippedoptionletadapter.hpp>
-#include <qle/math/flatextrapolation.hpp>
-#include <ql/termstructures/volatility/optionlet/strippedoptionlet.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <ql/time/calendars/unitedstates.hpp>
-#include <test/toplevelfixture.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/assign.hpp>
+#include <boost/test/unit_test.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/volatility/optionlet/strippedoptionlet.hpp>
+#include <ql/time/calendars/unitedstates.hpp>
+#include <qle/math/flatextrapolation.hpp>
+#include <qle/termstructures/strippedoptionletadapter.hpp>
+#include <test/toplevelfixture.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 
+using boost::assign::list_of;
 using qle::test::TopLevelFixture;
 using std::vector;
-using boost::assign::list_of;
 
 namespace {
 
-// Fixture to create an optionlet surface that is used in the tests 
+// Fixture to create an optionlet surface that is used in the tests
 class F : public TopLevelFixture {
 public:
     Date asof;
@@ -46,7 +46,7 @@ public:
     boost::shared_ptr<StrippedOptionlet> optionletSurface;
 
     F() : expiries(2), strikes(2), dc(Actual365Fixed()), vols(2) {
-        
+
         // Set the evaluation date
         asof = Date(17, Apr, 2019);
         Settings::instance().evaluationDate() = asof;
@@ -72,14 +72,14 @@ public:
         // clang-format on
 
         // Create the optionlet surface
-        optionletSurface = boost::make_shared<StrippedOptionlet>(settlementDays, calendar, 
-            bdc, dummyIborIndex, expiries, strikes, vols, dc, type);
+        optionletSurface = boost::make_shared<StrippedOptionlet>(settlementDays, calendar, bdc, dummyIborIndex,
+                                                                 expiries, strikes, vols, dc, type);
     }
 
     ~F() {}
 };
 
-}
+} // namespace
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(StrippedOptionletAdapterTests)
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_SUITE(StrippedOptionletAdapterTests)
 BOOST_FIXTURE_TEST_CASE(testFlatExtrapAfterLastExpiry, F) {
 
     // Set up optionlet adapter with flat extrapolation
-    boost::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter = 
+    boost::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter =
         boost::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(optionletSurface);
 
     // Pick a date 1Y after the max date
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(testOneStrikeColumn) {
     // As of date
     Date asof(17, Apr, 2019);
     Settings::instance().evaluationDate() = asof;
-    
+
     // Set up the stripped optionlet surface with one strike column
     Natural settlementDays = 2;
     UnitedStates calendar;
@@ -199,8 +199,8 @@ BOOST_AUTO_TEST_CASE(testOneStrikeColumn) {
     vols[1].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0070)));
 
     // Create the optionlet surface
-    boost::shared_ptr<StrippedOptionlet> optionletSurface = boost::make_shared<StrippedOptionlet>(settlementDays,
-        calendar, bdc, dummyIborIndex, expiries, strikes, vols, dc, type);
+    boost::shared_ptr<StrippedOptionlet> optionletSurface = boost::make_shared<StrippedOptionlet>(
+        settlementDays, calendar, bdc, dummyIborIndex, expiries, strikes, vols, dc, type);
 
     // Set up optionlet adapter with flat extrapolation
     boost::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter =

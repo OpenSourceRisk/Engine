@@ -18,7 +18,6 @@
 
 #include "testmarket.hpp"
 #include <boost/test/unit_test.hpp>
-#include <test/oreatoplevelfixture.hpp>
 #include <boost/timer/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -53,6 +52,7 @@
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <test/oreatoplevelfixture.hpp>
 
 using namespace std;
 using namespace QuantLib;

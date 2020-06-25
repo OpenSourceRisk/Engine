@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt-Test_SRC analyticlgmswaptionengine.cpp
+set(QuantExt-Test_SRC analyticcashsettledeuropeanengine.cpp
+analyticlgmswaptionengine.cpp
 blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
 blackvariancesurfacestddevs.cpp
@@ -26,6 +27,7 @@ discountingcommodityforwardengine.cpp
 discountratiomodifiedcurve.cpp
 dynamicblackvoltermstructure.cpp
 dynamicswaptionvolmatrix.cpp
+equityblackvolsurfaceproxy.cpp
 equityforwardcurvestripper.cpp
 fillemptymatrix.cpp
 forwardbond.cpp
@@ -49,6 +51,7 @@ strippedoptionletadapter2.cpp
 survivalprobabilitycurve.cpp
 swaptionvolatilityconverter.cpp
 swaptionvolconstantspread.cpp
+dategeneration.cpp
 testsuite.cpp)
 
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
