@@ -49,8 +49,8 @@ bool Israel::TelborImpl::isBusinessDay(const Date& date) const {
         || (((d == 9 && m == April) || (d == 17 && m == September)) && y == 2019) ||
         (d == 2 && m == March && y == 2020)
         // Holiday abroad
-        || ((d == 22 && m == April) || (d == 27 && m == May) && y == 2019) ||
-        (((d == 10 || d == 13) && m == April) || ((d == 8 || d == 25) && m == May) && y == 2020)
+        || (((d == 22 && m == April) || (d == 27 && m == May)) && y == 2019) ||
+        ((((d == 10 || d == 13) && m == April) || ((d == 8 || d == 25) && m == May)) && y == 2020)
         // Purim
         || (d == 24 && m == February && y == 2013) || (d == 16 && m == March && y == 2014) ||
         (d == 05 && m == March && y == 2015) || (d == 24 && m == March && y == 2016) ||

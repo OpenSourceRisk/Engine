@@ -642,7 +642,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             // We use this to convert Period to Date below to sample from `wrapper`
                             boost::shared_ptr<IborIndex> iborIndex;
                             Date spotDate;
-                            Calendar capCalendar;
+                            Calendar iborCalendar;
                             string strIborIndex;
                             Natural settleDays = 0;
                             if (curveConfigs.hasCapFloorVolCurveConfig(name)) {
@@ -652,10 +652,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 settleDays = config->settleDays();
                                 strIborIndex = config->iborIndex();
                                 if (tryParseIborIndex(strIborIndex, iborIndex)) {
-                                    capCalendar = iborIndex->fixingCalendar();
+                                    iborCalendar = iborIndex->fixingCalendar();
                                     Natural settlementDays = iborIndex->fixingDays();
-                                    spotDate = capCalendar.adjust(asof_);
-                                    spotDate = capCalendar.advance(spotDate, settlementDays * Days);
+                                    spotDate = iborCalendar.adjust(asof_);
+                                    spotDate = iborCalendar.advance(spotDate, settlementDays * Days);
                                 }
                             }
 
@@ -680,10 +680,10 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                             for (Size i = 0; i < optionTenors.size(); ++i) {
 
-                                if (iborIndex) {
+                                if (parameters_->capFloorVolAdjustOptionletPillars() && iborIndex) {
                                     // If we ask for cap pillars at tenors t_i for i = 1,...,N, we should attempt to
                                     // place the optionlet pillars at the fixing date of the last optionlet in the cap
-                                    // with tenor t_i
+                                    // with tenor t_i, if capFloorVolAdjustOptionletPillars is true.
                                     QL_REQUIRE(optionTenors[i] > iborIndex->tenor(),
                                                "The cap floor tenor must be greater than the ibor index tenor");
                                     boost::shared_ptr<CapFloor> capFloor =
@@ -692,7 +692,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     DLOG("Option [tenor, date] pair is [" << optionTenors[i] << ", "
                                                                           << io::iso_date(optionDates[i]) << "]");
                                 } else {
+                                    // Otherwise, just place the optionlet pillars at the configured tenors.
                                     optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
+                                    if (iborCalendar != Calendar()) {
+                                        // In case the original cap floor surface has the incorrect calendar configured.
+                                        optionDates[i] = iborCalendar.adjust(optionDates[i]);
+                                    }
                                 }
 
                                 // If ATM, use initial market's discount curve and ibor index to calculate ATM rate
@@ -700,11 +705,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 if (isAtm) {
                                     QL_REQUIRE(!strIborIndex.empty(), "Expected cap floor vol curve config for "
                                                                           << name << " to have an ibor index name");
-                                    initMarket->iborIndex(strIborIndex, configuration);
-                                    boost::shared_ptr<CapFloor> cap = MakeCapFloor(
-                                        CapFloor::Cap, optionTenors[i],
-                                        *initMarket->iborIndex(strIborIndex, configuration), 0.0, 0 * Days);
-                                    strike = cap->atmRate(**initMarket->discountCurve(name, configuration));
+                                    auto iborIndex = *initMarket->iborIndex(strIborIndex, configuration);
+                                    if (parameters_->capFloorVolUseCapAtm()) {
+                                        boost::shared_ptr<CapFloor> cap = MakeCapFloor(
+                                            CapFloor::Cap, optionTenors[i], iborIndex, 0.0, 0 * Days);
+                                        strike = cap->atmRate(**initMarket->discountCurve(name, configuration));
+                                    } else {
+                                        strike = iborIndex->fixing(optionDates[i]);
+                                    }
                                 }
 
                                 for (Size j = 0; j < strikes.size(); ++j) {
@@ -790,7 +798,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Calendar cal = ore::data::parseCalendar(parameters->defaultCurveCalendar(name));
                         // FIXME riskmarket uses SurvivalProbabilityCurve but this isn't added to ore
                         boost::shared_ptr<DefaultProbabilityTermStructure> defaultCurve(
-                            new QuantExt::SurvivalProbabilityCurve<Linear>(dates, quotes, dc, cal));
+                            new QuantExt::SurvivalProbabilityCurve<LogLinear>(dates, quotes, dc, cal));
                         Handle<DefaultProbabilityTermStructure> dch(defaultCurve);
 
                         dch->enableExtrapolation();

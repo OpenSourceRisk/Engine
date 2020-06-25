@@ -1062,6 +1062,16 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         }
         QL_REQUIRE(capFloorVolDayCounters_.find("") != capFloorVolDayCounters_.end(),
                    "default daycounter is not set for capFloorVolSurfaces");
+
+        capFloorVolAdjustOptionletPillars_ = false;
+        if (XMLNode* n = XMLUtils::getChildNode(nodeChild, "AdjustOptionletPillars")) {
+            capFloorVolAdjustOptionletPillars_ = parseBool(XMLUtils::getNodeValue(n));
+        }
+
+        capFloorVolUseCapAtm_ = false;
+        if (XMLNode* n = XMLUtils::getChildNode(nodeChild, "UseCapAtm")) {
+            capFloorVolUseCapAtm_ = parseBool(XMLUtils::getNodeValue(n));
+        }
     }
 
     DLOG("Loading YYCapFloorVolatilities");
@@ -1697,6 +1707,10 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
                 XMLUtils::appendNode(node, c);
             }
         }
+        
+        XMLUtils::addChild(doc, capFloorVolatilitiesNode, "AdjustOptionletPillars",
+            capFloorVolAdjustOptionletPillars_);
+        XMLUtils::addChild(doc, capFloorVolatilitiesNode, "UseCapAtm", capFloorVolUseCapAtm_);
     }
 
     // zero inflation cap/floor volatilities

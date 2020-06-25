@@ -143,7 +143,8 @@ int OREApp::run() {
 
             // We reset this here because the date grid building in sensitivity analysis depends on it.
             Settings::instance().evaluationDate() = asof_;
-            getSensitivityRunner()->runSensitivityAnalysis(market_, conventions_, curveConfigs_, marketParameters_);
+            sensitivityRunner_ = getSensitivityRunner();
+            sensitivityRunner_->runSensitivityAnalysis(market_, conventions_, curveConfigs_, marketParameters_);
             out_ << "OK" << endl;
         } else {
             LOG("skip sensitivity analysis");
