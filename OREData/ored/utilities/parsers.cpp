@@ -977,5 +977,16 @@ std::ostream& operator<<(std::ostream& os, Extrapolation extrap) {
     }
 }
 
+VolatilityType parseVolatilityQuoteType(const string& s) {
+
+    if (s == "Normal") {
+        return Normal;
+    } else if (s == "ShiftedLognormal") {
+        return ShiftedLognormal;
+    } else {
+        QL_FAIL("Unknown volatility quote type " << s);
+    }
+}
+
 } // namespace data
 } // namespace ore

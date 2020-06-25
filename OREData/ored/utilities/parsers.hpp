@@ -297,5 +297,10 @@ Extrapolation parseExtrapolation(const std::string& s);
 //! Write Extrapolation, \p extrap, to stream.
 std::ostream& operator<<(std::ostream& os, Extrapolation extrap);
 
+/*! Convert text to QuantLib::VolatilityType
+    \ingroup utilities
+*/
+QuantLib::VolatilityType parseVolatilityQuoteType(const std::string& s);
+
 } // namespace data
 } // namespace ore
