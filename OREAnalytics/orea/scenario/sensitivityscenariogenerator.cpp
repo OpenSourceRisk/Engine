@@ -17,16 +17,19 @@
 */
 
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
+#include <orea/scenario/spreadscenario.hpp>
+
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ostream>
+
 #include <ql/math/comparison.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
 
 #include <algorithm>
+#include <ostream>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -283,7 +286,10 @@ namespace {
 bool tryGetBaseScenarioValue(const boost::shared_ptr<Scenario> baseScenario, const RiskFactorKey& key, Real& value,
                              const bool continueOnError) {
     try {
-        value = baseScenario->get(key);
+        if (auto sp = boost::dynamic_pointer_cast<SpreadScenario>(baseScenario))
+            value = sp->getAbsoluteValue(key);
+        else
+            value = baseScenario->get(key);
         return true;
     } catch (const std::exception& e) {
         if (continueOnError) {
@@ -467,6 +473,9 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+            auto spreadScenario = boost::dynamic_pointer_cast<SpreadScenario>(scenario);
+            QL_REQUIRE(!sensitivityData_->useSpreadedTermStructures() || spreadScenario,
+                       "Can not generate spread scenarios, because scenario factory does not create SpreadScenario");
             scenarioDescriptions_.push_back(discountScenarioDescription(ccy, j, up));
             DLOG("generate discount curve scenario, ccy " << ccy << ", bucket " << j << ", up " << up << ", desc "
                                                           << scenarioDescriptions_.back());
@@ -477,9 +486,16 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
             // store shifted discount curve in the scenario
             for (Size k = 0; k < n_ten; ++k) {
                 RiskFactorKey key(RFType::DiscountCurve, ccy, k);
+                // FIXME why do we have that here, but not in generateIndexCurveScenarios?
                 if (!close_enough(shiftedZeros[k], zeros[k])) {
                     Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
-                    scenario->add(key, shiftedDiscount);
+                    if (sensitivityData_->useSpreadedTermStructures()) {
+                        Real discount = exp(-zeros[k] * times[k]);
+                        spreadScenario->add(key, discount);
+                        spreadScenario->addSpreadValue(key, shiftedDiscount / discount);
+                    } else {
+                        scenario->add(key, shiftedDiscount);
+                    }
                 }
 
                 // Possibly store valid shift size
@@ -551,6 +567,9 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+            auto spreadScenario = boost::dynamic_pointer_cast<SpreadScenario>(scenario);
+            QL_REQUIRE(!sensitivityData_->useSpreadedTermStructures() || spreadScenario,
+                       "Can not generate spread scenarios, because scenario factory does not create SpreadScenario");
 
             scenarioDescriptions_.push_back(indexScenarioDescription(indexName, j, up));
 
@@ -562,7 +581,13 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
                 RiskFactorKey key(RFType::IndexCurve, indexName, k);
 
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
-                scenario->add(key, shiftedDiscount);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    Real discount = exp(-zeros[k] * times[k]);
+                    spreadScenario->add(key, discount);
+                    spreadScenario->addSpreadValue(key, shiftedDiscount / discount);
+                } else {
+                    scenario->add(key, shiftedDiscount);
+                }
 
                 // Possibly store valid shift size
                 if (validShiftSize && up && j == k) {
@@ -634,6 +659,9 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+            auto spreadScenario = boost::dynamic_pointer_cast<SpreadScenario>(scenario);
+            QL_REQUIRE(!sensitivityData_->useSpreadedTermStructures() || spreadScenario,
+                       "Can not generate spread scenarios, because scenario factory does not create SpreadScenario");
 
             scenarioDescriptions_.push_back(yieldScenarioDescription(name, j, up));
 
@@ -644,7 +672,13 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
             for (Size k = 0; k < n_ten; ++k) {
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
                 RiskFactorKey key(RFType::YieldCurve, name, k);
-                scenario->add(key, shiftedDiscount);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    Real discount = exp(-zeros[k] * times[k]);
+                    spreadScenario->add(key, discount);
+                    spreadScenario->addSpreadValue(key, shiftedDiscount / discount);
+                } else {
+                    scenario->add(key, shiftedDiscount);
+                }
 
                 // Possibly store valid shift size
                 if (validShiftSize && up && j == k) {
