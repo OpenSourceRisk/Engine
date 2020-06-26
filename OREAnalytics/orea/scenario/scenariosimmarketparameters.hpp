@@ -49,7 +49,8 @@ public:
     //! Default constructor
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolIsCube_({ {"", false} }), swapVolSimulateATMOnly_(false), swapVolStrikeSpreads_({ {"", {0.0}} }),
-          cprSimulate_(false), correlationIsSurface_(false), correlationStrikes_({0.0}) {
+        capFloorVolAdjustOptionletPillars_(false), capFloorVolUseCapAtm_(false), cprSimulate_(false), 
+        correlationIsSurface_(false), correlationStrikes_({0.0}) {
         setDefaults();
     }
 

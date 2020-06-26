@@ -154,10 +154,6 @@ void ScenarioSimMarketParameters::setDefaults() {
     useMoneyness_[""] = true; // moneyness vs stdDevs - default to moneyness
     // Defaults for equity
     setSimulateEquityVolATMOnly(false);
-    setEquityVolIsSurface("", false);
-    setEquityUseMoneyness("", false);
-    setEquityVolMoneyness("", { 1.0 });
-    setEquityVolStandardDevs("", { 0.0 });
 }
 
 void ScenarioSimMarketParameters::reset() {

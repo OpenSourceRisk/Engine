@@ -41,6 +41,7 @@
 #include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/calendars/target.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
@@ -1104,8 +1105,19 @@ ScenarioSimMarket::ScenarioSimMarket(
                             vector<Time> times(m);
                             vector<Date> dates(m);
                             Calendar cal = wrapper->calendar();
+                            if (cal.empty()) {
+                                // look in the curveconfigs
+                                if (curveConfigs.hasEquityVolCurveConfig(name)) {
+                                    auto cfg = curveConfigs.equityVolCurveConfig(name);
+                                    cal = parseCalendar(cfg->calendar());
+                                    if (cal == NullCalendar()) {
+                                        cal = parseCalendar(cfg->ccy());
+                                    }
+                                } else { // fall back on weekendsonly
+                                    cal = WeekendsOnly();
+                                }
+                            }
                             DayCounter dc = ore::data::parseDayCounter(parameters->equityVolDayCounter(name));
-                            bool atmOnly = parameters->simulateEquityVolATMOnly();
                             
                             for (Size k = 0; k < m; k++) {
                                 dates[k] = cal.advance(asof_, expiries[k]);
