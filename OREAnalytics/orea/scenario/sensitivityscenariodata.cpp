@@ -702,6 +702,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     XMLUtils::addChild(doc, root, "ComputeGamma", computeGamma_);
+    XMLUtils::addChild(doc, root, "UseSpreadedTermStructures", useSpreadedTermStructures_);
 
     return root;
 }
