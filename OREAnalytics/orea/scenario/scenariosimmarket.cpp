@@ -1104,18 +1104,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                             vector<vector<Handle<Quote>>> quotes;
                             vector<Time> times(m);
                             vector<Date> dates(m);
-                            Calendar cal = wrapper->calendar();
-                            if (cal.empty()) {
-                                // look in the curveconfigs
-                                if (curveConfigs.hasEquityVolCurveConfig(name)) {
-                                    auto cfg = curveConfigs.equityVolCurveConfig(name);
-                                    cal = parseCalendar(cfg->calendar());
-                                    if (cal == NullCalendar()) {
-                                        cal = parseCalendar(cfg->ccy());
-                                    }
-                                } else { // fall back on weekendsonly
-                                    cal = WeekendsOnly();
-                                }
+                            Calendar cal;
+                            if (curveConfigs.hasEquityVolCurveConfig(name)) {
+                                auto cfg = curveConfigs.equityVolCurveConfig(name);
+                                cal = parseCalendar(cfg->calendar());
+                            }
+                            if (cal.empty() || cal == NullCalendar()) {
+                                // take the equity curves calendar - this at least ensures fixings align
+                                cal = eqCurve->fixingCalendar();
                             }
                             DayCounter dc = ore::data::parseDayCounter(parameters->equityVolDayCounter(name));
                             
