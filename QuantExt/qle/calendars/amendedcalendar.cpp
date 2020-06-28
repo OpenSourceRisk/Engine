@@ -24,21 +24,14 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-std::string AmendedCalendar::Impl::name() const {
-    return name_;
-}
+std::string AmendedCalendar::Impl::name() const { return name_; }
 
-bool AmendedCalendar::Impl::isWeekend(Weekday w) const {
-    return baseCalendar_.isWeekend(w);
-}
+bool AmendedCalendar::Impl::isWeekend(Weekday w) const { return baseCalendar_.isWeekend(w); }
 
-bool AmendedCalendar::Impl::isBusinessDay(const Date& date) const {
-    return baseCalendar_.isBusinessDay(date);
-}
+bool AmendedCalendar::Impl::isBusinessDay(const Date& date) const { return baseCalendar_.isBusinessDay(date); }
 
-AmendedCalendar::Impl::Impl(const QuantLib::Calendar& calendar, const std::string& name) : baseCalendar_(calendar), name_(name) {
-    
-}
+AmendedCalendar::Impl::Impl(const QuantLib::Calendar& calendar, const std::string& name)
+    : name_(name), baseCalendar_(calendar) {}
 
 AmendedCalendar::AmendedCalendar(const QuantLib::Calendar& calendar, const std::string& name) {
     impl_ = ext::shared_ptr<Calendar::Impl>(new AmendedCalendar::Impl(calendar, name));
