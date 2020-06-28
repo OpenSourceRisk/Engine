@@ -189,9 +189,22 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     TLOG(io::iso_date(dates.back()) << "," << fixed << setprecision(9) << survivalProbs.back());
     for (Size i = 0; i < helpers.size(); ++i) {
         if (helpers[i]->latestDate() > asof) {
-            dates.push_back(helpers[i]->latestDate());
-            survivalProbs.push_back(tmp->survivalProbability(dates.back()));
-            TLOG(io::iso_date(dates.back()) << "," << fixed << setprecision(9) << survivalProbs.back());
+            
+            Date pillarDate = helpers[i]->latestDate();
+            Probability sp = tmp->survivalProbability(pillarDate);
+            
+            // In some cases the bootstrapped survival probability at one tenor will be `close` to that at a previous 
+            // tenor. Here we don't add that survival probability and date to avoid issues when creating the 
+            // InterpolatedSurvivalProbabilityCurve below.
+            if (!survivalProbs.empty() && close(survivalProbs.back(), sp)) {
+                DLOG("Survival probability for curve " << spec.name() << " at date " << io::iso_date(pillarDate) <<
+                    " is the same as that at previous date " << io::iso_date(dates.back()) << " so skipping it.");
+                continue;
+            }
+
+            dates.push_back(pillarDate);
+            survivalProbs.push_back(sp);
+            TLOG(io::iso_date(pillarDate) << "," << fixed << setprecision(9) << sp);
         }
     }
     QL_REQUIRE(dates.size() >= 2, "Need at least 2 points to build the default curve");
