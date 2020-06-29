@@ -331,8 +331,8 @@ Example:
     Term & An integer followed by D, W, M or Y & Underlying Term\\ \hline
   % date rule & {\tt string} &  \\
   \end{tabular}
-  \caption{Money Market Futures Price}
-  \label{tab:mmfp_quote}
+  \caption{Overnight Index Futures Price}
+  \label{tab:oifp_quote}
 \end{table}
 
 Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule such as 3rd
@@ -603,53 +603,87 @@ Example:
 \item {CC\_BASIS\_SWAP/BASIS\_SPREAD/USD/3M/JPY/6M/10Y}
 \end{itemize}
 
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{CDS Spread}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\label{md:cds_spread_quote}
 
 \begin{table}[H]
 \centering
   \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
-    Instrument Type & \emph{CDS} & \\ \hline
-    Quote Type & \emph{CREDIT\_SPREAD} & \\ \hline
-    Issuer & String &  Issuer name \\ \hline
-    Seniority & String &  Seniority status \\ \hline
-    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Spread currency\\ \hline
-    Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\ \hline
+    Instrument Type & \lstinline!CDS! & \\ \hline
+    Quote Type & \lstinline!CREDIT_SPREAD! & \\ \hline
+    Entity & String & The CDS reference entity name \\ \hline
+    Tier & String & The CDS tier \\ \hline
+    DocClause & String & Optional, the CDS doc clause \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & The CDS currency\\ \hline
+    Term & A valid tenor string & The CDS tenor\\ \hline
   \end{tabular}
-  \caption{CDS Spread}
+  \caption{CDS spread quote}
   \label{tab:cdsspread_quote}
 \end{table}
 
-Example:
+As noted in the table above, the CDS documentation clause is optional. The following list shows valid CDS spread quote examples.
 \begin{itemize}
-\item {CDS/CREDIT\_SPREAD/GE/SeniorUnsec/EUR/5Y}
+\item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/5Y!
+\item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/XR14/5Y!
+\item \lstinline!CDS/CREDIT_SPREAD/RBS/SUBLT2/EUR/MR14/10Y!
+\item \lstinline!CDS/CREDIT_SPREAD/RBS/SUBLT2/EUR/1Y!
 \end{itemize}
 
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{CDS Recovery Rate}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{CDS Upfront Price}
+\label{md:cds_price_quote}
 
 \begin{table}[H]
 \centering
   \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
-    Instrument Type & \emph{RECOVERY\_RATE} & \\ \hline
-    Quote Type & \emph{RATE} & \\ \hline
-    Issuer & String &  Issuer name \\ \hline
-    Seniority & String &  Seniority status \\ \hline
-    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Spread currency\\ \hline
+    Instrument Type & \lstinline!CDS! & \\ \hline
+    Quote Type & \lstinline!PRICE! & \\ \hline
+    Entity & String & The CDS reference entity name \\ \hline
+    Tier & String & The CDS tier \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & The CDS currency\\ \hline
+    DocClause & String & Optional, the CDS doc clause \\ \hline
+    Term & A valid tenor string & The CDS tenor\\ \hline
+  \end{tabular}
+  \caption{CDS upfront price quote}
+  \label{tab:cds_price_quote}
+\end{table}
+
+As noted in the table above, the CDS documentation clause is optional. The following list shows valid CDS upfront price quote examples.
+\begin{itemize}
+\item \lstinline!CDS/PRICE/JPM/SNRFOR/USD/5Y!
+\item \lstinline!CDS/PRICE/JPM/SNRFOR/USD/XR14/5Y!
+\item \lstinline!CDS/PRICE/RBS/SUBLT2/EUR/MR14/10Y!
+\item \lstinline!CDS/PRICE/RBS/SUBLT2/EUR/1Y!
+\end{itemize}
+
+\subsection{CDS Recovery Rate}
+\label{md:cds_recovery_rate_quote}
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \lstinline!RECOVERY_RATE! & \\ \hline
+    Quote Type & \lstinline!RATE! & \\ \hline
+    Entity & String & The CDS reference entity name \\ \hline
+    Tier & String & The CDS tier \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & The CDS currency\\ \hline
+    DocClause & String & Optional, the CDS doc clause \\ \hline
   \end{tabular}
   \caption{CDS Recovery Rate}
   \label{tab:cdsrecovery_quote}
 \end{table}
 
-Example:
+As noted in the table above, the CDS documentation clause is optional. The following list shows valid recovery rate quote examples.
 \begin{itemize}
-\item {RECOVERY\_RATE/RATE/GE/SeniorUnsec/EUR}
+\item \lstinline!RECOVERY_RATE/RATE/JPM/SNRFOR/USD!
+\item \lstinline!RECOVERY_RATE/RATE/JPM/SNRFOR/USD/XR14!
+\item \lstinline!RECOVERY_RATE/RATE/RBS/SUBLT2/EUR/MR14!
+\item \lstinline!RECOVERY_RATE/RATE/RBS/SUBLT2/EUR!
 \end{itemize}
 
 \subsection{CDS Option Implied Volatility}
