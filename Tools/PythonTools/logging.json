@@ -16,14 +16,6 @@
       "formatter": "simple",
       "class": "logging.StreamHandler",
       "stream": "ext://sys.stdout"
-    },
-    "file_handler":
-    {
-      "level": "INFO",
-      "formatter": "simple",
-      "class": "logging.FileHandler",
-      "filename": "testing.log",
-      "mode": "w"
     }
   },
   "loggers":
