@@ -680,10 +680,6 @@ void ScenarioSimMarketParameters::setSimulateCprs(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::CPR, simulate);
 }
 
-void ScenarioSimMarketParameters::setEquityUseMoneyness(const string& name, bool useMoneyness) {
-    equityUseMoneyness_[name] = useMoneyness;
-}
-
 void ScenarioSimMarketParameters::setEquityVolIsSurface(const string& name, bool isSurface) {
     equityVolIsSurface_[name] = isSurface;
 }
@@ -701,7 +697,12 @@ void ScenarioSimMarketParameters::setEquityVolStandardDevs(const string&name, co
 }
 
 bool ScenarioSimMarketParameters::equityUseMoneyness(const string& key) const {
-    return lookup(equityUseMoneyness_, key);
+    try {
+        const vector<Real> temp = lookup(equityMoneyness_, key);
+        if (temp.size() > 0)
+            return true;
+    } catch (...) {}
+    return false;
 }
 
 bool ScenarioSimMarketParameters::equityVolIsSurface(const string& key) const {
@@ -1394,7 +1395,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 child = XMLUtils::getNextSibling(child, "Moneyness")) {
                 string label = XMLUtils::getAttribute(child, "name"); // will be "" if no attr
                 setEquityVolMoneyness(label, XMLUtils::getNodeValueAsDoublesCompact(child));
-                setEquityUseMoneyness(label, true);
                 if (equityVolMoneyness(label).size() > 1) {
                     setEquityVolIsSurface(label, true);
                 }
@@ -1408,7 +1408,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                     QL_FAIL("Equity Volatility simulation parameters - both moneyness and standard deviations provided for label " << label);
                 } else {
                     setEquityVolStandardDevs(label, XMLUtils::getNodeValueAsDoublesCompact(child));
-                    setEquityUseMoneyness(label, false);
                     if (equityVolStandardDevs(label).size() > 1) {
                         setEquityVolIsSurface(label, true);
                     }

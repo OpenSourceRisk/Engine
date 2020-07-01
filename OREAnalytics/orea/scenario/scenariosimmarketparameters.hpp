@@ -339,7 +339,6 @@ public:
 
     void setSimulateEquityVols(bool simulate);
     void setSimulateEquityVolATMOnly(bool simulateATMOnly) { equityVolSimulateATMOnly_ = simulateATMOnly; }
-    void setEquityUseMoneyness(const string& name, bool useMoneyness);
     void setEquityVolIsSurface(const string& name, bool isSurface);
     void setEquityVolExpiries(const string& name, const vector<Period>& expiries);
     void setEquityVolDecayMode(const string& val) { equityVolDecayMode_ = val; }
@@ -479,7 +478,6 @@ private:
     map<string, vector<Real>> fxStandardDevs_;
 
     bool equityVolSimulateATMOnly_;
-    map<string, bool> equityUseMoneyness_;
     map<string, bool> equityVolIsSurface_;
     map<string, vector<Period>> equityVolExpiries_;
     map<string, string> equityVolDayCounters_;
