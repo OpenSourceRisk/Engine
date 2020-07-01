@@ -1241,8 +1241,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<InflationIndexObserver> inflObserver(
                             boost::make_shared<InflationIndexObserver>(inflationIndex, qh, obsLag));
 
-                        baseCpis_.insert(pair<pair<string, string>, Handle<InflationIndexObserver>>(
-                            make_pair(Market::defaultConfiguration, name), inflObserver));
+                        // baseCpis_.insert(pair<pair<string, string>, Handle<InflationIndexObserver>>(
+                        //     make_pair(Market::defaultConfiguration, name), inflObserver));
                         simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
                                            std::forward_as_tuple(q));
                     } catch (const std::exception& e) {
