@@ -12,7 +12,7 @@
   {
     "console":
     {
-      "level": "INFO",
+      "level": "WARNING",
       "formatter": "simple",
       "class": "logging.StreamHandler",
       "stream": "ext://sys.stdout"
@@ -22,12 +22,12 @@
   {
     "compare_files":
     {
-      "level": "INFO"
+      "level": "WARNING"
     }
   },
   "root":
   {
-    "level": "INFO",
+    "level": "WARNING",
     "handlers": ["console"]
   }
 }
