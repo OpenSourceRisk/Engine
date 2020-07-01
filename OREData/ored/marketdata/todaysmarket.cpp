@@ -295,11 +295,12 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
                                              configuration;
         }
 
-        // 2 Correlation depends on underlying swap indices
+        // 2 Correlation depends on underlying swap indices (if CMS Spread Correlations are calibrated to prices)
 
         if (g[*v].curveSpec && curveConfigs_.hasCorrelationCurveConfig(g[*v].curveSpec->curveConfigID())) {
             auto config = curveConfigs_.correlationCurveConfig(g[*v].curveSpec->curveConfigID());
-            if (config->correlationType() == CorrelationCurveConfig::CorrelationType::CMSSpread) {
+            if (config->correlationType() == CorrelationCurveConfig::CorrelationType::CMSSpread &&
+                config->quoteType() == CorrelationCurveConfig::QuoteType::Price) {
                 bool found1 = config->index1().empty(), found2 = config->index2().empty();
                 for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
                     if (*w != *v) {
