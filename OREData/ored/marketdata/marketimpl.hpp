@@ -164,9 +164,8 @@ public:
                                  const string& configuration = Market::defaultConfiguration) const;
 
     //! Cpi Base Quotes
-    // Handle<QuantExt::InflationIndexObserver> baseCpis(const string& index,
-    //                                                   const string& configuration = Market::defaultConfiguration)
-    //                                                   const;
+    Handle<QuantExt::InflationIndexObserver> baseCpis(const string& index,
+                                                      const string& configuration = Market::defaultConfiguration) const;
 
     //! Commodity curves
     QuantLib::Handle<QuantExt::PriceTermStructure>
@@ -218,7 +217,7 @@ protected:
     map<pair<string, string>, Handle<Quote>> equitySpots_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
-    // map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
+    map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
     map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>> correlationCurves_;
     map<pair<string, string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
     map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
