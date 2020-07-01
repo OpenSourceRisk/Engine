@@ -45,9 +45,9 @@ CommodityVolatilityConfig::CommodityVolatilityConfig(const string& curveId, cons
 
 void CommodityVolatilityConfig::populateRequiredCurveIds() {
     if (!priceCurveId().empty())
-        requiredCurveIds_[CurveSpec::CurveType::Commodity].insert(priceCurveId());
+        requiredCurveIds_[CurveSpec::CurveType::Commodity].insert(parseCurveSpec(priceCurveId())->curveConfigID());
     if (!yieldCurveId().empty())
-        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(yieldCurveId());
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(yieldCurveId())->curveConfigID());
     if (auto vapo = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(volatilityConfig())) {
         requiredCurveIds_[CurveSpec::CurveType::CommodityVolatility].insert(
             parseCurveSpec(vapo->baseVolatilityId())->curveConfigID());
