@@ -29,5 +29,5 @@ add_link_directory_if_exists("${QUANTEXT_SOURCE_DIR}/build/qle")
 add_link_directory_if_exists("${OREDATA_SOURCE_DIR}/build/ored")
 
 add_subdirectory("orea")
-#add_subdirectory("doc")
+add_subdirectory("doc")
 add_subdirectory("test")
