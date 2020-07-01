@@ -417,7 +417,7 @@ static bool canBuild(boost::shared_ptr<YieldCurveSpec>& ycs, vector<boost::share
     }
 
     boost::shared_ptr<YieldCurveConfig> curveConfig = curveConfigs.yieldCurveConfig(yieldCurveID);
-    set<string> requiredYieldCurveIDs = curveConfig->requiredYieldCurveIDs();
+    set<string> requiredYieldCurveIDs = curveConfig->requiredCurveIds(CurveSpec::CurveType::Yield);
     for (auto it : requiredYieldCurveIDs) {
         // search for this name in the vector specs, return false if not found, otherwise move to next required id
         bool ok = false;

@@ -17,6 +17,7 @@
 */
 
 #include <ored/configuration/commodityvolcurveconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/errors.hpp>
 
@@ -39,6 +40,18 @@ CommodityVolatilityConfig::CommodityVolatilityConfig(const string& curveId, cons
       dayCounter_(dayCounter), calendar_(calendar), futureConventionsId_(futureConventionsId),
       optionExpiryRollDays_(optionExpiryRollDays), priceCurveId_(priceCurveId), yieldCurveId_(yieldCurveId) {
     populateQuotes();
+    populateRequiredCurveIds();
+}
+
+void CommodityVolatilityConfig::populateRequiredCurveIds() {
+    if (!priceCurveId().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Commodity].insert(priceCurveId());
+    if (!yieldCurveId().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(yieldCurveId());
+    if (auto vapo = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(volatilityConfig())) {
+        requiredCurveIds_[CurveSpec::CurveType::CommodityVolatility].insert(
+            parseCurveSpec(vapo->baseVolatilityId())->curveConfigID());
+    }
 }
 
 const string& CommodityVolatilityConfig::currency() const { return currency_; }
@@ -104,6 +117,7 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
     yieldCurveId_ = XMLUtils::getChildValue(node, "YieldCurveId", false);
 
     populateQuotes();
+    populateRequiredCurveIds();
 }
 
 XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {

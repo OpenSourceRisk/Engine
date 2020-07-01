@@ -114,6 +114,9 @@ private:
     Type type_;
     std::string extrapolation_;
 
+    //! Populate required curve ids
+    void populateRequiredCurveIds();
+
     //! Populate the quotes vector
     void populateQuotes();
 

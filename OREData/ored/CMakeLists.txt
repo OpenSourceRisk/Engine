@@ -8,6 +8,7 @@ configuration/commoditycurveconfig.cpp
 configuration/commodityvolcurveconfig.cpp
 configuration/conventions.cpp
 configuration/correlationcurveconfig.cpp
+configuration/curveconfig.cpp
 configuration/curveconfigurations.cpp
 configuration/defaultcurveconfig.cpp
 configuration/equitycurveconfig.cpp

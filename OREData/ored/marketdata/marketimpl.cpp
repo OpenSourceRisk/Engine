@@ -263,9 +263,9 @@ Handle<Quote> MarketImpl::securitySpread(const string& key, const string& config
     return lookup<Handle<Quote>>(securitySpreads_, key, configuration, "security spread");
 }
 
-Handle<QuantExt::InflationIndexObserver> MarketImpl::baseCpis(const string& key, const string& configuration) const {
-    return lookup<Handle<QuantExt::InflationIndexObserver>>(baseCpis_, key, configuration, "base CPI");
-}
+// Handle<QuantExt::InflationIndexObserver> MarketImpl::baseCpis(const string& key, const string& configuration) const {
+//     return lookup<Handle<QuantExt::InflationIndexObserver>>(baseCpis_, key, configuration, "base CPI");
+// }
 
 Handle<PriceTermStructure> MarketImpl::commodityPriceCurve(const string& commodityName,
                                                            const string& configuration) const {
@@ -297,14 +297,10 @@ void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountInd
 
         auto di = iborIndex(discountIndex, configuration)->forwardingTermStructure();
 
-        boost::shared_ptr<data::Convention> tmp = conventions_.get(swapIndex);
-        QL_REQUIRE(tmp, "Need conventions for swap index " << swapIndex);
-        boost::shared_ptr<data::SwapIndexConvention> swapCon =
-            boost::dynamic_pointer_cast<data::SwapIndexConvention>(tmp);
-        QL_REQUIRE(swapCon, "Conventions are not Swap Conventions for " << swapIndex);
-        tmp = conventions_.get(swapCon->conventions());
-        boost::shared_ptr<data::IRSwapConvention> con = boost::dynamic_pointer_cast<data::IRSwapConvention>(tmp);
-        QL_REQUIRE(con, "Cannot find IRSwapConventions");
+        auto swapCon = boost::dynamic_pointer_cast<data::SwapIndexConvention>(conventions_.get(swapIndex));
+        QL_REQUIRE(swapCon, "Did not find SwapIndexConvention for " << swapIndex);
+        auto con = boost::dynamic_pointer_cast<data::IRSwapConvention>(conventions_.get(swapCon->conventions()));
+        QL_REQUIRE(con, "Cannot find IRSwapConventions " << swapCon->conventions());
 
         auto fi = iborIndex(con->indexName(), configuration)->forwardingTermStructure();
 
@@ -404,10 +400,10 @@ void MarketImpl::refresh(const string& configuration) {
                     it->second.insert(*y);
             }
         }
-        for (auto& x : baseCpis_) {
-            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
-                it->second.insert(*x.second);
-        }
+        // for (auto& x : baseCpis_) {
+        //     if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+        //         it->second.insert(*x.second);
+        // }
         for (auto& x : commodityCurves_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);

@@ -53,7 +53,17 @@ class MarketImpl : public Market {
 public:
     //! Default constructor
     MarketImpl() {}
-    MarketImpl(const Conventions& conventions) : conventions_(conventions) {
+    /*! Constructor taking a reference to conventions. This ctor is deprecated, use the second ctor taking a pointer
+        instead. TODO remove this ctor and use the second ctor everywhere, remove the conventions member variable
+        holding the copy. */
+    MarketImpl(const Conventions& conventions) : conventions_(conventions) { initialise(); }
+    //! Constructor taking a pointer to conventions
+    MarketImpl(const boost::shared_ptr<Conventions>& conventions)
+        : conventions_ref_(conventions), conventions_(*conventions_ref_) {
+        initialise();
+    }
+
+    void initialise() {
         // if no fx spots are defined we still need an empty triangulation
         fxSpots_[Market::defaultConfiguration] = FXTriangulation();
     }
@@ -154,8 +164,9 @@ public:
                                  const string& configuration = Market::defaultConfiguration) const;
 
     //! Cpi Base Quotes
-    Handle<QuantExt::InflationIndexObserver> baseCpis(const string& index,
-                                                      const string& configuration = Market::defaultConfiguration) const;
+    // Handle<QuantExt::InflationIndexObserver> baseCpis(const string& index,
+    //                                                   const string& configuration = Market::defaultConfiguration)
+    //                                                   const;
 
     //! Commodity curves
     QuantLib::Handle<QuantExt::PriceTermStructure>
@@ -207,12 +218,15 @@ protected:
     map<pair<string, string>, Handle<Quote>> equitySpots_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
-    map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
+    // map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
     map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>> correlationCurves_;
     map<pair<string, string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
     map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
     map<pair<string, string>, Handle<Quote>> cprs_;
+
+    boost::shared_ptr<Conventions> conventions_ref_;
+    // needed for the deprecated ctor taking a reference to conventions, TODO remove
     Conventions conventions_;
 
     //! add a swap index to the market

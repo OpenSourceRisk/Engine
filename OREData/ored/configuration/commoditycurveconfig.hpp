@@ -107,6 +107,8 @@ public:
     //@}
 
 private:
+    void populateRequiredCurveIds();
+
     Type type_;
     vector<string> fwdQuotes_;
     std::string currency_;

@@ -77,7 +77,7 @@ public:
     const Type& type() const { return type_; }
     const string& discountCurveID() const { return discountCurveID_; }
     const string& benchmarkCurveID() const { return benchmarkCurveID_; }
-    const string& sourceCurveID() const { return benchmarkCurveID_; }
+    const string& sourceCurveID() const { return sourceCurveID_; }
     const string& recoveryRateQuote() const { return recoveryRateQuote_; }
     const string& conventionID() const { return conventionID_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
@@ -111,6 +111,7 @@ public:
     //@}
 
 private:
+    void populateRequiredCurveIds();
     //! Quote and optional flag pair
     std::vector<std::pair<std::string, bool>> cdsQuotes_;
     string currency_;

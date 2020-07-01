@@ -64,6 +64,8 @@ public:
     //@}
 
 private:
+    void populateRequiredCurveIds();
+
     std::string currency_;
     boost::shared_ptr<VolatilityConfig> volatilityConfig_;
     std::string dayCounter_;

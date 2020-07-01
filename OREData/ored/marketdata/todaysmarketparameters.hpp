@@ -77,6 +77,8 @@ enum class MarketObject {
 
 std::ostream& operator<<(std::ostream& out, const MarketObject& o);
 
+std::set<MarketObject> getMarketObjectTypes();
+
 class MarketConfiguration {
 public:
     MarketConfiguration();
@@ -190,6 +192,7 @@ inline string TodaysMarketParameters::marketObjectId(const MarketObject o, const
 
 inline const map<string, string>& TodaysMarketParameters::mapping(const MarketObject o,
                                                                   const string& configuration) const {
+    static map<string, string> empty;
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = marketObjects_.find(o);
     if (it != marketObjects_.end()) {
@@ -198,8 +201,7 @@ inline const map<string, string>& TodaysMarketParameters::mapping(const MarketOb
             return it2->second;
         }
     }
-    QL_FAIL("market object of type " << o << " with id " << marketObjectId(o, configuration)
-                                     << " specified in configuration " << configuration << " not found");
+    return empty;
 }
 
 } // namespace data

@@ -39,7 +39,7 @@ FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const st
       calendar_(calendar), fxSpotID_(fxSpotID), fxForeignYieldCurveID_(fxForeignCurveID),
       fxDomesticYieldCurveID_(fxDomesticCurveID), conventionsID_(conventionsID), smileDelta_(smileDelta),
       smileInterpolation_(interp) {
-    populateRequiredYieldCurveIDs();
+    populateRequiredCurveIds();
 }
 
 const vector<string>& FXVolatilityCurveConfig::quotes() {
@@ -136,7 +136,7 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", true);
     }
 
-    populateRequiredYieldCurveIDs();
+    populateRequiredCurveIds();
 }
 
 XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -187,7 +187,7 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
     return node;
 }
 
-void FXVolatilityCurveConfig::populateRequiredYieldCurveIDs() {
+void FXVolatilityCurveConfig::populateRequiredCurveIds() {
 
     if (dimension_ == Dimension::SmileVannaVolga || dimension_ == Dimension::SmileDelta) {
         std::vector<string> domTokens, forTokens;
@@ -195,17 +195,17 @@ void FXVolatilityCurveConfig::populateRequiredYieldCurveIDs() {
         split(forTokens, fxForeignYieldCurveID_, boost::is_any_of("/"));
 
         if (domTokens.size() == 3 && domTokens[0] == "Yield") {
-            requiredYieldCurveIDs_.insert(domTokens[2]);
+            requiredCurveIds_[CurveSpec::CurveType::Yield].insert(domTokens[2]);
         } else if (domTokens.size() == 1) {
-            requiredYieldCurveIDs_.insert(fxDomesticYieldCurveID_);
+            requiredCurveIds_[CurveSpec::CurveType::Yield].insert(fxDomesticYieldCurveID_);
         } else {
             QL_FAIL("Cannot determine the required domestic yield curve for fx vol curve " << curveID_);
         }
 
         if (forTokens.size() == 3 && forTokens[0] == "Yield") {
-            requiredYieldCurveIDs_.insert(forTokens[2]);
+            requiredCurveIds_[CurveSpec::CurveType::Yield].insert(forTokens[2]);
         } else if (forTokens.size() == 1) {
-            requiredYieldCurveIDs_.insert(fxForeignYieldCurveID_);
+            requiredCurveIds_[CurveSpec::CurveType::Yield].insert(fxForeignYieldCurveID_);
         } else {
             QL_FAIL("Cannot determine the required foreign yield curve for fx vol curve " << curveID_);
         }
