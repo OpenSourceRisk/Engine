@@ -17,6 +17,7 @@
 */
 
 #include <ored/marketdata/curvespec.hpp>
+#include <ored/utilities/to_string.hpp>
 
 namespace ore {
 namespace data {

@@ -23,8 +23,6 @@
 
 #pragma once
 
-#include <ored/utilities/to_string.hpp>
-
 #include <boost/shared_ptr.hpp>
 
 #include <ostream>
