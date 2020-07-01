@@ -1211,15 +1211,17 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 }
 
                                 LOG("ATM EQ Vols (BlackVarianceCurve3) for " << name);
-                                eqVolCurve = boost::make_shared<BlackVarianceCurve3>(
-                                    0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false);
+                                auto atmCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
+                                    0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false));
                                 
                                 // if we have a surface but are only simulating atm vols we wrap the atm curve and the full
                                 // t0 surface
                                 if (parameters->simulateEquityVolATMOnly()) {
                                     LOG("Simulating EQ Vols (EquityVolatilityConstantSpread) for " << name);
                                     eqVolCurve = boost::make_shared<EquityVolatilityConstantSpread>(
-                                        Handle<BlackVolTermStructure>(eqVolCurve), wrapper);
+                                        Handle<BlackVolTermStructure>(atmCurve), wrapper);
+                                } else {
+                                    eqVolCurve = atmCurve;
                                 }
 
                             }                            
