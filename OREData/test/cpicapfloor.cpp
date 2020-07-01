@@ -17,8 +17,10 @@
 */
 
 #include <boost/make_shared.hpp>
-#include <boost/test/data/test_case.hpp>
+// clang-format off
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+// clang-format on
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/csvloader.hpp>

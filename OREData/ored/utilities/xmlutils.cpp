@@ -579,8 +579,8 @@ vector<T> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent, const strin
 template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
                                     const vector<string>& values);
 // throws a warning currently, but that is ok, see the FIXME above in template <> void XMLUtils::addChildren(...)
-template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
-                                    const vector<double>& values);
+// template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
+//                                     const vector<double>& values);
 template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
                                     const vector<bool>& values);
 

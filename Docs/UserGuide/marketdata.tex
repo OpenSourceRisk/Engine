@@ -331,8 +331,8 @@ Example:
     Term & An integer followed by D, W, M or Y & Underlying Term\\ \hline
   % date rule & {\tt string} &  \\
   \end{tabular}
-  \caption{Money Market Futures Price}
-  \label{tab:mmfp_quote}
+  \caption{Overnight Index Futures Price}
+  \label{tab:oifp_quote}
 \end{table}
 
 Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule such as 3rd
@@ -603,53 +603,87 @@ Example:
 \item {CC\_BASIS\_SWAP/BASIS\_SPREAD/USD/3M/JPY/6M/10Y}
 \end{itemize}
 
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{CDS Spread}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\label{md:cds_spread_quote}
 
 \begin{table}[H]
 \centering
   \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
-    Instrument Type & \emph{CDS} & \\ \hline
-    Quote Type & \emph{CREDIT\_SPREAD} & \\ \hline
-    Issuer & String &  Issuer name \\ \hline
-    Seniority & String &  Seniority status \\ \hline
-    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Spread currency\\ \hline
-    Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\ \hline
+    Instrument Type & \lstinline!CDS! & \\ \hline
+    Quote Type & \lstinline!CREDIT_SPREAD! & \\ \hline
+    Entity & String & The CDS reference entity name \\ \hline
+    Tier & String & The CDS tier \\ \hline
+    DocClause & String & Optional, the CDS doc clause \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & The CDS currency\\ \hline
+    Term & A valid tenor string & The CDS tenor\\ \hline
   \end{tabular}
-  \caption{CDS Spread}
+  \caption{CDS spread quote}
   \label{tab:cdsspread_quote}
 \end{table}
 
-Example:
+As noted in the table above, the CDS documentation clause is optional. The following list shows valid CDS spread quote examples.
 \begin{itemize}
-\item {CDS/CREDIT\_SPREAD/GE/SeniorUnsec/EUR/5Y}
+\item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/5Y!
+\item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/XR14/5Y!
+\item \lstinline!CDS/CREDIT_SPREAD/RBS/SUBLT2/EUR/MR14/10Y!
+\item \lstinline!CDS/CREDIT_SPREAD/RBS/SUBLT2/EUR/1Y!
 \end{itemize}
 
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{CDS Recovery Rate}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{CDS Upfront Price}
+\label{md:cds_price_quote}
 
 \begin{table}[H]
 \centering
   \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
-    Instrument Type & \emph{RECOVERY\_RATE} & \\ \hline
-    Quote Type & \emph{RATE} & \\ \hline
-    Issuer & String &  Issuer name \\ \hline
-    Seniority & String &  Seniority status \\ \hline
-    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Spread currency\\ \hline
+    Instrument Type & \lstinline!CDS! & \\ \hline
+    Quote Type & \lstinline!PRICE! & \\ \hline
+    Entity & String & The CDS reference entity name \\ \hline
+    Tier & String & The CDS tier \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & The CDS currency\\ \hline
+    DocClause & String & Optional, the CDS doc clause \\ \hline
+    Term & A valid tenor string & The CDS tenor\\ \hline
+  \end{tabular}
+  \caption{CDS upfront price quote}
+  \label{tab:cds_price_quote}
+\end{table}
+
+As noted in the table above, the CDS documentation clause is optional. The following list shows valid CDS upfront price quote examples.
+\begin{itemize}
+\item \lstinline!CDS/PRICE/JPM/SNRFOR/USD/5Y!
+\item \lstinline!CDS/PRICE/JPM/SNRFOR/USD/XR14/5Y!
+\item \lstinline!CDS/PRICE/RBS/SUBLT2/EUR/MR14/10Y!
+\item \lstinline!CDS/PRICE/RBS/SUBLT2/EUR/1Y!
+\end{itemize}
+
+\subsection{CDS Recovery Rate}
+\label{md:cds_recovery_rate_quote}
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \lstinline!RECOVERY_RATE! & \\ \hline
+    Quote Type & \lstinline!RATE! & \\ \hline
+    Entity & String & The CDS reference entity name \\ \hline
+    Tier & String & The CDS tier \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & The CDS currency\\ \hline
+    DocClause & String & Optional, the CDS doc clause \\ \hline
   \end{tabular}
   \caption{CDS Recovery Rate}
   \label{tab:cdsrecovery_quote}
 \end{table}
 
-Example:
+As noted in the table above, the CDS documentation clause is optional. The following list shows valid recovery rate quote examples.
 \begin{itemize}
-\item {RECOVERY\_RATE/RATE/GE/SeniorUnsec/EUR}
+\item \lstinline!RECOVERY_RATE/RATE/JPM/SNRFOR/USD!
+\item \lstinline!RECOVERY_RATE/RATE/JPM/SNRFOR/USD/XR14!
+\item \lstinline!RECOVERY_RATE/RATE/RBS/SUBLT2/EUR/MR14!
+\item \lstinline!RECOVERY_RATE/RATE/RBS/SUBLT2/EUR!
 \end{itemize}
 
 \subsection{CDS Option Implied Volatility}
@@ -849,7 +883,7 @@ Example:
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Cap/Floor Implied Volatility}\label{ss:capfloor_impl_vol_quote}
+\subsection{Cap Floor Implied Volatility}\label{ss:capfloor_impl_vol_quote}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \begin{table}[H]
@@ -858,24 +892,24 @@ Example:
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
     Instrument Type & \emph{CAPFLOOR} & \\ \hline
-    Quote Type & \emph{RATE\_LNVOL} & \\ \hline
-    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Cap/Floor volatility\\ \hline
-    Term & An integer followed by D, W, M or Y & Period from start to expiry \\ \hline
-    IndexTenor & An integer followed by D, W, M or Y & Underlying index tenor \\ \hline
-    Atm & \emph{1, 0} & ATM volatility quote if true (1), otherwise (0) smile quote\\ \hline
-    Relative & \emph{1, 0} & Relative quote (to be added to atm vol) if true (1), otherwise (0) absolute quote\\ \hline
-    Strike & Real number & Strike rate\\ \hline
+    Quote Type & \lstinline!RATE_LNVOL!, \lstinline!RATE_NVOL!, \lstinline!RATE_SLNVOL! & Lognormal quoted volatility, normal quoted volatility, shifted lognormal quoted volatility. \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the cap floor volatility. \\ \hline
+    Term & A valid tenor string & Period from start to cap or floor maturity. \\ \hline
+    IndexTenor & A valid tenor string & Underlying index tenor e.g.\ \lstinline!3M! for \lstinline!EUR-EURIBOR-3M!. \\ \hline
+    ATM & \lstinline!1! or \lstinline!0! & True, i.e.\ \lstinline!1!, for an ATM quote and false, i.e.\ \lstinline!0!, for an absolute strike quote. \\ \hline
+    Relative & \lstinline!1! or \lstinline!0! & Should be set to \lstinline!1! for an ATM quote and to \lstinline!0! for an absolute strike quote. \\ \hline
+    Strike & Real number & Strike of cap or floor. Should be set to \lstinline!0! for an ATM quote. \\ \hline
   \end{tabular}
-  \caption{Cap/Floor Implied Volatility}
+  \caption{Cap floor implied volatility quote}
   \label{tab:capfloor_implvol_quote}
 \end{table}
 
+If a cap floor shift quote needs to be provided, i.e. in the case of a shifted lognormal surface, the quote is of the form \lstinline!CAPFLOOR/SHIFT/Currency/IndexTenor! where the meaning of \lstinline!Currency! and \lstinline!IndexTenor! are given in Table \ref{tab:capfloor_implvol_quote}.
 
-\medskip
-Examples:
+We have the following examples of cap floor implied volatility quotes:
 \begin{itemize}
-\item {CAPFLOOR/RATE\_LNVOL/EUR/10Y/6M/0/0/0.0350} (smile, absolute, strike 3.5\%)
-\item {CAPFLOOR/RATE\_LNVOL/EUR/10Y/6M/1/0/0.0000} (atm, absolute, irrelevant strike)
+\item \lstinline!CAPFLOOR/RATE_LNVOL/EUR/10Y/6M/1/1/0!: 10Y ATM cap floor implied lognormal volatility quote where the index tenor is 6M.
+\item \lstinline!CAPFLOOR/RATE_LNVOL/EUR/10Y/6M/0/0/0.035!: 10Y 3.5\% strike cap floor implied lognormal volatility quote where the index tenor is 6M.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -17,8 +17,10 @@
 */
 
 #include <boost/make_shared.hpp>
-#include <boost/test/data/test_case.hpp>
+// clang-format off
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+// clang-format on
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>

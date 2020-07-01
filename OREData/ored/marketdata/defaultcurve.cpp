@@ -140,6 +140,26 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
         }
     }
 
+    // If the configuration instructs us to imply a default from the market data, we do it here.
+    if (config.implyDefaultFromMarket() && *config.implyDefaultFromMarket()) {
+        if (recoveryRate_ != Null<Real>() && quotes.empty()) {
+            // Assume entity is in default, between event determination date and auction date. Build a survivial 
+            // probability curve with value 0.0 tomorrow to approximate this and allow dependent instruments to price.
+            // Need to use small but positive numbers to avoid downstream issues with log linear survivals e.g. below 
+            // and in places like ScenarioSimMarket.
+            vector<Date> dates{ asof, asof + 1 * Years, asof + 10 * Years };
+            vector<Real> survivalProbs{ 1.0, 1e-16, 1e-18 };
+            curve_ = boost::make_shared<InterpolatedSurvivalProbabilityCurve<LogLinear>>(
+                dates, survivalProbs, config.dayCounter());
+            curve_->enableExtrapolation();
+            WLOG("DefaultCurve: recovery rate found but no CDS quotes for " << config.curveID() << " and " <<
+                "ImplyDefaultFromMarket is true. Curve built that gives default immediately.");
+            return;
+        }
+    } else {
+        QL_REQUIRE(!quotes.empty(), "No market points found for CDS curve config " << config.curveID());
+    }
+
     // Create the CDS instrument helpers
     vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>> helpers;
     if (config.type() == DefaultCurveConfig::Type::SpreadCDS) {
@@ -189,9 +209,22 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     TLOG(io::iso_date(dates.back()) << "," << fixed << setprecision(9) << survivalProbs.back());
     for (Size i = 0; i < helpers.size(); ++i) {
         if (helpers[i]->latestDate() > asof) {
-            dates.push_back(helpers[i]->latestDate());
-            survivalProbs.push_back(tmp->survivalProbability(dates.back()));
-            TLOG(io::iso_date(dates.back()) << "," << fixed << setprecision(9) << survivalProbs.back());
+            
+            Date pillarDate = helpers[i]->latestDate();
+            Probability sp = tmp->survivalProbability(pillarDate);
+            
+            // In some cases the bootstrapped survival probability at one tenor will be `close` to that at a previous 
+            // tenor. Here we don't add that survival probability and date to avoid issues when creating the 
+            // InterpolatedSurvivalProbabilityCurve below.
+            if (!survivalProbs.empty() && close(survivalProbs.back(), sp)) {
+                DLOG("Survival probability for curve " << spec.name() << " at date " << io::iso_date(pillarDate) <<
+                    " is the same as that at previous date " << io::iso_date(dates.back()) << " so skipping it.");
+                continue;
+            }
+
+            dates.push_back(pillarDate);
+            survivalProbs.push_back(sp);
+            TLOG(io::iso_date(pillarDate) << "," << fixed << setprecision(9) << sp);
         }
     }
     QL_REQUIRE(dates.size() >= 2, "Need at least 2 points to build the default curve");
@@ -401,7 +434,12 @@ map<Period, Real> DefaultCurve::getRegexQuotes(string strRegex, const string& co
         }
     }
 
-    QL_REQUIRE(!result.empty(), "No market points found for curve config " << configId);
+    // We don't check for an empty set of CDS quotes here. We check it later because under some circumstances, 
+    // it may be allowable to have no quotes.
+    if (type != DefaultCurveConfig::Type::SpreadCDS && type != DefaultCurveConfig::Type::Price) {
+        QL_REQUIRE(!result.empty(), "No market points found for curve config " << configId);
+    }
+    
     LOG("DefaultCurve " << configId << " loaded and using " << result.size() << " quotes.");
 
     return result;
@@ -426,7 +464,12 @@ map<Period, Real> DefaultCurve::getExplicitQuotes(const vector<pair<string, bool
         }
     }
 
-    QL_REQUIRE(!result.empty(), "No market points found for curve config " << configId);
+    // We don't check for an empty set of CDS quotes here. We check it later because under some circumstances, 
+    // it may be allowable to have no quotes.
+    if (type != DefaultCurveConfig::Type::SpreadCDS && type != DefaultCurveConfig::Type::Price) {
+        QL_REQUIRE(!result.empty(), "No market points found for curve config " << configId);
+    }
+
     LOG("DefaultCurve " << configId << " using " << result.size() << " default quotes of " << quotes.size()
                         << " requested quotes.");
 

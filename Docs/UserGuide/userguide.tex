@@ -120,7 +120,7 @@
 %\date{28 April 2017}
 %\date{7 December 2017}
 %\date{28 May 2019}
-\date{12 June 2020}
+\date{19 June 2020}
 \maketitle
 
 \newpage
@@ -137,7 +137,7 @@ Date & Author & Comment \\
 28 April 2017 & Quaternion  & updates for release 2\\
 7 December 2017 & Quaternion & updates for release 3\\
 20 March 2019 & Quaternion & updates for release 4\\
-12 June 2020 & Quaternion & updates for release 5\\
+19 June 2020 & Quaternion & updates for release 5\\
 \hline
 \end{supertabular}
 \end{center}
@@ -204,7 +204,7 @@ and {\bf derivative value adjustments}
 for portfolios with netting, variation and initial margin agreements. 
 
 \medskip
-The sensitivity framework yields further {\bf market risk measures} such as ORE's parametric Value at Risk which takes deltas, vegas, gammas and cross gammas into account. This may be used to benchmark initial margin models such ISDA'S Standard Initial Margin Model. \\
+The sensitivity framework yields further {\bf market risk measures} such as ORE's parametric Value at Risk which takes deltas, vegas, gammas and cross gammas into account. This may be used to benchmark initial margin models such ISDA's Standard Initial Margin Model. \\
 
 \medskip
 Subsequent ORE releases will also compute {\bf regulatory capital charges} for counterparty credit risk under the new standardised approach (SA-CCR), and the Monte Carlo based market risk measures will be complemented by parametric methods, e.g. for benchmarking various initial margin calculation models applied in cleared and non-cleared derivatives business.
@@ -215,7 +215,7 @@ Subsequent ORE releases will also compute {\bf regulatory capital charges} for c
 %releases from Q1 2017 onwards will extend the derivative product and the risk factor range to Inflation, Credit, Equity
 %and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products
 %(loans and bonds) and related portfolio analytics.
-The product coverage of the fourth release of ORE in March 2018 is sketched in the following table.
+The product coverage of the fifth release of ORE in June 2020 is sketched in the following table.
 \begin{table}[hbt]
 \scriptsize
 \begin{center}
@@ -271,7 +271,7 @@ Future releases will further extend the product range and analytics coverage ind
 \medskip The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em
   Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX/INF/EQ risk factor evolution is based on
 a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates
-and lognormal processes for FX rates and EQ prices, Dodgeson-Kainth models for inflation. The model components are calibrated to cross currency discounting and forward curves, Swaptions, FX Options, EQ Options and CPI caps/floors.
+and lognormal processes for FX rates and EQ prices, Dodgson-Kainth models for inflation. The model components are calibrated to cross currency discounting and forward curves, Swaptions, FX Options, EQ Options and CPI caps/floors.
 
 \subsubsection*{Further Resources}
 \begin{itemize}
@@ -299,7 +299,7 @@ parametrisation and the structure of trade and market data input.
 This section summarises the high level changes between release 4 (May 2019) and 5 (June 2020).
 
 \bigskip
-INSTRMENTS
+INSTRUMENTS
 \begin{itemize}
 \item Add Inflation CPI and YoY Caps/Floors and capped/floored cash flows
 \item Add Forward Bond
@@ -307,6 +307,8 @@ INSTRMENTS
 \item Add reference data manager (handles Bond reference data as concrete example)
 \item Add underlying description (FX, Equity, Commodity)
 \item Add Settlement node to FX Forward, FX Swap and Swap instruments 
+\item Add lockout to overnight coupons
+\item Allow explicit payment dates for cash settled vanilla European options
 \item Extend Equity Swap: legs, equity coupon with FX adjustment, resettable feature,
   quantity vs initial notional
 \item Extend CDS: Allow fixed recovery, front or back stub periods, protection payment
@@ -343,7 +345,7 @@ TERM STRUCTURES
 \item Inflation cap/floor volatility surfaces cleaned up, inflation price surfaces removed
   from the market interface
 \item Equity volatility surface changes, clean up and stripping from option premiums,
-  allow wildcard in strike/expiry config.
+  allow wildcard in strike/expiry config, allow equity volatility surface proxies
 \item Allow optional quotes in curve configurations
 \item New Equity forward curve stripper that allows a dividend yield to be determined from
   equity option premiums
@@ -434,9 +436,9 @@ OTHER
 %========================================================
 
 The core processing steps followed in ORE to produce risk analytics results are sketched in Figure \ref{fig_process}.
-All ORE calculations and output are generated in three fundamental process steps as indicated in the three boxes in the
+All ORE calculations and outputs are generated in three fundamental process steps as indicated in the three boxes in the
 upper part of the figure. In each of these steps appropriate data (described below) is loaded and results are generated,
-either in form of a human readable report, or in an intermediate step as pure data files (e.g. NPV data, exposure data).
+either in the form of a human readable report, or in an intermediate step as pure data files (e.g. NPV data, exposure data).
 \begin{figure}[h]
 \begin{center}
 \includegraphics[scale=0.6]{process.pdf}
@@ -480,7 +482,7 @@ cube data:
 \item computing various XVAs including CVA, DVA, FVA, MVA for all netting sets, with and without taking collateral
   (variation and initial margin) into account, on demand with allocation to the trade level.
 \end{itemize}
-The output of this process step are XVA reports and the 'net' NPV cube, i.e. after aggregation, netting and collateral. \\
+The outputs of this process step are XVA reports and the 'net' NPV cube, i.e. after aggregation, netting and collateral. \\
 
 The example section \ref{sec:examples} demonstrates for representative product types how the described processing steps
 can be combined in a simple batch process which produces the mentioned reports, output files and exposure evolution
@@ -518,6 +520,7 @@ When unpacked, it creates a directory {\tt ORE-<VERSION>} with the following fil
 \item {\tt FrontEnd/}
 \item {\tt OREAnalytics/}
 \item {\tt OREData/}
+\item {\tt ORETest/}
 \item {\tt QuantExt/}
 \item {\tt ThirdPartyLibs/}
 \item {\tt tools/}
@@ -542,7 +545,7 @@ The release bundle does contain the ORE source code, which is sufficient to buil
   installed; QuantLib needs to be located in this project directory {\tt ORE-<VERSION>}. Alternatively, you can create a
   symbolic link named QuantLib here that points to the actual QuantLib directory
 \item Build QuantExt, OREData, OREAnalytics, App (in this order) as described in section \ref{sec:build}
-\item Note that ThirdPartyLibs does not need to be built, it contains RapdidXml, header only code for reading and
+\item Note that ThirdPartyLibs does not need to be built, it contains RapidXml, header only code for reading and
   writing XML files
 \item Move on to section \ref{sec:python} and the examples in section \ref{sec:examples}.
 \end{itemize}
@@ -578,6 +581,12 @@ This will create a folder 'ore' in your current directory that contains the code
 
 \end{enumerate}
 
+Note that one can also run 
+
+{\footnotesize \tt\% git clone --recurse-submodules https://github.com/opensourcerisk/engine.git ore}
+
+in step 2, which also performs the steps in 3.
+
 \subsubsection{Boost}\label{sec:boost}
 
 QuantLib and ORE depend on the boost C++ libraries. Hence these need to be installed before building QuantLib and
@@ -593,8 +602,7 @@ ORE. On all platforms the minimum required boost version is 1\_63 as of ORE rele
 \item 32-bit: \cite{boost-binaries}{\bs}VERSION{\bs}boost\_VERSION-msvc-14.0-32.exe{\bs}download 
 \item 64-bit: \cite{boost-binaries}{\bs}VERSION{\bs}boost\_VERSION-msvc-14.0-64.exe{\bs}download
 \end{itemize}
-\item Start the installation file and choose an installation folder. Take a note of that folder as it will be needed
-  later on.
+\item Start the installation file and choose an installation folder (the ``boost root directory''). Take a note of that folder as it will be needed later on.   
 \item Finish the installation by clicking Next a couple of times.
 \end{enumerate}
     
@@ -647,7 +655,7 @@ C++ support under the Programming Languages features (disabled by default).
   you expand, they all contain the same configuration file. You should now see 'Microsoft.Cpp.Win32.user' respectively
   'Microsoft.Cpp.x64.user' depending on whether you chose a Win32 or a x64 configuration. Click on this file to open the
   property pages. Select VC++ Directories and then add your boost directory to the 'Include Directories' entry. Likewise
-  add your boost library directory to the 'Library Directories' entry. If for example your boost installation is in {\tt
+  add your boost library directory (the directory that contains the *.lib files) to the 'Library Directories' entry. If for example your boost installation is in {\tt
     C:{\bs}boost\_1\_63\_0} and the libraries reside in the {\tt stage{\bs}lib} subfolder, add {\tt
     C:{\bs}boost\_1\_63\_0} to the 'Include Directories' entry and {\tt C:{\bs}boost\_1\_63\_0{\bs}stage{\bs} lib} to the
   'Library Directories' entry. Press OK. 
@@ -763,14 +771,6 @@ Alternatively, set environment variables {\tt BOOST\_ROOT} and {\tt BOOST\_LIBRA
 \medskip
 using four threads in this example.
 \medskip
-%\item Alternatively the individual API documentation for each library can be built by invoking \\
-%\medskip
-%{\tt make doc\_quantext} \\
-%\medskip
-%{\tt make doc\_ored} \\
-%\medskip
-%{\tt make doc\_orea} \\
-%\medskip
 \item Run all test suites by invoking \\
 \medskip
 {\tt ctest -j4}
@@ -900,6 +900,23 @@ To build the wrappers on Windows, Linux, mac OS
 \medskip
 On Linux or mac OS one can also use {\tt make} instead of {\tt ninja}. 
 In that case, omit the {\tt -G Ninja} part in the configuration. 
+
+\medskip
+To build on Windows using CMake and an existing Visual Studio installation you can e.g. run
+this from the top-level oreswig directory
+
+{\footnotesize
+{\tt mkdir build $\backslash$} \\
+{\tt cmake -G "Visual Studio 15 2017" $\backslash$}\\
+\hspace{1cm} {\tt -A x64 $\backslash$}\\
+\hspace{1cm} {\tt -D SWIG\_DIR=C:$\backslash$dev$\backslash$swigwin$\backslash$Lib $\backslash$}\\
+\hspace{1cm} {\tt -D SWIG\_EXECUTABLE=C:$\backslash$dev$\backslash$swigwin$\backslash$swig.exe $\backslash$}\\
+\hspace{1cm} {\tt -D ORE:PATHNAME=C:$\backslash$dev$\backslash$ORE$\backslash$master $\backslash$}\\
+\hspace{1cm} {\tt -D BOOST\_ROOT=C:$\backslash$dev$\backslash$boost $\backslash$}\\
+\hspace{1cm} {\tt -S OREAnalytics-SWIG/Python $\backslash$}\\
+\hspace{1cm} {\tt -B build $\backslash$}\\
+{\tt cmake --build build -v}
+}
 
 \medskip
 By default this builds the OREAnalytics-Python bindings which include the wrapped parts of QuantLib, QuantExt, OREData and OREAnalytics.
@@ -1084,7 +1101,7 @@ File Name & Description \\
 \end{table}
 
 Note: When building ORE from sources on Windows platforms, make sure that you copy your {\tt ore.exe} to the binary
-directory {\tt bin/win32/} respectively {\tt bin/x64/}. Otherwise the examples may be run using the pre-compiled
+directory {\tt App/bin/win32/} respectively {\tt App/bin/x64/}. Otherwise the examples may be run using the pre-compiled
 executables which come with the ORE release.
 
 %--------------------------------------------------------
@@ -1236,7 +1253,7 @@ Swap are shown in figure \ref{fig_4}.
 \end{center}
 \caption{European callable Swap represented as a package consisiting of non-callable Swap and Swaption. The Swaption has
   physical delivery and offsets all future Swap cash flows if exercised. The exposure evolution of the package is shown
-  here as 'EPE NettingSet' (green line). This is covered by the pink line, the exposure evolution of the same Swap but
+  here as 'EPE Netting Set' (green line). This is covered by the pink line, the exposure evolution of the same Swap but
   with maturity on the exercise date. The graphs match perfectly here, because the example Swap is deep in the money and
   exercise probability is close to one. Simulation with 5000 paths and quarterly time steps.}
 \label{fig_4}
@@ -1277,7 +1294,7 @@ Floor and a long Collar that exactly offsets the netted Cap and Floor.
 \end{figure}
 
 Further three test portfolios are provided as part of this example. Run the example and inspect the respective output
-directories {\tt Examples/Example\_7/Output/portfolio\_\#}. Note that these directories have to be present/created
+directories {\tt Examples/Example\_6/Output/portfolio\_\#}. Note that these directories have to be present/created
 before running the batch with {\tt python run.py}.
 
 %--------------------------------------------------------
@@ -1318,6 +1335,7 @@ Recall that the FX Option value $NPV(t)$ as of time $0 \leq t \leq T$ satisfies
 \frac{NPV(t)}{N(t)} &= \mbox{Nominal}\times\E_t\left[\frac{(X(T) - K)^+}{N(T)}\right]\\
 NPV(0) &= \E\left[\frac{NPV(t)}{N(t)}\right] = \E\left[\frac{NPV^+(t)}{N(t)} \right]= \EPE(t) 
 \end{align*}
+where $N(t)$ denotes the numeraire asset.
 One would therefore expect a flat exposure evolution up to option expiry. The deviation from this in ORE's simulation is
 due to the pricing approach chosen here under scenarios. A Black FX option pricer is used with deterministic Black
 volatility derived from today's volatility structure (pushed or rolled forward, see section \ref{sec:sim_market}). The
@@ -4149,11 +4167,10 @@ and {\tt term}) represents a default value that is used whenever no explicit val
  These dates would originally be missing from the calendar and has to be added.The general structure is shown in listing \ref{lst:calendar_adjustment}.
 In this example, two additional dates had been added to the calendar "Japan", one addtional holiday and one additional business day. If the user is not certain
 wether the date is already included or not, adding it to the {\tt calendaradjustment.xml} to be safe won't raise any errors.
-A sample {\tt calendaradjustment.xml} file can be found in the Global example input directory. However, it is only used in Example\_1.
+A sample {\tt calendaradjustment.xml} file can be found in the global example input directory. However, it is only used in Example\_1.
 
 \begin{longlisting}
-%\hrule\medskip
-  \begin{minted}[fontsize=\scriptsize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <CalendarAdjustments>
   <Calendar name="Japan">
     <AdditionalHolidays>
@@ -4163,10 +4180,28 @@ A sample {\tt calendaradjustment.xml} file can be found in the Global example in
       <Date>2020-01-02</Date>
     </AdditionalBusinessDays>
 </CalendarAdjustments>
-  \end{minted}
+\end{minted}
 \caption{Calendar Adjustment}\label{lst:calendar_adjustment}
 \end{longlisting}
 
+If the parameter \lstinline!BaseCalendar! is provided then a new calendar will be created using the specified calendar as a base, and adding any \lstinline!AdditionalHolidays! or \lstinline!AdditionalBusinessDays!. In the example below a new calendar \lstinline!Japan_amended! is being created, it will include any additional holidays or business days specified in the original \lstinline!Japan! calendar plus one additional date.
+
+If a new calendar is added in this way and the schema is being used to validate XML input, the corresponding calendar name must be added to the \lstinline!calendar! type in the file \textit{ore\_types.xsd}.
+
+\begin{longlisting}
+\hrule\medskip
+\begin{minted}[fontsize=\scriptsize]{xml}
+<CalendarAdjustments>
+  <Calendar name="Japan\_amended">
+    <BaseCalendar>Japan</BaseCalendar>
+    <AdditionalHolidays>
+      <Date>2020-04-06</Date>
+    </AdditionalHolidays>
+</CalendarAdjustments>
+\end{minted}
+\caption{Calendar Adjustment creating a new calendar}
+\label{lst:calendar_adjustment_2}
+\end{longlisting}
 
 %--------------------------------------------------------
 \subsection{Curves: {\tt curveconfig.xml}}\label{sec:curveconfig}
@@ -4193,66 +4228,19 @@ configuration determines the composition of
 
 This file also contains other market objects such as FXSpots, Security Spreads and Security Rates which are necessary
 for the construction of a market.
- 
-\include{yieldcurves}
 
-\subsubsection{Default Curves}
+\include{curve_configurations/yieldcurves}
+\include{curve_configurations/default_curves_from_cds}
 
-Listing \ref{lst:defaultcurve_configuration} shows the configuration of Default curves built from CDS spread
-quotes. The \lstinline!BootstrapConfig! node is optional and holds configuration details for the iterative bootstrap 
-that are described in section \ref{sec:bootstrap_config}. Also note - if the \lstinline!Type! is not \lstinline!Benchmark!
-then \lstinline!Quote! elements within the \lstinline!Quotes! node may have an \lstinline!optional! attribute, indicating
-whether or not the quote is optional. Example:
-%\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{xml}
-<Quotes>
-  <Quote optional="true">CDS/CREDIT_SPREAD/BANK/SR/USD/1Y</Quote>
-</Quotes>
-\end{minted}
-%\hrule
+\subsubsection{Default Curves from Yield Curves}
 
-Alternatively default curves can be set up as a difference curve of two yield curves as shown in listing
+Default curves can be set up as a difference curve of two yield curves as shown in listing
 \ref{lst:defaultcurve_configuration_2}. If $P_B(0,t)$ and $P_S(0,t)$ denote the discount factors of the given benchmark
 and source curve respectively the resulting default term structures has survival probabilities
 
 $$S(0,t) = P_S(0,t) / P_B(0,t)$$
 
 on the given pillars, and w.r.t. a a zero recovery rate. The interpolation is backward flat in the hazard rate.
-
-\begin{longlisting}
-%\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{xml}
-<DefaultCurves>
-  <DefaultCurve>
-    <CurveId>BANK_SR_USD</CurveId>
-    <CurveDescription>BANK SR CDS USD</CurveDescription>
-    <Currency>USD</Currency> 
-    <Type>SpreadCDS</Type>
-    <DiscountCurve>Yield/USD/USD3M</DiscountCurve>
-    <DayCounter>A365</DayCounter>
-    <RecoveryRate>RECOVERY_RATE/RATE/BANK/SR/USD</RecoveryRate>
-    <Quotes>
-      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/1Y</Quote>
-      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/2Y</Quote>
-      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/3Y</Quote>
-      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/4Y</Quote>
-      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/5Y</Quote>
-      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/7Y</Quote>
-      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/10Y</Quote>
-    </Quotes>
-    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
-    <BootstrapConfig>
-      ...
-    </BootstrapConfig>
-  </DefaultCurve>
-  <DefaultCurve>
-  ...
-  </DefaultCurve>
-</DefaultCurves>
-\end{minted}
-\caption{Default curve configuration based on CDS quotes}
-\label{lst:defaultcurve_configuration}
-\end{longlisting}
 
 \begin{longlisting}
 %\hrule\medskip
@@ -4338,54 +4326,7 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
 	\end{itemize}
 \end{itemize}
 
-\subsubsection{Cap/Floor Volatility Structures}
-
-Listing \ref{lst:capfloorvol_configuration} shows the configuration of Cap/Floor volatility structures.
-
-The \lstinline!BootstrapConfig! node is optional and holds configuration details for the iterative bootstrap 
-that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described 
-in section \ref{sec:bootstrap_config} are used.
-
-\begin{longlisting}
-%\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{xml}
-  <CapFloorVolatilities>
-    <CapFloorVolatility>
-      <CurveId>EUR_CF_N</CurveId>
-      <CurveDescription>EUR normal cap floor volatilities</CurveDescription>
-      <!-- Normal, Lognormal or ShiftedLognormal -->
-      <VolatilityType>Normal</VolatilityType>
-      <!-- Linear, Flat, None -->
-      <Extrapolation>Linear</Extrapolation>
-      <!-- Bilinear, BicubicSpline -->
-      <InterpolationMethod>Bilinear</InterpolationMethod>
-       <!-- Include ATM vol quotes also: True or False -->
-      <IncludeAtm>FALSE</IncludeAtm>
-      <!-- Day counter for date to time conversion -->
-      <DayCounter>Actual/365 (Fixed)</DayCounter>
-      <!--Calendar and Business day convention for cap/floor term to date conversion -->
-      <Calendar>TARGET</Calendar>
-      <BusinessDayConvention>Following</BusinessDayConvention>
-      <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Tenors>
-      <Strikes>-0.01,0.0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1</Strikes>
-      <IborIndex>EUR-EURIBOR-6M</IborIndex>
-      <DiscountCurve>Yield/EUR/EUR1D</DiscountCurve>
-      <!-- OptionletVolatilities, TermVolatilities -->
-      <InterpolateOn>OptionletVolatilities</InterpolateOn>
-      <!-- Linear, LinearFlat, BackwardFlat, Cubic, CubicFlat -->
-      <TimeInterpolation>LinearFlat</TimeInterpolation>
-      <!-- Linear, LinearFlat, BackwardFlat, Cubic, CubicFlat -->
-      <StrikeInterpolation>LinearFlat</StrikeInterpolation>
-      <BootstrapConfig>
-        ...
-      </BootstrapConfig>
-    </CapFloorVolatility>
-    ...
-  </CapFloorVolatilities>
-\end{minted}
-\caption{Cap/Floor volatility configuration}
-\label{lst:capfloorvol_configuration}
-\end{longlisting}
+\include{curve_configurations/capfloorvolatility}
 
 \subsubsection{FX Volatility Structures}
 

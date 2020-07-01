@@ -17,8 +17,10 @@
 */
 
 #include <boost/assign.hpp>
-#include <boost/test/data/test_case.hpp>
+// clang-format off
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+// clang-format on
 #include <boost/variant.hpp>
 
 #include <test/capfloormarketdata.hpp>

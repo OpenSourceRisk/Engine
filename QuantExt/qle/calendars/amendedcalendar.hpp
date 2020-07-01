@@ -16,44 +16,39 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file largejointcalendar.hpp
-    \brief Joint calendar
+/*! \file amendedcalendar.hpp
+    \brief Amended calendar
 */
 
-#ifndef quantext_large_joint_calendar_h
-#define quantext_large_joint_calendar_h
+#ifndef quantext_amended_calendar_h
+#define quantext_amended_calendar_h
 
 #include <ql/time/calendar.hpp>
 #include <ql/time/calendars/jointcalendar.hpp>
 
 namespace QuantExt {
 
-//! Large Joint calendar
-/*! Similar to QuantLib's "JointCalendar" but allows a larger number of
-    underlying calendars.
-
+//! Amended calendar
+/*! Any added or removed dates do not affect other implementations of this calendar.
     \ingroup calendars
 
-    \test the correctness of the returned results is tested by
-          reproducing the calculations.
 */
-class LargeJointCalendar : public QuantLib::Calendar {
+class AmendedCalendar : public QuantLib::Calendar {
 private:
     class Impl : public Calendar::Impl {
     public:
-        Impl(const std::vector<QuantLib::Calendar>& calendar, QuantLib::JointCalendarRule rule);
+        Impl(const QuantLib::Calendar& calendar, const std::string& name);
         std::string name() const;
         bool isWeekend(QuantLib::Weekday) const;
         bool isBusinessDay(const QuantLib::Date&) const;
 
     private:
-        QuantLib::JointCalendarRule rule_;
-        std::vector<QuantLib::Calendar> calendars_;
+        std::string name_;
+        QuantLib::Calendar baseCalendar_;
     };
 
 public:
-    explicit LargeJointCalendar(const std::vector<QuantLib::Calendar>&,
-                                QuantLib::JointCalendarRule = QuantLib::JoinHolidays);
+    AmendedCalendar(const QuantLib::Calendar&, const std::string& name);
 };
 
 } // namespace QuantExt

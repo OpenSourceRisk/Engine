@@ -5,6 +5,7 @@
 #include <qle/auto_link.hpp>
 #endif
 
+#include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/austria.hpp>
 #include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>
@@ -76,6 +77,7 @@
 #include <qle/indexes/ibor/idridrfix.hpp>
 #include <qle/indexes/ibor/idrjibor.hpp>
 #include <qle/indexes/ibor/ilstelbor.hpp>
+#include <qle/indexes/ibor/inrmiborois.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
 #include <qle/indexes/ibor/krwcd.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
