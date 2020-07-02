@@ -923,7 +923,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
                         scenario->add(key, shiftedValues[k][l]);
 
                         // Possibly store valid shift size
-                        if (validShiftSize && up && j == l && k == 0) {
+                        if (validShiftSize && up && j == l && k == strikeBucket) {
                             shiftSizes_[key] = shiftedValues[k][l] - values[k][l];
                         }
                     }
