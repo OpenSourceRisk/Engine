@@ -161,7 +161,6 @@ void TodaysMarket::initialise(const Date& asof) {
     map<string, string> buildErrors;
 
     for (const auto& configuration : params_.configurations()) {
-        LOG("Build dependency graph for TodaysMarket configuration " << configuration.first);
         // Build the graph of objects to build for the current configuration
         buildDependencyGraph(configuration.first, buildErrors);
         // set the fx spots before building the other market objects
@@ -241,7 +240,7 @@ void TodaysMarket::initialise(const Date& asof) {
 void TodaysMarket::buildDependencyGraph(const std::string& configuration,
                                         std::map<std::string, std::string>& buildErrors) {
 
-    DLOG("Build Dependency Graph for configuration " << configuration);
+    LOG("Build dependency graph for TodaysMarket configuration " << configuration);
 
     Graph& g = dependencies_[configuration];
     IndexMap index = boost::get(boost::vertex_index, g);
