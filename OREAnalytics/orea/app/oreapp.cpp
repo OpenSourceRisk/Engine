@@ -283,7 +283,7 @@ void OREApp::readSetup() {
 
     lazyMarketBuilding_ = false;
     if (params_->has("setup", "lazyMarketBuilding"))
-        continueOnError_ = parseBool(params_->get("setup", "lazyMarketBuilding"));
+        lazyMarketBuilding_ = parseBool(params_->get("setup", "lazyMarketBuilding"));
 }
 
 void OREApp::setupLog() {
