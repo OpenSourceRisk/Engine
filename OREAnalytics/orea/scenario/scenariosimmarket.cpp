@@ -1134,7 +1134,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         for (Size i = 0; i < n; i++) {
                                             Real mon = strikes[i];
                                             // strike
-                                            Real k = spot * mon;
+                                            Real k = spot->value() * mon;
                                         
                                             Size idx = i * m + j;
                                             Volatility vol = wrapper->blackVol(asof_ + expiries[j], k);
