@@ -73,10 +73,11 @@ void TradeFactory::addExtraBuilders(std::map<string, boost::shared_ptr<AbstractT
 
 boost::shared_ptr<Trade> TradeFactory::build(const string& className) const {
     auto it = builders_.find(className);
-    if (it == builders_.end())
-        return boost::shared_ptr<Trade>();
-    else
-        return it->second->build();
+
+    if (it == builders_.end()) {
+        return boost::shared_ptr<Trade>();}
+    else {
+        return it->second->build();}
 }
 
 } // namespace data
