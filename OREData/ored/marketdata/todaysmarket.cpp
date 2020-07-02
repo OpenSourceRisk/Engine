@@ -1053,7 +1053,7 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
 
     DfsVisitor<Vertex> dfs(order);
     auto colorMap = boost::make_vector_property_map<boost::default_color_type>(index);
-    boost::depth_first_search(g, dfs, colorMap, node);
+    boost::depth_first_visit(g, node, dfs, colorMap);
 
     if (dfs.foundCycle) {
         order.clear();
