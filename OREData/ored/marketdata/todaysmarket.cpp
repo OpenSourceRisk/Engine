@@ -94,7 +94,7 @@ template <typename Vertex> struct DfsVisitor : public boost::default_dfs_visitor
     DfsVisitor(std::vector<Vertex>& order) : order_(order) {}
     template <typename Graph> void finish_vertex(Vertex u, const Graph& g) { order_.push_back(u); }
     template <typename Edge, typename Graph> void back_edge(Edge e, const Graph& g) { foundCycle = true; }
-    std::vector<Vertex> order_;
+    std::vector<Vertex>& order_;
     bool foundCycle = false;
 };
 
