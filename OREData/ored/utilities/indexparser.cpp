@@ -81,6 +81,7 @@
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/secpi.hpp>
+#include <qle/indexes/escpi.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -437,7 +438,9 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
         {"ZA CPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()},
         {"SECPI", boost::make_shared<ZeroInflationIndexParser<SECPI>>()},
         {"DKCPI", boost::make_shared<ZeroInflationIndexParser<DKCPI>>()},
-        {"CACPI", boost::make_shared<ZeroInflationIndexParser<CACPI>>()}};
+        {"CACPI", boost::make_shared<ZeroInflationIndexParser<CACPI>>()},
+        {"ESCPI", boost::make_shared<ZeroInflationIndexParser<ESCPI>>()},
+    };
 
     auto it = m.find(s);
     if (it != m.end()) {

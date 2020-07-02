@@ -16,25 +16,27 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/errors.hpp>
-#include <qle/calendars/amendedcalendar.hpp>
-#include <sstream>
+/*! \file escpi.hpp
+    \brief Spain CPI index
+*/
 
-using namespace QuantLib;
+#ifndef quantext_escpi_hpp
+#define quantext_escpi_hpp
+
+#include <ql/currencies/europe.hpp>
+#include <ql/indexes/inflationindex.hpp>
+#include <qle/indexes/region.hpp>
 
 namespace QuantExt {
 
-std::string AmendedCalendar::Impl::name() const { return name_; }
-
-bool AmendedCalendar::Impl::isWeekend(Weekday w) const { return baseCalendar_.isWeekend(w); }
-
-bool AmendedCalendar::Impl::isBusinessDay(const Date& date) const { return baseCalendar_.isBusinessDay(date); }
-
-AmendedCalendar::Impl::Impl(const QuantLib::Calendar& calendar, const std::string& name)
-    : name_(name), baseCalendar_(calendar) {}
-
-AmendedCalendar::AmendedCalendar(const QuantLib::Calendar& calendar, const std::string& name) {
-    impl_ = ext::shared_ptr<Calendar::Impl>(new AmendedCalendar::Impl(calendar, name));
-}
+//! Spain CPI index
+class ESCPI : public ZeroInflationIndex {
+public:
+    ESCPI(bool interpolated, const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>())
+        : ZeroInflationIndex("CPI", SpainRegion(), false, interpolated, Monthly, Period(1, Months), // availability
+                             EURCurrency(), ts) {}
+};
 
 } // namespace QuantExt
+
+#endif
