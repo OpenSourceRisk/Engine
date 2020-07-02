@@ -263,6 +263,38 @@
           }
         ]
       },
+      "*rawcube*": {
+        "keys": [
+          "Id",
+          "NettingSet",
+          "DateIndex",
+          "Date",
+          "Sample",
+          "Depth"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Value"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": null
+          }
+        ]
+      },
+      "*scenariodump*": {
+        "keys": [
+          "Date",
+          "Scenario"
+        ],
+        "column_settings": [
+          {
+            "names": [],
+            "abs_tol": 0.0000000001,
+            "rel_tol": null
+          }
+        ]
+      },
       "*sensitivity*": {
         "keys": [
           "TradeId",
