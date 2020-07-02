@@ -1131,11 +1131,10 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                                 if (parameters->equityUseMoneyness(name)) { // moneyness surface
                                     for (Size j = 0; j < m; j++) {
-                                        auto eqForward = eqCurve->fixing(dates[j]);
                                         for (Size i = 0; i < n; i++) {
                                             Real mon = strikes[i];
                                             // strike
-                                            Real k = eqForward * mon;
+                                            Real k = spot->value() * mon;
                                         
                                             Size idx = i * m + j;
                                             Volatility vol = wrapper->blackVol(asof_ + expiries[j], k);
