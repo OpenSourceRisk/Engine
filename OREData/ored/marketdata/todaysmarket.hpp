@@ -76,25 +76,6 @@ class CorrelationCurve;
  */
 class TodaysMarket : public MarketImpl {
 public:
-    /*! Constructor taking references. This ctor is deprecated, use the second ctor taking pointers instead.
-        TODO remove this ctor and use the second ctor everywhere, remove the member reference variables */
-    TodaysMarket( //! Valuation date
-        const Date& asof,
-        //! Description of the market composition
-        const TodaysMarketParameters& params,
-        //! Market data loader
-        const Loader& loader,
-        //! Description of curve compositions
-        const CurveConfigurations& curveConfigs,
-        //! Repository of market conventions
-        const Conventions& conventions,
-        //! Continue even if build errors occur
-        const bool continueOnError = false,
-        //! Optional Load Fixings
-        const bool loadFixings = true,
-        //! Optional reference data manager, needed to build fitted bond curves
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
-
     //! Constructor taking pointers and allowing for a lazy build of the market objects
     TodaysMarket( //! Valuation date
         const Date& asof,
@@ -112,6 +93,25 @@ public:
         const bool loadFixings = true,
         //! If yes, build market objects lazily
         const bool lazyBuild = false,
+        //! Optional reference data manager, needed to build fitted bond curves
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
+
+    /*! Constructor taking references. This ctor is deprecated, use the second ctor taking pointers instead.
+        TODO remove this ctor, remove the member reference variables */
+    TodaysMarket( //! Valuation date
+        const Date& asof,
+        //! Description of the market composition
+        const TodaysMarketParameters& params,
+        //! Market data loader
+        const Loader& loader,
+        //! Description of curve compositions
+        const CurveConfigurations& curveConfigs,
+        //! Repository of market conventions
+        const Conventions& conventions,
+        //! Continue even if build errors occur
+        const bool continueOnError = false,
+        //! Optional Load Fixings
+        const bool loadFixings = true,
         //! Optional reference data manager, needed to build fitted bond curves
         const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
 
@@ -171,7 +171,7 @@ private:
 
     // fx triangulation initially built using all fx spot quotes from the loader; this is provided to
     // curve builders that require fx spots (e.g. xccy discount curves)
-    FXTriangulation fxT_;
+    mutable FXTriangulation fxT_;
 
     // cached market objects, the key of the maps is the curve spec name, except for swap indices, see below
     mutable map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
@@ -193,6 +193,9 @@ private:
     mutable map<string, boost::shared_ptr<CorrelationCurve>> requiredCorrelationCurves_;
     // for swap indices we map the configuration name to a map (swap index name => index)
     mutable map<string, map<string, boost::shared_ptr<SwapIndex>>> requiredSwapIndices_;
+
+    // if true no require() calls are processed
+    mutable bool freezeRequireProcessing_ = false;
 };
 
 std::ostream& operator<<(std::ostream& o, const TodaysMarket::Node& n);

@@ -91,12 +91,28 @@ template <typename Graph> string getCycles(const Graph& g) {
 
 //! Helper class to find the dependend nodes from a given start node and a topological order for them
 template <typename Vertex> struct DfsVisitor : public boost::default_dfs_visitor {
-    DfsVisitor(std::vector<Vertex>& order) : order_(order) {}
+    DfsVisitor(std::vector<Vertex>& order, bool& foundCycle) : order_(order), foundCycle_(foundCycle) {}
     template <typename Graph> void finish_vertex(Vertex u, const Graph& g) { order_.push_back(u); }
-    template <typename Edge, typename Graph> void back_edge(Edge e, const Graph& g) { foundCycle = true; }
+    template <typename Edge, typename Graph> void back_edge(Edge e, const Graph& g) { foundCycle_ = true; }
     std::vector<Vertex>& order_;
-    bool foundCycle = false;
+    bool& foundCycle_;
 };
+
+//! Helper function to get the two tokens in a correlation name Index2:Index1
+std::vector<std::string> getCorrelationTokens(const std::string& name) {
+    // Look for & first as it avoids collisions with : which can be used in an index name
+    // if it is not there we fall back on the old behaviour
+    string delim;
+    if (name.find('&') != std::string::npos)
+        delim = "&";
+    else
+        delim = "/:";
+    vector<string> tokens;
+    boost::split(tokens, name, boost::is_any_of(delim));
+    QL_REQUIRE(tokens.size() == 2,
+               "invalid correlation name '" << name << "', expected Index2:Index1 or Index2/Index1 or Index2&Index1");
+    return tokens;
+}
 
 } // namespace
 
@@ -163,8 +179,18 @@ void TodaysMarket::initialise(const Date& asof) {
     for (const auto& configuration : params_.configurations()) {
         // Build the graph of objects to build for the current configuration
         buildDependencyGraph(configuration.first, buildErrors);
-        // set the fx spots before building the other market objects
-        fxSpots_[configuration.first] = fxT_;
+    }
+
+    // build the fx spots in all configurations upfront (managing dependencies would be messy due to triangulation)
+
+    for (const auto& configuration : params_.configurations()) {
+        Graph& g = dependencies_[configuration.first];
+        VertexIterator v, vend;
+        for (std::tie(v, vend) = boost::vertices(g); v != vend; ++v) {
+            if (g[*v].obj == MarketObject::FXSpot) {
+                buildNode(configuration.first, g[*v]);
+            }
+        }
     }
 
     // if market is not build lazily, sort the dependency graph and build the objects
@@ -523,6 +549,17 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
     if (node.built)
         return;
 
+    // Within this function we somtimes call market interface methods like swapIndex() or iborIndex() to get an
+    // already built object. We disable the processing of require() calls for the scope of this function, since
+    // a) we know that these objects are alrady built and
+    // b) we would cause an infinite recursion with these nested calls
+
+    struct FreezeRequireProcessing {
+        FreezeRequireProcessing(bool& flag) : flag_(flag) { flag_ = true; }
+        ~FreezeRequireProcessing() { flag_ = false; }
+        bool& flag_;
+    } freezer(freezeRequireProcessing_);
+
     if (node.curveSpec == nullptr) {
 
         // not spec-based node, this can only be a SwapIndexCurve
@@ -588,7 +625,17 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
 
         // FX Spot
         case CurveSpec::CurveType::FX: {
-            // nothing to do, we have build all fx spots already above
+            boost::shared_ptr<FXSpotSpec> fxspec = boost::dynamic_pointer_cast<FXSpotSpec>(spec);
+            QL_REQUIRE(fxspec, "Failed to convert spec " << *spec << " to fx spot spec");
+            auto itr = requiredFxSpots_.find(fxspec->name());
+            if (itr == requiredFxSpots_.end()) {
+                DLOG("Building FXSpot for asof " << asof_);
+                boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof_, *fxspec, fxT_);
+                itr = requiredFxSpots_.insert(make_pair(fxspec->name(), fxSpot)).first;
+                fxT_.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3), itr->second->handle());
+            }
+            LOG("Adding FXSpot (" << node.name << ") with spec " << *fxspec << " to configuration " << configuration);
+            fxSpots_[configuration].addQuote(node.name, itr->second->handle());
             break;
         }
 
@@ -973,16 +1020,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
 
             DLOG("Adding CorrelationCurve (" << node.name << ") with spec " << *corrspec << " to configuration "
                                              << configuration);
-
-            // Look for & first as it avoids collisions with : which can be used in an index name
-            // if it is not there we fall back on the old behaviour
-            string delim;
-            if (node.name.find('&') != std::string::npos)
-                delim = "&";
-            else
-                delim = "/:";
-            vector<string> tokens;
-            boost::split(tokens, node.name, boost::is_any_of(delim));
+            auto tokens = getCorrelationTokens(node.name);
             QL_REQUIRE(tokens.size() == 2, "Invalid correlation spec " << node.name);
             correlationCurves_[make_tuple(configuration, tokens[0], tokens[1])] =
                 Handle<QuantExt::CorrelationTermStructure>(itr->second->corrTermStructure());
@@ -1001,35 +1039,50 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
 
 void TodaysMarket::require(const MarketObject o, const string& name, const string& configuration) const {
 
-    // if the market is not lazily built, there is nothing to do
+    // if the market is not lazily built or the require processing is freezed, there is nothing to do
 
-    if (!lazyBuild_)
+    if (!lazyBuild_ || freezeRequireProcessing_)
         return;
 
     // search the node (o, name) in the dependency graph
 
-    DLOG("market object " << o << "(" << name << ") required for configuration " << configuration);
+    DLOG("market object " << o << "(" << name << ") required for configuration '" << configuration << "'");
 
     auto tmp = dependencies_.find(configuration);
     if (tmp == dependencies_.end()) {
-        DLOG("configuration " << configuration << " not known, do nothing.");
-        return;
+        if (configuration != Market::defaultConfiguration) {
+            ALOG(StructuredCurveErrorMessage(ore::data::to_string(o) + "(" + name + ")", "Failed to Build Curve",
+                                             "Configuration '" + configuration +
+                                                 "' not known, retry with default configuration."));
+            require(o, name, Market::defaultConfiguration);
+            return;
+        } else {
+            ALOG(StructuredCurveErrorMessage(ore::data::to_string(o) + "(" + name + ")", "Failed to Build Curve",
+                                             "Configuration 'default' not known, this is unexpected. Do nothing."));
+            return;
+        }
     }
+
+    Vertex node;
 
     Graph& g = tmp->second;
     IndexMap index = boost::get(boost::vertex_index, g);
 
-    Vertex node;
-
     VertexIterator v, vend;
     bool found = false;
     for (std::tie(v, vend) = boost::vertices(g); v != vend; ++v) {
-        if (g[*v].obj == o && g[*v].name == name) {
-            found = true;
-            node = *v;
+        if (g[*v].obj == o) {
+            if (o == MarketObject::Correlation) {
+                // split the required name and the node name and compare the tokens
+                found = getCorrelationTokens(name) == getCorrelationTokens(g[*v].name);
+            } else {
+                found = (g[*v].name == name);
+            }
+            if (found) {
+                node = *v;
+                break;
+            }
         }
-        if (found)
-            break;
     }
 
     // if we did not find a node, we retry with the default configuration, as required by the interface
@@ -1037,6 +1090,7 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
     if (!found && configuration != Market::defaultConfiguration) {
         DLOG("not found, retry with default configuration");
         require(o, name, Market::defaultConfiguration);
+        return;
     }
 
     // if we still have no node, we do nothing, the error handling is done in MarketImpl
@@ -1046,16 +1100,23 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
         return;
     }
 
+    // if the node is already built, we are done
+
+    if (g[node].built) {
+        DLOG("node already built, do nothing.");
+    }
+
     // run a DFS from the found node to identify the required nodes to be built and get a possible order to do this
 
     map<string, string> buildErrors;
     std::vector<Vertex> order;
+    bool foundCycle = false;
 
-    DfsVisitor<Vertex> dfs(order);
+    DfsVisitor<Vertex> dfs(order, foundCycle);
     auto colorMap = boost::make_vector_property_map<boost::default_color_type>(index);
     boost::depth_first_visit(g, node, dfs, colorMap);
 
-    if (dfs.foundCycle) {
+    if (foundCycle) {
         order.clear();
         buildErrors[g[node].curveSpec ? g[node].curveSpec->name() : g[node].name] = "found cycle";
     }

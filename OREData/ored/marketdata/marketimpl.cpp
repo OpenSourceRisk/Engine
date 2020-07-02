@@ -44,8 +44,8 @@ A lookup(const B& map, const C& key, const string& configuration, const string& 
     if (it == map.end()) {
         // fall back to default configuration
         it = map.find(make_pair(Market::defaultConfiguration, key));
-        QL_REQUIRE(it != map.end(),
-                   "did not find object " << key << " of type " << type << " under configuration " << configuration);
+        QL_REQUIRE(it != map.end(), "did not find object " << key << " of type " << type << " under configuration '"
+                                                           << configuration << "' or 'default'");
     }
     return it->second;
 }
@@ -56,8 +56,8 @@ A lookup(const B& map, const C& key, const YieldCurveType y, const string& confi
     if (it == map.end()) {
         // fall back to default configuration
         it = map.find(make_tuple(Market::defaultConfiguration, y, key));
-        QL_REQUIRE(it != map.end(), "did not find object " << key << " of type " << type << " under configuration "
-                                                           << configuration << " in YieldCurves");
+        QL_REQUIRE(it != map.end(), "did not find object " << key << " of type " << type << " under configuration '"
+                                                           << configuration << "' or 'default' in YieldCurves");
     }
     return it->second;
 }
@@ -134,8 +134,8 @@ Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configurat
     auto it = fxSpots_.find(configuration);
     if (it == fxSpots_.end())
         it = fxSpots_.find(Market::defaultConfiguration);
-    QL_REQUIRE(it != fxSpots_.end(),
-               "did not find object " << ccypair << " of type fx spot under configuration " << configuration);
+    QL_REQUIRE(it != fxSpots_.end(), "did not find object " << ccypair << " of type fx spot under configuration '"
+                                                            << configuration << "' or 'default'");
     return it->second.getQuote(ccypair); // will throw if not found
 }
 
