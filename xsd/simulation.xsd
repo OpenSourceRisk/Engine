@@ -658,15 +658,15 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
-			<xs:element name="Expiries" maxOccurs="unbounded" minOccurs="0">
-			  <xs:complexType>
-			    <xs:simpleContent>
-			  	  <xs:extension base="xs:string">
-				    <xs:attribute name="name" type="xs:string" use="optional"/>
-				  </xs:extension>
-			    </xs:simpleContent>
-			</xs:complexType>
-		    </xs:element>
+            <xs:element name="Expiries" maxOccurs="unbounded" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="name" type="xs:string" use="optional"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
             <xs:element name="Surface" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
@@ -680,7 +680,7 @@
                       </xs:simpleContent>
                     </xs:complexType>
                   </xs:element>
-				  <xs:element name="StandardDeviations" maxOccurs="unbounded" minOccurs="0">
+                  <xs:element name="StandardDeviations" maxOccurs="unbounded" minOccurs="0">
                     <xs:complexType>
                       <xs:simpleContent>
                         <xs:extension base="xs:string">
@@ -707,7 +707,7 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
-		  </xs:sequence>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="BenchmarkCurves" minOccurs="0" maxOccurs="1">
