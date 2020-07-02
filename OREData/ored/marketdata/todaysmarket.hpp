@@ -110,12 +110,15 @@ public:
         const bool continueOnError = false,
         //! Optional Load Fixings
         const bool loadFixings = true,
-        //! Optional reference data manager, needed to build fitted bond curves
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         //! If yes, build market objects lazily
-        const bool lazyBuild = false);
+        const bool lazyBuild = false,
+        //! Optional reference data manager, needed to build fitted bond curves
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
 
 private:
+    // MarketImpl interface
+    void require(const MarketObject o, const string& name, const string& configuration) const override;
+
     // input parameters
 
     // only populated in ctor taking pointers
@@ -131,10 +134,11 @@ private:
 
     const bool continueOnError_;
     const bool loadFixings_;
+    const bool lazyBuild_;
     const boost::shared_ptr<ReferenceDataManager> referenceData_;
 
     // initialise market
-    void initialise(const Date& asof, const bool lazyBuild);
+    void initialise(const Date& asof);
 
     // build a graph whose vertices represent the market objects to build (DiscountCurve, IndexCurve, EquityVol, ...)
     // and an edge from x to y means that x must be built before y, since y depends on it. */
@@ -146,7 +150,7 @@ private:
         std::string name;                       // the LHS of the todays market mapping
         std::string mapping;                    // the RHS of the todays market mapping
         boost::shared_ptr<CurveSpec> curveSpec; // the parsed curve spec, if applicable, null otherwise
-        bool built;                             // true if we have build this node
+        bool built;                             // true if we have built this node
     };
     friend std::ostream& operator<<(std::ostream& o, const Node& n);
 
@@ -154,44 +158,41 @@ private:
     using Graph = boost::directed_graph<Node>;
     using IndexMap = boost::property_map<Graph, boost::vertex_index_t>::type;
     using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
-    using Edge = boost::graph_traits<Graph>::edge_descriptor;
+    // using Edge = boost::graph_traits<Graph>::edge_descriptor;
     using VertexIterator = boost::graph_traits<Graph>::vertex_iterator;
-    using InEdgeIterator = boost::graph_traits<Graph>::in_edge_iterator;
-    using OutEdgeIterator = boost::graph_traits<Graph>::out_edge_iterator;
+    // using InEdgeIterator = boost::graph_traits<Graph>::in_edge_iterator;
+    // using OutEdgeIterator = boost::graph_traits<Graph>::out_edge_iterator;
 
     // the dependency graphs for each configuration
-    std::map<std::string, Graph> dependencies_;
-
-    // a topological order for the dependency graphs per configuration
-    std::map<std::string, std::vector<Vertex>> order_;
+    mutable std::map<std::string, Graph> dependencies_;
 
     // build a single market object
-    void buildNode(const std::string& configuration, const Node& node);
+    void buildNode(const std::string& configuration, const Node& node) const;
 
     // fx triangulation initially built using all fx spot quotes from the loader; this is provided to
     // curve builders that require fx spots (e.g. xccy discount curves)
     FXTriangulation fxT_;
 
     // cached market objects, the key of the maps is the curve spec name, except for swap indices, see below
-    map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
-    map<string, boost::shared_ptr<FXSpot>> requiredFxSpots_;
-    map<string, boost::shared_ptr<FXVolCurve>> requiredFxVolCurves_;
-    map<string, boost::shared_ptr<SwaptionVolCurve>> requiredSwaptionVolCurves_;
-    map<string, boost::shared_ptr<YieldVolCurve>> requiredYieldVolCurves_;
-    map<string, boost::shared_ptr<CapFloorVolCurve>> requiredCapFloorVolCurves_;
-    map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
-    map<string, boost::shared_ptr<CDSVolCurve>> requiredCDSVolCurves_;
-    map<string, boost::shared_ptr<BaseCorrelationCurve>> requiredBaseCorrelationCurves_;
-    map<string, boost::shared_ptr<InflationCurve>> requiredInflationCurves_;
-    map<string, boost::shared_ptr<InflationCapFloorVolCurve>> requiredInflationCapFloorVolCurves_;
-    map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves_;
-    map<string, boost::shared_ptr<EquityVolCurve>> requiredEquityVolCurves_;
-    map<string, boost::shared_ptr<Security>> requiredSecurities_;
-    map<string, boost::shared_ptr<CommodityCurve>> requiredCommodityCurves_;
-    map<string, boost::shared_ptr<CommodityVolCurve>> requiredCommodityVolCurves_;
-    map<string, boost::shared_ptr<CorrelationCurve>> requiredCorrelationCurves_;
+    mutable map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
+    mutable map<string, boost::shared_ptr<FXSpot>> requiredFxSpots_;
+    mutable map<string, boost::shared_ptr<FXVolCurve>> requiredFxVolCurves_;
+    mutable map<string, boost::shared_ptr<SwaptionVolCurve>> requiredSwaptionVolCurves_;
+    mutable map<string, boost::shared_ptr<YieldVolCurve>> requiredYieldVolCurves_;
+    mutable map<string, boost::shared_ptr<CapFloorVolCurve>> requiredCapFloorVolCurves_;
+    mutable map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
+    mutable map<string, boost::shared_ptr<CDSVolCurve>> requiredCDSVolCurves_;
+    mutable map<string, boost::shared_ptr<BaseCorrelationCurve>> requiredBaseCorrelationCurves_;
+    mutable map<string, boost::shared_ptr<InflationCurve>> requiredInflationCurves_;
+    mutable map<string, boost::shared_ptr<InflationCapFloorVolCurve>> requiredInflationCapFloorVolCurves_;
+    mutable map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves_;
+    mutable map<string, boost::shared_ptr<EquityVolCurve>> requiredEquityVolCurves_;
+    mutable map<string, boost::shared_ptr<Security>> requiredSecurities_;
+    mutable map<string, boost::shared_ptr<CommodityCurve>> requiredCommodityCurves_;
+    mutable map<string, boost::shared_ptr<CommodityVolCurve>> requiredCommodityVolCurves_;
+    mutable map<string, boost::shared_ptr<CorrelationCurve>> requiredCorrelationCurves_;
     // for swap indices we map the configuration name to a map (swap index name => index)
-    map<string, map<string, boost::shared_ptr<SwapIndex>>> requiredSwapIndices_;
+    mutable map<string, map<string, boost::shared_ptr<SwapIndex>>> requiredSwapIndices_;
 };
 
 std::ostream& operator<<(std::ostream& o, const TodaysMarket::Node& n);

@@ -49,6 +49,7 @@
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 
+#include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/directed_graph.hpp>
 #include <boost/graph/tiernan_all_cycles.hpp>
 #include <boost/graph/topological_sort.hpp>
@@ -66,6 +67,7 @@ namespace ore {
 namespace data {
 
 namespace {
+
 //! Helper class to output cycles in the dependency graph
 template <class OutputStream> struct CyclePrinter {
     CyclePrinter(OutputStream& os) : os_(os) {}
@@ -78,6 +80,24 @@ template <class OutputStream> struct CyclePrinter {
     }
     OutputStream& os_;
 };
+
+//! Helper functions returning a string describing all circles in a graph
+template <typename Graph> string getCycles(const Graph& g) {
+    std::ostringstream cycles;
+    CyclePrinter<std::ostringstream> cyclePrinter(cycles);
+    boost::tiernan_all_cycles(g, cyclePrinter);
+    return cycles.str();
+}
+
+//! Helper class to find the dependend nodes from a given start node and a topological order for them
+template <typename Vertex> struct DfsVisitor : public boost::default_dfs_visitor {
+    DfsVisitor(std::vector<Vertex>& order) : order_(order) {}
+    template <typename Graph> void finish_vertex(Vertex u, const Graph& g) { order_.push_back(u); }
+    template <typename Edge, typename Graph> void back_edge(Edge e, const Graph& g) { foundCycle = true; }
+    std::vector<Vertex> order_;
+    bool foundCycle = false;
+};
+
 } // namespace
 
 TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& params, const Loader& loader,
@@ -85,28 +105,29 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                            const bool continueOnError, const bool loadFixings,
                            const boost::shared_ptr<ReferenceDataManager>& referenceData)
     : MarketImpl(conventions), params_(params), loader_(loader), curveConfigs_(curveConfigs),
-      continueOnError_(continueOnError), loadFixings_(loadFixings), referenceData_(referenceData) {
+      continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(false), referenceData_(referenceData) {
     // this ctor does not allow for lazy builds, since we store references to the inputs only
-    initialise(asof, false);
+    initialise(asof);
 }
 
 TodaysMarket::TodaysMarket(const Date& asof, const boost::shared_ptr<TodaysMarketParameters>& params,
                            const boost::shared_ptr<Loader>& loader,
                            const boost::shared_ptr<CurveConfigurations>& curveConfigs,
                            const boost::shared_ptr<Conventions>& conventions, const bool continueOnError,
-                           const bool loadFixings, const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                           const bool lazyBuild)
+                           const bool loadFixings, const bool lazyBuild,
+                           const boost::shared_ptr<ReferenceDataManager>& referenceData)
     : MarketImpl(conventions), params_ref_(params), loader_ref_(loader), curveConfigs_ref_(curveConfigs),
       conventions_ref_(conventions), params_(*params_ref_), loader_(*loader_ref_), curveConfigs_(*curveConfigs_ref_),
-      continueOnError_(continueOnError), loadFixings_(loadFixings), referenceData_(referenceData) {
+      continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(lazyBuild),
+      referenceData_(referenceData) {
     QL_REQUIRE(params_ref_, "TodaysMarket: TodaysMarketParameters are null");
     QL_REQUIRE(loader_ref_, "TodaysMarket: Loader is null");
     QL_REQUIRE(curveConfigs_ref_, "TodaysMarket: CurveConfigurations are null");
     QL_REQUIRE(conventions_ref_, "TodaysMarket: Conventions are null");
-    initialise(asof, lazyBuild);
+    initialise(asof);
 }
 
-void TodaysMarket::initialise(const Date& asof, const bool lazyBuild) {
+void TodaysMarket::initialise(const Date& asof) {
 
     asof_ = asof;
 
@@ -135,65 +156,72 @@ void TodaysMarket::initialise(const Date& asof, const bool lazyBuild) {
         }
     }
 
-    // loop over convfigurations and build market objects
+    // build the dependency graph for all configurations and  build all FX Spots
 
     map<string, string> buildErrors;
 
     for (const auto& configuration : params_.configurations()) {
-
-        LOG("Build objects in TodaysMarket configuration " << configuration.first);
-
+        LOG("Build dependency graph for TodaysMarket configuration " << configuration.first);
         // Build the graph of objects to build for the current configuration
-
         buildDependencyGraph(configuration.first, buildErrors);
+        // set the fx spots before building the other market objects
+        fxSpots_[configuration.first] = fxT_;
+    }
 
-        // Sort the graph topologically
+    // if market is not build lazily, sort the dependency graph and build the objects
 
-        Graph& g = dependencies_[configuration.first];
-        IndexMap index = boost::get(boost::vertex_index, g);
-        std::vector<Vertex>& order = order_[configuration.first];
-        try {
-            boost::topological_sort(g, std::back_inserter(order));
-        } catch (const std::exception& e) {
-            order.clear();
-            std::ostringstream cycles;
-            CyclePrinter<std::ostringstream> cyclePrinter(cycles);
-            boost::tiernan_all_cycles(g, cyclePrinter);
-            buildErrors["CurveDependencyGraph"] = "Topological sort of dependency graph failed for configuration " +
-                                                  configuration.first + " (" + ore::data::to_string(e.what()) +
-                                                  "). Got cylcle(s): " + cycles.str();
-        }
+    if (!lazyBuild_) {
 
-        TLOG("Can build objects in the following order:");
-        for (auto const& m : order) {
-            TLOG("vertex #" << index[m] << ": " << g[m]);
-        }
+        for (const auto& configuration : params_.configurations()) {
 
-        // Build the objects in the graph in topological order
+            LOG("Build objects in TodaysMarket configuration " << configuration.first);
 
-        Size countSuccess = 0, countError = 0;
-        for (auto const& m : order) {
+            // Sort the graph topologically
+
+            Graph& g = dependencies_[configuration.first];
+            IndexMap index = boost::get(boost::vertex_index, g);
+            std::vector<Vertex> order;
             try {
-                buildNode(configuration.first, g[m]);
-                ++countSuccess;
-                DLOG("built node " << g[m] << " in configuration " << configuration.first);
+                boost::topological_sort(g, std::back_inserter(order));
             } catch (const std::exception& e) {
-                if (g[m].curveSpec)
-                    buildErrors[g[m].curveSpec->name()] = e.what();
-                else
-                    buildErrors[g[m].name] = e.what();
-                ++countError;
-                ALOG("error while building node " << g[m] << " in configuration " << configuration.first << ": "
-                                                  << e.what());
+                // topological_sort() might have produced partial results, that we have to discard
+                order.clear();
+                // set error (most likely a circle), and output cycles if any
+                buildErrors["CurveDependencyGraph"] = "Topological sort of dependency graph failed for configuration " +
+                                                      configuration.first + " (" + ore::data::to_string(e.what()) +
+                                                      "). Got cylcle(s): " + getCycles(g);
             }
+
+            TLOG("Can build objects in the following order:");
+            for (auto const& m : order) {
+                TLOG("vertex #" << index[m] << ": " << g[m]);
+            }
+
+            // Build the objects in the graph in topological order
+
+            Size countSuccess = 0, countError = 0;
+            for (auto const& m : order) {
+                try {
+                    buildNode(configuration.first, g[m]);
+                    ++countSuccess;
+                    DLOG("built node " << g[m] << " in configuration " << configuration.first);
+                } catch (const std::exception& e) {
+                    if (g[m].curveSpec)
+                        buildErrors[g[m].curveSpec->name()] = e.what();
+                    else
+                        buildErrors[g[m].name] = e.what();
+                    ++countError;
+                    ALOG("error while building node " << g[m] << " in configuration " << configuration.first << ": "
+                                                      << e.what());
+                }
+            }
+
+            LOG("Loaded CurvesSpecs: success: " << countSuccess << ", error: " << countError);
         }
 
-        LOG("Loading " << countSuccess + countError << " CurveSpecs done for configuration " << configuration.first
-                       << " (thereof " << countError << " with errors)");
+    } // end of non-lazy build
 
-    } // loop over configurations
-
-    // output errors
+    // output errors from initialisation phase
 
     if (!buildErrors.empty()) {
         for (auto const& error : buildErrors) {
@@ -247,7 +275,7 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
             for (auto const& r : curveConfigs_.requiredCurveIds(g[*v].curveSpec->curveConfigID())) {
                 for (auto const& cId : r.second) {
                     // avoid self reference
-                    if(r.first == g[*v].curveSpec->baseType() && cId == g[*v].curveSpec->curveConfigID())
+                    if (r.first == g[*v].curveSpec->baseType() && cId == g[*v].curveSpec->curveConfigID())
                         continue;
                     bool found = false;
                     for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
@@ -485,9 +513,15 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
         }
     }
     DLOG("Dependency graph built with " << boost::num_vertices(g) << " vertices, " << boost::num_edges(g) << " edges.");
-}
+} // TodaysMarket::buildDependencyGraph
 
-void TodaysMarket::buildNode(const std::string& configuration, const Node& node) {
+void TodaysMarket::buildNode(const std::string& configuration, const Node& node) const {
+
+    // if the node is already built, there is nothing to do
+
+    if (node.built)
+        return;
+
     if (node.curveSpec == nullptr) {
 
         // not spec-based node, this can only be a SwapIndexCurve
@@ -553,21 +587,7 @@ void TodaysMarket::buildNode(const std::string& configuration, const Node& node)
 
         // FX Spot
         case CurveSpec::CurveType::FX: {
-            boost::shared_ptr<FXSpotSpec> fxspec = boost::dynamic_pointer_cast<FXSpotSpec>(spec);
-            QL_REQUIRE(fxspec, "Failed to convert spec " << *spec << " to fx spot spec");
-
-            auto itr = requiredFxSpots_.find(fxspec->name());
-            if (itr == requiredFxSpots_.end()) {
-                DLOG("Building FXSpot for asof " << asof_);
-                boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof_, *fxspec, fxT_);
-                itr = requiredFxSpots_.insert(make_pair(fxspec->name(), fxSpot)).first;
-                // we have added all quotes in the loader initially anyway
-                // fxT_.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3),
-                // itr->second->handle());
-            }
-
-            DLOG("Adding FXSpot (" << node.name << ") with spec " << *fxspec << " to configuration " << configuration);
-            fxSpots_[configuration].addQuote(node.name, itr->second->handle());
+            // nothing to do, we have build all fx spots already above
             break;
         }
 
@@ -974,7 +994,110 @@ void TodaysMarket::buildNode(const std::string& configuration, const Node& node)
 
         } // switch(specName)
     }     // else-block (spec based node)
+
 } // TodaysMarket::buildNode()
+
+void TodaysMarket::require(const MarketObject o, const string& name, const string& configuration) const {
+
+    // if the market is not lazily built, there is nothing to do
+
+    if (!lazyBuild_)
+        return;
+
+    // search the node (o, name) in the dependency graph
+
+    DLOG("market object " << o << "(" << name << ") required for configuration " << configuration);
+
+    auto tmp = dependencies_.find(configuration);
+    if (tmp == dependencies_.end()) {
+        DLOG("configuration " << configuration << " not known, do nothing.");
+        return;
+    }
+
+    Graph& g = tmp->second;
+    IndexMap index = boost::get(boost::vertex_index, g);
+
+    Vertex node;
+
+    VertexIterator v, vend;
+    bool found = false;
+    for (std::tie(v, vend) = boost::vertices(g); v != vend; ++v) {
+        if (g[*v].obj == o && g[*v].name == name) {
+            found = true;
+            node = *v;
+        }
+        if (found)
+            break;
+    }
+
+    // if we did not find a node, we retry with the default configuration, as required by the interface
+
+    if (!found && configuration != Market::defaultConfiguration) {
+        DLOG("not found, retry with default configuration");
+        require(o, name, Market::defaultConfiguration);
+    }
+
+    // if we still have no node, we do nothing, the error handling is done in MarketImpl
+
+    if (!found) {
+        DLOG("not found, do nothing");
+        return;
+    }
+
+    // run a DFS from the found node to identify the required nodes to be built and get a possible order to do this
+
+    map<string, string> buildErrors;
+    std::vector<Vertex> order;
+
+    DfsVisitor<Vertex> dfs(order);
+    auto colorMap = boost::make_vector_property_map<boost::default_color_type>(index);
+    boost::depth_first_search(g, dfs, colorMap, node);
+
+    if (dfs.foundCycle) {
+        order.clear();
+        buildErrors[g[node].curveSpec ? g[node].curveSpec->name() : g[node].name] = "found cycle";
+    }
+
+    // build the nodes
+
+    TLOG("Can build objects in the following order:");
+    for (auto const& m : order) {
+        TLOG("vertex #" << index[m] << ": " << g[m]);
+    }
+
+    Size countSuccess = 0, countError = 0;
+    for (auto const& m : order) {
+        try {
+            buildNode(configuration, g[m]);
+            ++countSuccess;
+            DLOG("built node " << g[m] << " in configuration " << configuration);
+        } catch (const std::exception& e) {
+            if (g[m].curveSpec)
+                buildErrors[g[m].curveSpec->name()] = e.what();
+            else
+                buildErrors[g[m].name] = e.what();
+            ++countError;
+            ALOG("error while building node " << g[m] << " in configuration " << configuration << ": " << e.what());
+        }
+    }
+
+    LOG("Loaded CurvesSpecs: success: " << countSuccess << ", error: " << countError);
+
+    // output errors
+
+    if (!buildErrors.empty()) {
+        for (auto const& error : buildErrors) {
+            ALOG(StructuredCurveErrorMessage(error.first, "Failed to Build Curve", error.second));
+        }
+        if (!continueOnError_) {
+            string errStr;
+            for (auto const& error : buildErrors) {
+                errStr += "(" + error.first + ": " + error.second + "); ";
+            }
+            QL_FAIL("Cannot build all required curves! Building failed for: " << errStr);
+        }
+    }
+} // TodaysMarket::require()
 
 std::ostream& operator<<(std::ostream& o, const TodaysMarket::Node& n) {
     return o << n.obj << "(" << n.name << "," << n.mapping << ")";

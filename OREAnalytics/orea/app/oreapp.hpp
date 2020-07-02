@@ -211,14 +211,15 @@ protected:
     bool parametricVar_;
     bool writeBaseScenario_;
     bool continueOnError_;
+    bool lazyMarketBuilding_;
     std::string inputPath_;
     std::string outputPath_;
 
     boost::shared_ptr<Market> market_;               // T0 market
     boost::shared_ptr<EngineFactory> engineFactory_; // engine factory linked to T0 market
     boost::shared_ptr<Portfolio> portfolio_;         // portfolio linked to T0 market
-    Conventions conventions_;
-    TodaysMarketParameters marketParameters_;
+    boost::shared_ptr<Conventions> conventions_;
+    boost::shared_ptr<TodaysMarketParameters> marketParameters_;
     boost::shared_ptr<ReferenceDataManager> referenceData_;
 
     boost::shared_ptr<ScenarioSimMarket> simMarket_; // sim market
@@ -232,7 +233,7 @@ protected:
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
 
-    ore::data::CurveConfigurations curveConfigs_;
+    boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
 
     //! Populated if a sensitivity analysis is performed.
     boost::shared_ptr<SensitivityRunner> sensitivityRunner_;
