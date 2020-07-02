@@ -167,7 +167,7 @@ private:
     mutable std::map<std::string, Graph> dependencies_;
 
     // build a single market object
-    void buildNode(const std::string& configuration, const Node& node) const;
+    void buildNode(const std::string& configuration, Node& node) const;
 
     // fx triangulation initially built using all fx spot quotes from the loader; this is provided to
     // curve builders that require fx spots (e.g. xccy discount curves)

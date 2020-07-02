@@ -218,7 +218,9 @@ void TodaysMarket::initialise(const Date& asof) {
             LOG("Loaded CurvesSpecs: success: " << countSuccess << ", error: " << countError);
         }
 
-    } // end of non-lazy build
+    } else {
+        LOG("Build objects in TodaysMarket lazily, i.e. when requested.");
+    }
 
     // output errors from initialisation phase
 
@@ -514,7 +516,7 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
     DLOG("Dependency graph built with " << boost::num_vertices(g) << " vertices, " << boost::num_edges(g) << " edges.");
 } // TodaysMarket::buildDependencyGraph
 
-void TodaysMarket::buildNode(const std::string& configuration, const Node& node) const {
+void TodaysMarket::buildNode(const std::string& configuration, Node& node) const {
 
     // if the node is already built, there is nothing to do
 
@@ -994,6 +996,7 @@ void TodaysMarket::buildNode(const std::string& configuration, const Node& node)
         } // switch(specName)
     }     // else-block (spec based node)
 
+    node.built = true;
 } // TodaysMarket::buildNode()
 
 void TodaysMarket::require(const MarketObject o, const string& name, const string& configuration) const {
@@ -1061,11 +1064,13 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
 
     TLOG("Can build objects in the following order:");
     for (auto const& m : order) {
-        TLOG("vertex #" << index[m] << ": " << g[m]);
+        TLOG("vertex #" << index[m] << ": " << g[m] << (g[m].built ? " (already built)" : " (not yet built)"));
     }
 
     Size countSuccess = 0, countError = 0;
     for (auto const& m : order) {
+        if (g[m].built)
+            continue;
         try {
             buildNode(configuration, g[m]);
             ++countSuccess;
