@@ -1,5 +1,9 @@
 \documentclass[12pt, a4paper]{article}
 
+% Avoid useless warnings about included images
+% Reference: https://tex.stackexchange.com/a/78020
+\pdfsuppresswarningpagegroup=1
+
 % Use \hypersetup here to get rid of the ugly boxes around links
 \usepackage{hyperref}
 \hypersetup{
@@ -7,6 +11,9 @@
   linkcolor=blue,
   urlcolor=blue
 }
+
+% Avoid warning about missing font for \textbackslash character.
+\usepackage[T1]{fontenc}
 
 % For nicer paragraph spacing
 \usepackage{parskip}
@@ -110,7 +117,7 @@
 \newcommand{\SCVA}{\mathit{SCVA}}
 \newcommand{\bs}{\textbackslash}
 \newcommand{\REDY}{\color{red}Y}
- 
+
 \begin{document}
 
 %\title{Open Source Risk Engine \\ User Guide  }
