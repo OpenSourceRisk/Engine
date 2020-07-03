@@ -27,8 +27,10 @@
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <qle/interpolators/optioninterpolator2d.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
+#include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
+#include <qle/interpolators/optioninterpolator2d.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -40,9 +42,8 @@ public:
     BlackVarianceSurfaceStdDevs(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
                                 const std::vector<Real>& stdDevs,
                                 const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-                                const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
-                                const Handle<YieldTermStructure>& domTS, bool stickyStrike = false,
-                                bool flatExtrapMoneyness = false);
+                                const DayCounter& dayCounter, const boost::shared_ptr<EqFxIndexBase>& index,
+                                bool stickyStrike = false, bool flatExtrapMoneyness = false);
 
     // A method that takes a reference to a vector of vector of quotes (that will be populated), termstructure,
     // expiries, and standard deviation points. Fills the quotes with the correct points from the termstructure.
@@ -58,8 +59,7 @@ public:
 
 private:
     virtual Real moneyness(Time t, Real strike) const;
-    Handle<YieldTermStructure> forTS_; // calculates fwd if StickyStrike==false
-    Handle<YieldTermStructure> domTS_;
+    boost::shared_ptr<EqFxIndexBase> index_;
     std::vector<Real> forwards_; // cache fwd values if StickyStrike==true
     Interpolation forwardCurve_;
     Interpolation atmVarCurve_;
