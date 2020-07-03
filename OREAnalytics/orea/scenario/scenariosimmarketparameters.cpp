@@ -1367,7 +1367,9 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         setEquityVolNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
        
         vector<XMLNode*> expiryNodes = XMLUtils::getChildrenNodes(nodeChild, "Expiries");
-        set<string> namesCheck(equityVolNames().begin(), equityVolNames().end());
+        set<string> names = params_.find(RiskFactorKey::KeyType::EquityVolatility)->second.second;
+        QL_REQUIRE(names.size() > 0, "EquityVolatility needs at least one name");
+        set<string> namesCheck = names;
         bool defaultProvided = false;
         for (XMLNode* expiryNode : expiryNodes) {
             // If there is no "name" attribute, getAttribute returns "" which is what we want in any case
