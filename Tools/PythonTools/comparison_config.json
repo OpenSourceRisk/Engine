@@ -282,19 +282,6 @@
           }
         ]
       },
-      "*scenariodump*": {
-        "keys": [
-          "Date",
-          "Scenario"
-        ],
-        "column_settings": [
-          {
-            "names": [],
-            "abs_tol": 0.0000000001,
-            "rel_tol": null
-          }
-        ]
-      },
       "*sensitivity*": {
         "keys": [
           "TradeId",
