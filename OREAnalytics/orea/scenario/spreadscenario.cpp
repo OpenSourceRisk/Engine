@@ -45,9 +45,7 @@ bool SpreadScenario::has(const ore::analytics::RiskFactorKey& key) const { retur
 
 const std::vector<ore::analytics::RiskFactorKey>& SpreadScenario::keys() const { return absoluteValues_->keys(); }
 
-void SpreadScenario::add(const ore::analytics::RiskFactorKey& key, Real value) {
-    absoluteValues_->add(key, Null<Real>());
-}
+void SpreadScenario::add(const ore::analytics::RiskFactorKey& key, Real value) { absoluteValues_->add(key, value); }
 
 Real SpreadScenario::get(const ore::analytics::RiskFactorKey& key) const {
     if (spreadValues_->has(key)) {
