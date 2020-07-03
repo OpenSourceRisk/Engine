@@ -104,6 +104,25 @@ Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
     return inverseIndex_ ? 1.0 / result : result;
 }
 
+Real FxIndex::forecastFixing(const Time& fixingTime) const {
+    QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(), "null term structure set to this instance of " << name());
+
+    // we base the forecast always on the exchange rate (and not on today's
+    // fixing)
+    Real rate;
+    if (!useQuote_) {
+        rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
+    } else {
+        QL_REQUIRE(!fxQuote_.empty(), "FxIndex::forecastFixing(): fx quote required");
+        rate = fxQuote_->value();
+    }
+    
+    // TODO: Add a time based adjusement for settlement days
+    Real forward = rate * sourceYts_->discount(fixingTime)  /
+        targetYts_->discount(fixingTime);
+    return forward;
+}
+
 Real FxIndex::forecastFixing(const Date& fixingDate) const {
     QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(), "null term structure set to this instance of " << name());
 
