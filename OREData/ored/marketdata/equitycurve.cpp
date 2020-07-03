@@ -138,7 +138,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
                 if (wcFlag) {
                     // is the quote 'in' the config? (also check expiry not before asof)
-                    if (regex_match(q->name(), reg1) && asof <= q->expiryDate()) {
+                    if (regex_match(q->name(), reg1) && asof < q->expiryDate()) {
                         QL_REQUIRE(find(qt.begin(), qt.end(), q) == qt.end(),
                                    "duplicate market datum found for " << q->name());
                         DLOG("EquityCurve Forward Price found for quote: " << q->name());
@@ -170,7 +170,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
                 if (wcFlag) {
                     // is the quote 'in' the config? (also check expiry not before asof)
-                    if (regex_match(q->name(), reg1) && asof <= expiryDate) {
+                    if (regex_match(q->name(), reg1) && asof < expiryDate) {
                         QL_REQUIRE(find(oqt.begin(), oqt.end(), q) == oqt.end(),
                                    "duplicate market datum found for " << q->name());
                         DLOG("EquityCurve Volatility Price found for quote: " << q->name());

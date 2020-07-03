@@ -152,6 +152,8 @@ void ScenarioSimMarketParameters::setDefaults() {
     fxStandardDevs_[""] = {0.0};
     hasFxPairWithSurface_ = false;
     useMoneyness_[""] = true; // moneyness vs stdDevs - default to moneyness
+    // Defaults for equity
+    setSimulateEquityVolATMOnly(false);
 }
 
 void ScenarioSimMarketParameters::reset() {
@@ -678,6 +680,47 @@ void ScenarioSimMarketParameters::setSimulateCprs(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::CPR, simulate);
 }
 
+void ScenarioSimMarketParameters::setEquityVolIsSurface(const string& name, bool isSurface) {
+    equityVolIsSurface_[name] = isSurface;
+}
+
+void ScenarioSimMarketParameters::setEquityVolExpiries(const string& name, const vector<Period>& expiries) {
+    equityVolExpiries_[name] = expiries;
+}
+
+void ScenarioSimMarketParameters::setEquityVolMoneyness(const string&name, const vector<Real>& moneyness) {
+    equityMoneyness_[name] = moneyness;
+}
+
+void ScenarioSimMarketParameters::setEquityVolStandardDevs(const string&name, const vector<Real>& standardDevs) {
+    equityStandardDevs_[name] = standardDevs;
+}
+
+bool ScenarioSimMarketParameters::equityUseMoneyness(const string& key) const {
+    try {
+        const vector<Real> temp = lookup(equityMoneyness_, key);
+        if (temp.size() > 0)
+            return true;
+    } catch (...) {}
+    return false;
+}
+
+bool ScenarioSimMarketParameters::equityVolIsSurface(const string& key) const {
+    return lookup(equityVolIsSurface_, key);
+}
+
+const vector<Period>& ScenarioSimMarketParameters::equityVolExpiries(const string& key) const {
+    return lookup(equityVolExpiries_, key);
+}
+
+const vector<Real>& ScenarioSimMarketParameters::equityVolMoneyness(const string& key) const {
+    return lookup(equityMoneyness_, key);
+}
+
+const vector<Real>& ScenarioSimMarketParameters::equityVolStandardDevs(const string& key) const {
+    return lookup(equityStandardDevs_, key);
+}
+
 bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& rhs) {
 
     if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || params_ != rhs.params_ ||
@@ -702,8 +745,8 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         fxVolExpiries_ != rhs.fxVolExpiries_ || fxVolDayCounters_ != rhs.fxVolDayCounters_ ||
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || equityVolExpiries_ != rhs.equityVolExpiries_ ||
         equityVolDayCounters_ != rhs.equityVolDayCounters_ || equityVolDecayMode_ != rhs.equityVolDecayMode_ ||
-        equityIsSurface_ != rhs.equityIsSurface_ || equityVolSimulateATMOnly_ != rhs.equityVolSimulateATMOnly_ ||
-        equityMoneyness_ != rhs.equityMoneyness_ ||
+        equityVolSimulateATMOnly_ != rhs.equityVolSimulateATMOnly_ ||
+        equityMoneyness_ != rhs.equityMoneyness_ || equityStandardDevs_ != rhs.equityStandardDevs_ ||
         additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
         additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_ ||
         baseCorrelationTerms_ != rhs.baseCorrelationTerms_ ||
@@ -1062,6 +1105,16 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         }
         QL_REQUIRE(capFloorVolDayCounters_.find("") != capFloorVolDayCounters_.end(),
                    "default daycounter is not set for capFloorVolSurfaces");
+
+        capFloorVolAdjustOptionletPillars_ = false;
+        if (XMLNode* n = XMLUtils::getChildNode(nodeChild, "AdjustOptionletPillars")) {
+            capFloorVolAdjustOptionletPillars_ = parseBool(XMLUtils::getNodeValue(n));
+        }
+
+        capFloorVolUseCapAtm_ = false;
+        if (XMLNode* n = XMLUtils::getChildNode(nodeChild, "UseCapAtm")) {
+            capFloorVolUseCapAtm_ = parseBool(XMLUtils::getNodeValue(n));
+        }
     }
 
     DLOG("Loading YYCapFloorVolatilities");
@@ -1310,22 +1363,58 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     nodeChild = XMLUtils::getChildNode(node, "EquityVolatilities");
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
         setSimulateEquityVols(XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true));
-        equityVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
         equityVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
         setEquityVolNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
+       
+        vector<XMLNode*> expiryNodes = XMLUtils::getChildrenNodes(nodeChild, "Expiries");
+        set<string> namesCheck(equityVolNames().begin(), equityVolNames().end());
+        bool defaultProvided = false;
+        for (XMLNode* expiryNode : expiryNodes) {
+            // If there is no "name" attribute, getAttribute returns "" which is what we want in any case
+            string name = XMLUtils::getAttribute(expiryNode, "name");
+            vector<Period> expiries = parseListOfValues<Period>(XMLUtils::getNodeValue(expiryNode), &parsePeriod);
+            QL_REQUIRE(equityVolExpiries_.insert(make_pair(name, expiries)).second,
+                "EquityVolatilities has duplicate expiries for key '" << name << "'");
+            namesCheck.erase(name);
+            defaultProvided = name == "";
+        }
+        QL_REQUIRE(defaultProvided || namesCheck.size() == 0, "EquityVolatilities has no expiries for " <<
+            "equities '" << join(namesCheck, ",") << "' and no default expiry set has been given");
+
         XMLNode* eqSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
+        setEquityVolIsSurface("", false);
+        setSimulateEquityVolATMOnly(false);
         if (eqSurfaceNode) {
-            equityIsSurface_ = true;
             XMLNode* atmOnlyNode = XMLUtils::getChildNode(eqSurfaceNode, "SimulateATMOnly");
+            // if set to true we will simulate ATM only for any surfaces without an explicit surface defined
+            // adding a default surface of moneyness or standard deviations below will supersede this
             if (atmOnlyNode) {
                 equityVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(eqSurfaceNode, "SimulateATMOnly", true);
-            } else {
-                equityVolSimulateATMOnly_ = false;
             }
-            if (!equityVolSimulateATMOnly_)
-                equityMoneyness_ = XMLUtils::getChildrenValuesAsDoublesCompact(eqSurfaceNode, "Moneyness", true);
+            for (XMLNode* child = XMLUtils::getChildNode(eqSurfaceNode, "Moneyness"); child;
+                child = XMLUtils::getNextSibling(child, "Moneyness")) {
+                string label = XMLUtils::getAttribute(child, "name"); // will be "" if no attr
+                setEquityVolMoneyness(label, XMLUtils::getNodeValueAsDoublesCompact(child));
+                if (equityVolMoneyness(label).size() > 1) {
+                    setEquityVolIsSurface(label, true);
+                }
+            }
+            for (XMLNode* child = XMLUtils::getChildNode(eqSurfaceNode, "StandardDeviations"); child;
+                child = XMLUtils::getNextSibling(child, "StandardDeviations")) {
+                string label = XMLUtils::getAttribute(child, "name"); // will be "" if no attr
+                // We cannot have both moneyness and standard deviations for any label (inclding the default of ""
+                // Throw error if this occurs
+                if (equityMoneyness_.find(label) != equityMoneyness_.end()){
+                    QL_FAIL("Equity Volatility simulation parameters - both moneyness and standard deviations provided for label " << label);
+                } else {
+                    setEquityVolStandardDevs(label, XMLUtils::getNodeValueAsDoublesCompact(child));
+                    if (equityVolStandardDevs(label).size() > 1) {
+                        setEquityVolIsSurface(label, true);
+                    }
+                }
+            }
         } else {
-            equityIsSurface_ = false;
+            DLOG("No surface provided, all equity volatilities will be taken as ATM.");
         }
         XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
         if (dc) {
@@ -1697,6 +1786,10 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
                 XMLUtils::appendNode(node, c);
             }
         }
+        
+        XMLUtils::addChild(doc, capFloorVolatilitiesNode, "AdjustOptionletPillars",
+            capFloorVolAdjustOptionletPillars_);
+        XMLUtils::addChild(doc, capFloorVolatilitiesNode, "UseCapAtm", capFloorVolUseCapAtm_);
     }
 
     // zero inflation cap/floor volatilities
@@ -1807,10 +1900,31 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, eqVolatilitiesNode, "Simulate", simulateEquityVols());
         XMLUtils::addChild(doc, eqVolatilitiesNode, "ReactionToTimeDecay", equityVolDecayMode_);
         XMLUtils::addChildren(doc, eqVolatilitiesNode, "Names", "Name", equityVolNames());
-        XMLUtils::addGenericChildAsList(doc, eqVolatilitiesNode, "Expiries", equityVolExpiries_);
-        if (equityIsSurface_) {
+        for (auto it = equityVolExpiries_.begin(); it != equityVolExpiries_.end(); it++) {
+            XMLUtils::addGenericChildAsList(doc, eqVolatilitiesNode, "Expiries", equityVolExpiries_[it->first], "name",
+                it->first);
+        }
+        if (equityVolSimulateATMOnly_ || equityMoneyness_.size() > 0 || equityStandardDevs_.size() > 0) {
             XMLNode* eqSurfaceNode = XMLUtils::addChild(doc, eqVolatilitiesNode, "Surface");
-            XMLUtils::addGenericChildAsList(doc, eqSurfaceNode, "Moneyness", equityMoneyness_);
+            if (equityVolSimulateATMOnly_) {
+                XMLUtils::addChild(doc, eqSurfaceNode, "SimulateATMOnly", equityVolSimulateATMOnly_);
+            }
+            for (auto it = equityMoneyness_.begin(); it != equityMoneyness_.end(); it++) {
+                XMLUtils::addGenericChildAsList(doc, eqSurfaceNode, "Moneyness", equityMoneyness_[it->first], "name",
+                    it->first);
+            }
+            for (auto it = equityStandardDevs_.begin(); it != equityStandardDevs_.end(); it++) {
+                XMLUtils::addGenericChildAsList(doc, eqSurfaceNode, "StandardDeviations", equityStandardDevs_[it->first], "name",
+                    it->first);
+            }            
+        }
+        if (equityVolDayCounters_.size() > 0) {
+            XMLNode* node = XMLUtils::addChild(doc, eqVolatilitiesNode, "DayCounters");
+            for (auto dc : equityVolDayCounters_) {
+                XMLNode* c = doc.allocNode("DayCounter", dc.second);
+                XMLUtils::addAttribute(doc, c, "name", dc.first);
+                XMLUtils::appendNode(node, c);
+            }
         }
     }
 

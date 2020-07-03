@@ -891,6 +891,9 @@
     <ClInclude Include="qle\termstructures\spreadeddiscountcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\eqfxindexbase.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

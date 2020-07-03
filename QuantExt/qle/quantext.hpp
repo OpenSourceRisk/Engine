@@ -5,6 +5,7 @@
 #include <qle/auto_link.hpp>
 #endif
 
+#include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/austria.hpp>
 #include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>

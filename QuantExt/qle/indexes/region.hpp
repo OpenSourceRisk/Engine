@@ -45,6 +45,12 @@ public:
     CanadaRegion();
 };
 
+//! Spain as geographical/economic region
+class SpainRegion : public QuantLib::Region {
+public:
+    SpainRegion();
+};
+
 } // namespace QuantExt
 
 #endif

@@ -53,7 +53,6 @@ public:
 
     F() {
         calendarAdjustments.fromFile(TEST_INPUT_FILE("calendaradjustments.xml"));
-        CalendarAdjustments::instance().setConfig(calendarAdjustments);
         startDate = Date(1, Jan, 2019);
         endDate = Date(31, Dec, 2020);
     }
@@ -108,7 +107,7 @@ BOOST_AUTO_TEST_CASE(testCalendarAdjustmentRealCalendars) {
     // and check that the holidays match the expected ones
     for (auto expectedHolidays : loadExpectedHolidays()) {
         vector<Date> qcalHols;
-        qcalHols = parseCalendar(expectedHolidays.calendarName, true).holidayList(startDate, endDate, false);
+        qcalHols = parseCalendar(expectedHolidays.calendarName).holidayList(startDate, endDate, false);
         BOOST_CHECK_EQUAL_COLLECTIONS(qcalHols.begin(), qcalHols.end(), expectedHolidays.holidays.begin(),
                                       expectedHolidays.holidays.end());
     }
@@ -140,6 +139,18 @@ BOOST_AUTO_TEST_CASE(testCalendarAdjustment) {
     set<string> res = {cac.getCalendars()};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expcal.begin(), expcal.end());
     BOOST_REQUIRE(cac.getHolidays("JPY") == set<Date>({Date(1, May, 2019)}));
+}
+
+BOOST_AUTO_TEST_CASE(testInvalidCalendarAdjustment) {
+    BOOST_TEST_MESSAGE("Testing that incorrect CalendarAdjustments are not accepted...");
+
+    // we check that new calendars can't be declared using another new calendar as a base
+    CalendarAdjustmentConfig calendarAdjustments_1;
+    BOOST_CHECK_THROW(calendarAdjustments_1.fromFile(TEST_INPUT_FILE("invalid_calendaradjustments_1.xml")), QuantLib::Error);
+    
+    // we check that new calendars can't be declared using a joint calendar as a base 
+    CalendarAdjustmentConfig calendarAdjustments_2;
+    BOOST_CHECK_THROW(calendarAdjustments_2.fromFile(TEST_INPUT_FILE("invalid_calendaradjustments_2.xml")), QuantLib::Error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

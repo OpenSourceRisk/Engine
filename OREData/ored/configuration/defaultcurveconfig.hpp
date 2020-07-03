@@ -30,6 +30,7 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
+#include <boost/optional.hpp>
 
 namespace ore {
 namespace data {
@@ -60,7 +61,8 @@ public:
                        const Calendar& calendar = Calendar(), const Size spotLag = 0,
                        const QuantLib::Date& startDate = QuantLib::Date(),
                        const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
-                       QuantLib::Real runningSpread = QuantLib::Null<Real>());
+                       QuantLib::Real runningSpread = QuantLib::Null<Real>(),
+                       const boost::optional<bool>& implyDefaultFromMarket = boost::none);
     //! Default constructor
     DefaultCurveConfig() {}
     //@}
@@ -89,6 +91,7 @@ public:
     const QuantLib::Date& startDate() const { return startDate_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
     const Real runningSpread() const { return runningSpread_; }
+    const boost::optional<bool>& implyDefaultFromMarket() const { return implyDefaultFromMarket_; }
     //@}
 
     //! \name Setters
@@ -108,6 +111,7 @@ public:
     QuantLib::Date& startDate() { return startDate_; }
     void setBootstrapConfig(const BootstrapConfig& bootstrapConfig) { bootstrapConfig_ = bootstrapConfig; }
     Real& runningSpread() { return runningSpread_; }
+    boost::optional<bool>& implyDefaultFromMarket() { return implyDefaultFromMarket_; }
     //@}
 
 private:
@@ -128,6 +132,21 @@ private:
     QuantLib::Date startDate_;
     BootstrapConfig bootstrapConfig_;
     Real runningSpread_;
+
+    /*! Indicates if the reference entity's default status should be implied from the market data. If \c true, this 
+        behaviour is active and if \c false it is not. If not explicitly set, it is assumed to be \c false.
+
+        When a default credit event has been determined for an entity, certain market data providers continue to 
+        supply a recovery rate from the credit event determination date up to the credit event auction settlement 
+        date. In this period, no CDS spreads or upfront prices are provided.
+        
+        When this flag is \c true, we assume an entity is in default if we find a recovery rate in the market but no 
+        CDS spreads or upfront prices. In this case, we build a survival probability curve with a value of 0.0 
+        tomorrow. This will give some approximation to the correct price for CDS and index CDS in these cases.
+        
+        When this flag is \c false, we make no such assumption and the default curve building fails.
+    */
+    boost::optional<bool> implyDefaultFromMarket_;
 };
 } // namespace data
 } // namespace ore
