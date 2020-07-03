@@ -4176,11 +4176,10 @@ and {\tt term}) represents a default value that is used whenever no explicit val
  These dates would originally be missing from the calendar and has to be added.The general structure is shown in listing \ref{lst:calendar_adjustment}.
 In this example, two additional dates had been added to the calendar "Japan", one addtional holiday and one additional business day. If the user is not certain
 wether the date is already included or not, adding it to the {\tt calendaradjustment.xml} to be safe won't raise any errors.
-A sample {\tt calendaradjustment.xml} file can be found in the Global example input directory. However, it is only used in Example\_1.
+A sample {\tt calendaradjustment.xml} file can be found in the global example input directory. However, it is only used in Example\_1.
 
 \begin{longlisting}
-%\hrule\medskip
-  \begin{minted}[fontsize=\scriptsize]{xml}
+\begin{minted}[fontsize=\scriptsize]{xml}
 <CalendarAdjustments>
   <Calendar name="Japan">
     <AdditionalHolidays>
@@ -4190,16 +4189,17 @@ A sample {\tt calendaradjustment.xml} file can be found in the Global example in
       <Date>2020-01-02</Date>
     </AdditionalBusinessDays>
 </CalendarAdjustments>
-  \end{minted}
+\end{minted}
 \caption{Calendar Adjustment}\label{lst:calendar_adjustment}
 \end{longlisting}
 
-If the parameter `BaseCalendar' is provided then a new calendar will be created using the specified calendar as a base, and adding any `AdditionalHolidays' or `AdditionalBusinessDays'. In the example below a new calendar `Japan\_amended' is being created, it will include any additional holidays/business days specified in the original `Japan' calendar plus one additional date.
+If the parameter \lstinline!BaseCalendar! is provided then a new calendar will be created using the specified calendar as a base, and adding any \lstinline!AdditionalHolidays! or \lstinline!AdditionalBusinessDays!. In the example below a new calendar \lstinline!Japan_amended! is being created, it will include any additional holidays or business days specified in the original \lstinline!Japan! calendar plus one additional date.
 
- If a new calendar is added in this way and the schema is being used to validate XML input, the corresponding calendar name must be added to the `calendar' type in the file ore_types.xsd.
+If a new calendar is added in this way and the schema is being used to validate XML input, the corresponding calendar name must be added to the \lstinline!calendar! type in the file \textit{ore\_types.xsd}.
+
 \begin{longlisting}
-%\hrule\medskip
-  \begin{minted}[fontsize=\scriptsize]{xml}
+\hrule\medskip
+\begin{minted}[fontsize=\scriptsize]{xml}
 <CalendarAdjustments>
   <Calendar name="Japan\_amended">
     <BaseCalendar>Japan</BaseCalendar>
@@ -4207,9 +4207,11 @@ If the parameter `BaseCalendar' is provided then a new calendar will be created 
       <Date>2020-04-06</Date>
     </AdditionalHolidays>
 </CalendarAdjustments>
-  \end{minted}
-\caption{Calendar Adjustment creating a new calendar}\label{lst:calendar_adjustment_2}
+\end{minted}
+\caption{Calendar Adjustment creating a new calendar}
+\label{lst:calendar_adjustment_2}
 \end{longlisting}
+
 %--------------------------------------------------------
 \subsection{Curves: {\tt curveconfig.xml}}\label{sec:curveconfig}
 %--------------------------------------------------------
@@ -4235,66 +4237,19 @@ configuration determines the composition of
 
 This file also contains other market objects such as FXSpots, Security Spreads and Security Rates which are necessary
 for the construction of a market.
- 
+
 \include{curve_configurations/yieldcurves}
+\include{curve_configurations/default_curves_from_cds}
 
-\subsubsection{Default Curves}
+\subsubsection{Default Curves from Yield Curves}
 
-Listing \ref{lst:defaultcurve_configuration} shows the configuration of Default curves built from CDS spread
-quotes. The \lstinline!BootstrapConfig! node is optional and holds configuration details for the iterative bootstrap 
-that are described in section \ref{sec:bootstrap_config}. Also note - if the \lstinline!Type! is not \lstinline!Benchmark!
-then \lstinline!Quote! elements within the \lstinline!Quotes! node may have an \lstinline!optional! attribute, indicating
-whether or not the quote is optional. Example:
-%\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{xml}
-<Quotes>
-  <Quote optional="true">CDS/CREDIT_SPREAD/BANK/SR/USD/1Y</Quote>
-</Quotes>
-\end{minted}
-%\hrule
-
-Alternatively default curves can be set up as a difference curve of two yield curves as shown in listing
+Default curves can be set up as a difference curve of two yield curves as shown in listing
 \ref{lst:defaultcurve_configuration_2}. If $P_B(0,t)$ and $P_S(0,t)$ denote the discount factors of the given benchmark
 and source curve respectively the resulting default term structures has survival probabilities
 
 $$S(0,t) = P_S(0,t) / P_B(0,t)$$
 
 on the given pillars, and w.r.t. a a zero recovery rate. The interpolation is backward flat in the hazard rate.
-
-\begin{longlisting}
-%\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{xml}
-<DefaultCurves>
-  <DefaultCurve>
-    <CurveId>BANK_SR_USD</CurveId>
-    <CurveDescription>BANK SR CDS USD</CurveDescription>
-    <Currency>USD</Currency> 
-    <Type>SpreadCDS</Type>
-    <DiscountCurve>Yield/USD/USD3M</DiscountCurve>
-    <DayCounter>A365</DayCounter>
-    <RecoveryRate>RECOVERY_RATE/RATE/BANK/SR/USD</RecoveryRate>
-    <Quotes>
-      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/1Y</Quote>
-      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/2Y</Quote>
-      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/3Y</Quote>
-      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/4Y</Quote>
-      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/5Y</Quote>
-      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/7Y</Quote>
-      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/10Y</Quote>
-    </Quotes>
-    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
-    <BootstrapConfig>
-      ...
-    </BootstrapConfig>
-  </DefaultCurve>
-  <DefaultCurve>
-  ...
-  </DefaultCurve>
-</DefaultCurves>
-\end{minted}
-\caption{Default curve configuration based on CDS quotes}
-\label{lst:defaultcurve_configuration}
-\end{longlisting}
 
 \begin{longlisting}
 %\hrule\medskip

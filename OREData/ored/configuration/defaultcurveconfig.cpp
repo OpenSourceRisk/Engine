@@ -35,12 +35,14 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curv
                                        const string& benchmarkCurveID, const string& sourceCurveID,
                                        const std::vector<string>& pillars, const Calendar& calendar, const Size spotLag,
                                        const Date& startDate, const BootstrapConfig& bootstrapConfig,
-                                       QuantLib::Real runningSpread)
+                                       QuantLib::Real runningSpread,
+                                       const boost::optional<bool>& implyDefaultFromMarket)
     : CurveConfig(curveID, curveDescription), cdsQuotes_(cdsQuotes), currency_(currency), type_(type),
       discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
       conventionID_(conventionID), extrapolation_(extrapolation), benchmarkCurveID_(benchmarkCurveID),
       sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar), spotLag_(spotLag), startDate_(startDate),
-      bootstrapConfig_(bootstrapConfig), runningSpread_(runningSpread) {
+      bootstrapConfig_(bootstrapConfig), runningSpread_(runningSpread),
+      implyDefaultFromMarket_(implyDefaultFromMarket) {
 
     for (const auto& kv : cdsQuotes) {
         quotes_.push_back(kv.first);
@@ -139,6 +141,10 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
             }
         }
 
+        implyDefaultFromMarket_ = boost::none;
+        if (XMLNode* n = XMLUtils::getChildNode(node, "ImplyDefaultFromMarket"))
+            implyDefaultFromMarket_ = parseBool(XMLUtils::getNodeValue(n));
+
         // Optional bootstrap configuration
         if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
             bootstrapConfig_.fromXML(n);
@@ -192,6 +198,9 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
 
     if (runningSpread_ != QuantLib::Null<Real>())
         XMLUtils::addChild(doc, node, "RunningSpread", to_string(runningSpread_));
+
+    if (implyDefaultFromMarket_)
+        XMLUtils::addChild(doc, node, "ImplyDefaultFromMarket", *implyDefaultFromMarket_);
 
     XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
 

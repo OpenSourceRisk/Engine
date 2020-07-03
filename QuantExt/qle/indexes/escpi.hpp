@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2018 Quaternion Risk Management Ltd
+ Copyright (C) 2020 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,28 +16,27 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file escpi.hpp
+    \brief Spain CPI index
+*/
+
+#ifndef quantext_escpi_hpp
+#define quantext_escpi_hpp
+
+#include <ql/currencies/europe.hpp>
+#include <ql/indexes/inflationindex.hpp>
 #include <qle/indexes/region.hpp>
 
 namespace QuantExt {
 
-SwedenRegion::SwedenRegion() {
-    static boost::shared_ptr<Data> SEdata(new Data("Sweden", "SE"));
-    data_ = SEdata;
-}
-
-DenmarkRegion::DenmarkRegion() {
-    static boost::shared_ptr<Data> DKdata(new Data("Denmark", "DK"));
-    data_ = DKdata;
-}
-
-CanadaRegion::CanadaRegion() {
-    static boost::shared_ptr<Data> CAdata = boost::make_shared<Data>("Canada", "CA");
-    data_ = CAdata;
-}
-
-SpainRegion::SpainRegion() {
-    static boost::shared_ptr<Data> ESdata = boost::make_shared<Data>("Spain", "ES");
-    data_ = ESdata;
-}
+//! Spain CPI index
+class ESCPI : public ZeroInflationIndex {
+public:
+    ESCPI(bool interpolated, const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>())
+        : ZeroInflationIndex("CPI", SpainRegion(), false, interpolated, Monthly, Period(1, Months), // availability
+                             EURCurrency(), ts) {}
+};
 
 } // namespace QuantExt
+
+#endif
