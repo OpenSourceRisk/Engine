@@ -57,6 +57,7 @@
 #include <qle/indexes/cacpi.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/dkcpi.hpp>
+#include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
