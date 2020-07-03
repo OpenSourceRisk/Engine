@@ -250,6 +250,7 @@ indexes/bondindex.hpp
 indexes/cacpi.hpp
 indexes/commodityindex.hpp
 indexes/dkcpi.hpp
+indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp

@@ -314,9 +314,10 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
         // Equity vols
         if (simMarketConfig_->simulateEquityVols()) {
-            const vector<Period>& expiries = simMarketConfig_->equityVolExpiries();
             for (Size k = 0; k < simMarketConfig_->equityVolNames().size(); k++) {
                 const string equityName = simMarketConfig_->equityVolNames()[k];
+
+                const vector<Period>& expiries = simMarketConfig_->equityVolExpiries(equityName);
 
                 Size eqIndex = eqVols_[k]->equityIndex();
                 Size eqCcyIdx = eqVols_[k]->eqCcyIndex();
