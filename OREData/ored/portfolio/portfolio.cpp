@@ -68,7 +68,6 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
         string id = XMLUtils::getAttribute(nodes[i], "id");
         QL_REQUIRE(id != "", "No id attribute in Trade Node");
         DLOG("Parsing trade id:" << id);
-        WLOG(tradeType);
         boost::shared_ptr<Trade> trade = factory->build(tradeType);
 
         if (trade) {
