@@ -35,4 +35,9 @@ CanadaRegion::CanadaRegion() {
     data_ = CAdata;
 }
 
+SpainRegion::SpainRegion() {
+    static boost::shared_ptr<Data> ESdata = boost::make_shared<Data>("Spain", "ES");
+    data_ = ESdata;
+}
+
 } // namespace QuantExt
