@@ -158,10 +158,7 @@ private:
     using Graph = boost::directed_graph<Node>;
     using IndexMap = boost::property_map<Graph, boost::vertex_index_t>::type;
     using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
-    // using Edge = boost::graph_traits<Graph>::edge_descriptor;
     using VertexIterator = boost::graph_traits<Graph>::vertex_iterator;
-    // using InEdgeIterator = boost::graph_traits<Graph>::in_edge_iterator;
-    // using OutEdgeIterator = boost::graph_traits<Graph>::out_edge_iterator;
 
     // the dependency graphs for each configuration
     mutable std::map<std::string, Graph> dependencies_;
