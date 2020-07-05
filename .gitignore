@@ -158,7 +158,8 @@ App/config.hpp
 ##########################
 # All QuantLib files
 ##########################
-/QuantLib/
+QuantLib
+QuantLib/
 
 ###############################
 #generatedlog4cxxexecutables
