@@ -156,9 +156,28 @@ App/config.hpp
 *.ipynb_checkpoints
 
 ##########################
-# All QuantLib files
+# generated QuantLib files
 ##########################
-QuantLib/
+QuantLib/Examples/BermudanSwaption/BermudanSwaption
+QuantLib/Examples/Bonds/Bonds
+QuantLib/Examples/CDS/CDS
+QuantLib/Examples/CallableBonds/CallableBonds
+QuantLib/Examples/ConvertibleBonds/ConvertibleBonds
+QuantLib/Examples/DiscreteHedging/DiscreteHedging
+QuantLib/Examples/EquityOption/EquityOption
+QuantLib/Examples/FRA/FRA
+QuantLib/Examples/FittedBondCurve/FittedBondCurve
+QuantLib/Examples/MarketModels/MarketModels
+QuantLib/Examples/Replication/Replication
+QuantLib/Examples/Repo/Repo
+QuantLib/Examples/Swap/SwapValuation
+QuantLib/elc-stamp
+QuantLib/quantlib-config
+QuantLib/quantlib.elc
+QuantLib/QuantLib.spec
+QuantLib/test-suite/quantlib-benchmark
+QuantLib/test-suite/quantlib-test-suite
+QuantLib/test-suite/main.cpp
 
 ###############################
 #generatedlog4cxxexecutables
