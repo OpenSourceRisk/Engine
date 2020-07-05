@@ -127,7 +127,7 @@ void CrossCcyBasisSwapHelper::initializeDates() {
     /* Arbitrarily set the spread leg as the pay leg */
     swap_ = boost::shared_ptr<CrossCcyBasisSwap>(new CrossCcyBasisSwap(
         spreadLegNominal, spreadLegCurrency_, spreadLegSchedule, spreadIndex_, 0.0, spreadGearing_, flatLegNominal,
-        flatLegCurrency_, flatLegSchedule, flatIndex_, 0.0, flatGearing_));
+        flatLegCurrency_, flatLegSchedule, flatIndex_, spreadOnFlatLeg_, flatGearing_));
 
     boost::shared_ptr<PricingEngine> engine;
     if (flatIsDomestic_) {
