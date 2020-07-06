@@ -64,7 +64,7 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     // Intentionally use null calendar because we will ask for index value on the expiry date without adjustment.
     if (!isFuturePrice_ || *isFuturePrice_) {
 
-        // Assume future price if isFuturePrice_ is not explicitly set of if it is and true.
+        // Assume future price if isFuturePrice_ is not explicitly set or if it is and true.
 
         // If we are given an explicit future contract expiry date, use it, otherwise use option's expiry.
         Date expiryDate;
