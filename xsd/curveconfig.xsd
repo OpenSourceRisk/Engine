@@ -84,7 +84,7 @@
   </xs:complexType>
 
   <xs:complexType name="volatilityMoneynessSurfaceConfig">
-    <xs:sequence>	
+    <xs:sequence>
       <xs:element type="xs:string" name="QuoteType" minOccurs="0"/>
       <xs:element type="xs:string" name="VolatilityType" minOccurs="0"/>
       <xs:element type="xs:string" name="ExerciseType" minOccurs="0"/>
@@ -587,6 +587,8 @@
 
   <xs:complexType name="volatilityApoFutureSurfaceConfig">
     <xs:sequence>
+      <xs:element type="xs:string" name="QuoteType" minOccurs="0"/>
+      <xs:element type="xs:string" name="VolatilityType" minOccurs="0"/>
       <xs:element type="xs:string" name="MoneynessLevels"/>
       <xs:element type="xs:string" name="VolatilityId"/>
       <xs:element type="xs:string" name="PriceCurveId"/>
