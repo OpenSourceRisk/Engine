@@ -82,12 +82,20 @@ public:
     const string& exerciseFeeSettlementCalendar() const { return exerciseFeeSettlementCalendar_; }
     const string& exerciseFeeSettlementConvention() const { return exerciseFeeSettlementConvention_; }
     const vector<double>& exercisePrices() const { return exercisePrices_; }
-    bool automaticExercise() const {
-        // Assumed false if not provided.
-        return automaticExercise_ ? *automaticExercise_ : false;
-    }
+    boost::optional<bool> automaticExercise() const { return automaticExercise_; }
     const boost::optional<OptionExerciseData>& exerciseData() const { return exerciseData_; }
     const boost::optional<OptionPaymentData>& paymentData() const { return paymentData_; }
+    //@}
+
+    //! \name Setters
+    //@{
+    void setExerciseDates(const std::vector<std::string>& exerciseDates) {
+        exerciseDates_ = exerciseDates;
+    }
+    void setAutomaticExercise(bool automaticExercise) { automaticExercise_ = automaticExercise; }
+    void setPaymentData(const OptionPaymentData& paymentData) {
+        paymentData_ = paymentData;
+    }
     //@}
 
     //! \name Serialisation
@@ -95,6 +103,11 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
+
+    //! Automatic exercise assumed false if not explicitly provided.
+    bool isAutomaticExercise() const {
+        return automaticExercise_ ? *automaticExercise_ : false;
+    }
 
 private:
     string longShort_;    // long or short
