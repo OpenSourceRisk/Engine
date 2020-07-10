@@ -66,6 +66,24 @@
           }
         ]
       },
+      "scenario.csv": {
+        "keys": [
+          "TradeId",
+          "Factor",
+          "Up/Down"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Base NPV",
+              "Scenario NPV",
+              "Difference"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": null
+          }
+        ]
+      },
       "simm_scenario.csv": {
         "keys": [
           "TradeId",
