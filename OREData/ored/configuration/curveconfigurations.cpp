@@ -259,6 +259,41 @@ set<string> CurveConfigurations::yieldCurveConfigIds() {
     return curves;
 }
 
+namespace {
+template <typename T>
+void addRequiredCurveIds(const std::string& curveId, const std::map<std::string, boost::shared_ptr<T>>& configs,
+                         std::map<CurveSpec::CurveType, std::set<string>>& result) {
+    auto c = configs.find(curveId);
+    if (c != configs.end()) {
+        auto r = c->second->requiredCurveIds();
+        result.insert(r.begin(), r.end());
+    }
+}
+} // namespace
+
+std::map<CurveSpec::CurveType, std::set<string>>
+CurveConfigurations::requiredCurveIds(const std::string& curveId) const {
+    std::map<CurveSpec::CurveType, std::set<string>> result;
+    addRequiredCurveIds(curveId, yieldCurveConfigs_, result);
+    addRequiredCurveIds(curveId, fxVolCurveConfigs_, result);
+    addRequiredCurveIds(curveId, swaptionVolCurveConfigs_, result);
+    addRequiredCurveIds(curveId, yieldVolCurveConfigs_, result);
+    addRequiredCurveIds(curveId, capFloorVolCurveConfigs_, result);
+    addRequiredCurveIds(curveId, defaultCurveConfigs_, result);
+    addRequiredCurveIds(curveId, cdsVolCurveConfigs_, result);
+    addRequiredCurveIds(curveId, baseCorrelationCurveConfigs_, result);
+    addRequiredCurveIds(curveId, inflationCurveConfigs_, result);
+    addRequiredCurveIds(curveId, inflationCapFloorVolCurveConfigs_, result);
+    addRequiredCurveIds(curveId, equityCurveConfigs_, result);
+    addRequiredCurveIds(curveId, equityVolCurveConfigs_, result);
+    addRequiredCurveIds(curveId, securityConfigs_, result);
+    addRequiredCurveIds(curveId, fxSpotConfigs_, result);
+    addRequiredCurveIds(curveId, commodityCurveConfigs_, result);
+    addRequiredCurveIds(curveId, commodityVolatilityConfigs_, result);
+    addRequiredCurveIds(curveId, correlationCurveConfigs_, result);
+    return result;
+}
+
 bool CurveConfigurations::hasYieldCurveConfig(const string& curveID) const { return has(curveID, yieldCurveConfigs_); }
 
 const boost::shared_ptr<YieldCurveConfig>& CurveConfigurations::yieldCurveConfig(const string& curveID) const {

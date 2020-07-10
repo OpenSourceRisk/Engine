@@ -31,6 +31,7 @@
 
 namespace ore {
 namespace data {
+
 using ore::data::XMLNode;
 using QuantLib::BusinessDayConvention;
 using QuantLib::Calendar;
@@ -107,6 +108,8 @@ public:
     //@}
 
 private:
+    void populateRequiredCurveIds();
+
     Type type_;
     QuoteType quoteType_;
     VolatilityType volatilityType_;
@@ -127,5 +130,6 @@ private:
 
 std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::VolatilityType t);
 std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::QuoteType t);
+
 } // namespace data
 } // namespace ore

@@ -33,6 +33,7 @@ EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, 
     : CurveConfig(curveID, curveDescription), ccy_(currency), volatilityConfig_(volatilityConfig),
       dayCounter_(dayCounter), calendar_(calendar) {
     populateQuotes();
+    populateRequiredCurveIds();
 }
 
 const string EquityVolatilityCurveConfig::quoteStem() const {
@@ -61,6 +62,11 @@ void EquityVolatilityCurveConfig::populateQuotes() {
             quotes_.push_back(quoteStr);
         }
     }
+}
+
+void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
+    if (!proxySurface().empty())
+        requiredCurveIds_[CurveSpec::CurveType::EquityVolatility].insert(proxySurface());
 }
 
 void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
@@ -144,6 +150,7 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         QL_FAIL("Only ATM and Smile dimensions, or Volatility Config supported for EquityVolatility " << curveID_);
     }
     populateQuotes();
+    populateRequiredCurveIds();
 }
 
 XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {

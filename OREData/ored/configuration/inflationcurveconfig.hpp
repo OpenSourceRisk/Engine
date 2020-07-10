@@ -89,6 +89,8 @@ public:
     vector<string>& seasonalityFactors() { return seasonalityFactors_; }
 
 private:
+    void populateRequiredCurveIds();
+
     vector<string> swapQuotes_;
     string nominalTermStructure_;
     Type type_;
