@@ -495,7 +495,6 @@ public:
     const string& zeroDayCounter() const { return zeroDayCounter_; }
     bool extrapolation() const { return extrapolation_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
-    const set<string>& requiredYieldCurveIDs() const { return requiredYieldCurveIDs_; }
     //@}
 
     //! \name Setters
@@ -510,13 +509,12 @@ public:
     const vector<string>& quotes() override;
 
 private:
-    void populateRequiredYieldCurveIDs();
+    void populateRequiredCurveIds();
 
     // Mandatory members
     string currency_;
     string discountCurveID_;
     vector<boost::shared_ptr<YieldCurveSegment>> curveSegments_;
-    set<string> requiredYieldCurveIDs_;
 
     // Optional members
     string interpolationVariable_;
@@ -528,5 +526,6 @@ private:
 
 // Map form curveID to YieldCurveConfig
 using YieldCurveConfigMap = std::map<string, boost::shared_ptr<YieldCurveConfig>>;
+
 } // namespace data
 } // namespace ore

@@ -16,14 +16,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/algorithm/string.hpp>
-#include <boost/assign.hpp>
-#include <boost/bimap.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+
 #include <ql/errors.hpp>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/assign.hpp>
+#include <boost/bimap.hpp>
 
 using boost::assign::list_of;
 using QuantLib::BusinessDayConvention;
@@ -70,6 +73,9 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
 
     // Check that we have a valid configuration
     validate();
+
+    // Populate required curve ids
+    populateRequiredCurveIds();
 
     // Populate quotes
     populateQuotes();
@@ -151,6 +157,9 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     // Check that we have a valid configuration
     validate();
 
+    // Populate required curve ids
+    populateRequiredCurveIds();
+
     // Populate quotes
     populateQuotes();
 }
@@ -197,6 +206,11 @@ string CapFloorVolatilityCurveConfig::toString(VolatilityType type) const {
     QL_REQUIRE(volatilityTypeMap.right.count(type) > 0,
                "Volatility type (" << static_cast<int>(type) << ") is not valid");
     return volatilityTypeMap.right.at(type);
+}
+
+void CapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
+    if (!discountCurve().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(discountCurve())->curveConfigID());
 }
 
 void CapFloorVolatilityCurveConfig::populateQuotes() {

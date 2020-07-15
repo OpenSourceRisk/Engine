@@ -79,6 +79,15 @@ CorrelationCurveConfig::CorrelationCurveConfig(const string& curveID, const stri
         QL_REQUIRE(optionTenors.size() == 1,
                    "Only one tenor should be supplied for a constant correlation termstructure");
     }
+
+    populateRequiredCurveIds();
+}
+
+void CorrelationCurveConfig::populateRequiredCurveIds() {
+    if (!swaptionVolatility().empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwaptionVolatility].insert(swaptionVolatility());
+    if (!discountCurve().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(discountCurve());
 }
 
 const vector<string>& CorrelationCurveConfig::quotes() {
@@ -181,6 +190,7 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
             discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
         }
     }
+    populateRequiredCurveIds();
 }
 
 XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {

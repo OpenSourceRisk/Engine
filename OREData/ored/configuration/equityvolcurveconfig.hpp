@@ -80,6 +80,8 @@ public:
     //@}
 
 private:
+    void populateRequiredCurveIds();
+
     string ccy_;
     boost::shared_ptr<VolatilityConfig> volatilityConfig_;
     string dayCounter_;

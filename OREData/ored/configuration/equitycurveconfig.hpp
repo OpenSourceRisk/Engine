@@ -95,6 +95,8 @@ public:
     //@}
 
 private:
+    void populateRequiredCurveIds();
+
     vector<string> fwdQuotes_;
     string forecastingCurve_;
     string currency_;
