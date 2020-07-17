@@ -20,6 +20,8 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
+#include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 
@@ -80,8 +82,8 @@ class SegmentIDGetter : public AcyclicVisitor,
                         public Visitor<FittedBondYieldCurveSegment> {
 
 public:
-    SegmentIDGetter(const string& curveID, set<string>& requiredYieldCurveIDs)
-        : curveID_(curveID), requiredYieldCurveIDs_(requiredYieldCurveIDs) {}
+    SegmentIDGetter(const string& curveID, map<CurveSpec::CurveType, set<string>>& requiredCurveIds)
+        : curveID_(curveID), requiredCurveIds_(requiredCurveIds) {}
 
     void visit(YieldCurveSegment&);
     void visit(SimpleYieldCurveSegment& s);
@@ -94,7 +96,7 @@ public:
 
 private:
     string curveID_;
-    set<string>& requiredYieldCurveIDs_;
+    map<CurveSpec::CurveType, set<string>>& requiredCurveIds_;
 };
 
 void SegmentIDGetter::visit(YieldCurveSegment&) {
@@ -104,65 +106,65 @@ void SegmentIDGetter::visit(YieldCurveSegment&) {
 void SegmentIDGetter::visit(SimpleYieldCurveSegment& s) {
     string aCurveID = s.projectionCurveID();
     if (curveID_ != aCurveID && !aCurveID.empty()) {
-        requiredYieldCurveIDs_.insert(aCurveID);
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID);
     }
 }
 
 void SegmentIDGetter::visit(AverageOISYieldCurveSegment& s) {
     string aCurveID = s.projectionCurveID();
     if (curveID_ != aCurveID && !aCurveID.empty()) {
-        requiredYieldCurveIDs_.insert(aCurveID);
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID);
     }
 }
 
 void SegmentIDGetter::visit(TenorBasisYieldCurveSegment& s) {
     string aCurveID = s.shortProjectionCurveID();
     if (curveID_ != aCurveID && !aCurveID.empty()) {
-        requiredYieldCurveIDs_.insert(aCurveID);
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID);
     }
     aCurveID = s.longProjectionCurveID();
     if (curveID_ != aCurveID && !aCurveID.empty()) {
-        requiredYieldCurveIDs_.insert(aCurveID);
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID);
     }
 }
 
 void SegmentIDGetter::visit(CrossCcyYieldCurveSegment& s) {
     string aCurveID = s.foreignDiscountCurveID();
     if (curveID_ != aCurveID && !aCurveID.empty()) {
-        requiredYieldCurveIDs_.insert(aCurveID);
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID);
     }
     aCurveID = s.domesticProjectionCurveID();
     if (curveID_ != aCurveID && !aCurveID.empty()) {
-        requiredYieldCurveIDs_.insert(aCurveID);
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID);
     }
     aCurveID = s.foreignProjectionCurveID();
     if (curveID_ != aCurveID && !aCurveID.empty()) {
-        requiredYieldCurveIDs_.insert(aCurveID);
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID);
     }
 }
 
 void SegmentIDGetter::visit(ZeroSpreadedYieldCurveSegment& s) {
     string aCurveID = s.referenceCurveID();
     if (curveID_ != aCurveID && !aCurveID.empty()) {
-        requiredYieldCurveIDs_.insert(aCurveID);
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID);
     }
 }
 
 void SegmentIDGetter::visit(DiscountRatioYieldCurveSegment& s) {
     if (curveID_ != s.baseCurveId() && !s.baseCurveId().empty()) {
-        requiredYieldCurveIDs_.insert(s.baseCurveId());
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(s.baseCurveId());
     }
     if (curveID_ != s.numeratorCurveId() && !s.numeratorCurveId().empty()) {
-        requiredYieldCurveIDs_.insert(s.numeratorCurveId());
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(s.numeratorCurveId());
     }
     if (curveID_ != s.denominatorCurveId() && !s.denominatorCurveId().empty()) {
-        requiredYieldCurveIDs_.insert(s.denominatorCurveId());
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(s.denominatorCurveId());
     }
 }
 
 void SegmentIDGetter::visit(FittedBondYieldCurveSegment& s) {
     for (auto const& c : s.iborIndexCurves())
-        requiredYieldCurveIDs_.insert(c.second);
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(c.second);
 }
 
 // YieldCurveConfig
@@ -176,7 +178,7 @@ YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDes
       curveSegments_(curveSegments), interpolationVariable_(interpolationVariable),
       interpolationMethod_(interpolationMethod), zeroDayCounter_(zeroDayCounter), extrapolation_(extrapolation),
       bootstrapConfig_(bootstrapConfig) {
-    populateRequiredYieldCurveIDs();
+    populateRequiredCurveIds();
 }
 
 const vector<string>& YieldCurveConfig::quotes() {
@@ -289,7 +291,7 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
                             bootstrapConfig_.maxFactor(), bootstrapConfig_.minFactor());
     }
 
-    populateRequiredYieldCurveIDs();
+    populateRequiredCurveIds();
 }
 
 XMLNode* YieldCurveConfig::toXML(XMLDocument& doc) {
@@ -320,17 +322,15 @@ XMLNode* YieldCurveConfig::toXML(XMLDocument& doc) {
     return node;
 }
 
-void YieldCurveConfig::populateRequiredYieldCurveIDs() {
+void YieldCurveConfig::populateRequiredCurveIds() {
 
-    if (!requiredYieldCurveIDs_.empty()) {
-        requiredYieldCurveIDs_.clear();
-    }
+    requiredCurveIds_.clear();
 
     if (curveID_ != discountCurveID_ && !discountCurveID_.empty()) {
-        requiredYieldCurveIDs_.insert(discountCurveID_);
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(discountCurveID_);
     }
 
-    SegmentIDGetter segmentIDGetter(curveID_, requiredYieldCurveIDs_);
+    SegmentIDGetter segmentIDGetter(curveID_, requiredCurveIds_);
     for (Size i = 0; i < curveSegments_.size(); i++) {
         curveSegments_[i]->accept(segmentIDGetter);
     }

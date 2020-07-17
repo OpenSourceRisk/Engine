@@ -38,6 +38,12 @@ EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveD
       exerciseStyle_(exerciseStyle) {
     quotes_ = fwdQuotes;
     quotes_.insert(quotes_.begin(), equitySpotQuote);
+    populateRequiredCurveIds();
+}
+
+void EquityCurveConfig::populateRequiredCurveIds() {
+    if (!forecastingCurve().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(forecastingCurve());
 }
 
 void EquityCurveConfig::fromXML(XMLNode* node) {
@@ -76,6 +82,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     } else {
         QL_REQUIRE(fwdQuotes_.size() > 0, "Invalid EquityCurveConfig, Quotes should be present when type!=NoDividends");
     }
+    populateRequiredCurveIds();
 }
 
 XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {

@@ -112,7 +112,7 @@ public:
     const std::set<string>& requiredYieldCurveIDs() const { return requiredYieldCurveIDs_; };
     //@}
 private:
-    void populateRequiredYieldCurveIDs();
+    void populateRequiredCurveIds();
 
     Dimension dimension_;
     vector<string> expiries_;
