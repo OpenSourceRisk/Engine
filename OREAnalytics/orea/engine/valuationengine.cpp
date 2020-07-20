@@ -52,7 +52,9 @@ ValuationEngine::ValuationEngine(const Date& today, const boost::shared_ptr<Date
 
 void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfolio,
                                 boost::shared_ptr<analytics::NPVCube> outputCube,
-                                vector<boost::shared_ptr<ValuationCalculator>> calculators) {
+                                vector<boost::shared_ptr<ValuationCalculator>> calculators, bool mporStickyDate) {
+
+    LOG("Build cube with mporStickyDate=" << mporStickyDate);
 
     QL_REQUIRE(portfolio->size() > 0, "ValuationEngine: Error portfolio is empty");
 
@@ -60,9 +62,9 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                "cube x dimension (" << outputCube->numIds() << ") "
                                     << "different from portfolio size (" << portfolio->trades().size() << ")");
 
-    QL_REQUIRE(outputCube->numDates() == dg_->dates().size(),
+    QL_REQUIRE(outputCube->numDates() == dg_->valuationDates().size(),
                "cube y dimension (" << outputCube->numDates() << ") "
-                                    << "different from number of time steps (" << dg_->dates().size() << ")");
+                                    << "different from number of valuation dates (" << dg_->valuationDates().size() << ")");
 
     LOG("Starting ValuationEngine for " << portfolio->size() << " trades, " << outputCube->samples() << " samples and "
                                         << dg_->size() << " dates.");
@@ -121,40 +123,97 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         for (auto& trade : trades)
             trade->instrument()->reset();
 
-        // loop over Dates
-        for (Size i = 0; i < dates.size(); ++i) {
+        // loop over Dates, increase cubeDateIndex for each valuation date we hit
+        int cubeDateIndex = -1;
+	for (Size i = 0; i < dates.size(); ++i) {
             Date d = dates[i];
+	    
+	    // Process auxiliary close-out dates first (may coincide with a valuation date, see below)
+	    // Store result at same cubeDateIndex as the previous valuation date's result, but at different cube depth
+	    // Differences to valuation date processing above:
+	    // Update valuation date and fixings, trades exercisable depending on stickiness 
+	    bool dateUpdated = false;
+	    bool scenarioUpdated = false;
+	    if (dg_->isCloseOutDate()[i]) {
+		timer.start();
 
-            timer.start();
+		// update market
+		simMarket_->preUpdate();
+	        if (!mporStickyDate) {
+		    simMarket_->updateDate(d);
+		    dateUpdated = true;
+		}
+		simMarket_->updateScenario(d);
+		scenarioUpdated = true;
 
-            simMarket_->update(d);
+		simMarket_->postUpdate(d, !mporStickyDate); // with fixings only if not sticky
 
-            // recalibrate models
-            for (auto const& b : modelBuilders_) {
-                if (om == ObservationMode::Mode::Disable)
-                    b.second->forceRecalculate();
-                b.second->recalibrate();
-            }
+		// recalibrate models
+		for (auto const& b : modelBuilders_) {
+		    if (om == ObservationMode::Mode::Disable)
+		        b.second->forceRecalculate();
+		    b.second->recalibrate();
+		}
 
-            timer.stop();
-            updateTime += timer.elapsed().wall * 1e-9;
+		timer.stop();
+		updateTime += timer.elapsed().wall * 1e-9;
 
-            // loop over trades
-            timer.start();
-            for (Size j = 0; j < trades.size(); ++j) {
-                auto trade = trades[j];
+		// loop over trades
+		timer.start();
+		if (mporStickyDate) // switch off if sticky
+                    tradeExercisable(false, trades);
+		QL_REQUIRE(cubeDateIndex >= 0, "negative cube date index, ensure that the date grid starts with a valuation date");
+                runCalculators(true, trades, calculators, outputCube, d, cubeDateIndex, sample);
+		if (mporStickyDate) // switch on again, if sticky
+                    tradeExercisable(true, trades);
+		timer.stop();
+		pricingTime += timer.elapsed().wall * 1e-9;
+	    }
 
-                // We can avoid checking mode here and always call updateQlInstruments()
-                if (om == ObservationMode::Mode::Disable)
-                    trade->instrument()->updateQlInstruments();
+	    // process a valuation date as usual
+	    if (dg_->isValuationDate()[i]) {
+	        timer.start();
 
-                for (auto calc : calculators)
-                    calc->calculate(trade, j, simMarket_, outputCube, d, i, sample);
-            }
-            timer.stop();
-            pricingTime += timer.elapsed().wall * 1e-9;
-        }
+		cubeDateIndex++;
 
+		// Don't do the following, decompose into several steps
+		// simMarket_->update(d); 
+		
+		simMarket_->preUpdate();
+
+		// we can skip this step if we have done that above in the close-out date section
+		if (!dateUpdated)
+		    simMarket_->updateDate(d);
+
+		// ... and we can skip this step, too, if we have done that above in the close-out date section
+		if (!scenarioUpdated)
+		    simMarket_->updateScenario(d);
+
+		// always with fixing update here
+		simMarket_->postUpdate(d, true); 
+
+		// aggregation scenario data update on valuation dates only 
+		simMarket_->updateAsd(d);
+	    
+		// recalibrate models
+		for (auto const& b : modelBuilders_) {
+		    if (om == ObservationMode::Mode::Disable)
+		        b.second->forceRecalculate();
+		    b.second->recalibrate();
+		}
+
+		timer.stop();
+		updateTime += timer.elapsed().wall * 1e-9;
+
+		// loop over trades
+		timer.start();
+		runCalculators(false, trades, calculators, outputCube, d, cubeDateIndex, sample);
+		timer.stop();
+		pricingTime += timer.elapsed().wall * 1e-9;
+	    }
+
+	}
+	
         timer.start();
         simMarket_->fixingManager()->reset();
         fixingTime += timer.elapsed().wall * 1e-9;
@@ -167,6 +226,35 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                                            << "pricing " << pricingTime << " sec, "
                                            << "update " << updateTime << " sec "
                                            << "fixing " << fixingTime);
+}
+
+void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<boost::shared_ptr<Trade>>& trades,
+                                     const std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
+                                     boost::shared_ptr<analytics::NPVCube>& outputCube, const Date& d,
+                                     const Size cubeDateIndex, const Size sample) {
+    ObservationMode::Mode om = ObservationMode::instance().mode();
+    // loop over trades
+    for (Size j = 0; j < trades.size(); ++j) {
+        auto trade = trades[j];
+        // We can avoid checking mode here and always call updateQlInstruments()
+        if (om == ObservationMode::Mode::Disable)
+            trade->instrument()->updateQlInstruments();
+        for (auto calc : calculators)
+            calc->calculate(trade, j, simMarket_, outputCube, d, cubeDateIndex, sample, isCloseOutDate);
+    }
+
+}
+
+void ValuationEngine::tradeExercisable(bool enable, const std::vector<boost::shared_ptr<Trade>>& trades) {
+    for (Size j = 0; j < trades.size(); ++j) {
+        auto t = boost::dynamic_pointer_cast<OptionWrapper>(trades[j]->instrument());
+        if (t != nullptr) {
+            if (enable)
+                t->enableExercise();
+            else
+                t->disableExercise();
+        }
+    }
 }
 } // namespace analytics
 } // namespace ore

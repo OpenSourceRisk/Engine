@@ -36,6 +36,7 @@
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/cube/cubeinterpretation.hpp>
 #include <ored/ored.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/tradefactory.hpp>
@@ -228,10 +229,11 @@ protected:
     Size samples_;
 
     Size cubeDepth_;
+    bool storeFlows_, useCloseOutLag_, useMporStickyDate_;
     boost::shared_ptr<NPVCube> cube_;
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
-
+    boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
     ore::data::CurveConfigurations curveConfigs_;
 
     //! Populated if a sensitivity analysis is performed.

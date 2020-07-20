@@ -142,8 +142,13 @@ public:
     //! Get scenarioFilter
     const boost::shared_ptr<ScenarioFilter>& filter() const { return filter_; }
 
-    //! Update market snapshot and relevant fixing history
-    void update(const Date& d) override;
+    //! Update
+    // virtual void update(const Date&) override;
+    virtual void preUpdate() override;
+    virtual void updateScenario(const Date&) override;
+    virtual void updateDate(const Date&) override;
+    virtual void postUpdate(const Date& d, bool withFixings) override;
+    virtual void updateAsd(const Date&) override;
 
     //! Reset sim market to initial state
     virtual void reset() override;

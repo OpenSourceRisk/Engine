@@ -88,7 +88,7 @@ public:
     //! Return the length of each dimension
     Size numIds() const override { return ids_.size(); }
     Size numDates() const override { return dates_.size(); }
-    Size samples() const override { return samples_; }
+    virtual Size samples() const override { return samples_; }
 
     //! Get the vector of ids for this cube
     const std::vector<std::string>& ids() const override { return ids_; }
@@ -145,13 +145,13 @@ public:
     Size depth() const override { return 1; }
 
     //! Get a T0 value from the cube
-    Real getT0(Size i, Size d) const override {
+    virtual Real getT0(Size i, Size d) const override {
         this->check(i, 0, 0, d);
         return this->t0Data_[i];
     }
 
     //! Set a value in the cube
-    void setT0(Real value, Size i, Size d) override {
+    virtual void setT0(Real value, Size i, Size d) override {
         this->check(i, 0, 0, d);
         this->t0Data_[i] = static_cast<T>(value);
     }
@@ -185,13 +185,13 @@ public:
     Size depth() const override { return this->data_[0][0][0].size(); } // we don't want any members in this class
 
     //! Get a T0 value from the cube
-    Real getT0(Size i, Size d) const override {
+    virtual Real getT0(Size i, Size d) const override {
         this->check(i, 0, 0, d);
         return this->t0Data_[i][d];
     }
 
     //! Set a value in the cube
-    void setT0(Real value, Size i, Size d) override {
+    virtual void setT0(Real value, Size i, Size d) override {
         this->check(i, 0, 0, d);
         this->t0Data_[i][d] = static_cast<T>(value);
     }

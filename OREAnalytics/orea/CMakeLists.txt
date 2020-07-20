@@ -8,9 +8,11 @@ app/parameters.cpp
 app/reportwriter.cpp
 app/sensitivityrunner.cpp
 app/structuredanalyticserror.cpp
+cube/cubeinterpretation.cpp
 cube/cubewriter.cpp
 cube/sensitivitycube.cpp
 engine/filteredsensitivitystream.cpp
+engine/mporcalculator.cpp
 engine/parametricvar.cpp
 engine/riskfilter.cpp
 engine/sensitivityaggregator.cpp
@@ -25,6 +27,7 @@ engine/valuationengine.cpp
 scenario/clonescenariofactory.cpp
 scenario/crossassetmodelscenariogenerator.cpp
 scenario/lgmscenariogenerator.cpp
+scenario/mporscenariogenerator.cpp
 scenario/scenario.cpp
 scenario/scenariogeneratorbuilder.cpp
 scenario/scenariogeneratordata.cpp
@@ -51,6 +54,7 @@ app/reportwriter.hpp
 app/sensitivityrunner.hpp
 app/structuredanalyticserror.hpp
 auto_link.hpp
+cube/cubeinterpretation.hpp
 cube/cubewriter.hpp
 cube/inmemorycube.hpp
 cube/npvcube.hpp
@@ -58,6 +62,7 @@ cube/npvsensicube.hpp
 cube/sensicube.hpp
 cube/sensitivitycube.hpp
 engine/filteredsensitivitystream.hpp
+engine/mporcalculator.hpp
 engine/observationmode.hpp
 engine/parametricvar.hpp
 engine/riskfilter.hpp
@@ -75,6 +80,8 @@ scenario/aggregationscenariodata.hpp
 scenario/clonescenariofactory.hpp
 scenario/crossassetmodelscenariogenerator.hpp
 scenario/lgmscenariogenerator.hpp
+scenario/mporaggregationscenariodata.hpp
+scenario/mporscenariogenerator.hpp
 scenario/scenario.hpp
 scenario/scenariofactory.hpp
 scenario/scenariogenerator.hpp

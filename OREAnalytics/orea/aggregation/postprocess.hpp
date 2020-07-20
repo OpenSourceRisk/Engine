@@ -25,6 +25,7 @@
 
 #include <orea/aggregation/collatexposurehelper.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/cube/cubeinterpretation.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
 
 #include <ored/portfolio/nettingsetmanager.hpp>
@@ -141,8 +142,10 @@ public:
         Size dimLocalRegressionEvaluations = 0,
         //! Local regression band width in standard deviations of the regression variable
         Real dimLocalRegressionBandwidth = 0,
-        //! Scaling factor applied to all DIM values
+	//! Scaling factor applied to all DIM values
         Real dimScaling = 1.0,
+	//! Interpreter for cube storage (where to find which data items)
+        boost::shared_ptr<CubeInterpretation> cubeInterpretation = boost::shared_ptr<CubeInterpretation>(),
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
         bool fullInitialCollateralisation = false,
         //! own capital discounting rate for discounting expected capital for KVA
@@ -295,6 +298,7 @@ private:
     Disposable<Array> regressorArray(string nettingSet, Size dateIndex, Size sampleIndex);
     //! Perform the calculation of IM as of t=t0
     void performT0DimCalc();
+    void populateNetSetValContainers(); 
 
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<NettingSetManager> nettingSetManager_;
@@ -304,7 +308,7 @@ private:
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     map<string, bool> analytics_;
 
-    map<string, vector<vector<Real>>> nettingSetNPV_, nettingSetFLOW_, nettingSetDIM_, nettingSetLocalDIM_,
+  map<string, vector<vector<Real>>> nettingSetNPV_, nettingSetCloseOutNPV_, nettingSetFLOW_, nettingSetDIM_, nettingSetLocalDIM_,
         nettingSetDeltaNPV_;
     map<string, vector<vector<Array>>> regressorArray_;
     map<string, vector<Real>> nettingSetExpectedDIM_, nettingSetZeroOrderDIM_, nettingSetSimpleDIMh_,
@@ -344,6 +348,7 @@ private:
     Size dimLocalRegressionEvaluations_;
     Real dimLocalRegressionBandwidth_;
     Real dimScaling_;
+    boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
     bool fullInitialCollateralisation_;
     Real kvaCapitalDiscountRate_;
     Real kvaAlpha_;
@@ -353,6 +358,7 @@ private:
     Real kvaTheirPdFloor_;
     Real kvaOurCvaRiskWeight_;
     Real kvaTheirCvaRiskWeight_;
+    bool populatedNetSetValContainers_;
 };
 } // namespace analytics
 } // namespace ore

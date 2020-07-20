@@ -75,9 +75,16 @@ public:
         //! Object for storing the resulting NPV cube
         boost::shared_ptr<analytics::NPVCube> outputCube,
         //! Calculators to use
-        std::vector<boost::shared_ptr<ValuationCalculator>> calculators);
+        std::vector<boost::shared_ptr<ValuationCalculator>> calculators,
+        //! Use sticky date in MPOR evaluation?
+        bool mporStickyDate = true);
 
 private:
+    void runCalculators(bool isCloseOutDate, const std::vector<boost::shared_ptr<Trade>>& trades,
+                        const std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
+                        boost::shared_ptr<analytics::NPVCube>& outputCube, const Date& d, const Size cubeDateIndex,
+                        const Size sample);
+    void tradeExercisable(bool enable, const std::vector<boost::shared_ptr<Trade>>& trades);
     QuantLib::Date today_;
     boost::shared_ptr<DateGrid> dg_;
     boost::shared_ptr<analytics::SimMarket> simMarket_;

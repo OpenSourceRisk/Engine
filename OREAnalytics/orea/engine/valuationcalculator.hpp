@@ -54,7 +54,9 @@ public:
         //! Date index
         Size dateIndex,
         //! Sample
-        Size sample) = 0;
+        Size sample,
+        //! isCloseOut
+        bool isCloseOut = false) = 0;
 
     virtual void calculateT0(
         //! The trade
@@ -79,14 +81,14 @@ public:
 
     virtual void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                            const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                           const Date& date, Size dateIndex, Size sample);
+                           const Date& date, Size dateIndex, Size sample, bool isCloseOut = false);
 
     virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                              const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube);
 
-protected:
     virtual Real npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket);
 
+protected:
     std::string baseCcyCode_;
     Size index_;
 };
@@ -105,7 +107,7 @@ public:
 
     virtual void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                            const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                           const Date& date, Size dateIndex, Size sample);
+                           const Date& date, Size dateIndex, Size sample, bool isCloseOut = false);
 
     virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                              const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube) {}
@@ -132,14 +134,14 @@ public:
 
     virtual void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                            const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                           const Date& date, Size dateIndex, Size sample);
+                           const Date& date, Size dateIndex, Size sample, bool isCloseOut = false);
 
     virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                              const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube);
 
-private:
     Real npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket);
 
+private:
     std::string baseCcyCode_;
     boost::shared_ptr<Market> t0Market_;
     Size index_;
