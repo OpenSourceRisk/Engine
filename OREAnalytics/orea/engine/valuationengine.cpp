@@ -132,20 +132,16 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
 	    // Store result at same cubeDateIndex as the previous valuation date's result, but at different cube depth
 	    // Differences to valuation date processing above:
 	    // Update valuation date and fixings, trades exercisable depending on stickiness 
-	    bool dateUpdated = false;
 	    bool scenarioUpdated = false;
 	    if (dg_->isCloseOutDate()[i]) {
 		timer.start();
 
 		// update market
 		simMarket_->preUpdate();
-	        if (!mporStickyDate) {
+		if (!mporStickyDate)
 		    simMarket_->updateDate(d);
-		    dateUpdated = true;
-		}
 		simMarket_->updateScenario(d);
 		scenarioUpdated = true;
-
 		simMarket_->postUpdate(d, !mporStickyDate); // with fixings only if not sticky
 
 		// recalibrate models
@@ -176,23 +172,16 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
 
 		cubeDateIndex++;
 
-		// Don't do the following, decompose into several steps
-		// simMarket_->update(d); 
-		
+		// All the steps below from preUpdate() to updateAsd(d) are combined in update(d), but we decompose as follows
+		// simMarket_->update(d); 		
 		simMarket_->preUpdate();
-
-		// we can skip this step if we have done that above in the close-out date section
-		if (!dateUpdated)
-		    simMarket_->updateDate(d);
-
-		// ... and we can skip this step, too, if we have done that above in the close-out date section
+		simMarket_->updateDate(d);
+		// We can skip this step, if we have done that above in the close-out date section
 		if (!scenarioUpdated)
 		    simMarket_->updateScenario(d);
-
-		// always with fixing update here
+		// Always with fixing update here, in contrast to the close-out date section
 		simMarket_->postUpdate(d, true); 
-
-		// aggregation scenario data update on valuation dates only 
+		// Aggregation scenario data update on valuation dates only 
 		simMarket_->updateAsd(d);
 	    
 		// recalibrate models
