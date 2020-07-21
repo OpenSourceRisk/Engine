@@ -31,7 +31,8 @@ namespace data {
 
 DateGrid::DateGrid()
     : dates_(1, Settings::instance().evaluationDate()), tenors_(1, 0 * Days), times_(1, 0.0),
-      timeGrid_(times_.begin(), times_.end()) {}
+      timeGrid_(times_.begin(), times_.end()),
+      isValuationDate_(std::vector<bool>(1, true)), isCloseOutDate_(std::vector<bool>(1, false)) {}
 
 DateGrid::DateGrid(const string& grid, const QuantLib::Calendar& gridCalendar, const QuantLib::DayCounter& dayCounter)
     : calendar_(gridCalendar), dayCounter_(dayCounter) {
