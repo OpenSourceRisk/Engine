@@ -110,7 +110,10 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
          WLOG("cube interpretation is not set, use regular");
 	 cubeInterpretation_ = boost::make_shared<RegularCubeInterpretation>();
      }
-     
+     boost::shared_ptr<RegularCubeInterpretation> regularCubeInterpretation =
+         boost::dynamic_pointer_cast<RegularCubeInterpretation>(cubeInterpretation_); 
+     bool isRegularCubeStorage = (regularCubeInterpretation != NULL); 
+   
      QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
     // check portfolio and cube have the same trade ids, in the same order
@@ -125,7 +128,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
     }
 
     Size trades = portfolio->size();
-    Size dates = cube_->dates().size();
+    Size dates = (isRegularCubeStorage) ? cube_->dates().size() - 1 : cube_->dates().size();
     Size samples = cube->samples();
 
     AllocationMethod allocationMethod = parseAllocationMethod(allocMethod);
@@ -256,8 +259,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         Real npv0 = tradeValueToday[tradeId];
         vector<Real> epe(dates + 1, 0.0);
         vector<Real> ene(dates + 1, 0.0);
-        vector<Real> ee_b(dates + 1);
-        vector<Real> eee_b(dates + 1);
+        vector<Real> ee_b(dates + 1, 0.0);
+        vector<Real> eee_b(dates + 1, 0.0);
         vector<Real> pfe(dates + 1, 0.0);
         epe[0] = std::max(npv0, 0.0);
         ene[0] = std::max(-npv0, 0.0);
