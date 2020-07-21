@@ -17,6 +17,7 @@
 */
 
 #include <ored/configuration/defaultcurveconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -51,6 +52,17 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curv
     if (type_ != Type::SpreadCDS && startDate_ != Date()) {
         WLOG("'StartDate' is only used when type is 'SpreadCDS'");
     }
+
+    populateRequiredCurveIds();
+}
+
+void DefaultCurveConfig::populateRequiredCurveIds() {
+    if (!discountCurveID().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(discountCurveID())->curveConfigID());
+    if (!benchmarkCurveID().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(benchmarkCurveID())->curveConfigID());
+    if (!sourceCurveID().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(sourceCurveID())->curveConfigID());
 }
 
 void DefaultCurveConfig::fromXML(XMLNode* node) {
@@ -138,6 +150,8 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
             bootstrapConfig_.fromXML(n);
         }
     }
+
+    populateRequiredCurveIds();
 }
 
 XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {

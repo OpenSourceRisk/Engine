@@ -93,8 +93,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
 			 bool fullInitialCollateralisation,
                          Real kvaCapitalDiscountRate, Real kvaAlpha, Real kvaRegAdjustment, Real kvaCapitalHurdle,
                          Real kvaOurPdFloor, Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight, Real kvaTheirCvaRiskWeight)
-    : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), cube_(cube),
-      scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
+    : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), configuration_(configuration),
+      cube_(cube), scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
       fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), dimQuantile_(dimQuantile),
       dimHorizonCalendarDays_(dimHorizonCalendarDays), dimRegressionOrder_(dimRegressionOrder),
@@ -113,7 +113,10 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
      boost::shared_ptr<RegularCubeInterpretation> regularCubeInterpretation =
          boost::dynamic_pointer_cast<RegularCubeInterpretation>(cubeInterpretation_); 
      bool isRegularCubeStorage = (regularCubeInterpretation != NULL); 
-   
+
+     LOG("cube storage is regular: " << isRegularCubeStorage);
+     LOG("cube dates: " << cube->dates().size());
+     
      QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
     // check portfolio and cube have the same trade ids, in the same order
@@ -128,7 +131,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
     }
 
     Size trades = portfolio->size();
-    Size dates = (isRegularCubeStorage) ? cube_->dates().size() - 1 : cube_->dates().size();
+    Size dates = cube_->dates().size(); // (isRegularCubeStorage) ? cube_->dates().size() - 1 : cube_->dates().size();
     Size samples = cube->samples();
 
     AllocationMethod allocationMethod = parseAllocationMethod(allocMethod);
@@ -279,7 +282,11 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
 	        //    grid has MPoR spacing), and we use the default date NPV.
 	        //    This is the treatment in the ORE releases up to June 2020).
 	        Real defaultValue = d > nextBreakDate && exerciseNextBreak ? 0.0 : cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
-	        Real closeOutValue = d > nextBreakDate && exerciseNextBreak ? 0.0 : cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
+	        Real closeOutValue;
+		if (isRegularCubeStorage && j == dates - 1)
+		    closeOutValue = defaultValue;
+		else
+		    closeOutValue = d > nextBreakDate && exerciseNextBreak ? 0.0 : cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
 		Real npv = calcType_ == CollateralExposureHelper::CalculationType::NoLag ? closeOutValue : defaultValue;
 		epe[j + 1] += max(npv, 0.0) / samples;
                 ene[j + 1] += max(-npv, 0.0) / samples;

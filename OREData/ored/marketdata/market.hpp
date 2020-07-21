@@ -56,6 +56,31 @@ enum class YieldCurveType {
     EquityDividend = 2
 };
 
+enum class MarketObject {
+    DiscountCurve = 0,
+    YieldCurve = 1,
+    IndexCurve = 2,
+    SwapIndexCurve = 3,
+    FXSpot = 4,
+    FXVol = 5,
+    SwaptionVol = 6,
+    DefaultCurve = 7,
+    CDSVol = 8,
+    BaseCorrelation = 9,
+    CapFloorVol = 10,
+    ZeroInflationCurve = 11,
+    YoYInflationCurve = 12,
+    ZeroInflationCapFloorVol = 13,
+    YoYInflationCapFloorVol = 14,
+    EquityCurve = 15,
+    EquityVol = 16,
+    Security = 17,
+    CommodityCurve = 18,
+    CommodityVolatility = 19,
+    Correlation = 20,
+    YieldVol = 21
+};
+
 //! Market
 /*!
   Base class for central repositories containing all term structure objects
