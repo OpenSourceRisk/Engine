@@ -27,7 +27,6 @@ engine/valuationengine.cpp
 scenario/clonescenariofactory.cpp
 scenario/crossassetmodelscenariogenerator.cpp
 scenario/lgmscenariogenerator.cpp
-scenario/mporscenariogenerator.cpp
 scenario/scenario.cpp
 scenario/scenariogeneratorbuilder.cpp
 scenario/scenariogeneratordata.cpp
@@ -80,8 +79,6 @@ scenario/aggregationscenariodata.hpp
 scenario/clonescenariofactory.hpp
 scenario/crossassetmodelscenariogenerator.hpp
 scenario/lgmscenariogenerator.hpp
-scenario/mporaggregationscenariodata.hpp
-scenario/mporscenariogenerator.hpp
 scenario/scenario.hpp
 scenario/scenariofactory.hpp
 scenario/scenariogenerator.hpp
