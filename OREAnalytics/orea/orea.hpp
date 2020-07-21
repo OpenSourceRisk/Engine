@@ -13,6 +13,7 @@
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
+#include <orea/cube/cubeinterpretation.hpp>
 #include <orea/cube/cubewriter.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -20,6 +21,7 @@
 #include <orea/cube/sensicube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
+#include <orea/engine/mporcalculator.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parametricvar.hpp>
 #include <orea/engine/riskfilter.hpp>
