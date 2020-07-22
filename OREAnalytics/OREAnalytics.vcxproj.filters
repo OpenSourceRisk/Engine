@@ -170,6 +170,12 @@
     <ClInclude Include="orea\app\structuredanalyticserror.hpp">
       <Filter>app</Filter>
     </ClInclude>
+    <ClInclude Include="orea\cube\cubeinterpretation.hpp">
+      <Filter>cube</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\mporcalculator.hpp">
+      <Filter>cube</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -288,6 +294,12 @@
     </ClCompile>
     <ClCompile Include="orea\app\structuredanalyticserror.cpp">
       <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\cube\cubeinterpretation.cpp">
+      <Filter>cube</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\mporcalculator.cpp">
+      <Filter>cube</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
