@@ -1268,9 +1268,9 @@ void PostProcess::dynamicInitialMargin() {
                     localRegressionSamples = Size(floor(1.0 * samples / dimLocalRegressionEvaluations_ + .5));
 
                 // Evaluate regression function to compute DIM for each scenario
-                for (Size k = 0; k < samples; ++k) {
-		    // Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
-                    Real numDefault = cubeInterpretation_->getDefaultAggrionScenarioData( 
+		for (Size k = 0; k < samples; ++k) {
+                    // Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
+                    Real numDefault = cubeInterpretation_->getDefaultAggrionScenarioData(
                             scenarioData_, AggregationScenarioDataType::Numeraire, j, k); 
 		    Array regressor =
                         dimRegressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
@@ -1789,6 +1789,8 @@ void PostProcess::exportDimRegression(const std::string& nettingSet, const std::
             nettingSetLocalDIM_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0)); 
             nettingSetExpectedDIM_[nettingSetId] = vector<Real>(dates, 0.0); 
             nettingSetZeroOrderDIM_[nettingSetId] = vector<Real>(dates, 0.0); 
+            nettingSetSimpleDIMh_[nettingSetId] = vector<Real>(dates, 0.0);
+            nettingSetSimpleDIMp_[nettingSetId] = vector<Real>(dates, 0.0);
         } 
         for (Size j = 0; j < stopDatesLoop; ++j) { 
             for (Size k = 0; k < samples; ++k) { 
