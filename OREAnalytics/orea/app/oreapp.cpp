@@ -923,9 +923,12 @@ void OREApp::runPostProcessor() {
     }
 
     // FIXME: Needs the "simulation" section in ore.xml with consistent simulation.xml
-    if (!cubeInterpreter_) {
+    if (!cubeInterpreter_) {      
         boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
-	cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->grid());
+	if (sgd->withCloseOutLag())
+	    cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->grid());
+	else
+	    cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
     }
     
     // FIXME: Add mpor time grid processing, pass cubeInterpreter_
