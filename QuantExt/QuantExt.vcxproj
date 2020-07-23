@@ -972,6 +972,7 @@
     <ClCompile Include="qle\termstructures\strippedyoyinflationoptionletvol.cpp" />
     <ClCompile Include="qle\termstructures\subperiodsswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp" />
+    <ClCompile Include="qle\termstructures\swaptionvolconstantspread.cpp" />
     <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp" />
     <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\yoyinflationoptionletvolstripper.cpp" />
