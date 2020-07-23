@@ -1540,5 +1540,8 @@
     <ClCompile Include="qle\calendars\amendedcalendar.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
+    <ClCompile Include="qle\termstructures\swaptionvolconstantspread.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
