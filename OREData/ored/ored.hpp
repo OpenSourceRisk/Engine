@@ -35,7 +35,6 @@
 #include <ored/marketdata/commodityvolcurve.hpp>
 #include <ored/marketdata/correlationcurve.hpp>
 #include <ored/marketdata/csvloader.hpp>
-#include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/defaultcurve.hpp>

@@ -894,6 +894,9 @@
     <ClInclude Include="qle\indexes\eqfxindexbase.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\amendedcalendar.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1538,6 +1541,12 @@
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\spreadeddiscountcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\amendedcalendar.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\swaptionvolconstantspread.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

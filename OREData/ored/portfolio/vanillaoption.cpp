@@ -95,7 +95,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
             }
 
             // If automatic exercise, we will need an index fixing on the expiry date.
-            if (option_.automaticExercise()) {
+            if (option_.isAutomaticExercise()) {
                 QL_REQUIRE(index_, "Option trade " << id() << " has automatic exercise so we need a valid index.");
                 // If index name has not been populated, use logic here to populate it from the index object.
                 string indexName = indexName_;
@@ -109,7 +109,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
             // Build the instrument
             vanilla = boost::make_shared<CashSettledEuropeanOption>(
-                type, strike_, expiryDate_, paymentDate, option_.automaticExercise(), index_, exercised, exercisePrice);
+                type, strike_, expiryDate_, paymentDate, option_.isAutomaticExercise(), index_, exercised, exercisePrice);
 
             // Allow for a separate pricing engine that takes care of payment on a date after expiry. Do this by
             // appending 'EuropeanCS' to the trade type.

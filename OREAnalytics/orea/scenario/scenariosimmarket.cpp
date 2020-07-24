@@ -581,6 +581,13 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                                                 !convertToNormal && wrapper->volatilityType() == ShiftedLognormal
                                                     ? wrapper->shift(optionTenors[i], underlyingTenors[j])
                                                     : 0.0;
+                                            DLOG("AtmVol at " << optionTenors.at(i) << "/" << underlyingTenors.at(j)
+                                                              << " is " << vol << ", shift is " << shift[i][j]
+                                                              << ", (name,index) = (" << name << "," << index << ")");
+                                        } else {
+                                            DLOG("SmileVol at " << optionTenors.at(i) << "/" << underlyingTenors.at(j)
+                                                                << "/" << strikeSpreads.at(k) << " is " << vol
+                                                                << ", (name,index) = (" << name << "," << index << ")");
                                         }
                                     }
                                 }

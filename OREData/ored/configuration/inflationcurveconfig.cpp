@@ -17,8 +17,10 @@
 */
 
 #include <ored/configuration/inflationcurveconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+
 #include <ql/errors.hpp>
 
 using namespace ore::data;
@@ -41,6 +43,12 @@ InflationCurveConfig::InflationCurveConfig(const string& curveID, const string& 
       seasonalityFactors_(seasonalityFactors) {
     quotes_ = swapQuotes;
     quotes_.insert(quotes_.end(), seasonalityFactors.begin(), seasonalityFactors.end());
+    populateRequiredCurveIds();
+}
+
+void InflationCurveConfig::populateRequiredCurveIds() {
+    if (!nominalTermStructure().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(nominalTermStructure())->curveConfigID());
 }
 
 void InflationCurveConfig::fromXML(XMLNode* node) {
@@ -94,6 +102,7 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
         seasonalityFactors_ = XMLUtils::getChildrenValues(seasonalityNode, "Factors", "Factor", true);
         quotes_.insert(quotes_.end(), seasonalityFactors_.begin(), seasonalityFactors_.end());
     }
+    populateRequiredCurveIds();
 }
 
 XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {

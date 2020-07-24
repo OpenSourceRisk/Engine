@@ -1,5 +1,9 @@
 \documentclass[12pt, a4paper]{article}
 
+% Avoid useless warnings about included images
+% Reference: https://tex.stackexchange.com/a/78020
+\pdfsuppresswarningpagegroup=1
+
 % Use \hypersetup here to get rid of the ugly boxes around links
 \usepackage{hyperref}
 \hypersetup{
@@ -7,6 +11,9 @@
   linkcolor=blue,
   urlcolor=blue
 }
+
+% Avoid warning about missing font for \textbackslash character.
+\usepackage[T1]{fontenc}
 
 % For nicer paragraph spacing
 \usepackage{parskip}
@@ -110,7 +117,7 @@
 \newcommand{\SCVA}{\mathit{SCVA}}
 \newcommand{\bs}{\textbackslash}
 \newcommand{\REDY}{\color{red}Y}
- 
+
 \begin{document}
 
 %\title{Open Source Risk Engine \\ User Guide  }
@@ -2265,6 +2272,8 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
   <!-- None, Unregister, Defer or Disable -->
   <Parameter name="observationModel">Disable</Parameter>
+  <Parameter name="lazyMarketBuilding">false</Parameter>
+  <Parameter name="continueOnError">false</Parameter>
 </Setup>
 \end{minted}
 %\hrule
@@ -2303,6 +2312,13 @@ and kicks off updates afterwards when enabled again
   Updates are not deferred here. Required term structure and instrument recalculations are triggered explicitly.
 \end{itemize}
 %\todo[inline]{Expand the technical description of observationModel}
+
+\medskip If the parameter {\tt lazyMarketBuilding} is set to true, the build of the curves in the TodaysMarket is
+delayed until they are actually requested. This can speed up the processing when some curves configured in TodaysMarket
+are not used. If not given, the parameter defaults to {\tt true}.
+
+\medskip If the parameter {\tt continueOnError} is set to true, the application will not exit on an error, but try to
+continue the processing. If not given, the parameter defaults to {\tt false}.
 
 \subsubsection{Markets}\label{sec:master_input_markets}
 

@@ -116,16 +116,9 @@ public:
             Handle<YieldTermStructure> curve = index->forwardingTermStructure();
             QL_REQUIRE(!curve.empty(), "null term structure set to this instance of " << index->name());
 
-            // we know that nCutoff >= i because either
-            // a) i = today, but if nCutoff < today, there is no forward part
-            // b) i = today + 1bd, the we have a historical fixing available on today and if nCutoff = today
-            //        again there is no forward part
-            QL_REQUIRE(nCutoff >= i,
-                       "internal inconsistency: nCutoff (" << nCutoff << ") >= i (" << i << ") expected.");
-
             // handle the part until the rate cutoff (might be empty, i.e. startDiscount = endDiscount)
             DiscountFactor startDiscount = curve->discount(dates[i]);
-            DiscountFactor endDiscount = curve->discount(dates[nCutoff]);
+            DiscountFactor endDiscount = curve->discount(dates[std::max(nCutoff, i)]);
 
             // handle the rate cutoff period (if there is any, i.e. if nCutoff < n)
             if (nCutoff < n) {

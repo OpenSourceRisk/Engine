@@ -37,7 +37,7 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     const boost::shared_ptr<Market>& market = engineFactory->market();
 
     // If automatic exercise, check that we have a non-empty FX index string, parse it and attach curves from market.
-    if (option_.automaticExercise()) {
+    if (option_.isAutomaticExercise()) {
 
         QL_REQUIRE(!fxIndex_.empty(),
                    "FX option trade " << id() << " has automatic exercise so the FXIndex node needs to be populated.");
