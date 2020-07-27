@@ -1880,11 +1880,11 @@ Leg joinLegs(const std::vector<Leg>& legs) {
         if (lastLeg != Null<Size>()) {
             auto lcpn = boost::dynamic_pointer_cast<Coupon>(legs[lastLeg].back());
             auto fcpn = boost::dynamic_pointer_cast<Coupon>(legs[i].front());
-            QL_REQUIRE(lcpn, "joinLegs: expected coupon as last cashflow in leg #" << (i - 1));
+            QL_REQUIRE(lcpn, "joinLegs: expected coupon as last cashflow in leg #" << lastLeg);
             QL_REQUIRE(fcpn, "joinLegs: expected coupon as first cashflow in leg #" << i);
             QL_REQUIRE(lcpn->accrualEndDate() == fcpn->accrualStartDate(),
                        "joinLegs: accrual end date of last coupon in leg #"
-                           << (i - 1) << " (" << lcpn->accrualEndDate()
+                           << lastLeg << " (" << lcpn->accrualEndDate()
                            << ") is not equal to accrual start date of first coupon in leg #" << i << " ("
                            << fcpn->accrualStartDate() << ")");
             lastLeg = i;
