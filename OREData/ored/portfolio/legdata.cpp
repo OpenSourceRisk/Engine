@@ -1871,10 +1871,14 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
 
 Leg joinLegs(const std::vector<Leg>& legs) {
     Leg masterLeg;
+    Size lastLeg = Null<Size>();
     for (Size i = 0; i < legs.size(); ++i) {
+        // skip empty legs
+        if(legs[i].empty())
+            continue;
         // check if the periods of adjacent legs are consistent
-        if (i > 0) {
-            auto lcpn = boost::dynamic_pointer_cast<Coupon>(legs[i - 1].back());
+        if (lastLeg != Null<Size>()) {
+            auto lcpn = boost::dynamic_pointer_cast<Coupon>(legs[lastLeg].back());
             auto fcpn = boost::dynamic_pointer_cast<Coupon>(legs[i].front());
             QL_REQUIRE(lcpn, "joinLegs: expected coupon as last cashflow in leg #" << (i - 1));
             QL_REQUIRE(fcpn, "joinLegs: expected coupon as first cashflow in leg #" << i);
@@ -1883,6 +1887,7 @@ Leg joinLegs(const std::vector<Leg>& legs) {
                            << (i - 1) << " (" << lcpn->accrualEndDate()
                            << ") is not equal to accrual start date of first coupon in leg #" << i << " ("
                            << fcpn->accrualStartDate() << ")");
+            lastLeg = i;
         }
         // copy legs together
         masterLeg.insert(masterLeg.end(), legs[i].begin(), legs[i].end());
