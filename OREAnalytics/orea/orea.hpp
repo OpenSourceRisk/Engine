@@ -50,6 +50,8 @@
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/scenario/spreadscenario.hpp>
+#include <orea/scenario/spreadscenariofactory.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <orea/simulation/fixingmanager.hpp>

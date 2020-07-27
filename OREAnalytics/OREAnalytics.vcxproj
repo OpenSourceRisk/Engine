@@ -82,6 +82,8 @@
     <ClInclude Include="orea\scenario\shiftscenariogenerator.hpp" />
     <ClInclude Include="orea\scenario\simplescenario.hpp" />
     <ClInclude Include="orea\scenario\simplescenariofactory.hpp" />
+    <ClInclude Include="orea\scenario\spreadscenario.hpp" />
+    <ClInclude Include="orea\scenario\spreadscenariofactory.hpp" />
     <ClInclude Include="orea\scenario\stressscenariodata.hpp" />
     <ClInclude Include="orea\scenario\stressscenariogenerator.hpp" />
     <ClInclude Include="orea\simulation\fixingmanager.hpp" />
@@ -123,6 +125,8 @@
     <ClCompile Include="orea\scenario\sensitivityscenariogenerator.cpp" />
     <ClCompile Include="orea\scenario\shiftscenariogenerator.cpp" />
     <ClCompile Include="orea\scenario\simplescenario.cpp" />
+    <ClCompile Include="orea\scenario\spreadscenario.cpp" />
+    <ClCompile Include="orea\scenario\spreadscenariofactory.cpp" />
     <ClCompile Include="orea\scenario\stressscenariodata.cpp" />
     <ClCompile Include="orea\scenario\stressscenariogenerator.cpp" />
     <ClCompile Include="orea\simulation\fixingmanager.cpp" />

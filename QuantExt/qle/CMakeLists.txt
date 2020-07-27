@@ -1,7 +1,7 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt_SRC calendars/austria.cpp
-calendars/amendedcalendar.cpp
+set(QuantExt_SRC calendars/amendedcalendar.cpp
+calendars/austria.cpp
 calendars/belgium.cpp
 calendars/chile.cpp
 calendars/cme.cpp
@@ -182,6 +182,7 @@ termstructures/optionletstripper2.cpp
 termstructures/overnightindexfutureratehelper.cpp
 termstructures/pricetermstructure.cpp
 termstructures/pricetermstructureadapter.cpp
+termstructures/spreadeddiscountcurve.cpp
 termstructures/spreadedoptionletvolatility.cpp
 termstructures/spreadedsmilesection.cpp
 termstructures/spreadedswaptionvolatility.cpp
@@ -189,6 +190,7 @@ termstructures/strippedoptionletadapter2.cpp
 termstructures/strippedyoyinflationoptionletvol.cpp
 termstructures/subperiodsswaphelper.cpp
 termstructures/swaptionvolatilityconverter.cpp
+termstructures/swaptionvolconstantspread.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
@@ -198,8 +200,8 @@ time/yearcounter.cpp)
 # hpp files, this list is maintained manually
 
 set(QuantExt_HDR auto_link.hpp
-calendars/austria.hpp
 calendars/amendedcalendar.hpp
+calendars/austria.hpp
 calendars/belgium.hpp
 calendars/chile.hpp
 calendars/cme.hpp
@@ -252,6 +254,7 @@ indexes/commodityindex.hpp
 indexes/dkcpi.hpp
 indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp
+indexes/escpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/ibor/audbbsw.hpp
@@ -466,6 +469,7 @@ termstructures/pricecurve.hpp
 termstructures/pricetermstructure.hpp
 termstructures/pricetermstructureadapter.hpp
 termstructures/probabilitytraits.hpp
+termstructures/spreadeddiscountcurve.hpp
 termstructures/spreadedoptionletvolatility.hpp
 termstructures/spreadedsmilesection.hpp
 termstructures/spreadedswaptionvolatility.hpp
