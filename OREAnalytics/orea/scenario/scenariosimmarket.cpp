@@ -24,6 +24,7 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
+#include <orea/scenario/spreadscenario.hpp>
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
@@ -58,6 +59,7 @@
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/pricecurve.hpp>
+#include <qle/termstructures/spreadeddiscountcurve.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
@@ -132,7 +134,7 @@ ReactionToTimeDecay parseDecayMode(const string& s) {
 
 void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
                                       const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
-                                      const string& dayCounter, bool simulate) {
+                                      const string& dayCounter, bool simulate, bool spreaded) {
     Handle<YieldTermStructure> wrapper = initMarket->yieldCurve(riskFactorYieldCurve(rf), key, configuration);
     QL_REQUIRE(!wrapper.empty(), "yield curve not provided for " << key);
     QL_REQUIRE(tenors.front() > 0 * Days, "yield curve tenors must not include t=0");
@@ -153,25 +155,35 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
     vector<Real> discounts(yieldCurveTimes.size());
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
     for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(yieldCurveDates[i + 1])));
+        Real val = wrapper->discount(yieldCurveDates[i + 1]);
+        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(spreaded ? 1.0 : val));
         Handle<Quote> qh(q);
         quotes.push_back(qh);
 
         // Check if the risk factor is simulated before adding it
         if (simulate) {
             simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
-            DLOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << q->value());
+            DLOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << val);
+            // if generating spreaded scenarios, add the absolute value as well
+            if (spreaded) {
+                absoluteSimData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i),
+                                         std::forward_as_tuple(val));
+            }
         }
     }
 
     boost::shared_ptr<YieldTermStructure> yieldCurve;
 
-    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister && !spreaded) {
         yieldCurve = boost::shared_ptr<YieldTermStructure>(
             new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), dc));
     } else {
-        yieldCurve = boost::shared_ptr<YieldTermStructure>(
-            new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+        if (spreaded)
+            yieldCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::SpreadedDiscountCurve(wrapper, yieldCurveTimes, quotes, dc));
+        else
+            yieldCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
     }
 
     Handle<YieldTermStructure> ych(yieldCurve);
@@ -186,17 +198,21 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                                      const Conventions& conventions, const std::string& configuration,
                                      const CurveConfigurations& curveConfigs,
-                                     const TodaysMarketParameters& todaysMarketParams, const bool continueOnError)
+                                     const TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
+                                     const bool useSpreadedTermStructures)
     : ScenarioSimMarket(initMarket, parameters, conventions, boost::make_shared<FixingManager>(initMarket->asofDate()),
-                        configuration, curveConfigs, todaysMarketParams, continueOnError) {}
+                        configuration, curveConfigs, todaysMarketParams, continueOnError, useSpreadedTermStructures) {}
 
-ScenarioSimMarket::ScenarioSimMarket(
-    const boost::shared_ptr<Market>& initMarket, const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
-    const Conventions& conventions, const boost::shared_ptr<FixingManager>& fixingManager,
-    const std::string& configuration, const ore::data::CurveConfigurations& curveConfigs,
-    const ore::data::TodaysMarketParameters& todaysMarketParams, const bool continueOnError)
+ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
+                                     const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
+                                     const Conventions& conventions,
+                                     const boost::shared_ptr<FixingManager>& fixingManager,
+                                     const std::string& configuration,
+                                     const ore::data::CurveConfigurations& curveConfigs,
+                                     const ore::data::TodaysMarketParameters& todaysMarketParams,
+                                     const bool continueOnError, const bool useSpreadedTermStructures)
     : SimMarket(conventions), parameters_(parameters), fixingManager_(fixingManager),
-      filter_(boost::make_shared<ScenarioFilter>()) {
+      filter_(boost::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
@@ -238,7 +254,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         LOG("building " << name << " yield curve..");
                         vector<Period> tenors = parameters->yieldCurveTenors(name);
                         addYieldCurve(initMarket, configuration, param.first, name, tenors,
-                                      parameters->yieldCurveDayCounter(name), param.second.first);
+                                      parameters->yieldCurveDayCounter(name), param.second.first,
+                                      useSpreadedTermStructures_);
                         LOG("building " << name << " yield curve done");
                     } catch (const std::exception& e) {
                         processException(continueOnError, e);
@@ -283,24 +300,35 @@ ScenarioSimMarket::ScenarioSimMarket(
                         quotes.push_back(Handle<Quote>(q));
 
                         for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
-                            boost::shared_ptr<SimpleQuote> q(
-                                new SimpleQuote(wrapperIndex->discount(yieldCurveDates[i + 1])));
+                            Real val = wrapperIndex->discount(yieldCurveDates[i + 1]);
+                            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(useSpreadedTermStructures_ ? 1.0 : val));
                             Handle<Quote> qh(q);
                             quotes.push_back(qh);
 
                             simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name, i),
                                                std::forward_as_tuple(q));
-
-                            DLOG("ScenarioSimMarket index curve " << name << " discount[" << i << "]=" << q->value());
+                            if (useSpreadedTermStructures_) {
+                                absoluteSimData_.emplace(std::piecewise_construct,
+                                                         std::forward_as_tuple(param.first, name, i),
+                                                         std::forward_as_tuple(val));
+                            }
+                            // FIXME where do we check whether the risk factor is simulated?
+                            DLOG("ScenarioSimMarket index curve " << name << " discount[" << i << "]=" << val);
                         }
+
                         // FIXME interpolation fixed to linear, added to xml??
                         boost::shared_ptr<YieldTermStructure> indexCurve;
-                        if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+                        if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister &&
+                            !useSpreadedTermStructures_) {
                             indexCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
                                 yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
                         } else {
-                            indexCurve = boost::shared_ptr<YieldTermStructure>(
-                                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+                            if (useSpreadedTermStructures_)
+                                indexCurve = boost::shared_ptr<YieldTermStructure>(
+                                    new QuantExt::SpreadedDiscountCurve(wrapperIndex, yieldCurveTimes, quotes, dc));
+                            else
+                                indexCurve = boost::shared_ptr<YieldTermStructure>(
+                                    new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
                         }
 
                         // wrapped curve, is slower than a native curve
@@ -1962,9 +1990,20 @@ ScenarioSimMarket::ScenarioSimMarket(
     }
 
     LOG("building base scenario");
-    baseScenario_ = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
+    auto absolute = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
     for (auto const& data : simData_) {
-        baseScenario_->add(data.first, data.second->value());
+        absolute->add(data.first, data.second->value());
+    }
+    if (useSpreadedTermStructures) {
+        // overwrite the keys for which we have both a spread and absolute value
+        auto spread = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
+        for (auto const& data : absoluteSimData_) {
+            absolute->add(data.first, data.second);
+            spread->add(data.first, simData_.at(data.first)->value());
+        }
+        baseScenario_ = boost::make_shared<SpreadScenario>(absolute, spread);
+    } else {
+        baseScenario_ = absolute;
     }
     LOG("building base scenario done");
 }
