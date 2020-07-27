@@ -170,6 +170,12 @@
     <ClInclude Include="orea\app\structuredanalyticserror.hpp">
       <Filter>app</Filter>
     </ClInclude>
+    <ClInclude Include="orea\scenario\spreadscenario.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\spreadscenariofactory.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -288,6 +294,12 @@
     </ClCompile>
     <ClCompile Include="orea\app\structuredanalyticserror.cpp">
       <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\spreadscenario.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\spreadscenariofactory.cpp">
+      <Filter>scenario</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

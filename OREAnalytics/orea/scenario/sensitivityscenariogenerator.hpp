@@ -94,6 +94,12 @@ using namespace data;
   Conversion into par (flat cap/floor) volatility sensis has to be implemented as a
   postprocessor step.
 
+  generateSpreadScenarios = true will generate spread scenarios for
+  - DiscountCurve
+  - IndexCurve
+  - YieldCurve
+  risk factors. This requires a factory that builds scenarios that can be cast to SpreadScenario.
+
   \ingroup scenario
  */
 class SensitivityScenarioGenerator : public ShiftScenarioGenerator {
