@@ -1,7 +1,7 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt_SRC calendars/austria.cpp
-calendars/amendedcalendar.cpp
+set(QuantExt_SRC calendars/amendedcalendar.cpp
+calendars/austria.cpp
 calendars/belgium.cpp
 calendars/chile.cpp
 calendars/cme.cpp
@@ -199,8 +199,8 @@ time/yearcounter.cpp)
 # hpp files, this list is maintained manually
 
 set(QuantExt_HDR auto_link.hpp
-calendars/austria.hpp
 calendars/amendedcalendar.hpp
+calendars/austria.hpp
 calendars/belgium.hpp
 calendars/chile.hpp
 calendars/cme.hpp
@@ -253,6 +253,7 @@ indexes/commodityindex.hpp
 indexes/dkcpi.hpp
 indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp
+indexes/escpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/ibor/audbbsw.hpp
