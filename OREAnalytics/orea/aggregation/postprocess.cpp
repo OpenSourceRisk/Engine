@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016-2020 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -17,6 +17,8 @@
 */
 
 #include <orea/aggregation/postprocess.hpp>
+#include <orea/aggregation/dimcalculator.hpp>
+#include <orea/aggregation/dimregressioncalculator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/vectorutils.hpp>
 #include <ql/errors.hpp>
@@ -78,46 +80,38 @@ std::ostream& operator<<(std::ostream& out, AllocationMethod m) {
     return out;
 }
 
-PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
-                         const boost::shared_ptr<NettingSetManager>& nettingSetManager,
-                         const boost::shared_ptr<Market>& market, const std::string& configuration,
-                         const boost::shared_ptr<NPVCube>& cube,
-                         const boost::shared_ptr<AggregationScenarioData>& scenarioData,
-                         const map<string, bool>& analytics, const string& baseCurrency, const string& allocMethod,
-                         Real marginalAllocationLimit, Real quantile, const string& calculationType,
-                         const string& dvaName, const string& fvaBorrowingCurve, const string& fvaLendingCurve,
-                         Real dimQuantile, Size dimHorizonCalendarDays, Size dimRegressionOrder,
-                         vector<string> dimRegressors, Size dimLocalRegressionEvaluations,
-                         Real dimLocalRegressionBandwidth, Real dimScaling, 
-			 boost::shared_ptr<CubeInterpretation> cubeInterpretation,
-			 bool fullInitialCollateralisation,
-                         Real kvaCapitalDiscountRate, Real kvaAlpha, Real kvaRegAdjustment, Real kvaCapitalHurdle,
-                         Real kvaOurPdFloor, Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight, Real kvaTheirCvaRiskWeight)
+PostProcess::PostProcess(
+    const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<NettingSetManager>& nettingSetManager,
+    const boost::shared_ptr<Market>& market, const std::string& configuration, const boost::shared_ptr<NPVCube>& cube,
+    const boost::shared_ptr<AggregationScenarioData>& scenarioData, const map<string, bool>& analytics,
+    const string& baseCurrency, const string& allocMethod, Real marginalAllocationLimit, Real quantile,
+    const string& calculationType, const string& dvaName, const string& fvaBorrowingCurve,
+    const string& fvaLendingCurve,const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
+    const boost::shared_ptr<CubeInterpretation>& cubeInterpretation, bool fullInitialCollateralisation,
+    Real kvaCapitalDiscountRate, Real kvaAlpha, Real kvaRegAdjustment, Real kvaCapitalHurdle, Real kvaOurPdFloor,
+    Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight, Real kvaTheirCvaRiskWeight)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), configuration_(configuration),
       cube_(cube), scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
-      fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), dimQuantile_(dimQuantile),
-      dimHorizonCalendarDays_(dimHorizonCalendarDays), dimRegressionOrder_(dimRegressionOrder),
-      dimRegressors_(dimRegressors), dimLocalRegressionEvaluations_(dimLocalRegressionEvaluations),
-      dimLocalRegressionBandwidth_(dimLocalRegressionBandwidth), dimScaling_(dimScaling), cubeInterpretation_(cubeInterpretation),
-      fullInitialCollateralisation_(fullInitialCollateralisation), kvaCapitalDiscountRate_(kvaCapitalDiscountRate),
-      kvaAlpha_(kvaAlpha), kvaRegAdjustment_(kvaRegAdjustment), kvaCapitalHurdle_(kvaCapitalHurdle),
-      kvaOurPdFloor_(kvaOurPdFloor), kvaTheirPdFloor_(kvaTheirPdFloor), kvaOurCvaRiskWeight_(kvaOurCvaRiskWeight),
-      kvaTheirCvaRiskWeight_(kvaTheirCvaRiskWeight), populatedNetSetValContainers_(false) {
+      fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), dimCalculator_(dimCalculator),
+      cubeInterpretation_(cubeInterpretation), fullInitialCollateralisation_(fullInitialCollateralisation),
+      kvaCapitalDiscountRate_(kvaCapitalDiscountRate), kvaAlpha_(kvaAlpha), kvaRegAdjustment_(kvaRegAdjustment),
+      kvaCapitalHurdle_(kvaCapitalHurdle), kvaOurPdFloor_(kvaOurPdFloor), kvaTheirPdFloor_(kvaTheirPdFloor),
+      kvaOurCvaRiskWeight_(kvaOurCvaRiskWeight), kvaTheirCvaRiskWeight_(kvaTheirCvaRiskWeight) {
 
-     // set a default value for the cube interpretation object if it is NULL 
-     if (!cubeInterpretation_) {
-         WLOG("cube interpretation is not set, use regular");
-	 cubeInterpretation_ = boost::make_shared<RegularCubeInterpretation>();
-     }
-     boost::shared_ptr<RegularCubeInterpretation> regularCubeInterpretation =
-         boost::dynamic_pointer_cast<RegularCubeInterpretation>(cubeInterpretation_); 
-     bool isRegularCubeStorage = (regularCubeInterpretation != NULL); 
+    // set a default value for the cube interpretation object if it is NULL
+    if (!cubeInterpretation_) {
+        WLOG("cube interpretation is not set, use regular");
+        cubeInterpretation_ = boost::make_shared<RegularCubeInterpretation>();
+    }
+    boost::shared_ptr<RegularCubeInterpretation> regularCubeInterpretation =
+        boost::dynamic_pointer_cast<RegularCubeInterpretation>(cubeInterpretation_);
+    bool isRegularCubeStorage = (regularCubeInterpretation != NULL);
 
-     LOG("cube storage is regular: " << isRegularCubeStorage);
-     LOG("cube dates: " << cube->dates().size());
-     
-     QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
+    LOG("cube storage is regular: " << isRegularCubeStorage);
+    LOG("cube dates: " << cube->dates().size());
+
+    QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
     // check portfolio and cube have the same trade ids, in the same order
     QL_REQUIRE(portfolio->size() == cube_->ids().size(),
@@ -203,8 +197,11 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
      * - used in collateral calculation
      * - used in MVA calculation
      */
-    if (analytics_["dim"] || analytics_["mva"])
-        dynamicInitialMargin();
+    if (analytics_["dim"] || analytics_["mva"]) {
+        QL_REQUIRE(dimCalculator_, "DIM calculator not set");
+	// dynamicInitialMargin();
+        dimCalculator_->build();
+    }
 
     /************************************************************
      * Step 2: Trade Exposure and Netting
@@ -270,25 +267,28 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
         pfe[0] = std::max(npv0, 0.0);
-        for (Size j = 0; j < dates; ++j) { 
-	    Date d = cube_->dates()[j];
+        for (Size j = 0; j < dates; ++j) {
+            Date d = cube_->dates()[j];
             vector<Real> distribution(samples, 0.0);
             for (Size k = 0; k < samples; ++k) {
-	        // RL 2020-07-17
-	        // 1) If the calculation type is set to NoLag:
-	        //    Collateral balances are NOT delayed by the MPoR, but we use the close-out NPV.
-	        // 2) Otherwise:
-	        //    Collateral balances are delayed by the MPoR (if possible, i.e. the valuation
-	        //    grid has MPoR spacing), and we use the default date NPV.
-	        //    This is the treatment in the ORE releases up to June 2020).
-	        Real defaultValue = d > nextBreakDate && exerciseNextBreak ? 0.0 : cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
-	        Real closeOutValue;
-		if (isRegularCubeStorage && j == dates - 1)
-		    closeOutValue = defaultValue;
-		else
-		    closeOutValue = d > nextBreakDate && exerciseNextBreak ? 0.0 : cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
-		Real npv = calcType_ == CollateralExposureHelper::CalculationType::NoLag ? closeOutValue : defaultValue;
-		epe[j + 1] += max(npv, 0.0) / samples;
+                // RL 2020-07-17
+                // 1) If the calculation type is set to NoLag:
+                //    Collateral balances are NOT delayed by the MPoR, but we use the close-out NPV.
+                // 2) Otherwise:
+                //    Collateral balances are delayed by the MPoR (if possible, i.e. the valuation
+                //    grid has MPoR spacing), and we use the default date NPV.
+                //    This is the treatment in the ORE releases up to June 2020).
+                Real defaultValue =
+                    d > nextBreakDate && exerciseNextBreak ? 0.0 : cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
+                Real closeOutValue;
+                if (isRegularCubeStorage && j == dates - 1)
+                    closeOutValue = defaultValue;
+                else
+                    closeOutValue = d > nextBreakDate && exerciseNextBreak
+                                        ? 0.0
+                                        : cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
+                Real npv = calcType_ == CollateralExposureHelper::CalculationType::NoLag ? closeOutValue : defaultValue;
+                epe[j + 1] += max(npv, 0.0) / samples;
                 ene[j + 1] += max(-npv, 0.0) / samples;
                 nettingSetDefaultValue[nettingSetId][j][k] += defaultValue;
                 nettingSetCloseOutValue[nettingSetId][j][k] += closeOutValue;
@@ -368,9 +368,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
     bool applyInitialMargin = analytics_["dim"];
 
     Size nettingSetCount = 0;
-    nettingSetValue = (calcType_ == CollateralExposureHelper::CalculationType::NoLag ?
-		       nettingSetCloseOutValue :
-		       nettingSetDefaultValue);
+    nettingSetValue = (calcType_ == CollateralExposureHelper::CalculationType::NoLag ? nettingSetCloseOutValue
+                                                                                     : nettingSetDefaultValue);
     for (auto n : nettingSetValue) {
         string nettingSetId = n.first;
         Size nettingSetTrades = nettingSetSize[nettingSetId];
@@ -382,7 +381,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         // The pointer may remain empty if there is no CSA or if it is inactive.
         boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>> collateral = collateralPaths(
             nettingSetId, nettingSetManager, market, configuration, scenarioData, dates, samples,
-	    nettingSetDefaultValue[nettingSetId], nettingSetValueToday[nettingSetId], nettingSetMaturity[nettingSetId]);
+            nettingSetDefaultValue[nettingSetId], nettingSetValueToday[nettingSetId], nettingSetMaturity[nettingSetId]);
 
         // Get the CSA index for Eonia Floor calculation below
         nettingSetCOLVA_[nettingSetId] = 0.0;
@@ -443,13 +442,14 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
 
                 eab[j + 1] += balance / samples;
                 Real exposure = data[j][k] - balance;
-		Real dim = 0.0;
+                Real dim = 0.0;
                 if (applyInitialMargin) {
                     // Initial Margin
                     // Use IM to reduce exposure
-		    //Size dimIndex = j == 0 ? 0 : j - 1;
-		    Size dimIndex = j;
-                    dim = nettingSetDIM_[nettingSetId][dimIndex][k];
+                    // Size dimIndex = j == 0 ? 0 : j - 1;
+                    Size dimIndex = j;
+                    // dim = nettingSetDIM_[nettingSetId][dimIndex][k];
+                    dim = dimCalculator_->dynamicIM(nettingSetId)[dimIndex][k];
                     QL_REQUIRE(dim >= 0, "negative DIM for set " << nettingSetId << ", date " << j << ", sample " << k);
                 }
                 epe[j + 1] += std::max(exposure - dim, 0.0) /
@@ -487,7 +487,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                         string tid = portfolio->trades()[i]->id();
                         Real allocation = 0.0;
                         if (balance == 0.0)
-                            allocation = cubeInterpretation_->getDefaultNpv(cube_, i, j, k); 
+                            allocation = cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
                         // else if (data[j][k] == 0.0)
                         else if (fabs(data[j][k]) <= marginalAllocationLimit)
                             allocation = exposure / nettingSetTrades;
@@ -846,14 +846,13 @@ PostProcess::collateralPaths(const string& nettingSetId, const boost::shared_ptr
     for (Size j = 0; j < dates; ++j) {
         for (Size k = 0; k < samples; ++k) {
             if (netting->csaCurrency() != baseCurrency_)
-                csaScenFxRates[j][k] =
-                    cubeInterpretation_->getDefaultAggrionScenarioData( 
-                        scenarioData_, AggregationScenarioDataType::FXSpot, j, k, csaFxPair);
+                csaScenFxRates[j][k] = cubeInterpretation_->getDefaultAggrionScenarioData(
+                    scenarioData_, AggregationScenarioDataType::FXSpot, j, k, csaFxPair);
             else
                 csaScenFxRates[j][k] = 1.0;
             if (csaIndexName != "") {
                 csaScenRates[j][k] = cubeInterpretation_->getDefaultAggrionScenarioData(
-                    scenarioData_, AggregationScenarioDataType::IndexFixing, j, k, csaIndexName); 
+                    scenarioData_, AggregationScenarioDataType::IndexFixing, j, k, csaIndexName);
             }
         }
     }
@@ -960,7 +959,8 @@ void PostProcess::updateStandAloneXVA() {
 
         vector<Real> edim;
         if (applyMVA)
-            edim = nettingSetExpectedDIM_[nettingSetId];
+            // edim = nettingSetExpectedDIM_[nettingSetId];
+            edim = dimCalculator_->expectedIM(nettingSetId);
         string cid = counterpartyId_[nettingSetId];
         Handle<DefaultProbabilityTermStructure> cvaDts = market_->defaultCurve(cid);
         QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
@@ -1062,252 +1062,7 @@ void PostProcess::updateAllocatedXVA() {
         }
     }
 }
-
-Disposable<Array> PostProcess::regressorArray(string nettingSet, Size dateIndex, Size sampleIndex) {
-    Array a(dimRegressors_.size());
-    for (Size i = 0; i < dimRegressors_.size(); ++i) {
-        string variable = dimRegressors_[i];
-        if (boost::to_upper_copy(variable) ==
-            "NPV") // this allows possibility to include NPV as a regressor alongside more fundamental risk factors
-            a[i] = nettingSetNPV_[nettingSet][dateIndex][sampleIndex];
-        else if (scenarioData_->has(AggregationScenarioDataType::IndexFixing, variable))
-	    a[i] = cubeInterpretation_->getDefaultAggrionScenarioData(scenarioData_, AggregationScenarioDataType::IndexFixing,
-								      dateIndex, sampleIndex, variable);  
-        else if (scenarioData_->has(AggregationScenarioDataType::FXSpot, variable))
-            a[i] = cubeInterpretation_->getDefaultAggrionScenarioData(scenarioData_, AggregationScenarioDataType::FXSpot,
-								      dateIndex, sampleIndex, variable);
-	else if (scenarioData_->has(AggregationScenarioDataType::Generic, variable))
-            a[i] = cubeInterpretation_->getDefaultAggrionScenarioData(scenarioData_, AggregationScenarioDataType::Generic,
-								      dateIndex, sampleIndex, variable);
-        else
-            QL_FAIL("scenario data does not provide data for " << variable);
-    }
-    return a;
-}
-
-void PostProcess::dynamicInitialMargin() {
-    LOG("DIM Analysis by regression");
-
-    if (!populatedNetSetValContainers_) 
-        populateNetSetValContainers();
-    
-    Date today = market_->asofDate();
-    Size dates = cube_->dates().size();
-    Size samples = cube_->samples();
-    map<string, Size> nettingSetSize;
-    set<string> nettingSets;
-
-    // for regular cube storage, the last grid date is a dummy input, to allow computation of deltaNpv 
-    boost::shared_ptr<RegularCubeInterpretation> regCubeInt = boost::dynamic_pointer_cast<RegularCubeInterpretation>(cubeInterpretation_); 
-    bool isRegularCubeStorage = (regCubeInt != NULL); 
-    Size stopDatesLoop = (isRegularCubeStorage) ? dates - 1 : dates; 
- 
-    // initialise aggregate NPV and Flow by date and scenario
-    for (Size i = 0; i < portfolio_->size(); ++i) {
-        string tradeId = portfolio_->trades()[i]->id();
-        string nettingSetId = portfolio_->trades()[i]->envelope().nettingSetId();
-        LOG("Aggregate exposure for trade " << tradeId);
-        if (nettingSets.find(nettingSetId) == nettingSets.end()) {
-            // nettingSetNPV_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
-            // nettingSetFLOW_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
-            // nettingSetDIM_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
-            // nettingSetDeltaNPV_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
-            // regressorArray_[nettingSetId] = vector<vector<Array>>(dates, vector<Array>(samples));
-            // nettingSetLocalDIM_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
-            // nettingSetExpectedDIM_[nettingSetId] = vector<Real>(dates, 0.0);
-            // nettingSetZeroOrderDIM_[nettingSetId] = vector<Real>(dates, 0.0);
-            // nettingSetSimpleDIMh_[nettingSetId] = vector<Real>(dates, 0.0);
-            // nettingSetSimpleDIMp_[nettingSetId] = vector<Real>(dates, 0.0);
-            nettingSets.insert(nettingSetId);
-            nettingSetSize[nettingSetId] = 0;
-        }
-        nettingSetSize[nettingSetId]++;
-
-        // for (Size j = 0; j < dates; ++j) {
-        //     for (Size k = 0; k < samples; ++k) {
-        //         Real npv = cube_->get(i, j, k);
-        //         QL_REQUIRE(cube_->depth() > 1, "cube depth > 1 expected for DIM, found depth " << cube_->depth());
-        //         Real flow = cube_->get(i, j, k, 1);
-        //         nettingSetNPV_[nettingSetId][j][k] += npv;
-        //         nettingSetFLOW_[nettingSetId][j][k] += flow;
-        //     }
-        // }
-    }
-
-    vector<string> nettingSetIds;
-    for (auto n : nettingSets)
-        nettingSetIds.push_back(n);
-
-    // Perform the T0 calculation
-    performT0DimCalc();
-
-    // This is allocated here and not outside the post processor because we determine the dimension (netting sets) here
-    dimCube_ = boost::make_shared<SinglePrecisionInMemoryCube>(today, nettingSetIds, cube_->dates(), samples);
-
-    Size polynomOrder = dimRegressionOrder_;
-    LOG("DIM regression polynom order = " << dimRegressionOrder_);
-    LsmBasisSystem::PolynomType polynomType = LsmBasisSystem::Monomial;
-    Size regressionDimension = dimRegressors_.empty() ? 1 : dimRegressors_.size();
-    LOG("DIM regression dimension = " << regressionDimension);
-#if QL_HEX_VERSION > 0x01150000
-    std::vector<ext::function<Real(Array)>> v(
-        LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
-#else // QL 1.14 and below
-    std::vector<boost::function1<Real, Array>> v(
-        LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
-#endif
-    Real confidenceLevel = QuantLib::InverseCumulativeNormal()(dimQuantile_);
-    LOG("DIM confidence level " << confidenceLevel);
-
-    Size simple_dim_index_h = Size(floor(dimQuantile_ * (samples - 1) + 0.5));
-    Size simple_dim_index_p = Size(floor((1.0 - dimQuantile_) * (samples - 1) + 0.5));
-
-    Size nettingSetCount = 0;
-    for (auto n : nettingSets) {
-        LOG("Process netting set " << n);
-        // Set last date's IM to zero for all samples
-        // for (Size k = 0; k < samples; ++k) {
-        //     nettingSetDIM_[n][dates - 1][k] = 0.0;
-        //     nettingSetLocalDIM_[n][dates - 1][k] = 0.0;
-        //     nettingSetDeltaNPV_[n][dates - 1][k] = 0.0;
-        // }
-        for (Size j = 0; j < stopDatesLoop; ++j) {
-            accumulator_set<double, stats<tag::mean, tag::variance>> accDiff;
-            accumulator_set<double, stats<tag::mean>> accOneOverNumeraire;
-            for (Size k = 0; k < samples; ++k) {
-                // Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
-                // Real num2 = scenarioData_->get(j + 1, k, AggregationScenarioDataType::Numeraire);
-                // Real npv1 = nettingSetNPV_[n][j][k];
-		Real numDefault = cubeInterpretation_->getDefaultAggrionScenarioData(
-			scenarioData_, AggregationScenarioDataType::Numeraire, j, k);  
-		Real numCloseOut =  cubeInterpretation_->getCloseOutAggrionScenarioData( 
-                        scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
-		Real npvDefault = nettingSetNPV_[n][j][k]; 
-		Real flow = nettingSetFLOW_[n][j][k];
-                // Real npv2 = nettingSetNPV_[n][j + 1][k];
-		Real npvCloseOut = nettingSetCloseOutNPV_[n][j][k]; 
-                // accDiff(npv2 * num2 + flow * num1 - npv1 * num1);
-                accDiff((npvCloseOut * numCloseOut) + (flow * numDefault) - (npvDefault * numDefault));
-		accOneOverNumeraire(1.0 / numDefault);
-            }
-
-            // Date d1 = cube_->dates()[j];
-            // Date d2 = cube_->dates()[j + 1];
-            // Real horizonScaling = sqrt(1.0 * dimHorizonCalendarDays_ / (d2 - d1));
-
-	    Size mporCalendarDays = cubeInterpretation_->getMporCalendarDays(cube_, j);
-	    Real horizonScaling = sqrt(1.0 * dimHorizonCalendarDays_ / mporCalendarDays);
-	    
-	    Real stdevDiff = sqrt(variance(accDiff));
-            Real E_OneOverNumeraire =
-                mean(accOneOverNumeraire); // "re-discount" (the stdev is calculated on non-discounted deltaNPVs)
-
-            nettingSetZeroOrderDIM_[n][j] = stdevDiff * horizonScaling * confidenceLevel;
-            nettingSetZeroOrderDIM_[n][j] *= E_OneOverNumeraire;
-
-            vector<Real> rx0(samples, 0.0);
-            vector<Array> rx(samples, Array());
-            vector<Real> ry1(samples, 0.0);
-            vector<Real> ry2(samples, 0.0);
-            for (Size k = 0; k < samples; ++k) {
-                // Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
-                // Real num2 = scenarioData_->get(j + 1, k, AggregationScenarioDataType::Numeraire);
-                // Real x = nettingSetNPV_[n][j][k] * num1;
-                // Real f = nettingSetFLOW_[n][j][k] * num1;
-                // Real y = nettingSetNPV_[n][j + 1][k] * num2;
-	        Real numDefault = cubeInterpretation_->getDefaultAggrionScenarioData(
-						scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
-		Real numCloseOut = cubeInterpretation_->getCloseOutAggrionScenarioData(
-					        scenarioData_, AggregationScenarioDataType::Numeraire, j, k); 
-                Real x = nettingSetNPV_[n][j][k] * numDefault; 
-                Real f = nettingSetFLOW_[n][j][k] * numDefault; 
-                Real y = nettingSetCloseOutNPV_[n][j][k] * numCloseOut;
-	        Real z = (y + f - x);
-                rx[k] = dimRegressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
-                rx0[k] = rx[k][0];
-                ry1[k] = z;     // for local regression
-                ry2[k] = z * z; // for least squares regression
-                nettingSetDeltaNPV_[n][j][k] = z;
-                regressorArray_[n][j][k] = rx[k];
-            }
-            vector<Real> delNpvVec_copy = nettingSetDeltaNPV_[n][j];
-            sort(delNpvVec_copy.begin(), delNpvVec_copy.end());
-            Real simpleDim_h = delNpvVec_copy[simple_dim_index_h];
-            Real simpleDim_p = delNpvVec_copy[simple_dim_index_p];
-            simpleDim_h *= horizonScaling;                                  // the usual scaling factors
-            simpleDim_p *= horizonScaling;                                  // the usual scaling factors
-            nettingSetSimpleDIMh_[n][j] = simpleDim_h * E_OneOverNumeraire; // discounted DIM
-            nettingSetSimpleDIMp_[n][j] = simpleDim_p * E_OneOverNumeraire; // discounted DIM
-
-            QL_REQUIRE(rx.size() > v.size(), "not enough points for regression with polynom order " << polynomOrder);
-            if (close_enough(stdevDiff, 0.0)) {
-                LOG("DIM: Zero std dev estimation at step " << j);
-                // Skip IM calculation if all samples have zero NPV (e.g. after latest maturity)
-                for (Size k = 0; k < samples; ++k) {
-                    nettingSetDIM_[n][j][k] = 0.0;
-                    nettingSetLocalDIM_[n][j][k] = 0.0;
-                }
-            } else {
-                // Least squares polynomial regression with specified polynom order
-                QuantExt::StabilisedGLLS ls(rx, ry2, v, QuantExt::StabilisedGLLS::MeanStdDev);
-                LOG("DIM data normalisation at time step "
-                    << j << ": " << scientific << setprecision(6) << " x-shift = " << ls.xShift() << " x-multiplier = "
-                    << ls.xMultiplier() << " y-shift = " << ls.yShift() << " y-multiplier = " << ls.yMultiplier());
-                LOG("DIM regression coefficients at time step " << j << ": " << fixed << setprecision(6)
-                                                                << ls.transformedCoefficients());
-
-                // Local regression versus first regression variable (i.e. we do not perform a
-                // multidimensional local regression):
-                // We evaluate this at a limited number of samples only for validation purposes.
-                // Note that computational effort scales quadratically with number of samples.
-                // NadarayaWatson needs a large number of samples for good results.
-                QuantExt::NadarayaWatson lr(rx0.begin(), rx0.end(), ry1.begin(),
-                                            GaussianKernel(0.0, dimLocalRegressionBandwidth_));
-                Size localRegressionSamples = samples;
-                if (dimLocalRegressionEvaluations_ > 0)
-                    localRegressionSamples = Size(floor(1.0 * samples / dimLocalRegressionEvaluations_ + .5));
-
-                // Evaluate regression function to compute DIM for each scenario
-		for (Size k = 0; k < samples; ++k) {
-                    // Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
-                    Real numDefault = cubeInterpretation_->getDefaultAggrionScenarioData(
-                            scenarioData_, AggregationScenarioDataType::Numeraire, j, k); 
-		    Array regressor =
-                        dimRegressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
-                    Real e = ls.eval(regressor, v);
-                    if (e < 0.0)
-                        LOG("Negative variance regression for date " << j << ", sample " << k
-                                                                     << ", regressor = " << regressor);
-
-                    // Note:
-                    // 1) We assume vanishing mean of "z", because the drift over a MPOR is usually small,
-                    //    and to avoid a second regression for the conditional mean
-                    // 2) In particular the linear regression function can yield negative variance values in
-                    //    extreme scenarios where an exact analytical or delta VaR calculation would yield a
-                    //    variance aproaching zero. We correct this here by taking the positive part.
-                    Real std = sqrt(std::max(e, 0.0));
-                    Real scalingFactor = horizonScaling * confidenceLevel * dimScaling_;
-                    // Real dim = std * scalingFactor / num1;
-                    Real dim = std * scalingFactor / numDefault;
-                    dimCube_->set(dim, nettingSetCount, j, k);
-                    nettingSetDIM_[n][j][k] = dim;
-                    nettingSetExpectedDIM_[n][j] += dim / samples;
-
-                    // Evaluate the Kernel regression for a subset of the samples only (performance)
-                    if (k % localRegressionSamples == 0)
-                        // nettingSetLocalDIM_[n][j][k] = lr.standardDeviation(regressor[0]) * scalingFactor / num1;
-                        nettingSetLocalDIM_[n][j][k] = lr.standardDeviation(regressor[0]) * scalingFactor / numDefault;
-                    else
-                        nettingSetLocalDIM_[n][j][k] = 0.0;
-                }
-            }
-        }
-
-        nettingSetCount++;
-    }
-    LOG("DIM by regression done");
-}
-
+  
 const vector<Real>& PostProcess::tradeEPE(const string& tradeId) {
     QL_REQUIRE(tradeEPE_.find(tradeId) != tradeEPE_.end(), "Trade " << tradeId << " not found in exposure map");
     return tradeEPE_[tradeId];
@@ -1562,249 +1317,23 @@ Real PostProcess::nettingSetCollateralFloor(const string& nettingSetId) {
     return nettingSetCollateralFloor_[nettingSetId];
 }
 
-void PostProcess::performT0DimCalc() {
-    // In this function we proxy the model-implied T0 IM by looking at the
-    // cube grid horizon lying closest to t0+mpor. We measure diffs relative
-    // to the mean of the distribution at this same time horizon, thus avoiding
-    // any cashflow-specific jumps
-
-    Date today = market_->asofDate();
-    Size relevantDateIdx = 0;
-    Real sqrtTimeScaling = 1.0;
-    for (Size i = 0; i < cube_->dates().size(); ++i) {
-        Size daysFromT0 = (cube_->dates()[i] - today);
-        if (daysFromT0 < dimHorizonCalendarDays_) {
-            // iterate until we straddle t0+mpor
-            continue;
-        } else if (daysFromT0 == dimHorizonCalendarDays_) {
-            // this date corresponds to t0+mpor, so use it
-            relevantDateIdx = i;
-            sqrtTimeScaling = 1.0;
-            break;
-        } else if (daysFromT0 > dimHorizonCalendarDays_) {
-            // the first date greater than t0+MPOR, check if it is closest
-            Size lastIdx = (i == 0) ? 0 : (i - 1);
-            Size lastDaysFromT0 = (cube_->dates()[lastIdx] - today);
-            int daysFromT0CloseOut = daysFromT0 - dimHorizonCalendarDays_;
-            int prevDaysFromT0CloseOut = lastDaysFromT0 - dimHorizonCalendarDays_;
-            if (std::abs(daysFromT0CloseOut) <= std::abs(prevDaysFromT0CloseOut)) {
-                relevantDateIdx = i;
-                sqrtTimeScaling = std::sqrt(Real(dimHorizonCalendarDays_) / Real(daysFromT0));
-            } else {
-                relevantDateIdx = lastIdx;
-                sqrtTimeScaling = std::sqrt(Real(dimHorizonCalendarDays_) / Real(lastDaysFromT0));
-            }
-            break;
-        }
-    }
-    // set some reasonable bounds on the sqrt time scaling, so that we are not looking at a ridiculous time horizon
-    QL_REQUIRE((sqrtTimeScaling * sqrtTimeScaling >= 0.5) && (sqrtTimeScaling * sqrtTimeScaling <= 2.0),
-               "T0 IM Estimation - The estimation time horizon from grid "
-                   << "is not sufficiently close to t0+MPOR - "
-                   << QuantLib::io::iso_date(cube_->dates()[relevantDateIdx]));
-
-    // TODO: Ensure that the simulation containers read-from below are indeed populated
-
-    Real confidenceLevel = QuantLib::InverseCumulativeNormal()(dimQuantile_);
-    Size simple_dim_index_h = Size(floor(dimQuantile_ * (cube_->samples() - 1) + 0.5));
-    for (auto it_map = nettingSetNPV_.begin(); it_map != nettingSetNPV_.end(); ++it_map) {
-        string key = it_map->first;
-        boost::shared_ptr<NettingSetDefinition> nettingObj = nettingSetManager_->get(key);
-        vector<Real> t0_dist = it_map->second[relevantDateIdx];
-        Size dist_size = t0_dist.size();
-        QL_REQUIRE(dist_size == cube_->samples(),
-                   "T0 IM - cube samples size mismatch - " << dist_size << ", " << cube_->samples());
-        Real mean_t0_dist = std::accumulate(t0_dist.begin(), t0_dist.end(), 0.0);
-        mean_t0_dist /= dist_size;
-        vector<Real> t0_delMtM_dist(dist_size, 0.0);
-        accumulator_set<double, stats<tag::mean, tag::variance>> acc_delMtm;
-        accumulator_set<double, stats<tag::mean>> acc_OneOverNum;
-        for (Size i = 0; i < dist_size; ++i) {
-            Real numeraire = scenarioData_->get(relevantDateIdx, i, AggregationScenarioDataType::Numeraire);
-            Real deltaMtmFromMean = numeraire * (t0_dist[i] - mean_t0_dist) * sqrtTimeScaling;
-            t0_delMtM_dist[i] = deltaMtmFromMean;
-            acc_delMtm(deltaMtmFromMean);
-            acc_OneOverNum(1.0 / numeraire);
-        }
-        Real E_OneOverNumeraire = mean(acc_OneOverNum);
-        Real variance_t0 = variance(acc_delMtm);
-        Real sqrt_t0 = sqrt(variance_t0);
-        net_t0_im_reg_h_[key] = (sqrt_t0 * confidenceLevel * E_OneOverNumeraire);
-        std::sort(t0_delMtM_dist.begin(), t0_delMtM_dist.end());
-        net_t0_im_simple_h_[key] = (t0_delMtM_dist[simple_dim_index_h] * E_OneOverNumeraire);
-
-        LOG("T0 IM (Reg) - {" << key << "} = " << net_t0_im_reg_h_[key]);
-        LOG("T0 IM (Simple) - {" << key << "} = " << net_t0_im_simple_h_[key]);
-    }
-    LOG("T0 IM Calculations Completed");
-}
-
 void PostProcess::exportDimEvolution(ore::data::Report& dimEvolutionReport) {
+    boost::shared_ptr<RegressionDynamicInitialMarginCalculator> regCalc =
+        boost::dynamic_pointer_cast<RegressionDynamicInitialMarginCalculator>(dimCalculator_);
 
-    Size dates = dimCube_->dates().size();
-    Size samples = dimCube_->samples();
-
-    // for regular cube storage, the last grid date is a dummy input, to allow computation of deltaNpv 
-    boost::shared_ptr<RegularCubeInterpretation> regCubeInt =  
-        boost::dynamic_pointer_cast<RegularCubeInterpretation>(cubeInterpretation_); 
-    bool isRegularCubeStorage = (regCubeInt != NULL); 
-    Size stopDatesLoop = (isRegularCubeStorage) ? dates - 1 : dates;
-
-    dimEvolutionReport.addColumn("TimeStep", Size())
-        .addColumn("Date", Date())
-        .addColumn("DaysInPeriod", Size())
-        .addColumn("ZeroOrderDIM", Real(), 6)
-        .addColumn("AverageDIM", Real(), 6)
-        .addColumn("AverageFLOW", Real(), 6)
-        .addColumn("SimpleDIM", Real(), 6)
-        .addColumn("NettingSet", string());
-
-    for (auto nettingSet : dimCube_->ids()) {
-
-        LOG("Export DIM evolution for netting set " << nettingSet);
-        for (Size i = 0; i < stopDatesLoop; ++i) {
-            Real expectedFlow = 0.0;
-            for (Size j = 0; j < samples; ++j) {
-                expectedFlow += nettingSetFLOW_[nettingSet][i][j] / samples;
-            }
-
-            Date defaultDate = dimCube_->dates()[i];
-            // Date d2 = dimCube_->dates()[i + 1];
-            // Size days = d2 - d1;
-	    Size days = cubeInterpretation_->getMporCalendarDays(dimCube_, i);
-	    dimEvolutionReport.next()
-                .add(i)
-                .add(defaultDate)
-                .add(days)
-                .add(nettingSetZeroOrderDIM_[nettingSet][i])
-                .add(nettingSetExpectedDIM_[nettingSet][i])
-                .add(expectedFlow)
-                .add(nettingSetSimpleDIMh_[nettingSet][i])
-                .add(nettingSet);
-        }
-    }
-    dimEvolutionReport.end();
-    LOG("Exporting expected DIM through time done");
+    if (regCalc)
+        regCalc->exportDimEvolution(dimEvolutionReport);
 }
-
-bool lessThan(const Array& a, const Array& b) {
-    QL_REQUIRE(a.size() > 0, "array a is empty");
-    QL_REQUIRE(b.size() > 0, "array a is empty");
-    return a[0] < b[0];
-}
-
+  
 void PostProcess::exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
                                       const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports) {
 
-    QL_REQUIRE(dimRegReports.size() == timeSteps.size(),
-               "number of file names (" << dimRegReports.size() << ") does not match number of time steps ("
-                                        << timeSteps.size() << ")");
-    for (Size ii = 0; ii < timeSteps.size(); ++ii) {
-        Size timeStep = timeSteps[ii];
-        LOG("Export DIM by sample for netting set " << nettingSet << " and time step " << timeStep);
+    boost::shared_ptr<RegressionDynamicInitialMarginCalculator> regCalc =
+        boost::dynamic_pointer_cast<RegressionDynamicInitialMarginCalculator>(dimCalculator_);
 
-        Size dates = dimCube_->dates().size();
-        const std::vector<std::string>& ids = dimCube_->ids();
-
-        int index = -1;
-        for (Size i = 0; i < ids.size(); ++i) {
-            if (ids[i] == nettingSet) {
-                index = i;
-                break;
-            }
-        }
-        QL_REQUIRE(index >= 0, "netting set " << nettingSet << " not found in DIM cube");
-
-        QL_REQUIRE(timeStep < dates - 1, "selected time step " << timeStep << " out of range [0, " << dates - 1 << "]");
-
-        Size samples = cube_->samples();
-        vector<Real> numeraires(samples, 0.0);
-        for (Size k = 0; k < samples; ++k)
-	    // numeraires[k] = scenarioData_->get(timeStep, k, AggregationScenarioDataType::Numeraire);
-	    numeraires[k] = cubeInterpretation_->getDefaultAggrionScenarioData(
-				       scenarioData_, AggregationScenarioDataType::Numeraire, timeStep, k); 
-  
-        auto p = sort_permutation(regressorArray_[nettingSet][timeStep], lessThan);
-        vector<Array> reg = apply_permutation(regressorArray_[nettingSet][timeStep], p);
-        vector<Real> dim = apply_permutation(nettingSetDIM_[nettingSet][timeStep], p);
-        vector<Real> ldim = apply_permutation(nettingSetLocalDIM_[nettingSet][timeStep], p);
-        vector<Real> delta = apply_permutation(nettingSetDeltaNPV_[nettingSet][timeStep], p);
-        vector<Real> num = apply_permutation(numeraires, p);
-
-        boost::shared_ptr<ore::data::Report> regReport = dimRegReports[ii];
-        regReport->addColumn("Sample", Size());
-        for (Size k = 0; k < reg[0].size(); ++k) {
-            ostringstream o;
-            o << "Regressor_" << k << "_";
-            o << (dimRegressors_.empty() ? "NPV" : dimRegressors_[k]);
-            regReport->addColumn(o.str(), Real(), 6);
-        }
-        regReport->addColumn("RegressionDIM", Real(), 6)
-            .addColumn("LocalDIM", Real(), 6)
-            .addColumn("ExpectedDIM", Real(), 6)
-            .addColumn("ZeroOrderDIM", Real(), 6)
-            .addColumn("DeltaNPV", Real(), 6)
-            .addColumn("SimpleDIM", Real(), 6);
-
-        // Note that RegressionDIM, LocalDIM, DeltaNPV are _not_ reduced by the numeraire in this output,
-        // but ExpectedDIM, ZeroOrderDIM and SimpleDIM _are_ reduced by the numeraire.
-        // This is so that the regression formula can be manually validated
-
-        for (Size j = 0; j < reg.size(); ++j) {
-            regReport->next().add(j);
-            for (Size k = 0; k < reg[j].size(); ++k)
-                regReport->add(reg[j][k]);
-            regReport->add(dim[j] * num[j])
-                .add(ldim[j] * num[j])
-                .add(nettingSetExpectedDIM_[nettingSet][timeStep])
-                .add(nettingSetZeroOrderDIM_[nettingSet][timeStep])
-                .add(delta[j])
-                .add(nettingSetSimpleDIMh_[nettingSet][timeStep]);
-        }
-        regReport->end();
-        LOG("Exporting DIM by Sample done for");
-    }
+    if (regCalc)
+        regCalc->exportDimRegression(nettingSet, timeSteps, dimRegReports);
 }
 
- void PostProcess::populateNetSetValContainers() { 
-    Size dates = cube_->dates().size(); 
-    Size samples = cube_->samples(); 
-    set<string> nettingSets; 
-    // for regular cube storage, the last grid date is a dummy input, to allow computation of deltaNpv 
-    boost::shared_ptr<RegularCubeInterpretation> regCubeInt = boost::dynamic_pointer_cast<RegularCubeInterpretation>(cubeInterpretation_); 
-    bool isRegularCubeStorage = (regCubeInt != NULL); 
-    Size stopDatesLoop = (isRegularCubeStorage) ? dates - 1 : dates; 
-    // initialise aggregate NPV and Flow by date and scenario 
-    for (Size i = 0; i < portfolio_->size(); ++i) { 
-        string tradeId = portfolio_->trades()[i]->id(); 
-        string nettingSetId = portfolio_->trades()[i]->envelope().nettingSetId(); 
-        LOG("Aggregate exposure for trade " << tradeId); 
-        if (nettingSets.find(nettingSetId) == nettingSets.end()) { 
-            nettingSetNPV_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0)); 
-            nettingSetCloseOutNPV_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0)); 
-            nettingSetFLOW_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0)); 
-            nettingSetDIM_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0)); 
-            nettingSetDeltaNPV_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0)); 
-            regressorArray_[nettingSetId] = vector<vector<Array>>(dates, vector<Array>(samples)); 
-            nettingSetLocalDIM_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0)); 
-            nettingSetExpectedDIM_[nettingSetId] = vector<Real>(dates, 0.0); 
-            nettingSetZeroOrderDIM_[nettingSetId] = vector<Real>(dates, 0.0); 
-            nettingSetSimpleDIMh_[nettingSetId] = vector<Real>(dates, 0.0);
-            nettingSetSimpleDIMp_[nettingSetId] = vector<Real>(dates, 0.0);
-        } 
-        for (Size j = 0; j < stopDatesLoop; ++j) { 
-            for (Size k = 0; k < samples; ++k) { 
-                Real defaultNpv = cubeInterpretation_->getDefaultNpv(cube_, i, j, k); 
-                Real closeOutNpv = cubeInterpretation_->getCloseOutNpv(cube_, i, j, k); 
-                QL_REQUIRE(cube_->depth() > 1, "cube depth > 1 expected for DIM, found depth " << cube_->depth()); 
-                Real mporFlow = cubeInterpretation_->getMporFlows(cube_, i, j, k); 
-                nettingSetNPV_[nettingSetId][j][k] += defaultNpv; 
-                nettingSetCloseOutNPV_[nettingSetId][j][k] += closeOutNpv; 
-                nettingSetFLOW_[nettingSetId][j][k] += mporFlow; 
-            } 
-        } 
-    } 
-    populatedNetSetValContainers_ = true; 
-} 
 } // namespace analytics
 } // namespace ore

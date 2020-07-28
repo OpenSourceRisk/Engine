@@ -7,6 +7,8 @@
 
 #include <orea/aggregation/collateralaccount.hpp>
 #include <orea/aggregation/collatexposurehelper.hpp>
+#include <orea/aggregation/dimcalculator.hpp>
+#include <orea/aggregation/dimregressioncalculator.hpp>
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/app/oreapp.hpp>
 #include <orea/app/parameters.hpp>
@@ -27,6 +29,7 @@
 #include <orea/engine/riskfilter.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/engine/sensitivitycalculator.hpp>
 #include <orea/engine/sensitivitycubestream.hpp>
 #include <orea/engine/sensitivityfilestream.hpp>
 #include <orea/engine/sensitivityinmemorystream.hpp>

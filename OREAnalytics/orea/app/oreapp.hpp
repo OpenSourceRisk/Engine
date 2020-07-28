@@ -127,7 +127,7 @@ protected:
     //! load in cube
     virtual void loadCube();
     //! run postProcessor to generate reports from cube
-    void runPostProcessor();
+    virtual void runPostProcessor();
 
     //! run stress tests and write out report
     virtual void runStressTest();
@@ -229,8 +229,9 @@ protected:
     boost::shared_ptr<DateGrid> grid_;
     Size samples_;
 
-    Size cubeDepth_;
-    bool storeFlows_, useCloseOutLag_, useMporStickyDate_;
+    Size cubeDepth_, sensitivitySlots_;
+    bool storeFlows_, storeSensis_, useCloseOutLag_, useMporStickyDate_, sensitivities1stOrder_, sensitivities2ndOrder_;
+  
     boost::shared_ptr<NPVCube> cube_;
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
@@ -239,6 +240,8 @@ protected:
 
     //! Populated if a sensitivity analysis is performed.
     boost::shared_ptr<SensitivityRunner> sensitivityRunner_;
+
+    boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
 
 private:
     virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }
