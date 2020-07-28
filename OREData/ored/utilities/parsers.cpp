@@ -984,5 +984,17 @@ VolatilityType parseVolatilityQuoteType(const string& s) {
     }
 }
 
+CapFloor::Type parseCapFloorType(const string& s) {
+    if (s == "Cap") {
+        return CapFloor::Cap;
+    } else if (s == "Floor") {
+        return CapFloor::Floor;
+    } else if (s == "Collar") {
+        return CapFloor::Collar;
+    } else {
+        QL_FAIL("Unknown cap floor type " << s);
+    }
+}
+
 } // namespace data
 } // namespace ore

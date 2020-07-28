@@ -32,6 +32,7 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
+#include <ored/model/inflation/infdkdata.hpp>
 #include <ored/model/marketobserver.hpp>
 #include <ored/model/modelbuilder.hpp>
 #include <ored/utilities/xmlutils.hpp>
@@ -140,6 +141,12 @@ private:
 
     // resulting model
     mutable RelinkableHandle<QuantExt::CrossAssetModel> model_;
+
+    // Calibrate DK inflation model
+    void calibrateInflation(const InfDkData& data,
+        QuantLib::Size modelIdx,
+        const boost::shared_ptr<QuantExt::InfDkParametrization>& inflationParam,
+        const boost::shared_ptr<QuantExt::IrLgm1fParametrization>& domesticIrParam) const;
 };
 
 } // namespace data
