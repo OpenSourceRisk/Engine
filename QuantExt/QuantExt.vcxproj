@@ -537,6 +537,7 @@
     <ClInclude Include="qle\currencies\asia.hpp" />
     <ClInclude Include="qle\currencies\europe.hpp" />
     <ClInclude Include="qle\currencies\metals.hpp" />
+    <ClInclude Include="qle\indexes\behicp.hpp" />
     <ClInclude Include="qle\indexes\bmaindexwrapper.hpp" />
     <ClInclude Include="qle\indexes\bondindex.hpp" />
     <ClInclude Include="qle\indexes\cacpi.hpp" />
@@ -544,6 +545,7 @@
     <ClInclude Include="qle\indexes\dkcpi.hpp" />
     <ClInclude Include="qle\indexes\eqfxindexbase.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
+    <ClInclude Include="qle\indexes\frcpi.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
     <ClInclude Include="qle\indexes\genericiborindex.hpp" />
     <ClInclude Include="qle\indexes\ibor\audbbsw.hpp" />
