@@ -86,7 +86,7 @@
       <Parameter name="ddvOrder">delta</Parameter><!-- delta, delta-gamma-normal -->
       <!-- If ddv=N: Regression -->
       <Parameter name="dimRegressionOrder">1</Parameter>
-      <Parameter name="dimRegressors">GBP,EUR-EURIBOR-3M,GBP-LIBOR-3M</Parameter>
+      <Parameter name="dimRegressors">EUR-EURIBOR-6M</Parameter>
       <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
       <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
       <Parameter name="dimScaling">1.0</Parameter>

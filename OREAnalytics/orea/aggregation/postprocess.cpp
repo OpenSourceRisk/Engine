@@ -1318,11 +1318,7 @@ Real PostProcess::nettingSetCollateralFloor(const string& nettingSetId) {
 }
 
 void PostProcess::exportDimEvolution(ore::data::Report& dimEvolutionReport) {
-    boost::shared_ptr<RegressionDynamicInitialMarginCalculator> regCalc =
-        boost::dynamic_pointer_cast<RegressionDynamicInitialMarginCalculator>(dimCalculator_);
-
-    if (regCalc)
-        regCalc->exportDimEvolution(dimEvolutionReport);
+    dimCalculator_->exportDimEvolution(dimEvolutionReport);
 }
   
 void PostProcess::exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
