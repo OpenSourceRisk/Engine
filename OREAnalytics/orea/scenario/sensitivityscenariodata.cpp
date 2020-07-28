@@ -448,6 +448,12 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 
     LOG("Get compute gamma flag");
     computeGamma_ = XMLUtils::getChildValueAsBool(node, "ComputeGamma", false); // defaults to true
+
+    LOG("Get useSpreadedTermStructures flag");
+    if (auto n = XMLUtils::getChildNode(node, "UseSpreadedTermStructures"))
+        useSpreadedTermStructures_ = parseBool(XMLUtils::getNodeValue(n));
+    else
+        useSpreadedTermStructures_ = false;
 }
 
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
@@ -696,6 +702,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     XMLUtils::addChild(doc, root, "ComputeGamma", computeGamma_);
+    XMLUtils::addChild(doc, root, "UseSpreadedTermStructures", useSpreadedTermStructures_);
 
     return root;
 }

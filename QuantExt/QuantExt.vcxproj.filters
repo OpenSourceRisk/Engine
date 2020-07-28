@@ -888,6 +888,9 @@
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadeddiscountcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\eqfxindexbase.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
@@ -1537,8 +1540,14 @@
     <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadeddiscountcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
     <ClCompile Include="qle\calendars\amendedcalendar.cpp">
       <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\swaptionvolconstantspread.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
