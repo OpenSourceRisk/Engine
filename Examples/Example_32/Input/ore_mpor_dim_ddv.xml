@@ -83,7 +83,7 @@
       <Parameter name="dimQuantile">0.99</Parameter>
       <Parameter name="dimHorizonCalendarDays">14</Parameter>
       <!-- If ddv=Y: Dynamic Delta Gamma VaR -->
-      <Parameter name="ddvOrder">delta</Parameter><!-- delta, delta-gamma-normal -->
+      <Parameter name="ddvOrder">delta-gamma</Parameter><!-- delta, delta-gamma-normal, delta-gamma -->
       <!-- If ddv=N: Regression -->
       <Parameter name="dimRegressionOrder">1</Parameter>
       <Parameter name="dimRegressors">EUR-EURIBOR-6M</Parameter>

@@ -2,7 +2,7 @@
 <Simulation>
   <Parameters>
     <Discretization>Exact</Discretization>
-    <Grid>2W,1M,2M,3M,4M,5M,6M,7M,8M,9M,10M,11M,1Y,1Y3M,1Y6M,1Y9M,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,11Y</Grid>
+    <Grid>2W,1M,2M,3M,4M,5M,6M,7M,8M,9M,10M,11M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,11Y</Grid>
     <!--<Grid>45,3M</Grid>-->
     <!--<Grid>290,2W</Grid>-->
     <!--<Grid>580,1W</Grid>-->
@@ -10,7 +10,7 @@
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>2000</Samples>
+    <Samples>1000</Samples>
     <CloseOutLag>2W</CloseOutLag>
     <MporMode>StickyDate</MporMode>
   </Parameters>
@@ -48,7 +48,7 @@
           <ParamType>Constant</ParamType>
           <!-- Constant, Piecewise -->
           <TimeGrid/>
-          <InitialValue>0.0</InitialValue>
+          <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
           <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
@@ -74,7 +74,7 @@
           <ReversionType>HullWhite</ReversionType>
           <ParamType>Constant</ParamType>
           <TimeGrid/>
-          <InitialValue>0.0</InitialValue>
+          <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
           <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
