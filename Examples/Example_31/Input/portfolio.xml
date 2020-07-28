@@ -13,8 +13,8 @@
         <Owner>Mutual</Owner>
         <Schedule>
           <Rules>
-            <StartDate>2005-03-03</StartDate>
-            <EndDate>2027-03-03</EndDate>
+            <StartDate>2016-02-10</StartDate>
+            <EndDate>2026-02-10</EndDate>
             <Tenor>5Y</Tenor>
             <Calendar>UK</Calendar>
             <Convention>ModifiedFollowing</Convention>
@@ -39,20 +39,20 @@
         <PaymentConvention>ModifiedFollowing</PaymentConvention>
         <FixedLegData>
           <Rates>
-            <Rate>0.018</Rate>
+            <Rate>0.0145</Rate>
           </Rates>
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>2005-03-03</StartDate>
-            <EndDate>2027-03-03</EndDate>
+            <StartDate>2016-02-10</StartDate>
+            <EndDate>2026-02-10</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>UK</Calendar>
             <Convention>ModifiedFollowing</Convention>
             <TermConvention>ModifiedFollowing</TermConvention>
             <Rule>Forward</Rule>
             <EndOfMonth/>
-            <FirstDate>2005-09-05</FirstDate>
+            <FirstDate/>
             <LastDate/>
           </Rules>
         </ScheduleData>
@@ -74,104 +74,14 @@
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>2005-03-03</StartDate>
-            <EndDate>2027-03-03</EndDate>
+            <StartDate>2016-02-10</StartDate>
+            <EndDate>2026-02-10</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>UK</Calendar>
             <Convention>ModifiedFollowing</Convention>
             <TermConvention>ModifiedFollowing</TermConvention>
             <Rule>Forward</Rule>
             <EndOfMonth/>
-            <FirstDate>2005-09-05</FirstDate>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-    </SwapData>
-  </Trade>
-  <!--
-      <Trade id="Swap_3">
-    <TradeType>Swap</TradeType>
-    <Envelope>
-      <CounterParty>CPTY_A</CounterParty>
-      <NettingSetId>CPTY_A</NettingSetId>
-      <AdditionalFields/>
-    </Envelope>
-    <TradeActions>
-      <TradeAction>
-        <Type>Break</Type>
-        <Owner>Mutual</Owner>
-        <Schedule>
-          <Rules>
-            <StartDate>2015-04-22</StartDate>
-            <EndDate>2024-11-01</EndDate>
-            <Tenor>5Y</Tenor>
-            <Calendar>UK</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </Schedule>
-      </TradeAction>
-    </TradeActions>
-    <SwapData>
-      <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>false</Payer>
-        <Currency>USD</Currency>
-        <Notionals>
-          <Notional>50000000</Notional>
-        </Notionals>
-        <DayCounter>A360</DayCounter>
-        <PaymentConvention>ModifiedFollowing</PaymentConvention>
-        <FixedLegData>
-          <Rates>
-            <Rate>0.02</Rate>
-          </Rates>
-        </FixedLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2015-04-22</StartDate>
-            <EndDate>2024-11-01</EndDate>
-            <Tenor>3M</Tenor>
-            <Calendar>UK</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-      <LegData>
-        <LegType>Floating</LegType>
-        <Payer>true</Payer>
-        <Currency>USD</Currency>
-        <Notionals>
-          <Notional>50000000</Notional>
-        </Notionals>
-        <DayCounter>A360</DayCounter>
-        <PaymentConvention>ModifiedFollowing</PaymentConvention>
-        <FloatingLegData>
-          <Index>USD-LIBOR-3M</Index>
-          <Spreads>
-            <Spread>0.0</Spread>
-          </Spreads>
-        </FloatingLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2015-04-22</StartDate>
-            <EndDate>2024-11-01</EndDate>
-            <Tenor>3M</Tenor>
-            <Calendar>UK</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
           </Rules>
@@ -179,94 +89,4 @@
       </LegData>
     </SwapData>
   </Trade>
-  <Trade id="Swap_2">
-    <TradeType>Swap</TradeType>
-    <Envelope>
-      <CounterParty>CPTY_A</CounterParty>
-      <NettingSetId>CPTY_A</NettingSetId>
-      <AdditionalFields/>
-    </Envelope>
-    <TradeActions>
-      <TradeAction>
-        <Type>Break</Type>
-        <Owner>Mutual</Owner>
-        <Schedule>
-          <Rules>
-            <StartDate>2012-09-05</StartDate>
-            <EndDate>2026-09-05</EndDate>
-            <Tenor>5Y</Tenor>
-            <Calendar>UK</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </Schedule>
-      </TradeAction>
-    </TradeActions>
-    <SwapData>
-      <LegData>
-        <LegType>Floating</LegType>
-        <Payer>true</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>30000000</Notional>
-        </Notionals>
-        <DayCounter>A360</DayCounter>
-        <PaymentConvention>ModifiedFollowing</PaymentConvention>
-        <FloatingLegData>
-          <Index>EUR-EURIBOR-3M</Index>
-          <Spreads>
-            <Spread>0.0</Spread>
-          </Spreads>
-        </FloatingLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2012-09-05</StartDate>
-            <EndDate>2026-09-05</EndDate>
-            <Tenor>3M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-      <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>false</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>30000000</Notional>
-        </Notionals>
-        <DayCounter>T360</DayCounter>
-        <PaymentConvention>ModifiedFollowing</PaymentConvention>
-        <FixedLegData>
-          <Rates>
-            <Rate>0.01</Rate>
-          </Rates>
-        </FixedLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2012-09-05</StartDate>
-            <EndDate>2026-09-05</EndDate>
-            <Tenor>1Y</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-    </SwapData>
-    </Trade>
-    -->
 </Portfolio>

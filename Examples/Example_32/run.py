@@ -9,13 +9,13 @@ from oreplus_examples_helper import OreExample
 oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
 # whithout VM/IM
-#oreex.print_headline("Run ORE to produce NPV cube and exposures, without VM/IM")
-#oreex.run("Input/ore.xml")
-#oreex.get_times("Output/log.txt")
-#oreex.save_output_to_subdir(
-#    "collateral_none",
-#    ["log.txt", "xva.csv"] + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
-#)
+oreex.print_headline("Run ORE to produce NPV cube and exposures, without VM/IM")
+oreex.run("Input/ore.xml")
+oreex.get_times("Output/log.txt")
+oreex.save_output_to_subdir(
+    "collateral_none",
+    ["log.txt", "xva.csv"] + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
+)
 
 # with VM, threshhold=mta=0, mpor=2w
 oreex.print_headline("Run ORE to postprocess the NPV cube, with VM, without IM")

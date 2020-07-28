@@ -4,6 +4,8 @@
 This example demonstrates exposure calculation with Variation Margin (VM) taken
 into account as in Example 31, and additional posting of Initial Margin (IM).
 
+The portfolio contains a single at-the-money Swap in GBP.
+
 IM is modelled dynamically by computing portfolio sensitivities and Delta (or
 Delta-Gamma) VaRs along all Monte Carlo paths, broadly consistent with the
 actual IM model - same holding period and confidence level. The covariance 
