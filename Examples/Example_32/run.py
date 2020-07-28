@@ -27,11 +27,21 @@ oreex.save_output_to_subdir(
     + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "colva*")))
 )
 
-# with VM and IM, threshold=mta=0, mpor=2w
-oreex.print_headline("Run ORE to postprocess the NPV cube, with VM and IM")
-oreex.run("Input/ore_mpor_dim.xml")
+# with VM and IM (regression), threshold=mta=0, mpor=2w
+oreex.print_headline("Run ORE to postprocess the NPV cube, with VM and IM (regression)")
+oreex.run("Input/ore_mpor_dim_reg.xml")
 oreex.save_output_to_subdir(
-    "collateral_mpor_dim",
+    "collateral_mpor_dim_reg",
+    ["log.txt", "xva.csv"]
+    + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
+    + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "colva*")))
+)
+
+# with VM and IM (ddv), threshold=mta=0, mpor=2w
+oreex.print_headline("Run ORE to postprocess the NPV cube, with VM and IM (ddv)")
+oreex.run("Input/ore_mpor_dim_ddv.xml")
+oreex.save_output_to_subdir(
+    "collateral_mpor_dim_ddv",
     ["log.txt", "xva.csv"]
     + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
     + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "colva*")))
@@ -42,18 +52,19 @@ oreex.print_headline("Plot results")
 oreex.setup_plot("nocollateral_epe")
 oreex.plot(os.path.join("collateral_none", "exposure_trade_Swap_1.csv"), 2, 3, 'b', "EPE Swap 1")
 oreex.plot(os.path.join("collateral_none", "exposure_nettingset_CPTY_A.csv"), 2, 3, 'm', "EPE NettingSet")
-oreex.decorate_plot(title="Example 10")
+oreex.decorate_plot(title="Example 32")
 oreex.save_plot_to_file()
 
 oreex.setup_plot("nocollateral_ene")
 oreex.plot(os.path.join("collateral_none", "exposure_trade_Swap_1.csv"), 2, 4, 'b', "ENE Swap 1")
 oreex.plot(os.path.join("collateral_none", "exposure_nettingset_CPTY_A.csv"), 2, 4, 'm', "ENE NettingSet")
-oreex.decorate_plot(title="Example 10")
+oreex.decorate_plot(title="Example 32")
 oreex.save_plot_to_file()
 
 oreex.setup_plot("mpor_epe")
 oreex.plot(os.path.join("collateral_none","exposure_nettingset_CPTY_A.csv"), 2, 3, 'b', "EPE NettingSet")
-oreex.plot(os.path.join("collateral_mpor","exposure_nettingset_CPTY_A.csv"), 2, 3, 'r', "EPE NettingSet, MPOR 2W")
-oreex.plot(os.path.join("collateral_mpor_dim","exposure_nettingset_CPTY_A.csv"), 2, 3, 'g', "EPE NettingSet, MPOR 2W, DIM")
-oreex.decorate_plot(title="Example 10")
+oreex.plot(os.path.join("collateral_mpor","exposure_nettingset_CPTY_A.csv"), 2, 3, 'c', "EPE NettingSet, MPOR 2W")
+oreex.plot(os.path.join("collateral_mpor_dim_reg","exposure_nettingset_CPTY_A.csv"), 2, 3, 'r', "EPE NettingSet, MPOR 2W, DIM (reg)")
+oreex.plot(os.path.join("collateral_mpor_dim_ddv","exposure_nettingset_CPTY_A.csv"), 2, 3, 'g', "EPE NettingSet, MPOR 2W, DIM (ddv)")
+oreex.decorate_plot(title="Example 32")
 oreex.save_plot_to_file()
