@@ -27,6 +27,8 @@
 
 #include <ored/report/report.hpp>
 
+#include <qle/math/covariancesalvage.hpp>
+
 #include <ql/math/array.hpp>
 #include <ql/math/matrix.hpp>
 
@@ -35,8 +37,8 @@
 
 namespace ore {
 namespace analytics {
-using QuantLib::Matrix;
 using QuantLib::Array;
+using QuantLib::Matrix;
 
 //! Parametric VaR Calculator
 /*! This class takes sensitivity data and a covariance matrix as an input and computes a parametric value at risk. The
@@ -54,7 +56,8 @@ public:
 
 protected:
     virtual std::vector<Real> computeVar(const Matrix& omega, const Array& delta, const Matrix& gamma,
-                                         const std::vector<Real>& p);
+                                         const std::vector<Real>& p,
+                                         const QuantExt::CovarianceSalvage& covarianceSalvage);
     const std::map<std::string, std::set<std::string>> tradePortfolios_;
     const std::string portfolioFilter_;
     const boost::shared_ptr<SensitivityStream> sensitivities_;

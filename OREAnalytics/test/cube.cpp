@@ -18,14 +18,14 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
-#include <test/oreatoplevelfixture.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <oret/toplevelfixture.hpp>
+#include <test/oreatoplevelfixture.hpp>
 
 using namespace ore::analytics;
 using namespace boost::unit_test_framework;
-using std::vector;
 using std::string;
+using std::vector;
 
 namespace {
 

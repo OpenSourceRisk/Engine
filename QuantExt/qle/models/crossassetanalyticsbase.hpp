@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file crossassetanalytics.hpp
-    \brief basis functions for analytics in the cross asset model
+/*! \file crossassetanalyticsbase.hpp
+    \brief basic functions for analytics in the cross asset model
     \ingroup crossassetmodel
 */
 

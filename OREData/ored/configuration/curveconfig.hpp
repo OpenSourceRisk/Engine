@@ -27,8 +27,8 @@
 
 namespace ore {
 namespace data {
-using std::string;
 using ore::data::XMLSerializable;
+using std::string;
 
 //! Base curve configuration
 /*!

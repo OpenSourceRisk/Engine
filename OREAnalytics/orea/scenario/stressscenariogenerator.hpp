@@ -88,6 +88,10 @@ private:
     void addSwaptionVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addCapFloorVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addSecuritySpreadShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
+    void addDefaultCurveShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
+    void addRecoveryRateShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
+    void addSurvivalProbabilityShifts(StressTestScenarioData::StressTestData& data,
+                                      boost::shared_ptr<Scenario>& scenario);
 
     boost::shared_ptr<StressTestScenarioData> stressData_;
     boost::shared_ptr<ScenarioFactory> stressScenarioFactory_;

@@ -11,44 +11,44 @@ import sys
 oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
 # Case B
-#oreex.print_headline("Run ORE (case B (swaption eur), 1st order regression, t=300)")
-#oreex.run("Input/ore_B1.xml")
-#oreex.get_times("Output/log_1.txt")
-#oreex.save_output_to_subdir(
-#    "case_B_eur_swaption",
-#    ["log_1.txt", "dim_evolution_1.txt", "dim_regression_1.txt"]
-#)
-#oreex.print_headline("Run ORE (case B (swaption eur), 2nd order regression, t=300)")
-#oreex.run("Input/ore_B2.xml")
-#oreex.save_output_to_subdir(
-#    "case_B_eur_swaption",
-#    ["log_2.txt", "dim_evolution_2.txt", "dim_regression_2.txt"]
-#)
-#oreex.print_headline("Run ORE (case B (swaption eur), zero order regression, t=300)")
-#oreex.run("Input/ore_B0.xml")
-#oreex.save_output_to_subdir(
-#    "case_B_eur_swaption",
-#    ["log_0.txt", "dim_evolution_0.txt", "dim_regression_0.txt"]
-#)
+oreex.print_headline("Run ORE (case B (swaption eur), 1st order regression, t=300)")
+oreex.run("Input/ore_B1.xml")
+oreex.get_times("Output/log_1.txt")
+oreex.save_output_to_subdir(
+    "case_B_eur_swaption",
+    ["log_1.txt", "dim_evolution_1.txt", "dim_regression_1.txt"]
+)
+oreex.print_headline("Run ORE (case B (swaption eur), 2nd order regression, t=300)")
+oreex.run("Input/ore_B2.xml")
+oreex.save_output_to_subdir(
+    "case_B_eur_swaption",
+    ["log_2.txt", "dim_evolution_2.txt", "dim_regression_2.txt"]
+)
+oreex.print_headline("Run ORE (case B (swaption eur), zero order regression, t=300)")
+oreex.run("Input/ore_B0.xml")
+oreex.save_output_to_subdir(
+    "case_B_eur_swaption",
+    ["log_0.txt", "dim_evolution_0.txt", "dim_regression_0.txt"]
+)
 
-#oreex.print_headline("Run ORE (case B (swaption eur), 1st order regression, t=100)")
-#oreex.run("Input/ore_B1b.xml")
-#oreex.save_output_to_subdir(
-#    "case_B_eur_swaption",
-#    ["log_1b.txt", "dim_evolution_1b.txt", "dim_regression_1b.txt"]
-#)
-#oreex.print_headline("Run ORE (case B (swaption eur), 2nd order regression, t=100)")
-#oreex.run("Input/ore_B2b.xml")
-#oreex.save_output_to_subdir(
-#    "case_B_eur_swaption",
-#    ["log_2b.txt", "dim_evolution_2b.txt", "dim_regression_2b.txt"]
-#)
-#oreex.print_headline("Run ORE (case B (swaption eur), zero order regression, t=100)")
-#oreex.run("Input/ore_B0b.xml")
-#oreex.save_output_to_subdir(
-#    "case_B_eur_swaption",
-#    ["log_0b.txt", "dim_evolution_0b.txt", "dim_regression_0b.txt"]
-#)
+oreex.print_headline("Run ORE (case B (swaption eur), 1st order regression, t=100)")
+oreex.run("Input/ore_B1b.xml")
+oreex.save_output_to_subdir(
+    "case_B_eur_swaption",
+    ["log_1b.txt", "dim_evolution_1b.txt", "dim_regression_1b.txt"]
+)
+oreex.print_headline("Run ORE (case B (swaption eur), 2nd order regression, t=100)")
+oreex.run("Input/ore_B2b.xml")
+oreex.save_output_to_subdir(
+    "case_B_eur_swaption",
+    ["log_2b.txt", "dim_evolution_2b.txt", "dim_regression_2b.txt"]
+)
+oreex.print_headline("Run ORE (case B (swaption eur), zero order regression, t=100)")
+oreex.run("Input/ore_B0b.xml")
+oreex.save_output_to_subdir(
+    "case_B_eur_swaption",
+    ["log_0b.txt", "dim_evolution_0b.txt", "dim_regression_0b.txt"]
+)
 
 oreex.print_headline("Plot results")
 

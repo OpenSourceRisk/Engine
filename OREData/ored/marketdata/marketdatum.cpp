@@ -20,16 +20,45 @@
 #include <ored/marketdata/marketdatum.hpp>
 #include <ored/utilities/parsers.hpp>
 
-using boost::lexical_cast;
 using boost::bad_lexical_cast;
+using boost::lexical_cast;
 
 namespace ore {
 namespace data {
 
+std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) {
+    switch (type) {
+    case MarketDatum::QuoteType::BASIS_SPREAD:
+        return out << "BASIS_SPREAD";
+    case MarketDatum::QuoteType::CREDIT_SPREAD:
+        return out << "CREDIT_SPREAD";
+    case MarketDatum::QuoteType::YIELD_SPREAD:
+        return out << "YIELD_SPREAD";
+    case MarketDatum::QuoteType::RATE:
+        return out << "RATE";
+    case MarketDatum::QuoteType::RATIO:
+        return out << "RATIO";
+    case MarketDatum::QuoteType::PRICE:
+        return out << "PRICE";
+    case MarketDatum::QuoteType::RATE_LNVOL:
+        return out << "RATE_LNVOL";
+    case MarketDatum::QuoteType::RATE_NVOL:
+        return out << "RATE_NVOL";
+    case MarketDatum::QuoteType::RATE_SLNVOL:
+        return out << "RATE_SLNVOL";
+    case MarketDatum::QuoteType::BASE_CORRELATION:
+        return out << "BASE_CORRELATION";
+    case MarketDatum::QuoteType::SHIFT:
+        return out << "SHIFT";
+    default:
+        return out << "?";
+    }
+}
+
 EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
-                                     string equityName, string ccy, string expiry, string strike)
+                                     string equityName, string ccy, string expiry, string strike, bool isCall)
     : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_OPTION), eqName_(equityName), ccy_(ccy),
-      expiry_(expiry), strike_(strike) {
+      expiry_(expiry), strike_(strike), isCall_(isCall) {
 
     // we will call a parser on the expiry string, to ensure it is a correctly-formatted date or tenor
     Date tmpDate;
@@ -38,10 +67,17 @@ EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& na
     parseDateOrPeriod(expiry, tmpDate, tmpPeriod, tmpBool);
 }
 
-Natural MMFutureQuote::expiryYear() const {
-    QL_REQUIRE(expiry_.length() == 7, "The expiry string must be of "
-                                      "the form YYYY-MM");
-    string strExpiryYear = expiry_.substr(0, 4);
+IndexCDSOptionQuote::IndexCDSOptionQuote(QuantLib::Real value, const Date& asof, const string& name,
+                                         const string& indexName, const boost::shared_ptr<Expiry>& expiry,
+                                         const string& indexTerm, const boost::shared_ptr<BaseStrike>& strike)
+    : MarketDatum(value, asof, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION), indexName_(indexName),
+      expiry_(expiry), indexTerm_(indexTerm), strike_(strike) {}
+
+namespace {
+Natural yearFromExpiryString(const std::string& expiry) {
+    QL_REQUIRE(expiry.length() == 7, "The expiry string must be of "
+                                     "the form YYYY-MM");
+    string strExpiryYear = expiry.substr(0, 4);
     Natural expiryYear;
     try {
         expiryYear = lexical_cast<Natural>(strExpiryYear);
@@ -51,10 +87,10 @@ Natural MMFutureQuote::expiryYear() const {
     return expiryYear;
 }
 
-Month MMFutureQuote::expiryMonth() const {
-    QL_REQUIRE(expiry_.length() == 7, "The expiry string must be of "
-                                      "the form YYYY-MM");
-    string strExpiryMonth = expiry_.substr(5);
+Month monthFromExpiryString(const std::string& expiry) {
+    QL_REQUIRE(expiry.length() == 7, "The expiry string must be of "
+                                     "the form YYYY-MM");
+    string strExpiryMonth = expiry.substr(5);
     Natural expiryMonth;
     try {
         expiryMonth = lexical_cast<Natural>(strExpiryMonth);
@@ -63,6 +99,15 @@ Month MMFutureQuote::expiryMonth() const {
     }
     return static_cast<Month>(expiryMonth);
 }
+} // namespace
+
+Natural MMFutureQuote::expiryYear() const { return yearFromExpiryString(expiry_); }
+
+Month MMFutureQuote::expiryMonth() const { return monthFromExpiryString(expiry_); }
+
+Natural OIFutureQuote::expiryYear() const { return yearFromExpiryString(expiry_); }
+
+Month OIFutureQuote::expiryMonth() const { return monthFromExpiryString(expiry_); }
 
 QuantLib::Size SeasonalityQuote::applyMonth() const {
     QL_REQUIRE(month_.length() == 3, "The month string must be of "
@@ -81,23 +126,10 @@ QuantLib::Size SeasonalityQuote::applyMonth() const {
 
 CommodityOptionQuote::CommodityOptionQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
                                            const string& commodityName, const string& quoteCurrency,
-                                           const string& expiry, const string& strike)
+                                           const boost::shared_ptr<Expiry>& expiry,
+                                           const boost::shared_ptr<BaseStrike>& strike)
     : MarketDatum(value, asof, name, quoteType, InstrumentType::COMMODITY_OPTION), commodityName_(commodityName),
-      quoteCurrency_(quoteCurrency), expiry_(expiry), strike_(strike) {
-
-    // If strike is not ATMF, it must parse to Real
-    if (strike != "ATMF") {
-        Real result;
-        QL_REQUIRE(tryParseReal(strike_, result),
-                   "Commodity option quote strike (" << strike_ << ") must be either ATMF or an actual strike price");
-    }
-
-    // Call parser to check that the expiry_ resolves to a period or a date
-    Date outDate;
-    Period outPeriod;
-    bool outBool;
-    parseDateOrPeriod(expiry_, outDate, outPeriod, outBool);
-}
+      quoteCurrency_(quoteCurrency), expiry_(expiry), strike_(strike) {}
 
 CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
                                    const string& index1, const string& index2, const string& expiry,
@@ -121,3 +153,47 @@ CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& n
 
 } // namespace data
 } // namespace ore
+
+BOOST_CLASS_EXPORT_GUID(ore::data::MoneyMarketQuote, "MoneyMarketQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::FRAQuote, "FRAQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::ImmFraQuote, "ImmFraQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::SwapQuote, "SwapQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::ZeroQuote, "ZeroQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::DiscountQuote, "DiscountQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::MMFutureQuote, "MMFutureQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::OIFutureQuote, "OIFutureQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::BasisSwapQuote, "BasisSwapQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::BMASwapQuote, "BMASwapQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::CrossCcyBasisSwapQuote, "CrossCcyBasisSwapQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::CrossCcyFixFloatSwapQuote, "CrossCcyFixFloatSwapQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::CdsQuote, "CdsQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::HazardRateQuote, "HazardRateQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::RecoveryRateQuote, "RecoveryRateQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::SwaptionQuote, "SwaptionQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::SwaptionShiftQuote, "SwaptionShiftQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::BondOptionQuote, "BondOptionQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::BondOptionShiftQuote, "BondOptionShiftQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::CapFloorQuote, "CapFloorQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::CapFloorShiftQuote, "CapFloorShiftQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::FXSpotQuote, "FXSpotQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::FXForwardQuote, "FXForwardQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::FXOptionQuote, "FXOptionQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::ZcInflationSwapQuote, "ZcInflationSwapQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::InflationCapFloorQuote, "InflationCapFloorQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::ZcInflationCapFloorQuote, "ZcInflationCapFloorQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::YoYInflationSwapQuote, "YoYInflationSwapQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::YyInflationCapFloorQuote, "YyInflationCapFloorQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::SeasonalityQuote, "SeasonalityQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::EquitySpotQuote, "EquitySpotQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::EquityForwardQuote, "EquityForwardQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::EquityDividendYieldQuote, "EquityDividendYieldQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::EquityOptionQuote, "EquityOptionQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::SecuritySpreadQuote, "SecuritySpreadQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::BaseCorrelationQuote, "BaseCorrelationQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::IndexCDSOptionQuote, "IndexCDSOptionQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::CommoditySpotQuote, "CommoditySpotQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::CommodityForwardQuote, "CommodityForwardQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::CommodityOptionQuote, "CommodityOptionQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::CorrelationQuote, "CorrelationQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::CPRQuote, "CPRQuote");
+BOOST_CLASS_EXPORT_GUID(ore::data::BondPriceQuote, "BondPriceQuote");

@@ -23,7 +23,9 @@
 #ifndef quantext_brl_cdi_coupon_pricer_hpp
 #define quantext_brl_cdi_coupon_pricer_hpp
 
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
+
 #include <ql/cashflows/couponpricer.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 
@@ -46,13 +48,15 @@ public:
     //@}
 
 private:
-    //! The coupon to be priced
-    const QuantLib::OvernightIndexedCoupon* coupon_;
+    /*! The coupon to be priced, for now we support both QuantLib::OvernightIndexedCoupon
+        and QuantExt::OvernightIndexedCoupon, see ORE ticket 1159 */
+    const QuantLib::OvernightIndexedCoupon* couponQl_;
+    const QuantExt::OvernightIndexedCoupon* couponQle_;
 
     //! The index underlying the coupon to be priced
     boost::shared_ptr<BRLCdi> index_;
 };
 
-}
+} // namespace QuantExt
 
 #endif

@@ -68,10 +68,8 @@
       </Currencies>
       <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
       <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
-      <Cube>
-          <SimulateATMOnly>false</SimulateATMOnly>
-          <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
-      </Cube>
+      <SimulateATMOnly>false</SimulateATMOnly>
+      <StrikeSpreads ccy="EUR">-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
     </SwaptionVolatilities>
     
     <CapFloorVolatilities>

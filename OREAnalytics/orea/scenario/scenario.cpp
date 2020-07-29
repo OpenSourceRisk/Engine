@@ -67,8 +67,8 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "YoYInflationCurve";
     case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
         return out << "YoYInflationCapFloorVolatility";
-    case RiskFactorKey::KeyType::CommoditySpot:
-        return out << "CommoditySpot";
+    case RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility:
+        return out << "ZeroInflationCapFloorVolatility";
     case RiskFactorKey::KeyType::CommodityCurve:
         return out << "CommodityCurve";
     case RiskFactorKey::KeyType::CommodityVolatility:
@@ -133,8 +133,8 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::YoYInflationCurve;
     else if (str == "YoYInflationCapFloorVolatility")
         return RiskFactorKey::KeyType::YoYInflationCapFloorVolatility;
-    else if (str == "CommoditySpot")
-        return RiskFactorKey::KeyType::CommoditySpot;
+    else if (str == "ZeroInflationCapFloorVolatility")
+        return RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility;
     else if (str == "CommodityCurve")
         return RiskFactorKey::KeyType::CommodityCurve;
     else if (str == "CommodityVolatility")

@@ -25,6 +25,7 @@
 
 #include <ored/portfolio/optiondata.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/underlying.hpp>
 
 namespace ore {
 namespace data {
@@ -37,21 +38,18 @@ using std::string;
 class EquityForward : public Trade {
 public:
     EquityForward() : Trade("EquityForward") {}
-    EquityForward(Envelope& env, string longShort, string name, string currency, double quantity, string maturityDate,
-                  double strike)
-        : Trade("EquityForward", env), longShort_(longShort), eqName_(name), currency_(currency), quantity_(quantity),
-          maturityDate_(maturityDate), strike_(strike) {}
+    EquityForward(Envelope& env, string longShort, EquityUnderlying equityUnderlying, string currency, double quantity,
+                  string maturityDate, double strike)
+        : Trade("EquityForward", env), longShort_(longShort), equityUnderlying_(equityUnderlying), currency_(currency),
+          quantity_(quantity), maturityDate_(maturityDate), strike_(strike) {}
 
     void build(const boost::shared_ptr<EngineFactory>&) override;
 
-    //! Return no fixings for an EquityForward.
-    std::map<std::string, std::set<QuantLib::Date>> fixings(
-        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
-        return {};
-    }
+    //! Add underlying Equity names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
 
     string longShort() { return longShort_; }
-    string eqName() { return eqName_; }
+    const string& eqName() const { return equityUnderlying_.name(); }
     string currency() { return currency_; }
     double quantity() { return quantity_; }
     string maturityDate() { return maturityDate_; }
@@ -62,7 +60,7 @@ public:
 
 private:
     string longShort_;
-    string eqName_;
+    EquityUnderlying equityUnderlying_;
     string currency_;
     double quantity_;
     string maturityDate_;

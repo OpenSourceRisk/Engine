@@ -5,7 +5,7 @@ MAINTAINER Quaternion Risk Management
 LABEL Description="Build QuantLib and add to the Boost build environment"
 
 # Argument for number of cores to use while building
-ARG num_cores=2
+ARG num_cores
 
 # Exclusions are performed by .dockerignore
 COPY QuantLib /ore/QuantLib
@@ -14,9 +14,8 @@ COPY QuantLib /ore/QuantLib
 # scripts fail if there are CRLF present in the files
 RUN cd /ore/QuantLib \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
-  && ./autogen.sh \
-  && ./configure --enable-static CXXFLAGS=-O2 \
-  && cd ql \
+  && mkdir -p build.ql && cd build.ql \
+  && cmake .. \
   && make -j ${num_cores} \
   && make install \
   && cd / \

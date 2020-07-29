@@ -17,7 +17,7 @@
 */
 
 /*! \file portfolio/builders/swap.hpp
-    \brief
+    \brief Engine builder for Swaps
     \ingroup builders
 */
 
@@ -27,6 +27,7 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
@@ -79,16 +80,16 @@ protected:
     }
 };
 
-//! Engine Builder for Cross Currency Swaps
+//! Engine Builder base class for Cross Currency Swaps
 /*! Pricing engines are cached by currencies (represented as a string list)
 
     \ingroup builders
 */
-class CrossCurrencySwapEngineBuilder
+class CrossCurrencySwapEngineBuilderBase
     : public CachingPricingEngineBuilder<string, const std::vector<Currency>&, const Currency&> {
 public:
-    CrossCurrencySwapEngineBuilder()
-        : CachingEngineBuilder("DiscountedCashflows", "DiscountingCrossCurrencySwapEngine", {"CrossCurrencySwap"}) {}
+    CrossCurrencySwapEngineBuilderBase(const std::string& model, const std::string& engine)
+        : CachingEngineBuilder(model, engine, {"CrossCurrencySwap"}) {}
 
 protected:
     virtual string keyImpl(const std::vector<Currency>& ccys, const Currency& base) override {
@@ -98,16 +99,27 @@ protected:
             ccyskey << ccys[i] << ((i < ccys.size() - 1) ? "-" : "");
         return ccyskey.str();
     }
+};
 
+//! Discounted Cashflows Engine Builder for Cross Currency Swaps
+class CrossCurrencySwapEngineBuilder : public CrossCurrencySwapEngineBuilderBase {
+public:
+    CrossCurrencySwapEngineBuilder()
+        : CrossCurrencySwapEngineBuilderBase("DiscountedCashflows", "DiscountingCrossCurrencySwapEngine") {}
+
+protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys,
                                                         const Currency& base) override {
 
         std::vector<Handle<YieldTermStructure>> discountCurves;
         std::vector<Handle<Quote>> fxQuotes;
+        std::string config = configuration(MarketContext::pricing);
+        std::string baseCcyCode = base.code();
         for (Size i = 0; i < ccys.size(); ++i) {
-            discountCurves.push_back(market_->discountCurve(ccys[i].code(), configuration(MarketContext::pricing)));
-            string pair = ccys[i].code() + base.code();
-            fxQuotes.push_back(market_->fxSpot(pair, configuration(MarketContext::pricing)));
+            string ccyCode = ccys[i].code();
+            discountCurves.push_back(xccyYieldCurve(market_, ccyCode, config));
+            string pair = ccyCode + baseCcyCode;
+            fxQuotes.push_back(market_->fxSpot(pair, config));
         }
 
         return boost::make_shared<QuantExt::DiscountingCurrencySwapEngine>(discountCurves, fxQuotes, ccys, base);

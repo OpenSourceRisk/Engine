@@ -1,4 +1,8 @@
 <TodaysMarket>
+  <YieldCurves id="default">
+    <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
+    <YieldCurve name="BENCHMARK_USD">Yield/EUR/BENCHMARK_USD</YieldCurve>
+  </YieldCurves>
   <DiscountingCurves id="default">
     <DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>
     <DiscountingCurve currency="EUR">Yield/EUR/EUR-IN-USD</DiscountingCurve>
@@ -13,10 +17,6 @@
     <Index name="GBP-LIBOR-6M">Yield/GBP/GBP-LIBOR-6M</Index>
     <Index name="USD-LIBOR-3M">Yield/USD/USD-LIBOR-3M</Index>
   </IndexForwardingCurves>
-  <YieldCurves id="default">
-    <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
-    <YieldCurve name="BENCHMARK_USD">Yield/EUR/BENCHMARK_USD</YieldCurve>
-  </YieldCurves>
   <SwapIndexCurves id="default">
     <SwapIndex name="EUR-CMS-1Y">
       <Discounting>EUR-EONIA</Discounting>

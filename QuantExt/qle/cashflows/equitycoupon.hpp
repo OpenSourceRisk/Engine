@@ -31,6 +31,7 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/time/schedule.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/fxindex.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -48,10 +49,11 @@ class EquityCoupon : public Coupon, public Observer {
 public:
     EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
                  const boost::shared_ptr<EquityIndex>& equityCurve, const DayCounter& dayCounter,
-                 bool isTotalReturn = false, Real dividendFactor = 1.0, bool notionalReset = false, 
-                 Real initialPrice = Real(), Real quantity = Real(),
-                 const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(), 
-                 const Date& exCouponDate = Date());
+                 bool isTotalReturn = false, Real dividendFactor = 1.0, bool notionalReset = false,
+                 Real initialPrice = Null<Real>(), Real quantity = Null<Real>(), const Date& fixingStartDate = Date(),
+                 const Date& fixingEndDate = Date(), const Date& refPeriodStart = Date(),
+                 const Date& refPeriodEnd = Date(), const Date& exCouponDate = Date(),
+                 const boost::shared_ptr<FxIndex>& fxIndex = nullptr, const bool initialPriceIsInTargetCcy = false);
 
     //! \name CashFlow interface
     //@{
@@ -73,6 +75,8 @@ public:
     //@{
     //! equity reference rate curve
     const boost::shared_ptr<EquityIndex>& equityCurve() const { return equityCurve_; }
+    //! fx index curve
+    const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     //! total return or price return?
     bool isTotalReturn() const { return isTotalReturn_; }
     //! are dividends scaled (e.g. to account for tax)
@@ -85,8 +89,12 @@ public:
     std::vector<Date> fixingDates() const;
     //! initial price
     Real initialPrice() const;
+    //! initial price is in target ccy (if applicable, i.e. if fxIndex != null, otherwise ignored)
+    bool initialPriceIsInTargetCcy() const;
     //! Number of equity shares held
     Real quantity() const { return quantity_; }
+    //! FX conversion rate (or 1.0 if not applicable)
+    Real fxRate() const;
     //! This function is called for other coupon types
     Date fixingDate() const {
         QL_FAIL("Equity Coupons have 2 fixings, not 1.");
@@ -115,9 +123,11 @@ protected:
     Real dividendFactor_;
     bool notionalReset_;
     Real initialPrice_;
+    bool initialPriceIsInTargetCcy_;
     Real quantity_;
     Date fixingStartDate_;
     Date fixingEndDate_;
+    boost::shared_ptr<FxIndex> fxIndex_;
 };
 
 // inline definitions
@@ -137,7 +147,8 @@ inline boost::shared_ptr<EquityCouponPricer> EquityCoupon::pricer() const { retu
  */
 class EquityLeg {
 public:
-    EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve);
+    EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
+              const boost::shared_ptr<FxIndex>& fxIndex = nullptr);
     EquityLeg& withNotional(Real notional);
     EquityLeg& withNotionals(const std::vector<Real>& notionals);
     EquityLeg& withPaymentDayCounter(const DayCounter& dayCounter);
@@ -146,24 +157,29 @@ public:
     EquityLeg& withTotalReturn(bool);
     EquityLeg& withDividendFactor(Real);
     EquityLeg& withInitialPrice(Real);
+    EquityLeg& withInitialPriceIsInTargetCcy(bool);
     EquityLeg& withFixingDays(Natural);
     EquityLeg& withValuationSchedule(const Schedule& valuationSchedule);
     EquityLeg& withNotionalReset(bool);
+    EquityLeg& withQuantity(Real);
     operator Leg() const;
 
 private:
     Schedule schedule_;
     boost::shared_ptr<EquityIndex> equityCurve_;
+    boost::shared_ptr<FxIndex> fxIndex_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
     bool isTotalReturn_;
     Real initialPrice_;
+    bool initialPriceIsInTargetCcy_;
     Real dividendFactor_;
     Natural fixingDays_;
     Schedule valuationSchedule_;
     bool notionalReset_;
+    Real quantity_;
 };
 
 } // namespace QuantExt

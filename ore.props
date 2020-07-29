@@ -3,6 +3,9 @@
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
   </PropertyGroup>
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>$(ORE)\disable_selected.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '10.0'">v100</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '11.0'">v110</PlatformToolset>
@@ -13,19 +16,16 @@
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '16.0'">v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Label="UserMacros">
-    <!--Compiler tag for target name-->
-    <qlCompilerTag Condition="'$(VisualStudioVersion)' == '10.0'">vc100</qlCompilerTag>
-    <qlCompilerTag Condition="'$(VisualStudioVersion)' == '11.0'">vc110</qlCompilerTag>
-    <qlCompilerTag Condition="'$(VisualStudioVersion)' == '12.0'">vc120</qlCompilerTag>
-    <qlCompilerTag Condition="'$(VisualStudioVersion)' == '13.0'">vc130</qlCompilerTag>
-    <qlCompilerTag Condition="'$(VisualStudioVersion)' == '14.0'">vc140</qlCompilerTag>
-    <qlCompilerTag Condition="'$(VisualStudioVersion)' == '15.0'">vc141</qlCompilerTag>
-    <qlCompilerTag Condition="'$(VisualStudioVersion)' == '16.0'">vc142</qlCompilerTag>
     <!--Additional warnings-->
     <additionalWarning></additionalWarning>
     <additionalWarning Condition="'$(VisualStudioVersion)' == '15.0'">$(additionalWarning) /w35038</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34189</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34101</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34701</additionalWarning>
-  </PropertyGroup>
+  </PropertyGroup>  
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);BOOST_ENABLE_ASSERT_HANDLER</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>  
 </Project>

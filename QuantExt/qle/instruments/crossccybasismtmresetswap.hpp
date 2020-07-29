@@ -16,10 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file crossccybasisswap.hpp
-    \brief Cross currency basis swap instrument
-
-        \ingroup instruments
+/*! \file crossccybasismtmresetswap.hpp
+    \brief Cross currency basis swap instrument with MTM reset
+    \ingroup instruments
 */
 
 #ifndef quantext_cross_ccy_basis_mtmreset_swap_hpp
@@ -53,8 +52,7 @@ public:
                               const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread,
                               const Currency& domesticCurrency, const Schedule& domesticSchedule,
                               const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
-                              const boost::shared_ptr<FxIndex>& fxIdx, bool invertFxIdx = false,
-                              bool receiveDomestic = true);
+                              const boost::shared_ptr<FxIndex>& fxIdx, bool receiveDomestic = true);
     //@}
     //! \name Instrument interface
     //@{
@@ -110,7 +108,6 @@ private:
     Spread domesticSpread_;
 
     boost::shared_ptr<FxIndex> fxIndex_;
-    bool invertFxIndex_;
     bool receiveDomestic_;
 
     mutable Spread fairForeignSpread_;

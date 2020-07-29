@@ -1,55 +1,46 @@
-<?xml version="1.0"?>
 <SensitivityAnalysis>
-  <!-- Discount curve shifts -->
   <DiscountCurves>
     <DiscountCurve ccy="USD">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+        <SingleCurve>true</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">USD-ON-DEPOSIT</Convention>
+          <Convention id="OIS">USD-OIS</Convention>
+        </Conventions>
+      </ParConversion>
     </DiscountCurve>
   </DiscountCurves>
-  <!-- Index curve shifts -->
   <IndexCurves>
     <IndexCurve index="USD-LIBOR-3M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP, DEP, DEP, DEP, IRS, IRS, IRS, IRS, IRS, IRS, IRS, IRS</Instruments>
+        <SingleCurve>false</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">USD-DEPOSIT</Convention>
+          <Convention id="IRS">USD-LIBOR-3M-SWAP</Convention>
+        </Conventions>
+      </ParConversion>
     </IndexCurve>
-  </IndexCurves>
-  <!-- Yield curve shifts -->
-  <YieldCurves>
-    <YieldCurve name="SP5">
-      <CurveType>EquityForecast</CurveType>
+    <IndexCurve index="USD-Prime">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</ShiftTenors>
-    </YieldCurve>
-  </YieldCurves>
-  <!-- FX spot shifts -->
-  <FxSpots/>
-  <!-- FX ATM vol shifts -->
-  <FxVolatilities/>
-  <!-- Swaption ATM vol shifts -->
-  <SwaptionVolatilities/>
-  <!-- Cap/Floor (Optionlet or Flat) vol surface shifts -->
-  <CapFloorVolatilities/>
-  <CDSVolatilities>
-  </CDSVolatilities>
-  <!-- Credit Curve shifts -->
-  <CreditCurves/>
-  <!-- Equity spot shifts -->
-  <EquitySpots>
-    <EquitySpot equity="SP5">
-      <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-    </EquitySpot>
-  </EquitySpots>
-  <!-- Equity ATM vol shifts -->
-  <EquityVolatilities/>
-  <ZeroInflationIndexCurves/>
-  <YYInflationIndexCurves/>
-  <BaseCorrelations/>
-  <SecuritySpreads/>
-  <!-- Cross Gamma filter: Pairs of factor sub-strings -->
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+        <SingleCurve>false</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">USD-ON-DEPOSIT</Convention>
+          <Convention id="OIS">USD-OIS</Convention>
+        </Conventions>
+      </ParConversion>
+    </IndexCurve>
+  </IndexCurves>
   <CrossGammaFilter/>
 </SensitivityAnalysis>

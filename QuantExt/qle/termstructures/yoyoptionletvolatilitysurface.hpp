@@ -40,7 +40,10 @@ public:
     YoYOptionletVolatilitySurface(boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> referenceVolSurface,
                                   VolatilityType volType = ShiftedLognormal, Real displacement = 0.0)
         : TermStructure(), referenceVolSurface_(referenceVolSurface), volType_(volType), displacement_(displacement) {
-      referenceVolSurface->enableExtrapolation();
+        QL_REQUIRE(QuantLib::close_enough(displacement, 0.0) || QuantLib::close_enough(displacement, 1.0),
+                   "YoYOptionletVolatilitySurface: displacement (" << displacement << ") must be 0 or 1");
+        registerWith(referenceVolSurface_);
+        referenceVolSurface->enableExtrapolation();
     }
 
     Volatility volatility(const Date& maturityDate, Rate strike, const Period& obsLag = Period(-1, Days),
@@ -69,6 +72,8 @@ public:
     virtual Volatility baseLevel() const { return referenceVolSurface_->baseLevel(); }
 
     boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> yoyVolSurface() const { return referenceVolSurface_; }
+
+    void deepUpdate() { referenceVolSurface_->deepUpdate(); }
 
 protected:
     boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> referenceVolSurface_;

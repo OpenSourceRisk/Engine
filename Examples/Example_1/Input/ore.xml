@@ -16,6 +16,7 @@
     <Parameter name="portfolioFile">portfolio_swap.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
     <Parameter name="continueOnError">false</Parameter>
+    <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">libor</Parameter>

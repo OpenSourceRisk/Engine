@@ -41,15 +41,11 @@ public:
     //! Default constructor
     Swaption() : Trade("Swaption") {}
     //! Constructor
-    Swaption(Envelope& env, OptionData& option, vector<LegData>& swap)
+    Swaption(const Envelope& env, const OptionData& option, const vector<LegData>& swap)
         : Trade("Swaption", env), option_(option), swap_(swap) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
-
-    //! Return the fixings that will be requested to price the Swaption given the \p settlementDate.
-    std::map<std::string, std::set<QuantLib::Date>> fixings(
-        const QuantLib::Date& settlementDate = QuantLib::Date()) const override;
 
     //! \name Inspectors
     //@{
@@ -62,6 +58,12 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
+
+    //! \name Trade
+    //@{
+    bool hasCashflows() const override { return false; }
+    //@}
+
 private:
     OptionData option_;
     vector<LegData> swap_;
@@ -79,7 +81,7 @@ private:
     boost::shared_ptr<QuantLib::Exercise> exercise_;
 
     //! Store the name of the underlying swap's floating leg index
-    std::string underlyingIndex_;
+    std::string underlyingIndex_, underlyingIndexQlName_;
 
     //! Store the underlying swap's floating leg
     QuantLib::Leg underlyingLeg_;

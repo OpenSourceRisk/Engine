@@ -23,9 +23,9 @@
 
 using namespace QuantLib;
 using namespace ore::data;
-using std::vector;
-using std::pair;
 using std::ostringstream;
+using std::pair;
+using std::vector;
 
 namespace testsuite {
 
@@ -82,7 +82,8 @@ boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPay
 
 boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
                                               Real spread, string floatFreq, string floatDC, string index,
-                                              string yyFreq, string yyDC, string yyIndex, string observationLag, Size fixDays);
+                                              string yyFreq, string yyDC, string yyIndex, string observationLag,
+                                              Size fixDays);
 
 boost::shared_ptr<Trade> buildCommodityForward(const std::string& id, const std::string& position, Size term,
                                                const std::string& commodityName, const std::string& currency,

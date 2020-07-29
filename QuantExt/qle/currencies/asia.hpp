@@ -32,17 +32,6 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! Kazakhstani tenge
-/*! The ISO three-letter code is KZT; the numeric code is 398.
- It is divided into 100 tiyin.
-
- \ingroup currencies
-*/
-class KZTCurrency : public Currency {
-public:
-    KZTCurrency();
-};
-
 //! Qatari riyal
 /*! The ISO three-letter code is QAR; the numeric code is 634.
  It is divided into 100 diram.
@@ -108,5 +97,17 @@ class CNHCurrency : public Currency {
 public:
     CNHCurrency();
 };
+
+//! Sri Lankan rupee
+/*! The ISO three-letter code is LKR; there numeric code is 144.
+ It is divided into 100 cents.
+
+ \ingroup currencies
+*/
+class LKRCurrency : public Currency {
+public:
+    LKRCurrency();
+};
+
 } // namespace QuantExt
 #endif

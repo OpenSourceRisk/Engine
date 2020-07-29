@@ -24,11 +24,11 @@
 #ifndef quantext_equityindex_hpp
 #define quantext_equityindex_hpp
 
+#include <ql/currency.hpp>
 #include <ql/handle.hpp>
 #include <ql/index.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
-#include <ql/currency.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -38,8 +38,7 @@ using namespace QuantLib;
 class EquityIndex : public Index, public Observer {
 public:
     /*! spot quote is interpreted as of today */
-    EquityIndex(const std::string& familyName, const Calendar& fixingCalendar,
-                const Currency& currency,
+    EquityIndex(const std::string& familyName, const Calendar& fixingCalendar, const Currency& currency,
                 const Handle<Quote> spotQuote = Handle<Quote>(),
                 const Handle<YieldTermStructure>& rate = Handle<YieldTermStructure>(),
                 const Handle<YieldTermStructure>& dividend = Handle<YieldTermStructure>());

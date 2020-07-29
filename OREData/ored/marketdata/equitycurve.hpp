@@ -28,12 +28,13 @@
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
+#include <qle/indexes/equityindex.hpp>
 
 namespace ore {
 namespace data {
-using QuantLib::Date;
-using ore::data::CurveConfigurations;
 using ore::data::Conventions;
+using ore::data::CurveConfigurations;
+using QuantLib::Date;
 
 //! Wrapper class for building Equity curves (spot quote, yield term structure, risk free IR term structure)
 /*!
@@ -51,21 +52,18 @@ public:
     //@}
     //! \name Inspectors
     //@{
-    const EquityCurveSpec& spec() const { return spec_; }
-    boost::shared_ptr<YieldTermStructure> divYieldTermStructure(const Date& asof) const;
-    Handle<YieldTermStructure> forecastingYieldTermStructure() const { return forecastYieldTermStructure_; };
-    const Real equitySpot() const { return equitySpot_; }
+    const EquityCurveSpec& spec() const { return spec_; };
+    boost::shared_ptr<QuantExt::EquityIndex> equityIndex() const { return equityIndex_; };
     //@}
 private:
     EquityCurveSpec spec_;
-    Real equitySpot_;
     EquityCurveConfig::Type curveType_;
     vector<Real> quotes_;
     vector<Date> terms_;
     DayCounter dc_;
-    Handle<YieldTermStructure> forecastYieldTermStructure_;
     YieldCurve::InterpolationVariable dividendInterpVariable_;
     YieldCurve::InterpolationMethod dividendInterpMethod_;
+    boost::shared_ptr<QuantExt::EquityIndex> equityIndex_;
 };
 } // namespace data
 } // namespace ore

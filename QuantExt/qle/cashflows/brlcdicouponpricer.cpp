@@ -19,18 +19,18 @@
 #include <qle/cashflows/brlcdicouponpricer.hpp>
 
 using namespace QuantLib;
-using std::vector;
 using std::pow;
+using std::vector;
 
 namespace QuantExt {
 
-// The code here is very similar to QuantLib::OvernightIndexedCouponPricer. That class is in 
-// an anonymous namespace so could not extend it. The altered code is to take account of the fact 
+// The code here is very similar to QuantLib::OvernightIndexedCouponPricer. That class is in
+// an anonymous namespace so could not extend it. The altered code is to take account of the fact
 // that the BRL CDI coupon accrues as (1 + DI) ^ (1 / 252)
 Rate BRLCdiCouponPricer::swapletRate() const {
 
-    const vector<Date>& fixingDates = coupon_->fixingDates();
-    const vector<Time>& dt = coupon_->dt();
+    const vector<Date>& fixingDates = couponQl_ ? couponQl_->fixingDates() : couponQle_->fixingDates();
+    const vector<Time>& dt = couponQl_ ? couponQl_->dt() : couponQle_->dt();
     Size n = dt.size();
     Size i = 0;
     Real compoundFactor = 1.0;
@@ -62,31 +62,30 @@ Rate BRLCdiCouponPricer::swapletRate() const {
         Handle<YieldTermStructure> curve = index_->forwardingTermStructure();
         QL_REQUIRE(!curve.empty(), "BRLCdiCouponPricer needs the index to have a forwarding term structure");
 
-        const vector<Date>& dates = coupon_->valueDates();
+        const vector<Date>& dates = couponQl_ ? couponQl_->valueDates() : couponQle_->valueDates();
         DiscountFactor startDiscount = curve->discount(dates[i]);
         DiscountFactor endDiscount = curve->discount(dates[n]);
 
         compoundFactor *= startDiscount / endDiscount;
     }
 
-    Rate rate = (compoundFactor - 1.0) / coupon_->accrualPeriod();
-    return coupon_->gearing() * rate + coupon_->spread();
+    Rate rate = (compoundFactor - 1.0) / (couponQl_ ? couponQl_->accrualPeriod() : couponQle_->accrualPeriod());
+    return (couponQl_ ? couponQl_->gearing() : couponQle_->gearing()) * rate +
+           (couponQl_ ? couponQl_->spread() : couponQle_->spread());
 }
 
 void BRLCdiCouponPricer::initialize(const FloatingRateCoupon& coupon) {
-    
     // Ensure that we have an overnight coupon and that the index is BRL DI
-    coupon_ = dynamic_cast<const OvernightIndexedCoupon*>(&coupon);
-    QL_REQUIRE(coupon_, "BRLCdiCouponPricer epxects an OvernightIndexedCoupon");
+    couponQl_ = dynamic_cast<const QuantLib::OvernightIndexedCoupon*>(&coupon);
+    couponQle_ = dynamic_cast<const QuantExt::OvernightIndexedCoupon*>(&coupon);
+    QL_REQUIRE(couponQl_ || couponQle_, "BRLCdiCouponPricer epxects an OvernightIndexedCoupon");
 
-    boost::shared_ptr<InterestRateIndex> index = coupon_->index();
+    boost::shared_ptr<InterestRateIndex> index = couponQl_ ? couponQl_->index() : couponQle_->index();
     index_ = boost::dynamic_pointer_cast<BRLCdi>(index);
     QL_REQUIRE(index_, "BRLCdiCouponPricer epxects the coupon's index to be BRLCdi");
 }
 
-Real BRLCdiCouponPricer::swapletPrice() const {
-    QL_FAIL("swapletPrice not implemented for BRLCdiCouponPricer");
-}
+Real BRLCdiCouponPricer::swapletPrice() const { QL_FAIL("swapletPrice not implemented for BRLCdiCouponPricer"); }
 
 Real BRLCdiCouponPricer::capletPrice(Rate effectiveCap) const {
     QL_FAIL("capletPrice not implemented for BRLCdiCouponPricer");
@@ -104,4 +103,4 @@ Real BRLCdiCouponPricer::floorletRate(Rate effectiveFloor) const {
     QL_FAIL("floorletRate not implemented for BRLCdiCouponPricer");
 }
 
-}
+} // namespace QuantExt

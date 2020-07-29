@@ -28,7 +28,9 @@ namespace data {
 void Trade::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Trade");
     tradeType_ = XMLUtils::getChildValue(node, "TradeType", true);
-    envelope_.fromXML(XMLUtils::getChildNode(node, "Envelope"));
+    if (XMLNode* envNode = XMLUtils::getChildNode(node, "Envelope")) {
+        envelope_.fromXML(envNode);
+    }
     tradeActions_.clear();
     XMLNode* taNode = XMLUtils::getChildNode(node, "TradeActions");
     if (taNode)
@@ -75,6 +77,24 @@ void Trade::addPayment(std::vector<boost::shared_ptr<Instrument>>& addInstrument
     legCurrencies_.push_back(fee->currency().code());
     // amount comes with its correct sign, avoid switching by saying payer=false
     legPayers_.push_back(false);
+}
+
+void Trade::validate() const {
+    QL_REQUIRE(id_ != "", "Trade id has not been set.");
+    QL_REQUIRE(tradeType_ != "", "Trade id has not been set.");
+    QL_REQUIRE(instrument_ || legs_.size() > 0,
+               "Trade " << id_ << " requires either QuantLib instruments or legs to be created.");
+    QL_REQUIRE(npvCurrency_ != "", "NPV currency has not been set for trade " << id_ << ".");
+    // QL_REQUIRE(notional_ != Null<Real>(), "Notional has not been set for trade " << id_ << ".");
+    // QL_REQUIRE(notionalCurrency_ != "", "Notional currency has not been set for trade " << id_ << ".");
+    QL_REQUIRE(maturity_ != Null<Date>(), "Maturity not set for trade " << id_ << ".");
+    QL_REQUIRE(!envelope_.empty(), "Envelope not set for trade " << id_ << ".");
+    if (legs_.size() > 0) {
+        QL_REQUIRE(legs_.size() == legPayers_.size(),
+                   "Inconsistent number of pay/receive indicators for legs in trade " << id_ << ".");
+        QL_REQUIRE(legs_.size() == legCurrencies_.size(),
+                   "Inconsistent number of leg currencies for legs in trade " << id_ << ".");
+    }
 }
 
 } // namespace data

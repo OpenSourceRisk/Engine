@@ -5,23 +5,6 @@
 
 #include <boost/config.hpp>
 
-// select toolset:
-#if (_MSC_VER >= 1920)
-#  define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc142"
-#elif (_MSC_VER >= 1910)
-#  define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc141"
-#elif (_MSC_VER >= 1900)
-#  define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc140"
-#elif (_MSC_VER >= 1800)
-#  define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc120"
-#elif (_MSC_VER >= 1700)
-#  define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc110"
-#elif (_MSC_VER >= 1600)
-#  define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc100"
-#else
-#  error "unsupported Microsoft compiler"
-#endif
-
 #ifdef _M_X64
 #define OPEN_SOURCE_RISKDATA_LIB_PLATFORM "-x64"
 #else
@@ -53,7 +36,7 @@
 #endif
 
 #define OPEN_SOURCE_RISKDATA_LIB_NAME                                                                                    \
-    "OREData-" OPEN_SOURCE_RISKDATA_LIB_TOOLSET OPEN_SOURCE_RISKDATA_LIB_PLATFORM                               \
+    "OREData" OPEN_SOURCE_RISKDATA_LIB_PLATFORM                               \
         OPEN_SOURCE_RISKDATA_LIB_THREAD_OPT OPEN_SOURCE_RISKDATA_LIB_RT_OPT ".lib"
 
 #pragma comment(lib, OPEN_SOURCE_RISKDATA_LIB_NAME)
