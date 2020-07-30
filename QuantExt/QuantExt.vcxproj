@@ -720,8 +720,11 @@
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp" />
+    <ClInclude Include="qle\termstructures\interpolatedhazardratecurve.hpp" />
+    <ClInclude Include="qle\termstructures\interpolatedsurvivalprobabilitycurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
     <ClInclude Include="qle\termstructures\iterativebootstrap.hpp" />
+    <ClInclude Include="qle\termstructures\multisectiondefaultcurve.hpp" />
     <ClInclude Include="qle\termstructures\optionletcurve.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripper.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripperwithatm.hpp" />
@@ -772,6 +775,8 @@
     <ClInclude Include="qle\termstructures\swaptionvolcube2.hpp" />
     <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp" />
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
+    <ClInclude Include="qle\termstructures\weightedyieldtermstructure.hpp" />
+    <ClInclude Include="qle\termstructures\yieldplusdefaultyieldtermstructure.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserverstatic.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationcurveobservermoving.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationoptionletvolstripper.hpp" />
