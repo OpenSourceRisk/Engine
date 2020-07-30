@@ -677,6 +677,8 @@
       <xs:element type="zeroSpreadType" name="ZeroSpread"/>
       <xs:element type="discountRatioType" name="DiscountRatio"/>
       <xs:element type="fittedBondType" name="FittedBond"/>
+      <xs:element type="weightedAverageType" name="WeightedAverage"/>
+      <xs:element type="yieldPlusDefaultType" name="YieldPlusDefault"/>
     </xs:choice>
   </xs:complexType>
 
@@ -820,6 +822,33 @@
         </xs:complexType>
       </xs:element>
       <xs:element type="xs:boolean" name="ExtrapolateFlat" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="yieldPlusDefaultType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Type" fixed="Yield Plus Default"/>
+      <xs:element type="xs:string" name="ReferenceCurve"/>
+      <xs:element name="DefaultCurves">
+        <xs:sequence>
+          <xs:element type="xs:string" name="DefaultCurve"/>
+        </xs:sequence>
+      </xs:element>
+      <xs:element name="Weights">
+        <xs:sequence>
+          <xs:element type="xs:float" name="Weight"/>
+        </xs:sequence>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="weightedAverageType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Type" fixed="Weighted Average"/>
+      <xs:element type="xs:string" name="ReferenceCurve1"/>
+      <xs:element type="xs:string" name="ReferenceCurve2"/>
+      <xs:element type="xs:float" name="Weight1"/>
+      <xs:element type="xs:float" name="Weight2"/>
     </xs:sequence>
   </xs:complexType>
 
