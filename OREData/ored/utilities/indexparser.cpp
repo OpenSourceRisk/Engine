@@ -180,6 +180,15 @@ boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
     return boost::make_shared<EquityIndex>(tokens[1], NullCalendar(), Currency());
 }
 
+boost::shared_ptr<QuantLib::Index> parseGenericIndex(const string& s) {
+    std::vector<string> tokens;
+    split(tokens, s, boost::is_any_of("-"));
+    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": GENERIC-NAME");
+    QL_REQUIRE(tokens[0] == "GENERIC", "expected first token to be GENERIC");
+    // it doesn't really matter what concrete implementation we use
+    return boost::make_shared<EquityIndex>(tokens[0] + "-" + tokens[1], NullCalendar(), Currency());
+}
+
 bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index, const boost::shared_ptr<Convention>& c) {
     try {
         index = parseIborIndex(s, Handle<YieldTermStructure>(), c);
@@ -555,6 +564,12 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
     if (!ret_idx) {
         try {
             ret_idx = parseCommodityIndex(s);
+        } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseGenericIndex(s);
         } catch (...) {
         }
     }
