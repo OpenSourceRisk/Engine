@@ -66,7 +66,7 @@ public:
                        const bool allowNegativeRates = false);
     //! Default constructor
     DefaultCurveConfig()
-        : spotLag_(0), extrapolation_(true), runningSpread_(Null<Real>()), allowNegativeRates_(false) {}
+        : extrapolation_(true), spotLag_(0), runningSpread_(QuantLib::Null<Real>()), allowNegativeRates_(false) {}
     //@}
 
     //! \name Serialisation
