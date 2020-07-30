@@ -253,9 +253,12 @@
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/interpolateddiscountcurve.hpp>
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
+#include <qle/termstructures/interpolatedhazardratecurve.hpp>
+#include <qle/termstructures/interpolatedsurvivalprobabilitycurve.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
+#include <qle/termstructures/multisectiondefaultcurve.hpp>
 #include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oiccbasisswaphelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
@@ -288,6 +291,8 @@
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
+#include <qle/termstructures/weightedyieldtermstructure.hpp>
+#include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
 #include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
