@@ -403,3 +403,106 @@ The \lstinline!BootstrapConfig! has the following interpretation for a fitted bo
 \caption{Fitted bond yield curve segment}
 \label{lst:fitted_bond_segment}
 \end{listing}
+
+\subsubsection*{Yield plus Default Segment}
+\label{sec:yield_plus_default}
+
+When the node name is \lstinline!YieldPlusDefault!, the \lstinline!Type! node has the only allowable value \emph{Yield
+ Plus Default}, and the node has the structure shown in Listing \ref{lst:yield_plus_default_segment}. This segment is
+used to build all-in discounting yield curves from a benchmark curve and (a weighted sum of) default curves. The
+construction is in some sense inverse to the benchmark default curve construction, see \ref{benchmark_default_curve}.
+
+\begin{itemize}
+\item ReferenceCurve: the benchmark yield curve serving as the basis of the resulting yield curve
+\item DefaultCurves: a list of default curves whose weighted sum is added to the benchmark yield curve
+\item Weights: a list of weights for the default curves, the number of weights must match the number of default curves
+\end{itemize}
+
+Notice that it is explicitly allowed to use default curves in different currencies than the benchmark yield curve. In
+the construction, the hazard rate is reinterpreted as an instantaneous forward rate, and the sum of the curves is being
+built in the instantaneous forward rate.
+
+The definition takes into account the recovery rates associated to each default curve. The resulting discount factor is
+computed as
+
+\begin{equation}
+P(0,t) = \prod_i  S_i(t)^{(1-R)w_i}
+\end{equation}
+
+where $S_i$ and $R_i$ are the survival probabilities and recovery rates of the source default curves, and $w_i$ are the
+weights.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <YieldCurve>
+    <CurveId>BenchmarkPlusDefault</CurveId>
+    <CurveDescription>USD Libor 3M + 0.5 x CDX.NA.HY + 0.5 x EUR.10BP</CurveDescription>
+    <Currency>USD</Currency>
+    <DiscountCurve/>
+    <Segments>
+      <YieldPlusDefault>
+        <Type>Yield Plus Default</Type>
+        <ReferenceCurve>USD3M</ReferenceCurve>
+        <DefaultCurves>
+          <DefaultCurve>Default/USD/CDX.NA.HY</DefaultCurve>
+          <DefaultCurve>Default/EUR/EUR.10BP</DefaultCurve>
+        </DefaultCurves>
+        <Weights>
+          <Weight>0.5</Weight>
+          <Weight>0.5</Weight>
+        </Weights>
+      </YieldPlusDefault>
+    </Segments>
+  </YieldCurve>
+</YieldCurves>
+\end{minted}
+\caption{Yield plus default curve segment}
+\label{lst:yield_plus_default_segment}
+\end{listing}
+
+\subsubsection*{Weighted Average Segment}
+\label{sec:yield_plus_default}
+
+When the node name is \lstinline!WeightedAverage!, the \lstinline!Type! node has the only allowable value
+\emph{WeightedAverage}, and the node has the structure shown in Listing \ref{lst:weighted_average_segment}. This segment
+is used to build a curve with instantaneous forward rates that are the weighted sum of instantaneous forward rates of
+reference curves. This way a projection curve for non-standard Ibor curves can be build, e.g. to project a Euribor2M
+index using the curves for 1M and 3M.
+
+\begin{itemize}
+\item ReferenceCurve1: the first source curve
+\item ReferenceCurve2: the second source curve
+\item Weight1: the weight of the first curve
+\item Weights: the weight of the second curve
+\end{itemize}
+
+If $P_1(0,t)$ and $P_2(0,t)$ denote the discount factors of the two reference curves, the discount factor $P(0,t)$ of
+the resulting curve is defined as
+
+\begin{equation}
+P(0,t) = P_1(0,t)^{w_1}P_2(0,t)^{w_2}
+\end{equation}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<YieldCurve>
+  <CurveId>EUR2M</CurveId>
+  <CurveDescription>Euribor2M forwarding curve, interpolated from 1M and 3M</CurveDescription>
+  <Currency>EUR</Currency>
+  <DiscountCurve>EUR1D</DiscountCurve>
+  <Segments>
+    <WeightedAverage>
+      <Type>Weighted Average</Type>
+      <ReferenceCurve1>EUR1M</ReferenceCurve1>
+      <ReferenceCurve2>EUR3M</ReferenceCurve2>
+      <Weight1>0.5</Weight1>
+      <Weight2>0.5</Weight2>
+    </WeightedAverage>
+  </Segments>
+</YieldCurve>
+\end{minted}
+\caption{Weighted Average yield curve segment}
+\label{lst:weighted_average_segment}
+\end{listing}
