@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <boost/optional.hpp>
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ql/time/calendar.hpp>
@@ -30,7 +31,6 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
-#include <boost/optional.hpp>
 
 namespace ore {
 namespace data {
@@ -49,7 +49,7 @@ using std::vector;
 class DefaultCurveConfig : public CurveConfig {
 public:
     //! Supported default curve types
-    enum class Type { SpreadCDS, HazardRate, Benchmark, Price };
+    enum class Type { SpreadCDS, HazardRate, Benchmark, Price, MultiSection };
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
@@ -62,9 +62,11 @@ public:
                        const QuantLib::Date& startDate = QuantLib::Date(),
                        const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
                        QuantLib::Real runningSpread = QuantLib::Null<Real>(),
-                       const boost::optional<bool>& implyDefaultFromMarket = boost::none);
+                       const boost::optional<bool>& implyDefaultFromMarket = boost::none,
+                       const bool allowNegativeRates = false);
     //! Default constructor
-    DefaultCurveConfig() {}
+    DefaultCurveConfig()
+        : spotLag_(0), extrapolation_(true), runningSpread_(Null<Real>()), allowNegativeRates_(false) {}
     //@}
 
     //! \name Serialisation
@@ -92,6 +94,9 @@ public:
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
     const Real runningSpread() const { return runningSpread_; }
     const boost::optional<bool>& implyDefaultFromMarket() const { return implyDefaultFromMarket_; }
+    const vector<string>& multiSectionSourceCurveIds() const { return multiSectionSourceCurveIds_; }
+    const vector<string>& multiSectionSwitchDates() const { return multiSectionSwitchDates_; }
+    const bool allowNegativeRates() const { return allowNegativeRates_; }
     //@}
 
     //! \name Setters
@@ -112,6 +117,7 @@ public:
     void setBootstrapConfig(const BootstrapConfig& bootstrapConfig) { bootstrapConfig_ = bootstrapConfig; }
     Real& runningSpread() { return runningSpread_; }
     boost::optional<bool>& implyDefaultFromMarket() { return implyDefaultFromMarket_; }
+    bool& allowNegativeRates() { return allowNegativeRates_; }
     //@}
 
 private:
@@ -133,21 +139,29 @@ private:
     QuantLib::Date startDate_;
     BootstrapConfig bootstrapConfig_;
     Real runningSpread_;
+    vector<string> multiSectionSourceCurveIds_;
+    vector<string> multiSectionSwitchDates_;
 
-    /*! Indicates if the reference entity's default status should be implied from the market data. If \c true, this 
+    /*! Indicates if the reference entity's default status should be implied from the market data. If \c true, this
         behaviour is active and if \c false it is not. If not explicitly set, it is assumed to be \c false.
 
-        When a default credit event has been determined for an entity, certain market data providers continue to 
-        supply a recovery rate from the credit event determination date up to the credit event auction settlement 
+        When a default credit event has been determined for an entity, certain market data providers continue to
+        supply a recovery rate from the credit event determination date up to the credit event auction settlement
         date. In this period, no CDS spreads or upfront prices are provided.
-        
-        When this flag is \c true, we assume an entity is in default if we find a recovery rate in the market but no 
-        CDS spreads or upfront prices. In this case, we build a survival probability curve with a value of 0.0 
+
+        When this flag is \c true, we assume an entity is in default if we find a recovery rate in the market but no
+        CDS spreads or upfront prices. In this case, we build a survival probability curve with a value of 0.0
         tomorrow. This will give some approximation to the correct price for CDS and index CDS in these cases.
-        
+
         When this flag is \c false, we make no such assumption and the default curve building fails.
     */
     boost::optional<bool> implyDefaultFromMarket_;
+
+    /*! If this flag is set to true, the checks for negative hazard rates are disabled when building a curve of type
+        - HazardRate
+        - Benchmark
+    */
+    bool allowNegativeRates_;
 };
 } // namespace data
 } // namespace ore

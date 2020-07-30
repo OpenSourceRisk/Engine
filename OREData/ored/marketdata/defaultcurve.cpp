@@ -17,10 +17,14 @@
 */
 
 #include <ored/marketdata/defaultcurve.hpp>
+#include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <qle/termstructures/defaultprobabilityhelpers.hpp>
+#include <qle/termstructures/interpolatedhazardratecurve.hpp>
+#include <qle/termstructures/interpolatedsurvivalprobabilitycurve.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
+#include <qle/termstructures/multisectiondefaultcurve.hpp>
 #include <qle/termstructures/probabilitytraits.hpp>
 
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
@@ -46,7 +50,8 @@ namespace data {
 
 DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loader,
                            const CurveConfigurations& curveConfigs, const Conventions& conventions,
-                           map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
+                           map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                           map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves) {
 
     try {
 
@@ -55,9 +60,12 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         // Set the recovery rate if necessary
         recoveryRate_ = Null<Real>();
         if (!config->recoveryRateQuote().empty()) {
-            QL_REQUIRE(loader.has(config->recoveryRateQuote(), asof),
-                       "There is no market data for the requested recovery rate " << config->recoveryRateQuote());
-            recoveryRate_ = loader.get(config->recoveryRateQuote(), asof)->quote()->value();
+            // for some curve types (Benchmark, MutliSection) a numeric recovery rate is allowed, which we handle here
+            if (!tryParseReal(config->recoveryRateQuote(), recoveryRate_)) {
+                QL_REQUIRE(loader.has(config->recoveryRateQuote(), asof),
+                           "There is no market data for the requested recovery rate " << config->recoveryRateQuote());
+                recoveryRate_ = loader.get(config->recoveryRateQuote(), asof)->quote()->value();
+            }
         }
 
         // Build the default curve of the requested type
@@ -71,6 +79,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             break;
         case DefaultCurveConfig::Type::Benchmark:
             buildBenchmarkCurve(*config, asof, spec, loader, conventions, yieldCurves);
+            break;
+        case DefaultCurveConfig::Type::MultiSection:
+            buildMultiSectionCurve(*config, asof, spec, loader, conventions, defaultCurves);
             break;
         default:
             QL_FAIL("The DefaultCurveConfig type " << static_cast<int>(config->type()) << " was not recognised");
@@ -143,17 +154,19 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     // If the configuration instructs us to imply a default from the market data, we do it here.
     if (config.implyDefaultFromMarket() && *config.implyDefaultFromMarket()) {
         if (recoveryRate_ != Null<Real>() && quotes.empty()) {
-            // Assume entity is in default, between event determination date and auction date. Build a survivial 
+            // Assume entity is in default, between event determination date and auction date. Build a survivial
             // probability curve with value 0.0 tomorrow to approximate this and allow dependent instruments to price.
-            // Need to use small but positive numbers to avoid downstream issues with log linear survivals e.g. below 
+            // Need to use small but positive numbers to avoid downstream issues with log linear survivals e.g. below
             // and in places like ScenarioSimMarket.
-            vector<Date> dates{ asof, asof + 1 * Years, asof + 10 * Years };
-            vector<Real> survivalProbs{ 1.0, 1e-16, 1e-18 };
-            curve_ = boost::make_shared<InterpolatedSurvivalProbabilityCurve<LogLinear>>(
-                dates, survivalProbs, config.dayCounter());
+            vector<Date> dates{asof, asof + 1 * Years, asof + 10 * Years};
+            vector<Real> survivalProbs{1.0, 1e-16, 1e-18};
+            curve_ = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
+                dates, survivalProbs, config.dayCounter(), Calendar(), std::vector<Handle<Quote>>(),
+                std::vector<Date>(), LogLinear());
             curve_->enableExtrapolation();
-            WLOG("DefaultCurve: recovery rate found but no CDS quotes for " << config.curveID() << " and " <<
-                "ImplyDefaultFromMarket is true. Curve built that gives default immediately.");
+            WLOG("DefaultCurve: recovery rate found but no CDS quotes for "
+                 << config.curveID() << " and "
+                 << "ImplyDefaultFromMarket is true. Curve built that gives default immediately.");
             return;
         }
     } else {
@@ -209,16 +222,17 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     TLOG(io::iso_date(dates.back()) << "," << fixed << setprecision(9) << survivalProbs.back());
     for (Size i = 0; i < helpers.size(); ++i) {
         if (helpers[i]->latestDate() > asof) {
-            
+
             Date pillarDate = helpers[i]->latestDate();
             Probability sp = tmp->survivalProbability(pillarDate);
-            
-            // In some cases the bootstrapped survival probability at one tenor will be `close` to that at a previous 
-            // tenor. Here we don't add that survival probability and date to avoid issues when creating the 
+
+            // In some cases the bootstrapped survival probability at one tenor will be `close` to that at a previous
+            // tenor. Here we don't add that survival probability and date to avoid issues when creating the
             // InterpolatedSurvivalProbabilityCurve below.
             if (!survivalProbs.empty() && close(survivalProbs.back(), sp)) {
-                DLOG("Survival probability for curve " << spec.name() << " at date " << io::iso_date(pillarDate) <<
-                    " is the same as that at previous date " << io::iso_date(dates.back()) << " so skipping it.");
+                DLOG("Survival probability for curve " << spec.name() << " at date " << io::iso_date(pillarDate)
+                                                       << " is the same as that at previous date "
+                                                       << io::iso_date(dates.back()) << " so skipping it.");
                 continue;
             }
 
@@ -230,8 +244,9 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     QL_REQUIRE(dates.size() >= 2, "Need at least 2 points to build the default curve");
 
     LOG("DefaultCurve: copy piecewise curve to interpolated survival probability curve");
-    curve_ =
-        boost::make_shared<InterpolatedSurvivalProbabilityCurve<LogLinear>>(dates, survivalProbs, config.dayCounter());
+    curve_ = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
+        dates, survivalProbs, config.dayCounter(), Calendar(), std::vector<Handle<Quote>>(), std::vector<Date>(),
+        LogLinear());
     if (config.extrapolation()) {
         curve_->enableExtrapolation();
         DLOG("DefaultCurve: Enabled Extrapolation");
@@ -278,8 +293,8 @@ void DefaultCurve::buildHazardRateCurve(DefaultCurveConfig& config, const Date& 
     }
 
     LOG("DefaultCurve: set up interpolated hazard rate curve");
-    curve_ = boost::make_shared<InterpolatedHazardRateCurve<BackwardFlat>>(dates, quoteValues, config.dayCounter(),
-                                                                           BackwardFlat());
+    curve_ = boost::make_shared<QuantExt::InterpolatedHazardRateCurve<BackwardFlat>>(
+        dates, quoteValues, config.dayCounter(), BackwardFlat(), config.allowNegativeRates());
 
     if (config.extrapolation()) {
         curve_->enableExtrapolation();
@@ -306,9 +321,8 @@ void DefaultCurve::buildBenchmarkCurve(DefaultCurveConfig& config, const Date& a
     QL_REQUIRE(config.type() == DefaultCurveConfig::Type::Benchmark,
                "DefaultCurve::buildBenchmarkCurve expected a default curve configuration with type Benchmark");
 
-    QL_REQUIRE(recoveryRate_ == Null<Real>(), "DefaultCurve: recovery rate must not be given "
-                                              "for benchmark implied curve type, it is assumed to be 0.0");
-    recoveryRate_ = 0.0;
+    if (recoveryRate_ == Null<Real>())
+        recoveryRate_ = 0.0;
 
     // Populate benchmark yield curve
     auto it = yieldCurves.find(config.benchmarkCurveID());
@@ -335,8 +349,12 @@ void DefaultCurve::buildBenchmarkCurve(DefaultCurveConfig& config, const Date& a
     Date spot = cal.advance(asof, spotLag * Days);
     for (Size i = 0; i < pillars.size(); ++i) {
         dates.push_back(cal.advance(spot, pillars[i]));
-        Real tmp = sourceCurve->handle()->discount(dates[i]) / benchmarkCurve->handle()->discount(dates[i]);
-        impliedSurvProb.push_back(dates[i] == asof ? 1.0 : tmp);
+        Real tmp = dates[i] == asof
+                       ? 1.0
+                       : sourceCurve->handle()->discount(dates[i]) / benchmarkCurve->handle()->discount(dates[i]);
+        // if a non-zero recovery rate is given, we adjust the implied surv probability according to a market value
+        // recovery model (see the documentation of the benchmark curve in the user guide for more details)
+        impliedSurvProb.push_back(std::pow(tmp, 1.0 / (1.0 - recoveryRate_)));
     }
     QL_REQUIRE(dates.size() > 0, "DefaultCurve (Benchmark): no dates given");
 
@@ -347,8 +365,9 @@ void DefaultCurve::buildBenchmarkCurve(DefaultCurveConfig& config, const Date& a
     }
 
     LOG("DefaultCurve: set up interpolated surv prob curve as yield over benchmark");
-    curve_ = boost::make_shared<InterpolatedSurvivalProbabilityCurve<LogLinear>>(dates, impliedSurvProb,
-                                                                                 config.dayCounter());
+    curve_ = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
+        dates, impliedSurvProb, config.dayCounter(), Calendar(), std::vector<Handle<Quote>>(), std::vector<Date>(),
+        LogLinear(), config.allowNegativeRates());
 
     if (config.extrapolation()) {
         curve_->enableExtrapolation();
@@ -359,6 +378,35 @@ void DefaultCurve::buildBenchmarkCurve(DefaultCurveConfig& config, const Date& a
     curve_->survivalProbability(QL_EPSILON);
 
     LOG("Finished building default curve of type Benchmark for curve " << config.curveID());
+}
+
+void DefaultCurve::buildMultiSectionCurve(DefaultCurveConfig& config, const Date& asof, const DefaultCurveSpec& spec,
+                                          const Loader& loader, const Conventions& conventions,
+                                          map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves) {
+    LOG("Start building default curve of type MultiSection for curve " << config.curveID());
+
+    std::vector<Handle<DefaultProbabilityTermStructure>> curves;
+    std::vector<Handle<Quote>> recoveryRates;
+    std::vector<Date> switchDates;
+
+    for (auto const& s : config.multiSectionSourceCurveIds()) {
+        auto it = defaultCurves.find(s);
+        QL_REQUIRE(it != defaultCurves.end(),
+                   "The multi section source curve " << s << " required for " << spec.name() << " was not found.");
+        curves.push_back(Handle<DefaultProbabilityTermStructure>(it->second->defaultTermStructure()));
+        recoveryRates.push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(it->second->recoveryRate())));
+    }
+
+    for (auto const& d : config.multiSectionSwitchDates()) {
+        switchDates.push_back(parseDate(d));
+    }
+
+    Handle<Quote> recoveryRate(boost::make_shared<SimpleQuote>(recoveryRate_));
+    LOG("DefaultCurve: set up multi section curve with " << curves.size() << " sections");
+    curve_ = boost::make_shared<QuantExt::MultiSectionDefaultCurve>(curves, recoveryRates, switchDates, recoveryRate,
+                                                                    config.dayCounter(), config.extrapolation());
+
+    LOG("Finished building default curve of type MultiSection for curve " << config.curveID());
 }
 
 map<Period, Real> DefaultCurve::getConfiguredQuotes(DefaultCurveConfig& config, const Date& asof,
@@ -434,12 +482,12 @@ map<Period, Real> DefaultCurve::getRegexQuotes(string strRegex, const string& co
         }
     }
 
-    // We don't check for an empty set of CDS quotes here. We check it later because under some circumstances, 
+    // We don't check for an empty set of CDS quotes here. We check it later because under some circumstances,
     // it may be allowable to have no quotes.
     if (type != DefaultCurveConfig::Type::SpreadCDS && type != DefaultCurveConfig::Type::Price) {
         QL_REQUIRE(!result.empty(), "No market points found for curve config " << configId);
     }
-    
+
     LOG("DefaultCurve " << configId << " loaded and using " << result.size() << " quotes.");
 
     return result;
@@ -464,7 +512,7 @@ map<Period, Real> DefaultCurve::getExplicitQuotes(const vector<pair<string, bool
         }
     }
 
-    // We don't check for an empty set of CDS quotes here. We check it later because under some circumstances, 
+    // We don't check for an empty set of CDS quotes here. We check it later because under some circumstances,
     // it may be allowable to have no quotes.
     if (type != DefaultCurveConfig::Type::SpreadCDS && type != DefaultCurveConfig::Type::Price) {
         QL_REQUIRE(!result.empty(), "No market points found for curve config " << configId);
