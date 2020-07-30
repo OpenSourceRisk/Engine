@@ -830,14 +830,18 @@
       <xs:element type="xs:string" name="Type" fixed="Yield Plus Default"/>
       <xs:element type="xs:string" name="ReferenceCurve"/>
       <xs:element name="DefaultCurves">
-        <xs:sequence>
-          <xs:element type="xs:string" name="DefaultCurve"/>
-        </xs:sequence>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="DefaultCurve"/>
+          </xs:sequence>
+        </xs:complexType>
       </xs:element>
       <xs:element name="Weights">
-        <xs:sequence>
-          <xs:element type="xs:float" name="Weight"/>
-        </xs:sequence>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:float" name="Weight"/>
+          </xs:sequence>
+        </xs:complexType>
       </xs:element>
     </xs:sequence>
   </xs:complexType>
