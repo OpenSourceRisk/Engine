@@ -1082,7 +1082,8 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
                                                ? conventions_.get(indexName)
                                                : nullptr);
                 }
-                if(fwdStartDays == 0)
+                // if the fwdStartDays match the fixing days, we can use the index base ctor
+                if (fwdStartDays == index->fixingDays())
                     depositHelper = boost::make_shared<DepositRateHelper>(hQuote, index);
                 else
                     depositHelper = boost::make_shared<DepositRateHelper>(
