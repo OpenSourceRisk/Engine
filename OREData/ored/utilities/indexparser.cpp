@@ -39,6 +39,7 @@
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
@@ -185,8 +186,7 @@ boost::shared_ptr<QuantLib::Index> parseGenericIndex(const string& s) {
     split(tokens, s, boost::is_any_of("-"));
     QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": GENERIC-NAME");
     QL_REQUIRE(tokens[0] == "GENERIC", "expected first token to be GENERIC");
-    // it doesn't really matter what concrete implementation we use
-    return boost::make_shared<EquityIndex>(tokens[0] + "-" + tokens[1], NullCalendar(), Currency());
+    return boost::make_shared<GenericIndex>(tokens[0] + "-" + tokens[1]);
 }
 
 bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index, const boost::shared_ptr<Convention>& c) {
