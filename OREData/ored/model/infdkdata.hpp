@@ -64,11 +64,12 @@ public:
               std::vector<std::string> optionStrikes = std::vector<std::string>())
         : LgmData(index, calibrationType, revType, volType, calibrateH, hType, hTimes, hValues, calibrateA, aType,
                   aTimes, aValues, shiftHorizon, scaling, optionExpiries, optionTerms, optionStrikes),
-          index_(index), currency_(currency), capfloor_(calibrateToCapfloor) {}
+          currency_(currency), capfloor_(calibrateToCapfloor) {}
 
     //! \name Setters/Getters
     //@{
-    std::string& infIndex() { return index_; }
+    // deprecated, for backwards compatibility only, use qualifier() instead
+    std::string& infIndex() { return qualifier_; }
     std::string currency() { return currency_; }
     std::string capFloor() { return capfloor_; }
     //@}
@@ -81,13 +82,11 @@ public:
     void clear() { LgmData::clear(); }
     void reset() {
         LgmData::reset();
-        index_ = "";
         currency_ = "";
         capfloor_ = "";
     }
 
 private:
-    std::string index_;
     std::string currency_;
     std::string capfloor_;
 };

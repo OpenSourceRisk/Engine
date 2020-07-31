@@ -42,6 +42,7 @@
 #include <qle/indexes/escpi.hpp>
 #include <qle/indexes/frcpi.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
@@ -180,6 +181,14 @@ boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
     QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
     QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
     return boost::make_shared<EquityIndex>(tokens[1], NullCalendar(), Currency());
+}
+
+boost::shared_ptr<QuantLib::Index> parseGenericIndex(const string& s) {
+    std::vector<string> tokens;
+    split(tokens, s, boost::is_any_of("-"));
+    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": GENERIC-NAME");
+    QL_REQUIRE(tokens[0] == "GENERIC", "expected first token to be GENERIC");
+    return boost::make_shared<GenericIndex>(tokens[0] + "-" + tokens[1]);
 }
 
 bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index, const boost::shared_ptr<Convention>& c) {
@@ -561,6 +570,12 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
     if (!ret_idx) {
         try {
             ret_idx = parseCommodityIndex(s);
+        } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseGenericIndex(s);
         } catch (...) {
         }
     }
