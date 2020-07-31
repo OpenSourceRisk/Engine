@@ -247,6 +247,7 @@ currencies/america.hpp
 currencies/asia.hpp
 currencies/europe.hpp
 currencies/metals.hpp
+indexes/behicp.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
 indexes/cacpi.hpp
@@ -255,6 +256,7 @@ indexes/dkcpi.hpp
 indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp
 indexes/escpi.hpp
+indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/ibor/audbbsw.hpp
