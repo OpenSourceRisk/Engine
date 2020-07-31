@@ -1095,8 +1095,6 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
                     depositConvention->eom(), depositConvention->dayCounter()));
             }
             instruments.push_back(depositHelper);
-            DLOG("DEPODEBUG term " << depositTerm << " fwdStart " << fwdStartDays << " maturity "
-                                   << depositHelper->latestRelevantDate());
         }
     }
 }
