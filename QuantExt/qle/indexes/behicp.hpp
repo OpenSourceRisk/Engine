@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2018 Quaternion Risk Management Ltd
+ Copyright (C) 2020 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,33 +16,25 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file qle/indexes/behicp.hpp
+    \brief Belgium HICP index
+*/
+
+#pragma once
+
+#include <ql/currencies/europe.hpp>
+#include <ql/indexes/inflationindex.hpp>
 #include <qle/indexes/region.hpp>
 
 namespace QuantExt {
 
-SwedenRegion::SwedenRegion() {
-    static boost::shared_ptr<Data> SEdata(new Data("Sweden", "SE"));
-    data_ = SEdata;
-}
-
-DenmarkRegion::DenmarkRegion() {
-    static boost::shared_ptr<Data> DKdata(new Data("Denmark", "DK"));
-    data_ = DKdata;
-}
-
-CanadaRegion::CanadaRegion() {
-    static boost::shared_ptr<Data> CAdata = boost::make_shared<Data>("Canada", "CA");
-    data_ = CAdata;
-}
-
-SpainRegion::SpainRegion() {
-    static boost::shared_ptr<Data> ESdata = boost::make_shared<Data>("Spain", "ES");
-    data_ = ESdata;
-}
-
-BelgiumRegion::BelgiumRegion() {
-    static boost::shared_ptr<Data> BEdata = boost::make_shared<Data>("Belgium", "BE");
-    data_ = BEdata;
-}
+//! Belgium HICP index
+class BEHICP : public QuantLib::ZeroInflationIndex {
+public:
+    BEHICP(bool interpolated, const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts =
+                                  QuantLib::Handle<QuantLib::ZeroInflationTermStructure>())
+        : QuantLib::ZeroInflationIndex("HICP", BelgiumRegion(), false, interpolated, QuantLib::Monthly,
+                                       QuantLib::Period(1, QuantLib::Months), QuantLib::EURCurrency(), ts) {}
+};
 
 } // namespace QuantExt
