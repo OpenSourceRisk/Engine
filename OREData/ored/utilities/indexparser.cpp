@@ -33,11 +33,14 @@
 #include <ql/indexes/all.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/all.hpp>
+#include <qle/indexes/behicp.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/cacpi.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/escpi.hpp>
+#include <qle/indexes/frcpi.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
@@ -82,7 +85,6 @@
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/secpi.hpp>
-#include <qle/indexes/escpi.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -433,12 +435,16 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
                                                               const Handle<ZeroInflationTermStructure>& h) {
 
     static map<string, boost::shared_ptr<ZeroInflationIndexParserBase>> m = {
+        {"BEHICP", boost::make_shared<ZeroInflationIndexParser<BEHICP>>()},
+        {"BE HICP", boost::make_shared<ZeroInflationIndexParser<BEHICP>>()},
         {"EUHICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
         {"EU HICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
         {"EUHICPXT", boost::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},
         {"EU HICPXT", boost::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},
         {"FRHICP", boost::make_shared<ZeroInflationIndexParser<FRHICP>>()},
         {"FR HICP", boost::make_shared<ZeroInflationIndexParser<FRHICP>>()},
+        {"FRCPI", boost::make_shared<ZeroInflationIndexParser<FRCPI>>()},
+        {"FR CPI", boost::make_shared<ZeroInflationIndexParser<FRCPI>>()},
         {"UKRPI", boost::make_shared<ZeroInflationIndexParser<UKRPI>>()},
         {"UK RPI", boost::make_shared<ZeroInflationIndexParser<UKRPI>>()},
         {"USCPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},

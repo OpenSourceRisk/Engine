@@ -59,6 +59,7 @@
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/escpi.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
@@ -276,6 +277,7 @@
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <qle/termstructures/probabilitytraits.hpp>
+#include <qle/termstructures/spreadeddiscountcurve.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility.hpp>
 #include <qle/termstructures/spreadedsmilesection.hpp>
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>

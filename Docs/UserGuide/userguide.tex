@@ -4001,6 +4001,14 @@ giving an example in each category:
   counts the points in the surface in lexical order w.r.t. the dimensions option expiry, underlying term and strike
 \end{itemize}
 
+Additional flags:
+
+\begin{itemize}
+\item ComputeGamma: If set to false, second order sensitivity computation is suppressed
+\item UseSpreadedTermStructures: If set to true, spreaded termstructures over t0 will be used for sensitivity
+  calculation (where supported), to improve the alignment of the scenario sim market and t0 curves
+\end{itemize}
+
 \begin{longlisting}
 %\hrule\medskip
   \begin{minted}[fontsize=\scriptsize]{xml}
@@ -4065,6 +4073,7 @@ giving an example in each category:
       <Index>EUR-EURIBOR-6M</Index>
     </CapFloorVolatility>
   </CapFloorVolatilities>
+  ...
   <SecuritySpreads>
     <SecuritySpread security="SECURITY_1">
       <ShiftType>Absolute</ShiftType>
@@ -4086,6 +4095,9 @@ giving an example in each category:
     <Pair>IndexCurve/EUR,IndexCurve/EUR</Pair>
     <Pair>DiscountCurve/EUR,IndexCurve/EUR</Pair>
   </CrossGammaFilter>
+  ...
+  <ComputeGamma>true</ComputeGamma>
+  <UseSpreadedTermStructures>false</UseSpreadedTermStructures>
 </SensitivityAnalysis>
 \end{minted}
 \caption{Sensitivity configuration}

@@ -537,6 +537,7 @@
     <ClInclude Include="qle\currencies\asia.hpp" />
     <ClInclude Include="qle\currencies\europe.hpp" />
     <ClInclude Include="qle\currencies\metals.hpp" />
+    <ClInclude Include="qle\indexes\behicp.hpp" />
     <ClInclude Include="qle\indexes\bmaindexwrapper.hpp" />
     <ClInclude Include="qle\indexes\bondindex.hpp" />
     <ClInclude Include="qle\indexes\cacpi.hpp" />
@@ -544,6 +545,7 @@
     <ClInclude Include="qle\indexes\dkcpi.hpp" />
     <ClInclude Include="qle\indexes\eqfxindexbase.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
+    <ClInclude Include="qle\indexes\frcpi.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
     <ClInclude Include="qle\indexes\genericiborindex.hpp" />
     <ClInclude Include="qle\indexes\genericindex.hpp" />
@@ -761,6 +763,7 @@
     <ClInclude Include="qle\termstructures\pricetermstructureadapter.hpp" />
     <ClInclude Include="qle\termstructures\pricetermstructure.hpp" />
     <ClInclude Include="qle\termstructures\probabilitytraits.hpp" />
+    <ClInclude Include="qle\termstructures\spreadeddiscountcurve.hpp" />
     <ClInclude Include="qle\termstructures\spreadedoptionletvolatility.hpp" />
     <ClInclude Include="qle\termstructures\spreadedsmilesection.hpp" />
     <ClInclude Include="qle\termstructures\spreadedswaptionvolatility.hpp" />
@@ -971,6 +974,7 @@
     <ClCompile Include="qle\termstructures\overnightindexfutureratehelper.cpp" />
     <ClCompile Include="qle\termstructures\pricetermstructure.cpp" />
     <ClCompile Include="qle\termstructures\pricetermstructureadapter.cpp" />
+    <ClCompile Include="qle\termstructures\spreadeddiscountcurve.cpp" />
     <ClCompile Include="qle\termstructures\spreadedoptionletvolatility.cpp" />
     <ClCompile Include="qle\termstructures\spreadedsmilesection.cpp" />
     <ClCompile Include="qle\termstructures\spreadedswaptionvolatility.cpp" />
@@ -978,6 +982,7 @@
     <ClCompile Include="qle\termstructures\strippedyoyinflationoptionletvol.cpp" />
     <ClCompile Include="qle\termstructures\subperiodsswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp" />
+    <ClCompile Include="qle\termstructures\swaptionvolconstantspread.cpp" />
     <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp" />
     <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\yoyinflationoptionletvolstripper.cpp" />
