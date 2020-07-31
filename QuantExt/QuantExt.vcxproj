@@ -546,6 +546,7 @@
     <ClInclude Include="qle\indexes\equityindex.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
     <ClInclude Include="qle\indexes\genericiborindex.hpp" />
+    <ClInclude Include="qle\indexes\genericindex.hpp" />
     <ClInclude Include="qle\indexes\ibor\audbbsw.hpp" />
     <ClInclude Include="qle\indexes\ibor\brlcdi.hpp" />
     <ClInclude Include="qle\indexes\ibor\chfsaron.hpp" />
