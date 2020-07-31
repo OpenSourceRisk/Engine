@@ -292,7 +292,10 @@ void InfDkBuilder::buildCapFloorBasket() const {
             expiryTimes.push_back(inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
                                                         inflationIndex_->zeroInflationTermStructure()->dayCounter(),
                                                         baseDate, helper->instrument()->fixingDate()));
-            DLOG("Added InflationOptionHelper " << data_->infIndex() << " " << QuantLib::io::iso_date(expiryDate));
+            DLOG("Added InflationOptionHelper index="
+                 << data_->infIndex() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
+                 << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
+                 << ", strike=" << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem);
         } else {
             optionActive_[j] = false;
         }

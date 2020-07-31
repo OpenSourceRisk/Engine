@@ -897,6 +897,24 @@
     <ClInclude Include="qle\calendars\amendedcalendar.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedhazardratecurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedsurvivalprobabilitycurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\multisectiondefaultcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\weightedyieldtermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\yieldplusdefaultyieldtermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\genericindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\behicp.hpp">
       <Filter>indexes</Filter>
     </ClInclude>

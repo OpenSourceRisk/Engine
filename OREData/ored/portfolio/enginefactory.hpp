@@ -120,6 +120,9 @@ public:
         }
     }
 
+    //! reset the builder (e.g. clear cache)
+    virtual void reset() {}
+
     //! Initialise this Builder with the market and parameters to use
     /*! This method should not be called directly, it is called by the EngineFactory
      *  before it is returned.
