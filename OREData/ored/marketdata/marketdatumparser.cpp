@@ -463,17 +463,31 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::EQUITY_OPTION: {
-        QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7, "6 or 7 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() >= 6 || tokens.size() <= 9, "6 - 9 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL || quoteType == MarketDatum::QuoteType::PRICE,
                    "Invalid quote type for " << datumName);
         const string& equityName = tokens[2];
         const string& ccy = tokens[3];
         string expiryString = tokens[4];
-        const string& strike = tokens[5];
+        // do we have a call or put flag as the last token?
+        bool hasCallPutToken = tokens.back() == "C" || tokens.back() == "P";
+        // the following tokens represent the strike, except the last one, if we have a call/put token
+        string strikeStr;
+        for(Size i=5; i < tokens.size() - (hasCallPutToken ? 1 : 0); ++i) {
+            strikeStr += (i > 5 ? "/" : "") + tokens[i];
+        }
+        boost::shared_ptr<BaseStrike> strike;
+        // we support ATM, ATMF as aliases for ATM/AtmSpot, ATM/AtmFwd, plus absolute strikes and MNY/[Spot/Fwd]/1.2
+        if(strikeStr == "ATM")
+            strike = boost::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmSpot);
+        else if(strikeStr == "ATMF")
+            strike = boost::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmFwd);
+        else
+            strike = parseBaseStrike(strikeStr);
         bool isCall = true;
-        if (tokens.size() == 7) {
-            QL_REQUIRE(tokens[6] == "C" || tokens[6] == "P",
-                       "excepted C or P for Call or Put at position 7 in " << datumName);
+        if (hasCallPutToken) {
+            QL_REQUIRE(tokens.back() == "C" || tokens.back() == "P",
+                       "excepted C or P for Call or Put at position " << tokens.size() << " in " << datumName);
             isCall = tokens[6] == "C";
         }
         // note how we only store the expiry string - to ensure we can support both Periods and Dates being specified in

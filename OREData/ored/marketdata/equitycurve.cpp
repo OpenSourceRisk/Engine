@@ -287,8 +287,12 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                                                                                  << calls[i]->strike());
                             callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
                             putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
-                            callStrikes.push_back(parseReal(calls[i]->strike()));
-                            putStrikes.push_back(parseReal(puts[j]->strike()));
+                            auto callAbsoluteStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(calls[i]->strike());
+                            auto putAbsoluteStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(puts[i]->strike());
+                            QL_REQUIRE(callAbsoluteStrike, "Expected absolute strike for quote " << calls[i]->name());
+                            QL_REQUIRE(putAbsoluteStrike, "Expected absolute strike for quote " << puts[i]->name());
+                            callStrikes.push_back(callAbsoluteStrike->strike());
+                            putStrikes.push_back(putAbsoluteStrike->strike());
                             callPremiums.push_back(calls[i]->quote()->value());
                             putPremiums.push_back(puts[j]->quote()->value());
                         }

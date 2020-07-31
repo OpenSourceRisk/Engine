@@ -306,18 +306,21 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
             if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION &&
                 md->quoteType() == vc.quoteType()) {
                 boost::shared_ptr<EquityOptionQuote> q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
-
-                if (q->eqName() == vc.curveID() && q->ccy() == vc.ccy()) {
+                // todo - for now we will ignore ATM, ATMF quotes both for explicit strikes and in case of strike wild card. ----
+                auto absoluteStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
+                if (absoluteStrike && (q->eqName() == vc.curveID() && q->ccy() == vc.ccy())) {
                     if (!expiriesWc) {
                         auto j = std::find(vssc.expiries().begin(), vssc.expiries().end(), q->expiry());
                         expiryRelevant = j != vssc.expiries().end();
                     }
                     if (!strikesWc) {
-                        auto i = std::find(vssc.strikes().begin(), vssc.strikes().end(), q->strike());
+                        auto i = std::find_if(vssc.strikes().begin(), vssc.strikes().end(),
+                                              [&absoluteStrike](const std::string& x) {
+                                                  return close_enough(parseReal(x), absoluteStrike->strike());
+                                              });
                         strikeRelevant = i != vssc.strikes().end();
                     } else {
-                        // todo - for now we will ignore ATMF quotes in case of strike wild card. ----
-                        strikeRelevant = q->strike() != "ATMF";
+                        strikeRelevant = true;
                     }
                     quoteRelevant = strikeRelevant && expiryRelevant;
 
@@ -330,12 +333,12 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                         QL_REQUIRE(tmpDate > asof,
                                    "Option quote for a past date (" << ore::data::to_string(tmpDate) << ")");
                         if (q->isCall()) {
-                            callStrikes.push_back(parseReal(q->strike()));
+                            callStrikes.push_back(absoluteStrike->strike());
                             callData.push_back(q->quote()->value());
                             callExpiries.push_back(tmpDate);
                             callQuotesAdded++;
                         } else {
-                            putStrikes.push_back(parseReal(q->strike()));
+                            putStrikes.push_back(absoluteStrike->strike());
                             putData.push_back(q->quote()->value());
                             putExpiries.push_back(tmpDate);
                             putQuotesAdded++;

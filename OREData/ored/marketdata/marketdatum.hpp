@@ -1499,7 +1499,12 @@ Specific data comprise
 - Equity/Index name
 - currency
 - expiry
-- strike - can be "ATMF" or an actual strike
+- strike - supported are:
+           - absolute strike, e.g. 1234.5
+           - ATM/AtmSpot         (or as an alias ATM)
+           - ATM/AtmFwd          (or as an alias ATMF)
+           - MNY/[Spot/Fwd]/1.2
+- C (call), P (put) flag, this is optional and defaults to C
 
 \ingroup marketdata
 */
@@ -1508,21 +1513,21 @@ public:
     EquityOptionQuote() {}
     //! Constructor
     EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy,
-                      string expiry, string strike, bool isCall = true);
+                      string expiry, const boost::shared_ptr<BaseStrike>& strike, bool isCall = true);
 
     //! \name Inspectors
     //@{
     const string& eqName() const { return eqName_; }
     const string& ccy() const { return ccy_; }
     const string& expiry() const { return expiry_; }
-    const string& strike() const { return strike_; }
+    const boost::shared_ptr<BaseStrike>& strike() const { return strike_; }
     bool isCall() { return isCall_; }
     //@}
 private:
     string eqName_;
     string ccy_;
     string expiry_;
-    string strike_;
+    boost::shared_ptr<BaseStrike> strike_;
     bool isCall_;
     //! Serialization
     friend class boost::serialization::access;
