@@ -65,9 +65,10 @@ The meaning of Call and Put values depend on the asset class of the option, see 
 Equity/ Commodity Option & \emph{Call}: The right to buy the underlying equity/commodity at the strike price.
 \newline \emph{Put}: The right to sell the underlying equity/commodity at the strike price. \\  \hline
  IR Swaption, CallableSwap, Commodity Swaption&  \emph{Call/Put} values are ignored, and the OptionType field is optional. Payer/Receiver swaption is determined by the  \lstinline!Payer! fields in the Leg Data nodes of the underlying swap. \\ \hline
-FX Options (all variants) &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the trade data node. 
+FX Options (all variants, except Asian) &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the trade data node. 
 \newline \emph{Put}: Bought and Sold currencies/amounts are switched compared to the trade data node.  \\ \hline
 Index CDS Option &  \emph{Call/Put} values are ignored, and the OptionType field is optional. The \lstinline!Payer! field in the underlying Index CDS leg  determines if the option is to buy or sell protection. \\ \hline
+Asian FX Options &  \emph{Call}: The right to buy/receive the underlying currency and sell/pay the currency in the \lstinline!Currency! field.  \newline \emph{Put}: The right to sell/pay  the underlying currency and buy/receive the currency in the \lstinline!Currency! field.   \\ \hline
 
   \end{tabu}
   \caption{Specification of Option Type Call / Put}
@@ -85,6 +86,7 @@ Index CDS Option &  \emph{Call/Put} values are ignored, and the OptionType field
     FxRainbowOption, CommodityRainbowOption only)
   \item \emph{Vanilla, Asian, AverageStrike, LookbackCall, LookbackPut} (applies to trade types EquityBasketOption,
     FxBasketOption, CommodityBasketOption only)
+  \item \emph{Asian} (applies to trade types EquityAsianOption, FxAsianOption only)    
   \end{itemize}
 
 \item Style: The exercise style of the option. 
