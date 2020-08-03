@@ -109,6 +109,7 @@ models/lgmimpliedyieldtermstructure.cpp
 models/linkablecalibratedmodel.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
+models/projectedcrossassetmodel.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
 pricingengines/analyticcclgmfxoptionengine.cpp
 pricingengines/analyticdkcpicapfloorengine.cpp
@@ -371,6 +372,7 @@ models/lgmimpliedyieldtermstructure.hpp
 models/linkablecalibratedmodel.hpp
 models/parametrization.hpp
 models/piecewiseconstanthelper.hpp
+models/projectedcrossassetmodel.hpp
 models/pseudoparameter.hpp
 pricingengines/analyticcashsettledeuropeanengine.hpp
 pricingengines/analyticcclgmfxoptionengine.hpp
