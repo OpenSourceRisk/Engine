@@ -52,6 +52,7 @@
 #include <qle/currencies/asia.hpp>
 #include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
+#include <qle/indexes/behicp.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/bondindex.hpp>
 #include <qle/indexes/cacpi.hpp>
@@ -60,6 +61,7 @@
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/escpi.hpp>
+#include <qle/indexes/frcpi.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
