@@ -174,6 +174,7 @@
 #include <qle/models/linkablecalibratedmodel.hpp>
 #include <qle/models/parametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
+#include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/models/pseudoparameter.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
