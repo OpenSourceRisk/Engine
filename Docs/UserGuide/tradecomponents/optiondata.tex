@@ -68,7 +68,7 @@ Equity/ Commodity Option & \emph{Call}: The right to buy the underlying equity/c
 FX Options (all variants, except Asian) &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the trade data node. 
 \newline \emph{Put}: Bought and Sold currencies/amounts are switched compared to the trade data node.  \\ \hline
 Index CDS Option &  \emph{Call/Put} values are ignored, and the OptionType field is optional. The \lstinline!Payer! field in the underlying Index CDS leg  determines if the option is to buy or sell protection. \\ \hline
-Asian FX Options &  \emph{Call}: The right to buy/receive the underlying currency and sell/pay the currency in the \lstinline!Currency! field.  \newline \emph{Put}: The right to sell/pay  the underlying currency and buy/receive the currency in the \lstinline!Currency! field.   \\ \hline
+Asian FX Options &  \emph{Call}: The right to buy/receive the underlying currency at the strike price.  \newline \emph{Put}: The right to sell/pay  the underlying currency at the strike price.   \\ \hline
 
   \end{tabu}
   \caption{Specification of Option Type Call / Put}
