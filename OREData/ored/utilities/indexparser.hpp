@@ -141,6 +141,12 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(
     const std::string& name, const QuantLib::Calendar& cal = QuantLib::NullCalendar(),
     const QuantLib::Handle<QuantExt::PriceTermStructure>& ts = QuantLib::Handle<QuantExt::PriceTermStructure>());
 
+//! Convert std::string (GENERIC-...) to QuantExt::Index
+/*!
+    \ingroup utilities
+*/
+boost::shared_ptr<QuantLib::Index> parseGenericIndex(const string& s);
+
 //! Convert std::string to QuantLib::Index
 /*!
     \ingroup utilities

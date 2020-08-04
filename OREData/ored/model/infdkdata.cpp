@@ -24,8 +24,8 @@ namespace ore {
 namespace data {
 
 void InfDkData::fromXML(XMLNode* node) {
-    index_ = XMLUtils::getAttribute(node, "index");
-    LOG("Cross-Asset Inflation Index = " << index_);
+    qualifier_ = XMLUtils::getAttribute(node, "index");
+    LOG("Cross-Asset Inflation Index = " << qualifier_);
 
     currency_ = XMLUtils::getChildValue(node, "Currency");
     LOG("Cross-Asset Inflation Index = " << currency_);
@@ -39,7 +39,7 @@ void InfDkData::fromXML(XMLNode* node) {
     optionStrikes() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Strikes", false);
     if (optionStrikes().size() > 0) {
         QL_REQUIRE(optionStrikes().size() == optionExpiries().size(),
-                   "vector size mismatch in cap floor expiries/strikes for inflation index " << index_);
+                   "vector size mismatch in cap floor expiries/strikes for inflation index " << qualifier_);
     } else // Default: ATM
         optionStrikes().resize(optionExpiries().size(), "ATM");
 
@@ -51,7 +51,7 @@ void InfDkData::fromXML(XMLNode* node) {
 
 XMLNode* InfDkData::toXML(XMLDocument& doc) {
     XMLNode* node = LgmData::toXML(doc);
-    XMLUtils::addAttribute(doc, node, "index", index_);
+    XMLUtils::addAttribute(doc, node, "index", qualifier_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
 
     // capfloor calibration
