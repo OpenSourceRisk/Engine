@@ -43,12 +43,12 @@ NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const str
                                            const Real& thresholdRcv, const Real& mtaPay, const Real& mtaRcv,
                                            const Real& iaHeld, const string& iaType, const string& marginCallFreq,
                                            const string& marginPostFreq, const string& mpr, const Real& collatSpreadPay,
-                                           const Real& collatSpreadRcv, const vector<string>& eligCollatCcys)
+                                           const Real& collatSpreadRcv, const vector<string>& eligCollatCcys, const Real& riskWeight)
     : nettingSetId_(nettingSetId), ctp_(ctp), activeCsaFlag_(true), csaTypeStr_(bilateral), csaCurrency_(csaCurrency),
       index_(index), thresholdPay_(thresholdPay), thresholdRcv_(thresholdRcv), mtaPay_(mtaPay), mtaRcv_(mtaRcv),
       iaHeld_(iaHeld), iaType_(iaType), marginCallFreqStr_(marginCallFreq), marginPostFreqStr_(marginPostFreq),
       mprStr_(mpr), collatSpreadPay_(collatSpreadPay), collatSpreadRcv_(collatSpreadRcv),
-      eligCollatCcys_(eligCollatCcys) {
+      eligCollatCcys_(eligCollatCcys), riskWeight_(riskWeight) {
 
     QL_REQUIRE(activeCsaFlag_, "NettingSetDefinition construction error... "
                                    << nettingSetId_ << "; this constructor is intended for "
@@ -99,6 +99,10 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         XMLUtils::checkNode(collatChild, "EligibleCollaterals");
         eligCollatCcys_ = XMLUtils::getChildrenValues(collatChild, "Currencies", "Currency", true);
     }
+
+    riskWeight_ = QuantLib::Null<Real>();
+    if (XMLUtils::getChildNode(node, "RiskWeight") != nullptr)
+        riskWeight_ = XMLUtils::getChildValueAsDouble(node, "RiskWeight", true);
     isLoaded_ = true;
 }
 
@@ -108,7 +112,7 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
 
     // Add the mandatory members.
     XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId_);
-    XMLUtils::addChild(doc, node, "Counterparty_", ctp_);
+    XMLUtils::addChild(doc, node, "Counterparty", ctp_);
     XMLUtils::addChild(doc, node, "ActiveCSAFlag", activeCsaFlag_);
 
     XMLNode* csaSubNode = doc.allocNode("CSADetails");
@@ -138,6 +142,10 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(csaSubNode, collatSubNode);
         XMLUtils::addChildren(doc, collatSubNode, "Currencies", "Currency", eligCollatCcys_);
     }
+
+    if (riskWeight_ != QuantLib::Null<Real>())
+        XMLUtils::addChild(doc, node, "RiskWeight", riskWeight_);
+
     return node;
 }
 
