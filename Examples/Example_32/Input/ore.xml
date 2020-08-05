@@ -46,6 +46,7 @@
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
       <Parameter name="storeFlows">N</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
+      <Parameter name="nettingSetCubeFile">cube_nettingset.dat</Parameter>
       <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
       <Parameter name="storeSensitivities1stOrder">Y</Parameter>
       <Parameter name="storeSensitivities2ndOrder">Y</Parameter>
@@ -57,8 +58,12 @@
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
+      <!-- "normal" npv cube to store results on trade level -->
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="hyperCube">Y</Parameter>
+      <!-- cube to store sensitivities on netting set level -->
+      <Parameter name="nettingSetCubeFile">cube_nettingset.dat</Parameter>
+      <Parameter name="hyperNettingSetCube">Y</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>

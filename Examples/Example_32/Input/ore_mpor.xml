@@ -52,6 +52,8 @@
       <Parameter name="csaFile">netting_mpor.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="hyperCube">Y</Parameter>
+      <Parameter name="nettingSetCubeFile">cube_nettingset.dat</Parameter>
+      <Parameter name="hyperNettingSetCube">Y</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
