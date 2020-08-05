@@ -110,6 +110,8 @@ protected:
     virtual void buildNPVCube();
     //! initialise NPV cube generation
     void initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio);
+    //! initialise sensitivity storage manager
+    void initialiseSensitivityStorageManager();
     //! load simMarketData
     boost::shared_ptr<ScenarioSimMarketParameters> getSimMarketData();
     //! load scenarioGeneratorData
@@ -235,7 +237,7 @@ protected:
     boost::shared_ptr<SensitivityStorageManager> sensitivityStorageManager_;
 
     boost::shared_ptr<NPVCube> cube_;           // cube to store results on trade level (e.g. NPVs, flows)
-    boost::shared_ptr<NPVCube> cubeNettingSet_; // cube to store results on netting set level (e.g. dynamic sensis)
+    boost::shared_ptr<NPVCube> nettingSetCube_; // cube to store results on netting set level (e.g. dynamic sensis)
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
     boost::shared_ptr<CubeInterpretation> cubeInterpreter_;

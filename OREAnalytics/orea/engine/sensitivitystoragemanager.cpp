@@ -157,8 +157,8 @@ boost::any CamSensitivityStorageManager::getSensitivities(const boost::shared_pt
     // get data from cube
 
     std::vector<Real> cubeData;
-    Size idx = firstCubeIndexToUse_;
     Size nettingSetIndex = getNettingSetIndex(nettingSetId, cube);
+    Size idx = firstCubeIndexToUse_;
     for (Size i = 0; i < getRequiredSize(); ++i) {
         Real tmp;
         if (dateIndex == Null<Size>()) {
@@ -166,6 +166,7 @@ boost::any CamSensitivityStorageManager::getSensitivities(const boost::shared_pt
         } else {
             tmp = cube->get(nettingSetIndex, dateIndex, sampleIndex, idx);
         }
+        ++idx;
         cubeData.push_back(tmp);
     }
 
@@ -178,9 +179,9 @@ boost::any CamSensitivityStorageManager::getSensitivities(const boost::shared_pt
     theta = cubeData[N_];
 
     if (use2ndOrderSensitivities_) {
-        Size idx = 0;
+        idx = 0;
         for (Size i = 0; i < N_; ++i) {
-            for (Size j = 0; j <= i; ++i) {
+            for (Size j = 0; j <= i; ++j) {
                 gamma(i, j) = gamma(j, i) = cubeData[N_ + 1 + idx];
                 ++idx;
             }
