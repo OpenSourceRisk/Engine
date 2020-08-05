@@ -4,27 +4,31 @@
 */
 
 #include <orea/engine/sensitivitycalculator.hpp>
+#include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/utilities/log.hpp>
 
-//#include <qle/pricingengines/discountingcurrencyswapenginedeltagamma.hpp>
+#include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/currencyswap.hpp>
+#include <qle/instruments/fxforward.hpp>
+
+#include <iostream>
 
 using namespace QuantLib;
 using namespace QuantExt;
 
-namespace ore {
-using namespace data;
-namespace analytics {
+namespace QuantExt {
 
-// result types, taken from qlep/pricingengines/discountingcurrencyswapenginedeltagamma.hpp
-struct CurrencyComparator {
-    bool operator()(const Currency& c1, const Currency& c2) const { return c1.code() < c2.code(); }
-};
 typedef std::map<Currency, Matrix, CurrencyComparator> result_type_matrix;
 typedef std::map<Currency, std::vector<Real>, CurrencyComparator> result_type_vector;
 typedef std::map<Currency, Real, CurrencyComparator> result_type_scalar;
+
+}
+
+namespace ore {
+using namespace data;
+namespace analytics {
 
 void SensitivityCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                                       const boost::shared_ptr<SimMarket>& simMarket,
@@ -145,6 +149,49 @@ Disposable<std::vector<Real>> SensitivityCalculator::sensis(const boost::shared_
                     }
                 }
             } // XCCY Swap
+        } else if (trade->tradeType() == "FxForward") {
+            boost::shared_ptr<FxForward> fxfwd = boost::dynamic_pointer_cast<FxForward>(trade);
+            QL_REQUIRE(fxfwd, "SensitivityCalculator: Expected FxForward trade class, could not cast");
+            boost::shared_ptr<Instrument> qlInstr = fxfwd->instrument()->qlInstrument();
+            if (qlInstr->isExpired())
+                return result;
+            Currency ccy1 = parseCurrency(fxfwd->boughtCurrency());
+            Currency ccy2 = parseCurrency(fxfwd->soldCurrency());
+	    // for (auto it :  qlInstr->additionalResults())
+	    //     std::cout << "FXFWD additional result key : " << it.first << " " << it.second.type().name() << std::endl;	    
+	    Real fxSpot1 = qlInstr->result<result_type_scalar>("fxSpot")[ccy1];
+            Real fxSpot2 = qlInstr->result<result_type_scalar>("fxSpot")[ccy2];
+	    Real deltaFxSpot1 = qlInstr->result<result_type_scalar>("deltaFxSpot")[ccy1];
+	    Real deltaFxSpot2 = qlInstr->result<result_type_scalar>("deltaFxSpot")[ccy2];
+	    result.push_back(fxSpot1);
+            result.push_back(fxSpot2);
+            result.push_back(deltaFxSpot1);
+            result.push_back(deltaFxSpot2);
+
+	    Real multiplier = trade->instrument()->multiplier();
+
+	    std::vector<Real> deltaDiscount1 = qlInstr->result<result_type_vector>("deltaDiscount")[ccy1];
+            for (Size i = 0; i < deltaDiscount1.size(); ++i)
+                result.push_back(multiplier * deltaDiscount1[i]);
+
+            std::vector<Real> deltaDiscount2 = qlInstr->result<result_type_vector>("deltaDiscount")[ccy2];
+            for (Size i = 0; i < deltaDiscount2.size(); ++i)
+                result.push_back(multiplier * deltaDiscount2[i]);
+
+            if (compute2ndOrder_) {
+                Matrix gamma1 = qlInstr->result<result_type_matrix>("gamma")[ccy1];
+                Matrix gamma2 = qlInstr->result<result_type_matrix>("gamma")[ccy2];
+                for (Size i = 0; i < gamma1.rows(); ++i) {
+                    for (Size j = 0; j <= i; ++j) {
+                        result.push_back(multiplier * gamma1[i][j]);
+                    }
+                }
+                for (Size i = 0; i < gamma2.rows(); ++i) {
+                    for (Size j = 0; j <= i; ++j) {
+                        result.push_back(multiplier * gamma2[i][j]);
+                    }
+                }
+            }
         } else if (trade->tradeType() == "Swaption") {
             // European Swaption (we don't check this, it will throw anyway below)
             std::vector<string> currencies = trade->legCurrencies();

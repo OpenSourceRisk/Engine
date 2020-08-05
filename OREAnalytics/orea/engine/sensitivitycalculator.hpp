@@ -46,6 +46,13 @@ namespace analytics {
                       2 + 2n + 2n(2n+1)/2 + uv + 1 entries. deltaFxSpot is set to zero if the ccy of the swaption is
                       the base ccy.
 
+    FXForward: | FxSpot_ccy1 FxSpot_ccy2 deltaFxSpot_ccy1 deltaFxSpot_ccy2 (4)
+                    deltaDiscount_ccy1 deltaDiscount_ccy2 (2n)
+                    gamma_ccy1 gamma_ccy2 | (2n(n+1)/2)
+          ccy1 and ccy2 refer to the two currencies of the trade, in alphabetical order,
+          If we have n bucket times this occupies 4 + 2n + 2 n(n+1)/2 entries.
+          deltaFxSpot_ccy1 resp. deltaFxSpot_ccy2 are set to zero if ccy1 resp. ccy2 is the base ccy.
+
     FXOption : | FxSpot deltaFxSpot gammaFxSpot vega deltaRate deltaDividend gamma gammaSpotRate gammaSpotDiv |
                If we have n delta-gamma bucket times and w vega bucket times, this occupies
                3 + w + n + n + 2n(2n+1)/2 + n + n entries.

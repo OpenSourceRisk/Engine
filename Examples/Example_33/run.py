@@ -50,15 +50,15 @@ oreex.save_output_to_subdir(
 oreex.print_headline("Plot results")
 
 oreex.setup_plot("nocollateral_epe")
-oreex.plot(os.path.join("collateral_none", "exposure_trade_Swap.csv"), 2, 3, 'b', "EPE Swap 1")
+oreex.plot(os.path.join("collateral_none", "exposure_trade_FxForward.csv"), 2, 3, 'b', "EPE FxForward")
 oreex.plot(os.path.join("collateral_none", "exposure_nettingset_CPTY_A.csv"), 2, 3, 'm', "EPE NettingSet")
-oreex.decorate_plot(title="Example 32")
+oreex.decorate_plot(title="Example 33")
 oreex.save_plot_to_file()
 
 oreex.setup_plot("nocollateral_ene")
-oreex.plot(os.path.join("collateral_none", "exposure_trade_Swap.csv"), 2, 4, 'b', "ENE Swap 1")
+oreex.plot(os.path.join("collateral_none", "exposure_trade_FxForward.csv"), 2, 4, 'b', "ENE FX Forward")
 oreex.plot(os.path.join("collateral_none", "exposure_nettingset_CPTY_A.csv"), 2, 4, 'm', "ENE NettingSet")
-oreex.decorate_plot(title="Example 32")
+oreex.decorate_plot(title="Example 33")
 oreex.save_plot_to_file()
 
 oreex.setup_plot("mpor_epe")
@@ -66,5 +66,5 @@ oreex.plot(os.path.join("collateral_none","exposure_nettingset_CPTY_A.csv"), 2, 
 oreex.plot(os.path.join("collateral_mpor","exposure_nettingset_CPTY_A.csv"), 2, 3, 'c', "EPE NettingSet, MPOR 2W")
 oreex.plot(os.path.join("collateral_mpor_dim_reg","exposure_nettingset_CPTY_A.csv"), 2, 3, 'r', "EPE NettingSet, MPOR 2W, DIM (reg)")
 oreex.plot(os.path.join("collateral_mpor_dim_ddv","exposure_nettingset_CPTY_A.csv"), 2, 3, 'g', "EPE NettingSet, MPOR 2W, DIM (ddv)")
-oreex.decorate_plot(title="Example 32")
+oreex.decorate_plot(title="Example 33")
 oreex.save_plot_to_file()

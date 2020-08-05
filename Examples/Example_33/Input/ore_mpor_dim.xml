@@ -79,7 +79,7 @@
       <!-- Dynamic Initial Margin -->
       <Parameter name="dim">Y</Parameter>
       <Parameter name="mva">Y</Parameter>
-      <Parameter name="ddv">N</Parameter>
+      <Parameter name="ddv">Y</Parameter>
       <Parameter name="dimQuantile">0.99</Parameter>
       <Parameter name="dimHorizonCalendarDays">14</Parameter>
       <!-- If ddv=Y: Dynamic Delta Gamma VaR -->
