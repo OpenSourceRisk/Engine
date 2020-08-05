@@ -2,9 +2,9 @@
 
 set(OREAnalytics_SRC aggregation/collateralaccount.cpp
 aggregation/collatexposurehelper.cpp
-aggregation/postprocess.cpp
 aggregation/dimcalculator.cpp
 aggregation/dimregressioncalculator.cpp
+aggregation/postprocess.cpp
 app/oreapp.cpp
 app/parameters.cpp
 app/reportwriter.cpp
@@ -24,6 +24,7 @@ engine/sensitivitycubestream.cpp
 engine/sensitivityfilestream.cpp
 engine/sensitivityinmemorystream.cpp
 engine/sensitivityrecord.cpp
+engine/sensitivitystoragemanager.cpp
 engine/stresstest.cpp
 engine/valuationcalculator.cpp
 engine/valuationengine.cpp
@@ -51,9 +52,9 @@ simulation/simmarket.cpp)
 
 set(OREAnalytics_HDR aggregation/collateralaccount.hpp
 aggregation/collatexposurehelper.hpp
-aggregation/postprocess.hpp
 aggregation/dimcalculator.hpp
 aggregation/dimregressioncalculator.hpp
+aggregation/postprocess.hpp
 app/oreapp.hpp
 app/parameters.hpp
 app/reportwriter.hpp
@@ -79,6 +80,7 @@ engine/sensitivitycubestream.hpp
 engine/sensitivityfilestream.hpp
 engine/sensitivityinmemorystream.hpp
 engine/sensitivityrecord.hpp
+engine/sensitivitystoragemanager.hpp
 engine/sensitivitystream.hpp
 engine/stresstest.hpp
 engine/valuationcalculator.hpp
