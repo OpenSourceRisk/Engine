@@ -34,6 +34,7 @@
 #include <orea/engine/sensitivityfilestream.hpp>
 #include <orea/engine/sensitivityinmemorystream.hpp>
 #include <orea/engine/sensitivityrecord.hpp>
+#include <orea/engine/sensitivitystoragemanager.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <orea/engine/valuationcalculator.hpp>
