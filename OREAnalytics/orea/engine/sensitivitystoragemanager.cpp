@@ -230,7 +230,7 @@ CamSensitivityStorageManager::processSwapSwaption(boost::shared_ptr<ore::analyti
     if (!isXCCY) {
 
         // determine relevant ql instrument and trade multiplier in case we have a swaption
-        bool hasThetaVega = true;
+        bool hasThetaVega = false;
         if (trade->tradeType() == "Swaption") {
             boost::shared_ptr<OptionWrapper> wrapper = boost::dynamic_pointer_cast<OptionWrapper>(trade->instrument());
             if (wrapper) { // option wrapper (i.e. we have a swaption)
@@ -241,6 +241,7 @@ CamSensitivityStorageManager::processSwapSwaption(boost::shared_ptr<ore::analyti
                 } else {
                     qlInstr = wrapper->qlInstrument();
                     tradeMultiplier = wrapper->multiplier() * (wrapper->isLong() ? 1.0 : -1.0);
+                    hasThetaVega = true;
                 }
             } else { // not an option wrapper
                 qlInstr = trade->instrument()->qlInstrument();
