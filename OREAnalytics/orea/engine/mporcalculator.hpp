@@ -40,12 +40,14 @@ public:
     MPORCalculator(const boost::shared_ptr<NPVCalculator>& npvCalc, Size defaultIndex = 0, Size closeOutIndex = 1)
         : npvCalc_(npvCalc), defaultIndex_(defaultIndex), closeOutIndex_(closeOutIndex) {}
 
-    virtual void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                           const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                           const Date& date, Size dateIndex, Size sample, bool isCloseOut = false);
+    void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
+                   const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
+                   boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex, Size sample,
+                   bool isCloseOut = false) override;
 
-    virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                             const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube);
+    void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
+                     const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
+                     boost::shared_ptr<NPVCube>& outputCubeNettingSet) override;
 
 private:
     boost::shared_ptr<NPVCalculator> npvCalc_;
