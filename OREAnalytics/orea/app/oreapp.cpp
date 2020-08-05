@@ -663,15 +663,15 @@ void OREApp::initAggregationScenarioData() {
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_);
 }
 
-void OREApp::initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids) {
-    QL_REQUIRE(cubeDepth_ > 0, "zero cube depth found");
-    if (cubeDepth_ == 1)
-        cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, ids, grid_->valuationDates(), samples_);
+void OREApp::initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids, const Size cubeDepth) {
+    QL_REQUIRE(cubeDepth > 0, "zero cube depth given");
+    if (cubeDepth == 1)
+        cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, ids, grid_->valuationDates(), samples_, 0.0);
     else
-        cube =
-            boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, ids, grid_->valuationDates(), samples_, cubeDepth_);
+        cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, ids, grid_->valuationDates(), samples_,
+                                                                cubeDepth, 0.0);
 
-    LOG("NPV cube depth: " << cubeDepth_);
+    LOG("init NPV cube with depth: " << cubeDepth);
 }
 
 void OREApp::buildNPVCube() {
@@ -699,7 +699,7 @@ void OREApp::buildNPVCube() {
     }
 
     if (storeSensis_)
-        calculators.push_back(boost::make_shared<SensitivityCalculator>(baseCurrency, slots, sensitivities2ndOrder_));
+        calculators.push_back(boost::make_shared<SensitivityCalculator>(sensitivityStorageManager_));
 
     if (useCloseOutLag_)
         cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(grid_);
@@ -766,44 +766,42 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
         cubeDepth_++;
     }
 
+    // initialise nettings set cube for the storage of sensitivities
     // FIXME: Move this into ORE+
-    std::vector<Time> curveSensitivityGrid, vegaOptSensitivityGrid, vegaUndSensitivityGrid, fxVegaSensitivityGrid;
-    bool cashFlowCalculator = false, sensitivityCalculator = false;
     storeSensis_ = false;
-    sensitivities1stOrder_ = false;
-    sensitivities2ndOrder_ = false;
-    sensitivitySlots_ = 0;
+    bool sensitivities1stOrder = false;
+    bool sensitivities2ndOrder = false;
     if (params_->has("simulation", "storeSensitivities1stOrder"))
-        sensitivities1stOrder_ = params_->get("simulation", "storeSensitivities1stOrder") == "Y";
+        sensitivities1stOrder = params_->get("simulation", "storeSensitivities1stOrder") == "Y";
     if (params_->has("simulation", "storeSensitivities2ndOrder"))
-        sensitivities2ndOrder_ = params_->get("simulation", "storeSensitivities2ndOrder") == "Y";
-    if (sensitivities1stOrder_ || sensitivities2ndOrder_) {
-        QL_REQUIRE(!sensitivities2ndOrder_ || sensitivities1stOrder_,
+        sensitivities2ndOrder = params_->get("simulation", "storeSensitivities2ndOrder") == "Y";
+    if (sensitivities1stOrder || sensitivities2ndOrder) {
+        QL_REQUIRE(!sensitivities2ndOrder || sensitivities1stOrder,
                    "2nd order sensitivity calculation requires 1st order sensitivity calculation");
         storeSensis_ = true;
-        curveSensitivityGrid = parseListOfValues<Time>(params_->get("simulation", "curveSensitivityGrid"), &parseReal);
-        vegaOptSensitivityGrid =
+        std::vector<Time> curveSensitivityGrid =
+            parseListOfValues<Time>(params_->get("simulation", "curveSensitivityGrid"), &parseReal);
+        std::vector<Time> vegaOptSensitivityGrid =
             parseListOfValues<Time>(params_->get("simulation", "vegaOptSensitivityGrid"), &parseReal);
-        vegaUndSensitivityGrid =
+        std::vector<Time> vegaUndSensitivityGrid =
             parseListOfValues<Time>(params_->get("simulation", "vegaUndSensitivityGrid"), &parseReal);
-        fxVegaSensitivityGrid =
+        std::vector<Time> fxVegaSensitivityGrid =
             parseListOfValues<Time>(params_->get("simulation", "fxVegaSensitivityGrid"), &parseReal);
         Size n = curveSensitivityGrid.size(), u = vegaOptSensitivityGrid.size(), v = vegaUndSensitivityGrid.size(),
              w = fxVegaSensitivityGrid.size();
-        // worst case estimation for needed cube depth, based on the description in
-        // sensitivitiycalculator.hpp, see there for the layout that is used to
-        // store the sensitivities in the cube
-        if (sensitivities1stOrder_)
-            sensitivitySlots_ = std::max(std::max(std::max(2 + 2 * n,     // swap
-                                                           4 + 4 * n),    // ccy swap
-                                                  2 + 2 * n + u * v + 1), // eu swaption
-                                         3 + w + 2 * n);                  // fx option
-        if (sensitivities2ndOrder_)
-            sensitivitySlots_ = std::max(std::max(std::max(2 + 2 * n + n * (2 * n + 1),      // swap
-                                                           4 + 4 * n + 2 * n * (2 * n + 1)), // ccy swap
-                                                  2 + 2 * n + u * v + 1 + 2 * (2 * n + 1)),  // eu swaption
-                                         3 + w + 2 * n + n * (2 * n + 1));                   // fx option
-        cubeDepth_ += sensitivitySlots_;
+        // first cube index can be set to 0, since at the moment we only use the netting-set cube for sensi storage
+        sensitivityStorageManager_ = boost::make_shared<CamSensitivityStorageManager>(simMarketData->ccys(), n, u, v, w,
+                                                                                      0, sensitivities2ndOrder);
+        // collect netting set ids from sim portfolio
+        std::set<std::string> nettingSetIds;
+        for (auto const& t : simPortfolio_->trades()) {
+            nettingSetIds.insert(t->envelope().nettingSetId());
+        }
+        std::vector<std::string> nettingSetIdsVec(nettingSetIds.begin(), nettingSetIds.end());
+        // init the netting set cube
+        initCube(cubeNettingSet_, nettingSetIdsVec, sensitivityStorageManager_->getRequiredSize());
+    } else {
+        cubeNettingSet_ = nullptr;
     }
 
     ostringstream o;
@@ -815,7 +813,7 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     simMarket_->aggregationScenarioData() = scenarioData_;
     out_ << "OK" << endl;
 
-    initCube(cube_, simPortfolio_->ids());
+    initCube(cube_, simPortfolio_->ids(), cubeDepth_);
 }
 
 void OREApp::generateNPVCube() {
@@ -825,18 +823,20 @@ void OREApp::generateNPVCube() {
     boost::shared_ptr<Portfolio> portfolio = loadPortfolio();
     initialiseNPVCubeGeneration(portfolio);
     buildNPVCube();
-    writeCube(cube_);
+    writeCube(cube_, "cubeFile");
+    if (cubeNettingSet_)
+        writeCube(cubeNettingSet_, "nettingSetCubeFile");
     writeScenarioData();
 
     LOG("NPV cube generation completed");
     MEM_LOG;
 }
 
-void OREApp::writeCube(boost::shared_ptr<NPVCube> cube) {
+void OREApp::writeCube(boost::shared_ptr<NPVCube> cube, const std::string& cubeFileParam) {
     out_ << endl << setw(tab_) << left << "Write Cube... " << flush;
     LOG("Write cube");
-    if (params_->has("simulation", "cubeFile")) {
-        string cubeFileName = outputPath_ + "/" + params_->get("simulation", "cubeFile");
+    if (params_->has("simulation", cubeFileParam)) {
+        string cubeFileName = outputPath_ + "/" + params_->get("simulation", cubeFileParam);
         cube->save(cubeFileName);
         out_ << "OK" << endl;
     } else
@@ -874,6 +874,9 @@ void OREApp::loadScenarioData() {
 }
 
 void OREApp::loadCube() {
+
+    // loade usual NPV cube on trade level
+
     string cubeFile = outputPath_ + "/" + params_->get("xva", "cubeFile");
     bool hyperCube = false;
     if (params_->has("xva", "hyperCube"))
@@ -888,6 +891,25 @@ void OREApp::loadCube() {
     cubeDepth_ = cube_->depth();
     LOG("Cube loading done: ids=" << cube_->numIds() << " dates=" << cube_->numDates()
                                   << " samples=" << cube_->samples() << " depth=" << cube_->depth());
+
+    // load additional cube on netting set level (if specified)
+
+    if (params_->has("xva", "nettingSetCubeFile") && params_->get("xva", "nettingSetCubeFile") != "") {
+        string cubeFile2 = outputPath_ + "/" + params_->get("xva", "nettingSetCubeFile");
+        bool hyperCube2 = false;
+        if (params_->has("xva", "hyperNettingSetCube"))
+            hyperCube2 = parseBool(params_->get("xva", "hyperNettingSetCube"));
+
+        if (hyperCube2)
+            cubeNettingSet_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
+        else
+            cubeNettingSet_ = boost::make_shared<SinglePrecisionInMemoryCube>();
+        LOG("Load netting set cube from file " << cubeFile2);
+        cubeNettingSet_->load(cubeFile2);
+        LOG("Cube loading done: ids=" << cubeNettingSet_->numIds() << " dates=" << cubeNettingSet_->numDates()
+                                      << " samples=" << cubeNettingSet_->samples()
+                                      << " depth=" << cubeNettingSet_->depth());
+    }
 }
 
 boost::shared_ptr<NettingSetManager> OREApp::initNettingSetManager() {

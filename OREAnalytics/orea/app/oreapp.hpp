@@ -31,12 +31,13 @@
 #include <orea/app/parameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
+#include <orea/cube/cubeinterpretation.hpp>
 #include <orea/engine/parametricvar.hpp>
+#include <orea/engine/sensitivitystoragemanager.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/cube/cubeinterpretation.hpp>
 #include <ored/ored.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/tradefactory.hpp>
@@ -104,7 +105,7 @@ protected:
     //! get an instance of an aggregationScenarioData class
     virtual void initAggregationScenarioData();
     //! get an instance of a cube class
-    virtual void initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids);
+    virtual void initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids, const Size cubeDepth);
     //! build an NPV cube
     virtual void buildNPVCube();
     //! initialise NPV cube generation
@@ -141,7 +142,7 @@ protected:
     //! write out DIM reports
     void writeDIMReport();
     //! write out cube
-    void writeCube(boost::shared_ptr<NPVCube> cube);
+    void writeCube(boost::shared_ptr<NPVCube> cube, const std::string& cubeFileParam);
     //! write out scenarioData
     void writeScenarioData();
     //! write out base scenario
@@ -229,10 +230,12 @@ protected:
     boost::shared_ptr<DateGrid> grid_;
     Size samples_;
 
-    Size cubeDepth_, sensitivitySlots_;
-    bool storeFlows_, storeSensis_, useCloseOutLag_, useMporStickyDate_, sensitivities1stOrder_, sensitivities2ndOrder_;
-  
-    boost::shared_ptr<NPVCube> cube_;
+    Size cubeDepth_; // depth of cube_ defined below
+    bool storeFlows_, storeSensis_, useCloseOutLag_, useMporStickyDate_;
+    boost::shared_ptr<SensitivityStorageManager> sensitivityStorageManager_;
+
+    boost::shared_ptr<NPVCube> cube_;           // cube to store results on trade level (e.g. NPVs, flows)
+    boost::shared_ptr<NPVCube> cubeNettingSet_; // cube to store results on netting set level (e.g. dynamic sensis)
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
     boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
