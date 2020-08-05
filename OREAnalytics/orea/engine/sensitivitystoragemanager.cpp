@@ -29,7 +29,7 @@ using namespace QuantExt;
 using namespace ore::data;
 using namespace ore::analytics;
 
-namespace oreplus {
+namespace ore {
 namespace analytics {
 
 // result types, taken from qlep/pricingengines/discountingcurrencyswapenginedeltagamma.hpp
@@ -85,6 +85,8 @@ void CamSensitivityStorageManager::addSensitivities(boost::shared_ptr<ore::analy
                    (dateIndex != Null<Size>() && sampleIndex != Null<Size>()),
                "CamSensitivityStorageManager::addSensitivities(): date and sample index must be both null (write to T0 "
                "slice) or both not null");
+
+    QL_REQUIRE(cube, "CamSensitivityStorageManager::addSensitivites(): no cube to store results given");
 
     try {
 
@@ -142,13 +144,15 @@ void CamSensitivityStorageManager::addSensitivities(boost::shared_ptr<ore::analy
     }
 }
 
-boost::any CamSensitivityStorageManager::getSensitivities(boost::shared_ptr<ore::analytics::NPVCube>& cube,
+boost::any CamSensitivityStorageManager::getSensitivities(const boost::shared_ptr<ore::analytics::NPVCube>& cube,
                                                           const std::string& nettingSetId, const Size dateIndex,
                                                           const Size sampleIndex) const {
 
-    Array delta(N_);
-    Matrix gamma(N_, N_);
-    Real theta;
+    QL_REQUIRE(cube, "CamSensitivityStorageManager::getSensitivites(): no cube to retrieve results from");
+
+    Array delta(N_, 0.0);
+    Matrix gamma(N_, N_, 0.0);
+    Real theta = 0.0;
 
     // get data from cube
 
@@ -453,4 +457,4 @@ CamSensitivityStorageManager::processFxOption(boost::shared_ptr<ore::analytics::
 }
 
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore

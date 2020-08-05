@@ -30,7 +30,7 @@
 
 #include <boost/any.hpp>
 
-namespace oreplus {
+namespace ore {
 namespace analytics {
 
 class SensitivityStorageManager {
@@ -52,13 +52,14 @@ public:
 
     /*! Get the stored sensitivities for a netting set for T0 (dateIndex = sampleIndex = null) or the given date and
       sample. The return value varies for each concrete implementation.  */
-    virtual boost::any getSensitivities(boost::shared_ptr<ore::analytics::NPVCube>& cube,
+    virtual boost::any getSensitivities(const boost::shared_ptr<ore::analytics::NPVCube>& cube,
                                         const std::string& nettingSetId,
                                         const QuantLib::Size dateIndex = QuantLib::Null<QuantLib::Size>(),
                                         const QuantLib::Size sampleIndex = QuantLib::Null<QuantLib::Size>()) const = 0;
 };
 
 class CamSensitivityStorageManager : public SensitivityStorageManager {
+public:
     explicit CamSensitivityStorageManager(const std::vector<std::string>& camCurrencies,
                                           const QuantLib::Size nCurveSensitivities,
                                           const QuantLib::Size nVegaOptSensitivities,
@@ -102,7 +103,7 @@ class CamSensitivityStorageManager : public SensitivityStorageManager {
          All entries are in base ccy (= first ccy in camCurrencies), the fx deltas against base ccy.
     */
 
-    boost::any getSensitivities(boost::shared_ptr<ore::analytics::NPVCube>& cube, const std::string& nettingSetId,
+    boost::any getSensitivities(const boost::shared_ptr<ore::analytics::NPVCube>& cube, const std::string& nettingSetId,
                                 const QuantLib::Size dateIndex = QuantLib::Null<QuantLib::Size>(),
                                 const QuantLib::Size sampleIndex = QuantLib::Null<QuantLib::Size>()) const override;
 
@@ -130,4 +131,4 @@ private:
 // class SIMMSensitivityStorageManager : public SensitivityStorageManager {};
 
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore
