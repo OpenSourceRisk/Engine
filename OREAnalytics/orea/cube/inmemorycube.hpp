@@ -135,8 +135,8 @@ protected:
 template <typename T> class InMemoryCube1 : public InMemoryCubeBase<T> {
 public:
     //! ctor
-    InMemoryCube1(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples)
-        : InMemoryCubeBase<T>(asof, ids, dates, samples) {}
+    InMemoryCube1(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples, const T& t = T())
+        : InMemoryCubeBase<T>(asof, ids, dates, samples, t) {}
 
     //! default
     InMemoryCube1() {}
@@ -175,8 +175,9 @@ public:
 template <typename T> class InMemoryCubeN : public InMemoryCubeBase<vector<T>> {
 public:
     //! ctor
-    InMemoryCubeN(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples, Size depth)
-        : InMemoryCubeBase<vector<T>>(asof, ids, dates, samples, vector<T>(depth, T())) {}
+    InMemoryCubeN(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples, Size depth,
+                  const T& t = T())
+        : InMemoryCubeBase<vector<T>>(asof, ids, dates, samples, vector<T>(depth, t)) {}
 
     //! default
     InMemoryCubeN() {}
