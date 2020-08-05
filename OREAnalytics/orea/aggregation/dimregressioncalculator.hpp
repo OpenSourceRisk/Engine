@@ -61,9 +61,9 @@ public:
         //! Local regression band width in standard deviations of the regression variable
         Real localRegressionBandWidth = 0);
 
-    map<string, Real> unscaledCurrentDIM();
+    map<string, Real> unscaledCurrentDIM() override;
     void build() override;
-    void exportDimEvolution(ore::data::Report& dimEvolutionReport);
+    void exportDimEvolution(ore::data::Report& dimEvolutionReport) override;
 
     void exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
                              const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports);
