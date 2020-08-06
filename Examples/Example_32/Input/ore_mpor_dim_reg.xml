@@ -4,7 +4,7 @@
     <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
-    <Parameter name="logFile">log_dim.txt</Parameter>
+    <Parameter name="logFile">log_mpor_dim_reg.txt</Parameter>
     <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
@@ -56,6 +56,7 @@
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting_mpor.xml</Parameter>
+      <Parameter name="fullInitialCollateralisation">Y</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="hyperCube">Y</Parameter>
       <Parameter name="nettingSetCubeFile">cube_nettingset.dat</Parameter>
@@ -87,7 +88,7 @@
       <!-- If ddv=Y: Dynamic Delta Gamma VaR -->
       <Parameter name="ddvOrder">delta</Parameter><!-- delta, delta-gamma-normal -->
       <!-- If ddv=N: Regression -->
-      <Parameter name="dimRegressionOrder">2</Parameter>
+      <Parameter name="dimRegressionOrder">1</Parameter>
       <Parameter name="dimRegressors">EUR-EURIBOR-6M</Parameter>
       <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
       <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>

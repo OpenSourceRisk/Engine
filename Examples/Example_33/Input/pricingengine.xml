@@ -7,7 +7,7 @@
     <EngineParameters>
       <Parameter name="ComputeDelta">Y</Parameter>
       <Parameter name="ComputeGamma">Y</Parameter>
-      <Parameter name="BucketTimes">0.25,0.5,1.0,2.0,3.0,5.0,10.0,20.0</Parameter>
+      <Parameter name="BucketTimes">10.0</Parameter>
     </EngineParameters>
   </Product>
   <Product type="CrossCurrencySwap">
@@ -17,7 +17,7 @@
     <EngineParameters>
       <Parameter name="ComputeDelta">Y</Parameter>
       <Parameter name="ComputeGamma">Y</Parameter>
-      <Parameter name="BucketTimes">0.25,0.5,1.0,2.0,3.0,5.0,10.0,20.0</Parameter>
+      <Parameter name="BucketTimes">10.0</Parameter>
     </EngineParameters>
   </Product>
   <Product type="FxForward">
@@ -38,7 +38,7 @@
       <Parameter name="ComputeDeltaVega">Y</Parameter>
       <Parameter name="ComputeGamma">Y</Parameter>
       <Parameter name="BucketTimesDeltaGamma">10.0</Parameter>
-      <Parameter name="BucketTimesVega">0.25,0.5,1.0,2.0,3.0,5.0,10.0,20.0</Parameter>      
+      <Parameter name="BucketTimesVega">10.0</Parameter>      
     </EngineParameters>
   </Product>
 </PricingEngines>

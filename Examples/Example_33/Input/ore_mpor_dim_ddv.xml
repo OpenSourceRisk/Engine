@@ -4,7 +4,7 @@
     <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
-    <Parameter name="logFile">log_mpor.txt</Parameter>
+    <Parameter name="logFile">log_dim.txt</Parameter>
     <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
@@ -46,6 +46,12 @@
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
+      <Parameter name="storeSensitivities1stOrder">Y</Parameter>
+      <Parameter name="storeSensitivities2ndOrder">Y</Parameter>
+      <Parameter name="curveSensitivityGrid">10.0</Parameter>
+      <Parameter name="vegaOptSensitivityGrid">10.0</Parameter>
+      <Parameter name="vegaUndSensitivityGrid">10.0</Parameter>
+      <Parameter name="fxVegaSensitivityGrid">10.0</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
@@ -53,8 +59,6 @@
       <Parameter name="fullInitialCollateralisation">Y</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="hyperCube">Y</Parameter>
-      <Parameter name="nettingSetCubeFile">cube_nettingset.dat</Parameter>
-      <Parameter name="hyperNettingSetCube">Y</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
@@ -73,6 +77,25 @@
       <Parameter name="collateralFloor">N</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+      <!-- Dynamic Initial Margin -->
+      <Parameter name="dim">Y</Parameter>
+      <Parameter name="mva">Y</Parameter>
+      <Parameter name="ddv">Y</Parameter>
+      <Parameter name="dimQuantile">0.99</Parameter>
+      <Parameter name="dimHorizonCalendarDays">14</Parameter>
+      <!-- If ddv=Y: Dynamic Delta Gamma VaR -->
+      <Parameter name="ddvOrder">delta</Parameter><!-- delta, delta-gamma-normal, delta-gamma -->
+      <!-- If ddv=N: Regression -->
+      <Parameter name="dimRegressionOrder">1</Parameter>
+      <Parameter name="dimRegressors">EUR-EURIBOR-6M</Parameter>
+      <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
+      <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
+      <Parameter name="dimScaling">1.0</Parameter>
+      <!-- DIM Reporting -->
+      <Parameter name="dimEvolutionFile">dim_evolution.txt</Parameter>      
+      <Parameter name="dimRegressionFiles">dim_regression.txt</Parameter>
+      <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>      
+      <Parameter name="dimOutputGridPoints">0</Parameter>
     </Analytic>
     <Analytic type="initialMargin">
       <Parameter name="active">N</Parameter>
