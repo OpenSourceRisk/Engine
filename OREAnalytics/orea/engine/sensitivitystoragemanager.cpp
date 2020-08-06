@@ -18,10 +18,12 @@
 
 #include <orea/engine/sensitivitystoragemanager.hpp>
 
+#include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/utilities/parsers.hpp>
 
+#include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/currencyswap.hpp>
 
 using namespace QuantLib;
@@ -31,14 +33,6 @@ using namespace ore::analytics;
 
 namespace ore {
 namespace analytics {
-
-// result types, taken from qlep/pricingengines/discountingcurrencyswapenginedeltagamma.hpp
-struct CurrencyComparator {
-    bool operator()(const Currency& c1, const Currency& c2) const { return c1.code() < c2.code(); }
-};
-typedef std::map<Currency, Matrix, CurrencyComparator> result_type_matrix;
-typedef std::map<Currency, std::vector<Real>, CurrencyComparator> result_type_vector;
-typedef std::map<Currency, Real, CurrencyComparator> result_type_scalar;
 
 CamSensitivityStorageManager::CamSensitivityStorageManager(
     const std::vector<std::string>& camCurrencies, const Size nCurveSensitivities, const Size nVegaOptSensitivities,
@@ -100,6 +94,8 @@ void CamSensitivityStorageManager::addSensitivities(boost::shared_ptr<ore::analy
             std::tie(delta, gamma, theta) = processSwapSwaption(cube, trade, market);
         } else if (trade->tradeType() == "FxOption") {
             std::tie(delta, gamma, theta) = processFxOption(cube, trade, market);
+        } else if (trade->tradeType() == "FxForward") {
+            std::tie(delta, gamma, theta) = processFxForward(cube, trade, market);
         } else {
             QL_FAIL("trade type '" << trade->tradeType() << "' not supported");
         }
@@ -137,7 +133,6 @@ void CamSensitivityStorageManager::addSensitivities(boost::shared_ptr<ore::analy
             }
             ++idx;
         }
-
     } catch (std::exception& e) {
         WLOG("CamSensitivityStorageManager::addSensitivities(): failed to get sensitivities for trade '"
              << trade->id() << "': " << e.what() << " - not adding sensitivities to cube");
@@ -275,7 +270,7 @@ CamSensitivityStorageManager::processSwapSwaption(boost::shared_ptr<ore::analyti
                 for (Size jj = 0; jj <= ii; ++jj) {
                     Real tmp = (inputGamma[ii][jj] + inputGamma[n + ii][jj] + inputGamma[ii][n + jj] +
                                 inputGamma[n + ii][n + jj]) *
-                               fx;
+                               fx * tradeMultiplier;
                     gamma[ccyIndex * n + ii][ccyIndex * n + jj] += tmp;
                     if (ii != jj)
                         gamma[ccyIndex * n + jj][ccyIndex * n + ii] += tmp;
@@ -345,10 +340,10 @@ CamSensitivityStorageManager::processSwapSwaption(boost::shared_ptr<ore::analyti
                 for (Size jj = 0; jj <= ii; ++jj) {
                     Real tmp1 = (inputGamma1[ii][jj] + inputGamma1[n + ii][jj] + inputGamma1[ii][n + jj] +
                                  inputGamma1[n + ii][n + jj]) *
-                                fx1;
+                                fx1 * tradeMultiplier;
                     Real tmp2 = (inputGamma2[ii][jj] + inputGamma2[n + ii][jj] + inputGamma2[ii][n + jj] +
                                  inputGamma2[n + ii][n + jj]) *
-                                fx2;
+                                fx2 * tradeMultiplier;
                     gamma[ccyIndex1 * n + ii][ccyIndex1 * n + jj] += tmp1;
                     gamma[ccyIndex2 * n + ii][ccyIndex2 * n + jj] += tmp2;
                     if (ii != jj) {
@@ -472,6 +467,102 @@ CamSensitivityStorageManager::processFxOption(boost::shared_ptr<ore::analytics::
         if (domCcyIndex != 0) {
             gamma[n * c + domCcyIndex - 1][n * c + domCcyIndex - 1] =
                 (spotGamma * (forFx * forFx) / domFx - 2.0 * spotDelta * forFx + npv * domFx) * tradeMultiplier;
+        }
+    }
+    return std::make_tuple(delta, gamma, theta);
+}
+
+std::tuple<Array, Matrix, Real>
+CamSensitivityStorageManager::processFxForward(boost::shared_ptr<ore::analytics::NPVCube> cube,
+                                               const boost::shared_ptr<ore::data::Trade>& trade,
+                                               const boost::shared_ptr<Market>& market) const {
+
+    // just for convenience
+    const Size& n = nCurveSensitivities_;
+    const Size c = camCurrencies_.size();
+    const std::string& baseCcyCode = camCurrencies_[0];
+
+    // results to fill
+    Array delta(N_, 0.0);
+    Matrix gamma(N_, N_, 0.0);
+    Real theta = 0.0;
+
+    // get ql isntrument and trade multiplier
+    boost::shared_ptr<Instrument> qlInstr = trade->instrument()->qlInstrument();
+    Real tradeMultiplier = trade->instrument()->multiplier();
+
+    // cast to FxForward trade
+    auto fxFwdTrade = boost::dynamic_pointer_cast<ore::data::FxForward>(trade);
+    QL_REQUIRE(fxFwdTrade, "expected FxForward trade class, could not cast");
+
+    // handle expired instrument
+    if (qlInstr->isExpired())
+        return std::make_tuple(delta, gamma, theta);
+
+    Currency ccy1 = parseCurrency(fxFwdTrade->boughtCurrency()); // foreign
+    Currency ccy2 = parseCurrency(fxFwdTrade->soldCurrency());   // domestic
+    Size ccyIndex1 = getCcyIndex(fxFwdTrade->boughtCurrency());
+    Size ccyIndex2 = getCcyIndex(fxFwdTrade->soldCurrency());
+    Real fx1 = market->fxSpot(fxFwdTrade->boughtCurrency() + baseCcyCode)->value();
+    Real fx2 = market->fxSpot(fxFwdTrade->soldCurrency() + baseCcyCode)->value();
+
+    Real npv1 = qlInstr->result<Real>("npvFor");
+    Real npv2 = qlInstr->result<Real>("npvDom");
+
+    if (ccyIndex1 != 0) {
+        Real fxDelta1 = fxFwdTrade->boughtCurrency() != baseCcyCode ? tradeMultiplier * npv1 : 0.0;
+        delta[n * c + ccyIndex1 - 1] += fxDelta1 * fx1;
+    }
+    if (ccyIndex2 != 0) {
+        Real fxDelta2 = fxFwdTrade->soldCurrency() != baseCcyCode ? tradeMultiplier * npv2 : 0.0;
+        delta[n * c + ccyIndex2 - 1] += fxDelta2 * fx2;
+    }
+
+    std::vector<Real> deltaDiscount1 = qlInstr->result<result_type_vector>("deltaDiscount")[ccy1];
+    std::vector<Real> deltaForward1 = qlInstr->result<result_type_vector>("deltaForward")[ccy1];
+    std::vector<Real> deltaDiscount2 = qlInstr->result<result_type_vector>("deltaDiscount")[ccy2];
+    std::vector<Real> deltaForward2 = qlInstr->result<result_type_vector>("deltaForward")[ccy2];
+    for (Size ii = 0; ii < n; ++ii) {
+        delta[ccyIndex1 * n + ii] += (deltaDiscount1[ii] + deltaForward1[ii]) * tradeMultiplier * fx1;
+        delta[ccyIndex2 * n + ii] += (deltaDiscount1[ii] + deltaForward1[ii]) * tradeMultiplier * fx2;
+    }
+
+    if (use2ndOrderSensitivities_) {
+        Matrix inputGamma1 = qlInstr->result<result_type_matrix>("gamma")[ccy1];
+        Matrix inputGamma2 = qlInstr->result<result_type_matrix>("gamma")[ccy2];
+        // IR-IR gamma
+        for (Size ii = 0; ii < n; ++ii) {
+            for (Size jj = 0; jj <= ii; ++jj) {
+                Real tmp1 = (inputGamma1[ii][jj] + inputGamma1[n + ii][jj] + inputGamma1[ii][n + jj] +
+                             inputGamma1[n + ii][n + jj]) *
+                            fx1 * tradeMultiplier;
+                Real tmp2 = (inputGamma2[ii][jj] + inputGamma2[n + ii][jj] + inputGamma2[ii][n + jj] +
+                             inputGamma2[n + ii][n + jj]) *
+                            fx2 * tradeMultiplier;
+                gamma[ccyIndex1 * n + ii][ccyIndex1 * n + jj] += tmp1;
+                gamma[ccyIndex2 * n + ii][ccyIndex2 * n + jj] += tmp2;
+                if (ii != jj) {
+                    gamma[ccyIndex1 * n + jj][ccyIndex1 * n + ii] += tmp1;
+                    gamma[ccyIndex2 * n + jj][ccyIndex2 * n + ii] += tmp2;
+                }
+            }
+        }
+        // IR-FX gamma
+        if (ccyIndex1 != 0) {
+            for (Size ii = 0; ii < n; ++ii) {
+                // log(fx) delta
+                Real tmp1 = delta[ccyIndex1 * n + ii] * fx1;
+                gamma[n * c + ccyIndex1 - 1][ccyIndex1 * n + ii] += tmp1;
+                gamma[ccyIndex1 * n + ii][n * c + ccyIndex1 - 1] += tmp1;
+            }
+        }
+        if (ccyIndex2 != 0) {
+            for (Size ii = 0; ii < n; ++ii) {
+                // log(fx) delta
+                Real tmp2 = delta[ccyIndex2 * n + ii] * fx2;
+                gamma[n * c + ccyIndex2 - 1][ccyIndex2 * n + ii] += tmp2;
+                gamma[ccyIndex2 * n + ii][n * c + ccyIndex2 - 1] += tmp2;
+            }
         }
     }
     return std::make_tuple(delta, gamma, theta);
