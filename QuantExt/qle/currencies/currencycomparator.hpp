@@ -26,13 +26,13 @@
 #include <ql/currency.hpp>
 
 namespace QuantExt {
-  
+
 struct CurrencyComparator {
-  bool operator()(const QuantLib::Currency& c1, const QuantLib::Currency& c2) const {
-    std::string code1 = c1.empty() ? "" : c1.code();
-    std::string code2 = c2.empty() ? "" : c2.code();
-    return code1 < code2;
-  }
+    bool operator()(const QuantLib::Currency& c1, const QuantLib::Currency& c2) const {
+        std::string code1 = c1.empty() ? "" : c1.code();
+        std::string code2 = c2.empty() ? "" : c2.code();
+        return code1 < code2;
+    }
 };
 
-}
+} // namespace QuantExt
