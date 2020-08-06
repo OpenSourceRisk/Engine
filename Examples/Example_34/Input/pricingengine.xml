@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngineDeltaGamma</Engine>
+    <EngineParameters>
+      <Parameter name="ComputeDelta">Y</Parameter>
+      <Parameter name="ComputeGamma">Y</Parameter>
+      <Parameter name="BucketTimes">10.0</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CrossCurrencySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCrossCurrencySwapEngineDeltaGamma</Engine>
+    <EngineParameters>
+      <Parameter name="ComputeDelta">Y</Parameter>
+      <Parameter name="ComputeGamma">Y</Parameter>
+      <Parameter name="BucketTimes">10.0</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingFxForwardEngineDeltaGamma</Engine>
+    <EngineParameters>
+      <Parameter name="ComputeDelta">Y</Parameter>
+      <Parameter name="ComputeGamma">Y</Parameter>
+      <Parameter name="BucketTimes">10.0</Parameter>
+    </EngineParameters>      
+  </Product>
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngineDeltaGamma</Engine>
+    <EngineParameters>
+      <Parameter name="ComputeDeltaVega">Y</Parameter>
+      <Parameter name="ComputeGamma">Y</Parameter>
+      <Parameter name="BucketTimesDeltaGamma">10.0</Parameter>
+      <Parameter name="BucketTimesVega">10.0</Parameter>      
+    </EngineParameters>
+  </Product>
+</PricingEngines>
