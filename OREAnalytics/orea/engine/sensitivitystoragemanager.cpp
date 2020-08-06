@@ -547,12 +547,10 @@ CamSensitivityStorageManager::processFxForward(boost::shared_ptr<ore::analytics:
     }
 
     std::vector<Real> deltaDiscount1 = qlInstr->result<result_type_vector>("deltaDiscount")[ccy1];
-    std::vector<Real> deltaForward1 = qlInstr->result<result_type_vector>("deltaForward")[ccy1];
     std::vector<Real> deltaDiscount2 = qlInstr->result<result_type_vector>("deltaDiscount")[ccy2];
-    std::vector<Real> deltaForward2 = qlInstr->result<result_type_vector>("deltaForward")[ccy2];
     for (Size ii = 0; ii < n; ++ii) {
-        delta[ccyIndex1 * n + ii] += (deltaDiscount1[ii] + deltaForward1[ii]) * tradeMultiplier * fx1;
-        delta[ccyIndex2 * n + ii] += (deltaDiscount1[ii] + deltaForward1[ii]) * tradeMultiplier * fx2;
+        delta[ccyIndex1 * n + ii] += deltaDiscount1[ii] * tradeMultiplier * fx1;
+        delta[ccyIndex2 * n + ii] += deltaDiscount1[ii] * tradeMultiplier * fx2;
     }
 
     if (use2ndOrderSensitivities_) {
