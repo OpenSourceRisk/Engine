@@ -34,6 +34,10 @@ using namespace ore::analytics;
 namespace ore {
 namespace analytics {
 
+typedef std::map<Currency, Matrix, CurrencyComparator> result_type_matrix;
+typedef std::map<Currency, std::vector<Real>, CurrencyComparator> result_type_vector;
+typedef std::map<Currency, Real, CurrencyComparator> result_type_scalar;
+
 CamSensitivityStorageManager::CamSensitivityStorageManager(
     const std::vector<std::string>& camCurrencies, const Size nCurveSensitivities, const Size nVegaOptSensitivities,
     const Size nVegaUndSensitivities, const Size nFxVegaSensitivities, const Size firstCubeIndexToUse,
