@@ -465,12 +465,17 @@ CamSensitivityStorageManager::processFxOption(boost::shared_ptr<ore::analytics::
         // FX-FX gamma
         Real spotGamma = qlInstr->result<Real>("gammaSpot");
         if (forCcyIndex != 0) {
-            gamma[n * c + forCcyIndex - 1][n * c + forCcyIndex - 1] =
+            gamma[n * c + forCcyIndex - 1][n * c + forCcyIndex - 1] +=
                 (spotGamma * (forFx * forFx) / domFx + 2.0 * spotDelta * forFx + npv * domFx) * tradeMultiplier;
         }
         if (domCcyIndex != 0) {
-            gamma[n * c + domCcyIndex - 1][n * c + domCcyIndex - 1] =
+            gamma[n * c + domCcyIndex - 1][n * c + domCcyIndex - 1] +=
                 (spotGamma * (forFx * forFx) / domFx - 2.0 * spotDelta * forFx + npv * domFx) * tradeMultiplier;
+        }
+        if (forCcyIndex !=0 && domCcyIndex !=0) {
+            Real tmp = (-spotGamma * (forFx * forFx) / domFx + npv * domFx) * tradeMultiplier;
+            gamma[n * c + domCcyIndex - 1][n * c + forCcyIndex - 1] += tmp;
+            gamma[n * c + forCcyIndex - 1][n * c + domCcyIndex - 1] += tmp;
         }
     }
     return std::make_tuple(delta, gamma, theta);
