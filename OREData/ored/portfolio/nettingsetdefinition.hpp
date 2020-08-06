@@ -69,8 +69,8 @@ public:
                          const string& marginPostFreq, // e.g. "1D", "2W", "3M", "4Y"
                          const string& mpr,            // e.g. "1D", "2W", "3M", "4Y"
                          const Real& collatSpreadPay, const Real& collatSpreadRcv,
-                         const vector<string>& eligCollatCcys, //! vector of three letter ISO codes
-                         const Real& riskWeight = QuantLib::Null<Real>()); //SA-CCR risk weight
+                         const vector<string>& eligCollatCcys, // vector of three letter ISO codes
+                         const Real& riskWeight = QuantLib::Null<Real>()); // SA-CCR risk weight
     /*!
       loads NettingSetDefinition object from XML
     */
