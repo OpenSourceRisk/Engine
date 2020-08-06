@@ -386,75 +386,94 @@ CamSensitivityStorageManager::processFxOption(boost::shared_ptr<ore::analytics::
 
     // just for convenience
     const Size& n = nCurveSensitivities_;
-    const Size& u = nVegaOptSensitivities_;
-    const Size& v = nVegaUndSensitivities_;
-    const Size& w = nFxVegaSensitivities_;
     const Size c = camCurrencies_.size();
+    const std::string& baseCcyCode = camCurrencies_[0];
 
     // results to fill
     Array delta(N_, 0.0);
     Matrix gamma(N_, N_, 0.0);
     Real theta = 0.0;
 
-    // FIXME dom is not necessarily base ccy!
     boost::shared_ptr<FxOption> fxOpt = boost::dynamic_pointer_cast<FxOption>(trade);
-
     boost::shared_ptr<Instrument> qlInstr = fxOpt->instrument()->qlInstrument();
+
+    // handle expired trade
     if (qlInstr->isExpired())
         return std::make_tuple(delta, gamma, theta);
+
     Real tradeMultiplier = fxOpt->instrument()->multiplier();
 
-    Currency ccy = parseCurrency(fxOpt->boughtCurrency());
+    Currency forCcy = parseCurrency(fxOpt->boughtCurrency());
     Currency domCcy = parseCurrency(fxOpt->soldCurrency());
-    Size ccyIndex = getCcyIndex(fxOpt->boughtCurrency());
+    Size forCcyIndex = getCcyIndex(fxOpt->boughtCurrency());
     Size domCcyIndex = getCcyIndex(fxOpt->soldCurrency());
-    Real fx = market->fxSpot(fxOpt->boughtCurrency() + fxOpt->soldCurrency())->value();
-    QL_REQUIRE(ccyIndex != 0, "FX Option: foreign currency is equal to base simulation currency");
-    QL_REQUIRE(domCcyIndex == 0, "FX Option: domestic currency must be equal to base simulation currency");
-    // log(fx) delta, i.e. multiply by fx
-    delta[n * c + ccyIndex - 1] += qlInstr->result<Real>("deltaSpot") * tradeMultiplier * fx;
+    Real forFx = market->fxSpot(fxOpt->boughtCurrency() + baseCcyCode)->value();
+    Real domFx = market->fxSpot(fxOpt->soldCurrency() + baseCcyCode)->value();
+
+    Real npv = qlInstr->NPV();
+    Real spotDelta = qlInstr->result<Real>("deltaSpot");
+    // log(fx) delta
+    if (forCcyIndex != 0) {
+        delta[n * c + forCcyIndex - 1] += (spotDelta * forFx + npv * domFx) * tradeMultiplier;
+    }
+    if (domCcyIndex != 0) {
+        delta[n * c + domCcyIndex - 1] += (-spotDelta * forFx + npv * domFx) * tradeMultiplier;
+    }
     // for ccy delta curve risk
     std::vector<Real> deltaDiv = qlInstr->result<std::vector<Real>>("deltaDividend");
     for (Size ii = 0; ii < n; ++ii) {
-        delta[ccyIndex * n + ii] += deltaDiv[ii] * tradeMultiplier * fx;
+        delta[forCcyIndex * n + ii] += deltaDiv[ii] * tradeMultiplier * domFx;
     }
     // dom ccy delta curve risk
     std::vector<Real> deltaRate = qlInstr->result<std::vector<Real>>("deltaRate");
     for (Size ii = 0; ii < n; ++ii) {
-        delta[ii] += deltaRate[ii] * tradeMultiplier;
+        delta[domCcyIndex * n + ii] += deltaRate[ii] * tradeMultiplier * domFx;
     }
     if (use2ndOrderSensitivities_) {
-        Real spotGamma = qlInstr->result<Real>("gammaSpot");
-        Matrix inputGamma = qlInstr->result<Matrix>("gamma");
-        std::vector<Real> spotRateGamma = qlInstr->result<std::vector<Real>>("gammaSpotRate");
-        std::vector<Real> spotDivGamma = qlInstr->result<std::vector<Real>>("gammaSpotDiv");
+        Matrix irGamma = qlInstr->result<Matrix>("gamma");
         // IR-IR gamma
+        Real mult = domFx * tradeMultiplier;
         for (Size ii = 0; ii < n; ++ii) {
-            for (Size jj = 0; jj <= ii; ++jj) {
-                gamma[ccyIndex * n + ii][ccyIndex * n + jj] += inputGamma[n + ii][n + jj];
-                gamma[ii][jj] += inputGamma[ii][jj];
-                gamma[ccyIndex * n + ii][jj] += inputGamma[n + ii][jj];
-                gamma[ii][ccyIndex * n + jj] += inputGamma[ii][n + jj];
-                if (ii != jj) {
-                    gamma[ccyIndex * n + jj][ccyIndex * n + ii] += inputGamma[n + ii][n + jj];
-                    gamma[jj][ii] += inputGamma[ii][jj];
-                    gamma[jj][ccyIndex * n + ii] += inputGamma[n + ii][jj];
-                    gamma[ccyIndex * n + jj][ii] += inputGamma[ii][n + jj];
-                }
+            for (Size jj = 0; jj < n; ++jj) {
+                gamma[domCcyIndex * n + ii][domCcyIndex * n + jj] += irGamma[ii][jj] * mult;
+                gamma[domCcyIndex * n + ii][forCcyIndex * n + jj] += irGamma[ii][n + jj] * mult;
+                gamma[forCcyIndex * n + ii][domCcyIndex * n + jj] += irGamma[n + ii][jj] * mult;
+                gamma[forCcyIndex * n + ii][forCcyIndex * n + jj] += irGamma[n + ii][n + jj] * mult;
             }
         }
         // IR-FX gamma
+        std::vector<Real> spotRateGamma = qlInstr->result<std::vector<Real>>("gammaSpotRate");
+        std::vector<Real> spotDivGamma = qlInstr->result<std::vector<Real>>("gammaSpotDiv");
         for (Size ii = 0; ii < n; ++ii) {
             // log(fx) delta
-            gamma[n * c + ccyIndex - 1][ccyIndex * n + ii] += spotDivGamma[ii] * fx;
-            gamma[n * c + ccyIndex - 1][ii] += spotRateGamma[ii] * fx;
-            gamma[ccyIndex * n + ii][n * c + ccyIndex - 1] += spotDivGamma[ii] * fx;
-            gamma[ii][n * c + ccyIndex - 1] += spotRateGamma[ii] * fx;
+            if (forCcyIndex != 0) {
+                Real tmp1 = (spotDivGamma[ii] * forFx + deltaDiv[ii] * domFx) * tradeMultiplier;
+                Real tmp2 = (spotRateGamma[ii] * forFx + deltaRate[ii] * domFx) * tradeMultiplier;
+                gamma[n * c + forCcyIndex - 1][forCcyIndex * n + ii] += tmp1;
+                gamma[forCcyIndex * n + ii][n * c + forCcyIndex - 1] += tmp1;
+                gamma[n * c + forCcyIndex - 1][domCcyIndex * n + ii] += tmp2;
+                gamma[domCcyIndex * n + ii][n * c + forCcyIndex - 1] += tmp2;
+            }
+            if (domCcyIndex != 0) {
+                Real tmp1 = (-spotDivGamma[ii] * forFx + deltaDiv[ii] * domFx) * tradeMultiplier;
+                Real tmp2 = (-spotRateGamma[ii] * forFx + deltaRate[ii] * domFx) * tradeMultiplier;
+                gamma[n * c + domCcyIndex - 1][forCcyIndex * n + ii] += tmp1;
+                gamma[forCcyIndex * n + ii][n * c + domCcyIndex - 1] += tmp1;
+                gamma[n * c + domCcyIndex - 1][domCcyIndex * n + ii] += tmp2;
+                gamma[domCcyIndex * n + ii][n * c + domCcyIndex - 1] += tmp2;
+            }
         }
         // FX-FX gamma
-        gamma[n * c + ccyIndex - 1][n * c + ccyIndex - 1] = spotGamma * fx * fx;
+        Real spotGamma = qlInstr->result<Real>("gammaSpot");
+        if (forCcyIndex != 0) {
+            gamma[n * c + forCcyIndex - 1][n * c + forCcyIndex - 1] =
+                (spotGamma * (forFx * forFx) / domFx + 2.0 * spotDelta * forFx + npv * domFx) * tradeMultiplier;
+        }
+        if (domCcyIndex != 0) {
+            gamma[n * c + domCcyIndex - 1][n * c + domCcyIndex - 1] =
+                (spotGamma * (forFx * forFx) / domFx - 2.0 * spotDelta * forFx + npv * domFx) * tradeMultiplier;
+        }
     }
-
     return std::make_tuple(delta, gamma, theta);
 }
 
