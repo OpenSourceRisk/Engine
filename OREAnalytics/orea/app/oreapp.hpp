@@ -232,7 +232,7 @@ protected:
     boost::shared_ptr<DateGrid> grid_;
     Size samples_;
 
-    Size cubeDepth_; // depth of cube_ defined below
+    Size cubeDepth_; // depth of cube_ defined below (i.e. not of nettingSetCube_, to be clear)
     bool storeFlows_, storeSensis_, useCloseOutLag_, useMporStickyDate_;
     boost::shared_ptr<SensitivityStorageManager> sensitivityStorageManager_;
 
