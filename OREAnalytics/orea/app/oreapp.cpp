@@ -826,10 +826,14 @@ void OREApp::initialiseSensitivityStorageManager() {
             parseListOfValues<Time>(params_->get("simulation", "fxVegaSensitivityGrid"), &parseReal);
         Size n = curveSensitivityGrid.size(), u = vegaOptSensitivityGrid.size(), v = vegaUndSensitivityGrid.size(),
              w = fxVegaSensitivityGrid.size();
+        // get model data so that we can pass the CAM currencies to the sensitivity storage manager
+        // at the moment (IR-FX coverage only for LGM and FX BS components) this is sufficient
+        string simulationConfigFile = inputPath_ + "/" + params_->get("simulation", "simulationConfigFile");
+        boost::shared_ptr<CrossAssetModelData> modelData = boost::make_shared<CrossAssetModelData>();
+        modelData->fromFile(simulationConfigFile);
         // first cube index can be set to 0, since at the moment we only use the netting-set cube for sensi storage
-        boost::shared_ptr<ScenarioSimMarketParameters> simMarketData = getSimMarketData();
-        sensitivityStorageManager_ = boost::make_shared<CamSensitivityStorageManager>(simMarketData->ccys(), n, u, v, w,
-                                                                                      0, sensitivities2ndOrder);
+        sensitivityStorageManager_ = boost::make_shared<CamSensitivityStorageManager>(modelData->currencies(), n, u, v,
+                                                                                      w, 0, sensitivities2ndOrder);
     }
 }
 
