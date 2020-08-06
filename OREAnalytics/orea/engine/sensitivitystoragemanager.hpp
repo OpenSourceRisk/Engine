@@ -60,6 +60,8 @@ public:
 
 class CamSensitivityStorageManager : public SensitivityStorageManager {
 public:
+    /*! Assuming IR-FX coverage only with LGM1F and FXBS model components, for this the cam currencies list is sufficient
+      to store the sensitivities in a suitable layout */
     explicit CamSensitivityStorageManager(const std::vector<std::string>& camCurrencies,
                                           const QuantLib::Size nCurveSensitivities,
                                           const QuantLib::Size nVegaOptSensitivities,
