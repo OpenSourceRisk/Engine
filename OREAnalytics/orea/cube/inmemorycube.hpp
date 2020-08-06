@@ -100,10 +100,10 @@ public:
 
 protected:
     void check(Size i, Size j, Size k, Size d) const {
-        QL_REQUIRE(i < numIds(), "Out of bounds on ids (i=" << i << ")");
-        QL_REQUIRE(j < numDates(), "Out of bounds on dates (j=" << j << ")");
-        QL_REQUIRE(k < samples(), "Out of bounds on samples (k=" << k << ")");
-        QL_REQUIRE(d < depth(), "Out of bounds on depth(d=" << d << ")");
+        QL_REQUIRE(i < numIds(), "Out of bounds on ids (i=" << i << ", numIds=" << numIds() << ")");
+        QL_REQUIRE(j < numDates(), "Out of bounds on dates (j=" << j << ", numDates=" << numDates() << ")");
+        QL_REQUIRE(k < samples(), "Out of bounds on samples (k=" << k << ", samples=" << samples() << ")");
+        QL_REQUIRE(d < depth(), "Out of bounds on depth (d=" << d << ", depth=" << depth() << ")");
     }
 
 private:
@@ -135,7 +135,8 @@ protected:
 template <typename T> class InMemoryCube1 : public InMemoryCubeBase<T> {
 public:
     //! ctor
-    InMemoryCube1(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples, const T& t = T())
+    InMemoryCube1(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples,
+                  const T& t = T())
         : InMemoryCubeBase<T>(asof, ids, dates, samples, t) {}
 
     //! default
