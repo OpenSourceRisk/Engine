@@ -18,6 +18,8 @@ void SensitivityCalculator::calculate(const boost::shared_ptr<Trade>& trade, Siz
                                       boost::shared_ptr<NPVCube>& outputCube,
                                       boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date,
                                       Size dateIndex, Size sample, bool isCloseOut) {
+    if (isCloseOut)
+        return;
     sensitivityStorageManager_->addSensitivities(outputCubeNettingSet, trade, simMarket, dateIndex, sample);
 }
 
