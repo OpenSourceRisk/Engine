@@ -412,11 +412,13 @@ CamSensitivityStorageManager::processFxOption(boost::shared_ptr<ore::analytics::
     Real npv = qlInstr->NPV();
     Real spotDelta = qlInstr->result<Real>("deltaSpot");
     // log(fx) delta
-    if (forCcyIndex != 0) {
+    if (forCcyIndex != 0 && domCcyIndex != 0) {
         delta[n * c + forCcyIndex - 1] += (spotDelta * forFx + npv * domFx) * tradeMultiplier;
-    }
-    if (domCcyIndex != 0) {
         delta[n * c + domCcyIndex - 1] += (-spotDelta * forFx + npv * domFx) * tradeMultiplier;
+    } else if (forCcyIndex != 0) {
+        delta[n * c + forCcyIndex - 1] = spotDelta;
+    } else {
+        delta[n * c + domCcyIndex - 1] = -spotDelta + npv * domFx;
     }
     // for ccy delta curve risk
     std::vector<Real> deltaDiv = qlInstr->result<std::vector<Real>>("deltaDividend");
@@ -445,17 +447,33 @@ CamSensitivityStorageManager::processFxOption(boost::shared_ptr<ore::analytics::
         std::vector<Real> spotDivGamma = qlInstr->result<std::vector<Real>>("gammaSpotDiv");
         for (Size ii = 0; ii < n; ++ii) {
             // log(fx) delta
-            if (forCcyIndex != 0) {
+            if (forCcyIndex != 0 && domCcyIndex != 0) {
+                // forCcyIndex
                 Real tmp1 = (spotDivGamma[ii] * forFx + deltaDiv[ii] * domFx) * tradeMultiplier;
                 Real tmp2 = (spotRateGamma[ii] * forFx + deltaRate[ii] * domFx) * tradeMultiplier;
                 gamma[n * c + forCcyIndex - 1][forCcyIndex * n + ii] += tmp1;
                 gamma[forCcyIndex * n + ii][n * c + forCcyIndex - 1] += tmp1;
                 gamma[n * c + forCcyIndex - 1][domCcyIndex * n + ii] += tmp2;
                 gamma[domCcyIndex * n + ii][n * c + forCcyIndex - 1] += tmp2;
-            }
-            if (domCcyIndex != 0) {
-                Real tmp1 = (-spotDivGamma[ii] * forFx + deltaDiv[ii] * domFx) * tradeMultiplier;
-                Real tmp2 = (-spotRateGamma[ii] * forFx + deltaRate[ii] * domFx) * tradeMultiplier;
+                // domCcyIndex
+                Real tmp3 = (-spotDivGamma[ii] * forFx + deltaDiv[ii] * domFx) * tradeMultiplier;
+                Real tmp4 = (-spotRateGamma[ii] * forFx + deltaRate[ii] * domFx) * tradeMultiplier;
+                gamma[n * c + domCcyIndex - 1][forCcyIndex * n + ii] += tmp3;
+                gamma[forCcyIndex * n + ii][n * c + domCcyIndex - 1] += tmp3;
+                gamma[n * c + domCcyIndex - 1][domCcyIndex * n + ii] += tmp4;
+                gamma[domCcyIndex * n + ii][n * c + domCcyIndex - 1] += tmp4;
+            } else if (forCcyIndex != 0) {
+                // forCcyIndex
+                Real tmp1 = spotDivGamma[ii] * tradeMultiplier;
+                Real tmp2 = spotRateGamma[ii] * tradeMultiplier;
+                gamma[n * c + forCcyIndex - 1][forCcyIndex * n + ii] += tmp1;
+                gamma[forCcyIndex * n + ii][n * c + forCcyIndex - 1] += tmp1;
+                gamma[n * c + forCcyIndex - 1][domCcyIndex * n + ii] += tmp2;
+                gamma[domCcyIndex * n + ii][n * c + forCcyIndex - 1] += tmp2;
+            } else {
+                // domCcyIndex
+                Real tmp1 = spotDivGamma[ii] + deltaDiv[ii] * domFx;
+                Real tmp2 = spotRateGamma[ii] + deltaRate[ii] * domFx;
                 gamma[n * c + domCcyIndex - 1][forCcyIndex * n + ii] += tmp1;
                 gamma[forCcyIndex * n + ii][n * c + domCcyIndex - 1] += tmp1;
                 gamma[n * c + domCcyIndex - 1][domCcyIndex * n + ii] += tmp2;
@@ -464,18 +482,19 @@ CamSensitivityStorageManager::processFxOption(boost::shared_ptr<ore::analytics::
         }
         // FX-FX gamma
         Real spotGamma = qlInstr->result<Real>("gammaSpot");
-        if (forCcyIndex != 0) {
+        if (forCcyIndex != 0 && domCcyIndex != 0) {
             gamma[n * c + forCcyIndex - 1][n * c + forCcyIndex - 1] +=
                 (spotGamma * (forFx * forFx) / domFx + 2.0 * spotDelta * forFx + npv * domFx) * tradeMultiplier;
-        }
-        if (domCcyIndex != 0) {
             gamma[n * c + domCcyIndex - 1][n * c + domCcyIndex - 1] +=
                 (spotGamma * (forFx * forFx) / domFx - 2.0 * spotDelta * forFx + npv * domFx) * tradeMultiplier;
-        }
-        if (forCcyIndex !=0 && domCcyIndex !=0) {
             Real tmp = (-spotGamma * (forFx * forFx) / domFx + npv * domFx) * tradeMultiplier;
             gamma[n * c + domCcyIndex - 1][n * c + forCcyIndex - 1] += tmp;
             gamma[n * c + forCcyIndex - 1][n * c + domCcyIndex - 1] += tmp;
+        } else if (forCcyIndex != 0) {
+            gamma[n * c + forCcyIndex - 1][n * c + forCcyIndex - 1] += spotGamma;
+        } else {
+            gamma[n * c + domCcyIndex - 1][n * c + domCcyIndex - 1] +=
+                spotGamma / domFx - spotDelta / domFx + npv * domFx;
         }
     }
     return std::make_tuple(delta, gamma, theta);
