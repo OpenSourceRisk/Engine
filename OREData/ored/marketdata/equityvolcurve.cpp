@@ -319,8 +319,6 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                                                   return close_enough(parseReal(x), absoluteStrike->strike());
                                               });
                         strikeRelevant = i != vssc.strikes().end();
-                    } else {
-                        strikeRelevant = true;
                     }
                     quoteRelevant = strikeRelevant && expiryRelevant;
 
