@@ -282,7 +282,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 // We only want overlapping expiry/strike pairs
                 for (Size i = 0; i < calls.size(); i++) {
                     for (Size j = 0; j < puts.size(); j++) {
-                        if (calls[i]->expiry() == puts[j]->expiry() && calls[i]->strike() == puts[j]->strike()) {
+                        if (calls[i]->expiry() == puts[j]->expiry() && *calls[i]->strike() == *puts[j]->strike()) {
                             TLOG("Adding Call and Put for strike/expiry pair : " << calls[i]->expiry() << "/"
                                                                                  << calls[i]->strike());
                             callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
