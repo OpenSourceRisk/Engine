@@ -100,7 +100,6 @@ public:
         notional_ = Null<Real>();
         notionalCurrency_ = "";
         maturity_ = Date();
-        tradeActions_.clear();
         requiredFixings_.clear();
     }
 
