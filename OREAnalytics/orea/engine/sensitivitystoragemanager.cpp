@@ -564,12 +564,8 @@ CamSensitivityStorageManager::processFxForward(boost::shared_ptr<ore::analytics:
         // IR-IR gamma
         for (Size ii = 0; ii < n; ++ii) {
             for (Size jj = 0; jj <= ii; ++jj) {
-                Real tmp1 = (inputGamma1[ii][jj] + inputGamma1[n + ii][jj] + inputGamma1[ii][n + jj] +
-                             inputGamma1[n + ii][n + jj]) *
-                            fx1 * tradeMultiplier;
-                Real tmp2 = (inputGamma2[ii][jj] + inputGamma2[n + ii][jj] + inputGamma2[ii][n + jj] +
-                             inputGamma2[n + ii][n + jj]) *
-                            fx2 * tradeMultiplier;
+                Real tmp1 = inputGamma1[ii][jj] * fx1 * tradeMultiplier;
+                Real tmp2 = inputGamma2[ii][jj] * fx2 * tradeMultiplier;
                 gamma[ccyIndex1 * n + ii][ccyIndex1 * n + jj] += tmp1;
                 gamma[ccyIndex2 * n + ii][ccyIndex2 * n + jj] += tmp2;
                 if (ii != jj) {
