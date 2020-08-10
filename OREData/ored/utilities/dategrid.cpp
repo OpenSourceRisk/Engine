@@ -225,7 +225,7 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
             Date c = calendar_.advance(dates_[i], p);
             if (i < dates_.size() - 1) {
                 QL_REQUIRE(c < dates_[i + 1],
-                           "close out date " << c << " lies no before next grid date " << dates_[i + 1]);
+                           "close out date " << c << " does not lie before next grid date " << dates_[i + 1]);
             }
             tmpDates.push_back(dates_[i]);
             tmpDates.push_back(c);
