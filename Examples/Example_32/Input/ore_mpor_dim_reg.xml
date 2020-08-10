@@ -90,7 +90,8 @@
       <!-- If ddv=N: Regression -->
       <Parameter name="dimRegressionOrder">1</Parameter>
       <Parameter name="dimRegressors"></Parameter>
-      <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
+      <!-- if zero, skip local regression -->
+      <Parameter name="dimLocalRegressionEvaluations">0</Parameter>
       <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
       <Parameter name="dimScaling">1.0</Parameter>
       <!-- DIM Reporting -->
