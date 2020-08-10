@@ -88,7 +88,7 @@
       <!-- If ddv=N: Regression -->
       <Parameter name="dimRegressionOrder">1</Parameter>
       <Parameter name="dimRegressors">USD</Parameter>
-      <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
+      <Parameter name="dimLocalRegressionEvaluations">0</Parameter>
       <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
       <Parameter name="dimScaling">1.0</Parameter>
       <!-- DIM Reporting -->
