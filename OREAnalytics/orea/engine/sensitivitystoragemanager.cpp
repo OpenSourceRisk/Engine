@@ -147,6 +147,11 @@ boost::any CamSensitivityStorageManager::getSensitivities(const boost::shared_pt
                                                           const std::string& nettingSetId, const Size dateIndex,
                                                           const Size sampleIndex) const {
 
+    QL_REQUIRE((dateIndex == Null<Size>() && sampleIndex == Null<Size>()) ||
+                   (dateIndex != Null<Size>() && sampleIndex != Null<Size>()),
+               "CamSensitivityStorageManager::getSensitivities(): date and sample index must be both null (write to T0 "
+               "slice) or both not null");
+
     QL_REQUIRE(cube, "CamSensitivityStorageManager::getSensitivites(): no cube to retrieve results from");
 
     Array delta(N_, 0.0);
