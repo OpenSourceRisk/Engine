@@ -129,7 +129,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
 	    accumulator_set<double, stats<tag::mean, tag::variance>> accDiff;
             accumulator_set<double, stats<tag::mean>> accOneOverNumeraire;
             for (Size k = 0; k < samples; ++k) {
-	        Real numDefault = cubeInterpretation_->getDefaultAggrionScenarioData(
+                Real numDefault = cubeInterpretation_->getDefaultAggrionScenarioData(
                     scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
                 Real numCloseOut = cubeInterpretation_->getCloseOutAggrionScenarioData(
                     scenarioData_, AggregationScenarioDataType::Numeraire, j, k);
@@ -233,7 +233,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
                     nettingSetExpectedDIM_[n][j] += dim / samples;
 
                     // Evaluate the Kernel regression for a subset of the samples only (performance)
-                    if (k % localRegressionSamples == 0)
+                    if (localRegressionEvaluations_ > 0 && (k % localRegressionSamples == 0))
                         // nettingSetLocalDIM_[n][j][k] = lr.standardDeviation(regressor[0]) * scalingFactor / num1;
                         nettingSetLocalDIM_[n][j][k] = lr.standardDeviation(regressor[0]) * scalingFactor / numDefault;
                     else
