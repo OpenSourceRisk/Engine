@@ -74,6 +74,8 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                 buildVolatility(asof, config, *vcc, loader);
             } else if (auto vssc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc)) {
                 buildVolatility(asof, config, *vssc, loader, eqIndex);
+            } else if (auto vmsc = boost::dynamic_pointer_cast<VolatilityMoneynessSurfaceConfig>(vc)) {
+                buildVolatility(asof, config, *vmsc, loader, eqIndex);
             } else {
                 QL_FAIL("Unexpected VolatilityConfig in EquityVolatilityConfig");
             }
@@ -292,8 +294,6 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         vector<Real> callStrikes, putStrikes;
         vector<Real> callData, putData;
         vector<Date> callExpiries, putExpiries;
-        // we allow for moneyness strikes as an alternative to absolute strikes
-        boost::optional<MoneynessStrike::Type> moneynessType;
 
         // In case of wild card we need the following granularity within the mkt data loop
         bool strikeRelevant = strikesWc;
@@ -303,7 +303,6 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         // We loop over all market data, looking for quotes that match the configuration
         Size callQuotesAdded = 0;
         Size putQuotesAdded = 0;
-        bool foundAbsoluteStrike = false, foundMoneynessStrike = false;
         for (auto& md : loader.loadQuotes(asof)) {
             // skip irrelevant data
             if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION &&
@@ -312,8 +311,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                 // todo - for now we will ignore ATM, ATMF quotes both for explicit strikes and in case of strike wild
                 // card. ----
                 auto absoluteStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
-                auto moneynessStrike = boost::dynamic_pointer_cast<MoneynessStrike>(q->strike());
-                if ((absoluteStrike || moneynessStrike) && (q->eqName() == vc.curveID() && q->ccy() == vc.ccy())) {
+                if (absoluteStrike && (q->eqName() == vc.curveID() && q->ccy() == vc.ccy())) {
                     if (!expiriesWc) {
                         auto j = std::find(vssc.expiries().begin(), vssc.expiries().end(), q->expiry());
                         expiryRelevant = j != vssc.expiries().end();
@@ -336,38 +334,12 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                         QL_REQUIRE(tmpDate > asof,
                                    "Option quote for a past date (" << ore::data::to_string(tmpDate) << ")");
                         if (q->isCall()) {
-                            if (absoluteStrike) {
-                                callStrikes.push_back(absoluteStrike->strike());
-                                foundAbsoluteStrike = true;
-                            } else {
-                                callStrikes.push_back(moneynessStrike->moneyness());
-                                if (moneynessType) {
-                                    QL_REQUIRE(
-                                        *moneynessType == moneynessStrike->type(),
-                                        "found Spot and Forward moneyness quotes in same surface, this is not allowed");
-                                } else {
-                                    moneynessType = moneynessStrike->type();
-                                }
-                                foundMoneynessStrike = true;
-                            }
+                            callStrikes.push_back(absoluteStrike->strike());
                             callData.push_back(q->quote()->value());
                             callExpiries.push_back(tmpDate);
                             callQuotesAdded++;
                         } else {
-                            if (absoluteStrike) {
-                                putStrikes.push_back(absoluteStrike->strike());
-                                foundAbsoluteStrike = true;
-                            } else {
-                                putStrikes.push_back(moneynessStrike->moneyness());
-                                if (moneynessType) {
-                                    QL_REQUIRE(
-                                        *moneynessType == moneynessStrike->type(),
-                                        "found Spot and Forward moneyness quotes in same surface, this is not allowed");
-                                } else {
-                                    moneynessType = moneynessStrike->type();
-                                }
-                                foundMoneynessStrike = true;
-                            }
+                            putStrikes.push_back(absoluteStrike->strike());
                             putData.push_back(q->quote()->value());
                             putExpiries.push_back(tmpDate);
                             putQuotesAdded++;
@@ -376,14 +348,6 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                 }
             }
         }
-
-        // we do not allow for mixing of moneyness and absolute strikes
-        QL_REQUIRE(!foundAbsoluteStrike || !foundMoneynessStrike,
-                   "found both absolute and moneyness strikes in one surface");
-
-        // for moneyness quotes we only support volatilities at the moment, no prices
-        QL_REQUIRE(!moneynessType || vc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL,
-                   "moneyness quotes are only allowed for volatilities");
 
         QL_REQUIRE(callQuotesAdded > 0, "No valid equity volatility quotes provided");
         bool callSurfaceOnly = false;
@@ -507,6 +471,12 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     } catch (...) {
         QL_FAIL("equity vol curve building failed: unknown error");
     }
+}
+
+void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConfig& vc,
+                                     const VolatilityMoneynessSurfaceConfig& vmsc, const Loader& loader,
+                                     const QuantLib::Handle<EquityIndex>& eqIndex) {
+
 }
 
 void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
