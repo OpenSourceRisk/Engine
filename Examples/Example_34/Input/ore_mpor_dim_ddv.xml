@@ -48,10 +48,10 @@
       <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
       <Parameter name="storeSensitivities1stOrder">Y</Parameter>
       <Parameter name="storeSensitivities2ndOrder">Y</Parameter>
-      <Parameter name="curveSensitivityGrid">10.0</Parameter>
-      <Parameter name="vegaOptSensitivityGrid">10.0</Parameter>
-      <Parameter name="vegaUndSensitivityGrid">10.0</Parameter>
-      <Parameter name="fxVegaSensitivityGrid">10.0</Parameter>
+      <Parameter name="curveSensitivityGrid">1.0,3.0,5.0,7.0,10.0</Parameter>
+      <Parameter name="vegaOptSensitivityGrid">1.0,3.0,5.0,7.0,10.0</Parameter>
+      <Parameter name="vegaUndSensitivityGrid">1.0,3.0,5.0,7.0,10.0</Parameter>
+      <Parameter name="fxVegaSensitivityGrid">1.0,3.0,5.0,7.0,10.0</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
@@ -86,7 +86,7 @@
       <Parameter name="dimQuantile">0.99</Parameter>
       <Parameter name="dimHorizonCalendarDays">14</Parameter>
       <!-- If ddv=Y: Dynamic Delta Gamma VaR -->
-      <Parameter name="ddvOrder">delta</Parameter><!-- delta, delta-gamma-normal, delta-gamma -->
+      <Parameter name="ddvOrder">delta-gamma</Parameter><!-- delta, delta-gamma-normal, delta-gamma -->
       <!-- If ddv=N: Regression -->
       <Parameter name="dimRegressionOrder">1</Parameter>
       <Parameter name="dimRegressors">EUR-EURIBOR-6M</Parameter>
