@@ -1146,7 +1146,7 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
         }
     }
 
-    LOG("Loaded CurvesSpecs: success: " << countSuccess << ", error: " << countError);
+    DLOG("Loaded CurvesSpecs: success: " << countSuccess << ", error: " << countError);
 
     // output errors
 
