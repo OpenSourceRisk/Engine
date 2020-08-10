@@ -339,7 +339,7 @@ CamSensitivityStorageManager::processSwapSwaption(boost::shared_ptr<ore::analyti
         std::vector<Real> deltaForward2 = instr->result<result_type_vector>("deltaForward")[ccy2];
         for (Size ii = 0; ii < n; ++ii) {
             delta[ccyIndex1 * n + ii] += (deltaDiscount1[ii] + deltaForward1[ii]) * tradeMultiplier * fx1;
-            delta[ccyIndex2 * n + ii] += (deltaDiscount1[ii] + deltaForward1[ii]) * tradeMultiplier * fx2;
+            delta[ccyIndex2 * n + ii] += (deltaDiscount2[ii] + deltaForward2[ii]) * tradeMultiplier * fx2;
         }
         if (use2ndOrderSensitivities_) {
             Matrix inputGamma1 = instr->result<result_type_matrix>("gamma")[ccy1];
@@ -555,7 +555,7 @@ CamSensitivityStorageManager::processFxForward(boost::shared_ptr<ore::analytics:
     std::vector<Real> deltaDiscount2 = qlInstr->result<result_type_vector>("deltaDiscount")[ccy2];
     for (Size ii = 0; ii < n; ++ii) {
         delta[ccyIndex1 * n + ii] += deltaDiscount1[ii] * tradeMultiplier * fx1;
-        delta[ccyIndex2 * n + ii] += deltaDiscount1[ii] * tradeMultiplier * fx2;
+        delta[ccyIndex2 * n + ii] += deltaDiscount2[ii] * tradeMultiplier * fx2;
     }
 
     if (use2ndOrderSensitivities_) {
