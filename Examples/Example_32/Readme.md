@@ -1,10 +1,13 @@
-# Example 32
+# Example 32 - Swaps with VM and IM
 
 ## About
 This example demonstrates exposure calculation with Variation Margin (VM) taken
 into account as in Example 31, and additional posting of Initial Margin (IM).
 
-The portfolio contains a single at-the-money Swap in EUR, base currency is EUR.
+The simulation base currency is EUR. The portfolio contains either
+- a single at-the-money Swap in EUR (portfolio_eur.xml), or
+- a single currency swap in USD (portfolio_usd.xml), or
+- a single cross currency swap EUR/USD, non-resetting (portfolio_eurusd.xml)
 
 IM is modelled dynamically by
 a) regression as in Example 13

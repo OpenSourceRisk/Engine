@@ -353,7 +353,8 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
 
     Size samples = dimCube_->samples();
     Size stopDatesLoop = datesLoopSize_;
-
+    Date asof = cube_->asof();
+    
     dimEvolutionReport.addColumn("TimeStep", Size())
         .addColumn("Date", Date())
         .addColumn("DaysInPeriod", Size())
@@ -361,7 +362,8 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
         .addColumn("AverageDIM", Real(), 6)
         .addColumn("AverageFLOW", Real(), 6)
         .addColumn("SimpleDIM", Real(), 6)
-        .addColumn("NettingSet", string());
+        .addColumn("NettingSet", string())
+        .addColumn("Time", Real(), 6);
 
     for (auto nettingSet : dimCube_->ids()) {
 
@@ -373,7 +375,8 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
             }
 
             Date defaultDate = dimCube_->dates()[i];
-            Size days = cubeInterpretation_->getMporCalendarDays(dimCube_, i);
+	    Time t = ActualActual().yearFraction(asof, defaultDate);
+	    Size days = cubeInterpretation_->getMporCalendarDays(dimCube_, i);
             dimEvolutionReport.next()
                 .add(i)
                 .add(defaultDate)
@@ -382,7 +385,8 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
                 .add(nettingSetExpectedDIM_[nettingSet][i])
                 .add(expectedFlow)
                 .add(nettingSetSimpleDIMh_[nettingSet][i])
-                .add(nettingSet);
+                .add(nettingSet)
+                .add(t);
         }
     }
     dimEvolutionReport.end();

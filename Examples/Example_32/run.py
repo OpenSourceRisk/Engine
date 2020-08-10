@@ -35,6 +35,7 @@ oreex.save_output_to_subdir(
     ["log.txt", "xva.csv"]
     + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
     + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "colva*")))
+    + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "dim*")))
 )
 
 # with VM and IM (ddv), threshold=mta=0, mpor=2w
@@ -45,6 +46,7 @@ oreex.save_output_to_subdir(
     ["log.txt", "xva.csv"]
     + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
     + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "colva*")))
+    + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "dim*")))
 )
 
 oreex.print_headline("Plot results")
@@ -66,5 +68,11 @@ oreex.plot(os.path.join("collateral_none","exposure_nettingset_CPTY_A.csv"), 2, 
 oreex.plot(os.path.join("collateral_mpor","exposure_nettingset_CPTY_A.csv"), 2, 3, 'c', "EPE NettingSet, MPOR 2W")
 oreex.plot(os.path.join("collateral_mpor_dim_reg","exposure_nettingset_CPTY_A.csv"), 2, 3, 'r', "EPE NettingSet, MPOR 2W, DIM (reg)")
 oreex.plot(os.path.join("collateral_mpor_dim_ddv","exposure_nettingset_CPTY_A.csv"), 2, 3, 'g', "EPE NettingSet, MPOR 2W, DIM (ddv)")
+oreex.decorate_plot(title="Example 32")
+oreex.save_plot_to_file()
+
+oreex.setup_plot("dim")
+oreex.plot(os.path.join("collateral_mpor_dim_reg","dim_evolution.txt"), 8, 4, 'r', "DIM (reg)")
+oreex.plot(os.path.join("collateral_mpor_dim_ddv","dim_evolution.txt"), 6, 3, 'g', "DIM (ddv)")
 oreex.decorate_plot(title="Example 32")
 oreex.save_plot_to_file()
