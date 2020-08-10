@@ -7,26 +7,6 @@
       <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
-    <TradeActions>
-      <TradeAction>
-        <Type>Break</Type>
-        <Owner>Mutual</Owner>
-        <Schedule>
-          <Rules>
-            <StartDate>2016-02-09</StartDate>
-            <EndDate>2026-02-09</EndDate>
-            <Tenor>5Y</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </Schedule>
-      </TradeAction>
-    </TradeActions>
     <SwapData>
       <LegData>
         <LegType>Fixed</LegType>

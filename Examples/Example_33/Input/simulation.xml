@@ -2,8 +2,8 @@
 <Simulation>
   <Parameters>
     <Discretization>Exact</Discretization>
-    <Grid>2W,1M,2M,3M,4M,5M,6M,7M,8M,9M,10M,11M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,11Y</Grid>
-    <Calendar>EUR,USD,GBP,CHF</Calendar>
+    <Grid>2W,1M,2M,3M,4M,5M,6M,7M,8M,9M,10M,11M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,10Y1M</Grid>
+    <Calendar>EUR,USD,GBP</Calendar>
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
