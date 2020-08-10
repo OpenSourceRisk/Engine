@@ -450,7 +450,8 @@ PostProcess::PostProcess(
                     Size dimIndex = j;
                     // dim = nettingSetDIM_[nettingSetId][dimIndex][k];
                     dim = dimCalculator_->dynamicIM(nettingSetId)[dimIndex][k];
-                    QL_REQUIRE(dim >= 0, "negative DIM for set " << nettingSetId << ", date " << j << ", sample " << k);
+                    QL_REQUIRE(dim >= 0, "negative DIM for set " << nettingSetId << ", date " << j << ", sample " << k
+                                                                 << ": " << dim);
                 }
                 epe[j + 1] += std::max(exposure - dim, 0.0) /
                               samples; // dim here represents the held IM, and is expressed as a positive number
