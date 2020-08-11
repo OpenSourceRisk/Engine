@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <Trade id="FxOption">
+    <TradeType>FxOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <FxOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2026-03-01</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <BoughtCurrency>USD</BoughtCurrency>
+      <BoughtAmount>1300000</BoughtAmount>
+      <SoldCurrency>GBP</SoldCurrency>
+      <SoldAmount>1000000</SoldAmount>
+    </FxOptionData>
+  </Trade>
+</Portfolio>
