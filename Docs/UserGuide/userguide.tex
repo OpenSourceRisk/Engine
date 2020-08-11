@@ -3343,7 +3343,7 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
     </EngineParameters>
   </Product>
   <GlobalParameters>
-    <Parameter name="ContinueOnCalibrationError>true</Parameter>
+    <Parameter name="ContinueOnCalibrationError">true</Parameter>
   </GlobalParameters>
 \end{minted}
 \caption{Pricing engine configuration}
@@ -4259,37 +4259,7 @@ for the construction of a market.
 
 \include{curve_configurations/yieldcurves}
 \include{curve_configurations/default_curves_from_cds}
-
-\subsubsection{Default Curves from Yield Curves}
-
-Default curves can be set up as a difference curve of two yield curves as shown in listing
-\ref{lst:defaultcurve_configuration_2}. If $P_B(0,t)$ and $P_S(0,t)$ denote the discount factors of the given benchmark
-and source curve respectively the resulting default term structures has survival probabilities
-
-$$S(0,t) = P_S(0,t) / P_B(0,t)$$
-
-on the given pillars, and w.r.t. a a zero recovery rate. The interpolation is backward flat in the hazard rate.
-
-\begin{longlisting}
-%\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{xml}
-    <DefaultCurve>
-      <CurveId>BOND_YIELD_EUR_OVER_OIS</CurveId>
-      <CurveDescription>Default curve derived as bond yield curve over Eonia</CurveDescription>
-      <Currency>EUR</Currency>
-      <Type>Benchmark</Type>
-      <DayCounter>A365</DayCounter>
-      <BenchmarkCurve>Yield/EUR/EUR1D</BenchmarkCurve>
-      <SourceCurve>Yield/EUR/BOND_YIELD_EUR</SourceCurve>
-      <Pillars>1Y,2Y,3Y,4Y,5Y,7Y,10Y</Pillars>
-      <SpotLag>0</SpotLag>
-      <Calendar>TARGET</Calendar>
-    </DefaultCurve>
-  </DefaultCurves>
-\end{minted}
-\caption{Default curve as a difference of two yield curves}
-\label{lst:defaultcurve_configuration_2}
-\end{longlisting}
+\include{curve_configurations/default_curves_other}
 
 \subsubsection{Swaption Volatility Structures}
 
@@ -4676,6 +4646,9 @@ elements are the following:
                <Factor>SEASONALITY/RATE/MULT/USCPI/NOV</Factor>
                <Factor>SEASONALITY/RATE/MULT/USCPI/DEC</Factor>
            </Factors>
+           <OverrideFactors>
+               1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00
+           </OverrideFactors>
        </Seasonality>
    </InflationCurve>
 </InflationCurves>
@@ -4702,6 +4675,10 @@ The optional seasonality block defines a multiplicative seasonality and contains
   month matters, the year is ignored.
 \item {\tt Frequency:} Defines the frequency of the factors (usually identical to the index's fixing frequency).
 \item {\tt Factors:} Multiplicative seasonality correction factors, must be part of the market data.
+\item {\tt OverrideFactors:} A numeric list of seaosonality correction factors, replacing the Factors. This allows to
+  specify a static seasonality correction that does not require market data quotes. If both Factors and OverrideFactors
+  are given, the OverrideFactors are used. Otherwise only one of Factors, OverrideFactors is required in a seasonality
+  block.
 \end{itemize}
 
 We note that if zero coupon swap market quotes are given, but the type is set to YY, the zero coupon swap quotes will be
