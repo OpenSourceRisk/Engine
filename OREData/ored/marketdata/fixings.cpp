@@ -55,7 +55,7 @@ void applyFixings(const vector<Fixing>& fixings, const data::Conventions& conven
             TLOG("Added fixing for " << f.name << " (" << io::iso_date(f.date) << ") value:" << f.fixing);
             count++;
         } catch (const std::exception& e) {
-            DLOG("Error during adding fixing for " << f.name << ": " << e.what());
+            WLOG("Error during adding fixing for " << f.name << ": " << e.what());
         }
     }
     timer.stop();

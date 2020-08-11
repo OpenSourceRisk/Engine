@@ -587,8 +587,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredYieldCurves_.find(ycspec->name());
             if (itr == requiredYieldCurves_.end()) {
                 DLOG("Building YieldCurve for asof " << asof_);
-                boost::shared_ptr<YieldCurve> yieldCurve = boost::make_shared<YieldCurve>(
-                    asof_, *ycspec, curveConfigs_, loader_, conventions_, requiredYieldCurves_, fxT_, referenceData_);
+                boost::shared_ptr<YieldCurve> yieldCurve =
+                    boost::make_shared<YieldCurve>(asof_, *ycspec, curveConfigs_, loader_, conventions_,
+                                                   requiredYieldCurves_, requiredDefaultCurves_, fxT_, referenceData_);
                 itr = requiredYieldCurves_.insert(make_pair(ycspec->name(), yieldCurve)).first;
                 DLOG("Added YieldCurve \"" << ycspec->name() << "\" to requiredYieldCurves map");
                 if (itr->second->currency().code() != ycspec->ccy()) {
@@ -749,8 +750,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredDefaultCurves_.end()) {
                 // build the curve
                 DLOG("Building DefaultCurve for asof " << asof_);
-                boost::shared_ptr<DefaultCurve> defaultCurve = boost::make_shared<DefaultCurve>(
-                    asof_, *defaultspec, loader_, curveConfigs_, conventions_, requiredYieldCurves_);
+                boost::shared_ptr<DefaultCurve> defaultCurve =
+                    boost::make_shared<DefaultCurve>(asof_, *defaultspec, loader_, curveConfigs_, conventions_,
+                                                     requiredYieldCurves_, requiredDefaultCurves_);
                 itr = requiredDefaultCurves_.insert(make_pair(defaultspec->name(), defaultCurve)).first;
             }
             DLOG("Adding DefaultCurve (" << node.name << ") with spec " << *defaultspec << " to configuration "
@@ -1104,6 +1106,7 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
 
     if (g[node].built) {
         DLOG("node already built, do nothing.");
+        return;
     }
 
     // run a DFS from the found node to identify the required nodes to be built and get a possible order to do this

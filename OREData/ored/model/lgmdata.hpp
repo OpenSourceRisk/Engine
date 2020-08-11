@@ -168,8 +168,10 @@ public:
     bool operator!=(const LgmData& rhs);
     //@}
 
-private:
+protected:
     std::string qualifier_;
+
+private:
     CalibrationType calibrationType_;
     ReversionType revType_;
     VolatilityType volType_;

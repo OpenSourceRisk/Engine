@@ -49,7 +49,10 @@
 #include <qle/termstructures/overnightindexfutureratehelper.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
+#include <qle/termstructures/weightedyieldtermstructure.hpp>
+#include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
 
+#include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/portfolio/bond.hpp>
@@ -170,6 +173,7 @@ YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const str
 YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigurations& curveConfigs,
                        const Loader& loader, const Conventions& conventions,
                        const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves,
+                       const map<string, boost::shared_ptr<DefaultCurve>>& requiredDefaultCurves,
                        const FXTriangulation& fxTriangulation,
                        const boost::shared_ptr<ReferenceDataManager>& referenceData)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), conventions_(conventions),
@@ -220,6 +224,12 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
         } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::FittedBond) {
             DLOG("Building FittedBondCurve " << curveSpec_);
             buildFittedBondCurve();
+        } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::WeightedAverage) {
+            DLOG("Building WeightedAverageCurve " << curveSpec_);
+            buildWeightedAverageCurve();
+        } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::YieldPlusDefault) {
+            DLOG("Building YieldPlusDefaultCurve " << curveSpec_);
+            buildYieldPlusDefaultCurve();
         } else {
             DLOG("Bootstrapping YieldCurve " << curveSpec_);
             buildBootstrappedCurve();
@@ -613,6 +623,43 @@ void YieldCurve::buildZeroSpreadedCurve() {
 
     p_ = boost::shared_ptr<YieldTermStructure>(new PiecewiseZeroSpreadedTermStructure(
         referenceCurve->handle(), quoteHandles, dates, comp, freq, quoteDayCounter));
+}
+
+void YieldCurve::buildWeightedAverageCurve() {
+    QL_REQUIRE(curveSegments_.size() == 1,
+               "One segment required for weighted average curve, got " << curveSegments_.size());
+    QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::WeightedAverage,
+               "The curve segment is not of type Weighted Average.");
+    auto segment = boost::dynamic_pointer_cast<WeightedAverageYieldCurveSegment>(curveSegments_[0]);
+    QL_REQUIRE(segment != nullptr, "expected WeightedAverageYieldCurveSegment, this is unexpected");
+    auto it1 = requiredYieldCurves_.find(yieldCurveKey(currency_, segment->referenceCurveID1(), asofDate_));
+    auto it2 = requiredYieldCurves_.find(yieldCurveKey(currency_, segment->referenceCurveID2(), asofDate_));
+    QL_REQUIRE(it1 != requiredYieldCurves_.end(), "Could not find reference curve1: " << segment->referenceCurveID1());
+    QL_REQUIRE(it2 != requiredYieldCurves_.end(), "Could not find reference curve2: " << segment->referenceCurveID2());
+    p_ = boost::make_shared<WeightedYieldTermStructure>(it1->second->handle(), it2->second->handle(),
+                                                        segment->weight1(), segment->weight2());
+}
+
+void YieldCurve::buildYieldPlusDefaultCurve() {
+    QL_REQUIRE(curveSegments_.size() == 1,
+               "One segment required for yield plus default curve, got " << curveSegments_.size());
+    QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::YieldPlusDefault,
+               "The curve segment is not of type Yield Plus Default.");
+    auto segment = boost::dynamic_pointer_cast<YieldPlusDefaultYieldCurveSegment>(curveSegments_[0]);
+    QL_REQUIRE(segment != nullptr, "expected YieldPlusDefaultCurveSegment, this is unexpected");
+    auto it = requiredYieldCurves_.find(yieldCurveKey(currency_, segment->referenceCurveID(), asofDate_));
+    QL_REQUIRE(it != requiredYieldCurves_.end(), "Could not find reference curve: " << segment->referenceCurveID());
+    std::vector<Handle<DefaultProbabilityTermStructure>> defaultCurves;
+    std::vector<Handle<Quote>> recRates;
+    for (Size i = 0; i < segment->defaultCurveIDs().size(); ++i) {
+        auto it = requiredDefaultCurves_.find(segment->defaultCurveIDs()[i]);
+        QL_REQUIRE(it != requiredDefaultCurves_.end(),
+                   "Could not find default curve: " << segment->defaultCurveIDs()[i]);
+        defaultCurves.push_back(Handle<DefaultProbabilityTermStructure>(it->second->defaultTermStructure()));
+        recRates.push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(it->second->recoveryRate())));
+    }
+    p_ = boost::make_shared<YieldPlusDefaultYieldTermStructure>(it->second->handle(), defaultCurves, recRates,
+                                                                segment->weights());
 }
 
 void YieldCurve::buildDiscountCurve() {

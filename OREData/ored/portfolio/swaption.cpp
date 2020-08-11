@@ -178,8 +178,8 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
         Real premiumAmount = -multiplier * option_.premium(); // pay if long, receive if short
         Currency premiumCurrency = parseCurrency(option_.premiumCcy());
         Date premiumDate = parseDate(option_.premiumPayDate());
-        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, currency,
-                   engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
+        addPayment(additionalInstruments, additionalMultipliers, 1.0, premiumDate, premiumAmount, premiumCurrency,
+                   currency, engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
         DLOG("option premium added for european swaption " << id());
     }
 
@@ -427,8 +427,8 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
         Real premiumAmount = -multiplier * option_.premium(); // pay if long, receive if short
         Currency premiumCurrency = parseCurrency(option_.premiumCcy());
         Date premiumDate = parseDate(option_.premiumPayDate());
-        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, currency,
-                   engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
+        addPayment(additionalInstruments, additionalMultipliers, 1.0, premiumDate, premiumAmount, premiumCurrency,
+                   currency, engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
         DLOG("option premium added for bermudan swaption " << id());
     }
 

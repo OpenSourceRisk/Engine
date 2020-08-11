@@ -888,11 +888,38 @@
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadeddiscountcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\eqfxindexbase.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
     <ClInclude Include="qle\calendars\amendedcalendar.hpp">
       <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedhazardratecurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedsurvivalprobabilitycurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\multisectiondefaultcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\weightedyieldtermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\yieldplusdefaultyieldtermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\genericindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\behicp.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\frcpi.hpp">
+      <Filter>indexes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1536,6 +1563,9 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadeddiscountcurve.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\calendars\amendedcalendar.cpp">
       <Filter>time\calendars</Filter>

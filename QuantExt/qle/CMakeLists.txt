@@ -1,7 +1,7 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt_SRC calendars/austria.cpp
-calendars/amendedcalendar.cpp
+set(QuantExt_SRC calendars/amendedcalendar.cpp
+calendars/austria.cpp
 calendars/belgium.cpp
 calendars/chile.cpp
 calendars/cme.cpp
@@ -182,6 +182,7 @@ termstructures/optionletstripper2.cpp
 termstructures/overnightindexfutureratehelper.cpp
 termstructures/pricetermstructure.cpp
 termstructures/pricetermstructureadapter.cpp
+termstructures/spreadeddiscountcurve.cpp
 termstructures/spreadedoptionletvolatility.cpp
 termstructures/spreadedsmilesection.cpp
 termstructures/spreadedswaptionvolatility.cpp
@@ -199,8 +200,8 @@ time/yearcounter.cpp)
 # hpp files, this list is maintained manually
 
 set(QuantExt_HDR auto_link.hpp
-calendars/austria.hpp
 calendars/amendedcalendar.hpp
+calendars/austria.hpp
 calendars/belgium.hpp
 calendars/chile.hpp
 calendars/cme.hpp
@@ -246,6 +247,7 @@ currencies/america.hpp
 currencies/asia.hpp
 currencies/europe.hpp
 currencies/metals.hpp
+indexes/behicp.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
 indexes/cacpi.hpp
@@ -253,6 +255,8 @@ indexes/commodityindex.hpp
 indexes/dkcpi.hpp
 indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp
+indexes/escpi.hpp
+indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/ibor/audbbsw.hpp
@@ -447,9 +451,12 @@ termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolatedcpivolatilitysurface.hpp
 termstructures/interpolateddiscountcurve.hpp
 termstructures/interpolateddiscountcurve2.hpp
+termstructures/interpolatedhazardratecurve.hpp
+termstructures/interpolatedsurvivalprobabilitycurve.hpp
 termstructures/interpolatedyoycapfloortermpricesurface.hpp
 termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
+termstructures/multisectiondefaultcurve.hpp
 termstructures/oibasisswaphelper.hpp
 termstructures/oiccbasisswaphelper.hpp
 termstructures/oisratehelper.hpp
@@ -467,6 +474,7 @@ termstructures/pricecurve.hpp
 termstructures/pricetermstructure.hpp
 termstructures/pricetermstructureadapter.hpp
 termstructures/probabilitytraits.hpp
+termstructures/spreadeddiscountcurve.hpp
 termstructures/spreadedoptionletvolatility.hpp
 termstructures/spreadedsmilesection.hpp
 termstructures/spreadedswaptionvolatility.hpp
@@ -482,6 +490,8 @@ termstructures/swaptionvolconstantspread.hpp
 termstructures/swaptionvolcube2.hpp
 termstructures/swaptionvolcubewithatm.hpp
 termstructures/tenorbasisswaphelper.hpp
+termstructures/weightedyieldtermstructure.hpp
+termstructures/yieldplusdefaultyieldtermstructure.hpp
 termstructures/yoyinflationcurveobservermoving.hpp
 termstructures/yoyinflationcurveobserverstatic.hpp
 termstructures/yoyinflationoptionletvolstripper.hpp

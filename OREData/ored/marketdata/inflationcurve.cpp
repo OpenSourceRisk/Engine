@@ -108,35 +108,46 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         // construct seasonality
         boost::shared_ptr<Seasonality> seasonality;
         if (config->seasonalityBaseDate() != Null<Date>()) {
-            std::vector<string> strFactorIDs = config->seasonalityFactors();
-            std::vector<double> factors(strFactorIDs.size());
-            for (Size i = 0; i < strFactorIDs.size(); i++) {
-                boost::shared_ptr<MarketDatum> marketQuote = loader.get(strFactorIDs[i], asof);
-                // Check that we have a valid seasonality factor
-                if (marketQuote) {
-                    QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::SEASONALITY,
-                               "Market quote (" << marketQuote->name() << ") not of type seasonality.");
-                    // Currently only monthly seasonality with 12 multiplicative factors os allowed
-                    QL_REQUIRE(config->seasonalityFrequency() == Monthly && strFactorIDs.size() == 12,
-                               "Only monthly seasonality with 12 factors is allowed. Provided "
-                                   << config->seasonalityFrequency() << " with " << strFactorIDs.size() << " factors.");
-                    boost::shared_ptr<SeasonalityQuote> sq = boost::dynamic_pointer_cast<SeasonalityQuote>(marketQuote);
-                    QL_REQUIRE(sq->type() == "MULT", "Market quote (" << sq->name() << ") not of multiplicative type.");
-                    Size seasBaseDateMonth = ((Size)config->seasonalityBaseDate().month());
-                    int findex = sq->applyMonth() - seasBaseDateMonth;
-                    if (findex < 0)
-                        findex += 12;
-                    QL_REQUIRE(findex >= 0 && findex < 12, "Unexpected seasonality index " << findex);
-                    factors[findex] = sq->quote()->value();
-                } else {
-                    QL_FAIL("Could not find quote for ID " << strFactorIDs[i] << " with as of date "
-                                                           << io::iso_date(asof) << ".");
+            if (!config->overrideSeasonalityFactors().empty()) {
+                // override market data by explicit list
+                seasonality = boost::make_shared<MultiplicativePriceSeasonality>(config->seasonalityBaseDate(),
+                                                                                 config->seasonalityFrequency(),
+                                                                                 config->overrideSeasonalityFactors());
+            } else {
+                std::vector<string> strFactorIDs = config->seasonalityFactors();
+                std::vector<double> factors(strFactorIDs.size());
+                for (Size i = 0; i < strFactorIDs.size(); i++) {
+                    boost::shared_ptr<MarketDatum> marketQuote = loader.get(strFactorIDs[i], asof);
+                    // Check that we have a valid seasonality factor
+                    if (marketQuote) {
+                        QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::SEASONALITY,
+                                   "Market quote (" << marketQuote->name() << ") not of type seasonality.");
+                        // Currently only monthly seasonality with 12 multiplicative factors os allowed
+                        QL_REQUIRE(config->seasonalityFrequency() == Monthly && strFactorIDs.size() == 12,
+                                   "Only monthly seasonality with 12 factors is allowed. Provided "
+                                       << config->seasonalityFrequency() << " with " << strFactorIDs.size()
+                                       << " factors.");
+                        boost::shared_ptr<SeasonalityQuote> sq =
+                            boost::dynamic_pointer_cast<SeasonalityQuote>(marketQuote);
+                        QL_REQUIRE(sq->type() == "MULT",
+                                   "Market quote (" << sq->name() << ") not of multiplicative type.");
+                        Size seasBaseDateMonth = ((Size)config->seasonalityBaseDate().month());
+                        int findex = sq->applyMonth() - seasBaseDateMonth;
+                        if (findex < 0)
+                            findex += 12;
+                        QL_REQUIRE(findex >= 0 && findex < 12, "Unexpected seasonality index " << findex);
+                        factors[findex] = sq->quote()->value();
+                    } else {
+                        QL_FAIL("Could not find quote for ID " << strFactorIDs[i] << " with as of date "
+                                                               << io::iso_date(asof) << ".");
+                    }
                 }
+                QL_REQUIRE(!factors.empty(), "no seasonality factors found");
+                seasonality = boost::make_shared<MultiplicativePriceSeasonality>(
+                    config->seasonalityBaseDate(), config->seasonalityFrequency(), factors);
             }
-            QL_REQUIRE(!factors.empty(), "no seasonality factors found");
-            seasonality = boost::make_shared<MultiplicativePriceSeasonality>(config->seasonalityBaseDate(),
-                                                                             config->seasonalityFrequency(), factors);
         }
+
         // construct curve (ZC or YY depending on configuration)
 
         // base zero / yoy rate: if given, take it, otherwise set it to first quote
