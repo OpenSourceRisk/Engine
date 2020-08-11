@@ -421,9 +421,9 @@ CamSensitivityStorageManager::processFxOption(boost::shared_ptr<ore::analytics::
         delta[n * c + forCcyIndex - 1] += (spotDelta * forFx + npv * domFx) * tradeMultiplier;
         delta[n * c + domCcyIndex - 1] += (-spotDelta * forFx + npv * domFx) * tradeMultiplier;
     } else if (forCcyIndex != 0) {
-        delta[n * c + forCcyIndex - 1] = spotDelta * tradeMultiplier;
+        delta[n * c + forCcyIndex - 1] += spotDelta * tradeMultiplier;
     } else {
-        delta[n * c + domCcyIndex - 1] = (-spotDelta + npv * domFx) * tradeMultiplier;
+        delta[n * c + domCcyIndex - 1] += (-spotDelta + npv * domFx) * tradeMultiplier;
     }
     // for ccy delta curve risk
     std::vector<Real> deltaDiv = qlInstr->result<std::vector<Real>>("deltaDividend");
