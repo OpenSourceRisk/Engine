@@ -421,7 +421,7 @@ CamSensitivityStorageManager::processFxOption(boost::shared_ptr<ore::analytics::
         delta[n * c + forCcyIndex - 1] += (spotDelta * forFx + npv * domFx) * tradeMultiplier;
         delta[n * c + domCcyIndex - 1] += (-spotDelta * forFx + npv * domFx) * tradeMultiplier;
     } else if (forCcyIndex != 0) {
-        delta[n * c + forCcyIndex - 1] += spotDelta * tradeMultiplier;
+        delta[n * c + forCcyIndex - 1] += spotDelta * forFx * tradeMultiplier;
     } else {
         delta[n * c + domCcyIndex - 1] += (-spotDelta + npv * domFx) * tradeMultiplier;
     }
@@ -496,7 +496,8 @@ CamSensitivityStorageManager::processFxOption(boost::shared_ptr<ore::analytics::
             gamma[n * c + domCcyIndex - 1][n * c + forCcyIndex - 1] += tmp;
             gamma[n * c + forCcyIndex - 1][n * c + domCcyIndex - 1] += tmp;
         } else if (forCcyIndex != 0) {
-            gamma[n * c + forCcyIndex - 1][n * c + forCcyIndex - 1] += spotGamma * tradeMultiplier;
+            gamma[n * c + forCcyIndex - 1][n * c + forCcyIndex - 1] +=
+                (spotGamma * forFx * forFx + spotDelta * forFx) * tradeMultiplier;
         } else {
             gamma[n * c + domCcyIndex - 1][n * c + domCcyIndex - 1] +=
                 (spotGamma / domFx - spotDelta / domFx + npv * domFx) * tradeMultiplier;
