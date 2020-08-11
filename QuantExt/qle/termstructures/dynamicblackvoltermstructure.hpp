@@ -236,7 +236,7 @@ Real DynamicBlackVolTermStructure<mode>::blackVarianceImplTag(Time t, Real strik
         scenarioStrike1 = initialForwardCurve_->operator()(scenarioT1) / forward * strike;
         scenarioStrike0 = initialForwardCurve_->operator()(scenarioT0) / spot_->value() * strike;
     }
-    return max(0.0, source_->blackVariance(scenarioT1, scenarioStrike1, true) -
+    return std::max(0.0, source_->blackVariance(scenarioT1, scenarioStrike1, true) -
            source_->blackVariance(scenarioT0, scenarioStrike0, true));
 }
 
@@ -245,7 +245,7 @@ Real DynamicBlackVolTermStructure<mode>::blackVarianceImplTag(Time t, Real strik
     if (decayMode_ == ForwardForwardVariance) {
         Real scenarioT0 = source_->timeFromReference(referenceDate());
         Real scenarioT1 = scenarioT0 + t;
-        return max(0.0, source_->blackVariance(scenarioT1, strike, true) - source_->blackVariance(scenarioT0, strike, true));
+        return std::max(0.0, source_->blackVariance(scenarioT1, strike, true) - source_->blackVariance(scenarioT0, strike, true));
     } else {
         return source_->blackVariance(t, strike, true);
     }
