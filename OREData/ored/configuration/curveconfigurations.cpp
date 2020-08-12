@@ -276,38 +276,41 @@ CurveConfigurations::requiredCurveIds(const CurveSpec::CurveType& type, const st
     std::map<CurveSpec::CurveType, std::set<string>> result;
     if (type == CurveSpec::CurveType::Yield)
         addRequiredCurveIds(curveId, yieldCurveConfigs_, result);
-    if (type == CurveSpec::CurveType::FXVolatility)
+    else if (type == CurveSpec::CurveType::FXVolatility)
         addRequiredCurveIds(curveId, fxVolCurveConfigs_, result);
-    if (type == CurveSpec::CurveType::SwaptionVolatility)
+    else if (type == CurveSpec::CurveType::SwaptionVolatility)
         addRequiredCurveIds(curveId, swaptionVolCurveConfigs_, result);
-    if (type == CurveSpec::CurveType::YieldVolatility)
+    else if (type == CurveSpec::CurveType::YieldVolatility)
         addRequiredCurveIds(curveId, yieldVolCurveConfigs_, result);
-    if (type == CurveSpec::CurveType::CapFloorVolatility)
+    else if (type == CurveSpec::CurveType::CapFloorVolatility)
         addRequiredCurveIds(curveId, capFloorVolCurveConfigs_, result);
-    if (type == CurveSpec::CurveType::Default)
+    else if (type == CurveSpec::CurveType::Default)
         addRequiredCurveIds(curveId, defaultCurveConfigs_, result);
-    if (type == CurveSpec::CurveType::CDSVolatility)
+    else if (type == CurveSpec::CurveType::CDSVolatility)
         addRequiredCurveIds(curveId, cdsVolCurveConfigs_, result);
-    if (type == CurveSpec::CurveType::BaseCorrelation)
+    else if (type == CurveSpec::CurveType::BaseCorrelation)
         addRequiredCurveIds(curveId, baseCorrelationCurveConfigs_, result);
-    if (type == CurveSpec::CurveType::Inflation)
+    else if (type == CurveSpec::CurveType::Inflation)
         addRequiredCurveIds(curveId, inflationCurveConfigs_, result);
-    if (type == CurveSpec::CurveType::InflationCapFloorVolatility)
+    else if (type == CurveSpec::CurveType::InflationCapFloorVolatility)
         addRequiredCurveIds(curveId, inflationCapFloorVolCurveConfigs_, result);
-    if (type == CurveSpec::CurveType::Equity)
+    else if (type == CurveSpec::CurveType::Equity)
         addRequiredCurveIds(curveId, equityCurveConfigs_, result);
-    if (type == CurveSpec::CurveType::EquityVolatility)
+    else if (type == CurveSpec::CurveType::EquityVolatility)
         addRequiredCurveIds(curveId, equityVolCurveConfigs_, result);
-    if (type == CurveSpec::CurveType::Security)
+    else if (type == CurveSpec::CurveType::Security)
         addRequiredCurveIds(curveId, securityConfigs_, result);
-    if (type == CurveSpec::CurveType::FX)
+    else if (type == CurveSpec::CurveType::FX)
         addRequiredCurveIds(curveId, fxSpotConfigs_, result);
-    if (type == CurveSpec::CurveType::Commodity)
+    else if (type == CurveSpec::CurveType::Commodity)
         addRequiredCurveIds(curveId, commodityCurveConfigs_, result);
-    if (type == CurveSpec::CurveType::CommodityVolatility)
+    else if (type == CurveSpec::CurveType::CommodityVolatility)
         addRequiredCurveIds(curveId, commodityVolatilityConfigs_, result);
-    if (type == CurveSpec::CurveType::Correlation)
+    else if (type == CurveSpec::CurveType::Correlation)
         addRequiredCurveIds(curveId, correlationCurveConfigs_, result);
+    else {
+        QL_FAIL("CurveConfigurations::requiredCurveIds(): unhandled curve spec type");
+    }
     return result;
 }
 
