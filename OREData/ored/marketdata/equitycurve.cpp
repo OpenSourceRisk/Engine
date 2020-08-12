@@ -282,19 +282,21 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 // We only want overlapping expiry/strike pairs
                 for (Size i = 0; i < calls.size(); i++) {
                     for (Size j = 0; j < puts.size(); j++) {
-                        if (calls[i]->expiry() == puts[j]->expiry() && *calls[i]->strike() == *puts[j]->strike()) {
-                            TLOG("Adding Call and Put for strike/expiry pair : " << calls[i]->expiry() << "/"
-                                                                                 << calls[i]->strike());
-                            callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
-                            putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
+                        if (calls[i]->expiry() == puts[j]->expiry()) {
                             auto callAbsoluteStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(calls[i]->strike());
-                            auto putAbsoluteStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(puts[i]->strike());
+                            auto putAbsoluteStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(puts[j]->strike());
                             QL_REQUIRE(callAbsoluteStrike, "Expected absolute strike for quote " << calls[i]->name());
-                            QL_REQUIRE(putAbsoluteStrike, "Expected absolute strike for quote " << puts[i]->name());
-                            callStrikes.push_back(callAbsoluteStrike->strike());
-                            putStrikes.push_back(putAbsoluteStrike->strike());
-                            callPremiums.push_back(calls[i]->quote()->value());
-                            putPremiums.push_back(puts[j]->quote()->value());
+                            QL_REQUIRE(putAbsoluteStrike, "Expected absolute strike for quote " << puts[j]->name());
+                            if (*calls[i]->strike() == *puts[j]->strike()) {
+                                TLOG("Adding Call and Put for strike/expiry pair : " << calls[i]->expiry() << "/"
+                                                                                     << calls[i]->strike()->toString());
+                                callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
+                                putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
+                                callStrikes.push_back(callAbsoluteStrike->strike());
+                                putStrikes.push_back(putAbsoluteStrike->strike());
+                                callPremiums.push_back(calls[i]->quote()->value());
+                                putPremiums.push_back(puts[j]->quote()->value());
+                            }
                         }
                     }
                 }
