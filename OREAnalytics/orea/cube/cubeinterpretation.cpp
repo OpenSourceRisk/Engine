@@ -41,7 +41,14 @@ Real RegularCubeInterpretation::getCloseOutNpv(const boost::shared_ptr<NPVCube>&
 
 Real RegularCubeInterpretation::getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
                                              Size sampleIdx) const {
-    return getGenericValue(cube, tradeIdx, dateIdx, sampleIdx, mporFlowsIdx_);
+    Real aggMporFlowsVal = 0.0;
+    try {
+        aggMporFlowsVal = getGenericValue(cube, tradeIdx, dateIdx, sampleIdx, mporFlowsIdx_);
+    } catch (std::exception& e) {
+        DLOG("Unable to retrieve MPOR flows for trade " << tradeIdx << ", date " << dateIdx << ", sample " << sampleIdx
+                                                        << "; " << e.what());
+    }
+    return aggMporFlowsVal;
 }
 
 Real RegularCubeInterpretation::getDefaultAggrionScenarioData(
@@ -86,8 +93,6 @@ Real MporGridCubeInterpretation::getMporFlows(const boost::shared_ptr<NPVCube>& 
     } catch (std::exception& e) {
         DLOG("Unable to retrieve MPOR flows for trade " << tradeIdx << ", date " << dateIdx << ", sample " << sampleIdx
                                                         << "; " << e.what());
-        // TODO: review this try-catch and default behaviour
-        aggMporFlowsVal = 0.0; // silently return zero if the MPOR flows is not stored within the cube
     }
     return aggMporFlowsVal;
 }

@@ -83,7 +83,6 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
             for (Size k = 0; k < samples; ++k) {
                 Real defaultNpv = cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
                 Real closeOutNpv = cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
-                QL_REQUIRE(cube_->depth() > 1, "cube depth > 1 expected for DIM, found depth " << cube_->depth());
                 Real mporFlow = cubeInterpretation_->getMporFlows(cube_, i, j, k);
                 nettingSetNPV_[nettingSetId][j][k] += defaultNpv;
                 nettingSetCloseOutNPV_[nettingSetId][j][k] += closeOutNpv;
