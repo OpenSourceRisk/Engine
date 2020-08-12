@@ -610,6 +610,8 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         QL_REQUIRE(vc.quotes().size() == quotesAdded,
                    "Found " << quotesAdded << " quotes, but " << vc.quotes().size() << " quotes required by config.");
     } else {
+        // check we have non-empty surface data
+        QL_REQUIRE(!surfaceData.empty(), "Moneyness Surface Data is empty");
         // If the expiries were configured via a wildcard, check that no surfaceData element has a Null<Real>().
         for (const auto& kv : surfaceData) {
             for (Size j = 0; j < moneynessLevels.size(); j++) {
