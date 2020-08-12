@@ -299,8 +299,9 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
 
     for (std::tie(v, vend) = boost::vertices(g); v != vend; ++v) {
         if (g[*v].curveSpec) {
-            for (auto const& r : curveConfigs_.requiredCurveIds(g[*v].curveSpec->curveConfigID())) {
-                for (auto const& cId : r.second) {
+            for (auto const& r :
+                 curveConfigs_.requiredCurveIds(g[*v].curveSpec->baseType(), g[*v].curveSpec->curveConfigID())) {
+                for (auto const& cId : r) {
                     // avoid self reference
                     if (r.first == g[*v].curveSpec->baseType() && cId == g[*v].curveSpec->curveConfigID())
                         continue;
