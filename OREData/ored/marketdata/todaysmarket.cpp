@@ -334,7 +334,8 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
 
         // 1 CapFloorVolatility depends on underlying index curve
 
-        if (g[*v].curveSpec && curveConfigs_.hasCapFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())) {
+        if (g[*v].obj == MarketObject::CapFloorVol &&
+            curveConfigs_.hasCapFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())) {
             string iborIndex = curveConfigs_.capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->iborIndex();
             bool found = false;
             for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
@@ -354,7 +355,8 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
 
         // 2 Correlation depends on underlying swap indices (if CMS Spread Correlations are calibrated to prices)
 
-        if (g[*v].curveSpec && curveConfigs_.hasCorrelationCurveConfig(g[*v].curveSpec->curveConfigID())) {
+        if (g[*v].obj == MarketObject::Correlation &&
+            curveConfigs_.hasCorrelationCurveConfig(g[*v].curveSpec->curveConfigID())) {
             auto config = curveConfigs_.correlationCurveConfig(g[*v].curveSpec->curveConfigID());
             if (config->correlationType() == CorrelationCurveConfig::CorrelationType::CMSSpread &&
                 config->quoteType() == CorrelationCurveConfig::QuoteType::Price) {
@@ -391,7 +393,8 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
 
         // 3 SwaptionVolatility depends on underlying swap indices
 
-        if (g[*v].curveSpec && curveConfigs_.hasSwaptionVolCurveConfig(g[*v].curveSpec->curveConfigID())) {
+        if (g[*v].obj == MarketObject::SwaptionVol &&
+            curveConfigs_.hasSwaptionVolCurveConfig(g[*v].curveSpec->curveConfigID())) {
             auto config = curveConfigs_.swaptionVolCurveConfig(g[*v].curveSpec->curveConfigID());
             bool found1 = config->shortSwapIndexBase().empty(), found2 = config->swapIndexBase().empty();
             for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
