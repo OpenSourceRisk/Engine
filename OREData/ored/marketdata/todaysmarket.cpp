@@ -1111,6 +1111,7 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
 
     if (g[node].built) {
         DLOG("node already built, do nothing.");
+        return;
     }
 
     // run a DFS from the found node to identify the required nodes to be built and get a possible order to do this
