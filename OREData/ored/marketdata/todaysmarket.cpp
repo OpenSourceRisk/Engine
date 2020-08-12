@@ -301,7 +301,7 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
         if (g[*v].curveSpec) {
             for (auto const& r :
                  curveConfigs_.requiredCurveIds(g[*v].curveSpec->baseType(), g[*v].curveSpec->curveConfigID())) {
-                for (auto const& cId : r) {
+                for (auto const& cId : r.second) {
                     // avoid self reference
                     if (r.first == g[*v].curveSpec->baseType() && cId == g[*v].curveSpec->curveConfigID())
                         continue;
