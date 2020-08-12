@@ -18,7 +18,7 @@
 
 #include <ored/configuration/equityvolcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
-äinclude <ored/utilities/parsers.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
@@ -66,8 +66,6 @@ void EquityVolatilityCurveConfig::populateQuotes() {
 }
 
 void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
-    if (!equityCurveId().empty())
-        requiredCurveIds_[CurveSpec::CurveType::Equity].insert(parseCurveSpec(equityCurveId())->curveConfigID());
     if (!proxySurface().empty()) {
         requiredCurveIds_[CurveSpec::CurveType::EquityVolatility].insert(proxySurface());
         // see EquityVolCurve::buildVolatility(...) for proxy surfaces, there we require equity curves for
@@ -158,8 +156,6 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         QL_FAIL("Only ATM and Smile dimensions, or Volatility Config supported for EquityVolatility " << curveID_);
     }
 
-    equityCurveId_ = XMLUtils::getChildValue(node, "EquityCurveId", false);
-
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -181,9 +177,6 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
     }
     if (calendar_ != "NullCalendar")
         XMLUtils::addChild(doc, node, "Calendar", calendar_);
-
-    if (!equityCurveId_.empty())
-        XMLUtils::addChild(doc, node, "EquityCurveId", equityCurveId_);
 
     return node;
 }

@@ -68,7 +68,6 @@ public:
     const string& calendar() const { return calendar_; }
     const boost::shared_ptr<VolatilityConfig>& volatilityConfig() const { return volatilityConfig_; };
     const string& proxySurface() const { return proxySurface_; }
-    const string& equityCurveId() const { return equityCurveId_; }
     const string quoteStem() const;
     void populateQuotes();
     bool isProxySurface() { return !proxySurface_.empty(); };
@@ -88,7 +87,6 @@ private:
     string dayCounter_;
     string calendar_;
     string proxySurface_;
-    string equityCurveId_;
 };
 } // namespace data
 } // namespace ore
