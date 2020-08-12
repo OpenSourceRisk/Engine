@@ -33,7 +33,6 @@
 #include <orea/app/sensitivityrunner.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/engine/parametricvar.hpp>
-#include <orea/engine/sensitivitystoragemanager.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
@@ -109,9 +108,7 @@ protected:
     //! build an NPV cube
     virtual void buildNPVCube();
     //! initialise NPV cube generation
-    void initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio);
-    //! initialise sensitivity storage manager
-    void initialiseSensitivityStorageManager();
+    virtual void initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio);
     //! load simMarketData
     boost::shared_ptr<ScenarioSimMarketParameters> getSimMarketData();
     //! load scenarioGeneratorData
@@ -232,12 +229,11 @@ protected:
     boost::shared_ptr<DateGrid> grid_;
     Size samples_;
 
-    Size cubeDepth_; // depth of cube_ defined below (i.e. not of nettingSetCube_, to be clear)
-    bool storeFlows_, storeSensis_, useCloseOutLag_, useMporStickyDate_;
-    boost::shared_ptr<SensitivityStorageManager> sensitivityStorageManager_;
+    Size cubeDepth_; // depth of cube_ defined below
+    bool storeFlows_, useCloseOutLag_, useMporStickyDate_;
 
     boost::shared_ptr<NPVCube> cube_;           // cube to store results on trade level (e.g. NPVs, flows)
-    boost::shared_ptr<NPVCube> nettingSetCube_; // cube to store results on netting set level (e.g. dynamic sensis)
+    boost::shared_ptr<NPVCube> nettingSetCube_; // cube to store results on netting set level
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
     boost::shared_ptr<CubeInterpretation> cubeInterpreter_;

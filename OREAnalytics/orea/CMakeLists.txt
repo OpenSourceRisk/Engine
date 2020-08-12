@@ -19,12 +19,10 @@ engine/parametricvar.cpp
 engine/riskfilter.cpp
 engine/sensitivityaggregator.cpp
 engine/sensitivityanalysis.cpp
-engine/sensitivitycalculator.cpp
 engine/sensitivitycubestream.cpp
 engine/sensitivityfilestream.cpp
 engine/sensitivityinmemorystream.cpp
 engine/sensitivityrecord.cpp
-engine/sensitivitystoragemanager.cpp
 engine/stresstest.cpp
 engine/valuationcalculator.cpp
 engine/valuationengine.cpp
@@ -75,12 +73,10 @@ engine/parametricvar.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp
 engine/sensitivityanalysis.hpp
-engine/sensitivitycalculator.hpp
 engine/sensitivitycubestream.hpp
 engine/sensitivityfilestream.hpp
 engine/sensitivityinmemorystream.hpp
 engine/sensitivityrecord.hpp
-engine/sensitivitystoragemanager.hpp
 engine/sensitivitystream.hpp
 engine/stresstest.hpp
 engine/valuationcalculator.hpp
