@@ -27,6 +27,12 @@
     <ClInclude Include="orea\aggregation\collatexposurehelper.hpp">
       <Filter>aggregation</Filter>
     </ClInclude>
+    <ClInclude Include="orea\aggregation\dimcalculator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\dimregressioncalculator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
     <ClInclude Include="orea\aggregation\postprocess.hpp">
       <Filter>aggregation</Filter>
     </ClInclude>
@@ -190,6 +196,12 @@
     <ClCompile Include="orea\aggregation\collatexposurehelper.cpp">
       <Filter>aggregation</Filter>
     </ClCompile>
+    <ClInclude Include="orea\aggregation\dimcalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\dimregressioncalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
     <ClCompile Include="orea\aggregation\postprocess.cpp">
       <Filter>aggregation</Filter>
     </ClCompile>
