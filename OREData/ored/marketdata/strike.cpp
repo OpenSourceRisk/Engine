@@ -285,8 +285,3 @@ boost::shared_ptr<BaseStrike> parseBaseStrike(const string& strStrike) {
 
 } // namespace data
 } // namespace ore
-
-BOOST_CLASS_EXPORT_GUID(ore::data::AbsoluteStrike, "AbsoluteStrike");
-BOOST_CLASS_EXPORT_GUID(ore::data::DeltaStrike, "DeltaStrike");
-BOOST_CLASS_EXPORT_GUID(ore::data::AtmStrike, "AtmStrike");
-BOOST_CLASS_EXPORT_GUID(ore::data::MoneynessStrike, "MoneynessStrike");

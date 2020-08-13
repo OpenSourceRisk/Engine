@@ -41,9 +41,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
 #include <boost/serialization/base_object.hpp>
-#include <boost/serialization/export.hpp>
 #include <boost/serialization/optional.hpp>
-#include <boost/serialization/serialization.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
 namespace ore {
