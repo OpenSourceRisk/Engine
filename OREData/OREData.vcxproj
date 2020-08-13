@@ -200,6 +200,7 @@
     <ClInclude Include="ored\version.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ored\export.cpp" />
     <ClCompile Include="ored\configuration\basecorrelationcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\bootstrapconfig.cpp" />
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp" />
