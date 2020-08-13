@@ -553,17 +553,6 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
     if (node.built)
         return;
 
-    // Within this function we somtimes call market interface methods like swapIndex() or iborIndex() to get an
-    // already built object. We disable the processing of require() calls for the scope of this function, since
-    // a) we know that these objects are alrady built and
-    // b) we would cause an infinite recursion with these nested calls
-
-    struct FreezeRequireProcessing {
-        FreezeRequireProcessing(bool& flag) : flag_(flag) { flag_ = true; }
-        ~FreezeRequireProcessing() { flag_ = false; }
-        bool& flag_;
-    } freezer(freezeRequireProcessing_);
-
     if (node.curveSpec == nullptr) {
 
         // not spec-based node, this can only be a SwapIndexCurve
@@ -574,7 +563,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
         const string& discountIndex = node.mapping;
         addSwapIndex(swapIndexName, discountIndex, configuration);
         DLOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
-        requiredSwapIndices_[configuration][swapIndexName] = swapIndex(swapIndexName, configuration).currentLink();
+        requiredSwapIndices_[configuration][swapIndexName] =
+            swapIndices_.at(std::make_pair(configuration, swapIndexName)).currentLink();
 
     } else {
 
@@ -1045,9 +1035,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
 
 void TodaysMarket::require(const MarketObject o, const string& name, const string& configuration) const {
 
-    // if the market is not lazily built or the require processing is freezed, there is nothing to do
+    // if the market is not lazily built, do nothing
 
-    if (!lazyBuild_ || freezeRequireProcessing_)
+    if (!lazyBuild_)
         return;
 
     // search the node (o, name) in the dependency graph
