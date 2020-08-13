@@ -19,6 +19,7 @@
 #include <boost/serialization/export.hpp>
 #include <ored/marketdata/strike.hpp>
 #include <ored/marketdata/marketdatum.hpp>
+#include <ored/marketdata/expiry.hpp>
 
 BOOST_CLASS_EXPORT_GUID(ore::data::MoneyMarketQuote, "MoneyMarketQuote");
 BOOST_CLASS_EXPORT_GUID(ore::data::FRAQuote, "FRAQuote");
@@ -64,8 +65,11 @@ BOOST_CLASS_EXPORT_GUID(ore::data::CorrelationQuote, "CorrelationQuote");
 BOOST_CLASS_EXPORT_GUID(ore::data::CPRQuote, "CPRQuote");
 BOOST_CLASS_EXPORT_GUID(ore::data::BondPriceQuote, "BondPriceQuote");
 
-
 BOOST_CLASS_EXPORT_GUID(ore::data::AbsoluteStrike, "AbsoluteStrike");
 BOOST_CLASS_EXPORT_GUID(ore::data::DeltaStrike, "DeltaStrike");
 BOOST_CLASS_EXPORT_GUID(ore::data::AtmStrike, "AtmStrike");
 BOOST_CLASS_EXPORT_GUID(ore::data::MoneynessStrike, "MoneynessStrike");
+
+BOOST_CLASS_EXPORT_GUID(ore::data::ExpiryDate, "ExpiryDate");
+BOOST_CLASS_EXPORT_GUID(ore::data::ExpiryPeriod, "ExpiryPeriod");
+BOOST_CLASS_EXPORT_GUID(ore::data::FutureContinuationExpiry, "FutureContinuationExpiry");
