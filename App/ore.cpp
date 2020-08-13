@@ -57,7 +57,12 @@ using namespace ore::analytics;
 int main(int argc, char** argv) {
 
     if (argc == 2 && (string(argv[1]) == "-v" || string(argv[1]) == "--version")) {
-        cout << "ORE version " << OPEN_SOURCE_RISK_VERSION << endl;
+        cout << "SEB-ORE -- an extension to ORE -- http://www.opensourcerisk.org/" << endl;
+        cout << "ORE original version   : " << OPEN_SOURCE_RISK_VERSION << endl;
+        cout << "Build date             : " << __TIMESTAMP__ << endl;
+        cout << "Build location         : " << __FILE__ << endl;
+        cout << "QuantLib Version       : " << QL_VERSION << endl;
+        cout << "Boost Version          : " << BOOST_LIB_VERSION << endl;
         exit(0);
     }
 

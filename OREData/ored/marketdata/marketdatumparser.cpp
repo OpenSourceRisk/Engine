@@ -218,10 +218,24 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     case MarketDatum::InstrumentType::IR_SWAP: {
         QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
         const string& ccy = tokens[2];
-        Period fwdStart = parsePeriod(tokens[3]);
         Period tenor = parsePeriod(tokens[4]);
-        Period term = parsePeriod(tokens[5]);
-        return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term, tenor);
+        // The fourth and last token can be a date or a standard tenor
+        Date date1;
+        Date date2;
+        Period term1;
+        Period term2;
+        bool isDate1;
+        bool isDate2;
+        parseDateOrPeriod(tokens[3], date1, term1, isDate1);
+        parseDateOrPeriod(tokens[5], date2, term2, isDate2);
+
+        QL_REQUIRE(isDate1 == isDate2, "fwdStart and term format mismatch. They should be both dates or periods");
+
+        if (isDate1) {
+            return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, date1, date2, tenor);
+        } else {
+            return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, term1, term2, tenor);
+        }
     }
 
     case MarketDatum::InstrumentType::BASIS_SWAP: {
