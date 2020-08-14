@@ -740,40 +740,5 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     LOG("Sensitivity report finished");
 }
 
-std::string ReportWriter::writeAdditionalResults(boost::shared_ptr<ore::data::Portfolio> portfolio) {
-
-    for (auto trade : portfolio->trades()) {
-        try {
-            std::cout << "tradeId: " << trade->id() << " ";
-            std::map<std::string,boost::any> map = trade->instrument()->qlInstrument()->additionalResults();
-            for (const auto &p: map) {
-                std::cout << " " << p.first << ": ";
-                if (p.second.type() == typeid(int)) {
-                    std::cout << boost::any_cast<int>(p.second);
-                } else if (p.second.type() == typeid(double)) {
-                    std::cout << boost::any_cast<double>(p.second);
-                } else if (p.second.type() == typeid(std::string)) {
-                    std::cout << boost::any_cast<std::string>(p.second);
-                } else if (p.second.type() == typeid(const char*)) {
-                    std::cout << boost::any_cast<const char*>(p.second);
-                } else if (p.second.type() == typeid(std::vector<double>)) {
-                    std::cout << "[";
-                    std::vector<double> vec = boost::any_cast<std::vector<double>>(p.second);
-                    for (Size i = 0; i < vec.size(); i ++) {
-                        if (i > 0)
-                            std::cout<<", "<<std::endl;
-                        std::cout << vec[i];
-                    }
-                    std::cout << "]";
-                } else {
-                    std::cout << "[unhandled type]";
-                }
-            }
-            
-        } catch (std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during trade pricing", e.what()));
-        }
-    }
-}
 } // namespace analytics
 } // namespace ore
