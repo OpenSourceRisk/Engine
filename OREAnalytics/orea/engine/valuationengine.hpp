@@ -24,6 +24,7 @@
 #pragma once
 
 #include <orea/cube/npvcube.hpp>
+#include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/simulation/simmarket.hpp>
 #include <ored/model/modelbuilder.hpp>
@@ -81,7 +82,7 @@ public:
         //! Object for storiing results on netting set level (e.g. sensitivities)
         boost::shared_ptr<analytics::NPVCube> outputCubeNettingSet = nullptr,
         boost::shared_ptr<analytics::NPVCube> outputCptyCube = nullptr,
-        std::vector<boost::shared_ptr<SurvProbCalculator>> cptyCalculators = {});
+        std::vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators = {});
 
 private:
     void runCalculators(bool isCloseOutDate, const std::vector<boost::shared_ptr<Trade>>& trades,
@@ -90,7 +91,7 @@ private:
                         boost::shared_ptr<analytics::NPVCube>& outputCubeSensis, const Date& d,
                         const Size cubeDateIndex, const Size sample);
     void runCalculators(bool isCloseOutDate, const std::vector<string>& counterparties,
-                        const std::vector<boost::shared_ptr<SurvProbCalculator>>& calculators,
+                        const std::vector<boost::shared_ptr<CounterpartyCalculator>>& calculators,
                         boost::shared_ptr<analytics::NPVCube>& cptyCube, const Date& d,
                         const Size cubeDateIndex, const Size sample);
     void tradeExercisable(bool enable, const std::vector<boost::shared_ptr<Trade>>& trades);

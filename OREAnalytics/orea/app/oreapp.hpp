@@ -233,7 +233,7 @@ protected:
     Size samples_;
 
     Size cubeDepth_; // depth of cube_ defined below (i.e. not of nettingSetCube_, to be clear)
-    bool storeFlows_, storeSensis_, useCloseOutLag_, useMporStickyDate_;
+    bool storeFlows_, storeSensis_, useCloseOutLag_, useMporStickyDate_, storeSp_;
     boost::shared_ptr<SensitivityStorageManager> sensitivityStorageManager_;
 
     boost::shared_ptr<NPVCube> cube_;           // cube to store results on trade level (e.g. NPVs, flows)

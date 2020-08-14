@@ -2,8 +2,13 @@
 
 set(OREAnalytics_SRC aggregation/collateralaccount.cpp
 aggregation/collatexposurehelper.cpp
+aggregation/exposurecalculator.cpp
 aggregation/dimcalculator.cpp
 aggregation/dimregressioncalculator.cpp
+aggregation/dynamiccreditxvacalculator.cpp
+aggregation/nettedexposurecalculator.cpp
+aggregation/staticcreditxvacalculator.cpp
+aggregation/xvacalculator.cpp
 aggregation/postprocess.cpp
 app/oreapp.cpp
 app/parameters.cpp
@@ -13,6 +18,7 @@ app/structuredanalyticserror.cpp
 cube/cubeinterpretation.cpp
 cube/cubewriter.cpp
 cube/sensitivitycube.cpp
+engine/cptycalculator.cpp
 engine/filteredsensitivitystream.cpp
 engine/mporcalculator.cpp
 engine/parametricvar.cpp
@@ -52,8 +58,13 @@ simulation/simmarket.cpp)
 
 set(OREAnalytics_HDR aggregation/collateralaccount.hpp
 aggregation/collatexposurehelper.hpp
+aggregation/exposurecalculator.hpp
 aggregation/dimcalculator.hpp
 aggregation/dimregressioncalculator.hpp
+aggregation/dynamiccreditxvacalculator.hpp
+aggregation/nettedexposurecalculator.hpp
+aggregation/staticcreditxvacalculator.hpp
+aggregation/xvacalculator.hpp
 aggregation/postprocess.hpp
 app/oreapp.hpp
 app/parameters.hpp
@@ -68,6 +79,7 @@ cube/npvcube.hpp
 cube/npvsensicube.hpp
 cube/sensicube.hpp
 cube/sensitivitycube.hpp
+engine/cptycalculator.hpp
 engine/filteredsensitivitystream.hpp
 engine/mporcalculator.hpp
 engine/observationmode.hpp

@@ -55,7 +55,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                                 vector<boost::shared_ptr<ValuationCalculator>> calculators, bool mporStickyDate,
                                 boost::shared_ptr<analytics::NPVCube> outputCubeNettingSet,
                                 boost::shared_ptr<analytics::NPVCube> outputCptyCube,
-                                vector<boost::shared_ptr<SurvProbCalculator>> cptyCalculators) {
+                                vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators) {
 
     LOG("Build cube with mporStickyDate=" << mporStickyDate);
 
@@ -255,7 +255,7 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<boos
 }
 
 void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<std::string>& counterparties,
-                                     const std::vector<boost::shared_ptr<SurvProbCalculator>>& calculators,
+                                     const std::vector<boost::shared_ptr<CounterpartyCalculator>>& calculators,
                                      boost::shared_ptr<analytics::NPVCube>& cptyCube,
                                      const Date& d,
                                      const Size cubeDateIndex, const Size sample) {
@@ -263,7 +263,7 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<std:
     for (Size j = 0; j < counterparties.size(); ++j) {
         auto counterparty = counterparties[j];
         for (auto calc : calculators)
-            calc->calculate(counterparty, j, simMarket_, cptyCube, d, cubeDateIndex, sample);
+            calc->calculate(counterparty, j, simMarket_, cptyCube, d, cubeDateIndex, sample, isCloseOutDate);
     }
 }
 

@@ -715,12 +715,11 @@ void OREApp::buildNPVCube() {
     else
         cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
 
-    vector<boost::shared_ptr<SurvProbCalculator>> cptyCalculators;
+    vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators;
 
-    if (params_->has("simulation", "simulateSurvivalProbabilities") &&
-        params_->get("simulation", "simulateSurvivalProbabilities") == "Y") {
+    if (storeSp_) {
         const string configuration = params_->get("markets", "simulation");
-        cptyCalculators.push_back(boost::make_shared<SurvProbCalculator>(configuration, 0));
+        cptyCalculators.push_back(boost::make_shared<SurvivalProbabilityCalculator>(configuration));
     }
     LOG("Build cube");
     ValuationEngine engine(asof_, grid_, simMarket_);
@@ -807,6 +806,20 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
         nettingSetCube_ = nullptr;
     }
 
+    initCube(cube_, simPortfolio_->ids(), cubeDepth_);
+    
+    // initialise counterparty cube for the storage of survival probabilities
+    storeSp_ = false;
+    if (params_->has("simulation", "storeSurvivalProbabilities") &&
+        params_->get("simulation", "storeSurvivalProbabilities") == "Y") {
+        storeSp_ = true;
+        auto counterparties = simPortfolio_->counterparties();
+        counterparties.push_back(params_->get("xva", "dvaName"));
+        initCube(cptyCube_, counterparties, 1);
+    } else {
+        cptyCube_ = nullptr;
+    }
+
     ostringstream o;
     o << "Aggregation Scenario Data " << grid_->valuationDates().size() << " x " << samples_ << "... ";
     out_ << setw(tab_) << o.str() << flush;
@@ -815,14 +828,6 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     // Set AggregationScenarioData
     simMarket_->aggregationScenarioData() = scenarioData_;
     out_ << "OK" << endl;
-
-    initCube(cube_, simPortfolio_->ids(), cubeDepth_);
-    if (params_->has("simulation", "simulateSurvivalProbabilities") &&
-        params_->get("simulation", "simulateSurvivalProbabilities") == "Y") {
-        auto counterparties = simPortfolio_->counterparties();
-        counterparties.push_back(params_->get("xva", "dvaName"));
-        initCube(cptyCube_, counterparties, 1);
-    }
 }
 
 void OREApp::initialiseSensitivityStorageManager() {
@@ -1002,6 +1007,10 @@ void OREApp::runPostProcessor() {
         analytics["dim"] = parseBool(params_->get("xva", "dim"));
     else
         analytics["dim"] = false;
+    if (params_->has("xva", "dynamicCredit"))
+        analytics["dynamicCredit"] = parseBool(params_->get("xva", "dynamicCredit"));
+    else
+        analytics["dynamicCredit"] = false;
 
     string baseCurrency = params_->get("xva", "baseCurrency");
     string calculationType = params_->get("xva", "calculationType");
@@ -1050,11 +1059,6 @@ void OREApp::runPostProcessor() {
         dimLocalRegressionBandwidth = parseReal(params_->get("xva", "dimLocalRegressionBandwidth"));
     }
 
-    if (params_->has("xva", "dynamicCredit"))
-        analytics["dynamicCredit"] = parseBool(params_->get("xva", "dynamicCredit"));
-    else
-        analytics["dynamicCredit"] = false;
-
     string marketConfiguration = params_->get("markets", "simulation");
 
     bool fullInitialCollateralisation = false;
@@ -1071,7 +1075,7 @@ void OREApp::runPostProcessor() {
             cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
     }
 
-    if (!dimCalculator_) {
+    if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
         ALOG("dim calculator not set, create RegressionDynamicInitialMarginCalculator");
         dimCalculator_ = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
             portfolio_, cube_, cubeInterpreter_, scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
