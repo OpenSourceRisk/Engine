@@ -22,6 +22,7 @@
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
@@ -38,13 +39,39 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/lexical_cast.hpp>
 
+
+namespace {
+
+using ore::data::CorrelationFactor;
+using ore::data::parseCorrelationFactor;
+using ore::data::parseInteger;
+using ore::data::XMLNode;
+using ore::data::XMLUtils;
+using std::string;
+
+CorrelationFactor fromNode(ore::data::XMLNode* node, bool firstFactor) {
+
+    string factorTag = firstFactor ? "factor1" : "factor2";
+    string idxTag = firstFactor ? "index1" : "index2";
+
+    CorrelationFactor factor = parseCorrelationFactor(XMLUtils::getAttribute(node, factorTag));
+    string strIdx = XMLUtils::getAttribute(node, idxTag);
+    if (strIdx != "") {
+        factor.index = parseInteger(strIdx);
+    }
+
+    return factor;
+}
+
+}
+
 namespace ore {
 namespace data {
 
 bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
 
     // compare correlations by value (not the handle links)
-    map<pair<string, string>, Handle<Quote>>::const_iterator corr1, corr2;
+    map<CorrelationKey, Handle<Quote>>::const_iterator corr1, corr2;
     for (corr1 = correlations_.begin(), corr2 = rhs.correlations_.begin();
          corr1 != correlations_.end() && corr2 != rhs.correlations_.end(); ++corr1, ++corr2) {
         if (corr1->first != corr2->first || !close_enough(corr1->second->value(), corr2->second->value()))
@@ -265,25 +292,22 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     }
 
     // Configure correlation structure
-
+    LOG("CrossAssetModelData: adding correlations.");
     XMLNode* correlationNode = XMLUtils::getChildNode(modelNode, "InstantaneousCorrelations");
     CorrelationMatrixBuilder cmb;
     if (correlationNode) {
         vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(correlationNode, "Correlation");
         for (Size i = 0; i < nodes.size(); ++i) {
-            string f1 = XMLUtils::getAttribute(nodes[i], "factor1");
-            string f2 = XMLUtils::getAttribute(nodes[i], "factor2");
-            string v = XMLUtils::getNodeValue(nodes[i]);
-            if (f1 != "" && f2 != "" && v != "") {
-                cmb.addCorrelation(f1, f2, boost::lexical_cast<Real>(v));
-                LOG("CrossAssetModelData: add correlation " << f1 << " " << f2 << " " << v);
-            }
+            CorrelationFactor factor_1 = fromNode(nodes[i], true);
+            CorrelationFactor factor_2 = fromNode(nodes[i], false);
+            Real corr = parseReal(XMLUtils::getNodeValue(nodes[i]));
+            cmb.addCorrelation(factor_1, factor_2, corr);
         }
     } else {
         QL_FAIL("No InstantaneousCorrelations found in model configuration XML");
     }
 
-    correlations_ = cmb.data();
+    correlations_ = cmb.correlations();
 
     validate();
 
@@ -449,13 +473,18 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
     XMLNode* instantaneousCorrelationsNode = doc.allocNode("InstantaneousCorrelations");
     XMLUtils::appendNode(crossAssetModelNode, instantaneousCorrelationsNode);
 
-    for (auto correlationIterator = correlations_.begin(); correlationIterator != correlations_.end();
-         correlationIterator++) {
-        XMLNode* node = doc.allocNode("Correlation", std::to_string(correlationIterator->second->value()));
+    for (auto it = correlations_.begin(); it != correlations_.end(); it++) {
+        
+        XMLNode* node = doc.allocNode("Correlation", to_string(it->second->value()));
         XMLUtils::appendNode(instantaneousCorrelationsNode, node);
-        std::vector<std::string> factors = pairToStrings(correlationIterator->first);
-        XMLUtils::addAttribute(doc, node, "factor1", factors[0]);
-        XMLUtils::addAttribute(doc, node, "factor2", factors[1]);
+        
+        CorrelationFactor f_1 = it->first.first;
+        XMLUtils::addAttribute(doc, node, "factor1", to_string(f_1.type) + ":" + f_1.name);
+        XMLUtils::addAttribute(doc, node, "index1", to_string(f_1.index));
+
+        CorrelationFactor f_2 = it->first.second;
+        XMLUtils::addAttribute(doc, node, "factor2", to_string(f_2.type) + ":" + f_2.name);
+        XMLUtils::addAttribute(doc, node, "index2", to_string(f_2.index));
     }
 
     return crossAssetModelNode;

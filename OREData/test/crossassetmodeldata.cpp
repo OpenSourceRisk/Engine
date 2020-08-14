@@ -238,7 +238,7 @@ boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
     cmb.addCorrelation("IR:USD", "IR:JPY", 1.0);
     cmb.addCorrelation("INF:EUHICPXT", "IR:EUR", 1.0);
 
-    crossAssetData->correlations() = cmb.data();
+    crossAssetData->correlations() = cmb.correlations();
 
     crossAssetData->bootstrapTolerance() = 0.001;
 

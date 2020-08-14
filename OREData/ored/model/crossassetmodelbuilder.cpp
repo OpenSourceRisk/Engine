@@ -272,19 +272,11 @@ void CrossAssetModelBuilder::buildModel() const {
     /******************************
      * Build the correlation matrix
      */
-
-    ore::data::CorrelationMatrixBuilder cmb;
+    DLOG("CrossAssetModelBuilder: adding correlations.");
+    CorrelationMatrixBuilder cmb;
     for (auto it = config_->correlations().begin(); it != config_->correlations().end(); it++) {
-        std::string factor1 = it->first.first;
-        std::string factor2 = it->first.second;
-        Handle<Quote> corr = it->second;
-        DLOG("Add correlation for " << factor1 << " " << factor2);
-        cmb.addCorrelation(factor1, factor2, corr);
+        cmb.addCorrelation(it->first.first, it->first.second, it->second);
     }
-
-    DLOG("Get correlation matrix for currencies:");
-    for (auto c : currencies)
-        DLOG("Currency " << c);
 
     Matrix corrMatrix = cmb.correlationMatrix(currencies, infIndices, crNames, eqNames);
 

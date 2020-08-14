@@ -170,22 +170,22 @@ struct TestData {
         infConfigs.push_back(boost::make_shared<InfDkData>(CalibrationType::Bootstrap,
             cbEuhicpxt, "EUR", "EUHICPXT", reversion, volatility));
 
-        std::map<std::pair<std::string, std::string>, Handle<Quote>> corr;
-        corr[std::make_pair("IR:EUR", "IR:USD")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.6));
-        corr[std::make_pair("IR:EUR", "IR:GBP")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.3));
-        corr[std::make_pair("IR:USD", "IR:GBP")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.1));
-        corr[std::make_pair("FX:USDEUR", "FX:GBPEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.3));
-        corr[std::make_pair("IR:EUR", "FX:USDEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.2));
-        corr[std::make_pair("IR:EUR", "FX:GBPEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.3));
-        corr[std::make_pair("IR:USD", "FX:USDEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(-0.2));
-        corr[std::make_pair("IR:USD", "FX:GBPEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(-0.1));
-        corr[std::make_pair("IR:GBP", "FX:USDEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
-        corr[std::make_pair("IR:GBP", "FX:GBPEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.1));
-        corr[std::make_pair("INF:UKRPI", "IR:GBP")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.1));
-        corr[std::make_pair("INF:EUHICPXT", "IR:EUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.1));
+        CorrelationMatrixBuilder cmb;
+        cmb.addCorrelation("IR:EUR", "IR:USD", Handle<Quote>(boost::make_shared<SimpleQuote>(0.6)));
+        cmb.addCorrelation("IR:EUR", "IR:GBP", Handle<Quote>(boost::make_shared<SimpleQuote>(0.3)));
+        cmb.addCorrelation("IR:USD", "IR:GBP", Handle<Quote>(boost::make_shared<SimpleQuote>(0.1)));
+        cmb.addCorrelation("FX:USDEUR", "FX:GBPEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.3)));
+        cmb.addCorrelation("IR:EUR", "FX:USDEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.2)));
+        cmb.addCorrelation("IR:EUR", "FX:GBPEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.3)));
+        cmb.addCorrelation("IR:USD", "FX:USDEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(-0.2)));
+        cmb.addCorrelation("IR:USD", "FX:GBPEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(-0.1)));
+        cmb.addCorrelation("IR:GBP", "FX:USDEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)));
+        cmb.addCorrelation("IR:GBP", "FX:GBPEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.1)));
+        cmb.addCorrelation("INF:UKRPI", "IR:GBP", Handle<Quote>(boost::make_shared<SimpleQuote>(0.1)));
+        cmb.addCorrelation("INF:EUHICPXT", "IR:EUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.1)));
 
-        boost::shared_ptr<CrossAssetModelData> config(
-            boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, corr));
+        boost::shared_ptr<CrossAssetModelData> config(boost::make_shared<CrossAssetModelData>(
+            irConfigs, fxConfigs, eqConfigs, infConfigs, cmb.correlations()));
 
         CrossAssetModelBuilder modelBuilder(market, config);
         ccLgm = *modelBuilder.model();

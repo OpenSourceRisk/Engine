@@ -996,5 +996,22 @@ CapFloor::Type parseCapFloorType(const string& s) {
     }
 }
 
+QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const string& s) {
+    namespace CT = QuantExt::CrossAssetModelTypes;
+    if (s == "IR") {
+        return CT::IR;
+    } else if (s == "FX") {
+        return CT::FX;
+    } else if (s == "INF") {
+        return CT::INF;
+    } else if (s == "CR") {
+        return CT::CR;
+    } else if (s == "EQ") {
+        return CT::EQ;
+    } else {
+        QL_FAIL("Unknown cross asset model type " << s);
+    }
+}
+
 } // namespace data
 } // namespace ore

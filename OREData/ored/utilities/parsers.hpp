@@ -42,6 +42,7 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
+#include <qle/models/crossassetmodel.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
@@ -307,6 +308,11 @@ QuantLib::VolatilityType parseVolatilityQuoteType(const std::string& s);
     \ingroup utilities
 */
 QuantLib::CapFloor::Type parseCapFloorType(const std::string& s);
+
+/*! Convert text to QuantExt::CrossAssetModelTypes::AssetType
+    \ingroup utilities
+*/
+QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const std::string& s);
 
 } // namespace data
 } // namespace ore

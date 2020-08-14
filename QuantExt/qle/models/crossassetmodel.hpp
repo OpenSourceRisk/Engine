@@ -48,6 +48,8 @@ namespace CrossAssetModelTypes {
 enum AssetType { IR, FX, INF, CR, EQ };
 static constexpr Size crossAssetModelAssetTypes = 5;
 
+std::ostream& operator<<(std::ostream& out, const AssetType& type);
+
 /*! the model types supported by the CrossAssetModel or derived classes;
   a model type may applicable to several asset types (like BS for FX, EQ) */
 enum ModelType { LGM1F, BS, DK, CIRPP };

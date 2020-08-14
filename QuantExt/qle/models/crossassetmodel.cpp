@@ -29,6 +29,27 @@ using namespace QuantExt::CrossAssetAnalytics;
 
 namespace QuantExt {
 
+namespace CrossAssetModelTypes {
+
+std::ostream& operator<<(std::ostream& out, const AssetType& type) {
+    switch (type) {
+    case IR:
+        return out << "IR";
+    case FX:
+        return out << "FX";
+    case INF:
+        return out << "INF";
+    case CR:
+        return out << "CR";
+    case EQ:
+        return out << "EQ";
+    default:
+        QL_FAIL("Did not recognise cross asset model type " << static_cast<int>(type) << ".");
+    }
+}
+
+}
+
 CrossAssetModel::CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization> >& parametrizations,
                                  const Matrix& correlation, SalvagingAlgorithm::Type salvaging)
     : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation), salvaging_(salvaging) {
