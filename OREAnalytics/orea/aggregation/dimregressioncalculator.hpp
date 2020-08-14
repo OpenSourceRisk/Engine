@@ -59,7 +59,9 @@ public:
         //! Number of local regression evaluation windows across all paths, up to number of samples
         Size localRegressionEvaluations = 0,
         //! Local regression band width in standard deviations of the regression variable
-        Real localRegressionBandWidth = 0);
+        Real localRegressionBandWidth = 0,
+	//! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
+	const std::map<std::string, Real>& currentIM = std::map<std::string, Real>());
 
     map<string, Real> unscaledCurrentDIM() override;
     void build() override;

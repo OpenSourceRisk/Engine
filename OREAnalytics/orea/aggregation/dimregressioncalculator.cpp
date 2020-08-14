@@ -50,8 +50,9 @@ RegressionDynamicInitialMarginCalculator::RegressionDynamicInitialMarginCalculat
     const boost::shared_ptr<CubeInterpretation>& cubeInterpretation,
     const boost::shared_ptr<AggregationScenarioData>& scenarioData, Real quantile, Size horizonCalendarDays,
     Size regressionOrder, std::vector<std::string> regressors, Size localRegressionEvaluations,
-    Real localRegressionBandWidth)
-    : DynamicInitialMarginCalculator(portfolio, cube, cubeInterpretation, scenarioData, quantile, horizonCalendarDays),
+    Real localRegressionBandWidth, const std::map<std::string, Real>& currentIM)
+    : DynamicInitialMarginCalculator(portfolio, cube, cubeInterpretation, scenarioData, quantile, horizonCalendarDays,
+                                     currentIM),
       regressionOrder_(regressionOrder), regressors_(regressors),
       localRegressionEvaluations_(localRegressionEvaluations), localRegressionBandWidth_(localRegressionBandWidth) {
     Size dates = cube_->dates().size();
@@ -97,6 +98,8 @@ const vector<Real>& RegressionDynamicInitialMarginCalculator::simpleResultsLower
 void RegressionDynamicInitialMarginCalculator::build() {
     LOG("DIM Analysis by polynomial regression");
 
+    map<string, Real> currentDim = unscaledCurrentDIM();
+
     Size stopDatesLoop = datesLoopSize_;
     Size samples = cube_->samples();
 
@@ -121,12 +124,23 @@ void RegressionDynamicInitialMarginCalculator::build() {
     Size nettingSetCount = 0;
     for (auto n : nettingSetIds_) {
         LOG("Process netting set " << n);
+
+        if (currentIM_.find(n) != currentIM_.end()) {
+            Real t0im = currentIM_[n];
+            QL_REQUIRE(currentDim.find(n) != currentDim.end(), "current DIM not found for netting set " << n);
+            Real t0dim = currentDim[n];
+            Real t0scaling = t0im / t0dim;
+            LOG("t0 scaling for netting set " << n << ": t0im" << t0im << " t0dim=" << t0dim
+                                              << " t0scaling=" << t0scaling);
+            nettingSetScaling_[n] = t0scaling;
+        }
+
         Real nettingSetDimScaling =
             nettingSetScaling_.find(n) == nettingSetScaling_.end() ? 1.0 : nettingSetScaling_[n];
         LOG("Netting set DIM scaling factor: " << nettingSetDimScaling);
 
         for (Size j = 0; j < stopDatesLoop; ++j) {
-	    accumulator_set<double, stats<tag::mean, tag::variance>> accDiff;
+            accumulator_set<double, stats<tag::mean, tag::variance>> accDiff;
             accumulator_set<double, stats<tag::mean>> accOneOverNumeraire;
             for (Size k = 0; k < samples; ++k) {
                 Real numDefault = cubeInterpretation_->getDefaultAggrionScenarioData(
@@ -354,7 +368,7 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
     Size samples = dimCube_->samples();
     Size stopDatesLoop = datesLoopSize_;
     Date asof = cube_->asof();
-    
+
     dimEvolutionReport.addColumn("TimeStep", Size())
         .addColumn("Date", Date())
         .addColumn("DaysInPeriod", Size())
@@ -375,8 +389,8 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
             }
 
             Date defaultDate = dimCube_->dates()[i];
-	    Time t = ActualActual().yearFraction(asof, defaultDate);
-	    Size days = cubeInterpretation_->getMporCalendarDays(dimCube_, i);
+            Time t = ActualActual().yearFraction(asof, defaultDate);
+            Size days = cubeInterpretation_->getMporCalendarDays(dimCube_, i);
             dimEvolutionReport.next()
                 .add(i)
                 .add(defaultDate)

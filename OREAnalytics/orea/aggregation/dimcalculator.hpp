@@ -63,15 +63,17 @@ public:
         //! VaR quantile, e.g. 0.99 for 99%
         Real quantile = 0.99,
         //! VaR holding period in calendar days
-        Size horizonCalendarDays = 14);
+        Size horizonCalendarDays = 14,
+	//! Actual t0 IM by netting set used to scale the DIM evolution, no scaling if the argument is omitted
+	const std::map<std::string, Real>& currentIM = std::map<std::string, Real>());
 
     virtual ~DynamicInitialMarginCalculator() {}
 
-    //! Reset the netting set specific scaling factor
-    void setScaling(const string& nettingSet, Real scaling) { nettingSetScaling_[nettingSet] = scaling; }
-
     //! Model implied t0 DIM by netting set, does not need a call to build() before
     virtual map<string, Real> unscaledCurrentDIM() = 0;
+
+    //! t0 IM by netting set, as provided as an arguments
+    map<string, Real> currentIM() { return currentIM_; }
 
     //! Compute dynamic initial margin along all paths and fill result structurues
     virtual void build() = 0;
@@ -91,6 +93,9 @@ public:
     //! Expected DIM vector by date for the specified netting set
     const vector<Real>& expectedIM(const string& nettingSet);
 
+    //! Get the implied netting set specific scaling factors
+    const std::map<std::string, Real>& getInitialMarginScaling() { return nettingSetScaling_; }
+
 protected:
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<NPVCube> cube_, dimCube_;
@@ -98,6 +103,8 @@ protected:
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     Real quantile_;
     Size horizonCalendarDays_;
+    map<string, Real> currentIM_;
+
     bool cubeIsRegular_;
     Size datesLoopSize_;
     vector<string> nettingSetIds_;
@@ -112,6 +119,8 @@ protected:
 
     // For each netting set: vector of values by date, aggregated over trades and samples
     map<string, vector<Real>> nettingSetExpectedDIM_;
+
+    
 };
 
 } // namespace analytics
