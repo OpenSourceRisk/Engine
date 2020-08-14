@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+#include <ql/utilities/null.hpp>
 #include <ql/time/period.hpp>
 
 namespace ore {
@@ -68,8 +69,8 @@ public:
                          const string& marginPostFreq, // e.g. "1D", "2W", "3M", "4Y"
                          const string& mpr,            // e.g. "1D", "2W", "3M", "4Y"
                          const Real& collatSpreadPay, const Real& collatSpreadRcv,
-                         const vector<string>& eligCollatCcys); //! vector of three letter ISO codes
-
+                         const vector<string>& eligCollatCcys, // vector of three letter ISO codes
+                         const Real& riskWeight = QuantLib::Null<Real>()); // SA-CCR risk weight
     /*!
       loads NettingSetDefinition object from XML
     */
@@ -122,6 +123,8 @@ public:
     Real collatSpreadPay() const { return collatSpreadPay_; }
     /*! Eligible Collateral Currencies */
     vector<string> eligCollatCcys() const { return eligCollatCcys_; }
+    /*! Counterparty risk weight */
+    Real riskWeight() const { return riskWeight_; }
     //@}
 
 private:
@@ -147,6 +150,7 @@ private:
     Real collatSpreadPay_;
     Real collatSpreadRcv_;
     vector<string> eligCollatCcys_;
+    Real riskWeight_;
 
     // object-status flags
     bool isLoaded_;
