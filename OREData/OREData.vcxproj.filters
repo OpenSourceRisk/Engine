@@ -509,7 +509,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ored\export.cpp" />
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
       <Filter>configuration</Filter>
     </ClCompile>

@@ -21,6 +21,8 @@
 #include <ored/utilities/to_string.hpp>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/export.hpp>
 
 using namespace QuantLib;
@@ -283,5 +285,45 @@ boost::shared_ptr<BaseStrike> parseBaseStrike(const string& strStrike) {
     return strike;
 }
 
+template <class Archive> void BaseStrike::serialize(Archive& ar, const unsigned int version) {}
+
+template <class Archive> void AbsoluteStrike::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<BaseStrike>(*this);
+    ar& strike_;
+}
+
+template <class Archive> void DeltaStrike::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<BaseStrike>(*this);
+    ar& deltaType_;
+    ar& optionType_;
+    ar& delta_;
+}
+
+template <class Archive> void AtmStrike::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<BaseStrike>(*this);
+    ar& atmType_;
+    ar& deltaType_;
+}
+
+template <class Archive> void MoneynessStrike::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<BaseStrike>(*this);
+    ar& type_;
+    ar& moneyness_;
+}
+
+template void BaseStrike::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void BaseStrike::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void DeltaStrike::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void DeltaStrike::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void AtmStrike::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void AtmStrike::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void MoneynessStrike::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void MoneynessStrike::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+
 } // namespace data
 } // namespace ore
+
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::AbsoluteStrike);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::DeltaStrike);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::AtmStrike);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::MoneynessStrike);
