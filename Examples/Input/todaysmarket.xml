@@ -219,4 +219,8 @@
       <CommodityVolatility name="COMDTY_GOLD_USD">CommodityVolatility/USD/GOLD_USD_VOLS</CommodityVolatility>
       <CommodityVolatility name="COMDTY_WTI_USD">CommodityVolatility/USD/WTI_USD_VOLS</CommodityVolatility>
   </CommodityVolatilities>
+  <CDSVolatilities id="default">
+    <CDSVolatility name="CPTY_A">CDSVolatility/CPTY_A</CDSVolatility>
+    <CDSVolatility name="CPTY_B">CDSVolatility/CPTY_A</CDSVolatility>
+  </CDSVolatilities>
 </TodaysMarket>

@@ -52,6 +52,10 @@ marketdata/todaysmarket.cpp
 marketdata/todaysmarketparameters.cpp
 marketdata/yieldcurve.cpp
 marketdata/yieldvolcurve.cpp
+model/crcirbuilder.cpp
+model/crcirdata.cpp
+model/crlgmbuilder.cpp
+model/crlgmdata.cpp
 model/crossassetmodelbuilder.cpp
 model/crossassetmodeldata.cpp
 model/eqbsbuilder.cpp
@@ -79,6 +83,7 @@ portfolio/commodityforward.cpp
 portfolio/commodityoption.cpp
 portfolio/creditdefaultswap.cpp
 portfolio/creditdefaultswapdata.cpp
+portfolio/creditdefaultswapoption.cpp
 portfolio/enginedata.cpp
 portfolio/enginefactory.cpp
 portfolio/envelope.cpp
@@ -191,6 +196,10 @@ marketdata/todaysmarket.hpp
 marketdata/todaysmarketparameters.hpp
 marketdata/yieldcurve.hpp
 marketdata/yieldvolcurve.hpp
+model/crcirbuilder.hpp
+model/crcirdata.hpp
+model/crlgmbuilder.hpp
+model/crlgmdata.hpp
 model/crossassetmodelbuilder.hpp
 model/crossassetmodeldata.hpp
 model/eqbsbuilder.hpp
@@ -221,6 +230,7 @@ portfolio/builders/commodityforward.hpp
 portfolio/builders/commodityoption.hpp
 portfolio/builders/cpicapfloor.hpp
 portfolio/builders/creditdefaultswap.hpp
+portfolio/builders/creditdefaultswapoption.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityoption.hpp
 portfolio/builders/forwardbond.hpp
@@ -235,6 +245,7 @@ portfolio/commodityforward.hpp
 portfolio/commodityoption.hpp
 portfolio/creditdefaultswap.hpp
 portfolio/creditdefaultswapdata.hpp
+portfolio/creditdefaultswapoption.hpp
 portfolio/enginedata.hpp
 portfolio/enginefactory.hpp
 portfolio/envelope.hpp

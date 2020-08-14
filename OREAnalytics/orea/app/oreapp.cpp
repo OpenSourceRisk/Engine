@@ -209,6 +209,12 @@ int OREApp::run() {
                        "cube x dimension (" << cube_->numIds() << ") does not match portfolio size ("
                                             << portfolio_->size() << ")");
 
+            if (cptyCube_) {
+                QL_REQUIRE(cptyCube_->numIds() == portfolio_->counterparties().size() + 1,
+                          "cptyCube x dimension (" << cptyCube_->numIds() << ") does not match portfolio size ("
+                                                   << portfolio_->counterparties().size() << " minus 1)");
+            }
+
             // Use pre-generared scenarios
             if (!scenarioData_)
                 loadScenarioData();
@@ -424,13 +430,16 @@ boost::shared_ptr<QuantExt::CrossAssetModel> OREApp::buildCam(boost::shared_ptr<
     string infCalibrationMarketStr = Market::defaultConfiguration;
     if (params_->has("markets", "infcalibration"))
         infCalibrationMarketStr = params_->get("markets", "infcalibration");
+    string crCalibrationMarketStr = Market::defaultConfiguration;
+    if (params_->has("markets", "crcalibration"))
+        crCalibrationMarketStr = params_->get("markets", "crcalibration");
     string simulationMarketStr = Market::defaultConfiguration;
     if (params_->has("markets", "simulation"))
         simulationMarketStr = params_->get("markets", "simulation");
 
     CrossAssetModelBuilder modelBuilder(market, modelData, lgmCalibrationMarketStr, fxCalibrationMarketStr,
-                                        eqCalibrationMarketStr, infCalibrationMarketStr, simulationMarketStr,
-                                        ActualActual(), false, continueOnCalibrationError);
+                                        eqCalibrationMarketStr, infCalibrationMarketStr, crCalibrationMarketStr,
+                                        simulationMarketStr, ActualActual(), false, continueOnCalibrationError);
     boost::shared_ptr<QuantExt::CrossAssetModel> model = *modelBuilder.model();
     return model;
 }
@@ -706,6 +715,13 @@ void OREApp::buildNPVCube() {
     else
         cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
 
+    vector<boost::shared_ptr<SurvProbCalculator>> cptyCalculators;
+
+    if (params_->has("simulation", "simulateSurvivalProbabilities") &&
+        params_->get("simulation", "simulateSurvivalProbabilities") == "Y") {
+        const string configuration = params_->get("markets", "simulation");
+        cptyCalculators.push_back(boost::make_shared<SurvProbCalculator>(configuration, 0));
+    }
     LOG("Build cube");
     ValuationEngine engine(asof_, grid_, simMarket_);
     ostringstream o;
@@ -717,7 +733,9 @@ void OREApp::buildNPVCube() {
     auto progressLog = boost::make_shared<ProgressLog>("Building cube...");
     engine.registerProgressIndicator(progressBar);
     engine.registerProgressIndicator(progressLog);
-    engine.buildCube(simPortfolio_, cube_, calculators, useMporStickyDate_, nettingSetCube_);
+
+    engine.buildCube(simPortfolio_, cube_, calculators, useMporStickyDate_, nettingSetCube_, cptyCube_, cptyCalculators);
+
     out_ << "OK" << endl;
 }
 
@@ -799,6 +817,12 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     out_ << "OK" << endl;
 
     initCube(cube_, simPortfolio_->ids(), cubeDepth_);
+    if (params_->has("simulation", "simulateSurvivalProbabilities") &&
+        params_->get("simulation", "simulateSurvivalProbabilities") == "Y") {
+        auto counterparties = simPortfolio_->counterparties();
+        counterparties.push_back(params_->get("xva", "dvaName"));
+        initCube(cptyCube_, counterparties, 1);
+    }
 }
 
 void OREApp::initialiseSensitivityStorageManager() {
@@ -847,6 +871,8 @@ void OREApp::generateNPVCube() {
     writeCube(cube_, "cubeFile");
     if (nettingSetCube_)
         writeCube(nettingSetCube_, "nettingSetCubeFile");
+    if (cptyCube_)
+        writeCube(cptyCube_, "cptyCubeFile");
     writeScenarioData();
 
     LOG("NPV cube generation completed");
@@ -933,6 +959,18 @@ void OREApp::loadCube() {
                                       << " samples=" << nettingSetCube_->samples()
                                       << " depth=" << nettingSetCube_->depth());
     }
+
+    // load additional cube on counterparty level (if specified)
+
+    if (params_->has("xva", "cptyCubeFile") && params_->get("xva", "cptyCubeFile") != "") {
+        string cubeFile3 = outputPath_ + "/" + params_->get("xva", "cptyCubeFile");
+        cptyCube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
+        LOG("Load counterparty cube from file " << cubeFile3);
+        cptyCube_->load(cubeFile3);
+        LOG("Cube loading done: ids=" << cptyCube_->numIds() << " dates=" << cptyCube_->numDates()
+                                      << " samples=" << cptyCube_->samples()
+                                      << " depth=" << cptyCube_->depth());
+    }
 }
 
 boost::shared_ptr<NettingSetManager> OREApp::initNettingSetManager() {
@@ -1012,6 +1050,11 @@ void OREApp::runPostProcessor() {
         dimLocalRegressionBandwidth = parseReal(params_->get("xva", "dimLocalRegressionBandwidth"));
     }
 
+    if (params_->has("xva", "dynamicCredit"))
+        analytics["dynamicCredit"] = parseBool(params_->get("xva", "dynamicCredit"));
+    else
+        analytics["dynamicCredit"] = false;
+
     string marketConfiguration = params_->get("markets", "simulation");
 
     bool fullInitialCollateralisation = false;
@@ -1040,7 +1083,7 @@ void OREApp::runPostProcessor() {
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, kvaCapitalDiscountRate,
         kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor, kvaOurCvaRiskWeight,
-        kvaTheirCvaRiskWeight);
+        kvaTheirCvaRiskWeight, cptyCube_);
 }
 
 void OREApp::writeXVAReports() {

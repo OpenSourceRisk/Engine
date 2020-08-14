@@ -63,8 +63,10 @@ protected:
     void updateSqrtCorrelation() const;
 
     const CrossAssetModel* const model_;
+    std::vector<boost::shared_ptr<StochasticProcess>> crCirpp_;
     const discretization disc_;
     SalvagingAlgorithm::Type salvaging_;
+    Size cirppCount_;
     mutable Matrix sqrtCorrelation_;
 
     class ExactDiscretization : public StochasticProcess::discretization {

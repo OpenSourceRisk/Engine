@@ -87,6 +87,8 @@ math/deltagammavar.cpp
 math/fillemptymatrix.cpp
 methods/multipathgeneratorbase.cpp
 models/cdsoptionhelper.cpp
+models/cirppimplieddefaulttermstructure.cpp
+models/crcirpp.cpp
 models/cmscaphelper.cpp
 models/cpicapfloorhelper.cpp
 models/crossassetanalytics.cpp
@@ -136,6 +138,7 @@ pricingengines/midpointcdsengine.cpp
 pricingengines/numericlgmswaptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
+processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
 quotes/logquote.cpp
@@ -340,6 +343,11 @@ math/stabilisedglls.hpp
 math/trace.hpp
 methods/multipathgeneratorbase.hpp
 models/cdsoptionhelper.hpp
+models/cirppconstantfellerparametrization.hpp
+models/cirppconstantparametrization.hpp
+models/cirppimplieddefaulttermstructure.hpp
+models/cirppparametrization.hpp
+models/crcirpp.hpp
 models/cmscaphelper.hpp
 models/cpicapfloorhelper.hpp
 models/crlgm1fparametrization.hpp
@@ -398,6 +406,7 @@ pricingengines/midpointcdsengine.hpp
 pricingengines/numericlgmswaptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
+processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
 quotes/exceptionquote.hpp

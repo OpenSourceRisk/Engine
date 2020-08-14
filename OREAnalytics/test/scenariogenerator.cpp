@@ -146,6 +146,8 @@ struct TestData {
 
         std::vector<boost::shared_ptr<EqBsData>> eqConfigs;
         std::vector<boost::shared_ptr<InfDkData>> infConfigs;
+        std::vector<boost::shared_ptr<CrLgmData>> crLgmConfigs;
+        std::vector<boost::shared_ptr<CrCirData>> crCirConfigs;
 
         vector<std::string> infExpiries = {"5Y"};
         vector<std::string> infStrikes = {"0.0"};
@@ -179,7 +181,8 @@ struct TestData {
         corr[std::make_pair("INF:EUHICPXT", "IR:EUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.1));
 
         boost::shared_ptr<CrossAssetModelData> config(
-            boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, corr));
+            boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs,
+                                                    crLgmConfigs, crCirConfigs, corr));
 
         CrossAssetModelBuilder modelBuilder(market, config);
         ccLgm = *modelBuilder.model();

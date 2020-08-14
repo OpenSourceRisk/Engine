@@ -16,22 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file lgmimplieddefaulttermstructure.hpp
-    \brief default probability structure implied by a LGM model
+/*! \file cirppimplieddefaulttermstructure.hpp
+    \brief default probability structure implied by a CIRPP model
     \ingroup models
 */
 
-#ifndef quantext_lgm_implied_survivalprob_ts_hpp
-#define quantext_lgm_implied_survivalprob_ts_hpp
+#ifndef quantext_cirpp_implied_survivalprob_ts_hpp
+#define quantext_cirpp_implied_survivalprob_ts_hpp
 
-#include <qle/models/crossassetmodel.hpp>
+#include <qle/models/crcirpp.hpp>
 
 #include <ql/termstructures/credit/survivalprobabilitystructure.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
-//! Lgm Implied Default Term Structure
 /*! The termstructure has the reference date of the model's
     termstructure at construction, but you can vary this
     as well as the state.
@@ -43,11 +42,10 @@ using namespace QuantLib;
     \ingroup models
  */
 
-class LgmImpliedDefaultTermStructure : public SurvivalProbabilityStructure {
+class CirppImpliedDefaultTermStructure : public SurvivalProbabilityStructure {
 public:
-    LgmImpliedDefaultTermStructure(const boost::shared_ptr<CrossAssetModel>& model, const Size index,
-                                   const Size currency, const DayCounter& dc = DayCounter(),
-                                   const bool purelyTimeBased = false);
+    CirppImpliedDefaultTermStructure(const boost::shared_ptr<CrCirpp>& model, const Size index,
+                                     const DayCounter& dc = DayCounter(), const bool purelyTimeBased = false);
 
     Date maxDate() const;
     Time maxTime() const;
@@ -56,9 +54,9 @@ public:
 
     void referenceDate(const Date& d);
     void referenceTime(const Time t);
-    void state(const Real z, const Real y);
-    void move(const Date& d, const Real z, const Real y);
-    void move(const Time t, const Real z, const Real y);
+    void state(const Real y);
+    void move(const Date& d, const Real y);
+    void move(const Time t, const Real y);
 
     void update();
 
@@ -66,70 +64,71 @@ protected:
     Rate hazardRateImpl(Time) const;
     Probability survivalProbabilityImpl(Time) const;
 
-    const boost::shared_ptr<CrossAssetModel> model_;
-    const Size index_, currency_;
+    const boost::shared_ptr<CrCirpp> model_;
+    const Size index_;
     const bool purelyTimeBased_;
     Date referenceDate_;
-    Real relativeTime_, z_, y_;
+    Real relativeTime_, y_;
 };
 
 // inline
 
-inline Date LgmImpliedDefaultTermStructure::maxDate() const {
+inline Date CirppImpliedDefaultTermStructure::maxDate() const {
     // we don't care - let the underlying classes throw
     // exceptions if applicable
     return Date::maxDate();
 }
 
-inline Time LgmImpliedDefaultTermStructure::maxTime() const {
+inline Time CirppImpliedDefaultTermStructure::maxTime() const {
     // see maxDate
     return QL_MAX_REAL;
 }
 
-inline const Date& LgmImpliedDefaultTermStructure::referenceDate() const {
+inline const Date& CirppImpliedDefaultTermStructure::referenceDate() const {
     QL_REQUIRE(!purelyTimeBased_, "reference date not available for purely "
                                   "time based term structure");
     return referenceDate_;
 }
 
-inline void LgmImpliedDefaultTermStructure::referenceDate(const Date& d) {
+inline void CirppImpliedDefaultTermStructure::referenceDate(const Date& d) {
     QL_REQUIRE(!purelyTimeBased_, "reference date not available for purely "
                                   "time based term structure");
     referenceDate_ = d;
     update();
 }
 
-inline void LgmImpliedDefaultTermStructure::referenceTime(const Time t) {
+inline void CirppImpliedDefaultTermStructure::referenceTime(const Time t) {
     QL_REQUIRE(purelyTimeBased_, "reference time can only be set for purely "
                                  "time based term structure");
     relativeTime_ = t;
 }
 
-inline void LgmImpliedDefaultTermStructure::state(const Real z, const Real y) {
-    z_ = z;
+inline void CirppImpliedDefaultTermStructure::state(const Real y) {
     y_ = y;
 }
 
-inline void LgmImpliedDefaultTermStructure::move(const Date& d, const Real z, const Real y) {
-    state(z, y);
+inline void CirppImpliedDefaultTermStructure::move(const Date& d, const Real y) {
+    state(y);
     referenceDate(d);
 }
 
-inline void LgmImpliedDefaultTermStructure::move(const Time t, const Real z, const Real y) {
-    state(z, y);
+inline void CirppImpliedDefaultTermStructure::move(const Time t, const Real y) {
+    state(y);
     referenceTime(t);
 }
 
-inline void LgmImpliedDefaultTermStructure::update() {
+inline void CirppImpliedDefaultTermStructure::update() {
     if (!purelyTimeBased_) {
-        relativeTime_ = dayCounter().yearFraction(model_->irlgm1f(0)->termStructure()->referenceDate(), referenceDate_);
+        relativeTime_ = dayCounter().yearFraction(model_->defaultCurve()->referenceDate(), referenceDate_);
     }
     notifyObservers();
 }
 
-inline Real LgmImpliedDefaultTermStructure::survivalProbabilityImpl(Time t) const {
+inline Real CirppImpliedDefaultTermStructure::survivalProbabilityImpl(Time t) const {
     QL_REQUIRE(t >= 0.0, "negative time (" << t << ") given");
-    return model_->crlgm1fS(index_, currency_, relativeTime_, relativeTime_ + t, z_, y_).second;
+    if (close_enough(t, 0))
+        return 1.0;
+    return model_->survivalProbability(relativeTime_, relativeTime_+ t, y_);
 }
 
 } // namespace QuantExt

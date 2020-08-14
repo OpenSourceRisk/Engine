@@ -230,6 +230,64 @@ boost::shared_ptr<vector<boost::shared_ptr<EqBsData>>> eqConfigsData() {
     return eqBsDataVector;
 }
 
+boost::shared_ptr<vector<boost::shared_ptr<CrLgmData>>> crLgmConfigsData() {
+
+    // Create three instances
+    boost::shared_ptr<CrLgmData> lgmData(new data::CrLgmData());
+
+    lgmData->name() = "ItraxxEuropeS9V1";
+
+    lgmData->calibrationType() = parseCalibrationType("BOOTSTRAP");
+    lgmData->reversionType() = parseReversionType("HULLWHITE");
+    lgmData->volatilityType() = parseVolatilityType("HAGAN");
+    std::vector<Time> hTimes = {1.0, 2.0, 3.0, 4.0};
+    std::vector<Real> hValues = {1.0, 2.0, 3.0, 4.0};
+    std::vector<Time> aTimes = {1.0, 2.0, 3.0, 4.0};
+    std::vector<Real> aValues = {1.0, 2.0, 3.0, 4.0};
+
+    lgmData->calibrateH() = false;
+    lgmData->hParamType() = parseParamType("CONSTANT");
+
+    lgmData->hTimes() = hTimes;
+
+    lgmData->hValues() = hValues;
+
+    lgmData->calibrateA() = false;
+    lgmData->aParamType() = parseParamType("CONSTANT");
+    lgmData->aTimes() = aTimes;
+    lgmData->aValues() = aValues;
+    lgmData->shiftHorizon() = 1.0;
+
+    lgmData->scaling() = 1.0;
+
+    boost::shared_ptr<vector<boost::shared_ptr<CrLgmData>>> lgmDataVector(new vector<boost::shared_ptr<CrLgmData>>);
+    *lgmDataVector = {lgmData};
+    return lgmDataVector;
+}
+
+boost::shared_ptr<vector<boost::shared_ptr<CrCirData>>> crCirConfigsData() {
+
+    // Create three instances
+    boost::shared_ptr<CrCirData> cirData(new data::CrCirData());
+
+    cirData->name() = "CDX.NA.S33v1";
+
+    cirData->currency() = "USD";
+    cirData->calibrationType() = parseCalibrationType("None");
+    cirData->calibrationStrategy() = parseCirCalibrationStrategy("None");
+    cirData->startValue() = 0.1;
+    cirData->reversionValue() = 0.1;
+    cirData->longTermValue() = 0.1;
+    cirData->volatility() = 0.1;
+    cirData->relaxedFeller() = true;
+    cirData->fellerFactor() = 1.1;
+    cirData->tolerance() = 1e-8;
+
+    boost::shared_ptr<vector<boost::shared_ptr<CrCirData>>> cirDataVector(new vector<boost::shared_ptr<CrCirData>>);
+    *cirDataVector = {cirData};
+    return cirDataVector;
+}
+
 boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
 
     boost::shared_ptr<data::CrossAssetModelData> crossAssetData(new data::CrossAssetModelData());
@@ -238,16 +296,22 @@ boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
     crossAssetData->currencies() = {"EUR", "USD", "JPY"}; // need to check how to set this up
     crossAssetData->equities() = {"SP5"};
     crossAssetData->infIndices() = {"EUHICPXT"};
+    crossAssetData->creditNames() = {"ItraxxEuropeS9V1", "CDX.NA.S33v1"};
     crossAssetData->irConfigs() = *irConfigsData();
     crossAssetData->fxConfigs() = *fxConfigsData();
     crossAssetData->eqConfigs() = *eqConfigsData();
     crossAssetData->infConfigs() = *infConfigsData();
+    crossAssetData->crLgmConfigs() = *crLgmConfigsData();
+    crossAssetData->crCirConfigs() = *crCirConfigsData();
 
     CorrelationMatrixBuilder cmb;
     cmb.addCorrelation("IR:EUR", "IR:USD", 1.0);
     cmb.addCorrelation("IR:EUR", "IR:JPY", 1.0);
     cmb.addCorrelation("IR:USD", "IR:JPY", 1.0);
     cmb.addCorrelation("INF:EUHICPXT", "IR:EUR", 1.0);
+    cmb.addCorrelation("IR:EUR", "CR:ItraxxEuropeS9V1", 1.0);
+    cmb.addCorrelation("IR:USD", "CR:CDX.NA.S33v1", 1.0);
+    cmb.addCorrelation("CR:ItraxxEuropeS9V1", "CR:CDX.NA.S33v1", 1.0);
 
     crossAssetData->correlations() = cmb.data();
 

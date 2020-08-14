@@ -1,0 +1,108 @@
+/*
+ Copyright (C) 2020 Quaternion Risk Management Ltd
+ All rights reserved.
+*/
+
+/*! \file cirppconstantparametrization.hpp
+    \brief constant CIR ++ parametrization
+    \ingroup models
+*/
+
+#ifndef quantext_cirpp_constant_parametrization_hpp
+#define quantext_cirpp_constant_parametrization_hpp
+
+#include <qle/models/cirppparametrization.hpp>
+
+#include <ql/errors.hpp>
+
+namespace QuantExt {
+
+//! CIR++ Constant Parametrization
+/*! \ingroup models
+ */
+template <class TS> class CirppConstantParametrization : public CirppParametrization<TS> {
+public:
+    CirppConstantParametrization(const Currency& currency, const Handle<TS>& termStructure, const Real kappa,
+                                 const Real theta, const Real sigma, const Real y0, const bool shifted,
+                                 const std::string& name = std::string());
+
+    Real kappa(const Time t) const;
+    Real theta(const Time t) const;
+    Real sigma(const Time t) const;
+    Real y0(const Time t) const;
+
+    const boost::shared_ptr<Parameter> parameter(const Size) const;
+
+protected:
+    Real direct(const Size i, const Real x) const;
+    Real inverse(const Size j, const Real y) const;
+
+private:
+    const boost::shared_ptr<PseudoParameter> kappa_, theta_, sigma_, y0_;
+};
+
+// implementation
+
+template <class TS>
+CirppConstantParametrization<TS>::CirppConstantParametrization(const Currency& currency,
+                                                               const Handle<TS>& termStructure,
+                                                               const Real kappa, const Real theta,
+                                                               const Real sigma, const Real y0,
+                                                               const bool shifted,
+                                                               const std::string& name)
+    : CirppParametrization<TS>(currency, termStructure, shifted, name),
+      kappa_(boost::make_shared<PseudoParameter>(1)),
+      theta_(boost::make_shared<PseudoParameter>(1)), sigma_(boost::make_shared<PseudoParameter>(1)),
+      y0_(boost::make_shared<PseudoParameter>(1)) {
+    kappa_->setParam(0, inverse(0, kappa));
+    theta_->setParam(0, inverse(1, theta));
+    sigma_->setParam(0, inverse(2, sigma));
+    y0_->setParam(0, inverse(3, y0));
+}
+
+template <class TS> inline Real CirppConstantParametrization<TS>::direct(const Size i, const Real x) const {
+    constexpr Real eps = 1E-10;
+    return x * x + eps;
+}
+
+template <class TS> inline Real CirppConstantParametrization<TS>::inverse(const Size i, const Real y) const {
+    constexpr Real eps = 1E-10;
+    return sqrt(y - eps);
+}
+
+template <class TS> inline Real CirppConstantParametrization<TS>::kappa(const Time) const {
+    return direct(0, kappa_->params()[0]);
+}
+
+template <class TS> inline Real CirppConstantParametrization<TS>::theta(const Time) const {
+    return direct(1, theta_->params()[0]);
+}
+
+template <class TS> inline Real CirppConstantParametrization<TS>::sigma(const Time) const {
+    return direct(2, sigma_->params()[0]);
+}
+
+template <class TS> inline Real CirppConstantParametrization<TS>::y0(const Time) const {
+    return direct(3, y0_->params()[0]);
+}
+
+template <class TS>
+inline const boost::shared_ptr<Parameter> CirppConstantParametrization<TS>::parameter(const Size i) const {
+    QL_REQUIRE(i < 4, "parameter " << i << " does not exist, only have 0..3");
+    if (i == 0)
+        return kappa_;
+    else if (i == 1)
+        return theta_;
+    else if (i == 2)
+        return sigma_;
+    else
+        return y0_;
+}
+
+// typedef
+typedef CirppConstantParametrization<YieldTermStructure> IrCirppConstantParametrization;
+typedef CirppConstantParametrization<DefaultProbabilityTermStructure> CrCirppConstantParametrization;
+
+} // namespace QuantExt
+
+#endif

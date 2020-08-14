@@ -89,9 +89,9 @@ PostProcess::PostProcess(
     const string& fvaLendingCurve,const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
     const boost::shared_ptr<CubeInterpretation>& cubeInterpretation, bool fullInitialCollateralisation,
     Real kvaCapitalDiscountRate, Real kvaAlpha, Real kvaRegAdjustment, Real kvaCapitalHurdle, Real kvaOurPdFloor,
-    Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight, Real kvaTheirCvaRiskWeight)
+    Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight, Real kvaTheirCvaRiskWeight, const boost::shared_ptr<NPVCube>& cptyCube)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), configuration_(configuration),
-      cube_(cube), scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
+      cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
       fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), dimCalculator_(dimCalculator),
       cubeInterpretation_(cubeInterpretation), fullInitialCollateralisation_(fullInitialCollateralisation),
@@ -122,6 +122,31 @@ PostProcess::PostProcess(
                                                                         << i << " (id=" << portfolio->trades()[i]->id()
                                                                         << ") does not match cube trade id ("
                                                                         << cube_->ids()[i]);
+    }
+
+    if (analytics_["dynamicCredit"]) {
+        QL_REQUIRE(cptyCube_, "cptyCube cannot be null when dynamicCredit is ON");
+    } else {
+        QL_REQUIRE(!cptyCube_, "unexpected non-null cptyCube when dynamicCredit is OFF");
+    }
+
+    if (analytics_["dynamicCredit"]) {
+        // check portfolio and cptyCube have the same counterparties, in the same order
+        QL_REQUIRE(portfolio->counterparties().size() + 1 == cptyCube_->ids().size(),
+                   "PostProcess::PostProcess(): portfolio counterparty size ("
+                   << portfolio->counterparties().size() << ") does not match cpty cube trade size ("
+                   << cptyCube_->ids().size() << ")");
+        for (Size i = 0; i < portfolio->counterparties().size(); ++i) {
+            QL_REQUIRE(portfolio->counterparties()[i] == cptyCube_->ids()[i],
+                       "PostProcess::PostProcess(): portfolio counterparty #"
+                       << i << " (id=" << portfolio->counterparties()[i]
+                       << ") does not match cube name id ("
+                       << cptyCube_->ids()[i]);
+        }
+        QL_REQUIRE(dvaName == cptyCube_->ids().back(),
+                       "PostProcess::PostProcess(): dvaName (" << dvaName
+                       << ") does not match cube name id ("
+                       << cptyCube_->ids().back());
     }
 
     Size trades = portfolio->size();
@@ -215,6 +240,15 @@ PostProcess::PostProcess(
     map<string, vector<vector<Real>>> nettingSetValue, nettingSetDefaultValue, nettingSetCloseOutValue;
     map<string, Size> nettingSetSize;
     set<string> nettingSets;
+
+    for (Size i = 0; i < portfolio->size(); ++i) {
+        string tradeId = portfolio->trades()[i]->id();
+        tradeIds_.push_back(tradeId);
+    }
+
+    tradeExposureCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(today, tradeIds_, cube_->dates(),
+                         analytics_["dynamicCredit"] ? samples : 1, 4);
+    
     bool exerciseNextBreak = analytics_["exerciseNextBreak"];
     for (Size i = 0; i < portfolio->size(); ++i) {
         string tradeId = portfolio->trades()[i]->id();
@@ -266,6 +300,9 @@ PostProcess::PostProcess(
         ene[0] = std::max(-npv0, 0.0);
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
+        tradeExposureCube_->setT0(epe[0], tradeId, 0);
+        tradeExposureCube_->setT0(ene[0], tradeId, 1);
+        LOG("t0 epe: " << epe[0]);
         pfe[0] = std::max(npv0, 0.0);
         for (Size j = 0; j < dates; ++j) {
             Date d = cube_->dates()[j];
@@ -293,6 +330,15 @@ PostProcess::PostProcess(
                 nettingSetDefaultValue[nettingSetId][j][k] += defaultValue;
                 nettingSetCloseOutValue[nettingSetId][j][k] += closeOutValue;
                 distribution[k] = npv;
+
+                if (cptyCube_) {
+                    tradeExposureCube_->set(max(npv, 0.0), tradeId, d, k, 0);
+                    tradeExposureCube_->set(max(-npv, 0.0), tradeId, d, k, 1);
+                }
+            }
+            if (!cptyCube_) {
+                tradeExposureCube_->set(epe[j + 1], tradeId, d, 0, 0);
+                tradeExposureCube_->set(ene[j + 1], tradeId, d, 0, 1);
             }
             ee_b[j + 1] = epe[j + 1] / curve->discount(cube_->dates()[j]);
             eee_b[j + 1] = std::max(eee_b[j], ee_b[j + 1]);
@@ -300,7 +346,7 @@ PostProcess::PostProcess(
             Size index = Size(floor(quantile_ * (samples - 1) + 0.5));
             pfe[j + 1] = std::max(distribution[index], 0.0);
         }
-        tradeIds_.push_back(tradeId);
+        // tradeIds_.push_back(tradeId);
         tradeEPE_[tradeId] = epe;
         tradeENE_[tradeId] = ene;
         tradeEE_B_[tradeId] = ee_b;
@@ -363,7 +409,10 @@ PostProcess::PostProcess(
         nettingSetIds_.push_back(n.first);
 
     // FIXME: Why is this not passed in? why are we hardcoding a cube instance here?
-    nettedCube_ = boost::make_shared<SinglePrecisionInMemoryCube>(today, nettingSetIds_, cube_->dates(), samples);
+    if (analytics_["dynamicCredit"])
+        nettedCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(today, nettingSetIds_, cube_->dates(), samples, 3);
+    else
+        nettedCube_ = boost::make_shared<SinglePrecisionInMemoryCube>(today, nettingSetIds_, cube_->dates(), samples);
 
     bool applyInitialMargin = analytics_["dim"];
 
@@ -427,7 +476,17 @@ PostProcess::PostProcess(
         eab[0] = -npv;
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
-        nettedCube_->setT0(nettingSetValueToday[nettingSetId], nettingSetCount);
+        nettedCube_->setT0(nettingSetValueToday[nettingSetId], nettingSetCount, 0);
+        if (analytics_["dynamicCredit"]) {
+            nettedCube_->setT0(epe[0], nettingSetCount, 1);
+            nettedCube_->setT0(ene[0], nettingSetCount, 2);
+        }
+
+        for (Size i = 0; i < trades; ++i) {
+            string tid = portfolio->trades()[i]->id();
+            tradeExposureCube_->setT0(0, tid, 2);
+            tradeExposureCube_->setT0(0, tid, 3);
+        }
 
         for (Size j = 0; j < dates; ++j) {
 
@@ -458,7 +517,11 @@ PostProcess::PostProcess(
                 ene[j + 1] += std::max(-exposure - dim, 0.0) /
                               samples; // dim here represents the posted IM, and is expressed as a positive number
                 distribution[k] = exposure;
-                nettedCube_->set(exposure, nettingSetCount, j, k);
+                nettedCube_->set(exposure, nettingSetCount, j, k, 0);
+                if (analytics_["dynamicCredit"]) {
+                    nettedCube_->set(std::max(exposure - dim, 0.0), nettingSetCount, j, k, 1);
+                    nettedCube_->set(std::max(-exposure - dim, 0.0), nettingSetCount, j, k, 2);
+                }
 
                 if (netting->activeCsaFlag()) {
                     Real indexValue = 0.0;
@@ -495,10 +558,13 @@ PostProcess::PostProcess(
                         else
                             allocation = exposure * cubeInterpretation_->getDefaultNpv(cube_, i, j, k) / data[j][k];
 
-                        if (exposure > 0.0)
+                        if (exposure > 0.0) {
                             allocatedTradeEPE_[tid][j + 1] += allocation / samples;
-                        else
+                            tradeExposureCube_->set(allocation, tid, date, k, 2);
+                        } else {
                             allocatedTradeENE_[tid][j + 1] -= allocation / samples;
+                            tradeExposureCube_->set(-allocation, tid, date, k, 3);
+                        }
                     }
                 }
             }
@@ -567,28 +633,75 @@ PostProcess::PostProcess(
                 string tid = portfolio->trades()[i]->id();
 
                 for (Size j = 0; j < dates; ++j) {
+                    Date date = cube_->dates()[j];
                     if (allocationMethod == AllocationMethod::RelativeFairValueNet) {
                         // FIXME: What to do when either the pos. or neg. netting set value is zero?
                         QL_REQUIRE(nettingSetPositiveValueToday[nid] > 0.0, "non-zero positive NPV expected");
                         QL_REQUIRE(nettingSetNegativeValueToday[nid] > 0.0, "non-zero negative NPV expected");
-                        allocatedTradeEPE_[tid][j + 1] =
-                            netEPE_[nid][j] * std::max(tradeValueToday[tid], 0.0) / nettingSetPositiveValueToday[nid];
-                        allocatedTradeENE_[tid][j + 1] =
-                            netENE_[nid][j] * -std::max(-tradeValueToday[tid], 0.0) / nettingSetNegativeValueToday[nid];
+                        if (analytics_["dynamicCredit"]) {
+                            for (Size k = 0; k < samples; ++k) {
+                                Real netEPE = nettedCube_->get(nid, date, k, 1);
+                                Real netENE = nettedCube_->get(nid, date, k, 2);
+                                tradeExposureCube_->set(
+                                    netEPE * std::max(tradeValueToday[tid], 0.0) / nettingSetPositiveValueToday[nid],
+                                    tid, date, k, 2);
+                                tradeExposureCube_->set(
+                                    netENE * -std::max(-tradeValueToday[tid], 0.0) / nettingSetPositiveValueToday[nid],
+                                    tid, date, k, 3);
+                            }
+                        } else {
+                            allocatedTradeEPE_[tid][j + 1] =
+                                netEPE_[nid][j] * std::max(tradeValueToday[tid], 0.0) / nettingSetPositiveValueToday[nid];
+                            allocatedTradeENE_[tid][j + 1] =
+                                netENE_[nid][j] * -std::max(-tradeValueToday[tid], 0.0) / nettingSetNegativeValueToday[nid];
+                        }
                     } else if (allocationMethod == AllocationMethod::RelativeFairValueGross) {
                         // FIXME: What to do when the netting set value is zero?
                         QL_REQUIRE(nettingSetValueToday[nid] != 0.0, "non-zero netting set value expected");
-                        allocatedTradeEPE_[tid][j + 1] =
-                            netEPE_[nid][j] * tradeValueToday[tid] / nettingSetValueToday[nid];
-                        allocatedTradeENE_[tid][j + 1] =
-                            netENE_[nid][j] * tradeValueToday[tid] / nettingSetValueToday[nid];
+                        if (analytics_["dynamicCredit"]) {
+                            for (Size k = 0; k < samples; ++k) {
+                                Real netEPE = nettedCube_->get(nid, date, k, 1);
+                                Real netENE = nettedCube_->get(nid, date, k, 2);
+                                tradeExposureCube_->set(
+                                    netEPE * tradeValueToday[tid] / nettingSetPositiveValueToday[nid],
+                                    tid, date, k, 2);
+                                tradeExposureCube_->set(
+                                    netENE * tradeValueToday[tid] / nettingSetPositiveValueToday[nid],
+                                    tid, date, k, 3);
+                            }
+                        } else {
+                            allocatedTradeEPE_[tid][j + 1] =
+                                netEPE_[nid][j] * tradeValueToday[tid] / nettingSetValueToday[nid];
+                            allocatedTradeENE_[tid][j + 1] =
+                                netENE_[nid][j] * tradeValueToday[tid] / nettingSetValueToday[nid];
+                        }
                     } else if (allocationMethod == AllocationMethod::RelativeXVA) {
-                        allocatedTradeEPE_[tid][j + 1] = netEPE_[nid][j] * tradeCVA_[tid] / sumTradeCVA_[nid];
-                        allocatedTradeENE_[tid][j + 1] = netENE_[nid][j] * tradeDVA_[tid] / sumTradeDVA_[nid];
+                        if (analytics_["dynamicCredit"]) {
+                            for (Size k = 0; k < samples; ++k) {
+                                Real netEPE = nettedCube_->get(nid, date, k, 1);
+                                Real netENE = nettedCube_->get(nid, date, k, 2);
+                                tradeExposureCube_->set(
+                                    netEPE * tradeValueToday[tid] / tradeCVA_[tid] / sumTradeCVA_[nid],
+                                    tid, date, k, 2);
+                                tradeExposureCube_->set(
+                                    netENE * tradeValueToday[tid] / tradeDVA_[tid] / sumTradeDVA_[nid],
+                                    tid, date, k, 3);
+                            }
+                        } else {
+                            allocatedTradeEPE_[tid][j + 1] = netEPE_[nid][j] * tradeCVA_[tid] / sumTradeCVA_[nid];
+                            allocatedTradeENE_[tid][j + 1] = netENE_[nid][j] * tradeDVA_[tid] / sumTradeDVA_[nid];
+                        }
                     } else if (allocationMethod == AllocationMethod::None) {
                         DLOG("No allocation from " << nid << " to " << tid << " date " << j);
-                        allocatedTradeEPE_[tid][j + 1] = 0.0;
-                        allocatedTradeENE_[tid][j + 1] = 0.0;
+                        if (analytics_["dynamicCredit"]) {
+                            for (Size k = 0; k < samples; ++k) {
+                                tradeExposureCube_->set(0.0, tid, date, k, 2);
+                                tradeExposureCube_->set(0.0, tid, date, k, 3);
+                            }
+                        } else {
+                            allocatedTradeEPE_[tid][j + 1] = 0.0;
+                            allocatedTradeENE_[tid][j + 1] = 0.0;
+                        }
                     } else
                         QL_FAIL("allocationMethod " << allocationMethod << " not available");
                 }
@@ -911,11 +1024,22 @@ void PostProcess::updateStandAloneXVA() {
             Date d0 = j == 0 ? today : cube_->dates()[j - 1];
             Date d1 = cube_->dates()[j];
             Real cvaS0 = cvaDts->survivalProbability(d0);
-            Real cvaS1 = cvaDts->survivalProbability(d1);
+            // Real cvaS1 = cvaDts->survivalProbability(d1);
             Real dvaS0 = dvaDts.empty() ? 1.0 : dvaDts->survivalProbability(d0);
-            Real dvaS1 = dvaDts.empty() ? 1.0 : dvaDts->survivalProbability(d1);
-            Real cvaIncrement = (1.0 - cvaRR) * (cvaS0 - cvaS1) * tradeEPE_[tradeId][j + 1];
-            Real dvaIncrement = (1.0 - dvaRR) * (dvaS0 - dvaS1) * tradeENE_[tradeId][j + 1];
+            // Real dvaS1 = dvaDts.empty() ? 1.0 : dvaDts->survivalProbability(d1);
+            Real cvaIncrement = 0; //= (1.0 - cvaRR) * (cvaS0 - cvaS1) * tradeEPE_[tradeId][j + 1];
+            Real dvaIncrement = 0; //= (1.0 - dvaRR) * (dvaS0 - dvaS1) * tradeENE_[tradeId][j + 1];
+
+            for (Size k = 0; k < tradeExposureCube_->samples(); ++k) {
+                Real cvaS0 = j == 0 ? 1.0 : (cptyCube_ ? cptyCube_->get(cid, d0, k) : cvaDts->survivalProbability(d0));
+                Real cvaS1 = cptyCube_ ? cptyCube_->get(cid, d1, k) : cvaDts->survivalProbability(d1);
+                Real dvaS0 = (dvaDts.empty() || j == 0) ? 1.0 : (cptyCube_ ? cptyCube_->get(dvaName_, d0, k) : dvaDts->survivalProbability(d0));
+                Real dvaS1 = dvaDts.empty() ? 1.0 : cptyCube_ ? cptyCube_->get(dvaName_, d1, k) : dvaDts->survivalProbability(d1);
+                Real epe = tradeExposureCube_->get(tradeId, d1, k, 0);
+                Real ene = tradeExposureCube_->get(tradeId, d1, k, 1);
+                cvaIncrement += (1.0 - cvaRR) * (cvaS0 - cvaS1) * epe / tradeExposureCube_->samples();
+                dvaIncrement += (1.0 - dvaRR) * (dvaS0 - dvaS1) * ene / tradeExposureCube_->samples();
+            }
             tradeCVA_[tradeId] += cvaIncrement;
             tradeDVA_[tradeId] += dvaIncrement;
 
@@ -992,8 +1116,25 @@ void PostProcess::updateStandAloneXVA() {
             Real cvaS1 = cvaDts->survivalProbability(d1);
             Real dvaS0 = dvaDts.empty() ? 1.0 : dvaDts->survivalProbability(d0);
             Real dvaS1 = dvaDts.empty() ? 1.0 : dvaDts->survivalProbability(d1);
-            Real cvaIncrement = (1.0 - cvaRR) * (cvaS0 - cvaS1) * epe[j + 1];
-            Real dvaIncrement = (1.0 - dvaRR) * (dvaS0 - dvaS1) * ene[j + 1];
+            Real cvaIncrement = 0;
+            Real dvaIncrement = 0;
+            if (analytics_["dynamicCredit"]) {
+                for (Size k = 0; k < tradeExposureCube_->samples(); ++k) {
+                    Real epe = nettedCube_->get(nettingSetId, d1, k, 1);
+                    Real ene = nettedCube_->get(nettingSetId, d1, k, 2);
+                    Real cvaS0 = j == 0 ? 1.0 : cptyCube_->get(cid, d0, k);
+                    Real cvaS1 = cptyCube_->get(cid, d1, k);
+                    Real dvaS0 = (dvaDts.empty() || j == 0) ? 1.0 : cptyCube_->get(dvaName_, d0, k);
+                    Real dvaS1 = dvaDts.empty() ? 1.0 : cptyCube_->get(dvaName_, d1, k);
+                    cvaIncrement += (cvaS0 - cvaS1) * epe;
+                    dvaIncrement += (dvaS0 - dvaS1) * ene;
+                }
+                cvaIncrement *= (1.0 - cvaRR) / tradeExposureCube_->samples();
+                dvaIncrement *= (1.0 - dvaRR) / tradeExposureCube_->samples();
+            } else {
+                cvaIncrement = (1.0 - cvaRR) * (cvaS0 - cvaS1) * epe[j + 1];
+                dvaIncrement = (1.0 - dvaRR) * (dvaS0 - dvaS1) * ene[j + 1];
+            }
             nettingSetCVA_[nettingSetId] += cvaIncrement;
             nettingSetDVA_[nettingSetId] += dvaIncrement;
 
@@ -1052,12 +1193,30 @@ void PostProcess::updateAllocatedXVA() {
         for (Size j = 0; j < dates; ++j) {
             Date d0 = j == 0 ? today : cube_->dates()[j - 1];
             Date d1 = cube_->dates()[j];
-            Real cvaS0 = cvaDts->survivalProbability(d0);
-            Real cvaS1 = cvaDts->survivalProbability(d1);
-            Real dvaS0 = dvaDts.empty() ? 1.0 : dvaDts->survivalProbability(d0);
-            Real dvaS1 = dvaDts.empty() ? 1.0 : dvaDts->survivalProbability(d1);
-            Real allocatedCvaIncrement = (1.0 - cvaRR) * (cvaS0 - cvaS1) * allocatedTradeEPE_[tradeId][j + 1];
-            Real allocatedDvaIncrement = (1.0 - dvaRR) * (dvaS0 - dvaS1) * allocatedTradeENE_[tradeId][j + 1];
+
+            Real allocatedCvaIncrement = 0;
+            Real allocatedDvaIncrement = 0;
+            if (analytics_["dynamicCredit"]) {
+                for (Size k = 0; k < tradeExposureCube_->samples(); ++k) {
+                    Real cvaS0 = j == 0 ? 1.0 : cptyCube_->get(cid, d0, k);
+                    Real cvaS1 = cptyCube_->get(cid, d1, k);
+                    Real dvaS0 = (dvaDts.empty() || j == 0) ? 1.0 : cptyCube_->get(dvaName_, d0, k);
+                    Real dvaS1 = dvaDts.empty() ? 1.0 : cptyCube_->get(dvaName_, d1, k);
+                    Real allocatedTradeEPE = tradeExposureCube_->get(tradeId, d1, k, 2);
+                    Real allocatedTradeENE = tradeExposureCube_->get(tradeId, d1, k, 3);
+                    allocatedCvaIncrement += (cvaS0 - cvaS1) * allocatedTradeEPE;
+                    allocatedDvaIncrement += (dvaS0 - dvaS1) * allocatedTradeENE;
+                }
+                allocatedDvaIncrement *= (1.0 - cvaRR) / tradeExposureCube_->samples();
+                allocatedDvaIncrement *= (1.0 - dvaRR) / tradeExposureCube_->samples();
+            } else {
+                Real cvaS0 = cvaDts->survivalProbability(d0);
+                Real cvaS1 = cvaDts->survivalProbability(d1);
+                Real dvaS0 = dvaDts.empty() ? 1.0 : dvaDts->survivalProbability(d0);
+                Real dvaS1 = dvaDts.empty() ? 1.0 : dvaDts->survivalProbability(d1);
+                allocatedCvaIncrement = (1.0 - cvaRR) * (cvaS0 - cvaS1) * allocatedTradeEPE_[tradeId][j + 1];
+                allocatedDvaIncrement = (1.0 - dvaRR) * (dvaS0 - dvaS1) * allocatedTradeENE_[tradeId][j + 1];
+            }
             allocatedTradeCVA_[tradeId] += allocatedCvaIncrement;
             allocatedTradeDVA_[tradeId] += allocatedDvaIncrement;
         }

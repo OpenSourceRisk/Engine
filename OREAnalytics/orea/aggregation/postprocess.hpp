@@ -152,7 +152,9 @@ public:
         //! Our KVA CVA Risk Weight
         Real kvaOurCvaRiskWeight = 0.05,
         //! Their KVA CVA Risk Weight,
-        Real kvaTheirCvaRiskWeight = 0.05);
+        Real kvaTheirCvaRiskWeight = 0.05,
+        //! Input Counterparty Cube
+        const boost::shared_ptr<NPVCube>& cptyCube_ = nullptr);
 
     void setDimCalculator(boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
@@ -262,6 +264,8 @@ public:
 
     //! Inspector for the input NPV cube (by trade, time, scenario)
     const boost::shared_ptr<NPVCube>& cube() { return cube_; }
+    //! Inspector for the input Cpty cube (by name, time, scenario)
+    const boost::shared_ptr<NPVCube>& cptyCube() { return cptyCube_; }
     //! Return the  for the input NPV cube after netting and collateral (by netting set, time, scenario)
     const boost::shared_ptr<NPVCube>& netCube() { return nettedCube_; }
     //! Return the dynamic initial margin cube (regression approach)
@@ -290,6 +294,7 @@ protected:
     boost::shared_ptr<Market> market_;
     const std::string configuration_;
     boost::shared_ptr<NPVCube> cube_;
+    boost::shared_ptr<NPVCube> cptyCube_;
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     map<string, bool> analytics_;
 
@@ -309,6 +314,7 @@ protected:
     map<string, Real> nettingSetFCA_, nettingSetFBA_, nettingSetFCA_exOwnSP_, nettingSetFBA_exOwnSP_,
         nettingSetFCA_exAllSP_, nettingSetFBA_exAllSP_;
     boost::shared_ptr<NPVCube> nettedCube_;
+    boost::shared_ptr<NPVCube> tradeExposureCube_;
 
     vector<string> tradeIds_;
     vector<string> nettingSetIds_;

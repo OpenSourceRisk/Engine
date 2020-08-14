@@ -145,8 +145,13 @@
 #include <qle/math/trace.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
+#include <qle/models/cirppconstantfellerparametrization.hpp>
+#include <qle/models/cirppconstantparametrization.hpp>
+#include <qle/models/cirppimplieddefaulttermstructure.hpp>
+#include <qle/models/cirppparametrization.hpp>
 #include <qle/models/cmscaphelper.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
+#include <qle/models/crcirpp.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetanalyticsbase.hpp>
@@ -203,6 +208,7 @@
 #include <qle/pricingengines/numericlgmswaptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
+#include <qle/processes/crcirppstateprocess.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
 #include <qle/quotes/exceptionquote.hpp>
