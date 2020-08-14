@@ -707,9 +707,6 @@ void OREApp::buildNPVCube() {
         slots++;
     }
 
-    if (storeSensis_)
-        calculators.push_back(boost::make_shared<SensitivityCalculator>(sensitivityStorageManager_));
-
     if (useCloseOutLag_)
         cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(grid_);
     else
@@ -783,28 +780,7 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
         cubeDepth_++;
     }
 
-    // initialise nettings set cube for the storage of sensitivities
-    // FIXME: Move this into ORE+
-    storeSensis_ = false;
-    bool sensitivities1stOrder = false;
-    bool sensitivities2ndOrder = false;
-    if (params_->has("simulation", "storeSensitivities1stOrder"))
-        sensitivities1stOrder = params_->get("simulation", "storeSensitivities1stOrder") == "Y";
-    if (params_->has("simulation", "storeSensitivities2ndOrder"))
-        sensitivities2ndOrder = params_->get("simulation", "storeSensitivities2ndOrder") == "Y";
-    if (sensitivities1stOrder || sensitivities2ndOrder) {
-        initialiseSensitivityStorageManager();
-        // collect netting set ids from sim portfolio
-        std::set<std::string> nettingSetIds;
-        for (auto const& t : simPortfolio_->trades()) {
-            nettingSetIds.insert(t->envelope().nettingSetId());
-        }
-        std::vector<std::string> nettingSetIdsVec(nettingSetIds.begin(), nettingSetIds.end());
-        // init the netting set cube
-        initCube(nettingSetCube_, nettingSetIdsVec, sensitivityStorageManager_->getRequiredSize());
-    } else {
-        nettingSetCube_ = nullptr;
-    }
+    nettingSetCube_ = nullptr;
 
     initCube(cube_, simPortfolio_->ids(), cubeDepth_);
     
@@ -828,42 +804,6 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     // Set AggregationScenarioData
     simMarket_->aggregationScenarioData() = scenarioData_;
     out_ << "OK" << endl;
-}
-
-void OREApp::initialiseSensitivityStorageManager() {
-    // if already initialised, do nothing
-    if (sensitivityStorageManager_)
-        return;
-    storeSensis_ = false;
-    bool sensitivities1stOrder = false;
-    bool sensitivities2ndOrder = false;
-    if (params_->has("simulation", "storeSensitivities1stOrder"))
-        sensitivities1stOrder = params_->get("simulation", "storeSensitivities1stOrder") == "Y";
-    if (params_->has("simulation", "storeSensitivities2ndOrder"))
-        sensitivities2ndOrder = params_->get("simulation", "storeSensitivities2ndOrder") == "Y";
-    if (sensitivities1stOrder || sensitivities2ndOrder) {
-        QL_REQUIRE(!sensitivities2ndOrder || sensitivities1stOrder,
-                   "2nd order sensitivity calculation requires 1st order sensitivity calculation");
-        storeSensis_ = true;
-        std::vector<Time> curveSensitivityGrid =
-            parseListOfValues<Time>(params_->get("simulation", "curveSensitivityGrid"), &parseReal);
-        std::vector<Time> vegaOptSensitivityGrid =
-            parseListOfValues<Time>(params_->get("simulation", "vegaOptSensitivityGrid"), &parseReal);
-        std::vector<Time> vegaUndSensitivityGrid =
-            parseListOfValues<Time>(params_->get("simulation", "vegaUndSensitivityGrid"), &parseReal);
-        std::vector<Time> fxVegaSensitivityGrid =
-            parseListOfValues<Time>(params_->get("simulation", "fxVegaSensitivityGrid"), &parseReal);
-        Size n = curveSensitivityGrid.size(), u = vegaOptSensitivityGrid.size(), v = vegaUndSensitivityGrid.size(),
-             w = fxVegaSensitivityGrid.size();
-        // get model data so that we can pass the CAM currencies to the sensitivity storage manager
-        // at the moment (IR-FX coverage only for LGM and FX BS components) this is sufficient
-        string simulationConfigFile = inputPath_ + "/" + params_->get("simulation", "simulationConfigFile");
-        boost::shared_ptr<CrossAssetModelData> modelData = boost::make_shared<CrossAssetModelData>();
-        modelData->fromFile(simulationConfigFile);
-        // first cube index can be set to 0, since at the moment we only use the netting-set cube for sensi storage
-        sensitivityStorageManager_ = boost::make_shared<CamSensitivityStorageManager>(modelData->currencies(), n, u, v,
-                                                                                      w, 0, sensitivities2ndOrder);
-    }
 }
 
 void OREApp::generateNPVCube() {

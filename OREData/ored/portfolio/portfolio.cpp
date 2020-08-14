@@ -126,6 +126,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     auto trade = trades_.begin();
     while (trade != trades_.end()) {
         try {
+            (*trade)->reset();
             (*trade)->build(engineFactory);
             TLOG("Required Fixings for trade " << (*trade)->id() << ":");
             TLOGGERSTREAM << (*trade)->requiredFixings();

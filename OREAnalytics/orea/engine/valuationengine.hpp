@@ -73,13 +73,12 @@ public:
     void buildCube(
         //! Portfolio to be priced
         const boost::shared_ptr<data::Portfolio>& portfolio,
-        //! Object for storing the results on trade level (e.g. NPVs, flows)
+        //! Object for storing the results at trade level (e.g. NPVs, close-out NPVs, flows)
         boost::shared_ptr<analytics::NPVCube> outputCube,
         //! Calculators to use
         std::vector<boost::shared_ptr<ValuationCalculator>> calculators,
         //! Use sticky date in MPOR evaluation?
         bool mporStickyDate = true,
-        //! Object for storiing results on netting set level (e.g. sensitivities)
         boost::shared_ptr<analytics::NPVCube> outputCubeNettingSet = nullptr,
         boost::shared_ptr<analytics::NPVCube> outputCptyCube = nullptr,
         std::vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators = {});

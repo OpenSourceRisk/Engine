@@ -78,7 +78,9 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
 
     swaptionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
 
-    buildSwaptionBasket();
+    if (data_->calibrateA() || data_->calibrateH()) {
+        buildSwaptionBasket();
+    }
 
     Array aTimes(data_->aTimes().begin(), data_->aTimes().end());
     Array hTimes(data_->hTimes().begin(), data_->hTimes().end());

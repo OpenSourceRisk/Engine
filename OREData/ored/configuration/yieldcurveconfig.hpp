@@ -70,7 +70,9 @@ public:
         CrossCcyBasis,
         CrossCcyFixFloat,
         DiscountRatio,
-        FittedBond
+        FittedBond,
+        WeightedAverage,
+        YieldPlusDefault,
     };
     //! Default destructor
     virtual ~YieldCurveSegment() {}
@@ -366,6 +368,92 @@ public:
 
 private:
     string referenceCurveID_;
+};
+
+//! Weighted average yield curve segment
+/*!
+  A weighted average segment is used to build a yield curve from two source curves and weights. The
+  resulting disount factor is the weighted sum of the source curves' discount factors.
+
+  \ingroup configuration
+*/
+class WeightedAverageYieldCurveSegment : public YieldCurveSegment {
+public:
+    //! \name Constructors/Destructors
+    //@{
+    //! Default constructor
+    WeightedAverageYieldCurveSegment() {}
+    //! Detailed constructor
+    WeightedAverageYieldCurveSegment(const string& typeID, const string& referenceCurveID1,
+                                     const string& referenceCurveID2, const Real weight1, const Real weight2);
+    //! Default destructor
+    virtual ~WeightedAverageYieldCurveSegment() {}
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const string& referenceCurveID1() const { return referenceCurveID1_; }
+    const string& referenceCurveID2() const { return referenceCurveID2_; }
+    Real weight1() const { return weight1_; }
+    Real weight2() const { return weight2_; }
+    //@}
+
+    //! \name Visitability
+    //@{
+    virtual void accept(AcyclicVisitor&);
+    //@}
+
+private:
+    string referenceCurveID1_, referenceCurveID2_;
+    double weight1_, weight2_;
+};
+
+//! Yield plus default curves segment
+/*!
+  A yield plus default curves segment is used to build a yield curve from a source yield curve and
+  a weighted sum of default curves interpreted as zero curves (zero recovery, hazard rate =
+  instantaneous forward rate)
+
+  \ingroup configuration
+*/
+class YieldPlusDefaultYieldCurveSegment : public YieldCurveSegment {
+public:
+    //! \name Constructors/Destructors
+    //@{
+    //! Default constructor
+    YieldPlusDefaultYieldCurveSegment() {}
+    //! Detailed constructor
+    YieldPlusDefaultYieldCurveSegment(const string& typeID, const string& referenceCurveID,
+                                      const std::vector<std::string>& defaultCurveIDs,
+                                      const std::vector<Real>& weights);
+    //! Default destructor
+    virtual ~YieldPlusDefaultYieldCurveSegment() {}
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const string& referenceCurveID() const { return referenceCurveID_; }
+    const std::vector<std::string>& defaultCurveIDs() { return defaultCurveIDs_; }
+    const std::vector<Real>& weights() { return weights_; }
+    //@}
+
+    //! \name Visitability
+    //@{
+    virtual void accept(AcyclicVisitor&);
+    //@}
+
+private:
+    string referenceCurveID_;
+    std::vector<std::string> defaultCurveIDs_;
+    std::vector<Real> weights_;
 };
 
 //! Discount ratio yield curve segment
