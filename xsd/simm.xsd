@@ -1,0 +1,42 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="SIMMNameMappings">
+    <xs:complexType>
+      <xs:all>
+        <xs:element name="Mapping" maxOccurs="unbounded" minOccurs="0">
+          <xs:complexType>
+            <xs:all>
+              <xs:element type="xs:string" name="Name" />
+              <xs:element type="xs:string" name="Qualifier" />
+            </xs:all>
+          </xs:complexType>
+        </xs:element>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="SIMMBucketMappings">
+    <xs:complexType>
+      <xs:all>
+        <xs:element type="simmBucketMapping" name="Risk_CreditQ" maxOccurs="1" minOccurs="0" />
+        <xs:element type="simmBucketMapping" name="Risk_CreditNonQ" maxOccurs="1" minOccurs="0" />
+        <xs:element type="simmBucketMapping" name="Risk_Equity" maxOccurs="1" minOccurs="0" />
+        <xs:element type="simmBucketMapping" name="Risk_Commodity" maxOccurs="1" minOccurs="0" />
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="simmBucketMapping">
+    <xs:all>
+      <xs:element name="Mapping" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="Qualifier" />
+            <xs:element type="xs:string" name="Bucket" />
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+  </xs:complexType>
+
+</xs:schema>

@@ -1,0 +1,8 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!-- Schema for ORE+ Portfolio, Trade types -->
+  <xs:include schemaLocation="ore_types.xsd"/>
+  <xs:include schemaLocation="instruments.xsd"/>
+  <xs:include schemaLocation="instruments_plus.xsd"/>
+
+</xs:schema>

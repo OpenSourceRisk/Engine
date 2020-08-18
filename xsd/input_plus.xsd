@@ -10,7 +10,12 @@
   <xs:include schemaLocation="todaysmarket.xsd"/>
   <xs:include schemaLocation="sensitivity.xsd"/>
   <xs:include schemaLocation="stress.xsd"/>
+  <xs:include schemaLocation="referencedata.xsd"/>
   <xs:include schemaLocation="ore.xsd"/>
   <xs:include schemaLocation="calendaradjustment.xsd"/>
+  
+  <xs:include schemaLocation="instruments_plus.xsd"/>
+  <xs:include schemaLocation="simm.xsd"/>
+  <xs:include schemaLocation="scriptlibrary.xsd"/>
 
 </xs:schema>
