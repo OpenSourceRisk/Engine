@@ -22,19 +22,25 @@ namespace QuantExt {
 
 boost::shared_ptr<CrossAssetModel>
 getProjectedCrossAssetModel(const boost::shared_ptr<CrossAssetModel>& model,
-                            const std::vector<std::pair<CrossAssetModelTypes::AssetType, Size> >& selectedComponents) {
+                            const std::vector<std::pair<CrossAssetModelTypes::AssetType, Size> >& selectedComponents,
+                            std::vector<Size>& projectedStateProcessIndices) {
 
     // vectors holding the selected parametrizations and associated indices in the correlation matrix
 
     std::vector<boost::shared_ptr<Parametrization> > parametrizations;
     std::vector<Size> correlationIndices;
 
-    // loop over selected components and fill parametrizations and correlation indices
+    // loop over selected components and fill
+    // - parametrizations
+    // - correlation indices
+    // - state process indices
 
     for (auto const& c : selectedComponents) {
         parametrizations.push_back(model->parametrizations().at(model->idx(c.first, c.second)));
         for (Size b = 0; b < model->brownians(c.first, c.second); ++b)
             correlationIndices.push_back(model->cIdx(c.first, c.second, b));
+        for (Size p = 0; p < model->stateVariables(c.first, c.second); ++p)
+            projectedStateProcessIndices.push_back(model->pIdx(c.first, c.second, p));
     }
 
     // build correlation matrix

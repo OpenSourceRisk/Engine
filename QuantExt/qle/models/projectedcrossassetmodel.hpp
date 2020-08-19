@@ -29,6 +29,7 @@ namespace QuantExt {
 
 boost::shared_ptr<CrossAssetModel>
 getProjectedCrossAssetModel(const boost::shared_ptr<CrossAssetModel>& model,
-                            const std::vector<std::pair<CrossAssetModelTypes::AssetType, Size> >& selectedComponents);
+                            const std::vector<std::pair<CrossAssetModelTypes::AssetType, Size> >& selectedComponents,
+                            std::vector<Size>& projectedStateProcessIndices);
 
 } // namespace QuantExt
