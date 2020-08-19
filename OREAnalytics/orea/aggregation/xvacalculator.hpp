@@ -65,7 +65,7 @@ public:
         const boost::shared_ptr<NPVCube> tradeExposureCube,
         const boost::shared_ptr<NPVCube> nettingSetExposureCube,
         const Size tradeEpeIndex = 0, const Size tradeEneIndex = 1,
-        const Size nettingSetEpeIndex = 0, const Size nettingSetEneIndex = 1);
+        const Size nettingSetEpeIndex = 1, const Size nettingSetEneIndex = 2);
 
     virtual ~ValueAdjustmentCalculator() {}
 
@@ -95,8 +95,17 @@ public:
     virtual const Real calculateNettingSetMvaIncrement(const string& nid, const string& cid,
                                                        const Date& d0, const Date& d1, const Real& dcf) = 0;
 
-    //! DIM evolution report
-    // virtual void exportDimEvolution(ore::data::Report& dimEvolutionReport);
+    //! CVA map for all the trades
+    const map<string, Real>& tradeCva();
+
+    //! DVA map for all the trades
+    const map<string, Real>& tradeDva();
+
+    //! CVA map for all the netting sets
+    const map<string, Real>& nettingSetCva();
+
+    //! DVA map for all the netting sets
+    const map<string, Real>& nettingSetDva();
 
     //! CVA for the specified trade
     const Real& tradeCva(const string& trade);
@@ -161,9 +170,9 @@ public:
 protected:
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<Market> market_;
-    string dvaName_;
     string configuration_;
     string baseCurrency_;
+    string dvaName_;
     string fvaBorrowingCurve_;
     string fvaLendingCurve_;
     bool applyDynamicInitialMargin_;

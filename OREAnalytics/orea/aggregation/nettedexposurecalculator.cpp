@@ -38,7 +38,12 @@ NettedExposureCalculator::NettedExposureCalculator(
     const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
     const bool applyInitialMargin,
     const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
-    const bool fullInitialCollateralisation)
+    const bool fullInitialCollateralisation,
+    const bool marginalAllocation,
+    const Real marginalAllocationLimit,
+    const boost::shared_ptr<NPVCube>& tradeExposureCube,
+    const Size allocatedEpeIndex,
+    const Size allocatedEneIndex)
     : portfolio_(portfolio), market_(market), cube_(cube),
       baseCurrency_(baseCurrency), configuration_(configuration),
       quantile_(quantile), calcType_(calcType),
@@ -46,7 +51,11 @@ NettedExposureCalculator::NettedExposureCalculator(
       nettingSetValue_(nettingSetValue),
       scenarioData_(scenarioData), cubeInterpretation_(cubeInterpretation),
       applyInitialMargin_(applyInitialMargin), dimCalculator_(dimCalculator),
-      fullInitialCollateralisation_(fullInitialCollateralisation) {
+      fullInitialCollateralisation_(fullInitialCollateralisation),
+      marginalAllocation_(marginalAllocation),
+      marginalAllocationLimit_(marginalAllocationLimit),
+      tradeExposureCube_(tradeExposureCube),
+      allocatedEpeIndex_(allocatedEpeIndex), allocatedEneIndex_(allocatedEneIndex) {
 
     vector<string> nettingSetIds;
     for(auto nettingSet : nettingSetValue)
@@ -54,7 +63,7 @@ NettedExposureCalculator::NettedExposureCalculator(
 
     exposureCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(
         market_->asofDate(), nettingSetIds, cube->dates(),
-        multiPath ? cube->samples() : 1, 2); // EPE, ENE
+        multiPath ? cube->samples() : 1, EXPOSURE_CUBE_DEPTH); // Exposure afer collateral, EPE, ENE
 };
 
 void NettedExposureCalculator::build() {
@@ -69,6 +78,7 @@ void NettedExposureCalculator::build() {
     
     map<string, Real> nettingSetValueToday;
     map<string, Date> nettingSetMaturity;
+    map<string, Size> nettingSetSize;
     for (Size i = 0; i < portfolio_->trades().size(); ++i) {
         const auto& trade = portfolio_->trades()[i];
         string tradeId = trade->id();
@@ -78,13 +88,18 @@ void NettedExposureCalculator::build() {
         if (nettingSetValueToday.find(nettingSetId) == nettingSetValueToday.end()) {
             nettingSetValueToday[nettingSetId] = 0.0;
             nettingSetMaturity[nettingSetId] = today;
+            nettingSetSize[nettingSetId] = 0;
         }
 
         nettingSetValueToday[nettingSetId] += npv;
 
         if (trade->maturity() > nettingSetMaturity[nettingSetId])
             nettingSetMaturity[nettingSetId] = trade->maturity();
+        nettingSetSize[nettingSetId]++;
     }
+
+    vector<vector<Real>> averagePositiveAllocation(portfolio_->size(), vector<Real>(cube_->dates().size(), 0.0));
+    vector<vector<Real>> averageNegativeAllocation(portfolio_->size(), vector<Real>(cube_->dates().size(), 0.0));
 
     Size nettingSetCount = 0;
     for (auto n : nettingSetValue_) {
@@ -145,20 +160,19 @@ void NettedExposureCalculator::build() {
         eab[0] = -npv;
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
-        exposureCube_->setT0(epe[0], nettingSetCount, 0);
-        exposureCube_->setT0(ene[0], nettingSetCount, 1);
+        exposureCube_->setT0(epe[0], nettingSetCount, ExposureIndex::EPE);
+        exposureCube_->setT0(ene[0], nettingSetCount, ExposureIndex::ENE);
 
         for (Size j = 0; j < cube_->dates().size(); ++j) {
 
             Date date = cube_->dates()[j];
             Date prevDate = j > 0 ? cube_->dates()[j - 1] : today;
-
+            Real averageExposure = 0.0;
             vector<Real> distribution(cube_->samples(), 0.0);
             for (Size k = 0; k < cube_->samples(); ++k) {
                 Real balance = 0.0;
                 if (collateral)
                     balance = collateral->at(k)->accountBalance(date);
-
                 eab[j + 1] += balance / cube_->samples();
                 Real exposure = data[j][k] - balance;
                 Real dim = 0.0;
@@ -172,14 +186,16 @@ void NettedExposureCalculator::build() {
                     QL_REQUIRE(dim >= 0, "negative DIM for set " << nettingSetId << ", date " << j << ", sample " << k
                                                                  << ": " << dim);
                 }
+                averageExposure += exposure / cube_->samples();
                 epe[j + 1] += std::max(exposure - dim, 0.0) /
                               cube_->samples(); // dim here represents the held IM, and is expressed as a positive number
                 ene[j + 1] += std::max(-exposure - dim, 0.0) /
                               cube_->samples(); // dim here represents the posted IM, and is expressed as a positive number
                 distribution[k] = exposure;
                 if (multiPath_) {
-                    exposureCube_->set(std::max(exposure - dim, 0.0), nettingSetCount, j, k, 0);
-                    exposureCube_->set(std::max(-exposure - dim, 0.0), nettingSetCount, j, k, 1);
+                    exposureCube_->set(exposure, nettingSetCount, j, k, ExposureIndex::Exposure);
+                    exposureCube_->set(std::max(exposure - dim, 0.0), nettingSetCount, j, k, ExposureIndex::EPE);
+                    exposureCube_->set(std::max(-exposure - dim, 0.0), nettingSetCount, j, k, ExposureIndex::ENE);
                 }
 
                 if (netting->activeCsaFlag()) {
@@ -201,10 +217,40 @@ void NettedExposureCalculator::build() {
                     eoniaFloorInc[j + 1] += floorDelta;
                     collateralFloor_[nettingSetId] += floorDelta;
                 }
+
+                if (marginalAllocation_) {
+                    for (Size i = 0; i < portfolio_->trades().size(); ++i) {
+                        string nid = portfolio_->trades()[i]->envelope().nettingSetId();
+                        if (nid != nettingSetId)
+                            continue;
+                        string tid = portfolio_->trades()[i]->id();
+                        Real allocation = 0.0;
+                        if (balance == 0.0)
+                            allocation = cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
+                        // else if (data[j][k] == 0.0)
+                        else if (fabs(data[j][k]) <= marginalAllocationLimit_)
+                            allocation = exposure / nettingSetSize[nid];
+                        else
+                            allocation = exposure * cubeInterpretation_->getDefaultNpv(cube_, i, j, k) / data[j][k];
+
+                        if (multiPath_) {
+                            if (exposure > 0.0)
+                                tradeExposureCube_->set(allocation, i, j, k, allocatedEpeIndex_);
+                            else
+                                tradeExposureCube_->set(-allocation, i, j, k, allocatedEneIndex_);
+                        } else {
+                            if (exposure > 0.0)
+                                averagePositiveAllocation[i][j] += allocation / cube_->samples();
+                            else
+                                averageNegativeAllocation[i][j] -= allocation / cube_->samples();
+                        }
+                    }
+                }
             }
             if (!multiPath_) {
-                exposureCube_->set(epe[j + 1], nettingSetCount, j, 0, 0);
-                exposureCube_->set(ene[j + 1], nettingSetCount, j, 0, 1);
+                exposureCube_->set(averageExposure, nettingSetCount, j, 0, ExposureIndex::Exposure);
+                exposureCube_->set(epe[j + 1], nettingSetCount, j, 0, ExposureIndex::EPE);
+                exposureCube_->set(ene[j + 1], nettingSetCount, j, 0, ExposureIndex::ENE);
             }
             ee_b[j + 1] = epe[j + 1] / curve->discount(cube_->dates()[j]);
             eee_b[j + 1] = std::max(eee_b[j], ee_b[j + 1]);
@@ -248,6 +294,15 @@ void NettedExposureCalculator::build() {
         }
         epe_b_[nettingSetId] = epe_b;
         eepe_b_[nettingSetId] = eepe_b;
+    }
+                
+    if (marginalAllocation_ && !multiPath_) {
+        for (Size i = 0; i < portfolio_->trades().size(); ++i) {
+            for (Size j = 0; j < cube_->dates().size(); ++j) {
+                tradeExposureCube_->set(averagePositiveAllocation[i][j], i, j, 0, allocatedEpeIndex_);
+                tradeExposureCube_->set(averageNegativeAllocation[i][j], i, j, 0, allocatedEneIndex_);
+            }
+        }
     }
 }
 
@@ -321,7 +376,7 @@ NettedExposureCalculator::collateralPaths(
     return collateral;
 }
 
-vector<Real> NettedExposureCalculator::getMeanExposure(const string& tid, Size index) {
+vector<Real> NettedExposureCalculator::getMeanExposure(const string& tid, ExposureIndex index) {
     vector<Real> exp(cube_->dates().size(), 0.0);
     for (Size i = 0; i < cube_->dates().size(); i++) {
         for (Size k = 0; k < exposureCube_->samples(); k++) {

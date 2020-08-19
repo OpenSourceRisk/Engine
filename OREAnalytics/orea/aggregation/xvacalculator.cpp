@@ -102,6 +102,22 @@ ValueAdjustmentCalculator::ValueAdjustmentCalculator(
     
 }
 
+const map<string, Real>& ValueAdjustmentCalculator::tradeCva() {
+    return tradeCva_;
+}
+
+const map<string, Real>& ValueAdjustmentCalculator::tradeDva() {
+    return tradeDva_;
+}
+
+const map<string, Real>& ValueAdjustmentCalculator::nettingSetCva() {
+    return nettingSetCva_;
+}
+
+const map<string, Real>& ValueAdjustmentCalculator::nettingSetDva() {
+    return nettingSetDva_;
+}
+
 const Real& ValueAdjustmentCalculator::tradeCva(const std::string& trade) {
     if (tradeCva_.find(trade) != tradeCva_.end())
         return tradeCva_[trade];
@@ -298,7 +314,7 @@ void ValueAdjustmentCalculator::build() {
             if (!lendingCurve.empty()) {
                 Real dcf = lendingCurve->discount(d0) / lendingCurve->discount(d1) -
                            oisCurve->discount(d0) / oisCurve->discount(d1);
-                 Real fbaIncrement = calculateFbaIncrement(tid, cid, dvaName_, d0, d1, dcf);
+                Real fbaIncrement = calculateFbaIncrement(tid, cid, dvaName_, d0, d1, dcf);
                 Real fbaIncrement_exOwnSP = calculateFbaIncrement(tid, cid, "", d0, d1, dcf);
                 Real fbaIncrement_exAllSP = calculateFbaIncrement(tid, "", "", d0, d1, dcf);
                 tradeFba_[tid] += fbaIncrement;

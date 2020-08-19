@@ -186,7 +186,7 @@
       <Correlation factor1="IR:USD" factor2="FX:GBPEUR">0</Correlation>
       <Correlation factor1="FX:USDEUR" factor2="FX:GBPEUR">0</Correlation>
       <Correlation factor1="IR:EUR" factor2="CR:CPTY_A">0.0</Correlation>
-      <Correlation factor1="CR:CPTY_A" factor2="CR:CPTY_B">0.0</Correlation>
+      <Correlation factor1="CR:CPTY_A" factor2="CR:CPTY_B">0.8</Correlation>
       <!-- ... -->
     </InstantaneousCorrelations>
   </CrossAssetModel>

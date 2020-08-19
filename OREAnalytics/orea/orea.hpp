@@ -10,6 +10,7 @@
 #include <orea/aggregation/dimcalculator.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
 #include <orea/aggregation/dynamiccreditxvacalculator.hpp>
+#include <orea/aggregation/exposureallocator.hpp>
 #include <orea/aggregation/exposurecalculator.hpp>
 #include <orea/aggregation/nettedexposurecalculator.hpp>
 #include <orea/aggregation/postprocess.hpp>

@@ -2,6 +2,7 @@
 
 set(OREAnalytics_SRC aggregation/collateralaccount.cpp
 aggregation/collatexposurehelper.cpp
+aggregation/exposureallocator.cpp
 aggregation/exposurecalculator.cpp
 aggregation/dimcalculator.cpp
 aggregation/dimregressioncalculator.cpp
@@ -56,6 +57,7 @@ simulation/simmarket.cpp)
 
 set(OREAnalytics_HDR aggregation/collateralaccount.hpp
 aggregation/collatexposurehelper.hpp
+aggregation/exposureallocator.hpp
 aggregation/exposurecalculator.hpp
 aggregation/dimcalculator.hpp
 aggregation/dimregressioncalculator.hpp

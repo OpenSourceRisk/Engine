@@ -66,6 +66,14 @@ public:
     //! Compute exposures along all paths and fill result structurues
     virtual void build();
 
+    enum ExposureIndex {
+        EPE = 0,
+        ENE,
+        allocatedEPE,
+        allocatedENE
+    };
+    const Size EXPOSURE_CUBE_DEPTH = 4;
+
     boost::shared_ptr<Portfolio> portfolio() { return portfolio_; }
     boost::shared_ptr<NPVCube> npvCube() { return cube_; }
     boost::shared_ptr<CubeInterpretation> cubeInterpretation() { return cubeInterpretation_; }
@@ -90,10 +98,10 @@ public:
     const map<string, vector<vector<Real>>>& nettingSetDefaultValue() { return nettingSetDefaultValue_; }
     const map<string, vector<vector<Real>>>& nettingSetCloseOutValue() { return nettingSetCloseOutValue_; }
 
-    vector<Real> epe(const string& tid) { return getMeanExposure(tid, 0); }
-    vector<Real> ene(const string& tid) { return getMeanExposure(tid, 1); }
-    vector<Real> allocatedEpe(const string& tid) { return getMeanExposure(tid, 2); }
-    vector<Real> allocatedEne(const string& tid) { return getMeanExposure(tid, 3); }
+    vector<Real> epe(const string& tid) { return getMeanExposure(tid, ExposureIndex::EPE); }
+    vector<Real> ene(const string& tid) { return getMeanExposure(tid, ExposureIndex::ENE); }
+    vector<Real> allocatedEpe(const string& tid) { return getMeanExposure(tid, ExposureIndex::allocatedEPE); }
+    vector<Real> allocatedEne(const string& tid) { return getMeanExposure(tid, ExposureIndex::allocatedENE); }
     vector<Real>& ee_b(const string& tid) { return ee_b_[tid]; }
     vector<Real>& eee_b(const string& tid) { return eee_b_[tid]; }
     vector<Real>& pfe(const string& tid) { return pfe_[tid]; }
@@ -129,7 +137,7 @@ protected:
     map<string, std::vector<Real>> pfe_;
     map<string, Real> epe_b_;
     map<string, Real> eepe_b_;
-    vector<Real> getMeanExposure(const string& tid, Size index);
+    vector<Real> getMeanExposure(const string& tid, ExposureIndex index);
 };
 
 } // namespace analytics

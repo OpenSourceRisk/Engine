@@ -55,15 +55,28 @@ public:
         const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
         const bool applyInitialMargin,
         const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
-        const bool fullInitialCollateralisation);
+        const bool fullInitialCollateralisation,
+        // Marginal Allocation
+        const bool marginalAllocation,
+        const Real marginalAllocationLimit,
+        const boost::shared_ptr<NPVCube>& tradeExposureCube,
+        const Size allocatedEpeIndex,
+        const Size allocatedEneIndex);
 
     virtual ~NettedExposureCalculator() {}
     const boost::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
     //! Compute exposures along all paths and fill result structurues
     virtual void build();
 
-    vector<Real> epe(const string& nid) { return getMeanExposure(nid, 0); }
-    vector<Real> ene(const string& nid) { return getMeanExposure(nid, 1); }
+    enum ExposureIndex {
+        Exposure = 0,
+        EPE,
+        ENE
+    };
+    const Size EXPOSURE_CUBE_DEPTH = 3;
+
+    vector<Real> epe(const string& nid) { return getMeanExposure(nid, ExposureIndex::EPE); }
+    vector<Real> ene(const string& nid) { return getMeanExposure(nid, ExposureIndex::ENE); }
     vector<Real>& ee_b(const string& nid) { return ee_b_[nid]; }
     vector<Real>& eee_b(const string& nid) { return eee_b_[nid]; }
     vector<Real>& pfe(const string& nid) { return pfe_[nid]; }
@@ -74,7 +87,6 @@ public:
     Real& eepe_b(const string& nid) { return eepe_b_[nid]; }
     Real& colva(const string& nid) { return colva_[nid]; }
     Real& collateralFloor(const string& nid) { return collateralFloor_[nid]; }
-    
 
 protected:
     boost::shared_ptr<Portfolio> portfolio_;
@@ -92,6 +104,12 @@ protected:
     const bool applyInitialMargin_;
     const boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
     const bool fullInitialCollateralisation_;
+    // Marginal Allocation
+    const bool marginalAllocation_;
+    const Real marginalAllocationLimit_;
+    boost::shared_ptr<NPVCube> tradeExposureCube_;
+    const Size allocatedEpeIndex_;
+    const Size allocatedEneIndex_;
 
     // Output
     boost::shared_ptr<NPVCube> exposureCube_;
@@ -106,7 +124,7 @@ protected:
     map<string, Real> eepe_b_;
     map<string, Real> colva_;
     map<string, Real> collateralFloor_;
-    vector<Real> getMeanExposure(const string& tid, Size index);
+    vector<Real> getMeanExposure(const string& tid, ExposureIndex index);
 
     boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>>
     collateralPaths(const string& nettingSetId,

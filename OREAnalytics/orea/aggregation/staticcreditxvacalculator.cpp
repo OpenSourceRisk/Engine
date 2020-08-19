@@ -102,10 +102,16 @@ const Real StaticCreditXvaCalculator::calculateNettingSetDvaIncrement(
 const Real StaticCreditXvaCalculator::calculateFbaIncrement(
     const string& tid, const string& cid, const string& dvaName,
     const Date& d0, const Date& d1, const Real& dcf) {
-    Handle<DefaultProbabilityTermStructure> dts_cid = market_->defaultCurve(cid, configuration_);
-    QL_REQUIRE(cid == "" || !dts_cid.empty(), "Default curve missing for counterparty " << cid);
-    Handle<DefaultProbabilityTermStructure> dts_dvaName = market_->defaultCurve(dvaName, configuration_);
-    QL_REQUIRE(dvaName == "" || !dts_dvaName.empty(), "Default curve missing for counterparty " << dvaName);
+    Handle<DefaultProbabilityTermStructure> dts_cid;
+    Handle<DefaultProbabilityTermStructure> dts_dvaName;
+    if (cid != "") {
+        dts_cid = market_->defaultCurve(cid, configuration_);
+        QL_REQUIRE(!dts_cid.empty(), "Default curve missing for counterparty " << cid);
+    }
+    if (dvaName != "") {
+        dts_dvaName = market_->defaultCurve(dvaName, configuration_);
+        QL_REQUIRE(!dts_dvaName.empty(), "Default curve missing for counterparty " << cid);
+    }
 
     Real increment = 0.0;
     Real s0 = cid == "" ? 1.0 : dts_cid->survivalProbability(d0);
@@ -118,10 +124,16 @@ const Real StaticCreditXvaCalculator::calculateFbaIncrement(
 const Real StaticCreditXvaCalculator::calculateFcaIncrement(
     const string& tid, const string& cid, const string& dvaName,
     const Date& d0, const Date& d1, const Real& dcf) {
-    Handle<DefaultProbabilityTermStructure> dts_cid = market_->defaultCurve(cid, configuration_);
-    QL_REQUIRE(cid == "" || !dts_cid.empty(), "Default curve missing for counterparty " << cid);
-    Handle<DefaultProbabilityTermStructure> dts_dvaName = market_->defaultCurve(dvaName, configuration_);
-    QL_REQUIRE(dvaName == "" || !dts_dvaName.empty(), "Default curve missing for counterparty " << dvaName);
+    Handle<DefaultProbabilityTermStructure> dts_cid;
+    Handle<DefaultProbabilityTermStructure> dts_dvaName;
+    if (cid != "") {
+        dts_cid = market_->defaultCurve(cid, configuration_);
+        QL_REQUIRE(!dts_cid.empty(), "Default curve missing for counterparty " << cid);
+    }
+    if (dvaName != "") {
+        dts_dvaName = market_->defaultCurve(dvaName, configuration_);
+        QL_REQUIRE(!dts_dvaName.empty(), "Default curve missing for counterparty " << cid);
+    }
 
     Real increment = 0.0;
     Real s0 = cid == "" ? 1.0 : dts_cid->survivalProbability(d0);
@@ -134,10 +146,16 @@ const Real StaticCreditXvaCalculator::calculateFcaIncrement(
 const Real StaticCreditXvaCalculator::calculateNettingSetFbaIncrement(
     const string& nid, const string& cid, const string& dvaName,
     const Date& d0, const Date& d1, const Real& dcf) {
-    Handle<DefaultProbabilityTermStructure> dts_cid = market_->defaultCurve(cid, configuration_);
-    QL_REQUIRE(cid == "" || !dts_cid.empty(), "Default curve missing for counterparty " << cid);
-    Handle<DefaultProbabilityTermStructure> dts_dvaName = market_->defaultCurve(dvaName, configuration_);
-    QL_REQUIRE(dvaName == "" || !dts_dvaName.empty(), "Default curve missing for counterparty " << dvaName);
+    Handle<DefaultProbabilityTermStructure> dts_cid;
+    Handle<DefaultProbabilityTermStructure> dts_dvaName;
+    if (cid != "") {
+        dts_cid = market_->defaultCurve(cid, configuration_);
+        QL_REQUIRE(!dts_cid.empty(), "Default curve missing for counterparty " << cid);
+    }
+    if (dvaName != "") {
+        dts_dvaName = market_->defaultCurve(dvaName, configuration_);
+        QL_REQUIRE(!dts_dvaName.empty(), "Default curve missing for counterparty " << cid);
+    }
 
     Real increment = 0.0;
     Real s0 = cid == "" ? 1.0 : dts_cid->survivalProbability(d0);
@@ -150,10 +168,16 @@ const Real StaticCreditXvaCalculator::calculateNettingSetFbaIncrement(
 const Real StaticCreditXvaCalculator::calculateNettingSetFcaIncrement(
     const string& nid, const string& cid, const string& dvaName,
     const Date& d0, const Date& d1, const Real& dcf) {
-    Handle<DefaultProbabilityTermStructure> dts_cid = market_->defaultCurve(cid, configuration_);
-    QL_REQUIRE(cid == "" || !dts_cid.empty(), "Default curve missing for counterparty " << cid);
-    Handle<DefaultProbabilityTermStructure> dts_dvaName = market_->defaultCurve(dvaName, configuration_);
-    QL_REQUIRE(dvaName == "" || !dts_dvaName.empty(), "Default curve missing for counterparty " << dvaName);
+    Handle<DefaultProbabilityTermStructure> dts_cid;
+    Handle<DefaultProbabilityTermStructure> dts_dvaName;
+    if (cid != "") {
+        dts_cid = market_->defaultCurve(cid, configuration_);
+        QL_REQUIRE(!dts_cid.empty(), "Default curve missing for counterparty " << cid);
+    }
+    if (dvaName != "") {
+        dts_dvaName = market_->defaultCurve(dvaName, configuration_);
+        QL_REQUIRE(!dts_dvaName.empty(), "Default curve missing for counterparty " << cid);
+    }
 
     Real increment = 0.0;
     Real s0 = cid == "" ? 1.0 : dts_cid->survivalProbability(d0);

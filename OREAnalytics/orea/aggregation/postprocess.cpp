@@ -17,6 +17,7 @@
 */
 
 #include <orea/aggregation/postprocess.hpp>
+#include <orea/aggregation/exposureallocator.hpp>
 #include <orea/aggregation/dimcalculator.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
 #include <orea/aggregation/dynamiccreditxvacalculator.hpp>
@@ -129,11 +130,6 @@ PostProcess::PostProcess(
 
     if (analytics_["dynamicCredit"]) {
         QL_REQUIRE(cptyCube_, "cptyCube cannot be null when dynamicCredit is ON");
-    } else {
-        QL_REQUIRE(!cptyCube_, "unexpected non-null cptyCube when dynamicCredit is OFF");
-    }
-
-    if (analytics_["dynamicCredit"]) {
         // check portfolio and cptyCube have the same counterparties, in the same order
         QL_REQUIRE(portfolio->counterparties().size() + 1 == cptyCube_->ids().size(),
                    "PostProcess::PostProcess(): portfolio counterparty size ("
@@ -152,10 +148,6 @@ PostProcess::PostProcess(
                        << cptyCube_->ids().back());
     }
 
-    Size trades = portfolio->size();
-    Size dates = cube_->dates().size(); // (isRegularCubeStorage) ? cube_->dates().size() - 1 : cube_->dates().size();
-    Size samples = cube->samples();
-
     AllocationMethod allocationMethod = parseAllocationMethod(allocMethod);
 
     /***********************************************
@@ -164,54 +156,9 @@ PostProcess::PostProcess(
      * b) Find the final maturity of the netting set
      */
     LOG("Compute netting set NPVs as of today and netting set maturity");
-    map<string, Real> tradeValueToday;
-    map<string, Real> nettingSetValueToday, nettingSetPositiveValueToday, nettingSetNegativeValueToday;
     // Don't use Settings::instance().evaluationDate() here, this has moved to simulation end date.
     Date today = market->asofDate();
     LOG("AsOfDate = " << QuantLib::io::iso_date(today));
-
-    vector<Real> times(dates);
-    DayCounter dc = ActualActual();
-
-    for (Size i = 0; i < dates; i++)
-        times[i] = dc.yearFraction(today, cube_->dates()[i]);
-
-    map<string, string> cidMap, nidMap;
-    map<string, Date> matMap;
-    for (auto trade : portfolio->trades()) {
-        string tradeId = trade->id();
-        nidMap[tradeId] = trade->envelope().nettingSetId();
-        cidMap[tradeId] = trade->envelope().counterparty();
-        if (cidMap[tradeId] != nettingSetManager_->get(nidMap[tradeId])->counterparty()) {
-            // changed from QL_REQUIRE in Roland Kapl's original pull request to an ALERT
-            ALOG("counterparty from trade (" << cidMap[tradeId]
-                                             << "is not the same as counterparty from trade's netting set: "
-                                             << nettingSetManager_->get(nidMap[tradeId])->counterparty());
-        }
-        matMap[tradeId] = trade->maturity();
-    }
-
-    for (Size i = 0; i < cube_->ids().size(); ++i) {
-        string tradeId = cube_->ids()[i];
-        string nettingSetId = nidMap[tradeId];
-        string cpId = cidMap[tradeId];
-        Real npv = cube_->getT0(i);
-
-        tradeValueToday[tradeId] = npv;
-        counterpartyId_[nettingSetId] = cpId;
-
-        if (nettingSetValueToday.find(nettingSetId) == nettingSetValueToday.end()) {
-            nettingSetValueToday[nettingSetId] = 0.0;
-            nettingSetPositiveValueToday[nettingSetId] = 0.0;
-            nettingSetNegativeValueToday[nettingSetId] = 0.0;
-        }
-
-        nettingSetValueToday[nettingSetId] += npv;
-        if (npv > 0)
-            nettingSetPositiveValueToday[nettingSetId] += npv;
-        else
-            nettingSetNegativeValueToday[nettingSetId] += npv;
-    }
 
     /***************************************************************
      * Step 1: Dynamic Initial Margin calculation
@@ -263,7 +210,10 @@ PostProcess::PostProcess(
                          exposureCalculator_->nettingSetCloseOutValue() :
                          exposureCalculator_->nettingSetDefaultValue(),
             scenarioData_, cubeInterpretation_, analytics_["dim"],
-            dimCalculator_, fullInitialCollateralisation_
+            dimCalculator_, fullInitialCollateralisation_,
+            allocationMethod == AllocationMethod::Marginal, marginalAllocationLimit,
+            exposureCalculator_->exposureCube(),
+            ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE
         );
     nettedExposureCalculator_->build();
 
@@ -277,83 +227,62 @@ PostProcess::PostProcess(
             fvaBorrowingCurve_, fvaLendingCurve_, analytics_["dim"],
             dimCalculator, exposureCalculator_->exposureCube(),
             nettedExposureCalculator_->exposureCube(), cptyCube_,
-            0, 1, 0, 1, 0);
+            ExposureCalculator::ExposureIndex::EPE,
+            ExposureCalculator::ExposureIndex::ENE,
+            NettedExposureCalculator::ExposureIndex::EPE,
+            NettedExposureCalculator::ExposureIndex::ENE,
+            0);
     } else {
         cvaCalculator_ = boost::make_shared<StaticCreditXvaCalculator>(
             portfolio_, market_, configuration_,baseCurrency_, dvaName_,
             fvaBorrowingCurve_, fvaLendingCurve_, analytics_["dim"],
             dimCalculator, exposureCalculator_->exposureCube(),
             nettedExposureCalculator_->exposureCube(),
-            0, 1, 0, 1);
+            ExposureCalculator::ExposureIndex::EPE,
+            ExposureCalculator::ExposureIndex::ENE,
+            NettedExposureCalculator::ExposureIndex::EPE,
+            NettedExposureCalculator::ExposureIndex::ENE);
     }
     cvaCalculator_->build();
 
     /***************************
      * Simple allocation methods
      */
-    LOG(4);
-    if (allocationMethod != AllocationMethod::Marginal) {
-        for (auto n : exposureCalculator_->nettingSetDefaultValue()) {
-            string nettingSetId = n.first;
-
-            for (Size i = 0; i < trades; ++i) {
-                string nid = portfolio->trades()[i]->envelope().nettingSetId();
-                if (nid != nettingSetId)
-                    continue;
-                string tid = portfolio->trades()[i]->id();
-
-                for (Size j = 0; j < dates; ++j) {
-                    Date date = cube_->dates()[j];
-                    if (allocationMethod == AllocationMethod::RelativeFairValueNet) {
-                        // FIXME: What to do when either the pos. or neg. netting set value is zero?
-                        QL_REQUIRE(nettingSetPositiveValueToday[nid] > 0.0, "non-zero positive NPV expected");
-                        QL_REQUIRE(nettingSetNegativeValueToday[nid] > 0.0, "non-zero negative NPV expected");
-                        for (Size k = 0; k < samples; ++k) {
-                            Real netEPE = nettedExposureCalculator_->exposureCube()->get(nid, date, k, 0);
-                            Real netENE = nettedExposureCalculator_->exposureCube()->get(nid, date, k, 1);
-                            exposureCalculator_->exposureCube()->set(
-                                netEPE * std::max(tradeValueToday[tid], 0.0) / nettingSetPositiveValueToday[nid],
-                                tid, date, k, 2);
-                            exposureCalculator_->exposureCube()->set(
-                                netENE * -std::max(-tradeValueToday[tid], 0.0) / nettingSetPositiveValueToday[nid],
-                                tid, date, k, 3);
-                        }
-                    } else if (allocationMethod == AllocationMethod::RelativeFairValueGross) {
-                        // FIXME: What to do when the netting set value is zero?
-                        QL_REQUIRE(nettingSetValueToday[nid] != 0.0, "non-zero netting set value expected");
-                        for (Size k = 0; k < samples; ++k) {
-                            Real netEPE = nettedExposureCalculator_->exposureCube()->get(nid, date, k, 0);
-                            Real netENE = nettedExposureCalculator_->exposureCube()->get(nid, date, k, 1);
-                            exposureCalculator_->exposureCube()->set(
-                                netEPE * tradeValueToday[tid] / nettingSetPositiveValueToday[nid],
-                                tid, date, k, 2);
-                            exposureCalculator_->exposureCube()->set(
-                                netENE * tradeValueToday[tid] / nettingSetPositiveValueToday[nid],
-                                tid, date, k, 3);
-                        }
-                    } else if (allocationMethod == AllocationMethod::RelativeXVA) {
-                        for (Size k = 0; k < samples; ++k) {
-                            Real netEPE = nettedExposureCalculator_->exposureCube()->get(nid, date, k, 0);
-                            Real netENE = nettedExposureCalculator_->exposureCube()->get(nid, date, k, 1);
-                            exposureCalculator_->exposureCube()->set(
-                                netEPE * tradeValueToday[tid] / tradeCVA(tid) / cvaCalculator_->nettingSetSumCva(nid),
-                                tid, date, k, 2);
-                            exposureCalculator_->exposureCube()->set(
-                                netENE * tradeValueToday[tid] / tradeCVA(tid) / cvaCalculator_->nettingSetSumDva(nid),
-                                tid, date, k, 3);
-                        }
-                    } else if (allocationMethod == AllocationMethod::None) {
-                        DLOG("No allocation from " << nid << " to " << tid << " date " << j);
-                        for (Size k = 0; k < samples; ++k) {
-                            exposureCalculator_->exposureCube()->set(0.0, tid, date, k, 2);
-                            exposureCalculator_->exposureCube()->set(0.0, tid, date, k, 3);
-                        }
-                    } else
-                        QL_FAIL("allocationMethod " << allocationMethod << " not available");
-                }
-            }
-        }
+    boost::shared_ptr<ExposureAllocator> exposureAllocator;
+    if (allocationMethod == AllocationMethod::Marginal) {
+        DLOG("Marginal Calculation handled in NettedExposureCalculator");
     }
+    else if (allocationMethod == AllocationMethod::RelativeFairValueNet)
+        exposureAllocator = boost::make_shared<RelativeFairValueNetExposureAllocator>(
+            portfolio, exposureCalculator_->exposureCube(),
+            nettedExposureCalculator_->exposureCube(), cube_,
+            ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
+            ExposureCalculator::EPE, ExposureCalculator::ENE,
+            NettedExposureCalculator::EPE, NettedExposureCalculator::ENE);
+    else if (allocationMethod == AllocationMethod::RelativeFairValueGross)
+        exposureAllocator = boost::make_shared<RelativeFairValueGrossExposureAllocator>(
+            portfolio, exposureCalculator_->exposureCube(),
+            nettedExposureCalculator_->exposureCube(), cube_,
+            ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
+            ExposureCalculator::EPE, ExposureCalculator::ENE,
+            NettedExposureCalculator::EPE, NettedExposureCalculator::ENE);
+    else if (allocationMethod == AllocationMethod::RelativeXVA)
+        exposureAllocator = boost::make_shared<RelativeXvaExposureAllocator>(
+            portfolio, exposureCalculator_->exposureCube(),
+            nettedExposureCalculator_->exposureCube(), cube_,
+            cvaCalculator_->tradeCva(), cvaCalculator_->tradeDva(),
+            cvaCalculator_->nettingSetCva(), cvaCalculator_->nettingSetDva(),
+            ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
+            ExposureCalculator::EPE, ExposureCalculator::ENE,
+            NettedExposureCalculator::EPE, NettedExposureCalculator::ENE);
+    else if (allocationMethod == AllocationMethod::None)
+        exposureAllocator = boost::make_shared<NoneExposureAllocator>(
+            portfolio, exposureCalculator_->exposureCube(),
+            nettedExposureCalculator_->exposureCube());
+    else
+        QL_FAIL("allocationMethod " << allocationMethod << " not available");
+    if(exposureAllocator)
+        exposureAllocator->build();
 
     /********************************************************
      * Update Allocated XVAs
@@ -364,14 +293,20 @@ PostProcess::PostProcess(
             fvaBorrowingCurve_, fvaLendingCurve_, analytics_["dim"],
             dimCalculator, exposureCalculator_->exposureCube(),
             nettedExposureCalculator_->exposureCube(), cptyCube_,
-            0, 1, 0, 1, 0);
+            ExposureCalculator::ExposureIndex::allocatedEPE,
+            ExposureCalculator::ExposureIndex::allocatedENE,
+            NettedExposureCalculator::ExposureIndex::EPE,
+            NettedExposureCalculator::ExposureIndex::ENE);
     } else {
-        cvaCalculator_ = boost::make_shared<StaticCreditXvaCalculator>(
+        allocatedCvaCalculator_ = boost::make_shared<StaticCreditXvaCalculator>(
             portfolio_, market_, configuration_,baseCurrency_, dvaName_,
             fvaBorrowingCurve_, fvaLendingCurve_, analytics_["dim"],
             dimCalculator, exposureCalculator_->exposureCube(),
             nettedExposureCalculator_->exposureCube(),
-            2, 3, 0, 1);
+            ExposureCalculator::ExposureIndex::allocatedEPE,
+            ExposureCalculator::ExposureIndex::allocatedENE,
+            NettedExposureCalculator::ExposureIndex::EPE,
+            NettedExposureCalculator::ExposureIndex::ENE);
     }
     allocatedCvaCalculator_->build();
 

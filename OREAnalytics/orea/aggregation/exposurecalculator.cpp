@@ -38,15 +38,15 @@ ExposureCalculator::ExposureCalculator(
     : portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation),
        market_(market), exerciseNextBreak_(exerciseNextBreak),
       baseCurrency_(baseCurrency), configuration_(configuration),
-      quantile_(quantile), dates_(cube->dates()),
-      calcType_(calcType), isRegularCubeStorage_(isRegularCubeStorage), multiPath_(multiPath),
+      quantile_(quantile), calcType_(calcType), isRegularCubeStorage_(isRegularCubeStorage),
+      multiPath_(multiPath), dates_(cube->dates()),
       today_(market_->asofDate()), dc_(ActualActual()) {
 
     QL_REQUIRE(portfolio_, "portfolio is null");
 
     exposureCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(
         market->asofDate(), portfolio_->ids(), dates_,
-        multiPath ? cube_->samples() : 1, 4);// EPE, ENE, allocatedEPE, allocatedENE
+        multiPath ? cube_->samples() : 1, EXPOSURE_CUBE_DEPTH);// EPE, ENE, allocatedEPE, allocatedENE
 
     set<string> nettingSetIdsSet;
     for (const auto& trade : portfolio->trades())
@@ -56,7 +56,6 @@ ExposureCalculator::ExposureCalculator(
     times_ = vector<Real>(dates_.size(), 0.0);
     for (Size i = 0; i < dates_.size(); i++)
         times_[i] = dc_.yearFraction(today_, cube_->dates()[i]);
-
 }
 
 void ExposureCalculator::build() {
@@ -137,13 +136,13 @@ void ExposureCalculator::build() {
                 nettingSetCloseOutValue_[nettingSetId][j][k] += closeOutValue;
                 distribution[k] = npv;
                 if (multiPath_) {
-                    exposureCube_->set(max(npv, 0.0), tradeId, d, k, 0);
-                    exposureCube_->set(max(-npv, 0.0), tradeId, d, k, 1);
+                    exposureCube_->set(max(npv, 0.0), tradeId, d, k, ExposureIndex::EPE);
+                    exposureCube_->set(max(-npv, 0.0), tradeId, d, k, ExposureIndex::ENE);
                 }
             }
             if (!multiPath_) {
-                exposureCube_->set(epe[j + 1], tradeId, d, 0, 0);
-                exposureCube_->set(ene[j + 1], tradeId, d, 0, 1);
+                exposureCube_->set(epe[j + 1], tradeId, d, 0, ExposureIndex::EPE);
+                exposureCube_->set(ene[j + 1], tradeId, d, 0, ExposureIndex::ENE);
             }
             ee_b[j + 1] = epe[j + 1] / curve->discount(cube_->dates()[j]);
             eee_b[j + 1] = std::max(eee_b[j], ee_b[j + 1]);
@@ -190,7 +189,7 @@ void ExposureCalculator::build() {
     }
 }
 
-vector<Real> ExposureCalculator::getMeanExposure(const string& tid, Size index) {
+vector<Real> ExposureCalculator::getMeanExposure(const string& tid, ExposureIndex index) {
     vector<Real> exp(dates_.size(), 0.0);
     for (Size i = 0; i < dates_.size(); i++) {
         for (Size k = 0; k < exposureCube_->samples(); k++) {
