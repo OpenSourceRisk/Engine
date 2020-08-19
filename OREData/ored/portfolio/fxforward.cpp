@@ -65,7 +65,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // set Pricing engine
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<FxForwardEngineBuilder> fxBuilder = boost::dynamic_pointer_cast<FxForwardEngineBuilder>(builder);
+    boost::shared_ptr<FxForwardEngineBuilderBase> fxBuilder = boost::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
 
     instrument_->qlInstrument()->setPricingEngine(fxBuilder->engine(boughtCcy, soldCcy));
 
