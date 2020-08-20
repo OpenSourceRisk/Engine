@@ -108,13 +108,13 @@ public:
     Real& eepe_b(const string& tid) { return eepe_b_[tid]; }
 
 protected:
-    const boost::shared_ptr<Portfolio>& portfolio_;
-    const boost::shared_ptr<NPVCube>& cube_;
-    const boost::shared_ptr<CubeInterpretation>& cubeInterpretation_;
-    const boost::shared_ptr<Market>& market_;
+    const boost::shared_ptr<Portfolio> portfolio_;
+    const boost::shared_ptr<NPVCube> cube_;
+    const boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
+    const boost::shared_ptr<Market> market_;
     const bool exerciseNextBreak_;
-    const string& baseCurrency_;
-    const string& configuration_;
+    const string baseCurrency_;
+    const string configuration_;
     const Real quantile_;
     const CollateralExposureHelper::CalculationType calcType_;
     const bool multiPath_;

@@ -287,6 +287,13 @@ void ValueAdjustmentCalculator::build() {
 
         tradeCva_[tid] = 0.0;
         tradeDva_[tid] = 0.0;
+        tradeFca_[tid] = 0.0;
+        tradeFca_exOwnSp_[tid] = 0.0;
+        tradeFca_exAllSp_[tid] = 0.0;
+        tradeFba_[tid] = 0.0;
+        tradeFba_exOwnSp_[tid] = 0.0;
+        tradeFba_exAllSp_[tid] = 0.0;
+        tradeMva_[tid] = 0.0;
         for (Size j = 0; j < numDates; ++j) {
 
             // CVA / DVA
@@ -343,6 +350,13 @@ void ValueAdjustmentCalculator::build() {
 
         nettingSetCva_[nid] = 0.0;
         nettingSetDva_[nid] = 0.0;
+        nettingSetFca_[nid] = 0.0;
+        nettingSetFca_exOwnSp_[nid] = 0.0;
+        nettingSetFca_exAllSp_[nid] = 0.0;
+        nettingSetFba_[nid] = 0.0;
+        nettingSetFba_exOwnSp_[nid] = 0.0;
+        nettingSetFba_exAllSp_[nid] = 0.0;
+        nettingSetMva_[nid] = 0.0;
         for (Size j = 0; j < numDates; ++j) {
 
             // CVA / DVA
