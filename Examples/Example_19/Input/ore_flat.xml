@@ -28,7 +28,7 @@
     </Analytic>
     <Analytic type="additionalResults">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="outputFileName">additionalResultsFlat.xml</Parameter>
+      <Parameter name="outputFileName">additionalResultsFlat.csv</Parameter>
     </Analytic>
   </Analytics>
 </ORE>

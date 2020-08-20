@@ -64,7 +64,6 @@ model/irlgmdata.cpp
 model/lgmbuilder.cpp
 model/lgmdata.cpp
 model/utilities.cpp
-portfolio/additionalresults.cpp
 portfolio/bond.cpp
 portfolio/bondutils.cpp
 portfolio/builders/capfloor.cpp
@@ -207,7 +206,6 @@ model/marketobserver.hpp
 model/modelbuilder.hpp
 model/structuredmodelerror.hpp
 model/utilities.hpp
-portfolio/additionalresults.hpp
 portfolio/bond.hpp
 portfolio/bondutils.hpp
 portfolio/builders/bond.hpp

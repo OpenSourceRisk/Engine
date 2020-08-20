@@ -78,7 +78,6 @@
 #include <ored/model/modelbuilder.hpp>
 #include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/utilities.hpp>
-#include <ored/portfolio/additionalresults.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>

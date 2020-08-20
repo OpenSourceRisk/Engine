@@ -740,5 +740,68 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     LOG("Sensitivity report finished");
 }
 
+pair<string, string> extractResult(pair<string, boost::any> anyResult) {
+    string resultType;
+    std::ostringstream oss;
+
+    if (anyResult.second.type() == typeid(int)) {
+        resultType = "int";
+        int r = boost::any_cast<int>(anyResult.second);
+        oss << std::fixed << std::setprecision(8) << r;
+    } else if (anyResult.second.type() == typeid(double)) {
+        resultType = "double";
+        double r = boost::any_cast<double>(anyResult.second);
+        oss << std::fixed << std::setprecision(8) << r; 
+    } else if (anyResult.second.type() == typeid(std::string)) {
+        resultType = "string";
+        std::string r = boost::any_cast<std::string>(anyResult.second);
+        oss << std::fixed << std::setprecision(8) << r;
+    } else if (anyResult.second.type() == typeid(std::vector<double>)) {
+        resultType = "vector_double";
+        std::vector<double> r = boost::any_cast<std::vector<double>>(anyResult.second);
+        if (r.size() == 0) {
+            oss << "";
+        } else {
+            oss << std::fixed << std::setprecision(8) << r[0];
+            for (Size i = 1; i < r.size(); i++) {
+                oss << ", " << r[i];
+            }
+        }
+    } else if (anyResult.second.type() == typeid(QuantLib::Matrix)) {
+        resultType = "matrix";
+        QuantLib::Matrix r = boost::any_cast<QuantLib::Matrix>(anyResult.second);
+        oss << std::fixed << std::setprecision(8) << r; 
+    } else {
+        ALOG("Unsupported AdditionalResults type: " << anyResult.first);
+    }
+    return make_pair(resultType, oss.str());
+}
+
+void ReportWriter::writeAdditionalResultsReport(ore::data::Report& report,
+                            boost::shared_ptr<Portfolio> portfolio) {
+    LOG("Writing AdditionalResults report");
+    report.addColumn("TradeId", string())
+        .addColumn("ResultId", string())
+        .addColumn("ResultType", string())
+        .addColumn("ResultValue", string());
+
+    for (auto trade : portfolio->trades()) {
+        std::map<std::string,boost::any> additionalResults = 
+            trade->instrument()->qlInstrument()->additionalResults();
+
+        if (additionalResults.size() > 0) {
+            for (auto r : additionalResults) {
+                pair<string, string> result = extractResult(r);
+                report.next()
+                    .add(trade->id())
+                    .add(r.first)
+                    .add(result.first)
+                    .add(result.second);
+            }
+        }
+    }
+    report.end();
+    LOG("AdditionalResults report written");
+}
 } // namespace analytics
 } // namespace ore
