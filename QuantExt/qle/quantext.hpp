@@ -64,6 +64,7 @@
 #include <qle/indexes/frcpi.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
+#include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/indexes/ibor/chfsaron.hpp>

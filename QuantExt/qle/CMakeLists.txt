@@ -260,6 +260,7 @@ indexes/escpi.hpp
 indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
+indexes/genericindex.hpp
 indexes/ibor/audbbsw.hpp
 indexes/ibor/brlcdi.hpp
 indexes/ibor/chfsaron.hpp
