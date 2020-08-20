@@ -45,18 +45,6 @@ namespace analytics {
 using namespace QuantLib;
 using namespace data;
 
-enum class AllocationMethod {
-    None,
-    Marginal, // Pykhtin & Rosen, 2010
-    RelativeFairValueGross,
-    RelativeFairValueNet,
-    RelativeXVA
-};
-
-std::ostream& operator<<(std::ostream& out, AllocationMethod m);
-
-AllocationMethod parseAllocationMethod(const string& s);
-
 //! Exposure Aggregation and XVA Calculation
 /*!
   This class aggregates NPV cube data, computes exposure statistics

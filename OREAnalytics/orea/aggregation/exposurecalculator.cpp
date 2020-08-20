@@ -34,11 +34,11 @@ ExposureCalculator::ExposureCalculator(
     const boost::shared_ptr<Market>& market,
     bool exerciseNextBreak, const string& baseCurrency, const string& configuration,
     const Real quantile, const CollateralExposureHelper::CalculationType calcType,
-    const bool isRegularCubeStorage, const bool multiPath)
+    const bool multiPath)
     : portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation),
        market_(market), exerciseNextBreak_(exerciseNextBreak),
       baseCurrency_(baseCurrency), configuration_(configuration),
-      quantile_(quantile), calcType_(calcType), isRegularCubeStorage_(isRegularCubeStorage),
+      quantile_(quantile), calcType_(calcType),
       multiPath_(multiPath), dates_(cube->dates()),
       today_(market_->asofDate()), dc_(ActualActual()) {
 
@@ -56,6 +56,10 @@ ExposureCalculator::ExposureCalculator(
     times_ = vector<Real>(dates_.size(), 0.0);
     for (Size i = 0; i < dates_.size(); i++)
         times_[i] = dc_.yearFraction(today_, cube_->dates()[i]);
+
+    boost::shared_ptr<RegularCubeInterpretation> regularCubeInterpretation =
+        boost::dynamic_pointer_cast<RegularCubeInterpretation>(cubeInterpretation_);
+    isRegularCubeStorage_ = (regularCubeInterpretation != NULL);
 }
 
 void ExposureCalculator::build() {

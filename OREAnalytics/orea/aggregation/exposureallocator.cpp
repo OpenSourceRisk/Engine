@@ -196,5 +196,38 @@ Real NoneExposureAllocator::calculateAllocatedEne(const string& tid, const strin
     return 0;
 }
 
+ExposureAllocator::AllocationMethod parseAllocationMethod(const string& s) {
+    static map<string, ExposureAllocator::AllocationMethod> m = {
+        {"None", ExposureAllocator::AllocationMethod::None},
+        {"Marginal", ExposureAllocator::AllocationMethod::Marginal},
+        {"RelativeFairValueGross", ExposureAllocator::AllocationMethod::RelativeFairValueGross},
+        {"RelativeFairValueNet", ExposureAllocator::AllocationMethod::RelativeFairValueNet},
+        {"RelativeXVA", ExposureAllocator::AllocationMethod::RelativeXVA},
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("AllocationMethod \"" << s << "\" not recognized");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, ExposureAllocator::AllocationMethod m) {
+    if (m == ExposureAllocator::AllocationMethod::None)
+        out << "None";
+    else if (m == ExposureAllocator::AllocationMethod::Marginal)
+        out << "Marginal";
+    else if (m == ExposureAllocator::AllocationMethod::RelativeFairValueGross)
+        out << "RelativeFairValueGross";
+    else if (m == ExposureAllocator::AllocationMethod::RelativeFairValueNet)
+        out << "RelativeFairValueNet";
+    else if (m == ExposureAllocator::AllocationMethod::RelativeXVA)
+        out << "RelativeXVA";
+    else
+        QL_FAIL("Allocation method not covered");
+    return out;
+}
+
 } // namespace analytics
 } // namespace ore

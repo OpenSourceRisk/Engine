@@ -41,6 +41,15 @@ using namespace std;
 */
 class ExposureAllocator {
 public:
+
+    enum class AllocationMethod {
+        None,
+        Marginal, // Pykhtin & Rosen, 2010
+        RelativeFairValueGross,
+        RelativeFairValueNet,
+        RelativeXVA
+    };
+
     ExposureAllocator(
         const boost::shared_ptr<Portfolio>& portfolio,
         const boost::shared_ptr<NPVCube>& tradeExposureCube,
@@ -144,5 +153,9 @@ protected:
     virtual Real calculateAllocatedEne(const string& tid, const string& nid, const Date& date, const Size sample);
 };
 
+//! Convert text representation to ExposureAllocator::AllocationMethod
+ExposureAllocator::AllocationMethod parseAllocationMethod(const string& s);
+//! Convert ExposureAllocator::AllocationMethod to text representation
+std::ostream& operator<<(std::ostream& out, ExposureAllocator::AllocationMethod m);
 } // namespace analytics
 } // namespace ore

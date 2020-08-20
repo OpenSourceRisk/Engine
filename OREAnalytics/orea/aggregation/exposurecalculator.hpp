@@ -57,7 +57,6 @@ public:
         const string& configuration,
         const Real quantile,
         const CollateralExposureHelper::CalculationType calcType,
-        const bool isRegularCubeStorage,
         const bool multiPath
     );
 
@@ -109,17 +108,17 @@ public:
     Real& eepe_b(const string& tid) { return eepe_b_[tid]; }
 
 protected:
-    boost::shared_ptr<Portfolio> portfolio_;
-    boost::shared_ptr<NPVCube> cube_;
-    boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
-    boost::shared_ptr<Market> market_;
-    bool exerciseNextBreak_;
-    string baseCurrency_;
-    string configuration_;
-    Real quantile_;
-    CollateralExposureHelper::CalculationType calcType_;
+    const boost::shared_ptr<Portfolio>& portfolio_;
+    const boost::shared_ptr<NPVCube>& cube_;
+    const boost::shared_ptr<CubeInterpretation>& cubeInterpretation_;
+    const boost::shared_ptr<Market>& market_;
+    const bool exerciseNextBreak_;
+    const string& baseCurrency_;
+    const string& configuration_;
+    const Real quantile_;
+    const CollateralExposureHelper::CalculationType calcType_;
+    const bool multiPath_;
     bool isRegularCubeStorage_;
-    bool multiPath_;
 
     vector<Date> dates_;
     const Date today_;

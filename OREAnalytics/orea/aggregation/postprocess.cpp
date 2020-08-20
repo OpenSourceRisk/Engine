@@ -51,39 +51,6 @@ using namespace boost::accumulators;
 namespace ore {
 namespace analytics {
 
-AllocationMethod parseAllocationMethod(const string& s) {
-    static map<string, AllocationMethod> m = {
-        {"None", AllocationMethod::None},
-        {"Marginal", AllocationMethod::Marginal},
-        {"RelativeFairValueGross", AllocationMethod::RelativeFairValueGross},
-        {"RelativeFairValueNet", AllocationMethod::RelativeFairValueNet},
-        {"RelativeXVA", AllocationMethod::RelativeXVA},
-    };
-
-    auto it = m.find(s);
-    if (it != m.end()) {
-        return it->second;
-    } else {
-        QL_FAIL("AllocationMethod \"" << s << "\" not recognized");
-    }
-}
-
-std::ostream& operator<<(std::ostream& out, AllocationMethod m) {
-    if (m == AllocationMethod::None)
-        out << "None";
-    else if (m == AllocationMethod::Marginal)
-        out << "Marginal";
-    else if (m == AllocationMethod::RelativeFairValueGross)
-        out << "RelativeFairValueGross";
-    else if (m == AllocationMethod::RelativeFairValueNet)
-        out << "RelativeFairValueNet";
-    else if (m == AllocationMethod::RelativeXVA)
-        out << "RelativeXVA";
-    else
-        QL_FAIL("Allocation method not covered");
-    return out;
-}
-
 PostProcess::PostProcess(
     const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<NettingSetManager>& nettingSetManager,
     const boost::shared_ptr<Market>& market, const std::string& configuration, const boost::shared_ptr<NPVCube>& cube,
@@ -148,7 +115,7 @@ PostProcess::PostProcess(
                        << cptyCube_->ids().back());
     }
 
-    AllocationMethod allocationMethod = parseAllocationMethod(allocMethod);
+    ExposureAllocator::AllocationMethod allocationMethod = parseAllocationMethod(allocMethod);
 
     /***********************************************
      * Step 0: Netting as of today
@@ -184,8 +151,7 @@ PostProcess::PostProcess(
         boost::make_shared<ExposureCalculator>(
             portfolio, cube_, cubeInterpretation_,
             market_, analytics_["exerciseNextBreak"], baseCurrency_,
-            configuration_, quantile_, calcType_, isRegularCubeStorage,
-            analytics_["dynamicCredit"]
+            configuration_, quantile_, calcType_, analytics_["dynamicCredit"]
         );
     exposureCalculator_->build();
 
@@ -211,7 +177,7 @@ PostProcess::PostProcess(
                          exposureCalculator_->nettingSetDefaultValue(),
             scenarioData_, cubeInterpretation_, analytics_["dim"],
             dimCalculator_, fullInitialCollateralisation_,
-            allocationMethod == AllocationMethod::Marginal, marginalAllocationLimit,
+            allocationMethod == ExposureAllocator::AllocationMethod::Marginal, marginalAllocationLimit,
             exposureCalculator_->exposureCube(),
             ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE
         );
@@ -249,24 +215,24 @@ PostProcess::PostProcess(
      * Simple allocation methods
      */
     boost::shared_ptr<ExposureAllocator> exposureAllocator;
-    if (allocationMethod == AllocationMethod::Marginal) {
+    if (allocationMethod == ExposureAllocator::AllocationMethod::Marginal) {
         DLOG("Marginal Calculation handled in NettedExposureCalculator");
     }
-    else if (allocationMethod == AllocationMethod::RelativeFairValueNet)
+    else if (allocationMethod == ExposureAllocator::AllocationMethod::RelativeFairValueNet)
         exposureAllocator = boost::make_shared<RelativeFairValueNetExposureAllocator>(
             portfolio, exposureCalculator_->exposureCube(),
             nettedExposureCalculator_->exposureCube(), cube_,
             ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
             ExposureCalculator::EPE, ExposureCalculator::ENE,
             NettedExposureCalculator::EPE, NettedExposureCalculator::ENE);
-    else if (allocationMethod == AllocationMethod::RelativeFairValueGross)
+    else if (allocationMethod == ExposureAllocator::AllocationMethod::RelativeFairValueGross)
         exposureAllocator = boost::make_shared<RelativeFairValueGrossExposureAllocator>(
             portfolio, exposureCalculator_->exposureCube(),
             nettedExposureCalculator_->exposureCube(), cube_,
             ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
             ExposureCalculator::EPE, ExposureCalculator::ENE,
             NettedExposureCalculator::EPE, NettedExposureCalculator::ENE);
-    else if (allocationMethod == AllocationMethod::RelativeXVA)
+    else if (allocationMethod == ExposureAllocator::AllocationMethod::RelativeXVA)
         exposureAllocator = boost::make_shared<RelativeXvaExposureAllocator>(
             portfolio, exposureCalculator_->exposureCube(),
             nettedExposureCalculator_->exposureCube(), cube_,
@@ -275,7 +241,7 @@ PostProcess::PostProcess(
             ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
             ExposureCalculator::EPE, ExposureCalculator::ENE,
             NettedExposureCalculator::EPE, NettedExposureCalculator::ENE);
-    else if (allocationMethod == AllocationMethod::None)
+    else if (allocationMethod == ExposureAllocator::AllocationMethod::None)
         exposureAllocator = boost::make_shared<NoneExposureAllocator>(
             portfolio, exposureCalculator_->exposureCube(),
             nettedExposureCalculator_->exposureCube());
