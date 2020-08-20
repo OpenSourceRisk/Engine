@@ -501,6 +501,28 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
     report.end();
 }
 
+void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                            const string& nettingSetId) {
+    const vector<Date> dates = postProcess->cube()->dates();
+    Date today = Settings::instance().evaluationDate();
+    DayCounter dc = ActualActual();
+    const vector<Real>& sensi = postProcess->netCvaHazardRateSensitivity(nettingSetId);
+    report.addColumn("NettingSet", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 6)
+        .addColumn("CvaHazardRateSensitivity", double(), 6);
+
+    for (Size j = 0; j < dates.size(); ++j) {
+        Real time = dc.yearFraction(today, dates[j]);
+        report.next()
+            .add(nettingSetId)
+            .add(dates[j])
+            .add(time)
+            .add(sensi[j]);
+    }
+    report.end();
+}
+
 void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationMethod,
                             boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess) {
     const vector<Date> dates = postProcess->cube()->dates();

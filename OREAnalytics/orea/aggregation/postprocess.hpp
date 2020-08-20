@@ -206,6 +206,9 @@ public:
     const vector<Real>& allocatedTradeEPE(const string& tradeId);
     //! Return trade ENE, allocated down from the netting set level
     const vector<Real>& allocatedTradeENE(const string& tradeId);
+  
+    //! Return Netting Set CVA Hazard Rate Sensitvity vector
+    const vector<Real>& netCvaHazardRateSensitivity(const string& nettingSetId);
 
     //! Return trade (stand-alone) CVA
     Real tradeCVA(const string& tradeId);
@@ -297,6 +300,7 @@ protected:
     map<string, Real> tradeEPE_B_, tradeEEPE_B_;
     map<string, vector<Real>> allocatedTradeEPE_, allocatedTradeENE_;
     map<string, vector<Real>> netEPE_, netENE_, netEE_B_, netEEE_B_, netPFE_, netVAR_, expectedCollateral_;
+    map<string, vector<Real>> netCvaHazardRateSensitivity_;
     map<string, Real> netEPE_B_, netEEPE_B_;
     map<string, vector<Real>> colvaInc_, eoniaFloorInc_;
     map<string, Real> tradeCVA_, tradeDVA_, tradeMVA_, tradeFBA_, tradeFCA_, tradeFBA_exOwnSP_, tradeFCA_exOwnSP_,

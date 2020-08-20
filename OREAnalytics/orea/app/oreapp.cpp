@@ -1012,8 +1012,14 @@ void OREApp::writeXVAReports() {
         string nettingSetColvaFile = o2.str();
         CSVFileReport nettingSetColvaReport(nettingSetColvaFile);
         getReportWriter()->writeNettingSetColva(nettingSetColvaReport, postProcess_, n);
-    }
 
+	ostringstream o3;
+        o3 << outputPath_ << "/cva_sensitivity_nettingset_" << n << ".csv";
+        string nettingSetCvaSensiFile = o3.str();
+        CSVFileReport nettingSetCvaSensitivityReport(nettingSetCvaSensiFile);
+        getReportWriter()->writeNettingSetCvaSensitivities(nettingSetCvaSensitivityReport, postProcess_, n);
+    }
+    
     string XvaFile = outputPath_ + "/xva.csv";
     CSVFileReport xvaReport(XvaFile);
     getReportWriter()->writeXVA(xvaReport, params_->get("xva", "allocationMethod"), portfolio_, postProcess_);
