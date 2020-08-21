@@ -318,7 +318,7 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
                         }
                     }
                     if (!found)
-                        buildErrors[g[*v].mapping] = "did not find required curve id  " + cId + " of type " +
+                        buildErrors[g[*v].mapping] = "did not find required curve id " + cId + " of type " +
                                                      ore::data::to_string(r.first) + " (required from " +
                                                      ore::data::to_string(g[*v]) +
                                                      ") in dependency graph for configuration " + configuration;
