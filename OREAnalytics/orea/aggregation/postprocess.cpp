@@ -1438,17 +1438,16 @@ vector<Real> PostProcess::spreadSensitivities(const vector<Real>& cvahrSensi,
     for (Size i = 0; i < len; ++i) {
         Real fairSpread = fairCdsSpread(i, hr, deltat, dis, lgd);
         input[i] = cvahrSensi[i];
-	Real denominator = 0.0, enumerator = 0;
 	for (Size k = 0; k <= i; ++k) {
 	    Real fairSpreadBumped = fairCdsSpread(i, hr, deltat, dis, lgd, k, bumpSize);
 	    Real spreadMove = fairSpreadBumped - fairSpread;
-	    jacobi[i][k] = spreadMove / bumpSize;
+	    jacobi[k][i] = spreadMove / bumpSize;
 	}
 	// Real fairSpread = lgd * enumerator / denominator;
 	DLOG("Fair spread " << fairSpread << " time step " << i);
     }
       
-    Array output = input * inverse(jacobi);
+    Array output = inverse(jacobi) * input;
 
     for (Size i = 0; i < output.size(); ++i)
         spreadSensi[i] = output[i];
