@@ -740,66 +740,6 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     LOG("Sensitivity report finished");
 }
 
-pair<string, string> extractResult(const pair<string, boost::any>& anyResult) {
-    string resultType;
-    std::ostringstream oss;
-
-    if (anyResult.second.type() == typeid(int)) {
-        resultType = "int";
-        int r = boost::any_cast<int>(anyResult.second);
-        oss << std::fixed << std::setprecision(8) << r;
-    } else if (anyResult.second.type() == typeid(double)) {
-        resultType = "double";
-        double r = boost::any_cast<double>(anyResult.second);
-        oss << std::fixed << std::setprecision(8) << r; 
-    } else if (anyResult.second.type() == typeid(std::string)) {
-        resultType = "string";
-        std::string r = boost::any_cast<std::string>(anyResult.second);
-        oss << std::fixed << std::setprecision(8) << r;
-    } else if (anyResult.second.type() == typeid(std::vector<double>)) {
-        resultType = "vector_double";
-        std::vector<double> r = boost::any_cast<std::vector<double>>(anyResult.second);
-        if (r.size() == 0) {
-            oss << "";
-        } else {
-            oss << std::fixed << std::setprecision(8) << r[0];
-            for (Size i = 1; i < r.size(); i++) {
-                oss << ", " << r[i];
-            }
-        }
-    } else if (anyResult.second.type() == typeid(std::vector<Date>)) {
-        resultType = "vector_date";
-        std::vector<Date> r = boost::any_cast<std::vector<Date>>(anyResult.second);
-        if (r.size() == 0) {
-            oss << "";
-        } else {
-            oss << std::fixed << std::setprecision(8) << to_string(r[0]);
-            for (Size i = 1; i < r.size(); i++) {
-                oss << ", " << to_string(r[i]);
-            }
-        }
-    } else if (anyResult.second.type() == typeid(std::vector<std::string>)) {
-        resultType = "vector_string";
-        std::vector<std::string> r = boost::any_cast<std::vector<std::string>>(anyResult.second);
-        if (r.size() == 0) {
-            oss << "";
-        } else {
-            oss << std::fixed << std::setprecision(8) << r[0];
-            for (Size i = 1; i < r.size(); i++) {
-                oss << ", " << r[i];
-            }
-        }
-    } else if (anyResult.second.type() == typeid(QuantLib::Matrix)) {
-        resultType = "matrix";
-        QuantLib::Matrix r = boost::any_cast<QuantLib::Matrix>(anyResult.second);
-        oss << std::fixed << std::setprecision(8) << r; 
-    } else {
-        ALOG("Unsupported AdditionalResults type: " << anyResult.first);
-        resultType = "unsupported_type";
-    }
-    return make_pair(resultType, oss.str());
-}
-
 void ReportWriter::writeAdditionalResultsReport(ore::data::Report& report,
                             boost::shared_ptr<Portfolio> portfolio) {
     LOG("Writing AdditionalResults report");
@@ -817,7 +757,7 @@ void ReportWriter::writeAdditionalResultsReport(ore::data::Report& report,
 
         if (additionalResults.size() > 0) {
             for (auto r : additionalResults) {
-                pair<string, string> result = extractResult(r);
+                pair<string, string> result = parseBoostAny(r.second);
                 report.next()
                     .add(trade->id())
                     .add(r.first)
