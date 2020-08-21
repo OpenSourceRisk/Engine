@@ -106,6 +106,8 @@
 \newcommand{\EEPE}{\mathit{EEPE}}
 \newcommand{\EEE}{\mathit{EEE}}
 \newcommand{\EAD}{\mathit{EAD}}
+\newcommand{\PE}{\mathit{PE}}
+\newcommand{\NE}{\mathit{NE}}
 \newcommand{\RC}{\mathit{RC}}
 \newcommand{\RW}{\mathit{RW}}
 \newcommand{\NS}{\mathit{NS}}
@@ -2451,7 +2453,10 @@ needed for subsequent XVA analytics.
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="storeFlows">Y</Parameter>
+    <Parameter name="storeSurvivalProbabilities">Y</Parameter>
     <Parameter name="cubeFile">cube_A.dat</Parameter>
+    <Parameter name="nettingSetCubeFile">nettingSetCube_A.dat</Parameter>
+    <Parameter name="cptyCubeFile">cptyCube_A.dat</Parameter>
     <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
     <Parameter name="aggregationScenarioDump">scenariodump.csv</Parameter>
   </Analytic>
@@ -2463,9 +2468,11 @@ needed for subsequent XVA analytics.
 
 The pricing engines file specifies how trades are priced under future scenarios which can differ from pricing as of
 today (specified in section Setup).  Key base currency determines into which currency all NPVs will be converted. Key
-store scenarios (Y or N) determines whether the market scenarios are written to a file for later reuse. And finally, the
-key `store flows' (Y or N) controls whether cumulative cash flows between simulation dates are stored in the (hyper-)
-cube for post processing in the context of Dynamic Initial Margin and Variation Margin calculations. The additional
+store scenarios (Y or N) determines whether the market scenarios are written to a file for later reuse. Key
+`store flows' (Y or N) controls whether cumulative cash flows between simulation dates are stored in the (hyper-)
+cube for post processing in the context of Dynamic Initial Margin and Variation Margin calculations. And finally, the
+key `store survival probabilities' (Y or N) controls whether survival probabilities on simulation dates are stored in the
+cube for post processing in the context of Dynamic Credit XVA calculation. The additional
 scenario data (written to the specified file here) is likewise required in the post processor step. These data comprise
 simulated index fixing e.g. for collateral compounding and simulated FX rates for cash collateral conversion into base
 currency. The scenario dump file, if specified here, causes ORE to write simulated market data to a human-readable csv
@@ -2507,6 +2514,7 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
     <Parameter name="colva">Y</Parameter>
     <Parameter name="collateralFloor">Y</Parameter>
+    <Parameter name="dynamicCredit">N</Parameter>
     <Parameter name="kva">Y</Parameter>
     <Parameter name="kvaCapitalDiscountRate">0.10</Parameter>
     <Parameter name="kvaAlpha">1.4</Parameter>
@@ -2571,6 +2579,7 @@ collateral rates floor to the collateral model file (netting.xml)}
 %basis point is 0.0001) assuming the day count convention of the
 %collateral rate. 
 %basis point is 0.0001) assuming the day count convention of the collateral rate.
+\item {\tt dynamicCredit:} Flag to enable using pathwise survival probabilies when calculating CVA, DVA, FVA and MVA increments from exposures. If set to N the survival probabilities are extracted from T0 curves.
 \item {\tt kva:} Flag to enable setting the kva ccr parameters.
 \item {\tt kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight:} the kva CCR parameters (see \ref{sec:app_kva} and \ref{sec:app_kva_cva}.
 \item {\tt dimQuantile:} Quantile for Dynamic Initial Margin (DIM) calculation
@@ -5626,7 +5635,21 @@ changed in the ORE source code or made configurable. \\
 
 Moreover, formulas (\ref{CVA}, \ref{DVA}) assume independence of credit and other market risk factors, so that $\PD$ and
 $\LGD$ factors are outside the expectations. With the extension of ORE to credit asset classes and in particular for
-wrong-way-risk analysis, CVA/DVA formulas will be generalised.
+wrong-way-risk analysis, CVA/DVA formulas is generaised and is applicable to calculations with dynamic credit
+
+\begin{align}
+\CVA^{dyn} &= \sum_{i} \E^N\left[\frac{\PD^{dyn}(t_{i-1},t_i)\times \PE(t_i)}{N(t)} \right]\times\LGD \label{CVA_dynamic} \\
+\DVA^{dyn} &= \sum_{i} \E^N\left[\frac{\PD^{dyn}_{Bank}(t_{i-1},t_i)\times \NE(t_i)}{N(t)} \right]\times\LGD_{Bank} \label{DVA_dynamic}
+\end{align}
+where
+\begin{align*}
+\PE(t) & \mbox{ random variables representing positive exposure at } t: (NPV(t)-C(t))^+\\
+\NE(t) & \mbox{ random variables representing negative exposure at } t: (-NPV(t)+C(t))^+\\
+PD^{dyn}(t_i,t_j) & \mbox{ random variables representing counterparty probability of default in } [t_i;t_j]\\
+PD^{dyn}_{Bank}(t_i,t_j) & \mbox{ random variables representing our probability of default in } [t_i;t_j]\\
+LGD & \mbox{ counterparty loss given default}\\
+LGD_{Bank} & \mbox{ our loss given default}\\
+\end{align*}
 
 \subsection{FVA}\label{sec:fva}
 
