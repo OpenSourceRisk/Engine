@@ -31,6 +31,7 @@
 #include <string>
 
 #include <boost/serialization/base_object.hpp>
+#include <boost/serialization/export.hpp>
 
 namespace ore {
 namespace data {
@@ -57,7 +58,7 @@ protected:
 private:
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {}
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 /*! Expiry consisting of an explicit expiry date
@@ -90,10 +91,7 @@ private:
     QuantLib::Date expiryDate_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<Expiry>(*this);
-        ar& expiryDate_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 /*! Expiry consisting of a period
@@ -126,10 +124,7 @@ private:
     QuantLib::Period expiryPeriod_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<Expiry>(*this);
-        ar& expiryPeriod_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 /*! Expiry represented by a future continuation index
@@ -159,10 +154,7 @@ private:
     QuantLib::Natural expiryIndex_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<Expiry>(*this);
-        ar& expiryIndex_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Write \p strike to stream.
@@ -173,3 +165,7 @@ boost::shared_ptr<Expiry> parseExpiry(const std::string& strExpiry);
 
 } // namespace data
 } // namespace ore
+
+BOOST_CLASS_EXPORT_KEY(ore::data::ExpiryDate);
+BOOST_CLASS_EXPORT_KEY(ore::data::ExpiryPeriod);
+BOOST_CLASS_EXPORT_KEY(ore::data::FutureContinuationExpiry);
