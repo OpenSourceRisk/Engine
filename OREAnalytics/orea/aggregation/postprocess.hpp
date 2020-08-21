@@ -209,6 +209,8 @@ public:
   
     //! Return Netting Set CVA Hazard Rate Sensitvity vector
     const vector<Real>& netCvaHazardRateSensitivity(const string& nettingSetId);
+    //! Return Netting Set CVA Spread Sensitvity vector
+    const vector<Real>& netCvaSpreadSensitivity(const string& nettingSetId);
 
     //! Return trade (stand-alone) CVA
     Real tradeCVA(const string& tradeId);
@@ -288,6 +290,10 @@ protected:
     void updateStandAloneXVA();
     void updateAllocatedXVA();
 
+    // perfrom jacobi transform to turn hazard rate sensitivities into spread sensitivities
+    vector<Real> spreadSensitivities(const vector<Real>& cvahrSensi, const vector<Real>& cumulativeSurvival, const vector<Real>& deltaPD, const vector<Real>& deltat, Real lgd,
+				     const vector<Real>& discount = vector<Real>());
+
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<NettingSetManager> nettingSetManager_;
     boost::shared_ptr<Market> market_;
@@ -300,7 +306,7 @@ protected:
     map<string, Real> tradeEPE_B_, tradeEEPE_B_;
     map<string, vector<Real>> allocatedTradeEPE_, allocatedTradeENE_;
     map<string, vector<Real>> netEPE_, netENE_, netEE_B_, netEEE_B_, netPFE_, netVAR_, expectedCollateral_;
-    map<string, vector<Real>> netCvaHazardRateSensitivity_;
+    map<string, vector<Real>> netCvaHazardRateSensitivity_, netCvaSpreadSensitivity_;
     map<string, Real> netEPE_B_, netEEPE_B_;
     map<string, vector<Real>> colvaInc_, eoniaFloorInc_;
     map<string, Real> tradeCVA_, tradeDVA_, tradeMVA_, tradeFBA_, tradeFCA_, tradeFBA_exOwnSP_, tradeFCA_exOwnSP_,
