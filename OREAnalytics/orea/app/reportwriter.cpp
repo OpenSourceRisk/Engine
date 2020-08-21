@@ -740,7 +740,7 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     LOG("Sensitivity report finished");
 }
 
-pair<string, string> extractResult(pair<string, boost::any> anyResult) {
+pair<string, string> extractResult(const pair<string, boost::any>& anyResult) {
     string resultType;
     std::ostringstream oss;
 
@@ -767,12 +767,35 @@ pair<string, string> extractResult(pair<string, boost::any> anyResult) {
                 oss << ", " << r[i];
             }
         }
+    } else if (anyResult.second.type() == typeid(std::vector<Date>)) {
+        resultType = "vector_date";
+        std::vector<Date> r = boost::any_cast<std::vector<Date>>(anyResult.second);
+        if (r.size() == 0) {
+            oss << "";
+        } else {
+            oss << std::fixed << std::setprecision(8) << to_string(r[0]);
+            for (Size i = 1; i < r.size(); i++) {
+                oss << ", " << to_string(r[i]);
+            }
+        }
+    } else if (anyResult.second.type() == typeid(std::vector<std::string>)) {
+        resultType = "vector_string";
+        std::vector<std::string> r = boost::any_cast<std::vector<std::string>>(anyResult.second);
+        if (r.size() == 0) {
+            oss << "";
+        } else {
+            oss << std::fixed << std::setprecision(8) << r[0];
+            for (Size i = 1; i < r.size(); i++) {
+                oss << ", " << r[i];
+            }
+        }
     } else if (anyResult.second.type() == typeid(QuantLib::Matrix)) {
         resultType = "matrix";
         QuantLib::Matrix r = boost::any_cast<QuantLib::Matrix>(anyResult.second);
         oss << std::fixed << std::setprecision(8) << r; 
     } else {
         ALOG("Unsupported AdditionalResults type: " << anyResult.first);
+        resultType = "unsupported_type";
     }
     return make_pair(resultType, oss.str());
 }
@@ -786,8 +809,11 @@ void ReportWriter::writeAdditionalResultsReport(ore::data::Report& report,
         .addColumn("ResultValue", string());
 
     for (auto trade : portfolio->trades()) {
+        auto underlyingInst = trade->instrument()->qlInstrument();
+        if (!underlyingInst)
+            continue;
         std::map<std::string,boost::any> additionalResults = 
-            trade->instrument()->qlInstrument()->additionalResults();
+            underlyingInst->additionalResults();
 
         if (additionalResults.size() > 0) {
             for (auto r : additionalResults) {
