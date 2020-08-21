@@ -5308,10 +5308,11 @@ This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning
 \subsection{Risk Factor Evolution Model}\label{sec:app_rfe}
 
 ORE applies the cross asset model described in detail in \cite{Lichters} to evolve  the market through time. So far the
-evolution model in ORE supports IR and FX risk factors for any number of currencies, Equity and Inflation as well as Credit (for $t0$-pricing). Extensions to full simulation of Credit and Commodity is planned. \\
+evolution model in ORE supports IR and FX risk factors for any number of currencies, Equity and Inflation as well as Credit. Extensions to full simulation of Commodity is planned. \\
 
 The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates, lognormal FX and equity 
-processes and the Dodgson-Kainth model for inflation. We identify a single {\em domestic} currency; its LGM process, 
+processes, Dodgson-Kainth model for inflation, LGM or Extended Cox-Ingersoll-Ross model (CIR++) for credit.
+We identify a single {\em domestic} currency; its LGM process,
 which is labelled $z_0$; and a set of $n$ foreign currencies with associated LGM processes that are labelled $z_i$, 
 $i=1,\dots,n$. 
 
@@ -5320,7 +5321,9 @@ currency for the equity process as $\phi(j)$. The dividend yield corresponding t
 by $q_j$.
 
 Following \cite{Lichters}, 13.27 - 13.29 we write the inflation processes 
-in the domestic LGM measure with state variables $z_{I,k}$ and $y_{I,k}$ for $k=1,\ldots,K$.  If we consider $n$ 
+in the domestic LGM measure with state variables $z_{I,k}$ and $y_{I,k}$ for $k=1,\ldots,K$
+and the credit processes in the domestic LGM measure with state variables ${C,k}$ and $y_{C,k}$ for $k=1,\ldots,K$.
+If we consider $n$ 
 foreign exchange rates for converting foreign currency amounts into the single domestic currency by multiplication, 
 $x_i$, $i=1,\dots,n$, then the cross asset model is given by the system of SDEs
 \begin{eqnarray*}
@@ -5329,7 +5332,9 @@ dz_i &=& \gamma_i\,dt + \alpha_i\,dW_i^z,  \qquad i>0 \\
 \frac{d x_i}{x_i} &=& \mu_i\, dt + \sigma_i\,dW_i^x, \qquad i > 0 \\
 \frac{d s_j}{s_j} &=& \mu_j^S\, dt + \sigma_j^S\,dW_j^S \\
 dz_{I,k} &=& \alpha_{I,k}(t)dW_k^I \\
-dy_{I,k} &=& \alpha_{I,k}(t)H_{I,k}(t)dW_k^I \\ \\
+dy_{I,k} &=& \alpha_{I,k}(t)H_{I,k}(t)dW_k^I \\
+dz_{C,k} &=& \alpha_{C,k}(t)dW_k^C \\
+dy_{C,k} &=& H_{C,k}(t)\alpha_{C,k}(t)dW_k^C \\ \\
 \gamma_i &=&
 -\alpha_i^2\,H_i -\rho_{ii}^{zx}\,\sigma_i\,\alpha_i + \rho_{i0}^{zz}\,\alpha_i\,\alpha_0\,H_0\\
 \mu_i &=& r_0 - r_i + \rho_{0i}^{zx}\,\alpha_0\,H_0\,\sigma_i\\
@@ -5337,7 +5342,7 @@ dy_{I,k} &=& \alpha_{I,k}(t)H_{I,k}(t)dW_k^I \\ \\
 \rho_{j \phi(j)}^{sx}\sigma_j^S \sigma_{\phi(j)}) \\
 r_i &=& f_i(0,t) + z_i(t)\,H'_i(t) + \zeta_i(t)\,H_i(t)\,H'_i(t),
 \quad \zeta_i(t) = \int_0^t \alpha_i^2(s)\,ds  \\ \\
-dW^\alpha_a\,dW^\beta_b &=& \rho^{\alpha\beta}_{ij}\,dt, \qquad \alpha, \beta \in \{z, x, I\}, \qquad a, b \text{
+dW^\alpha_a\,dW^\beta_b &=& \rho^{\alpha\beta}_{ij}\,dt, \qquad \alpha, \beta \in \{z, x, I, C\}, \qquad a, b \text{
                               suitable indices }
 %\zeta_i(t) &=& \int_0^t \alpha_i^2(s)\,ds,
 %\qquad H_i(t) = \int_0^t e^{-\beta_i(s)} \,ds \\
@@ -5563,7 +5568,58 @@ The equity/inflation covariances over the interval $[s,t] := [t_0, t_0+\Delta t]
 	&&+ \rho_{ij}^{sI} \int_s^t \sigma_i^S (u) H_{I,j} (u) \alpha_{I,j} (u) du\\
 \end{eqnarray*}
 
+The expectation of the Credit processes $z_{C,k}, y_{C,k}$ conditional on $\mathcal{F}_{t_0}$ at any time $t>t_0$ is
+equal to $z_{C,k}(t_0)$ resp. $y_{C,k}(t_0)$ since both processes are drift free.
 
+The credit/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+	Cov \left[\Delta z_{C,a}, \Delta z_{C,b} \right] &=&
+	\rho_{ab}^{CC}\int_s^t \alpha_{C, a}(u) \alpha_{C, b}(u) du\\
+  Cov \left[\Delta z_{C,a}, \Delta y_{C,b} \right] &=&
+	\rho_{ab}^{CC}\int_s^t \alpha_{C, a}(u) H_{C,b}(u) \alpha_{C, b}(u) du\\
+  Cov \left[\Delta y_{C,a}, \Delta y_{C,b} \right] &=&
+	\rho_{ab}^{CC}\int_s^t \alpha_{C, a}(u) H_{C,a}(u) \alpha_{C, b}(u) H_{C,b}(u) du\\
+\end{eqnarray*}
+
+The IR/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+	Cov \left[\Delta z_a, \Delta z_{C,b} \right] &=&
+	\rho_{ab}^{zC}\int_s^t \alpha_a(u) \alpha_{C, b}(u) du\\
+  Cov \left[\Delta z_a, \Delta y_{C,b} \right] &=&
+	\rho_{ab}^{zC}\int_s^t \alpha_a(u) H_{C,b}(u) \alpha_{C, b}(u) du\\
+\end{eqnarray*}
+
+The FX/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta x_a, \Delta z_{C,b} ] & = & \rho_{0b}^{zC} \int_s^t \alpha_0(s) (H_0(t)-H_0(s)) \alpha_{C,b}(s) ds \\
+                                             & & -\rho_{ab}^{zC} \int_s^t \alpha_a(s)(H_a(t)-H_a(s))\alpha_{C,b}(s) ds \\
+                                             & & +\rho_{ab}^{xC}\int_s^t \sigma_a(s) \alpha_{C,b}(s) ds \\
+  \mathrm{Cov}[ \Delta x_a, \Delta y_{C,b} ] & = & \rho_{0b}^{zC} \int_s^t \alpha_0(s) (H_0(t)-H_0(s)) H_{C,b}(s)\alpha_{C,b}(s) ds \\
+                                             & & -\rho_{ab}^{zC} \int_s^t \alpha_a(s)(H_a(t)-H_a(s))H_{C,b}(s)\alpha_{C,b}(s) ds \\
+                                             & & +\rho_{ab}^{xC}\int_s^t \sigma_a(s) H_{C,b}(s)\alpha_{C,b}(s) ds
+\end{eqnarray*}
+
+The inflation/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta z_{I,a}, \Delta z_{C,b} ] &=&
+  \rho_{ab}^{IC}\int_s^t \alpha_{I,a} \alpha_{C,b}(u) du\\
+  \mathrm{Cov}[ \Delta z_{I,a}, \Delta y_{C,b} ] &=&
+  \rho_{ab}^{IC}\int_s^t \alpha_{I,a} H_{C,b}(u) \alpha_{C,b}(u) du\\
+  \mathrm{Cov}[ \Delta y_{I,a}, \Delta z_{C,b} ] &=&
+  \rho_{ab}^{IC}\int_s^t \alpha_{I,a} H_{I,a}(u) \alpha_{C,b}(u) du\\
+  \mathrm{Cov}[ \Delta y_{I,a}, \Delta y_{C,b} ] &=&
+  \rho_{ab}^{IC}\int_s^t \alpha_{I,a} H_{I,a}(u) \alpha_{C,b}(u) H_{C,b}(u) du\\
+\end{eqnarray*}
+
+The equity/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+	Cov \left[\Delta ln[s_i], \Delta z_{C,j} \right] &=&
+	\rho_{\phi(i)j}^{zC} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) \alpha_{C,j} (u) du\\
+	&&+ \rho_{ij}^{sC} \int_s^t \sigma_i^S (u) \alpha_{C,j} (u) du\\	
+	Cov \left[\Delta ln[s_i], \Delta y_{C,j} \right] &=&
+	\rho_{\phi(i)j}^{zC} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) H_{C,j} (u) \alpha_{C,j} (u) du\\
+	&&+ \rho_{ij}^{sC} \int_s^t \sigma_i^S (u) H_{C,j} (u) \alpha_{C,j} (u) du\\
+\end{eqnarray*}
 
 \subsection{Exposures}\label{sec:app_exposure}
 
