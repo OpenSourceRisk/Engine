@@ -740,5 +740,34 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     LOG("Sensitivity report finished");
 }
 
+void ReportWriter::writeAdditionalResultsReport(ore::data::Report& report,
+                            boost::shared_ptr<Portfolio> portfolio) {
+    LOG("Writing AdditionalResults report");
+    report.addColumn("TradeId", string())
+        .addColumn("ResultId", string())
+        .addColumn("ResultType", string())
+        .addColumn("ResultValue", string());
+
+    for (auto trade : portfolio->trades()) {
+        auto underlyingInst = trade->instrument()->qlInstrument();
+        if (!underlyingInst)
+            continue;
+        std::map<std::string,boost::any> additionalResults = 
+            underlyingInst->additionalResults();
+
+        if (additionalResults.size() > 0) {
+            for (auto r : additionalResults) {
+                pair<string, string> result = parseBoostAny(r.second);
+                report.next()
+                    .add(trade->id())
+                    .add(r.first)
+                    .add(result.first)
+                    .add(result.second);
+            }
+        }
+    }
+    report.end();
+    LOG("AdditionalResults report written");
+}
 } // namespace analytics
 } // namespace ore

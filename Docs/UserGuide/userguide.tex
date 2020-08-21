@@ -2355,6 +2355,7 @@ type can be (so far) in
 \begin{itemize}
 \item npv
 \item cashflow
+\item additionalResults
 \item curves
 \item simulation
 \item xva
@@ -2364,7 +2365,7 @@ type can be (so far) in
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter
   name="key">value</Parameter>}. Each analysis must have one key {\tt active} set to Y or N to activate/deactivate this
-analysis.  The following listing \ref{lst:ore_analytics} shows the parametrisation of the first three basic analytics in
+analysis.  The following listing \ref{lst:ore_analytics} shows the parametrisation of the first four basic analytics in
 the list above.
 
 \begin{listing}[H]
@@ -2386,6 +2387,10 @@ the list above.
     <Parameter name="grid">240,1M</Parameter>
     <Parameter name="outputFileName">curves.csv</Parameter>
   </Analytic>
+  <Analytic type="additionalResults">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="outputFileName">additional\_results.csv</Parameter>
+  </Analytic> 
   <Analytic type="...">
     <!-- ... -->
   </Analytic>      
@@ -2435,6 +2440,29 @@ section).  Key {\tt grid} defines the time grid on which the yield curves are ev
 this monthly grid into the csv file specified by key {\tt outputFileName}. The grid can also be specified explicitly by
 a comma separated list of tenor points such as {\tt 1W, 1M, 2M, 3M, \dots}.
 
+The additionalResults analytic writes a report containing any additional results generated for the portfolio. The results are pricingengine specific but Table \ref{additionalreport} shows the output for a vanilla swaption.
+
+\begin{table}[hbt]
+\scriptsize
+\begin{center}
+  \begin{tabular}{l|l|l|l}
+\hline
+\#TradeId & ResultId & ResultType & ResultValue \\
+example\_swaption & annuity & double & 2123720984 \\
+example\_swaption & atmForward & double & 0.01664135 \\
+example\_swaption & spreadCorrection & double & 0 \\
+example\_swaption & stdDev & double & 0.00546015 \\
+example\_swaption & strike & double & 0.024 \\
+example\_swaption & swapLength & double & 4 \\
+example\_swaption & vega & double & 309237709.5 \\
+\hline
+\hline
+\ldots
+\end{tabular}
+\caption{AddiitonalResults Report}
+\label{additionalreport}
+\end{center}
+\end{table}
 \medskip The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulation which evolves the market as
 specified in the simulation config file. The primary result is an NPV cube file, i.e. valuations of all trades in the
 portfolio file (see section Setup), for all future points in time on the simulation grid and for all paths. Apart from
