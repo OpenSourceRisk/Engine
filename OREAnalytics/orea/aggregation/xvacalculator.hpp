@@ -107,6 +107,12 @@ public:
     //! DVA map for all the netting sets
     const map<string, Real>& nettingSetDva();
 
+    //! Sum CVA map for all the netting sets
+    const map<string, Real>& nettingSetSumCva();
+
+    //! Sum DVA map for all the netting sets
+    const map<string, Real>& nettingSetSumDva();
+
     //! CVA for the specified trade
     const Real& tradeCva(const string& trade);
 

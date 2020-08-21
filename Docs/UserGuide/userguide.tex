@@ -2556,7 +2556,7 @@ FX rates)
 settled after the margin period of risk; AsymmetricCVA - margin requested from the counterparty settles with delay,
 margin requested from us settles immediately; AsymmetricDVA - vice versa). \todo[inline]{Move calculationType into the
 {\tt csaFile}?}
-\item {\tt allocationMethod:} XVA allocation method, choices are {\em None, Marginal, RelativeXVA}
+\item {\tt allocationMethod:} XVA allocation method, choices are {\em None, Marginal, RelativeXVA, RelativeFairValueGross, RelativeFairValueNet}
 \item {\tt marginalAllocationLimit:} The marginal allocation method a la Pykhtin/Rosen breaks down when the netting set
 value vanishes while the exposure does not. This parameter acts as a cutoff for the marginal allocation when the
 absolute netting set value falls below this limit and switches to equal distribution of the exposure in this case.

@@ -118,6 +118,14 @@ const map<string, Real>& ValueAdjustmentCalculator::nettingSetDva() {
     return nettingSetDva_;
 }
 
+const map<string, Real>& ValueAdjustmentCalculator::nettingSetSumCva() {
+    return nettingSetSumCva_;
+}
+
+const map<string, Real>& ValueAdjustmentCalculator::nettingSetSumDva() {
+    return nettingSetSumDva_;
+}
+
 const Real& ValueAdjustmentCalculator::tradeCva(const std::string& trade) {
     if (tradeCva_.find(trade) != tradeCva_.end())
         return tradeCva_[trade];

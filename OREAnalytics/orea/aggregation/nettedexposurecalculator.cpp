@@ -61,9 +61,18 @@ NettedExposureCalculator::NettedExposureCalculator(
     for(auto nettingSet : nettingSetValue)
         nettingSetIds.push_back(nettingSet.first);
 
-    exposureCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(
-        market_->asofDate(), nettingSetIds, cube->dates(),
-        multiPath ? cube->samples() : 1, EXPOSURE_CUBE_DEPTH); // Exposure afer collateral, EPE, ENE
+    nettedCube_= boost::make_shared<SinglePrecisionInMemoryCube>(
+            market_->asofDate(), nettingSetIds, cube->dates(),
+            cube->samples()); // Exposure afer collateral
+    if (multiPath) {
+        exposureCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(
+            market_->asofDate(), nettingSetIds, cube->dates(),
+            cube->samples(), EXPOSURE_CUBE_DEPTH); // EPE, ENE
+    } else {
+        exposureCube_ = boost::make_shared<DoublePrecisionInMemoryCubeN>(
+            market_->asofDate(), nettingSetIds, cube->dates(),
+            1, EXPOSURE_CUBE_DEPTH); // EPE, ENE
+    }
 };
 
 void NettedExposureCalculator::build() {
@@ -160,6 +169,7 @@ void NettedExposureCalculator::build() {
         eab[0] = -npv;
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
+        nettedCube_->setT0(npv, nettingSetCount);
         exposureCube_->setT0(epe[0], nettingSetCount, ExposureIndex::EPE);
         exposureCube_->setT0(ene[0], nettingSetCount, ExposureIndex::ENE);
 
@@ -167,7 +177,6 @@ void NettedExposureCalculator::build() {
 
             Date date = cube_->dates()[j];
             Date prevDate = j > 0 ? cube_->dates()[j - 1] : today;
-            Real averageExposure = 0.0;
             vector<Real> distribution(cube_->samples(), 0.0);
             for (Size k = 0; k < cube_->samples(); ++k) {
                 Real balance = 0.0;
@@ -186,14 +195,13 @@ void NettedExposureCalculator::build() {
                     QL_REQUIRE(dim >= 0, "negative DIM for set " << nettingSetId << ", date " << j << ", sample " << k
                                                                  << ": " << dim);
                 }
-                averageExposure += exposure / cube_->samples();
                 epe[j + 1] += std::max(exposure - dim, 0.0) /
                               cube_->samples(); // dim here represents the held IM, and is expressed as a positive number
                 ene[j + 1] += std::max(-exposure - dim, 0.0) /
                               cube_->samples(); // dim here represents the posted IM, and is expressed as a positive number
                 distribution[k] = exposure;
+                nettedCube_->set(exposure, nettingSetCount, j, k);
                 if (multiPath_) {
-                    exposureCube_->set(exposure, nettingSetCount, j, k, ExposureIndex::Exposure);
                     exposureCube_->set(std::max(exposure - dim, 0.0), nettingSetCount, j, k, ExposureIndex::EPE);
                     exposureCube_->set(std::max(-exposure - dim, 0.0), nettingSetCount, j, k, ExposureIndex::ENE);
                 }
@@ -248,7 +256,6 @@ void NettedExposureCalculator::build() {
                 }
             }
             if (!multiPath_) {
-                exposureCube_->set(averageExposure, nettingSetCount, j, 0, ExposureIndex::Exposure);
                 exposureCube_->set(epe[j + 1], nettingSetCount, j, 0, ExposureIndex::EPE);
                 exposureCube_->set(ene[j + 1], nettingSetCount, j, 0, ExposureIndex::ENE);
             }
@@ -377,12 +384,13 @@ NettedExposureCalculator::collateralPaths(
 }
 
 vector<Real> NettedExposureCalculator::getMeanExposure(const string& tid, ExposureIndex index) {
-    vector<Real> exp(cube_->dates().size(), 0.0);
+    vector<Real> exp(cube_->dates().size() + 1, 0.0);
+    exp[0] = exposureCube_->getT0(tid, index);
     for (Size i = 0; i < cube_->dates().size(); i++) {
         for (Size k = 0; k < exposureCube_->samples(); k++) {
-            exp[i] += exposureCube_->get(tid, cube_->dates()[i], k, index);
+            exp[i + 1] += exposureCube_->get(tid, cube_->dates()[i], k, index);
         }
-        exp[i] /= exposureCube_->samples();
+        exp[i + 1] /= exposureCube_->samples();
     }
     return exp;
 }

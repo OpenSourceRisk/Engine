@@ -258,7 +258,7 @@ public:
     //! Inspector for the input Cpty cube (by name, time, scenario)
     const boost::shared_ptr<NPVCube>& cptyCube() { return cptyCube_; }
     //! Return the  for the input NPV cube after netting and collateral (by netting set, time, scenario)
-    const boost::shared_ptr<NPVCube>& netCube() { return nettedExposureCalculator_->exposureCube(); }
+    const boost::shared_ptr<NPVCube>& netCube() { return nettedExposureCalculator_->nettedCube(); }
     //! Return the dynamic initial margin cube (regression approach)
     //const boost::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
     //! Write average (over samples) DIM evolution through time for all netting sets

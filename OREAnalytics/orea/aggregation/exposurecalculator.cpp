@@ -44,9 +44,15 @@ ExposureCalculator::ExposureCalculator(
 
     QL_REQUIRE(portfolio_, "portfolio is null");
 
-    exposureCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(
-        market->asofDate(), portfolio_->ids(), dates_,
-        multiPath ? cube_->samples() : 1, EXPOSURE_CUBE_DEPTH);// EPE, ENE, allocatedEPE, allocatedENE
+    if (multiPath) {
+        exposureCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(
+            market->asofDate(), portfolio_->ids(), dates_,
+            cube_->samples(), EXPOSURE_CUBE_DEPTH);// EPE, ENE, allocatedEPE, allocatedENE
+    } else {
+        exposureCube_ = boost::make_shared<DoublePrecisionInMemoryCubeN>(
+            market->asofDate(), portfolio_->ids(), dates_,
+            1, EXPOSURE_CUBE_DEPTH);// EPE, ENE, allocatedEPE, allocatedENE
+    }
 
     set<string> nettingSetIdsSet;
     for (const auto& trade : portfolio->trades())
@@ -113,6 +119,8 @@ void ExposureCalculator::build() {
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
         pfe[0] = std::max(npv0, 0.0);
+        exposureCube_->setT0(epe[0], tradeId, ExposureIndex::EPE);
+        exposureCube_->setT0(ene[0], tradeId, ExposureIndex::ENE);
         for (Size j = 0; j < dates_.size(); ++j) {
             Date d = cube_->dates()[j];
             vector<Real> distribution(cube_->samples(), 0.0);
@@ -194,12 +202,13 @@ void ExposureCalculator::build() {
 }
 
 vector<Real> ExposureCalculator::getMeanExposure(const string& tid, ExposureIndex index) {
-    vector<Real> exp(dates_.size(), 0.0);
+    vector<Real> exp(dates_.size() + 1, 0.0);
+    exp[0] = exposureCube_->getT0(tid, index);
     for (Size i = 0; i < dates_.size(); i++) {
         for (Size k = 0; k < exposureCube_->samples(); k++) {
-            exp[i] += exposureCube_->get(tid, dates_[i], k, index);
+            exp[i + 1] += exposureCube_->get(tid, dates_[i], k, index);
         }
-        exp[i] /= exposureCube_->samples();
+        exp[i + 1] /= exposureCube_->samples();
     }
     return exp;
 }

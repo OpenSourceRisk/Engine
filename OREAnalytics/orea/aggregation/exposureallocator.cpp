@@ -162,13 +162,7 @@ RelativeXvaExposureAllocator::RelativeXvaExposureAllocator(
                         tradeEpeIndex, tradeEneIndex,
                         nettingSetEpeIndex, nettingSetEneIndex),
       tradeCva_(tradeCva), tradeDva_(tradeDva),
-      nettingSetSumCva_(nettingSetSumCva), nettingSetSumDva_(nettingSetSumDva) {
-    for (Size i = 0; i < portfolio->ids().size(); ++i) {
-        string tradeId = portfolio_->ids()[i];
-        Real npv = npvCube->getT0(i);
-        tradeValueToday_[tradeId] = npv;
-    }
-}
+      nettingSetSumCva_(nettingSetSumCva), nettingSetSumDva_(nettingSetSumDva) {}
 
 Real RelativeXvaExposureAllocator::calculateAllocatedEpe(const string& tid, const string& nid,
                                                          const Date& date, const Size sample) {

@@ -237,7 +237,7 @@ PostProcess::PostProcess(
             portfolio, exposureCalculator_->exposureCube(),
             nettedExposureCalculator_->exposureCube(), cube_,
             cvaCalculator_->tradeCva(), cvaCalculator_->tradeDva(),
-            cvaCalculator_->nettingSetCva(), cvaCalculator_->nettingSetDva(),
+            cvaCalculator_->nettingSetSumCva(), cvaCalculator_->nettingSetSumDva(),
             ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
             ExposureCalculator::EPE, ExposureCalculator::ENE,
             NettedExposureCalculator::EPE, NettedExposureCalculator::ENE);
@@ -564,7 +564,7 @@ const vector<Real>& PostProcess::colvaIncrements(const string& nettingSetId) {
 }
 
 const vector<Real>& PostProcess::collateralFloorIncrements(const string& nettingSetId) {
-    return nettedExposureCalculator_->colvaIncrements(nettingSetId);
+    return nettedExposureCalculator_->collateralFloorIncrements(nettingSetId);
 }
 
 const vector<Real>& PostProcess::allocatedTradeEPE(const string& tradeId) {
