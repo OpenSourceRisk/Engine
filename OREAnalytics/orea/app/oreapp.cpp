@@ -397,6 +397,11 @@ boost::shared_ptr<ScenarioGeneratorData> OREApp::getScenarioGeneratorData() {
     string simulationConfigFile = inputPath_ + "/" + params_->get("simulation", "simulationConfigFile");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->fromFile(simulationConfigFile);
+    DLOG("grid size=" << sgd->grid()->size() << ", dates=" << sgd->grid()->dates().size()
+                      << ", valuationDates=" << sgd->grid()->valuationDates().size()
+                      << ", closeOutDates=" << sgd->grid()->closeOutDates().size());
+    useCloseOutLag_ = sgd->withCloseOutLag();
+    useMporStickyDate_ = sgd->withMporStickyDate();
     return sgd;
 }
 
@@ -655,17 +660,18 @@ void OREApp::writeBaseScenario() {
 }
 
 void OREApp::initAggregationScenarioData() {
-    scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->size(), samples_);
+    scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->valuationDates().size(), samples_);
 }
 
-void OREApp::initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids) {
-    if (cubeDepth_ == 1)
-        cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, ids, grid_->dates(), samples_);
-    else if (cubeDepth_ == 2)
-        cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, ids, grid_->dates(), samples_, cubeDepth_);
-    else {
-        QL_FAIL("cube depth 1 or 2 expected");
-    }
+void OREApp::initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids, const Size cubeDepth) {
+    QL_REQUIRE(cubeDepth > 0, "zero cube depth given");
+    if (cubeDepth == 1)
+        cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, ids, grid_->valuationDates(), samples_, 0.0);
+    else
+        cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, ids, grid_->valuationDates(), samples_,
+                                                                cubeDepth, 0.0);
+
+    LOG("init NPV cube with depth: " << cubeDepth);
 }
 
 void OREApp::buildNPVCube() {
@@ -673,20 +679,42 @@ void OREApp::buildNPVCube() {
     // Valuation calculators
     string baseCurrency = params_->get("simulation", "baseCurrency");
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
-    calculators.push_back(boost::make_shared<NPVCalculator>(baseCurrency));
-    if (cubeDepth_ > 1)
-        calculators.push_back(boost::make_shared<CashflowCalculator>(baseCurrency, asof_, grid_, 1));
+
+    Size slots = 0;
+    if (useCloseOutLag_) {
+        boost::shared_ptr<NPVCalculator> npvCalc = boost::make_shared<NPVCalculator>(baseCurrency);
+        // calculators.push_back(boost::make_shared<NPVCalculator>(baseCurrency));
+        // default date value stored at index 0, close-out value at index 1
+        calculators.push_back(boost::make_shared<MPORCalculator>(npvCalc, 0, 1));
+        slots = 2;
+    } else {
+        calculators.push_back(boost::make_shared<NPVCalculator>(baseCurrency));
+        slots = 1;
+    }
+
+    if (storeFlows_) {
+        // cash flow stored at index 2
+        calculators.push_back(boost::make_shared<CashflowCalculator>(baseCurrency, asof_, grid_, cubeDepth_ - 1));
+        slots++;
+    }
+
+    if (useCloseOutLag_)
+        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(grid_);
+    else
+        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
+
     LOG("Build cube");
     ValuationEngine engine(asof_, grid_, simMarket_);
     ostringstream o;
     o.str("");
-    o << "Build Cube " << simPortfolio_->size() << " x " << grid_->size() << " x " << samples_ << "... ";
+    o << "Build Cube " << simPortfolio_->size() << " x " << grid_->valuationDates().size() << " x " << samples_
+      << "... ";
 
     auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab_, progressBarWidth_);
     auto progressLog = boost::make_shared<ProgressLog>("Building cube...");
     engine.registerProgressIndicator(progressBar);
     engine.registerProgressIndicator(progressLog);
-    engine.buildCube(simPortfolio_, cube_, calculators);
+    engine.buildCube(simPortfolio_, cube_, calculators, useMporStickyDate_, nettingSetCube_);
     out_ << "OK" << endl;
 }
 
@@ -725,13 +753,20 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
         out_ << "OK" << endl;
     }
 
-    if (params_->has("simulation", "storeFlows") && params_->get("simulation", "storeFlows") == "Y")
-        cubeDepth_ = 2; // NPV and FLOW
-    else
-        cubeDepth_ = 1; // NPV only
+    cubeDepth_ = 1; // NPV only
+    if (sgd->withCloseOutLag())
+        cubeDepth_++;
+
+    storeFlows_ = false;
+    if (params_->has("simulation", "storeFlows") && params_->get("simulation", "storeFlows") == "Y") {
+        storeFlows_ = true;
+        cubeDepth_++;
+    }
+
+    nettingSetCube_ = nullptr;
 
     ostringstream o;
-    o << "Aggregation Scenario Data " << grid_->size() << " x " << samples_ << "... ";
+    o << "Aggregation Scenario Data " << grid_->valuationDates().size() << " x " << samples_ << "... ";
     out_ << setw(tab_) << o.str() << flush;
 
     initAggregationScenarioData();
@@ -739,7 +774,7 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     simMarket_->aggregationScenarioData() = scenarioData_;
     out_ << "OK" << endl;
 
-    initCube(cube_, simPortfolio_->ids());
+    initCube(cube_, simPortfolio_->ids(), cubeDepth_);
 }
 
 void OREApp::generateNPVCube() {
@@ -749,26 +784,30 @@ void OREApp::generateNPVCube() {
     boost::shared_ptr<Portfolio> portfolio = loadPortfolio();
     initialiseNPVCubeGeneration(portfolio);
     buildNPVCube();
-    writeCube(cube_);
+    writeCube(cube_, "cubeFile");
+    if (nettingSetCube_)
+        writeCube(nettingSetCube_, "nettingSetCubeFile");
     writeScenarioData();
 
     LOG("NPV cube generation completed");
     MEM_LOG;
 }
 
-void OREApp::writeCube(boost::shared_ptr<NPVCube> cube) {
-    out_ << endl << setw(tab_) << left << "Write Cube... " << flush;
-    LOG("Write cube");
-    if (params_->has("simulation", "cubeFile")) {
-        string cubeFileName = outputPath_ + "/" + params_->get("simulation", "cubeFile");
+void OREApp::writeCube(boost::shared_ptr<NPVCube> cube, const std::string& cubeFileParam) {
+    out_ << setw(tab_) << left << "Write Cube... " << flush;
+    if (params_->has("simulation", cubeFileParam)) {
+        string cubeFileName = outputPath_ + "/" + params_->get("simulation", cubeFileParam);
         cube->save(cubeFileName);
+        LOG("Write cube '" << cubeFileName << "'");
         out_ << "OK" << endl;
-    } else
+    } else {
+        LOG("Did not write cube, since parameter simulation/" << cubeFileParam << " not specified.");
         out_ << "SKIP" << endl;
+    }
 }
 
 void OREApp::writeScenarioData() {
-    out_ << endl << setw(tab_) << left << "Write Aggregation Scenario Data... " << flush;
+    out_ << setw(tab_) << left << "Write Aggregation Scenario Data... " << flush;
     LOG("Write scenario data");
     bool skipped = true;
     if (params_->has("simulation", "aggregationScenarioDataFileName")) {
@@ -798,18 +837,42 @@ void OREApp::loadScenarioData() {
 }
 
 void OREApp::loadCube() {
-    string cubeFile = outputPath_ + "/" + params_->get("xva", "cubeFile");
-    cubeDepth_ = 1;
-    if (params_->has("xva", "hyperCube"))
-        cubeDepth_ = parseBool(params_->get("xva", "hyperCube")) ? 2 : 1;
 
-    if (cubeDepth_ > 1)
+    // loade usual NPV cube on trade level
+
+    string cubeFile = outputPath_ + "/" + params_->get("xva", "cubeFile");
+    bool hyperCube = false;
+    if (params_->has("xva", "hyperCube"))
+        hyperCube = parseBool(params_->get("xva", "hyperCube"));
+
+    if (hyperCube)
         cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
     else
         cube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
     LOG("Load cube from file " << cubeFile);
     cube_->load(cubeFile);
-    LOG("Cube loading done");
+    cubeDepth_ = cube_->depth();
+    LOG("Cube loading done: ids=" << cube_->numIds() << " dates=" << cube_->numDates()
+                                  << " samples=" << cube_->samples() << " depth=" << cube_->depth());
+
+    // load additional cube on netting set level (if specified)
+
+    if (params_->has("xva", "nettingSetCubeFile") && params_->get("xva", "nettingSetCubeFile") != "") {
+        string cubeFile2 = outputPath_ + "/" + params_->get("xva", "nettingSetCubeFile");
+        bool hyperCube2 = false;
+        if (params_->has("xva", "hyperNettingSetCube"))
+            hyperCube2 = parseBool(params_->get("xva", "hyperNettingSetCube"));
+
+        if (hyperCube2)
+            nettingSetCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
+        else
+            nettingSetCube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
+        LOG("Load netting set cube from file " << cubeFile2);
+        nettingSetCube_->load(cubeFile2);
+        LOG("Cube loading done: ids=" << nettingSetCube_->numIds() << " dates=" << nettingSetCube_->numDates()
+                                      << " samples=" << nettingSetCube_->samples()
+                                      << " depth=" << nettingSetCube_->depth());
+    }
 }
 
 boost::shared_ptr<NettingSetManager> OREApp::initNettingSetManager() {
@@ -896,13 +959,28 @@ void OREApp::runPostProcessor() {
         fullInitialCollateralisation = parseBool(params_->get("xva", "fullInitialCollateralisation"));
     }
 
+    // FIXME: Needs the "simulation" section in ore.xml with consistent simulation.xml
+    if (!cubeInterpreter_) {
+        boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
+        if (sgd->withCloseOutLag())
+            cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->grid());
+        else
+            cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
+    }
+
+    if (!dimCalculator_) {
+        ALOG("dim calculator not set, create RegressionDynamicInitialMarginCalculator");
+        dimCalculator_ = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
+            portfolio_, cube_, cubeInterpreter_, scenarioData_, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
+            dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
+    }
+
     postProcess_ = boost::make_shared<PostProcess>(
         portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
-        fvaLendingCurve, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
-        dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation,
-        kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor,
-        kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight);
+        fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, kvaCapitalDiscountRate,
+        kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor, kvaOurCvaRiskWeight,
+        kvaTheirCvaRiskWeight);
 }
 
 void OREApp::writeXVAReports() {
