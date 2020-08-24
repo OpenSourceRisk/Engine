@@ -1053,34 +1053,41 @@ void PostProcess::updateStandAloneXVA() {
             }
         }
 
-	// Update CVA hazard rate sensis
-	vector<Real> cvaHrSensi(dates, 0.0);
-	for (Size k = 0; k < dates; ++k) {
-	    for (Size j = 0; j < dates; ++j) 
-	        //cvaHrSensi[k] += (1.0 - cvaRR) * pdhrSensi[j][k];
-	        cvaHrSensi[k] += (1.0 - cvaRR) * pdhrSensi[j][k] * epe[j + 1];
-	}
+	bool cvaSensi = analytics_["cvaSensi"];
+	LOG("CVA Sensitivity: " << cvaSensi);
+	if (cvaSensi) {
+	    // Update CVA hazard rate sensis
+	    vector<Real> cvaHrSensi(dates, 0.0);
+	    for (Size k = 0; k < dates; ++k) {
+	        for (Size j = 0; j < dates; ++j) 
+		    //cvaHrSensi[k] += (1.0 - cvaRR) * pdhrSensi[j][k];
+		  cvaHrSensi[k] += (1.0 - cvaRR) * pdhrSensi[j][k] * epe[j + 1];
+	    }
 
-	// Aggregate hazard rate sensis to external (or default) sensitivity grid
-	if (spreadSensitivityGrid_.size() == 0) {
-	    ALOG("spread sensitivity grid not specified, using default grid: 6M, 1Y, 3Y, 5Y, 10Y");
-	    spreadSensitivityGrid_ = { 0.5, 1.0, 3.0, 5.0, 10.0 };
-	}	
-	vector<Real> cvaHrSensiCoarse(spreadSensitivityGrid_.size(), 0.0);
-	Real t = 0.0;
-	Size index = 0;
-	for (Size k = 0; k < dates; ++k) {
-	    t += deltat[k];
-	    if (t > spreadSensitivityGrid_[index] && index < spreadSensitivityGrid_.size() - 1)
-	        index++;
-	    cvaHrSensiCoarse[index] += cvaHrSensi[k];
-	}
-	
-	netCvaHazardRateSensitivity_[nettingSetId] = cvaHrSensiCoarse;
+	    // Aggregate hazard rate sensis to external (or default) sensitivity grid
+	    if (spreadSensitivityGrid_.size() == 0) {
+	        ALOG("spread sensitivity grid not specified, using default grid: 6M, 1Y, 3Y, 5Y, 10Y");
+		spreadSensitivityGrid_ = { 0.5, 1.0, 3.0, 5.0, 10.0 };
+	    }	
+	    vector<Real> cvaHrSensiCoarse(spreadSensitivityGrid_.size(), 0.0);
+	    Real t = 0.0;
+	    Size index = 0;
+	    for (Size k = 0; k < dates; ++k) {
+	        t += deltat[k];
+		if (t > spreadSensitivityGrid_[index] && index < spreadSensitivityGrid_.size() - 1)
+		    index++;
+		cvaHrSensiCoarse[index] += cvaHrSensi[k];
+	    }
 
-	// Par CDS spread conversion
-	netCvaSpreadSensitivity_[nettingSetId] = spreadSensitivities(spreadSensitivityGrid_, cvaHrSensiCoarse,
+	    netCvaHazardRateSensitivity_[nettingSetId] = cvaHrSensiCoarse;
+	    // Par CDS spread conversion
+	    netCvaSpreadSensitivity_[nettingSetId] = spreadSensitivities(spreadSensitivityGrid_, cvaHrSensiCoarse,
 								     cumulativeSurvival, deltaPD, deltat, 1.0 - cvaRR, discount);
+	} else {
+	    spreadSensitivityGrid_ = vector<Real>();
+	    netCvaHazardRateSensitivity_[nettingSetId] = vector<Real>();
+	    netCvaSpreadSensitivity_[nettingSetId] = vector<Real>();
+	}
     }
 }
 
@@ -1494,12 +1501,12 @@ vector<Real> PostProcess::spreadSensitivities(const vector<Real>& sensiGrid,
     // Build Jacobi matrix J of fair CDS spread sensitivities w.r.t. hazard rate moves, preferrably analytically, bump & reval for now
     // Compute CVA sensitivity w.r.t. spread moves via " CVA sensi w.r.t. spreads = J^{-1} * CVA sensi w.r.t. hazard rates " 
     // Simplifying assumptions:
-    // - the CDS pays its premium at the end of each time step rather than at some schedule dates
-    // - hence no rebate term
+    // - the CDS pays its premium at the end of each simulation grid time step rather than at some schedule dates
+    // - no rebate term
     // - the discount curve is the base currency discount curve
     Matrix jacobi(sensiGridSize, sensiGridSize, 0.0);
     Array input(sensiGridSize, 0);
-    Real bumpSize = 1.0e-6; // some small value, just used to approximate the partial derivative here
+    Real bumpSize = 1.0e-4; // some small value, just used to approximate the partial derivative here
     for (Size i = 0; i < sensiGridSize; ++i) {
         Real fairSpread = fairCdsSpread(i, sensiGrid, hr, deltat, dis, lgd);
         input[i] = cvahrSensi[i];

@@ -918,6 +918,10 @@ void OREApp::runPostProcessor() {
         analytics["dim"] = parseBool(params_->get("xva", "dim"));
     else
         analytics["dim"] = false;
+    if (params_->has("xva", "cvaSensi"))
+        analytics["cvaSensi"] = parseBool(params_->get("xva", "cvaSensi"));
+    else
+        analytics["cvaSensi"] = false;
 
     string baseCurrency = params_->get("xva", "baseCurrency");
     string calculationType = params_->get("xva", "calculationType");
