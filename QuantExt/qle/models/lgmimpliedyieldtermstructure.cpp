@@ -21,7 +21,8 @@
 namespace QuantExt {
 
 LgmImpliedYieldTermStructure::LgmImpliedYieldTermStructure(const boost::shared_ptr<LinearGaussMarkovModel>& model,
-                                                           const DayCounter& dc, const bool purelyTimeBased, const bool cacheValues)
+                                                           const DayCounter& dc, const bool purelyTimeBased,
+                                                           const bool cacheValues)
     : YieldTermStructure(dc == DayCounter() ? model->parametrization()->termStructure()->dayCounter() : dc),
       cacheValues_(cacheValues), model_(model), purelyTimeBased_(purelyTimeBased),
       referenceDate_(purelyTimeBased ? Null<Date>() : model_->parametrization()->termStructure()->referenceDate()),
@@ -32,9 +33,10 @@ LgmImpliedYieldTermStructure::LgmImpliedYieldTermStructure(const boost::shared_p
 
 LgmImpliedYtsFwdFwdCorrected::LgmImpliedYtsFwdFwdCorrected(const boost::shared_ptr<LinearGaussMarkovModel>& model,
                                                            const Handle<YieldTermStructure> targetCurve,
-                                                           const DayCounter& dc, const bool purelyTimeBased, const bool cacheValues)
+                                                           const DayCounter& dc, const bool purelyTimeBased,
+                                                           const bool cacheValues)
     : LgmImpliedYieldTermStructure(model, dc, purelyTimeBased, cacheValues), targetCurve_(targetCurve) {
-    
+
     if (cacheValues_) {
         dt_ = targetCurve_->discount(relativeTime_);
         zeta_ = model_->parametrization()->zeta(relativeTime_);
@@ -45,7 +47,8 @@ LgmImpliedYtsFwdFwdCorrected::LgmImpliedYtsFwdFwdCorrected(const boost::shared_p
 
 LgmImpliedYtsSpotCorrected::LgmImpliedYtsSpotCorrected(const boost::shared_ptr<LinearGaussMarkovModel>& model,
                                                        const Handle<YieldTermStructure> targetCurve,
-                                                       const DayCounter& dc, const bool purelyTimeBased, const bool cacheValues)
+                                                       const DayCounter& dc, const bool purelyTimeBased,
+                                                       const bool cacheValues)
     : LgmImpliedYieldTermStructure(model, dc, purelyTimeBased, cacheValues), targetCurve_(targetCurve) {
     registerWith(targetCurve_);
 }

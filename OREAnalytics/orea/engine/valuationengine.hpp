@@ -28,8 +28,8 @@
 #include <orea/simulation/simmarket.hpp>
 #include <ored/model/modelbuilder.hpp>
 #include <ored/portfolio/portfolio.hpp>
-#include <ored/utilities/progressbar.hpp>
 #include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/progressbar.hpp>
 
 #include <map>
 #include <set>
@@ -72,12 +72,22 @@ public:
     void buildCube(
         //! Portfolio to be priced
         const boost::shared_ptr<data::Portfolio>& portfolio,
-        //! Object for storing the resulting NPV cube
+        //! Object for storing the results at trade level (e.g. NPVs, close-out NPVs, flows)
         boost::shared_ptr<analytics::NPVCube> outputCube,
         //! Calculators to use
-        std::vector<boost::shared_ptr<ValuationCalculator>> calculators);
+        std::vector<boost::shared_ptr<ValuationCalculator>> calculators,
+        //! Use sticky date in MPOR evaluation?
+        bool mporStickyDate = true,
+        //! Optional object for storing results at netting set level
+        boost::shared_ptr<analytics::NPVCube> outputCubeNettingSet = nullptr);
 
 private:
+    void runCalculators(bool isCloseOutDate, const std::vector<boost::shared_ptr<Trade>>& trades,
+                        const std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
+                        boost::shared_ptr<analytics::NPVCube>& outputCube,
+                        boost::shared_ptr<analytics::NPVCube>& outputCubeSensis, const Date& d,
+                        const Size cubeDateIndex, const Size sample);
+    void tradeExercisable(bool enable, const std::vector<boost::shared_ptr<Trade>>& trades);
     QuantLib::Date today_;
     boost::shared_ptr<DateGrid> dg_;
     boost::shared_ptr<analytics::SimMarket> simMarket_;

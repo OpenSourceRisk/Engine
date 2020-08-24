@@ -499,6 +499,7 @@
     <ClInclude Include="qle\calendars\ice.hpp" />
     <ClInclude Include="qle\calendars\israel.hpp" />
     <ClInclude Include="qle\calendars\largejointcalendar.hpp" />
+    <ClInclude Include="qle\calendars\amendedcalendar.hpp" />
     <ClInclude Include="qle\calendars\luxembourg.hpp" />
     <ClInclude Include="qle\calendars\malaysia.hpp" />
     <ClInclude Include="qle\calendars\netherlands.hpp" />
@@ -536,14 +537,18 @@
     <ClInclude Include="qle\currencies\asia.hpp" />
     <ClInclude Include="qle\currencies\europe.hpp" />
     <ClInclude Include="qle\currencies\metals.hpp" />
+    <ClInclude Include="qle\indexes\behicp.hpp" />
     <ClInclude Include="qle\indexes\bmaindexwrapper.hpp" />
     <ClInclude Include="qle\indexes\bondindex.hpp" />
     <ClInclude Include="qle\indexes\cacpi.hpp" />
     <ClInclude Include="qle\indexes\commodityindex.hpp" />
     <ClInclude Include="qle\indexes\dkcpi.hpp" />
+    <ClInclude Include="qle\indexes\eqfxindexbase.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
+    <ClInclude Include="qle\indexes\frcpi.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
     <ClInclude Include="qle\indexes\genericiborindex.hpp" />
+    <ClInclude Include="qle\indexes\genericindex.hpp" />
     <ClInclude Include="qle\indexes\ibor\audbbsw.hpp" />
     <ClInclude Include="qle\indexes\ibor\brlcdi.hpp" />
     <ClInclude Include="qle\indexes\ibor\chfsaron.hpp" />
@@ -718,8 +723,11 @@
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp" />
+    <ClInclude Include="qle\termstructures\interpolatedhazardratecurve.hpp" />
+    <ClInclude Include="qle\termstructures\interpolatedsurvivalprobabilitycurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
     <ClInclude Include="qle\termstructures\iterativebootstrap.hpp" />
+    <ClInclude Include="qle\termstructures\multisectiondefaultcurve.hpp" />
     <ClInclude Include="qle\termstructures\optionletcurve.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripper.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripperwithatm.hpp" />
@@ -755,6 +763,7 @@
     <ClInclude Include="qle\termstructures\pricetermstructureadapter.hpp" />
     <ClInclude Include="qle\termstructures\pricetermstructure.hpp" />
     <ClInclude Include="qle\termstructures\probabilitytraits.hpp" />
+    <ClInclude Include="qle\termstructures\spreadeddiscountcurve.hpp" />
     <ClInclude Include="qle\termstructures\spreadedoptionletvolatility.hpp" />
     <ClInclude Include="qle\termstructures\spreadedsmilesection.hpp" />
     <ClInclude Include="qle\termstructures\spreadedswaptionvolatility.hpp" />
@@ -770,6 +779,8 @@
     <ClInclude Include="qle\termstructures\swaptionvolcube2.hpp" />
     <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp" />
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
+    <ClInclude Include="qle\termstructures\weightedyieldtermstructure.hpp" />
+    <ClInclude Include="qle\termstructures\yieldplusdefaultyieldtermstructure.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserverstatic.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationcurveobservermoving.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationoptionletvolstripper.hpp" />
@@ -790,6 +801,7 @@
     <ClCompile Include="qle\calendars\ice.cpp" />
     <ClCompile Include="qle\calendars\israel.cpp" />
     <ClCompile Include="qle\calendars\largejointcalendar.cpp" />
+    <ClCompile Include="qle\calendars\amendedcalendar.cpp" />
     <ClCompile Include="qle\calendars\luxembourg.cpp" />
     <ClCompile Include="qle\calendars\malaysia.cpp" />
     <ClCompile Include="qle\calendars\netherlands.cpp" />
@@ -962,6 +974,7 @@
     <ClCompile Include="qle\termstructures\overnightindexfutureratehelper.cpp" />
     <ClCompile Include="qle\termstructures\pricetermstructure.cpp" />
     <ClCompile Include="qle\termstructures\pricetermstructureadapter.cpp" />
+    <ClCompile Include="qle\termstructures\spreadeddiscountcurve.cpp" />
     <ClCompile Include="qle\termstructures\spreadedoptionletvolatility.cpp" />
     <ClCompile Include="qle\termstructures\spreadedsmilesection.cpp" />
     <ClCompile Include="qle\termstructures\spreadedswaptionvolatility.cpp" />
@@ -969,6 +982,7 @@
     <ClCompile Include="qle\termstructures\strippedyoyinflationoptionletvol.cpp" />
     <ClCompile Include="qle\termstructures\subperiodsswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp" />
+    <ClCompile Include="qle\termstructures\swaptionvolconstantspread.cpp" />
     <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp" />
     <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\yoyinflationoptionletvolstripper.cpp" />

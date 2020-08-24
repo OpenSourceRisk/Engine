@@ -24,10 +24,10 @@
 #pragma once
 
 #include <map>
-#include <set>
 #include <orea/cube/npvcube.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
+#include <set>
 
 namespace ore {
 namespace analytics {

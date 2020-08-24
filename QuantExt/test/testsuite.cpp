@@ -83,4 +83,3 @@ BOOST_GLOBAL_FIXTURE(QleGlobalFixture);
 #else
 BOOST_TEST_GLOBAL_FIXTURE(QleGlobalFixture);
 #endif
-

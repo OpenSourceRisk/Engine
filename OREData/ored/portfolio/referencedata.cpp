@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -42,25 +42,25 @@ XMLNode* ReferenceDatum::toXML(XMLDocument& doc) {
 
 ReferenceDatumRegister<ReferenceDatumBuilder<BondReferenceDatum>> BondReferenceDatum::reg_(TYPE);
 
- void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
-     QL_REQUIRE(node, "BondReferenceDatum::BondData::fromXML(): no node given");
-     issuerId = XMLUtils::getChildValue(node, "IssuerId", true);
-     settlementDays = XMLUtils::getChildValue(node, "SettlementDays", true);
-     calendar = XMLUtils::getChildValue(node, "Calendar", true);
-     issueDate = XMLUtils::getChildValue(node, "IssueDate", true);
-     creditCurveId = XMLUtils::getChildValue(node, "CreditCurveId", false);
-     referenceCurveId = XMLUtils::getChildValue(node, "ReferenceCurveId", true);
-     proxySecurityId = XMLUtils::getChildValue(node, "ProxySecurityId", false);
-     incomeCurveId = XMLUtils::getChildValue(node, "IncomeCurveId", false);
-     volatilityCurveId = XMLUtils::getChildValue(node, "VolatilityCurveId", false);
+void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
+    QL_REQUIRE(node, "BondReferenceDatum::BondData::fromXML(): no node given");
+    issuerId = XMLUtils::getChildValue(node, "IssuerId", true);
+    settlementDays = XMLUtils::getChildValue(node, "SettlementDays", true);
+    calendar = XMLUtils::getChildValue(node, "Calendar", true);
+    issueDate = XMLUtils::getChildValue(node, "IssueDate", true);
+    creditCurveId = XMLUtils::getChildValue(node, "CreditCurveId", false);
+    referenceCurveId = XMLUtils::getChildValue(node, "ReferenceCurveId", true);
+    proxySecurityId = XMLUtils::getChildValue(node, "ProxySecurityId", false);
+    incomeCurveId = XMLUtils::getChildValue(node, "IncomeCurveId", false);
+    volatilityCurveId = XMLUtils::getChildValue(node, "VolatilityCurveId", false);
 
-     legData.clear();
-     XMLNode* legNode = XMLUtils::getChildNode(node, "LegData");
-     while (legNode != nullptr) {
-         LegData ld;
-         ld.fromXML(legNode);
-         legData.push_back(ld);
-         legNode = XMLUtils::getNextSibling(legNode, "LegData");
+    legData.clear();
+    XMLNode* legNode = XMLUtils::getChildNode(node, "LegData");
+    while (legNode != nullptr) {
+        LegData ld;
+        ld.fromXML(legNode);
+        legData.push_back(ld);
+        legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
 }
 
@@ -98,15 +98,16 @@ void BasicReferenceDataManager::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ReferenceData");
 
     for (XMLNode* child = XMLUtils::getChildNode(node, "ReferenceDatum"); child;
-        child = XMLUtils::getNextSibling(child, "ReferenceDatum")) {
+         child = XMLUtils::getNextSibling(child, "ReferenceDatum")) {
         // get type and id
         string refDataType = XMLUtils::getChildValue(child, "Type", true);
         string id = XMLUtils::getAttribute(child, "id");
         QL_REQUIRE(id != "", "ReferenceDatum has no id");
 
-        QL_REQUIRE(!hasData(refDataType, id), "BasicReferenceDataManager already has " << refDataType << " with id " << id);
+        QL_REQUIRE(!hasData(refDataType, id),
+                   "BasicReferenceDataManager already has " << refDataType << " with id " << id);
 
-        boost::shared_ptr<ReferenceDatum> refData = buildReferenceDatum(refDataType);        
+        boost::shared_ptr<ReferenceDatum> refData = buildReferenceDatum(refDataType);
         refData->fromXML(child);
         // set the type and id at top level (is this needed?)
         refData->setType(refDataType);
@@ -122,7 +123,8 @@ void BasicReferenceDataManager::add(const boost::shared_ptr<ReferenceDatum>& rd)
 
 boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildReferenceDatum(const string& refDataType) {
     auto refData = ReferenceDatumFactory::instance().build(refDataType);
-    QL_REQUIRE(refData, "Reference data type " << refDataType << " has not been registered with the reference data factory.");
+    QL_REQUIRE(refData,
+               "Reference data type " << refDataType << " has not been registered with the reference data factory.");
     return refData;
 }
 
@@ -144,5 +146,5 @@ boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const strin
     return it->second;
 }
 
-} // data
-} // ore
+} // namespace data
+} // namespace ore

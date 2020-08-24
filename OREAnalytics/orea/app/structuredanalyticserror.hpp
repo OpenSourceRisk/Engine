@@ -43,5 +43,5 @@ private:
     std::string what_;
 };
 
-}
-}
+} // namespace analytics
+} // namespace ore

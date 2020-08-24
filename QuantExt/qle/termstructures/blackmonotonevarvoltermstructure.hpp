@@ -58,7 +58,10 @@ public:
     Calendar calendar() const { return vol_->calendar(); }
     //! \name Observer interface
     //@{
-    void update() { monoVars_.clear(); notifyObservers(); }
+    void update() {
+        monoVars_.clear();
+        notifyObservers();
+    }
     //@}
     //! \name VolatilityTermStructure interface
     //@{
@@ -77,7 +80,7 @@ protected:
         QL_REQUIRE(timePoints_.size() > 0, "timePoints cannot be empty");
         std::vector<Real> vars(timePoints_.size());
         vars[0] = vol_->blackVariance(timePoints_[0], strike);
-        for(Size i = 1; i < timePoints_.size(); i++) {
+        for (Size i = 1; i < timePoints_.size(); i++) {
             Real var = vol_->blackVariance(timePoints_[i], strike);
             var = std::max(var, vars[i - 1]);
             vars[i] = var;
@@ -86,7 +89,7 @@ protected:
     }
 
     Real getMonotoneVar(const Time& t, const Real& strike) const {
-        if(monoVars_.find(strike) == monoVars_.end())
+        if (monoVars_.find(strike) == monoVars_.end())
             setMonotoneVar(strike);
         BackwardFlatInterpolation interpolation(timePoints_.begin(), timePoints_.end(), monoVars_[strike].begin());
         return interpolation(t);
@@ -96,11 +99,9 @@ private:
     Handle<BlackVolTermStructure> vol_;
     std::vector<Time> timePoints_;
 
-    class closeDouble : public std::binary_function<double,double,bool>
-    {
+    class closeDouble : public std::binary_function<double, double, bool> {
     public:
-        bool operator()(const double &left, const double &right) const
-        {
+        bool operator()(const double& left, const double& right) const {
             return left < right && !QuantLib::close_enough(left, right);
         }
     };

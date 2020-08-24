@@ -39,14 +39,14 @@
 
 namespace ore {
 namespace data {
+using ore::data::Market;
+using QuantLib::Disposable;
+using QuantLib::PricingEngine;
 using std::map;
+using std::pair;
 using std::set;
 using std::string;
-using std::pair;
 using std::tuple;
-using ore::data::Market;
-using QuantLib::PricingEngine;
-using QuantLib::Disposable;
 
 class Trade;
 class LegBuilder;
@@ -119,6 +119,9 @@ public:
             return Market::defaultConfiguration;
         }
     }
+
+    //! reset the builder (e.g. clear cache)
+    virtual void reset() {}
 
     //! Initialise this Builder with the market and parameters to use
     /*! This method should not be called directly, it is called by the EngineFactory

@@ -16,29 +16,29 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
-#include <qle/termstructures/equityoptionsurfacestripper.hpp>
-#include <qle/termstructures/blackvariancesurfacesparse.hpp>
+#include <boost/make_shared.hpp>
 #include <ql/instruments/impliedvolatility.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <ql/math/solvers1d/brent.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
-#include <boost/make_shared.hpp>
+#include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
+#include <qle/termstructures/blackvariancesurfacesparse.hpp>
+#include <qle/termstructures/equityoptionsurfacestripper.hpp>
 
-using std::vector;
 using std::pair;
+using std::vector;
 using namespace QuantLib;
 
 namespace {
 
 class PriceError {
 public:
-    PriceError(const VanillaOption& option,
-        SimpleQuote& vol, Real targetValue) : 
-        option_(option), vol_(vol), targetValue_(targetValue) {};
+    PriceError(const VanillaOption& option, SimpleQuote& vol, Real targetValue)
+        : option_(option), vol_(vol), targetValue_(targetValue){};
     Real operator()(Volatility x) const;
+
 private:
     const VanillaOption& option_;
     SimpleQuote& vol_;
@@ -57,27 +57,25 @@ Real PriceError::operator()(Volatility x) const {
     return npv - targetValue_;
 }
 
-}
+} // namespace
 
 namespace QuantExt {
 
-EquityOptionSurfaceStripper::EquityOptionSurfaceStripper(
-    const boost::shared_ptr<OptionInterpolatorBase>& callSurface,
-    const boost::shared_ptr<OptionInterpolatorBase>& putSurface,
-    const Handle<EquityIndex>& eqIndex,
-    const Calendar& calendar,
-    const DayCounter& dayCounter,
-    Exercise::Type type,
-    bool lowerStrikeConstExtrap,
-    bool upperStrikeConstExtrap,
-    bool timeFlatExtrapolation) :
-    callSurface_(callSurface), putSurface_(putSurface), eqIndex_(eqIndex), calendar_(calendar), 
-    dayCounter_(dayCounter), type_(type), lowerStrikeConstExtrap_(lowerStrikeConstExtrap), 
-    upperStrikeConstExtrap_(upperStrikeConstExtrap), timeFlatExtrapolation_(timeFlatExtrapolation) {
+EquityOptionSurfaceStripper::EquityOptionSurfaceStripper(const boost::shared_ptr<OptionInterpolatorBase>& callSurface,
+                                                         const boost::shared_ptr<OptionInterpolatorBase>& putSurface,
+                                                         const Handle<EquityIndex>& eqIndex, const Calendar& calendar,
+                                                         const DayCounter& dayCounter, Exercise::Type type,
+                                                         bool lowerStrikeConstExtrap, bool upperStrikeConstExtrap,
+                                                         bool timeFlatExtrapolation)
+    : callSurface_(callSurface), putSurface_(putSurface), eqIndex_(eqIndex), calendar_(calendar),
+      dayCounter_(dayCounter), type_(type), lowerStrikeConstExtrap_(lowerStrikeConstExtrap),
+      upperStrikeConstExtrap_(upperStrikeConstExtrap), timeFlatExtrapolation_(timeFlatExtrapolation) {
 
-    // the call and put surfaces should have the same expiries/strikes/reference date/day counters, some checks to ensure this
-    QL_REQUIRE(callSurface_->referenceDate() == putSurface_->referenceDate(), "Mismatch between Call and Put reference dates in EquityOptionPremiumCurveStripper");
-   
+    // the call and put surfaces should have the same expiries/strikes/reference date/day counters, some checks to
+    // ensure this
+    QL_REQUIRE(callSurface_->referenceDate() == putSurface_->referenceDate(),
+               "Mismatch between Call and Put reference dates in EquityOptionPremiumCurveStripper");
+
     // register with all market data
     registerWith(eqIndex);
     registerWith(Settings::instance().evaluationDate());
@@ -95,21 +93,21 @@ void EquityOptionSurfaceStripper::performCalculations() const {
 
     boost::shared_ptr<SimpleQuote> volQuote;
     boost::shared_ptr<PricingEngine> engine;
-    
+
     boost::shared_ptr<BlackVarianceSurfaceSparse> callVolSurface, putVolSurface;
 
     // if the surface is a price surface then we have premiums
     bool premiumSurfaces = boost::dynamic_pointer_cast<OptionPriceSurface>(callSurface_) != NULL;
     if (premiumSurfaces) {
         // first also check the put surface
-        QL_REQUIRE(boost::dynamic_pointer_cast<OptionPriceSurface>(putSurface_) != NULL, 
-            "Call price surface provided, but no put price surface");
+        QL_REQUIRE(boost::dynamic_pointer_cast<OptionPriceSurface>(putSurface_) != NULL,
+                   "Call price surface provided, but no put price surface");
 
         // Set up the engine for implying the vols
         // term structures needed to get implied vol
         volQuote = boost::make_shared<SimpleQuote>(0.1);
-        Handle<BlackVolTermStructure> volTs(boost::make_shared<BlackConstantVol>(callSurface_->referenceDate(),
-            calendar_, Handle<Quote>(volQuote), dayCounter_));
+        Handle<BlackVolTermStructure> volTs(boost::make_shared<BlackConstantVol>(
+            callSurface_->referenceDate(), calendar_, Handle<Quote>(volQuote), dayCounter_));
 
         // a black scholes process
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<BlackScholesMertonProcess>(
@@ -187,13 +185,14 @@ void EquityOptionSurfaceStripper::performCalculations() const {
             }
         }
     }
-    volSurface_ = boost::make_shared<BlackVarianceSurfaceSparse>(callSurface_->referenceDate(), calendar_,
-        volExpiries, volStrikes, volData, dayCounter_, lowerStrikeConstExtrap_, upperStrikeConstExtrap_,
-        timeFlatExtrapolation_);
+    volSurface_ = boost::make_shared<BlackVarianceSurfaceSparse>(
+        callSurface_->referenceDate(), calendar_, volExpiries, volStrikes, volData, dayCounter_,
+        lowerStrikeConstExtrap_, upperStrikeConstExtrap_, timeFlatExtrapolation_);
 }
 
 Real EquityOptionSurfaceStripper::implyVol(Date expiry, Real strike, Option::Type type,
-    boost::shared_ptr<PricingEngine> engine, boost::shared_ptr<SimpleQuote> volQuote) const {
+                                           boost::shared_ptr<PricingEngine> engine,
+                                           boost::shared_ptr<SimpleQuote> volQuote) const {
 
     // create an american option for current strike/expiry and type
     boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike));
@@ -209,8 +208,8 @@ Real EquityOptionSurfaceStripper::implyVol(Date expiry, Real strike, Option::Typ
     option.setPricingEngine(engine);
 
     // option.setPricingEngine(engine);
-    Real targetPrice = type == Option::Call ? callSurface_->getValue(expiry, strike) :
-        putSurface_->getValue(expiry, strike);
+    Real targetPrice =
+        type == Option::Call ? callSurface_->getValue(expiry, strike) : putSurface_->getValue(expiry, strike);
 
     // calculate the implied volatility using a solver
     Real vol;
@@ -226,9 +225,9 @@ Real EquityOptionSurfaceStripper::implyVol(Date expiry, Real strike, Option::Typ
     return vol;
 }
 
-boost::shared_ptr<QuantLib::BlackVolTermStructure> EquityOptionSurfaceStripper::volSurface() { 
+boost::shared_ptr<QuantLib::BlackVolTermStructure> EquityOptionSurfaceStripper::volSurface() {
     calculate();
-    return volSurface_; 
+    return volSurface_;
 }
 
-} // QuantExt
+} // namespace QuantExt

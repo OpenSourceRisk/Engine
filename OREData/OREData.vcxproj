@@ -66,7 +66,6 @@
     <ClInclude Include="ored\marketdata\commodityvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\correlationcurve.hpp" />
     <ClInclude Include="ored\marketdata\csvloader.hpp" />
-    <ClInclude Include="ored\marketdata\curveloader.hpp" />
     <ClInclude Include="ored\marketdata\curvespec.hpp" />
     <ClInclude Include="ored\marketdata\curvespecparser.hpp" />
     <ClInclude Include="ored\marketdata\defaultcurve.hpp" />
@@ -209,6 +208,7 @@
     <ClCompile Include="ored\configuration\commodityvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\conventions.cpp" />
     <ClCompile Include="ored\configuration\correlationcurveconfig.cpp" />
+    <ClCompile Include="ored\configuration\curveconfig.cpp" />
     <ClCompile Include="ored\configuration\curveconfigurations.cpp" />
     <ClCompile Include="ored\configuration\defaultcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\equitycurveconfig.cpp" />
@@ -226,7 +226,6 @@
     <ClCompile Include="ored\marketdata\commodityvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\correlationcurve.cpp" />
     <ClCompile Include="ored\marketdata\csvloader.cpp" />
-    <ClCompile Include="ored\marketdata\curveloader.cpp" />
     <ClCompile Include="ored\marketdata\curvespec.cpp" />
     <ClCompile Include="ored\marketdata\curvespecparser.cpp" />
     <ClCompile Include="ored\marketdata\defaultcurve.cpp" />

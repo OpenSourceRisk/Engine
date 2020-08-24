@@ -24,17 +24,17 @@
 #ifndef quantext_stripped_optionlet_adapter_h
 #define quantext_stripped_optionlet_adapter_h
 
+#include <algorithm>
+#include <boost/bind.hpp>
+#include <boost/lambda/lambda.hpp>
 #include <ql/math/interpolation.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
+#include <ql/termstructures/volatility/flatsmilesection.hpp>
+#include <ql/termstructures/volatility/interpolatedsmilesection.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionletbase.hpp>
 #include <ql/utilities/dataformatters.hpp>
-#include <ql/termstructures/volatility/flatsmilesection.hpp>
-#include <ql/termstructures/volatility/interpolatedsmilesection.hpp>
-#include <boost/lambda/lambda.hpp>
-#include <boost/bind.hpp>
 #include <vector>
-#include <algorithm>
 
 namespace QuantExt {
 
@@ -42,9 +42,9 @@ namespace QuantExt {
 
     The class takes two template parameters indicating the interpolation in the time and strike direction respectively.
 
-    The class can take a QuantLib::StrippedOptionletBase that has only one strike column. In this case, the strike 
-    interpolation is ignored and the volatility at one of the pillar tenors, and any strike, is merely the passed 
-    in volatility. In this case, the smile sections are flat. All of this enables the StrippedOptionletAdapter to 
+    The class can take a QuantLib::StrippedOptionletBase that has only one strike column. In this case, the strike
+    interpolation is ignored and the volatility at one of the pillar tenors, and any strike, is merely the passed
+    in volatility. In this case, the smile sections are flat. All of this enables the StrippedOptionletAdapter to
     represent a stripped ATM optionlet curve. The single strike in the QuantLib::StrippedOptionletBase is ignored.
 
     \ingroup termstructures
@@ -53,21 +53,19 @@ template <class TimeInterpolator, class SmileInterpolator>
 class StrippedOptionletAdapter : public QuantLib::OptionletVolatilityStructure, public QuantLib::LazyObject {
 
 public:
-    /*! Constructor that does not take a reference date. The settlement days is derived from \p sob and the term 
+    /*! Constructor that does not take a reference date. The settlement days is derived from \p sob and the term
         structure will be a \e moving term structure.
     */
-    StrippedOptionletAdapter(
-        const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
-        const TimeInterpolator& ti = TimeInterpolator(),
-        const SmileInterpolator& si = SmileInterpolator());
+    StrippedOptionletAdapter(const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
+                             const TimeInterpolator& ti = TimeInterpolator(),
+                             const SmileInterpolator& si = SmileInterpolator());
 
     /*! Constructor taking an explicit \p referenceDate and the term structure will therefore be not \e moving.
-    */
-    StrippedOptionletAdapter(
-        const QuantLib::Date& referenceDate,
-        const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
-        const TimeInterpolator& ti = TimeInterpolator(),
-        const SmileInterpolator& si = SmileInterpolator());
+     */
+    StrippedOptionletAdapter(const QuantLib::Date& referenceDate,
+                             const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
+                             const TimeInterpolator& ti = TimeInterpolator(),
+                             const SmileInterpolator& si = SmileInterpolator());
 
     //! \name TermStructure interface
     //@{
@@ -112,10 +110,10 @@ protected:
 private:
     //! Base optionlet object that provides the stripped optionlet volatilities
     boost::shared_ptr<QuantLib::StrippedOptionletBase> optionletBase_;
-    
+
     //! The interpolation object in the time direction
     TimeInterpolator ti_;
-    
+
     //! The interpolation object in the strike direction
     SmileInterpolator si_;
 
@@ -133,25 +131,21 @@ private:
 
 template <class TimeInterpolator, class SmileInterpolator>
 StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::StrippedOptionletAdapter(
-    const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
-    const TimeInterpolator& ti,
+    const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob, const TimeInterpolator& ti,
     const SmileInterpolator& si)
-    : OptionletVolatilityStructure(sob->settlementDays(), sob->calendar(), sob->businessDayConvention(), 
-      sob->dayCounter()), optionletBase_(sob), ti_(ti), si_(si),
-      strikeSections_(optionletBase_->optionletMaturities()) {
+    : OptionletVolatilityStructure(sob->settlementDays(), sob->calendar(), sob->businessDayConvention(),
+                                   sob->dayCounter()),
+      optionletBase_(sob), ti_(ti), si_(si), strikeSections_(optionletBase_->optionletMaturities()) {
     registerWith(optionletBase_);
     populateOneStrike();
 }
 
 template <class TimeInterpolator, class SmileInterpolator>
 StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::StrippedOptionletAdapter(
-    const QuantLib::Date& referenceDate,
-    const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
-    const TimeInterpolator& ti,
-    const SmileInterpolator& si)
-    : OptionletVolatilityStructure(referenceDate, sob->calendar(), sob->businessDayConvention(),
-      sob->dayCounter()), optionletBase_(sob), ti_(ti), si_(si),
-      strikeSections_(optionletBase_->optionletMaturities()) {
+    const QuantLib::Date& referenceDate, const boost::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
+    const TimeInterpolator& ti, const SmileInterpolator& si)
+    : OptionletVolatilityStructure(referenceDate, sob->calendar(), sob->businessDayConvention(), sob->dayCounter()),
+      optionletBase_(sob), ti_(ti), si_(si), strikeSections_(optionletBase_->optionletMaturities()) {
     registerWith(optionletBase_);
     populateOneStrike();
 }
@@ -163,7 +157,7 @@ inline QuantLib::Date StrippedOptionletAdapter<TimeInterpolator, SmileInterpolat
 
 template <class TimeInterpolator, class SmileInterpolator>
 inline QuantLib::Rate StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::minStrike() const {
-    
+
     // If only one strike
     if (oneStrike_) {
         if (volatilityType() == QuantLib::ShiftedLognormal) {
@@ -172,7 +166,7 @@ inline QuantLib::Rate StrippedOptionletAdapter<TimeInterpolator, SmileInterpolat
             return QL_MIN_REAL;
         }
     }
-    
+
     // Return the minimum strike over all optionlet tenors
     QuantLib::Rate minStrike = optionletBase_->optionletStrikes(0).front();
     for (QuantLib::Size i = 1; i < optionletBase_->optionletMaturities(); ++i) {
@@ -220,7 +214,7 @@ inline void StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::updat
 
 template <class TimeInterpolator, class SmileInterpolator>
 inline void StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::performCalculations() const {
-    
+
     // Some localised typedefs and using declarations to make the code more readable
     using QuantLib::Rate;
     using QuantLib::Size;
@@ -248,7 +242,7 @@ inline void StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::deepU
 }
 
 template <class TimeInterpolator, class SmileInterpolator>
-inline boost::shared_ptr<QuantLib::StrippedOptionletBase> 
+inline boost::shared_ptr<QuantLib::StrippedOptionletBase>
 StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::optionletBase() const {
     return optionletBase_;
 }
@@ -256,20 +250,20 @@ StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::optionletBase() c
 template <class TimeInterpolator, class SmileInterpolator>
 inline boost::shared_ptr<QuantLib::SmileSection>
 StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::smileSectionImpl(QuantLib::Time optionTime) const {
-    
+
     // Some localised typedefs and using declarations to make the code more readable
+    using boost::lambda::_1;
+    using boost::lambda::_2;
+    using QuantLib::close;
+    using QuantLib::Null;
     using QuantLib::Rate;
     using QuantLib::Real;
     using QuantLib::Size;
-    using QuantLib::Null;
-    using QuantLib::close;
-    using QuantLib::io::ordinal;
     using QuantLib::Volatility;
-    using boost::lambda::_1;
-    using boost::lambda::_2;
-    using std::vector;
+    using QuantLib::io::ordinal;
     using std::equal;
     using std::sqrt;
+    using std::vector;
 
     // Leave ATM rate as Null<Real>() for now but could interpolate optionletBase_->atmOptionletRates()?
     Real atmRate = Null<Real>();
@@ -277,16 +271,17 @@ StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::smileSectionImpl(
     // If one strike, return a flat smile section
     if (oneStrike_) {
         Volatility vol = volatility(optionTime, optionletBase_->optionletStrikes(0)[0], true);
-        return boost::make_shared<QuantLib::FlatSmileSection>(optionTime, vol, optionletBase_->dayCounter(),
-            atmRate, volatilityType(), displacement());
+        return boost::make_shared<QuantLib::FlatSmileSection>(optionTime, vol, optionletBase_->dayCounter(), atmRate,
+                                                              volatilityType(), displacement());
     }
 
     // This method can only return a valid value if the strikes are the same for all optionlet dates
     const vector<Rate>& strikes = optionletBase_->optionletStrikes(0);
     for (Size i = 1; i < optionletBase_->optionletMaturities(); ++i) {
         const vector<Rate>& compStrikes = optionletBase_->optionletStrikes(i);
-        QL_REQUIRE(equal(strikes.begin(), strikes.end(), compStrikes.begin(), boost::bind(close, _1, _2)), "The strikes at the " <<
-            ordinal(i) << " optionlet date do not equal those at the first optionlet date");
+        QL_REQUIRE(equal(strikes.begin(), strikes.end(), compStrikes.begin(), boost::bind(close, _1, _2)),
+                   "The strikes at the " << ordinal(i)
+                                         << " optionlet date do not equal those at the first optionlet date");
     }
 
     // Store standard deviation at each strike
@@ -294,15 +289,16 @@ StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::smileSectionImpl(
     for (Size i = 0; i < strikes.size(); i++) {
         stdDevs.push_back(sqrt(blackVariance(optionTime, strikes[i], true)));
     }
-    
+
     // Return the smile section.
-    return boost::make_shared<QuantLib::InterpolatedSmileSection<SmileInterpolator> >(optionTime, strikes, stdDevs,
-        atmRate, si_, optionletBase_->dayCounter(), volatilityType(), displacement());
+    return boost::make_shared<QuantLib::InterpolatedSmileSection<SmileInterpolator> >(
+        optionTime, strikes, stdDevs, atmRate, si_, optionletBase_->dayCounter(), volatilityType(), displacement());
 }
 
 template <class TimeInterpolator, class SmileInterpolator>
-inline QuantLib::Volatility StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::volatilityImpl(
-    QuantLib::Time optionTime, QuantLib::Rate strike) const {
+inline QuantLib::Volatility
+StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::volatilityImpl(QuantLib::Time optionTime,
+                                                                              QuantLib::Rate strike) const {
 
     // Some localised typedefs and using declarations to make the code more readable
     using QuantLib::Interpolation;
@@ -321,7 +317,7 @@ inline QuantLib::Volatility StrippedOptionletAdapter<TimeInterpolator, SmileInte
     vector<Time> fixingTimes = optionletBase_->optionletFixingTimes();
     Interpolation ti = ti_.interpolate(fixingTimes.begin(), fixingTimes.end(), vols.begin());
 
-    // Extrapolation can be enabled at this level. The range checks will have already been performed in 
+    // Extrapolation can be enabled at this level. The range checks will have already been performed in
     // the public OptionletVolatilityStructure::volatility method that calls this `Impl`
     ti.enableExtrapolation();
 
@@ -339,6 +335,6 @@ inline void StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::popul
     }
 }
 
-}
+} // namespace QuantExt
 
 #endif

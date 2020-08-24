@@ -28,11 +28,12 @@ namespace QuantExt {
 
 CrossCcyBasisSwap::CrossCcyBasisSwap(Real payNominal, const Currency& payCurrency, const Schedule& paySchedule,
                                      const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real payGearing,
-				     Real recNominal, const Currency& recCurrency, const Schedule& recSchedule,
+                                     Real recNominal, const Currency& recCurrency, const Schedule& recSchedule,
                                      const boost::shared_ptr<IborIndex>& recIndex, Spread recSpread, Real recGearing)
     : CrossCcySwap(2), payNominal_(payNominal), payCurrency_(payCurrency), paySchedule_(paySchedule),
-      payIndex_(payIndex), paySpread_(paySpread), payGearing_(payGearing), recNominal_(recNominal), recCurrency_(recCurrency),
-      recSchedule_(recSchedule), recIndex_(recIndex), recSpread_(recSpread), recGearing_(recGearing) {
+      payIndex_(payIndex), paySpread_(paySpread), payGearing_(payGearing), recNominal_(recNominal),
+      recCurrency_(recCurrency), recSchedule_(recSchedule), recIndex_(recIndex), recSpread_(recSpread),
+      recGearing_(recGearing) {
     registerWith(payIndex);
     registerWith(recIndex);
     initialize();
@@ -40,7 +41,8 @@ CrossCcyBasisSwap::CrossCcyBasisSwap(Real payNominal, const Currency& payCurrenc
 
 void CrossCcyBasisSwap::initialize() {
     // Pay leg
-    legs_[0] = IborLeg(paySchedule_, payIndex_).withNotionals(payNominal_).withSpreads(paySpread_).withGearings(payGearing_);
+    legs_[0] =
+        IborLeg(paySchedule_, payIndex_).withNotionals(payNominal_).withSpreads(paySpread_).withGearings(payGearing_);
     payer_[0] = -1.0;
     currencies_[0] = payCurrency_;
     // Pay leg notional exchange at start.
@@ -53,7 +55,8 @@ void CrossCcyBasisSwap::initialize() {
     legs_[0].push_back(finalPayCF);
 
     // Receive leg
-    legs_[1] = IborLeg(recSchedule_, recIndex_).withNotionals(recNominal_).withSpreads(recSpread_).withGearings(recGearing_);
+    legs_[1] =
+        IborLeg(recSchedule_, recIndex_).withNotionals(recNominal_).withSpreads(recSpread_).withGearings(recGearing_);
     payer_[1] = +1.0;
     currencies_[1] = recCurrency_;
     // Receive leg notional exchange at start.

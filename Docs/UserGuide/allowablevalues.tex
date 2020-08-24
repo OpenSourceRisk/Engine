@@ -197,6 +197,34 @@ TENOR                    & An integer followed by \emph{D, W, M or Y}           
 \centering
 \begin{tabular}{|l|p{10cm}|}
 \hline
+\multicolumn{2}{|l|} {Defaults for {\tt FixingDays}}   \\ \hline
+\textbf{Index} &\textbf{Default value}     \\ \hline \hline
+Ibor indices    &   2, except for the Ibor indices below:  \\ \hline
+\emph{USD-SIFMA}    &   1 \\ \hline
+\emph{GBP-LIBOR}    &   0 \\ \hline
+\emph{AUD-BBSW}    &   0 \\ \hline
+\emph{CAD-CDOR}    &   0 \\ \hline
+\emph{CNY-SHIBOR}    &   1 \\ \hline
+\emph{HKD-HIBOR}    &   0 \\ \hline
+\emph{MXN-TIIE}    &   1 \\ \hline
+\emph{MYR-KLIBOR}    &   0 \\ \hline
+\emph{TRY-TRLIBOR}    &   0 \\ \hline
+\emph{ZAR-JIBAR}    &   0 \\ \hline \hline
+Overnight indices    &   0, except for the Overnight indices below:  \\ \hline
+\emph{CHF-TOIS}    &   1 \\ \hline
+\emph{CLP-CAMARA}    &   2 \\ \hline
+\emph{PLN-POLONIA}    &   1 \\ \hline
+\emph{DKK-DKKOIS}    &   1 \\ \hline
+\emph{SEK-SIOR}    &   1 \\ \hline
+\end{tabular}
+  \caption{Defaults for FixingDays}
+  \label{tab:fixingdaysdefaults}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{10cm}|}
+\hline
 %\multicolumn{2}{|l|}{\lstinline!Index!}   \\ \hline
 \multicolumn{2}{|l|}{\tt FX Index}   \\ \hline
 \textbf{Index Format} &\textbf{Allowable Values}     \\ \hline
@@ -299,7 +327,7 @@ conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: 
     \hline
     \lstinline!XR! & No restructuring referencing the 2003 ISDA Definitions \\
     \hline
-	\lstinline!CR14! & Full or old restructuring referencing the 2014 ISDA Definitions \\
+    \lstinline!CR14! & Full or old restructuring referencing the 2014 ISDA Definitions \\
     \hline
     \lstinline!MM14! & Modified modified restructuring referencing the 2014 ISDA Definitions \\
     \hline

@@ -84,7 +84,7 @@
   </xs:complexType>
 
   <xs:complexType name="volatilityMoneynessSurfaceConfig">
-    <xs:sequence>	
+    <xs:sequence>
       <xs:element type="xs:string" name="QuoteType" minOccurs="0"/>
       <xs:element type="xs:string" name="VolatilityType" minOccurs="0"/>
       <xs:element type="xs:string" name="ExerciseType" minOccurs="0"/>
@@ -159,6 +159,7 @@
         <xs:element type="constantVolatilityConfig" name="Constant"/>
         <xs:element type="volatilityCurveConfig" name="Curve"/>
         <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
+        <xs:element type="volatilityMoneynessSurfaceConfig" name="MoneynessSurface"/>
         <xs:element type="xs:string" name="ProxySurface"/>
       </xs:choice>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/> 	  
@@ -344,11 +345,27 @@
       <xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Pillars" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="SpotLag" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="SourceCurves" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="SwitchDates" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="SwitchDate" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="RunningSpread" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="ImplyDefaultFromMarket" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="AllowNegativeRates" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -586,6 +603,8 @@
 
   <xs:complexType name="volatilityApoFutureSurfaceConfig">
     <xs:sequence>
+      <xs:element type="xs:string" name="QuoteType" minOccurs="0"/>
+      <xs:element type="xs:string" name="VolatilityType" minOccurs="0"/>
       <xs:element type="xs:string" name="MoneynessLevels"/>
       <xs:element type="xs:string" name="VolatilityId"/>
       <xs:element type="xs:string" name="PriceCurveId"/>
@@ -659,6 +678,8 @@
       <xs:element type="zeroSpreadType" name="ZeroSpread"/>
       <xs:element type="discountRatioType" name="DiscountRatio"/>
       <xs:element type="fittedBondType" name="FittedBond"/>
+      <xs:element type="weightedAverageType" name="WeightedAverage"/>
+      <xs:element type="yieldPlusDefaultType" name="YieldPlusDefault"/>
     </xs:choice>
   </xs:complexType>
 
@@ -802,6 +823,37 @@
         </xs:complexType>
       </xs:element>
       <xs:element type="xs:boolean" name="ExtrapolateFlat" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="yieldPlusDefaultType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Type" fixed="Yield Plus Default"/>
+      <xs:element type="xs:string" name="ReferenceCurve"/>
+      <xs:element name="DefaultCurves">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="DefaultCurve"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Weights">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:float" name="Weight"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="weightedAverageType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Type" fixed="Weighted Average"/>
+      <xs:element type="xs:string" name="ReferenceCurve1"/>
+      <xs:element type="xs:string" name="ReferenceCurve2"/>
+      <xs:element type="xs:float" name="Weight1"/>
+      <xs:element type="xs:float" name="Weight2"/>
     </xs:sequence>
   </xs:complexType>
 

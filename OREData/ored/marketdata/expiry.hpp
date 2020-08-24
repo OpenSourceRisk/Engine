@@ -23,20 +23,21 @@
 
 #pragma once
 
+#include <boost/shared_ptr.hpp>
 #include <ored/utilities/serializationdate.hpp>
 #include <ored/utilities/serializationperiod.hpp>
-#include <ql/types.hpp>
 #include <ql/time/date.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/types.hpp>
 #include <string>
 
 #include <boost/serialization/base_object.hpp>
+#include <boost/serialization/export.hpp>
 
 namespace ore {
 namespace data {
 
 /*! Abstract base class to hold information that describes an expiry.
-*/
+ */
 class Expiry {
 public:
     virtual ~Expiry() {}
@@ -57,11 +58,11 @@ protected:
 private:
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {}
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 /*! Expiry consisting of an explicit expiry date
-*/
+ */
 class ExpiryDate : public Expiry {
 public:
     //! Default constructor.
@@ -90,14 +91,11 @@ private:
     QuantLib::Date expiryDate_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<Expiry>(*this);
-        ar& expiryDate_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 /*! Expiry consisting of a period
-*/
+ */
 class ExpiryPeriod : public Expiry {
 public:
     //! Default constructor.
@@ -126,14 +124,11 @@ private:
     QuantLib::Period expiryPeriod_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<Expiry>(*this);
-        ar& expiryPeriod_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 /*! Expiry represented by a future continuation index
-*/
+ */
 class FutureContinuationExpiry : public Expiry {
 public:
     //! Constructor with optional explicit future continuation index.
@@ -142,7 +137,7 @@ public:
     //! Return the future continuation expiry index.
     QuantLib::Natural expiryIndex() const;
 
-    /*! Populate FutureContinuationExpiry object from \p strIndex which should be of the form \c c<Index> where 
+    /*! Populate FutureContinuationExpiry object from \p strIndex which should be of the form \c c<Index> where
         Index is a positive integer. An exception is thrown if \p strIndex is not of this form.
     */
     void fromString(const std::string& strIndex) override;
@@ -159,10 +154,7 @@ private:
     QuantLib::Natural expiryIndex_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<Expiry>(*this);
-        ar& expiryIndex_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Write \p strike to stream.
@@ -171,5 +163,9 @@ std::ostream& operator<<(std::ostream& os, const Expiry& expiry);
 //! Parse an Expiry from its string representation, \p strExpiry.
 boost::shared_ptr<Expiry> parseExpiry(const std::string& strExpiry);
 
-}
-}
+} // namespace data
+} // namespace ore
+
+BOOST_CLASS_EXPORT_KEY(ore::data::ExpiryDate);
+BOOST_CLASS_EXPORT_KEY(ore::data::ExpiryPeriod);
+BOOST_CLASS_EXPORT_KEY(ore::data::FutureContinuationExpiry);

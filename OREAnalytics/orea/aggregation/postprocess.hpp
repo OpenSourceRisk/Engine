@@ -24,6 +24,8 @@
 #pragma once
 
 #include <orea/aggregation/collatexposurehelper.hpp>
+#include <orea/aggregation/dimcalculator.hpp>
+#include <orea/cube/cubeinterpretation.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
 
@@ -129,20 +131,10 @@ public:
         const string& fvaBorrowingCurve = "",
         //! Lending curve name to be used in FVA calculations
         const string& fvaLendingCurve = "",
-        //! Quantile used in dynamic initial margin calculation
-        Real dimQuantile = 0.99,
-        //! Initial margin horizon in calendar days, 2 weeks = 14 days
-        Size dimHorizonCalendarDays = 14,
-        //! Order of the regression polynomial used in DIM estmation
-        Size dimRegressionOrder = 0,
-        //! Regressors to be used in the DIM estimation by regression, each must match an additional scenario data key
-        vector<string> dimRegressors = vector<string>(),
-        //! Number of local regression evaluations, e.g. to validata DIM by regression
-        Size dimLocalRegressionEvaluations = 0,
-        //! Local regression band width in standard deviations of the regression variable
-        Real dimLocalRegressionBandwidth = 0,
-        //! Scaling factor applied to all DIM values
-        Real dimScaling = 1.0,
+	//! Dynamic Initial Margin Calculator
+	const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator = boost::shared_ptr<DynamicInitialMarginCalculator>(),
+        //! Interpreter for cube storage (where to find which data items)
+        const boost::shared_ptr<CubeInterpretation>& cubeInterpretation = boost::shared_ptr<CubeInterpretation>(),
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
         bool fullInitialCollateralisation = false,
         //! own capital discounting rate for discounting expected capital for KVA
@@ -157,10 +149,14 @@ public:
         Real kvaOurPdFloor = 0.03,
         //! Their KVA PD floor
         Real kvaTheirPdFloor = 0.03,
-	//! Our KVA CVA Risk Weight
-	Real kvaOurCvaRiskWeight = 0.05,
-	//! Their KVA CVA Risk Weight,
-	Real kvaTheirCvaRiskWeight = 0.05);
+        //! Our KVA CVA Risk Weight
+        Real kvaOurCvaRiskWeight = 0.05,
+        //! Their KVA CVA Risk Weight,
+        Real kvaTheirCvaRiskWeight = 0.05);
+
+    void setDimCalculator(boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
+        dimCalculator_ = dimCalculator;
+    }
 
     //! Return list of Trade IDs in the portfolio
     const vector<string>& tradeIds() { return tradeIds_; }
@@ -269,14 +265,14 @@ public:
     //! Return the  for the input NPV cube after netting and collateral (by netting set, time, scenario)
     const boost::shared_ptr<NPVCube>& netCube() { return nettedCube_; }
     //! Return the dynamic initial margin cube (regression approach)
-    const boost::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
+    //const boost::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
     //! Write average (over samples) DIM evolution through time for all netting sets
     void exportDimEvolution(ore::data::Report& dimEvolutionReport);
     //! Write DIM as a function of sample netting set NPV for a given time step
     void exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
                              const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports);
 
-private:
+protected:
     //! Helper function to return the collateral account evolution for a given netting set
     boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>>
     collateralPaths(const string& nettingSetId, const boost::shared_ptr<NettingSetManager>& nettingSetManager,
@@ -285,16 +281,9 @@ private:
                     const vector<vector<Real>>& nettingSetValue, Real nettingSetValueToday,
                     const Date& nettingSetMaturity);
 
-    void updateNettingSetKVA();   
+    void updateNettingSetKVA();
     void updateStandAloneXVA();
     void updateAllocatedXVA();
-
-    //! Fill dynamic initial margin cube (per netting set, date and sample)
-    void dynamicInitialMargin();
-    //! Compile the array of DIM regressors for the specified netting set, date and sample index
-    Disposable<Array> regressorArray(string nettingSet, Size dateIndex, Size sampleIndex);
-    //! Perform the calculation of IM as of t=t0
-    void performT0DimCalc();
 
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<NettingSetManager> nettingSetManager_;
@@ -304,11 +293,6 @@ private:
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     map<string, bool> analytics_;
 
-    map<string, vector<vector<Real>>> nettingSetNPV_, nettingSetFLOW_, nettingSetDIM_, nettingSetLocalDIM_,
-        nettingSetDeltaNPV_;
-    map<string, vector<vector<Array>>> regressorArray_;
-    map<string, vector<Real>> nettingSetExpectedDIM_, nettingSetZeroOrderDIM_, nettingSetSimpleDIMh_,
-        nettingSetSimpleDIMp_;
     map<string, vector<Real>> tradeEPE_, tradeENE_, tradeEE_B_, tradeEEE_B_, tradePFE_, tradeVAR_;
     map<string, Real> tradeEPE_B_, tradeEEPE_B_;
     map<string, vector<Real>> allocatedTradeEPE_, allocatedTradeENE_;
@@ -325,8 +309,6 @@ private:
     map<string, Real> nettingSetFCA_, nettingSetFBA_, nettingSetFCA_exOwnSP_, nettingSetFBA_exOwnSP_,
         nettingSetFCA_exAllSP_, nettingSetFBA_exAllSP_;
     boost::shared_ptr<NPVCube> nettedCube_;
-    boost::shared_ptr<NPVCube> dimCube_;
-    map<string, Real> net_t0_im_reg_h_, net_t0_im_simple_h_;
 
     vector<string> tradeIds_;
     vector<string> nettingSetIds_;
@@ -337,13 +319,8 @@ private:
     string dvaName_;
     string fvaBorrowingCurve_;
     string fvaLendingCurve_;
-    Real dimQuantile_;
-    Size dimHorizonCalendarDays_;
-    Size dimRegressionOrder_;
-    vector<string> dimRegressors_;
-    Size dimLocalRegressionEvaluations_;
-    Real dimLocalRegressionBandwidth_;
-    Real dimScaling_;
+    boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
+    boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
     bool fullInitialCollateralisation_;
     Real kvaCapitalDiscountRate_;
     Real kvaAlpha_;
@@ -354,5 +331,6 @@ private:
     Real kvaOurCvaRiskWeight_;
     Real kvaTheirCvaRiskWeight_;
 };
+
 } // namespace analytics
 } // namespace ore

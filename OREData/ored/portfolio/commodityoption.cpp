@@ -39,13 +39,11 @@ using QuantExt::PriceTermStructure;
 namespace ore {
 namespace data {
 
-CommodityOption::CommodityOption() : VanillaOptionTrade(AssetClass::COM) {
-    tradeType_ = "CommodityOption";
-}
+CommodityOption::CommodityOption() : VanillaOptionTrade(AssetClass::COM) { tradeType_ = "CommodityOption"; }
 
 CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionData, const string& commodityName,
-    const string& currency, Real strike, Real quantity, const boost::optional<bool>& isFuturePrice,
-    const Date& futureExpiryDate)
+                                 const string& currency, Real strike, Real quantity,
+                                 const boost::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
     : VanillaOptionTrade(env, AssetClass::COM, optionData, commodityName, currency, strike, quantity),
       isFuturePrice_(isFuturePrice), futureExpiryDate_(futureExpiryDate) {
     tradeType_ = "CommodityOption";
@@ -59,15 +57,15 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
 
     // Get the price curve for the commodity.
     const boost::shared_ptr<Market>& market = engineFactory->market();
-    Handle<PriceTermStructure> priceCurve = market->commodityPriceCurve(assetName_,
-        engineFactory->configuration(MarketContext::pricing));
-    
+    Handle<PriceTermStructure> priceCurve =
+        market->commodityPriceCurve(assetName_, engineFactory->configuration(MarketContext::pricing));
+
     // Populate the index_ in case the option is automatic exercise.
     // Intentionally use null calendar because we will ask for index value on the expiry date without adjustment.
     if (!isFuturePrice_ || *isFuturePrice_) {
-        
-        // Assume future price if isFuturePrice_ is not explicitly set of if it is and true.
-        
+
+        // Assume future price if isFuturePrice_ is not explicitly set or if it is and true.
+
         // If we are given an explicit future contract expiry date, use it, otherwise use option's expiry.
         Date expiryDate;
         if (futureExpiryDate_ != Date()) {
@@ -75,11 +73,11 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
         } else {
             // Get the expiry date of the option. This is the expiry date of the commodity future index.
             const vector<string>& expiryDates = option_.exerciseDates();
-            QL_REQUIRE(expiryDates.size() == 1, "Expected exactly one expiry date for CommodityOption but got " <<
-                expiryDates.size() << ".");
+            QL_REQUIRE(expiryDates.size() == 1,
+                       "Expected exactly one expiry date for CommodityOption but got " << expiryDates.size() << ".");
             expiryDate = parseDate(expiryDates[0]);
         }
-        
+
         index_ = boost::make_shared<CommodityFuturesIndex>(assetName_, expiryDate, NullCalendar(), priceCurve);
 
     } else {
@@ -91,14 +89,14 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
 
     // LOG the volatility if the trade expiry date is in the future.
     if (expiryDate_ > Settings::instance().evaluationDate()) {
-        DLOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with expiry " << expiryDate_ <<
-            " and strike " << strike_ << " is " <<
-            market->commodityVolatility(assetName_)->blackVol(expiryDate_, strike_));
+        DLOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with expiry " << expiryDate_
+                                << " and strike " << strike_ << " is "
+                                << market->commodityVolatility(assetName_)->blackVol(expiryDate_, strike_));
     }
 }
 
 std::map<AssetClass, std::set<std::string>> CommodityOption::underlyingIndices() const {
-    return { {AssetClass::COM, std::set<std::string>({ assetName_ })} };
+    return {{AssetClass::COM, std::set<std::string>({assetName_})}};
 }
 
 void CommodityOption::fromXML(XMLNode* node) {
@@ -147,5 +145,5 @@ XMLNode* CommodityOption::toXML(XMLDocument& doc) {
     return node;
 }
 
-}
-}
+} // namespace data
+} // namespace ore

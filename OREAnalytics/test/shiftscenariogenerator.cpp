@@ -17,11 +17,10 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <test/oreatoplevelfixture.hpp>
-#include <ored/utilities/to_string.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <oret/toplevelfixture.hpp>
+#include <test/oreatoplevelfixture.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace ore::data;

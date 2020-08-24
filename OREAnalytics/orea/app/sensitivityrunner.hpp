@@ -62,7 +62,8 @@ public:
 
     virtual ~SensitivityRunner(){};
 
-    virtual void runSensitivityAnalysis(boost::shared_ptr<ore::data::Market> market, Conventions& conventions,
+    virtual void runSensitivityAnalysis(
+        boost::shared_ptr<ore::data::Market> market, Conventions& conventions,
         const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
         const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters());
 
@@ -75,6 +76,12 @@ public:
     //! Write out some standard sensitivities reports
     virtual void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis);
 
+    //! \name Inspectors
+    //@{
+    const boost::shared_ptr<ScenarioSimMarket>& simMarket() const { return simMarket_; }
+    const boost::shared_ptr<SensitivityScenarioData>& sensiData() const { return sensiData_; }
+    //@}
+
 protected:
     boost::shared_ptr<Parameters> params_;
     boost::shared_ptr<TradeFactory> tradeFactory_;
@@ -82,6 +89,12 @@ protected:
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
     boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
     const bool continueOnError_;
+
+    //! Scenario simulation market that is bumped for the sensitivity run.
+    boost::shared_ptr<ScenarioSimMarket> simMarket_;
+
+    //! Sensitivity configuration data used for the sensitivity run.
+    boost::shared_ptr<SensitivityScenarioData> sensiData_;
 };
 
 } // namespace analytics

@@ -29,8 +29,8 @@ FxBlackVolatilitySurface::FxBlackVolatilitySurface(
     const Date& referenceDate, const std::vector<Date>& dates, const std::vector<Volatility>& atmVols,
     const std::vector<Volatility>& rr, const std::vector<Volatility>& bf, const DayCounter& dayCounter,
     const Calendar& cal, const Handle<Quote>& fxSpot, const Handle<YieldTermStructure>& domesticTS,
-    const Handle<YieldTermStructure>& foreignTS, bool requireMonotoneVariance,
-    const DeltaVolQuote::AtmType atmType, const DeltaVolQuote::DeltaType deltaType, const Real delta)
+    const Handle<YieldTermStructure>& foreignTS, bool requireMonotoneVariance, const DeltaVolQuote::AtmType atmType,
+    const DeltaVolQuote::DeltaType deltaType, const Real delta)
     : BlackVolatilityTermStructure(referenceDate, cal), times_(dates.size()), dayCounter_(dayCounter), fxSpot_(fxSpot),
       domesticTS_(domesticTS), foreignTS_(foreignTS),
       atmCurve_(referenceDate, dates, atmVols, dayCounter, requireMonotoneVariance), rr_(rr), bf_(bf),

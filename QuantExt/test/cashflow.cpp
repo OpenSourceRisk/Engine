@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
 
     // Fx Index, coupon and underlying have different currency
     Handle<YieldTermStructure> domYTS(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.01, dc))); // EUR
-    Handle<YieldTermStructure> forYTS(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.02, dc)));  // USD
+    Handle<YieldTermStructure> forYTS(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.02, dc))); // USD
     Handle<Quote> fxSpot(boost::make_shared<SimpleQuote>(1.1));
     boost::shared_ptr<FxIndex> fxIndex =
         boost::make_shared<FxIndex>("FX::EURUSD", 2, EURCurrency(), USDCurrency(), TARGET(), fxSpot, domYTS, forYTS);
@@ -191,7 +191,8 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
     dt = dc.yearFraction(today, cfDate2);
     forward = spot->value() * std::exp((0.02 - 0.01) * dt);
     div = spot->value() * std::exp((0.02) * dt) - forward;
-    expectedAmount = nominal * ((forward + div) * fxIndex->fixing(cfDate2) - spot->value() * 1.1) / (spot->value() * 1.1);
+    expectedAmount =
+        nominal * ((forward + div) * fxIndex->fixing(cfDate2) - spot->value() * 1.1) / (spot->value() * 1.1);
     BOOST_TEST_MESSAGE("Check Total Return with underlying in different ccy handling is correct.");
     BOOST_CHECK_CLOSE(eq5.amount(), expectedAmount, 1e-10);
 }

@@ -112,6 +112,8 @@ public:
     //@}
 
 private:
+    void populateRequiredCurveIds();
+
     Dimension dimension_;
     CorrelationType correlationType_;
     string conventions_;

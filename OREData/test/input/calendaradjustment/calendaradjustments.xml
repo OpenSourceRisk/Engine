@@ -11,6 +11,17 @@
         </AdditionalHolidays>
         <AdditionalBusinessDays/>
     </Calendar>
+    <Calendar name= "DKK_amended">
+        <BaseCalendar>DKK</BaseCalendar>
+        <AdditionalHolidays>
+            <Date>2019-04-15</Date>
+            <Date>2019-04-16</Date>
+            <Date>2019-04-17</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays>
+            <Date>2020-12-31</Date>
+        </AdditionalBusinessDays>
+    </Calendar>
     <Calendar name= "CNH">
         <AdditionalHolidays>
             <Date>2019-02-04</Date>
@@ -46,6 +57,11 @@
         </AdditionalHolidays>
         <AdditionalBusinessDays/>
     </Calendar>
+    <Calendar name= "CNH_amended">
+        <BaseCalendar>CNH</BaseCalendar>
+        <AdditionalHolidays/>
+        <AdditionalBusinessDays/>
+    </Calendar>
     <Calendar name= "Japan">
         <AdditionalHolidays>
             <Date>2019-04-30</Date>
@@ -70,6 +86,15 @@
         <AdditionalBusinessDays>
             <Date>2019-06-20</Date>
         </AdditionalBusinessDays>
+    </Calendar>
+    <Calendar name= "FRA_amended">
+        <BaseCalendar>FRA</BaseCalendar>
+        <AdditionalHolidays>
+            <Date>2019-06-20</Date>
+            <Date>2019-06-21</Date>
+            <Date>2019-06-22</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
     </Calendar>
     <Calendar name= "ITL">
         <AdditionalHolidays>
@@ -113,6 +138,28 @@
             <Date>2019-12-31</Date>
             <Date>2020-12-24</Date>
             <Date>2020-12-31</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+    <!-- we check that calendars with the same baseCalendar don't affect each other-->
+    <Calendar name= "WeekendsOnly_1">
+        <BaseCalendar>WeekendsOnly</BaseCalendar>
+        <AdditionalHolidays>
+            <Date>2019-06-20</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+    <Calendar name= "WeekendsOnly_2">
+        <BaseCalendar>WeekendsOnly</BaseCalendar>
+        <AdditionalHolidays>
+            <Date>2019-06-21</Date>
+        </AdditionalHolidays>
+        <AdditionalBusinessDays/>
+    </Calendar>
+    <Calendar name= "WeekendsOnly_3">
+        <BaseCalendar>WeekendsOnly</BaseCalendar>
+        <AdditionalHolidays>
+            <Date>2019-06-24</Date>
         </AdditionalHolidays>
         <AdditionalBusinessDays/>
     </Calendar>

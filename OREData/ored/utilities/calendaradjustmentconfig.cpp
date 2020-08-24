@@ -17,24 +17,25 @@
 */
 
 #include <ored/utilities/calendaradjustmentconfig.hpp>
-#include <string>
-#include <ql/time/calendar.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ql/time/calendar.hpp>
+#include <string>
 namespace ore {
 namespace data {
 
- CalendarAdjustmentConfig::CalendarAdjustmentConfig(){
-
-}
+CalendarAdjustmentConfig::CalendarAdjustmentConfig() {}
 
 void CalendarAdjustmentConfig::addHolidays(const string& calname, const Date& d) {
     additionalHolidays_[normalisedName(calname)].insert(d);
 }
 
-
 void CalendarAdjustmentConfig::addBusinessDays(const string& calname, const Date& d) {
     additionalBusinessDays_[normalisedName(calname)].insert(d);
+}
+
+void CalendarAdjustmentConfig::addBaseCalendar(const string& calname, const string& s) {
+    baseCalendars_[normalisedName(calname)] = s;
 }
 
 const set<Date>& CalendarAdjustmentConfig::getHolidays(const string& calname) const {
@@ -59,43 +60,91 @@ const set<Date>& CalendarAdjustmentConfig::getBusinessDays(const string& calname
 
 set<string> CalendarAdjustmentConfig::getCalendars() const {
     set<string> cals;
-    for (auto it: additionalHolidays_) {
+    for (auto it : additionalHolidays_) {
         cals.insert(it.first);
     }
-    for (auto it: additionalBusinessDays_) {
+    for (auto it : additionalBusinessDays_) {
         cals.insert(it.first);
     }
     return cals;
 }
 
-string CalendarAdjustmentConfig::normalisedName(const string& c) const {
-    return parseCalendar(c,false).name();
-}
 
-void CalendarAdjustmentConfig::append(const CalendarAdjustmentConfig&  c) {
+const string& CalendarAdjustmentConfig::getBaseCalendar(const string& calname) const {
+    auto bc = baseCalendars_.find(normalisedName(calname));
+
+    if (bc != baseCalendars_.end()) {
+        return bc->second;
+    } else {
+        static const string empty = "";
+        return empty;
+    }
+}
+string CalendarAdjustmentConfig::normalisedName(const string& c) const { return parseCalendar(c).name(); }
+
+void CalendarAdjustmentConfig::append(const CalendarAdjustmentConfig& c) {
     for (auto it : c.getCalendars()) {
-        for (auto h : c.getHolidays(it)){
+        for (auto h : c.getHolidays(it)) {
             addHolidays(it, h);
         }
         for (auto b : c.getBusinessDays(it)) {
             addBusinessDays(it, b);
-        }        
+        }
     }
 };
 
 void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CalendarAdjustments");
+
+    //we loop once skipping any new calendars
     for (auto calnode : XMLUtils::getChildrenNodes(node, "Calendar")) {
         string calname = XMLUtils::getAttribute(calnode, "name");
+        string baseCalendar = XMLUtils::getChildValue(calnode, "BaseCalendar", false);
+        if (baseCalendar != "") {
+            // we check here if the baseCalendar is in the map before the new calendars are added
+            // this is because we don't want any new calendars to be defined in terms of other new calendars
+            parseCalendar(baseCalendar);
+            continue;
+        }
+        Calendar cal = parseCalendar(calname);
+
         vector<string> holidayDates = XMLUtils::getChildrenValues(calnode, "AdditionalHolidays", "Date");
         for (auto holiday : holidayDates) {
-            addHolidays(calname, parseDate(holiday));
+            Date h = parseDate(holiday);
+            addHolidays(calname, h);
+            cal.addHoliday(h);
         }
         vector<string> businessDates = XMLUtils::getChildrenValues(calnode, "AdditionalBusinessDays", "Date");
         for (auto businessDay : businessDates) {
-            addBusinessDays(calname, parseDate(businessDay));
+            Date b = parseDate(businessDay);
+            addBusinessDays(calname, b);
+            cal.removeHoliday(b);
         }
     }
+    //then loop again adding the new calendars
+    for (auto calnode : XMLUtils::getChildrenNodes(node, "Calendar")) {
+        string calname = XMLUtils::getAttribute(calnode, "name");
+        string baseCalendar = XMLUtils::getChildValue(calnode, "BaseCalendar", false);
+        if (baseCalendar == "")
+            continue;
+        Calendar cal = parseCalendar(baseCalendar, calname);
+
+        vector<string> holidayDates = XMLUtils::getChildrenValues(calnode, "AdditionalHolidays", "Date");
+        for (auto holiday : holidayDates) {
+            Date h = parseDate(holiday);
+            addHolidays(calname, h);
+            cal.addHoliday(h);
+        }
+        vector<string> businessDates = XMLUtils::getChildrenValues(calnode, "AdditionalBusinessDays", "Date");
+        for (auto businessDay : businessDates) {
+            Date b = parseDate(businessDay);
+            addBusinessDays(calname, b);
+            cal.removeHoliday(b);
+        }
+
+        addBaseCalendar(calname, baseCalendar);
+    }
+
 }
 
 XMLNode* CalendarAdjustmentConfig::toXML(XMLDocument& doc) {
@@ -103,17 +152,19 @@ XMLNode* CalendarAdjustmentConfig::toXML(XMLDocument& doc) {
     for (auto cal : getCalendars()) {
         XMLNode* calendarNode = XMLUtils::addChild(doc, node, "Calendar");
         XMLUtils::addAttribute(doc, calendarNode, "name", cal);
+        if (getBaseCalendar(cal) != "")
+            XMLUtils::addChild(doc, calendarNode, "BaseCalendar", getBaseCalendar(cal));
         XMLNode* ahd = XMLUtils::addChild(doc, calendarNode, "AdditionalHolidays");
         for (auto hol : getHolidays(cal)) {
             XMLUtils::addChild(doc, ahd, "Date", to_string(hol));
         }
         XMLNode* abd = XMLUtils::addChild(doc, calendarNode, "AdditionalBusinessDays");
-        for (auto bd: getBusinessDays(cal)) {
+        for (auto bd : getBusinessDays(cal)) {
             XMLUtils::addChild(doc, abd, "Date", to_string(bd));
         }
     }
     return node;
 }
 
-}
-}
+} // namespace data
+} // namespace ore

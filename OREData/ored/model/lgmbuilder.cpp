@@ -56,7 +56,10 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     QuantLib::Currency ccy = parseCurrency(data_->ccy());
     LOG("LgmCalibration for ccy " << ccy << ", configuration is " << configuration_);
 
-    discountCurve_ = RelinkableHandle<YieldTermStructure>(*market_->discountCurve(ccy.code(), configuration_));
+    // the discount curve underlying the model might be relinked to a different curve outside this builder
+    // the calibration curve should always stay the same though, therefore we create a different handle for this
+    modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*market_->discountCurve(ccy.code(), configuration_));
+    calibrationDiscountCurve_ = Handle<YieldTermStructure>(*modelDiscountCurve_);
 
     if (data_->calibrateA() || data_->calibrateH()) {
         svts_ = market_->swaptionVol(data_->ccy(), configuration_);
@@ -68,14 +71,16 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
         marketObserver_->addObservable(shortSwapIndex_->forwardingTermStructure());
         marketObserver_->addObservable(shortSwapIndex_->discountingTermStructure());
     }
-    marketObserver_->addObservable(discountCurve_);
+    marketObserver_->addObservable(calibrationDiscountCurve_);
     registerWith(marketObserver_);
     // notify observers of all market data changes, not only when not calculated
     alwaysForwardNotifications();
 
     swaptionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
 
-    buildSwaptionBasket();
+    if (data_->calibrateA() || data_->calibrateH()) {
+        buildSwaptionBasket();
+    }
 
     Array aTimes(data_->aTimes().begin(), data_->aTimes().end());
     Array hTimes(data_->hTimes().begin(), data_->hTimes().end());
@@ -122,16 +127,16 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
         data_->volatilityType() == LgmData::VolatilityType::HullWhite) {
         DLOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstantHullWhiteAdaptor");
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            ccy, discountCurve_, aTimes, alpha, hTimes, h);
+            ccy, modelDiscountCurve_, aTimes, alpha, hTimes, h);
     } else if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
                data_->volatilityType() == LgmData::VolatilityType::Hagan) {
         DLOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstant");
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantParametrization>(
-            ccy, discountCurve_, aTimes, alpha, hTimes, h);
+            ccy, modelDiscountCurve_, aTimes, alpha, hTimes, h);
     } else if (data_->reversionType() == LgmData::ReversionType::Hagan &&
                data_->volatilityType() == LgmData::VolatilityType::Hagan) {
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseLinearParametrization>(
-            ccy, discountCurve_, aTimes, alpha, hTimes, h);
+            ccy, modelDiscountCurve_, aTimes, alpha, hTimes, h);
         DLOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseLinear");
     } else {
         QL_FAIL("Reversion type Hagan and volatility type HullWhite not covered");
@@ -178,7 +183,7 @@ void LgmBuilder::performCalculations() const {
         marketObserver_->hasUpdated(true);
 
         if ((data_->calibrateA() || data_->calibrateH())) {
-            if (swaptionBasketRefDate_ != discountCurve_->referenceDate()) {
+            if (swaptionBasketRefDate_ != calibrationDiscountCurve_->referenceDate()) {
                 // build swaption basket if required, i.e. if reference date has changed since last build
                 buildSwaptionBasket();
                 volSurfaceChanged(true);
@@ -191,7 +196,7 @@ void LgmBuilder::performCalculations() const {
         }
 
         for (Size j = 0; j < swaptionBasket_.size(); j++) {
-            auto engine = boost::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_);
+            auto engine = boost::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_, calibrationDiscountCurve_);
             engine->enableCache(!data_->calibrateH(), !data_->calibrateA());
             swaptionBasket_[j]->setPricingEngine(engine);
             // necessary if notifications are disabled (observation mode = Disable)
@@ -501,7 +506,7 @@ void LgmBuilder::buildSwaptionBasket() const {
     for (Size j = 0; j < maturityTimes.size(); j++)
         swaptionMaturities_[j] = maturityTimes[j];
 
-    swaptionBasketRefDate_ = discountCurve_->referenceDate();
+    swaptionBasketRefDate_ = calibrationDiscountCurve_->referenceDate();
 }
 
 std::string LgmBuilder::getBasketDetails() const {

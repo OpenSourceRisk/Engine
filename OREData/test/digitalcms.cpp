@@ -218,7 +218,7 @@ void outputCoupons(boost::shared_ptr<ore::data::Swap> cmsSwap) {
     Leg leg = cmsSwap->legs().at(0);
     for (auto cf : leg) {
         boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
-        if(frc) {
+        if (frc) {
             BOOST_TEST_MESSAGE("Coupon Date: " << frc->date() << "; Rate: " << frc->rate()
                                                << "; DayCount: " << frc->dayCounter());
         } else {

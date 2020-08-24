@@ -88,9 +88,9 @@
 namespace ore {
 namespace analytics {
 using namespace QuantLib;
-using std::vector;
 using std::map;
 using std::string;
+using std::vector;
 
 //! Map a yield curve type to a risk factor key type
 RiskFactorKey::KeyType yieldCurveRiskFactor(const ore::data::YieldCurveType y);
@@ -109,15 +109,22 @@ public:
 };
 
 //! Simulation Market updated with discrete scenarios
+/*! If useSpreadedTermStructures is true, term structures for
+  - discount curves
+  - index curves
+  - yield curves
+  will be built as a spread over the initMarket curves and require scenarios that contain the spread
+  to the base scenario rather than the absolute scenario value. This is used by the SensitivityScenarioGenerator
+  if the respective flag is switched on there. */
 class ScenarioSimMarket : public analytics::SimMarket {
 public:
     //! Constructor
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
-                      const std::string& configuration = Market::defaultConfiguration, 
+                      const std::string& configuration = Market::defaultConfiguration,
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-                      const bool continueOnError = false);
+                      const bool continueOnError = false, const bool useSpreadedTermStructures = false);
 
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
@@ -125,7 +132,7 @@ public:
                       const std::string& configuration = Market::defaultConfiguration,
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-                      const bool continueOnError = false);
+                      const bool continueOnError = false, const bool useSpreadedTermStructures = false);
 
     //! Set scenario generator
     boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
@@ -142,8 +149,13 @@ public:
     //! Get scenarioFilter
     const boost::shared_ptr<ScenarioFilter>& filter() const { return filter_; }
 
-    //! Update market snapshot and relevant fixing history
-    void update(const Date& d) override;
+    //! Update
+    // virtual void update(const Date&) override;
+    virtual void preUpdate() override;
+    virtual void updateScenario(const Date&) override;
+    virtual void updateDate(const Date&) override;
+    virtual void postUpdate(const Date& d, bool withFixings) override;
+    virtual void updateAsd(const Date&) override;
 
     //! Reset sim market to initial state
     virtual void reset() override;
@@ -161,15 +173,15 @@ protected:
     virtual void applyScenario(const boost::shared_ptr<Scenario>& scenario);
     void addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
                        const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
-                       const std::string& dc, bool simulate = true);
-    
+                       const std::string& dc, bool simulate = true, bool spreaded = false);
+
     /*! Given a yield curve spec ID, \p yieldSpecId, return the corresponding yield term structure
     from the \p market. If \p market is `nullptr`, then the yield term structure is taken from
     this ScenarioSimMarket instance.
     */
-    QuantLib::Handle<QuantLib::YieldTermStructure> getYieldCurve(const std::string& yieldSpecId,
-        const ore::data::TodaysMarketParameters& todaysMarketParams, const std::string& configuration,
-        const boost::shared_ptr<ore::data::Market>& market = nullptr) const;
+    QuantLib::Handle<QuantLib::YieldTermStructure>
+    getYieldCurve(const std::string& yieldSpecId, const ore::data::TodaysMarketParameters& todaysMarketParams,
+                  const std::string& configuration, const boost::shared_ptr<ore::data::Market>& market = nullptr) const;
 
     const boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
     boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
@@ -181,6 +193,11 @@ protected:
     boost::shared_ptr<Scenario> baseScenario_;
 
     std::set<RiskFactorKey::KeyType> nonSimulatedFactors_;
+
+    // if generate spread scenario values for keys, we store the absolute values in this map
+    // so that we can set up the base scenario with absolute values for all keys properly below
+    bool useSpreadedTermStructures_;
+    std::map<RiskFactorKey, Real> absoluteSimData_;
 };
 } // namespace analytics
 } // namespace ore

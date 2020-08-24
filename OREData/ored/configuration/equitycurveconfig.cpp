@@ -34,10 +34,16 @@ EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveD
                                      bool extrapolation, const QuantLib::Exercise::Type& exerciseStyle)
     : CurveConfig(curveID, curveDescription), fwdQuotes_(fwdQuotes), forecastingCurve_(forecastingCurve),
       currency_(currency), type_(type), equitySpotQuoteID_(equitySpotQuote), dayCountID_(dayCountID),
-      divInterpVariable_(dividendInterpVariable), divInterpMethod_(dividendInterpMethod),
-      extrapolation_(extrapolation), exerciseStyle_(exerciseStyle) {
+      divInterpVariable_(dividendInterpVariable), divInterpMethod_(dividendInterpMethod), extrapolation_(extrapolation),
+      exerciseStyle_(exerciseStyle) {
     quotes_ = fwdQuotes;
     quotes_.insert(quotes_.begin(), equitySpotQuote);
+    populateRequiredCurveIds();
+}
+
+void EquityCurveConfig::populateRequiredCurveIds() {
+    if (!forecastingCurve().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(forecastingCurve());
 }
 
 void EquityCurveConfig::fromXML(XMLNode* node) {
@@ -76,6 +82,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     } else {
         QL_REQUIRE(fwdQuotes_.size() > 0, "Invalid EquityCurveConfig, Quotes should be present when type!=NoDividends");
     }
+    populateRequiredCurveIds();
 }
 
 XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {

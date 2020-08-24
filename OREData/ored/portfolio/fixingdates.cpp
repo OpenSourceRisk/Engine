@@ -23,9 +23,9 @@
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
-#include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/indexes/commodityindex.hpp>
 
 #include <ql/cashflow.hpp>
@@ -358,9 +358,7 @@ void FixingDateGetter::visit(QuantExt::OvernightIndexedCoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
 }
 
-void FixingDateGetter::visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c) {
-    c.underlying()->accept(*this);
-}
+void FixingDateGetter::visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c) { c.underlying()->accept(*this); }
 
 void FixingDateGetter::visit(AverageBMACoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
@@ -368,8 +366,10 @@ void FixingDateGetter::visit(AverageBMACoupon& c) {
 
 void FixingDateGetter::visit(CmsSpreadCoupon& c) {
     // Enforce fixing to be added even if coupon pays on settlement.
-    requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.swapSpreadIndex()->swapIndex1()->name()), c.date(), true);
-    requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.swapSpreadIndex()->swapIndex2()->name()), c.date(), true);
+    requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.swapSpreadIndex()->swapIndex1()->name()), c.date(),
+                                   true);
+    requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.swapSpreadIndex()->swapIndex2()->name()), c.date(),
+                                   true);
 }
 
 void FixingDateGetter::visit(DigitalCoupon& c) { c.underlying()->accept(*this); }
@@ -401,7 +401,7 @@ void FixingDateGetter::visit(SubPeriodsCoupon& c) {
 
 void FixingDateGetter::visit(IndexedCoupon& c) {
     // the coupon's index might be null if an initial fixing is provided
-    if(c.index())
+    if (c.index())
         requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.index()->name()), c.date());
     QL_REQUIRE(c.underlying(), "FixingDateGetter::visit(IndexedCoupon): underlying() is null");
     c.underlying()->accept(*this);

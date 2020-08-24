@@ -33,9 +33,9 @@
 
 namespace ore {
 namespace analytics {
+using QuantLib::Date;
 using QuantLib::Real;
 using QuantLib::Size;
-using QuantLib::Date;
 using std::string;
 
 //! Data types stored in the scenario class
@@ -55,8 +55,8 @@ public:
         FXSpot,
         FXVolatility,
         EquitySpot,
-        EquityVolatility,
         DividendYield,
+        EquityVolatility,
         SurvivalProbability,
         RecoveryRate,
         CDSVolatility,

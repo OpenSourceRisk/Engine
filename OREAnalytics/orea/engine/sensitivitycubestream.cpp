@@ -31,8 +31,9 @@ namespace analytics {
 using crossPair = SensitivityCube::crossPair;
 
 SensitivityCubeStream::SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, const string& currency)
-    : cube_(cube), currency_(currency), upRiskFactor_(cube_->upFactors().begin()), downRiskFactor_(cube_->downFactors().begin()),
-      itCrossPair_(cube_->crossFactors().begin()), tradeIdx_(cube_->tradeIdx().begin()) {}
+    : cube_(cube), currency_(currency), upRiskFactor_(cube_->upFactors().begin()),
+      downRiskFactor_(cube_->downFactors().begin()), itCrossPair_(cube_->crossFactors().begin()),
+      tradeIdx_(cube_->tradeIdx().begin()) {}
 
 SensitivityRecord SensitivityCubeStream::next() {
 
@@ -61,7 +62,7 @@ SensitivityRecord SensitivityCubeStream::next() {
             sr.desc_1 = upRiskFactor_->right.factorDesc;
             sr.shift_1 = upRiskFactor_->right.shiftSize;
             sr.delta = cube_->delta(tradeIdx, usrx);
-            if(downRiskFactor_ != cube_->downFactors().end()) {
+            if (downRiskFactor_ != cube_->downFactors().end()) {
                 Size dsrx = downRiskFactor_->second.index;
                 sr.gamma = cube_->gamma(tradeIdx, usrx, dsrx);
                 downRiskFactor_++;

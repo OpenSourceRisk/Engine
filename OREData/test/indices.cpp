@@ -169,7 +169,7 @@ static struct test_data index_data[] = {
     {"CAD-BA-1Y", "CDOR1Y Actual/365 (Fixed)", 1 * Years},
 
     {"CNY-SHIBOR-3M", "Shibor3M Actual/360", 3 * Months},
-  
+
     {"CZK-PRIBOR-6M", "CZK-PRIBOR6M Actual/360", 6 * Months},
 
     {"USD-LIBOR-1W", "USDLibor1W Actual/360", 1 * Weeks},
@@ -320,7 +320,7 @@ static struct test_data index_data[] = {
     {"TRY-TRLIBOR-4M", "TRLibor4M Actual/360", 4 * Months},
     {"TRY-TRLIBOR-5M", "TRLibor5M Actual/360", 5 * Months},
     {"TRY-TRLIBOR-6M", "TRLibor6M Actual/360", 6 * Months},
-  
+
     {"MYR-KLIBOR-1M", "MYR-KLIBOR1M Actual/365 (Fixed)", 1 * Months},
     {"MYR-KLIBOR-2M", "MYR-KLIBOR2M Actual/365 (Fixed)", 2 * Months},
     {"MYR-KLIBOR-3M", "MYR-KLIBOR3M Actual/365 (Fixed)", 3 * Months},

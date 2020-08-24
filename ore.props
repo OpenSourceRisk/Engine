@@ -3,6 +3,9 @@
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Language)'=='C++'">
+    <CAExcludePath>$(ORE)\QuantLib\ql;$(BOOST)\boost;$(CAExcludePath)</CAExcludePath>
+  </PropertyGroup>
   <PropertyGroup>
     <CodeAnalysisRuleSet>$(ORE)\disable_selected.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>

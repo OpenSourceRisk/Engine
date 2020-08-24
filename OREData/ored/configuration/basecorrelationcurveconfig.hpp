@@ -31,14 +31,14 @@
 
 namespace ore {
 namespace data {
-using std::string;
-using std::vector;
 using ore::data::XMLNode;
-using QuantLib::Period;
+using QuantLib::BusinessDayConvention;
+using QuantLib::Calendar;
 using QuantLib::DayCounter;
 using QuantLib::Natural;
-using QuantLib::Calendar;
-using QuantLib::BusinessDayConvention;
+using QuantLib::Period;
+using std::string;
+using std::vector;
 
 //! Base Correlation term structure configuration
 /*!

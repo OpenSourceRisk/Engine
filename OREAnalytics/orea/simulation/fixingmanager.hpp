@@ -51,9 +51,9 @@ public:
 
     //! Initialise the manager with these flows and indices from the given portfolio
     void initialise(const boost::shared_ptr<Portfolio>& portfolio);
-  
+
     virtual void processCashFlows(const boost::shared_ptr<QuantLib::CashFlow> cf);
-  
+
     //! Update fixings to date d
     void update(Date d);
 

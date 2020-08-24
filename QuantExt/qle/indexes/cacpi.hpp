@@ -32,12 +32,12 @@ namespace QuantExt {
 //! Canadian CPI index
 class CACPI : public QuantLib::ZeroInflationIndex {
 public:
-    CACPI(bool interpolated, const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts = 
-        QuantLib::Handle<QuantLib::ZeroInflationTermStructure>())
-        : QuantLib::ZeroInflationIndex("CPI", CanadaRegion(), false, interpolated, QuantLib::Monthly, 
-            QuantLib::Period(1, QuantLib::Months), QuantLib::CADCurrency(), ts) {}
+    CACPI(bool interpolated, const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts =
+                                 QuantLib::Handle<QuantLib::ZeroInflationTermStructure>())
+        : QuantLib::ZeroInflationIndex("CPI", CanadaRegion(), false, interpolated, QuantLib::Monthly,
+                                       QuantLib::Period(1, QuantLib::Months), QuantLib::CADCurrency(), ts) {}
 };
 
-}
+} // namespace QuantExt
 
 #endif

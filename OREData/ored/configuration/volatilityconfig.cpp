@@ -58,7 +58,7 @@ void VolatilityConfig::addBaseNode(XMLDocument& doc, XMLNode* node) {
         XMLUtils::addChild(doc, node, "ExerciseType", to_string(exerciseType_));
         return;
     }
-    
+
     // Must be a volatility (or possibly fail)
     XMLUtils::addChild(doc, node, "QuoteType", "ImpliedVolatility");
     if (quoteType_ == MarketDatum::QuoteType::RATE_LNVOL) {
@@ -70,14 +70,15 @@ void VolatilityConfig::addBaseNode(XMLDocument& doc, XMLNode* node) {
     } else {
         QL_FAIL("Invalid quote type");
     }
-
 }
 
 ConstantVolatilityConfig::ConstantVolatilityConfig(MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType) : VolatilityConfig(quoteType, exerciseType) {}
+                                                   QuantLib::Exercise::Type exerciseType)
+    : VolatilityConfig(quoteType, exerciseType) {}
 
 ConstantVolatilityConfig::ConstantVolatilityConfig(const string& quote, MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType) : VolatilityConfig(quoteType, exerciseType), quote_(quote) {}
+                                                   QuantLib::Exercise::Type exerciseType)
+    : VolatilityConfig(quoteType, exerciseType), quote_(quote) {}
 
 const string& ConstantVolatilityConfig::quote() const { return quote_; }
 
@@ -94,21 +95,15 @@ XMLNode* ConstantVolatilityConfig::toXML(XMLDocument& doc) {
     return node;
 }
 
-VolatilityCurveConfig::VolatilityCurveConfig(MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType, bool enforceMontoneVariance)
+VolatilityCurveConfig::VolatilityCurveConfig(MarketDatum::QuoteType quoteType, QuantLib::Exercise::Type exerciseType,
+                                             bool enforceMontoneVariance)
     : VolatilityConfig(quoteType, exerciseType), enforceMontoneVariance_(enforceMontoneVariance) {}
 
-VolatilityCurveConfig::VolatilityCurveConfig(const vector<string>& quotes,
-    const string& interpolation,
-    const string& extrapolation, 
-    MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType,
-    bool enforceMontoneVariance)
-    : VolatilityConfig(quoteType, exerciseType),
-      quotes_(quotes),
-      interpolation_(interpolation),
-      extrapolation_(extrapolation),
-      enforceMontoneVariance_(enforceMontoneVariance) {}
+VolatilityCurveConfig::VolatilityCurveConfig(const vector<string>& quotes, const string& interpolation,
+                                             const string& extrapolation, MarketDatum::QuoteType quoteType,
+                                             QuantLib::Exercise::Type exerciseType, bool enforceMontoneVariance)
+    : VolatilityConfig(quoteType, exerciseType), quotes_(quotes), interpolation_(interpolation),
+      extrapolation_(extrapolation), enforceMontoneVariance_(enforceMontoneVariance) {}
 
 const vector<string>& VolatilityCurveConfig::quotes() const { return quotes_; }
 
@@ -124,7 +119,7 @@ void VolatilityCurveConfig::fromXML(XMLNode* node) {
     quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
     interpolation_ = XMLUtils::getChildValue(node, "Interpolation", true);
     extrapolation_ = XMLUtils::getChildValue(node, "Extrapolation", true);
-    
+
     enforceMontoneVariance_ = true;
     if (XMLNode* n = XMLUtils::getChildNode(node, "EnforceMontoneVariance"))
         enforceMontoneVariance_ = parseBool(XMLUtils::getNodeValue(n));
@@ -141,21 +136,15 @@ XMLNode* VolatilityCurveConfig::toXML(XMLDocument& doc) {
 }
 
 VolatilitySurfaceConfig::VolatilitySurfaceConfig(MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType) : VolatilityConfig(quoteType, exerciseType) {}
+                                                 QuantLib::Exercise::Type exerciseType)
+    : VolatilityConfig(quoteType, exerciseType) {}
 
-VolatilitySurfaceConfig::VolatilitySurfaceConfig(
-    const string& timeInterpolation,
-    const string& strikeInterpolation,
-    bool extrapolation,
-    const string& timeExtrapolation,
-    const string& strikeExtrapolation,
-    MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType)
-    : VolatilityConfig(quoteType, exerciseType), 
-      timeInterpolation_(timeInterpolation),
-      strikeInterpolation_(strikeInterpolation),
-      extrapolation_(extrapolation),
-      timeExtrapolation_(timeExtrapolation),
+VolatilitySurfaceConfig::VolatilitySurfaceConfig(const string& timeInterpolation, const string& strikeInterpolation,
+                                                 bool extrapolation, const string& timeExtrapolation,
+                                                 const string& strikeExtrapolation, MarketDatum::QuoteType quoteType,
+                                                 QuantLib::Exercise::Type exerciseType)
+    : VolatilityConfig(quoteType, exerciseType), timeInterpolation_(timeInterpolation),
+      strikeInterpolation_(strikeInterpolation), extrapolation_(extrapolation), timeExtrapolation_(timeExtrapolation),
       strikeExtrapolation_(strikeExtrapolation) {}
 
 const string& VolatilitySurfaceConfig::timeInterpolation() const { return timeInterpolation_; }
@@ -185,29 +174,25 @@ void VolatilitySurfaceConfig::addNodes(XMLDocument& doc, XMLNode* node) const {
 }
 
 VolatilityStrikeSurfaceConfig::VolatilityStrikeSurfaceConfig(MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType) : VolatilitySurfaceConfig(quoteType, exerciseType) {}
+                                                             QuantLib::Exercise::Type exerciseType)
+    : VolatilitySurfaceConfig(quoteType, exerciseType) {}
 
 VolatilityStrikeSurfaceConfig::VolatilityStrikeSurfaceConfig(
-    const vector<string>& strikes,
-    const vector<string>& expiries,
-    const string& timeInterpolation,
-    const string& strikeInterpolation,
-    bool extrapolation,
-    const string& timeExtrapolation,
-    const string& strikeExtrapolation, 
-    MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType)
-    : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation,
-        timeExtrapolation, strikeExtrapolation, quoteType, exerciseType), strikes_(strikes), expiries_(expiries) {}
+    const vector<string>& strikes, const vector<string>& expiries, const string& timeInterpolation,
+    const string& strikeInterpolation, bool extrapolation, const string& timeExtrapolation,
+    const string& strikeExtrapolation, MarketDatum::QuoteType quoteType, QuantLib::Exercise::Type exerciseType)
+    : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
+                              strikeExtrapolation, quoteType, exerciseType),
+      strikes_(strikes), expiries_(expiries) {}
 
 const vector<string>& VolatilityStrikeSurfaceConfig::strikes() const { return strikes_; }
 
 const vector<string>& VolatilityStrikeSurfaceConfig::expiries() const { return expiries_; }
 
 vector<pair<string, string>> VolatilityStrikeSurfaceConfig::quotes() const {
-    
+
     vector<pair<string, string>> result;
-    
+
     for (const string& e : expiries()) {
         for (const string& s : strikes_) {
             result.push_back(make_pair(e, s));
@@ -235,28 +220,19 @@ XMLNode* VolatilityStrikeSurfaceConfig::toXML(XMLDocument& doc) {
 }
 
 VolatilityDeltaSurfaceConfig::VolatilityDeltaSurfaceConfig(MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType) : VolatilitySurfaceConfig(quoteType, exerciseType) {}
+                                                           QuantLib::Exercise::Type exerciseType)
+    : VolatilitySurfaceConfig(quoteType, exerciseType) {}
 
 VolatilityDeltaSurfaceConfig::VolatilityDeltaSurfaceConfig(
-    const string& deltaType,
-    const string& atmType,
-    const vector<string>& putDeltas,
-    const vector<string>& callDeltas,
-    const vector<string>& expiries,
-    const string& timeInterpolation,
-    const string& strikeInterpolation,
-    bool extrapolation,
-    const string& timeExtrapolation,
-    const string& strikeExtrapolation,
-    const std::string& atmDeltaType,
-    bool futurePriceCorrection,
-    MarketDatum::QuoteType quoteType,
+    const string& deltaType, const string& atmType, const vector<string>& putDeltas, const vector<string>& callDeltas,
+    const vector<string>& expiries, const string& timeInterpolation, const string& strikeInterpolation,
+    bool extrapolation, const string& timeExtrapolation, const string& strikeExtrapolation,
+    const std::string& atmDeltaType, bool futurePriceCorrection, MarketDatum::QuoteType quoteType,
     QuantLib::Exercise::Type exerciseType)
-    : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation,
-        timeExtrapolation, strikeExtrapolation, quoteType, exerciseType), deltaType_(deltaType), 
-        atmType_(atmType), putDeltas_(putDeltas), callDeltas_(callDeltas), expiries_(expiries),
-        atmDeltaType_(atmDeltaType), futurePriceCorrection_(futurePriceCorrection) {
-}
+    : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
+                              strikeExtrapolation, quoteType, exerciseType),
+      deltaType_(deltaType), atmType_(atmType), putDeltas_(putDeltas), callDeltas_(callDeltas), expiries_(expiries),
+      atmDeltaType_(atmDeltaType), futurePriceCorrection_(futurePriceCorrection) {}
 
 const string& VolatilityDeltaSurfaceConfig::deltaType() const { return deltaType_; }
 
@@ -329,24 +305,18 @@ XMLNode* VolatilityDeltaSurfaceConfig::toXML(XMLDocument& doc) {
 }
 
 VolatilityMoneynessSurfaceConfig::VolatilityMoneynessSurfaceConfig(MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType) : VolatilitySurfaceConfig(quoteType, exerciseType) {}
+                                                                   QuantLib::Exercise::Type exerciseType)
+    : VolatilitySurfaceConfig(quoteType, exerciseType) {}
 
 VolatilityMoneynessSurfaceConfig::VolatilityMoneynessSurfaceConfig(
-    const string& moneynessType,
-    const vector<string>& moneynessLevels,
-    const vector<string>& expiries,
-    const string& timeInterpolation,
-    const string& strikeInterpolation,
-    bool extrapolation,
-    const string& timeExtrapolation,
-    const string& strikeExtrapolation,
-    bool futurePriceCorrection,
-    MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType)
-    : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation,
-        timeExtrapolation, strikeExtrapolation, quoteType, exerciseType), moneynessType_(moneynessType),
-        moneynessLevels_(moneynessLevels), expiries_(expiries), futurePriceCorrection_(futurePriceCorrection) {
-}
+    const string& moneynessType, const vector<string>& moneynessLevels, const vector<string>& expiries,
+    const string& timeInterpolation, const string& strikeInterpolation, bool extrapolation,
+    const string& timeExtrapolation, const string& strikeExtrapolation, bool futurePriceCorrection,
+    MarketDatum::QuoteType quoteType, QuantLib::Exercise::Type exerciseType)
+    : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
+                              strikeExtrapolation, quoteType, exerciseType),
+      moneynessType_(moneynessType), moneynessLevels_(moneynessLevels), expiries_(expiries),
+      futurePriceCorrection_(futurePriceCorrection) {}
 
 const string& VolatilityMoneynessSurfaceConfig::moneynessType() const { return moneynessType_; }
 
@@ -397,27 +367,19 @@ XMLNode* VolatilityMoneynessSurfaceConfig::toXML(XMLDocument& doc) {
 }
 
 VolatilityApoFutureSurfaceConfig::VolatilityApoFutureSurfaceConfig(MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType) : VolatilitySurfaceConfig(quoteType, exerciseType) {}
+                                                                   QuantLib::Exercise::Type exerciseType)
+    : VolatilitySurfaceConfig(quoteType, exerciseType) {}
 
 VolatilityApoFutureSurfaceConfig::VolatilityApoFutureSurfaceConfig(
-    const std::vector<std::string>& moneynessLevels,
-    const std::string& baseVolatilityId,
-    const std::string& basePriceCurveId,
-    const std::string& baseConventionsId,
-    const std::string& timeInterpolation,
-    const std::string& strikeInterpolation,
-    bool extrapolation,
-    const std::string& timeExtrapolation,
-    const std::string& strikeExtrapolation,
-    Real beta,
-    const std::string& maxTenor,
-    MarketDatum::QuoteType quoteType,
+    const std::vector<std::string>& moneynessLevels, const std::string& baseVolatilityId,
+    const std::string& basePriceCurveId, const std::string& baseConventionsId, const std::string& timeInterpolation,
+    const std::string& strikeInterpolation, bool extrapolation, const std::string& timeExtrapolation,
+    const std::string& strikeExtrapolation, Real beta, const std::string& maxTenor, MarketDatum::QuoteType quoteType,
     QuantLib::Exercise::Type exerciseType)
-    : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation,
-      timeExtrapolation, strikeExtrapolation, quoteType, exerciseType), moneynessLevels_(moneynessLevels), 
-      baseVolatilityId_(baseVolatilityId), basePriceCurveId_(basePriceCurveId), baseConventionsId_(baseConventionsId), 
-      beta_(beta), maxTenor_(maxTenor) {
-}
+    : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
+                              strikeExtrapolation, quoteType, exerciseType),
+      moneynessLevels_(moneynessLevels), baseVolatilityId_(baseVolatilityId), basePriceCurveId_(basePriceCurveId),
+      baseConventionsId_(baseConventionsId), beta_(beta), maxTenor_(maxTenor) {}
 
 const vector<string>& VolatilityApoFutureSurfaceConfig::moneynessLevels() const { return moneynessLevels_; }
 
@@ -431,9 +393,7 @@ Real VolatilityApoFutureSurfaceConfig::beta() const { return beta_; }
 
 const string& VolatilityApoFutureSurfaceConfig::maxTenor() const { return maxTenor_; }
 
-vector<pair<string, string>> VolatilityApoFutureSurfaceConfig::quotes() const {
-    return vector<pair<string, string>>();
-}
+vector<pair<string, string>> VolatilityApoFutureSurfaceConfig::quotes() const { return vector<pair<string, string>>(); }
 
 void VolatilityApoFutureSurfaceConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ApoFutureSurface");
@@ -462,5 +422,5 @@ XMLNode* VolatilityApoFutureSurfaceConfig::toXML(XMLDocument& doc) {
     return node;
 }
 
-}
-}
+} // namespace data
+} // namespace ore

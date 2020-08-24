@@ -307,7 +307,7 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::calculateYoYTermStructur
         Date maturity = nominalTermStructure()->referenceDate() + Period(i, Years);
         Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(atmYoYSwapRate(maturity)))); //!
         boost::shared_ptr<BootstrapHelper<YoYInflationTermStructure> > anInstrument(new YearOnYearInflationSwapHelper(
-	    quote, observationLag(), maturity, calendar(), bdc_, dayCounter(), yoyIndex(), nominalH));
+            quote, observationLag(), maturity, calendar(), bdc_, dayCounter(), yoyIndex(), nominalH));
         YYhelpers.push_back(anInstrument);
     }
 

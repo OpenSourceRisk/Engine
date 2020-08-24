@@ -93,7 +93,7 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
 }
 
 std::map<AssetClass, std::set<std::string>> EquityForward::underlyingIndices() const {
-    return { {AssetClass::EQ, std::set<std::string>({ eqName() })} };
+    return {{AssetClass::EQ, std::set<std::string>({eqName()})}};
 }
 
 } // namespace data
