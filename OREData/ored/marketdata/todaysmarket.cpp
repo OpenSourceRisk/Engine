@@ -1097,7 +1097,7 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
     }
 
     // if the node is already built, we are done
-
+    
     if (g[node].built) {
         DLOG("node already built, do nothing.");
         return;
