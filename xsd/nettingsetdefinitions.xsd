@@ -55,6 +55,7 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
+            <xs:element type="xs:decimal" name="RiskWeight" maxOccurs="1" minOccurs="0"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>

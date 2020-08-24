@@ -99,6 +99,7 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         XMLUtils::checkNode(collatChild, "EligibleCollaterals");
         eligCollatCcys_ = XMLUtils::getChildrenValues(collatChild, "Currencies", "Currency", true);
     }
+
     isLoaded_ = true;
 }
 
@@ -108,7 +109,7 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
 
     // Add the mandatory members.
     XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId_);
-    XMLUtils::addChild(doc, node, "Counterparty_", ctp_);
+    XMLUtils::addChild(doc, node, "Counterparty", ctp_);
     XMLUtils::addChild(doc, node, "ActiveCSAFlag", activeCsaFlag_);
 
     XMLNode* csaSubNode = doc.allocNode("CSADetails");
@@ -138,6 +139,7 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(csaSubNode, collatSubNode);
         XMLUtils::addChildren(doc, collatSubNode, "Currencies", "Currency", eligCollatCcys_);
     }
+
     return node;
 }
 
