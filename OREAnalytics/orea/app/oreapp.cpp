@@ -680,10 +680,10 @@ void OREApp::initAggregationScenarioData() {
 void OREApp::initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids, const Size cubeDepth) {
     QL_REQUIRE(cubeDepth > 0, "zero cube depth given");
     if (cubeDepth == 1)
-        cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, ids, grid_->valuationDates(), samples_, 0.0);
+        cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, ids, grid_->valuationDates(), samples_, 0.0f);
     else
         cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, ids, grid_->valuationDates(), samples_,
-                                                                cubeDepth, 0.0);
+                                                                cubeDepth, 0.0f);
 
     LOG("init NPV cube with depth: " << cubeDepth);
 }

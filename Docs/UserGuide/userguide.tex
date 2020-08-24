@@ -4606,6 +4606,53 @@ When this configuration is used, the market is searched for quote strings of the
 \label{lst:eqoptionvol_surface}
 \end{longlisting}
 
+A volatility surface can also be given in terms of moneyness levels as shown in listing
+\ref{lst:eqoptionvol_mny_surface}. The nodes have the same meaning as in the case of a strike surface with the following
+exceptions:
+
+\begin{itemize}
+\item \lstinline!QuoteType!: only \lstinline!ImpliedVolatility! is allowed
+\item \lstinline!VolatilityType! [Optional]: only \lstinline!Lognormal! is allowed
+\item \lstinline!MoneynessType!: \lstinline!Spot! or \lstinline!Fwd!, indicating the type of moneyness. See
+  \ref{md:equity_option_iv} for the definition of moneyness types.
+\item \lstinline!MoneynessLevels!: comma separated list of moneyness levels, no wild cards are allowed.
+\item \lstinline!Expiries!: comma separated list of expiry tenors and or expiry dates. A single wildcard character, \lstinline!*!, can be used here also to indicate that all expiries found in the market data for this equity volatility configuration should be used when building the equity volatility surface.
+\end{itemize}
+
+Notice that the market data for the moneyness level $1.0$ must be given as a moneyness quote, not an ATM or ATMF quote,
+see \ref{md:equity_option_iv} for details of the market data.
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityVolatilities>
+  <EquityVolatility>
+    <CurveId>SP5</CurveId>
+    <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+    <Currency>USD</Currency>
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <MoneynessSurface>
+      <QuoteType>ImpliedVolatility</QuoteType>
+      <VolatilityType>Lognormal</VolatilityType>
+      <MoneynessType>Fwd</MoneynessType>
+      <MoneynessLevels>0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5</MoneynessLevels>
+      <Expiries>*</Expiries>
+      <TimeInterpolation>Linear</TimeInterpolation>
+      <StrikeInterpolation>Linear</StrikeInterpolation>
+      <Extrapolation>true</Extrapolation>
+      <TimeExtrapolation>UseInterpolator</TimeExtrapolation>
+      <StrikeExtrapolation>Flat</StrikeExtrapolation>
+    </MoneynessSurface>
+  </EquityVolatility>
+  <EquityVolatility>
+    ...
+  </EquityVolatility>
+</EquityVolatilities>
+\end{minted}
+\caption{Equity option volatility configuration - moneyness surface}
+\label{lst:eqoptionvol_mny_surface}
+\end{longlisting}
+
 Finally, the volatility proxy surface configuration layout is given in Listing \ref{lst:eqoptionvol_proxy}. This allows us to use any other surface as a proxy, in cases where there is no option data for a given equity. We provide a name in the \lstinline!ProxySurface! field, which must match the \lstinline!CurveId! of another configuration. The proxy surface looks up the volatility in the reference surface bases on moneyness.
  
 \begin{longlisting}

@@ -74,7 +74,6 @@ void Trade::addPayment(std::vector<boost::shared_ptr<Instrument>>& addInstrument
 
     // 2) Add a trade leg for cash flow reporting, divide the amount by the multiplier, because the leg entries
     //    are multiplied with the trade multiplier in the cashflow report (and if used elsewhere)
-    Real multiplier = instrument() ? instrument()->multiplier() : 1.0;
     legs_.push_back(Leg(
         1, boost::make_shared<SimpleCashFlow>(fee->cashFlow()->amount() / tradeMultiplier, fee->cashFlow()->date())));
     legCurrencies_.push_back(fee->currency().code());
