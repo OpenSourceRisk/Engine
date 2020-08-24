@@ -126,9 +126,9 @@ void TodaysMarketParameters::clear() {
 
 void TodaysMarketParameters::fromXML(XMLNode* node) {
 
-    // add default configuration (may be overwritten below)
-    MarketConfiguration defaultConfig;
-    addConfiguration(Market::defaultConfiguration, defaultConfig);
+    // add default configuration if we do not have one (may be overwritten below)
+    if (!hasConfiguration(Market::defaultConfiguration))
+        addConfiguration(Market::defaultConfiguration, MarketConfiguration());
 
     // fill data from XML
     XMLUtils::checkNode(node, "TodaysMarket");
@@ -292,7 +292,7 @@ void TodaysMarketParameters::addMarketObject(const MarketObject o, const string&
     }
 
     // add the mapping
-    marketObjects_[o][id] = assignments;
+    marketObjects_[o][id].insert(assignments.begin(), assignments.end());
     for (auto s : assignments)
         DLOG("TodaysMarketParameters, add market objects of type " << o << ": " << id << " " << s.first << " "
                                                                    << s.second);
