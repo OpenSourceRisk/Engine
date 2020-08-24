@@ -20,6 +20,7 @@ crossccybasismtmresetswaphelper.cpp
 crossccyfixfloatswap.cpp
 crossccyfixfloatswaphelper.cpp
 currency.cpp
+dategeneration.cpp
 deltagammavar.cpp
 deposit.cpp
 discountcurve.cpp

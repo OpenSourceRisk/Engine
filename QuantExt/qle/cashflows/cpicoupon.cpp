@@ -80,13 +80,13 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
             Option::Call, underlying_->nominal(), startDate_, underlying_->baseCPI(), underlying_->date(), cal, conv,
             cal, conv, cap_, Handle<ZeroInflationIndex>(underlying_->cpiIndex()), underlying_->observationLag(),
             underlying_->observationInterpolation());
-	// std::cout << "Capped/Floored CPI Coupon" << std::endl
-	// 	  << "  nominal = " << underlying_->nominal() << std::endl
-	// 	  << "  paymentDate = " << QuantLib::io::iso_date(underlying_->date()) << std::endl
-	// 	  << "  startDate = " << QuantLib::io::iso_date(startDate_) << std::endl
-	// 	  << "  baseCPI = " << underlying_->baseCPI() << std::endl
-	// 	  << "  lag = " << underlying_->observationLag() << std::endl
-	// 	  << "  interpolation = " << underlying_->observationInterpolation() << std::endl;
+        // std::cout << "Capped/Floored CPI Coupon" << std::endl
+        // 	  << "  nominal = " << underlying_->nominal() << std::endl
+        // 	  << "  paymentDate = " << QuantLib::io::iso_date(underlying_->date()) << std::endl
+        // 	  << "  startDate = " << QuantLib::io::iso_date(startDate_) << std::endl
+        // 	  << "  baseCPI = " << underlying_->baseCPI() << std::endl
+        // 	  << "  lag = " << underlying_->observationLag() << std::endl
+        // 	  << "  interpolation = " << underlying_->observationInterpolation() << std::endl;
     }
     if (isFloored_) {
         cpiFloor_ = boost::make_shared<CPICapFloor>(

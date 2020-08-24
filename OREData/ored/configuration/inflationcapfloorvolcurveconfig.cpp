@@ -16,13 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/algorithm/string.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <ql/errors.hpp>
+
+#include <boost/algorithm/string.hpp>
 
 namespace ore {
 namespace data {
@@ -62,7 +64,16 @@ InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
       extrapolate_(extrapolate), tenors_(tenors), capStrikes_(capStrikes), floorStrikes_(floorStrikes),
       strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index_(index), indexCurve_(indexCurve),
-      yieldTermStructure_(yieldTermStructure), observationLag_(observationLag) {}
+      yieldTermStructure_(yieldTermStructure), observationLag_(observationLag) {
+    populateRequiredCurveIds();
+}
+
+void InflationCapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
+    if (!yieldTermStructure().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(yieldTermStructure())->curveConfigID());
+    if (!indexCurve().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Inflation].insert(parseCurveSpec(indexCurve())->curveConfigID());
+}
 
 const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
@@ -154,7 +165,7 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         floorStrikes_ = XMLUtils::getChildrenValuesAsStrings(node, "FloorStrikes", true);
         QL_REQUIRE(!capStrikes_.empty() || !floorStrikes_.empty(),
                    "CapStrikes or FloorStrikes node should not be empty");
-	// Set strikes to the sorted union of cap and floor strikes 
+        // Set strikes to the sorted union of cap and floor strikes
         std::set<Real> strikeSet;
         for (Size i = 0; i < capStrikes_.size(); ++i)
             strikeSet.insert(parseReal(capStrikes_[i]));
@@ -182,6 +193,7 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     indexCurve_ = XMLUtils::getChildValue(node, "IndexCurve", true);
     yieldTermStructure_ = XMLUtils::getChildValue(node, "YieldTermStructure", true);
     observationLag_ = parsePeriod(XMLUtils::getChildValue(node, "ObservationLag", true));
+    populateRequiredCurveIds();
 }
 
 XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {

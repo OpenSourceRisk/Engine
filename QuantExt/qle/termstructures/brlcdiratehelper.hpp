@@ -24,9 +24,9 @@
 #ifndef quantext_brl_cdi_rate_helper_hpp
 #define quantext_brl_cdi_rate_helper_hpp
 
+#include <ql/termstructures/yield/ratehelpers.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
-#include <ql/termstructures/yield/ratehelpers.hpp>
 
 namespace QuantExt {
 
@@ -35,13 +35,11 @@ namespace QuantExt {
 */
 class BRLCdiRateHelper : public QuantLib::RelativeDateRateHelper {
 public:
-    BRLCdiRateHelper(
-        const QuantLib::Period& swapTenor,
-        const QuantLib::Handle<QuantLib::Quote>& fixedRate,
-        const boost::shared_ptr<BRLCdi>& brlCdiIndex,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve = 
-            QuantLib::Handle<QuantLib::YieldTermStructure>(),
-        bool telescopicValueDates = false);
+    BRLCdiRateHelper(const QuantLib::Period& swapTenor, const QuantLib::Handle<QuantLib::Quote>& fixedRate,
+                     const boost::shared_ptr<BRLCdi>& brlCdiIndex,
+                     const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve =
+                         QuantLib::Handle<QuantLib::YieldTermStructure>(),
+                     bool telescopicValueDates = false);
 
     //! \name inspectors
     //@{
@@ -77,14 +75,12 @@ protected:
 */
 class DatedBRLCdiRateHelper : public QuantLib::RateHelper {
 public:
-    DatedBRLCdiRateHelper(
-        const QuantLib::Date& startDate,
-        const QuantLib::Date& endDate,
-        const QuantLib::Handle<QuantLib::Quote>& fixedRate,
-        const boost::shared_ptr<BRLCdi>& brlCdiIndex,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve =
-            QuantLib::Handle<QuantLib::YieldTermStructure>(),
-        bool telescopicValueDates = false);
+    DatedBRLCdiRateHelper(const QuantLib::Date& startDate, const QuantLib::Date& endDate,
+                          const QuantLib::Handle<QuantLib::Quote>& fixedRate,
+                          const boost::shared_ptr<BRLCdi>& brlCdiIndex,
+                          const QuantLib::Handle<QuantLib::YieldTermStructure>& discountingCurve =
+                              QuantLib::Handle<QuantLib::YieldTermStructure>(),
+                          bool telescopicValueDates = false);
 
     //! \name inspectors
     //@{
@@ -112,6 +108,6 @@ protected:
     QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> discountRelinkableHandle_;
 };
 
-}
+} // namespace QuantExt
 
 #endif

@@ -106,7 +106,7 @@ void CrossAssetModelBuilder::registerWithSubBuilders() {
 }
 
 bool CrossAssetModelBuilder::requiresRecalibration() const {
-    for (auto const &b : subBuilders_)
+    for (auto const& b : subBuilders_)
         if (b->requiresRecalibration())
             return true;
     return marketObserver_->hasUpdated(false);
@@ -115,7 +115,7 @@ bool CrossAssetModelBuilder::requiresRecalibration() const {
 void CrossAssetModelBuilder::performCalculations() const {
     // if any of the sub models requires a recalibration, we rebuilt the model
     // TODO we could do this more selectively
-    if (requiresRecalibration()) {
+    if (!dontCalibrate_ && requiresRecalibration()) {
         // reset market observer update flag
         marketObserver_->hasUpdated(true);
         // the cast is a bit ugly, but we pretty much know what we are doing here
@@ -343,7 +343,7 @@ void CrossAssetModelBuilder::buildModel() const {
             if (fx->calibrationType() == CalibrationType::Bootstrap) {
                 if (fabs(fxOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
                     // we check the log level here to avoid unncessary computations
-                    if(Log::instance().filter(ORE_DATA)) {
+                    if (Log::instance().filter(ORE_DATA)) {
                         TLOGGERSTREAM << "Calibration details:";
                         TLOGGERSTREAM << getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i],
                                                                irParametrizations[0]);
@@ -359,7 +359,7 @@ void CrossAssetModelBuilder::buildModel() const {
                     WLOGGERSTREAM << getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i],
                                                            irParametrizations[0]);
                     WLOGGERSTREAM << "rmse = " << fxOptionCalibrationErrors_[i];
-                    if(!continueOnError_)
+                    if (!continueOnError_)
                         QL_FAIL(exceptionMessage);
                 }
             }
@@ -491,7 +491,7 @@ void CrossAssetModelBuilder::buildModel() const {
             if (inf->calibrationType() == CalibrationType::Bootstrap) {
                 if (fabs(infCapFloorCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
                     // we check the log level here to avoid unncessary computations
-                    if(Log::instance().filter(ORE_DATA)) {
+                    if (Log::instance().filter(ORE_DATA)) {
                         TLOGGERSTREAM << "Calibration details:";
                         TLOGGERSTREAM << getCalibrationDetails(infCapFloorBaskets_[i], infParametrizations[i],
                                                                irParametrizations[0]);
@@ -507,7 +507,7 @@ void CrossAssetModelBuilder::buildModel() const {
                     WLOGGERSTREAM << getCalibrationDetails(infCapFloorBaskets_[i], infParametrizations[i],
                                                            irParametrizations[0]);
                     WLOGGERSTREAM << "rmse = " << infCapFloorCalibrationErrors_[i];
-                    if(!continueOnError_)
+                    if (!continueOnError_)
                         QL_FAIL(exceptionMessage);
                 }
             }

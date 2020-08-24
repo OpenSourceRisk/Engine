@@ -20,25 +20,15 @@
 
 namespace QuantExt {
 
-    ConstantYoYOptionletVolatility::
-    ConstantYoYOptionletVolatility(const Handle<Quote>& volatility,
-                                   Natural settlementDays,
-                                   const Calendar& cal,
-                                   BusinessDayConvention bdc,
-                                   const DayCounter& dc,
-                                   const Period &observationLag,
-                                   Frequency frequency,
-                                   bool indexIsInterpolated)
-    : YoYOptionletVolatilitySurface(settlementDays, cal, bdc, dc,
-                                    observationLag, frequency, indexIsInterpolated),
+ConstantYoYOptionletVolatility::ConstantYoYOptionletVolatility(const Handle<Quote>& volatility, Natural settlementDays,
+                                                               const Calendar& cal, BusinessDayConvention bdc,
+                                                               const DayCounter& dc, const Period& observationLag,
+                                                               Frequency frequency, bool indexIsInterpolated)
+    : YoYOptionletVolatilitySurface(settlementDays, cal, bdc, dc, observationLag, frequency, indexIsInterpolated),
       volatility_(volatility) {
-        registerWith(volatility_);
-    }
+    registerWith(volatility_);
+}
 
+Volatility ConstantYoYOptionletVolatility::volatilityImpl(const Time, Rate) const { return volatility_->value(); }
 
-    Volatility ConstantYoYOptionletVolatility::volatilityImpl(const Time,
-                                                              Rate) const {
-        return volatility_->value();
-    }
-
-} // namespace QuantLib
+} // namespace QuantExt

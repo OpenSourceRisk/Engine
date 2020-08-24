@@ -70,7 +70,7 @@ protected:
                       const ext::shared_ptr<IborIndex>& iborIndex_,
                       const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>(),
                       const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0);
-    
+
     //! Method to populate the dates, times and accruals that can be overridden in derived classes
     virtual void populateDates() const;
 

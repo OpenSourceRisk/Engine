@@ -35,14 +35,9 @@ namespace data {
 class BootstrapConfig : public XMLSerializable {
 public:
     //! Constructor
-    BootstrapConfig(
-        QuantLib::Real accuracy = 1.0e-12,
-        QuantLib::Real globalAccuracy = QuantLib::Null<QuantLib::Real>(),
-        bool dontThrow = false,
-        QuantLib::Size maxAttempts = 5,
-        QuantLib::Real maxFactor = 2.0,
-        QuantLib::Real minFactor = 2.0,
-        QuantLib::Size dontThrowSteps = 10);
+    BootstrapConfig(QuantLib::Real accuracy = 1.0e-12, QuantLib::Real globalAccuracy = QuantLib::Null<QuantLib::Real>(),
+                    bool dontThrow = false, QuantLib::Size maxAttempts = 5, QuantLib::Real maxFactor = 2.0,
+                    QuantLib::Real minFactor = 2.0, QuantLib::Size dontThrowSteps = 10);
 
     //! \name XMLSerializable interface
     //@{
@@ -71,5 +66,5 @@ private:
     QuantLib::Size dontThrowSteps_;
 };
 
-}
-}
+} // namespace data
+} // namespace ore

@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file switzerland.hpp
     \brief Swiss calendar
 */
@@ -29,45 +28,46 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-    //! Swiss calendar
-    /*! Holidays:
-        <ul>
-        <li>Saturdays</li>
-        <li>Sundays</li>
-        <li>New Year's Day, January 1st</li>
-        <li>Berchtoldstag, January 2nd</li>
-        <li>Good Friday</li>
-        <li>Easter Monday</li>
-        <li>Ascension Day</li>
-        <li>Whit Monday</li>
-        <li>Labour Day, May 1st</li>
-        <li>National Day, August 1st</li>
-        <li>Christmas, December 25th</li>
-        <li>St. Stephen's Day, December 26th</li>
-        </ul>
+//! Swiss calendar
+/*! Holidays:
+    <ul>
+    <li>Saturdays</li>
+    <li>Sundays</li>
+    <li>New Year's Day, January 1st</li>
+    <li>Berchtoldstag, January 2nd</li>
+    <li>Good Friday</li>
+    <li>Easter Monday</li>
+    <li>Ascension Day</li>
+    <li>Whit Monday</li>
+    <li>Labour Day, May 1st</li>
+    <li>National Day, August 1st</li>
+    <li>Christmas, December 25th</li>
+    <li>St. Stephen's Day, December 26th</li>
+    </ul>
 
-        \ingroup calendars
-    */
-    class Switzerland : public Calendar {
-      private:
-        class SettlementImpl : public Calendar::WesternImpl {
-          public:
-            std::string name() const { return "Switzerland"; }
-            bool isBusinessDay(const Date&) const;
-        };
-        class SixImpl : public Calendar::WesternImpl {
-          public:
-            std::string name() const { return "SIX Swiss Exchange"; }
-            bool isBusinessDay(const Date&) const;
-        };
-      public:
-        enum Market { Settlement,     //!< generic settlement calendar
-                      SIX             //!< SIX Swiss Exchange calendar
-        };
-        Switzerland(Market market = Settlement);
+    \ingroup calendars
+*/
+class Switzerland : public Calendar {
+private:
+    class SettlementImpl : public Calendar::WesternImpl {
+    public:
+        std::string name() const { return "Switzerland"; }
+        bool isBusinessDay(const Date&) const;
+    };
+    class SixImpl : public Calendar::WesternImpl {
+    public:
+        std::string name() const { return "SIX Swiss Exchange"; }
+        bool isBusinessDay(const Date&) const;
     };
 
-}
+public:
+    enum Market {
+        Settlement, //!< generic settlement calendar
+        SIX         //!< SIX Swiss Exchange calendar
+    };
+    Switzerland(Market market = Settlement);
+};
 
+} // namespace QuantExt
 
 #endif

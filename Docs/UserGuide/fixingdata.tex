@@ -147,13 +147,31 @@ DOM             & Any supported currency code \\
 \hline
 \textbf{Index Component} & \textbf{Allowable Values} \\
 \hline
-NAME           & \textit{\begin{tabular}[c]{@{}l@{}}EUHICP\\ EUHICPXT\\ FRHICP\\ UKRPI\\ 
-		USCPI\\ ZACPI \end{tabular}} \\ 
+NAME           & \textit{\begin{tabular}[c]{@{}l@{}}EUHICP\\ EUHICPXT\\ FRHICP\\ FRCPI\\ UKRPI\\
+		USCPI\\ ZACPI\\ BEHICP \end{tabular}} \\
 \hline
 \end{tabular}
 \caption{Allowable values for zero inflation indices.}
 \label{tab:infl_indices}
 \end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{2}{|l|}{\textbf{Generic Indices of form GENERIC-NAME:}} \\
+\hline
+\textbf{Index Component} & \textbf{Allowable Values} \\
+\hline
+GENERIC          & Must be ``GENERIC'' (to denote a generic fixing) \\
+\hline
+NAME		     & Any string \\
+\hline
+\end{tabular}
+\caption{Allowable values for generic indices.}
+\label{tab:generic_indices}
+\end{table}
+
 
 % \begin{table}[H]
 % \centering

@@ -546,6 +546,13 @@ struct rls {
     const Size i_, j_;
 };
 
+/*! H(t+T)-H(t) component (needed for analytical covariances of zero rates) */
+struct HTtz {
+    HTtz(const Size i, const Real T) : i_(i), T_(T) {}
+    Real eval(const CrossAssetModel* x, const Real t) const { return x->irlgm1f(i_)->H(T_ + t) - x->irlgm1f(i_)->H(t); }
+    const Size i_;
+    const Real T_;
+};
 /*! @} */
 
 } // namespace CrossAssetAnalytics

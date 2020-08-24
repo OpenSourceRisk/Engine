@@ -21,8 +21,8 @@
 #include <ql/math/optimization/projection.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 
-using std::vector;
 using boost::shared_ptr;
+using std::vector;
 
 namespace QuantExt {
 
@@ -117,8 +117,7 @@ Real LinkableCalibratedModel::value(const Array& params,
     return value(params, tmp);
 }
 
-Real LinkableCalibratedModel::value(const Array& params,
-                                    const vector<shared_ptr<CalibrationHelper> >& instruments) {
+Real LinkableCalibratedModel::value(const Array& params, const vector<shared_ptr<CalibrationHelper> >& instruments) {
     vector<Real> w = vector<Real>(instruments.size(), 1.0);
     Projection p(params);
     CalibrationFunction f(this, instruments, w, p);

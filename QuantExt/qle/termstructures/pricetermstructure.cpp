@@ -54,8 +54,7 @@ void PriceTermStructure::checkRange(Time t, bool extrapolate) const {
     TermStructure::checkRange(t, extrapolate);
 }
 
-DerivedPriceQuote::DerivedPriceQuote(const QuantLib::Handle<PriceTermStructure>& priceTs)
-    : priceTs_(priceTs) {
+DerivedPriceQuote::DerivedPriceQuote(const QuantLib::Handle<PriceTermStructure>& priceTs) : priceTs_(priceTs) {
     registerWith(priceTs_);
 }
 
@@ -64,12 +63,8 @@ Real DerivedPriceQuote::value() const {
     return priceTs_->price(0, true);
 }
 
-bool DerivedPriceQuote::isValid() const {
-    return !priceTs_.empty();
-}
+bool DerivedPriceQuote::isValid() const { return !priceTs_.empty(); }
 
-void DerivedPriceQuote::update() {
-    notifyObservers();
-}
+void DerivedPriceQuote::update() { notifyObservers(); }
 
 } // namespace QuantExt

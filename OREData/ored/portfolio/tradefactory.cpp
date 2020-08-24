@@ -24,8 +24,8 @@
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityswap.hpp>
-#include <ored/portfolio/forwardrateagreement.hpp>
 #include <ored/portfolio/forwardbond.hpp>
+#include <ored/portfolio/forwardrateagreement.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/fxswap.hpp>
@@ -52,7 +52,7 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
     addBuilder("EquitySwap", boost::make_shared<TradeBuilder<EquitySwap>>());
     addBuilder("Bond", boost::make_shared<TradeBuilder<Bond>>());
     addBuilder("ForwardBond", boost::make_shared<TradeBuilder<ForwardBond>>());
-    addBuilder("CreditDefaultSwap", boost::make_shared<TradeBuilder<CreditDefaultSwap>>());    
+    addBuilder("CreditDefaultSwap", boost::make_shared<TradeBuilder<CreditDefaultSwap>>());
     addBuilder("CommodityForward", boost::make_shared<TradeBuilder<CommodityForward>>());
     addBuilder("CommodityOption", boost::make_shared<TradeBuilder<CommodityOption>>());
     if (extraBuilders.size() > 0)
@@ -73,10 +73,11 @@ void TradeFactory::addExtraBuilders(std::map<string, boost::shared_ptr<AbstractT
 
 boost::shared_ptr<Trade> TradeFactory::build(const string& className) const {
     auto it = builders_.find(className);
-    if (it == builders_.end())
-        return boost::shared_ptr<Trade>();
-    else
-        return it->second->build();
+
+    if (it == builders_.end()) {
+        return boost::shared_ptr<Trade>();}
+    else {
+        return it->second->build();}
 }
 
 } // namespace data

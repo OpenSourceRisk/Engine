@@ -21,10 +21,10 @@
     \ingroup math
 */
 
-#include <ql/math/matrix.hpp>
+#include <ql/math/interpolation.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
-#include <ql/math/interpolation.hpp>
+#include <ql/math/matrix.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -33,4 +33,4 @@ using namespace QuantLib;
 /*! This function fills a matrix that is not completely populated by linear interpolation across
  * the desired axis. */
 void fillIncompleteMatrix(Matrix& mat, bool interpRows, Real blank);
-}
+} // namespace QuantExt

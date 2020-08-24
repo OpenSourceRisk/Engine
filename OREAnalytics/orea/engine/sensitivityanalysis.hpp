@@ -73,8 +73,7 @@ public:
         const bool nonShiftedBaseCurrencyConversion = false,
         std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
         std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-        const bool continueOnError = false,
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr, const bool continueOnError = false,
         bool xccyDiscounting = false);
 
     virtual ~SensitivityAnalysis() {}

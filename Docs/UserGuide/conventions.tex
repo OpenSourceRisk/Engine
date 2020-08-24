@@ -70,7 +70,7 @@ tenor. If not provided, this defaults to 0.
 \item SpotCalendar [Optional]: The calendar to use for business days when applying the \lstinline!SpotLag!. If not
 provided, it defaults to a calendar with no holidays.
 \item RollConvention [Optional]: The roll convention to use when applying the zero rate tenor. If not provided, it
-defaults to Following (Choices are {\em Backward, Forward, Zero, ThirdWednesday, Twentieth, TwentiethIMM, CDS}).
+defaults to Following (Choices are {\em Backward, Forward, Zero, ThirdWednesday, Twentieth, TwentiethIMM, CDS, ThirdThursday, ThirdFriday, MondayAfterThirdFriday, TuesdayAfterThirdFriday}).
 \item EOM [Optional]: Whether or not to use the end of month convention when applying the zero rate tenor. If not
 provided, it defaults to false.
 \end{itemize}
@@ -796,3 +796,57 @@ An example \lstinline!CommodityFuture! node for the NYMEX WTI future contract, s
 \caption{NYMEX WTI \textnormal{\lstinline!CommodityFuture!} node}
 \label{lst:ex_wti_comm_future_convention}
 \end{listing}
+
+\subsubsection{Credit Default Swap Conventions}
+\label{sss:cds_conventions}
+A node with name \lstinline!CDS! is used to store conventions for credit default swaps. The structure of this node is shown in Listing \ref{lst:cds_conventions}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CDS>
+  <Id>...</Id>
+  <SettlementDays>...</SettlementDays>
+  <Calendar>...</Calendar>
+  <Frequency>...</Frequency>
+  <PaymentConvention>...</PaymentConvention>
+  <Rule>...</Rule>
+  <DayCounter>...</DayCounter>
+  <SettlesAccrual>...</SettlesAccrual>
+  <PaysAtDefaultTime>...</PaysAtDefaultTime>
+</CDS>
+\end{minted}
+\caption{CDS conventions}
+\label{lst:cds_conventions}
+\end{listing}
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+
+\item \lstinline!Id!:
+The identifier for the CDS convention.
+
+\item \lstinline!SettlementDays!:
+The number of days after the CDS trade date when protection starts i.e.\ the \textit{Protection effective date} or \textit{step-in date}. Any non-negative integer is allowed here. For standard CDS after, this is generally set to 1.
+
+\item \lstinline!Calendar!:
+The calendar associated with the CDS. For non-JPY currencies, this is generally \lstinline!WeekendsOnly! to agree with the ISDA standard. For JPY CDS, the ISDA standard calendar is \lstinline!TYO! documented at \url{https://www.cdsmodel.com/cdsmodel}. This could be set up as an additional calendar or \lstinline!JPN! could be used as a proxy. Allowable calendar values are given in Table \ref{tab:calendar}.
+
+\item \lstinline!Frequency!:
+The frequency of fee leg payments for the CDS. The ISDA standard is \lstinline!Quarterly! but any valid frequency is allowed.
+
+\item \lstinline!PaymentConvention!:
+The business day convention for payments on the CDS. The ISDA standard is \lstinline!Following! but any valid business day convention from Table \ref{tab:allow_stand_data} is allowed.
+
+\item \lstinline!Rule!:
+The date generation rule for the fee leg on the CDS. The ISDA standard is \lstinline!CDS2015! but any valid date generation rule is allowed.
+
+\item \lstinline!DayCounter!:
+The day counter for fee leg payments on the CDS. The ISDA standard is \lstinline!A360! but any valid day counter from Table \ref{tab:daycount} is allowed.
+
+\item \lstinline!SettlesAccrual!:
+A boolean value indicating if an accrued fee is due on the occurrence of a credit event. Allowable boolean values are given in the Table \ref{tab:boolean_allowable}. In general, this is set \lstinline!true!.
+
+\item \lstinline!PaysAtDefaultTime!:
+A boolean value indicating if the accrued fee, on the occurrence of a credit event, is payable at the credit event date or the end of the fee period. A value of \lstinline!true! indicates that the accrued is payable at the credit event date and a value of \lstinline!false! indicates that it is payable at the end of the fee period. In general, this is set \lstinline!true!.
+
+\end{itemize}

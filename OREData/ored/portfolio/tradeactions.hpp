@@ -30,10 +30,10 @@
 
 namespace ore {
 namespace data {
+using ore::data::XMLNode;
+using ore::data::XMLSerializable;
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
-using ore::data::XMLNode;
 
 //! Serializable object holding a trade action
 /*!

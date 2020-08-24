@@ -23,107 +23,88 @@
 #pragma once
 
 #include <ql/instruments/inflationcapfloor.hpp>
-#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 #include <ql/option.hpp>
-
+#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 
 namespace QuantLib {
 class Quote;
 class YoYOptionletVolatilitySurface;
 class YoYInflationIndex;
-}
+} // namespace QuantLib
 
 namespace QuantExt {
 
-    using namespace QuantLib;
+using namespace QuantLib;
 
-    //! Base YoY inflation cap/floor engine
-    /*! This class doesn't know yet what sort of vol it is.  The
-        inflation index must be linked to a yoy inflation term
-        structure.  This provides the curves, hence the call uses a
-        shared_ptr<> not a handle<> to the index.
+//! Base YoY inflation cap/floor engine
+/*! This class doesn't know yet what sort of vol it is.  The
+    inflation index must be linked to a yoy inflation term
+    structure.  This provides the curves, hence the call uses a
+    shared_ptr<> not a handle<> to the index.
 
-        \ingroup inflationcapfloorengines
-    */
-    class YoYInflationCapFloorEngine : public QuantLib::YoYInflationCapFloor::engine {
-    public:
-        YoYInflationCapFloorEngine(const ext::shared_ptr<QuantLib::YoYInflationIndex>&,
-                                   const Handle<QuantLib::YoYOptionletVolatilitySurface>& vol,
-                                   const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
+    \ingroup inflationcapfloorengines
+*/
+class YoYInflationCapFloorEngine : public QuantLib::YoYInflationCapFloor::engine {
+public:
+    YoYInflationCapFloorEngine(const ext::shared_ptr<QuantLib::YoYInflationIndex>&,
+                               const Handle<QuantLib::YoYOptionletVolatilitySurface>& vol,
+                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
-        ext::shared_ptr<QuantLib::YoYInflationIndex> index() const { return index_;}
-        Handle<QuantLib::YoYOptionletVolatilitySurface> volatility() const { return volatility_; }
+    ext::shared_ptr<QuantLib::YoYInflationIndex> index() const { return index_; }
+    Handle<QuantLib::YoYOptionletVolatilitySurface> volatility() const { return volatility_; }
 
-        void setVolatility(const Handle<QuantLib::YoYOptionletVolatilitySurface>& vol);
+    void setVolatility(const Handle<QuantLib::YoYOptionletVolatilitySurface>& vol);
 
-        void calculate() const;
-    protected:
-        //! descendents only need to implement this
-        virtual Real optionletImpl(Option::Type type, Rate strike,
-                                   Rate forward, Real stdDev,
+    void calculate() const;
+
+protected:
+    //! descendents only need to implement this
+    virtual Real optionletImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real d) const = 0;
+    virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
                                    Real d) const = 0;
-        virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
-                                       Real d) const = 0;
 
-        ext::shared_ptr<QuantLib::YoYInflationIndex> index_;
-        Handle<QuantLib::YoYOptionletVolatilitySurface> volatility_;
-        Handle<YieldTermStructure> discountCurve_;
-    };
+    ext::shared_ptr<QuantLib::YoYInflationIndex> index_;
+    Handle<QuantLib::YoYOptionletVolatilitySurface> volatility_;
+    Handle<YieldTermStructure> discountCurve_;
+};
 
+//! Black-formula inflation cap/floor engine (standalone, i.e. no coupon pricer)
+class YoYInflationBlackCapFloorEngine : public YoYInflationCapFloorEngine {
+public:
+    YoYInflationBlackCapFloorEngine(const ext::shared_ptr<QuantLib::YoYInflationIndex>&,
+                                    const Handle<QuantLib::YoYOptionletVolatilitySurface>&,
+                                    const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
+protected:
+    virtual Real optionletImpl(Option::Type, Real strike, Real forward, Real stdDev, Real d) const;
+    virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
+                                   Real d) const;
+};
 
-    //! Black-formula inflation cap/floor engine (standalone, i.e. no coupon pricer)
-    class YoYInflationBlackCapFloorEngine
-    : public YoYInflationCapFloorEngine {
-    public:
-        YoYInflationBlackCapFloorEngine(const ext::shared_ptr<QuantLib::YoYInflationIndex>&,
+//! Unit Displaced Black-formula inflation cap/floor engine (standalone, i.e. no coupon pricer)
+class YoYInflationUnitDisplacedBlackCapFloorEngine : public YoYInflationCapFloorEngine {
+public:
+    YoYInflationUnitDisplacedBlackCapFloorEngine(
+        const ext::shared_ptr<QuantLib::YoYInflationIndex>&, const Handle<QuantLib::YoYOptionletVolatilitySurface>&,
+        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
+
+protected:
+    virtual Real optionletImpl(Option::Type, Real strike, Real forward, Real stdDev, Real d) const;
+    virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
+                                   Real d) const;
+};
+
+//! Unit Displaced Black-formula inflation cap/floor engine (standalone, i.e. no coupon pricer)
+class YoYInflationBachelierCapFloorEngine : public YoYInflationCapFloorEngine {
+public:
+    YoYInflationBachelierCapFloorEngine(const ext::shared_ptr<QuantLib::YoYInflationIndex>&,
                                         const Handle<QuantLib::YoYOptionletVolatilitySurface>&,
                                         const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
-    protected:
 
-        virtual Real optionletImpl(Option::Type, Real strike,
-                                   Real forward, Real stdDev,
+protected:
+    virtual Real optionletImpl(Option::Type, Real strike, Real forward, Real stdDev, Real d) const;
+    virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
                                    Real d) const;
-        virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
-                                       Real d) const;
-    };
+};
 
-
-    //! Unit Displaced Black-formula inflation cap/floor engine (standalone, i.e. no coupon pricer)
-    class YoYInflationUnitDisplacedBlackCapFloorEngine
-    : public YoYInflationCapFloorEngine {
-    public:
-        YoYInflationUnitDisplacedBlackCapFloorEngine(
-                    const ext::shared_ptr<QuantLib::YoYInflationIndex>&,
-                    const Handle<QuantLib::YoYOptionletVolatilitySurface>&,
-                    const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
-
-    protected:
-
-        virtual Real optionletImpl(Option::Type, Real strike,
-                                   Real forward, Real stdDev,
-                                   Real d) const;
-        virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
-                                       Real d) const;
-    };
-
-
-    //! Unit Displaced Black-formula inflation cap/floor engine (standalone, i.e. no coupon pricer)
-    class YoYInflationBachelierCapFloorEngine
-    : public YoYInflationCapFloorEngine {
-    public:
-        YoYInflationBachelierCapFloorEngine(
-                    const ext::shared_ptr<QuantLib::YoYInflationIndex>&,
-                    const Handle<QuantLib::YoYOptionletVolatilitySurface>&,
-                    const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
-
-    protected:
-
-        virtual Real optionletImpl(Option::Type, Real strike,
-                                   Real forward, Real stdDev,
-                                   Real d) const;
-        virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
-                                       Real d) const;
-    };
-
-}
+} // namespace QuantExt

@@ -18,9 +18,9 @@
 
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
-#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/errors.hpp>
@@ -68,7 +68,6 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
         string id = XMLUtils::getAttribute(nodes[i], "id");
         QL_REQUIRE(id != "", "No id attribute in Trade Node");
         DLOG("Parsing trade id:" << id);
-
         boost::shared_ptr<Trade> trade = factory->build(tradeType);
 
         if (trade) {
@@ -127,6 +126,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     auto trade = trades_.begin();
     while (trade != trades_.end()) {
         try {
+            (*trade)->reset();
             (*trade)->build(engineFactory);
             TLOG("Required Fixings for trade " << (*trade)->id() << ":");
             TLOGGERSTREAM << (*trade)->requiredFixings();
@@ -161,6 +161,13 @@ map<string, string> Portfolio::nettingSetMap() const {
     for (auto t : trades_)
         nettingSetMap[t->id()] = t->envelope().nettingSetId();
     return nettingSetMap;
+}
+
+map<string, set<string>> Portfolio::counterpartyNettingSets() const {
+    map<string, set<string>> cpNettingSets;
+    for (auto t : trades_)
+        cpNettingSets[t->envelope().counterparty()].insert(t->envelope().nettingSetId());
+    return cpNettingSets;
 }
 
 void Portfolio::add(const boost::shared_ptr<Trade>& trade) {
@@ -206,7 +213,7 @@ map<string, set<Date>> Portfolio::fixings(const Date& settlementDate) const {
 }
 
 std::map<AssetClass, std::set<std::string>> Portfolio::underlyingIndices() {
-    
+
     if (!underlyingIndicesCache_.empty())
         return underlyingIndicesCache_;
 

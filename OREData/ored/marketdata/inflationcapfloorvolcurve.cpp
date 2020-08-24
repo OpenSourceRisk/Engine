@@ -503,7 +503,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
 
         Handle<YieldTermStructure> nominalTS = yoyIndex->yoyInflationTermStructure()->nominalTermStructure();
         boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
- 	    boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex, hovs, nominalTS);
+            boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex, hovs, nominalTS);
 
         boost::shared_ptr<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>> interpVolSurface =
             boost::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>>(

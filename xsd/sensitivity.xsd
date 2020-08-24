@@ -28,6 +28,7 @@
       <xs:element type="commodityvolatilities" name="CommodityVolatilities" minOccurs="0"/>
       <xs:element type="correlationcurves" name="Correlations" minOccurs="0"/>
       <xs:element type="crossgammafilter" name="CrossGammaFilter" minOccurs="0"/>
+      <xs:element type="bool" name="ComputeGamma" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

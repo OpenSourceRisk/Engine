@@ -20,10 +20,10 @@
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
-#include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/builders/commodityforward.hpp>
@@ -82,7 +82,7 @@ EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, co
                              const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
                              const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders,
                              const boost::shared_ptr<ReferenceDataManager>& referenceData)
-    : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData){
+    : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData) {
     LOG("Building EngineFactory");
 
     addDefaultBuilders();
@@ -92,7 +92,7 @@ EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, co
 void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& builder) {
     const string& modelName = builder->model();
     const string& engineName = builder->engine();
-    LOG("EngineFactory registering builder for model:" << modelName << " and engine:" << engineName);
+    DLOG("EngineFactory registering builder for model:" << modelName << " and engine:" << engineName);
     builders_[make_tuple(modelName, engineName, builder->tradeTypes())] = builder;
 }
 
@@ -122,7 +122,7 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
 }
 
 void EngineFactory::registerLegBuilder(const boost::shared_ptr<LegBuilder>& legBuilder) {
-    LOG("EngineFactory registering builder for leg type " << legBuilder->legType());
+    DLOG("EngineFactory registering builder for leg type " << legBuilder->legType());
     legBuilders_[legBuilder->legType()] = legBuilder;
 }
 
@@ -201,12 +201,12 @@ void EngineFactory::addExtraBuilders(const std::vector<boost::shared_ptr<EngineB
                                      const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders) {
 
     if (extraEngineBuilders.size() > 0) {
-        LOG("adding " << extraEngineBuilders.size() << " extra engine builders");
+        DLOG("adding " << extraEngineBuilders.size() << " extra engine builders");
         for (auto eb : extraEngineBuilders)
             registerBuilder(eb);
     }
     if (extraLegBuilders.size() > 0) {
-        LOG("adding " << extraLegBuilders.size() << " extra leg builders");
+        DLOG("adding " << extraLegBuilders.size() << " extra leg builders");
         for (auto elb : extraLegBuilders)
             registerLegBuilder(elb);
     }

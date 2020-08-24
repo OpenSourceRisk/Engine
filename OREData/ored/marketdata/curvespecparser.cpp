@@ -145,8 +145,8 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
     case CurveSpec::CurveType::YieldVolatility: {
         // YieldVolatility/CurveConfigID
         QL_REQUIRE(tokens.size() == 2, "Unexpected number"
-            " of tokens in yield vol curve spec "
-            << s);
+                                       " of tokens in yield vol curve spec "
+                                           << s);
         const string& curveConfigID = tokens[1];
         return boost::make_shared<YieldVolatilityCurveSpec>(curveConfigID);
     }

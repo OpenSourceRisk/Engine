@@ -68,7 +68,7 @@ protected:
     mutable Real zeta_;
     mutable Real Ht_;
     bool cacheValues_;
-    
+
     const boost::shared_ptr<LinearGaussMarkovModel> model_;
     const bool purelyTimeBased_;
     Date referenceDate_;
@@ -92,7 +92,6 @@ public:
 
 protected:
     Real discountImpl(Time t) const;
-    
 
 private:
     const Handle<YieldTermStructure> targetCurve_;
@@ -190,7 +189,7 @@ inline void LgmImpliedYieldTermStructure::move(const Date& d, const Real s) {
 inline void LgmImpliedYieldTermStructure::move(const Time t, const Real s) {
     state_ = s;
     referenceTime(t);
-    
+
     notifyObservers();
 }
 
@@ -198,7 +197,6 @@ inline void LgmImpliedYieldTermStructure::update() {
     if (!purelyTimeBased_) {
         relativeTime_ =
             dayCounter().yearFraction(model_->parametrization()->termStructure()->referenceDate(), referenceDate_);
-        
     }
 
     notifyObservers();
@@ -211,7 +209,7 @@ inline Real LgmImpliedYieldTermStructure::discountImpl(Time t) const {
 
 inline Real LgmImpliedYtsFwdFwdCorrected::discountImpl(Time t) const {
     QL_REQUIRE(t >= 0.0, "negative time (" << t << ") given");
-    //if relativeTime_ is close to zero, we return the discount factor directly from the target curve
+    // if relativeTime_ is close to zero, we return the discount factor directly from the target curve
     if (QuantLib::close_enough(relativeTime_, 0.0)) {
         return targetCurve_->discount(t);
     } else {
@@ -221,7 +219,8 @@ inline Real LgmImpliedYtsFwdFwdCorrected::discountImpl(Time t) const {
             zeta_ = model_->parametrization()->zeta(relativeTime_);
             Ht_ = model_->parametrization()->H(relativeTime_);
         }
-        return std::exp(-(HT - Ht_) * state_ - 0.5 * (HT * HT - Ht_ * Ht_) * zeta_) * targetCurve_->discount(relativeTime_ + t) / dt_;
+        return std::exp(-(HT - Ht_) * state_ - 0.5 * (HT * HT - Ht_ * Ht_) * zeta_) *
+               targetCurve_->discount(relativeTime_ + t) / dt_;
     }
 }
 

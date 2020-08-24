@@ -16,26 +16,28 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+// clang-format off
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
+// clang-format on
 #include <ored/utilities/parsers.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <ql/time/calendars/all.hpp>
 // #include <qle/calendars/austria.hpp>
-#include <qle/calendars/france.hpp>
+#include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>
+#include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
+#include <qle/calendars/france.hpp>
+#include <qle/calendars/ice.hpp>
+#include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
+#include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/thailand.hpp>
-#include <qle/calendars/spain.hpp>
-#include <qle/calendars/luxembourg.hpp>
-#include <qle/calendars/belgium.hpp>
 #include <qle/calendars/wmr.hpp>
-#include <qle/calendars/ice.hpp>
-#include <qle/calendars/cme.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -60,9 +62,9 @@ ostream& operator<<(ostream& os, const TestDatum& testDatum) {
 
 TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"EUR", TARGET()},
-			    {"ATS", QuantExt::Austria()},
+                            {"ATS", QuantExt::Austria()},
                             {"FRF", QuantExt::France()},
-			    {"CHF", QuantExt::Switzerland()},
+                            {"CHF", QuantExt::Switzerland()},
                             {"USD", UnitedStates()},
                             {"GBP", UnitedKingdom()},
                             {"CAD", Canada()},
@@ -128,18 +130,18 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"ESP", Spain()},
                             {"AUT", Austria()},
                             // ICE exchange calendars
-                            { "ICE_FuturesUS", ICE(ICE::FuturesUS) },
-                            { "ICE_FuturesUS_1", ICE(ICE::FuturesUS_1) },
-                            { "ICE_FuturesUS_2", ICE(ICE::FuturesUS_2) },
-                            { "ICE_FuturesEU", ICE(ICE::FuturesEU) },
-                            { "ICE_FuturesEU_1", ICE(ICE::FuturesEU_1) },
-                            { "ICE_EndexEnergy", ICE(ICE::EndexEnergy) },
-                            { "ICE_EndexEquities", ICE(ICE::EndexEquities) },
-                            { "ICE_SwapTradeUS", ICE(ICE::SwapTradeUS) },
-                            { "ICE_SwapTradeUK", ICE(ICE::SwapTradeUK) },
-                            { "ICE_FuturesSingapore", ICE(ICE::FuturesSingapore) },
+                            {"ICE_FuturesUS", ICE(ICE::FuturesUS)},
+                            {"ICE_FuturesUS_1", ICE(ICE::FuturesUS_1)},
+                            {"ICE_FuturesUS_2", ICE(ICE::FuturesUS_2)},
+                            {"ICE_FuturesEU", ICE(ICE::FuturesEU)},
+                            {"ICE_FuturesEU_1", ICE(ICE::FuturesEU_1)},
+                            {"ICE_EndexEnergy", ICE(ICE::EndexEnergy)},
+                            {"ICE_EndexEquities", ICE(ICE::EndexEquities)},
+                            {"ICE_SwapTradeUS", ICE(ICE::SwapTradeUS)},
+                            {"ICE_SwapTradeUK", ICE(ICE::SwapTradeUK)},
+                            {"ICE_FuturesSingapore", ICE(ICE::FuturesSingapore)},
                             // CME exchange calendar
-                            { "CME", CME() },
+                            {"CME", CME()},
                             // joint calendars
                             {"US,TARGET", JointCalendar(UnitedStates(), TARGET())},
                             {"NYB,TGT", JointCalendar(UnitedStates(), TARGET())},

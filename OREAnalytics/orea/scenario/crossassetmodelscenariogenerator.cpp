@@ -169,7 +169,6 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             }
         }
     }
-
 }
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
@@ -315,9 +314,10 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
         // Equity vols
         if (simMarketConfig_->simulateEquityVols()) {
-            const vector<Period>& expiries = simMarketConfig_->equityVolExpiries();
             for (Size k = 0; k < simMarketConfig_->equityVolNames().size(); k++) {
                 const string equityName = simMarketConfig_->equityVolNames()[k];
+
+                const vector<Period>& expiries = simMarketConfig_->equityVolExpiries(equityName);
 
                 Size eqIndex = eqVols_[k]->equityIndex();
                 Size eqCcyIdx = eqVols_[k]->eqCcyIndex();
@@ -380,7 +380,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                 scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + l], yoyRates[d_yinf[l]]);
             }
         }
-        
+
         // TODO: Further risk factor classes are added here
     }
     return scenarios;

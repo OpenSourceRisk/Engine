@@ -28,22 +28,18 @@ using std::vector;
 namespace ore {
 namespace data {
 
-OptionPaymentData::OptionPaymentData() : rulesBased_(false), lag_(0),
-    convention_(Following), relativeTo_(RelativeTo::Expiry) {}
+OptionPaymentData::OptionPaymentData()
+    : rulesBased_(false), lag_(0), convention_(Following), relativeTo_(RelativeTo::Expiry) {}
 
 OptionPaymentData::OptionPaymentData(const vector<string>& dates)
-    : strDates_(dates), rulesBased_(false), lag_(0),
-      convention_(Following), relativeTo_(RelativeTo::Expiry) {
+    : strDates_(dates), rulesBased_(false), lag_(0), convention_(Following), relativeTo_(RelativeTo::Expiry) {
     init();
 }
 
-OptionPaymentData::OptionPaymentData(const string& lag,
-    const string& calendar,
-    const string& convention,
-    const string& relativeTo)
-    : strLag_(lag), strCalendar_(calendar), strConvention_(convention),
-      strRelativeTo_(relativeTo), rulesBased_(true), lag_(0),
-      convention_(Following), relativeTo_(RelativeTo::Expiry) {
+OptionPaymentData::OptionPaymentData(const string& lag, const string& calendar, const string& convention,
+                                     const string& relativeTo)
+    : strLag_(lag), strCalendar_(calendar), strConvention_(convention), strRelativeTo_(relativeTo), rulesBased_(true),
+      lag_(0), convention_(Following), relativeTo_(RelativeTo::Expiry) {
     init();
 }
 
@@ -68,7 +64,7 @@ void OptionPaymentData::fromXML(XMLNode* node) {
 
 XMLNode* OptionPaymentData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("PaymentData");
-    
+
     if (rulesBased_) {
         XMLNode* rulesNode = doc.allocNode("Rules");
         XMLUtils::addChild(doc, rulesNode, "Lag", strLag_);
@@ -119,5 +115,5 @@ ostream& operator<<(ostream& out, const OptionPaymentData::RelativeTo& relativeT
     }
 }
 
-}
-}
+} // namespace data
+} // namespace ore

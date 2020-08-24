@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/portfolio/builders/cachingenginebuilder.hpp
-  \brief Abstract template engine builder class 
+  \brief Abstract template engine builder class
   \ingroup builders
 */
 
@@ -69,6 +69,8 @@ public:
         }
         return engines_[key];
     }
+
+    void reset() override { engines_.clear(); }
 
 protected:
     virtual T keyImpl(Args...) = 0;

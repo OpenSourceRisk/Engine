@@ -37,17 +37,17 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     const boost::shared_ptr<Market>& market = engineFactory->market();
 
     // If automatic exercise, check that we have a non-empty FX index string, parse it and attach curves from market.
-    if (option_.automaticExercise()) {
-        
-        QL_REQUIRE(!fxIndex_.empty(), "FX option trade " << id() <<
-            " has automatic exercise so the FXIndex node needs to be populated.");
-        
+    if (option_.isAutomaticExercise()) {
+
+        QL_REQUIRE(!fxIndex_.empty(),
+                   "FX option trade " << id() << " has automatic exercise so the FXIndex node needs to be populated.");
+
         // The strike is the number of units of sold currency (currency_) per unit of bought currency (assetName_).
         // So, the convention here is that the sold currency is domestic and the bought currency is foreign.
         // Note: intentionally use null calendar and 0 day fixing lag here because we will ask the FX index for its
         //       value on the expiry date without adjustment.
         index_ = buildFxIndex(fxIndex_, currency_, assetName_, market,
-            engineFactory->configuration(MarketContext::pricing), "NullCalendar", 0);
+                              engineFactory->configuration(MarketContext::pricing), "NullCalendar", 0);
 
         // Populate the external index name so that fixings work.
         indexName_ = fxIndex_;
@@ -59,8 +59,9 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // LOG the volatility if the trade expiry date is in the future.
     if (expiryDate_ > Settings::instance().evaluationDate()) {
         const string& ccyPairCode = assetName_ + currency_;
-        DLOG("Implied vol for " << tradeType_ << " on " << ccyPairCode << " with expiry " << expiryDate_ <<
-            " and strike " << strike_ << " is " << market->fxVol(ccyPairCode)->blackVol(expiryDate_, strike_));
+        DLOG("Implied vol for " << tradeType_ << " on " << ccyPairCode << " with expiry " << expiryDate_
+                                << " and strike " << std::setprecision(6) << strike_ << " is "
+                                << market->fxVol(ccyPairCode)->blackVol(expiryDate_, strike_));
     }
 }
 
@@ -79,7 +80,7 @@ void FxOption::fromXML(XMLNode* node) {
 }
 
 XMLNode* FxOption::toXML(XMLDocument& doc) {
-    //TODO: Should call parent class to xml?
+    // TODO: Should call parent class to xml?
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxOptionData");
     XMLUtils::appendNode(node, fxNode);

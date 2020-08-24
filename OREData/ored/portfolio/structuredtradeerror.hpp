@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include <ored/utilities/log.hpp>
-#include <ored/portfolio/trade.hpp>
 #include <boost/algorithm/string.hpp>
+#include <ored/portfolio/trade.hpp>
+#include <ored/utilities/log.hpp>
 
 namespace ore {
 namespace data {
@@ -33,30 +33,30 @@ namespace data {
 //! Utility class for Structured Trade errors, contains the Trade ID and Type
 class StructuredTradeErrorMessage : public StructuredErrorMessage {
 public:
-    StructuredTradeErrorMessage(const boost::shared_ptr<Trade>& trade,
-                                const std::string& exceptionType, const std::string& exceptionWhat = "")
-                                : tradeId_(trade->id()), tradeType_(trade->tradeType()),
-                                  exceptionType_(exceptionType), exceptionWhat_(exceptionWhat) {}
+    StructuredTradeErrorMessage(const boost::shared_ptr<Trade>& trade, const std::string& exceptionType,
+                                const std::string& exceptionWhat = "")
+        : tradeId_(trade->id()), tradeType_(trade->tradeType()), exceptionType_(exceptionType),
+          exceptionWhat_(exceptionWhat) {}
 
     StructuredTradeErrorMessage(const std::string& tradeId, const std::string& tradeType,
                                 const std::string& exceptionType, const char* exceptionWhat = "")
-                                : tradeId_(tradeId), tradeType_(tradeType),
-                                  exceptionType_(exceptionType), exceptionWhat_(exceptionWhat) {}
+        : tradeId_(tradeId), tradeType_(tradeType), exceptionType_(exceptionType), exceptionWhat_(exceptionWhat) {}
 
     const std::string& tradeId() const { return tradeId_; }
     const std::string& tradeType() const { return tradeType_; }
     const std::string& exceptionType() const { return exceptionType_; }
     const std::string& exceptionWhat() const { return exceptionWhat_; }
+
 protected:
     std::string json() const override {
-        return "{ \"errorType\":\"Trade\", \"tradeId\":\"" + tradeId_ + "\"," +
-               " \"tradeType\":\"" + tradeType_ + "\"," +
-               " \"exceptionType\":\"" + exceptionType_ + "\"," +
-               " \"exceptionMessage\":\"" + jsonify(exceptionWhat_) + "\"}";
+        return "{ \"errorType\":\"Trade\", \"tradeId\":\"" + tradeId_ + "\"," + " \"tradeType\":\"" + tradeType_ +
+               "\"," + " \"exceptionType\":\"" + exceptionType_ + "\"," + " \"exceptionMessage\":\"" +
+               jsonify(exceptionWhat_) + "\"}";
     }
+
 private:
     std::string tradeId_, tradeType_, exceptionType_, exceptionWhat_;
 };
 
-}
-}
+} // namespace data
+} // namespace ore

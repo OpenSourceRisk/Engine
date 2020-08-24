@@ -13,7 +13,6 @@
   <xs:complexType name="parameters">
     <xs:sequence>
       <xs:element type="discretizationType" name="Discretization"/>
-      <!-- FIXME: Discretisation -->
       <xs:element type="xs:string" name="Grid"/>
       <xs:element type="xs:string" name="Calendar"/>
       <!-- can be multiple so we don't use calendar type -->
@@ -24,8 +23,17 @@
       <xs:element type="xs:positiveInteger" name="Samples"/>
       <xs:element type="SobolBrownianGeneratorOrdering" name="Ordering" minOccurs="0"/>
       <xs:element type="SobolRsgDirectionIntegers" name="DirectionIntegers" minOccurs="0"/>
+      <xs:element type="xs:string" name="CloseOutLag" minOccurs="0"/>
+      <xs:element type="mporMode" name="MporMode" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
+
+  <xs:simpleType name="mporMode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ActualDate"/>
+      <xs:enumeration value="StickyDate"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:simpleType name="discretizationType">
     <xs:restriction base="xs:string">
@@ -570,6 +578,8 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
+            <xs:element type="bool" name="AdjustOptionletPillars" maxOccurs="1" minOccurs="0"/>
+            <xs:element type="bool" name="UseCapAtm" maxOccurs="1" minOccurs="0"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -656,12 +666,52 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
-            <xs:element type="xs:string" name="Expiries"/>
+            <xs:element name="Expiries" maxOccurs="unbounded" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="name" type="xs:string" use="optional"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
             <xs:element name="Surface" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
                   <xs:element type="xs:boolean" name="SimulateATMOnly" maxOccurs="1" minOccurs="0"/>
-                  <xs:element type="xs:string" name="Moneyness" maxOccurs="1" minOccurs="0"/>
+                  <xs:element name="Moneyness" maxOccurs="unbounded" minOccurs="0">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="name" type="xs:string" use="optional"/>
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                  <xs:element name="StandardDeviations" maxOccurs="unbounded" minOccurs="0">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="name" type="xs:string" use="optional"/>
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="DayCounter" maxOccurs="unbounded" minOccurs="1">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="name" type="xs:string" use="optional"/>
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
                 </xs:sequence>
               </xs:complexType>
             </xs:element>

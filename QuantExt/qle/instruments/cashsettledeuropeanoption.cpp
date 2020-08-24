@@ -16,17 +16,16 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/instruments/cashsettledeuropeanoption.hpp>
-#include <ql/exercise.hpp>
 #include <ql/event.hpp>
+#include <ql/exercise.hpp>
 #include <ql/settings.hpp>
+#include <qle/instruments/cashsettledeuropeanoption.hpp>
 
 using QuantLib::BusinessDayConvention;
 using QuantLib::Calendar;
 using QuantLib::Date;
 using QuantLib::EuropeanExercise;
 using QuantLib::Index;
-using QuantLib::io::iso_date;
 using QuantLib::Natural;
 using QuantLib::Null;
 using QuantLib::Option;
@@ -36,64 +35,59 @@ using QuantLib::Real;
 using QuantLib::Settings;
 using QuantLib::StrikedTypePayoff;
 using QuantLib::VanillaOption;
+using QuantLib::io::iso_date;
 
 namespace {
 
 // Shared check of arguments
 void check(const Date& expiryDate, const Date& paymentDate, bool automaticExercise,
-    const boost::shared_ptr<Index>& underlying, bool exercised, Real priceAtExercise) {
+           const boost::shared_ptr<Index>& underlying, bool exercised, Real priceAtExercise) {
 
     using QuantLib::io::iso_date;
 
-    QL_REQUIRE(paymentDate >= expiryDate, "Cash settled European option payment date (" << iso_date(paymentDate) <<
-        ") must be greater than or equal to the expiry date (" << iso_date(expiryDate) << ")");
+    QL_REQUIRE(paymentDate >= expiryDate, "Cash settled European option payment date ("
+                                              << iso_date(paymentDate)
+                                              << ") must be greater than or equal to the expiry date ("
+                                              << iso_date(expiryDate) << ")");
 
     if (automaticExercise) {
         QL_REQUIRE(underlying, "Cash settled European option has automatic exercise so we need a valid underlying.");
     }
 
     if (exercised) {
-        QL_REQUIRE(priceAtExercise != Null<Real>(), "Cash settled European option was exercised so we need " <<
-            "a valid exercise price.");
+        QL_REQUIRE(priceAtExercise != Null<Real>(), "Cash settled European option was exercised so we need "
+                                                        << "a valid exercise price.");
     }
 }
 
-}
+} // namespace
 
 namespace QuantExt {
 
-CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type,
-    Real strike,
-    const Date& expiryDate,
-    const Date& paymentDate,
-    bool automaticExercise,
-    const boost::shared_ptr<Index>& underlying,
-    bool exercised,
-    Real priceAtExercise)
+CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type, Real strike, const Date& expiryDate,
+                                                     const Date& paymentDate, bool automaticExercise,
+                                                     const boost::shared_ptr<Index>& underlying, bool exercised,
+                                                     Real priceAtExercise)
     : VanillaOption(boost::make_shared<PlainVanillaPayoff>(type, strike),
-        boost::make_shared<EuropeanExercise>(expiryDate)), paymentDate_(paymentDate),
-        automaticExercise_(automaticExercise), underlying_(underlying), exercised_(false),
-        priceAtExercise_(Null<Real>()) {
+                    boost::make_shared<EuropeanExercise>(expiryDate)),
+      paymentDate_(paymentDate), automaticExercise_(automaticExercise), underlying_(underlying), exercised_(false),
+      priceAtExercise_(Null<Real>()) {
 
     init(exercised, priceAtExercise);
-    
+
     check(exercise_->lastDate(), paymentDate_, automaticExercise_, underlying_, exercised_, priceAtExercise_);
 }
 
-CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type,
-    Real strike,
-    const Date& expiryDate,
-    Natural paymentLag,
-    const Calendar& paymentCalendar,
-    BusinessDayConvention paymentConvention,
-    bool automaticExercise,
-    const boost::shared_ptr<Index>& underlying,
-    bool exercised,
-    Real priceAtExercise)
+CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type, Real strike, const Date& expiryDate,
+                                                     Natural paymentLag, const Calendar& paymentCalendar,
+                                                     BusinessDayConvention paymentConvention, bool automaticExercise,
+                                                     const boost::shared_ptr<Index>& underlying, bool exercised,
+                                                     Real priceAtExercise)
     : VanillaOption(boost::make_shared<PlainVanillaPayoff>(type, strike),
-        boost::make_shared<EuropeanExercise>(expiryDate)), automaticExercise_(automaticExercise),
-        underlying_(underlying), exercised_(false), priceAtExercise_(Null<Real>()) {
-    
+                    boost::make_shared<EuropeanExercise>(expiryDate)),
+      automaticExercise_(automaticExercise), underlying_(underlying), exercised_(false),
+      priceAtExercise_(Null<Real>()) {
+
     init(exercised, priceAtExercise);
 
     // Derive payment date from exercise date using the lag, calendar and convention.
@@ -110,20 +104,18 @@ void CashSettledEuropeanOption::init(bool exercised, Real priceAtExercise) {
         registerWith(underlying_);
 }
 
-bool CashSettledEuropeanOption::isExpired() const {
-    return QuantLib::detail::simple_event(paymentDate_).hasOccurred();
-}
+bool CashSettledEuropeanOption::isExpired() const { return QuantLib::detail::simple_event(paymentDate_).hasOccurred(); }
 
 void CashSettledEuropeanOption::setupArguments(PricingEngine::arguments* args) const {
-    
+
     VanillaOption::setupArguments(args);
-    
+
     CashSettledEuropeanOption::arguments* arguments = dynamic_cast<CashSettledEuropeanOption::arguments*>(args);
-    
+
     // We have a VanillaOption engine that will ignore the deferred payment.
     if (!arguments)
         return;
-    
+
     // Set up the arguments specific to cash settled european option.
     arguments->paymentDate = paymentDate_;
     arguments->automaticExercise = automaticExercise_;
@@ -134,37 +126,28 @@ void CashSettledEuropeanOption::setupArguments(PricingEngine::arguments* args) c
 
 void CashSettledEuropeanOption::exercise(Real priceAtExercise) {
     QL_REQUIRE(priceAtExercise != Null<Real>(), "Cannot exercise with a null price.");
-    QL_REQUIRE(Settings::instance().evaluationDate() >= exercise_->lastDate(), "European option cannot be " <<
-        "exercised before expiry date. Valuation date " << iso_date(Settings::instance().evaluationDate()) <<
-        " is before expiry date " << iso_date(exercise_->lastDate()) << ".");
+    QL_REQUIRE(Settings::instance().evaluationDate() >= exercise_->lastDate(),
+               "European option cannot be "
+                   << "exercised before expiry date. Valuation date " << iso_date(Settings::instance().evaluationDate())
+                   << " is before expiry date " << iso_date(exercise_->lastDate()) << ".");
     exercised_ = true;
     priceAtExercise_ = priceAtExercise;
     update();
 }
 
-const Date& CashSettledEuropeanOption::paymentDate() const {
-    return paymentDate_;
-}
+const Date& CashSettledEuropeanOption::paymentDate() const { return paymentDate_; }
 
-bool CashSettledEuropeanOption::automaticExercise() const {
-    return automaticExercise_;
-}
+bool CashSettledEuropeanOption::automaticExercise() const { return automaticExercise_; }
 
-const boost::shared_ptr<Index>& CashSettledEuropeanOption::underlying() const {
-    return underlying_;
-}
+const boost::shared_ptr<Index>& CashSettledEuropeanOption::underlying() const { return underlying_; }
 
-bool CashSettledEuropeanOption::exercised() const {
-    return exercised_;
-}
+bool CashSettledEuropeanOption::exercised() const { return exercised_; }
 
-Real CashSettledEuropeanOption::priceAtExercise() const {
-    return priceAtExercise_;
-}
+Real CashSettledEuropeanOption::priceAtExercise() const { return priceAtExercise_; }
 
 void CashSettledEuropeanOption::arguments::validate() const {
     QuantLib::VanillaOption::arguments::validate();
     check(exercise->lastDate(), paymentDate, automaticExercise, underlying, exercised, priceAtExercise);
 }
 
-}
+} // namespace QuantExt

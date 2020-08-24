@@ -27,9 +27,9 @@
 #include <ored/utilities/parsers.hpp>
 
 using namespace std;
-using QuantLib::WeekendsOnly;
 using QuantLib::Currency;
 using QuantLib::Days;
+using QuantLib::WeekendsOnly;
 
 namespace ore {
 namespace data {
@@ -281,7 +281,8 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& ccy = tokens[4];
         string docClause = tokens.size() == 7 ? tokens[5] : "";
         Period term = parsePeriod(tokens.back());
-        return boost::make_shared<CdsQuote>(value, asof, datumName, quoteType, underlyingName, seniority, ccy, term, docClause);
+        return boost::make_shared<CdsQuote>(value, asof, datumName, quoteType, underlyingName, seniority, ccy, term,
+                                            docClause);
     }
 
     case MarketDatum::InstrumentType::HAZARD_RATE: {
@@ -291,11 +292,13 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& ccy = tokens[4];
         string docClause = tokens.size() == 7 ? tokens[5] : "";
         Period term = parsePeriod(tokens.back());
-        return boost::make_shared<HazardRateQuote>(value, asof, datumName, underlyingName, seniority, ccy, term, docClause);
+        return boost::make_shared<HazardRateQuote>(value, asof, datumName, underlyingName, seniority, ccy, term,
+                                                   docClause);
     }
 
     case MarketDatum::InstrumentType::RECOVERY_RATE: {
-        QL_REQUIRE(tokens.size() == 3 || tokens.size() == 5 || tokens.size() == 6, "3, 5 or 6 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() == 3 || tokens.size() == 5 || tokens.size() == 6,
+                   "3, 5 or 6 tokens expected in " << datumName);
         const string& underlyingName = tokens[2]; // issuer name for CDS, security ID for bond specific RRs
         string seniority = "";
         string ccy = "";
@@ -358,8 +361,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         if (tokens.size() == 6) { // volatility
             QL_REQUIRE(tokens[5] == "ATM", "only ATM allowed for bond option quotes");
             return boost::make_shared<BondOptionQuote>(value, asof, datumName, quoteType, qualifier, expiry, term);
-        }
-        else { // SLN volatility shift
+        } else { // SLN volatility shift
             return boost::make_shared<BondOptionShiftQuote>(value, asof, datumName, quoteType, qualifier, term);
         }
     }
@@ -461,16 +463,31 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::EQUITY_OPTION: {
-        QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7, "6 or 7 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() >= 6 || tokens.size() <= 9, "6 - 9 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL || quoteType == MarketDatum::QuoteType::PRICE,
-            "Invalid quote type for " << datumName);
+                   "Invalid quote type for " << datumName);
         const string& equityName = tokens[2];
         const string& ccy = tokens[3];
         string expiryString = tokens[4];
-        const string& strike = tokens[5];
+        // do we have a call or put flag as the last token?
+        bool hasCallPutToken = tokens.back() == "C" || tokens.back() == "P";
+        // the following tokens represent the strike, except the last one, if we have a call/put token
+        string strikeStr;
+        for(Size i=5; i < tokens.size() - (hasCallPutToken ? 1 : 0); ++i) {
+            strikeStr += (i > 5 ? "/" : "") + tokens[i];
+        }
+        boost::shared_ptr<BaseStrike> strike;
+        // we support ATM, ATMF as aliases for ATM/AtmSpot, ATM/AtmFwd, plus absolute strikes and MNY/[Spot/Fwd]/1.2
+        if(strikeStr == "ATM")
+            strike = boost::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmSpot);
+        else if(strikeStr == "ATMF")
+            strike = boost::make_shared<AtmStrike>(QuantLib::DeltaVolQuote::AtmType::AtmFwd);
+        else
+            strike = parseBaseStrike(strikeStr);
         bool isCall = true;
-        if (tokens.size() == 7) {
-            QL_REQUIRE(tokens[6] == "C" || tokens[6] == "P", "excepted C or P for Call or Put at position 7 in " << datumName);
+        if (hasCallPutToken) {
+            QL_REQUIRE(tokens.back() == "C" || tokens.back() == "P",
+                       "excepted C or P for Call or Put at position " << tokens.size() << " in " << datumName);
             isCall = tokens[6] == "C";
         }
         // note how we only store the expiry string - to ensure we can support both Periods and Dates being specified in
@@ -482,9 +499,9 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     case MarketDatum::InstrumentType::BOND: {
         QL_REQUIRE(tokens.size() == 3, "3 tokens expected in " << datumName);
         const string& securityID = tokens[2];
-        if(quoteType == MarketDatum::QuoteType::YIELD_SPREAD)
+        if (quoteType == MarketDatum::QuoteType::YIELD_SPREAD)
             return boost::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
-        else if(quoteType == MarketDatum::QuoteType::PRICE)
+        else if (quoteType == MarketDatum::QuoteType::PRICE)
             return boost::make_shared<BondPriceQuote>(value, asof, datumName, securityID);
     }
 
@@ -499,12 +516,12 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::INDEX_CDS_OPTION: {
-        
+
         // Expects the following form. The strike is optional. The index term is optional for backwards compatibility.
         // INDEX_CDS_OPTION/RATE_LNVOL/<INDEX_NAME>[/<INDEX_TERM>]/<EXPIRY>[/<STRIKE>]
         QL_REQUIRE(tokens.size() >= 4 || tokens.size() <= 6, "4, 5 or 6 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Invalid quote type for " << datumName);
-        
+
         boost::shared_ptr<Expiry> expiry;
         boost::shared_ptr<BaseStrike> strike;
         string indexTerm;
@@ -528,7 +545,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
             // We have just been given the expiry.
             expiry = parseExpiry(tokens[3]);
         }
-        
+
         return boost::make_shared<IndexCDSOptionQuote>(value, asof, datumName, tokens[2], expiry, indexTerm, strike);
     }
 
@@ -547,14 +564,14 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
 
         // The last token can be a string defining a special tenor i.e. ON, TN or SN
         if (tokens[4] == "ON") {
-            return boost::make_shared<CommodityForwardQuote>(
-                value, asof, datumName, quoteType, tokens[2], tokens[3], 1 * Days, 0 * Days);
+            return boost::make_shared<CommodityForwardQuote>(value, asof, datumName, quoteType, tokens[2], tokens[3],
+                                                             1 * Days, 0 * Days);
         } else if (tokens[4] == "TN") {
-            return boost::make_shared<CommodityForwardQuote>(
-                value, asof, datumName, quoteType, tokens[2], tokens[3], 1 * Days, 1 * Days);
+            return boost::make_shared<CommodityForwardQuote>(value, asof, datumName, quoteType, tokens[2], tokens[3],
+                                                             1 * Days, 1 * Days);
         } else if (tokens[4] == "SN") {
-            return boost::make_shared<CommodityForwardQuote>(
-                value, asof, datumName, quoteType, tokens[2], tokens[3], 1 * Days);
+            return boost::make_shared<CommodityForwardQuote>(value, asof, datumName, quoteType, tokens[2], tokens[3],
+                                                             1 * Days);
         }
 
         // The last token can be a date or a standard tenor
@@ -564,11 +581,11 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         parseDateOrPeriod(tokens[4], date, tenor, isDate);
 
         if (isDate) {
-            return boost::make_shared<CommodityForwardQuote>(
-                value, asof, datumName, quoteType, tokens[2], tokens[3], date);
+            return boost::make_shared<CommodityForwardQuote>(value, asof, datumName, quoteType, tokens[2], tokens[3],
+                                                             date);
         } else {
-            return boost::make_shared<CommodityForwardQuote>(
-                value, asof, datumName, quoteType, tokens[2], tokens[3], tenor);
+            return boost::make_shared<CommodityForwardQuote>(value, asof, datumName, quoteType, tokens[2], tokens[3],
+                                                             tenor);
         }
     }
 
@@ -583,8 +600,8 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         string strStrike = boost::algorithm::join(boost::make_iterator_range(tokens.begin() + 5, tokens.end()), "/");
         boost::shared_ptr<BaseStrike> strike = parseBaseStrike(strStrike);
 
-        return boost::make_shared<CommodityOptionQuote>(value, asof, datumName, quoteType, 
-            tokens[2], tokens[3], expiry, strike);
+        return boost::make_shared<CommodityOptionQuote>(value, asof, datumName, quoteType, tokens[2], tokens[3], expiry,
+                                                        strike);
     }
 
     case MarketDatum::InstrumentType::CORRELATION: {

@@ -50,8 +50,13 @@ public:
      *  as per  Castagna& Mercurio(2006), to use. The second approximation is more accurate
      *  but can ask for the square root of a negative number under unusual circumstances.
      */
-    enum class Dimension { ATM, SmileVannaVolga, SmileDelta};   
-    enum class SmileInterpolation { VannaVolga1, VannaVolga2, Linear, Cubic }; // Vanna Volga first/second approximation respectively
+    enum class Dimension { ATM, SmileVannaVolga, SmileDelta };
+    enum class SmileInterpolation {
+        VannaVolga1,
+        VannaVolga2,
+        Linear,
+        Cubic
+    }; // Vanna Volga first/second approximation respectively
 
     //! \name Constructors/Destructors
     //@{
@@ -59,11 +64,12 @@ public:
     FXVolatilityCurveConfig() {}
     //! Detailed constructor
     FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
-                            const vector<string>& expiries, const vector<string>& deltas = vector<string>(), const string& fxSpotID = "",
-                            const string& fxForeignCurveID = "", const string& fxDomesticCurveID = "",
+                            const vector<string>& expiries, const vector<string>& deltas = vector<string>(),
+                            const string& fxSpotID = "", const string& fxForeignCurveID = "",
+                            const string& fxDomesticCurveID = "",
                             const DayCounter& dayCounter = QuantLib::Actual365Fixed(),
                             const Calendar& calendar = QuantLib::TARGET(),
-                            const SmileInterpolation& interp = SmileInterpolation::VannaVolga2, 
+                            const SmileInterpolation& interp = SmileInterpolation::VannaVolga2,
                             const string& conventionsID = "", const QuantLib::Natural& smileDelta = 25);
 
     //@}
@@ -86,8 +92,8 @@ public:
     const string& fxForeignYieldCurveID() const { return fxForeignYieldCurveID_; }
     const string& fxDomesticYieldCurveID() const { return fxDomesticYieldCurveID_; }
     const SmileInterpolation& smileInterpolation() const { return smileInterpolation_; }
-    const string& conventionsID() const { return conventionsID_; } 
-    const QuantLib::Natural& smileDelta() const { return smileDelta_; } 
+    const string& conventionsID() const { return conventionsID_; }
+    const QuantLib::Natural& smileDelta() const { return smileDelta_; }
     const vector<string>& quotes() override;
     //@}
 
@@ -101,14 +107,12 @@ public:
     string& fxSpotID() { return fxSpotID_; }
     string& fxForeignYieldCurveID() { return fxForeignYieldCurveID_; }
     string& fxDomesticYieldCurveID() { return fxDomesticYieldCurveID_; }
-    string conventionsID() { return conventionsID_; } 
-    QuantLib::Natural& smileDelta() { return smileDelta_; } 
-    const std::set<string>& requiredYieldCurveIDs() const {
-        return requiredYieldCurveIDs_;
-    };
+    string conventionsID() { return conventionsID_; }
+    QuantLib::Natural& smileDelta() { return smileDelta_; }
+    const std::set<string>& requiredYieldCurveIDs() const { return requiredYieldCurveIDs_; };
     //@}
 private:
-    void populateRequiredYieldCurveIDs();
+    void populateRequiredCurveIds();
 
     Dimension dimension_;
     vector<string> expiries_;
@@ -118,8 +122,8 @@ private:
     string fxSpotID_;
     string fxForeignYieldCurveID_;
     string fxDomesticYieldCurveID_;
-    string conventionsID_; 
-    QuantLib::Natural smileDelta_; 
+    string conventionsID_;
+    QuantLib::Natural smileDelta_;
     std::set<string> requiredYieldCurveIDs_;
     SmileInterpolation smileInterpolation_;
 };

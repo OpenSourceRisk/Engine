@@ -39,6 +39,8 @@ BOOST_AUTO_TEST_SUITE(FittedBondCurveTests)
 
 BOOST_AUTO_TEST_CASE(testCurveFromFixedRateBonds) {
 
+#if QL_HEX_VERSION >= 0x01190000 || defined(QL_ORE_PATCH)
+    // will work in QL 1.19
     Date asof(6, April, 2020);
     Settings::instance().evaluationDate() = asof;
 
@@ -81,6 +83,7 @@ BOOST_AUTO_TEST_CASE(testCurveFromFixedRateBonds) {
                                                    << " discount factor is " << curve->discount(b->maturityDate()));
         BOOST_CHECK_CLOSE(b->cleanPrice(), 100.0, 0.01); // 1bp tolerance in absolute price
     }
+#endif
 }
 
 BOOST_AUTO_TEST_SUITE_END()

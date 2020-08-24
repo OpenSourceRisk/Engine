@@ -92,7 +92,7 @@ public:
 
     // Convert a single vol associated with a given swaption
     Real convert(const Date& expiry, const Period& swapTenor, Real strikeSpread, const DayCounter& volDayCounter,
-        VolatilityType outType, Real outShift = 0.0) const;
+                 VolatilityType outType, Real outShift = 0.0) const;
 
     //! Set implied volatility solver accuracy
     Real& accuracy() { return accuracy_; }
@@ -106,7 +106,7 @@ private:
     // Method that is called depending on the type of svsIn
     boost::shared_ptr<SwaptionVolatilityStructure>
     convert(const boost::shared_ptr<SwaptionVolatilityMatrix>& svMatrix) const;
-    
+
     const Date asof_;
     const boost::shared_ptr<SwaptionVolatilityStructure> svsIn_;
     Handle<YieldTermStructure> discount_, shortDiscount_;

@@ -30,8 +30,7 @@ namespace data {
 
 OptionExerciseData::OptionExerciseData() : price_(Null<Real>()) {}
 
-OptionExerciseData::OptionExerciseData(const string& date, const string& price)
-    : strDate_(date), strPrice_(price) {
+OptionExerciseData::OptionExerciseData(const string& date, const string& price) : strDate_(date), strPrice_(price) {
     init();
 }
 
@@ -54,5 +53,5 @@ void OptionExerciseData::init() {
     price_ = parseReal(strPrice_);
 }
 
-}
-}
+} // namespace data
+} // namespace ore

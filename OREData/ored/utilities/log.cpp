@@ -155,7 +155,7 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
     ls_ << " : ";
 
     // log pid if given
-    if(pid_ > 0)
+    if (pid_ > 0)
         ls_ << " [" << pid_ << "] ";
 }
 
@@ -187,7 +187,7 @@ LoggerStream::~LoggerStream() {
     }
 }
 
-string StructuredErrorMessage::jsonify (const string& s) const {
+string StructuredErrorMessage::jsonify(const string& s) const {
     string str = s;
     boost::replace_all(str, "\\", "\\\\"); // do this before the below otherwise we get \\"
     boost::replace_all(str, "\"", "\\\"");

@@ -23,11 +23,11 @@
 #ifndef quantext_brl_cdi_coupon_pricer_hpp
 #define quantext_brl_cdi_coupon_pricer_hpp
 
-#include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/indexes/ibor/brlcdi.hpp>
 
-#include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/couponpricer.hpp>
+#include <ql/cashflows/overnightindexedcoupon.hpp>
 
 namespace QuantExt {
 
@@ -57,6 +57,6 @@ private:
     boost::shared_ptr<BRLCdi> index_;
 };
 
-}
+} // namespace QuantExt
 
 #endif

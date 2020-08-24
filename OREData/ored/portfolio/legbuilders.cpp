@@ -27,7 +27,7 @@ namespace data {
 
 Leg FixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                               RequiredFixings& requiredFixings, const string& configuration) const {
-    Leg leg =  makeFixedLeg(data);
+    Leg leg = makeFixedLeg(data);
     std::map<std::string, std::string> qlToOREIndexNames;
     applyIndexing(leg, data, engineFactory, qlToOREIndexNames, requiredFixings);
     addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
@@ -156,13 +156,18 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
     auto eqData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
     QL_REQUIRE(eqData, "Wrong LegType, expected Equity");
     string eqName = eqData->eqName();
-
     auto eqCurve = *engineFactory->market()->equityCurve(eqName, configuration);
+
+    bool curveCcyCheck = false;
+    if (eqCurve->currency().empty()) {
+        WLOG("No equity currency set in EquityIndex for equity " << eqCurve->name());
+    } else {
+        curveCcyCheck = data.currency() != eqCurve->currency().code();
+    }
 
     boost::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
     // if equity currency differs from the leg currency we need an FxIndex
-    if ((eqData->eqCurrency() != "" && eqData->eqCurrency() != data.currency()) ||
-        (data.currency() != eqCurve->currency().code())) {
+    if ((eqData->eqCurrency() != "" && eqData->eqCurrency() != data.currency()) || curveCcyCheck) {
         QL_REQUIRE(eqData->fxIndex() != "",
                    "No FxIndex - if equity currency differs from leg currency an FxIndex must be provided");
 
