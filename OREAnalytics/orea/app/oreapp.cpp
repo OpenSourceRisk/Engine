@@ -489,6 +489,20 @@ void OREApp::writeInitialReports() {
         out_ << "SKIP" << endl;
     }
 
+    /*********************
+     * Additional Results
+     */
+    out_ << setw(tab_) << left << "Additional Results... " << flush;
+    if (params_->hasGroup("additionalResults") && params_->get("additionalResults", "active") == "Y") {
+        string fileName = outputPath_ + "/" + params_->get("additionalResults", "outputFileName");
+        CSVFileReport addResultReport(fileName);
+        getReportWriter()->writeAdditionalResultsReport(addResultReport, portfolio_);
+        out_ << "OK" << endl;
+    } else {
+        LOG("skip additional results");
+        out_ << "SKIP" << endl;
+    }
+
     /**********************
      * Cash flow generation
      */

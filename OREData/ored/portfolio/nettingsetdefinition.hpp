@@ -62,15 +62,15 @@ public:
       Constructor for "collateralised" netting sets
     */
     NettingSetDefinition(const string& nettingSetId, const string& ctp, const string& bilateral,
-                         const string& csaCurrency, // three letter ISO code
-                         const string& index, const Real& thresholdPay, const Real& thresholdRcv, const Real& mtaPay,
-                         const Real& mtaRcv, const Real& iaHeld, const string& iaType,
-                         const string& marginCallFreq, // e.g. "1D", "2W", "3M", "4Y"
-                         const string& marginPostFreq, // e.g. "1D", "2W", "3M", "4Y"
-                         const string& mpr,            // e.g. "1D", "2W", "3M", "4Y"
-                         const Real& collatSpreadPay, const Real& collatSpreadRcv,
-                         const vector<string>& eligCollatCcys, // vector of three letter ISO codes
-                         const Real& riskWeight = QuantLib::Null<Real>()); // SA-CCR risk weight
+        const string& csaCurrency, // three letter ISO code
+        const string& index, const Real& thresholdPay, const Real& thresholdRcv, const Real& mtaPay,
+        const Real& mtaRcv, const Real& iaHeld, const string& iaType,
+        const string& marginCallFreq, // e.g. "1D", "2W", "3M", "4Y"
+        const string& marginPostFreq, // e.g. "1D", "2W", "3M", "4Y"
+        const string& mpr,            // e.g. "1D", "2W", "3M", "4Y"
+        const Real& collatSpreadPay, const Real& collatSpreadRcv,
+        const vector<string>& eligCollatCcys); // vector of three letter ISO codes
+                         
     /*!
       loads NettingSetDefinition object from XML
     */
@@ -123,8 +123,6 @@ public:
     Real collatSpreadPay() const { return collatSpreadPay_; }
     /*! Eligible Collateral Currencies */
     vector<string> eligCollatCcys() const { return eligCollatCcys_; }
-    /*! Counterparty risk weight */
-    Real riskWeight() const { return riskWeight_; }
     //@}
 
 private:
@@ -150,7 +148,6 @@ private:
     Real collatSpreadPay_;
     Real collatSpreadRcv_;
     vector<string> eligCollatCcys_;
-    Real riskWeight_;
 
     // object-status flags
     bool isLoaded_;

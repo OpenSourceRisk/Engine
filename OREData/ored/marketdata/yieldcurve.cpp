@@ -177,7 +177,8 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
                        const FXTriangulation& fxTriangulation,
                        const boost::shared_ptr<ReferenceDataManager>& referenceData)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), conventions_(conventions),
-      requiredYieldCurves_(requiredYieldCurves), fxTriangulation_(fxTriangulation), referenceData_(referenceData) {
+      requiredYieldCurves_(requiredYieldCurves), requiredDefaultCurves_(requiredDefaultCurves),
+      fxTriangulation_(fxTriangulation), referenceData_(referenceData) {
 
     try {
 
@@ -847,9 +848,12 @@ void YieldCurve::buildFittedBondCurve() {
 
     std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;
     for (auto const& c : curveSegment->iborIndexCurves()) {
-        auto y = requiredYieldCurves_.find(yieldCurveKey(currency_, c.first, asofDate_));
-        QL_REQUIRE(y != requiredYieldCurves_.end(),
-                   "required yield curve '" << c.first << "' not provided for fitted bond curve");
+        auto index = parseIborIndex(c.first, Handle<YieldTermStructure>(),
+                                    conventions_.has(c.first) ? conventions_.get(c.first) : nullptr);
+        auto key = yieldCurveKey(index->currency(), c.second, asofDate_);
+        auto y = requiredYieldCurves_.find(key);
+        QL_REQUIRE(y != requiredYieldCurves_.end(), "required yield curve '" << key << "' for iborIndex '" << c.first
+                                                                             << "' not provided for fitted bond curve");
         iborCurveMapping[c.first] = y->second->handle();
     }
 
