@@ -899,7 +899,12 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredEquityVolCurves_.find(eqvolspec->name());
             if (itr == requiredEquityVolCurves_.end()) {
                 LOG("Building EquityVol for asof " << asof_);
-                // First we need the Equity Index, this should already be built
+                // First we need the Equity Index, we don't have a depedency for this in the graph, rather
+                // pull it directly from MarketImpl, which will trigger the build if necessary -
+                // this works, but contradicts the idea of managing the dependencies fully in a graph.
+                // The EQVol builder should rather get the index from the requiredEquityCurves_.
+                // In addition we should maybe specify the eqIndex name in the vol curve config explicitly
+                // instead of assuming that it has the same curve id as the vol curve to be build?
                 Handle<EquityIndex> eqIndex = MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration);
                 boost::shared_ptr<EquityVolCurve> eqVolCurve =
                     boost::make_shared<EquityVolCurve>(asof_, *eqvolspec, loader_, curveConfigs_, eqIndex,
