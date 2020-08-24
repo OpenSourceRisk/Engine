@@ -503,23 +503,19 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
 
 void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                             const string& nettingSetId) {
-    const vector<Date> dates = postProcess->cube()->dates();
+    const vector<Real> grid = postProcess->spreadSensitivityGrid();
     Date today = Settings::instance().evaluationDate();
-    DayCounter dc = ActualActual();
     const vector<Real>& sensiHR = postProcess->netCvaHazardRateSensitivity(nettingSetId);
     const vector<Real>& sensiSpread = postProcess->netCvaSpreadSensitivity(nettingSetId);
     report.addColumn("NettingSet", string())
-        .addColumn("Date", Date())
         .addColumn("Time", double(), 6)
         .addColumn("CvaHazardRateSensitivity", double(), 6)
         .addColumn("CvaSpreadSensitivity", double(), 6);
 
-    for (Size j = 0; j < dates.size(); ++j) {
-        Real time = dc.yearFraction(today, dates[j]);
+    for (Size j = 0; j < grid.size(); ++j) {
         report.next()
             .add(nettingSetId)
-            .add(dates[j])
-            .add(time)
+            .add(grid[j])
             .add(sensiHR[j])
             .add(sensiSpread[j]);
     }

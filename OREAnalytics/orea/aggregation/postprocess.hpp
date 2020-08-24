@@ -158,6 +158,12 @@ public:
         dimCalculator_ = dimCalculator;
     }
 
+    void setSpreadSensitivityGrid(vector<Real> spreadSensitivityGrid) {
+        spreadSensitivityGrid_ = spreadSensitivityGrid;
+    }
+
+    const vector<Real>& spreadSensitivityGrid() { return spreadSensitivityGrid_; }
+
     //! Return list of Trade IDs in the portfolio
     const vector<string>& tradeIds() { return tradeIds_; }
     //! Return list of netting set IDs in the portfolio
@@ -277,6 +283,7 @@ public:
     void exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
                              const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports);
 
+  
 protected:
     //! Helper function to return the collateral account evolution for a given netting set
     boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>>
@@ -291,7 +298,12 @@ protected:
     void updateAllocatedXVA();
 
     // perfrom jacobi transform to turn hazard rate sensitivities into spread sensitivities
-    vector<Real> spreadSensitivities(const vector<Real>& cvahrSensi, const vector<Real>& cumulativeSurvival, const vector<Real>& deltaPD, const vector<Real>& deltat, Real lgd,
+    vector<Real> spreadSensitivities(const vector<Real>& sensiGrid,
+				     const vector<Real>& cvahrSensi,
+				     const vector<Real>& cumulativeSurvival,
+				     const vector<Real>& deltaPD,
+				     const vector<Real>& deltat,
+				     Real lgd,
 				     const vector<Real>& discount = vector<Real>());
 
     boost::shared_ptr<Portfolio> portfolio_;
@@ -340,6 +352,8 @@ protected:
     Real kvaTheirPdFloor_;
     Real kvaOurCvaRiskWeight_;
     Real kvaTheirCvaRiskWeight_;
+
+    vector<Real> spreadSensitivityGrid_;
 };
 
 } // namespace analytics
