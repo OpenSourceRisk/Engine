@@ -227,7 +227,10 @@ void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& 
 
     These additional index and fixing date pairs are found by scanning the \p mktParams and:
     - for MarketObject::IndexCurve, take the ibor index name and add the dates for each weekday between settlement
-      date minus \p iborLookback period and settlement date
+      date minus \p iborLookback period or \p oisLookback period and settlement date. The distinction between 
+      Ibor and OIS is made here to cover the fixings necessary for OIS futures. The default value of 4 months 
+      covers OIS futures with a contract period of up to 3 months. It would need to be configured differently 
+      if OIS futures with a longer contract period are possible.
     - for MarketObject::ZeroInflationCurve, take the inflation index and add the first of each month between
       settlement date minus \p inflationLookback period and settlement date
     - for MarketObject::YoYInflationCurve, take the inflation index and add the first of each month between
@@ -243,6 +246,7 @@ void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& 
 void addMarketFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings,
                           const TodaysMarketParameters& mktParams,
                           const QuantLib::Period& iborLookback = 5 * QuantLib::Days,
+                          const QuantLib::Period& oisLookback = 4 * QuantLib::Months,
                           const QuantLib::Period& inflationLookback = 1 * QuantLib::Years,
                           const std::string& configuration = Market::defaultConfiguration);
 

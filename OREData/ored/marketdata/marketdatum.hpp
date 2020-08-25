@@ -180,19 +180,22 @@ public:
     MoneyMarketQuote() {}
     //! Constructor
     MoneyMarketQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period fwdStart,
-                     Period term)
+                     Period term, const std::string& indexName = "")
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::MM), ccy_(ccy), fwdStart_(fwdStart),
-          term_(term) {}
+          term_(term), indexName_(indexName) {}
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
     const Period& fwdStart() const { return fwdStart_; }
     const Period& term() const { return term_; }
+    //! Empty if the index name is not provided.
+    const std::string& indexName() const { return indexName_; }
     //@}
 private:
     string ccy_;
     Period fwdStart_;
     Period term_;
+    std::string indexName_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
@@ -279,9 +282,9 @@ public:
     SwapQuote() {}
     //! Constructor
     SwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period fwdStart,
-              Period term, Period tenor)
+              Period term, Period tenor, const std::string& indexName = "")
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IR_SWAP), ccy_(ccy), fwdStart_(fwdStart),
-          term_(term), tenor_(tenor) {}
+          term_(term), tenor_(tenor), indexName_(indexName) {}
 
     //! \name Inspectors
     //@{
@@ -289,12 +292,14 @@ public:
     const Period& fwdStart() const { return fwdStart_; }
     const Period& term() const { return term_; }
     const Period& tenor() const { return tenor_; }
+    const std::string& indeName() const { return indexName_; }
     //@}
 private:
     string ccy_;
     Period fwdStart_;
     Period term_;
     Period tenor_;
+    std::string indexName_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
