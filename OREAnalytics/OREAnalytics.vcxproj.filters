@@ -27,6 +27,9 @@
     <ClInclude Include="orea\aggregation\collatexposurehelper.hpp">
       <Filter>aggregation</Filter>
     </ClInclude>
+    <ClInclude Include="orea\aggregation\cvaspreadsensitivitycalculator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
     <ClInclude Include="orea\aggregation\dimcalculator.hpp">
       <Filter>aggregation</Filter>
     </ClInclude>
@@ -194,6 +197,9 @@
       <Filter>aggregation</Filter>
     </ClCompile>
     <ClCompile Include="orea\aggregation\collatexposurehelper.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\cvaspreadsensitivitycalculator.cpp">
       <Filter>aggregation</Filter>
     </ClCompile>
     <ClInclude Include="orea\aggregation\dimcalculator.cpp">
