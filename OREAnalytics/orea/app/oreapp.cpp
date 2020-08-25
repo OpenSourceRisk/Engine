@@ -918,6 +918,10 @@ void OREApp::runPostProcessor() {
         analytics["dim"] = parseBool(params_->get("xva", "dim"));
     else
         analytics["dim"] = false;
+    if (params_->has("xva", "cvaSensi"))
+        analytics["cvaSensi"] = parseBool(params_->get("xva", "cvaSensi"));
+    else
+        analytics["cvaSensi"] = false;
 
     string baseCurrency = params_->get("xva", "baseCurrency");
     string calculationType = params_->get("xva", "calculationType");
@@ -989,10 +993,17 @@ void OREApp::runPostProcessor() {
             dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
     }
 
+    std::vector<Period> cvaSensiGrid;
+    if (params_->has("xva", "cvaSensiGrid"))
+        cvaSensiGrid = parseListOfValues<Period>(params_->get("xva", "cvaSensiGrid"), &parsePeriod);
+    Real cvaSensiShiftSize = 0.0;
+    if (params_->has("xva", "cvaSensiShiftSize"))
+        cvaSensiShiftSize = parseReal(params_->get("xva", "cvaSensiShiftSize"));
+    
     postProcess_ = boost::make_shared<PostProcess>(
         portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
-        fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, kvaCapitalDiscountRate,
+        fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid, cvaSensiShiftSize, kvaCapitalDiscountRate,
         kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor, kvaOurCvaRiskWeight,
         kvaTheirCvaRiskWeight);
 }
@@ -1026,8 +1037,14 @@ void OREApp::writeXVAReports() {
         string nettingSetColvaFile = o2.str();
         CSVFileReport nettingSetColvaReport(nettingSetColvaFile);
         getReportWriter()->writeNettingSetColva(nettingSetColvaReport, postProcess_, n);
-    }
 
+	ostringstream o3;
+        o3 << outputPath_ << "/cva_sensitivity_nettingset_" << n << ".csv";
+        string nettingSetCvaSensiFile = o3.str();
+        CSVFileReport nettingSetCvaSensitivityReport(nettingSetCvaSensiFile);
+        getReportWriter()->writeNettingSetCvaSensitivities(nettingSetCvaSensitivityReport, postProcess_, n);
+    }
+    
     string XvaFile = outputPath_ + "/xva.csv";
     CSVFileReport xvaReport(XvaFile);
     getReportWriter()->writeXVA(xvaReport, params_->get("xva", "allocationMethod"), portfolio_, postProcess_);
