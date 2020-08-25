@@ -993,10 +993,17 @@ void OREApp::runPostProcessor() {
             dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
     }
 
+    std::vector<Period> cvaSensiGrid;
+    if (params_->has("xva", "cvaSensiGrid"))
+        cvaSensiGrid = parseListOfValues<Period>(params_->get("xva", "cvaSensiGrid"), &parsePeriod);
+    Real cvaSensiShiftSize = 0.0;
+    if (params_->has("xva", "cvaSensiShiftSize"))
+        cvaSensiShiftSize = parseReal(params_->get("xva", "cvaSensiShiftSize"));
+    
     postProcess_ = boost::make_shared<PostProcess>(
         portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
-        fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, kvaCapitalDiscountRate,
+        fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid, cvaSensiShiftSize, kvaCapitalDiscountRate,
         kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor, kvaOurCvaRiskWeight,
         kvaTheirCvaRiskWeight);
 }

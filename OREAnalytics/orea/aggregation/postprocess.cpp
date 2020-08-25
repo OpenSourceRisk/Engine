@@ -19,6 +19,7 @@
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/aggregation/dimcalculator.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
+#include <orea/aggregation/cvaspreadsensitivitycalculator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/vectorutils.hpp>
 #include <ql/errors.hpp>
@@ -88,6 +89,7 @@ PostProcess::PostProcess(
     const string& calculationType, const string& dvaName, const string& fvaBorrowingCurve,
     const string& fvaLendingCurve,const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
     const boost::shared_ptr<CubeInterpretation>& cubeInterpretation, bool fullInitialCollateralisation,
+    vector<Period> cvaSensiGrid, Real cvaSensiShiftSize,
     Real kvaCapitalDiscountRate, Real kvaAlpha, Real kvaRegAdjustment, Real kvaCapitalHurdle, Real kvaOurPdFloor,
     Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight, Real kvaTheirCvaRiskWeight)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), configuration_(configuration),
@@ -95,6 +97,7 @@ PostProcess::PostProcess(
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
       fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), dimCalculator_(dimCalculator),
       cubeInterpretation_(cubeInterpretation), fullInitialCollateralisation_(fullInitialCollateralisation),
+      cvaSpreadSensiGrid_(cvaSensiGrid), cvaSpreadSensiShiftSize_(cvaSensiShiftSize),
       kvaCapitalDiscountRate_(kvaCapitalDiscountRate), kvaAlpha_(kvaAlpha), kvaRegAdjustment_(kvaRegAdjustment),
       kvaCapitalHurdle_(kvaCapitalHurdle), kvaOurPdFloor_(kvaOurPdFloor), kvaTheirPdFloor_(kvaTheirPdFloor),
       kvaOurCvaRiskWeight_(kvaOurCvaRiskWeight), kvaTheirCvaRiskWeight_(kvaTheirCvaRiskWeight) {
@@ -975,31 +978,6 @@ void PostProcess::updateStandAloneXVA() {
             dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
         }
 
-	// Sensitivity of period PDs to hazard rates, used to generate CVA sensitivities further below
-	Matrix pdhrSensi(dates, dates, 0.0);
-	vector<Real> deltat(dates, 0.0);
-	vector<Real> cumulativeSurvival(dates, 0.0);
-	vector<Real> deltaPD(dates, 0.0);
-	vector<Real> discount(dates, 0.0);	
-        for (Size j = 0; j < dates; ++j) {
-            Date d0 = j == 0 ? today : cube_->dates()[j - 1];
-            Date d1 = cube_->dates()[j];
-            Real cvaS0 = cvaDts->survivalProbability(d0);
-            Real cvaS1 = cvaDts->survivalProbability(d1);
-	    Real cvaPD = cvaS0 - cvaS1;
-	    Real dt = 1.0 * (d1 - d0) / 365;
-	    deltat[j] = dt;
-	    cumulativeSurvival[j] = cvaS1;
-	    deltaPD[j] = cvaPD;
-	    discount[j] = discountCurve->discount(d1);
-	    for (Size k = 0; k <= j; ++k) {
-	        Date d0k = k == 0 ? today : cube_->dates()[k - 1];
-		Date d1k = cube_->dates()[k];
-		Real dtk = 1.0 * (d1k - d0k) / 365;
-		pdhrSensi[j][k] = k < j ? -dtk * cvaPD : dtk * cvaS1;
-	    }
-	}
-
 	Handle<YieldTermStructure> borrowingCurve, lendingCurve;
         if (fvaBorrowingCurve_ != "")
             borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
@@ -1056,37 +1034,23 @@ void PostProcess::updateStandAloneXVA() {
 	bool cvaSensi = analytics_["cvaSensi"];
 	LOG("CVA Sensitivity: " << cvaSensi);
 	if (cvaSensi) {
-	    // Update CVA hazard rate sensis
-	    vector<Real> cvaHrSensi(dates, 0.0);
-	    for (Size k = 0; k < dates; ++k) {
-	        for (Size j = 0; j < dates; ++j) 
-		    //cvaHrSensi[k] += (1.0 - cvaRR) * pdhrSensi[j][k];
-		  cvaHrSensi[k] += (1.0 - cvaRR) * pdhrSensi[j][k] * epe[j + 1];
+	    boost::shared_ptr<CVASpreadSensitivityCalculator> cvaSensiCalculator = boost::make_shared<CVASpreadSensitivityCalculator>(
+	         nettingSetId, market_->asofDate(), epe, cube_->dates(), cvaDts, cvaRR, discountCurve, cvaSpreadSensiGrid_, cvaSpreadSensiShiftSize_);
+
+	    for (Size i = 0; i < cvaSensiCalculator->shiftTimes().size(); ++i) {
+	        DLOG("CVA Sensi Calculator: t=" << cvaSensiCalculator->shiftTimes()[i]
+		     << " h=" << cvaSensiCalculator->hazardRateSensitivities()[i] 
+		     << " s=" << cvaSensiCalculator->cdsSpreadSensitivities()[i]); 
 	    }
 
-	    // Aggregate hazard rate sensis to external (or default) sensitivity grid
-	    if (spreadSensitivityGrid_.size() == 0) {
-	        ALOG("spread sensitivity grid not specified, using default grid: 6M, 1Y, 3Y, 5Y, 10Y");
-		spreadSensitivityGrid_ = { 0.5, 1.0, 3.0, 5.0, 10.0 };
-	    }	
-	    vector<Real> cvaHrSensiCoarse(spreadSensitivityGrid_.size(), 0.0);
-	    Real t = 0.0;
-	    Size index = 0;
-	    for (Size k = 0; k < dates; ++k) {
-	        t += deltat[k];
-		if (t > spreadSensitivityGrid_[index] && index < spreadSensitivityGrid_.size() - 1)
-		    index++;
-		cvaHrSensiCoarse[index] += cvaHrSensi[k];
-	    }
-
-	    netCvaHazardRateSensitivity_[nettingSetId] = cvaHrSensiCoarse;
-	    // Par CDS spread conversion
-	    netCvaSpreadSensitivity_[nettingSetId] = spreadSensitivities(spreadSensitivityGrid_, cvaHrSensiCoarse,
-								     cumulativeSurvival, deltaPD, deltat, 1.0 - cvaRR, discount);
+	    netCvaHazardRateSensi_[nettingSetId] = cvaSensiCalculator->hazardRateSensitivities();
+	    netCvaSpreadSensi_[nettingSetId] = cvaSensiCalculator->cdsSpreadSensitivities();
+	    cvaSpreadSensiTimes_ = cvaSensiCalculator->shiftTimes();
+	    
 	} else {
-	    spreadSensitivityGrid_ = vector<Real>();
-	    netCvaHazardRateSensitivity_[nettingSetId] = vector<Real>();
-	    netCvaSpreadSensitivity_[nettingSetId] = vector<Real>();
+	    cvaSpreadSensiTimes_ = vector<Real>();
+	    netCvaHazardRateSensi_[nettingSetId] = vector<Real>();
+	    netCvaSpreadSensi_[nettingSetId] = vector<Real>();
 	}
     }
 }
@@ -1175,15 +1139,15 @@ const vector<Real>& PostProcess::netENE(const string& nettingSetId) {
 }
 
 const vector<Real>& PostProcess::netCvaHazardRateSensitivity(const string& nettingSetId) {
-    QL_REQUIRE(netCvaHazardRateSensitivity_.find(nettingSetId) != netCvaHazardRateSensitivity_.end(),
-               "Netting set " << nettingSetId << " not found in netCvaHazardRateSensitivity map");
-    return netCvaHazardRateSensitivity_[nettingSetId];
+    QL_REQUIRE(netCvaHazardRateSensi_.find(nettingSetId) != netCvaHazardRateSensi_.end(),
+               "Netting set " << nettingSetId << " not found in netCvaHazardRateSensi map");
+    return netCvaHazardRateSensi_[nettingSetId];
 }
 
 const vector<Real>& PostProcess::netCvaSpreadSensitivity(const string& nettingSetId) {
-    QL_REQUIRE(netCvaSpreadSensitivity_.find(nettingSetId) != netCvaSpreadSensitivity_.end(),
-               "Netting set " << nettingSetId << " not found in netCvaSpreadSensitivity map");
-    return netCvaSpreadSensitivity_[nettingSetId];
+    QL_REQUIRE(netCvaSpreadSensi_.find(nettingSetId) != netCvaSpreadSensi_.end(),
+               "Netting set " << nettingSetId << " not found in netCvaSpreadSensi map");
+    return netCvaSpreadSensi_[nettingSetId];
 }
 
 const vector<Real>& PostProcess::netEE_B(const string& nettingSetId) {
@@ -1405,131 +1369,6 @@ void PostProcess::exportDimRegression(const std::string& nettingSet, const std::
 
     if (regCalc)
         regCalc->exportDimRegression(nettingSet, timeSteps, dimRegReports);
-}
-
-Real survivalProbability(Real t, const vector<Real>& times, const vector<Real>& hazardRates) {
-    // survival probabilities implied by piecewise flat hazard rates on the simulation grid
-    Real S = 1.0;
-    if (t == 0.0)
-        return 1.0;
-    for (Size i = 0; i < times.size(); ++i) {
-        Real dt = i == 0 ? times[i] : times[i] - times[i-1];
-	if (times[i] < t)
-            S *= exp(-dt * hazardRates[i]);
-	else {
-            if (i == 0)
-	        S *= exp(-t * hazardRates[i]);
-	    else
-	        S *= exp(-(t - times[i-1]) * hazardRates[i]);
-	    return S;
-	}
-    }
-    return S * exp(-(t - times.back()) * hazardRates.back());
-}
-  
-Real fairCdsSpread(Size term,
-		   const vector<Real>& sensiGrid,
-		   const vector<Real>& hr,
-		   const vector<Real>& deltat,
-		   const vector<Real>& discount,
-		   Real lgd,
-		   Size bumpIndex = 0,
-		   Real bumpSize = 0.0) {
-    vector<Real> pd(deltat.size(), 0.0), surv(deltat.size(), 0.0), times(deltat.size(), 0.0);
-    vector<Real> hrb = hr;
-    Real denominator = 0, enumerator = 0;
-    QL_REQUIRE(term < sensiGrid.size(), "term out of range");
-    Real T = sensiGrid[term];
-    Real t2 = sensiGrid[bumpIndex];
-    Real t1 = bumpIndex == 0 ? 0.0 : sensiGrid[bumpIndex - 1];
-    bool isLastBump = bumpIndex == sensiGrid.size() - 1;
-    Real t = 0.0;
-    for (Size i = 0; i < deltat.size(); ++i) {
-        t += deltat[i];
-    	if (t > T) break;
-    	Real h = (t > t1 && (t <= t2 || isLastBump)) ? hr[i] + bumpSize : hr[i];
-    	surv[i] = i == 0 ? exp(-h * deltat[i]) : surv[i-1] * exp(-h * deltat[i]);
-    	pd[i] = i == 0 ? 1.0 - surv[i] : surv[i-1] - surv[i];
-    	denominator += deltat[i] * surv[i] * discount[i];
-    	enumerator += pd[i] * discount[i];
-    }
-    // for (Size i = 0; i < deltat.size(); ++i) {
-    //     t += deltat[i];
-    // 	times[i] = t;
-    // 	hrb[i] = (t > t1 && (t <= t2 || isLastBump)) ? hr[i] + bumpSize : hr[i];
-    // }
-
-    // Real dt = T < 1.0 ? T : 1.0;
-    // for (Real t = dt; t <= T; t += dt) {
-    //     Real S1 = survivalProbability(t-dt, times, hrb);
-    // 	Real S2 = survivalProbability(t, times, hrb);
-    // 	denominator += dt * S2;
-    // 	enumerator += (S1 - S2);
-    // 	DLOG("FairSpread " << T << " " << t << " " << S1 << " " << S2);
-    // }
-    return lgd * enumerator / denominator;
-}
-  
-vector<Real> PostProcess::spreadSensitivities(const vector<Real>& sensiGrid,
-					      const vector<Real>& cvahrSensi,
-					      const vector<Real>& cumulativeSurvival,
-					      const vector<Real>& deltaPD,
-					      const vector<Real>& deltat,
-					      Real lgd,
-					      const vector<Real>& discount) {
-
-    QL_REQUIRE(cvahrSensi.size() == sensiGrid.size(), "vector size mismatch cvahrSensi vs sensiGrid");
-    QL_REQUIRE(cumulativeSurvival.size() == deltat.size(), "vector size mismatch cumulativeSurvival vs deltat");
-    QL_REQUIRE(deltaPD.size() == deltat.size(), "vector size mismatch deltaPD vs deltat");
-    QL_REQUIRE(discount.size() == 0 || discount.size() == deltat.size(), "vector size mismatch discount vs deltat");
-  
-    vector<Real> dis = discount.size() == 0 ? vector<Real>(deltat.size(), 1.0) : discount;
-    Size len = deltat.size();
-    Size sensiGridSize = cvahrSensi.size();
-    vector<Real> spreadSensi(sensiGridSize, 0.0);
-
-    // init hazard rate vector
-    vector<Real> hr(len, 0.0);
-    for (Size i = 0; i < hr.size(); ++i) {
-        Real S = i == 0 ? 1.0 : cumulativeSurvival[i-1];
-        hr[i] = -1.0 / deltat[i] * log(1.0 - deltaPD[i] / S);
-	DLOG("hazard rate " << i << ": " << hr[i]);
-    }
-
-    DLOG("LGD = " <<  lgd);
-
-    // Build Jacobi matrix J of fair CDS spread sensitivities w.r.t. hazard rate moves, preferrably analytically, bump & reval for now
-    // Compute CVA sensitivity w.r.t. spread moves via " CVA sensi w.r.t. spreads = J^{-1} * CVA sensi w.r.t. hazard rates " 
-    // Simplifying assumptions:
-    // - the CDS pays its premium at the end of each simulation grid time step rather than at some schedule dates
-    // - no rebate term
-    // - the discount curve is the base currency discount curve
-    Matrix jacobi(sensiGridSize, sensiGridSize, 0.0);
-    Array input(sensiGridSize, 0);
-    Real bumpSize = 1.0e-4; // some small value, just used to approximate the partial derivative here
-    for (Size i = 0; i < sensiGridSize; ++i) {
-        Real fairSpread = fairCdsSpread(i, sensiGrid, hr, deltat, dis, lgd);
-        input[i] = cvahrSensi[i];
-	Real sum = 0.0;
-	for (Size k = 0; k <= i; ++k) {
-	    Real fairSpreadBumped = fairCdsSpread(i, sensiGrid, hr, deltat, dis, lgd, k, bumpSize);
-	    Real spreadMove = fairSpreadBumped - fairSpread;
-	    jacobi[k][i] = spreadMove / bumpSize;
-	    sum += jacobi[k][i];
-	    DLOG("jacobi["<< k << "][" << i << "]=" << jacobi[k][i]);
-	}
-	DLOG("Sensi grid " << i << ", " << sensiGrid[i]
-	     << ", fair spread " << fairSpread
-	     << ", jacobi row sum " << sum
-	     << ", input sensi " << input[i]);
-    }
-
-    Array output = inverse(jacobi) * input;
-
-    for (Size i = 0; i < output.size(); ++i)
-        spreadSensi[i] = output[i];
-
-    return spreadSensi;
 }
 
 } // namespace analytics

@@ -137,6 +137,10 @@ public:
         const boost::shared_ptr<CubeInterpretation>& cubeInterpretation = boost::shared_ptr<CubeInterpretation>(),
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
         bool fullInitialCollateralisation = false,
+	//! CVA spread sensitvitiy grid
+	vector<Period> cvaSpreadSensiGrid = { 6*Months, 1*Years, 3*Years, 5*Years, 10*Years },
+	//! CVA spread sensitivity shift size
+	Real cvaSpreadSensiShiftSize = 0.0001,
         //! own capital discounting rate for discounting expected capital for KVA
         Real kvaCapitalDiscountRate = 0.10,
         //! alpha to adjust EEPE to give EAD for risk capital
@@ -158,11 +162,7 @@ public:
         dimCalculator_ = dimCalculator;
     }
 
-    void setSpreadSensitivityGrid(vector<Real> spreadSensitivityGrid) {
-        spreadSensitivityGrid_ = spreadSensitivityGrid;
-    }
-
-    const vector<Real>& spreadSensitivityGrid() { return spreadSensitivityGrid_; }
+    const vector<Real>& spreadSensitivityGrid() { return cvaSpreadSensiTimes_; }
 
     //! Return list of Trade IDs in the portfolio
     const vector<string>& tradeIds() { return tradeIds_; }
@@ -297,15 +297,6 @@ protected:
     void updateStandAloneXVA();
     void updateAllocatedXVA();
 
-    // perfrom jacobi transform to turn hazard rate sensitivities into spread sensitivities
-    vector<Real> spreadSensitivities(const vector<Real>& sensiGrid,
-				     const vector<Real>& cvahrSensi,
-				     const vector<Real>& cumulativeSurvival,
-				     const vector<Real>& deltaPD,
-				     const vector<Real>& deltat,
-				     Real lgd,
-				     const vector<Real>& discount = vector<Real>());
-
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<NettingSetManager> nettingSetManager_;
     boost::shared_ptr<Market> market_;
@@ -318,7 +309,7 @@ protected:
     map<string, Real> tradeEPE_B_, tradeEEPE_B_;
     map<string, vector<Real>> allocatedTradeEPE_, allocatedTradeENE_;
     map<string, vector<Real>> netEPE_, netENE_, netEE_B_, netEEE_B_, netPFE_, netVAR_, expectedCollateral_;
-    map<string, vector<Real>> netCvaHazardRateSensitivity_, netCvaSpreadSensitivity_;
+    map<string, vector<Real>> netCvaHazardRateSensi_, netCvaSpreadSensi_;
     map<string, Real> netEPE_B_, netEEPE_B_;
     map<string, vector<Real>> colvaInc_, eoniaFloorInc_;
     map<string, Real> tradeCVA_, tradeDVA_, tradeMVA_, tradeFBA_, tradeFCA_, tradeFBA_exOwnSP_, tradeFCA_exOwnSP_,
@@ -344,6 +335,9 @@ protected:
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
     boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
     bool fullInitialCollateralisation_;
+    vector<Period> cvaSpreadSensiGrid_;
+    vector<Time> cvaSpreadSensiTimes_;
+    Real cvaSpreadSensiShiftSize_;
     Real kvaCapitalDiscountRate_;
     Real kvaAlpha_;
     Real kvaRegAdjustment_;
@@ -352,8 +346,6 @@ protected:
     Real kvaTheirPdFloor_;
     Real kvaOurCvaRiskWeight_;
     Real kvaTheirCvaRiskWeight_;
-
-    vector<Real> spreadSensitivityGrid_;
 };
 
 } // namespace analytics

@@ -504,9 +504,8 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
 void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                             const string& nettingSetId) {
     const vector<Real> grid = postProcess->spreadSensitivityGrid();
-    Date today = Settings::instance().evaluationDate();
-    const vector<Real>& sensiHR = postProcess->netCvaHazardRateSensitivity(nettingSetId);
-    const vector<Real>& sensiSpread = postProcess->netCvaSpreadSensitivity(nettingSetId);
+    const vector<Real>& sensiHazardRate = postProcess->netCvaHazardRateSensitivity(nettingSetId);
+    const vector<Real>& sensiCdsSpread = postProcess->netCvaSpreadSensitivity(nettingSetId);
     report.addColumn("NettingSet", string())
         .addColumn("Time", double(), 6)
         .addColumn("CvaHazardRateSensitivity", double(), 6)
@@ -516,8 +515,8 @@ void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report, bo
         report.next()
             .add(nettingSetId)
             .add(grid[j])
-            .add(sensiHR[j])
-            .add(sensiSpread[j]);
+            .add(sensiHazardRate[j])
+            .add(sensiCdsSpread[j]);
     }
     report.end();
 }
