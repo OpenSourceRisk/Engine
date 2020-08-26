@@ -2,4 +2,5 @@
   <DiscountingCurves id="default">
     <DiscountingCurve currency="USD">Yield/USD/USD-LIBOR-3M</DiscountingCurve>
   </DiscountingCurves>
+  <IndexForwardingCurves />
 </TodaysMarket>
