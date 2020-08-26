@@ -214,6 +214,7 @@ Example:
     Instrument Type & \emph{MM} & \\ \hline
     Quote Type & \emph{RATE} & \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Deposit rate\\ \hline
+    IndexName & Optional, any string & Generally used to differentiate money market rates referencing different interest rate indices with the same tenor\\ \hline
     Forward start & An integer followed by D, W, M or Y.  & Period from today to start \\ \hline
     Term & An integer followed by D, W, M or Y. & Period from start to maturity\\ \hline
   \end{tabular}
@@ -497,6 +498,7 @@ Example: Three Months SOFR Futures (DEC 2019):
     Instrument Type & \emph{IR\_SWAP} & \\ \hline
     Quote Type & \emph{RATE} & \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Swap rate\\ \hline
+    IndexName & Optional, any string & Generally used to differentiate swaps referencing different interest rate indices with the same tenor\\ \hline
     Forward start & An integer followed by D, W, M or Y & Generic period from today to start\\ \hline
     Tenor & An integer followed by D, W, M or Y & Underlying index period \\ \hline
     Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\ \hline

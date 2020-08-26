@@ -1129,6 +1129,14 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
                 Date refStart = refEnd - futureQuote->tenor();
                 Date startDate = IMM::nextDate(refStart);
                 Date endDate = IMM::nextDate(refEnd);
+
+                if (endDate <= asofDate_) {
+                    WLOG("Skipping the " << io::ordinal(i + 1) << " overnight index future instrument because its " <<
+                        "end date, " << io::iso_date(endDate) << ", is on or before the valuation date, " <<
+                        io::iso_date(asofDate_) << ".");
+                    continue;
+                }
+
                 boost::shared_ptr<RateHelper> futureHelper(
                     new OvernightIndexFutureRateHelper(futureQuote->quote(), startDate, endDate, on));
                 instruments.push_back(futureHelper);
@@ -1142,6 +1150,14 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
                 // Create a MM future helper
                 Date refDate(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
                 Date immDate = IMM::nextDate(refDate, false);
+
+                if (immDate < asofDate_) {
+                    WLOG("Skipping the " << io::ordinal(i + 1) << " money market future instrument because its " <<
+                        "start date, " << io::iso_date(immDate) << ", is before the valuation date, " <<
+                        io::iso_date(asofDate_) << ".");
+                    continue;
+                }
+
                 boost::shared_ptr<RateHelper> futureHelper(
                     new FuturesRateHelper(futureQuote->quote(), immDate, futureConvention->index()));
 
