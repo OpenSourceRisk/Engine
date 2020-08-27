@@ -3,7 +3,7 @@
   <xs:element type="sensitivityanalysis" name="SensitivityAnalysis"/>
 
   <xs:complexType name="sensitivityanalysis">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="xs:boolean" name="ParConversion" minOccurs="0"/>
       <xs:element type="discountcurves" name="DiscountCurves"/>
       <xs:element type="indexcurves" name="IndexCurves" minOccurs="0"/>
@@ -29,7 +29,7 @@
       <xs:element type="correlationcurves" name="Correlations" minOccurs="0"/>
       <xs:element type="crossgammafilter" name="CrossGammaFilter" minOccurs="0"/>
       <xs:element type="bool" name="ComputeGamma" minOccurs="0"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="parconversion">
@@ -259,7 +259,7 @@
       <xs:element type="xs:string" name="Shifts"  minOccurs="0"/>
       <xs:element name="ParConversion" minOccurs="0">
         <xs:complexType>
-          <xs:sequence>
+          <xs:all>
             <xs:element type="xs:string" name="Instruments"/>
             <xs:element type="xs:boolean" name="SingleCurve"/>
             <xs:element name="Conventions">
@@ -277,7 +277,7 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
-          </xs:sequence>
+          </xs:all>
         </xs:complexType>
       </xs:element>
     </xs:sequence>
