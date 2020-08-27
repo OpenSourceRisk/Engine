@@ -21,6 +21,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -184,7 +185,9 @@ void SegmentIDGetter::visit(WeightedAverageYieldCurveSegment& s) {
 
 void SegmentIDGetter::visit(YieldPlusDefaultYieldCurveSegment& s) {
     requiredCurveIds_[CurveSpec::CurveType::Yield].insert(s.referenceCurveID());
-    requiredCurveIds_[CurveSpec::CurveType::Default].insert(s.defaultCurveIDs().begin(), s.defaultCurveIDs().end());
+    for (auto const& i : s.defaultCurveIDs()) {
+        requiredCurveIds_[CurveSpec::CurveType::Default].insert(parseCurveSpec(i)->curveConfigID());
+    }
 }
 
 // YieldCurveConfig

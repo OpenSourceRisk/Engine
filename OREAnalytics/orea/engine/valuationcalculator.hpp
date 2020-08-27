@@ -47,14 +47,18 @@ public:
         Size tradeIndex,
         //! The market
         const boost::shared_ptr<SimMarket>& simMarket,
-        //! The cube
+        //! The cube for data on trade level
         boost::shared_ptr<NPVCube>& outputCube,
+        //! The cube for data on netting set level
+        boost::shared_ptr<NPVCube>& outputCubeNettingSet,
         //! The date
         const Date& date,
         //! Date index
         Size dateIndex,
         //! Sample
-        Size sample) = 0;
+        Size sample,
+        //! isCloseOut
+        bool isCloseOut = false) = 0;
 
     virtual void calculateT0(
         //! The trade
@@ -64,7 +68,9 @@ public:
         //! The market
         const boost::shared_ptr<SimMarket>& simMarket,
         //! The cube
-        boost::shared_ptr<NPVCube>& outputCube) = 0;
+        boost::shared_ptr<NPVCube>& outputCube,
+        //! The cube
+        boost::shared_ptr<NPVCube>& outputCubeNettingSet) = 0;
 };
 
 //! NPVCalculator
@@ -79,14 +85,16 @@ public:
 
     virtual void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                            const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                           const Date& date, Size dateIndex, Size sample);
+                           boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
+                           Size sample, bool isCloseOut = false);
 
     virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                             const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube);
+                             const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
+                             boost::shared_ptr<NPVCube>& outputCubeNettingSet);
 
-protected:
     virtual Real npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket);
 
+protected:
     std::string baseCcyCode_;
     Size index_;
 };
@@ -105,10 +113,12 @@ public:
 
     virtual void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                            const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                           const Date& date, Size dateIndex, Size sample);
+                           boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
+                           Size sample, bool isCloseOut = false);
 
     virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                             const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube) {}
+                             const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
+                             boost::shared_ptr<NPVCube>& outputCubeNettingSet) {}
 
 private:
     std::string baseCcyCode_;
@@ -132,14 +142,16 @@ public:
 
     virtual void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                            const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                           const Date& date, Size dateIndex, Size sample);
+                           boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
+                           Size sample, bool isCloseOut = false);
 
     virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                             const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube);
+                             const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
+                             boost::shared_ptr<NPVCube>& outputCubeNettingSet);
 
-private:
     Real npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket);
 
+private:
     std::string baseCcyCode_;
     boost::shared_ptr<Market> t0Market_;
     Size index_;

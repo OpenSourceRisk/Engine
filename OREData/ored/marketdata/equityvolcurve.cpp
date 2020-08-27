@@ -17,6 +17,9 @@
 */
 
 #include <algorithm>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/adaptor/indexed.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/log.hpp>
@@ -29,6 +32,7 @@
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/equityoptionsurfacestripper.hpp>
@@ -74,6 +78,8 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                 buildVolatility(asof, config, *vcc, loader);
             } else if (auto vssc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc)) {
                 buildVolatility(asof, config, *vssc, loader, eqIndex);
+            } else if (auto vmsc = boost::dynamic_pointer_cast<VolatilityMoneynessSurfaceConfig>(vc)) {
+                buildVolatility(asof, config, *vmsc, loader, eqIndex);
             } else {
                 QL_FAIL("Unexpected VolatilityConfig in EquityVolatilityConfig");
             }
@@ -306,18 +312,20 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
             if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION &&
                 md->quoteType() == vc.quoteType()) {
                 boost::shared_ptr<EquityOptionQuote> q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
-
-                if (q->eqName() == vc.curveID() && q->ccy() == vc.ccy()) {
+                // todo - for now we will ignore ATM, ATMF quotes both for explicit strikes and in case of strike wild
+                // card. ----
+                auto absoluteStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
+                if (absoluteStrike && (q->eqName() == vc.curveID() && q->ccy() == vc.ccy())) {
                     if (!expiriesWc) {
                         auto j = std::find(vssc.expiries().begin(), vssc.expiries().end(), q->expiry());
                         expiryRelevant = j != vssc.expiries().end();
                     }
                     if (!strikesWc) {
-                        auto i = std::find(vssc.strikes().begin(), vssc.strikes().end(), q->strike());
+                        auto i = std::find_if(vssc.strikes().begin(), vssc.strikes().end(),
+                                              [&absoluteStrike](const std::string& x) {
+                                                  return close_enough(parseReal(x), absoluteStrike->strike());
+                                              });
                         strikeRelevant = i != vssc.strikes().end();
-                    } else {
-                        // todo - for now we will ignore ATMF quotes in case of strike wild card. ----
-                        strikeRelevant = q->strike() != "ATMF";
                     }
                     quoteRelevant = strikeRelevant && expiryRelevant;
 
@@ -330,12 +338,12 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                         QL_REQUIRE(tmpDate > asof,
                                    "Option quote for a past date (" << ore::data::to_string(tmpDate) << ")");
                         if (q->isCall()) {
-                            callStrikes.push_back(parseReal(q->strike()));
+                            callStrikes.push_back(absoluteStrike->strike());
                             callData.push_back(q->quote()->value());
                             callExpiries.push_back(tmpDate);
                             callQuotesAdded++;
                         } else {
-                            putStrikes.push_back(parseReal(q->strike()));
+                            putStrikes.push_back(absoluteStrike->strike());
                             putData.push_back(q->quote()->value());
                             putExpiries.push_back(tmpDate);
                             putQuotesAdded++;
@@ -467,6 +475,229 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     } catch (...) {
         QL_FAIL("equity vol curve building failed: unknown error");
     }
+}
+
+namespace {
+vector<Real> checkMoneyness(const vector<string>& strMoneynessLevels) {
+
+    using boost::adaptors::transformed;
+    using boost::algorithm::join;
+
+    vector<Real> moneynessLevels = parseVectorOfValues<Real>(strMoneynessLevels, &parseReal);
+    sort(moneynessLevels.begin(), moneynessLevels.end(), [](Real x, Real y) { return !close(x, y) && x < y; });
+    QL_REQUIRE(adjacent_find(moneynessLevels.begin(), moneynessLevels.end(),
+                             [](Real x, Real y) { return close(x, y); }) == moneynessLevels.end(),
+               "The configured moneyness levels contain duplicates");
+    DLOG("Parsed " << moneynessLevels.size() << " unique configured moneyness levels.");
+    DLOG("The moneyness levels are: " << join(
+             moneynessLevels | transformed([](Real d) { return ore::data::to_string(d); }), ","));
+
+    return moneynessLevels;
+}
+} // namespace
+
+void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConfig& vc,
+                                     const VolatilityMoneynessSurfaceConfig& vmsc, const Loader& loader,
+                                     const QuantLib::Handle<EquityIndex>& eqIndex) {
+
+    // this follows ComoodityVolCurve::buildVolatility() for moneyness surface configs
+
+    using boost::adaptors::transformed;
+    using boost::algorithm::join;
+
+    // Check that the quote type is volatility, we do not support price
+    QL_REQUIRE(vc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL,
+               "Equity Moneyness Surface supports lognormal volatility quotes only");
+
+    // Parse, sort and check the vector of configured moneyness levels
+    vector<Real> moneynessLevels = checkMoneyness(vmsc.moneynessLevels());
+
+    // Expiries may be configured with a wildcard or given explicitly
+    bool expWc = false;
+    if (find(vmsc.expiries().begin(), vmsc.expiries().end(), "*") != vmsc.expiries().end()) {
+        expWc = true;
+        QL_REQUIRE(vmsc.expiries().size() == 1, "Wild card expiry specified but more expiries also specified.");
+        DLOG("Have expiry wildcard pattern " << vmsc.expiries()[0]);
+    }
+
+    // Map to hold the rows of the volatility matrix. The keys are the expiry dates and the values are the
+    // vectors of volatilities, one for each configured moneyness.
+    map<Date, vector<Real>> surfaceData;
+
+    // Count the number of quotes added. We check at the end that we have added all configured quotes.
+    Size quotesAdded = 0;
+
+    // Configured moneyness type.
+    MoneynessStrike::Type moneynessType = parseMoneynessType(vmsc.moneynessType());
+
+    // Populate the configured strikes.
+    vector<boost::shared_ptr<BaseStrike>> strikes;
+    for (const auto& moneynessLevel : moneynessLevels) {
+        strikes.push_back(boost::make_shared<MoneynessStrike>(moneynessType, moneynessLevel));
+    }
+
+    // Read the quotes to fill the expiry dates and vols matrix.
+    for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
+
+        // Go to next quote if the market data point's date does not equal our asof.
+        if (md->asofDate() != asof)
+            continue;
+
+        // Go to next quote if not a commodity option quote.
+        auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
+        if (!q)
+            continue;
+
+        // Go to next quote if eq name or currency do not match config.
+        if (vc.curveID() != q->eqName() || vc.ccy() != q->ccy())
+            continue;
+
+        // Go to next quote if quote type does not match config
+        if (vc.quoteType() != q->quoteType())
+            continue;
+
+        // Iterator to one of the configured strikes.
+        vector<boost::shared_ptr<BaseStrike>>::iterator strikeIt;
+
+        if (!expWc) {
+
+            // If we have explicitly configured expiries and the quote is not in the configured quotes continue.
+            auto it = find(vc.quotes().begin(), vc.quotes().end(), q->name());
+            if (it == vc.quotes().end())
+                continue;
+
+            // Check if quote's strike is in the configured strikes, continue if no.
+            strikeIt = find_if(strikes.begin(), strikes.end(),
+                               [&q](boost::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
+            if (strikeIt == strikes.end())
+                continue;
+
+        } else {
+
+            // Check if quote's strike is in the configured strikes and continue if it is not.
+            strikeIt = find_if(strikes.begin(), strikes.end(),
+                               [&q](boost::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
+            if (strikeIt == strikes.end())
+                continue;
+        }
+
+        // Position of quote in vector of strikes
+        Size pos = std::distance(strikes.begin(), strikeIt);
+
+        // Process the quote
+        Date eDate = getDateFromDateOrPeriod(q->expiry(), asof, calendar_);
+
+        // Add quote to surface
+        if (surfaceData.count(eDate) == 0)
+            surfaceData[eDate] = vector<Real>(moneynessLevels.size(), Null<Real>());
+
+        QL_REQUIRE(surfaceData[eDate][pos] == Null<Real>(),
+                   "Quote " << q->name() << " provides a duplicate quote for the date " << io::iso_date(eDate)
+                            << " and strike " << *q->strike());
+        surfaceData[eDate][pos] = q->quote()->value();
+        quotesAdded++;
+
+        TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << *q->strike() << "," << fixed
+                            << setprecision(9) << "," << q->quote()->value() << ")");
+    }
+
+    LOG("EquityVolCurve: added " << quotesAdded << " quotes in building moneyness strike surface.");
+
+    // Check the data gathered.
+    if (!expWc) {
+        // If expiries were configured explicitly, the number of configured quotes should equal the
+        // number of quotes added.
+        QL_REQUIRE(vc.quotes().size() == quotesAdded,
+                   "Found " << quotesAdded << " quotes, but " << vc.quotes().size() << " quotes required by config.");
+    } else {
+        // check we have non-empty surface data
+        QL_REQUIRE(!surfaceData.empty(), "Moneyness Surface Data is empty");
+        // If the expiries were configured via a wildcard, check that no surfaceData element has a Null<Real>().
+        for (const auto& kv : surfaceData) {
+            for (Size j = 0; j < moneynessLevels.size(); j++) {
+                QL_REQUIRE(kv.second[j] != Null<Real>(), "Volatility for expiry date "
+                                                             << io::iso_date(kv.first) << " and strike " << *strikes[j]
+                                                             << " not found. Cannot proceed with a sparse matrix.");
+            }
+        }
+    }
+
+    // Populate the volatility quotes and the expiry times.
+    // Rows are moneyness levels and columns are expiry times - this is what the ctor needs below.
+    vector<Date> expiryDates(surfaceData.size());
+    vector<Time> expiryTimes(surfaceData.size());
+    vector<vector<Handle<Quote>>> vols(moneynessLevels.size());
+    for (const auto& row : surfaceData | boost::adaptors::indexed(0)) {
+        expiryDates[row.index()] = row.value().first;
+        expiryTimes[row.index()] = dayCounter_.yearFraction(asof, row.value().first);
+        for (Size i = 0; i < row.value().second.size(); i++) {
+            vols[i].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(row.value().second[i])));
+        }
+    }
+
+    // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
+    // BlackVarianceSurfaceMoneyness time extrapolation is hard-coded to constant in volatility.
+    bool flatExtrapolation = true;
+    if (vmsc.extrapolation()) {
+
+        auto strikeExtrapType = parseExtrapolation(vmsc.strikeExtrapolation());
+        if (strikeExtrapType == Extrapolation::UseInterpolator) {
+            DLOG("Strike extrapolation switched to using interpolator.");
+            flatExtrapolation = false;
+        } else if (strikeExtrapType == Extrapolation::None) {
+            DLOG("Strike extrapolation cannot be turned off on its own so defaulting to flat.");
+        } else if (strikeExtrapType == Extrapolation::Flat) {
+            DLOG("Strike extrapolation has been set to flat.");
+        } else {
+            DLOG("Strike extrapolation " << strikeExtrapType << " not expected so default to flat.");
+        }
+
+        auto timeExtrapType = parseExtrapolation(vmsc.timeExtrapolation());
+        if (timeExtrapType != Extrapolation::Flat) {
+            DLOG("BlackVarianceSurfaceMoneyness only supports flat volatility extrapolation in the time direction");
+        }
+    } else {
+        DLOG("Extrapolation is turned off for the whole surface so the time and"
+             << " strike extrapolation settings are ignored");
+    }
+
+    // Time interpolation
+    if (vmsc.timeInterpolation() != "Linear") {
+        DLOG("BlackVarianceSurfaceMoneyness only supports linear time interpolation in variance.");
+    }
+
+    // Strike interpolation
+    if (vmsc.strikeInterpolation() != "Linear") {
+        DLOG("BlackVarianceSurfaceMoneyness only supports linear strike interpolation in variance.");
+    }
+
+    // Both moneyness surfaces need a spot quote.
+
+    // The choice of false here is important for forward moneyness. It means that we use the cpts and yts in the
+    // BlackVarianceSurfaceMoneynessForward to get the forward value at all times and in particular at times that
+    // are after the last expiry time. If we set it to true, BlackVarianceSurfaceMoneynessForward uses a linear
+    // interpolated forward curve on the expiry times internally which is poor.
+    bool stickyStrike = false;
+
+    if (moneynessType == MoneynessStrike::Type::Forward) {
+
+        DLOG("Creating BlackVarianceSurfaceMoneynessForward object");
+        vol_ = boost::make_shared<BlackVarianceSurfaceMoneynessForward>(
+            calendar_, eqIndex->equitySpot(), expiryTimes, moneynessLevels, vols, dayCounter_,
+            eqIndex->equityDividendCurve(), eqIndex->equityForecastCurve(), stickyStrike, flatExtrapolation);
+
+    } else {
+
+        DLOG("Creating BlackVarianceSurfaceMoneynessSpot object");
+        vol_ = boost::make_shared<BlackVarianceSurfaceMoneynessSpot>(calendar_, eqIndex->equitySpot(), expiryTimes,
+                                                                     moneynessLevels, vols, dayCounter_, stickyStrike,
+                                                                     flatExtrapolation);
+    }
+
+    DLOG("Setting BlackVarianceSurfaceMoneyness extrapolation to " << to_string(vmsc.extrapolation()));
+    vol_->enableExtrapolation(vmsc.extrapolation());
+
+    LOG("EquityVolCurve: finished building 2-D volatility moneyness strike surface");
 }
 
 void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,

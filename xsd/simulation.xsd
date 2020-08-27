@@ -13,7 +13,6 @@
   <xs:complexType name="parameters">
     <xs:all>
       <xs:element type="discretizationType" name="Discretization"/>
-      <!-- FIXME: Discretisation -->
       <xs:element type="xs:string" name="Grid"/>
       <xs:element type="xs:string" name="Calendar"/>
       <!-- can be multiple so we don't use calendar type -->
@@ -24,8 +23,17 @@
       <xs:element type="xs:positiveInteger" name="Samples"/>
       <xs:element type="SobolBrownianGeneratorOrdering" name="Ordering" minOccurs="0"/>
       <xs:element type="SobolRsgDirectionIntegers" name="DirectionIntegers" minOccurs="0"/>
+      <xs:element type="xs:string" name="CloseOutLag" minOccurs="0"/>
+      <xs:element type="mporMode" name="MporMode" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
+
+  <xs:simpleType name="mporMode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ActualDate"/>
+      <xs:enumeration value="StickyDate"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:simpleType name="discretizationType">
     <xs:restriction base="xs:string">

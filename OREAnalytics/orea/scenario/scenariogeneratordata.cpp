@@ -112,6 +112,27 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     else
         directionIntegers_ = SobolRsg::JoeKuoD7;
 
+    withCloseOutLag_ = false;
+    if (XMLUtils::getChildNode(node, "CloseOutLag") != NULL) {
+        withCloseOutLag_ = true;
+        closeOutLag_ = parsePeriod(XMLUtils::getChildValue(node, "CloseOutLag", true));
+        grid_->addCloseOutDates(closeOutLag_);
+        LOG("Use lagged close out grid, lag period is " << closeOutLag_);
+    }
+    withMporStickyDate_ = false;
+    if (XMLUtils::getChildNode(node, "MporMode") != NULL) {
+        string mporMode = XMLUtils::getChildValue(node, "MporMode", true);
+        if (mporMode == "StickyDate") {
+            withMporStickyDate_ = true;
+            LOG("Use Mpor sticky date mode");
+        } else if (mporMode == "ActualDate") {
+            withMporStickyDate_ = false;
+            LOG("Use Mpor actual date mode");
+        } else {
+            QL_FAIL("MporMode " << mporMode << " not recognised");
+        }
+    }
+
     LOG("ScenarioGeneratorData done.");
 }
 

@@ -84,6 +84,12 @@ public:
     //! the underlying multiplier
     Real underlyingMultiplier() const { return undMultiplier_; }
 
+    //! disable exercise decisions
+    void enableExercise() { exercisable_ = true; }
+
+    //! enable exercise decisions
+    void disableExercise() { exercisable_ = false; }
+
 protected:
     bool isLong_;
     bool isPhysicalDelivery_;
@@ -93,6 +99,7 @@ protected:
     mutable boost::shared_ptr<QuantLib::Instrument> activeUnderlyingInstrument_;
     Real undMultiplier_;
     mutable bool exercised_;
+    bool exercisable_;
     mutable QuantLib::Date exerciseDate_;
 
     virtual bool exercise() const = 0;

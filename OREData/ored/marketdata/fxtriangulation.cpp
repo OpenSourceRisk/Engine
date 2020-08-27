@@ -65,7 +65,7 @@ Handle<Quote> FXTriangulation::getQuote(const string& pair) const {
         return it->second;
 
     // Now we have to break the pair up and search for it.
-    QL_REQUIRE(pair.size() == 6, "Invalid ccypair " << pair);
+    QL_REQUIRE(pair.size() == 6, "Invalid ccypair3 " << pair);
     string domestic = pair.substr(0, 3);
     string foreign = pair.substr(3);
 

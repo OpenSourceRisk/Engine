@@ -177,7 +177,8 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
                        const FXTriangulation& fxTriangulation,
                        const boost::shared_ptr<ReferenceDataManager>& referenceData)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), conventions_(conventions),
-      requiredYieldCurves_(requiredYieldCurves), fxTriangulation_(fxTriangulation), referenceData_(referenceData) {
+      requiredYieldCurves_(requiredYieldCurves), requiredDefaultCurves_(requiredDefaultCurves),
+      fxTriangulation_(fxTriangulation), referenceData_(referenceData) {
 
     try {
 
@@ -847,9 +848,12 @@ void YieldCurve::buildFittedBondCurve() {
 
     std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;
     for (auto const& c : curveSegment->iborIndexCurves()) {
-        auto y = requiredYieldCurves_.find(yieldCurveKey(currency_, c.first, asofDate_));
-        QL_REQUIRE(y != requiredYieldCurves_.end(),
-                   "required yield curve '" << c.first << "' not provided for fitted bond curve");
+        auto index = parseIborIndex(c.first, Handle<YieldTermStructure>(),
+                                    conventions_.has(c.first) ? conventions_.get(c.first) : nullptr);
+        auto key = yieldCurveKey(index->currency(), c.second, asofDate_);
+        auto y = requiredYieldCurves_.find(key);
+        QL_REQUIRE(y != requiredYieldCurves_.end(), "required yield curve '" << key << "' for iborIndex '" << c.first
+                                                                             << "' not provided for fitted bond curve");
         iborCurveMapping[c.first] = y->second->handle();
     }
 
@@ -1125,6 +1129,14 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
                 Date refStart = refEnd - futureQuote->tenor();
                 Date startDate = IMM::nextDate(refStart);
                 Date endDate = IMM::nextDate(refEnd);
+
+                if (endDate <= asofDate_) {
+                    WLOG("Skipping the " << io::ordinal(i + 1) << " overnight index future instrument because its " <<
+                        "end date, " << io::iso_date(endDate) << ", is on or before the valuation date, " <<
+                        io::iso_date(asofDate_) << ".");
+                    continue;
+                }
+
                 boost::shared_ptr<RateHelper> futureHelper(
                     new OvernightIndexFutureRateHelper(futureQuote->quote(), startDate, endDate, on));
                 instruments.push_back(futureHelper);
@@ -1138,6 +1150,14 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
                 // Create a MM future helper
                 Date refDate(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
                 Date immDate = IMM::nextDate(refDate, false);
+
+                if (immDate < asofDate_) {
+                    WLOG("Skipping the " << io::ordinal(i + 1) << " money market future instrument because its " <<
+                        "start date, " << io::iso_date(immDate) << ", is before the valuation date, " <<
+                        io::iso_date(asofDate_) << ".");
+                    continue;
+                }
+
                 boost::shared_ptr<RateHelper> futureHelper(
                     new FuturesRateHelper(futureQuote->quote(), immDate, futureConvention->index()));
 

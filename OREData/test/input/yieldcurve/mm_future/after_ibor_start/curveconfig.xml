@@ -1,0 +1,26 @@
+<CurveConfiguration>
+  <YieldCurves>
+    <YieldCurve>
+      <CurveId>USD-LIBOR-3M</CurveId>
+      <CurveDescription />
+      <Currency>USD</Currency>
+      <DiscountCurve>USD-LIBOR-3M</DiscountCurve>
+      <Segments>
+        <Simple>
+          <Type>Future</Type>
+          <Quotes>
+            <Quote>MM_FUTURE/PRICE/USD/2020-08/ED/3M</Quote>
+            <Quote>MM_FUTURE/PRICE/USD/2020-09/ED/3M</Quote>
+            <Quote>MM_FUTURE/PRICE/USD/2020-10/ED/3M</Quote>
+          </Quotes>
+          <Conventions>USD-LIBOR-3M-FUTURES</Conventions>
+          <ProjectionCurve>USD-LIBOR-3M</ProjectionCurve>
+        </Simple>
+      </Segments>
+      <InterpolationVariable>Discount</InterpolationVariable>
+      <InterpolationMethod>LogLinear</InterpolationMethod>
+      <YieldCurveDayCounter>A365</YieldCurveDayCounter>
+      <Tolerance>0.000000000001</Tolerance>
+    </YieldCurve>
+  </YieldCurves>
+</CurveConfiguration>
