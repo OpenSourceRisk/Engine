@@ -11,7 +11,7 @@
   </xs:complexType>
 
   <xs:complexType name="product">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="xs:string" name="Model"/>
       <xs:element name="ModelParameters">
         <xs:complexType>
@@ -28,7 +28,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-    </xs:sequence>
+    </xs:all>
     <xs:attribute type="xs:string" name="type" use="required"/>
   </xs:complexType>
 
