@@ -25,6 +25,7 @@
 #include <map>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
@@ -984,5 +985,64 @@ VolatilityType parseVolatilityQuoteType(const string& s) {
     }
 }
 
+pair<string, string> parseBoostAny(const boost::any& anyType) {
+    string resultType;
+    std::ostringstream oss;
+
+    if (anyType.type() == typeid(int)) {
+        resultType = "int";
+        int r = boost::any_cast<int>(anyType);
+        oss << std::fixed << std::setprecision(8) << r;
+    } else if (anyType.type() == typeid(double)) {
+        resultType = "double";
+        double r = boost::any_cast<double>(anyType);
+        oss << std::fixed << std::setprecision(8) << r; 
+    } else if (anyType.type() == typeid(std::string)) {
+        resultType = "string";
+        std::string r = boost::any_cast<std::string>(anyType);
+        oss << std::fixed << std::setprecision(8) << r;
+    } else if (anyType.type() == typeid(std::vector<double>)) {
+        resultType = "vector_double";
+        std::vector<double> r = boost::any_cast<std::vector<double>>(anyType);
+        if (r.size() == 0) {
+            oss << "";
+        } else {
+            oss << std::fixed << std::setprecision(8) << r[0];
+            for (Size i = 1; i < r.size(); i++) {
+                oss << ", " << r[i];
+            }
+        }
+    } else if (anyType.type() == typeid(std::vector<Date>)) {
+        resultType = "vector_date";
+        std::vector<Date> r = boost::any_cast<std::vector<Date>>(anyType);
+        if (r.size() == 0) {
+            oss << "";
+        } else {
+            oss << std::fixed << std::setprecision(8) << to_string(r[0]);
+            for (Size i = 1; i < r.size(); i++) {
+                oss << ", " << to_string(r[i]);
+            }
+        }
+    } else if (anyType.type() == typeid(std::vector<std::string>)) {
+        resultType = "vector_string";
+        std::vector<std::string> r = boost::any_cast<std::vector<std::string>>(anyType);
+        if (r.size() == 0) {
+            oss << "";
+        } else {
+            oss << std::fixed << std::setprecision(8) << r[0];
+            for (Size i = 1; i < r.size(); i++) {
+                oss << ", " << r[i];
+            }
+        }
+    } else if (anyType.type() == typeid(QuantLib::Matrix)) {
+        resultType = "matrix";
+        QuantLib::Matrix r = boost::any_cast<QuantLib::Matrix>(anyType);
+        oss << std::fixed << std::setprecision(8) << r; 
+    } else {
+        ALOG("Unsupported Boost::Any type");
+        resultType = "unsupported_type";
+    }
+    return make_pair(resultType, oss.str());
+}
 } // namespace data
 } // namespace ore

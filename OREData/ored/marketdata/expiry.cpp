@@ -20,7 +20,8 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
-#include <boost/serialization/export.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 using namespace QuantLib;
 using std::ostream;
@@ -30,6 +31,8 @@ namespace ore {
 namespace data {
 
 bool operator==(const Expiry& lhs, const Expiry& rhs) { return lhs.equal_to(rhs); }
+
+template <class Archive> void Expiry::serialize(Archive& ar, const unsigned int version) {}
 
 ExpiryDate::ExpiryDate() {}
 
@@ -47,6 +50,11 @@ bool ExpiryDate::equal_to(const Expiry& other) const {
     } else {
         return false;
     }
+}
+
+template <class Archive> void ExpiryDate::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<Expiry>(*this);
+    ar& expiryDate_;
 }
 
 ExpiryPeriod::ExpiryPeriod() {}
@@ -67,6 +75,11 @@ bool ExpiryPeriod::equal_to(const Expiry& other) const {
     }
 }
 
+template <class Archive> void ExpiryPeriod::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<Expiry>(*this);
+    ar& expiryPeriod_;
+}
+
 FutureContinuationExpiry::FutureContinuationExpiry(QuantLib::Natural expiryIndex) : expiryIndex_(expiryIndex) {}
 
 QuantLib::Natural FutureContinuationExpiry::expiryIndex() const { return expiryIndex_; }
@@ -85,6 +98,11 @@ bool FutureContinuationExpiry::equal_to(const Expiry& other) const {
     } else {
         return false;
     }
+}
+
+template <class Archive> void FutureContinuationExpiry::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<Expiry>(*this);
+    ar& expiryIndex_;
 }
 
 ostream& operator<<(ostream& os, const Expiry& expiry) { return os << expiry.toString(); }
@@ -110,9 +128,18 @@ boost::shared_ptr<Expiry> parseExpiry(const string& strExpiry) {
     }
 }
 
+template void Expiry::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void Expiry::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void ExpiryDate::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void ExpiryDate::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void ExpiryPeriod::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void ExpiryPeriod::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void FutureContinuationExpiry::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void FutureContinuationExpiry::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+
 } // namespace data
 } // namespace ore
 
-BOOST_CLASS_EXPORT_GUID(ore::data::ExpiryDate, "ExpiryDate");
-BOOST_CLASS_EXPORT_GUID(ore::data::ExpiryPeriod, "ExpiryPeriod");
-BOOST_CLASS_EXPORT_GUID(ore::data::FutureContinuationExpiry, "FutureContinuationExpiry");
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::ExpiryDate);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::ExpiryPeriod);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::FutureContinuationExpiry);

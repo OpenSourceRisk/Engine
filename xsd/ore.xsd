@@ -3,11 +3,11 @@
   <xs:element type="ore" name="ORE"/>
 
   <xs:complexType name="ore">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="parameterListType" name="Setup"/>
       <xs:element type="parameterListType" name="Markets"/>
       <xs:element type="analyticsType" name="Analytics"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="analyticsType">

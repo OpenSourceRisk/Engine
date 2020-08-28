@@ -246,6 +246,7 @@ cashflows/subperiodscouponpricer.hpp
 currencies/africa.hpp
 currencies/america.hpp
 currencies/asia.hpp
+currencies/currencycomparator.hpp
 currencies/europe.hpp
 currencies/metals.hpp
 indexes/behicp.hpp

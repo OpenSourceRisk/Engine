@@ -501,6 +501,26 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
     report.end();
 }
 
+void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                            const string& nettingSetId) {
+    const vector<Real> grid = postProcess->spreadSensitivityGrid();
+    const vector<Real>& sensiHazardRate = postProcess->netCvaHazardRateSensitivity(nettingSetId);
+    const vector<Real>& sensiCdsSpread = postProcess->netCvaSpreadSensitivity(nettingSetId);
+    report.addColumn("NettingSet", string())
+        .addColumn("Time", double(), 6)
+        .addColumn("CvaHazardRateSensitivity", double(), 6)
+        .addColumn("CvaSpreadSensitivity", double(), 6);
+
+    for (Size j = 0; j < grid.size(); ++j) {
+        report.next()
+            .add(nettingSetId)
+            .add(grid[j])
+            .add(sensiHazardRate[j])
+            .add(sensiCdsSpread[j]);
+    }
+    report.end();
+}
+
 void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationMethod,
                             boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess) {
     const vector<Date> dates = postProcess->cube()->dates();
@@ -740,5 +760,34 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     LOG("Sensitivity report finished");
 }
 
+void ReportWriter::writeAdditionalResultsReport(ore::data::Report& report,
+                            boost::shared_ptr<Portfolio> portfolio) {
+    LOG("Writing AdditionalResults report");
+    report.addColumn("TradeId", string())
+        .addColumn("ResultId", string())
+        .addColumn("ResultType", string())
+        .addColumn("ResultValue", string());
+
+    for (auto trade : portfolio->trades()) {
+        auto underlyingInst = trade->instrument()->qlInstrument();
+        if (!underlyingInst)
+            continue;
+        std::map<std::string,boost::any> additionalResults = 
+            underlyingInst->additionalResults();
+
+        if (additionalResults.size() > 0) {
+            for (auto r : additionalResults) {
+                pair<string, string> result = parseBoostAny(r.second);
+                report.next()
+                    .add(trade->id())
+                    .add(r.first)
+                    .add(result.first)
+                    .add(result.second);
+            }
+        }
+    }
+    report.end();
+    LOG("AdditionalResults report written");
+}
 } // namespace analytics
 } // namespace ore

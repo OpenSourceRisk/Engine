@@ -60,7 +60,7 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     if (expiryDate_ > Settings::instance().evaluationDate()) {
         const string& ccyPairCode = assetName_ + currency_;
         DLOG("Implied vol for " << tradeType_ << " on " << ccyPairCode << " with expiry " << expiryDate_
-                                << " and strike " << strike_ << " is "
+                                << " and strike " << std::setprecision(6) << strike_ << " is "
                                 << market->fxVol(ccyPairCode)->blackVol(expiryDate_, strike_));
     }
 }
