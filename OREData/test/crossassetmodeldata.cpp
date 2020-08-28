@@ -147,10 +147,10 @@ vector<boost::shared_ptr<InflationModelData>> infConfigsData() {
     vector<CalibrationBasket> calibrationBaskets = { cb };
 
     ReversionParameter reversion(LgmData::ReversionType::HullWhite, false, ParamType::Piecewise,
-        { 1.0, 2.0, 3.0, 4.0 }, { 1.0, 2.0, 3.0, 4.0 });
+        { 1.0, 2.0, 3.0, 4.0 }, { 1.0, 2.0, 3.0, 4.0, 4.0 });
 
     VolatilityParameter volatility(LgmData::VolatilityType::Hagan, false, ParamType::Piecewise,
-        { 1.0, 2.0, 3.0, 4.0 }, { 1.0, 2.0, 3.0, 4.0 });
+        { 1.0, 2.0, 3.0, 4.0 }, { 1.0, 2.0, 3.0, 4.0, 4.0 });
 
     LgmReversionTransformation rt(1.0, 1.0);
 
