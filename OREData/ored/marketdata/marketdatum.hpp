@@ -143,6 +143,11 @@ public:
     //! Default destructor
     virtual ~MarketDatum() {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<MarketDatum>(quote_->value(), asofDate_, name_, quoteType_, instrumentType_);
+    }
+
     //! \name Inspectors
     //@{
     const string& name() const { return name_; }
@@ -183,6 +188,11 @@ public:
                      Period term)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::MM), ccy_(ccy), fwdStart_(fwdStart),
           term_(term) {}
+    
+    //! Make a copy of the datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<MoneyMarketQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, fwdStart_, term_);
+    }
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
@@ -215,6 +225,11 @@ public:
              Period term)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FRA), ccy_(ccy), fwdStart_(fwdStart),
           term_(term) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<FRAQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, fwdStart_, term_);
+    }
 
     //! \name Inspectors
     //@{
@@ -250,6 +265,11 @@ public:
     ImmFraQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Size imm1, Size imm2)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IMM_FRA), ccy_(ccy), imm1_(imm1), imm2_(imm2) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<ImmFraQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, imm1_, imm2_);
+    }
+
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
@@ -282,6 +302,11 @@ public:
               Period term, Period tenor)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IR_SWAP), ccy_(ccy), fwdStart_(fwdStart),
           term_(term), tenor_(tenor) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<SwapQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, fwdStart_, term_, tenor_);
+    }
 
     //! \name Inspectors
     //@{
@@ -325,6 +350,12 @@ public:
         QL_REQUIRE(date_ != Date() || tenor != Period(), "ZeroQuote: either date or period is required");
         tenorBased_ = (date_ == Date());
     }
+    
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<ZeroQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, date_, dayCounter_, tenor_);
+    }
+
     //! Inspectors
     //@{
     const string& ccy() const { return ccy_; }
@@ -358,7 +389,11 @@ public:
     //! Constructor
     DiscountQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Date date)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::DISCOUNT), ccy_(ccy), date_(date) {}
-
+    
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<DiscountQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, date_);
+    }
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
@@ -389,6 +424,11 @@ public:
                   string contract = "", Period tenor = 3 * Months)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::MM_FUTURE), ccy_(ccy), expiry_(expiry),
           contract_(contract), tenor_(tenor) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<MMFutureQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, expiry_, contract_, tenor_);
+    }
 
     //! \name Inspectors
     //@{
@@ -427,6 +467,11 @@ public:
                   string contract = "", Period tenor = 3 * Months)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::OI_FUTURE), ccy_(ccy), expiry_(expiry),
           contract_(contract), tenor_(tenor) {}
+    
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<OIFutureQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, expiry_, contract_, tenor_);
+    }
 
     //! \name Inspectors
     //@{
@@ -472,6 +517,11 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BASIS_SWAP), flatTerm_(flatTerm), term_(term),
           ccy_(ccy), maturity_(maturity) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<BasisSwapQuote>(quote_->value(), asofDate_, name_, quoteType_, flatTerm_, term_, ccy_, maturity_);
+    }
+
     //! \name Inspectors
     //@{
     const Period& flatTerm() const { return flatTerm_; }
@@ -513,6 +563,11 @@ public:
                  Period maturity = 3 * Months)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BMA_SWAP), term_(term), ccy_(ccy),
           maturity_(maturity) {}
+    
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<BMASwapQuote>(quote_->value(), asofDate_, name_, quoteType_, term_, ccy_, maturity_);
+    }
 
     //! \name Inspectors
     //@{
@@ -554,6 +609,11 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CC_BASIS_SWAP), flatCcy_(flatCcy),
           flatTerm_(flatTerm), ccy_(ccy), term_(term), maturity_(maturity) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CrossCcyBasisSwapQuote>(quote_->value(), asofDate_, name_, quoteType_, flatCcy_, flatTerm_, ccy_, term_, maturity_);
+    }
+
     //! \name Inspectors
     //@{
     const string& flatCcy() const { return flatCcy_; }
@@ -591,6 +651,11 @@ public:
         : MarketDatum(value, asof, name, quoteType, InstrumentType::CC_FIX_FLOAT_SWAP), floatCurrency_(floatCurrency),
           floatTenor_(floatTenor), fixedCurrency_(fixedCurrency), fixedTenor_(fixedTenor), maturity_(maturity) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CrossCcyFixFloatSwapQuote>(quote_->value(), asofDate_, name_, quoteType_, floatCurrency_, floatTenor_, fixedCurrency_, fixedTenor_, maturity_);
+    }
+
     //! \name Inspectors
     //@{
     const string& floatCurrency() const { return floatCurrency_; }
@@ -627,6 +692,11 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS), underlyingName_(underlyingName),
           seniority_(seniority), ccy_(ccy), term_(term), docClause_(docClause) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CdsQuote>(quote_->value(), asofDate_, name_, quoteType_, underlyingName_, seniority_, ccy_, term_, docClause_);
+    }
+
     //! \name Inspectors
     //@{
     const Period& term() const { return term_; }
@@ -662,6 +732,11 @@ public:
         : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::HAZARD_RATE),
           underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy), term_(term), docClause_(docClause) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<HazardRateQuote>(quote_->value(), asofDate_, name_, underlyingName_, seniority_, ccy_, term_, docClause_);
+    }
+
     //! \name Inspectors
     //@{
     const Period& term() const { return term_; }
@@ -695,6 +770,11 @@ public:
                       const string& seniority, const string& ccy, const string& docClause = "")
         : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::RECOVERY_RATE),
           underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy), docClause_(docClause) {}
+    
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<RecoveryRateQuote>(quote_->value(), asofDate_, name_, underlyingName_, seniority_, ccy_, docClause_);
+    }
 
     //! \name Inspectors
     //@{
@@ -735,6 +815,11 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::SWAPTION), ccy_(ccy), expiry_(expiry),
           term_(term), dimension_(dimension), strike_(strike) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<SwaptionQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, expiry_, term_, dimension_, strike_);
+    }
+
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
@@ -773,6 +858,11 @@ public:
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::SHIFT, "quote type must be SHIFT for shift data");
     }
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<SwaptionShiftQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, term_);
+    }
+
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
@@ -806,6 +896,12 @@ public:
                     Period term)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BOND_OPTION), qualifier_(qualifier),
           expiry_(expiry), term_(term) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<BondOptionQuote>(quote_->value(), asofDate_, name_, quoteType_, qualifier_, expiry_, term_);
+    }
+
     //! \name Inspectors
     //@{
     const string& qualifier() const { return qualifier_; }
@@ -842,6 +938,12 @@ public:
           term_(term) {
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::SHIFT, "quote type must be SHIFT for shift data");
     }
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<BondOptionShiftQuote>(quote_->value(), asofDate_, name_, quoteType_, qualifier_, term_);
+    }
+
     //! \name Inspectors
     //@{
     const string& qualifier() const { return qualifier_; }
@@ -877,6 +979,11 @@ public:
                   Period underlying, bool atm, bool relative, Real strike = 0.0)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CAPFLOOR), ccy_(ccy), term_(term),
           underlying_(underlying), atm_(atm), relative_(relative), strike_(strike) {}
+    
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CapFloorQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, term_, underlying_, atm_, relative_, strike_);
+    }
 
     //! \name Inspectors
     //@{
@@ -913,6 +1020,11 @@ public:
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::SHIFT, "Quote type must be SHIFT for shift data");
     }
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CapFloorShiftQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, indexTenor_);
+    }
+
     const string& ccy() const { return ccy_; }
     const Period& indexTenor() const { return indexTenor_; }
 
@@ -944,6 +1056,11 @@ public:
     //! Constructor
     FXSpotQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string unitCcy, string ccy)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_SPOT), unitCcy_(unitCcy), ccy_(ccy) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<FXSpotQuote>(quote_->value(), asofDate_, name_, quoteType_, unitCcy_, ccy_);
+    }
 
     //! \name Inspectors
     //@{
@@ -980,6 +1097,11 @@ public:
                    const Period& term, Real conversionFactor = 1.0)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_FWD), unitCcy_(unitCcy), ccy_(ccy),
           term_(term), conversionFactor_(conversionFactor) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<FXForwardQuote>(quote_->value(), asofDate_, name_, quoteType_, unitCcy_, ccy_, term_, conversionFactor_);
+    }
 
     //! \name Inspectors
     //@{
@@ -1026,6 +1148,11 @@ public:
                    "Unsupported FXOptionQuote strike (" << strike << ")");
     }
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<FXOptionQuote>(quote_->value(), asofDate_, name_, quoteType_, unitCcy_, ccy_, expiry_, strike_);
+    }
+
     //! \name Inspectors
     //@{
     const string& unitCcy() const { return unitCcy_; }
@@ -1057,6 +1184,12 @@ public:
     ZcInflationSwapQuote(Real value, Date asofDate, const string& name, const string& index, Period term)
         : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::ZC_INFLATIONSWAP), index_(index),
           term_(term) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<ZcInflationSwapQuote>(quote_->value(), asofDate_, name_, index_, term_);
+    }
+
     string index() { return index_; }
     Period term() { return term_; }
 
@@ -1084,6 +1217,12 @@ public:
                            Period term, bool isCap, const string& strike, InstrumentType instrumentType)
         : MarketDatum(value, asofDate, name, quoteType, instrumentType), index_(index), term_(term), isCap_(isCap),
           strike_(strike) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<InflationCapFloorQuote>(quote_->value(), asofDate_, name_, quoteType_, index_, term_, isCap_, strike_, instrumentType_);
+    }
+
     string index() { return index_; }
     Period term() { return term_; }
     bool isCap() { return isCap_; }
@@ -1116,6 +1255,11 @@ public:
         : InflationCapFloorQuote(value, asofDate, name, quoteType, index, term, isCap, strike,
                                  InstrumentType::ZC_INFLATIONCAPFLOOR) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<ZcInflationCapFloorQuote>(quote_->value(), asofDate_, name_, quoteType_, index(), term(), isCap(), strike());
+    }
+
 private:
     //! Serialization
     friend class boost::serialization::access;
@@ -1136,6 +1280,12 @@ public:
     YoYInflationSwapQuote(Real value, Date asofDate, const string& name, const string& index, Period term)
         : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::YY_INFLATIONSWAP), index_(index),
           term_(term) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<YoYInflationSwapQuote>(quote_->value(), asofDate_, name_, index_, term_);
+    }
+
     string index() { return index_; }
     Period term() { return term_; }
 
@@ -1164,6 +1314,11 @@ public:
         : InflationCapFloorQuote(value, asofDate, name, quoteType, index, term, isCap, strike,
                                  InstrumentType::YY_INFLATIONCAPFLOOR) {}
 
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<YyInflationCapFloorQuote>(quote_->value(), asofDate_, name_, quoteType_, index(), term(), isCap(), strike());
+    }
 private:
     //! Serialization
     friend class boost::serialization::access;
@@ -1216,6 +1371,12 @@ public:
     EquitySpotQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_SPOT), eqName_(equityName), ccy_(ccy) {}
 
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<EquitySpotQuote>(quote_->value(), asofDate_, name_, quoteType_, eqName_, ccy_);
+    }
+
     //! \name Inspectors
     //@{
     const string& eqName() const { return eqName_; }
@@ -1250,6 +1411,12 @@ public:
                        string ccy, const Date& expiryDate)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_FWD), eqName_(equityName), ccy_(ccy),
           expiry_(expiryDate) {}
+
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<EquityForwardQuote>(quote_->value(), asofDate_, name_, quoteType_, eqName_, ccy_, expiry_);
+    }
 
     //! \name Inspectors
     //@{
@@ -1288,6 +1455,11 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_DIVIDEND), eqName_(equityName),
           ccy_(ccy), tenor_(tenorDate) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<EquityDividendYieldQuote>(quote_->value(), asofDate_, name_, quoteType_, eqName_, ccy_, tenor_);
+    }
+
     //! \name Inspectors
     //@{
     const string& eqName() const { return eqName_; }
@@ -1322,6 +1494,12 @@ public:
     EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy,
                       string expiry, string strike, bool isCall = true);
 
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<EquityOptionQuote>(quote_->value(), asofDate_, name_, quoteType_, eqName_, ccy_, expiry_, strike_, isCall_);
+    }
+
     //! \name Inspectors
     //@{
     const string& eqName() const { return eqName_; }
@@ -1354,6 +1532,11 @@ public:
     SecuritySpreadQuote(Real value, Date asofDate, const string& name, const string& securityID)
         : MarketDatum(value, asofDate, name, QuoteType::YIELD_SPREAD, InstrumentType::BOND), securityID_(securityID) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<SecuritySpreadQuote>(quote_->value(), asofDate_, name_, securityID_);
+    }
+
     //! \name Inspectors
     //@{
     const string& securityID() const { return securityID_; }
@@ -1379,6 +1562,12 @@ public:
                          Period term, Real detachmentPoint)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS_INDEX), cdsIndexName_(cdsIndexName),
           term_(term), detachmentPoint_(detachmentPoint) {}
+
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<BaseCorrelationQuote>(quote_->value(), asofDate_, name_, quoteType_, cdsIndexName_, term_, detachmentPoint_);
+    }
 
     //! \name Inspectors
     //@{
@@ -1418,6 +1607,12 @@ public:
                         const std::string& indexName, const boost::shared_ptr<Expiry>& expiry,
                         const std::string& indexTerm = "", const boost::shared_ptr<BaseStrike>& strike = nullptr);
 
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<IndexCDSOptionQuote>(quote_->value(), asofDate_, name_, indexName_, expiry_, indexTerm_, strike_);
+    }
+
     //! \name Inspectors
     //@{
     const std::string& indexName() const { return indexName_; }
@@ -1450,6 +1645,11 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_SPOT), commodityName_(commodityName),
           quoteCurrency_(quoteCurrency) {
         QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity spot quote must be of type 'PRICE'");
+    }
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CommoditySpotQuote>(quote_->value(), asofDate_, name_, quoteType_, commodityName_, quoteCurrency_);
     }
 
     //! \name Inspectors
@@ -1489,6 +1689,15 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), commodityName_(commodityName),
           quoteCurrency_(quoteCurrency), tenor_(tenor), startTenor_(startTenor), tenorBased_(true) {
         QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
+    }
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        if (tenorBased_) {
+            return boost::make_shared<CommodityForwardQuote>(quote_->value(), asofDate_, name_, quoteType_, commodityName_, quoteCurrency_, tenor_, startTenor_);
+        } else {
+            return boost::make_shared<CommodityForwardQuote>(quote_->value(), asofDate_, name_, quoteType_, commodityName_, quoteCurrency_, expiryDate_);
+        }
     }
 
     //! \name Inspectors
@@ -1546,6 +1755,11 @@ public:
                          const std::string& commodityName, const std::string& quoteCurrency,
                          const boost::shared_ptr<Expiry>& expiry, const boost::shared_ptr<BaseStrike>& strike);
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CommodityOptionQuote>(quote_->value(), asofDate_, name_, quoteType_, commodityName_, quoteCurrency_, expiry_, strike_);
+    }
+
     //! \name Inspectors
     //@{
     const std::string& commodityName() const { return commodityName_; }
@@ -1585,6 +1799,11 @@ public:
                      const std::string& index1, const std::string& index2, const std::string& expiry,
                      const std::string& strike);
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CorrelationQuote>(quote_->value(), asofDate_, name_, quoteType_, index1_, index2_, expiry_, strike_);
+    }
+
     //! \name Inspectors
     //@{
     const std::string& index1() const { return index1_; }
@@ -1616,6 +1835,11 @@ public:
     CPRQuote(Real value, Date asofDate, const string& name, const string& securityId)
         : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::CPR), securityID_(securityId) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CPRQuote>(quote_->value(), asofDate_, name_, securityID_);
+    }
+
     //! \name Inspectors
     //@{
     const string& securityID() const { return securityID_; }
@@ -1639,6 +1863,11 @@ public:
     //! Constructor
     BondPriceQuote(Real value, Date asofDate, const string& name, const string& securityId)
         : MarketDatum(value, asofDate, name, QuoteType::PRICE, InstrumentType::BOND), securityID_(securityId) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<BondPriceQuote>(quote_->value(), asofDate_, name_, securityID_);
+    }
 
     //! \name Inspectors
     //@{
