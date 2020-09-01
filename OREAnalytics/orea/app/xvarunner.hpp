@@ -27,6 +27,7 @@
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/scenariogeneratordata.hpp>
+#include <orea/engine/valuationcalculator.hpp>
 
 namespace ore {
 namespace analytics {
@@ -43,13 +44,20 @@ public:
         const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
         const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
         const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
-        const boost::shared_ptr<ore::data::CrossAssetModelData>& crossAssetModelData);
+        const boost::shared_ptr<ore::data::CrossAssetModelData>& crossAssetModelData,
+        QuantLib::Real dimQuantile = 0.99,
+        QuantLib::Size dimHorizonCalendarDays = 14);
 
     const boost::shared_ptr<PostProcess>& runXva(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true);
 
 protected:
-    virtual boost::shared_ptr<NPVCube> nettingSetCube() { return boost::make_shared<NPVCube>(); };
-    virtual boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator();
+    virtual boost::shared_ptr<NPVCube> getNettingSetCube() { return nullptr; };
+    virtual boost::shared_ptr<DynamicInitialMarginCalculator> getDimCalculator(
+        const boost::shared_ptr<NPVCube>& cube,
+        const boost::shared_ptr<CubeInterpretation>& cubeInterpreter,
+        const boost::shared_ptr<AggregationScenarioData>& scenarioData,
+        const boost::shared_ptr<QuantExt::CrossAssetModel>& model = nullptr,
+        const boost::shared_ptr<NPVCube>& nettingCube = nullptr);
 
     QuantLib::Date asof_;
     std::string baseCurrency_;
@@ -63,8 +71,11 @@ protected:
     boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
     boost::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData_;
 
+    QuantLib::Real dimQuantile_;
+    QuantLib::Size dimHorizonCalendarDays_;
 
     std::vector<boost::shared_ptr<ValuationCalculator>> calculators_;
+
 };
 
 } // namespace analytics

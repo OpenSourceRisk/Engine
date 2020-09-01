@@ -19,6 +19,7 @@
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/aggregation/dimcalculator.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
+#include <orea/aggregation/cvaspreadsensitivitycalculator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/vectorutils.hpp>
 #include <ql/errors.hpp>
@@ -88,6 +89,7 @@ PostProcess::PostProcess(
     const string& calculationType, const string& dvaName, const string& fvaBorrowingCurve,
     const string& fvaLendingCurve,const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
     const boost::shared_ptr<CubeInterpretation>& cubeInterpretation, bool fullInitialCollateralisation,
+    vector<Period> cvaSensiGrid, Real cvaSensiShiftSize,
     Real kvaCapitalDiscountRate, Real kvaAlpha, Real kvaRegAdjustment, Real kvaCapitalHurdle, Real kvaOurPdFloor,
     Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight, Real kvaTheirCvaRiskWeight)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), configuration_(configuration),
@@ -95,6 +97,7 @@ PostProcess::PostProcess(
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
       fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), dimCalculator_(dimCalculator),
       cubeInterpretation_(cubeInterpretation), fullInitialCollateralisation_(fullInitialCollateralisation),
+      cvaSpreadSensiGrid_(cvaSensiGrid), cvaSpreadSensiShiftSize_(cvaSensiShiftSize),
       kvaCapitalDiscountRate_(kvaCapitalDiscountRate), kvaAlpha_(kvaAlpha), kvaRegAdjustment_(kvaRegAdjustment),
       kvaCapitalHurdle_(kvaCapitalHurdle), kvaOurPdFloor_(kvaOurPdFloor), kvaTheirPdFloor_(kvaTheirPdFloor),
       kvaOurCvaRiskWeight_(kvaOurCvaRiskWeight), kvaTheirCvaRiskWeight_(kvaTheirCvaRiskWeight) {
@@ -951,13 +954,15 @@ void PostProcess::updateStandAloneXVA() {
 
     bool applyMVA = analytics_["mva"];
 
+    Handle<YieldTermStructure> discountCurve = market_->discountCurve(baseCurrency_, configuration_);
+
     // Netting Set XVA
     for (auto n : netEPE_) {
         string nettingSetId = n.first;
         LOG("Update XVA for netting set " << nettingSetId);
         vector<Real> epe = netEPE_[nettingSetId];
         vector<Real> ene = netENE_[nettingSetId];
-
+	
         vector<Real> edim;
         if (applyMVA)
             // edim = nettingSetExpectedDIM_[nettingSetId];
@@ -973,7 +978,7 @@ void PostProcess::updateStandAloneXVA() {
             dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
         }
 
-        Handle<YieldTermStructure> borrowingCurve, lendingCurve;
+	Handle<YieldTermStructure> borrowingCurve, lendingCurve;
         if (fvaBorrowingCurve_ != "")
             borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
         if (fvaLendingCurve_ != "")
@@ -996,7 +1001,7 @@ void PostProcess::updateStandAloneXVA() {
             Real dvaIncrement = (1.0 - dvaRR) * (dvaS0 - dvaS1) * ene[j + 1];
             nettingSetCVA_[nettingSetId] += cvaIncrement;
             nettingSetDVA_[nettingSetId] += dvaIncrement;
-
+	      
             Real borrowingSpreadDcf = 0.0;
             if (!borrowingCurve.empty())
                 borrowingSpreadDcf = borrowingCurve->discount(d0) / borrowingCurve->discount(d1) -
@@ -1025,6 +1030,28 @@ void PostProcess::updateStandAloneXVA() {
                 nettingSetMVA_[nettingSetId] += mvaIncrement;
             }
         }
+
+	bool cvaSensi = analytics_["cvaSensi"];
+	LOG("CVA Sensitivity: " << cvaSensi);
+	if (cvaSensi) {
+	    boost::shared_ptr<CVASpreadSensitivityCalculator> cvaSensiCalculator = boost::make_shared<CVASpreadSensitivityCalculator>(
+	         nettingSetId, market_->asofDate(), epe, cube_->dates(), cvaDts, cvaRR, discountCurve, cvaSpreadSensiGrid_, cvaSpreadSensiShiftSize_);
+
+	    for (Size i = 0; i < cvaSensiCalculator->shiftTimes().size(); ++i) {
+	        DLOG("CVA Sensi Calculator: t=" << cvaSensiCalculator->shiftTimes()[i]
+		     << " h=" << cvaSensiCalculator->hazardRateSensitivities()[i] 
+		     << " s=" << cvaSensiCalculator->cdsSpreadSensitivities()[i]); 
+	    }
+
+	    netCvaHazardRateSensi_[nettingSetId] = cvaSensiCalculator->hazardRateSensitivities();
+	    netCvaSpreadSensi_[nettingSetId] = cvaSensiCalculator->cdsSpreadSensitivities();
+	    cvaSpreadSensiTimes_ = cvaSensiCalculator->shiftTimes();
+	    
+	} else {
+	    cvaSpreadSensiTimes_ = vector<Real>();
+	    netCvaHazardRateSensi_[nettingSetId] = vector<Real>();
+	    netCvaSpreadSensi_[nettingSetId] = vector<Real>();
+	}
     }
 }
 
@@ -1109,6 +1136,18 @@ const vector<Real>& PostProcess::netENE(const string& nettingSetId) {
     QL_REQUIRE(netENE_.find(nettingSetId) != netENE_.end(),
                "Netting set " << nettingSetId << " not found in exposure map");
     return netENE_[nettingSetId];
+}
+
+const vector<Real>& PostProcess::netCvaHazardRateSensitivity(const string& nettingSetId) {
+    QL_REQUIRE(netCvaHazardRateSensi_.find(nettingSetId) != netCvaHazardRateSensi_.end(),
+               "Netting set " << nettingSetId << " not found in netCvaHazardRateSensi map");
+    return netCvaHazardRateSensi_[nettingSetId];
+}
+
+const vector<Real>& PostProcess::netCvaSpreadSensitivity(const string& nettingSetId) {
+    QL_REQUIRE(netCvaSpreadSensi_.find(nettingSetId) != netCvaSpreadSensi_.end(),
+               "Netting set " << nettingSetId << " not found in netCvaSpreadSensi map");
+    return netCvaSpreadSensi_[nettingSetId];
 }
 
 const vector<Real>& PostProcess::netEE_B(const string& nettingSetId) {

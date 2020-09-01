@@ -40,10 +40,13 @@ XvaRunner::XvaRunner(Date asof,
     const boost::shared_ptr<TodaysMarketParameters>& todaysMarketParams,
     const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
     const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
-    const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData) : 
+    const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
+    Real dimQuantile,
+    Size dimHorizonCalendarDays) :
     asof_(asof), baseCurrency_(baseCurrency), portfolio_(portfolio), netting_(netting), engineData_(engineData), 
     curveConfigs_(curveConfigs), conventions_(conventions), todaysMarketParams_(todaysMarketParams), simMarketData_(simMarketData), 
-    scenarioGeneratorData_(scenarioGeneratorData), crossAssetModelData_(crossAssetModelData){}
+    scenarioGeneratorData_(scenarioGeneratorData), crossAssetModelData_(crossAssetModelData), dimQuantile_(dimQuantile), 
+    dimHorizonCalendarDays_(dimHorizonCalendarDays){}
 
 const boost::shared_ptr<PostProcess>& XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnErr) {
     CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, "", "", "", "", "", ActualActual(), false,
@@ -88,7 +91,7 @@ const boost::shared_ptr<PostProcess>& XvaRunner::runXva(const boost::shared_ptr<
         calculators_.push_back(npvCalculator);
     }
 
-    boost::shared_ptr<NPVCube> nettingCube = nettingSetCube();
+    boost::shared_ptr<NPVCube> nettingCube = getNettingSetCube();
     
     boost::shared_ptr<AggregationScenarioData> scenarioData =
         boost::make_shared<InMemoryAggregationScenarioData>(scenarioGeneratorData_->grid()->size(), scenarioGeneratorData_->samples());
@@ -109,24 +112,9 @@ const boost::shared_ptr<PostProcess>& XvaRunner::runXva(const boost::shared_ptr<
     analytics["colva"] = true;
     analytics["xva"] = false;
     analytics["dim"] = true;
-    Real dimQuantile = 0.99;
-    Size dimHorizonCalendarDays = 14;
 
-    boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator;
-/*
-    if (storeSensis) {
-        // Assume we want to run DIM with dynamic delta VaR if sensitivities are stored
-        boost::shared_ptr<DimHelper> dimHelper = boost::make_shared<DimHelper>(
-            model, nettingSetCube, sensitivityStorageManager, curveSensitivityGrid, dimHorizonCalendarDays);
-        // delta 1, delta-gamma-normal 2, delta-gamma 3
-        Size ddvOrder = 3; // FIXME, move all DIM parameters to pricer arguments
-        dimCalculator =
-            boost::make_shared<DynamicDeltaVaRCalculator>(portfolio, cube, cubeInterpreter, scenarioData,
-                dimQuantile, dimHorizonCalendarDays, dimHelper, ddvOrder);
-    }
-    else { */
-    //}
-
+    boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator = 
+        getDimCalculator(cube, cubeInterpreter, scenarioData, model, nettingCube);
     boost::shared_ptr<PostProcess> postProcess =
         boost::make_shared<PostProcess>(portfolio_, netting_, market, "", cube, scenarioData, analytics, baseCurrency_,
             "None", 1.0, 0.95, "Symmetric", "", "", "", dimCalculator, cubeInterpreter);
@@ -134,19 +122,19 @@ const boost::shared_ptr<PostProcess>& XvaRunner::runXva(const boost::shared_ptr<
     return postProcess;
 }
 
-
-boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::dimCalculator() {
+boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(const boost::shared_ptr<NPVCube>& cube,
+    const boost::shared_ptr<CubeInterpretation>& cubeInterpreter, const boost::shared_ptr<AggregationScenarioData>& scenarioData,
+    const boost::shared_ptr<QuantExt::CrossAssetModel>& model, const boost::shared_ptr<NPVCube>& nettingCube) {
 
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator;
     Size dimRegressionOrder = 0;
     vector<string> dimRegressors; // FIXME: empty vector means regression vs netting set NPV
-    Real dimScaling = 1.0;
     Size dimLocalRegressionEvaluations = 0; // skip local regression
     Real dimLocalRegressionBandwidth = 0.25;
 
     dimCalculator =
         boost::make_shared<RegressionDynamicInitialMarginCalculator>(
-            portfolio_, cube, cubeInterpreter, scenarioData, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
+            portfolio_, cube, cubeInterpreter, scenarioData, dimQuantile_, dimHorizonCalendarDays_, dimRegressionOrder,
             dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
 
     return dimCalculator;

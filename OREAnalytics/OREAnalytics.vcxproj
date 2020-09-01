@@ -37,6 +37,7 @@
   <ItemGroup>
     <ClInclude Include="orea\aggregation\collateralaccount.hpp" />
     <ClInclude Include="orea\aggregation\collatexposurehelper.hpp" />
+    <ClInclude Include="orea\aggregation\cvaspreadsensitivitycalculator.hpp" />
     <ClInclude Include="orea\aggregation\dimcalculator.hpp" />
     <ClInclude Include="orea\aggregation\dimregressioncalculator.hpp" />
     <ClInclude Include="orea\aggregation\postprocess.hpp" />
@@ -97,6 +98,7 @@
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp" />
     <ClCompile Include="orea\aggregation\collatexposurehelper.cpp" />
+    <ClCompile Include="orea\aggregation\cvaspreadsensitivitycalculator.cpp" />
     <ClCompile Include="orea\aggregation\dimcalculator.cpp" />
     <ClCompile Include="orea\aggregation\dimregressioncalculator.cpp" />
     <ClCompile Include="orea\aggregation\postprocess.cpp" />

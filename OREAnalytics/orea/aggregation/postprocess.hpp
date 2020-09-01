@@ -137,6 +137,10 @@ public:
         const boost::shared_ptr<CubeInterpretation>& cubeInterpretation = boost::shared_ptr<CubeInterpretation>(),
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
         bool fullInitialCollateralisation = false,
+	//! CVA spread sensitvitiy grid
+	vector<Period> cvaSpreadSensiGrid = { 6*Months, 1*Years, 3*Years, 5*Years, 10*Years },
+	//! CVA spread sensitivity shift size
+	Real cvaSpreadSensiShiftSize = 0.0001,
         //! own capital discounting rate for discounting expected capital for KVA
         Real kvaCapitalDiscountRate = 0.10,
         //! alpha to adjust EEPE to give EAD for risk capital
@@ -157,6 +161,8 @@ public:
     void setDimCalculator(boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
     }
+
+    const vector<Real>& spreadSensitivityGrid() { return cvaSpreadSensiTimes_; }
 
     //! Return list of Trade IDs in the portfolio
     const vector<string>& tradeIds() { return tradeIds_; }
@@ -206,6 +212,11 @@ public:
     const vector<Real>& allocatedTradeEPE(const string& tradeId);
     //! Return trade ENE, allocated down from the netting set level
     const vector<Real>& allocatedTradeENE(const string& tradeId);
+  
+    //! Return Netting Set CVA Hazard Rate Sensitvity vector
+    const vector<Real>& netCvaHazardRateSensitivity(const string& nettingSetId);
+    //! Return Netting Set CVA Spread Sensitvity vector
+    const vector<Real>& netCvaSpreadSensitivity(const string& nettingSetId);
 
     //! Return trade (stand-alone) CVA
     Real tradeCVA(const string& tradeId);
@@ -272,6 +283,7 @@ public:
     void exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
                              const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports);
 
+  
 protected:
     //! Helper function to return the collateral account evolution for a given netting set
     boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>>
@@ -297,6 +309,7 @@ protected:
     map<string, Real> tradeEPE_B_, tradeEEPE_B_;
     map<string, vector<Real>> allocatedTradeEPE_, allocatedTradeENE_;
     map<string, vector<Real>> netEPE_, netENE_, netEE_B_, netEEE_B_, netPFE_, netVAR_, expectedCollateral_;
+    map<string, vector<Real>> netCvaHazardRateSensi_, netCvaSpreadSensi_;
     map<string, Real> netEPE_B_, netEEPE_B_;
     map<string, vector<Real>> colvaInc_, eoniaFloorInc_;
     map<string, Real> tradeCVA_, tradeDVA_, tradeMVA_, tradeFBA_, tradeFCA_, tradeFBA_exOwnSP_, tradeFCA_exOwnSP_,
@@ -322,6 +335,9 @@ protected:
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
     boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
     bool fullInitialCollateralisation_;
+    vector<Period> cvaSpreadSensiGrid_;
+    vector<Time> cvaSpreadSensiTimes_;
+    Real cvaSpreadSensiShiftSize_;
     Real kvaCapitalDiscountRate_;
     Real kvaAlpha_;
     Real kvaRegAdjustment_;

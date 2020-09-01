@@ -8,18 +8,18 @@ LABEL Description="Build debug version of ORE and add to the QuantLib build envi
 ARG num_cores
 
 # Copy ORE sources for libs and app
-COPY QuantExt /ore/QuantExt
-COPY OREData /ore/OREData
-COPY OREAnalytics /ore/OREAnalytics
-COPY App /ore/App
-COPY ThirdPartyLibs /ore/ThirdPartyLibs
-COPY ORETest /ore/ORETest
-COPY cmake /ore/cmake
-COPY Docker /ore/Docker
+COPY QuantExt /lib_src/QuantExt
+COPY OREData /lib_src/OREData
+COPY OREAnalytics /lib_src/OREAnalytics
+COPY App /lib_src/App
+COPY ThirdPartyLibs /lib_src/ThirdPartyLibs
+COPY ORETest /lib_src/ORETest
+COPY cmake /lib_src/cmake
+COPY Docker /lib_src/Docker
 
 # Need the dos2unix all if building from Windows because the shell 
 # scripts fail if there are CRLF present in the files
-RUN cd /ore \
+RUN cd /lib_src \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && cp Docker/CMakeLists_ORE.txt CMakeLists.txt \
   && mkdir -p build.ore && cd build.ore \
@@ -27,6 +27,9 @@ RUN cd /ore \
   && make -j ${num_cores} \
   && make install \
   && cd / \
-  && rm -rf ore
+  && rm -rf /lib_src/build.ore \
+  && rm -rf /lib_src/App \
+  && rm -rf /lib_src/cmake \
+  && rm -rf /lib_src/Docker
 
 CMD bash
