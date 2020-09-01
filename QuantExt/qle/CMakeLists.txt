@@ -103,6 +103,7 @@ models/fxbsparametrization.cpp
 models/fxbspiecewiseconstantparametrization.cpp
 models/fxeqoptionhelper.cpp
 models/gaussian1dcrossassetadaptor.cpp
+models/infjyparameterization.cpp
 models/lgm.cpp
 models/lgmimplieddefaulttermstructure.cpp
 models/lgmimpliedyieldtermstructure.cpp
@@ -355,6 +356,7 @@ models/fxbspiecewiseconstantparametrization.hpp
 models/fxeqoptionhelper.hpp
 models/gaussian1dcrossassetadaptor.hpp
 models/infdkparametrization.hpp
+models/infjyparameterization.hpp
 models/irlgm1fconstantparametrization.hpp
 models/irlgm1fparametrization.hpp
 models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp

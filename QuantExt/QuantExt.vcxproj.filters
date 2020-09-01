@@ -894,6 +894,9 @@
     <ClInclude Include="qle\calendars\amendedcalendar.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\infjyparameterization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1539,6 +1542,9 @@
     </ClCompile>
     <ClCompile Include="qle\calendars\amendedcalendar.cpp">
       <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\infjyparameterization.cpp">
+      <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
