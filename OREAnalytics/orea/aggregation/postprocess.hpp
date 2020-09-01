@@ -162,12 +162,15 @@ public:
         dimCalculator_ = dimCalculator;
     }
 
-    const vector<Real>& spreadSensitivityGrid() { return cvaSpreadSensiTimes_; }
-
+    const vector<Real>& spreadSensitivityTimes() { return cvaSpreadSensiTimes_; }
+    const vector<Period>& spreadSensitivityGrid() { return cvaSpreadSensiGrid_; }
+    
     //! Return list of Trade IDs in the portfolio
     const vector<string>& tradeIds() { return tradeIds_; }
     //! Return list of netting set IDs in the portfolio
     const vector<string>& nettingSetIds() { return nettingSetIds_; }
+    //! Return the map of counterparty Ids
+    const map<string, string>& counterpartyId() { return counterpartyId_; }
 
     //! Return trade level Expected Positive Exposure evolution
     const vector<Real>& tradeEPE(const string& tradeId);
