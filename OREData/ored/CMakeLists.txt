@@ -63,6 +63,7 @@ model/fxbsbuilder.cpp
 model/fxbsdata.cpp
 model/inflation/infdkbuilder.cpp
 model/inflation/infdkdata.cpp
+model/inflation/infjybuilder.cpp
 model/inflation/infjydata.cpp
 model/inflation/inflationmodeldata.cpp
 model/irlgmdata.cpp
@@ -208,6 +209,7 @@ model/fxbsbuilder.hpp
 model/fxbsdata.hpp
 model/inflation/infdkbuilder.hpp
 model/inflation/infdkdata.hpp
+model/inflation/infjybuilder.hpp
 model/inflation/infjydata.hpp
 model/inflation/inflationmodeldata.hpp
 model/irlgmdata.hpp

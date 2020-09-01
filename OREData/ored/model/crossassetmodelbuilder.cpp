@@ -20,6 +20,7 @@
 #include <ored/model/eqbsbuilder.hpp>
 #include <ored/model/fxbsbuilder.hpp>
 #include <ored/model/inflation/infdkbuilder.hpp>
+#include <ored/model/inflation/infjybuilder.hpp>
 #include <ored/model/inflation/infjydata.hpp>
 #include <ored/model/lgmbuilder.hpp>
 #include <ored/model/structuredmodelerror.hpp>
@@ -239,7 +240,7 @@ void CrossAssetModelBuilder::buildModel() const {
     }
 
     // Build the INF parametrizations and calibration baskets
-    vector<boost::shared_ptr<InfDkParametrization>> infParameterizations;
+    vector<boost::shared_ptr<Parametrization>> infParameterizations;
     for (Size i = 0; i < config_->infConfigs().size(); i++) {
         DLOG("INF Parametrization " << i);
         boost::shared_ptr<InflationModelData> imData = config_->infConfigs()[i];
@@ -249,8 +250,11 @@ void CrossAssetModelBuilder::buildModel() const {
             infParameterizations.push_back(builder->parametrization());
             infCapFloorBaskets_[i] = builder->optionBasket();
             subBuilders_.insert(builder);
-        } else if (auto dkData = boost::dynamic_pointer_cast<InfJyData>(imData)) {
-            QL_FAIL("CrossAssetModelBuilder does not process InfJyData yet.");
+        } else if (auto jyData = boost::dynamic_pointer_cast<InfJyData>(imData)) {
+            boost::shared_ptr<InfJyBuilder> builder = boost::make_shared<InfJyBuilder>(
+                market_, jyData, configurationInfCalibration_, referenceCalibrationGrid_);
+            infParameterizations.push_back(builder->parameterization());
+            subBuilders_.insert(builder);
         } else {
             QL_FAIL("CrossAssetModelBuilder expects either DK or JY inflation model data.");
         }
@@ -264,8 +268,7 @@ void CrossAssetModelBuilder::buildModel() const {
         parametrizations.push_back(fxParametrizations[i]);
     for (Size i = 0; i < eqParametrizations.size(); i++)
         parametrizations.push_back(eqParametrizations[i]);
-    for (Size i = 0; i < infParameterizations.size(); i++)
-        parametrizations.push_back(infParameterizations[i]);
+    parametrizations.insert(parametrizations.end(), infParameterizations.begin(), infParameterizations.end());
 
     QL_REQUIRE(fxParametrizations.size() == irParametrizations.size() - 1, "mismatch in IR/FX parametrization sizes");
 
@@ -444,8 +447,13 @@ void CrossAssetModelBuilder::buildModel() const {
     for (Size i = 0; i < infParameterizations.size(); i++) {
         boost::shared_ptr<InflationModelData> imData = config_->infConfigs()[i];
         if (auto dkData = boost::dynamic_pointer_cast<InfDkData>(imData)) {
-            calibrateInflation(*dkData, i, infParameterizations[i], irParametrizations[0]);
-        } else if (auto dkData = boost::dynamic_pointer_cast<InfJyData>(imData)) {
+            auto dkParam = boost::dynamic_pointer_cast<InfDkParametrization>(infParameterizations[i]);
+            QL_REQUIRE(dkParam, "Expected DK model data to have given a DK parameterisation.");
+            calibrateInflation(*dkData, i, dkParam, irParametrizations[0]);
+        } else if (auto jyData = boost::dynamic_pointer_cast<InfJyData>(imData)) {
+            auto jyParam = boost::dynamic_pointer_cast<InfJyParameterization>(infParameterizations[i]);
+            QL_REQUIRE(jyParam, "Expected JY model data to have given a JY parameterisation.");
+            calibrateInflation(*jyData, i, jyParam, irParametrizations[0]);
             QL_FAIL("CrossAssetModelBuilder does not process InfJyData yet.");
         } else {
             QL_FAIL("CrossAssetModelBuilder expects either DK or JY inflation model data.");
@@ -479,11 +487,11 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
     const boost::shared_ptr<InfDkParametrization>& inflationParam,
     const boost::shared_ptr<IrLgm1fParametrization>& domesticIrParam) const {
 
-    DLOG("INF (DK) Calibration " << modelIdx);
+    LOG("Calibrate DK inflation model for inflation index " << data.index());
     
     if ((!data.volatility().calibrate() && !data.reversion().calibrate()) ||
         (data.calibrationType() == CalibrationType::None)) {
-        DLOG("INF (DK) Calibration " << modelIdx << " not requested.");
+        LOG("Calibration of DK inflation model for inflation index " << data.index() << " not requested.");
         return;
     }
 
@@ -540,6 +548,24 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
         }
     }
 
+}
+
+void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data,
+    Size modelIdx,
+    const boost::shared_ptr<InfJyParameterization>& inflationParam,
+    const boost::shared_ptr<IrLgm1fParametrization>& domesticIrParam) const {
+
+    LOG("Calibrate JY inflation model for inflation index " << data.index());
+
+    if ((!data.realRateVolatility().calibrate() &&
+         !data.realRateReversion().calibrate() &&
+         !data.indexVolatility().calibrate()) ||
+        (data.calibrationType() == CalibrationType::None)) {
+        LOG("Calibration of JY inflation model for inflation index " << data.index() << " not requested.");
+        return;
+    }
+
+    QL_FAIL("Calibration of JY model not yet implemented.");
 }
 
 } // namespace data

@@ -105,6 +105,7 @@
     <ClInclude Include="ored\model\fxbsdata.hpp" />
     <ClInclude Include="ored\model\inflation\infdkbuilder.hpp" />
     <ClInclude Include="ored\model\inflation\infdkdata.hpp" />
+    <ClInclude Include="ored\model\inflation\infjybuilder.hpp" />
     <ClInclude Include="ored\model\inflation\infjydata.hpp" />
     <ClInclude Include="ored\model\inflation\inflationmodeldata.hpp" />
     <ClInclude Include="ored\model\irlgmdata.hpp" />
@@ -270,6 +271,7 @@
     <ClCompile Include="ored\model\fxbsdata.cpp" />
     <ClCompile Include="ored\model\inflation\infdkbuilder.cpp" />
     <ClCompile Include="ored\model\inflation\infdkdata.cpp" />
+    <ClCompile Include="ored\model\inflation\infjybuilder.cpp" />
     <ClCompile Include="ored\model\inflation\infjydata.cpp" />
     <ClCompile Include="ored\model\inflation\inflationmodeldata.cpp" />
     <ClCompile Include="ored\model\irlgmdata.cpp" />
