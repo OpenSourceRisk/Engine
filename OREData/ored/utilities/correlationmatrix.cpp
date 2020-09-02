@@ -186,9 +186,6 @@ Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const ProcessInfo
         }
     }
 
-    // Check that the matrix is a valid correlation matrix.
-
-
     return corr;
 }
 

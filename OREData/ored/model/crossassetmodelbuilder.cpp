@@ -164,6 +164,12 @@ void CrossAssetModelBuilder::buildModel() const {
 
     subBuilders_.clear();
 
+    // Store information on the number of factors for each process. This is used when requesting a correlation matrix 
+    // from the CorrelationMatrixBuilder below.
+    using ProcessInfo = CorrelationMatrixBuilder::ProcessInfo;
+    namespace CT = QuantExt::CrossAssetModelTypes;
+    ProcessInfo processInfo;
+
     /*******************************************************
      * Build the IR parametrizations and calibration baskets
      */
@@ -187,6 +193,7 @@ void CrossAssetModelBuilder::buildModel() const {
         irParametrizations.push_back(parametrization);
         irDiscountCurves.push_back(builder->discountCurve());
         subBuilders_.insert(builder);
+        processInfo[CT::IR].emplace_back(ir->ccy(), 1);
     }
 
     QL_REQUIRE(irParametrizations.size() > 0, "missing IR parametrizations");
@@ -217,6 +224,7 @@ void CrossAssetModelBuilder::buildModel() const {
         fxOptionBaskets_[i] = builder->optionBasket();
         fxParametrizations.push_back(parametrization);
         subBuilders_.insert(builder);
+        processInfo[CT::FX].emplace_back(ccy.code() + domCcy.code(), 1);
     }
 
     /*******************************************************
@@ -237,24 +245,27 @@ void CrossAssetModelBuilder::buildModel() const {
         eqParametrizations.push_back(parametrization);
         eqNames.push_back(eqName);
         subBuilders_.insert(builder);
+        processInfo[CT::EQ].emplace_back(eqName, 1);
     }
 
     // Build the INF parametrizations and calibration baskets
     vector<boost::shared_ptr<Parametrization>> infParameterizations;
     for (Size i = 0; i < config_->infConfigs().size(); i++) {
-        DLOG("INF Parametrization " << i);
         boost::shared_ptr<InflationModelData> imData = config_->infConfigs()[i];
+        DLOG("Inflation parameterisation (" << i << ") for index " << imData->index());
         if (auto dkData = boost::dynamic_pointer_cast<InfDkData>(imData)) {
             boost::shared_ptr<InfDkBuilder> builder = boost::make_shared<InfDkBuilder>(
                 market_, dkData, configurationInfCalibration_, referenceCalibrationGrid_);
             infParameterizations.push_back(builder->parametrization());
             infCapFloorBaskets_[i] = builder->optionBasket();
             subBuilders_.insert(builder);
+            processInfo[CT::INF].emplace_back(dkData->index(), 1);
         } else if (auto jyData = boost::dynamic_pointer_cast<InfJyData>(imData)) {
             boost::shared_ptr<InfJyBuilder> builder = boost::make_shared<InfJyBuilder>(
                 market_, jyData, configurationInfCalibration_, referenceCalibrationGrid_);
             infParameterizations.push_back(builder->parameterization());
             subBuilders_.insert(builder);
+            processInfo[CT::INF].emplace_back(jyData->index(), 2);
         } else {
             QL_FAIL("CrossAssetModelBuilder expects either DK or JY inflation model data.");
         }
@@ -281,7 +292,7 @@ void CrossAssetModelBuilder::buildModel() const {
         cmb.addCorrelation(it->first.first, it->first.second, it->second);
     }
 
-    Matrix corrMatrix = cmb.correlationMatrix(currencies, infIndices, crNames, eqNames);
+    Matrix corrMatrix = cmb.correlationMatrix(processInfo);
 
     /*****************************
      * Build the cross asset model
