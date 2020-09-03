@@ -41,14 +41,16 @@ XvaRunner::XvaRunner(Date asof,
     const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
     const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
     const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
-    Real dimQuantile,
-    Size dimHorizonCalendarDays) :
+    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
+    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
+    const boost::shared_ptr<ReferenceDataManager>& referenceData,
+    Real dimQuantile, Size dimHorizonCalendarDays) :
     asof_(asof), baseCurrency_(baseCurrency), portfolio_(portfolio), netting_(netting), engineData_(engineData), 
     curveConfigs_(curveConfigs), conventions_(conventions), todaysMarketParams_(todaysMarketParams), simMarketData_(simMarketData), 
-    scenarioGeneratorData_(scenarioGeneratorData), crossAssetModelData_(crossAssetModelData), dimQuantile_(dimQuantile), 
-    dimHorizonCalendarDays_(dimHorizonCalendarDays){}
+    scenarioGeneratorData_(scenarioGeneratorData), crossAssetModelData_(crossAssetModelData), extraLegBuilders_(extraLegBuilders),
+    extraEngineBuilders_(extraEngineBuilders), dimQuantile_(dimQuantile), dimHorizonCalendarDays_(dimHorizonCalendarDays){}
 
-const boost::shared_ptr<PostProcess>& XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnErr) {
+void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnErr) {
     CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, "", "", "", "", "", ActualActual(), false,
         continueOnErr);
     boost::shared_ptr<QuantExt::CrossAssetModel> model = *modelBuilder.model();
@@ -64,7 +66,8 @@ const boost::shared_ptr<PostProcess>& XvaRunner::runXva(const boost::shared_ptr<
     // TODO: Is this needed? PMMarket is in ORE Plus
     // Rebuild portfolio linked to SSM (wrapped)
     // auto simPmMarket = boost::make_shared<PreciousMetalMarket>(simMarket);
-    boost::shared_ptr<EngineFactory> simFactory = boost::make_shared<EngineFactory>(engineData_, simMarket);
+    boost::shared_ptr<EngineFactory> simFactory = boost::make_shared<EngineFactory>(engineData_, simMarket, 
+        map<MarketContext, string>(), extraEngineBuilders_, extraLegBuilders_, referenceData_);
     portfolio_->reset();
     portfolio_->build(simFactory);
 
@@ -74,6 +77,7 @@ const boost::shared_ptr<PostProcess>& XvaRunner::runXva(const boost::shared_ptr<
     boost::shared_ptr<NPVCalculator> npvCalculator = boost::make_shared<NPVCalculator>(baseCurrency_);
     boost::shared_ptr<NPVCube> cube;
     boost::shared_ptr<CubeInterpretation> cubeInterpreter;
+
     if (scenarioGeneratorData_->withCloseOutLag()) {
         // depth 2: NPV and close-out NPV 
         cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(
@@ -115,11 +119,9 @@ const boost::shared_ptr<PostProcess>& XvaRunner::runXva(const boost::shared_ptr<
 
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator = 
         getDimCalculator(cube, cubeInterpreter, scenarioData, model, nettingCube);
-    boost::shared_ptr<PostProcess> postProcess =
-        boost::make_shared<PostProcess>(portfolio_, netting_, market, "", cube, scenarioData, analytics, baseCurrency_,
-            "None", 1.0, 0.95, "Symmetric", "", "", "", dimCalculator, cubeInterpreter);
+    postProcess_ = boost::make_shared<PostProcess>(portfolio_, netting_, market, "", cube, scenarioData, analytics, 
+        baseCurrency_, "None", 1.0, 0.95, "Symmetric", "", "", "", dimCalculator, cubeInterpreter);
 
-    return postProcess;
 }
 
 boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(const boost::shared_ptr<NPVCube>& cube,
