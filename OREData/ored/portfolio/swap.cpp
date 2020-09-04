@@ -56,6 +56,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legs_.resize(numLegs);
 
     bool isXCCY = false;
+    bool isResetting = false;
 
     for (Size i = 0; i < numLegs; ++i) {
         currencies[i] = parseCurrency(legData_[i].currency());
@@ -129,6 +130,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
             DLOG("Building Resetting XCCY Notional leg");
             Real foreignNotional = legData_[i].foreignAmount();
+            isResetting = true;
 
             Leg resettingLeg;
             for (Size j = 0; j < legs_[i].size(); j++) {
@@ -251,7 +253,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("npv currency is " << npvCurrency_);
 
     if (isXCCY) {
-        boost::shared_ptr<QuantExt::CurrencySwap> swap(new QuantExt::CurrencySwap(legs_, legPayers_, currencies));
+        boost::shared_ptr<QuantExt::CurrencySwap> swap(
+            new QuantExt::CurrencySwap(legs_, legPayers_, currencies, settlement_ == "Physical", isResetting));
         boost::shared_ptr<CrossCurrencySwapEngineBuilderBase> swapBuilder =
             boost::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());

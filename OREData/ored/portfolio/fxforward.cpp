@@ -43,7 +43,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         DLOG("Build FxForward with maturity date " << QuantLib::io::iso_date(maturityDate));
 
         boost::shared_ptr<QuantLib::Instrument> instrument = boost::make_shared<QuantExt::FxForward>(
-            boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false);
+            boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false, settlement_ == "Physical");
         instrument_.reset(new VanillaInstrument(instrument));
 
         npvCurrency_ = soldCurrency_;
