@@ -57,7 +57,7 @@ public:
                Pay nominal1 if true, otherwise pay nominal2.
     */
     FxForward(const Real& nominal1, const Currency& currency1, const Real& nominal2, const Currency& currency2,
-              const Date& maturityDate, const bool& payCurrency1);
+              const Date& maturityDate, const bool& payCurrency1, const bool isPhysciallySettled = true);
 
     /*! \param nominal1
                FX forward nominal amount (domestic currency)
@@ -68,7 +68,8 @@ public:
         \param sellingNominal
                Sell (pay) nominal1 if true, otherwise buy (receive) nominal.
     */
-    FxForward(const Money& nominal1, const ExchangeRate& forwardRate, const Date& forwardDate, bool sellingNominal);
+    FxForward(const Money& nominal1, const ExchangeRate& forwardRate, const Date& forwardDate, bool sellingNominal,
+              const bool isPhysicallySettled = true);
 
     /*! \param nominal1
                FX forward nominal amount 1 (domestic currency)
@@ -83,7 +84,7 @@ public:
                Sell (pay) nominal1 if true, otherwise buy (receive) nominal1.
     */
     FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote, const Currency& currency2,
-              const Date& maturityDate, bool sellingNominal);
+              const Date& maturityDate, bool sellingNominal, const bool isPhysicallySettled = true);
     //@}
 
     //! \name Results
@@ -129,6 +130,7 @@ private:
     Currency currency2_;
     Date maturityDate_;
     bool payCurrency1_;
+    bool isPhysicallySettled_;
 
     // results
     mutable Money npv_;
@@ -144,6 +146,7 @@ public:
     Currency currency2;
     Date maturityDate;
     bool payCurrency1;
+    bool isPhysicallySettled;
     void validate() const;
 };
 

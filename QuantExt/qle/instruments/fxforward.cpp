@@ -25,14 +25,14 @@ using namespace QuantLib;
 namespace QuantExt {
 
 FxForward::FxForward(const Real& nominal1, const Currency& currency1, const Real& nominal2, const Currency& currency2,
-                     const Date& maturityDate, const bool& payCurrency1)
+                     const Date& maturityDate, const bool& payCurrency1, const bool isPhysicallySettled)
     : nominal1_(nominal1), currency1_(currency1), nominal2_(nominal2), currency2_(currency2),
-      maturityDate_(maturityDate), payCurrency1_(payCurrency1) {}
+      maturityDate_(maturityDate), payCurrency1_(payCurrency1), isPhysicallySettled_(isPhysicallySettled) {}
 
 FxForward::FxForward(const Money& nominal1, const ExchangeRate& forwardRate, const Date& maturityDate,
-                     bool sellingNominal)
+                     bool sellingNominal, const bool isPhysicallySettled)
     : nominal1_(nominal1.value()), currency1_(nominal1.currency()), maturityDate_(maturityDate),
-      payCurrency1_(sellingNominal) {
+      payCurrency1_(sellingNominal), isPhysicallySettled_(isPhysicallySettled) {
 
     QL_REQUIRE(currency1_ == forwardRate.target(), "Currency of nominal1 does not match target (domestic) "
                                                    "currency in the exchange rate.");
@@ -43,9 +43,9 @@ FxForward::FxForward(const Money& nominal1, const ExchangeRate& forwardRate, con
 }
 
 FxForward::FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote, const Currency& currency2,
-                     const Date& maturityDate, bool sellingNominal)
+                     const Date& maturityDate, bool sellingNominal, const bool isPhysicallySettled)
     : nominal1_(nominal1.value()), currency1_(nominal1.currency()), currency2_(currency2), maturityDate_(maturityDate),
-      payCurrency1_(sellingNominal) {
+      payCurrency1_(sellingNominal), isPhysicallySettled_(isPhysicallySettled) {
 
     QL_REQUIRE(fxForwardQuote->isValid(), "The FX Forward quote is not valid.");
 
@@ -72,6 +72,7 @@ void FxForward::setupArguments(PricingEngine::arguments* args) const {
     arguments->currency2 = currency2_;
     arguments->maturityDate = maturityDate_;
     arguments->payCurrency1 = payCurrency1_;
+    arguments->isPhysicallySettled = isPhysicallySettled_;
 }
 
 void FxForward::fetchResults(const PricingEngine::results* r) const {
@@ -99,3 +100,4 @@ void FxForward::results::reset() {
     fairForwardRate = ExchangeRate();
 }
 } // namespace QuantExt
+
