@@ -341,9 +341,9 @@ void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountInd
         auto di = iborIndex(discountIndex, configuration)->forwardingTermStructure();
 
         auto swapCon = boost::dynamic_pointer_cast<data::SwapIndexConvention>(conventions_.get(swapIndex));
-        QL_REQUIRE(swapCon, "Did not find SwapIndexConvention for " << swapIndex);
+        QL_REQUIRE(swapCon, "expected SwapIndexConvention for " << swapIndex);
         auto con = boost::dynamic_pointer_cast<data::IRSwapConvention>(conventions_.get(swapCon->conventions()));
-        QL_REQUIRE(con, "Cannot find IRSwapConventions " << swapCon->conventions());
+        QL_REQUIRE(con, "expected IRSwapConvention for " << swapCon->conventions());
 
         auto fi = iborIndex(con->indexName(), configuration)->forwardingTermStructure();
 
