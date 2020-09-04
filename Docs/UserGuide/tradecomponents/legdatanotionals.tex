@@ -118,11 +118,11 @@ specifying notionals only for dates where the notional changes.
 
 \vspace{1em} 
 
-In case of exchange of currencies an initial exchange, a final exchange
+An initial exchange, a final exchange
 and an amortising exchange can be specified using an \lstinline!Exchanges! child element with \break
 \lstinline!NotionalInitialExchange!, \lstinline!NotionalFinalExchange! and \break
 \lstinline!NotionalAmortizingExchange! as subelements, see Listing
-\ref{lst:notional_exchange}.
+\ref{lst:notional_exchange}. The \lstinline!Exchanges! element is typically used in cross-currency swaps and inflation swaps, but can also be used in other trade and leg types.
 
 Allowable values for \lstinline!NotionalInitialExchange!,  \lstinline!NotionalFinalExchange! and \lstinline!NotionalAmortizingExchange!:   \emph{true, false}. Defaults to  \emph{false} if omitted, or if the entire \lstinline!Exchanges! block is omitted.
 
