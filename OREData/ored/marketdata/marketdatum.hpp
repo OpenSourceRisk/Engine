@@ -144,7 +144,7 @@ public:
     virtual ~MarketDatum() {}
 
     //! Make a copy of the market datum
-    boost::shared_ptr<MarketDatum> clone() {
+    virtual boost::shared_ptr<MarketDatum> clone() {
         return boost::make_shared<MarketDatum>(quote_->value(), asofDate_, name_, quoteType_, instrumentType_);
     }
 
