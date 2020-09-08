@@ -503,7 +503,7 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
 
 void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                             const string& nettingSetId) {
-    const vector<Real> grid = postProcess->spreadSensitivityGrid();
+    const vector<Real> grid = postProcess->spreadSensitivityTimes();
     const vector<Real>& sensiHazardRate = postProcess->netCvaHazardRateSensitivity(nettingSetId);
     const vector<Real>& sensiCdsSpread = postProcess->netCvaSpreadSensitivity(nettingSetId);
     report.addColumn("NettingSet", string())

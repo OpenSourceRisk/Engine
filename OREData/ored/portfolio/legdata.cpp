@@ -28,6 +28,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/vectorutils.hpp>
 
 #include <boost/make_shared.hpp>
 #include <ql/cashflow.hpp>
@@ -65,8 +66,11 @@
 using namespace QuantLib;
 using namespace QuantExt;
 
+
 namespace ore {
 namespace data {
+
+bool lessThan(const string& s1, const string& s2) { return s1 < s2; }
 
 LegDataRegister<CashflowData> CashflowData::reg_("Cashflow");
 
@@ -74,6 +78,10 @@ void CashflowData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     amounts_ =
         XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Cashflow", "Amount", "date", dates_, &parseReal, false);
+
+    auto p = sort_permutation(dates_, lessThan);
+    apply_permutation_in_place(dates_, p);
+    apply_permutation_in_place(amounts_, p);
 }
 
 XMLNode* CashflowData::toXML(XMLDocument& doc) {
