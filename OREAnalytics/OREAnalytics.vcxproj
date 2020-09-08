@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug (static runtime)|Win32">
@@ -46,6 +46,7 @@
     <ClInclude Include="orea\app\reportwriter.hpp" />
     <ClInclude Include="orea\app\sensitivityrunner.hpp" />
     <ClInclude Include="orea\app\structuredanalyticserror.hpp" />
+    <ClInclude Include="orea\app\xvarunner.hpp" />
     <ClInclude Include="orea\auto_link.hpp" />
     <ClInclude Include="orea\cube\cubeinterpretation.hpp" />
     <ClInclude Include="orea\cube\cubewriter.hpp" />
@@ -106,6 +107,7 @@
     <ClCompile Include="orea\app\reportwriter.cpp" />
     <ClCompile Include="orea\app\sensitivityrunner.cpp" />
     <ClCompile Include="orea\app\structuredanalyticserror.cpp" />
+    <ClCompile Include="orea\app\xvarunner.cpp" />
     <ClCompile Include="orea\cube\cubeinterpretation.cpp" />
     <ClCompile Include="orea\cube\cubewriter.cpp" />
     <ClCompile Include="orea\cube\sensitivitycube.cpp" />
