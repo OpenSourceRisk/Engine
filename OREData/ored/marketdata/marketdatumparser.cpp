@@ -500,7 +500,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         if (hasCallPutToken) {
             QL_REQUIRE(tokens.back() == "C" || tokens.back() == "P",
                        "excepted C or P for Call or Put at position " << tokens.size() << " in " << datumName);
-            isCall = tokens[6] == "C";
+            isCall = tokens.back() == "C";
         }
         // note how we only store the expiry string - to ensure we can support both Periods and Dates being specified in
         // the vol curve-config.
