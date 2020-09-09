@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2020 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,28 +16,28 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/models/dkimpliedyoyinflationtermstructure.hpp
-    \brief year on year inflation term structure implied by a Dodgson Kainth (DK) model
+/*! \file qle/models/jyimpliedyoyinflationtermstructure.hpp
+    \brief year on year inflation term structure implied by a Jarrow Yildrim (JY) model
     \ingroup models
 */
 
-#ifndef quantext_dk_implied_yoy_inflation_term_structure_hpp
-#define quantext_dk_implied_yoy_inflation_term_structure_hpp
+#ifndef quantext_jy_implied_yoy_inflation_term_structure_hpp
+#define quantext_jy_implied_yoy_inflation_term_structure_hpp
 
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/yoyinflationmodeltermstructure.hpp>
 
 namespace QuantExt {
 
-/*! Dodgson Kainth (DK) implied year on year inflation term structure
+/*! Jarrow Yildrim (JY) implied year on year inflation term structure
     \ingroup models
 */
-class DkImpliedYoYInflationTermStructure : public YoYInflationModelTermStructure {
+class JyImpliedYoYInflationTermStructure : public YoYInflationModelTermStructure {
 public:
     /*! Constructor taking the cross asset model, \p model, and the index of the relevant inflation component within
         the model, \p index.
     */
-    DkImpliedYoYInflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
+    JyImpliedYoYInflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
 
     //! \name YoYInflationModelTermStructure interface
     //@{

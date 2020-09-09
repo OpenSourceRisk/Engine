@@ -759,4 +759,16 @@ Real CrossAssetModel::crV(const Size i, const Size ccy, const Time t, const Time
                (HlT * integral(this, P(sx(ccy - 1), al(i)), t, T) - integral(this, P(sx(ccy - 1), Hl(i), al(i)), t, T));
 }
 
+Handle<ZeroInflationTermStructure> inflationTermStructure(
+    const boost::shared_ptr<CrossAssetModel>& model, Size index) {
+    
+    if (model->modelType(INF, index) == DK) {
+        return model->infdk(index)->termStructure();
+    } else if (model->modelType(INF, index) == JY) {
+        return model->infjy(index)->realRate()->termStructure();
+    } else {
+        QL_FAIL("Expected inflation model to be either DK or JY.");
+    }
+}
+
 } // namespace QuantExt

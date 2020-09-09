@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2020 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
+#include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 
 using QuantLib::Date;
 using QuantLib::Size;
@@ -24,20 +24,21 @@ using QuantLib::Time;
 
 namespace QuantExt {
 
-DkImpliedZeroInflationTermStructure::DkImpliedZeroInflationTermStructure(
+JyImpliedZeroInflationTermStructure::JyImpliedZeroInflationTermStructure(
     const boost::shared_ptr<CrossAssetModel>& model, Size index)
     : ZeroInflationModelTermStructure(model, index) {}
 
-Real DkImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
-    QL_REQUIRE(t >= 0.0, "DkImpliedZeroInflationTermStructure::zeroRateImpl: negative time (" << t << ") given");
-    auto p = model_->infdkI(index_, relativeTime_, relativeTime_ + t, state_[0], state_[1]);
-    return std::pow(p.second, 1 / t) - 1;
+Real JyImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
+    QL_REQUIRE(t >= 0.0, "JyImpliedZeroInflationTermStructure::zeroRateImpl: negative time (" << t << ") given");
+    QL_FAIL("Not implemented yet.");
+    // auto p = model_->infdkI(index_, relativeTime_, relativeTime_ + t, state_[0], state_[1]);
+    // return std::pow(p.second, 1 / t) - 1;
 }
 
-void DkImpliedZeroInflationTermStructure::checkState() const {
-    // For DK, expect the state to be two variables i.e. z_I and y_I.
-    QL_REQUIRE(state_.size() == 2, "DkImpliedZeroInflationTermStructure: expected state to have " <<
-        "two elements but got " << state_.size());
+void JyImpliedZeroInflationTermStructure::checkState() const {
+    // For JY, expect the state to be three variables i.e. z_I, c_I and z_{ir}.
+    QL_REQUIRE(state_.size() == 3, "JyImpliedZeroInflationTermStructure: expected state to have " <<
+        "three elements but got " << state_.size());
 }
 
 }

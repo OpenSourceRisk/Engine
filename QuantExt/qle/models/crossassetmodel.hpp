@@ -414,6 +414,10 @@ protected:
     }
 };
 
+//! Utility function to return a handle to the inflation term structure given the inflation index.
+QuantLib::Handle<QuantLib::ZeroInflationTermStructure> inflationTermStructure(
+    const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
+
 // inline
 
 inline const boost::shared_ptr<StochasticProcess>

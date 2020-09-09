@@ -897,6 +897,18 @@
     <ClInclude Include="qle\models\infjyparameterization.hpp">
       <Filter>models</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\zeroinflationmodeltermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\yoyinflationmodeltermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\jyimpliedyoyinflationtermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\jyimpliedzeroinflationtermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1544,6 +1556,18 @@
       <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\models\infjyparameterization.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\zeroinflationmodeltermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\yoyinflationmodeltermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\jyimpliedyoyinflationtermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\jyimpliedzeroinflationtermstructure.cpp">
       <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>
