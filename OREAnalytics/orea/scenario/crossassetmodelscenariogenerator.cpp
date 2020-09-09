@@ -140,7 +140,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     if (n_inf > 0) {
         cpiKeys_.reserve(n_inf);
         for (Size j = 0; j < n_inf; ++j) {
-            cpiKeys_.emplace_back(RiskFactorKey::KeyType::CPIIndex, model->infdk(j)->name());
+            cpiKeys_.emplace_back(RiskFactorKey::KeyType::CPIIndex, model->inf(j)->name());
         }
 
         Size n_zeroinf = simMarketConfig_->zeroInflationIndices().size();
@@ -339,7 +339,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             Real y = sample.value[model_->pIdx(INF, j, 1)][i + 1];
 
             // update fixing manage with fixing for base date
-            boost::shared_ptr<ZeroInflationIndex> index = *initMarket_->zeroInflationIndex(model_->infdk(j)->name());
+            boost::shared_ptr<ZeroInflationIndex> index = *initMarket_->zeroInflationIndex(model_->inf(j)->name());
             Date baseDate = index->zeroInflationTermStructure()->baseDate();
             Time relativeTime =
                 inflationYearFraction(index->zeroInflationTermStructure()->frequency(),
@@ -367,7 +367,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
         for (Size j = 0; j < n_yoyinf; ++j) {
             std::string indexName = simMarketConfig_->yoyInflationIndices()[j];
-            Size ccy = model_->ccyIndex(model_->infdk(j)->currency());
+            Size ccy = model_->ccyIndex(model_->inf(j)->currency());
             Real z = sample.value[model_->pIdx(INF, model_->infIndex(indexName), 0)][i + 1];
             Real y = sample.value[model_->pIdx(INF, model_->infIndex(indexName), 1)][i + 1];
             Real ir_z = sample.value[model_->pIdx(IR, ccy)][i + 1];

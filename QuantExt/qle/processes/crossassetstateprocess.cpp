@@ -83,12 +83,30 @@ void CrossAssetStateProcess::updateSqrtCorrelation() const {
     for (Size t = 0; t < crossAssetModelAssetTypes; ++t) {
         AssetType assetType = AssetType(t);
         for (Size i = 0; i < model_->components(assetType); ++i) {
-            for (Size j = 0; j < model_->brownians(assetType, i); ++j) {
-                for (Size ii = 0; ii < model_->stateVariables(assetType, i); ++ii) {
-                    brownianIndices.push_back(brownianIndex);
+
+            // 3 possibilities for number of state variables vs. the number of Brownian motions for the i-th component 
+            // within the current asset type.
+            // 1) They are equal. Make the assumption that there is a 1-1 correspondence. This is essentially what has 
+            //    been happening until now outside of DK model i.e. always 1 state var and 1 Brownian motion.
+            // 2) number of state vars > number of Brownian motions. Happens with DK model. Think the code below will 
+            //    only work when number of Brownian motions equals 1. Not changing it as not sure what was intended.
+            // 3) number of state vars < number of Brownian motions. Not covered below.
+            auto brownians = model_->brownians(assetType, i);
+            auto stateVars = model_->stateVariables(assetType, i);
+
+            if (brownians == stateVars) {
+                for (Size k = 0; k < brownians; ++k) {
+                    brownianIndices.push_back(brownianIndex++);
                 }
-                ++brownianIndex;
+            } else {
+                for (Size j = 0; j < brownians; ++j) {
+                    for (Size k = 0; k < stateVars; ++k) {
+                        brownianIndices.push_back(brownianIndex);
+                    }
+                    ++brownianIndex;
+                }
             }
+            
         }
     }
     for (Size i = 0; i < corr.rows(); ++i) {
@@ -109,6 +127,12 @@ Disposable<Array> CrossAssetStateProcess::initialValues() const {
     for (Size i = 0; i < model_->components(EQ); ++i) {
         /* eqbs processes are in log spot */
         res[model_->pIdx(EQ, i, 0)] = std::log(model_->eqbs(i)->eqSpotToday()->value());
+    }
+    for (Size i = 0; i < model_->components(INF); ++i) {
+        // Second component of JY model is the inflation index process.
+        if (model_->modelType(INF, i) == JY) {
+            res[model_->pIdx(INF, i, 1)] = std::log(model_->infjy(i)->index()->fxSpotToday()->value());
+        }
     }
     /* infdk, crlgm1f processes have initial value 0 */
     return res;
@@ -352,6 +376,15 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl1(const 
     for (Size k = 0; k < e; ++k) {
         res[model_->pIdx(EQ, k, 0)] = eq_expectation_1(model_, k, t0, dt);
     }
+
+    // If inflation is JY, need to take account of the drift.
+    for (Size i = 0; i < model_->components(INF); ++i) {
+        if (model_->modelType(INF, i) == JY) {
+            std::tie(res[model_->pIdx(INF, i, 0)], res[model_->pIdx(INF, i, 1)]) = 
+                inf_jy_expectation_1(model_, i, t0, dt);
+        }
+    }
+
     return res;
 }
 
@@ -373,13 +406,23 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl2(const 
         res[model_->pIdx(EQ, k, 0)] +=
             eq_expectation_2(model_, k, t0, x0[model_->pIdx(EQ, k, 0)], x0[model_->pIdx(IR, eqCcyIdx, 0)], dt);
     }
-    /*! inf, cr components have integrated drift 0, we have to return the conditional
-        expected value though, since x0 is subtracted later */
-    Size d = model_->components(INF);
-    for (Size i = 0; i < d; ++i) {
-        res[model_->pIdx(INF, i, 0)] = x0[model_->pIdx(INF, i, 0)];
-        res[model_->pIdx(INF, i, 1)] = x0[model_->pIdx(INF, i, 1)];
+
+    // Inflation: JY is state dependent. DK is not. Even for DK, still need to return the conditional expected value.
+    for (Size i = 0; i < model_->components(INF); ++i) {
+        if (model_->modelType(INF, i) == JY) {
+            auto i_i = model_->ccyIndex(model_->infjy(i)->currency());
+            auto zi_i_0 = x0[model_->pIdx(IR, i_i, 0)];
+            auto state_0 = std::make_pair(x0[model_->pIdx(INF, i, 0)], x0[model_->pIdx(INF, i, 1)]);
+            std::tie(res[model_->pIdx(INF, i, 0)], res[model_->pIdx(INF, i, 1)]) =
+                inf_jy_expectation_2(model_, i, t0, state_0, zi_i_0, dt);
+        } else {
+            res[model_->pIdx(INF, i, 0)] = x0[model_->pIdx(INF, i, 0)];
+            res[model_->pIdx(INF, i, 1)] = x0[model_->pIdx(INF, i, 1)];
+        }
     }
+
+    /*! cr components have integrated drift 0, we have to return the conditional
+        expected value though, since x0 is subtracted later */
     Size c = model_->components(CR);
     for (Size i = 0; i < c; ++i) {
         res[model_->pIdx(CR, i, 0)] = x0[model_->pIdx(CR, i, 0)];

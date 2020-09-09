@@ -465,7 +465,6 @@ void CrossAssetModelBuilder::buildModel() const {
             auto jyParam = boost::dynamic_pointer_cast<InfJyParameterization>(infParameterizations[i]);
             QL_REQUIRE(jyParam, "Expected JY model data to have given a JY parameterisation.");
             calibrateInflation(*jyData, i, jyParam, irParametrizations[0]);
-            QL_FAIL("CrossAssetModelBuilder does not process InfJyData yet.");
         } else {
             QL_FAIL("CrossAssetModelBuilder expects either DK or JY inflation model data.");
         }

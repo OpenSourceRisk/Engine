@@ -56,6 +56,14 @@ void InfJyParameterization::update() const {
     index_->update();
 }
 
+boost::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> InfJyParameterization::realRate() const {
+    return realRate_;
+}
+
+boost::shared_ptr<FxBsParametrization> InfJyParameterization::index() const {
+    return index_;
+}
+
 Real InfJyParameterization::direct(const Size i, const Real x) const {
     checkIndex(i);
     if (i < 2) {

@@ -43,6 +43,12 @@ public:
     void update() const override;
     //@}
 
+    //! \name Inspectors
+    //@{
+    boost::shared_ptr<Lgm1fParametrization<QuantLib::ZeroInflationTermStructure>> realRate() const;
+    boost::shared_ptr<FxBsParametrization> index() const;
+    //@}
+
 protected:
     //! \name Parametrization interface
     //@{
