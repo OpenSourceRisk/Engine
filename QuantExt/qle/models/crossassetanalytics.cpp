@@ -608,10 +608,14 @@ Real eq_eq_covariance(const CrossAssetModel* x, const Size k, const Size l, cons
     return res;
 }
 
-Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t) {
+Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const DayCounter& dc) {
     auto lag = inflationYearFraction(ts->frequency(), ts->indexIsInterpolated(),
-        ts->dayCounter(), ts->baseDate(), ts->referenceDate());
+        dc, ts->baseDate(), ts->referenceDate());
     return std::pow(1.0 + ts->zeroRate(t - lag), t);
+}
+
+Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t) {
+    return inflationGrowth(ts, t, ts->dayCounter());
 }
 
 } // namespace CrossAssetAnalytics
