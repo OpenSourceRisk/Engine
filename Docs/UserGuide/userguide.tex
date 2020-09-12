@@ -2263,6 +2263,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
   <Parameter name="portfolioFile">portfolio.xml</Parameter>
   <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
+  <Parameter name="referenceDataFile">../../Input/referencedata.xml</Parameter>
   <!-- None, Unregister, Defer or Disable -->
   <Parameter name="observationModel">Disable</Parameter>
 </Setup>
@@ -2286,7 +2287,7 @@ When ORE starts, it will initialise today's market, i.e. load market data, fixin
 specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the trades in {\tt portfolio.xml} and link them with
 pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt implyTodaysFixings} is set to Y, today's
 fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as e.g. in
-scenario analysis and stress testing.
+scenario analysis and stress testing. The curveConfigFile {\tt curveconfig.xml}, the conventionsFile {\tt conventions.xml}, the referenceDataFile {\tt referencedata.xml}, the marketDataFile and the fixingDataFile are explained in the sections below.
 
 \medskip Parameter {\tt calendarAdjustment} includes the {\tt calendarAdjustment.xml} which lists out additional holidays and business days to be added to specified calendars. The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
 {\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users
