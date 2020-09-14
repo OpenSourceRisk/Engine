@@ -198,7 +198,25 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             underlyingIndex, builder->configuration(MarketContext::pricing));
         qlIndexName = zeroIndex->name();
 
-        Date startDate = parseDate(cpiData->startDate());
+        // the cpi leg uses the first schedule date as the start date, which only makes sense if there are at least
+        // two dates in the schedule, otherwise the only date in the schedule is the pay date of the cf and a a separate
+        // start date is expected; if both the separate start date and a schedule with more than one date is given
+        Date startDate;
+        Schedule schedule = makeSchedule(legData_.schedule());
+
+        if (schedule.size() < 2) {
+            QL_REQUIRE(!cpiData->startDate().empty(),
+                       "makeCPILeg(): if only one schedule date is given, a StartDate must be given in addition");
+            startDate = parseDate(cpiData->startDate());
+        } else {
+            QL_REQUIRE(cpiData->startDate().empty() || parseDate(cpiData->startDate()) == schedule.dates().front(),
+                       "makeCPILeg(): first schedule date ("
+                           << schedule.dates().front() << ") must be identical to start date ("
+                           << parseDate(cpiData->startDate())
+                           << "), the start date can be omitted for schedules containing more than one date");
+            startDate = schedule.dates().front();
+        }
+
         Real baseCPI = cpiData->baseCPI();
         Period observationLag = parsePeriod(cpiData->observationLag());
         CPI::InterpolationType interpolation = parseObservationInterpolation(cpiData->interpolation());
