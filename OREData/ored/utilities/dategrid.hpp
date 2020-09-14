@@ -93,6 +93,10 @@ public:
     const QuantLib::TimeGrid& timeGrid() const { return timeGrid_; }
     //@}
 
+    //! Returns the time grid associated with the vector of valuation times (plus t=0)
+    QuantLib::TimeGrid valuationTimeGrid() const;
+    //@}
+
     //! Accessor methods
     const QuantLib::Date& operator[](QuantLib::Size i) const { return dates_[i]; };
 
