@@ -287,6 +287,9 @@ public:
     //! Write DIM as a function of sample netting set NPV for a given time step
     void exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
                              const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports);
+
+    //! get the cvaSpreadSensiShiftSize
+    QuantLib::Real cvaSpreadSensiShiftSize() { return cvaSpreadSensiShiftSize_; }
   
 protected:
     //! Helper function to return the collateral account evolution for a given netting set
