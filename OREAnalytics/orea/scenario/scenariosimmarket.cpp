@@ -2027,11 +2027,6 @@ void ScenarioSimMarket::update(const Date& d) {
     else if (om == ObservationMode::Mode::Defer)
         ObservableSettings::instance().disableUpdates(true);
 
-    boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
-    QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
-
-    numeraire_ = scenario->getNumeraire();
-
     if (d != Settings::instance().evaluationDate())
         Settings::instance().evaluationDate() = d;
     else if (om == ObservationMode::Mode::Unregister) {
@@ -2044,6 +2039,11 @@ void ScenarioSimMarket::update(const Date& d) {
         boost::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
         obs->notifyObservers();
     }
+
+    boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
+    QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
+
+    numeraire_ = scenario->getNumeraire();
 
     applyScenario(scenario);
 
