@@ -435,7 +435,6 @@ struct zetay {
     zetay(const Size i) : i_(i) {}
 
     Real eval(const CrossAssetModel* x, const Real t) const {
-        return x->infdk(i_)->zeta(t);
         if (x->modelType(INF, i_) == CrossAssetModelTypes::DK)
             return x->infdk(i_)->zeta(t);
         else if (x->modelType(INF, i_) == CrossAssetModelTypes::JY)

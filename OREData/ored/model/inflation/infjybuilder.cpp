@@ -142,7 +142,8 @@ InfJyBuilder::InfJyBuilder(
     }
 
     // 3) The final parameterisation is a combination of the real rate and index parameterisation.
-    parameterization_ = boost::make_shared<QuantExt::InfJyParameterization>(realRateParam, indexParam);
+    parameterization_ = boost::make_shared<QuantExt::InfJyParameterization>(
+        realRateParam, indexParam, inflationIndex_);
 
 }
 

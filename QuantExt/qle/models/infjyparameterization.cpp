@@ -23,15 +23,17 @@ using QuantLib::Array;
 using QuantLib::Parameter;
 using QuantLib::Real;
 using QuantLib::Size;
+using QuantLib::ZeroInflationIndex;
 using QuantLib::ZeroInflationTermStructure;
 
 namespace QuantExt {
 
 InfJyParameterization::InfJyParameterization(
     boost::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> realRate,
-    boost::shared_ptr<FxBsParametrization> index)
+    boost::shared_ptr<FxBsParametrization> index,
+    boost::shared_ptr<ZeroInflationIndex> inflationIndex)
     : Parametrization(realRate->currency(), realRate->name()),
-      realRate_(realRate), index_(index) {}
+      realRate_(realRate), index_(index), inflationIndex_(inflationIndex) {}
 
 const Array& InfJyParameterization::parameterTimes(const Size i) const {
     checkIndex(i);
@@ -62,6 +64,10 @@ boost::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> InfJyParamet
 
 boost::shared_ptr<FxBsParametrization> InfJyParameterization::index() const {
     return index_;
+}
+
+boost::shared_ptr<ZeroInflationIndex> InfJyParameterization::inflationIndex() const {
+    return inflationIndex_;
 }
 
 Real InfJyParameterization::direct(const Size i, const Real x) const {

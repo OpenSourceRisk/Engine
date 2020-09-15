@@ -51,6 +51,12 @@ protected:
     //@}
 };
 
+/*! Calculation of inflation growth between two times given the Jarrow Yildrim (JY) real rate state, \p rrState, and 
+    the nominal interest rate state, \p irState.
+*/
+QuantLib::Real inflationGrowth(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
+    QuantLib::Time S, QuantLib::Time T, QuantLib::Real irState, QuantLib::Real rrState);
+
 }
 
 #endif

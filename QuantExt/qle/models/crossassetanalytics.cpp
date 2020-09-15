@@ -76,13 +76,12 @@ pair<Real, Real> inf_jy_expectation_1(const CrossAssetModel* x, Size i, Time t0,
 
     res.second += integral(x, P(rzy(0, i, 1), Hz(0), az(0), sy(i)), t0, t0 + dt);
 
-    res.second += integral(x, P(LC(Hi_i_e, -1.0, Hz(i_i)), LC(0.0, -1.0, P(Hz(i_i), az(i_i), az(i_i)),
-        1.0, P(Hz(0), az(0), az(i_i), rzz(0, i_i)), -1.0, P(rzx(i_i, i_i - 1), az(i_i), sx(i_i - 1)) )), t0, t0 + dt);
-
     res.second -= integral(x, P(LC(Hi_e, -1.0, Hy(i)), LC(0.0, -1.0, P(Hy(i), ay(i), ay(i)),
         1.0, P(Hz(0), az(0), ay(i), rzy(0, i)), -1.0, P(ryy(i, i, 0, 1), ay(i), sy(i)))), t0, t0 + dt);
 
     if (i_i > 0) {
+        res.second += integral(x, P(LC(Hi_i_e, -1.0, Hz(i_i)), LC(0.0, -1.0, P(Hz(i_i), az(i_i), az(i_i)), 1.0,
+            P(Hz(0), az(0), az(i_i), rzz(0, i_i)), -1.0, P(rzx(i_i, i_i - 1), az(i_i), sx(i_i - 1)))), t0, t0 + dt);
         res.second -= integral(x, P(rxy(i_i - 1, i, 1), sy(i), sx(i_i - 1)), t0, t0 + dt);
         res.second += integral(x, P(LC(Hi_e, -1.0, Hy(i)), ay(i), sx(i_i - 1), rxy(i_i - 1, i)), t0, t0 + dt);
     }

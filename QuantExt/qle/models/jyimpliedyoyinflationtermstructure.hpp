@@ -46,7 +46,8 @@ public:
     //@}
 
 protected:
-    QuantLib::Real yoySwapletRate(QuantLib::Time S, QuantLib::Time T) const;
+    //! Year on year swaplet price for the period from \p S to \p T.
+    QuantLib::Real yoySwaplet(QuantLib::Time S, QuantLib::Time T) const;
 
     //! \name YoYInflationModelTermStructure interface
     //@{
