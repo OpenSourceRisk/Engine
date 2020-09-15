@@ -278,6 +278,16 @@ QuantLib::TimeGrid DateGrid::valuationTimeGrid() const {
     return TimeGrid(times.begin(), times.end());
 }
 
+QuantLib::TimeGrid DateGrid::closeOutTimeGrid() const {
+    std::vector<Real> times;
+    Date today = Settings::instance().evaluationDate();
+    for (Size i = 0; i < dates_.size(); ++i) {
+        if (isCloseOutDate_[i])
+            times.push_back(dayCounter_.yearFraction(today, dates_[i]));
+    }
+    return TimeGrid(times.begin(), times.end());
+}
+
 boost::shared_ptr<DateGrid> generateShiftedDateGrid(const boost::shared_ptr<DateGrid>& dg,
                                                     const QuantLib::Period& shift) {
     DLOG("Building shifted date grid with shift of " << shift);

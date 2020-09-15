@@ -97,6 +97,10 @@ public:
     QuantLib::TimeGrid valuationTimeGrid() const;
     //@}
 
+    //! Returns the time grid associated with the vector of close-out times (plus t=0)
+    QuantLib::TimeGrid closeOutTimeGrid() const;
+    //@}
+
     //! Accessor methods
     const QuantLib::Date& operator[](QuantLib::Size i) const { return dates_[i]; };
 
