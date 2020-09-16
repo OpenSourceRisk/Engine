@@ -34,6 +34,8 @@ namespace analytics {
 
 class XvaRunner {
 public:
+    virtual ~XvaRunner() {};
+
     XvaRunner(QuantLib::Date asof,
         const std::string& baseCurrency,
         const boost::shared_ptr<ore::data::Portfolio>& portfolio,
