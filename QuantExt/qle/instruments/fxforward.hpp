@@ -55,9 +55,11 @@ public:
                Date on which currency amounts are exchanged.
         \param payCurrency1
                Pay nominal1 if true, otherwise pay nominal2.
+        \param isPhysicallySettled
+               if true fx forward is physically settled
     */
     FxForward(const Real& nominal1, const Currency& currency1, const Real& nominal2, const Currency& currency2,
-              const Date& maturityDate, const bool& payCurrency1, const bool isPhysciallySettled = true);
+              const Date& maturityDate, const bool& payCurrency1, const bool isPhysicallySettled = true);
 
     /*! \param nominal1
                FX forward nominal amount (domestic currency)
@@ -67,6 +69,8 @@ public:
                Date of the exchange.
         \param sellingNominal
                Sell (pay) nominal1 if true, otherwise buy (receive) nominal.
+        \param isPhysicallySettled
+               if true fx forward is physically settled
     */
     FxForward(const Money& nominal1, const ExchangeRate& forwardRate, const Date& forwardDate, bool sellingNominal,
               const bool isPhysicallySettled = true);
@@ -82,6 +86,8 @@ public:
                FX Forward maturity date
         \param sellingNominal
                Sell (pay) nominal1 if true, otherwise buy (receive) nominal1.
+        \param isPhysicallySettled
+               if true fx forward is physically settled
     */
     FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote, const Currency& currency2,
               const Date& maturityDate, bool sellingNominal, const bool isPhysicallySettled = true);

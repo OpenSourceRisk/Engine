@@ -26,9 +26,8 @@
 
 #include <ql/termstructures/yieldtermstructure.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! weighted yield term structure
 /*! this yield term structure is defined by discount factors given by a weighted geometric average of discount factors

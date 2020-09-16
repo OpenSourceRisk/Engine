@@ -27,9 +27,8 @@
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! yield plus default yield term structure
 /*! this yield term structure is defined by discount factors given by a weighted sum of survival probabilities of
