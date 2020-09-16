@@ -45,8 +45,8 @@
 #include <ql/termstructures/interpolatedcurve.hpp>
 #include <utility>
 
-using namespace QuantLib;
 namespace QuantExt {
+using namespace QuantLib;
 
     //! DefaultProbabilityTermStructure based on interpolation of survival probabilities
     /*! \ingroup defaultprobabilitytermstructures */
