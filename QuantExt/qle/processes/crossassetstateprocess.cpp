@@ -190,6 +190,70 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
             res[model_->pIdx(EQ, k, 0)] = fr_i - fq_k + (rhozs0k * H0 * alpha0 * sigmask) -
                                           (eps_ccy * rhoxsik * sigmaxi * sigmask) - (0.5 * sigmask * sigmask);
         }
+
+        // State independent pieces of JY inflation model, if there is a CAM JY component.
+        for (Size j = 0; j < model_->components(INF); ++j) {
+            
+            if (model_->modelType(INF, j) == JY) {
+                
+                auto p = model_->infjy(j);
+                Size i_j = model_->ccyIndex(p->currency());
+                
+                // JY inflation parameter values.
+                Real H_y_j = p->realRate()->H(t);
+                Real Hp_y_j = p->realRate()->Hprime(t);
+                Real zeta_y_j = p->realRate()->zeta(t);
+                Real alpha_y_j = p->realRate()->alpha(t);
+                Real sigma_c_j = p->index()->sigma(t);
+
+                // Inflation nominal currency parameter values
+                Real H_i_j = model_->irlgm1f(i_j)->H(t);
+                Real Hp_i_j = model_->irlgm1f(i_j)->Hprime(t);
+                Real zeta_i_j = model_->irlgm1f(i_j)->zeta(t);
+
+                // Correlations
+                Real rho_zy_0j = model_->correlation(IR, 0, INF, j, 0, 0);
+                Real rho_yc_ij = model_->correlation(INF, j, INF, j, 0, 1);
+                Real rho_zc_0j = model_->correlation(IR, 0, INF, j, 0, 1);
+                
+                // JY real rate drift. It is state independent
+                auto rrDrift = -alpha_y_j * alpha_y_j * H_y_j
+                    + rho_zy_0j * alpha0 * alpha_y_j * H_y_j
+                    - rho_yc_ij * alpha_y_j * sigma_c_j;
+
+                if (i_j > 0) {
+                    Real sigma_x_i_j = model_->fxbs(i_j - 1)->sigma(t);
+                    Real rho_yx_j_i_j = model_->correlation(INF, j, FX, i_j - 1, 0, 0);
+                    rrDrift -= rho_yx_j_i_j * alpha_y_j * sigma_x_i_j;
+                }
+
+                res[model_->pIdx(INF, j, 0)] = rrDrift;
+
+                // JY log inflation index drift (state independent piece).
+                auto indexDrift = rho_zc_0j * alpha0 * sigma_c_j * H0 - 0.5 * sigma_c_j * sigma_c_j
+                    + zeta_i_j * Hp_i_j * H_i_j - zeta_y_j * Hp_y_j * H_y_j;
+
+                // Add on the f_n(0, t) - f_r(0, t) piece using the initial zero inflation term structure.
+                // Use the same dt below that is used in yield forward rate calculations.
+                auto ts = p->realRate()->termStructure();
+                Time dt = 0.0001;
+                Time t1 = std::max(t - dt / 2.0, 0.0);
+                Time t2 = t1 + dt;
+                auto z_t = ts->zeroRate(t);
+                auto z_t1 = ts->zeroRate(t1);
+                auto z_t2 = ts->zeroRate(t2);
+                indexDrift += std::log(1 + z_t) + (t / (1 + z_t)) * ((z_t2 - z_t1) / dt);
+
+                if (i_j > 0) {
+                    Real sigma_x_i_j = model_->fxbs(i_j - 1)->sigma(t);
+                    Real rho_cx_j_i_j = model_->correlation(INF, j, FX, i_j - 1, 1, 0);
+                    indexDrift -= rho_cx_j_i_j * sigma_c_j * sigma_x_i_j;
+                }
+
+                res[model_->pIdx(INF, j, 1)] = indexDrift;
+            }
+        }
+
         cache_m_.insert(std::make_pair(t, res));
     } else {
         res = i->second;
@@ -213,6 +277,25 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
         Real zetai = model_->irlgm1f(i)->zeta(t);
         res[model_->pIdx(EQ, k, 0)] += (x[model_->pIdx(IR, i, 0)] * Hprimei) + (zetai * Hprimei * Hi);
     }
+
+    // Non-cacheable portion of inflation JY drift, if there is a CAM JY component.
+    for (Size j = 0; j < model_->components(INF); ++j) {
+        if (model_->modelType(INF, j) == JY) {
+
+            auto p = model_->infjy(j);
+            Size i_j = model_->ccyIndex(p->currency());
+
+            // JY inflation parameter values.
+            Real Hp_y_j = p->realRate()->Hprime(t);
+
+            // Inflation nominal currency parameter values
+            Real Hp_i_j = model_->irlgm1f(i_j)->Hprime(t);
+
+            res[model_->pIdx(INF, j, 1)] += x[model_->pIdx(IR, i_j, 0)] * Hp_i_j
+                - x[model_->pIdx(INF, j, 0)] * Hp_y_j;
+        }
+    }
+
     /* no drift for infdk, crlgm1f components */
     return res;
 }
@@ -273,12 +356,20 @@ Disposable<Array> CrossAssetStateProcess::marginalDiffusionImpl(Time t, const Ar
     }
     // inf-inf
     for (Size i = 0; i < d; ++i) {
-        Real alphai = model_->infdk(i)->alpha(t);
-        Real Hi = model_->infdk(i)->H(t);
-        // infz-infz
-        setValue(res, alphai, model_, INF, i, 0);
-        // infy-infy
-        setValue(res, alphai * Hi, model_, INF, i, 1);
+        if (model_->modelType(INF, i) == DK) {
+            Real alphai = model_->infdk(i)->alpha(t);
+            Real Hi = model_->infdk(i)->H(t);
+            // DK z diffusion coefficient
+            setValue(res, alphai, model_, INF, i, 0);
+            // DK y diffusion coefficient
+            setValue(res, alphai * Hi, model_, INF, i, 1);
+        } else {
+            auto p = model_->infjy(i);
+            // JY z diffusion coefficient
+            setValue(res, p->realRate()->alpha(t), model_, INF, i, 0);
+            // JY I diffusion coefficient
+            setValue(res, p->index()->sigma(t), model_, INF, i, 1);
+        }
     }
     for (Size i = 0; i < c; ++i) {
         // Skip CR components that are not LGM
