@@ -220,6 +220,8 @@ public:
     const vector<Real>& netCvaHazardRateSensitivity(const string& nettingSetId);
     //! Return Netting Set CVA Spread Sensitvity vector
     const vector<Real>& netCvaSpreadSensitivity(const string& nettingSetId);
+    //! Return Netting Set CVA Spread Sensitvity vector
+    const std::map<std::string, std::vector<QuantLib::Real>>& netCvaSpreadSensitivity() const { return netCvaSpreadSensi_; }
 
     //! Return trade (stand-alone) CVA
     Real tradeCVA(const string& tradeId);
@@ -286,6 +288,8 @@ public:
     void exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
                              const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports);
 
+    //! get the cvaSpreadSensiShiftSize
+    QuantLib::Real cvaSpreadSensiShiftSize() { return cvaSpreadSensiShiftSize_; }
   
 protected:
     //! Helper function to return the collateral account evolution for a given netting set

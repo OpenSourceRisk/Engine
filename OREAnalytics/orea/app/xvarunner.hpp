@@ -34,6 +34,8 @@ namespace analytics {
 
 class XvaRunner {
 public:
+    virtual ~XvaRunner() {}
+
     XvaRunner(QuantLib::Date asof,
         const std::string& baseCurrency,
         const boost::shared_ptr<ore::data::Portfolio>& portfolio,
@@ -56,7 +58,7 @@ public:
     const boost::shared_ptr<PostProcess>& postProcess() { return postProcess_; }
 
 protected:
-    virtual boost::shared_ptr<NPVCube> getNettingSetCube() { return nullptr; };
+    virtual boost::shared_ptr<NPVCube> getNettingSetCube(std::vector<boost::shared_ptr<ValuationCalculator>>& calculators) { return nullptr; };
     virtual boost::shared_ptr<DynamicInitialMarginCalculator> getDimCalculator(
         const boost::shared_ptr<NPVCube>& cube,
         const boost::shared_ptr<CubeInterpretation>& cubeInterpreter,
@@ -81,7 +83,6 @@ protected:
     QuantLib::Real dimQuantile_;
     QuantLib::Size dimHorizonCalendarDays_;
 
-    std::vector<boost::shared_ptr<ValuationCalculator>> calculators_;
     boost::shared_ptr<PostProcess> postProcess_;
 };
 

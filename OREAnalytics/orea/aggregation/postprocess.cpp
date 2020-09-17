@@ -1063,7 +1063,7 @@ void PostProcess::updateAllocatedXVA() {
     // Allocated Trade XVA
     for (Size i = 0; i < trades; ++i) {
         string tradeId = portfolio_->trades()[i]->id();
-        LOG("Update XVA for trade " << tradeId);
+        DLOG("Update XVA for trade " << tradeId);
         string cid = portfolio_->trades()[i]->envelope().counterparty();
         Handle<DefaultProbabilityTermStructure> cvaDts = market_->defaultCurve(cid, configuration_);
         QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);

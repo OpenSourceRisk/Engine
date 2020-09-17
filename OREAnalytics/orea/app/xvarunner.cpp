@@ -51,6 +51,9 @@ XvaRunner::XvaRunner(Date asof,
     extraEngineBuilders_(extraEngineBuilders), dimQuantile_(dimQuantile), dimHorizonCalendarDays_(dimHorizonCalendarDays){}
 
 void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnErr) {
+    // ensure date is reset
+    Settings::instance().evaluationDate() = asof_;
+
     CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, "", "", "", "", "", ActualActual(), false,
         continueOnErr);
     boost::shared_ptr<QuantExt::CrossAssetModel> model = *modelBuilder.model();
@@ -74,6 +77,8 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
     // The cube...
     LOG("Create Cube");
 
+
+    std::vector<boost::shared_ptr<ValuationCalculator>> calculators;
     boost::shared_ptr<NPVCalculator> npvCalculator = boost::make_shared<NPVCalculator>(baseCurrency_);
     boost::shared_ptr<NPVCube> cube;
     boost::shared_ptr<CubeInterpretation> cubeInterpreter;
@@ -85,17 +90,17 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
             2); // depth 2: default date and close-out date NPV
         cubeInterpreter = boost::make_shared<MporGridCubeInterpretation>(scenarioGeneratorData_->grid());
         // default date value stored at index 0, close-out value at index 1
-        calculators_.push_back(boost::make_shared<MPORCalculator>(npvCalculator, 0, 1));
+        calculators.push_back(boost::make_shared<MPORCalculator>(npvCalculator, 0, 1));
     }
     else {
         // depth 2: NPV and cash flow
         cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(
             asof_, portfolio_->ids(), scenarioGeneratorData_->grid()->dates(), scenarioGeneratorData_->samples(), 2);
         cubeInterpreter = boost::make_shared<RegularCubeInterpretation>();
-        calculators_.push_back(npvCalculator);
+        calculators.push_back(npvCalculator);
     }
 
-    boost::shared_ptr<NPVCube> nettingCube = getNettingSetCube();
+    boost::shared_ptr<NPVCube> nettingCube = getNettingSetCube(calculators);
     
     boost::shared_ptr<AggregationScenarioData> scenarioData =
         boost::make_shared<InMemoryAggregationScenarioData>(scenarioGeneratorData_->grid()->size(), scenarioGeneratorData_->samples());
@@ -104,7 +109,7 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
 
     LOG("ValEngine Build Cube");
     ValuationEngine engine(asof_, scenarioGeneratorData_->grid(), simMarket);
-    engine.buildCube(portfolio_, cube, calculators_, scenarioGeneratorData_->withMporStickyDate(), nettingCube);
+    engine.buildCube(portfolio_, cube, calculators, scenarioGeneratorData_->withMporStickyDate(), nettingCube);
     LOG("Got Cube");
 
     LOG("Run post processor");
