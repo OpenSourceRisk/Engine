@@ -214,9 +214,12 @@ int OREApp::run() {
                 loadScenarioData();
 
             QL_REQUIRE(scenarioData_->dimDates() == cube_->dates().size(),
-                       "scenario dates do not match cube grid size");
-            QL_REQUIRE(scenarioData_->dimSamples() == cube_->samples(),
-                       "scenario sample size does not match cube sample size");
+                       "asd scenario dates (" << scenarioData_->dimDates() << ") do not match cube grid size ("
+                                              << cube_->dates().size() << ")");
+            QL_REQUIRE(scenarioData_->dimSamples() == cube_->samples(), "asd scenario sample size does ("
+                                                                            << scenarioData_->dimSamples()
+                                                                            << ") not match cube sample size ("
+                                                                            << cube_->samples() << ")");
 
             runPostProcessor();
             out_ << "OK" << endl;
