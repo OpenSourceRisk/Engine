@@ -51,6 +51,10 @@ Real RegularCubeInterpretation::getMporFlows(const boost::shared_ptr<NPVCube>& c
     return aggMporFlowsVal;
 }
 
+bool RegularCubeInterpretation::hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const {
+    return cube->depth() > mporFlowsIdx_;
+}
+
 Real RegularCubeInterpretation::getDefaultAggrionScenarioData(
     const boost::shared_ptr<AggregationScenarioData>& aggScenData, const AggregationScenarioDataType& dataType,
     Size dateIdx, Size sampleIdx, const std::string& qualifier) const {
@@ -95,6 +99,10 @@ Real MporGridCubeInterpretation::getMporFlows(const boost::shared_ptr<NPVCube>& 
                                                         << "; " << e.what());
     }
     return aggMporFlowsVal;
+}
+
+bool MporGridCubeInterpretation::hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const {
+    return cube->depth() > mporFlowsIdx_;
 }
 
 Real MporGridCubeInterpretation::getDefaultAggrionScenarioData(
