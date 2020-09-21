@@ -162,12 +162,15 @@ public:
         dimCalculator_ = dimCalculator;
     }
 
-    const vector<Real>& spreadSensitivityGrid() { return cvaSpreadSensiTimes_; }
-
+    const vector<Real>& spreadSensitivityTimes() { return cvaSpreadSensiTimes_; }
+    const vector<Period>& spreadSensitivityGrid() { return cvaSpreadSensiGrid_; }
+    
     //! Return list of Trade IDs in the portfolio
     const vector<string>& tradeIds() { return tradeIds_; }
     //! Return list of netting set IDs in the portfolio
     const vector<string>& nettingSetIds() { return nettingSetIds_; }
+    //! Return the map of counterparty Ids
+    const map<string, string>& counterpartyId() { return counterpartyId_; }
 
     //! Return trade level Expected Positive Exposure evolution
     const vector<Real>& tradeEPE(const string& tradeId);
@@ -217,6 +220,8 @@ public:
     const vector<Real>& netCvaHazardRateSensitivity(const string& nettingSetId);
     //! Return Netting Set CVA Spread Sensitvity vector
     const vector<Real>& netCvaSpreadSensitivity(const string& nettingSetId);
+    //! Return Netting Set CVA Spread Sensitvity vector
+    const std::map<std::string, std::vector<QuantLib::Real>>& netCvaSpreadSensitivity() const { return netCvaSpreadSensi_; }
 
     //! Return trade (stand-alone) CVA
     Real tradeCVA(const string& tradeId);
@@ -283,6 +288,8 @@ public:
     void exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
                              const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports);
 
+    //! get the cvaSpreadSensiShiftSize
+    QuantLib::Real cvaSpreadSensiShiftSize() { return cvaSpreadSensiShiftSize_; }
   
 protected:
     //! Helper function to return the collateral account evolution for a given netting set
