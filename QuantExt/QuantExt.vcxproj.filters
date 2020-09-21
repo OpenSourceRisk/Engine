@@ -921,6 +921,9 @@
     <ClInclude Include="qle\indexes\frcpi.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\projectedcrossassetmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1572,6 +1575,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\swaptionvolconstantspread.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\projectedcrossassetmodel.cpp">
+      <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
