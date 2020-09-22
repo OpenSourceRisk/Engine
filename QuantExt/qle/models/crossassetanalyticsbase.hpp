@@ -194,7 +194,7 @@ const LC2_<E1, E2> LC(QuantLib::Real c, QuantLib::Real c1, const E1& e1, QuantLi
 template <class E1, class E2, class E3>
 const LC3_<E1, E2, E3> LC(QuantLib::Real c, QuantLib::Real c1, const E1& e1, QuantLib::Real c2, const E2& e2,
     QuantLib::Real c3, const E3& e3) {
-    return LC3_<E1, E2, E3>(c, c1, e1, c2, e2, c2, e3);
+    return LC3_<E1, E2, E3>(c, c1, e1, c2, e2, c3, e3);
 }
 
 /*! creator function for linear combination, 4 factors */

@@ -253,7 +253,7 @@ Real infz_infy_covariance(const CrossAssetModel* x, const Size i, const Size j, 
         // H_{j}^{y}(t_0 + dt)
         Real Hj = Hy(j).eval(x, t0 + dt);
         
-        res = integral(x, P(rzy(i_j, j), az(i_j), ay(j), LC(Hi_j, -1.0, Hz(i_j))), t0, t0 + dt);
+        res = integral(x, P(rzy(i_j, i), az(i_j), ay(i), LC(Hi_j, -1.0, Hz(i_j))), t0, t0 + dt);
         res -= integral(x, P(ryy(i, j), ay(i), ay(j), LC(Hj, -1.0, Hy(j))), t0, t0 + dt);
         res += integral(x, P(ryy(i, j, 0, 1), ay(i), sy(j)), t0, t0 + dt);
     }

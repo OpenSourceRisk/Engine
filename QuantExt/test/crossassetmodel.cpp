@@ -18,7 +18,10 @@
 
 #include "toplevelfixture.hpp"
 #include "utilities.hpp"
+// clang-format off
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+// clang-format on
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
@@ -44,6 +47,7 @@
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
+#include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/models/lgmimplieddefaulttermstructure.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
@@ -78,6 +82,7 @@
 #include <ql/indexes/ibor/gbplibor.hpp>
 #include <ql/indexes/ibor/usdlibor.hpp>
 #include <ql/indexes/inflation/euhicp.hpp>
+#include <ql/indexes/inflation/ukrpi.hpp>
 #include <ql/instruments/cpicapfloor.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
@@ -116,6 +121,8 @@ using namespace CrossAssetModelTypes;
 
 using boost::unit_test_framework::test_suite;
 using namespace boost::accumulators;
+namespace bdata = boost::unit_test::data;
+using std::vector;
 
 namespace {
 
@@ -1856,166 +1863,265 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCorrelationRecovery) {
 namespace {
 
 struct IrFxInfCrModelTestData {
-    IrFxInfCrModelTestData()
-        : referenceDate(30, July, 2015), eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
-          usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
-          gbpYts(boost::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed())),
-          fxEurUsd(boost::make_shared<SimpleQuote>(0.90)), fxEurGbp(boost::make_shared<SimpleQuote>(1.35)),
-          infEurAlpha(0.01), infEurKappa(0.01), infGbpAlpha(0.01), infGbpKappa(0.01),
-          n1Ts(boost::make_shared<FlatHazardRate>(referenceDate, 0.01, Actual365Fixed())), n1Alpha(0.01), n1Kappa(0.01),
-          c(8, 8, 0.0) {
-
-        std::vector<Date> infDates;
-        std::vector<Real> infRates;
-        infDates.push_back(Date(30, April, 2015));
-        infDates.push_back(Date(30, July, 2015));
-        infRates.push_back(0.01);
-        infRates.push_back(0.01);
-        infEurTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(
-            referenceDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, false, eurYts, infDates, infRates));
-        infGbpTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(
-            referenceDate, UnitedKingdom(), Actual365Fixed(), 3 * Months, Monthly, false, eurYts, infDates, infRates));
-        infEurTs->enableExtrapolation();
-        infGbpTs->enableExtrapolation();
-        // same for eur and gbp (doesn't matter anyway, since we are
-        // using flat ts here)
-        infLag =
-            inflationYearFraction(Monthly, false, Actual365Fixed(), infEurTs->baseDate(), infEurTs->referenceDate());
+    
+    IrFxInfCrModelTestData(bool infEurIsDK = true, bool infGbpIsDK = true, bool flatVols = false)
+        : referenceDate(30, July, 2015),
+          dc(Actual365Fixed()),
+          eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, dc)),
+          usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05, dc)),
+          gbpYts(boost::make_shared<FlatForward>(referenceDate, 0.04, dc)),
+          fxEurUsd(boost::make_shared<SimpleQuote>(0.90)),
+          fxEurGbp(boost::make_shared<SimpleQuote>(1.35)),
+          n1Ts(boost::make_shared<FlatHazardRate>(referenceDate, 0.01, dc)) {
 
         Settings::instance().evaluationDate() = referenceDate;
-        volstepdates.push_back(Date(15, July, 2016));
-        volstepdates.push_back(Date(15, July, 2017));
-        volstepdates.push_back(Date(15, July, 2018));
-        volstepdates.push_back(Date(15, July, 2019));
-        volstepdates.push_back(Date(15, July, 2020));
+        
+        // Store the indvidual models that will be fed to the CAM.
+        vector<boost::shared_ptr<Parametrization> > singleModels;
 
-        volstepdatesFx.push_back(Date(15, July, 2016));
-        volstepdatesFx.push_back(Date(15, October, 2016));
-        volstepdatesFx.push_back(Date(15, May, 2017));
-        volstepdatesFx.push_back(Date(13, September, 2017));
-        volstepdatesFx.push_back(Date(15, July, 2018));
+        // IR parameterisations
+        addSingleIrModel(flatVols, EURCurrency(), eurYts, 0.02, 0.0050, 0.0080, singleModels);
+        addSingleIrModel(flatVols, USDCurrency(), usdYts, 0.03, 0.0030, 0.0110, singleModels);
+        addSingleIrModel(flatVols, GBPCurrency(), gbpYts, 0.04, 0.0070, 0.0095, singleModels);
 
-        volsteptimes_a = Array(volstepdates.size());
-        volsteptimesFx_a = Array(volstepdatesFx.size());
-        for (Size i = 0; i < volstepdates.size(); ++i) {
-            volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
-        }
-        for (Size i = 0; i < volstepdatesFx.size(); ++i) {
-            volsteptimesFx_a[i] = eurYts->timeFromReference(volstepdatesFx[i]);
-        }
+        // FX parameterisations
+        addSingleFxModel(flatVols, USDCurrency(), fxEurUsd, 0.15, 0.20, singleModels);
+        addSingleFxModel(flatVols, GBPCurrency(), fxEurGbp, 0.10, 0.15, singleModels);
 
-        for (Size i = 0; i < volstepdates.size() + 1; ++i) {
-            eurVols.push_back(0.0050 + (0.0080 - 0.0050) * std::exp(-0.3 * static_cast<double>(i)));
-        }
-        for (Size i = 0; i < volstepdates.size() + 1; ++i) {
-            usdVols.push_back(0.0030 + (0.0110 - 0.0030) * std::exp(-0.3 * static_cast<double>(i)));
-        }
-        for (Size i = 0; i < volstepdates.size() + 1; ++i) {
-            gbpVols.push_back(0.0070 + (0.0095 - 0.0070) * std::exp(-0.3 * static_cast<double>(i)));
-        }
-        for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
-            fxSigmasUsd.push_back(0.15 + (0.20 - 0.15) * std::exp(-0.3 * static_cast<double>(i)));
-        }
-        for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
-            fxSigmasGbp.push_back(0.10 + (0.15 - 0.10) * std::exp(-0.3 * static_cast<double>(i)));
-        }
-        eurVols_a = Array(eurVols.begin(), eurVols.end());
-        usdVols_a = Array(usdVols.begin(), usdVols.end());
-        gbpVols_a = Array(gbpVols.begin(), gbpVols.end());
-        fxSigmasUsd_a = Array(fxSigmasUsd.begin(), fxSigmasUsd.end());
-        fxSigmasGbp_a = Array(fxSigmasGbp.begin(), fxSigmasGbp.end());
+        // Add the inflation parameterisations.
+        vector<Date> infDates{ Date(30, April, 2015), Date(30, July, 2015) };
+        vector<Real> infRates{ 0.01, 0.01 };
+        
+        infEurTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(
+            referenceDate, TARGET(), dc, 3 * Months, Monthly, false, eurYts, infDates, infRates));
+        infEurTs->enableExtrapolation();
+        
+        infLag = inflationYearFraction(Monthly, false, dc, infEurTs->baseDate(), infEurTs->referenceDate());
 
-        notimes_a = Array(0);
-        eurKappa_a = Array(1, 0.02);
-        usdKappa_a = Array(1, 0.03);
-        gbpKappa_a = Array(1, 0.04);
-
-        eurLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYts, volsteptimes_a,
-                                                                               eurVols_a, notimes_a, eurKappa_a);
-        usdLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(USDCurrency(), usdYts, volsteptimes_a,
-                                                                               usdVols_a, notimes_a, usdKappa_a);
-        gbpLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(GBPCurrency(), gbpYts, volsteptimes_a,
-                                                                               gbpVols_a, notimes_a, gbpKappa_a);
-
-        fxUsd_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), fxEurUsd, volsteptimesFx_a,
-                                                                           fxSigmasUsd_a);
-        fxGbp_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(GBPCurrency(), fxEurGbp, volsteptimesFx_a,
-                                                                           fxSigmasGbp_a);
-
-        // inflation
-        infEur_p = boost::make_shared<InfDkConstantParametrization>(EURCurrency(), infEurTs, infEurAlpha, infEurKappa);
-        infGbp_p = boost::make_shared<InfDkConstantParametrization>(GBPCurrency(), infGbpTs, infGbpAlpha, infGbpKappa);
-
-        // credit
-        n1_p = boost::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n1Ts, n1Alpha, n1Kappa);
-
-        singleModels.push_back(eurLgm_p);
-        singleModels.push_back(usdLgm_p);
-        singleModels.push_back(gbpLgm_p);
-        singleModels.push_back(fxUsd_p);
-        singleModels.push_back(fxGbp_p);
-        singleModels.push_back(infEur_p);
-        singleModels.push_back(infGbp_p);
-        singleModels.push_back(n1_p);
-
-        Real tmp[8][8] = {
-            // EUR  USD GBP  FX1  FX2  CR INF_EUR INF_GBP
-            { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // EUR
-            { 0.6, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // USD
-            { 0.3, 0.1, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // GBP
-            { 0.2, 0.2, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0 }, // FX1
-            { 0.3, 0.1, 0.1, 0.3, 1.0, 0.0, 0.0, 0.0 }, // FX2
-            { 0.8, 0.2, 0.1, 0.4, 0.2, 1.0, 0.0, 0.0 }, // CR
-            { 0.6, 0.1, 0.2, 0.2, 0.5, 0.5, 1.0, 0.0 }, // INF_EUR
-            { 0.3, 0.2, 0.1, 0.1, 0.3, 0.4, 0.2, 1.0 }  // INF_GBP
-        };
-
-        for (Size i = 0; i < 8; ++i) {
-            for (Size j = 0; j <= i; ++j) {
-                c[i][j] = c[j][i] = tmp[i][j];
-            }
+        Real infEurAlpha = 0.006;
+        Real infEurKappa = 0.01;
+        if (infEurIsDK) {
+            singleModels.push_back(boost::make_shared<InfDkConstantParametrization>(
+                EURCurrency(), infEurTs, infEurAlpha, infEurKappa));
+        } else {
+            Real infEurSigma = 0.15;
+            Handle<Quote> baseCpiQuote(boost::make_shared<SimpleQuote>(1.0));
+            auto index = boost::make_shared<EUHICP>(false);
+            auto realRateParam = boost::make_shared<Lgm1fConstantParametrization<ZeroInflationTermStructure>>(
+                EURCurrency(), infEurTs, infEurAlpha, infEurKappa);
+            auto indexParam = boost::make_shared<FxBsConstantParametrization>(
+                EURCurrency(), baseCpiQuote, infEurSigma);
+            singleModels.push_back(boost::make_shared<InfJyParameterization>(realRateParam, indexParam, index));
         }
 
+        infGbpTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(referenceDate,
+            UnitedKingdom(), dc, 3 * Months, Monthly, false, gbpYts, infDates, infRates));
+        infGbpTs->enableExtrapolation();
+
+        Real infGbpAlpha = 0.008;
+        Real infGbpKappa = 0.015;
+        if (infGbpIsDK) {
+            singleModels.push_back(boost::make_shared<InfDkConstantParametrization>(
+                EURCurrency(), infEurTs, infGbpAlpha, infGbpKappa));
+        } else {
+            Real infGbpSigma = 0.10;
+            Handle<Quote> baseCpiQuote(boost::make_shared<SimpleQuote>(1.0));
+            auto index = boost::make_shared<UKRPI>(false);
+            auto realRateParam = boost::make_shared<Lgm1fConstantParametrization<ZeroInflationTermStructure>>(
+                GBPCurrency(), infGbpTs, infGbpAlpha, infGbpKappa);
+            auto indexParam = boost::make_shared<FxBsConstantParametrization>(
+                GBPCurrency(), baseCpiQuote, infGbpSigma);
+            singleModels.push_back(boost::make_shared<InfJyParameterization>(realRateParam, indexParam, index));
+        }
+
+        // Add the credit parameterisation.
+        singleModels.push_back(boost::make_shared<CrLgm1fConstantParametrization>(
+            EURCurrency(), n1Ts, 0.01, 0.01));
+
+        // Create the correlation matrix.
+        Matrix c = createCorrelation(infEurIsDK, infGbpIsDK);
         BOOST_TEST_MESSAGE("correlation matrix is\n" << c);
 
         model = boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None);
     }
 
+    // Add an IR model with flat or time depending volatilities.
+    void addSingleIrModel(bool flatVols, const Currency& ccy, Handle<YieldTermStructure> yts, Real kappa,
+        Volatility lowerBound, Volatility upperBound,
+        vector<boost::shared_ptr<Parametrization> >& singleModels) {
+
+        // If use flat vols, add the parameterisation and return.
+        if (flatVols) {
+            singleModels.push_back(boost::make_shared<IrLgm1fConstantParametrization>(ccy, yts, lowerBound, kappa));
+            return;
+        }
+
+        // Use non-flat volatilities
+        static vector<Date> vDates{
+            Date(15, July, 2016),
+            Date(15, July, 2017),
+            Date(15, July, 2018),
+            Date(15, July, 2019),
+            Date(15, July, 2020)
+        };
+
+        Array vTimes(vDates.size());
+        for (Size i = 0; i < vTimes.size(); ++i) {
+            vTimes[i] = yts->timeFromReference(vDates[i]);
+        }
+
+        Array vols(vDates.size() + 1);
+        for (Size i = 0; i < vols.size(); ++i) {
+            vols[i] = lowerBound + (upperBound - lowerBound) * std::exp(-0.3 * i);
+        }
+
+        singleModels.push_back(boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
+            ccy, yts, vTimes, vols, Array(), Array(1, kappa)));
+    }
+
+    // Add an FX model with flat or time depending volatilities.
+    void addSingleFxModel(bool flatVols, const Currency& ccy, Handle<Quote> spot,
+        Volatility lowerBound, Volatility upperBound,
+        vector<boost::shared_ptr<Parametrization> >& singleModels) {
+
+        // If use flat vols, add the parameterisation and return.
+        if (flatVols) {
+            singleModels.push_back(boost::make_shared<FxBsConstantParametrization>(ccy, spot, lowerBound));
+            return;
+        }
+
+        // Use non-flat volatilities
+        static vector<Date> vDates{
+            Date(15, July, 2016),
+            Date(15, October, 2016),
+            Date(15, May, 2017),
+            Date(13, September, 2017),
+            Date(15, July, 2018)
+        };
+
+        Array vTimes(vDates.size());
+        for (Size i = 0; i < vTimes.size(); ++i) {
+            vTimes[i] = dc.yearFraction(referenceDate, vDates[i]);
+        }
+
+        Array vols(vDates.size() + 1);
+        for (Size i = 0; i < vols.size(); ++i) {
+            vols[i] = lowerBound + (upperBound - lowerBound) * std::exp(-0.3 * i);
+        }
+
+        singleModels.push_back(boost::make_shared<FxBsPiecewiseConstantParametrization>(
+            ccy, spot, vTimes, vols));
+    }
+
+    // Create the correlation matrix.
+    Matrix createCorrelation(bool infEurIsDK, bool infGbpIsDK) {
+
+        // Four different correlation matrices depending on type of two inflation components.
+        vector<vector<Real>> tmp;
+        if (infEurIsDK && infGbpIsDK) {
+            tmp = {
+                // EUR  USD GBP  FX1  FX2  INF_EUR INF_GBP CR
+                { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // EUR
+                { 0.6, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // USD
+                { 0.3, 0.1, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // GBP
+                { 0.2, 0.2, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0 }, // FX1
+                { 0.3, 0.1, 0.1, 0.3, 1.0, 0.0, 0.0, 0.0 }, // FX2
+                { 0.8, 0.2, 0.1, 0.4, 0.3, 1.0, 0.0, 0.0 }, // INF_EUR
+                { 0.6, 0.1, 0.2, 0.2, 0.5, 0.5, 1.0, 0.0 }, // INF_GBP
+                { 0.3, 0.2, 0.1, 0.1, 0.3, 0.4, 0.2, 1.0 }  // CR
+            };
+        } else if (!infEurIsDK && infGbpIsDK) {
+            tmp = {
+                {1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_EUR
+                {0.600, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_USD
+                {0.300, 0.100, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_GBP
+                {0.200, 0.200, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURUSD
+                {0.300, 0.100, 0.100, 0.300, 1.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURGBP
+                {0.400, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_EUR_RR
+                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000}, // INF_EUR_IDX
+                {0.000, 0.000, 0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // INF_GBP
+                {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.000, 0.200, 1.000}  // CR
+            };
+        } else if (infEurIsDK && !infGbpIsDK) {
+            tmp = {
+                {1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_EUR
+                {0.600, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_USD
+                {0.300, 0.100, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_GBP
+                {0.200, 0.200, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURUSD
+                {0.300, 0.100, 0.100, 0.300, 1.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURGBP
+                {0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_EUR
+                {0.000, 0.000, 0.400, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000}, // INF_GBP_RR
+                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // INF_GBP_IDX
+                {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.200, 0.000, 1.000}  // CR
+            };
+        } else {
+            tmp = {
+                {1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_EUR
+                {0.600, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_USD
+                {0.300, 0.100, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // IR_GBP
+                {0.200, 0.200, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURUSD
+                {0.300, 0.100, 0.100, 0.300, 1.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // FX_EURGBP
+                {0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000, 0.000}, // INF_EUR_RR
+                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000, 0.000}, // INF_EUR_IDX
+                {0.000, 0.000, 0.600, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000, 0.000}, // INF_GBP_RR
+                {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 1.000, 0.000}, // INF_GBP_IDX
+                {0.300, 0.200, 0.100, 0.100, 0.300, 0.400, 0.000, 0.200, 0.000, 1.000}  // CR
+            };
+        }
+
+        Matrix c(tmp.size(), tmp.size());
+        for (Size i = 0; i < tmp.size(); ++i) {
+            for (Size j = 0; j <= i; ++j) {
+                c[i][j] = c[j][i] = tmp[i][j];
+            }
+        }
+
+        return c;
+    }
+
     SavedSettings backup;
     Date referenceDate;
-    // ir-fx
-    Handle<YieldTermStructure> eurYts, usdYts, gbpYts;
-    std::vector<Date> volstepdates, volstepdatesFx;
-    Array volsteptimes_a, volsteptimesFx_a;
-    std::vector<Real> eurVols, usdVols, gbpVols, fxSigmasUsd, fxSigmasGbp;
-    Handle<Quote> fxEurUsd, fxEurGbp;
-    Array eurVols_a, usdVols_a, gbpVols_a, fxSigmasUsd_a, fxSigmasGbp_a;
-    Array notimes_a, eurKappa_a, usdKappa_a, gbpKappa_a;
-    boost::shared_ptr<IrLgm1fParametrization> eurLgm_p, usdLgm_p, gbpLgm_p;
-    boost::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
-    // inf
-    Handle<ZeroInflationTermStructure> infEurTs, infGbpTs;
-    boost::shared_ptr<InfDkParametrization> infEur_p, infGbp_p;
-    Real infEurAlpha, infEurKappa, infGbpAlpha, infGbpKappa;
+    DayCounter dc;
+    
+    // IR
+    Handle<YieldTermStructure> eurYts;
+    Handle<YieldTermStructure> usdYts;
+    Handle<YieldTermStructure> gbpYts;
+
+    // FX
+    Handle<Quote> fxEurUsd;
+    Handle<Quote> fxEurGbp;
+    
+    // Inflation
+    Handle<ZeroInflationTermStructure> infEurTs;
+    Handle<ZeroInflationTermStructure> infGbpTs;
     Real infLag;
-    // cr
-    Handle<DefaultProbabilityTermStructure> n1Ts, n2Ts, n3Ts;
-    boost::shared_ptr<CrLgm1fParametrization> n1_p, n2_p, n3_p;
-    Real n1Alpha, n1Kappa, n2Alpha, n2Kappa, n3Alpha, n3Kappa;
-    // model
-    std::vector<boost::shared_ptr<Parametrization> > singleModels;
-    Matrix c;
+
+    // Credit
+    Handle<DefaultProbabilityTermStructure> n1Ts;
+    
+    // Model
     boost::shared_ptr<CrossAssetModel> model;
+
 }; // IrFxInfCrModelTestData
 
 } // anonymous namespace
 
-BOOST_AUTO_TEST_CASE(testIrFxInfCrMartingaleProperty) {
+// Test case options
+vector<bool> infEurFlags{ true, false };
+vector<bool> infGbpFlags{ true, false };
+vector<bool> flatVolsFlags{ true, false };
 
-    BOOST_TEST_MESSAGE("Testing martingale property in ir-fx-inf-cr model for "
-                       "Euler and exact discretizations...");
+BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
+    bdata::make(infEurFlags) * bdata::make(infGbpFlags) * bdata::make(flatVolsFlags),
+    infEurIsDk, infGbpIsDk, flatVols) {
 
-    IrFxInfCrModelTestData d;
+    BOOST_TEST_MESSAGE("Testing martingale property in ir-fx-inf-cr model for Euler and exact discretizations...");
+    BOOST_TEST_MESSAGE("EUR inflation model is: " << (infEurIsDk ? "DK" : "JY"));
+    BOOST_TEST_MESSAGE("GBP inflation model is: " << (infGbpIsDk ? "DK" : "JY"));
+    BOOST_TEST_MESSAGE("Using " << (flatVols ? "" : "non-") << "flat volatilities.");
+
+    IrFxInfCrModelTestData d(infEurIsDk, infGbpIsDk, flatVols);
 
     boost::shared_ptr<StochasticProcess> process1 = d.model->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> process2 = d.model->stateProcess(CrossAssetStateProcess::euler);
@@ -2076,13 +2182,23 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrMartingaleProperty) {
         // GBP zerobond
         gbpzb1(d.model->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.model->numeraire(0, T, zeur1));
         // EUR CPI indexed bond
-        std::pair<Real, Real> sinfeur1 = d.model->infdkI(0, T, T2, infeurz1, infeury1);
-        infeur1(sinfeur1.first * sinfeur1.second * d.model->discountBond(0, T, T2, zeur1) /
+        if (infEurIsDk) {
+            std::pair<Real, Real> sinfeur1 = d.model->infdkI(0, T, T2, infeurz1, infeury1);
+            infeur1(sinfeur1.first * sinfeur1.second * d.model->discountBond(0, T, T2, zeur1) /
                 d.model->numeraire(0, T, zeur1));
+        } else {
+            infeur1(exp(infeury1) * inflationGrowth(d.model, 0, T, T2, zeur1, infeurz1) *
+                d.model->discountBond(0, T, T2, zeur1) / d.model->numeraire(0, T, zeur1));
+        }
         // GBP CPI indexed bond
-        std::pair<Real, Real> sinfgbp1 = d.model->infdkI(1, T, T2, infgbpz1, infgbpy1);
-        infgbp1(sinfgbp1.first * sinfgbp1.second * d.model->discountBond(2, T, T2, zgbp1) * fxgbp1 /
+        if (infGbpIsDk) {
+            std::pair<Real, Real> sinfgbp1 = d.model->infdkI(1, T, T2, infgbpz1, infgbpy1);
+            infgbp1(sinfgbp1.first * sinfgbp1.second * d.model->discountBond(2, T, T2, zgbp1) * fxgbp1 /
                 d.model->numeraire(0, T, zeur1));
+        } else {
+            infgbp1(exp(infgbpy1) * inflationGrowth(d.model, 1, T, T2, zgbp1, infgbpz1) *
+                d.model->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.model->numeraire(0, T, zeur1));
+        }
         // EUR defaultable zerobond
         std::pair<Real, Real> sn11 = d.model->crlgm1fS(0, 0, T, T2, crzn11, cryn11);
         n1eur1(sn11.first * sn11.second * d.model->discountBond(0, T, T2, zeur1) / d.model->numeraire(0, T, zeur1));
@@ -2094,13 +2210,23 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrMartingaleProperty) {
         // GBP zerobond
         gbpzb2(d.model->discountBond(2, T, T2, zgbp2) * fxgbp2 / d.model->numeraire(0, T, zeur2));
         // EUR CPI indexed bond
-        std::pair<Real, Real> sinfeur2 = d.model->infdkI(0, T, T2, infeurz2, infeury2);
-        infeur2(sinfeur2.first * sinfeur2.second * d.model->discountBond(0, T, T2, zeur2) /
+        if (infEurIsDk) {
+            std::pair<Real, Real> sinfeur2 = d.model->infdkI(0, T, T2, infeurz2, infeury2);
+            infeur2(sinfeur2.first * sinfeur2.second * d.model->discountBond(0, T, T2, zeur2) /
                 d.model->numeraire(0, T, zeur2));
+        } else {
+            infeur2(exp(infeury2) * inflationGrowth(d.model, 0, T, T2, zeur2, infeurz2) *
+                d.model->discountBond(0, T, T2, zeur2) / d.model->numeraire(0, T, zeur2));
+        }
         // GBP CPI indexed bond
-        std::pair<Real, Real> sinfgbp2 = d.model->infdkI(1, T, T2, infgbpz2, infgbpy2);
-        infgbp2(sinfgbp2.first * sinfgbp2.second * d.model->discountBond(2, T, T2, zgbp2) * fxgbp2 /
+        if (infGbpIsDk) {
+            std::pair<Real, Real> sinfgbp2 = d.model->infdkI(1, T, T2, infgbpz2, infgbpy2);
+            infgbp2(sinfgbp2.first * sinfgbp2.second * d.model->discountBond(2, T, T2, zgbp2) * fxgbp2 /
                 d.model->numeraire(0, T, zeur2));
+        } else {
+            infgbp2(exp(infgbpy2) * inflationGrowth(d.model, 1, T, T2, zgbp2, infgbpz2) *
+                d.model->discountBond(2, T, T2, zgbp2) * fxgbp2 / d.model->numeraire(0, T, zeur2));
+        }
         // EUR defaultable zerobond
         std::pair<Real, Real> sn12 = d.model->crlgm1fS(0, 0, T, T2, crzn12, cryn12);
         n1eur2(sn12.first * sn12.second * d.model->discountBond(0, T, T2, zeur2) / d.model->numeraire(0, T, zeur2));
@@ -2209,14 +2335,18 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrMartingaleProperty) {
 
 } // testIrFxInfCrMartingaleProperty
 
-BOOST_AUTO_TEST_CASE(testIrFxInfCrMoments) {
+BOOST_DATA_TEST_CASE(testIrFxInfCrMoments,
+    bdata::make(infEurFlags)* bdata::make(infGbpFlags)* bdata::make(flatVolsFlags),
+    infEurIsDk, infGbpIsDk, flatVols) {
 
-    BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler and exact discretization "
-                       "in ir-fx-inf-cr model...");
+    BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler and exact discretization in ir-fx-inf-cr model...");
+    BOOST_TEST_MESSAGE("EUR inflation model is: " << (infEurIsDk ? "DK" : "JY"));
+    BOOST_TEST_MESSAGE("GBP inflation model is: " << (infGbpIsDk ? "DK" : "JY"));
+    BOOST_TEST_MESSAGE("Using " << (flatVols ? "" : "non-") << "flat volatilities.");
 
-    IrFxInfCrModelTestData d;
+    IrFxInfCrModelTestData d(infEurIsDk, infGbpIsDk, flatVols);
 
-    const Size n = 11; // d.model->dimension();
+    Size n = d.model->dimension();
 
     boost::shared_ptr<StochasticProcess> p_exact = d.model->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> p_euler = d.model->stateProcess(CrossAssetStateProcess::euler);
@@ -2236,8 +2366,14 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrMoments) {
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid, SobolBrownianGenerator::Diagonal, seed,
                                                 SobolRsg::JoeKuoD7);
 
-    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > e_eu[n], e_eu2[n];
-    accumulator_set<double, stats<tag::covariance<double, tag::covariate1> > > v_eu[n][n], v_eu2[n][n];
+    vector<accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > > e_eu(n);
+    vector<accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > > e_eu2(n);
+    vector<vector<accumulator_set<double, stats<tag::covariance<double, tag::covariate1> > > > > v_eu(n);
+    vector<vector<accumulator_set<double, stats<tag::covariance<double, tag::covariate1> > > > > v_eu2(n);
+    for (Size i = 0; i < n; ++i) {
+        v_eu[i] = vector<accumulator_set<double, stats<tag::covariance<double, tag::covariate1> > > >(n);
+        v_eu2[i] = vector<accumulator_set<double, stats<tag::covariance<double, tag::covariate1> > > >(n);
+    }
 
     for (Size i = 0; i < paths; ++i) {
         Sample<MultiPath> path = pgen.next();
@@ -2257,7 +2393,8 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrMoments) {
     }
 
     for (Size i = 0; i < n; ++i) {
-        BOOST_TEST_MESSAGE("E_" << i << " " << e_an[i] << " " << mean(e_eu[i]) << " " << mean(e_eu2[i]));
+        BOOST_TEST_MESSAGE("E_" << i << " " << std::fixed << std::setprecision(12) <<
+            e_an[i] << " " << mean(e_eu[i]) << " " << mean(e_eu2[i]));
     }
     BOOST_TEST_MESSAGE("==================");
 
@@ -2291,7 +2428,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrMoments) {
     }
     BOOST_TEST_MESSAGE("==================");
 
-    Real errTolLd[] = { 0.5E-4, 0.5E-4, 0.5E-4, 10.0E-4, 10.0E-4, 0.7E-4, 0.7E-4, 0.7E-4, 0.7E-4, 0.7E-4, 0.7E-4 };
+    Real errTolLd[] = { 0.5E-4, 0.5E-4, 0.5E-4, 10.0E-4, 10.0E-4, 0.7E-4, 0.8E-4, 0.7E-4, 0.7E-4, 0.7E-4, 0.7E-4 };
 
     for (Size i = 0; i < n; ++i) {
         // check expectation against analytical calculation (Euler)
