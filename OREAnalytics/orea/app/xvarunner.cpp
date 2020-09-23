@@ -103,7 +103,7 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
     boost::shared_ptr<NPVCube> nettingCube = getNettingSetCube(calculators);
     
     boost::shared_ptr<AggregationScenarioData> scenarioData =
-        boost::make_shared<InMemoryAggregationScenarioData>(scenarioGeneratorData_->grid()->size(), scenarioGeneratorData_->samples());
+        boost::make_shared<InMemoryAggregationScenarioData>(scenarioGeneratorData_->grid()->valuationDates().size(), scenarioGeneratorData_->samples());
 
     simMarket->aggregationScenarioData() = scenarioData; // ??? simMarket gets agg data?
 
@@ -121,11 +121,12 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
     analytics["colva"] = true;
     analytics["xva"] = false;
     analytics["dim"] = true;
+    analytics["cvaSensi"] = true;
 
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator = 
         getDimCalculator(cube, cubeInterpreter, scenarioData, model, nettingCube);
     postProcess_ = boost::make_shared<PostProcess>(portfolio_, netting_, market, "", cube, scenarioData, analytics, 
-        baseCurrency_, "None", 1.0, 0.95, "Symmetric", "", "", "", dimCalculator, cubeInterpreter);
+        baseCurrency_, "None", 1.0, 0.95, "Symmetric", "", "", "", dimCalculator, cubeInterpreter, true);
 
 }
 
