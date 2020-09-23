@@ -128,7 +128,7 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator = 
         getDimCalculator(cube, cubeInterpreter, scenarioData, model, nettingCube);
     postProcess_ = boost::make_shared<PostProcess>(portfolio_, netting_, market, "", cube, scenarioData, analytics, 
-        baseCurrency_, "None", 1.0, 0.95, "Symmetric", "", "", "", dimCalculator, cubeInterpreter, true);
+        baseCurrency_, "None", 1.0, 0.95, calculationType, "", "", "", dimCalculator, cubeInterpreter, true);
 
 }
 
