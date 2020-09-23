@@ -570,6 +570,12 @@
     <ClInclude Include="qle\indexes\ibor\clpcamara.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\cnhhibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\cnhshibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\copibr.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -923,6 +929,9 @@
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\jpyeytibor.hpp">
       <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\projectedcrossassetmodel.hpp">
+      <Filter>models</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1575,6 +1584,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\swaptionvolconstantspread.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\projectedcrossassetmodel.cpp">
+      <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

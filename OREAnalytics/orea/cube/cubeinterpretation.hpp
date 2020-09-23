@@ -40,7 +40,7 @@ namespace analytics {
 class CubeInterpretation {
 public:
     virtual ~CubeInterpretation() {}
-  
+
     //! Retrieve an arbitrary value from the Cube (user needs to know the precise location within depth axis)
     virtual Real getGenericValue(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx,
                                  Size depth) const = 0;
@@ -56,6 +56,9 @@ public:
     //! Retrieve the aggregate value of Margin Period of Risk cashflows from the Cube
     virtual Real getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
                               Size sampleIdx) const = 0;
+
+    //! check whether mpor flows are available in the cube
+    virtual bool hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const = 0;
 
     //! Retrieve a (default date) simulated risk factor value from AggregationScenarioData
     virtual Real getDefaultAggrionScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
@@ -90,6 +93,8 @@ public:
     Real getCloseOutNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
 
     Real getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
+
+    bool hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const;
 
     Real getDefaultAggrionScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
                                        const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
@@ -128,6 +133,8 @@ public:
     Real getCloseOutNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
 
     Real getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
+
+    bool hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const;
 
     Real getDefaultAggrionScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
                                        const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
