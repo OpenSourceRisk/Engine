@@ -661,6 +661,7 @@
     <ClInclude Include="qle\models\linkablecalibratedmodel.hpp" />
     <ClInclude Include="qle\models\parametrization.hpp" />
     <ClInclude Include="qle\models\piecewiseconstanthelper.hpp" />
+    <ClInclude Include="qle\models\projectedcrossassetmodel.hpp" />
     <ClInclude Include="qle\models\pseudoparameter.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcclgmfxoptionengine.hpp" />
@@ -903,6 +904,7 @@
     <ClCompile Include="qle\models\linkablecalibratedmodel.cpp" />
     <ClCompile Include="qle\models\parametrization.cpp" />
     <ClCompile Include="qle\models\piecewiseconstanthelper.cpp" />
+    <ClCompile Include="qle\models\projectedcrossassetmodel.cpp" />
     <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticcclgmfxoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticdkcpicapfloorengine.cpp" />
