@@ -7,12 +7,17 @@
 
 #include <orea/aggregation/collateralaccount.hpp>
 #include <orea/aggregation/collatexposurehelper.hpp>
+#include <orea/aggregation/cvaspreadsensitivitycalculator.hpp>
+#include <orea/aggregation/dimcalculator.hpp>
+#include <orea/aggregation/dimregressioncalculator.hpp>
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/app/oreapp.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
+#include <orea/app/xvarunner.hpp>
+#include <orea/cube/cubeinterpretation.hpp>
 #include <orea/cube/cubewriter.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -20,6 +25,7 @@
 #include <orea/cube/sensicube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
+#include <orea/engine/mporcalculator.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parametricvar.hpp>
 #include <orea/engine/riskfilter.hpp>
@@ -50,6 +56,8 @@
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/scenario/spreadscenario.hpp>
+#include <orea/scenario/spreadscenariofactory.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <orea/simulation/fixingmanager.hpp>

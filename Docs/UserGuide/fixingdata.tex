@@ -82,7 +82,7 @@ used (Table \ref{tab:IR_indices}).
 CCY-INDEX                & \textit{\begin{tabular}[c]{@{}l@{}}EUR-EONIA\\ EUR-EURIBOR\\ EUR-LIBOR\\ USD-FedFunds\\ USD-Prime\\
 USD-LIBOR\\ GBP-SONIA\\ GBP-LIBOR\\ JPY-TONAR\\ JPY-LIBOR\\ CHF-LIBOR\\ CHF-TOIS\\ AUD-LIBOR\\ AUD-BBSW\\ CAD-CDOR\\ 
 CAD-BA\\ CAD-LIBOR\\ SEK-STIBOR\\ SEK-LIBOR\\ DKK-LIBOR\\ DKK-CIBOR\\ SGD-SIBOR\\ HKD-HIBOR \\CZK-PRIBOR\\ HUF-BUBOR\\ 
-IDR-IDRFIX\\ INR-MIFOR\\ JPY-TIBOR\\ KRW-KORIBOR\\ MXN-TIIE\\ MYR-KLIBOR\\ NOK-NIBOR\\ NZD-BKBM\\ PLN-WIBOR\\ 
+IDR-IDRFIX\\ INR-MIFOR\\ JPY-TIBOR\\ JPY-EYTIBOR\\ KRW-KORIBOR\\ MXN-TIIE\\ MYR-KLIBOR\\ NOK-NIBOR\\ NZD-BKBM\\ PLN-WIBOR\\ 
 SEK-STIBOR\\ SGD-SOR\\ SKK-BRIBOR\\ TWD-TAIBOR\\ ZAR-JIBAR\\ DEM-LIBOR \end{tabular}} \\ \hline
 TENOR                    & An integer followed by \emph{D, W, M or Y} \\
 \hline
@@ -147,13 +147,31 @@ DOM             & Any supported currency code \\
 \hline
 \textbf{Index Component} & \textbf{Allowable Values} \\
 \hline
-NAME           & \textit{\begin{tabular}[c]{@{}l@{}}EUHICP\\ EUHICPXT\\ FRHICP\\ UKRPI\\ 
-		USCPI\\ ZACPI \end{tabular}} \\ 
+NAME           & \textit{\begin{tabular}[c]{@{}l@{}}EUHICP\\ EUHICPXT\\ FRHICP\\ FRCPI\\ UKRPI\\
+		USCPI\\ ZACPI\\ BEHICP \end{tabular}} \\
 \hline
 \end{tabular}
 \caption{Allowable values for zero inflation indices.}
 \label{tab:infl_indices}
 \end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{2}{|l|}{\textbf{Generic Indices of form GENERIC-NAME:}} \\
+\hline
+\textbf{Index Component} & \textbf{Allowable Values} \\
+\hline
+GENERIC          & Must be ``GENERIC'' (to denote a generic fixing) \\
+\hline
+NAME		     & Any string \\
+\hline
+\end{tabular}
+\caption{Allowable values for generic indices.}
+\label{tab:generic_indices}
+\end{table}
+
 
 % \begin{table}[H]
 % \centering

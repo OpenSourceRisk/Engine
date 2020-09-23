@@ -61,12 +61,12 @@ public:
               std::vector<std::string> optionTerms = std::vector<std::string>(),
               std::vector<std::string> optionStrikes = std::vector<std::string>())
         : LgmData(currency, calibrationType, revType, volType, calibrateH, hType, hTimes, hValues, calibrateA, aType,
-                  aTimes, aValues, shiftHorizon, scaling, optionExpiries, optionTerms, optionStrikes),
-          ccy_(currency) {}
+                  aTimes, aValues, shiftHorizon, scaling, optionExpiries, optionTerms, optionStrikes) {}
 
     //! \name Setters/Getters
     //@{
-    std::string& ccy() { return ccy_; }
+    // deprecated, for backwards compatibility only, use qualifier() instead
+    std::string& ccy() { return qualifier_; }
     //@}
 
     //! \name Serialisation
@@ -77,11 +77,7 @@ public:
     void clear() { LgmData::clear(); }
     void reset() {
         LgmData::reset();
-        ccy_ = "";
     }
-
-private:
-    std::string ccy_;
 };
 } // namespace data
 } // namespace ore

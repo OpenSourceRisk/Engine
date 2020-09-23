@@ -31,6 +31,7 @@
 #include <orea/app/parameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
+#include <orea/cube/cubeinterpretation.hpp>
 #include <orea/engine/parametricvar.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
@@ -103,11 +104,13 @@ protected:
     //! get an instance of an aggregationScenarioData class
     virtual void initAggregationScenarioData();
     //! get an instance of a cube class
-    virtual void initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids);
+    virtual void initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids, const Size cubeDepth);
+    //! set depth of NPV cube in cubeDepth_
+    virtual void setCubeDepth(const boost::shared_ptr<ScenarioGeneratorData>& sgd);
     //! build an NPV cube
     virtual void buildNPVCube();
     //! initialise NPV cube generation
-    void initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio);
+    virtual void initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio);
     //! load simMarketData
     boost::shared_ptr<ScenarioSimMarketParameters> getSimMarketData();
     //! load scenarioGeneratorData
@@ -126,7 +129,7 @@ protected:
     //! load in cube
     virtual void loadCube();
     //! run postProcessor to generate reports from cube
-    void runPostProcessor();
+    virtual void runPostProcessor();
 
     //! run stress tests and write out report
     virtual void runStressTest();
@@ -140,7 +143,7 @@ protected:
     //! write out DIM reports
     void writeDIMReport();
     //! write out cube
-    void writeCube(boost::shared_ptr<NPVCube> cube);
+    void writeCube(boost::shared_ptr<NPVCube> cube, const std::string& cubeFileParam);
     //! write out scenarioData
     void writeScenarioData();
     //! write out base scenario
@@ -228,15 +231,20 @@ protected:
     boost::shared_ptr<DateGrid> grid_;
     Size samples_;
 
-    Size cubeDepth_;
-    boost::shared_ptr<NPVCube> cube_;
+    Size cubeDepth_; // depth of cube_ defined below
+    bool storeFlows_, useCloseOutLag_, useMporStickyDate_;
+
+    boost::shared_ptr<NPVCube> cube_;           // cube to store results on trade level (e.g. NPVs, flows)
+    boost::shared_ptr<NPVCube> nettingSetCube_; // cube to store results on netting set level
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
-
+    boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
     boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
 
     //! Populated if a sensitivity analysis is performed.
     boost::shared_ptr<SensitivityRunner> sensitivityRunner_;
+
+    boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
 
 private:
     virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }

@@ -7,7 +7,7 @@
       <xs:maxLength value="10"/>
       <!-- This is not super strict, e.g. 2016-17-39 would pass, but it catches
            most errors-->
-      <xs:pattern value="(2\d{3}[0-1]\d[0-3]\d|2\d{3}[-./][0-1]\d[-./][0-3]\d|[0-3]\d[-./][0-1]\d[-./]2\d{3})?"/>
+      <xs:pattern value="([1-2]\d{3}[0-1]\d[0-3]\d|[1-2]\d{3}[-./][0-1]\d[-./][0-3]\d|[0-3]\d[-./][0-1]\d[-./][1-2]\d{3})?"/>
     </xs:restriction>
   </xs:simpleType>
 

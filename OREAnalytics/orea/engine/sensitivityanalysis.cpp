@@ -122,7 +122,8 @@ void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory>
     LOG("Initialise sim market for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
                                                                            << ")");
     simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_,
-                                                       curveConfigs_, todaysMarketParams_, continueOnError_);
+                                                       curveConfigs_, todaysMarketParams_, continueOnError_,
+                                                       sensitivityData_->useSpreadedTermStructures());
 
     LOG("Sim market initialised for sensitivity analysis");
 

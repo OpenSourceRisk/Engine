@@ -1,7 +1,7 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt_SRC calendars/austria.cpp
-calendars/amendedcalendar.cpp
+set(QuantExt_SRC calendars/amendedcalendar.cpp
+calendars/austria.cpp
 calendars/belgium.cpp
 calendars/chile.cpp
 calendars/cme.cpp
@@ -112,6 +112,7 @@ models/lgmimpliedyieldtermstructure.cpp
 models/linkablecalibratedmodel.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
+models/projectedcrossassetmodel.cpp
 models/yoyinflationmodeltermstructure.cpp
 models/zeroinflationmodeltermstructure.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
@@ -187,6 +188,7 @@ termstructures/optionletstripper2.cpp
 termstructures/overnightindexfutureratehelper.cpp
 termstructures/pricetermstructure.cpp
 termstructures/pricetermstructureadapter.cpp
+termstructures/spreadeddiscountcurve.cpp
 termstructures/spreadedoptionletvolatility.cpp
 termstructures/spreadedsmilesection.cpp
 termstructures/spreadedswaptionvolatility.cpp
@@ -194,6 +196,7 @@ termstructures/strippedoptionletadapter2.cpp
 termstructures/strippedyoyinflationoptionletvol.cpp
 termstructures/subperiodsswaphelper.cpp
 termstructures/swaptionvolatilityconverter.cpp
+termstructures/swaptionvolconstantspread.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
@@ -203,8 +206,8 @@ time/yearcounter.cpp)
 # hpp files, this list is maintained manually
 
 set(QuantExt_HDR auto_link.hpp
-calendars/austria.hpp
 calendars/amendedcalendar.hpp
+calendars/austria.hpp
 calendars/belgium.hpp
 calendars/chile.hpp
 calendars/cme.hpp
@@ -248,8 +251,10 @@ cashflows/subperiodscouponpricer.hpp
 currencies/africa.hpp
 currencies/america.hpp
 currencies/asia.hpp
+currencies/currencycomparator.hpp
 currencies/europe.hpp
 currencies/metals.hpp
+indexes/behicp.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
 indexes/cacpi.hpp
@@ -257,8 +262,11 @@ indexes/commodityindex.hpp
 indexes/dkcpi.hpp
 indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp
+indexes/escpi.hpp
+indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
+indexes/genericindex.hpp
 indexes/ibor/audbbsw.hpp
 indexes/ibor/brlcdi.hpp
 indexes/ibor/chfsaron.hpp
@@ -273,6 +281,7 @@ indexes/ibor/dkkois.hpp
 indexes/ibor/ester.hpp
 indexes/ibor/hkdhibor.hpp
 indexes/ibor/hufbubor.hpp
+indexes/ibor/jpyeytibor.hpp
 indexes/ibor/idridrfix.hpp
 indexes/ibor/idrjibor.hpp
 indexes/ibor/ilstelbor.hpp
@@ -374,6 +383,7 @@ models/lgmimpliedyieldtermstructure.hpp
 models/linkablecalibratedmodel.hpp
 models/parametrization.hpp
 models/piecewiseconstanthelper.hpp
+models/projectedcrossassetmodel.hpp
 models/pseudoparameter.hpp
 models/yoyinflationmodeltermstructure.hpp
 models/zeroinflationmodeltermstructure.hpp
@@ -456,9 +466,12 @@ termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolatedcpivolatilitysurface.hpp
 termstructures/interpolateddiscountcurve.hpp
 termstructures/interpolateddiscountcurve2.hpp
+termstructures/interpolatedhazardratecurve.hpp
+termstructures/interpolatedsurvivalprobabilitycurve.hpp
 termstructures/interpolatedyoycapfloortermpricesurface.hpp
 termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
+termstructures/multisectiondefaultcurve.hpp
 termstructures/oibasisswaphelper.hpp
 termstructures/oiccbasisswaphelper.hpp
 termstructures/oisratehelper.hpp
@@ -476,6 +489,7 @@ termstructures/pricecurve.hpp
 termstructures/pricetermstructure.hpp
 termstructures/pricetermstructureadapter.hpp
 termstructures/probabilitytraits.hpp
+termstructures/spreadeddiscountcurve.hpp
 termstructures/spreadedoptionletvolatility.hpp
 termstructures/spreadedsmilesection.hpp
 termstructures/spreadedswaptionvolatility.hpp
@@ -491,6 +505,8 @@ termstructures/swaptionvolconstantspread.hpp
 termstructures/swaptionvolcube2.hpp
 termstructures/swaptionvolcubewithatm.hpp
 termstructures/tenorbasisswaphelper.hpp
+termstructures/weightedyieldtermstructure.hpp
+termstructures/yieldplusdefaultyieldtermstructure.hpp
 termstructures/yoyinflationcurveobservermoving.hpp
 termstructures/yoyinflationcurveobserverstatic.hpp
 termstructures/yoyinflationoptionletvolstripper.hpp

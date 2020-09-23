@@ -190,9 +190,6 @@ private:
     mutable map<string, boost::shared_ptr<CorrelationCurve>> requiredCorrelationCurves_;
     // for swap indices we map the configuration name to a map (swap index name => index)
     mutable map<string, map<string, boost::shared_ptr<SwapIndex>>> requiredSwapIndices_;
-
-    // if true no require() calls are processed
-    mutable bool freezeRequireProcessing_ = false;
 };
 
 std::ostream& operator<<(std::ostream& o, const TodaysMarket::Node& n);

@@ -52,6 +52,26 @@ using std::string;
 using std::tuple;
 using std::vector;
 
+namespace {
+
+// Generate lookback dates
+set<Date> generateLookbackDates(const Period& lookbackPeriod, const Calendar& calendar) {
+
+    set<Date> dates;
+
+    Date today = Settings::instance().evaluationDate();
+    Date lookback = calendar.advance(today, -lookbackPeriod);
+    do {
+        TLOG("Adding date " << io::iso_date(lookback) << " to fixings.");
+        dates.insert(lookback);
+        lookback = calendar.advance(lookback, 1 * Days);
+    } while (lookback <= today);
+
+    return dates;
+}
+
+}
+
 namespace ore {
 namespace data {
 
@@ -436,31 +456,45 @@ void amendInflationFixingDates(map<string, set<Date>>& fixings) {
     }
 }
 
-void addMarketFixingDates(map<std::string, set<Date>>& fixings, const TodaysMarketParameters& mktParams,
-                          const Period& iborLookback, const Period& inflationLookback, const string& configuration) {
+void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketParameters& mktParams,
+                          const Period& iborLookback, const Period& oisLookback,
+                          const Period& inflationLookback, const string& configuration) {
 
     if (mktParams.hasConfiguration(configuration)) {
+
+        LOG("Start adding market fixing dates for configuration '" << configuration << "'");
 
         // If there are ibor indices in the market parameters, add the lookback fixings
         if (mktParams.hasMarketObject(MarketObject::IndexCurve)) {
 
             QL_REQUIRE(iborLookback >= 0 * Days, "Ibor lookback period must be non-negative");
 
-            // Dates that will be used for each of the ibor indices
-            Date today = Settings::instance().evaluationDate();
-            Date lookback = WeekendsOnly().advance(today, -iborLookback);
-            set<Date> dates;
-            do {
-                TLOG("Adding date " << io::iso_date(lookback) << " to fixings for ibor indices");
-                dates.insert(lookback);
-                lookback = WeekendsOnly().advance(lookback, 1 * Days);
-            } while (lookback <= today);
+            DLOG("Start adding market fixing dates for interest rate indices.");
 
-            // For each of the ibor indices in market parameters, insert the dates
+            set<Date> iborDates;
+            set<Date> oisDates;
+            WeekendsOnly calendar;
+
+            // For each of the IR indices in market parameters, insert the dates
             for (const auto& kv : mktParams.mapping(MarketObject::IndexCurve, configuration)) {
-                TLOG("Adding extra fixing dates for ibor index " << kv.first);
-                fixings[kv.first].insert(dates.begin(), dates.end());
+                if (isOvernightIndex(kv.first)) {
+                    if (oisDates.empty()) {
+                        TLOG("Generating fixing dates for overnight indices.");
+                        oisDates = generateLookbackDates(oisLookback, calendar);
+                    }
+                    TLOG("Adding extra fixing dates for overnight index " << kv.first);
+                    fixings[kv.first].insert(oisDates.begin(), oisDates.end());
+                } else {
+                    if (iborDates.empty()) {
+                        TLOG("Generating fixing dates for ibor indices.");
+                        iborDates = generateLookbackDates(iborLookback, calendar);
+                    }
+                    TLOG("Adding extra fixing dates for ibor index " << kv.first);
+                    fixings[kv.first].insert(iborDates.begin(), iborDates.end());
+                }
             }
+
+            DLOG("Finished adding market fixing dates for interest rate indices.");
         }
 
         // If there are inflation indices in the market parameters, add the lookback fixings
@@ -540,6 +574,8 @@ void addMarketFixingDates(map<std::string, set<Date>>& fixings, const TodaysMark
                 }
             }
         }
+
+        LOG("Finished adding market fixing dates for configuration '" << configuration << "'");
     }
 }
 

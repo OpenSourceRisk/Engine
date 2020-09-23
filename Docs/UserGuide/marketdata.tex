@@ -214,6 +214,7 @@ Example:
     Instrument Type & \emph{MM} & \\ \hline
     Quote Type & \emph{RATE} & \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Deposit rate\\ \hline
+    IndexName & Optional, any string & Generally used to differentiate money market rates referencing different interest rate indices with the same tenor\\ \hline
     Forward start & An integer followed by D, W, M or Y.  & Period from today to start \\ \hline
     Term & An integer followed by D, W, M or Y. & Period from start to maturity\\ \hline
   \end{tabular}
@@ -497,6 +498,7 @@ Example: Three Months SOFR Futures (DEC 2019):
     Instrument Type & \emph{IR\_SWAP} & \\ \hline
     Quote Type & \emph{RATE} & \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Swap rate\\ \hline
+    IndexName & Optional, any string & Generally used to differentiate swaps referencing different interest rate indices with the same tenor\\ \hline
     Forward start & An integer followed by D, W, M or Y & Generic period from today to start\\ \hline
     Tenor & An integer followed by D, W, M or Y & Underlying index period \\ \hline
     Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\ \hline
@@ -1021,7 +1023,7 @@ Examples:
 
 \begin{table}[H]
 	\centering
-	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+	\begin{tabular}{|p{3cm}|p{5.5cm}|p{5cm}|}
 		\hline
 		{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
         Instrument Type & \emph{EQUITY\_OPTION} & \\ \hline
@@ -1029,21 +1031,27 @@ Examples:
         Name & String & Identifying name of the equity \\ \hline
         Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ \hline
         Expiry & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ \hline
-        Strike & {\tt ATMF}, or else any {\tt Real} & strike price \\ \hline
+        Strike & {\tt ATM/AtmSpot} (= {\tt ATM}), {\tt ATM/AtmFwd} (={\tt ATMF}), {\tt MNY/[Spot|Fwd]/1.2} where $1.2$
+                 is the moneyness level, or a {\tt Real} for an absolute strike & strike \\ \hline
+        CallPut & {\tt C} for Call, {\tt P} for Put & Optional Call/Put flag (defaults to Call) \\ \hline
 	\end{tabular}
 	\caption{Equity Option Implied Volatility}
 	\label{tab:eqimplvol_quote}
 \end{table}
 
-Volatilities are quoted as a function of strike price - either at-the-money forward ({\tt ATMF}) or else a specified 
-real number, corresponding to the absolute strike value.Only log-normal implied volatilities ({\tt RATE\_LNVOL}) are 
-supported.
+Volatilities are quoted as a function of strike price - either at-the-money spot or forward, a moneyness level or else a
+specified real number, corresponding to the absolute strike value. Only log-normal implied volatilities ({\tt
+  RATE\_LNVOL}) are supported.
+
+If $K$ is the absolute strike, $S$ the spot, $F$ the forward and $m$ the moneyness level, we have $K=Sm$ if spot
+moneyness and $K=Fm$ if forward moneyness is specified.
 
 \medskip
 Example:
 \begin{itemize}
 	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/6M/ATMF}
 	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/2018-06-30/ATMF}
+	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/6M/MNY/Fwd/1.2}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1053,28 +1061,30 @@ Example:
 
 \begin{table}[H]
 	\centering
-	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-		\hline
-		{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
-        Instrument Type & \emph{EQUITY\_OPTION} & \\ \hline
-        Quote Type & \emph{PRICE} & \\ \hline
-        Name & String & Identifying name of the equity \\ \hline
-        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ \hline
-        Expiry & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ \hline
-        Strike & {\tt ATMF}, or else any {\tt Real} & strike price \\ \hline
+	\begin{tabular}{|p{3cm}|p{5.5cm}|p{5cm}|}
+      \hline
+      {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+      Instrument Type & \emph{EQUITY\_OPTION} & \\ \hline
+      Quote Type & \emph{PRICE} & \\ \hline
+      Name & String & Identifying name of the equity \\ \hline
+      Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ \hline
+      Expiry & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ \hline
+      Strike & {\tt ATM/AtmSpot} (= {\tt ATM}), {\tt ATM/AtmFwd} (={\tt ATMF}) or a {\tt Real} for an absolute strike & strike \\ \hline
+      CallPut & {\tt C} for Call, {\tt P} for Put & Optional Call/Put flag (defaults to Call) \\ \hline
 	\end{tabular}
 	\caption{Equity Option Premium}
 	\label{tab:eqpremvol_quote}
 \end{table}
 
-Premiums are quoted as a function of strike price - either at-the-money forward ({\tt ATMF}) or else a specified 
-real number, corresponding to the absolute strike value.
+Premiums are quoted as a function of strike price - either at-the-money spot or forward or else a specified real number,
+corresponding to the absolute strike value.
 
 \medskip
 Example:
 \begin{itemize}
 	\item {EQUITY\_OPTION/PRICE/SP5/USD/6M/ATMF}
 	\item {EQUITY\_OPTION/PRICE/SP5/USD/2018-06-30/2000}
+	\item {EQUITY\_OPTION/PRICE/SP5/USD/2018-06-30/2000/C}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1102,7 +1112,7 @@ Examples:
 \item {ZC\_INFLATIONSWAP/RATE/EUHICPXT/2Y}
 \end{itemize}
 
-Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI, ZACPI.
+Examples for inflation index names include EUHICP, EUHICPXT, FRHICP, FRCPI, UKRPI, USCPI, ZACPI, BEHICP.
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Year on Year Inflation Swap Rate}
@@ -1129,7 +1139,7 @@ Examples:
 \item {YY\_INFLATIONSWAP/RATE/EUHICPXT/2Y}
 \end{itemize}
 
-Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI, ZACPI.
+Examples for inflation index names include EUHICP, EUHICPXT, FRHICP, FRCPI, UKRPI, USCPI, ZACPI, BEHICP.
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Zero Coupon Inflation Cap Floor Price}
@@ -1158,7 +1168,7 @@ Examples:
 \item {ZC\_INFLATIONCAPFLOOR/PRICE/EUHICPXT/2Y/C/0.01}
 \end{itemize}
 
-Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI, ZACPI.
+Examples for inflation index names include EUHICP, EUHICPXT, FRHICP, FRCPI, UKRPI, USCPI, ZACPI, BEHICP.
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Inflation Seasonality Correction Factors}
@@ -1187,7 +1197,7 @@ Examples:
 \item SEASONALITY/RATE/MULT/EUHICPXT/NOV
 \end{itemize}
 
-Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI, ZACPI.
+Examples for inflation index names include EUHICP, EUHICPXT, FRHICP, FRCPI, UKRPI, USCPI, ZACPI, BEHICP.
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Bond Yield Spreads}

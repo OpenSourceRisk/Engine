@@ -23,6 +23,14 @@
 using namespace std;
 namespace QuantExt {
 
+Date getImmDate(Date asof, Size i) {
+    Date imm = asof;
+    for (Size j = 0; j < i; j++) {
+        imm = IMM::nextDate(imm, true);
+    }
+    return imm;
+}
+
 ImmFraRateHelper::ImmFraRateHelper(const Handle<Quote>& rate, const Size imm1, const Size imm2,
                                    const boost::shared_ptr<IborIndex>& i, Pillar::Choice pillarChoice,
                                    Date customPillarDate)
@@ -90,14 +98,6 @@ void ImmFraRateHelper::initializeDates() {
     latestDate_ = pillarDate_; // backward compatibility
 
     fixingDate_ = iborIndex_->fixingDate(earliestDate_);
-}
-
-Date ImmFraRateHelper::getImmDate(Date asof, Size i) {
-    Date imm = asof;
-    for (Size j = 0; j < i; j++) {
-        imm = IMM::nextDate(imm, true);
-    }
-    return imm;
 }
 
 void ImmFraRateHelper::accept(AcyclicVisitor& v) {

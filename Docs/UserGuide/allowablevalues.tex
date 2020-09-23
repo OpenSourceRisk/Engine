@@ -170,7 +170,7 @@ CCY-INDEX                &
 EUR-EONIA\\ EUR-ESTER \\ EUR-EURIBOR\\ EUR-LIBOR\\ EUR-CMS\\
 USD-FedFunds\\ USD-SOFR \\ USD-Prime\\ USD-LIBOR\\ USD-SIFMA\\ USD-CMS\\
 GBP-SONIA\\ GBP-LIBOR\\ GBP-CMS\\ 
-JPY-LIBOR\\ JPY-TIBOR \\ JPY-TONAR \\ JPY-CMS \\
+JPY-LIBOR\\ JPY-TIBOR \\ JPY-EYTIBOR \\ JPY-TONAR \\ JPY-CMS \\
 CHF-LIBOR\\ CHF-SARON\\ 
 AUD-LIBOR\\ AUD-BBSW\\ 
 CAD-CDOR\\ CAD-BA\\ 
@@ -191,6 +191,34 @@ TENOR                    & An integer followed by \emph{D, W, M or Y}           
 \end{tabular}
   \caption{Allowable values for Index.}
   \label{tab:indices}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\multicolumn{2}{|l|} {Defaults for {\tt FixingDays}}   \\ \hline
+\textbf{Index} &\textbf{Default value}     \\ \hline \hline
+Ibor indices    &   2, except for the Ibor indices below:  \\ \hline
+\emph{USD-SIFMA}    &   1 \\ \hline
+\emph{GBP-LIBOR}    &   0 \\ \hline
+\emph{AUD-BBSW}    &   0 \\ \hline
+\emph{CAD-CDOR}    &   0 \\ \hline
+\emph{CNY-SHIBOR}    &   1 \\ \hline
+\emph{HKD-HIBOR}    &   0 \\ \hline
+\emph{MXN-TIIE}    &   1 \\ \hline
+\emph{MYR-KLIBOR}    &   0 \\ \hline
+\emph{TRY-TRLIBOR}    &   0 \\ \hline
+\emph{ZAR-JIBAR}    &   0 \\ \hline \hline
+Overnight indices    &   0, except for the Overnight indices below:  \\ \hline
+\emph{CHF-TOIS}    &   1 \\ \hline
+\emph{CLP-CAMARA}    &   2 \\ \hline
+\emph{PLN-POLONIA}    &   1 \\ \hline
+\emph{DKK-DKKOIS}    &   1 \\ \hline
+\emph{SEK-SIOR}    &   1 \\ \hline
+\end{tabular}
+  \caption{Defaults for FixingDays}
+  \label{tab:fixingdaysdefaults}
 \end{table}
 
 \begin{table}[H]

@@ -122,6 +122,9 @@ public:
     void update();
     void generateArguments();
 
+    /*! the vector of parametrizations */
+    const std::vector<boost::shared_ptr<Parametrization> >& parametrizations() const { return p_; }
+
     /*! components per asset class, see below for specific model type inspectors */
     const boost::shared_ptr<Parametrization> ir(const Size ccy) const;
     const boost::shared_ptr<Parametrization> fx(const Size ccy) const;
@@ -188,6 +191,9 @@ public:
     /*! set correlation */
     void correlation(const AssetType s, const Size i, const AssetType t, const Size j, const Real value,
                      const Size iOffset = 0, const Size jOffset = 0);
+
+    /*! get salvaging algorithm */
+    SalvagingAlgorithm::Type salvagingAlgorithm() const { return salvaging_; }
 
     /*! analytical moments require numerical integration,
       which can be customized here */

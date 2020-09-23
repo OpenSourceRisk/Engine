@@ -299,7 +299,8 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
 
     for (std::tie(v, vend) = boost::vertices(g); v != vend; ++v) {
         if (g[*v].curveSpec) {
-            for (auto const& r : curveConfigs_.requiredCurveIds(g[*v].curveSpec->curveConfigID())) {
+            for (auto const& r :
+                 curveConfigs_.requiredCurveIds(g[*v].curveSpec->baseType(), g[*v].curveSpec->curveConfigID())) {
                 for (auto const& cId : r.second) {
                     // avoid self reference
                     if (r.first == g[*v].curveSpec->baseType() && cId == g[*v].curveSpec->curveConfigID())
@@ -317,7 +318,7 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
                         }
                     }
                     if (!found)
-                        buildErrors[g[*v].mapping] = "did not find required curve id  " + cId + " of type " +
+                        buildErrors[g[*v].mapping] = "did not find required curve id " + cId + " of type " +
                                                      ore::data::to_string(r.first) + " (required from " +
                                                      ore::data::to_string(g[*v]) +
                                                      ") in dependency graph for configuration " + configuration;
@@ -334,7 +335,8 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
 
         // 1 CapFloorVolatility depends on underlying index curve
 
-        if (g[*v].curveSpec && curveConfigs_.hasCapFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())) {
+        if (g[*v].obj == MarketObject::CapFloorVol &&
+            curveConfigs_.hasCapFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())) {
             string iborIndex = curveConfigs_.capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->iborIndex();
             bool found = false;
             for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
@@ -354,7 +356,8 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
 
         // 2 Correlation depends on underlying swap indices (if CMS Spread Correlations are calibrated to prices)
 
-        if (g[*v].curveSpec && curveConfigs_.hasCorrelationCurveConfig(g[*v].curveSpec->curveConfigID())) {
+        if (g[*v].obj == MarketObject::Correlation &&
+            curveConfigs_.hasCorrelationCurveConfig(g[*v].curveSpec->curveConfigID())) {
             auto config = curveConfigs_.correlationCurveConfig(g[*v].curveSpec->curveConfigID());
             if (config->correlationType() == CorrelationCurveConfig::CorrelationType::CMSSpread &&
                 config->quoteType() == CorrelationCurveConfig::QuoteType::Price) {
@@ -391,7 +394,8 @@ void TodaysMarket::buildDependencyGraph(const std::string& configuration,
 
         // 3 SwaptionVolatility depends on underlying swap indices
 
-        if (g[*v].curveSpec && curveConfigs_.hasSwaptionVolCurveConfig(g[*v].curveSpec->curveConfigID())) {
+        if (g[*v].obj == MarketObject::SwaptionVol &&
+            curveConfigs_.hasSwaptionVolCurveConfig(g[*v].curveSpec->curveConfigID())) {
             auto config = curveConfigs_.swaptionVolCurveConfig(g[*v].curveSpec->curveConfigID());
             bool found1 = config->shortSwapIndexBase().empty(), found2 = config->swapIndexBase().empty();
             for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
@@ -549,17 +553,6 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
     if (node.built)
         return;
 
-    // Within this function we somtimes call market interface methods like swapIndex() or iborIndex() to get an
-    // already built object. We disable the processing of require() calls for the scope of this function, since
-    // a) we know that these objects are alrady built and
-    // b) we would cause an infinite recursion with these nested calls
-
-    struct FreezeRequireProcessing {
-        FreezeRequireProcessing(bool& flag) : flag_(flag) { flag_ = true; }
-        ~FreezeRequireProcessing() { flag_ = false; }
-        bool& flag_;
-    } freezer(freezeRequireProcessing_);
-
     if (node.curveSpec == nullptr) {
 
         // not spec-based node, this can only be a SwapIndexCurve
@@ -570,7 +563,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
         const string& discountIndex = node.mapping;
         addSwapIndex(swapIndexName, discountIndex, configuration);
         DLOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
-        requiredSwapIndices_[configuration][swapIndexName] = swapIndex(swapIndexName, configuration).currentLink();
+        requiredSwapIndices_[configuration][swapIndexName] =
+            swapIndices_.at(std::make_pair(configuration, swapIndexName)).currentLink();
 
     } else {
 
@@ -587,8 +581,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredYieldCurves_.find(ycspec->name());
             if (itr == requiredYieldCurves_.end()) {
                 DLOG("Building YieldCurve for asof " << asof_);
-                boost::shared_ptr<YieldCurve> yieldCurve = boost::make_shared<YieldCurve>(
-                    asof_, *ycspec, curveConfigs_, loader_, conventions_, requiredYieldCurves_, fxT_, referenceData_);
+                boost::shared_ptr<YieldCurve> yieldCurve =
+                    boost::make_shared<YieldCurve>(asof_, *ycspec, curveConfigs_, loader_, conventions_,
+                                                   requiredYieldCurves_, requiredDefaultCurves_, fxT_, referenceData_);
                 itr = requiredYieldCurves_.insert(make_pair(ycspec->name(), yieldCurve)).first;
                 DLOG("Added YieldCurve \"" << ycspec->name() << "\" to requiredYieldCurves map");
                 if (itr->second->currency().code() != ycspec->ccy()) {
@@ -749,8 +744,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredDefaultCurves_.end()) {
                 // build the curve
                 DLOG("Building DefaultCurve for asof " << asof_);
-                boost::shared_ptr<DefaultCurve> defaultCurve = boost::make_shared<DefaultCurve>(
-                    asof_, *defaultspec, loader_, curveConfigs_, conventions_, requiredYieldCurves_);
+                boost::shared_ptr<DefaultCurve> defaultCurve =
+                    boost::make_shared<DefaultCurve>(asof_, *defaultspec, loader_, curveConfigs_, conventions_,
+                                                     requiredYieldCurves_, requiredDefaultCurves_);
                 itr = requiredDefaultCurves_.insert(make_pair(defaultspec->name(), defaultCurve)).first;
             }
             DLOG("Adding DefaultCurve (" << node.name << ") with spec " << *defaultspec << " to configuration "
@@ -903,7 +899,12 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredEquityVolCurves_.find(eqvolspec->name());
             if (itr == requiredEquityVolCurves_.end()) {
                 LOG("Building EquityVol for asof " << asof_);
-                // First we need the Equity Index, this should already be built
+                // First we need the Equity Index, we don't have a depedency for this in the graph, rather
+                // pull it directly from MarketImpl, which will trigger the build if necessary -
+                // this works, but contradicts the idea of managing the dependencies fully in a graph.
+                // The EQVol builder should rather get the index from the requiredEquityCurves_.
+                // In addition we should maybe specify the eqIndex name in the vol curve config explicitly
+                // instead of assuming that it has the same curve id as the vol curve to be build?
                 Handle<EquityIndex> eqIndex = MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration);
                 boost::shared_ptr<EquityVolCurve> eqVolCurve =
                     boost::make_shared<EquityVolCurve>(asof_, *eqvolspec, loader_, curveConfigs_, eqIndex,
@@ -1039,9 +1040,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
 
 void TodaysMarket::require(const MarketObject o, const string& name, const string& configuration) const {
 
-    // if the market is not lazily built or the require processing is freezed, there is nothing to do
+    // if the market is not lazily built, do nothing
 
-    if (!lazyBuild_ || freezeRequireProcessing_)
+    if (!lazyBuild_)
         return;
 
     // search the node (o, name) in the dependency graph
@@ -1101,9 +1102,10 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
     }
 
     // if the node is already built, we are done
-
+    
     if (g[node].built) {
         DLOG("node already built, do nothing.");
+        return;
     }
 
     // run a DFS from the found node to identify the required nodes to be built and get a possible order to do this
@@ -1146,7 +1148,9 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
         }
     }
 
-    LOG("Loaded CurvesSpecs: success: " << countSuccess << ", error: " << countError);
+    if (countSuccess + countError > 0) {
+        DLOG("Loaded CurvesSpecs: success: " << countSuccess << ", error: " << countError);
+    }
 
     // output errors
 

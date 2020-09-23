@@ -162,7 +162,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
         Real premiumAmount = -bsInd * option_.premium(); // pay if long, receive if short
         Currency premiumCurrency = parseCurrency(option_.premiumCcy());
         Date premiumDate = parseDate(option_.premiumPayDate());
-        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, ccy,
+        addPayment(additionalInstruments, additionalMultipliers, mult, premiumDate, premiumAmount, premiumCurrency, ccy,
                    engineFactory, configuration);
         DLOG("option premium added for vanilla option " << id());
     }

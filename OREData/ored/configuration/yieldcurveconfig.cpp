@@ -21,6 +21,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -68,6 +69,10 @@ YieldCurveSegment::Type parseYieldCurveSegment(const string& s) {
         return YieldCurveSegment::Type::DiscountRatio;
     else if (iequals(s, "FittedBond"))
         return YieldCurveSegment::Type::FittedBond;
+    else if (iequals(s, "Yield Plus Default"))
+        return YieldCurveSegment::Type::YieldPlusDefault;
+    else if (iequals(s, "Weighted Average"))
+        return YieldCurveSegment::Type::WeightedAverage;
     QL_FAIL("Yield curve segment type " << s << " not recognized");
 }
 
@@ -79,7 +84,9 @@ class SegmentIDGetter : public AcyclicVisitor,
                         public Visitor<CrossCcyYieldCurveSegment>,
                         public Visitor<ZeroSpreadedYieldCurveSegment>,
                         public Visitor<DiscountRatioYieldCurveSegment>,
-                        public Visitor<FittedBondYieldCurveSegment> {
+                        public Visitor<FittedBondYieldCurveSegment>,
+                        public Visitor<WeightedAverageYieldCurveSegment>,
+                        public Visitor<YieldPlusDefaultYieldCurveSegment> {
 
 public:
     SegmentIDGetter(const string& curveID, map<CurveSpec::CurveType, set<string>>& requiredCurveIds)
@@ -93,6 +100,8 @@ public:
     void visit(ZeroSpreadedYieldCurveSegment& s);
     void visit(DiscountRatioYieldCurveSegment& s);
     void visit(FittedBondYieldCurveSegment& s);
+    void visit(WeightedAverageYieldCurveSegment& s);
+    void visit(YieldPlusDefaultYieldCurveSegment& s);
 
 private:
     string curveID_;
@@ -167,6 +176,20 @@ void SegmentIDGetter::visit(FittedBondYieldCurveSegment& s) {
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(c.second);
 }
 
+void SegmentIDGetter::visit(WeightedAverageYieldCurveSegment& s) {
+    string aCurveID1 = s.referenceCurveID1();
+    string aCurveID2 = s.referenceCurveID2();
+    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID1);
+    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID2);
+}
+
+void SegmentIDGetter::visit(YieldPlusDefaultYieldCurveSegment& s) {
+    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(s.referenceCurveID());
+    for (auto const& i : s.defaultCurveIDs()) {
+        requiredCurveIds_[CurveSpec::CurveType::Default].insert(parseCurveSpec(i)->curveConfigID());
+    }
+}
+
 // YieldCurveConfig
 YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                    const string& discountCurveID,
@@ -233,8 +256,12 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
                 segment.reset(new DiscountRatioYieldCurveSegment());
             } else if (childName == "FittedBond") {
                 segment.reset(new FittedBondYieldCurveSegment());
+            } else if (childName == "WeightedAverage") {
+                segment.reset(new WeightedAverageYieldCurveSegment());
+            } else if (childName == "YieldPlusDefault") {
+                segment.reset(new YieldPlusDefaultYieldCurveSegment());
             } else {
-                QL_FAIL("Yield curve segment node name not recognized.");
+                QL_FAIL("Yield curve segment node name '" << childName << "' not recognized.");
             }
 
             if (segment) {
@@ -682,6 +709,72 @@ XMLNode* FittedBondYieldCurveSegment::toXML(XMLDocument& doc) {
 
 void FittedBondYieldCurveSegment::accept(AcyclicVisitor& v) {
     Visitor<FittedBondYieldCurveSegment>* v1 = dynamic_cast<Visitor<FittedBondYieldCurveSegment>*>(&v);
+    if (v1 != 0)
+        v1->visit(*this);
+    else
+        YieldCurveSegment::accept(v);
+}
+
+WeightedAverageYieldCurveSegment::WeightedAverageYieldCurveSegment(const string& typeID,
+                                                                   const string& referenceCurveID1,
+                                                                   const string& referenceCurveID2, const Real weight1,
+                                                                   const Real weight2)
+    : YieldCurveSegment(typeID, "", {}), referenceCurveID1_(referenceCurveID1), referenceCurveID2_(referenceCurveID2),
+      weight1_(weight1), weight2_(weight2) {}
+
+void WeightedAverageYieldCurveSegment::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "WeightedAverage");
+    YieldCurveSegment::fromXML(node);
+    referenceCurveID1_ = XMLUtils::getChildValue(node, "ReferenceCurve1", true);
+    referenceCurveID2_ = XMLUtils::getChildValue(node, "ReferenceCurve2", true);
+    weight1_ = XMLUtils::getChildValueAsDouble(node, "Weight1", true);
+    weight2_ = XMLUtils::getChildValueAsDouble(node, "Weight2", true);
+}
+
+XMLNode* WeightedAverageYieldCurveSegment::toXML(XMLDocument& doc) {
+    XMLNode* node = YieldCurveSegment::toXML(doc);
+    XMLUtils::setNodeName(doc, node, "WeightedAverage");
+    XMLUtils::addChild(doc, node, "ReferenceCurve1", referenceCurveID1_);
+    XMLUtils::addChild(doc, node, "ReferenceCurve2", referenceCurveID2_);
+    XMLUtils::addChild(doc, node, "Weight1", weight1_);
+    XMLUtils::addChild(doc, node, "Weight2", weight2_);
+    return node;
+}
+
+void WeightedAverageYieldCurveSegment::accept(AcyclicVisitor& v) {
+    Visitor<WeightedAverageYieldCurveSegment>* v1 = dynamic_cast<Visitor<WeightedAverageYieldCurveSegment>*>(&v);
+    if (v1 != 0)
+        v1->visit(*this);
+    else
+        YieldCurveSegment::accept(v);
+}
+
+YieldPlusDefaultYieldCurveSegment::YieldPlusDefaultYieldCurveSegment(const string& typeID,
+                                                                     const string& referenceCurveID,
+                                                                     const std::vector<std::string>& defaultCurveIDs,
+                                                                     const std::vector<Real>& weights)
+    : YieldCurveSegment(typeID, "", {}), referenceCurveID_(referenceCurveID), defaultCurveIDs_(defaultCurveIDs),
+      weights_(weights) {}
+
+void YieldPlusDefaultYieldCurveSegment::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "YieldPlusDefault");
+    YieldCurveSegment::fromXML(node);
+    referenceCurveID_ = XMLUtils::getChildValue(node, "ReferenceCurve", true);
+    defaultCurveIDs_ = XMLUtils::getChildrenValues(node, "DefaultCurves", "DefaultCurve", true);
+    weights_ = XMLUtils::getChildrenValuesAsDoubles(node, "Weights", "Weight", true);
+}
+
+XMLNode* YieldPlusDefaultYieldCurveSegment::toXML(XMLDocument& doc) {
+    XMLNode* node = YieldCurveSegment::toXML(doc);
+    XMLUtils::setNodeName(doc, node, "YieldPlusDefault");
+    XMLUtils::addChild(doc, node, "ReferenceCurve", referenceCurveID_);
+    XMLUtils::addChildren(doc, node, "DefaultCurves", "DefaultCurve", defaultCurveIDs_);
+    XMLUtils::addChildren(doc, node, "Weights", "Weight", weights_);
+    return node;
+}
+
+void YieldPlusDefaultYieldCurveSegment::accept(AcyclicVisitor& v) {
+    Visitor<YieldPlusDefaultYieldCurveSegment>* v1 = dynamic_cast<Visitor<YieldPlusDefaultYieldCurveSegment>*>(&v);
     if (v1 != 0)
         v1->visit(*this);
     else

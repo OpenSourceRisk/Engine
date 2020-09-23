@@ -31,20 +31,31 @@
 namespace ore {
 namespace data {
 
-//! Engine Builder for FX Forwards
-/*! Pricing engines are cached by currency pair
+//! Engine Builder base class for FX Forwards
+/*! Pricing engines are cached by currency1 and currency2
     \ingroup builders
 */
-class FxForwardEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
+class FxForwardEngineBuilderBase
+    : public CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
 public:
-    FxForwardEngineBuilder()
-        : CachingEngineBuilder("DiscountedCashflows", "DiscountingFxForwardEngine", {"FxForward"}) {}
+    FxForwardEngineBuilderBase(const std::string& model, const std::string& engine)
+        : CachingEngineBuilder(model, engine, {"FxForward"}) {}
 
 protected:
     virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
         return forCcy.code() + domCcy.code();
     }
+};
 
+//! Engine Builder for FX Forwards
+/*! Pricing engines are cached by currency pair
+    \ingroup builders
+*/
+class FxForwardEngineBuilder : public FxForwardEngineBuilderBase {
+public:
+    FxForwardEngineBuilder() : FxForwardEngineBuilderBase("DiscountedCashflows", "DiscountingFxForwardEngine") {}
+
+protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
         string pair = keyImpl(forCcy, domCcy);
         return boost::make_shared<QuantExt::DiscountingFxForwardEngine>(

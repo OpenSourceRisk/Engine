@@ -314,5 +314,10 @@ QuantLib::CapFloor::Type parseCapFloorType(const std::string& s);
 */
 QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const std::string& s);
 
+/*! Convert boost::any to pair<string,string>, including the valueType and the value
+    \ingroup utilities
+*/
+std::pair<string, string> parseBoostAny(const boost::any& anyType);
+
 } // namespace data
 } // namespace ore

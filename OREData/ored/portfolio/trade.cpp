@@ -50,9 +50,9 @@ XMLNode* Trade::toXML(XMLDocument& doc) {
 }
 
 void Trade::addPayment(std::vector<boost::shared_ptr<Instrument>>& addInstruments, std::vector<Real>& addMultipliers,
-                       const Date& paymentDate, const Real& paymentAmount, const Currency& paymentCurrency,
-                       const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
-                       const string& configuration) {
+                       const Real tradeMultiplier, const Date& paymentDate, const Real& paymentAmount,
+                       const Currency& paymentCurrency, const Currency& tradeCurrency,
+                       const boost::shared_ptr<EngineFactory>& factory, const string& configuration) {
     boost::shared_ptr<QuantExt::Payment> fee(new QuantExt::Payment(paymentAmount, paymentCurrency, paymentDate));
 
     // assuming amount provided with correct sign
@@ -72,8 +72,10 @@ void Trade::addPayment(std::vector<boost::shared_ptr<Instrument>>& addInstrument
     // 1) Add to additional instruments for pricing
     addInstruments.push_back(fee);
 
-    // 2) Add a trade leg for cash flow reporting
-    legs_.push_back(Leg(1, fee->cashFlow()));
+    // 2) Add a trade leg for cash flow reporting, divide the amount by the multiplier, because the leg entries
+    //    are multiplied with the trade multiplier in the cashflow report (and if used elsewhere)
+    legs_.push_back(Leg(
+        1, boost::make_shared<SimpleCashFlow>(fee->cashFlow()->amount() / tradeMultiplier, fee->cashFlow()->date())));
     legCurrencies_.push_back(fee->currency().code());
     // amount comes with its correct sign, avoid switching by saying payer=false
     legPayers_.push_back(false);

@@ -570,6 +570,12 @@
     <ClInclude Include="qle\indexes\ibor\clpcamara.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\cnhhibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\cnhshibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\copibr.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -888,6 +894,9 @@
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadeddiscountcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\eqfxindexbase.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
@@ -907,6 +916,36 @@
       <Filter>models</Filter>
     </ClInclude>
     <ClInclude Include="qle\models\jyimpliedzeroinflationtermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedhazardratecurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedsurvivalprobabilitycurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\multisectiondefaultcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\weightedyieldtermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\yieldplusdefaultyieldtermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\genericindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\behicp.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\frcpi.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\jpyeytibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\projectedcrossassetmodel.hpp">
       <Filter>models</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1552,6 +1591,9 @@
     <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadeddiscountcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
     <ClCompile Include="qle\calendars\amendedcalendar.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
@@ -1568,6 +1610,12 @@
       <Filter>models</Filter>
     </ClCompile>
     <ClCompile Include="qle\models\jyimpliedzeroinflationtermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\swaptionvolconstantspread.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\projectedcrossassetmodel.cpp">
       <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>

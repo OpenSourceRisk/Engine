@@ -24,6 +24,7 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
+#include <orea/scenario/spreadscenario.hpp>
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
@@ -58,6 +59,7 @@
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/pricecurve.hpp>
+#include <qle/termstructures/spreadeddiscountcurve.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
@@ -132,7 +134,7 @@ ReactionToTimeDecay parseDecayMode(const string& s) {
 
 void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
                                       const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
-                                      const string& dayCounter, bool simulate) {
+                                      const string& dayCounter, bool simulate, bool spreaded) {
     Handle<YieldTermStructure> wrapper = initMarket->yieldCurve(riskFactorYieldCurve(rf), key, configuration);
     QL_REQUIRE(!wrapper.empty(), "yield curve not provided for " << key);
     QL_REQUIRE(tenors.front() > 0 * Days, "yield curve tenors must not include t=0");
@@ -153,25 +155,35 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
     vector<Real> discounts(yieldCurveTimes.size());
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
     for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(yieldCurveDates[i + 1])));
+        Real val = wrapper->discount(yieldCurveDates[i + 1]);
+        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(spreaded ? 1.0 : val));
         Handle<Quote> qh(q);
         quotes.push_back(qh);
 
         // Check if the risk factor is simulated before adding it
         if (simulate) {
             simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
-            DLOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << q->value());
+            DLOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << val);
+            // if generating spreaded scenarios, add the absolute value as well
+            if (spreaded) {
+                absoluteSimData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i),
+                                         std::forward_as_tuple(val));
+            }
         }
     }
 
     boost::shared_ptr<YieldTermStructure> yieldCurve;
 
-    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister && !spreaded) {
         yieldCurve = boost::shared_ptr<YieldTermStructure>(
             new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), dc));
     } else {
-        yieldCurve = boost::shared_ptr<YieldTermStructure>(
-            new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+        if (spreaded)
+            yieldCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::SpreadedDiscountCurve(wrapper, yieldCurveTimes, quotes, dc));
+        else
+            yieldCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
     }
 
     Handle<YieldTermStructure> ych(yieldCurve);
@@ -186,17 +198,21 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                                      const Conventions& conventions, const std::string& configuration,
                                      const CurveConfigurations& curveConfigs,
-                                     const TodaysMarketParameters& todaysMarketParams, const bool continueOnError)
+                                     const TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
+                                     const bool useSpreadedTermStructures)
     : ScenarioSimMarket(initMarket, parameters, conventions, boost::make_shared<FixingManager>(initMarket->asofDate()),
-                        configuration, curveConfigs, todaysMarketParams, continueOnError) {}
+                        configuration, curveConfigs, todaysMarketParams, continueOnError, useSpreadedTermStructures) {}
 
-ScenarioSimMarket::ScenarioSimMarket(
-    const boost::shared_ptr<Market>& initMarket, const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
-    const Conventions& conventions, const boost::shared_ptr<FixingManager>& fixingManager,
-    const std::string& configuration, const ore::data::CurveConfigurations& curveConfigs,
-    const ore::data::TodaysMarketParameters& todaysMarketParams, const bool continueOnError)
+ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
+                                     const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
+                                     const Conventions& conventions,
+                                     const boost::shared_ptr<FixingManager>& fixingManager,
+                                     const std::string& configuration,
+                                     const ore::data::CurveConfigurations& curveConfigs,
+                                     const ore::data::TodaysMarketParameters& todaysMarketParams,
+                                     const bool continueOnError, const bool useSpreadedTermStructures)
     : SimMarket(conventions), parameters_(parameters), fixingManager_(fixingManager),
-      filter_(boost::make_shared<ScenarioFilter>()) {
+      filter_(boost::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
@@ -238,7 +254,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         LOG("building " << name << " yield curve..");
                         vector<Period> tenors = parameters->yieldCurveTenors(name);
                         addYieldCurve(initMarket, configuration, param.first, name, tenors,
-                                      parameters->yieldCurveDayCounter(name), param.second.first);
+                                      parameters->yieldCurveDayCounter(name), param.second.first,
+                                      useSpreadedTermStructures_);
                         LOG("building " << name << " yield curve done");
                     } catch (const std::exception& e) {
                         processException(continueOnError, e);
@@ -283,24 +300,35 @@ ScenarioSimMarket::ScenarioSimMarket(
                         quotes.push_back(Handle<Quote>(q));
 
                         for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
-                            boost::shared_ptr<SimpleQuote> q(
-                                new SimpleQuote(wrapperIndex->discount(yieldCurveDates[i + 1])));
+                            Real val = wrapperIndex->discount(yieldCurveDates[i + 1]);
+                            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(useSpreadedTermStructures_ ? 1.0 : val));
                             Handle<Quote> qh(q);
                             quotes.push_back(qh);
 
                             simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name, i),
                                                std::forward_as_tuple(q));
-
-                            DLOG("ScenarioSimMarket index curve " << name << " discount[" << i << "]=" << q->value());
+                            if (useSpreadedTermStructures_) {
+                                absoluteSimData_.emplace(std::piecewise_construct,
+                                                         std::forward_as_tuple(param.first, name, i),
+                                                         std::forward_as_tuple(val));
+                            }
+                            // FIXME where do we check whether the risk factor is simulated?
+                            DLOG("ScenarioSimMarket index curve " << name << " discount[" << i << "]=" << val);
                         }
+
                         // FIXME interpolation fixed to linear, added to xml??
                         boost::shared_ptr<YieldTermStructure> indexCurve;
-                        if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+                        if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister &&
+                            !useSpreadedTermStructures_) {
                             indexCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
                                 yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
                         } else {
-                            indexCurve = boost::shared_ptr<YieldTermStructure>(
-                                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+                            if (useSpreadedTermStructures_)
+                                indexCurve = boost::shared_ptr<YieldTermStructure>(
+                                    new QuantExt::SpreadedDiscountCurve(wrapperIndex, yieldCurveTimes, quotes, dc));
+                            else
+                                indexCurve = boost::shared_ptr<YieldTermStructure>(
+                                    new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
                         }
 
                         // wrapped curve, is slower than a native curve
@@ -553,6 +581,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                 !convertToNormal && wrapper->volatilityType() == ShiftedLognormal
                                                     ? wrapper->shift(optionTenors[i], underlyingTenors[j])
                                                     : 0.0;
+                                            DLOG("AtmVol at " << optionTenors.at(i) << "/" << underlyingTenors.at(j)
+                                                              << " is " << vol << ", shift is " << shift[i][j]
+                                                              << ", (name,index) = (" << name << "," << index << ")");
+                                        } else {
+                                            DLOG("SmileVol at " << optionTenors.at(i) << "/" << underlyingTenors.at(j)
+                                                                << "/" << strikeSpreads.at(k) << " is " << vol
+                                                                << ", (name,index) = (" << name << "," << index << ")");
                                         }
                                     }
                                 }
@@ -1955,14 +1990,46 @@ ScenarioSimMarket::ScenarioSimMarket(
     }
 
     LOG("building base scenario");
-    baseScenario_ = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
+    auto absolute = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
     for (auto const& data : simData_) {
-        baseScenario_->add(data.first, data.second->value());
+        absolute->add(data.first, data.second->value());
+    }
+    if (useSpreadedTermStructures) {
+        // overwrite the keys for which we have both a spread and absolute value
+        auto spread = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
+        for (auto const& data : absoluteSimData_) {
+            absolute->add(data.first, data.second);
+            spread->add(data.first, simData_.at(data.first)->value());
+        }
+        baseScenario_ = boost::make_shared<SpreadScenario>(absolute, spread);
+    } else {
+        baseScenario_ = absolute;
     }
     LOG("building base scenario done");
 }
 
-void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenario) {
+void ScenarioSimMarket::reset() {
+    auto filterBackup = filter_;
+    // no filter
+    filter_ = boost::make_shared<ScenarioFilter>();
+    // reset eval date
+    Settings::instance().evaluationDate() = baseScenario_->asof();
+    // reset numeraire
+    numeraire_ = baseScenario_->getNumeraire();
+    // reset term structures
+    applyScenario(baseScenario_);
+    // see the comment in update() for why this is necessary...
+    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+        boost::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
+        obs->notifyObservers();
+    }
+    // reset fixing manager
+    fixingManager_->reset();
+    // restore the filter
+    filter_ = filterBackup;
+}
+
+  void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenario) {
     const vector<RiskFactorKey>& keys = scenario->keys();
 
     Size count = 0;
@@ -1993,40 +2060,21 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
     }
 
     // update market asof date
-    asof_ = scenario->asof();
+    // asof_ = scenario->asof();
 }
 
-void ScenarioSimMarket::reset() {
-    auto filterBackup = filter_;
-    // no filter
-    filter_ = boost::make_shared<ScenarioFilter>();
-    // reset eval date
-    Settings::instance().evaluationDate() = baseScenario_->asof();
-    // reset numeraire
-    numeraire_ = baseScenario_->getNumeraire();
-    // reset term structures
-    applyScenario(baseScenario_);
-    // see the comment in update() for why this is necessary...
-    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
-        boost::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
-        obs->notifyObservers();
-    }
-    // reset fixing manager
-    fixingManager_->reset();
-    // restore the filter
-    filter_ = filterBackup;
-}
-
+/*
 void ScenarioSimMarket::update(const Date& d) {
     // DLOG("ScenarioSimMarket::update called with Date " << QuantLib::io::iso_date(d));
-    QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
 
+    // pre update observable settings
     ObservationMode::Mode om = ObservationMode::instance().mode();
     if (om == ObservationMode::Mode::Disable)
         ObservableSettings::instance().disableUpdates(false);
     else if (om == ObservationMode::Mode::Defer)
         ObservableSettings::instance().disableUpdates(true);
 
+    // update date
     if (d != Settings::instance().evaluationDate())
         Settings::instance().evaluationDate() = d;
     else if (om == ObservationMode::Mode::Unregister) {
@@ -2040,14 +2088,14 @@ void ScenarioSimMarket::update(const Date& d) {
         obs->notifyObservers();
     }
 
+    // update scenario and market quotes
+    QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
     boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
     QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
-
     numeraire_ = scenario->getNumeraire();
-
     applyScenario(scenario);
 
-    // Observation Mode - key to update these before fixings are set
+    // post market update observable settings and refresh - key to update these before fixings are set
     if (om == ObservationMode::Mode::Disable) {
         refresh();
         ObservableSettings::instance().enableUpdates();
@@ -2085,6 +2133,83 @@ void ScenarioSimMarket::update(const Date& d) {
     }
 
     // DLOG("ScenarioSimMarket::update done");
+}
+*/
+  
+void ScenarioSimMarket::preUpdate() {
+    ObservationMode::Mode om = ObservationMode::instance().mode();
+    if (om == ObservationMode::Mode::Disable)
+        ObservableSettings::instance().disableUpdates(false);
+    else if (om == ObservationMode::Mode::Defer)
+        ObservableSettings::instance().disableUpdates(true);
+ }
+  
+void ScenarioSimMarket::updateDate(const Date& d) {
+    ObservationMode::Mode om = ObservationMode::instance().mode();
+    if (d != Settings::instance().evaluationDate())
+        Settings::instance().evaluationDate() = d;
+    else if (om == ObservationMode::Mode::Unregister) {
+        // Due to some of the notification chains having been unregistered,
+        // it is possible that some lazy objects might be missed in the case
+        // that the evaluation date has not been updated. Therefore, we
+        // manually kick off an observer notification from this level.
+        // We have unit regression tests in OREAnalyticsTestSuite to ensure
+        // the various ObservationMode settings return the anticipated results.
+        boost::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
+        obs->notifyObservers();
+    }
+}
+
+void ScenarioSimMarket::updateScenario(const Date& d) {
+    QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
+    boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
+    QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
+    numeraire_ = scenario->getNumeraire();
+    applyScenario(scenario);
+}
+
+void ScenarioSimMarket::postUpdate(const Date& d, bool withFixings) {
+    ObservationMode::Mode om = ObservationMode::instance().mode();
+
+    // Observation Mode - key to update these before fixings are set
+    if (om == ObservationMode::Mode::Disable) {
+        refresh();
+        ObservableSettings::instance().enableUpdates();
+    } else if (om == ObservationMode::Mode::Defer) {
+        ObservableSettings::instance().enableUpdates();
+    }
+
+    // Apply fixings as historical fixings. Must do this before we populate ASD
+    if (withFixings)
+        fixingManager_->update(d);
+}
+
+void ScenarioSimMarket::updateAsd(const Date& d) {
+    if (asd_) {
+        // add additional scenario data to the given container, if required
+        for (auto i : parameters_->additionalScenarioDataIndices()) {
+	    boost::shared_ptr<QuantLib::Index> index;
+	    try {
+	        index = *iborIndex(i);
+            } catch (...) {
+            }
+            try {
+                index = *swapIndex(i);
+            } catch (...) {
+            }
+            QL_REQUIRE(index != nullptr, "ScenarioSimMarket::update() index " << i << " not found in sim market");
+	    asd_->set(index->fixing(d), AggregationScenarioDataType::IndexFixing, i);
+	}
+
+        for (auto c : parameters_->additionalScenarioDataCcys()) {
+            if (c != parameters_->baseCcy())
+                asd_->set(fxSpot(c + parameters_->baseCcy())->value(), AggregationScenarioDataType::FXSpot, c);
+        }
+
+        asd_->set(numeraire_, AggregationScenarioDataType::Numeraire);
+
+        asd_->next();
+    }
 }
 
 bool ScenarioSimMarket::isSimulated(const RiskFactorKey::KeyType& factor) const {

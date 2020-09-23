@@ -2355,6 +2355,7 @@ type can be (so far) in
 \begin{itemize}
 \item npv
 \item cashflow
+\item additionalResults
 \item curves
 \item simulation
 \item xva
@@ -2364,7 +2365,7 @@ type can be (so far) in
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter
   name="key">value</Parameter>}. Each analysis must have one key {\tt active} set to Y or N to activate/deactivate this
-analysis.  The following listing \ref{lst:ore_analytics} shows the parametrisation of the first three basic analytics in
+analysis.  The following listing \ref{lst:ore_analytics} shows the parametrisation of the first four basic analytics in
 the list above.
 
 \begin{listing}[H]
@@ -2386,6 +2387,10 @@ the list above.
     <Parameter name="grid">240,1M</Parameter>
     <Parameter name="outputFileName">curves.csv</Parameter>
   </Analytic>
+  <Analytic type="additionalResults">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="outputFileName">additional\_results.csv</Parameter>
+  </Analytic> 
   <Analytic type="...">
     <!-- ... -->
   </Analytic>      
@@ -2435,6 +2440,29 @@ section).  Key {\tt grid} defines the time grid on which the yield curves are ev
 this monthly grid into the csv file specified by key {\tt outputFileName}. The grid can also be specified explicitly by
 a comma separated list of tenor points such as {\tt 1W, 1M, 2M, 3M, \dots}.
 
+The additionalResults analytic writes a report containing any additional results generated for the portfolio. The results are pricingengine specific but Table \ref{additionalreport} shows the output for a vanilla swaption.
+
+\begin{table}[hbt]
+\scriptsize
+\begin{center}
+  \begin{tabular}{l|l|l|l}
+\hline
+\#TradeId & ResultId & ResultType & ResultValue \\
+example\_swaption & annuity & double & 2123720984 \\
+example\_swaption & atmForward & double & 0.01664135 \\
+example\_swaption & spreadCorrection & double & 0 \\
+example\_swaption & stdDev & double & 0.00546015 \\
+example\_swaption & strike & double & 0.024 \\
+example\_swaption & swapLength & double & 4 \\
+example\_swaption & vega & double & 309237709.5 \\
+\hline
+\hline
+\ldots
+\end{tabular}
+\caption{AddiitonalResults Report}
+\label{additionalreport}
+\end{center}
+\end{table}
 \medskip The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulation which evolves the market as
 specified in the simulation config file. The primary result is an NPV cube file, i.e. valuations of all trades in the
 portfolio file (see section Setup), for all future points in time on the simulation grid and for all paths. Apart from
@@ -3343,7 +3371,7 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
     </EngineParameters>
   </Product>
   <GlobalParameters>
-    <Parameter name="ContinueOnCalibrationError>true</Parameter>
+    <Parameter name="ContinueOnCalibrationError">true</Parameter>
   </GlobalParameters>
 \end{minted}
 \caption{Pricing engine configuration}
@@ -3421,6 +3449,7 @@ Let us discuss this section using the following example
   <Discretization>Exact</Discretization>
   <Grid>80,3M</Grid>
   <Calendar>EUR,USD,GBP,CHF</Calendar>
+  <DayCounter>ACT/ACT</DayCounter>
   <Sequence>SobolBrownianBridge</Sequence>
   <Seed>42</Seed>
   <Samples>1000</Samples>
@@ -3442,6 +3471,7 @@ purposes)
 required because the simulation must step over 'good' dates on which index fixings can be stored.
 %\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for
 % more efficient memory usage. \todo[inline]{Remove Scenario choice}
+\item {\tt DayCounter:} Day count convention used to translate dates to times. Optional, defaults to ActualActual ISDA.
 \item {\tt Sequence:} Choose random sequence generator ({\em MersenneTwister, MersenneTwisterAntithetic, Sobol,
 SobolBrownianBridge}).
 \item {\tt Seed:} Random number generator seed
@@ -4001,6 +4031,14 @@ giving an example in each category:
   counts the points in the surface in lexical order w.r.t. the dimensions option expiry, underlying term and strike
 \end{itemize}
 
+Additional flags:
+
+\begin{itemize}
+\item ComputeGamma: If set to false, second order sensitivity computation is suppressed
+\item UseSpreadedTermStructures: If set to true, spreaded termstructures over t0 will be used for sensitivity
+  calculation (where supported), to improve the alignment of the scenario sim market and t0 curves
+\end{itemize}
+
 \begin{longlisting}
 %\hrule\medskip
   \begin{minted}[fontsize=\scriptsize]{xml}
@@ -4065,6 +4103,7 @@ giving an example in each category:
       <Index>EUR-EURIBOR-6M</Index>
     </CapFloorVolatility>
   </CapFloorVolatilities>
+  ...
   <SecuritySpreads>
     <SecuritySpread security="SECURITY_1">
       <ShiftType>Absolute</ShiftType>
@@ -4086,6 +4125,9 @@ giving an example in each category:
     <Pair>IndexCurve/EUR,IndexCurve/EUR</Pair>
     <Pair>DiscountCurve/EUR,IndexCurve/EUR</Pair>
   </CrossGammaFilter>
+  ...
+  <ComputeGamma>true</ComputeGamma>
+  <UseSpreadedTermStructures>false</UseSpreadedTermStructures>
 </SensitivityAnalysis>
 \end{minted}
 \caption{Sensitivity configuration}
@@ -4247,37 +4289,7 @@ for the construction of a market.
 
 \include{curve_configurations/yieldcurves}
 \include{curve_configurations/default_curves_from_cds}
-
-\subsubsection{Default Curves from Yield Curves}
-
-Default curves can be set up as a difference curve of two yield curves as shown in listing
-\ref{lst:defaultcurve_configuration_2}. If $P_B(0,t)$ and $P_S(0,t)$ denote the discount factors of the given benchmark
-and source curve respectively the resulting default term structures has survival probabilities
-
-$$S(0,t) = P_S(0,t) / P_B(0,t)$$
-
-on the given pillars, and w.r.t. a a zero recovery rate. The interpolation is backward flat in the hazard rate.
-
-\begin{longlisting}
-%\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{xml}
-    <DefaultCurve>
-      <CurveId>BOND_YIELD_EUR_OVER_OIS</CurveId>
-      <CurveDescription>Default curve derived as bond yield curve over Eonia</CurveDescription>
-      <Currency>EUR</Currency>
-      <Type>Benchmark</Type>
-      <DayCounter>A365</DayCounter>
-      <BenchmarkCurve>Yield/EUR/EUR1D</BenchmarkCurve>
-      <SourceCurve>Yield/EUR/BOND_YIELD_EUR</SourceCurve>
-      <Pillars>1Y,2Y,3Y,4Y,5Y,7Y,10Y</Pillars>
-      <SpotLag>0</SpotLag>
-      <Calendar>TARGET</Calendar>
-    </DefaultCurve>
-  </DefaultCurves>
-\end{minted}
-\caption{Default curve as a difference of two yield curves}
-\label{lst:defaultcurve_configuration_2}
-\end{longlisting}
+\include{curve_configurations/default_curves_other}
 
 \subsubsection{Swaption Volatility Structures}
 
@@ -4596,6 +4608,53 @@ When this configuration is used, the market is searched for quote strings of the
 \label{lst:eqoptionvol_surface}
 \end{longlisting}
 
+A volatility surface can also be given in terms of moneyness levels as shown in listing
+\ref{lst:eqoptionvol_mny_surface}. The nodes have the same meaning as in the case of a strike surface with the following
+exceptions:
+
+\begin{itemize}
+\item \lstinline!QuoteType!: only \lstinline!ImpliedVolatility! is allowed
+\item \lstinline!VolatilityType! [Optional]: only \lstinline!Lognormal! is allowed
+\item \lstinline!MoneynessType!: \lstinline!Spot! or \lstinline!Fwd!, indicating the type of moneyness. See
+  \ref{md:equity_option_iv} for the definition of moneyness types.
+\item \lstinline!MoneynessLevels!: comma separated list of moneyness levels, no wild cards are allowed.
+\item \lstinline!Expiries!: comma separated list of expiry tenors and or expiry dates. A single wildcard character, \lstinline!*!, can be used here also to indicate that all expiries found in the market data for this equity volatility configuration should be used when building the equity volatility surface.
+\end{itemize}
+
+Notice that the market data for the moneyness level $1.0$ must be given as a moneyness quote, not an ATM or ATMF quote,
+see \ref{md:equity_option_iv} for details of the market data.
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityVolatilities>
+  <EquityVolatility>
+    <CurveId>SP5</CurveId>
+    <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+    <Currency>USD</Currency>
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <MoneynessSurface>
+      <QuoteType>ImpliedVolatility</QuoteType>
+      <VolatilityType>Lognormal</VolatilityType>
+      <MoneynessType>Fwd</MoneynessType>
+      <MoneynessLevels>0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5</MoneynessLevels>
+      <Expiries>*</Expiries>
+      <TimeInterpolation>Linear</TimeInterpolation>
+      <StrikeInterpolation>Linear</StrikeInterpolation>
+      <Extrapolation>true</Extrapolation>
+      <TimeExtrapolation>UseInterpolator</TimeExtrapolation>
+      <StrikeExtrapolation>Flat</StrikeExtrapolation>
+    </MoneynessSurface>
+  </EquityVolatility>
+  <EquityVolatility>
+    ...
+  </EquityVolatility>
+</EquityVolatilities>
+\end{minted}
+\caption{Equity option volatility configuration - moneyness surface}
+\label{lst:eqoptionvol_mny_surface}
+\end{longlisting}
+
 Finally, the volatility proxy surface configuration layout is given in Listing \ref{lst:eqoptionvol_proxy}. This allows us to use any other surface as a proxy, in cases where there is no option data for a given equity. We provide a name in the \lstinline!ProxySurface! field, which must match the \lstinline!CurveId! of another configuration. The proxy surface looks up the volatility in the reference surface bases on moneyness.
  
 \begin{longlisting}
@@ -4664,6 +4723,9 @@ elements are the following:
                <Factor>SEASONALITY/RATE/MULT/USCPI/NOV</Factor>
                <Factor>SEASONALITY/RATE/MULT/USCPI/DEC</Factor>
            </Factors>
+           <OverrideFactors>
+               1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00,1.00
+           </OverrideFactors>
        </Seasonality>
    </InflationCurve>
 </InflationCurves>
@@ -4690,6 +4752,10 @@ The optional seasonality block defines a multiplicative seasonality and contains
   month matters, the year is ignored.
 \item {\tt Frequency:} Defines the frequency of the factors (usually identical to the index's fixing frequency).
 \item {\tt Factors:} Multiplicative seasonality correction factors, must be part of the market data.
+\item {\tt OverrideFactors:} A numeric list of seaosonality correction factors, replacing the Factors. This allows to
+  specify a static seasonality correction that does not require market data quotes. If both Factors and OverrideFactors
+  are given, the OverrideFactors are used. Otherwise only one of Factors, OverrideFactors is required in a seasonality
+  block.
 \end{itemize}
 
 We note that if zero coupon swap market quotes are given, but the type is set to YY, the zero coupon swap quotes will be
@@ -5267,6 +5333,7 @@ This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning
 \input{../../Docs/UserGuide/tradecomponents/floatinglegdata}
 \input{../../Docs/UserGuide/tradecomponents/legdataamortisation}
 \input{../../Docs/UserGuide/tradecomponents/indexings}
+\input{../../Docs/UserGuide/tradecomponents/cashflowleg}
 \input{../../Docs/UserGuide/tradecomponents/cmsleg}
 \input{../../Docs/UserGuide/tradecomponents/cmsspreadleg}
 \input{../../Docs/UserGuide/tradecomponents/digitalcmsspreadleg}
