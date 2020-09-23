@@ -188,7 +188,13 @@ void TodaysMarket::initialise(const Date& asof) {
         VertexIterator v, vend;
         for (std::tie(v, vend) = boost::vertices(g); v != vend; ++v) {
             if (g[*v].obj == MarketObject::FXSpot) {
-                buildNode(configuration.first, g[*v]);
+                try {
+                    buildNode(configuration.first, g[*v]);
+                } catch (const std::exception& e) {
+                    buildErrors[g[*v].curveSpec->name()] = e.what();
+                    ALOG("error while building node " << g[*v] << " in configuration " << configuration.first << ": "
+                                                      << e.what());
+                }
             }
         }
     }
