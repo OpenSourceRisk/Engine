@@ -927,6 +927,9 @@
     <ClInclude Include="qle\indexes\frcpi.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\jpyeytibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
     <ClInclude Include="qle\models\projectedcrossassetmodel.hpp">
       <Filter>models</Filter>
     </ClInclude>
