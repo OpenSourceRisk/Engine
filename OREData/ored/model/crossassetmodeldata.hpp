@@ -167,8 +167,6 @@ public:
     bool operator==(const CrossAssetModelData& rhs);
     bool operator!=(const CrossAssetModelData& rhs);
     //@}
-
-private:
     //! helper to convert LGM data, possibly including defaults, into an IR config vector
     void buildIrConfigs(map<string, boost::shared_ptr<IrLgmData>>& irMap);
     //! helper to convert FX data, possibly including defaults, into an FX config vector
@@ -178,6 +176,7 @@ private:
     //! helper to convert INF data, possibly including defaults, into an EQ config vector
     void buildInfConfigs(std::map<std::string, boost::shared_ptr<InfDkData>>& infMap);
 
+private:
     //
     struct HandleComp {
         bool operator()(const Handle<Quote>& x, const Handle<Quote>& y) const {
