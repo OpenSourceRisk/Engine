@@ -1144,7 +1144,7 @@ void OREApp::writeXVAReports() {
     string rawCubeOutputFile = params_->get("xva", "rawCubeOutputFile");
     CubeWriter cw1(outputPath_ + "/" + rawCubeOutputFile);
     map<string, string> nettingSetMap = portfolio_->nettingSetMap();
-    cw1.write(postProcess_->netCube(), nettingSetMap);
+    cw1.write(postProcess_->cube(), nettingSetMap);
 
     string netCubeOutputFile = params_->get("xva", "netCubeOutputFile");
     CubeWriter cw2(outputPath_ + "/" + netCubeOutputFile);
