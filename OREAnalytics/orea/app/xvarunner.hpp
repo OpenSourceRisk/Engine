@@ -22,12 +22,12 @@
 */
 #pragma once
 
+#include <orea/aggregation/postprocess.hpp>
+#include <orea/engine/valuationcalculator.hpp>
+#include <orea/scenario/scenariogeneratordata.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
-#include <orea/aggregation/postprocess.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/scenario/scenariogeneratordata.hpp>
-#include <orea/engine/valuationcalculator.hpp>
 
 namespace ore {
 namespace analytics {
@@ -36,35 +36,38 @@ class XvaRunner {
 public:
     virtual ~XvaRunner() {}
 
-    XvaRunner(QuantLib::Date asof,
-        const std::string& baseCurrency,
-        const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-        const boost::shared_ptr<ore::data::NettingSetManager>& netting,
-        const boost::shared_ptr<ore::data::EngineData>& engineData,
-        const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-        const boost::shared_ptr<ore::data::Conventions>& conventions,
-        const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
-        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-        const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
-        const boost::shared_ptr<ore::data::CrossAssetModelData>& crossAssetModelData,
-        std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
-        std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-        QuantLib::Real dimQuantile = 0.99,
-        QuantLib::Size dimHorizonCalendarDays = 14);
+    XvaRunner(QuantLib::Date asof, const std::string& baseCurrency,
+              const boost::shared_ptr<ore::data::Portfolio>& portfolio,
+              const boost::shared_ptr<ore::data::NettingSetManager>& netting,
+              const boost::shared_ptr<ore::data::EngineData>& engineData,
+              const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+              const boost::shared_ptr<ore::data::Conventions>& conventions,
+              const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+              const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+              const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
+              const boost::shared_ptr<ore::data::CrossAssetModelData>& crossAssetModelData,
+              std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
+              std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
+              const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr, QuantLib::Real dimQuantile = 0.99,
+              QuantLib::Size dimHorizonCalendarDays = 14, map<string, bool> analytics = {},
+              string calculationType = "Symmetric", string dvaName = "", string fvaBorrowingCurve = "",
+              string fvaLendingCurve = "", bool fullInitialCollateralisation = true);
 
     void runXva(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true);
 
     const boost::shared_ptr<PostProcess>& postProcess() { return postProcess_; }
 
 protected:
-    virtual boost::shared_ptr<NPVCube> getNettingSetCube(std::vector<boost::shared_ptr<ValuationCalculator>>& calculators) { return nullptr; };
-    virtual boost::shared_ptr<DynamicInitialMarginCalculator> getDimCalculator(
-        const boost::shared_ptr<NPVCube>& cube,
-        const boost::shared_ptr<CubeInterpretation>& cubeInterpreter,
-        const boost::shared_ptr<AggregationScenarioData>& scenarioData,
-        const boost::shared_ptr<QuantExt::CrossAssetModel>& model = nullptr,
-        const boost::shared_ptr<NPVCube>& nettingCube = nullptr);
+    virtual boost::shared_ptr<NPVCube>
+    getNettingSetCube(std::vector<boost::shared_ptr<ValuationCalculator>>& calculators) {
+        return nullptr;
+    };
+    virtual boost::shared_ptr<DynamicInitialMarginCalculator>
+    getDimCalculator(const boost::shared_ptr<NPVCube>& cube,
+                     const boost::shared_ptr<CubeInterpretation>& cubeInterpreter,
+                     const boost::shared_ptr<AggregationScenarioData>& scenarioData,
+                     const boost::shared_ptr<QuantExt::CrossAssetModel>& model = nullptr,
+                     const boost::shared_ptr<NPVCube>& nettingCube = nullptr);
 
     QuantLib::Date asof_;
     std::string baseCurrency_;
@@ -78,11 +81,16 @@ protected:
     boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
     boost::shared_ptr<ore::data::CrossAssetModelData> crossAssetModelData_;
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
-    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_; 
+    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
     boost::shared_ptr<ReferenceDataManager> referenceData_;
     QuantLib::Real dimQuantile_;
     QuantLib::Size dimHorizonCalendarDays_;
-
+    map<string, bool> analytics_;
+    string calculationType_;
+    string dvaName_;
+    string fvaBorrowingCurve_;
+    string fvaLendingCurve_;
+    bool fullInitialCollateralisation_;
     boost::shared_ptr<PostProcess> postProcess_;
 };
 

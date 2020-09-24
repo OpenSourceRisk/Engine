@@ -86,7 +86,7 @@ protected:
     //! load market conventions
     void getConventions();
     //! load market parameters
-    void getMarketParameters();
+    boost::shared_ptr<TodaysMarketParameters> getMarketParameters();
     //! load reference data
     void getReferenceData();
     //! build engine factory for a given market
@@ -116,6 +116,11 @@ protected:
     //! build CAM
     boost::shared_ptr<QuantExt::CrossAssetModel> buildCam(boost::shared_ptr<Market> market,
                                                           const bool continueOnCalibrationError);
+    //! load pricing engine data
+    boost::shared_ptr<EngineData> getEngineData(string groupName);
+    //! load cross asset model data
+    boost::shared_ptr<CrossAssetModelData> getCrossAssetModelData();
+
     //! build scenarioGenerator
     virtual boost::shared_ptr<ScenarioGenerator>
     buildScenarioGenerator(boost::shared_ptr<Market> market,
