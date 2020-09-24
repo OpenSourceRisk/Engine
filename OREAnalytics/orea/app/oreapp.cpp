@@ -184,7 +184,7 @@ int OREApp::run() {
          * Use XVA runner if we want both simulation and XVA
          */
         bool useXvaRunner = false;
-        if (params_->has("xva", "useXvaRunner"))
+        if (params_->hasGroup("xva") && params_->has("xva", "useXvaRunner"))
             useXvaRunner = parseBool(params_->get("xva", "useXvaRunner"));
 
         if (simulate_ && xva_ && useXvaRunner) {
