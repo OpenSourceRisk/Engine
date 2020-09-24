@@ -51,7 +51,7 @@ public:
               const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr, QuantLib::Real dimQuantile = 0.99,
               QuantLib::Size dimHorizonCalendarDays = 14, map<string, bool> analytics = {},
               string calculationType = "Symmetric", string dvaName = "", string fvaBorrowingCurve = "",
-              string fvaLendingCurve = "", bool fullInitialCollateralisation = true);
+              string fvaLendingCurve = "", bool fullInitialCollateralisation = true, bool storeFlows = false);
 
     void runXva(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true);
 
@@ -91,6 +91,7 @@ protected:
     string fvaBorrowingCurve_;
     string fvaLendingCurve_;
     bool fullInitialCollateralisation_;
+    bool storeFlows_;
     boost::shared_ptr<PostProcess> postProcess_;
 };
 

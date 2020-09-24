@@ -313,11 +313,13 @@ boost::shared_ptr<XvaRunner> OREApp::getXvaRunner() {
         fullInitialCollateralisation = parseBool(params_->get("xva", "fullInitialCollateralisation"));
     }
 
+    bool storeFlows = params_->has("simulation", "storeFlows") && parseBool(params_->get("simulation", "storeFlows"));
+
     boost::shared_ptr<XvaRunner> xva = boost::make_shared<XvaRunner>(
         asof_, baseCcy, portfolio_, nettingSetManager, engineData, curveConfigs_, conventions_, marketParameters,
         simMarketParameters, scenarioGeneratorData, modelData, getExtraLegBuilders(), getExtraEngineBuilders(), referenceData,
         dimQuantile, dimHorizonCalendarDays, analytics, calculationType, dvaName, fvaBorrowingCurve, fvaLendingCurve,
-        fullInitialCollateralisation);
+        fullInitialCollateralisation, storeFlows);
 
     return xva;
 }

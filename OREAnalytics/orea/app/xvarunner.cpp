@@ -43,7 +43,8 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
                      std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
                      const boost::shared_ptr<ReferenceDataManager>& referenceData, Real dimQuantile,
                      Size dimHorizonCalendarDays, map<string, bool> analytics, string calculationType, string dvaName,
-                     string fvaBorrowingCurve, string fvaLendingCurve, bool fullInitialCollateralisation)
+                     string fvaBorrowingCurve, string fvaLendingCurve, bool fullInitialCollateralisation,
+                     bool storeFlows)
     : asof_(asof), baseCurrency_(baseCurrency), portfolio_(portfolio), netting_(netting), engineData_(engineData),
       curveConfigs_(curveConfigs), conventions_(conventions), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), scenarioGeneratorData_(scenarioGeneratorData),
@@ -51,7 +52,7 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
       extraEngineBuilders_(extraEngineBuilders), referenceData_(referenceData), dimQuantile_(dimQuantile),
       dimHorizonCalendarDays_(dimHorizonCalendarDays), analytics_(analytics), calculationType_(calculationType),
       dvaName_(dvaName), fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve),
-      fullInitialCollateralisation_(fullInitialCollateralisation) {}
+      fullInitialCollateralisation_(fullInitialCollateralisation), storeFlows_(storeFlows) {}
 
 void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnErr) {
     // ensure date is reset
@@ -99,9 +100,19 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
             ALOG("Forcing calculation type " << calculationType << " for simulations with close-out grid");
         }
     } else {
-        // depth 2: NPV and cash flow
-        cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(
-            asof_, portfolio_->ids(), scenarioGeneratorData_->grid()->dates(), scenarioGeneratorData_->samples(), 2);
+        if (storeFlows_) {
+            // regular, depth 2: NPV and cash flow
+            cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, portfolio_->ids(),
+                                                                    scenarioGeneratorData_->grid()->dates(),
+                                                                    scenarioGeneratorData_->samples(), 2, 0.0f);
+            calculators.push_back(
+                boost::make_shared<CashflowCalculator>(baseCurrency_, asof_, scenarioGeneratorData_->grid(), 1));
+        } else
+            // regular, depth 1
+            cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, portfolio_->ids(),
+                                                                   scenarioGeneratorData_->grid()->dates(),
+                                                                   scenarioGeneratorData_->samples(), 0.0f);
+
         cubeInterpreter = boost::make_shared<RegularCubeInterpretation>();
         calculators.push_back(npvCalculator);
         calculationType = calculationType_; //"Symmetric";
@@ -121,15 +132,7 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
 
     LOG("Run post processor");
 
-    // FIXME, move all DIM parameters to pricer arguments
-    if (analytics_.size() == 0) {
-        DLOG("Post processor analytics not set, creating defaults");
-        analytics_["cva"] = true;
-        analytics_["dva"] = false;
-        analytics_["colva"] = true;
-        analytics_["xva"] = false;
-        analytics_["dim"] = true;
-    }
+    QL_REQUIRE(analytics_.size() > 0, "analytics map not set");
 
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator =
         getDimCalculator(cube, cubeInterpreter, scenarioData, model, nettingCube);

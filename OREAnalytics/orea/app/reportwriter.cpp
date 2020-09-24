@@ -525,28 +525,29 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
                             boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess) {
     const vector<Date> dates = postProcess->cube()->dates();
     DayCounter dc = ActualActual();
+    Size precision = 2;
     report.addColumn("TradeId", string())
         .addColumn("NettingSetId", string())
-        .addColumn("CVA", double(), 6)
-        .addColumn("DVA", double(), 6)
-        .addColumn("FBA", double(), 6)
-        .addColumn("FCA", double(), 6)
-        .addColumn("FBAexOwnSP", double(), 6)
-        .addColumn("FCAexOwnSP", double(), 6)
-        .addColumn("FBAexAllSP", double(), 6)
-        .addColumn("FCAexAllSP", double(), 6)
-        .addColumn("COLVA", double(), 6)
-        .addColumn("MVA", double(), 6)
-        .addColumn("OurKVACCR", double(), 6)
-        .addColumn("TheirKVACCR", double(), 6)
-        .addColumn("OurKVACVA", double(), 6)
-        .addColumn("TheirKVACVA", double(), 6)
-        .addColumn("CollateralFloor", double(), 6)
-        .addColumn("AllocatedCVA", double(), 6)
-        .addColumn("AllocatedDVA", double(), 6)
+        .addColumn("CVA", double(), precision)
+        .addColumn("DVA", double(), precision)
+        .addColumn("FBA", double(), precision)
+        .addColumn("FCA", double(), precision)
+        .addColumn("FBAexOwnSP", double(), precision)
+        .addColumn("FCAexOwnSP", double(), precision)
+        .addColumn("FBAexAllSP", double(), precision)
+        .addColumn("FCAexAllSP", double(), precision)
+        .addColumn("COLVA", double(), precision)
+        .addColumn("MVA", double(), precision)
+        .addColumn("OurKVACCR", double(), precision)
+        .addColumn("TheirKVACCR", double(), precision)
+        .addColumn("OurKVACVA", double(), precision)
+        .addColumn("TheirKVACVA", double(), precision)
+        .addColumn("CollateralFloor", double(), precision)
+        .addColumn("AllocatedCVA", double(), precision)
+        .addColumn("AllocatedDVA", double(), precision)
         .addColumn("AllocationMethod", string())
-        .addColumn("BaselEPE", double(), 6)
-        .addColumn("BaselEEPE", double(), 6);
+        .addColumn("BaselEPE", double(), precision)
+        .addColumn("BaselEEPE", double(), precision);
 
     for (auto n : postProcess->nettingSetIds()) {
         report.next()
