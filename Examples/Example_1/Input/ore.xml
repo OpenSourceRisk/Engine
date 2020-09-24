@@ -52,7 +52,7 @@
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="useXvaRunner">Y</Parameter>
+      <Parameter name="useXvaRunner">N</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
