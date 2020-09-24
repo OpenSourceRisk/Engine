@@ -563,6 +563,7 @@
     <ClInclude Include="qle\indexes\ibor\dkkcibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\dkkois.hpp" />
     <ClInclude Include="qle\indexes\ibor\ester.hpp" />
+    <ClInclude Include="qle\indexes\ibor\jpyeytibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\hkdhibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\hufbubor.hpp" />
     <ClInclude Include="qle\indexes\ibor\idridrfix.hpp" />
@@ -661,6 +662,7 @@
     <ClInclude Include="qle\models\linkablecalibratedmodel.hpp" />
     <ClInclude Include="qle\models\parametrization.hpp" />
     <ClInclude Include="qle\models\piecewiseconstanthelper.hpp" />
+    <ClInclude Include="qle\models\projectedcrossassetmodel.hpp" />
     <ClInclude Include="qle\models\pseudoparameter.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcclgmfxoptionengine.hpp" />
@@ -903,6 +905,7 @@
     <ClCompile Include="qle\models\linkablecalibratedmodel.cpp" />
     <ClCompile Include="qle\models\parametrization.cpp" />
     <ClCompile Include="qle\models\piecewiseconstanthelper.cpp" />
+    <ClCompile Include="qle\models\projectedcrossassetmodel.cpp" />
     <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticcclgmfxoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticdkcpicapfloorengine.cpp" />

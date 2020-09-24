@@ -98,11 +98,32 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
 
 } // NumericLgmSwaptionEngineBase::calculate
 
+std::map<std::string, boost::any> NumericLgmSwaptionEngineBase::additionalResults() const {
+    std::vector<Real> exerciseTimes, alpha, kappa, hullWhiteSigma;
+    for (auto const& d : exercise_->dates()) {
+        if (d > model()->parametrization()->termStructure()->referenceDate()) {
+            Real t = model()->parametrization()->termStructure()->timeFromReference(d);
+            exerciseTimes.push_back(t);
+            alpha.push_back(model()->parametrization()->alpha(t));
+            kappa.push_back(model()->parametrization()->kappa(t));
+            hullWhiteSigma.push_back(model()->parametrization()->hullWhiteSigma(t));
+        }
+    }
+    std::map<std::string, boost::any> result;
+    result["exerciseTimes"] = exerciseTimes;
+    result["lgmAlpha"] = alpha;
+    result["lgmKappa"] = kappa;
+    result["hullWhiteSigma"] = hullWhiteSigma;
+    return result;
+}
+
 void NumericLgmSwaptionEngine::calculate() const {
     // TODO ParYieldCurve cash-settled swaptions are priced as if CollateralizedCashPrice, this can be refined
     iborIndex_ = arguments_.swap->iborIndex();
     exercise_ = arguments_.exercise;
     results_.value = NumericLgmSwaptionEngineBase::calculate();
+    auto tmp = NumericLgmSwaptionEngineBase::additionalResults();
+    results_.additionalResults.insert(tmp.begin(), tmp.end());
 } // NumericLgmSwaptionEngine::calculate
 
 Real NumericLgmSwaptionEngine::conditionalSwapValue(Real x, Real t, const Date expiry0) const {
@@ -140,6 +161,8 @@ void NumericLgmNonstandardSwaptionEngine::calculate() const {
     iborIndex_ = arguments_.swap->iborIndex();
     exercise_ = arguments_.exercise;
     results_.value = NumericLgmSwaptionEngineBase::calculate();
+    auto tmp = NumericLgmSwaptionEngineBase::additionalResults();
+    results_.additionalResults.insert(tmp.begin(), tmp.end());
 } // NumericLgmSwaptionEngine::calculate
 
 Real NumericLgmNonstandardSwaptionEngine::conditionalSwapValue(Real x, Real t, const Date expiry0) const {

@@ -320,10 +320,12 @@ map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM()
         }
     }
     // set some reasonable bounds on the sqrt time scaling, so that we are not looking at a ridiculous time horizon
-    QL_REQUIRE((sqrtTimeScaling * sqrtTimeScaling >= 0.5) && (sqrtTimeScaling * sqrtTimeScaling <= 2.0),
-               "T0 IM Estimation - The estimation time horizon from grid "
-                   << "is not sufficiently close to t0+MPOR - "
-                   << QuantLib::io::iso_date(cube_->dates()[relevantDateIdx]));
+    if (sqrtTimeScaling < std::sqrt(0.5) || sqrtTimeScaling > std::sqrt(2.0)) {
+        WLOG("T0 IM Estimation - The estimation time horizon from grid is not sufficiently close to t0+MPOR - "
+             << QuantLib::io::iso_date(cube_->dates()[relevantDateIdx])
+             << ", the T0 IM estimate might be inaccurate. Consider inserting a first grid tenor closer to the dim "
+                "horizon");
+    }
 
     // TODO: Ensure that the simulation containers read-from below are indeed populated
 

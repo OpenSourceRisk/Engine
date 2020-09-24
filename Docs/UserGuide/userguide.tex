@@ -3449,6 +3449,7 @@ Let us discuss this section using the following example
   <Discretization>Exact</Discretization>
   <Grid>80,3M</Grid>
   <Calendar>EUR,USD,GBP,CHF</Calendar>
+  <DayCounter>ACT/ACT</DayCounter>
   <Sequence>SobolBrownianBridge</Sequence>
   <Seed>42</Seed>
   <Samples>1000</Samples>
@@ -3470,6 +3471,7 @@ purposes)
 required because the simulation must step over 'good' dates on which index fixings can be stored.
 %\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for
 % more efficient memory usage. \todo[inline]{Remove Scenario choice}
+\item {\tt DayCounter:} Day count convention used to translate dates to times. Optional, defaults to ActualActual ISDA.
 \item {\tt Sequence:} Choose random sequence generator ({\em MersenneTwister, MersenneTwisterAntithetic, Sobol,
 SobolBrownianBridge}).
 \item {\tt Seed:} Random number generator seed

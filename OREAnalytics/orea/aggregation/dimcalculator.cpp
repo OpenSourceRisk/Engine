@@ -66,6 +66,10 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
     Size dates = cube_->dates().size();
     Size samples = cube_->samples();
 
+    if (!cubeInterpretation_->hasMporFlows(cube_)) {
+        WLOG("cube holds no mpor flows, will assume no flows in the dim calculation");
+    }
+
     // initialise aggregate NPV and Flow by date and scenario
     set<string> nettingSets;
     for (Size i = 0; i < portfolio_->size(); ++i) {
@@ -84,7 +88,8 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
             for (Size k = 0; k < samples; ++k) {
                 Real defaultNpv = cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
                 Real closeOutNpv = cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
-                Real mporFlow = cubeInterpretation_->getMporFlows(cube_, i, j, k);
+                Real mporFlow =
+                    cubeInterpretation_->hasMporFlows(cube_) ? cubeInterpretation_->getMporFlows(cube_, i, j, k) : 0.0;
                 nettingSetNPV_[nettingSetId][j][k] += defaultNpv;
                 nettingSetCloseOutNPV_[nettingSetId][j][k] += closeOutNpv;
                 nettingSetFLOW_[nettingSetId][j][k] += mporFlow;

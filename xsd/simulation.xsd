@@ -15,6 +15,7 @@
       <xs:element type="discretizationType" name="Discretization"/>
       <xs:element type="xs:string" name="Grid"/>
       <xs:element type="xs:string" name="Calendar"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
       <!-- can be multiple so we don't use calendar type -->
       <xs:element type="sequenceType" name="Sequence"/>
       <xs:element type="xs:string" name="Scenario"/>

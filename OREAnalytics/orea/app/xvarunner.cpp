@@ -84,7 +84,7 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
     boost::shared_ptr<NPVCalculator> npvCalculator = boost::make_shared<NPVCalculator>(baseCurrency_);
     boost::shared_ptr<NPVCube> cube;
     boost::shared_ptr<CubeInterpretation> cubeInterpreter;
-
+    string calculationType;
     if (scenarioGeneratorData_->withCloseOutLag()) {
         // depth 2: NPV and close-out NPV
         cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, portfolio_->ids(),
@@ -94,18 +94,24 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
         cubeInterpreter = boost::make_shared<MporGridCubeInterpretation>(scenarioGeneratorData_->grid());
         // default date value stored at index 0, close-out value at index 1
         calculators.push_back(boost::make_shared<MPORCalculator>(npvCalculator, 0, 1));
-    } else {
+        calculationType = "NoLag";
+	if (calculationType_ != calculationType) {
+	    ALOG("Forcing calculation type " << calculationType << " for simulations with close-out grid");
+	}
+    }
+    else {
         // depth 2: NPV and cash flow
         cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(
             asof_, portfolio_->ids(), scenarioGeneratorData_->grid()->dates(), scenarioGeneratorData_->samples(), 2);
         cubeInterpreter = boost::make_shared<RegularCubeInterpretation>();
         calculators.push_back(npvCalculator);
+        calculationType = calculationType_; //"Symmetric";
     }
 
     boost::shared_ptr<NPVCube> nettingCube = getNettingSetCube(calculators);
-
-    boost::shared_ptr<AggregationScenarioData> scenarioData = boost::make_shared<InMemoryAggregationScenarioData>(
-        scenarioGeneratorData_->grid()->size(), scenarioGeneratorData_->samples());
+    
+    boost::shared_ptr<AggregationScenarioData> scenarioData =
+        boost::make_shared<InMemoryAggregationScenarioData>(scenarioGeneratorData_->grid()->valuationDates().size(), scenarioGeneratorData_->samples());
 
     simMarket->aggregationScenarioData() = scenarioData; // ??? simMarket gets agg data?
 
@@ -117,7 +123,6 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
     LOG("Run post processor");
 
     // FIXME, move all DIM parameters to pricer arguments
-    // map<string, bool> analytics;
     if (analytics_.size() == 0) {
         DLOG("Post processor analytics not set, creating defaults");
         analytics_["cva"] = true;
@@ -130,7 +135,7 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator =
         getDimCalculator(cube, cubeInterpreter, scenarioData, model, nettingCube);
     postProcess_ = boost::make_shared<PostProcess>(portfolio_, netting_, market, "", cube, scenarioData, analytics_,
-                                                   baseCurrency_, "None", 1.0, 0.95, calculationType_, dvaName_,
+                                                   baseCurrency_, "None", 1.0, 0.95, calculationType, dvaName_,
                                                    fvaBorrowingCurve_, fvaLendingCurve_, dimCalculator, cubeInterpreter,
                                                    fullInitialCollateralisation_);
 }
