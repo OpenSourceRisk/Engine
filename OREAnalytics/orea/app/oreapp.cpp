@@ -183,11 +183,11 @@ int OREApp::run() {
         /***************************************************
          * Use XVA runner if we want both simulation and XVA
          */
-        useXvaRunner_ = false;
+        bool useXvaRunner = false;
         if (params_->hasGroup("xva") && params_->has("xva", "useXvaRunner"))
-            useXvaRunner_ = parseBool(params_->get("xva", "useXvaRunner"));
+            useXvaRunner = parseBool(params_->get("xva", "useXvaRunner"));
 
-        if (simulate_ && xva_ && useXvaRunner_) {
+        if (simulate_ && xva_ && useXvaRunner) {
 
 	    out_ << setw(tab_) << left << "XVA simulation... " << flush;
 	    boost::shared_ptr<XvaRunner> xva = getXvaRunner();
@@ -1146,10 +1146,7 @@ void OREApp::writeXVAReports() {
     string rawCubeOutputFile = params_->get("xva", "rawCubeOutputFile");
     CubeWriter cw1(outputPath_ + "/" + rawCubeOutputFile);
     map<string, string> nettingSetMap = portfolio_->nettingSetMap();
-    if (useXvaRunner_)
-        cw1.write(postProcess_->cube(), nettingSetMap);
-    else
-        cw1.write(cube_, nettingSetMap);
+    cw1.write(postProcess_->cube(), nettingSetMap);
     
     string netCubeOutputFile = params_->get("xva", "netCubeOutputFile");
     CubeWriter cw2(outputPath_ + "/" + netCubeOutputFile);

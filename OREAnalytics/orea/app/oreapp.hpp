@@ -256,7 +256,6 @@ protected:
 
 private:
     virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }
-    bool useXvaRunner_;
 };
 } // namespace analytics
 } // namespace ore
