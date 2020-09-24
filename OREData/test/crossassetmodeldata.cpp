@@ -21,7 +21,9 @@
 #include <oret/fileutilities.hpp>
 #include <oret/toplevelfixture.hpp>
 
+#include <ored/model/calibrationinstruments/cpicapfloor.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
+#include <ored/model/inflation/infdkdata.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 
 using namespace QuantLib;
@@ -131,44 +133,31 @@ boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> irConfigsData() {
     return lgmDataVector;
 }
 
-boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infConfigsData() {
+vector<boost::shared_ptr<InflationModelData>> infConfigsData() {
 
-    // Create two instances
-    boost::shared_ptr<InfDkData> infDkData1(new data::InfDkData());
+    // TODO: Replacing the data that was here for now. It doesn't make sense.
 
-    vector<std::string> expiries = {"1Y", "2Y", "36M"};
-    vector<std::string> strikes = {"0.03", "0.03", "0.03"};
+    vector<boost::shared_ptr<CalibrationInstrument>> instruments;
+    vector<Period> expiries = { 1 * Years, 2 * Years, 36 * Months };
+    auto strike = boost::make_shared<AbsoluteStrike>(0.03);
+    for (const Period& expiry : expiries) {
+        instruments.push_back(boost::make_shared<CpiCapFloor>(CapFloor::Floor, expiry, strike));
+    }
+    CalibrationBasket cb(instruments);
+    vector<CalibrationBasket> calibrationBaskets = { cb };
 
-    // First instance
-    infDkData1->infIndex() = "EUHICPXT";
-    infDkData1->currency() = "EUR";
-    infDkData1->calibrationType() = parseCalibrationType("BOOTSTRAP");
-    infDkData1->reversionType() = parseReversionType("HULLWHITE");
-    infDkData1->volatilityType() = parseVolatilityType("HAGAN");
-    std::vector<Time> hTimes = {1.0, 2.0, 3.0, 4.0};
-    std::vector<Real> hValues = {1.0, 2.0, 3.0, 4.0};
-    std::vector<Time> aTimes = {1.0, 2.0, 3.0, 4.0};
-    std::vector<Real> aValues = {1.0, 2.0, 3.0, 4.0};
+    ReversionParameter reversion(LgmData::ReversionType::HullWhite, false, ParamType::Piecewise,
+        { 1.0, 2.0, 3.0, 4.0 }, { 1.0, 2.0, 3.0, 4.0, 4.0 });
 
-    infDkData1->calibrateH() = false;
-    infDkData1->hParamType() = parseParamType("PIECEWISE");
+    VolatilityParameter volatility(LgmData::VolatilityType::Hagan, false, ParamType::Piecewise,
+        { 1.0, 2.0, 3.0, 4.0 }, { 1.0, 2.0, 3.0, 4.0, 4.0 });
 
-    infDkData1->hTimes() = hTimes;
-    infDkData1->hValues() = hValues;
+    LgmReversionTransformation rt(1.0, 1.0);
 
-    infDkData1->calibrateA() = false;
-    infDkData1->aParamType() = parseParamType("PIECEWISE");
-    infDkData1->aTimes() = aTimes;
-    infDkData1->aValues() = aValues;
-    infDkData1->shiftHorizon() = 1.0;
+    boost::shared_ptr<InfDkData> data = boost::make_shared<InfDkData>(CalibrationType::Bootstrap, calibrationBaskets,
+        "EUR", "EUHICPXT", reversion, volatility, rt);
 
-    infDkData1->optionExpiries() = expiries;
-    infDkData1->optionStrikes() = strikes;
-    infDkData1->scaling() = 1.0;
-
-    boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infDkDataVector(new vector<boost::shared_ptr<InfDkData>>);
-    *infDkDataVector = {infDkData1};
-    return infDkDataVector;
+    return {data};
 }
 
 boost::shared_ptr<vector<boost::shared_ptr<FxBsData>>> fxConfigsData() {
@@ -241,7 +230,7 @@ boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
     crossAssetData->irConfigs() = *irConfigsData();
     crossAssetData->fxConfigs() = *fxConfigsData();
     crossAssetData->eqConfigs() = *eqConfigsData();
-    crossAssetData->infConfigs() = *infConfigsData();
+    crossAssetData->infConfigs() = infConfigsData();
 
     CorrelationMatrixBuilder cmb;
     cmb.addCorrelation("IR:EUR", "IR:USD", 1.0);
@@ -249,7 +238,7 @@ boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
     cmb.addCorrelation("IR:USD", "IR:JPY", 1.0);
     cmb.addCorrelation("INF:EUHICPXT", "IR:EUR", 1.0);
 
-    crossAssetData->correlations() = cmb.data();
+    crossAssetData->correlations() = cmb.correlations();
 
     crossAssetData->bootstrapTolerance() = 0.001;
 
