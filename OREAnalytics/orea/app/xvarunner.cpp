@@ -48,7 +48,7 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
       curveConfigs_(curveConfigs), conventions_(conventions), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), scenarioGeneratorData_(scenarioGeneratorData),
       crossAssetModelData_(crossAssetModelData), extraLegBuilders_(extraLegBuilders),
-      extraEngineBuilders_(extraEngineBuilders), dimQuantile_(dimQuantile),
+      extraEngineBuilders_(extraEngineBuilders), referenceData_(referenceData), dimQuantile_(dimQuantile),
       dimHorizonCalendarDays_(dimHorizonCalendarDays), analytics_(analytics), calculationType_(calculationType),
       dvaName_(dvaName), fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve),
       fullInitialCollateralisation_(fullInitialCollateralisation) {}
@@ -95,11 +95,10 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
         // default date value stored at index 0, close-out value at index 1
         calculators.push_back(boost::make_shared<MPORCalculator>(npvCalculator, 0, 1));
         calculationType = "NoLag";
-	if (calculationType_ != calculationType) {
-	    ALOG("Forcing calculation type " << calculationType << " for simulations with close-out grid");
-	}
-    }
-    else {
+        if (calculationType_ != calculationType) {
+            ALOG("Forcing calculation type " << calculationType << " for simulations with close-out grid");
+        }
+    } else {
         // depth 2: NPV and cash flow
         cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(
             asof_, portfolio_->ids(), scenarioGeneratorData_->grid()->dates(), scenarioGeneratorData_->samples(), 2);
@@ -109,9 +108,9 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
     }
 
     boost::shared_ptr<NPVCube> nettingCube = getNettingSetCube(calculators);
-    
-    boost::shared_ptr<AggregationScenarioData> scenarioData =
-        boost::make_shared<InMemoryAggregationScenarioData>(scenarioGeneratorData_->grid()->valuationDates().size(), scenarioGeneratorData_->samples());
+
+    boost::shared_ptr<AggregationScenarioData> scenarioData = boost::make_shared<InMemoryAggregationScenarioData>(
+        scenarioGeneratorData_->grid()->valuationDates().size(), scenarioGeneratorData_->samples());
 
     simMarket->aggregationScenarioData() = scenarioData; // ??? simMarket gets agg data?
 

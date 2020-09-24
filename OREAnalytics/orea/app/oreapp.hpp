@@ -31,6 +31,7 @@
 #include <orea/app/parameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
+#include <orea/app/xvarunner.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/engine/parametricvar.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
@@ -99,6 +100,8 @@ protected:
     //! load portfolio from file(s)
     boost::shared_ptr<Portfolio> loadPortfolio();
 
+    //! get the XVA runner
+    virtual boost::shared_ptr<XvaRunner> getXvaRunner();
     //! generate NPV cube
     virtual void generateNPVCube();
     //! get an instance of an aggregationScenarioData class
