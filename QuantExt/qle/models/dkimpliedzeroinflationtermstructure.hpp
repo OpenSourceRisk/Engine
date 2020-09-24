@@ -16,107 +16,41 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file dkimpliedzeroinflationtermstructure.hpp
-    \brief zero inflation term structure implied by a DK model
+/*! \file qle/models/dkimpliedzeroinflationtermstructure.hpp
+    \brief zero inflation term structure implied by a Dodgson Kainth (DK) model
     \ingroup models
 */
 
-#ifndef quantext_dk_implied_zits_hpp
-#define quantext_dk_implied_zits_hpp
+#ifndef quantext_dk_implied_zero_inflation_term_structure_hpp
+#define quantext_dk_implied_zero_inflation_term_structure_hpp
 
 #include <qle/models/crossassetmodel.hpp>
-
-#include <ql/termstructures/inflationtermstructure.hpp>
+#include <qle/models/zeroinflationmodeltermstructure.hpp>
 
 namespace QuantExt {
-using namespace QuantLib;
 
-//! Dk Implied Zero Inflation Term Structure
-/*! The termstructure has the reference date of the model's
-termstructure at construction, but you can vary this
-as well as the state.
-The purely time based variant is mainly there for
-perfomance reasons, note that it does not provide the
-full term structure interface and does not send
-notifications on reference time updates.
-
-\ingroup models
+/*! Dodgson Kainth (DK) implied zero inflation term structure
+    \ingroup models
 */
-
-class DkImpliedZeroInflationTermStructure : public ZeroInflationTermStructure {
+class DkImpliedZeroInflationTermStructure : public ZeroInflationModelTermStructure {
 public:
-    DkImpliedZeroInflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, Size index);
-
-    Date maxDate() const;
-    Time maxTime() const;
-    Date baseDate() const;
-
-    const Date& referenceDate() const;
-
-    void referenceDate(const Date& d);
-    void state(const Real s_z, const Real s_y);
-    void move(const Date& d, const Real s_z, const Real s_y);
-
-    void update();
-    Real I_t(Time t) const;
+    /*! Constructor taking the cross asset model, \p model, and the index of the relevant inflation component within
+        the model, \p index.
+    */
+    DkImpliedZeroInflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
 
 protected:
-    Real zeroRateImpl(Time t) const;
+    //! \name ZeroInflationTermStructure interface
+    //@{
+    QuantLib::Real zeroRateImpl(QuantLib::Time t) const override;
+    //@}
 
-    const boost::shared_ptr<CrossAssetModel> model_;
-    Size index_;
-    Date referenceDate_;
-    Real relativeTime_, state_z_, state_y_;
+    //! \name ZeroInflationModelTermStructure interface
+    //@{
+    void checkState() const override;
+    //@}
 };
 
-// inline
-
-inline Date DkImpliedZeroInflationTermStructure::maxDate() const {
-    // we don't care - let the underlying classes throw
-    // exceptions if applicable
-    return Date::maxDate();
 }
-
-inline Time DkImpliedZeroInflationTermStructure::maxTime() const {
-    // see maxDate
-    return QL_MAX_REAL;
-}
-
-inline Date DkImpliedZeroInflationTermStructure::baseDate() const { return referenceDate_ - observationLag_; }
-
-inline const Date& DkImpliedZeroInflationTermStructure::referenceDate() const { return referenceDate_; }
-
-inline void DkImpliedZeroInflationTermStructure::referenceDate(const Date& d) {
-    referenceDate_ = d;
-    relativeTime_ = dayCounter().yearFraction(model_->infdk(index_)->termStructure()->referenceDate(), referenceDate_);
-    update();
-}
-
-inline void DkImpliedZeroInflationTermStructure::state(const Real s_z, const Real s_y) {
-    state_z_ = s_z;
-    state_y_ = s_y;
-    notifyObservers();
-}
-
-inline void DkImpliedZeroInflationTermStructure::move(const Date& d, const Real s_z, const Real s_y) {
-    state(s_z, s_y);
-    referenceDate(d);
-}
-
-inline void DkImpliedZeroInflationTermStructure::update() { notifyObservers(); }
-
-inline Real DkImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
-    QL_REQUIRE(t >= 0.0, "negative time (" << t << ") given");
-    std::pair<Real, Real> ii = model_->infdkI(index_, relativeTime_, relativeTime_ + t, state_z_, state_y_);
-    return std::pow(ii.second, 1 / t) - 1;
-}
-
-inline Real DkImpliedZeroInflationTermStructure::I_t(Time t) const {
-    QL_REQUIRE(t >= 0.0, "negative time (" << t << ") given");
-    std::pair<Real, Real> ii = model_->infdkI(index_, relativeTime_, relativeTime_ + t, state_z_, state_y_);
-    return ii.first;
-}
-
-} // namespace QuantExt
 
 #endif

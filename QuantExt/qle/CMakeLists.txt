@@ -103,6 +103,9 @@ models/fxbsparametrization.cpp
 models/fxbspiecewiseconstantparametrization.cpp
 models/fxeqoptionhelper.cpp
 models/gaussian1dcrossassetadaptor.cpp
+models/infjyparameterization.cpp
+models/jyimpliedyoyinflationtermstructure.cpp
+models/jyimpliedzeroinflationtermstructure.cpp
 models/lgm.cpp
 models/lgmimplieddefaulttermstructure.cpp
 models/lgmimpliedyieldtermstructure.cpp
@@ -110,6 +113,8 @@ models/linkablecalibratedmodel.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
 models/projectedcrossassetmodel.cpp
+models/yoyinflationmodeltermstructure.cpp
+models/zeroinflationmodeltermstructure.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
 pricingengines/analyticcclgmfxoptionengine.cpp
 pricingengines/analyticdkcpicapfloorengine.cpp
@@ -364,11 +369,14 @@ models/fxbspiecewiseconstantparametrization.hpp
 models/fxeqoptionhelper.hpp
 models/gaussian1dcrossassetadaptor.hpp
 models/infdkparametrization.hpp
+models/infjyparameterization.hpp
 models/irlgm1fconstantparametrization.hpp
 models/irlgm1fparametrization.hpp
 models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp
 models/irlgm1fpiecewiseconstantparametrization.hpp
 models/irlgm1fpiecewiselinearparametrization.hpp
+models/jyimpliedyoyinflationtermstructure.hpp
+models/jyimpliedzeroinflationtermstructure.hpp
 models/lgm.hpp
 models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
@@ -377,6 +385,8 @@ models/parametrization.hpp
 models/piecewiseconstanthelper.hpp
 models/projectedcrossassetmodel.hpp
 models/pseudoparameter.hpp
+models/yoyinflationmodeltermstructure.hpp
+models/zeroinflationmodeltermstructure.hpp
 pricingengines/analyticcashsettledeuropeanengine.hpp
 pricingengines/analyticcclgmfxoptionengine.hpp
 pricingengines/analyticdkcpicapfloorengine.hpp

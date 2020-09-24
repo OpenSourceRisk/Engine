@@ -985,6 +985,35 @@ VolatilityType parseVolatilityQuoteType(const string& s) {
     }
 }
 
+CapFloor::Type parseCapFloorType(const string& s) {
+    if (s == "Cap") {
+        return CapFloor::Cap;
+    } else if (s == "Floor") {
+        return CapFloor::Floor;
+    } else if (s == "Collar") {
+        return CapFloor::Collar;
+    } else {
+        QL_FAIL("Unknown cap floor type " << s);
+    }
+}
+
+QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const string& s) {
+    namespace CT = QuantExt::CrossAssetModelTypes;
+    if (s == "IR") {
+        return CT::IR;
+    } else if (s == "FX") {
+        return CT::FX;
+    } else if (s == "INF") {
+        return CT::INF;
+    } else if (s == "CR") {
+        return CT::CR;
+    } else if (s == "EQ") {
+        return CT::EQ;
+    } else {
+        QL_FAIL("Unknown cross asset model type " << s);
+    }
+}
+
 pair<string, string> parseBoostAny(const boost::any& anyType) {
     string resultType;
     std::ostringstream oss;
@@ -1044,5 +1073,6 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
     }
     return make_pair(resultType, oss.str());
 }
+
 } // namespace data
 } // namespace ore
