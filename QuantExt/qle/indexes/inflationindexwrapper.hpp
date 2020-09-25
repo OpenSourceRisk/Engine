@@ -90,6 +90,9 @@ public:
     //@}
 };
 
+//! Expose private method ZeroInflationIndex::needsForecast()
+bool needsForecast(const boost::shared_ptr<ZeroInflationIndex>& index, const Date& fixingDate);
+
 } // namespace QuantExt
 
 #endif
