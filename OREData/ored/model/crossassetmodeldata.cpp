@@ -17,9 +17,12 @@
 */
 
 #include <ored/model/crossassetmodeldata.hpp>
+#include <ored/model/inflation/infdkdata.hpp>
+#include <ored/model/inflation/infjydata.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
@@ -36,13 +39,39 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/lexical_cast.hpp>
 
+
+namespace {
+
+using ore::data::CorrelationFactor;
+using ore::data::parseCorrelationFactor;
+using ore::data::parseInteger;
+using ore::data::XMLNode;
+using ore::data::XMLUtils;
+using std::string;
+
+CorrelationFactor fromNode(ore::data::XMLNode* node, bool firstFactor) {
+
+    string factorTag = firstFactor ? "factor1" : "factor2";
+    string idxTag = firstFactor ? "index1" : "index2";
+
+    CorrelationFactor factor = parseCorrelationFactor(XMLUtils::getAttribute(node, factorTag));
+    string strIdx = XMLUtils::getAttribute(node, idxTag);
+    if (strIdx != "") {
+        factor.index = parseInteger(strIdx);
+    }
+
+    return factor;
+}
+
+}
+
 namespace ore {
 namespace data {
 
 bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
 
     // compare correlations by value (not the handle links)
-    map<pair<string, string>, Handle<Quote>>::const_iterator corr1, corr2;
+    map<CorrelationKey, Handle<Quote>>::const_iterator corr1, corr2;
     for (corr1 = correlations_.begin(), corr2 = rhs.correlations_.begin();
          corr1 != correlations_.end() && corr2 != rhs.correlations_.end(); ++corr1, ++corr2) {
         if (corr1->first != corr2->first || !close_enough(corr1->second->value(), corr2->second->value()))
@@ -76,11 +105,8 @@ bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
         }
     }
 
-    for (Size i = 0; i < infConfigs_.size(); i++) {
-        if (*infConfigs_[i] != *(rhs.infConfigs_[i])) {
-            return false;
-        }
-    }
+    // Not checking inflation model data for equality. The equality operators were only written to support 
+    // unit testing toXML and fromXML. Questionable if it should be done this way.
 
     return true;
 }
@@ -226,55 +252,62 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     for (Size i = 0; i < eqConfigs_.size(); i++)
         LOG("CrossAssetModelData: EQ config name " << i << " = " << eqConfigs_[i]->eqName());
 
-    // Configure INF model components
+    // Read the inflation model data.
+    if (XMLNode* n = XMLUtils::getChildNode(modelNode, "InflationIndexModels")) {
+        
+        map<string, boost::shared_ptr<InflationModelData>> mp;
+        
+        // Loop over nodes and pick out any with name: LGM, DodgsonKainth or JarrowYildirim.
+        for (XMLNode* cn = XMLUtils::getChildNode(n); cn; cn = XMLUtils::getNextSibling(cn)) {
 
-    std::map<std::string, boost::shared_ptr<InfDkData>> infDataMap;
-    XMLNode* infNode = XMLUtils::getChildNode(modelNode, "InflationIndexModels");
-    if (infNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(infNode, "LGM"); child;
-             child = XMLUtils::getNextSibling(child, "LGM")) {
+            boost::shared_ptr<InflationModelData> imData;
 
-            boost::shared_ptr<InfDkData> config(new InfDkData());
-            config->fromXML(child);
-
-            for (Size i = 0; i < config->optionExpiries().size(); i++) {
-                LOG("Cross-Asset Inflation Index calibration option " << config->optionExpiries()[i] << " "
-                                                                      << config->optionStrikes()[i]);
+            string nodeName = XMLUtils::getNodeName(cn);
+            if (nodeName == "LGM" || nodeName == "DodgsonKainth") {
+                imData = boost::make_shared<InfDkData>();
+            } else if (nodeName == "JarrowYildirim") {
+                imData = boost::make_shared<InfJyData>();
+            } else {
+                WLOG("Did not recognise InflationIndexModels node with name " << nodeName <<
+                    " as a valid inflation index model so skipping it.");
+                continue;
             }
 
-            infDataMap[config->infIndex()] = config;
+            const string& indexName = imData->index();
+            imData->fromXML(cn);
+            mp[indexName] = imData;
 
-            LOG("CrossAssetModelData: Inflation Index config built with key " << config->infIndex());
+            LOG("CrossAssetModelData: inflation index model data built with key " << indexName);
         }
+        
+        // Align the inflation model data with the infindices_ read in above and handle defaults
+        buildInfConfigs(mp);
+
+        // Log the index number and inflation index name for each inflation index model.
+        for (Size i = 0; i < infConfigs_.size(); i++)
+            LOG("CrossAssetModelData: INF config name " << i << " = " << infConfigs_[i]->index());
+
     } else {
-        LOG("No Inflation Index Models section found");
+        LOG("No InflationIndexModels node found so no inflation models configured.");
     }
 
-    buildInfConfigs(infDataMap);
-
-    for (Size i = 0; i < infConfigs_.size(); i++)
-        LOG("CrossAssetModelData: INF config name " << i << " = " << infConfigs_[i]->infIndex());
-
     // Configure correlation structure
-
+    LOG("CrossAssetModelData: adding correlations.");
     XMLNode* correlationNode = XMLUtils::getChildNode(modelNode, "InstantaneousCorrelations");
     CorrelationMatrixBuilder cmb;
     if (correlationNode) {
         vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(correlationNode, "Correlation");
         for (Size i = 0; i < nodes.size(); ++i) {
-            string f1 = XMLUtils::getAttribute(nodes[i], "factor1");
-            string f2 = XMLUtils::getAttribute(nodes[i], "factor2");
-            string v = XMLUtils::getNodeValue(nodes[i]);
-            if (f1 != "" && f2 != "" && v != "") {
-                cmb.addCorrelation(f1, f2, boost::lexical_cast<Real>(v));
-                LOG("CrossAssetModelData: add correlation " << f1 << " " << f2 << " " << v);
-            }
+            CorrelationFactor factor_1 = fromNode(nodes[i], true);
+            CorrelationFactor factor_2 = fromNode(nodes[i], false);
+            Real corr = parseReal(XMLUtils::getNodeValue(nodes[i]));
+            cmb.addCorrelation(factor_1, factor_2, corr);
         }
     } else {
         QL_FAIL("No InstantaneousCorrelations found in model configuration XML");
     }
 
-    correlations_ = cmb.data();
+    correlations_ = cmb.correlations();
 
     validate();
 
@@ -366,32 +399,40 @@ void CrossAssetModelData::buildEqConfigs(std::map<std::string, boost::shared_ptr
     }
 }
 
-void CrossAssetModelData::buildInfConfigs(std::map<std::string, boost::shared_ptr<InfDkData>>& infDataMap) {
-    // Append Inf configurations into the infConfigs vector in the order of the inflation
-    // indices in the infindices_ vector.
-    // If there is an Inf configuration for any of the names missing,
-    // then we will look up the configuration with key "default" and use this instead.
-    // If this is not provided either we will throw an exception.
-    for (Size i = 0; i < infindices_.size(); i++) {
-        string index = infindices_[i];
-        if (infDataMap.find(index) != infDataMap.end())
-            infConfigs_.push_back(infDataMap[index]);
-        else { // copy from default
-            LOG("Inflation configuration missing for index " << index << ", using default");
-            if (infDataMap.find("default") == infDataMap.end()) {
-                ALOG("Both default INF and " << index << " INF configuration missing");
-                QL_FAIL("Both default INF and " << index << " INF configuration missing");
-            }
-            boost::shared_ptr<InfDkData> def = infDataMap["default"];
-            boost::shared_ptr<InfDkData> infData = boost::make_shared<InfDkData>(
-                index, def->currency(), def->calibrationType(), def->reversionType(), def->volatilityType(),
-                def->calibrateH(), def->hParamType(), def->hTimes(), def->hValues(), def->calibrateA(),
-                def->aParamType(), def->aTimes(), def->aValues(), def->shiftHorizon(), def->scaling(), def->capFloor(),
-                def->optionExpiries(), def->optionTerms(), def->optionStrikes());
+void CrossAssetModelData::buildInfConfigs(const map<string, boost::shared_ptr<InflationModelData>>& mp) {
+    
+    // Append inflation model data to the infConfigs_ vector in the order of the inflation indices in the infindices_ 
+    // vector.
 
-            infConfigs_.push_back(infData);
+    // If for any of the inflation indices in the infindices_ vector, there is no inflation model data in mp then the 
+    // default inflation model data is used. The default inflation model data should be in mp under the key name 
+    // "default". If it is not provided either, an exception is thrown.
+
+    for (const string& indexName : infindices_) {
+        
+        auto it = mp.find(indexName);
+        if (it != mp.end()) {
+            infConfigs_.push_back(it->second);
+        } else {
+            
+            LOG("Inflation index model data missing for index " << indexName << " so attempt to use default");
+
+            auto itDefault = mp.find("default");
+            QL_REQUIRE(itDefault != mp.end(), "Inflation index model data missing for index " <<
+                indexName << " and for default.");
+
+            // Make a copy of the model data and add to vector.
+            boost::shared_ptr<InflationModelData> imData = itDefault->second;
+            if (auto dk = boost::dynamic_pointer_cast<InfDkData>(imData)) {
+                infConfigs_.push_back(boost::make_shared<InfDkData>(*dk));
+            } else if (auto jy = boost::dynamic_pointer_cast<InfJyData>(imData)) {
+                infConfigs_.push_back(boost::make_shared<InfJyData>(*jy));
+            } else {
+                QL_FAIL("Expected inflation model data to be DK or JY.");
+            }
         }
-        LOG("CrossAssetModelData: INF config added for name " << index);
+
+        LOG("CrossAssetModelData: INF config added for name " << indexName);
     }
 }
 
@@ -432,13 +473,18 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
     XMLNode* instantaneousCorrelationsNode = doc.allocNode("InstantaneousCorrelations");
     XMLUtils::appendNode(crossAssetModelNode, instantaneousCorrelationsNode);
 
-    for (auto correlationIterator = correlations_.begin(); correlationIterator != correlations_.end();
-         correlationIterator++) {
-        XMLNode* node = doc.allocNode("Correlation", std::to_string(correlationIterator->second->value()));
+    for (auto it = correlations_.begin(); it != correlations_.end(); it++) {
+        
+        XMLNode* node = doc.allocNode("Correlation", to_string(it->second->value()));
         XMLUtils::appendNode(instantaneousCorrelationsNode, node);
-        std::vector<std::string> factors = pairToStrings(correlationIterator->first);
-        XMLUtils::addAttribute(doc, node, "factor1", factors[0]);
-        XMLUtils::addAttribute(doc, node, "factor2", factors[1]);
+        
+        CorrelationFactor f_1 = it->first.first;
+        XMLUtils::addAttribute(doc, node, "factor1", to_string(f_1.type) + ":" + f_1.name);
+        XMLUtils::addAttribute(doc, node, "index1", to_string(f_1.index));
+
+        CorrelationFactor f_2 = it->first.second;
+        XMLUtils::addAttribute(doc, node, "factor2", to_string(f_2.type) + ":" + f_2.name);
+        XMLUtils::addAttribute(doc, node, "index2", to_string(f_2.index));
     }
 
     return crossAssetModelNode;

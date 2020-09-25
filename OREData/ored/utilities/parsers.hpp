@@ -30,6 +30,7 @@
 #include <ql/exercise.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/instruments/swaption.hpp>
+#include <ql/instruments/capfloor.hpp>
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/position.hpp>
@@ -41,6 +42,7 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
+#include <qle/models/crossassetmodel.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
@@ -301,6 +303,16 @@ std::ostream& operator<<(std::ostream& os, Extrapolation extrap);
     \ingroup utilities
 */
 QuantLib::VolatilityType parseVolatilityQuoteType(const std::string& s);
+
+/*! Convert text to QuantLib::CapFloor::Type
+    \ingroup utilities
+*/
+QuantLib::CapFloor::Type parseCapFloorType(const std::string& s);
+
+/*! Convert text to QuantExt::CrossAssetModelTypes::AssetType
+    \ingroup utilities
+*/
+QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const std::string& s);
 
 /*! Convert boost::any to pair<string,string>, including the valueType and the value
     \ingroup utilities

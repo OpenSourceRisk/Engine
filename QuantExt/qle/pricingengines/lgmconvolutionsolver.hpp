@@ -64,12 +64,12 @@ private:
 template <typename ValueType>
 std::vector<ValueType> LgmConvolutionSolver::rollback(const std::vector<ValueType>& v, const Real t1, const Real t0,
                                                       const ValueType zero) const {
-    if (close_enough(t0, t1))
+    if (QuantLib::close_enough(t0, t1))
         return v;
     QL_REQUIRE(t0 < t1, "LgmConvolutionSolver::rollback(): t0 (" << t0 << ") < t1 (" << t1 << ") required.");
     Real sigma = std::sqrt(model_->parametrization()->zeta(t1));
     Real dx = sigma / static_cast<Real>(nx_);
-    if (close_enough(t0, 0.0)) {
+    if (QuantLib::close_enough(t0, 0.0)) {
         // rollback from t1 to t0 = 0
         ValueType value(zero);
         for (int i = 0; i <= 2 * my_; i++) {

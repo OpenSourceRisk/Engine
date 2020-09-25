@@ -214,9 +214,12 @@ int OREApp::run() {
                 loadScenarioData();
 
             QL_REQUIRE(scenarioData_->dimDates() == cube_->dates().size(),
-                       "scenario dates do not match cube grid size");
-            QL_REQUIRE(scenarioData_->dimSamples() == cube_->samples(),
-                       "scenario sample size does not match cube sample size");
+                       "asd scenario dates (" << scenarioData_->dimDates() << ") do not match cube grid size ("
+                                              << cube_->dates().size() << ")");
+            QL_REQUIRE(scenarioData_->dimSamples() == cube_->samples(), "asd scenario sample size does ("
+                                                                            << scenarioData_->dimSamples()
+                                                                            << ") not match cube sample size ("
+                                                                            << cube_->samples() << ")");
 
             runPostProcessor();
             out_ << "OK" << endl;
@@ -694,22 +697,18 @@ void OREApp::buildNPVCube() {
     string baseCurrency = params_->get("simulation", "baseCurrency");
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
 
-    Size slots = 0;
     if (useCloseOutLag_) {
         boost::shared_ptr<NPVCalculator> npvCalc = boost::make_shared<NPVCalculator>(baseCurrency);
         // calculators.push_back(boost::make_shared<NPVCalculator>(baseCurrency));
         // default date value stored at index 0, close-out value at index 1
         calculators.push_back(boost::make_shared<MPORCalculator>(npvCalc, 0, 1));
-        slots = 2;
     } else {
         calculators.push_back(boost::make_shared<NPVCalculator>(baseCurrency));
-        slots = 1;
     }
 
     if (storeFlows_) {
-        // cash flow stored at index 2
+        // cash flow stored at index 1 (no close-out lag) or 2 (have close-out lag)
         calculators.push_back(boost::make_shared<CashflowCalculator>(baseCurrency, asof_, grid_, cubeDepth_ - 1));
-        slots++;
     }
 
     if (useCloseOutLag_)
@@ -730,6 +729,15 @@ void OREApp::buildNPVCube() {
     engine.registerProgressIndicator(progressLog);
     engine.buildCube(simPortfolio_, cube_, calculators, useMporStickyDate_, nettingSetCube_);
     out_ << "OK" << endl;
+}
+
+void OREApp::setCubeDepth(const boost::shared_ptr<ScenarioGeneratorData>& sgd) {
+    cubeDepth_ = 1;
+    if (sgd->withCloseOutLag())
+        cubeDepth_++;
+    if (params_->has("simulation", "storeFlows") && parseBool(params_->get("simulation", "storeFlows"))) {
+        cubeDepth_++;
+    }
 }
 
 void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio) {
@@ -767,15 +775,9 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
         out_ << "OK" << endl;
     }
 
-    cubeDepth_ = 1; // NPV only
-    if (sgd->withCloseOutLag())
-        cubeDepth_++;
+    setCubeDepth(sgd);
 
-    storeFlows_ = false;
-    if (params_->has("simulation", "storeFlows") && params_->get("simulation", "storeFlows") == "Y") {
-        storeFlows_ = true;
-        cubeDepth_++;
-    }
+    storeFlows_ = params_->has("simulation", "storeFlows") && parseBool(params_->get("simulation", "storeFlows"));
 
     nettingSetCube_ = nullptr;
 
@@ -999,13 +1001,13 @@ void OREApp::runPostProcessor() {
     Real cvaSensiShiftSize = 0.0;
     if (params_->has("xva", "cvaSensiShiftSize"))
         cvaSensiShiftSize = parseReal(params_->get("xva", "cvaSensiShiftSize"));
-    
+
     postProcess_ = boost::make_shared<PostProcess>(
         portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
-        fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid, cvaSensiShiftSize, kvaCapitalDiscountRate,
-        kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor, kvaOurCvaRiskWeight,
-        kvaTheirCvaRiskWeight);
+        fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid,
+        cvaSensiShiftSize, kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor,
+        kvaTheirPdFloor, kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight);
 }
 
 void OREApp::writeXVAReports() {
@@ -1038,13 +1040,13 @@ void OREApp::writeXVAReports() {
         CSVFileReport nettingSetColvaReport(nettingSetColvaFile);
         getReportWriter()->writeNettingSetColva(nettingSetColvaReport, postProcess_, n);
 
-	ostringstream o3;
+        ostringstream o3;
         o3 << outputPath_ << "/cva_sensitivity_nettingset_" << n << ".csv";
         string nettingSetCvaSensiFile = o3.str();
         CSVFileReport nettingSetCvaSensitivityReport(nettingSetCvaSensiFile);
         getReportWriter()->writeNettingSetCvaSensitivities(nettingSetCvaSensitivityReport, postProcess_, n);
     }
-    
+
     string XvaFile = outputPath_ + "/xva.csv";
     CSVFileReport xvaReport(XvaFile);
     getReportWriter()->writeXVA(xvaReport, params_->get("xva", "allocationMethod"), portfolio_, postProcess_);
