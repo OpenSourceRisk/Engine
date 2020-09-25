@@ -127,7 +127,10 @@
       <xs:element name="InflationIndexModels" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element type="lgm" name="LGM" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:choice maxOccurs="unbounded">
+              <xs:element type="lgm" name="LGM"/>
+              <xs:element type="jarrowYildrim" name="JarrowYildirim"/>
+            </xs:choice>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -140,6 +143,8 @@
                   <xs:extension base="correlationValue">
                     <xs:attribute type="xs:string" name="factor1" use="required"/>
                     <xs:attribute type="xs:string" name="factor2" use="required"/>
+                    <xs:attribute type="xs:string" name="index1"/>
+                    <xs:attribute type="xs:string" name="index2"/>
                   </xs:extension>
                 </xs:simpleContent>
               </xs:complexType>
@@ -156,7 +161,21 @@
       <xs:maxInclusive value="1.0"/>
     </xs:restriction>
   </xs:simpleType>
-
+  
+  <xs:complexType name="calibrationCpiCapFloor">
+    <xs:sequence>
+      <xs:element type="capFloor" name="Type"/>
+      <xs:element type="xs:string" name="Maturity"/>
+      <xs:element type="xs:string" name="Strike"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="calibrationBasket">
+    <xs:choice>
+      <xs:element type="calibrationCpiCapFloor" name="CpiCapFloor" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:choice>
+  </xs:complexType>
+  
   <xs:complexType name="lgm">
     <xs:all>
       <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0"/>
@@ -208,6 +227,13 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
+      <xs:element name="CalibrationBaskets" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="calibrationBasket" name="CalibrationBasket" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ParameterTransformation">
         <xs:complexType>
           <xs:all>
@@ -221,6 +247,64 @@
     <!-- FIXME: currency not ccy -->
     <xs:attribute type="xs:string" name="index" />
     <!-- FIXME: currency not ccy -->
+  </xs:complexType>
+  
+  <xs:complexType name="volatilityParameter">
+    <xs:sequence>
+      <xs:element type="bool" name="Calibrate"/>
+      <xs:element type="volatilityTypeType" name="VolatilityType" minOccurs="0"/>
+      <xs:element type="paramTypeType" name="ParamType"/>
+      <xs:element type="xs:string" name="TimeGrid" minOccurs="0"/>
+      <xs:element type="xs:string" name="InitialValue"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="reversionParameter">
+    <xs:sequence>
+      <xs:element type="bool" name="Calibrate"/>
+      <xs:element type="reversionTypeType" name="ReversionType"/>
+      <xs:element type="paramTypeType" name="ParamType"/>
+      <xs:element type="xs:string" name="TimeGrid" minOccurs="0"/>
+      <xs:element type="xs:string" name="InitialValue"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="lgmReversionTransformation">
+    <xs:sequence>
+      <xs:element type="xs:float" name="ShiftHorizon"/>
+      <xs:element type="xs:float" name="Scaling"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="jarrowYildrim">
+    <xs:sequence>
+      <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="calibrationTypeType" name="CalibrationType"/>
+      <xs:element name="RealRate">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="volatilityParameter" name="Volatility"/>
+            <xs:element type="reversionParameter" name="Reversion"/>
+            <xs:element type="lgmReversionTransformation" name="ParameterTransformation"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Index">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="volatilityParameter" name="Volatility"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="CalibrationBaskets" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="calibrationBasket" name="CalibrationBasket" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="index" />
   </xs:complexType>
 
   <xs:simpleType name="calibrationTypeType">

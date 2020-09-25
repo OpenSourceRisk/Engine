@@ -28,6 +28,7 @@
 #include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
+#include <qle/models/infjyparameterization.hpp>
 #include <qle/models/lgm.hpp>
 
 #include <qle/processes/crossassetstateprocess.hpp>
@@ -48,9 +49,11 @@ namespace CrossAssetModelTypes {
 enum AssetType { IR, FX, INF, CR, EQ };
 static constexpr Size crossAssetModelAssetTypes = 5;
 
+std::ostream& operator<<(std::ostream& out, const AssetType& type);
+
 /*! the model types supported by the CrossAssetModel or derived classes;
   a model type may applicable to several asset types (like BS for FX, EQ) */
-enum ModelType { LGM1F, BS, DK, CIRPP };
+enum ModelType { LGM1F, BS, DK, CIRPP, JY };
 } // namespace CrossAssetModelTypes
 
 using namespace CrossAssetModelTypes;
@@ -153,6 +156,9 @@ public:
 
     /*! INF DK components */
     const boost::shared_ptr<InfDkParametrization> infdk(const Size i) const;
+
+    //! Inflation JY component
+    const boost::shared_ptr<InfJyParameterization> infjy(const Size i) const;
 
     /*! CR LGM 1F components */
     const boost::shared_ptr<CrLgm1fParametrization> crlgm1f(const Size i) const;
@@ -414,6 +420,10 @@ protected:
     }
 };
 
+//! Utility function to return a handle to the inflation term structure given the inflation index.
+QuantLib::Handle<QuantLib::ZeroInflationTermStructure> inflationTermStructure(
+    const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
+
 // inline
 
 inline const boost::shared_ptr<StochasticProcess>
@@ -452,6 +462,12 @@ inline const boost::shared_ptr<IrLgm1fParametrization> CrossAssetModel::irlgm1f(
 inline const boost::shared_ptr<InfDkParametrization> CrossAssetModel::infdk(const Size i) const {
     boost::shared_ptr<InfDkParametrization> tmp = boost::dynamic_pointer_cast<InfDkParametrization>(p_[idx(INF, i)]);
     QL_REQUIRE(tmp, "model at " << i << " is not INF-DK");
+    return tmp;
+}
+
+inline const boost::shared_ptr<InfJyParameterization> CrossAssetModel::infjy(const Size i) const {
+    auto tmp = boost::dynamic_pointer_cast<InfJyParameterization>(p_[idx(INF, i)]);
+    QL_REQUIRE(tmp, "model at " << i << " is not INF-JY");
     return tmp;
 }
 

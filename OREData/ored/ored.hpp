@@ -69,8 +69,8 @@
 #include <ored/model/eqbsdata.hpp>
 #include <ored/model/fxbsbuilder.hpp>
 #include <ored/model/fxbsdata.hpp>
-#include <ored/model/infdkbuilder.hpp>
-#include <ored/model/infdkdata.hpp>
+#include <ored/model/inflation/infdkbuilder.hpp>
+#include <ored/model/inflation/infdkdata.hpp>
 #include <ored/model/irlgmdata.hpp>
 #include <ored/model/lgmbuilder.hpp>
 #include <ored/model/lgmdata.hpp>
