@@ -18,12 +18,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file etibor.hpp
+/*! \file jpyeytibor.hpp
     \brief %JPY %Euroyen %TIBOR index
 */
 
-#ifndef quantext_etibor_hpp
-#define quantext_etibor_hpp
+#ifndef quantext_jpyeytibor_hpp
+#define quantext_jpyeytibor_hpp
 
 #include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/japan.hpp>
