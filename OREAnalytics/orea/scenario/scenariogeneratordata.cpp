@@ -75,14 +75,17 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     std::string calString = XMLUtils::getChildValue(node, "Calendar", true);
     Calendar cal = parseCalendar(calString);
 
+    std::string dcString = XMLUtils::getChildValue(node, "DayCounter", false);
+    DayCounter dc = dcString.empty() ? ActualActual() : parseDayCounter(dcString);
+
     std::string gridString = XMLUtils::getChildValue(node, "Grid", true);
     std::vector<std::string> tokens;
     boost::split(tokens, gridString, boost::is_any_of(","));
     if (tokens.size() <= 2) {
-        grid_ = boost::make_shared<DateGrid>(gridString, cal);
+        grid_ = boost::make_shared<DateGrid>(gridString, cal, dc);
     } else {
         std::vector<Period> gridTenors = XMLUtils::getChildrenValuesAsPeriods(node, "Grid", true);
-        grid_ = boost::make_shared<DateGrid>(gridTenors, cal);
+        grid_ = boost::make_shared<DateGrid>(gridTenors, cal, dc);
     }
     LOG("ScenarioGeneratorData grid points size = " << grid_->size());
 
@@ -99,7 +102,7 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     // overwrite samples with enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES
     if (auto c = getenv("OVERWRITE_SCENARIOGENERATOR_SAMPLES")) {
         samples_ = std::stol(c);
-        ALOG("Overwrite samples with " << samples_ << " from enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES");
+        LOG("Overwrite samples with " << samples_ << " from enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES");
     }
 
     if (auto n = XMLUtils::getChildNode(node, "Ordering"))

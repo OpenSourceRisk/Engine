@@ -31,6 +31,7 @@
 #include <orea/app/parameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
+#include <orea/app/xvarunner.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/engine/parametricvar.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
@@ -86,7 +87,7 @@ protected:
     //! load market conventions
     void getConventions();
     //! load market parameters
-    void getMarketParameters();
+    boost::shared_ptr<TodaysMarketParameters> getMarketParameters();
     //! load reference data
     void getReferenceData();
     //! build engine factory for a given market
@@ -99,12 +100,16 @@ protected:
     //! load portfolio from file(s)
     boost::shared_ptr<Portfolio> loadPortfolio();
 
+    //! get the XVA runner
+    virtual boost::shared_ptr<XvaRunner> getXvaRunner();
     //! generate NPV cube
     virtual void generateNPVCube();
     //! get an instance of an aggregationScenarioData class
     virtual void initAggregationScenarioData();
     //! get an instance of a cube class
     virtual void initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids, const Size cubeDepth);
+    //! set depth of NPV cube in cubeDepth_
+    virtual void setCubeDepth(const boost::shared_ptr<ScenarioGeneratorData>& sgd);
     //! build an NPV cube
     virtual void buildNPVCube();
     //! initialise NPV cube generation
@@ -116,6 +121,11 @@ protected:
     //! build CAM
     boost::shared_ptr<QuantExt::CrossAssetModel> buildCam(boost::shared_ptr<Market> market,
                                                           const bool continueOnCalibrationError);
+    //! load pricing engine data
+    boost::shared_ptr<EngineData> getEngineData(string groupName);
+    //! load cross asset model data
+    boost::shared_ptr<CrossAssetModelData> getCrossAssetModelData();
+
     //! build scenarioGenerator
     virtual boost::shared_ptr<ScenarioGenerator>
     buildScenarioGenerator(boost::shared_ptr<Market> market,

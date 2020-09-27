@@ -49,6 +49,8 @@
 #include <qle/indexes/ibor/chfsaron.hpp>
 #include <qle/indexes/ibor/chftois.hpp>
 #include <qle/indexes/ibor/clpcamara.hpp>
+#include <qle/indexes/ibor/cnhhibor.hpp>
+#include <qle/indexes/ibor/cnhshibor.hpp>
 #include <qle/indexes/ibor/copibr.hpp>
 #include <qle/indexes/ibor/corra.hpp>
 #include <qle/indexes/ibor/czkpribor.hpp>
@@ -56,6 +58,7 @@
 #include <qle/indexes/ibor/dkkcibor.hpp>
 #include <qle/indexes/ibor/dkkois.hpp>
 #include <qle/indexes/ibor/ester.hpp>
+#include <qle/indexes/ibor/jpyeytibor.hpp>
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
 #include <qle/indexes/ibor/idridrfix.hpp>
@@ -276,12 +279,15 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"GBP-LIBOR", boost::make_shared<IborIndexParserWithPeriod<GBPLibor>>()},
         {"JPY-LIBOR", boost::make_shared<IborIndexParserWithPeriod<JPYLibor>>()},
         {"JPY-TIBOR", boost::make_shared<IborIndexParserWithPeriod<Tibor>>()},
+        {"JPY-EYTIBOR", boost::make_shared<IborIndexParserWithPeriod<JPYEYTIBOR>>()},
         {"CAD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<CADLibor>>()},
         {"CHF-LIBOR", boost::make_shared<IborIndexParserWithPeriod<CHFLibor>>()},
         {"SEK-LIBOR", boost::make_shared<IborIndexParserWithPeriod<SEKLibor>>()},
         {"SEK-STIBOR", boost::make_shared<IborIndexParserWithPeriod<SEKStibor>>()},
         {"NOK-NIBOR", boost::make_shared<IborIndexParserWithPeriod<NOKNibor>>()},
         {"HKD-HIBOR", boost::make_shared<IborIndexParserWithPeriod<HKDHibor>>()},
+        {"CNH-HIBOR", boost::make_shared<IborIndexParserWithPeriod<CNHHibor>>()},
+        {"CNH-SHIBOR", boost::make_shared<IborIndexParserWithPeriod<CNHShibor>>()},
         {"SAR-SAIBOR", boost::make_shared<IborIndexParserWithPeriod<SAibor>>()},
         {"SGD-SIBOR", boost::make_shared<IborIndexParserWithPeriod<SGDSibor>>()},
         {"SGD-SOR", boost::make_shared<IborIndexParserWithPeriod<SGDSor>>()},

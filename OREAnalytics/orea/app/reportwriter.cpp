@@ -201,7 +201,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 flowType = "InterestProjected";
                         } else if (ptrInfl) {
                             fixingDate = ptrInfl->fixingDate();
-                            fixingValue = ptrInfl->index()->fixing(fixingDate);
+                            fixingValue = ptrInfl->indexFixing();
                             flowType = "Inflation";
                         } else if (ptrIndCf) {
                             fixingDate = ptrIndCf->fixingDate();
@@ -525,28 +525,29 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
                             boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess) {
     const vector<Date> dates = postProcess->cube()->dates();
     DayCounter dc = ActualActual();
+    Size precision = 2;
     report.addColumn("TradeId", string())
         .addColumn("NettingSetId", string())
-        .addColumn("CVA", double(), 2)
-        .addColumn("DVA", double(), 2)
-        .addColumn("FBA", double(), 2)
-        .addColumn("FCA", double(), 2)
-        .addColumn("FBAexOwnSP", double(), 2)
-        .addColumn("FCAexOwnSP", double(), 2)
-        .addColumn("FBAexAllSP", double(), 2)
-        .addColumn("FCAexAllSP", double(), 2)
-        .addColumn("COLVA", double(), 2)
-        .addColumn("MVA", double(), 2)
-        .addColumn("OurKVACCR", double(), 2)
-        .addColumn("TheirKVACCR", double(), 2)
-        .addColumn("OurKVACVA", double(), 2)
-        .addColumn("TheirKVACVA", double(), 2)
-        .addColumn("CollateralFloor", double(), 2)
-        .addColumn("AllocatedCVA", double(), 2)
-        .addColumn("AllocatedDVA", double(), 2)
+        .addColumn("CVA", double(), precision)
+        .addColumn("DVA", double(), precision)
+        .addColumn("FBA", double(), precision)
+        .addColumn("FCA", double(), precision)
+        .addColumn("FBAexOwnSP", double(), precision)
+        .addColumn("FCAexOwnSP", double(), precision)
+        .addColumn("FBAexAllSP", double(), precision)
+        .addColumn("FCAexAllSP", double(), precision)
+        .addColumn("COLVA", double(), precision)
+        .addColumn("MVA", double(), precision)
+        .addColumn("OurKVACCR", double(), precision)
+        .addColumn("TheirKVACCR", double(), precision)
+        .addColumn("OurKVACVA", double(), precision)
+        .addColumn("TheirKVACVA", double(), precision)
+        .addColumn("CollateralFloor", double(), precision)
+        .addColumn("AllocatedCVA", double(), precision)
+        .addColumn("AllocatedDVA", double(), precision)
         .addColumn("AllocationMethod", string())
-        .addColumn("BaselEPE", double(), 2)
-        .addColumn("BaselEEPE", double(), 2);
+        .addColumn("BaselEPE", double(), precision)
+        .addColumn("BaselEEPE", double(), precision);
 
     for (auto n : postProcess->nettingSetIds()) {
         report.next()

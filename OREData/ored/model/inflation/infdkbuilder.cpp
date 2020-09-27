@@ -23,7 +23,8 @@
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 
-#include <ored/model/infdkbuilder.hpp>
+#include <ored/model/inflation/infdkbuilder.hpp>
+#include <ored/model/calibrationinstruments/cpicapfloor.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -40,17 +41,22 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
                            const std::string& configuration, const std::string& referenceCalibrationGrid)
     : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid) {
 
-    LOG("DkBuilder for " << data_->infIndex());
+    LOG("DkBuilder for " << data_->index());
 
-    optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
+    if (!data_->calibrationBaskets().empty()) {
+        QL_REQUIRE(data_->calibrationBaskets().size() == 1, "If there is a calibration basket, expect exactly 1.");
+        const CalibrationBasket& cb = data_->calibrationBaskets()[0];
+        QL_REQUIRE(!cb.empty(), "If there is a calibration basket, expect it to be non-empty.");
+        optionActive_ = vector<bool>(cb.instruments().size(), false);
+    }
+
     marketObserver_ = boost::make_shared<MarketObserver>();
 
     // get market data
-    std::string infIndex = data_->infIndex();
     inflationIndex_ = boost::dynamic_pointer_cast<ZeroInflationIndex>(
-        *market_->zeroInflationIndex(data_->infIndex(), configuration_));
-    QL_REQUIRE(inflationIndex_, "DkBuilder: requires ZeroInflationIndex, got " << data_->infIndex());
-    infVol_ = market_->cpiInflationCapFloorVolatilitySurface(infIndex, configuration_);
+        *market_->zeroInflationIndex(data_->index(), configuration_));
+    QL_REQUIRE(inflationIndex_, "DkBuilder: requires ZeroInflationIndex, got " << data_->index());
+    infVol_ = market_->cpiInflationCapFloorVolatilitySurface(data_->index(), configuration_);
 
     // register with market observables except vols
     marketObserver_->registerWith(inflationIndex_);
@@ -62,85 +68,90 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     alwaysForwardNotifications();
 
     // build option basket and derive parametrization from it
-    if (data_->calibrateA() || data_->calibrateH())
+    const ReversionParameter& reversion = data_->reversion();
+    const VolatilityParameter& volatility = data_->volatility();
+    if (volatility.calibrate() || reversion.calibrate())
         buildCapFloorBasket();
 
-    Array aTimes(data_->aTimes().begin(), data_->aTimes().end());
-    Array hTimes(data_->hTimes().begin(), data_->hTimes().end());
-    Array alpha(data_->aValues().begin(), data_->aValues().end());
-    Array h(data_->hValues().begin(), data_->hValues().end());
+    Array aTimes(volatility.times().begin(), volatility.times().end());
+    Array hTimes(reversion.times().begin(), reversion.times().end());
+    Array alpha(volatility.values().begin(), volatility.values().end());
+    Array h(reversion.values().begin(), reversion.values().end());
 
-    if (data_->aParamType() == ParamType::Constant) {
-        QL_REQUIRE(data_->aTimes().size() == 0, "empty alpha times expected");
-        QL_REQUIRE(data_->aValues().size() == 1, "initial alpha array should have size 1");
-    } else if (data_->aParamType() == ParamType::Piecewise) {
-        if (data_->calibrateA() && data_->calibrationType() == CalibrationType::Bootstrap) { // override
-            if (data_->aTimes().size() > 0) {
+    if (volatility.type() == ParamType::Constant) {
+        QL_REQUIRE(volatility.times().size() == 0, "empty alpha times expected");
+        QL_REQUIRE(volatility.values().size() == 1, "initial alpha array should have size 1");
+    } else if (volatility.type() == ParamType::Piecewise) {
+        if (volatility.calibrate() && data_->calibrationType() == CalibrationType::Bootstrap) {
+            if (volatility.times().size() > 0) {
                 DLOG("overriding alpha time grid with option expiries");
             }
             QL_REQUIRE(optionExpiries_.size() > 0, "empty option expiries");
             aTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
-            alpha = Array(aTimes.size() + 1, data_->aValues()[0]);
+            alpha = Array(aTimes.size() + 1, volatility.values()[0]);
         } else { // use input time grid and input alpha array otherwise
             QL_REQUIRE(alpha.size() == aTimes.size() + 1, "alpha grids do not match");
         }
-    } else
-        QL_FAIL("Alpha type case not covered");
+    } else {
+        QL_FAIL("Expected DK model data volatility parameter to be Constant or Piecewise.");
+    }
 
-    if (data_->hParamType() == ParamType::Constant) {
-        QL_REQUIRE(data_->hValues().size() == 1, "reversion grid size 1 expected");
-        QL_REQUIRE(data_->hTimes().size() == 0, "empty reversion time grid expected");
-    } else if (data_->hParamType() == ParamType::Piecewise) {
-        if (data_->calibrateH() && data_->calibrationType() == CalibrationType::Bootstrap) { // override
-            if (data_->hTimes().size() > 0) {
+    if (reversion.type() == ParamType::Constant) {
+        QL_REQUIRE(reversion.values().size() == 1, "reversion grid size 1 expected");
+        QL_REQUIRE(reversion.times().size() == 0, "empty reversion time grid expected");
+    } else if (reversion.type() == ParamType::Piecewise) {
+        if (reversion.calibrate() && data_->calibrationType() == CalibrationType::Bootstrap) {
+            if (reversion.times().size() > 0) {
                 DLOG("overriding H time grid with option expiries");
             }
             QL_REQUIRE(optionExpiries_.size() > 0, "empty option expiries");
             hTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
-            h = Array(hTimes.size() + 1, data_->hValues()[0]);
+            h = Array(hTimes.size() + 1, reversion.values()[0]);
         } else { // use input time grid and input alpha array otherwise
             QL_REQUIRE(h.size() == hTimes.size() + 1, "H grids do not match");
         }
-    } else
-        QL_FAIL("H type case not covered");
+    } else {
+        QL_FAIL("Expected DK model data reversion parameter to be Constant or Piecewise.");
+    }
 
     DLOG("before calibration: alpha times = " << aTimes << " values = " << alpha);
     DLOG("before calibration:     h times = " << hTimes << " values = " << h)
 
-    if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
-        data_->volatilityType() == LgmData::VolatilityType::HullWhite) {
+    if (reversion.reversionType() == LgmData::ReversionType::HullWhite &&
+        volatility.volatilityType() == LgmData::VolatilityType::HullWhite) {
         DLOG("INF parametrization: InfDkPiecewiseConstantHullWhiteAdaptor");
         parametrization_ = boost::make_shared<InfDkPiecewiseConstantHullWhiteAdaptor>(
             inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
-            data_->infIndex());
-    } else if (data_->reversionType() == LgmData::ReversionType::HullWhite) {
-        DLOG("INF parametrization for " << data_->infIndex() << ": InfDkPiecewiseConstant");
+            data_->index());
+    } else if (reversion.reversionType() == LgmData::ReversionType::HullWhite) {
+        DLOG("INF parametrization for " << data_->index() << ": InfDkPiecewiseConstant");
         parametrization_ = boost::make_shared<InfDkPiecewiseConstantParametrization>(
             inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
-            data_->infIndex());
+            data_->index());
     } else {
         parametrization_ = boost::make_shared<InfDkPiecewiseLinearParametrization>(
             inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
-            data_->infIndex());
-        DLOG("INF parametrization for " << data_->infIndex() << ": InfDkPiecewiseLinear");
+            data_->index());
+        DLOG("INF parametrization for " << data_->index() << ": InfDkPiecewiseLinear");
     }
 
     DLOG("alpha times size: " << aTimes.size());
     DLOG("lambda times size: " << hTimes.size());
 
     DLOG("Apply shift horizon and scale");
+    Time horizon = data_->reversionTransformation().horizon();
+    Real scaling = data_->reversionTransformation().scaling();
+    QL_REQUIRE(horizon >= 0.0, "shift horizon must be non negative");
+    QL_REQUIRE(scaling > 0.0, "scaling must be positive");
 
-    QL_REQUIRE(data_->shiftHorizon() >= 0.0, "shift horizon must be non negative");
-    QL_REQUIRE(data_->scaling() > 0.0, "scaling must be positive");
-
-    if (data_->shiftHorizon() > 0.0) {
-        DLOG("Apply shift horizon " << data_->shiftHorizon() << " to the " << data_->infIndex() << " DK model");
-        parametrization_->shift() = data_->shiftHorizon();
+    if (horizon > 0.0) {
+        DLOG("Apply shift horizon " << horizon << " to the " << data_->index() << " DK model");
+        parametrization_->shift() = horizon;
     }
 
-    if (data_->scaling() != 1.0) {
-        DLOG("Apply scaling " << data_->scaling() << " to the " << data_->infIndex() << " DK model");
-        parametrization_->scaling() = data_->scaling();
+    if (scaling != 1.0) {
+        DLOG("Apply scaling " << scaling << " to the " << data_->index() << " DK model");
+        parametrization_->scaling() = scaling;
     }
 }
 
@@ -155,7 +166,7 @@ std::vector<boost::shared_ptr<BlackCalibrationHelper>> InfDkBuilder::optionBaske
 }
 
 bool InfDkBuilder::requiresRecalibration() const {
-    return (data_->calibrateA() || data_->calibrateH()) &&
+    return (data_->volatility().calibrate() || data_->reversion().calibrate()) &&
            (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
 }
 
@@ -170,37 +181,12 @@ void InfDkBuilder::performCalculations() const {
     }
 }
 
-Real InfDkBuilder::optionStrike(const Size j) const {
-    Strike strike = parseStrike(data_->optionStrikes()[j]);
-
-    Real strikeValue;
-    QL_REQUIRE(strike.type == Strike::Type::Absolute,
-               "DkBuilder: only fixed strikes supported, got " << data_->optionStrikes()[j]);
-    strikeValue = strike.value;
-    return strikeValue;
-}
-
-Date InfDkBuilder::optionExpiry(const Size j) const {
-    Date today = Settings::instance().evaluationDate();
-    std::string expiryString = data_->optionExpiries()[j];
-    Period expiry = parsePeriod(expiryString);
-    Date expiryDate = inflationIndex_->fixingCalendar().advance(today, expiry);
-    QL_REQUIRE(expiryDate > today, "expired calibration option expiry " << QuantLib::io::iso_date(expiryDate));
-    return expiryDate;
-}
-
 bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
     bool hasUpdated = false;
 
     Handle<YieldTermStructure> nominalTS = inflationIndex_->zeroInflationTermStructure()->nominalTermStructure();
     boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine =
         boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(nominalTS, infVol_);
-
-    Option::Type capfloor;
-    if (data_->capFloor() == "Cap")
-        capfloor = Option::Type::Call;
-    else
-        capfloor = Option::Type::Put;
 
     Calendar fixCalendar = inflationIndex_->fixingCalendar();
     BusinessDayConvention bdc = infVol_->businessDayConvention();
@@ -213,15 +199,32 @@ bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
     if (infPriceCache_.size() != optionBasket_.size())
         infPriceCache_ = vector<Real>(optionBasket_.size(), Null<Real>());
 
+    // Handle on calibration instruments. No checks this time.
+    const auto& ci = data_->calibrationBaskets()[0].instruments();
+    
+    Real nominal = 1.0;
     Size optionCounter = 0;
-    for (Size j = 0; j < data_->optionExpiries().size(); j++) {
+    Date today = Settings::instance().evaluationDate();
+    for (Size j = 0; j < ci.size(); j++) {
+        
         if (!optionActive_[j])
             continue;
-        Real nominal = 1.0;
-        Date startDate = Settings::instance().evaluationDate();
+
+        auto cpiCapFloor = boost::dynamic_pointer_cast<CpiCapFloor>(ci[j]);
+        QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor calibration instruments in DK inflation model data.");
+
+        Date expiryDate = inflationIndex_->fixingCalendar().advance(today, cpiCapFloor->maturity());
+        QL_REQUIRE(expiryDate > today, "expired calibration option expiry " << io::iso_date(expiryDate));
+
+        auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(cpiCapFloor->strike());
+        QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor in DK inflation model data to have absolute strikes.");
+        Real strikeValue = strike->strike();
+
+        Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
+        
         boost::shared_ptr<CPICapFloor> h =
-            boost::make_shared<CPICapFloor>(capfloor, nominal, startDate, baseCPI, optionExpiry(j), fixCalendar, bdc,
-                                            fixCalendar, bdc, optionStrike(j), hIndex, lag);
+            boost::make_shared<CPICapFloor>(capfloor, nominal, today, baseCPI, expiryDate, fixCalendar, bdc,
+                                            fixCalendar, bdc, strikeValue, hIndex, lag);
         h->setPricingEngine(engine);
         Real price = h->NPV();
         if (!close_enough(infPriceCache_[optionCounter], price)) {
@@ -235,17 +238,21 @@ bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
 }
 
 void InfDkBuilder::buildCapFloorBasket() const {
-    QL_REQUIRE(data_->optionExpiries().size() == data_->optionStrikes().size(), "Inf option vector size mismatch");
 
-    optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
+    // Checks that there is a basket.
+    QL_REQUIRE(!data_->calibrationBaskets().empty(), "No calibration basket provided in inflation DK model data.");
+    const CalibrationBasket& cb = data_->calibrationBaskets()[0];
+    const auto& ci = cb.instruments();
+
+    QL_REQUIRE(ci.size() == optionActive_.size(), "Expected the option active vector size to equal the " <<
+        "number of calibration instruments");
+    fill(optionActive_.begin(), optionActive_.end(), false);
 
     DLOG("build reference date grid '" << referenceCalibrationGrid_ << "'");
     Date lastRefCalDate = Date::minDate();
     std::vector<Date> referenceCalibrationDates;
     if (!referenceCalibrationGrid_.empty())
         referenceCalibrationDates = DateGrid(referenceCalibrationGrid_).dates();
-
-    std::vector<Time> expiryTimes;
 
     Handle<YieldTermStructure> nominalTS = inflationIndex_->zeroInflationTermStructure()->nominalTermStructure();
     boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine =
@@ -257,45 +264,54 @@ void InfDkBuilder::buildCapFloorBasket() const {
     BusinessDayConvention bdc = infVol_->businessDayConvention();
     Period lag = infVol_->observationLag();
     Handle<ZeroInflationIndex> hIndex(inflationIndex_);
-    Real nominal = 1.0;
     Date startDate = Settings::instance().evaluationDate();
 
-    Option::Type capfloor;
-    if (data_->capFloor() == "Cap")
-        capfloor = Option::Type::Call;
-    else
-        capfloor = Option::Type::Put;
-
+    Real nominal = 1.0;
+    vector<Time> expiryTimes;
     optionBasket_.clear();
-    for (Size j = 0; j < data_->optionExpiries().size(); j++) {
-        Date expiryDate = optionExpiry(j);
+    Date today = Settings::instance().evaluationDate();
+    for (Size j = 0; j < ci.size(); j++) {
+        
+        auto cpiCapFloor = boost::dynamic_pointer_cast<CpiCapFloor>(ci[j]);
+        QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor calibration instruments in DK inflation model data.");
+
+        Date expiryDate = inflationIndex_->fixingCalendar().advance(today, cpiCapFloor->maturity());
+        QL_REQUIRE(expiryDate > today, "expired calibration option expiry " << io::iso_date(expiryDate));
 
         // check if we want to keep the helper when a reference calibration grid is given
         auto refCalDate =
             std::lower_bound(referenceCalibrationDates.begin(), referenceCalibrationDates.end(), expiryDate);
         if (refCalDate == referenceCalibrationDates.end() || *refCalDate > lastRefCalDate) {
+            
             optionActive_[j] = true;
-            Real strikeValue = optionStrike(j);
+
+            auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(cpiCapFloor->strike());
+            QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor in DK inflation model data to have absolute strikes.");
+            Real strikeValue = strike->strike();
+
+            Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
 
             boost::shared_ptr<CPICapFloor> cf =
-                boost::make_shared<CPICapFloor>(capfloor, nominal, startDate, baseCPI, optionExpiry(j), fixCalendar,
-                                                bdc, fixCalendar, bdc, optionStrike(j), hIndex, lag);
+                boost::make_shared<CPICapFloor>(capfloor, nominal, startDate, baseCPI, expiryDate, fixCalendar,
+                                                bdc, fixCalendar, bdc, strikeValue, hIndex, lag);
             cf->setPricingEngine(engine);
             Real marketPrem = cf->NPV();
 
             boost::shared_ptr<QuantExt::CpiCapFloorHelper> helper =
                 boost::make_shared<QuantExt::CpiCapFloorHelper>(capfloor, baseCPI, expiryDate, fixCalendar, bdc,
-                                                                fixCalendar, bdc, strikeValue, hIndex, lag, marketPrem);
+                    fixCalendar, bdc, strikeValue, hIndex, lag, marketPrem);
 
             optionBasket_.push_back(helper);
             helper->performCalculations();
             expiryTimes.push_back(inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
                                                         inflationIndex_->zeroInflationTermStructure()->dayCounter(),
                                                         baseDate, helper->instrument()->fixingDate()));
+            
             DLOG("Added InflationOptionHelper index="
-                 << data_->infIndex() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
+                 << data_->index() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
                  << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
                  << ", strike=" << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem);
+
         } else {
             optionActive_[j] = false;
         }
