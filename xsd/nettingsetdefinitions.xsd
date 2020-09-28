@@ -56,6 +56,7 @@
               </xs:complexType>
             </xs:element>
             <xs:element type="xs:decimal" name="RiskWeight" maxOccurs="1" minOccurs="0"/>
+            <xs:element type="xs:decimal" name="ApplyInitialMargin" maxOccurs="1" minOccurs="0"/>
           </xs:all>
         </xs:complexType>
       </xs:element>
