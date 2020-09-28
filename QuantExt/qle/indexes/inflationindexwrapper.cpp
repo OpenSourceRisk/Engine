@@ -117,25 +117,4 @@ void YoYInflationCouponPricer2::initialize(const InflationCoupon& coupon) {
     }
 }
 
-bool needsForecast(const boost::shared_ptr<ZeroInflationIndex>& index, const Date& fixingDate) {
-    // see ZeroInflationIndex::needsForecast()
-    Date today = Settings::instance().evaluationDate();
-    Date todayMinusLag = today - index->availabilityLag();
-    Date historicalFixingKnown = inflationPeriod(todayMinusLag, index->frequency()).first - 1;
-    Date latestNeededDate = fixingDate;
-    if (index->interpolated()) {
-        std::pair<Date, Date> p = inflationPeriod(fixingDate, index->frequency());
-        if (fixingDate > p.first)
-            latestNeededDate += Period(index->frequency());
-    }
-    if (latestNeededDate <= historicalFixingKnown) {
-        return false;
-    } else if (latestNeededDate > today) {
-        return true;
-    } else {
-        Real f = index->timeSeries()[latestNeededDate];
-        return (f == Null<Real>());
-    }
-}
-
 } // namespace QuantExt
