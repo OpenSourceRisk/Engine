@@ -63,6 +63,8 @@
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/yieldvolcurve.hpp>
+#include <ored/model/calibrationbasket.hpp>
+#include <ored/model/calibrationinstrumentfactory.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/model/eqbsbuilder.hpp>
@@ -71,11 +73,16 @@
 #include <ored/model/fxbsdata.hpp>
 #include <ored/model/inflation/infdkbuilder.hpp>
 #include <ored/model/inflation/infdkdata.hpp>
+#include <ored/model/inflation/infjybuilder.hpp>
+#include <ored/model/inflation/infjydata.hpp>
+#include <ored/model/inflation/inflationmodeldata.hpp>
 #include <ored/model/irlgmdata.hpp>
 #include <ored/model/lgmbuilder.hpp>
 #include <ored/model/lgmdata.hpp>
 #include <ored/model/marketobserver.hpp>
 #include <ored/model/modelbuilder.hpp>
+#include <ored/model/modeldata.hpp>
+#include <ored/model/modelparameter.hpp>
 #include <ored/model/structuredmodelerror.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/portfolio/bond.hpp>

@@ -180,59 +180,77 @@ int OREApp::run() {
             out_ << "SKIP" << endl;
         }
 
-        /******************************************
-         * Simulation: Scenario and Cube Generation
+        /***************************************************
+         * Use XVA runner if we want both simulation and XVA
          */
+        bool useXvaRunner = false;
+        if (params_->hasGroup("xva") && params_->has("xva", "useXvaRunner"))
+            useXvaRunner = parseBool(params_->get("xva", "useXvaRunner"));
 
-        if (simulate_) {
-            generateNPVCube();
-        } else {
-            LOG("skip simulation");
-            out_ << setw(tab_) << left << "Simulation... ";
-            out_ << "SKIP" << endl;
-        }
+        if (simulate_ && xva_ && useXvaRunner) {
 
-        /*****************************
-         * Aggregation and XVA Reports
-         */
-        out_ << setw(tab_) << left << "Aggregation and XVA Reports... " << flush;
-        if (xva_) {
-
-            // We reset this here because the date grid building below depends on it.
-            Settings::instance().evaluationDate() = asof_;
-
-            // Use pre-generated cube
-            if (!cube_)
-                loadCube();
-
-            QL_REQUIRE(cube_->numIds() == portfolio_->size(),
-                       "cube x dimension (" << cube_->numIds() << ") does not match portfolio size ("
-                                            << portfolio_->size() << ")");
-
-            // Use pre-generared scenarios
-            if (!scenarioData_)
-                loadScenarioData();
-
-            QL_REQUIRE(scenarioData_->dimDates() == cube_->dates().size(),
-                       "asd scenario dates (" << scenarioData_->dimDates() << ") do not match cube grid size ("
-                                              << cube_->dates().size() << ")");
-            QL_REQUIRE(scenarioData_->dimSamples() == cube_->samples(), "asd scenario sample size does ("
-                                                                            << scenarioData_->dimSamples()
-                                                                            << ") not match cube sample size ("
-                                                                            << cube_->samples() << ")");
-
-            runPostProcessor();
+	    out_ << setw(tab_) << left << "XVA simulation... " << flush;
+	    boost::shared_ptr<XvaRunner> xva = getXvaRunner();
+            xva->runXva(market_, true);
+            postProcess_ = xva->postProcess();
             out_ << "OK" << endl;
-            out_ << setw(tab_) << left << "Write Reports... " << flush;
+
+            out_ << setw(tab_) << left << "Write XVA Reports... " << flush;
             writeXVAReports();
             if (writeDIMReport_)
                 writeDIMReport();
             out_ << "OK" << endl;
-        } else {
-            LOG("skip XVA reports");
-            out_ << "SKIP" << endl;
-        }
 
+        } else {
+
+            /******************************************
+             * Simulation: Scenario and Cube Generation
+             */
+            if (simulate_) {
+                generateNPVCube();
+            } else {
+                LOG("skip simulation");
+                out_ << setw(tab_) << left << "Simulation... ";
+                out_ << "SKIP" << endl;
+            }
+
+            /*****************************
+             * Aggregation and XVA Reports
+             */
+            out_ << setw(tab_) << left << "Aggregation and XVA Reports... " << flush;
+            if (xva_) {
+                // We reset this here because the date grid building below depends on it.
+                Settings::instance().evaluationDate() = asof_;
+
+                // Use pre-generated cube
+                if (!cube_)
+                    loadCube();
+
+                QL_REQUIRE(cube_->numIds() == portfolio_->size(),
+                           "cube x dimension (" << cube_->numIds() << ") does not match portfolio size ("
+                                                << portfolio_->size() << ")");
+
+                // Use pre-generared scenarios
+                if (!scenarioData_)
+                    loadScenarioData();
+
+                QL_REQUIRE(scenarioData_->dimDates() == cube_->dates().size(),
+                           "scenario dates do not match cube grid size");
+                QL_REQUIRE(scenarioData_->dimSamples() == cube_->samples(),
+                           "scenario sample size does not match cube sample size");
+
+                runPostProcessor();
+                out_ << "OK" << endl;
+                out_ << setw(tab_) << left << "Write Reports... " << flush;
+                writeXVAReports();
+                if (writeDIMReport_)
+                    writeDIMReport();
+                out_ << "OK" << endl;
+            } else {
+                LOG("skip XVA reports");
+                out_ << "SKIP" << endl;
+            }
+        }
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
         out_ << "Error: " << e.what() << endl;
@@ -245,6 +263,65 @@ int OREApp::run() {
 
     LOG("ORE done.");
     return 0;
+}
+
+boost::shared_ptr<XvaRunner> OREApp::getXvaRunner() {
+    LOG(" OREApp::getXvaRunner() called");
+
+    string baseCcy = params_->get("simulation", "baseCurrency");
+    boost::shared_ptr<EngineData> engineData = getEngineData("simulation");
+    boost::shared_ptr<NettingSetManager> nettingSetManager = initNettingSetManager();
+    boost::shared_ptr<TodaysMarketParameters> marketParameters = getMarketParameters();
+    boost::shared_ptr<ScenarioSimMarketParameters> simMarketParameters = getSimMarketData();
+    boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData = getScenarioGeneratorData();
+    boost::shared_ptr<CrossAssetModelData> modelData = getCrossAssetModelData();
+
+    map<string, bool> analytics;
+    analytics["exerciseNextBreak"] = parseBool(params_->get("xva", "exerciseNextBreak"));
+    analytics["exposureProfiles"] = parseBool(params_->get("xva", "exposureProfiles"));
+    analytics["cva"] = parseBool(params_->get("xva", "cva"));
+    analytics["dva"] = parseBool(params_->get("xva", "dva"));
+    analytics["fva"] = parseBool(params_->get("xva", "fva"));
+    analytics["colva"] = parseBool(params_->get("xva", "colva"));
+    analytics["collateralFloor"] = parseBool(params_->get("xva", "collateralFloor"));
+    if (params_->has("xva", "kva"))
+        analytics["kva"] = parseBool(params_->get("xva", "kva"));
+    else
+        analytics["kva"] = false;
+    if (params_->has("xva", "mva"))
+        analytics["mva"] = parseBool(params_->get("xva", "mva"));
+    else
+        analytics["mva"] = false;
+    if (params_->has("xva", "dim"))
+        analytics["dim"] = parseBool(params_->get("xva", "dim"));
+    else
+        analytics["dim"] = false;
+    if (params_->has("xva", "cvaSensi"))
+        analytics["cvaSensi"] = parseBool(params_->get("xva", "cvaSensi"));
+    else
+        analytics["cvaSensi"] = false;
+
+    const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr;
+    QuantLib::Real dimQuantile = 0.99;
+    QuantLib::Size dimHorizonCalendarDays = 14;
+    string dvaName = params_->get("xva", "dvaName");
+    string fvaLendingCurve = params_->get("xva", "fvaLendingCurve");
+    string fvaBorrowingCurve = params_->get("xva", "fvaBorrowingCurve");
+    string calculationType = params_->get("xva", "calculationType");
+    bool fullInitialCollateralisation = false;
+    if (params_->has("xva", "fullInitialCollateralisation")) {
+        fullInitialCollateralisation = parseBool(params_->get("xva", "fullInitialCollateralisation"));
+    }
+
+    bool storeFlows = params_->has("simulation", "storeFlows") && parseBool(params_->get("simulation", "storeFlows"));
+
+    boost::shared_ptr<XvaRunner> xva = boost::make_shared<XvaRunner>(
+        asof_, baseCcy, portfolio_, nettingSetManager, engineData, curveConfigs_, conventions_, marketParameters,
+        simMarketParameters, scenarioGeneratorData, modelData, getExtraLegBuilders(), getExtraEngineBuilders(), referenceData,
+        dimQuantile, dimHorizonCalendarDays, analytics, calculationType, dvaName, fvaBorrowingCurve, fvaLendingCurve,
+        fullInitialCollateralisation, storeFlows);
+
+    return xva;
 }
 
 void OREApp::readSetup() {
@@ -330,13 +407,28 @@ void OREApp::getConventions() {
     }
 }
 
-void OREApp::getMarketParameters() {
+boost::shared_ptr<TodaysMarketParameters> OREApp::getMarketParameters() {
     if (params_->has("setup", "marketConfigFile") && params_->get("setup", "marketConfigFile") != "") {
         string marketConfigFile = inputPath_ + "/" + params_->get("setup", "marketConfigFile");
         marketParameters_->fromFile(marketConfigFile);
     } else {
         WLOG("No market parameters loaded");
     }
+    return marketParameters_;
+}
+
+boost::shared_ptr<EngineData> OREApp::getEngineData(string groupName) {
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    string pricingEnginesFile = inputPath_ + "/" + params_->get(groupName, "pricingEnginesFile");
+    engineData->fromFile(pricingEnginesFile);
+    return engineData;
+}
+
+boost::shared_ptr<CrossAssetModelData> OREApp::getCrossAssetModelData() {
+    string simulationConfigFile = inputPath_ + "/" + params_->get("simulation", "simulationConfigFile");
+    boost::shared_ptr<CrossAssetModelData> modelData = boost::make_shared<CrossAssetModelData>();
+    modelData->fromFile(simulationConfigFile);
+    return modelData;
 }
 
 boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market,
@@ -1054,8 +1146,8 @@ void OREApp::writeXVAReports() {
     string rawCubeOutputFile = params_->get("xva", "rawCubeOutputFile");
     CubeWriter cw1(outputPath_ + "/" + rawCubeOutputFile);
     map<string, string> nettingSetMap = portfolio_->nettingSetMap();
-    cw1.write(cube_, nettingSetMap);
-
+    cw1.write(postProcess_->cube(), nettingSetMap);
+    
     string netCubeOutputFile = params_->get("xva", "netCubeOutputFile");
     CubeWriter cw2(outputPath_ + "/" + netCubeOutputFile);
     cw2.write(postProcess_->netCube(), nettingSetMap);
