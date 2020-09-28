@@ -954,6 +954,9 @@
     <ClInclude Include="qle\models\yoycapfloorhelper.hpp">
       <Filter>models</Filter>
     </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticjycpicapfloorengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1629,6 +1632,9 @@
     </ClCompile>
     <ClCompile Include="qle\models\yoycapfloorhelper.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticjycpicapfloorengine.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

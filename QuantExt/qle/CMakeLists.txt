@@ -120,6 +120,7 @@ models/zeroinflationmodeltermstructure.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
 pricingengines/analyticcclgmfxoptionengine.cpp
 pricingengines/analyticdkcpicapfloorengine.cpp
+pricingengines/analyticjycpicapfloorengine.cpp
 pricingengines/analyticlgmcdsoptionengine.cpp
 pricingengines/analyticlgmswaptionengine.cpp
 pricingengines/analyticxassetlgmeqoptionengine.cpp
@@ -394,6 +395,7 @@ models/zeroinflationmodeltermstructure.hpp
 pricingengines/analyticcashsettledeuropeanengine.hpp
 pricingengines/analyticcclgmfxoptionengine.hpp
 pricingengines/analyticdkcpicapfloorengine.hpp
+pricingengines/analyticjycpicapfloorengine.hpp
 pricingengines/analyticlgmcdsoptionengine.hpp
 pricingengines/analyticlgmswaptionengine.hpp
 pricingengines/analyticxassetlgmeqoptionengine.hpp
