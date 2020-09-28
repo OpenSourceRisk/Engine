@@ -77,7 +77,7 @@ public:
     QuantLib::Real yoyRate(const QuantLib::Date& d, const QuantLib::Period& obsLag = -1 * QuantLib::Days,
         bool forceLinearInterpolation = false, bool extrapolate = false) const;
 
-    /*! Return the year-on-year rates for the maturities associated with \p dates. If an \obsLag is explicitly 
+    /*! Return the year-on-year rates for the maturities associated with \p dates. If an \p obsLag is explicitly 
         provided and not set to <code>-1 * QuantLib::Days</code>, it is used as the observation lag. Otherwise, the 
         term structure's observation lag is used.
     */
