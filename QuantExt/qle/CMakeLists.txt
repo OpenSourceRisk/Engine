@@ -114,6 +114,7 @@ models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
 models/projectedcrossassetmodel.cpp
 models/yoyinflationmodeltermstructure.cpp
+models/yoyswaphelper.cpp
 models/zeroinflationmodeltermstructure.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
 pricingengines/analyticcclgmfxoptionengine.cpp
@@ -386,6 +387,7 @@ models/piecewiseconstanthelper.hpp
 models/projectedcrossassetmodel.hpp
 models/pseudoparameter.hpp
 models/yoyinflationmodeltermstructure.hpp
+models/yoyswaphelper.hpp
 models/zeroinflationmodeltermstructure.hpp
 pricingengines/analyticcashsettledeuropeanengine.hpp
 pricingengines/analyticcclgmfxoptionengine.hpp
