@@ -667,6 +667,7 @@
     <ClInclude Include="qle\models\piecewiseconstanthelper.hpp" />
     <ClInclude Include="qle\models\projectedcrossassetmodel.hpp" />
     <ClInclude Include="qle\models\pseudoparameter.hpp" />
+    <ClInclude Include="qle\models\yoycapfloorhelper.hpp" />
     <ClInclude Include="qle\models\yoyinflationmodeltermstructure.hpp" />
     <ClInclude Include="qle\models\yoyswaphelper.hpp" />
     <ClInclude Include="qle\models\zeroinflationmodeltermstructure.hpp" />
@@ -914,6 +915,7 @@
     <ClCompile Include="qle\models\linkablecalibratedmodel.cpp" />
     <ClCompile Include="qle\models\parametrization.cpp" />
     <ClCompile Include="qle\models\piecewiseconstanthelper.cpp" />
+    <ClCompile Include="qle\models\yoycapfloorhelper.cpp" />
     <ClCompile Include="qle\models\yoyinflationmodeltermstructure.cpp" />
     <ClCompile Include="qle\models\yoyswaphelper.cpp" />
     <ClCompile Include="qle\models\zeroinflationmodeltermstructure.cpp" />

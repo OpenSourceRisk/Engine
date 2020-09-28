@@ -951,6 +951,9 @@
     <ClInclude Include="qle\models\yoyswaphelper.hpp">
       <Filter>models</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\yoycapfloorhelper.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1622,6 +1625,9 @@
       <Filter>models</Filter>
     </ClCompile>
     <ClCompile Include="qle\models\yoyswaphelper.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\yoycapfloorhelper.cpp">
       <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>
