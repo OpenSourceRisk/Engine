@@ -340,22 +340,6 @@
             "rel_tol": null
           }
         ]
-      },
-      "sa_cva_pricer.csv": {
-        "keys": [
-          "RiskType",
-	  "Bucket",
-	  "Analytic"
-        ],
-        "column_settings": [
-          {
-            "names": [
-              "Value"
-            ],
-            "abs_tol": 0.00001,
-            "rel_tol": null
-          }
-        ]
       }
     }
   }
