@@ -6,7 +6,7 @@
     <xs:all>
       <xs:element type="parameters" name="Parameters" minOccurs="0" maxOccurs="1"/>
       <xs:element type="crossAssetModel" name="CrossAssetModel" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="market" name="Market" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="market" name="Market" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
