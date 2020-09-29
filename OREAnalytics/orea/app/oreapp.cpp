@@ -650,16 +650,13 @@ void OREApp::runStressTest() {
     engineData->fromFile(pricingEnginesFile);
 
     LOG("Get Portfolio");
-    string portfolioFile = inputPath_ + "/" + params_->get("setup", "portfolioFile");
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
-    portfolio->load(portfolioFile);
+    boost::shared_ptr<Portfolio> portfolio = loadPortfolio();
 
     LOG("Build Stress Test");
     string marketConfiguration = params_->get("markets", "pricing");
-    boost::shared_ptr<StressTest> stressTest =
-        boost::make_shared<StressTest>(portfolio, market_, marketConfiguration, engineData, simMarketData, stressData,
-                                       *conventions_, *curveConfigs_, *marketParameters_);
+    boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
+        portfolio, market_, marketConfiguration, engineData, simMarketData, stressData, *conventions_, *curveConfigs_,
+        *marketParameters_, nullptr, getExtraEngineBuilders(), getExtraLegBuilders(), referenceData_, continueOnError_);
 
     string outputFile = outputPath_ + "/" + params_->get("stress", "scenarioOutputFile");
     Real threshold = parseReal(params_->get("stress", "outputThreshold"));

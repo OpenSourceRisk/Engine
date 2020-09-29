@@ -163,9 +163,10 @@ Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const ProcessInfo
             
             // Don't allow multiple factors for FX for now. Need to check later the FX inversion in the lookup below 
             // if we want to extend the builder to multiple factors for each FX process.
-            if (kv.first == CT::FX)
+            if (kv.first == CT::FX) {
                 QL_REQUIRE(p.second == 1, "CorrelationMatrixBuilder does not support multiple factors for FX. " <<
                     p.first << " is set up with " << p.second << " factors.");
+            }
 
             dim += p.second;
             for (Size i = 0; i < p.second; ++i) {
