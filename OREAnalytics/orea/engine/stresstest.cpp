@@ -55,7 +55,10 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                        boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                        const boost::shared_ptr<StressTestScenarioData>& stressData, const Conventions& conventions,
                        const CurveConfigurations& curveConfigs, const TodaysMarketParameters& todaysMarketParams,
-                       boost::shared_ptr<ScenarioFactory> scenarioFactory, bool continueOnError) {
+                       boost::shared_ptr<ScenarioFactory> scenarioFactory,
+                       std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
+                       std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
+                       const boost::shared_ptr<ReferenceDataManager>& referenceData, bool continueOnError) {
 
     LOG("Build Simulation Market");
     boost::shared_ptr<ScenarioSimMarket> simMarket =
@@ -73,7 +76,8 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     LOG("Build Engine Factory");
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = marketConfiguration;
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, simMarket, configurations);
+    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
+        engineData, simMarket, configurations, extraEngineBuilders, extraLegBuilders, referenceData);
 
     LOG("Reset and Build Portfolio");
     portfolio->reset();
