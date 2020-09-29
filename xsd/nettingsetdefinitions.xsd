@@ -52,6 +52,7 @@
                       </xs:all>
                     </xs:complexType>
                   </xs:element>
+                  <xs:element type="xs:boolean" name="ApplyInitialMargin" maxOccurs="1" minOccurs="0"/>
                 </xs:all>
               </xs:complexType>
             </xs:element>

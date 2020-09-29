@@ -52,9 +52,20 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
       extraEngineBuilders_(extraEngineBuilders), referenceData_(referenceData), dimQuantile_(dimQuantile),
       dimHorizonCalendarDays_(dimHorizonCalendarDays), analytics_(analytics), calculationType_(calculationType),
       dvaName_(dvaName), fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve),
-      fullInitialCollateralisation_(fullInitialCollateralisation), storeFlows_(storeFlows) {}
+      fullInitialCollateralisation_(fullInitialCollateralisation), storeFlows_(storeFlows) {
+
+    if (analytics_.size() == 0) {
+        WLOG("post processor analytics not set, using defaults");
+	analytics_["dim"] = true;
+	analytics_["mva"] = true;
+	analytics_["kva"] = false;
+	analytics_["cvaSensi"] = true;
+    }
+}
 
 void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnErr) {
+    LOG("XvaRunner::runXva called");
+
     // ensure date is reset
     Settings::instance().evaluationDate() = asof_;
 
@@ -70,6 +81,9 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
         market, simMarketData_, *conventions_, "", *curveConfigs_, *todaysMarketParams_, true);
     simMarket->scenarioGenerator() = sg;
 
+    for (auto b : extraEngineBuilders_)
+        b->reset();
+    
     // TODO: Is this needed? PMMarket is in ORE Plus
     // Rebuild portfolio linked to SSM (wrapped)
     // auto simPmMarket = boost::make_shared<PreciousMetalMarket>(simMarket);
@@ -79,8 +93,6 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
     portfolio_->build(simFactory);
 
     // The cube...
-    LOG("Create Cube");
-
     std::vector<boost::shared_ptr<ValuationCalculator>> calculators;
     boost::shared_ptr<NPVCalculator> npvCalculator = boost::make_shared<NPVCalculator>(baseCurrency_);
     boost::shared_ptr<NPVCube> cube;
@@ -115,7 +127,7 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
 
         cubeInterpreter = boost::make_shared<RegularCubeInterpretation>();
         calculators.push_back(npvCalculator);
-        calculationType = calculationType_; //"Symmetric";
+        calculationType = calculationType_;
     }
 
     boost::shared_ptr<NPVCube> nettingCube = getNettingSetCube(calculators);
@@ -125,15 +137,12 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
 
     simMarket->aggregationScenarioData() = scenarioData; // ??? simMarket gets agg data?
 
-    LOG("ValEngine Build Cube");
+    LOG("Build Cube");
     ValuationEngine engine(asof_, scenarioGeneratorData_->grid(), simMarket);
     engine.buildCube(portfolio_, cube, calculators, scenarioGeneratorData_->withMporStickyDate(), nettingCube);
-    LOG("Got Cube");
 
     LOG("Run post processor");
-
     QL_REQUIRE(analytics_.size() > 0, "analytics map not set");
-
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator =
         getDimCalculator(cube, cubeInterpreter, scenarioData, model, nettingCube);
     postProcess_ = boost::make_shared<PostProcess>(portfolio_, netting_, market, "", cube, scenarioData, analytics_,

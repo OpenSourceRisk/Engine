@@ -138,7 +138,7 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
 
     // the exchange rate is interpreted as the spot rate w.r.t. the index's
     // settlement date
-    Date refValueDate = valueDate(Settings::instance().evaluationDate());
+    Date refValueDate = valueDate(fixingCalendar().adjust(Settings::instance().evaluationDate()));
 
     // the fixing is obeying the settlement delay as well
     Date fixingValueDate = valueDate(fixingDate);
