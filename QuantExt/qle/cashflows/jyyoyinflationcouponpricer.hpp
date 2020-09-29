@@ -47,4 +47,14 @@ private:
     QuantLib::Rate adjustedFixing(QuantLib::Rate fixing = QuantLib::Null<QuantLib::Rate>()) const override;
 };
 
+/*! Return the expected value of the inflation index ratio \f$I(T)/I(S)\f$ under Jarrow Yildrim where 
+    \f$ 0 < S < T \f$. The value is given in Section 13 of <em>Modern Derivatives Pricing and Credit Exposure 
+    Analysis, 2015</em> by the following:
+    \f[
+    \frac{P_r(0,T)}{P_n(0,T)} \frac{P_n(0,S)}{P_r(0,S)} e^{C(S,T)}
+    \f]
+*/
+QuantLib::Real jyExpectedIndexRatio(const boost::shared_ptr<CrossAssetModel>& model,
+    QuantLib::Size index, QuantLib::Time S, QuantLib::Time T);
+
 }

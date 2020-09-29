@@ -64,31 +64,37 @@ Rate JyYoYInflationCouponPricer::adjustedFixing(Rate) const {
     }
 
     // Use the JY model to calculate the adjusted fixing.
-    using namespace CrossAssetAnalytics;
-    auto irIdx = model_->ccyIndex(model_->infjy(index_)->currency());
-    auto irTs = model_->irlgm1f(irIdx)->termStructure();
     auto zts = model_->infjy(index_)->realRate()->termStructure();
-
-    auto T = zts->timeFromReference(numFixingDate);
     auto S = zts->timeFromReference(denFixingDate);
+    auto T = zts->timeFromReference(numFixingDate);
+
+    return jyExpectedIndexRatio(model_, index_, S, T) - 1;
+}
+
+Real jyExpectedIndexRatio(const boost::shared_ptr<CrossAssetModel>& model, Size index, Time S, Time T) {
+
+    using namespace CrossAssetAnalytics;
+    auto irIdx = model->ccyIndex(model->infjy(index)->currency());
+    auto irTs = model->irlgm1f(irIdx)->termStructure();
+    auto zts = model->infjy(index)->realRate()->termStructure();
 
     // Calculate growthRatio: \frac{P_r(0,T)}{P_n(0,T)} / \frac{P_r(0,S)}{P_n(0,S)}
     auto growthRatio = inflationGrowth(zts, T) / inflationGrowth(zts, S);
-    
+
     // Calculate exponent of the convexity adjustment i.e. c.
-    auto rrParam = model_->infjy(index_)->realRate();
+    auto rrParam = model->infjy(index)->realRate();
     auto H_r_S = rrParam->H(S);
     auto H_r_T = rrParam->H(T);
-    auto H_n_S = model_->irlgm1f(irIdx)->H(S);
+    auto H_n_S = model->irlgm1f(irIdx)->H(S);
 
     auto c = H_r_S * rrParam->zeta(S);
-    c -= H_n_S * integral(model_.get(), P(rzy(irIdx, index_, 0), az(irIdx), ay(index_)), 0.0, S);
-    c += integral(model_.get(), LC(0.0, -1.0, P(ay(index_), ay(index_), Hy(index_)),
-        1.0, P(rzy(irIdx, index_, 0), az(irIdx), ay(index_), Hz(irIdx)),
-        -1.0, P(ryy(index_, index_, 0, 1), ay(index_), sy(index_))), 0.0, S);
+    c -= H_n_S * integral(model.get(), P(rzy(irIdx, index, 0), az(irIdx), ay(index)), 0.0, S);
+    c += integral(model.get(), LC(0.0, -1.0, P(ay(index), ay(index), Hy(index)),
+        1.0, P(rzy(irIdx, index, 0), az(irIdx), ay(index), Hz(irIdx)),
+        -1.0, P(ryy(index, index, 0, 1), ay(index), sy(index))), 0.0, S);
     c *= (H_r_S - H_r_T);
 
-    return growthRatio * exp(c) - 1;
+    return growthRatio * exp(c);
 }
 
 }
