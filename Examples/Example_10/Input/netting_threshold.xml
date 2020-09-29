@@ -28,7 +28,7 @@
           <Currency>EUR</Currency>
         </Currencies>
       </EligibleCollaterals>
-      <ApplyInitialMargin>Y</ApplyInitialMargin>
+      <ApplyInitialMargin>true</ApplyInitialMargin>
     </CSADetails>
   </NettingSet>
   <NettingSet>
@@ -59,7 +59,7 @@
           <Currency>EUR</Currency>
         </Currencies>
       </EligibleCollaterals>
-      <ApplyInitialMargin>Y</ApplyInitialMargin>
+      <ApplyInitialMargin>true</ApplyInitialMargin>
     </CSADetails>
   </NettingSet>
 </NettingSetDefinitions>
