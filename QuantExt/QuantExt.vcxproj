@@ -676,6 +676,7 @@
     <ClInclude Include="qle\pricingengines\analyticcclgmfxoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticdkcpicapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticjycpicapfloorengine.hpp" />
+    <ClInclude Include="qle\pricingengines\analyticjyyoycapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticlgmcdsoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp" />
@@ -927,6 +928,7 @@
     <ClCompile Include="qle\pricingengines\analyticcclgmfxoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticdkcpicapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticjycpicapfloorengine.cpp" />
+    <ClCompile Include="qle\pricingengines\analyticjyyoycapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticlgmcdsoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticxassetlgmeqoptionengine.cpp" />

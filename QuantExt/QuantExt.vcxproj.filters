@@ -960,6 +960,9 @@
     <ClInclude Include="qle\cashflows\jyyoyinflationcouponpricer.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticjyyoycapfloorengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1641,6 +1644,9 @@
     </ClCompile>
     <ClCompile Include="qle\cashflows\jyyoyinflationcouponpricer.cpp">
       <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticjyyoycapfloorengine.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
