@@ -279,11 +279,12 @@ void InfDkBuilder::buildCapFloorBasket() const {
     for (Size j = 0; j < data_->optionExpiries().size(); j++) {
         Date expiryDate = optionExpiry(j);
 
-        // check if we want to keep the helper when a reference calibration grid is given
+        // check if we want to keep the helper when a reference calibration grid is given or
+        // we have duplicate expiry times (see below)
+        optionActive_[j] = false;
         auto refCalDate =
             std::lower_bound(referenceCalibrationDates.begin(), referenceCalibrationDates.end(), expiryDate);
         if (refCalDate == referenceCalibrationDates.end() || *refCalDate > lastRefCalDate) {
-            optionActive_[j] = true;
             Real strikeValue = optionStrike(j);
 
             boost::shared_ptr<CPICapFloor> cf =
@@ -296,17 +297,30 @@ void InfDkBuilder::buildCapFloorBasket() const {
                 boost::make_shared<QuantExt::CpiCapFloorHelper>(capfloor, baseCPI, expiryDate, fixCalendar, bdc,
                                                                 fixCalendar, bdc, strikeValue, hIndex, lag, marketPrem);
 
-            optionBasket_.push_back(helper);
-            helper->performCalculations();
-            expiryTimes.push_back(inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
-                                                        inflationIndex_->zeroInflationTermStructure()->dayCounter(),
-                                                        baseDate, helper->instrument()->fixingDate()));
-            DLOG("Added InflationOptionHelper index="
-                 << data_->infIndex() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
-                 << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
-                 << ", strike=" << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem);
-        } else {
-            optionActive_[j] = false;
+            Real tte = inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
+                                             inflationIndex_->zeroInflationTermStructure()->dayCounter(), baseDate,
+                                             helper->instrument()->fixingDate());
+            // we might produce duplicate expiry times even if the fixing dates are all different
+            if (std::find_if(expiryTimes.begin(), expiryTimes.end(),
+                             [tte](Real x) { return QuantLib::close_enough(x, tte); }) == expiryTimes.end()) {
+                optionBasket_.push_back(helper);
+                helper->performCalculations();
+                expiryTimes.push_back(inflationYearFraction(inflationIndex_->frequency(),
+                                                            inflationIndex_->interpolated(),
+                                                            inflationIndex_->zeroInflationTermStructure()->dayCounter(),
+                                                            baseDate, helper->instrument()->fixingDate()));
+                DLOG("Added InflationOptionHelper index="
+                     << data_->infIndex() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
+                     << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
+                     << ", strike=" << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem);
+                optionActive_[j] = true;
+            } else {
+                DLOG("Skipped InflationOptionHelper index="
+                     << data_->infIndex() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
+                     << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
+                     << ", strike=" << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem
+                     << " since we already have a helper with the same expiry time.");
+            }
         }
     }
 
