@@ -305,21 +305,18 @@ void InfDkBuilder::buildCapFloorBasket() const {
                              [tte](Real x) { return QuantLib::close_enough(x, tte); }) == expiryTimes.end()) {
                 optionBasket_.push_back(helper);
                 helper->performCalculations();
-                expiryTimes.push_back(inflationYearFraction(inflationIndex_->frequency(),
-                                                            inflationIndex_->interpolated(),
-                                                            inflationIndex_->zeroInflationTermStructure()->dayCounter(),
-                                                            baseDate, helper->instrument()->fixingDate()));
+                expiryTimes.push_back(tte);
                 DLOG("Added InflationOptionHelper index="
                      << data_->infIndex() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
-                     << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
-                     << ", strike=" << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem);
+                     << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI << ", strike="
+                     << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem << ", tte=" << tte);
                 optionActive_[j] = true;
             } else {
                 DLOG("Skipped InflationOptionHelper index="
                      << data_->infIndex() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
                      << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
                      << ", strike=" << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem
-                     << " since we already have a helper with the same expiry time.");
+                     << ", tte=" << tte << " since we already have a helper with the same expiry time.");
             }
         }
     }
