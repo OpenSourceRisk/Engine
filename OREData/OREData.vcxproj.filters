@@ -537,6 +537,9 @@
     <ClInclude Include="ored\model\inflation\infjybuilder.hpp">
       <Filter>model\inflation</Filter>
     </ClInclude>
+    <ClInclude Include="ored\model\calibrationinstruments\yoycapfloor.hpp">
+      <Filter>model\calibrationinstruments</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -949,6 +952,9 @@
     </ClCompile>
     <ClCompile Include="ored\model\inflation\infjybuilder.cpp">
       <Filter>model\inflation</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\calibrationinstruments\yoycapfloor.cpp">
+      <Filter>model\calibrationinstruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

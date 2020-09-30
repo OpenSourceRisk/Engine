@@ -162,7 +162,7 @@
     </xs:restriction>
   </xs:simpleType>
   
-  <xs:complexType name="calibrationCpiCapFloor">
+  <xs:complexType name="calibrationInflationCapFloor">
     <xs:sequence>
       <xs:element type="capFloor" name="Type"/>
       <xs:element type="xs:string" name="Maturity"/>
@@ -172,7 +172,8 @@
   
   <xs:complexType name="calibrationBasket">
     <xs:choice>
-      <xs:element type="calibrationCpiCapFloor" name="CpiCapFloor" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element type="calibrationInflationCapFloor" name="CpiCapFloor" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element type="calibrationInflationCapFloor" name="YoYCapFloor" minOccurs="1" maxOccurs="unbounded"/>
     </xs:choice>
   </xs:complexType>
   

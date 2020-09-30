@@ -97,6 +97,7 @@
     <ClInclude Include="ored\model\calibrationbasket.hpp" />
     <ClInclude Include="ored\model\calibrationinstrumentfactory.hpp" />
     <ClInclude Include="ored\model\calibrationinstruments\cpicapfloor.hpp" />
+    <ClInclude Include="ored\model\calibrationinstruments\yoycapfloor.hpp" />
     <ClInclude Include="ored\model\crossassetmodelbuilder.hpp" />
     <ClInclude Include="ored\model\crossassetmodeldata.hpp" />
     <ClInclude Include="ored\model\eqbsbuilder.hpp" />
@@ -263,6 +264,7 @@
     <ClCompile Include="ored\model\calibrationbasket.cpp" />
     <ClCompile Include="ored\model\calibrationinstrumentfactory.cpp" />
     <ClCompile Include="ored\model\calibrationinstruments\cpicapfloor.cpp" />
+    <ClCompile Include="ored\model\calibrationinstruments\yoycapfloor.cpp" />
     <ClCompile Include="ored\model\crossassetmodelbuilder.cpp" />
     <ClCompile Include="ored\model\crossassetmodeldata.cpp" />
     <ClCompile Include="ored\model\eqbsbuilder.cpp" />

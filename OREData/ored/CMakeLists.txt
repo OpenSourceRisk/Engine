@@ -55,6 +55,7 @@ marketdata/yieldvolcurve.cpp
 model/calibrationbasket.cpp
 model/calibrationinstrumentfactory.cpp
 model/calibrationinstruments/cpicapfloor.cpp
+model/calibrationinstruments/yoycapfloor.cpp
 model/crossassetmodelbuilder.cpp
 model/crossassetmodeldata.cpp
 model/eqbsbuilder.cpp
@@ -201,6 +202,8 @@ marketdata/yieldcurve.hpp
 marketdata/yieldvolcurve.hpp
 model/calibrationbasket.hpp
 model/calibrationinstrumentfactory.hpp
+model/calibrationinstruments/cpicapfloor.hpp
+model/calibrationinstruments/yoycapfloor.hpp
 model/crossassetmodelbuilder.hpp
 model/crossassetmodeldata.hpp
 model/eqbsbuilder.hpp
