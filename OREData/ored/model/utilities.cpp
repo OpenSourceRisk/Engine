@@ -167,8 +167,7 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
 }
 
 std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-                                  const boost::shared_ptr<InfDkParametrization>& parametrization,
-                                  const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
+                                  const boost::shared_ptr<InfDkParametrization>& parametrization) {
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
         << std::setw(14) << "(diff)" << std::setw(14) << "infdkAlpha" << std::setw(14) << "infdkH\n";
@@ -178,7 +177,7 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
         Real marketValue = basket[j]->marketValue();
         Real valueDiff = (modelValue - marketValue);
         boost::shared_ptr<CpiCapFloorHelper> instr = boost::dynamic_pointer_cast<CpiCapFloorHelper>(basket[j]);
-        if (instr != nullptr && parametrization != nullptr && domesticLgm != nullptr) {
+        if (instr != nullptr && parametrization != nullptr) {
             // report alpha, H at t_expiry^-
             t = inflationYearFraction(
                     parametrization->termStructure()->frequency(),

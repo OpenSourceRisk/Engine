@@ -54,8 +54,7 @@ std::string getCalibrationDetails(
 
 std::string getCalibrationDetails(
     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-    const boost::shared_ptr<InfDkParametrization>& parametrization = boost::shared_ptr<InfDkParametrization>(),
-    const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
+    const boost::shared_ptr<InfDkParametrization>& parametrization = boost::shared_ptr<InfDkParametrization>());
 
 } // namespace data
 } // namespace ore

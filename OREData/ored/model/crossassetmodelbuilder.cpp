@@ -159,7 +159,6 @@ void CrossAssetModelBuilder::buildModel() const {
     eqOptionExpiries_.resize(config_->eqConfigs().size());
     eqOptionCalibrationErrors_.resize(config_->eqConfigs().size());
     infCapFloorBaskets_.resize(config_->infConfigs().size());
-    infCapFloorExpiries_.resize(config_->infConfigs().size());
     infCapFloorCalibrationErrors_.resize(config_->infConfigs().size());
 
     subBuilders_.clear();
@@ -460,11 +459,11 @@ void CrossAssetModelBuilder::buildModel() const {
         if (auto dkData = boost::dynamic_pointer_cast<InfDkData>(imData)) {
             auto dkParam = boost::dynamic_pointer_cast<InfDkParametrization>(infParameterizations[i]);
             QL_REQUIRE(dkParam, "Expected DK model data to have given a DK parameterisation.");
-            calibrateInflation(*dkData, i, dkParam, irParametrizations[0]);
+            calibrateInflation(*dkData, i, dkParam);
         } else if (auto jyData = boost::dynamic_pointer_cast<InfJyData>(imData)) {
             auto jyParam = boost::dynamic_pointer_cast<InfJyParameterization>(infParameterizations[i]);
             QL_REQUIRE(jyParam, "Expected JY model data to have given a JY parameterisation.");
-            calibrateInflation(*jyData, i, jyParam, irParametrizations[0]);
+            calibrateInflation(*jyData, i, jyParam);
         } else {
             QL_FAIL("CrossAssetModelBuilder expects either DK or JY inflation model data.");
         }
@@ -494,8 +493,7 @@ void CrossAssetModelBuilder::forceRecalculate() {
 }
 
 void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size modelIdx,
-    const boost::shared_ptr<InfDkParametrization>& inflationParam,
-    const boost::shared_ptr<IrLgm1fParametrization>& domesticIrParam) const {
+    const boost::shared_ptr<InfDkParametrization>& inflationParam) const {
 
     LOG("Calibrate DK inflation model for inflation index " << data.index());
     
@@ -542,7 +540,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
             // we check the log level here to avoid unncessary computations
             if (Log::instance().filter(ORE_DATA)) {
                 TLOGGERSTREAM << "Calibration details:";
-                TLOGGERSTREAM << getCalibrationDetails(infCapFloorBaskets_[modelIdx], inflationParam, domesticIrParam);
+                TLOGGERSTREAM << getCalibrationDetails(infCapFloorBaskets_[modelIdx], inflationParam);
                 TLOGGERSTREAM << "rmse = " << infCapFloorCalibrationErrors_[modelIdx];
             }
         } else {
@@ -551,7 +549,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
                 std::to_string(config_->bootstrapTolerance());
             WLOG(StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage));
             WLOGGERSTREAM << "Calibration details:";
-            WLOGGERSTREAM << getCalibrationDetails(infCapFloorBaskets_[modelIdx], inflationParam, domesticIrParam);
+            WLOGGERSTREAM << getCalibrationDetails(infCapFloorBaskets_[modelIdx], inflationParam);
             WLOGGERSTREAM << "rmse = " << infCapFloorCalibrationErrors_[modelIdx];
             if (!continueOnError_)
                 QL_FAIL(exceptionMessage);
@@ -561,9 +559,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
 }
 
 void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data,
-    Size modelIdx,
-    const boost::shared_ptr<InfJyParameterization>& inflationParam,
-    const boost::shared_ptr<IrLgm1fParametrization>& domesticIrParam) const {
+    Size modelIdx, const boost::shared_ptr<InfJyParameterization>& inflationParam) const {
 
     LOG("Calibrate JY inflation model for inflation index " << data.index());
 

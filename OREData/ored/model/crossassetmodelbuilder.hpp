@@ -148,14 +148,12 @@ private:
     // Calibrate DK inflation model
     void calibrateInflation(const InfDkData& data,
         QuantLib::Size modelIdx,
-        const boost::shared_ptr<QuantExt::InfDkParametrization>& inflationParam,
-        const boost::shared_ptr<QuantExt::IrLgm1fParametrization>& domesticIrParam) const;
+        const boost::shared_ptr<QuantExt::InfDkParametrization>& inflationParam) const;
 
     // Calibrate JY inflation model
     void calibrateInflation(const InfJyData& data,
         QuantLib::Size modelIdx,
-        const boost::shared_ptr<QuantExt::InfJyParameterization>& inflationParam,
-        const boost::shared_ptr<QuantExt::IrLgm1fParametrization>& domesticIrParam) const;
+        const boost::shared_ptr<QuantExt::InfJyParameterization>& inflationParam) const;
 };
 
 } // namespace data
