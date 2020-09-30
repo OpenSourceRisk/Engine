@@ -172,21 +172,27 @@ void InfDkBuilder::performCalculations() const {
 
 Real InfDkBuilder::optionStrike(const Size j) const {
     Strike strike = parseStrike(data_->optionStrikes()[j]);
-
-    Real strikeValue;
-    QL_REQUIRE(strike.type == Strike::Type::Absolute,
-               "DkBuilder: only fixed strikes supported, got " << data_->optionStrikes()[j]);
-    strikeValue = strike.value;
-    return strikeValue;
+    if (strike.type == Strike::Type::Absolute)
+        return strike.value;
+    else if (strike.type == Strike::Type::ATM) {
+        return inflationIndex_->zeroInflationTermStructure()->zeroRate(optionExpiry(j));
+    } else {
+        QL_FAIL("DkBuilder: strike '" << data_->optionStrikes()[j]
+                                      << "' not supported, expected absolute strike (e.g. '0.01') or 'ATM'");
+    }
 }
 
 Date InfDkBuilder::optionExpiry(const Size j) const {
     Date today = Settings::instance().evaluationDate();
-    std::string expiryString = data_->optionExpiries()[j];
-    Period expiry = parsePeriod(expiryString);
-    Date expiryDate = inflationIndex_->fixingCalendar().advance(today, expiry);
-    QL_REQUIRE(expiryDate > today, "expired calibration option expiry " << QuantLib::io::iso_date(expiryDate));
-    return expiryDate;
+    Date d;
+    Period p;
+    bool isDate;
+    parseDateOrPeriod(data_->optionExpiries()[j], d, p, isDate);
+    if (!isDate) {
+        d = inflationIndex_->fixingCalendar().advance(today, p);
+    }
+    QL_REQUIRE(d > today, "expired calibration option expiry " << QuantLib::io::iso_date(d));
+    return d;
 }
 
 bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
