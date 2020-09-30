@@ -235,7 +235,10 @@ bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
 }
 
 void InfDkBuilder::buildCapFloorBasket() const {
-    QL_REQUIRE(data_->optionExpiries().size() == data_->optionStrikes().size(), "Inf option vector size mismatch");
+    QL_REQUIRE(data_->optionExpiries().size() == data_->optionStrikes().size(),
+               "InfDkBuilder: number of given option expiries (" << data_->optionExpiries().size()
+                                                                 << ") must match number of given strikes ("
+                                                                 << data_->optionStrikes().size() << ")");
 
     optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
 
