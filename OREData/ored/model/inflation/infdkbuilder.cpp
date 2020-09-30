@@ -312,6 +312,9 @@ void InfDkBuilder::buildCapFloorBasket() const {
                  << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
                  << ", strike=" << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem);
 
+            if (refCalDate != referenceCalibrationDates.end())
+                lastRefCalDate = *refCalDate;
+
         } else {
             optionActive_[j] = false;
         }
