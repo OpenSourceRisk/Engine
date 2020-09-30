@@ -275,9 +275,15 @@ void CrossAssetModelBuilder::buildModel() const {
         cmb.addCorrelation(factor1, factor2, corr);
     }
 
-    DLOG("Get correlation matrix for currencies:");
-    for (auto c : currencies)
+    DLOG("Get correlation matrix for:");
+    for (auto const& c : currencies)
         DLOG("Currency " << c);
+    for (auto const& i : infIndices)
+        DLOG("INF index " << i);
+    for (auto const& n : crNames)
+        DLOG("CR name " << n);
+    for (auto const& n : eqNames)
+        DLOG("EQ name " << n);
 
     Matrix corrMatrix = cmb.correlationMatrix(currencies, infIndices, crNames, eqNames);
 
