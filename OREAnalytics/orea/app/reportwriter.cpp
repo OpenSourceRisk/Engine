@@ -58,7 +58,8 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("NotionalCurrency", string())
         .addColumn("Notional(Base)", double(), 2)
         .addColumn("NettingSet", string())
-        .addColumn("CounterParty", string());
+        .addColumn("CounterParty", string())
+        .addColumn("Volatility", double(), 6);
     for (auto trade : portfolio->trades()) {
         try {
             string npvCcy = trade->npvCurrency();
@@ -86,6 +87,35 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                          : trade->notional() * fxNotional)
                 .add(trade->envelope().nettingSetId())
                 .add(trade->envelope().counterparty());
+
+            // Option volatility output
+            boost::shared_ptr<QuantLib::VanillaOption> qlVanOpt =
+                boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trade->instrument()->qlInstrument());
+            if (qlVanOpt) {
+                Volatility blackVol = 0.0;
+
+                if (trade->tradeType() == "EquityOption") {
+                    boost::shared_ptr<ore::data::EquityOption> eqoTrn =
+                        boost::dynamic_pointer_cast<ore::data::EquityOption>(trade);
+                    std::string assetName = eqoTrn->equityName();
+                    blackVol = market->equityVol(assetName)->blackVol(maturity, eqoTrn->strike());
+                } else if (trade->tradeType() == "FxOption") {
+                    boost::shared_ptr<ore::data::FxOption> fxoTrn =
+                        boost::dynamic_pointer_cast<ore::data::FxOption>(trade);
+                    const std::string& ccyPair = fxoTrn->boughtCurrency() + fxoTrn->soldCurrency();
+                    // strike =  soldAmount / boughtAmount;
+                    blackVol = market->fxVol(ccyPair)->blackVol(maturity, fxoTrn->strike());
+                } else if (trade->tradeType() == "CommodityOption") {
+                    //boost::shared_ptr<ore::data::CommodityOption> comoTrn =
+                    //    boost::dynamic_pointer_cast<ore::data::CommodityOption>(trade);
+                    //std::string assetName = comoTrn->fxIndex();
+                    //blackVol = market->commodityVolatility(assetName)->blackVol(maturity, trade->notional());
+                }
+                report.add(blackVol);
+            } else {
+                report.add(Null<Real>());
+            }
+
         } catch (std::exception& e) {
             ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during trade pricing", e.what()));
             Date maturity = trade->maturity();
@@ -102,7 +132,8 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(nullString_)
                 .add(Null<Real>())
                 .add(nullString_)
-                .add(nullString_);
+                .add(nullString_)
+                .add(Null<Real>());
         }
     }
     report.end();
