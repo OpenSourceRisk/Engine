@@ -165,7 +165,7 @@
   <xs:complexType name="calibrationInflationCapFloor">
     <xs:sequence>
       <xs:element type="capFloor" name="Type"/>
-      <xs:element type="xs:string" name="Maturity"/>
+      <xs:element type="xs:string" name="Tenor"/>
       <xs:element type="xs:string" name="Strike"/>
     </xs:sequence>
   </xs:complexType>

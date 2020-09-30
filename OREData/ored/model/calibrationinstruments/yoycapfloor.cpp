@@ -32,19 +32,19 @@ YoYCapFloor::YoYCapFloor()
  : CalibrationInstrument("YoYCapFloor"), type_(CapFloor::Floor) {}
 
 YoYCapFloor::YoYCapFloor(CapFloor::Type type,
-    const Period& maturity,
+    const Period& tenor,
     const boost::shared_ptr<BaseStrike>& strike)
     : CalibrationInstrument("YoYCapFloor"),
       type_(type),
-      maturity_(maturity),
+      tenor_(tenor),
       strike_(strike) {}
 
 CapFloor::Type YoYCapFloor::type() const {
     return type_;
 }
 
-const QuantLib::Period& YoYCapFloor::maturity() const {
-    return maturity_;
+const QuantLib::Period& YoYCapFloor::tenor() const {
+    return tenor_;
 }
 
 const boost::shared_ptr<BaseStrike>& YoYCapFloor::strike() const {
@@ -54,14 +54,14 @@ const boost::shared_ptr<BaseStrike>& YoYCapFloor::strike() const {
 void YoYCapFloor::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, instrumentType_);
     type_ = parseCapFloorType(XMLUtils::getChildValue(node, "Type", true));
-    maturity_ = parsePeriod(XMLUtils::getChildValue(node, "Maturity", true));
+    tenor_ = parsePeriod(XMLUtils::getChildValue(node, "Tenor", true));
     strike_ = parseBaseStrike(XMLUtils::getChildValue(node, "Strike", true));
 }
 
 XMLNode* YoYCapFloor::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(instrumentType_);
     XMLUtils::addChild(doc, node, "Type", to_string(type_));
-    XMLUtils::addChild(doc, node, "Maturity", to_string(maturity_));
+    XMLUtils::addChild(doc, node, "Tenor", to_string(tenor_));
     XMLUtils::addChild(doc, node, "Strike", strike_->toString());
     return node;
 }

@@ -32,19 +32,19 @@ CpiCapFloor::CpiCapFloor()
  : CalibrationInstrument("CpiCapFloor"), type_(CapFloor::Floor) {}
 
 CpiCapFloor::CpiCapFloor(CapFloor::Type type,
-    const Period& maturity,
+    const Period& tenor,
     const boost::shared_ptr<BaseStrike>& strike)
     : CalibrationInstrument("CpiCapFloor"),
       type_(type),
-      maturity_(maturity),
+      tenor_(tenor),
       strike_(strike) {}
 
 CapFloor::Type CpiCapFloor::type() const {
     return type_;
 }
 
-const QuantLib::Period& CpiCapFloor::maturity() const {
-    return maturity_;
+const QuantLib::Period& CpiCapFloor::tenor() const {
+    return tenor_;
 }
 
 const boost::shared_ptr<BaseStrike>& CpiCapFloor::strike() const {
@@ -54,14 +54,14 @@ const boost::shared_ptr<BaseStrike>& CpiCapFloor::strike() const {
 void CpiCapFloor::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, instrumentType_);
     type_ = parseCapFloorType(XMLUtils::getChildValue(node, "Type", true));
-    maturity_ = parsePeriod(XMLUtils::getChildValue(node, "Maturity", true));
+    tenor_ = parsePeriod(XMLUtils::getChildValue(node, "Tenor", true));
     strike_ = parseBaseStrike(XMLUtils::getChildValue(node, "Strike", true));
 }
 
 XMLNode* CpiCapFloor::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(instrumentType_);
     XMLUtils::addChild(doc, node, "Type", to_string(type_));
-    XMLUtils::addChild(doc, node, "Maturity", to_string(maturity_));
+    XMLUtils::addChild(doc, node, "Tenor", to_string(tenor_));
     XMLUtils::addChild(doc, node, "Strike", strike_->toString());
     return node;
 }

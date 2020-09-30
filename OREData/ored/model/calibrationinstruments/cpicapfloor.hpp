@@ -41,13 +41,13 @@ public:
 
     //! Detailed constructor
     CpiCapFloor(QuantLib::CapFloor::Type type,
-        const QuantLib::Period& maturity,
+        const QuantLib::Period& tenor,
         const boost::shared_ptr<BaseStrike>& strike);
 
     //! \name Inspectors
     //@{
     QuantLib::CapFloor::Type type() const;
-    const QuantLib::Period& maturity() const;
+    const QuantLib::Period& tenor() const;
     const boost::shared_ptr<BaseStrike>& strike() const;
     //@}
 
@@ -59,7 +59,7 @@ public:
 
 private:
     QuantLib::CapFloor::Type type_;
-    QuantLib::Period maturity_;
+    QuantLib::Period tenor_;
     boost::shared_ptr<BaseStrike> strike_;
 
     static CalibrationInstrumentRegister<CpiCapFloor> reg_;

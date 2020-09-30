@@ -213,7 +213,7 @@ bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
         auto cpiCapFloor = boost::dynamic_pointer_cast<CpiCapFloor>(ci[j]);
         QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor calibration instruments in DK inflation model data.");
 
-        Date expiryDate = inflationIndex_->fixingCalendar().advance(today, cpiCapFloor->maturity());
+        Date expiryDate = inflationIndex_->fixingCalendar().advance(today, cpiCapFloor->tenor());
         QL_REQUIRE(expiryDate > today, "expired calibration option expiry " << io::iso_date(expiryDate));
 
         auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(cpiCapFloor->strike());
@@ -275,7 +275,7 @@ void InfDkBuilder::buildCapFloorBasket() const {
         auto cpiCapFloor = boost::dynamic_pointer_cast<CpiCapFloor>(ci[j]);
         QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor calibration instruments in DK inflation model data.");
 
-        Date expiryDate = inflationIndex_->fixingCalendar().advance(today, cpiCapFloor->maturity());
+        Date expiryDate = inflationIndex_->fixingCalendar().advance(today, cpiCapFloor->tenor());
         QL_REQUIRE(expiryDate > today, "expired calibration option expiry " << io::iso_date(expiryDate));
 
         // check if we want to keep the helper when a reference calibration grid is given
