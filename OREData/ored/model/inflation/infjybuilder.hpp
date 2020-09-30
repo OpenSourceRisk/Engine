@@ -53,10 +53,14 @@ public:
         const std::string& configuration = Market::defaultConfiguration,
         const std::string& referenceCalibrationGrid = "");
 
+    using Helpers = std::vector<boost::shared_ptr<QuantLib::CalibrationHelper>>;
+    
     //! \name Inspectors
     //@{
     std::string inflationIndex() const;
     boost::shared_ptr<QuantExt::InfJyParameterization> parameterization() const;
+    Helpers realRateBasket() const;
+    Helpers indexBasket() const;
     //@}
 
     //! \name ModelBuilder interface
@@ -79,10 +83,62 @@ private:
     // Helper flag used in the forceRecalculate() method.
     bool forceCalibration_ = false;
 
+    /*! Calibration instruments to use for calibrating the real rate portion of the JY model. The basket is
+        empty if we are not calibrating the real rate portion of the JY model. Depending on the calibration 
+        configuration, either the real rate reversion parameter or the real rate volatility parameter will be 
+        adjusted in order to match these instruments.
+    */
+    mutable Helpers realRateBasket_;
+    mutable std::vector<bool> rrInstActive_;
+    mutable QuantLib::Array rrInstExpiries_;
+
+    /*! Calibration instruments to use for calibrating the inflation index portion of the JY model. The basket is 
+        empty if we are not calibrating the inflation index portion of the JY model.
+    */
+    mutable Helpers indexBasket_;
+    mutable std::vector<bool> indexInstActive_;
+    mutable QuantLib::Array indexInstExpiries_;
+
     //! \name LazyObject interface
     //@{
     void performCalculations() const override;
     //@}
+
+    //! Build any calibration baskets requested by the configuration i.e. via the \c data_ member.
+    void buildCalibrationBaskets() const;
+
+    //! Build the calibration basket.
+    Helpers buildCalibrationBasket(const CalibrationBasket& cb, std::vector<bool>& active,
+        QuantLib::Array& expiries) const;
+
+    //! Build a CPI cap floor calibration basket.
+    Helpers buildCpiCapFloorBasket(const CalibrationBasket& cb, std::vector<bool>& active,
+        QuantLib::Array& expiries) const;
+
+    //! Build a YoY cap floor calibration basket.
+    Helpers buildYoYCapFloorBasket(const CalibrationBasket& cb, std::vector<bool>& active,
+        QuantLib::Array& expiries) const;
+
+    //! Build a YoY swap calibration basket.
+    Helpers buildYoYSwapBasket(const CalibrationBasket& cb, std::vector<bool>& active,
+        QuantLib::Array& expiries) const;
+
+    //! Find calibration basket with parameter value equal to \p parameter
+    const CalibrationBasket& calibrationBasket(const std::string& parameter) const;
+
+    //! Create the real rate parameterisation.
+    boost::shared_ptr<QuantExt::Lgm1fParametrization<ZeroInflationTermStructure>> createRealRateParam() const;
+
+    //! Create the inflation index parameterisation.
+    boost::shared_ptr<QuantExt::FxBsParametrization> createIndexParam() const;
+
+    /*! Perform checks and possibly adjust the \p times and \p values array depending on calibration configuration.
+    */
+    void setupParams(const ModelParameter& param, QuantLib::Array& times, QuantLib::Array& values, 
+        const QuantLib::Array& expiries, const std::string& paramName) const;
+
+    //! Create the reference calibration dates.
+    std::vector<QuantLib::Date> referenceCalibrationDates() const;
 };
 
 }

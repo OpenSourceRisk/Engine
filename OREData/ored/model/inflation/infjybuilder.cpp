@@ -17,18 +17,32 @@
 */
 
 #include <ored/model/inflation/infjybuilder.hpp>
+#include <ored/model/calibrationinstruments/cpicapfloor.hpp>
+#include <ored/model/calibrationinstruments/yoycapfloor.hpp>
+#include <ored/model/calibrationinstruments/yoyswap.hpp>
+#include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/log.hpp>
+#include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
 #include <qle/models/infjyparameterization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
+#include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 
+using QuantExt::CPIBlackCapFloorEngine;
+using QuantExt::CpiCapFloorHelper;
+using QuantExt::FxBsParametrization;
+using QuantExt::Lgm1fParametrization;
+using std::lower_bound;
+using std::set;
 using std::string;
 
 namespace ore {
 namespace data {
+
+using Helpers = InfJyBuilder::Helpers;
 
 InfJyBuilder::InfJyBuilder(
     const boost::shared_ptr<Market>& market,
@@ -36,18 +50,14 @@ InfJyBuilder::InfJyBuilder(
     const string& configuration,
     const string& referenceCalibrationGrid)
     : market_(market),
-      configuration_(configuration),
-      data_(data),
-      referenceCalibrationGrid_(referenceCalibrationGrid),
-      marketObserver_(boost::make_shared<MarketObserver>()),
-      inflationIndex_(*market_->zeroInflationIndex(data_->index(), configuration_)),
-      inflationVolatility_(market_->cpiInflationCapFloorVolatilitySurface(data_->index(), configuration_)) {
+    configuration_(configuration),
+    data_(data),
+    referenceCalibrationGrid_(referenceCalibrationGrid),
+    marketObserver_(boost::make_shared<MarketObserver>()),
+    inflationIndex_(*market_->zeroInflationIndex(data_->index(), configuration_)),
+    inflationVolatility_(market_->cpiInflationCapFloorVolatilitySurface(data_->index(), configuration_)) {
 
     LOG("InfJyBuilder: building model for inflation index " << data_->index());
-
-    if (!data_->calibrationBaskets().empty()) {
-        QL_FAIL("InfJyBuilder: need to do work with the calibration baskets.");
-    }
 
     // Register with market observables except volatilities
     marketObserver_->registerWith(inflationIndex_);
@@ -58,27 +68,334 @@ InfJyBuilder::InfJyBuilder(
     // Notify observers of all market data changes, not only when not calculated
     alwaysForwardNotifications();
 
-    // Need to build calibration instruments if any of the parameters need calibration
-    const ReversionParameter& rrReversion = data_->realRateReversion();
-    const VolatilityParameter& rrVolatility = data_->realRateVolatility();
-    const VolatilityParameter& idxVolatility = data_->indexVolatility();
-    if (rrVolatility.calibrate() || rrReversion.calibrate() || idxVolatility.calibrate()) {
-        QL_FAIL("InfJyBuilder: need to do work with the calibration baskets.");
+    // Build the calibration instruments
+    buildCalibrationBaskets();
+
+    // Create the JY parameterisation.
+    parameterization_ = boost::make_shared<QuantExt::InfJyParameterization>(
+        createRealRateParam(), createIndexParam(), inflationIndex_);
+}
+
+string InfJyBuilder::inflationIndex() const {
+    return data_->index();
+}
+
+boost::shared_ptr<QuantExt::InfJyParameterization> InfJyBuilder::parameterization() const {
+    calculate();
+    return parameterization_;
+}
+
+Helpers InfJyBuilder::realRateBasket() const {
+    calculate();
+    return realRateBasket_;
+}
+
+Helpers InfJyBuilder::indexBasket() const {
+    calculate();
+    return indexBasket_;
+}
+
+bool InfJyBuilder::requiresRecalibration() const {
+    return (data_->realRateVolatility().calibrate() ||
+        data_->realRateReversion().calibrate() ||
+        data_->indexVolatility().calibrate()) &&
+        (marketObserver_->hasUpdated(false) ||
+            forceCalibration_);
+}
+
+void InfJyBuilder::performCalculations() const {
+    if (requiresRecalibration()) {
+        marketObserver_->hasUpdated(true);
+        buildCalibrationBaskets();
+    }
+}
+
+void InfJyBuilder::forceRecalculate() {
+    forceCalibration_ = true;
+    ModelBuilder::forceRecalculate();
+    forceCalibration_ = false;
+}
+
+void InfJyBuilder::buildCalibrationBaskets() const {
+
+    // If calibration type is None, don't build any baskets.
+    if (data_->calibrationType() == CalibrationType::None) {
+        DLOG("InfJyBuilder: calibration type is None so no calibration baskets built.");
+        return;
     }
 
-    // In the event of calibration, need to restructure the real rate and reversion parameters.
+    const auto& cbs = data_->calibrationBaskets();
+
+    // If calibration type is BestFit, check that we have at least one calibration basket. Build up to a maximum of 
+    // two calibration baskets. Log a warning if more than two are given. Arbitrarily assign the built baskets to 
+    // the realRateBasket_ and indexBasket_ members. They will be combined again in any case for BestFit calibration.
+    if (data_->calibrationType() == CalibrationType::BestFit) {
+        QL_REQUIRE(cbs.size() > 0, "InfJyBuilder: calibration type is BestFit but no calibration baskets provided.");
+        rrInstActive_ = vector<bool>(cbs[0].instruments().size(), false);
+        realRateBasket_ = buildCalibrationBasket(cbs[0], rrInstActive_, rrInstExpiries_);
+        if (cbs.size() > 1) {
+            indexInstActive_ = vector<bool>(cbs[1].instruments().size(), false);
+            indexBasket_ = buildCalibrationBasket(cbs[1], indexInstActive_, indexInstExpiries_);
+        }
+        if (cbs.size() > 2)
+            WLOG("InfJyBuilder: only 2 calibration baskets can be processed but " << cbs.size() <<
+                " were supplied. The extra baskets are ignored.");
+        return;
+    }
+
+    // Make sure that the calibration type is now Bootstrap.
+    QL_REQUIRE(data_->calibrationType() == CalibrationType::Bootstrap, "InfJyBuilder: expected the calibration " <<
+        "type to be one of None, BestFit or Bootstrap.");
+
+    const VolatilityParameter& idxVolatility = data_->indexVolatility();
+    const ReversionParameter& rrReversion = data_->realRateReversion();
+    const VolatilityParameter& rrVolatility = data_->realRateVolatility();
+
+    // Firstly, look at the inflation index portion i.e. are we calibrating it.
+    if (idxVolatility.calibrate()) {
+
+        DLOG("InfJyBuilder: building calibration basket for JY index bootstrap calibration.");
+
+        // If we are not calibrating the real rate portion, then we expect exactly one calibration basket. Otherwise 
+        // we need to find a basket with the 'Index' parameter.
+        if (!rrReversion.calibrate() && !rrVolatility.calibrate()) {
+            QL_REQUIRE(cbs.size() == 1, "InfJyBuilder: calibrating only JY index volatility using Bootstrap so " <<
+                "expected exactly one basket but got " << cbs.size() << ".");
+            const auto& cb = cbs[0];
+            if (!cb.parameter().empty() && cb.parameter() != "Index") {
+                WLOG("InfJyBuilder: calibrating only JY index volatility using Bootstrap so expected the " <<
+                    "calibration basket parameter to be 'Index' but got '" << cb.parameter() << "'.");
+            }
+            indexInstActive_ = vector<bool>(cb.instruments().size(), false);
+            indexBasket_ = buildCalibrationBasket(cb, indexInstActive_, indexInstExpiries_);
+        } else {
+            DLOG("InfJyBuilder: need a calibration basket with parameter equal to 'Index'.");
+            const auto& cb = calibrationBasket("Index");
+            indexInstActive_ = vector<bool>(cb.instruments().size(), false);
+            indexBasket_ = buildCalibrationBasket(cb, indexInstActive_, indexInstExpiries_);
+        }
+    }
+
+    // Secondly, look at the real rate portion i.e. are we calibrating it.
+    if (rrReversion.calibrate() || rrVolatility.calibrate()) {
+
+        DLOG("InfJyBuilder: building calibration basket for JY real rate bootstrap calibration.");
+        QL_REQUIRE(!(rrReversion.calibrate() && rrVolatility.calibrate()), "InfJyBuilder: calibrating both the " <<
+            "real rate reversion and real rate volatility using Bootstrap is not supported.");
+
+        // If we are not calibrating the index portion, then we expect exactly one calibration basket. Otherwise 
+        // we need to find a basket with the 'RealRate' parameter.
+        if (!idxVolatility.calibrate()) {
+            QL_REQUIRE(cbs.size() == 1, "InfJyBuilder: calibrating only JY real rate using Bootstrap so " <<
+                "expected exactly one basket but got " << cbs.size() << ".");
+            const auto& cb = cbs[0];
+            if (!cb.parameter().empty() && cb.parameter() != "RealRate") {
+                WLOG("InfJyBuilder: calibrating only JY real rate using Bootstrap so expected the " <<
+                    "calibration basket parameter to be 'RealRate' but got '" << cb.parameter() << "'.");
+            }
+            rrInstActive_ = vector<bool>(cb.instruments().size(), false);
+            realRateBasket_ = buildCalibrationBasket(cb, rrInstActive_, rrInstExpiries_);
+        } else {
+            DLOG("InfJyBuilder: need a calibration basket with parameter equal to 'RealRate'.");
+            const auto& cb = calibrationBasket("RealRate");
+            rrInstActive_ = vector<bool>(cb.instruments().size(), false);
+            realRateBasket_ = buildCalibrationBasket(cb, rrInstActive_, rrInstExpiries_);
+        }
+    }
+
+}
+
+Helpers InfJyBuilder::buildCalibrationBasket(const CalibrationBasket& cb,
+    vector<bool>& active, Array& expiries) const {
+
+    QL_REQUIRE(!cb.empty(), "InfJyBuilder: calibration basket should not be empty.");
+
+    if (cb.instrumentType() == "CpiCapFloor") {
+        return buildCpiCapFloorBasket(cb, active, expiries);
+    } else if (cb.instrumentType() == "YoYCapFloor") {
+        return buildYoYCapFloorBasket(cb, active, expiries);
+    } else if (cb.instrumentType() == "YoYSwap") {
+        return buildYoYSwapBasket(cb, active, expiries);
+    } else {
+        QL_FAIL("InfJyBuilder: expected calibration instrument to be one of CpiCapFloor, YoYCapFloor or YoYSwap");
+    }
+}
+
+Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
+    vector<bool>& active, Array& expiries) const {
+
+    DLOG("InfJyBuilder: start building the CPI cap floor calibration basket.");
+
+    const auto& ci = cb.instruments();
+    QL_REQUIRE(ci.size() == active.size(), "InfJyBuilder: expected the active options vector size to equal the " <<
+        "number of calibration instruments");
+    fill(active.begin(), active.end(), false);
+
+    // Procedure is to create a CPI cap floor as described by each instrument in the calibration basket. We then value 
+    // each of the CPI cap floor instruments using market data and an engine and pass the NPV as the market premium to 
+    // helper that we create.
+
+    Helpers helpers;
+
+    // Create the engine
+    auto yts = inflationIndex_->zeroInflationTermStructure()->nominalTermStructure();
+    auto engine = boost::make_shared<CPIBlackCapFloorEngine>(yts, inflationVolatility_);
+
+    // CPI cap floor calibration instrument details. Assumed to equal those from the index and market structures.
+    // Some of these should possibly come from conventions.
+    // Also some variables used in the loop below.
+    auto calendar = inflationIndex_->fixingCalendar();
+    auto baseDate = inflationIndex_->zeroInflationTermStructure()->baseDate();
+    auto dc = inflationIndex_->zeroInflationTermStructure()->dayCounter();
+    auto baseCpi = inflationIndex_->fixing(baseDate);
+    auto isInterp = inflationIndex_->interpolated();
+    auto freq = inflationIndex_->frequency();
+    auto bdc = inflationVolatility_->businessDayConvention();
+    auto obsLag = inflationVolatility_->observationLag();
+    Handle<ZeroInflationIndex> inflationIndex(inflationIndex_);
+    Date today = Settings::instance().evaluationDate();
+    Real nominal = 1.0;
+
+    // Avoid instruments with duplicate expiry times in the loop below
+    auto cmp = [](Time s, Time t) { return close(s, t); };
+    set<Time, decltype(cmp)> expiryTimes(cmp);
+
+    // Reference calibration dates if any. If they are given, we only include one calibration instrument from each 
+    // period in the grid. Logic copied from other builders.
+    auto rcDates = referenceCalibrationDates();
+    auto prevRcDate = Date::minDate();
+
+    // Add calibration instruments to the helpers vector.
+    for (Size i = 0; i < ci.size(); ++i) {
+
+        auto cpiCapFloor = boost::dynamic_pointer_cast<CpiCapFloor>(ci[i]);
+        QL_REQUIRE(cpiCapFloor, "InfJyBuilder: expected CpiCapFloor calibration instrument.");
+        auto maturity = calendar.advance(today, cpiCapFloor->tenor());
+
+        // Deal with reference calibration date grid stuff.
+        auto rcDate = lower_bound(rcDates.begin(), rcDates.end(), maturity);
+        if (!(rcDate == rcDates.end() || *rcDate > prevRcDate)) {
+            active[i] = false;
+            continue;
+        }
+
+        if (rcDate != rcDates.end())
+            prevRcDate = *rcDate;
+
+        // Build the CPI calibration instrument in order to calculate its NPV.
+        auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(cpiCapFloor->strike());
+        QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor in inflation model data to have absolute strikes.");
+        Real strikeValue = strike->strike();
+        Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
+        auto inst = boost::make_shared<CPICapFloor>(capfloor, nominal, today, baseCpi, maturity, calendar,
+                bdc, calendar, bdc, strikeValue, inflationIndex, obsLag);
+        inst->setPricingEngine(engine);
+
+        // Build the helper using the NPV as the premium.
+        auto premium = inst->NPV();
+        auto helper = boost::make_shared<CpiCapFloorHelper>(capfloor, baseCpi, maturity, calendar, bdc,
+            calendar, bdc, strikeValue, inflationIndex, obsLag, premium);
+        helpers.push_back(helper);
+
+        // Add the helper's time to expiry.
+        auto fixingDate = helper->instrument()->fixingDate();
+        auto t = inflationYearFraction(freq, isInterp, dc, baseDate, fixingDate);
+        auto p = expiryTimes.insert(t);
+        QL_REQUIRE(p.second, "InfJyBuilder: a CPI cap floor calibration " <<
+            "instrument with the expiry time, " << t << ", was already added.");
+
+        TLOG("InfJyBuilder: added CPICapFloor helper" <<
+            ": index = " << data_->index() <<
+            ", type = " << cpiCapFloor->type() <<
+            ", expiry = " << io::iso_date(maturity) <<
+            ", base CPI = " << baseCpi <<
+            ", strike = " << strikeValue <<
+            ", obs lag = " << obsLag <<
+            ", market premium = " << premium);
+    }
+
+    // Populate the expiry times array with the unique sorted expiry times.
+    expiries = Array(expiryTimes.begin(), expiryTimes.end());
+
+    DLOG("InfJyBuilder: finished building the CPI cap floor calibration basket.");
+
+    return helpers;
+}
+
+Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb,
+    vector<bool>& active, Array& expiries) const {
+
+    DLOG("InfJyBuilder: start building the YoY cap floor calibration basket.");
+
+    const auto& ci = cb.instruments();
+    QL_REQUIRE(ci.size() == active.size(), "InfJyBuilder: expected the active options vector size to equal the " <<
+        "number of calibration instruments");
+    fill(active.begin(), active.end(), false);
+
+    // Procedure is to create a YoY cap floor as described by each instrument in the calibration basket. We then value 
+    // each of the YoY cap floor instruments using market data and an engine and pass the NPV as the market premium to 
+    // helper that we create.
+
+    Helpers helpers;
+
+    DLOG("InfJyBuilder: finished building the YoY cap floor calibration basket.");
+
+    return helpers;
+}
+
+Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
+    vector<bool>& active, Array& expiries) const {
+
+    DLOG("InfJyBuilder: start building the YoY swap calibration basket.");
+
+    const auto& ci = cb.instruments();
+    QL_REQUIRE(ci.size() == active.size(), "InfJyBuilder: expected the active swaps vector size to equal the " <<
+        "number of calibration instruments");
+    fill(active.begin(), active.end(), false);
+
+    // Procedure is to create a YoY cap floor as described by each instrument in the calibration basket. We then value 
+    // each of the YoY cap floor instruments using market data and an engine and pass the NPV as the market premium to 
+    // helper that we create.
+
+    Helpers helpers;
+
+    DLOG("InfJyBuilder: finished building the YoY swap calibration basket.");
+
+    return helpers;
+}
+
+const CalibrationBasket& InfJyBuilder::calibrationBasket(const string& parameter) const {
+
+    for (const auto& cb : data_->calibrationBaskets()) {
+        if (cb.parameter() == parameter) {
+            return cb;
+        }
+    }
+
+    QL_FAIL("InfJyBuilder: unable to find calibration basket with parameter value equal to '" << parameter << "'.");
+}
+
+boost::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> InfJyBuilder::createRealRateParam() const {
+
+    DLOG("InfJyBuilder: start creating the real rate parameterisation.");
+
+    // Initial parameter setup as provided by the data_.
+    const ReversionParameter& rrReversion = data_->realRateReversion();
+    const VolatilityParameter& rrVolatility = data_->realRateVolatility();
     Array rrVolatilityTimes(rrVolatility.times().begin(), rrVolatility.times().end());
     Array rrVolatilityValues(rrVolatility.values().begin(), rrVolatility.values().end());
     Array rrReversionTimes(rrReversion.times().begin(), rrReversion.times().end());
     Array rrReversionValues(rrReversion.values().begin(), rrReversion.values().end());
-    Array idxVolatilityTimes(idxVolatility.times().begin(), idxVolatility.times().end());
-    Array idxVolatilityValues(idxVolatility.values().begin(), idxVolatility.values().end());
+
+    // Perform checks and in the event of bootstrap calibration, may need to restructure the parameters.
+    setupParams(rrReversion, rrReversionTimes, rrReversionValues, rrInstExpiries_, "RealRate reversion");
+    setupParams(rrVolatility, rrVolatilityTimes, rrVolatilityValues, rrInstExpiries_, "RealRate volatility");
 
     // Create the JY parameterization.
     using RT = LgmData::ReversionType;
     using VT = LgmData::VolatilityType;
 
-    // 1) Create the real rate portion of the parameterization
+    // Create the real rate portion of the parameterization
     using QuantLib::ZeroInflationTermStructure;
     boost::shared_ptr<QuantExt::Lgm1fParametrization<ZeroInflationTermStructure>> realRateParam;
     if (rrReversion.reversionType() == RT::HullWhite && rrVolatility.volatilityType() == VT::HullWhite) {
@@ -121,9 +438,30 @@ InfJyBuilder::InfJyBuilder(
             ", passed to the JY real rate parameterisation for index " << data_->index() << ".");
     }
 
-    // 2) Create the index portion of the parameterization
+    DLOG("InfJyBuilder: finished creating the real rate parameterisation.");
+
+    return realRateParam;
+}
+
+boost::shared_ptr<FxBsParametrization> InfJyBuilder::createIndexParam() const {
+
+    DLOG("InfJyBuilder: start creating the index parameterisation.");
+
+    // Initial parameter setup as provided by the data_.
+    const VolatilityParameter& idxVolatility = data_->indexVolatility();
+    Array idxVolatilityTimes(idxVolatility.times().begin(), idxVolatility.times().end());
+    Array idxVolatilityValues(idxVolatility.values().begin(), idxVolatility.values().end());
+
+    // Perform checks and in the event of bootstrap calibration, may need to restructure the parameters.
+    setupParams(idxVolatility, idxVolatilityTimes, idxVolatilityValues, indexInstExpiries_, "Index volatility");
+
+    // Create the JY parameterization.
+    using RT = LgmData::ReversionType;
+    using VT = LgmData::VolatilityType;
+
+    // Create the index portion of the parameterization
     boost::shared_ptr<QuantExt::FxBsParametrization> indexParam;
-    
+
     Handle<Quote> baseCpiQuote(boost::make_shared<SimpleQuote>(
         inflationIndex_->fixing(inflationIndex_->zeroInflationTermStructure()->baseDate())));
 
@@ -141,39 +479,52 @@ InfJyBuilder::InfJyBuilder(
         QL_FAIL("InfJyBuilder: index volatility parameterization needs to be Piecewise or Constant.");
     }
 
-    // 3) The final parameterisation is a combination of the real rate and index parameterisation.
-    parameterization_ = boost::make_shared<QuantExt::InfJyParameterization>(
-        realRateParam, indexParam, inflationIndex_);
+    DLOG("InfJyBuilder: finished creating the index parameterisation.");
 
+    return indexParam;
 }
 
-string InfJyBuilder::inflationIndex() const {
-    return data_->index();
-}
+void InfJyBuilder::setupParams(const ModelParameter& param, Array& times, Array& values,
+    const Array& expiries, const string& paramName) const {
 
-boost::shared_ptr<QuantExt::InfJyParameterization> InfJyBuilder::parameterization() const {
-    calculate();
-    return parameterization_;
-}
+    DLOG("InfJyBuilder: start setting up parameters for " << paramName);
 
-bool InfJyBuilder::requiresRecalibration() const {
-    return (data_->realRateVolatility().calibrate() ||
-            data_->realRateReversion().calibrate() ||
-            data_->indexVolatility().calibrate()) &&
-           (marketObserver_->hasUpdated(false) ||
-            forceCalibration_);
-}
+    if (param.type() == ParamType::Constant) {
+        QL_REQUIRE(param.times().size() == 0, "InfJyBuilder: parameter is constant so empty times expected");
+        QL_REQUIRE(param.values().size() == 1, "InfJyBuilder: parameter is constant so initial value array " <<
+            "should have 1 element.");
+    } else if (param.type() == ParamType::Piecewise) {
 
-void InfJyBuilder::performCalculations() const {
-    if (requiresRecalibration()) {
-        marketObserver_->hasUpdated(true);
+        if (param.calibrate() && data_->calibrationType() == CalibrationType::Bootstrap) {
+            QL_REQUIRE(!expiries.empty(), "InfJyBuilder: calibration instrument expiries are empty.");
+            QL_REQUIRE(!values.empty(), "InfJyBuilder: expected at least one initial value.");
+            DLOG("InfJyBuilder: overriding initial times " << times << " with option calibration instrument " <<
+                "expiries " << expiries << ".");
+            times = Array(expiries.begin(), expiries.end() - 1);
+            values = Array(times.size() + 1, values[0]);
+        } else {
+            QL_REQUIRE(values.size() == times.size() + 1, "InfJyBuilder: size of values grid, " << values.size() <<
+                ", should be 1 greater than the size of the times grid, " << times.size() << ".");
+        }
+
+    } else {
+        QL_FAIL("Expected " << paramName << " parameter to be Constant or Piecewise.");
     }
+
+    DLOG("InfJyBuilder: finished setting up parameters for " << paramName);
 }
 
-void InfJyBuilder::forceRecalculate() {
-    forceCalibration_ = true;
-    ModelBuilder::forceRecalculate();
-    forceCalibration_ = false;
+vector<Date> InfJyBuilder::referenceCalibrationDates() const {
+
+    TLOG("InfJyBuilder: start building reference date grid '" << referenceCalibrationGrid_ << "'.");
+    
+    vector<Date> res;
+    if (!referenceCalibrationGrid_.empty())
+        res = DateGrid(referenceCalibrationGrid_).dates();
+
+    TLOG("InfJyBuilder: finished building reference date grid.");
+
+    return res;
 }
 
 }
