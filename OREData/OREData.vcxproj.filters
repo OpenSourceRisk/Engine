@@ -540,6 +540,9 @@
     <ClInclude Include="ored\model\calibrationinstruments\yoycapfloor.hpp">
       <Filter>model\calibrationinstruments</Filter>
     </ClInclude>
+    <ClInclude Include="ored\model\calibrationinstruments\yoyswap.hpp">
+      <Filter>model\calibrationinstruments</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -954,6 +957,9 @@
       <Filter>model\inflation</Filter>
     </ClCompile>
     <ClCompile Include="ored\model\calibrationinstruments\yoycapfloor.cpp">
+      <Filter>model\calibrationinstruments</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\calibrationinstruments\yoyswap.cpp">
       <Filter>model\calibrationinstruments</Filter>
     </ClCompile>
   </ItemGroup>

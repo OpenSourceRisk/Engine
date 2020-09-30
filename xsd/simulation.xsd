@@ -170,10 +170,17 @@
     </xs:sequence>
   </xs:complexType>
   
+  <xs:complexType name="calibrationYoYSwap">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Tenor"/>
+    </xs:sequence>
+  </xs:complexType>
+  
   <xs:complexType name="calibrationBasket">
     <xs:choice>
       <xs:element type="calibrationInflationCapFloor" name="CpiCapFloor" minOccurs="1" maxOccurs="unbounded"/>
       <xs:element type="calibrationInflationCapFloor" name="YoYCapFloor" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element type="calibrationYoYSwap" name="YoYSwap" minOccurs="1" maxOccurs="unbounded"/>
     </xs:choice>
   </xs:complexType>
   
