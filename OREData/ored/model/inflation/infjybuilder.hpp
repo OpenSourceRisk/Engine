@@ -77,8 +77,14 @@ private:
     
     boost::shared_ptr<QuantExt::InfJyParameterization> parameterization_;
     boost::shared_ptr<MarketObserver> marketObserver_;
-    boost::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex_;
-    QuantLib::Handle<QuantLib::CPIVolatilitySurface> inflationVolatility_;
+
+    // We always need a ZeroInflationIndex to build the JY model.
+    boost::shared_ptr<QuantLib::ZeroInflationIndex> zeroInflationIndex_;
+
+    // We may need these depending on the calibration instrument types.
+    QuantLib::Handle<QuantLib::CPIVolatilitySurface> cpiVolatility_;
+    boost::shared_ptr<QuantLib::YoYInflationIndex> yoyInflationIndex_;
+    QuantLib::Handle<QuantExt::YoYOptionletVolatilitySurface> yoyVolatility_;
 
     // Helper flag used in the forceRecalculate() method.
     bool forceCalibration_ = false;
@@ -109,7 +115,7 @@ private:
 
     //! Build the calibration basket.
     Helpers buildCalibrationBasket(const CalibrationBasket& cb, std::vector<bool>& active,
-        QuantLib::Array& expiries) const;
+        QuantLib::Array& expiries, bool forRealRateReversion = false) const;
 
     //! Build a CPI cap floor calibration basket.
     Helpers buildCpiCapFloorBasket(const CalibrationBasket& cb, std::vector<bool>& active,
@@ -121,7 +127,7 @@ private:
 
     //! Build a YoY swap calibration basket.
     Helpers buildYoYSwapBasket(const CalibrationBasket& cb, std::vector<bool>& active,
-        QuantLib::Array& expiries) const;
+        QuantLib::Array& expiries, bool forRealRateReversion = false) const;
 
     //! Find calibration basket with parameter value equal to \p parameter
     const CalibrationBasket& calibrationBasket(const std::string& parameter) const;
@@ -139,6 +145,9 @@ private:
 
     //! Create the reference calibration dates.
     std::vector<QuantLib::Date> referenceCalibrationDates() const;
+
+    //! Attempt to initialise market data members that may be needed for building calibration instruments.
+    void initialiseMarket();
 };
 
 }

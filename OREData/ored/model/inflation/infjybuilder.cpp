@@ -29,12 +29,18 @@
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
+#include <qle/models/yoyswaphelper.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
+#include <ql/cashflows/yoyinflationcoupon.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
 
 using QuantExt::CPIBlackCapFloorEngine;
 using QuantExt::CpiCapFloorHelper;
 using QuantExt::FxBsParametrization;
 using QuantExt::Lgm1fParametrization;
+using QuantExt::YoYSwapHelper;
+using QuantLib::DiscountingSwapEngine;
+using QuantLib::YoYInflationCoupon;
 using std::lower_bound;
 using std::set;
 using std::string;
@@ -54,13 +60,12 @@ InfJyBuilder::InfJyBuilder(
     data_(data),
     referenceCalibrationGrid_(referenceCalibrationGrid),
     marketObserver_(boost::make_shared<MarketObserver>()),
-    inflationIndex_(*market_->zeroInflationIndex(data_->index(), configuration_)),
-    inflationVolatility_(market_->cpiInflationCapFloorVolatilitySurface(data_->index(), configuration_)) {
+    zeroInflationIndex_(*market_->zeroInflationIndex(data_->index(), configuration_)) {
 
     LOG("InfJyBuilder: building model for inflation index " << data_->index());
 
     // Register with market observables except volatilities
-    marketObserver_->registerWith(inflationIndex_);
+    marketObserver_->registerWith(zeroInflationIndex_);
 
     // Register the model builder with the market observer
     registerWith(marketObserver_);
@@ -73,7 +78,7 @@ InfJyBuilder::InfJyBuilder(
 
     // Create the JY parameterisation.
     parameterization_ = boost::make_shared<QuantExt::InfJyParameterization>(
-        createRealRateParam(), createIndexParam(), inflationIndex_);
+        createRealRateParam(), createIndexParam(), zeroInflationIndex_);
 }
 
 string InfJyBuilder::inflationIndex() const {
@@ -194,19 +199,19 @@ void InfJyBuilder::buildCalibrationBaskets() const {
                     "calibration basket parameter to be 'RealRate' but got '" << cb.parameter() << "'.");
             }
             rrInstActive_ = vector<bool>(cb.instruments().size(), false);
-            realRateBasket_ = buildCalibrationBasket(cb, rrInstActive_, rrInstExpiries_);
+            realRateBasket_ = buildCalibrationBasket(cb, rrInstActive_, rrInstExpiries_, rrReversion.calibrate());
         } else {
             DLOG("InfJyBuilder: need a calibration basket with parameter equal to 'RealRate'.");
             const auto& cb = calibrationBasket("RealRate");
             rrInstActive_ = vector<bool>(cb.instruments().size(), false);
-            realRateBasket_ = buildCalibrationBasket(cb, rrInstActive_, rrInstExpiries_);
+            realRateBasket_ = buildCalibrationBasket(cb, rrInstActive_, rrInstExpiries_, rrReversion.calibrate());
         }
     }
 
 }
 
 Helpers InfJyBuilder::buildCalibrationBasket(const CalibrationBasket& cb,
-    vector<bool>& active, Array& expiries) const {
+    vector<bool>& active, Array& expiries, bool forRealRateReversion) const {
 
     QL_REQUIRE(!cb.empty(), "InfJyBuilder: calibration basket should not be empty.");
 
@@ -215,7 +220,7 @@ Helpers InfJyBuilder::buildCalibrationBasket(const CalibrationBasket& cb,
     } else if (cb.instrumentType() == "YoYCapFloor") {
         return buildYoYCapFloorBasket(cb, active, expiries);
     } else if (cb.instrumentType() == "YoYSwap") {
-        return buildYoYSwapBasket(cb, active, expiries);
+        return buildYoYSwapBasket(cb, active, expiries, forRealRateReversion);
     } else {
         QL_FAIL("InfJyBuilder: expected calibration instrument to be one of CpiCapFloor, YoYCapFloor or YoYSwap");
     }
@@ -225,6 +230,9 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
     vector<bool>& active, Array& expiries) const {
 
     DLOG("InfJyBuilder: start building the CPI cap floor calibration basket.");
+
+    QL_REQUIRE(!cpiVolatility_.empty(), "InfJyBuilder: need a non-empty CPI cap floor volatility structure " <<
+        "to build a CPI cap floor calibration basket.");
 
     const auto& ci = cb.instruments();
     QL_REQUIRE(ci.size() == active.size(), "InfJyBuilder: expected the active options vector size to equal the " <<
@@ -238,21 +246,21 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
     Helpers helpers;
 
     // Create the engine
-    auto yts = inflationIndex_->zeroInflationTermStructure()->nominalTermStructure();
-    auto engine = boost::make_shared<CPIBlackCapFloorEngine>(yts, inflationVolatility_);
+    auto yts = zeroInflationIndex_->zeroInflationTermStructure()->nominalTermStructure();
+    auto engine = boost::make_shared<CPIBlackCapFloorEngine>(yts, cpiVolatility_);
 
     // CPI cap floor calibration instrument details. Assumed to equal those from the index and market structures.
     // Some of these should possibly come from conventions.
     // Also some variables used in the loop below.
-    auto calendar = inflationIndex_->fixingCalendar();
-    auto baseDate = inflationIndex_->zeroInflationTermStructure()->baseDate();
-    auto dc = inflationIndex_->zeroInflationTermStructure()->dayCounter();
-    auto baseCpi = inflationIndex_->fixing(baseDate);
-    auto isInterp = inflationIndex_->interpolated();
-    auto freq = inflationIndex_->frequency();
-    auto bdc = inflationVolatility_->businessDayConvention();
-    auto obsLag = inflationVolatility_->observationLag();
-    Handle<ZeroInflationIndex> inflationIndex(inflationIndex_);
+    auto calendar = zeroInflationIndex_->fixingCalendar();
+    auto baseDate = zeroInflationIndex_->zeroInflationTermStructure()->baseDate();
+    auto dc = zeroInflationIndex_->zeroInflationTermStructure()->dayCounter();
+    auto baseCpi = zeroInflationIndex_->fixing(baseDate);
+    auto isInterp = zeroInflationIndex_->interpolated();
+    auto freq = zeroInflationIndex_->frequency();
+    auto bdc = cpiVolatility_->businessDayConvention();
+    auto obsLag = cpiVolatility_->observationLag();
+    Handle<ZeroInflationIndex> inflationIndex(zeroInflationIndex_);
     Date today = Settings::instance().evaluationDate();
     Real nominal = 1.0;
 
@@ -344,9 +352,19 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb,
 }
 
 Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
-    vector<bool>& active, Array& expiries) const {
+    vector<bool>& active, Array& expiries, bool forRealRateReversion) const {
 
     DLOG("InfJyBuilder: start building the YoY swap calibration basket.");
+
+    // Initial checks.
+    QL_REQUIRE(yoyInflationIndex_, "InfJyBuilder: need a valid year on year inflation index " <<
+        "to build a year on year swap calibration basket.");
+    auto yoyTs = yoyInflationIndex_->yoyInflationTermStructure();
+    QL_REQUIRE(!yoyTs.empty(), "InfJyBuilder: need a valid year on year term structure " <<
+        "to build a year on year swap calibration basket.");
+    auto yts = yoyTs->nominalTermStructure();
+    QL_REQUIRE(!yts.empty(), "InfJyBuilder: need a valid nominal term structure " <<
+        "to build a year on year swap calibration basket.");
 
     const auto& ci = cb.instruments();
     QL_REQUIRE(ci.size() == active.size(), "InfJyBuilder: expected the active swaps vector size to equal the " <<
@@ -358,6 +376,90 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
     // helper that we create.
 
     Helpers helpers;
+
+    // Create the engine
+    auto engine = boost::make_shared<DiscountingSwapEngine>(yts);
+
+    // YoY swap calibration instrument details. Assumed to equal those from the index and market structures.
+    // Some of these should possibly come from conventions. Hardcoded some common values here.
+    // Also some variables used in the loop below.
+    Natural settlementDays = 2;
+    auto calendar = yoyInflationIndex_->fixingCalendar();
+    auto dc = yoyTs->dayCounter();
+    auto bdc = cpiVolatility_->businessDayConvention();
+    auto obsLag = cpiVolatility_->observationLag();
+    Date today = Settings::instance().evaluationDate();
+
+    // Avoid instruments with duplicate expiry times in the loop below
+    auto cmp = [](Time s, Time t) { return close(s, t); };
+    set<Time, decltype(cmp)> expiryTimes(cmp);
+
+    // Reference calibration dates if any. If they are given, we only include one calibration instrument from each 
+    // period in the grid. Logic copied from other builders.
+    auto rcDates = referenceCalibrationDates();
+    auto prevRcDate = Date::minDate();
+
+    // Add calibration instruments to the helpers vector.
+    for (Size i = 0; i < ci.size(); ++i) {
+
+        auto yoySwap = boost::dynamic_pointer_cast<YoYSwap>(ci[i]);
+        QL_REQUIRE(yoySwap, "InfJyBuilder: expected YoYSwap calibration instrument.");
+
+        // Build the YoY helper.
+        auto quote = boost::make_shared<SimpleQuote>(0.01);
+        auto helper = boost::make_shared<YoYSwapHelper>(Handle<Quote>(quote), settlementDays, yoySwap->tenor(),
+            yoyInflationIndex_, obsLag, calendar, bdc, dc, calendar, bdc, dc, calendar, bdc);
+
+        // Deal with reference calibration date grid stuff based on maturity of helper instrument.
+        auto helperInst = helper->yoySwap();
+        auto maturity = helperInst->maturityDate();
+        auto rcDate = lower_bound(rcDates.begin(), rcDates.end(), maturity);
+        if (!(rcDate == rcDates.end() || *rcDate > prevRcDate)) {
+            active[i] = false;
+            continue;
+        }
+
+        if (rcDate != rcDates.end())
+            prevRcDate = *rcDate;
+
+        // Price the underlying helper instrument to get its fair rate.
+        helperInst->setPricingEngine(engine);
+
+        // Update the helper's market quote with the fair rate.
+        quote->setValue(helperInst->fairRate());
+
+        // Add the helper to the calibration helpers.
+        helpers.push_back(helper);
+
+        // For JY calibration to YoY swaps, the parameter's time depends on whether you are calibrating the real rate 
+        // reversion or the real rate volatility (probably don't want to calibrate the inflation index vol to YoY 
+        // swaps as it only shows up via the drift). If you are calibrating to real rate reversion, you want the time 
+        // to the numerator index fixing date on the last YoY swaplet on the YoY leg. If you are calibrating to real 
+        // rate volatility, you want the time to the denominator index fixing date on the last YoY swaplet on the YoY 
+        // leg. We use numerator fixing date - 1 * Years here for this. You can see this from the parameter 
+        // dependencies in the YoY swaplet formula in Section 13 of the book (i.e. T vs. S).
+        Time t = 0.0;
+        QL_REQUIRE(!helperInst->yoyLeg().empty(), "InfJyBuilder: expected YoYSwap to have non-empty YoY leg.");
+        auto finalYoYCoupon = boost::dynamic_pointer_cast<YoYInflationCoupon>(helperInst->yoyLeg().back());
+        Date numFixingDate = finalYoYCoupon->fixingDate();
+        if (forRealRateReversion) {
+            t = yoyTs->timeFromReference(numFixingDate);
+        } else {
+            t = yoyTs->timeFromReference(numFixingDate - 1 * Years);
+        }
+        auto p = expiryTimes.insert(t);
+        QL_REQUIRE(p.second, "InfJyBuilder: a YoY swap calibration instrument with the expiry " <<
+            "time, " << t << ", was already added.");
+
+        TLOG("InfJyBuilder: added year on year swap helper" <<
+            ": index = " << data_->index() <<
+            ", maturity = " << io::iso_date(maturity) <<
+            ", obs lag = " << obsLag <<
+            ", market rate = " << quote->value());
+    }
+
+    // Populate the expiry times array with the unique sorted expiry times.
+    expiries = Array(expiryTimes.begin(), expiryTimes.end());
 
     DLOG("InfJyBuilder: finished building the YoY swap calibration basket.");
 
@@ -402,19 +504,19 @@ boost::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> InfJyBuilder
         using QuantExt::Lgm1fPiecewiseConstantHullWhiteAdaptor;
         DLOG("InfJyBuilder: real rate parameterization is Lgm1fPiecewiseConstantHullWhiteAdaptor");
         realRateParam = boost::make_shared<Lgm1fPiecewiseConstantHullWhiteAdaptor<ZeroInflationTermStructure>>(
-            inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), rrVolatilityTimes,
+            zeroInflationIndex_->currency(), zeroInflationIndex_->zeroInflationTermStructure(), rrVolatilityTimes,
             rrVolatilityValues, rrReversionTimes, rrReversionValues, data_->index());
     } else if (rrReversion.reversionType() == RT::HullWhite) {
         using QuantExt::Lgm1fPiecewiseConstantParametrization;
         DLOG("InfJyBuilder: real rate parameterization is Lgm1fPiecewiseConstantParametrization");
         realRateParam = boost::make_shared<Lgm1fPiecewiseConstantParametrization<ZeroInflationTermStructure>>(
-            inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), rrVolatilityTimes,
+            zeroInflationIndex_->currency(), zeroInflationIndex_->zeroInflationTermStructure(), rrVolatilityTimes,
             rrVolatilityValues, rrReversionTimes, rrReversionValues, data_->index());
     } else {
         using QuantExt::Lgm1fPiecewiseLinearParametrization;
         DLOG("InfJyBuilder: real rate parameterization is Lgm1fPiecewiseLinearParametrization");
         realRateParam = boost::make_shared<Lgm1fPiecewiseLinearParametrization<ZeroInflationTermStructure>>(
-            inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), rrVolatilityTimes,
+            zeroInflationIndex_->currency(), zeroInflationIndex_->zeroInflationTermStructure(), rrVolatilityTimes,
             rrVolatilityValues, rrReversionTimes, rrReversionValues, data_->index());
     }
 
@@ -463,18 +565,18 @@ boost::shared_ptr<FxBsParametrization> InfJyBuilder::createIndexParam() const {
     boost::shared_ptr<QuantExt::FxBsParametrization> indexParam;
 
     Handle<Quote> baseCpiQuote(boost::make_shared<SimpleQuote>(
-        inflationIndex_->fixing(inflationIndex_->zeroInflationTermStructure()->baseDate())));
+        zeroInflationIndex_->fixing(zeroInflationIndex_->zeroInflationTermStructure()->baseDate())));
 
     if (idxVolatility.type() == ParamType::Piecewise) {
         using QuantExt::FxBsPiecewiseConstantParametrization;
         DLOG("InfJyBuilder: index volatility parameterization is FxBsPiecewiseConstantParametrization");
         indexParam = boost::make_shared<FxBsPiecewiseConstantParametrization>(
-            inflationIndex_->currency(), baseCpiQuote, idxVolatilityTimes, idxVolatilityValues);
+            zeroInflationIndex_->currency(), baseCpiQuote, idxVolatilityTimes, idxVolatilityValues);
     } else if (idxVolatility.type() == ParamType::Constant) {
         using QuantExt::FxBsConstantParametrization;
         DLOG("InfJyBuilder: index volatility parameterization is FxBsConstantParametrization");
         indexParam = boost::make_shared<FxBsConstantParametrization>(
-            inflationIndex_->currency(), baseCpiQuote, idxVolatilityValues[0]);
+            zeroInflationIndex_->currency(), baseCpiQuote, idxVolatilityValues[0]);
     } else {
         QL_FAIL("InfJyBuilder: index volatility parameterization needs to be Piecewise or Constant.");
     }
@@ -525,6 +627,34 @@ vector<Date> InfJyBuilder::referenceCalibrationDates() const {
     TLOG("InfJyBuilder: finished building reference date grid.");
 
     return res;
+}
+
+void InfJyBuilder::initialiseMarket() {
+
+    TLOG("InfJyBuilder: start initialising market data members.");
+
+    // Try catches are not nice but Market does not have a method for checking if a structure exists so it is 
+    // unfortunately necessary.
+    try {
+        cpiVolatility_ = market_->cpiInflationCapFloorVolatilitySurface(data_->index(), configuration_);
+    } catch (...) {
+        DLOG("InfJyBuilder: the market does not have a CPI cap floor volatility surface.");
+    }
+
+    try {
+        yoyInflationIndex_ = *market_->yoyInflationIndex(data_->index(), configuration_);
+        marketObserver_->registerWith(yoyInflationIndex_);
+    } catch (...) {
+        DLOG("InfJyBuilder: the market does not have a YoY inflation index.");
+    }
+
+    try {
+        yoyVolatility_ = market_->yoyCapFloorVol(data_->index(), configuration_);
+    } catch (...) {
+        DLOG("InfJyBuilder: the market does not have a YoY cap floor volatility surface.");
+    }
+
+    TLOG("InfJyBuilder: finished initialising market data members.");
 }
 
 }
