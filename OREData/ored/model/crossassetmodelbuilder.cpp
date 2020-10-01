@@ -286,6 +286,7 @@ void CrossAssetModelBuilder::buildModel() const {
         DLOG("EQ name " << n);
 
     Matrix corrMatrix = cmb.correlationMatrix(currencies, infIndices, crNames, eqNames);
+    DLOGGERSTREAM << corrMatrix;
 
     /*****************************
      * Build the cross asset model
