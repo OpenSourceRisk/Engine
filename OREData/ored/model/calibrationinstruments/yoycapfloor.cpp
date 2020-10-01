@@ -21,7 +21,7 @@
 #include <ored/utilities/to_string.hpp>
 
 using QuantLib::Period;
-using QuantLib::CapFloor;
+using QuantLib::YoYInflationCapFloor;
 
 namespace ore {
 namespace data {
@@ -29,9 +29,9 @@ namespace data {
 CalibrationInstrumentRegister<YoYCapFloor> YoYCapFloor::reg_("YoYCapFloor");
 
 YoYCapFloor::YoYCapFloor() 
- : CalibrationInstrument("YoYCapFloor"), type_(CapFloor::Floor) {}
+ : CalibrationInstrument("YoYCapFloor"), type_(YoYInflationCapFloor::Floor) {}
 
-YoYCapFloor::YoYCapFloor(CapFloor::Type type,
+YoYCapFloor::YoYCapFloor(YoYInflationCapFloor::Type type,
     const Period& tenor,
     const boost::shared_ptr<BaseStrike>& strike)
     : CalibrationInstrument("YoYCapFloor"),
@@ -39,7 +39,7 @@ YoYCapFloor::YoYCapFloor(CapFloor::Type type,
       tenor_(tenor),
       strike_(strike) {}
 
-CapFloor::Type YoYCapFloor::type() const {
+YoYInflationCapFloor::Type YoYCapFloor::type() const {
     return type_;
 }
 
@@ -53,14 +53,19 @@ const boost::shared_ptr<BaseStrike>& YoYCapFloor::strike() const {
 
 void YoYCapFloor::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, instrumentType_);
-    type_ = parseCapFloorType(XMLUtils::getChildValue(node, "Type", true));
+    type_ = parseYoYInflationCapFloorType(XMLUtils::getChildValue(node, "Type", true));
     tenor_ = parsePeriod(XMLUtils::getChildValue(node, "Tenor", true));
     strike_ = parseBaseStrike(XMLUtils::getChildValue(node, "Strike", true));
 }
 
 XMLNode* YoYCapFloor::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(instrumentType_);
-    XMLUtils::addChild(doc, node, "Type", to_string(type_));
+    if (type_ == YoYInflationCapFloor::Cap)
+        XMLUtils::addChild(doc, node, "Type", "Cap");
+    else if (type_ == YoYInflationCapFloor::Floor)
+        XMLUtils::addChild(doc, node, "Type", "Floor");
+    else
+        QL_FAIL("Failure in YoYCapFloor::toXML, unsupported YoY cap floor type.");
     XMLUtils::addChild(doc, node, "Tenor", to_string(tenor_));
     XMLUtils::addChild(doc, node, "Strike", strike_->toString());
     return node;

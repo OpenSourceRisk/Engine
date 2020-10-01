@@ -26,7 +26,7 @@
 #include <ored/model/calibrationbasket.hpp>
 #include <ored/model/calibrationinstrumentfactory.hpp>
 #include <ored/marketdata/strike.hpp>
-#include <ql/instruments/capfloor.hpp>
+#include <ql/instruments/inflationcapfloor.hpp>
 
 namespace ore {
 namespace data {
@@ -40,13 +40,13 @@ public:
     YoYCapFloor();
 
     //! Detailed constructor
-    YoYCapFloor(QuantLib::CapFloor::Type type,
+    YoYCapFloor(QuantLib::YoYInflationCapFloor::Type type,
         const QuantLib::Period& tenor,
         const boost::shared_ptr<BaseStrike>& strike);
 
     //! \name Inspectors
     //@{
-    QuantLib::CapFloor::Type type() const;
+    QuantLib::YoYInflationCapFloor::Type type() const;
     const QuantLib::Period& tenor() const;
     const boost::shared_ptr<BaseStrike>& strike() const;
     //@}
@@ -58,7 +58,7 @@ public:
     //@}
 
 private:
-    QuantLib::CapFloor::Type type_;
+    QuantLib::YoYInflationCapFloor::Type type_;
     QuantLib::Period tenor_;
     boost::shared_ptr<BaseStrike> strike_;
 

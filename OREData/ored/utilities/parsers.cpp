@@ -997,6 +997,18 @@ CapFloor::Type parseCapFloorType(const string& s) {
     }
 }
 
+YoYInflationCapFloor::Type parseYoYInflationCapFloorType(const string& s) {
+    if (s == "Cap" || s == "YoYInflationCap") {
+        return YoYInflationCapFloor::Cap;
+    } else if (s == "Floor" || s == "YoYInflationFloor") {
+        return YoYInflationCapFloor::Floor;
+    } else if (s == "Collar" || s == "YoYInflationCollar") {
+        return YoYInflationCapFloor::Collar;
+    } else {
+        QL_FAIL("Unknown year on year inflation cap floor type " << s);
+    }
+}
+
 QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const string& s) {
     namespace CT = QuantExt::CrossAssetModelTypes;
     if (s == "IR") {
