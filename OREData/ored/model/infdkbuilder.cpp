@@ -311,6 +311,8 @@ void InfDkBuilder::buildCapFloorBasket() const {
                      << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI << ", strike="
                      << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem << ", tte=" << tte);
                 optionActive_[j] = true;
+                if (refCalDate != referenceCalibrationDates.end())
+                    lastRefCalDate = *refCalDate;
             } else {
                 DLOG("Skipped InflationOptionHelper index="
                      << data_->infIndex() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
