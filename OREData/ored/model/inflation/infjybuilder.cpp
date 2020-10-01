@@ -29,7 +29,9 @@
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
+#include <qle/models/yoycapfloorhelper.hpp>
 #include <qle/models/yoyswaphelper.hpp>
+#include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
@@ -38,6 +40,10 @@ using QuantExt::CPIBlackCapFloorEngine;
 using QuantExt::CpiCapFloorHelper;
 using QuantExt::FxBsParametrization;
 using QuantExt::Lgm1fParametrization;
+using QuantExt::YoYCapFloorHelper;
+using QuantExt::YoYInflationUnitDisplacedBlackCapFloorEngine;
+using QuantExt::YoYInflationBachelierCapFloorEngine;
+using QuantExt::YoYInflationBlackCapFloorEngine;
 using QuantExt::YoYSwapHelper;
 using QuantLib::DiscountingSwapEngine;
 using QuantLib::YoYInflationCoupon;
@@ -215,6 +221,11 @@ Helpers InfJyBuilder::buildCalibrationBasket(const CalibrationBasket& cb,
 
     QL_REQUIRE(!cb.empty(), "InfJyBuilder: calibration basket should not be empty.");
 
+    const auto& ci = cb.instruments();
+    QL_REQUIRE(ci.size() == active.size(), "InfJyBuilder: expected the active instruments vector " <<
+        "size to equal the number of calibration instruments");
+    fill(active.begin(), active.end(), false);
+
     if (cb.instrumentType() == "CpiCapFloor") {
         return buildCpiCapFloorBasket(cb, active, expiries);
     } else if (cb.instrumentType() == "YoYCapFloor") {
@@ -233,11 +244,6 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
 
     QL_REQUIRE(!cpiVolatility_.empty(), "InfJyBuilder: need a non-empty CPI cap floor volatility structure " <<
         "to build a CPI cap floor calibration basket.");
-
-    const auto& ci = cb.instruments();
-    QL_REQUIRE(ci.size() == active.size(), "InfJyBuilder: expected the active options vector size to equal the " <<
-        "number of calibration instruments");
-    fill(active.begin(), active.end(), false);
 
     // Procedure is to create a CPI cap floor as described by each instrument in the calibration basket. We then value 
     // each of the CPI cap floor instruments using market data and an engine and pass the NPV as the market premium to 
@@ -274,6 +280,7 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
     auto prevRcDate = Date::minDate();
 
     // Add calibration instruments to the helpers vector.
+    const auto& ci = cb.instruments();
     for (Size i = 0; i < ci.size(); ++i) {
 
         auto cpiCapFloor = boost::dynamic_pointer_cast<CpiCapFloor>(ci[i]);
@@ -292,7 +299,7 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
 
         // Build the CPI calibration instrument in order to calculate its NPV.
         auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(cpiCapFloor->strike());
-        QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor in inflation model data to have absolute strikes.");
+        QL_REQUIRE(strike, "Expected CpiCapFloor in inflation model data to have absolute strikes.");
         Real strikeValue = strike->strike();
         Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
         auto inst = boost::make_shared<CPICapFloor>(capfloor, nominal, today, baseCpi, maturity, calendar,
@@ -335,16 +342,111 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb,
 
     DLOG("InfJyBuilder: start building the YoY cap floor calibration basket.");
 
-    const auto& ci = cb.instruments();
-    QL_REQUIRE(ci.size() == active.size(), "InfJyBuilder: expected the active options vector size to equal the " <<
-        "number of calibration instruments");
-    fill(active.begin(), active.end(), false);
+    // Initial checks.
+    QL_REQUIRE(yoyInflationIndex_, "InfJyBuilder: need a valid year on year inflation index " <<
+        "to build a year on year cap floor calibration basket.");
+    auto yoyTs = yoyInflationIndex_->yoyInflationTermStructure();
+    QL_REQUIRE(!yoyTs.empty(), "InfJyBuilder: need a valid year on year term structure " <<
+        "to build a year on year cap floor calibration basket.");
+    auto yts = yoyTs->nominalTermStructure();
+    QL_REQUIRE(!yts.empty(), "InfJyBuilder: need a valid nominal term structure " <<
+        "to build a year on year cap floor calibration basket.");
+    QL_REQUIRE(!yoyVolatility_.empty(), "InfJyBuilder: need a valid year on year volatility " <<
+        "structure to build a year on year cap floor calibration basket.");
 
     // Procedure is to create a YoY cap floor as described by each instrument in the calibration basket. We then value 
     // each of the YoY cap floor instruments using market data and an engine and pass the NPV as the market premium to 
     // helper that we create.
 
     Helpers helpers;
+
+    // Create the engine which depends on the type of the YoY volatility and the shift.
+    boost::shared_ptr<PricingEngine> engine;
+    Handle<YoYOptionletVolatilitySurface> hovs(yoyVolatility_->yoyVolSurface());
+    auto ovsType = yoyVolatility_->volatilityType();
+    if (ovsType == Normal)
+        engine = boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyInflationIndex_, hovs, yts);
+    else if (ovsType == ShiftedLognormal && close(yoyVolatility_->displacement(), 0.0))
+        engine = boost::make_shared<YoYInflationBlackCapFloorEngine>(yoyInflationIndex_, hovs, yts);
+    else if (ovsType == ShiftedLognormal)
+        engine = boost::make_shared<YoYInflationUnitDisplacedBlackCapFloorEngine>(yoyInflationIndex_, hovs, yts);
+    else
+        QL_FAIL("InfJyBuilder: can't create engine with yoy volatility type, " << ovsType << ".");
+
+    // YoY cap floor calibration instrument details. Assumed to equal those from the index and market structures.
+    // Some of these should possibly come from conventions. Also some variables used in the loop below.
+    Natural settlementDays = 2;
+    auto calendar = yoyInflationIndex_->fixingCalendar();
+    auto dc = yoyTs->dayCounter();
+    auto bdc = Following;
+    auto obsLag = yoyVolatility_->observationLag();
+    Date today = Settings::instance().evaluationDate();
+
+    // Avoid instruments with duplicate expiry times in the loop below
+    auto cmp = [](Time s, Time t) { return close(s, t); };
+    set<Time, decltype(cmp)> expiryTimes(cmp);
+
+    // Reference calibration dates if any. If they are given, we only include one calibration instrument from each 
+    // period in the grid. Logic copied from other builders.
+    auto rcDates = referenceCalibrationDates();
+    auto prevRcDate = Date::minDate();
+
+    // Add calibration instruments to the helpers vector.
+    const auto& ci = cb.instruments();
+    for (Size i = 0; i < ci.size(); ++i) {
+
+        auto yoyCapFloor = boost::dynamic_pointer_cast<YoYCapFloor>(ci[i]);
+        QL_REQUIRE(yoyCapFloor, "InfJyBuilder: expected YoYCapFloor calibration instrument.");
+
+        // Get the configured strike.
+        auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(yoyCapFloor->strike());
+        QL_REQUIRE(strike, "Expected CpiCapFloor in inflation model data to have absolute strikes.");
+        Real strikeValue = strike->strike();
+
+        // Build the YoY cap floor helper.
+        auto quote = boost::make_shared<SimpleQuote>(0.01);
+        auto helper = boost::make_shared<YoYCapFloorHelper>(Handle<Quote>(quote), yoyCapFloor->type(), strikeValue,
+            settlementDays, yoyCapFloor->tenor(), yoyInflationIndex_, obsLag, calendar, bdc, dc, calendar, bdc);
+
+        // Deal with reference calibration date grid stuff based on maturity of helper instrument.
+        auto helperInst = helper->yoyCapFloor();
+        auto maturity = helperInst->maturityDate();
+        auto rcDate = lower_bound(rcDates.begin(), rcDates.end(), maturity);
+        if (!(rcDate == rcDates.end() || *rcDate > prevRcDate)) {
+            active[i] = false;
+            continue;
+        }
+
+        if (rcDate != rcDates.end())
+            prevRcDate = *rcDate;
+
+        // Price the underlying helper instrument to get its fair premium.
+        helperInst->setPricingEngine(engine);
+
+        // Update the helper's market quote with the fair rate.
+        quote->setValue(helperInst->NPV());
+
+        // Add the helper to the calibration helpers.
+        helpers.push_back(helper);
+
+        // Add the helper's time to expiry.
+        auto fixingDate = helperInst->lastYoYInflationCoupon()->fixingDate();
+        auto t = yoyTs->timeFromReference(fixingDate);
+        auto p = expiryTimes.insert(t);
+        QL_REQUIRE(p.second, "InfJyBuilder: a YoY cap floor calibration " <<
+            "instrument with the expiry time, " << t << ", was already added.");
+
+        TLOG("InfJyBuilder: added YoYCapFloor helper" <<
+            ": index = " << data_->index() <<
+            ", type = " << yoyCapFloor->type() <<
+            ", expiry = " << io::iso_date(maturity) <<
+            ", strike = " << strikeValue <<
+            ", obs lag = " << obsLag <<
+            ", market premium = " << quote->value());
+    }
+
+    // Populate the expiry times array with the unique sorted expiry times.
+    expiries = Array(expiryTimes.begin(), expiryTimes.end());
 
     DLOG("InfJyBuilder: finished building the YoY cap floor calibration basket.");
 
@@ -366,11 +468,6 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
     QL_REQUIRE(!yts.empty(), "InfJyBuilder: need a valid nominal term structure " <<
         "to build a year on year swap calibration basket.");
 
-    const auto& ci = cb.instruments();
-    QL_REQUIRE(ci.size() == active.size(), "InfJyBuilder: expected the active swaps vector size to equal the " <<
-        "number of calibration instruments");
-    fill(active.begin(), active.end(), false);
-
     // Procedure is to create a YoY cap floor as described by each instrument in the calibration basket. We then value 
     // each of the YoY cap floor instruments using market data and an engine and pass the NPV as the market premium to 
     // helper that we create.
@@ -386,8 +483,8 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
     Natural settlementDays = 2;
     auto calendar = yoyInflationIndex_->fixingCalendar();
     auto dc = yoyTs->dayCounter();
-    auto bdc = cpiVolatility_->businessDayConvention();
-    auto obsLag = cpiVolatility_->observationLag();
+    auto bdc = Following;
+    auto obsLag = yoyTs->observationLag();
     Date today = Settings::instance().evaluationDate();
 
     // Avoid instruments with duplicate expiry times in the loop below
@@ -400,6 +497,7 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
     auto prevRcDate = Date::minDate();
 
     // Add calibration instruments to the helpers vector.
+    const auto& ci = cb.instruments();
     for (Size i = 0; i < ci.size(); ++i) {
 
         auto yoySwap = boost::dynamic_pointer_cast<YoYSwap>(ci[i]);
