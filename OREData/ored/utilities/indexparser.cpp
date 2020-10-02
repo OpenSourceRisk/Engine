@@ -413,7 +413,6 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
     BusinessDayConvention fixedLegConvention = irSwapConvention ? irSwapConvention->fixedConvention() : ModifiedFollowing;
     DayCounter fixedLegDayCounter = irSwapConvention ? irSwapConvention->fixedDayCounter() : ActualActual();
 
-    std::cout << s << " " << fixingCalendar.name() << std::endl;
     return boost::make_shared<SwapIndex>(familyName, p, settlementDays, ccy, fixingCalendar, fixedLegTenor,
                                          fixedLegConvention, fixedLegDayCounter, index, d);
 }
