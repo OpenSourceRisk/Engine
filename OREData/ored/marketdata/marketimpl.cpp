@@ -347,7 +347,7 @@ void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountInd
 
         auto fi = iborIndex(con->indexName(), configuration)->forwardingTermStructure();
 
-        boost::shared_ptr<SwapIndex> si = data::parseSwapIndex(swapIndex, fi, di, con);
+        boost::shared_ptr<SwapIndex> si = data::parseSwapIndex(swapIndex, fi, di, con, swapCon);
         swapIndices_[make_pair(configuration, swapIndex)] = Handle<SwapIndex>(si);
     } catch (std::exception& e) {
         QL_FAIL("Failure in MarketImpl::addSwapIndex() with index " << swapIndex << " : " << e.what());

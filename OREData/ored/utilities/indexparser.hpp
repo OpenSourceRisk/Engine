@@ -112,7 +112,8 @@ boost::shared_ptr<QuantExt::EquityIndex> parseEquityIndex(const string& s);
 boost::shared_ptr<SwapIndex>
 parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = Handle<YieldTermStructure>(),
                const Handle<YieldTermStructure>& discounting = Handle<YieldTermStructure>(),
-               boost::shared_ptr<Convention> convention = nullptr);
+               boost::shared_ptr<IRSwapConvention> irSwapConvention = nullptr,
+               boost::shared_ptr<SwapIndexConvention> swapIndexConvention = nullptr);
 
 //! Convert std::string to QuantLib::ZeroInflationIndex
 /*!

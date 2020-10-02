@@ -383,8 +383,8 @@ void OvernightIndexConvention::build() {
     QL_REQUIRE(tokens.size() == 2, "Two tokens required in OvernightIndexConvention " << id_ << ": CCY-INDEX");
 }
 
-SwapIndexConvention::SwapIndexConvention(const string& id, const string& conventions)
-    : Convention(id, Type::SwapIndex), strConventions_(conventions) {}
+SwapIndexConvention::SwapIndexConvention(const string& id, const string& conventions, const string& fixingCalendar)
+    : Convention(id, Type::SwapIndex), strConventions_(conventions), fixingCalendar_(fixingCalendar) {}
 
 void SwapIndexConvention::fromXML(XMLNode* node) {
 
@@ -394,6 +394,7 @@ void SwapIndexConvention::fromXML(XMLNode* node) {
 
     // Get string values from xml
     strConventions_ = XMLUtils::getChildValue(node, "Conventions", true);
+    fixingCalendar_ = XMLUtils::getChildValue(node, "FixingCalendar", false);
 }
 
 XMLNode* SwapIndexConvention::toXML(XMLDocument& doc) {
@@ -401,9 +402,11 @@ XMLNode* SwapIndexConvention::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("SwapIndex");
     XMLUtils::addChild(doc, node, "Id", id_);
     XMLUtils::addChild(doc, node, "Conventions", strConventions_);
+    XMLUtils::addChild(doc, node, "FixingCalendar", fixingCalendar_);
 
     return node;
 }
+
 IRSwapConvention::IRSwapConvention(const string& id, const string& fixedCalendar, const string& fixedFrequency,
                                    const string& fixedConvention, const string& fixedDayCounter, const string& index,
                                    bool hasSubPeriod, const string& floatFrequency, const string& subPeriodsCouponType,

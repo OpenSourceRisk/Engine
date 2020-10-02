@@ -449,9 +449,10 @@ private:
 class SwapIndexConvention : public Convention {
 public:
     SwapIndexConvention() {}
-    SwapIndexConvention(const string& id, const string& conventions);
+    SwapIndexConvention(const string& id, const string& conventions, const string& fixingCalendar = "");
 
     const string& conventions() const { return strConventions_; }
+    const string& fixingCalendar() const { return fixingCalendar_; }
 
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
@@ -459,6 +460,7 @@ public:
 
 private:
     string strConventions_;
+    string fixingCalendar_;
 };
 
 //! Container for storing Interest Rate Swap conventions
