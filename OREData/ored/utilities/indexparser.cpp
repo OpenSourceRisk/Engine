@@ -405,7 +405,7 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
         index =  irSwapConvention->index()->clone(f);
     }
     QuantLib::Natural settlementDays = index ? index->fixingDays() : 0;
-    QuantLib::Calendar fixingCalendar =index ? index->fixingCalendar() : NullCalendar();
+    QuantLib::Calendar fixingCalendar = irSwapConvention ? irSwapConvention->fixedCalendar() : NullCalendar();
     if(swapIndexConvention && !swapIndexConvention->fixingCalendar().empty()) {
         fixingCalendar = parseCalendar(swapIndexConvention->fixingCalendar());
     }
