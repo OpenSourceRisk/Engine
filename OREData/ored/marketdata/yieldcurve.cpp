@@ -17,6 +17,7 @@
 */
 
 #include <ql/currencies/exchangeratemanager.hpp>
+#include <ql/experimental/futures/overnightindexfutureratehelper.hpp>
 #include <ql/indexes/ibor/usdlibor.hpp>
 #include <ql/math/randomnumbers/haltonrsg.hpp>
 #include <ql/pricingengines/bond/bondfunctions.hpp>
@@ -46,7 +47,6 @@
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
-#include <qle/termstructures/overnightindexfutureratehelper.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 #include <qle/termstructures/weightedyieldtermstructure.hpp>
