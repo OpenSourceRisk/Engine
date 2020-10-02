@@ -128,12 +128,38 @@ EUR-EURIBOR, USD-LIBOR etc.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsubsection{Future Conventions}
+\subsubsection{Future Conventions}\label{ss:conventions_future}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-A node with name \emph{Future} is used to store conventions for IMM Future quotes. The structure of this node is shown
-in Listing \ref{lst:future_conventions}. The only piece of information needed is the underlying money market or
-overnight future index name and this is given in the \lstinline!Index! node. For example, this could be EUR-EURIBOR-3M,
-USD-LIBOR-3M, USD-SOFR, GBP-SONIA etc.
+
+A node with name \emph{Future} is used to store conventions for money market (MM) or overnight index (OI) interest rate
+future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The structure of this node is shown in Listing
+\ref{lst:future_conventions}. The fields have the following meaning:
+
+\begin{itemize}
+\item Id: The name of the convention.
+\item Index: The underlying index of the futures, this is either a MM (i.e. Ibor) index like e.g. EUR-EURIBOR-3M or an
+  overnight index like e.g. USD-SOFR.
+\item DateGenerationRule [Optional]: This should be set to 'IMM' when the start and end dates of the future are
+  following the IMM date logic or 'FirstDayOfMonth' when the start and end date are the first day of a month. If not
+  given this field defaults to 'IMM'.
+  \begin{itemize}
+  \item For MM futures only 'IMM' is allowed and the expiry date is determined as the next 3rd Wednesday of the expiry
+    month of a future.
+  \item For an overnight index future 'IMM' means that the end date of the future is set to the 3rd Wednesday of the
+    expiry month and the start date is set to the 3rd Wednesday of the expiry month minus the future tenor. The setting
+    'IMM' applies to SOFR-3M futures for example. 'FirstDayOfMonth' on the other hand means that the end date of the
+    future is set to the first day in the month following the future's expiry month and the start date is set to the
+    first day of the month lying $n$ months before the end date's month where $n$ is the number of months of the
+    future's underlying tenor. The setting 'FirstDayOfMonth' applies to SOFR-1M futures for example. This tenor is
+    derived from the market quote, see \ref{ss:market_data_oi_index_future_prices}.
+  \end{itemize}
+\item OvernightIndexFutureNettingType [Optional]: Only relevant for OI futures. Can be 'Compounding' (which is also the
+  default value if no value is given) or 'Averaging'. For example, SOFR 3M futures are compounding while SOFR 1M futures
+  are averaging the daily overnight fixings over the calculation period of the future.
+\end{itemize}
+
+Listings \ref{lst:future_conventions_euribor_3m}, \ref{lst:future_conventions_sofr_3m},
+\ref{lst:future_conventions_sofr_1m} show examples for Euribor-3M, SOFR-3M and SOFR-1M future conventions.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -141,11 +167,54 @@ USD-LIBOR-3M, USD-SOFR, GBP-SONIA etc.
 <Future>
   <Id> </Id>
   <Index> </Index>
+  <DateGenerationRule> </DateGenerationRule>
+  <OvernightIndexFutureNettingType> </OvernightIndexFutureNettingType>
 </Future>
 \end{minted}
 \caption{Future conventions}
 \label{lst:future_conventions}
 \end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Future>
+  <Id>EURIBOR-3M-FUTURES</Id>
+  <Index>EUR-EURIBOR-3M</Index>
+</Future>
+\end{minted}
+\caption{Euribor 3M MM Future conventions}
+\label{lst:future_conventions_euribor_3m}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Future>
+    <Id>USD-SOFR-3M-FUTURES</Id>
+    <Index>USD-SOFR</Index>
+    <DateGenerationRule>IMM</DateGenerationRule>
+    <OvernightIndexFutureNettingType>Compounding</OvernightIndexFutureNettingType>
+  </Future>
+\end{minted}
+\caption{USD SOFR 3M OI Future conventions}
+\label{lst:future_conventions_sofr_3m}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Future>
+    <Id>USD-SOFR-1M-FUTURES</Id>
+    <Index>USD-SOFR</Index>
+    <DateGenerationRule>FirstDayOfMonth</DateGenerationRule>
+    <OvernightIndexFutureNettingType>Averaging</OvernightIndexFutureNettingType>
+  </Future>
+\end{minted}
+\caption{USD SOFR 1M OI Future conventions}
+\label{lst:future_conventions_sofr_1m}
+\end{listing}
+
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{FRA Conventions}

@@ -193,19 +193,30 @@ XMLNode* DepositConvention::toXML(XMLDocument& doc) {
 }
 
 FutureConvention::FutureConvention(const string& id, const string& index, const Conventions* conventions)
+    : FutureConvention(id, index, QuantLib::OvernightIndexFuture::NettingType::Compounding, DateGenerationRule::IMM,
+                       conventions) {}
+
+FutureConvention::FutureConvention(const string& id, const string& index,
+                                   const QuantLib::OvernightIndexFuture::NettingType overnightIndexFutureNettingType,
+                                   const DateGenerationRule dateGenerationRule, const Conventions* conventions)
     : Convention(id, Type::Future), strIndex_(index),
       index_(parseIborIndex(strIndex_, Handle<YieldTermStructure>(),
                             getIborOrOvernightConvention(conventions, strIndex_))),
-      conventions_(conventions) {}
+      overnightIndexFutureNettingType_(overnightIndexFutureNettingType), conventions_(conventions) {}
 
 void FutureConvention::fromXML(XMLNode* node) {
-
     XMLUtils::checkNode(node, "Future");
     type_ = Type::Future;
     id_ = XMLUtils::getChildValue(node, "Id", true);
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
     index_ =
         parseIborIndex(strIndex_, Handle<YieldTermStructure>(), getIborOrOvernightConvention(conventions_, strIndex_));
+    string nettingTypeStr = XMLUtils::getChildValue(node, "OvernightIndexFutureNettingType", false);
+    overnightIndexFutureNettingType_ = nettingTypeStr.empty() ? OvernightIndexFuture::NettingType::Compounding
+                                                              : parseOvernightIndexFutureNettingType(nettingTypeStr);
+    string dateGenerationStr = XMLUtils::getChildValue(node, "DateGenerationRule", false);
+    dateGenerationRule_ =
+        dateGenerationStr.empty() ? DateGenerationRule::IMM : parseFutureDateGenerationRule(dateGenerationStr);
 }
 
 XMLNode* FutureConvention::toXML(XMLDocument& doc) {
@@ -213,7 +224,8 @@ XMLNode* FutureConvention::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Future");
     XMLUtils::addChild(doc, node, "Id", id_);
     XMLUtils::addChild(doc, node, "Index", strIndex_);
-
+    XMLUtils::addChild(doc, node, "OvernightIndexFutureNettingType", ore::data::to_string(overnightIndexFutureNettingType_));
+    XMLUtils::addChild(doc, node, "DateGenerationRule", ore::data::to_string(dateGenerationRule_));
     return node;
 }
 

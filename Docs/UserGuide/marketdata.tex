@@ -299,15 +299,13 @@ Example:
     Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
     Contract & String & Contract name\\ \hline
     Term & An integer followed by D, W, M or Y & Underlying Term\\ \hline
-  % date rule & {\tt string} &  \\
   \end{tabular}
   \caption{Money Market Futures Price}
   \label{tab:mmfp_quote}
 \end{table}
 
-Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule such as 3rd
-Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly, but
-defined in the futures contract.
+Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule defined in the future
+conventions, see \ref{ss:conventions_future}.
 
 \medskip
 Example:
@@ -316,7 +314,7 @@ Example:
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Overnight Index Futures Price}
+\subsection{Overnight Index Futures Price}\label{ss:market_data_oi_index_future_prices}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \begin{table}[H]
@@ -329,16 +327,14 @@ Example:
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Overnight Index Future price\\ \hline
     Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
     Contract & String & Contract name\\ \hline
-    Term & An integer followed by D, W, M or Y & Underlying Term\\ \hline
-  % date rule & {\tt string} &  \\
+    Term & An integer followed by M or Y & Underlying Term in months or years \\ \hline
   \end{tabular}
   \caption{Overnight Index Futures Price}
   \label{tab:oifp_quote}
 \end{table}
 
-Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule such as 3rd
-Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly, but
-defined in the futures contract.
+Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule defined in the future
+conventions, see \ref{ss:conventions_future}.
 
 \medskip
 Example: Three Months SOFR Futures (DEC 2019):
