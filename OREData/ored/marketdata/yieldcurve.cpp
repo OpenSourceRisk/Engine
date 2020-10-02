@@ -1156,6 +1156,10 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
                     futureConvention->overnightIndexFutureNettingType());
                 instruments.push_back(futureHelper);
 
+                TLOG("adding OI future helper: price=" << futureQuote->quote()->value() << " start=" << startDate
+                                                       << " end=" << endDate << " nettingType="
+                                                       << futureConvention->overnightIndexFutureNettingType());
+
             } else {
                 // MM Future
                 boost::shared_ptr<MMFutureQuote> futureQuote;
