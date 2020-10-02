@@ -1140,8 +1140,8 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
                     endDate = IMM::nextDate(refEnd, false);
                 } else if (futureConvention->dateGenerationRule() ==
                            FutureConvention::DateGenerationRule::FirstDayOfMonth) {
-                    Date endDate = Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear()) + 1 * Months;
-                    Date startDate = endDate - futureQuote->tenor();
+                    endDate = Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear()) + 1 * Months;
+                    startDate = endDate - futureQuote->tenor();
                 }
 
                 if (endDate <= asofDate_) {
