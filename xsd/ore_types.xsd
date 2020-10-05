@@ -550,6 +550,20 @@
       <xs:enumeration value="Exercise"/>
     </xs:restriction>
   </xs:simpleType>
+
+  <xs:simpleType name="overnightIndexFutureNettingType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Averaging"/>
+      <xs:enumeration value="Compounding"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="futureDateGenerationRule">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="IMM"/>
+      <xs:enumeration value="FirstDayOfMonth"/>
+    </xs:restriction>
+  </xs:simpleType>
   
 </xs:schema>
 
