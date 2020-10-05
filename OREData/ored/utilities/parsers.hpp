@@ -47,6 +47,7 @@
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/variant.hpp>
 
 namespace ore {
 namespace data {
@@ -170,6 +171,12 @@ QuantLib::Exercise::Type parseExerciseType(const string& s);
 QuantLib::Option::Type parseOptionType(const string& s);
 
 //! Convert text to QuantLib::Period or QuantLib::Date
+/*!
+\ingroup utilities
+*/
+boost::variant<QuantLib::Date, QuantLib::Period> parseDateOrPeriod(const string& s);
+
+//! Convert text to QuantLib::Period or QuantLib::Date (deprecated version)
 /*!
 \ingroup utilities
 */
