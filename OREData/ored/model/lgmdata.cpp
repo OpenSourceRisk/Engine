@@ -311,5 +311,33 @@ XMLNode* LgmData::toXML(XMLDocument& doc) {
 
     return lgmNode;
 }
+
+LgmReversionTransformation::LgmReversionTransformation()
+    : horizon_(0.0), scaling_(1.0) {}
+
+LgmReversionTransformation::LgmReversionTransformation(Time horizon, Real scaling)
+    : horizon_(horizon), scaling_(scaling) {}
+
+Time LgmReversionTransformation::horizon() const {
+    return horizon_;
+}
+
+Real LgmReversionTransformation::scaling() const {
+    return scaling_;
+}
+
+void LgmReversionTransformation::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "ParameterTransformation");
+    horizon_ = XMLUtils::getChildValueAsDouble(node, "ShiftHorizon", true);
+    scaling_ = XMLUtils::getChildValueAsDouble(node, "Scaling", true);
+}
+
+XMLNode* LgmReversionTransformation::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("ParameterTransformation");
+    XMLUtils::addChild(doc, node, "ShiftHorizon", horizon_);
+    XMLUtils::addChild(doc, node, "Scaling", scaling_);
+    return node;
+}
+
 } // namespace data
 } // namespace ore

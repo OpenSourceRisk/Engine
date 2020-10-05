@@ -368,13 +368,12 @@ PostProcess::PostProcess(
     // FIXME: Why is this not passed in? why are we hardcoding a cube instance here?
     nettedCube_ = boost::make_shared<SinglePrecisionInMemoryCube>(today, nettingSetIds_, cube_->dates(), samples);
 
-    bool applyInitialMargin = analytics_["dim"];
-
     Size nettingSetCount = 0;
     nettingSetValue = (calcType_ == CollateralExposureHelper::CalculationType::NoLag ? nettingSetCloseOutValue
                                                                                      : nettingSetDefaultValue);
     for (auto n : nettingSetValue) {
         string nettingSetId = n.first;
+        boost::shared_ptr<NettingSetDefinition> netting = nettingSetManager->get(nettingSetId);
         Size nettingSetTrades = nettingSetSize[nettingSetId];
 
         LOG("Aggregate exposure for netting set " << nettingSetId);
@@ -386,10 +385,18 @@ PostProcess::PostProcess(
             nettingSetId, nettingSetManager, market, configuration, scenarioData, dates, samples,
             nettingSetDefaultValue[nettingSetId], nettingSetValueToday[nettingSetId], nettingSetMaturity[nettingSetId]);
 
+	bool applyInitialMargin = netting->applyInitialMargin() && analytics_["dim"];       
+	LOG("ApplyInitialMargin=" << applyInitialMargin << " for netting set " << nettingSetId 
+	    << ", CSA IM=" << netting->applyInitialMargin()
+	    << ", Analytics DIM=" << analytics_["dim"]);
+	if (analytics_["dim"] && !netting->applyInitialMargin())
+	    ALOG("ApplyInitialMargin deactivated at netting set level " << nettingSetId);
+	if (!analytics_["dim"] && netting->applyInitialMargin())
+	    ALOG("ApplyInitialMargin deactivated in analytics, but active at netting set level " << nettingSetId);
+	
         // Get the CSA index for Eonia Floor calculation below
         nettingSetCOLVA_[nettingSetId] = 0.0;
         nettingSetCollateralFloor_[nettingSetId] = 0.0;
-        boost::shared_ptr<NettingSetDefinition> netting = nettingSetManager->get(nettingSetId);
         string csaIndexName;
         Handle<IborIndex> csaIndex;
         if (netting->activeCsaFlag()) {
@@ -446,7 +453,7 @@ PostProcess::PostProcess(
                 eab[j + 1] += balance / samples;
                 Real exposure = data[j][k] - balance;
                 Real dim = 0.0;
-                if (applyInitialMargin) {
+                if (applyInitialMargin && collateral) { // don't apply initial margin without VM, i.e. inactive CSA
                     // Initial Margin
                     // Use IM to reduce exposure
                     // Size dimIndex = j == 0 ? 0 : j - 1;

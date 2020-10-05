@@ -25,6 +25,7 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/marketimpl.hpp>
+#include <ored/model/calibrationinstruments/cpicapfloor.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/swap.hpp>
@@ -145,41 +146,46 @@ struct TestData {
                                                          sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 
         std::vector<boost::shared_ptr<EqBsData>> eqConfigs;
-        std::vector<boost::shared_ptr<InfDkData>> infConfigs;
+        
+        // Inflation configurations
+        vector<boost::shared_ptr<InflationModelData>> infConfigs;
 
-        vector<std::string> infExpiries = {"5Y"};
-        vector<std::string> infStrikes = {"0.0"};
-        hTimes = {1.0};
-        hValues = {0.5, 0.5};
-        aTimes = {};
-        aValues = {0.1};
+        vector<boost::shared_ptr<CalibrationInstrument>> instruments = { 
+            boost::make_shared<CpiCapFloor>(CapFloor::Cap, 5 * Years, boost::make_shared<AbsoluteStrike>(0.0))
+        };
+        vector<CalibrationBasket> cbUkrpi = { CalibrationBasket(instruments) };
 
-        revType = LgmData::ReversionType::Hagan;
-        infConfigs.push_back(boost::make_shared<InfDkData>("UKRPI", "GBP", calibrationType, revType, volType, true,
-                                                           ParamType::Piecewise, hTimes, hValues, false,
-                                                           ParamType::Constant, aTimes, aValues, 0.0, 1.0, "Cap",
-                                                           infExpiries, std::vector<std::string>(), infStrikes));
-        infConfigs.push_back(boost::make_shared<InfDkData>("EUHICPXT", "EUR", calibrationType, revType, volType, true,
-                                                           ParamType::Piecewise, hTimes, hValues, false,
-                                                           ParamType::Constant, aTimes, aValues, 0.0, 1.0, "Floor",
-                                                           infExpiries, std::vector<std::string>(), infStrikes));
+        instruments = {
+            boost::make_shared<CpiCapFloor>(CapFloor::Floor, 5 * Years, boost::make_shared<AbsoluteStrike>(0.0))
+        };
+        vector<CalibrationBasket> cbEuhicpxt = { CalibrationBasket(instruments) };
 
-        std::map<std::pair<std::string, std::string>, Handle<Quote>> corr;
-        corr[std::make_pair("IR:EUR", "IR:USD")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.6));
-        corr[std::make_pair("IR:EUR", "IR:GBP")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.3));
-        corr[std::make_pair("IR:USD", "IR:GBP")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.1));
-        corr[std::make_pair("FX:USDEUR", "FX:GBPEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.3));
-        corr[std::make_pair("IR:EUR", "FX:USDEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.2));
-        corr[std::make_pair("IR:EUR", "FX:GBPEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.3));
-        corr[std::make_pair("IR:USD", "FX:USDEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(-0.2));
-        corr[std::make_pair("IR:USD", "FX:GBPEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(-0.1));
-        corr[std::make_pair("IR:GBP", "FX:USDEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
-        corr[std::make_pair("IR:GBP", "FX:GBPEUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.1));
-        corr[std::make_pair("INF:UKRPI", "IR:GBP")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.1));
-        corr[std::make_pair("INF:EUHICPXT", "IR:EUR")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.1));
+        ReversionParameter reversion(LgmData::ReversionType::Hagan, false,
+            ParamType::Piecewise, { 1.0 }, { 0.5, 0.5 });
 
-        boost::shared_ptr<CrossAssetModelData> config(
-            boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, corr));
+        VolatilityParameter volatility(LgmData::VolatilityType::Hagan, true, 0.1);
+
+        infConfigs.push_back(boost::make_shared<InfDkData>(CalibrationType::Bootstrap,
+            cbUkrpi, "GBP", "UKRPI", reversion, volatility));
+        infConfigs.push_back(boost::make_shared<InfDkData>(CalibrationType::Bootstrap,
+            cbEuhicpxt, "EUR", "EUHICPXT", reversion, volatility));
+
+        CorrelationMatrixBuilder cmb;
+        cmb.addCorrelation("IR:EUR", "IR:USD", Handle<Quote>(boost::make_shared<SimpleQuote>(0.6)));
+        cmb.addCorrelation("IR:EUR", "IR:GBP", Handle<Quote>(boost::make_shared<SimpleQuote>(0.3)));
+        cmb.addCorrelation("IR:USD", "IR:GBP", Handle<Quote>(boost::make_shared<SimpleQuote>(0.1)));
+        cmb.addCorrelation("FX:USDEUR", "FX:GBPEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.3)));
+        cmb.addCorrelation("IR:EUR", "FX:USDEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.2)));
+        cmb.addCorrelation("IR:EUR", "FX:GBPEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.3)));
+        cmb.addCorrelation("IR:USD", "FX:USDEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(-0.2)));
+        cmb.addCorrelation("IR:USD", "FX:GBPEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(-0.1)));
+        cmb.addCorrelation("IR:GBP", "FX:USDEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)));
+        cmb.addCorrelation("IR:GBP", "FX:GBPEUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.1)));
+        cmb.addCorrelation("INF:UKRPI", "IR:GBP", Handle<Quote>(boost::make_shared<SimpleQuote>(0.1)));
+        cmb.addCorrelation("INF:EUHICPXT", "IR:EUR", Handle<Quote>(boost::make_shared<SimpleQuote>(0.1)));
+
+        boost::shared_ptr<CrossAssetModelData> config(boost::make_shared<CrossAssetModelData>(
+            irConfigs, fxConfigs, eqConfigs, infConfigs, cmb.correlations()));
 
         CrossAssetModelBuilder modelBuilder(market, config);
         ccLgm = *modelBuilder.model();

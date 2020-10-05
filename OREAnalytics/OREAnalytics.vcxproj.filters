@@ -191,6 +191,9 @@
     <ClInclude Include="orea\scenario\spreadscenariofactory.hpp">
       <Filter>scenario</Filter>
     </ClInclude>
+    <ClInclude Include="orea\app\xvarunner.hpp">
+      <Filter>app</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -202,12 +205,6 @@
     <ClCompile Include="orea\aggregation\cvaspreadsensitivitycalculator.cpp">
       <Filter>aggregation</Filter>
     </ClCompile>
-    <ClInclude Include="orea\aggregation\dimcalculator.cpp">
-      <Filter>aggregation</Filter>
-    </ClInclude>
-    <ClInclude Include="orea\aggregation\dimregressioncalculator.cpp">
-      <Filter>aggregation</Filter>
-    </ClInclude>
     <ClCompile Include="orea\aggregation\postprocess.cpp">
       <Filter>aggregation</Filter>
     </ClCompile>
@@ -330,6 +327,15 @@
     </ClCompile>
     <ClCompile Include="orea\scenario\spreadscenariofactory.cpp">
       <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\app\xvarunner.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\dimcalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\dimregressioncalculator.cpp">
+      <Filter>aggregation</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

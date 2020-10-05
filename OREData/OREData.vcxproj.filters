@@ -22,6 +22,12 @@
     <Filter Include="report">
       <UniqueIdentifier>{f56268ea-d150-4fb7-b75b-9618e16d7c3d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="model\calibrationinstruments">
+      <UniqueIdentifier>{1fec87df-dbce-4a0c-a47b-9bcc5cec4efe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="model\inflation">
+      <UniqueIdentifier>{4b38d6b7-ea6f-4969-adba-91114fef3272}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ored\configuration\capfloorvolcurveconfig.hpp">
@@ -342,12 +348,6 @@
     <ClInclude Include="ored\marketdata\security.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
-    <ClInclude Include="ored\model\infdkbuilder.hpp">
-      <Filter>model</Filter>
-    </ClInclude>
-    <ClInclude Include="ored\model\infdkdata.hpp">
-      <Filter>model</Filter>
-    </ClInclude>
     <ClInclude Include="ored\model\irlgmdata.hpp">
       <Filter>model</Filter>
     </ClInclude>
@@ -506,6 +506,36 @@
     </ClInclude>
     <ClInclude Include="ored\portfolio\optionexercisedata.hpp">
       <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\modelparameter.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\calibrationbasket.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\calibrationinstruments\cpicapfloor.hpp">
+      <Filter>model\calibrationinstruments</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\calibrationinstrumentfactory.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\modeldata.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\inflation\infdkbuilder.hpp">
+      <Filter>model\inflation</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\inflation\infdkdata.hpp">
+      <Filter>model\inflation</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\inflation\infjydata.hpp">
+      <Filter>model\inflation</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\inflation\inflationmodeldata.hpp">
+      <Filter>model\inflation</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\inflation\infjybuilder.hpp">
+      <Filter>model\inflation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -767,12 +797,6 @@
     <ClCompile Include="ored\marketdata\security.cpp">
       <Filter>marketdata</Filter>
     </ClCompile>
-    <ClCompile Include="ored\model\infdkbuilder.cpp">
-      <Filter>model</Filter>
-    </ClCompile>
-    <ClCompile Include="ored\model\infdkdata.cpp">
-      <Filter>model</Filter>
-    </ClCompile>
     <ClCompile Include="ored\model\irlgmdata.cpp">
       <Filter>model</Filter>
     </ClCompile>
@@ -895,6 +919,36 @@
     </ClCompile>
     <ClCompile Include="ored\configuration\curveconfig.cpp">
       <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\modelparameter.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\calibrationbasket.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\calibrationinstruments\cpicapfloor.cpp">
+      <Filter>model\calibrationinstruments</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\calibrationinstrumentfactory.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\modeldata.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\inflation\infdkbuilder.cpp">
+      <Filter>model\inflation</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\inflation\infdkdata.cpp">
+      <Filter>model\inflation</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\inflation\infjydata.cpp">
+      <Filter>model\inflation</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\inflation\inflationmodeldata.cpp">
+      <Filter>model\inflation</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\inflation\infjybuilder.cpp">
+      <Filter>model\inflation</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -35,13 +35,10 @@ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y}. Interpolation lags are typically expressed in a positive number of  \emph{M}, months. Note that negative values are allowed, but mean that the inflation is observed forward in time from the period start/end date, which is unusual.  
 
-\item Interpolation: The type of interpolation that is applied to inflation fixings.
+\item Interpolation: The type of interpolation that is applied to inflation fixings. \emph{Linear} interpolation means that the inflation fixing for a given date is interpolated linearly between the surrounding - usually monthly - actual fixings, whereas with  \emph{Flat} interpolation the inflation fixings are constant for each day at the value of the previous/latest actual fixing (flat forward interpolation).  
+%\emph{AsIndex} means that the underlying inflation index interpolation is applied. Note that if an inflation index have fixing interpolation switched off,  \emph{AsIndex}  is equivalent to \emph{Flat} interpolation.
 
-Allowable values:  \emph{Linear, Flat, AsIndex} 
-
-\medskip
-The latter choice means that the underlying inflation index
-interpolation is applied.
+Allowable values:  \emph{Linear, Flat} 
 
 \item SubtractInflationNotional [Optional]: A flag indicating whether
   the non-inflation adjusted notional amount should be subtracted from
