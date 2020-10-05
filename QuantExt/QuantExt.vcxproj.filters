@@ -852,12 +852,6 @@
     <ClInclude Include="qle\cashflows\blackovernightindexedcouponpricer.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
-    <ClInclude Include="qle\instruments\overnightindexfuture.hpp">
-      <Filter>instruments</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\overnightindexfutureratehelper.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
     <ClInclude Include="qle\currencies\europe.hpp">
       <Filter>currencies</Filter>
     </ClInclude>
@@ -1554,12 +1548,6 @@
     </ClCompile>
     <ClCompile Include="qle\cashflows\blackovernightindexedcouponpricer.cpp">
       <Filter>cashflows</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\instruments\overnightindexfuture.cpp">
-      <Filter>instruments</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\overnightindexfutureratehelper.cpp">
-      <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\currencies\europe.cpp">
       <Filter>currencies</Filter>

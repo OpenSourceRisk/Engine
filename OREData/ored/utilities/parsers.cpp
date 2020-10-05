@@ -1074,5 +1074,47 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
     return make_pair(resultType, oss.str());
 }
 
+QuantLib::OvernightIndexFuture::NettingType parseOvernightIndexFutureNettingType(const std::string& s) {
+    if (s == "Averaging") {
+        return QuantLib::OvernightIndexFuture::NettingType::Averaging;
+    } else if (s == "Compounding") {
+        return QuantLib::OvernightIndexFuture::NettingType::Compounding;
+    } else {
+        QL_FAIL("Overnight Index Future Netting Type '" << s << "' not known, expected 'Averaging' or 'Compounding'");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, QuantLib::OvernightIndexFuture::NettingType t) {
+    if (t == QuantLib::OvernightIndexFuture::NettingType::Averaging)
+        return os << "Averaging";
+    else if (t == QuantLib::OvernightIndexFuture::NettingType::Compounding)
+        return os << "Compounding";
+    else {
+        QL_FAIL("Internal error: unknown OvernightIndexFuture::NettingType - check implementation of operator<< "
+                "for this enum");
+    }
+}
+
+FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::string& s) {
+    if (s == "IMM")
+        return FutureConvention::DateGenerationRule::IMM;
+    else if (s == "FirstDayOfMonth")
+        return FutureConvention::DateGenerationRule::FirstDayOfMonth;
+    else {
+        QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM' or 'FirstDayOfMonth'");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule t) {
+    if (t == FutureConvention::DateGenerationRule::IMM)
+        return os << "IMM";
+    else if (t == FutureConvention::DateGenerationRule::FirstDayOfMonth)
+        return os << "FirstDayOfMonth";
+    else {
+        QL_FAIL("Internal error: unknown FutureConvention::DateGenerationRule - check implementation of operator<< "
+                "for this enum");
+    }
+}
+
 } // namespace data
 } // namespace ore
