@@ -201,6 +201,7 @@ marketdata/yieldcurve.hpp
 marketdata/yieldvolcurve.hpp
 model/calibrationbasket.hpp
 model/calibrationinstrumentfactory.hpp
+model/calibrationinstruments/cpicapfloor.hpp
 model/crossassetmodelbuilder.hpp
 model/crossassetmodeldata.hpp
 model/eqbsbuilder.hpp

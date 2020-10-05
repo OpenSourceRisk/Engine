@@ -272,6 +272,8 @@ indexes/ibor/brlcdi.hpp
 indexes/ibor/chfsaron.hpp
 indexes/ibor/chftois.hpp
 indexes/ibor/clpcamara.hpp
+indexes/ibor/cnhhibor.hpp
+indexes/ibor/cnhshibor.hpp
 indexes/ibor/copibr.hpp
 indexes/ibor/corra.hpp
 indexes/ibor/czkpribor.hpp
@@ -281,12 +283,12 @@ indexes/ibor/dkkois.hpp
 indexes/ibor/ester.hpp
 indexes/ibor/hkdhibor.hpp
 indexes/ibor/hufbubor.hpp
-indexes/ibor/jpyeytibor.hpp
 indexes/ibor/idridrfix.hpp
 indexes/ibor/idrjibor.hpp
 indexes/ibor/ilstelbor.hpp
 indexes/ibor/inrmiborois.hpp
 indexes/ibor/inrmifor.hpp
+indexes/ibor/jpyeytibor.hpp
 indexes/ibor/krwcd.hpp
 indexes/ibor/krwkoribor.hpp
 indexes/ibor/mxntiie.hpp
