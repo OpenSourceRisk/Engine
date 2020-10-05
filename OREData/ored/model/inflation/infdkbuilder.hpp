@@ -71,6 +71,8 @@ public:
 
 private:
     void performCalculations() const override;
+    Real optionStrikeValue(const Size j) const;
+    Date optionMaturityDate(const Size j) const;
     void buildCapFloorBasket() const;
 
     // checks whether inf vols have changed compared to cache and updates the cache if requested
