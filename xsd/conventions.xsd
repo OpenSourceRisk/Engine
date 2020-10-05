@@ -233,6 +233,7 @@
     <xs:all>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FixingCalendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 

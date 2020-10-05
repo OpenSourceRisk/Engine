@@ -635,6 +635,7 @@ A node with name \emph{SwapIndex} is used to store conventions for Swap indices 
   <SwapIndex>
     <Id>EUR-CMS-2Y</Id>
     <Conventions>EUR-EURIBOR-6M-SWAP</Conventions>
+    <FixingCalendar>TARGET</FixingCalendar>
   </SwapIndex>
 \end{minted}
 \caption{Swap index convention}
@@ -648,6 +649,8 @@ The meaning of the elements is as follows:
   representing a period. The index name can contain an optional tag ``CCY-CMS-TAG-TENOR'' which is an arbitrary label
   that allows to define more than one swap index per currency.
 \item Conventions: A swap convention defining the index conventions.
+\item FixingCalendar [Optional]: The fixing calendar for the swap index fixings publication. If not given, the fixed leg
+  calendar from the swap conventions will be used as a fall back.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
