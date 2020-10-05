@@ -444,7 +444,7 @@ void CrossAssetModelBuilder::buildModel() const {
 
     for (Size i = 0; i < irParametrizations.size(); i++) {
         auto p = irParametrizations[i];
-        irDiscountCurves[i].linkTo(*market_->discountCurve(p->currency().code(), configurationFinalModel_));
+        irDiscountCurves[i].linkTo(*market_->discountCurve(p->currency().code(), configurationInfCalibration_));
         DLOG("Relinked discounting curve for " << p->currency().code() << " as final model curves");
     }
 
