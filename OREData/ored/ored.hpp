@@ -65,6 +65,7 @@
 #include <ored/marketdata/yieldvolcurve.hpp>
 #include <ored/model/calibrationbasket.hpp>
 #include <ored/model/calibrationinstrumentfactory.hpp>
+#include <ored/model/calibrationinstruments/cpicapfloor.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/model/eqbsbuilder.hpp>
