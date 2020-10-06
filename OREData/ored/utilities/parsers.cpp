@@ -33,6 +33,7 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
+#include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/austria.hpp>
 #include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>
@@ -42,7 +43,6 @@
 #include <qle/calendars/ice.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/largejointcalendar.hpp>
-#include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/netherlands.hpp>
@@ -746,18 +746,38 @@ Option::Type parseOptionType(const std::string& s) {
     }
 }
 
-void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
+boost::variant<QuantLib::Date, QuantLib::Period> parseDateOrPeriod(const string& s) {
     QL_REQUIRE(!s.empty(), "Cannot parse empty string as date or period");
     string c(1, s.back());
     bool isPeriod = c.find_first_of("DdWwMmYy") != string::npos;
     if (isPeriod) {
-        p = ore::data::parsePeriod(s);
-        isDate = false;
+        return ore::data::parsePeriod(s);
     } else {
-        d = ore::data::parseDate(s);
-        QL_REQUIRE(d != Date(), "Cannot parse \"" << s << "\" as date");
-        isDate = true;
+        return ore::data::parseDate(s);
     }
+}
+
+namespace {
+struct legacy_date_or_period_visitor : public boost::static_visitor<> {
+    legacy_date_or_period_visitor(Date& res_d, Period& res_p, bool& res_is_date)
+        : res_d(res_d), res_p(res_p), res_is_date(res_is_date) {}
+    void operator()(const QuantLib::Date& d) const {
+        res_d = d;
+        res_is_date = true;
+    }
+    void operator()(const QuantLib::Period& p) const {
+        res_p = p;
+        res_is_date = false;
+    }
+    Date& res_d;
+    Period& res_p;
+    bool& res_is_date;
+};
+} // namespace
+
+void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
+    auto r = parseDateOrPeriod(s);
+    boost::apply_visitor(legacy_date_or_period_visitor(d, p, isDate), r);
 }
 
 QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s) {
