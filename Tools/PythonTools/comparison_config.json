@@ -343,7 +343,8 @@
       },
       "dim_evolution.csv": {
         "keys": [
-          "TimeStep"
+            "TimeStep",
+            "NettingSet"
         ],
         "column_settings": [
           {
@@ -353,7 +354,7 @@
               "AverageFLOW",
               "SimpleDIM"
             ],
-            "abs_tol": 0.0001,
+            "abs_tol": 0.01,
             "rel_tol": null
           }
         ]
