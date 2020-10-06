@@ -68,8 +68,8 @@ FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
 
     // build option basket and derive parametrization from it
     if (data->calibrateSigma()) {
-        registerWith(fxVol_);
         fxVol_ = market_->fxVol(ccyPair, configuration_);
+        registerWith(fxVol_);
         buildOptionBasket();
     }
 
