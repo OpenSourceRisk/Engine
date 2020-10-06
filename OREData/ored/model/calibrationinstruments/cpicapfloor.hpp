@@ -23,10 +23,13 @@
 
 #pragma once
 
+#include <ored/marketdata/strike.hpp>
 #include <ored/model/calibrationbasket.hpp>
 #include <ored/model/calibrationinstrumentfactory.hpp>
-#include <ored/marketdata/strike.hpp>
+
 #include <ql/instruments/capfloor.hpp>
+
+#include <boost/variant.hpp>
 
 namespace ore {
 namespace data {
@@ -40,14 +43,13 @@ public:
     CpiCapFloor();
 
     //! Detailed constructor
-    CpiCapFloor(QuantLib::CapFloor::Type type,
-        const QuantLib::Period& maturity,
-        const boost::shared_ptr<BaseStrike>& strike);
+    CpiCapFloor(QuantLib::CapFloor::Type type, const boost::variant<QuantLib::Date, QuantLib::Period>& maturity,
+                const boost::shared_ptr<BaseStrike>& strike);
 
     //! \name Inspectors
     //@{
     QuantLib::CapFloor::Type type() const;
-    const QuantLib::Period& maturity() const;
+    const boost::variant<QuantLib::Date, QuantLib::Period>& maturity() const;
     const boost::shared_ptr<BaseStrike>& strike() const;
     //@}
 
@@ -59,11 +61,11 @@ public:
 
 private:
     QuantLib::CapFloor::Type type_;
-    QuantLib::Period maturity_;
+    boost::variant<QuantLib::Date, QuantLib::Period> maturity_;
     boost::shared_ptr<BaseStrike> strike_;
 
     static CalibrationInstrumentRegister<CpiCapFloor> reg_;
 };
 
-}
-}
+} // namespace data
+} // namespace ore
