@@ -54,23 +54,24 @@ FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
     fxSpot_ = market_->fxSpot(ccyPair, configuration_);
     ytsDom_ = market_->discountCurve(domesticCcy.code(), configuration_);
     ytsFor_ = market_->discountCurve(ccy.code(), configuration_);
-    fxVol_ = market_->fxVol(ccyPair, configuration_);
 
     // register with market observables except vols
     marketObserver_->addObservable(fxSpot_);
     marketObserver_->addObservable(market_->discountCurve(domesticCcy.code()));
     marketObserver_->addObservable(market_->discountCurve(ccy.code()));
 
-    // register the builder with the vol and the market observer
-    registerWith(fxVol_);
+    // register the builder with the market observer
     registerWith(marketObserver_);
 
     // notify observers of all market data changes, not only when not calculated
     alwaysForwardNotifications();
 
     // build option basket and derive parametrization from it
-    if (data->calibrateSigma())
+    if (data->calibrateSigma()) {
+        fxVol_ = market_->fxVol(ccyPair, configuration_);
+        registerWith(fxVol_);
         buildOptionBasket();
+    }
 
     Array sigmaTimes, sigma;
     if (data->sigmaParamType() == ParamType::Constant) {
