@@ -23,8 +23,8 @@
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 
-#include <ored/model/inflation/infdkbuilder.hpp>
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
+#include <ored/model/inflation/infdkbuilder.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -53,8 +53,8 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     marketObserver_ = boost::make_shared<MarketObserver>();
 
     // get market data
-    inflationIndex_ = boost::dynamic_pointer_cast<ZeroInflationIndex>(
-        *market_->zeroInflationIndex(data_->index(), configuration_));
+    inflationIndex_ =
+        boost::dynamic_pointer_cast<ZeroInflationIndex>(*market_->zeroInflationIndex(data_->index(), configuration_));
     QL_REQUIRE(inflationIndex_, "DkBuilder: requires ZeroInflationIndex, got " << data_->index());
     infVol_ = market_->cpiInflationCapFloorVolatilitySurface(data_->index(), configuration_);
 
@@ -181,6 +181,49 @@ void InfDkBuilder::performCalculations() const {
     }
 }
 
+namespace {
+struct option_maturity_date_getter : boost::static_visitor<QuantLib::Date> {
+    option_maturity_date_getter(const boost::shared_ptr<ZeroInflationIndex>& index) : index(index) {}
+    Date operator()(const Date& d) const { return d; }
+    Date operator()(const Period& p) const {
+        Date today = Settings::instance().evaluationDate();
+        return index->fixingCalendar().advance(today, p);
+    }
+    boost::shared_ptr<ZeroInflationIndex> index;
+};
+} // namespace
+
+Date InfDkBuilder::optionMaturityDate(const Size j) const {
+    Date today = Settings::instance().evaluationDate();
+    const auto& ci = data_->calibrationBaskets()[0].instruments();
+    QL_REQUIRE(j < ci.size(), "InfDkBuilder::optionMaturityDate(" << j << "): out of bounds, got " << ci.size()
+                                                                  << " calibration instruments");
+    auto cf = boost::dynamic_pointer_cast<CpiCapFloor>(ci.at(j));
+    QL_REQUIRE(cf, "InfDkBuilder::optionMaturityDate("
+                       << j << "): expected CpiCapFloor calibration instruments, could not cast");
+    Date res = boost::apply_visitor(option_maturity_date_getter(inflationIndex_), cf->maturity());
+    QL_REQUIRE(res > today, "expired calibration option expiry " << io::iso_date(res));
+    return res;
+}
+
+Real InfDkBuilder::optionStrikeValue(const Size j) const {
+    const auto& ci = data_->calibrationBaskets()[0].instruments();
+    QL_REQUIRE(j < ci.size(), "InfDkBuilder::optionMaturityDate(" << j << "): out of bounds, got " << ci.size()
+                                                                  << " calibration instruments");
+    auto cf = boost::dynamic_pointer_cast<CpiCapFloor>(ci.at(j));
+    QL_REQUIRE(cf,
+               "InfDkBuilder::optionStrike(" << j << "): expected CpiCapFloor calibration instruments, could not cast");
+    if (auto abs = boost::dynamic_pointer_cast<AbsoluteStrike>(cf->strike())) {
+        return abs->strike();
+    } else if (auto atm = boost::dynamic_pointer_cast<AtmStrike>(cf->strike())) {
+        return inflationIndex_->zeroInflationTermStructure()->zeroRate(optionMaturityDate(j));
+    } else {
+        QL_FAIL("InfDkBuilder::optionStrike("
+                << j << "): strike type not supported, expected absolute strike or atm fwd strike, got '"
+                << cf->strike()->toString());
+    }
+}
+
 bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
     bool hasUpdated = false;
 
@@ -201,27 +244,23 @@ bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
 
     // Handle on calibration instruments. No checks this time.
     const auto& ci = data_->calibrationBaskets()[0].instruments();
-    
+
     Real nominal = 1.0;
     Size optionCounter = 0;
     Date today = Settings::instance().evaluationDate();
     for (Size j = 0; j < ci.size(); j++) {
-        
+
         if (!optionActive_[j])
             continue;
 
         auto cpiCapFloor = boost::dynamic_pointer_cast<CpiCapFloor>(ci[j]);
         QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor calibration instruments in DK inflation model data.");
 
-        Date expiryDate = inflationIndex_->fixingCalendar().advance(today, cpiCapFloor->maturity());
-        QL_REQUIRE(expiryDate > today, "expired calibration option expiry " << io::iso_date(expiryDate));
-
-        auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(cpiCapFloor->strike());
-        QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor in DK inflation model data to have absolute strikes.");
-        Real strikeValue = strike->strike();
+        Date expiryDate = optionMaturityDate(j);
+        auto strikeValue = optionStrikeValue(j);
 
         Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
-        
+
         boost::shared_ptr<CPICapFloor> h =
             boost::make_shared<CPICapFloor>(capfloor, nominal, today, baseCPI, expiryDate, fixCalendar, bdc,
                                             fixCalendar, bdc, strikeValue, hIndex, lag);
@@ -244,8 +283,8 @@ void InfDkBuilder::buildCapFloorBasket() const {
     const CalibrationBasket& cb = data_->calibrationBaskets()[0];
     const auto& ci = cb.instruments();
 
-    QL_REQUIRE(ci.size() == optionActive_.size(), "Expected the option active vector size to equal the " <<
-        "number of calibration instruments");
+    QL_REQUIRE(ci.size() == optionActive_.size(), "Expected the option active vector size to equal the "
+                                                      << "number of calibration instruments");
     fill(optionActive_.begin(), optionActive_.end(), false);
 
     DLOG("build reference date grid '" << referenceCalibrationGrid_ << "'");
@@ -269,54 +308,50 @@ void InfDkBuilder::buildCapFloorBasket() const {
     Real nominal = 1.0;
     vector<Time> expiryTimes;
     optionBasket_.clear();
-    Date today = Settings::instance().evaluationDate();
     for (Size j = 0; j < ci.size(); j++) {
-        
+
         auto cpiCapFloor = boost::dynamic_pointer_cast<CpiCapFloor>(ci[j]);
         QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor calibration instruments in DK inflation model data.");
 
-        Date expiryDate = inflationIndex_->fixingCalendar().advance(today, cpiCapFloor->maturity());
-        QL_REQUIRE(expiryDate > today, "expired calibration option expiry " << io::iso_date(expiryDate));
+        Date expiryDate = optionMaturityDate(j);
 
         // check if we want to keep the helper when a reference calibration grid is given
         auto refCalDate =
             std::lower_bound(referenceCalibrationDates.begin(), referenceCalibrationDates.end(), expiryDate);
         if (refCalDate == referenceCalibrationDates.end() || *refCalDate > lastRefCalDate) {
-            
-            optionActive_[j] = true;
-
-            auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(cpiCapFloor->strike());
-            QL_REQUIRE(cpiCapFloor, "Expected CpiCapFloor in DK inflation model data to have absolute strikes.");
-            Real strikeValue = strike->strike();
-
+            Real strikeValue = optionStrikeValue(j);
             Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
-
             boost::shared_ptr<CPICapFloor> cf =
-                boost::make_shared<CPICapFloor>(capfloor, nominal, startDate, baseCPI, expiryDate, fixCalendar,
-                                                bdc, fixCalendar, bdc, strikeValue, hIndex, lag);
+                boost::make_shared<CPICapFloor>(capfloor, nominal, startDate, baseCPI, expiryDate, fixCalendar, bdc,
+                                                fixCalendar, bdc, strikeValue, hIndex, lag);
             cf->setPricingEngine(engine);
             Real marketPrem = cf->NPV();
-
             boost::shared_ptr<QuantExt::CpiCapFloorHelper> helper =
                 boost::make_shared<QuantExt::CpiCapFloorHelper>(capfloor, baseCPI, expiryDate, fixCalendar, bdc,
-                    fixCalendar, bdc, strikeValue, hIndex, lag, marketPrem);
-
-            optionBasket_.push_back(helper);
-            helper->performCalculations();
-            expiryTimes.push_back(inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
-                                                        inflationIndex_->zeroInflationTermStructure()->dayCounter(),
-                                                        baseDate, helper->instrument()->fixingDate()));
-            
-            DLOG("Added InflationOptionHelper index="
-                 << data_->index() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
-                 << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
-                 << ", strike=" << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem);
-
-            if (refCalDate != referenceCalibrationDates.end())
-                lastRefCalDate = *refCalDate;
-
-        } else {
-            optionActive_[j] = false;
+                                                                fixCalendar, bdc, strikeValue, hIndex, lag, marketPrem);
+            Real tte = inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
+                                             inflationIndex_->zeroInflationTermStructure()->dayCounter(), baseDate,
+                                             helper->instrument()->fixingDate());
+            // we might produce duplicate expiry times even if the fixing dates are all different
+            if (std::find_if(expiryTimes.begin(), expiryTimes.end(),
+                             [tte](Real x) { return QuantLib::close_enough(x, tte); }) == expiryTimes.end()) {
+                optionBasket_.push_back(helper);
+                helper->performCalculations();
+                expiryTimes.push_back(tte);
+                DLOG("Added InflationOptionHelper index="
+                     << data_->index() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor") << ", expiry="
+                     << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI << ", strike=" << strikeValue
+                     << ", lag=" << lag << ", marketPremium=" << marketPrem << ", tte=" << tte);
+                optionActive_[j] = true;
+                if (refCalDate != referenceCalibrationDates.end())
+                    lastRefCalDate = *refCalDate;
+            } else {
+                DLOG("Skipped InflationOptionHelper index="
+                     << data_->index() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
+                     << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
+                     << ", strike=" << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem
+                     << ", tte=" << tte << " since we already have a helper with the same expiry time.");
+            }
         }
     }
 

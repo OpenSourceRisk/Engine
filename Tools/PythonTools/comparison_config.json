@@ -340,6 +340,24 @@
             "rel_tol": null
           }
         ]
+      },
+      "dim_evolution.csv": {
+        "keys": [
+            "TimeStep",
+            "NettingSet"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "ZeroOrderDIM",
+              "AverageDIM",
+              "AverageFLOW",
+              "SimpleDIM"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": null
+          }
+        ]
       }
     }
   }
