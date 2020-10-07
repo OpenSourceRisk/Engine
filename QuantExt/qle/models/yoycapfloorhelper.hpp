@@ -66,6 +66,12 @@ public:
     //! Set the pricing engine to be used by the underlying YoY cap floor
     void setPricingEngine(const boost::shared_ptr<QuantLib::PricingEngine>& engine);
 
+    //! Return the market premium value
+    QuantLib::Real marketValue() const;
+
+    //! Return the model value
+    QuantLib::Real modelValue() const;
+
 private:
     //! Create the underlying YoY cap floor
     void createCapFloor();

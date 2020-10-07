@@ -20,22 +20,24 @@
 #include <ored/utilities/log.hpp>
 
 #include <qle/models/cpicapfloorhelper.hpp>
+#include <qle/models/yoycapfloorhelper.hpp>
+#include <qle/models/yoyswaphelper.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
 
 #include <ql/exercise.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 
+using QuantExt::InfJyParameterization;
+using std::map;
+using std::ostringstream;
+using std::right;
+using std::setprecision;
+using std::setw;
+using std::string;
+using std::vector;
+
 namespace ore {
 namespace data {
-
-Real getCalibrationError(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket) {
-    Real rmse = 0.0;
-    for (auto const& h : basket) {
-        Real tmp = h->calibrationError();
-        rmse += tmp * tmp;
-    }
-    return std::sqrt(rmse / static_cast<Real>(basket.size()));
-}
 
 namespace {
 Real impliedVolatility(const boost::shared_ptr<BlackCalibrationHelper>& h) {
@@ -54,6 +56,70 @@ Real impliedVolatility(const boost::shared_ptr<BlackCalibrationHelper>& h) {
         return 0.0;
     }
 }
+
+// Struct to store some helper values needed below when printing out calibration details.
+struct HelperValues {
+    Real modelValue;
+    Real marketValue;
+    Real error;
+    Time maturity;
+};
+
+// Deal with possible JY inflation helpers. Use Date key to order the results so as to avoid re-calculating the 
+// time in the parameterisation.
+map<Date, HelperValues> jyHelperValues(const vector<boost::shared_ptr<CalibrationHelper>>& cb,
+    const Array& times) {
+
+    map<Date, HelperValues> result;
+
+    for (const auto ci : cb) {
+        
+        if (boost::shared_ptr<CpiCapFloorHelper> h = boost::dynamic_pointer_cast<CpiCapFloorHelper>(ci)) {
+            HelperValues hv;
+            hv.modelValue = h->modelValue();
+            hv.marketValue = h->marketValue();
+            hv.error = hv.modelValue - hv.marketValue;
+            auto d = h->instrument()->fixingDate();
+            result[d] = hv;
+            continue;
+        }
+
+        if (boost::shared_ptr<YoYCapFloorHelper> h = boost::dynamic_pointer_cast<YoYCapFloorHelper>(ci)) {
+            HelperValues hv;
+            hv.modelValue = h->modelValue();
+            hv.marketValue = h->marketValue();
+            hv.error = hv.modelValue - hv.marketValue;
+            auto d = h->yoyCapFloor()->lastYoYInflationCoupon()->fixingDate();
+            result[d] = hv;
+            continue;
+        }
+
+        if (boost::shared_ptr<YoYSwapHelper> h = boost::dynamic_pointer_cast<YoYSwapHelper>(ci)) {
+            HelperValues hv;
+            hv.modelValue = h->modelRate();
+            hv.marketValue = h->marketRate();
+            hv.error = hv.modelValue - hv.marketValue;
+            auto d = h->yoySwap()->maturityDate();
+            result[d] = hv;
+            continue;
+        }
+
+        QL_FAIL("Expected JY calibration instruments to be one of: CPI cap floor, YoY cap floor or YoY swap.");
+    }
+
+    QL_REQUIRE(result.size() == times.size() + 1, "Expected JY times to be 1 less the number of instruments.");
+
+    Size ctr = 0;
+    for (auto& kv : result) {
+        if (ctr < times.size())
+            kv.second.maturity = times[ctr++];
+        else
+            kv.second.maturity = times.back();
+    }
+
+    return result;
+}
+
 } // namespace
 
 std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
@@ -199,6 +265,81 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
         modelH = parametrization->H(t);
     }
     log << "t >= " << t << ": infDkAlpha = " << modelAlpha << " infDkH = " << modelH << "\n";
+    return log.str();
+}
+
+string getCalibrationDetails(
+    const vector<boost::shared_ptr<CalibrationHelper>>& rrBasket,
+    const vector<boost::shared_ptr<CalibrationHelper>>& idxBasket,
+    const boost::shared_ptr<InfJyParameterization>& p,
+    bool calibrateRealRateVol) {
+
+    ostringstream log;
+    Real epsTime = 0.0001;
+
+    // Real rate basket: if it has instruments, the real rate was calibrated.
+    if (!rrBasket.empty()) {
+
+        // Header rows
+        log << "Real rate calibration:\n";
+        log << right << setw(3) << "#" << setw(5) << "](-" << setw(12) << "inst_date" << setw(12) << "time" <<
+            setw(14) << "modelValue" << setw(14) << "marketValue" << setw(14) << "(diff)" << setw(14) <<
+            "infJyAlpha" << setw(14) << "infJyH\n";
+
+        // Parameter values for corresponding to maturity of each instrument
+        Array times = calibrateRealRateVol ? p->realRate()->parameterTimes(0) : p->realRate()->parameterTimes(1);
+        auto helperValues = jyHelperValues(rrBasket, times);
+        Size ctr = 0;
+        Time t = 0.0;
+        for (const auto& kv : helperValues) {
+            auto hv = kv.second;
+            t = hv.maturity - epsTime;
+            string bound = "<=";
+            if (helperValues.size() == 1) {
+                bound = " -";
+            } else if (ctr == helperValues.size() - 1) {
+                t += 2 * epsTime;
+                bound = " >";
+            }
+            auto alpha = p->realRate()->alpha(t);
+            auto h = p->realRate()->H(t);
+            log << setw(3) << ctr++ << setw(5) << bound << setw(6) << io::iso_date(kv.first) << setprecision(6) <<
+                setw(12) << hv.maturity << setw(14) << hv.modelValue << setw(14) << hv.marketValue << setw(14) <<
+                hv.error << setw(14) << alpha << setw(14) << h << "\n";
+        }
+    }
+
+    // Inflation index basket: if it has instruments, the inflation index was calibrated.
+    if (!idxBasket.empty()) {
+
+        // Header rows
+        log << "Inflation index calibration:\n";
+        log << right << setw(3) << "#" << setw(5) << "](-" << setw(12) << "inst_date" << setw(12) << "time" <<
+            setw(14) << "modelValue" << setw(14) << "marketValue" << setw(14) << "(diff)" <<
+            setw(14) << "infJySigma\n";
+
+        // Parameter values for corresponding to maturity of each instrument
+        Array times = p->index()->parameterTimes(0);
+        auto helperValues = jyHelperValues(idxBasket, times);
+        Size ctr = 0;
+        Time t = 0.0;
+        for (const auto& kv : helperValues) {
+            auto hv = kv.second;
+            t = hv.maturity - epsTime;
+            string bound = "<=";
+            if (helperValues.size() == 1) {
+                bound = " -";
+            } else if (ctr == helperValues.size() - 1) {
+                t += 2 * epsTime;
+                bound = " >";
+            }
+            auto sigma = p->index()->sigma(t);
+            log << setw(3) << ctr++ << setw(5) << bound << setw(6) << io::iso_date(kv.first) << setprecision(6) <<
+                setw(12) << hv.maturity << setw(14) << hv.modelValue << setw(14) << hv.marketValue << setw(14) <<
+                hv.error << setw(14) << sigma << "\n";
+        }
+    }
+
     return log.str();
 }
 

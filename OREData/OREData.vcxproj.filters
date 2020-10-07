@@ -543,6 +543,9 @@
     <ClInclude Include="ored\model\calibrationinstruments\yoyswap.hpp">
       <Filter>model\calibrationinstruments</Filter>
     </ClInclude>
+    <ClInclude Include="ored\model\calibrationconfiguration.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -961,6 +964,9 @@
     </ClCompile>
     <ClCompile Include="ored\model\calibrationinstruments\yoyswap.cpp">
       <Filter>model\calibrationinstruments</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\calibrationconfiguration.cpp">
+      <Filter>model</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

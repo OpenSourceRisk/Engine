@@ -18,6 +18,7 @@
 
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/crossassetanalytics.hpp>
+#include <qle/utilities/inflation.hpp>
 
 using QuantLib::Date;
 using QuantLib::Size;
@@ -74,7 +75,6 @@ Real inflationGrowth(const boost::shared_ptr<CrossAssetModel>& model, Size index
     // Now, use the original zero inflation term structure to get P_r(0, S) / P_n(0, S) and P_r(0, T) / P_n(0, T) and
     // return \frac{P_r(S, T)}{P_n(S, T)}
     const auto& zts = model->infjy(index)->realRate()->termStructure();
-    using CrossAssetAnalytics::inflationGrowth;
     return inflationGrowth(zts, T) / inflationGrowth(zts, S) * p_r / p_n;
 
 }

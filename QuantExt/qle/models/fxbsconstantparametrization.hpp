@@ -35,7 +35,9 @@ class FxBsConstantParametrization : public FxBsParametrization {
 public:
     /*! The currency refers to the foreign currency, the
         spot is as of today (i.e. the discounted spot) */
-    FxBsConstantParametrization(const Currency& currency, const Handle<Quote>& fxSpotToday, const Real sigma);
+    FxBsConstantParametrization(const Currency& currency, const Handle<Quote>& fxSpotToday, const Real sigma,
+        const boost::shared_ptr<QuantLib::Constraint>& sigmaConstraint = boost::make_shared<QuantLib::NoConstraint>());
+
     Real variance(const Time t) const;
     Real sigma(const Time t) const;
     const boost::shared_ptr<Parameter> parameter(const Size) const;

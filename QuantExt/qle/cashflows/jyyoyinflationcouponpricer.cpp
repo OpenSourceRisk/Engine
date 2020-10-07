@@ -18,6 +18,7 @@
 
 #include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
 #include <qle/models/crossassetanalytics.hpp>
+#include <qle/utilities/inflation.hpp>
 
 using QuantLib::Option;
 using QuantLib::Rate;
@@ -56,17 +57,18 @@ Rate JyYoYInflationCouponPricer::adjustedFixing(Rate) const {
     // If everything has been published in order to determine I(S), return model independent value read off curve.
     // Logic to determine last available fixing and where forecasting is needed copied from YoYInflationIndex::fixing.
     Date today = Settings::instance().evaluationDate();
-    auto freq = coupon_->index()->frequency();
-    auto ip = inflationPeriod(today - coupon_->index()->availabilityLag(), freq);
-    bool isInterp = coupon_->index()->interpolated();
+    const auto& index = coupon_->index();
+    auto freq = index->frequency();
+    auto ip = inflationPeriod(today - index->availabilityLag(), freq);
+    bool isInterp = index->interpolated();
     if ((!isInterp && denFixingDate < ip.first) || (isInterp && denFixingDate < ip.first - Period(freq))) {
         return coupon_->indexFixing();
     }
 
     // Use the JY model to calculate the adjusted fixing.
     auto zts = model_->infjy(index_)->realRate()->termStructure();
-    auto S = zts->timeFromReference(denFixingDate);
-    auto T = zts->timeFromReference(numFixingDate);
+    auto S = inflationTime(denFixingDate, *zts);
+    auto T = inflationTime(numFixingDate, *zts);
 
     return jyExpectedIndexRatio(model_, index_, S, T) - 1;
 }

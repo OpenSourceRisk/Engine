@@ -99,6 +99,15 @@ void YoYSwapHelper::setPricingEngine(const boost::shared_ptr<PricingEngine>& eng
     engine_ = engine;
 }
 
+Real YoYSwapHelper::marketRate() const {
+    return rate_->value();
+}
+
+Real YoYSwapHelper::modelRate() const {
+    yoySwap_->setPricingEngine(engine_);
+    return yoySwap_->fairRate();
+}
+
 void YoYSwapHelper::createSwap() {
 
     // YoY swap start date and end date.

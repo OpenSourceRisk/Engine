@@ -19,6 +19,7 @@
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/pseudoparameter.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ql/experimental/math/piecewiseintegral.hpp>
 #include <ql/math/integrals/simpsonintegral.hpp>
@@ -26,6 +27,8 @@
 #include <ql/processes/eulerdiscretization.hpp>
 
 using namespace QuantExt::CrossAssetAnalytics;
+using std::map;
+using std::vector;
 
 namespace QuantExt {
 
@@ -584,6 +587,49 @@ void CrossAssetModel::calibrateInfDkReversionsGlobal(
     OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
     const std::vector<Real>& weights) {
     calibrate(helpers, method, endCriteria, constraint, weights, MoveParameter(INF, 1, index, Null<Size>()));
+    update();
+}
+
+void CrossAssetModel::calibrateInfJyGlobal(Size index,
+    const vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+    OptimizationMethod& method,
+    const EndCriteria& endCriteria,
+    const map<Size, bool>& toCalibrate,
+    const Constraint& constraint,
+    const vector<Real>& weights) {
+
+    // Initialise the parameters to move first to get the size.
+    vector<bool> fixedParams = MoveParameter(INF, 0, index, Null<Size>());
+    std::fill(fixedParams.begin(), fixedParams.end(), true);
+
+    // Update fixedParams with parameters that need to be calibrated.
+    for (const auto& kv : toCalibrate) {
+        if (kv.second) {
+            vector<bool> tmp = MoveParameter(INF, kv.first, index, Null<Size>());
+            std::transform(fixedParams.begin(), fixedParams.end(), tmp.begin(),
+                fixedParams.begin(), std::logical_and<>());
+        }
+    }
+
+    // Perform the calibration
+    calibrate(helpers, method, endCriteria, constraint, weights, fixedParams);
+
+    update();
+}
+
+void CrossAssetModel::calibrateInfJyIterative(Size mIdx,
+    Size pIdx,
+    const vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+    OptimizationMethod& method,
+    const EndCriteria& endCriteria,
+    const Constraint& constraint,
+    const vector<Real>& weights) {
+
+    for (Size i = 0; i < helpers.size(); ++i) {
+        vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
+        calibrate(h, method, endCriteria, constraint, weights, MoveParameter(INF, pIdx, mIdx, i));
+    }
+
     update();
 }
 

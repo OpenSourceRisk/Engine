@@ -87,8 +87,7 @@ void AnalyticJyCpiCapFloorEngine::calculate() const {
     v -= 2 * integral(x, P(ryy(index_, index_, 0, 1), LC(H_r_t, -1.0, Hy(index_)), ay(index_), sy(index_)), 0.0, t);
 
     // Calculate the forward CPI, F_I(0,T) in the book.
-    Real curveBaseCpi = model_->infjy(index_)->index()->fxSpotToday()->value();
-    Real fwd = curveBaseCpi * pow(1.0 + zts->zeroRate(arguments_.fixDate), t);
+    Real fwd = arguments_.infIndex->fixing(arguments_.fixDate);
 
     // Get adjusted nominal and strike, \tilde{N} and \tilde{K} from the book.
     Real adjNominal = arguments_.nominal / arguments_.baseCPI;

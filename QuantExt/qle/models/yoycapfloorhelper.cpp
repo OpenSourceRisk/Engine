@@ -98,6 +98,15 @@ void YoYCapFloorHelper::setPricingEngine(const boost::shared_ptr<PricingEngine>&
     engine_ = engine;
 }
 
+QuantLib::Real YoYCapFloorHelper::marketValue() const {
+    return premium_->value();
+}
+
+QuantLib::Real YoYCapFloorHelper::modelValue() const {
+    yoyCapFloor_->setPricingEngine(engine_);
+    return yoyCapFloor_->NPV();
+}
+
 void YoYCapFloorHelper::createCapFloor() {
 
     // YoY cap floor start date and end date.

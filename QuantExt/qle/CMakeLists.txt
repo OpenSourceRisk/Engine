@@ -206,7 +206,8 @@ termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
 time/actual364.cpp
-time/yearcounter.cpp)
+time/yearcounter.cpp
+utilities/inflation.cpp)
 
 # hpp files, this list is maintained manually
 
@@ -526,6 +527,7 @@ termstructures/zeroinflationcurveobserverstatic.hpp
 time/actual364.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
+utilities/inflation.hpp
 version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")

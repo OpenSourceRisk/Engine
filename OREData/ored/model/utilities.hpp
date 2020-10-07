@@ -29,6 +29,7 @@
 #include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
+#include <qle/models/infjyparameterization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 
 namespace ore {
@@ -36,7 +37,15 @@ namespace data {
 using namespace QuantExt;
 using namespace QuantLib;
 
-Real getCalibrationError(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket);
+template <typename Helper>
+Real getCalibrationError(const std::vector<boost::shared_ptr<Helper>>& basket) {
+    Real rmse = 0.0;
+    for (auto const& h : basket) {
+        Real tmp = h->calibrationError();
+        rmse += tmp * tmp;
+    }
+    return std::sqrt(rmse / static_cast<Real>(basket.size()));
+}
 
 std::string getCalibrationDetails(
     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
@@ -55,6 +64,12 @@ std::string getCalibrationDetails(
 std::string getCalibrationDetails(
     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
     const boost::shared_ptr<InfDkParametrization>& parametrization = boost::shared_ptr<InfDkParametrization>());
+
+std::string getCalibrationDetails(
+    const std::vector<boost::shared_ptr<CalibrationHelper>>& realRateBasket,
+    const std::vector<boost::shared_ptr<CalibrationHelper>>& indexBasket,
+    const boost::shared_ptr<InfJyParameterization>& parameterization,
+    bool calibrateRealRateVol = false);
 
 } // namespace data
 } // namespace ore

@@ -69,6 +69,12 @@ public:
     //! Set the pricing engine to be used by the underlying YoY swap
     void setPricingEngine(const boost::shared_ptr<QuantLib::PricingEngine>& engine);
 
+    //! Return the market fair year on year rate
+    QuantLib::Real marketRate() const;
+
+    //! Return the model implied fair year on year rate
+    QuantLib::Real modelRate() const;
+
 private:
     //! Create the underlying YoY swap
     void createSwap();

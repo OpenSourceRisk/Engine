@@ -285,9 +285,31 @@
     </xs:sequence>
   </xs:complexType>
   
+  <xs:complexType name="boundaryConstraint">
+    <xs:sequence>
+      <xs:element type="xs:decimal" name="LowerBound"/>
+      <xs:element type="xs:decimal" name="UpperBound"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="parameter" use="required"/>
+  </xs:complexType>
+  
+  <xs:complexType name="calibrationConfiguration">
+    <xs:sequence>
+      <xs:element type="positiveDecimal" name="RmseTolerance" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:positiveInteger" name="MaxIterations" maxOccurs="1" minOccurs="0"/>
+      <xs:element name="Constraints" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="boundaryConstraint" name="BoundaryConstraint" maxOccurs="unbounded" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  
   <xs:complexType name="jarrowYildrim">
     <xs:sequence>
-      <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="calibrationTypeType" name="CalibrationType"/>
       <xs:element name="RealRate">
         <xs:complexType>
@@ -314,6 +336,8 @@
       </xs:element>
     </xs:sequence>
     <xs:attribute type="xs:string" name="index" />
+    <xs:element type="xs:positiveInteger" name="MaxIterations" maxOccurs="1" minOccurs="0"/>
+    <xs:element type="positiveDecimal" name="RmseTolerance" maxOccurs="1" minOccurs="0"/>
   </xs:complexType>
 
   <xs:simpleType name="calibrationTypeType">
