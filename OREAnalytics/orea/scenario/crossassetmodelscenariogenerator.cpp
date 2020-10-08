@@ -5,7 +5,7 @@
  This file is part of ORE, a free-software/open-source library
  for transparent pricing and risk analysis - http://opensourcerisk.org
 
- ORE is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it1
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program.
  The license is also available online at <http://opensourcerisk.org>
@@ -25,6 +25,8 @@
 #include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
 #include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgmimplieddefaulttermstructure.hpp>
+#include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
+#include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 
 using namespace QuantLib;
@@ -142,7 +144,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     if (n_inf > 0) {
         cpiKeys_.reserve(n_inf);
         for (Size j = 0; j < n_inf; ++j) {
-            cpiKeys_.emplace_back(RiskFactorKey::KeyType::CPIIndex, model->infdk(j)->name());
+            cpiKeys_.emplace_back(RiskFactorKey::KeyType::CPIIndex, model->inf(j)->name());
         }
 
         Size n_zeroinf = simMarketConfig_->zeroInflationIndices().size();
@@ -195,11 +197,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     Size n_cr = model_->components(CR);
     Size n_indices = simMarketConfig_->indices().size();
     Size n_curves = simMarketConfig_->yieldCurveNames().size();
-    Size n_zeroinf = simMarketConfig_->zeroInflationIndices().size();
-    Size n_yoyinf = simMarketConfig_->yoyInflationIndices().size();
     vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> curves, fwdCurves, yieldCurves;
-    vector<boost::shared_ptr<QuantExt::DkImpliedZeroInflationTermStructure>> zeroInfCurves;
-    vector<boost::shared_ptr<QuantExt::DkImpliedYoYInflationTermStructure>> yoyInfCurves;
     vector<boost::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>> lgmDefaultCurves;
     vector<boost::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>> cirppDefaultCurves;
     vector<boost::shared_ptr<IborIndex>> indices;
@@ -234,12 +232,42 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         yieldCurveCurrency.push_back(ccy);
     }
 
-    for (Size j = 0; j < n_zeroinf; ++j) {
-        zeroInfCurves.push_back(boost::make_shared<QuantExt::DkImpliedZeroInflationTermStructure>(model_, j));
+    // Cache data regarding the zero inflation curves to avoid repeating in date loop below.
+    // This vector needs to follow the order of the simMarketConfig_->zeroInflationIndices().
+    // 1st element in tuple is the index of the inflation component in the CAM.
+    // 2nd element in tuple is the index of the inflation component's currency in the CAM.
+    // 3rd element in tuple is the type of inflation model in the CAM.
+    // 4th element in tuple is the CAM implied inflation term structure.
+    using CT = CrossAssetModelTypes::ModelType;
+    vector<tuple<Size, Size, CT, boost::shared_ptr<ZeroInflationModelTermStructure>>> zeroInfCurves;
+    for (const auto& name : simMarketConfig_->zeroInflationIndices()) {
+        auto idx = model_->infIndex(name);
+        auto ccyIdx = model_->ccyIndex(model_->inf(idx)->currency());
+        auto mt = model_->modelType(INF, idx);
+        QL_REQUIRE(mt == DK || mt == JY, "CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
+        boost::shared_ptr<ZeroInflationModelTermStructure> ts;
+        if (mt == DK) {
+            ts = boost::make_shared<DkImpliedZeroInflationTermStructure>(model_, idx);
+        } else {
+            ts = boost::make_shared<JyImpliedZeroInflationTermStructure>(model_, idx);
+        }
+        zeroInfCurves.emplace_back(idx, ccyIdx, mt, ts);
     }
 
-    for (Size j = 0; j < n_yoyinf; ++j) {
-        yoyInfCurves.push_back(boost::make_shared<QuantExt::DkImpliedYoYInflationTermStructure>(model_, j));
+    // Same logic here as for the zeroInfCurves above.
+    vector<tuple<Size, Size, CT, boost::shared_ptr<YoYInflationModelTermStructure>>> yoyInfCurves;
+    for (const auto& name : simMarketConfig_->yoyInflationIndices()) {
+        auto idx = model_->infIndex(name);
+        auto ccyIdx = model_->ccyIndex(model_->inf(idx)->currency());
+        auto mt = model_->modelType(INF, idx);
+        QL_REQUIRE(mt == DK || mt == JY, "CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
+        boost::shared_ptr<YoYInflationModelTermStructure> ts;
+        if (mt == DK) {
+            ts = boost::make_shared<DkImpliedYoYInflationTermStructure>(model_, idx);
+        } else {
+            ts = boost::make_shared<JyImpliedYoYInflationTermStructure>(model_, idx);
+        }
+        yoyInfCurves.emplace_back(idx, ccyIdx, mt, ts);
     }
 
     for (Size j = 0; j < n_cr; ++j) {
@@ -362,52 +390,84 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             }
         }
 
-        // Inflation curves
+        // Inflation index values
         for (Size j = 0; j < n_inf; j++) {
-            // LGM factor value, second index = 0 holds initial values
+            
+            // Depending on type of model, i.e. DK or JY, z and y mean different things.
             Real z = sample.value[model_->pIdx(INF, j, 0)][i + 1];
             Real y = sample.value[model_->pIdx(INF, j, 1)][i + 1];
 
-            // update fixing manage with fixing for base date
-            boost::shared_ptr<ZeroInflationIndex> index = *initMarket_->zeroInflationIndex(model_->infdk(j)->name());
-            Date baseDate = index->zeroInflationTermStructure()->baseDate();
-            Time relativeTime =
-                inflationYearFraction(index->zeroInflationTermStructure()->frequency(),
-                                      index->zeroInflationTermStructure()->indexIsInterpolated(),
-                                      index->zeroInflationTermStructure()->dayCounter(), baseDate,
-                                      dates_[i] - index->zeroInflationTermStructure()->observationLag());
-            std::pair<Real, Real> ii = model_->infdkI(j, relativeTime, relativeTime, z, y);
-
-            Real baseCPI = index->fixing(baseDate);
-            scenarios[i]->add(cpiKeys_[j], baseCPI * ii.first);
+            // Could possibly cache the model type outside the loop to improve performance.
+            Real cpi = 0.0;
+            if (model_->modelType(INF, j) == JY) {
+                cpi = std::exp(sample.value[model_->pIdx(INF, j, 1)][i + 1]);
+            } else if (model_->modelType(INF, j) == DK) {
+                auto index = *initMarket_->zeroInflationIndex(model_->inf(j)->name());
+                Date baseDate = index->zeroInflationTermStructure()->baseDate();
+                auto zts = index->zeroInflationTermStructure();
+                Time relativeTime = inflationYearFraction(zts->frequency(), zts->indexIsInterpolated(),
+                    zts->dayCounter(), baseDate, dates_[i] - zts->observationLag());
+                std::tie(cpi, std::ignore) = model_->infdkI(j, relativeTime, relativeTime, z, y);
+                cpi *= index->fixing(baseDate);
+            } else {
+                QL_FAIL("CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
+            }
+            
+            scenarios[i]->add(cpiKeys_[j], cpi);
         }
 
-        for (Size j = 0; j < n_zeroinf; ++j) {
-            std::string indexName = simMarketConfig_->zeroInflationIndices()[j];
-            Real z = sample.value[model_->pIdx(INF, model_->infIndex(indexName), 0)][i + 1];
-            Real y = sample.value[model_->pIdx(INF, model_->infIndex(indexName), 1)][i + 1];
-            zeroInfCurves[j]->move(dates_[i], z, y);
+        // Zero inflation curves
+        for (Size j = 0; j < zeroInfCurves.size(); ++j) {
+            
+            auto tup = zeroInfCurves[j];
+
+            // State variables needed depends on model, 3 for JY and 2 for DK.
+            auto idx = std::get<0>(tup);
+            Array state(3);
+            state[0] = sample.value[model_->pIdx(INF, idx, 0)][i + 1];
+            state[1] = sample.value[model_->pIdx(INF, idx, 1)][i + 1];
+            if (std::get<2>(tup) == DK) {
+                state.resize(2);
+            } else {
+                state[2] = sample.value[model_->pIdx(IR, std::get<1>(tup))][i + 1];
+            }
+
+            // Update the term structure's date and state.
+            auto ts = std::get<3>(tup);
+            ts->move(dates_[i], state);
+
+            // Populate the zero inflation scenario values based on the current date and state.
             for (Size k = 0; k < ten_zinf_[j].size(); k++) {
-                Date d = dates_[i] + ten_zinf_[j][k];
-                Time T = dc.yearFraction(dates_[i], d);
-                Real zero = zeroInfCurves[j]->zeroRate(T);
-                scenarios[i]->add(zeroInflationKeys_[j * ten_zinf_[j].size() + k], zero);
+                Time T = dc.yearFraction(dates_[i], dates_[i] + ten_zinf_[j][k]);
+                scenarios[i]->add(zeroInflationKeys_[j * ten_zinf_[j].size() + k], ts->zeroRate(T));
             }
         }
 
-        for (Size j = 0; j < n_yoyinf; ++j) {
-            std::string indexName = simMarketConfig_->yoyInflationIndices()[j];
-            Size ccy = model_->ccyIndex(model_->infdk(j)->currency());
-            Real z = sample.value[model_->pIdx(INF, model_->infIndex(indexName), 0)][i + 1];
-            Real y = sample.value[model_->pIdx(INF, model_->infIndex(indexName), 1)][i + 1];
-            Real ir_z = sample.value[model_->pIdx(IR, ccy)][i + 1];
-            yoyInfCurves[j]->move(dates_[i], z, y, ir_z);
-            vector<Date> d_yinf;
-            for (Size k = 0; k < ten_yinf_[j].size(); k++)
-                d_yinf.push_back(dates_[i] + ten_yinf_[j][k]);
-            map<Date, Real> yoyRates = yoyInfCurves[j]->yoyRates(d_yinf);
-            for (Size l = 0; l < d_yinf.size(); l++) {
-                scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + l], yoyRates[d_yinf[l]]);
+        // YoY inflation curves
+        for (Size j = 0; j < yoyInfCurves.size(); ++j) {
+            
+            auto tup = yoyInfCurves[j];
+
+            // For YoY model implied term structure, JY and DK both need 3 state variables.
+            auto idx = std::get<0>(tup);
+            Array state(3);
+            state[0] = sample.value[model_->pIdx(INF, idx, 0)][i + 1];
+            state[1] = sample.value[model_->pIdx(INF, idx, 1)][i + 1];
+            state[2] = sample.value[model_->pIdx(IR, std::get<1>(tup))][i + 1];
+
+            // Update the term structure's date and state.
+            auto ts = std::get<3>(tup);
+            ts->move(dates_[i], state);
+
+            // Create the YoY pillar dates from the tenors.
+            vector<Date> pillarDates(ten_yinf_[j].size());
+            for (Size k = 0; k < pillarDates.size(); ++k)
+                pillarDates[k] = dates_[i] + ten_yinf_[j][k];
+
+            // Use the YoY term structure's YoY rates to populate the scenarios.
+            auto yoyRates = ts->yoyRates(pillarDates);
+            for (Size k = 0; k < pillarDates.size(); ++k) {
+                scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + k], yoyRates.at(pillarDates[k]));
             }
         }
 

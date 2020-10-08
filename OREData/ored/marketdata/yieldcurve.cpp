@@ -17,6 +17,7 @@
 */
 
 #include <ql/currencies/exchangeratemanager.hpp>
+#include <ql/experimental/futures/overnightindexfutureratehelper.hpp>
 #include <ql/indexes/ibor/usdlibor.hpp>
 #include <ql/math/randomnumbers/haltonrsg.hpp>
 #include <ql/pricingengines/bond/bondfunctions.hpp>
@@ -46,7 +47,6 @@
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
-#include <qle/termstructures/overnightindexfutureratehelper.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 #include <qle/termstructures/weightedyieldtermstructure.hpp>
@@ -177,7 +177,8 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
                        const FXTriangulation& fxTriangulation,
                        const boost::shared_ptr<ReferenceDataManager>& referenceData)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), conventions_(conventions),
-      requiredYieldCurves_(requiredYieldCurves), fxTriangulation_(fxTriangulation), referenceData_(referenceData) {
+      requiredYieldCurves_(requiredYieldCurves), requiredDefaultCurves_(requiredDefaultCurves),
+      fxTriangulation_(fxTriangulation), referenceData_(referenceData) {
 
     try {
 
@@ -847,9 +848,12 @@ void YieldCurve::buildFittedBondCurve() {
 
     std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;
     for (auto const& c : curveSegment->iborIndexCurves()) {
-        auto y = requiredYieldCurves_.find(yieldCurveKey(currency_, c.first, asofDate_));
-        QL_REQUIRE(y != requiredYieldCurves_.end(),
-                   "required yield curve '" << c.first << "' not provided for fitted bond curve");
+        auto index = parseIborIndex(c.first, Handle<YieldTermStructure>(),
+                                    conventions_.has(c.first) ? conventions_.get(c.first) : nullptr);
+        auto key = yieldCurveKey(index->currency(), c.second, asofDate_);
+        auto y = requiredYieldCurves_.find(key);
+        QL_REQUIRE(y != requiredYieldCurves_.end(), "required yield curve '" << key << "' for iborIndex '" << c.first
+                                                                             << "' not provided for fitted bond curve");
         iborCurveMapping[c.first] = y->second->handle();
     }
 
@@ -1113,6 +1117,7 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
 
         // Check that we have a valid future quote
         if (marketQuote) {
+
             if (auto on = boost::dynamic_pointer_cast<OvernightIndex>(futureConvention->index())) {
                 // Overnight Index Future
                 boost::shared_ptr<OIFutureQuote> futureQuote;
@@ -1120,14 +1125,41 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
                            "Market quote not of type Overnight Index Future.");
                 futureQuote = boost::dynamic_pointer_cast<OIFutureQuote>(marketQuote);
 
+                // check that the tenor of the quote is expressed in months or years, otherwise the date calculations
+                // below do not make sense
+                QL_REQUIRE(futureQuote->tenor().units() == Months || futureQuote->tenor().units() == Years,
+                           "Tenor of future quote (" << futureQuote->name()
+                                                     << ") must be expressed in months or years");
+
                 // Create a Overnight index future helper
-                Date refEnd = Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
-                Date refStart = refEnd - futureQuote->tenor();
-                Date startDate = IMM::nextDate(refStart);
-                Date endDate = IMM::nextDate(refEnd);
-                boost::shared_ptr<RateHelper> futureHelper(
-                    new OvernightIndexFutureRateHelper(futureQuote->quote(), startDate, endDate, on));
+                Date startDate, endDate;
+                if (futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM) {
+                    Date refEnd = Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
+                    Date refStart = refEnd - futureQuote->tenor();
+                    startDate = IMM::nextDate(refStart, false);
+                    endDate = IMM::nextDate(refEnd, false);
+                } else if (futureConvention->dateGenerationRule() ==
+                           FutureConvention::DateGenerationRule::FirstDayOfMonth) {
+                    endDate = Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear()) + 1 * Months;
+                    startDate = endDate - futureQuote->tenor();
+                }
+
+                if (endDate <= asofDate_) {
+                    WLOG("Skipping the " << io::ordinal(i + 1) << " overnight index future instrument because its "
+                                         << "end date, " << io::iso_date(endDate)
+                                         << ", is on or before the valuation date, " << io::iso_date(asofDate_) << ".");
+                    continue;
+                }
+
+                boost::shared_ptr<RateHelper> futureHelper = boost::make_shared<OvernightIndexFutureRateHelper>(
+                    futureQuote->quote(), startDate, endDate, on, Handle<Quote>(),
+                    futureConvention->overnightIndexFutureNettingType());
                 instruments.push_back(futureHelper);
+
+                TLOG("adding OI future helper: price=" << futureQuote->quote()->value() << " start=" << startDate
+                                                       << " end=" << endDate << " nettingType="
+                                                       << futureConvention->overnightIndexFutureNettingType());
+
             } else {
                 // MM Future
                 boost::shared_ptr<MMFutureQuote> futureQuote;
@@ -1136,10 +1168,22 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
                 futureQuote = boost::dynamic_pointer_cast<MMFutureQuote>(marketQuote);
 
                 // Create a MM future helper
+                QL_REQUIRE(
+                    futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM,
+                    "For MM Futures only 'IMM' is allowed as the date generation rule, check the future convention '"
+                        << segment->conventionsID() << "'");
                 Date refDate(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
                 Date immDate = IMM::nextDate(refDate, false);
-                boost::shared_ptr<RateHelper> futureHelper(
-                    new FuturesRateHelper(futureQuote->quote(), immDate, futureConvention->index()));
+
+                if (immDate < asofDate_) {
+                    WLOG("Skipping the " << io::ordinal(i + 1) << " money market future instrument because its "
+                                         << "start date, " << io::iso_date(immDate)
+                                         << ", is before the valuation date, " << io::iso_date(asofDate_) << ".");
+                    continue;
+                }
+
+                boost::shared_ptr<RateHelper> futureHelper =
+                    boost::make_shared<FuturesRateHelper>(futureQuote->quote(), immDate, futureConvention->index());
 
                 instruments.push_back(futureHelper);
             }

@@ -214,6 +214,7 @@ Example:
     Instrument Type & \emph{MM} & \\ \hline
     Quote Type & \emph{RATE} & \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Deposit rate\\ \hline
+    IndexName & Optional, any string & Generally used to differentiate money market rates referencing different interest rate indices with the same tenor\\ \hline
     Forward start & An integer followed by D, W, M or Y.  & Period from today to start \\ \hline
     Term & An integer followed by D, W, M or Y. & Period from start to maturity\\ \hline
   \end{tabular}
@@ -298,15 +299,13 @@ Example:
     Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
     Contract & String & Contract name\\ \hline
     Term & An integer followed by D, W, M or Y & Underlying Term\\ \hline
-  % date rule & {\tt string} &  \\
   \end{tabular}
   \caption{Money Market Futures Price}
   \label{tab:mmfp_quote}
 \end{table}
 
-Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule such as 3rd
-Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly, but
-defined in the futures contract.
+Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule defined in the future
+conventions, see \ref{ss:conventions_future}.
 
 \medskip
 Example:
@@ -315,7 +314,7 @@ Example:
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Overnight Index Futures Price}
+\subsection{Overnight Index Futures Price}\label{ss:market_data_oi_index_future_prices}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \begin{table}[H]
@@ -328,16 +327,14 @@ Example:
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Overnight Index Future price\\ \hline
     Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
     Contract & String & Contract name\\ \hline
-    Term & An integer followed by D, W, M or Y & Underlying Term\\ \hline
-  % date rule & {\tt string} &  \\
+    Term & An integer followed by M or Y & Underlying Term in months or years \\ \hline
   \end{tabular}
   \caption{Overnight Index Futures Price}
   \label{tab:oifp_quote}
 \end{table}
 
-Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule such as 3rd
-Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly, but
-defined in the futures contract.
+Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule defined in the future
+conventions, see \ref{ss:conventions_future}.
 
 \medskip
 Example: Three Months SOFR Futures (DEC 2019):
@@ -497,6 +494,7 @@ Example: Three Months SOFR Futures (DEC 2019):
     Instrument Type & \emph{IR\_SWAP} & \\ \hline
     Quote Type & \emph{RATE} & \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Swap rate\\ \hline
+    IndexName & Optional, any string & Generally used to differentiate swaps referencing different interest rate indices with the same tenor\\ \hline
     Forward start & An integer followed by D, W, M or Y & Generic period from today to start\\ \hline
     Tenor & An integer followed by D, W, M or Y & Underlying index period \\ \hline
     Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\ \hline
@@ -1021,7 +1019,7 @@ Examples:
 
 \begin{table}[H]
 	\centering
-	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+	\begin{tabular}{|p{3cm}|p{5.5cm}|p{5cm}|}
 		\hline
 		{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
         Instrument Type & \emph{EQUITY\_OPTION} & \\ \hline
@@ -1029,21 +1027,27 @@ Examples:
         Name & String & Identifying name of the equity \\ \hline
         Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ \hline
         Expiry & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ \hline
-        Strike & {\tt ATMF}, or else any {\tt Real} & strike price \\ \hline
+        Strike & {\tt ATM/AtmSpot} (= {\tt ATM}), {\tt ATM/AtmFwd} (={\tt ATMF}), {\tt MNY/[Spot|Fwd]/1.2} where $1.2$
+                 is the moneyness level, or a {\tt Real} for an absolute strike & strike \\ \hline
+        CallPut & {\tt C} for Call, {\tt P} for Put & Optional Call/Put flag (defaults to Call) \\ \hline
 	\end{tabular}
 	\caption{Equity Option Implied Volatility}
 	\label{tab:eqimplvol_quote}
 \end{table}
 
-Volatilities are quoted as a function of strike price - either at-the-money forward ({\tt ATMF}) or else a specified 
-real number, corresponding to the absolute strike value.Only log-normal implied volatilities ({\tt RATE\_LNVOL}) are 
-supported.
+Volatilities are quoted as a function of strike price - either at-the-money spot or forward, a moneyness level or else a
+specified real number, corresponding to the absolute strike value. Only log-normal implied volatilities ({\tt
+  RATE\_LNVOL}) are supported.
+
+If $K$ is the absolute strike, $S$ the spot, $F$ the forward and $m$ the moneyness level, we have $K=Sm$ if spot
+moneyness and $K=Fm$ if forward moneyness is specified.
 
 \medskip
 Example:
 \begin{itemize}
 	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/6M/ATMF}
 	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/2018-06-30/ATMF}
+	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/6M/MNY/Fwd/1.2}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1053,28 +1057,30 @@ Example:
 
 \begin{table}[H]
 	\centering
-	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-		\hline
-		{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
-        Instrument Type & \emph{EQUITY\_OPTION} & \\ \hline
-        Quote Type & \emph{PRICE} & \\ \hline
-        Name & String & Identifying name of the equity \\ \hline
-        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ \hline
-        Expiry & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ \hline
-        Strike & {\tt ATMF}, or else any {\tt Real} & strike price \\ \hline
+	\begin{tabular}{|p{3cm}|p{5.5cm}|p{5cm}|}
+      \hline
+      {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+      Instrument Type & \emph{EQUITY\_OPTION} & \\ \hline
+      Quote Type & \emph{PRICE} & \\ \hline
+      Name & String & Identifying name of the equity \\ \hline
+      Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ \hline
+      Expiry & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ \hline
+      Strike & {\tt ATM/AtmSpot} (= {\tt ATM}), {\tt ATM/AtmFwd} (={\tt ATMF}) or a {\tt Real} for an absolute strike & strike \\ \hline
+      CallPut & {\tt C} for Call, {\tt P} for Put & Optional Call/Put flag (defaults to Call) \\ \hline
 	\end{tabular}
 	\caption{Equity Option Premium}
 	\label{tab:eqpremvol_quote}
 \end{table}
 
-Premiums are quoted as a function of strike price - either at-the-money forward ({\tt ATMF}) or else a specified 
-real number, corresponding to the absolute strike value.
+Premiums are quoted as a function of strike price - either at-the-money spot or forward or else a specified real number,
+corresponding to the absolute strike value.
 
 \medskip
 Example:
 \begin{itemize}
 	\item {EQUITY\_OPTION/PRICE/SP5/USD/6M/ATMF}
 	\item {EQUITY\_OPTION/PRICE/SP5/USD/2018-06-30/2000}
+	\item {EQUITY\_OPTION/PRICE/SP5/USD/2018-06-30/2000/C}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

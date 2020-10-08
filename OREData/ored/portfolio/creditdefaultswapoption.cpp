@@ -98,7 +98,7 @@ void CreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>& engi
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(maturity_);
 
     boost::shared_ptr<QuantExt::CdsOption> cdsOption;
-    cdsOption = boost::make_shared<CdsOption>(cds, exercise);
+    cdsOption = boost::make_shared<QuantExt::CdsOption>(cds, exercise);
 
     builder = engineFactory->builder("CreditDefaultSwapOption");
     boost::shared_ptr<CreditDefaultSwapOptionEngineBuilder> cdsOptionBuilder =

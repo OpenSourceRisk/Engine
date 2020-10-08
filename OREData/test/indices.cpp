@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE(testSwapIndexParsing) {
         QL_REQUIRE(con, "no swap convention");
         boost::shared_ptr<SwapIndex> swap;
         try {
-            swap = ore::data::parseSwapIndex(str, h, h, con);
+            swap = ore::data::parseSwapIndex(str, h, h, con, swapCon);
         } catch (std::exception& e) {
             BOOST_FAIL("Swap Parser failed to parse \"" << str << "\" [exception:" << e.what() << "]");
         } catch (...) {

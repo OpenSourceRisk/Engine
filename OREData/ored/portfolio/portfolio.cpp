@@ -172,6 +172,13 @@ std::vector<std::string> Portfolio::counterparties() const {
     return counterparties;
 }
 
+map<string, set<string>> Portfolio::counterpartyNettingSets() const {
+    map<string, set<string>> cpNettingSets;
+    for (auto t : trades_)
+        cpNettingSets[t->envelope().counterparty()].insert(t->envelope().nettingSetId());
+    return cpNettingSets;
+}
+
 void Portfolio::add(const boost::shared_ptr<Trade>& trade) {
     QL_REQUIRE(!has(trade->id()), "Attempted to add a trade to the portfolio with an id, which already exists.");
     trades_.push_back(trade);

@@ -7,7 +7,7 @@
       <xs:maxLength value="10"/>
       <!-- This is not super strict, e.g. 2016-17-39 would pass, but it catches
            most errors-->
-      <xs:pattern value="(2\d{3}[0-1]\d[0-3]\d|2\d{3}[-./][0-1]\d[-./][0-3]\d|[0-3]\d[-./][0-1]\d[-./]2\d{3})?"/>
+      <xs:pattern value="([1-2]\d{3}[0-1]\d[0-3]\d|[1-2]\d{3}[-./][0-1]\d[-./][0-3]\d|[0-3]\d[-./][0-1]\d[-./][1-2]\d{3})?"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -548,6 +548,20 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Expiry"/>
       <xs:enumeration value="Exercise"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="overnightIndexFutureNettingType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Averaging"/>
+      <xs:enumeration value="Compounding"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="futureDateGenerationRule">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="IMM"/>
+      <xs:enumeration value="FirstDayOfMonth"/>
     </xs:restriction>
   </xs:simpleType>
   

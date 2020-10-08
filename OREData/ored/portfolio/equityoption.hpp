@@ -63,7 +63,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
-private:
+protected:
     EquityUnderlying equityUnderlying_;
 };
 } // namespace data

@@ -35,6 +35,7 @@
 #include <ored/utilities/to_string.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/toplevelfixture.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
 #include <tuple>
 
 using namespace QuantLib;
@@ -275,7 +276,8 @@ BOOST_AUTO_TEST_CASE(testModifyInflationFixings) {
 BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
 
     // Set the evaluation date
-    Settings::instance().evaluationDate() = Date(21, Feb, 2019);
+    Date asof(21, Feb, 2019);
+    Settings::instance().evaluationDate() = asof;
 
     // Set up a simple TodaysMarketParameters
     TodaysMarketParameters mktParams;
@@ -306,9 +308,20 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
                                 Date(1, Feb, 2018)};
     set<Date> iborDates = {Date(21, Feb, 2019), Date(20, Feb, 2019), Date(19, Feb, 2019),
                            Date(18, Feb, 2019), Date(15, Feb, 2019), Date(14, Feb, 2019)};
+
+    // Default for OIS dates is a lookback of 4 months on weekend only calendar => 21 Feb 2019 -> 21 Oct 2018.
+    // 21 Oct 2018 is a Sunday => 22 Oct 2018 is the start of the lookback.
+    set<Date> oisDates;
+    Date oisDate(22, Oct, 2018);
+    WeekendsOnly cal;
+    while (oisDate <= asof) {
+        oisDates.insert(oisDate);
+        oisDate = cal.advance(oisDate, 1 * Days);
+    }
+
     map<string, set<Date>> expectedFixings = {{"EUHICPXT", inflationDates}, {"USCPI", inflationDates},
                                               {"UKRPI", inflationDates},    {"EUR-EURIBOR-3M", iborDates},
-                                              {"USD-FedFunds", iborDates},  {"USD-LIBOR-3M", iborDates}};
+                                              {"USD-FedFunds", oisDates},  {"USD-LIBOR-3M", iborDates}};
 
     // Populate empty fixings map using the function to be tested
     map<string, set<Date>> fixings;

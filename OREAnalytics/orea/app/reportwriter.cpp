@@ -124,6 +124,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         .addColumn("Currency", string())
         .addColumn("Coupon", double(), 10)
         .addColumn("Accrual", double(), 10)
+        .addColumn("AccrualStartDate", Date(), 4)
+        .addColumn("AccrualEndDate", Date(), 4)
+        .addColumn("AccruedAmount", double(), 4)
         .addColumn("fixingDate", Date())
         .addColumn("fixingValue", double(), 10)
         .addColumn("Notional", double(), 4);
@@ -132,6 +135,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         report.addColumn("DiscountFactor", double(), 10);
         report.addColumn("PresentValue", double(), 10);
     }
+
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
     for (Size k = 0; k < trades.size(); k++) {
@@ -163,15 +167,24 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                         Real coupon;
                         Real accrual;
                         Real notional;
+                        Date accrualStartDate, accrualEndDate;
+                        Real accruedAmount;
                         if (ptrCoupon) {
                             coupon = ptrCoupon->rate();
                             accrual = ptrCoupon->accrualPeriod();
                             notional = ptrCoupon->nominal();
+                            accrualStartDate = ptrCoupon->accrualStartDate();
+                            accrualEndDate = ptrCoupon->accrualEndDate();
+                            accruedAmount = ptrCoupon->accruedAmount(asof);
+                            if (payer)
+                                accruedAmount *= -1.0;
                             flowType = "Interest";
                         } else {
                             coupon = Null<Real>();
                             accrual = Null<Real>();
                             notional = Null<Real>();
+                            accrualStartDate = accrualEndDate = Null<Date>();
+                            accruedAmount = Null<Real>();
                             flowType = "Notional";
                         }
                         // This BMA part here (and below) is necessary because the fixingDay() method of
@@ -201,7 +214,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 flowType = "InterestProjected";
                         } else if (ptrInfl) {
                             fixingDate = ptrInfl->fixingDate();
-                            fixingValue = ptrInfl->index()->fixing(fixingDate);
+                            fixingValue = ptrInfl->indexFixing();
                             flowType = "Inflation";
                         } else if (ptrIndCf) {
                             fixingDate = ptrIndCf->fixingDate();
@@ -226,6 +239,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             .add(ccy)
                             .add(coupon)
                             .add(accrual)
+                            .add(accrualStartDate)
+                            .add(accrualEndDate)
+                            .add(accruedAmount * (accruedAmount == Null<Real>() ? 1.0 : multiplier))
                             .add(fixingDate)
                             .add(fixingValue)
                             .add(notional * (notional == Null<Real>() ? 1.0 : multiplier));
@@ -236,6 +252,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             Real presentValue = discountFactor * effectiveAmount;
                             report.add(presentValue);
                         }
+
                     }
                 }
             }
@@ -279,6 +296,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             .add(effectiveAmount)
                             .add(condCfCurrenciesVec[i])
                             .add(Null<Real>())
+                            .add(Null<Real>())
+                            .add(Null<Date>())
+                            .add(Null<Date>())
                             .add(Null<Real>())
                             .add(Null<Date>())
                             .add(Null<Real>())
@@ -501,32 +521,53 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
     report.end();
 }
 
+void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                            const string& nettingSetId) {
+    const vector<Real> grid = postProcess->spreadSensitivityTimes();
+    const vector<Real>& sensiHazardRate = postProcess->netCvaHazardRateSensitivity(nettingSetId);
+    const vector<Real>& sensiCdsSpread = postProcess->netCvaSpreadSensitivity(nettingSetId);
+    report.addColumn("NettingSet", string())
+        .addColumn("Time", double(), 6)
+        .addColumn("CvaHazardRateSensitivity", double(), 6)
+        .addColumn("CvaSpreadSensitivity", double(), 6);
+
+    for (Size j = 0; j < grid.size(); ++j) {
+        report.next()
+            .add(nettingSetId)
+            .add(grid[j])
+            .add(sensiHazardRate[j])
+            .add(sensiCdsSpread[j]);
+    }
+    report.end();
+}
+
 void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationMethod,
                             boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess) {
     const vector<Date> dates = postProcess->cube()->dates();
     DayCounter dc = ActualActual();
+    Size precision = 2;
     report.addColumn("TradeId", string())
         .addColumn("NettingSetId", string())
-        .addColumn("CVA", double(), 2)
-        .addColumn("DVA", double(), 2)
-        .addColumn("FBA", double(), 2)
-        .addColumn("FCA", double(), 2)
-        .addColumn("FBAexOwnSP", double(), 2)
-        .addColumn("FCAexOwnSP", double(), 2)
-        .addColumn("FBAexAllSP", double(), 2)
-        .addColumn("FCAexAllSP", double(), 2)
-        .addColumn("COLVA", double(), 2)
-        .addColumn("MVA", double(), 2)
-        .addColumn("OurKVACCR", double(), 2)
-        .addColumn("TheirKVACCR", double(), 2)
-        .addColumn("OurKVACVA", double(), 2)
-        .addColumn("TheirKVACVA", double(), 2)
-        .addColumn("CollateralFloor", double(), 2)
-        .addColumn("AllocatedCVA", double(), 2)
-        .addColumn("AllocatedDVA", double(), 2)
+        .addColumn("CVA", double(), precision)
+        .addColumn("DVA", double(), precision)
+        .addColumn("FBA", double(), precision)
+        .addColumn("FCA", double(), precision)
+        .addColumn("FBAexOwnSP", double(), precision)
+        .addColumn("FCAexOwnSP", double(), precision)
+        .addColumn("FBAexAllSP", double(), precision)
+        .addColumn("FCAexAllSP", double(), precision)
+        .addColumn("COLVA", double(), precision)
+        .addColumn("MVA", double(), precision)
+        .addColumn("OurKVACCR", double(), precision)
+        .addColumn("TheirKVACCR", double(), precision)
+        .addColumn("OurKVACVA", double(), precision)
+        .addColumn("TheirKVACVA", double(), precision)
+        .addColumn("CollateralFloor", double(), precision)
+        .addColumn("AllocatedCVA", double(), precision)
+        .addColumn("AllocatedDVA", double(), precision)
         .addColumn("AllocationMethod", string())
-        .addColumn("BaselEPE", double(), 2)
-        .addColumn("BaselEEPE", double(), 2);
+        .addColumn("BaselEPE", double(), precision)
+        .addColumn("BaselEEPE", double(), precision);
 
     for (auto n : postProcess->nettingSetIds()) {
         report.next()
@@ -740,5 +781,34 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     LOG("Sensitivity report finished");
 }
 
+void ReportWriter::writeAdditionalResultsReport(ore::data::Report& report,
+                            boost::shared_ptr<Portfolio> portfolio) {
+    LOG("Writing AdditionalResults report");
+    report.addColumn("TradeId", string())
+        .addColumn("ResultId", string())
+        .addColumn("ResultType", string())
+        .addColumn("ResultValue", string());
+
+    for (auto trade : portfolio->trades()) {
+        auto underlyingInst = trade->instrument()->qlInstrument();
+        if (!underlyingInst)
+            continue;
+        std::map<std::string,boost::any> additionalResults = 
+            underlyingInst->additionalResults();
+
+        if (additionalResults.size() > 0) {
+            for (auto r : additionalResults) {
+                pair<string, string> result = parseBoostAny(r.second);
+                report.next()
+                    .add(trade->id())
+                    .add(r.first)
+                    .add(result.first)
+                    .add(result.second);
+            }
+        }
+    }
+    report.end();
+    LOG("AdditionalResults report written");
+}
 } // namespace analytics
 } // namespace ore

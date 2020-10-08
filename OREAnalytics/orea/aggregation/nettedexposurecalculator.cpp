@@ -125,7 +125,7 @@ void NettedExposureCalculator::build() {
                             nettingSetValue_[nettingSetId],
                             nettingSetMaturity[nettingSetId]);
 
-        // Get the CSA index for Eonia Floor calculation below
+	// Get the CSA index for Eonia Floor calculation below
         colva_[nettingSetId] = 0.0;
         collateralFloor_[nettingSetId] = 0.0;
         boost::shared_ptr<NettingSetDefinition> netting = nettingSetManager_->get(nettingSetId);
@@ -139,6 +139,15 @@ void NettedExposureCalculator::build() {
                            "scenario data does not provide index values for " << csaIndexName);
             }
         }
+
+	bool applyInitialMargin = netting->applyInitialMargin() && applyInitialMargin_;
+	LOG("ApplyInitialMargin=" << applyInitialMargin << " for netting set " << nettingSetId 
+	    << ", CSA IM=" << netting->applyInitialMargin()
+	    << ", Analytics DIM=" << applyInitialMargin_);
+	if (applyInitialMargin_ && !netting->applyInitialMargin())
+	    ALOG("ApplyInitialMargin deactivated at netting set level " << nettingSetId);
+	if (!applyInitialMargin_ && netting->applyInitialMargin())
+	    ALOG("ApplyInitialMargin deactivated in analytics, but active at netting set level " << nettingSetId);
 
         Handle<YieldTermStructure> curve = market_->discountCurve(baseCurrency_, configuration_);
         vector<Real> epe(cube_->dates().size() + 1, 0.0);
@@ -185,7 +194,7 @@ void NettedExposureCalculator::build() {
                 eab[j + 1] += balance / cube_->samples();
                 Real exposure = data[j][k] - balance;
                 Real dim = 0.0;
-                if (applyInitialMargin_) {
+                if (applyInitialMargin && collateral) { // don't apply initial margin without VM, i.e. inactive CSA
                     // Initial Margin
                     // Use IM to reduce exposure
                     // Size dimIndex = j == 0 ? 0 : j - 1;

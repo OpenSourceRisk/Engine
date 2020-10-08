@@ -570,6 +570,12 @@
     <ClInclude Include="qle\indexes\ibor\clpcamara.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\cnhhibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\cnhshibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\copibr.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -846,12 +852,6 @@
     <ClInclude Include="qle\cashflows\blackovernightindexedcouponpricer.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
-    <ClInclude Include="qle\instruments\overnightindexfuture.hpp">
-      <Filter>instruments</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\overnightindexfutureratehelper.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
     <ClInclude Include="qle\currencies\europe.hpp">
       <Filter>currencies</Filter>
     </ClInclude>
@@ -897,6 +897,21 @@
     <ClInclude Include="qle\calendars\amendedcalendar.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\infjyparameterization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\zeroinflationmodeltermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\yoyinflationmodeltermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\jyimpliedyoyinflationtermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\jyimpliedzeroinflationtermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\interpolatedhazardratecurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -920,6 +935,12 @@
     </ClInclude>
     <ClInclude Include="qle\indexes\frcpi.hpp">
       <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\jpyeytibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\projectedcrossassetmodel.hpp">
+      <Filter>models</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1528,12 +1549,6 @@
     <ClCompile Include="qle\cashflows\blackovernightindexedcouponpricer.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
-    <ClCompile Include="qle\instruments\overnightindexfuture.cpp">
-      <Filter>instruments</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\overnightindexfutureratehelper.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
     <ClCompile Include="qle\currencies\europe.cpp">
       <Filter>currencies</Filter>
     </ClCompile>
@@ -1570,8 +1585,26 @@
     <ClCompile Include="qle\calendars\amendedcalendar.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
+    <ClCompile Include="qle\models\infjyparameterization.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\zeroinflationmodeltermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\yoyinflationmodeltermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\jyimpliedyoyinflationtermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\jyimpliedzeroinflationtermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
     <ClCompile Include="qle\termstructures\swaptionvolconstantspread.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\projectedcrossassetmodel.cpp">
+      <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

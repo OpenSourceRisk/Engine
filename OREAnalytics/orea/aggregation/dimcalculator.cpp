@@ -48,9 +48,10 @@ namespace analytics {
 DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
     const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<NPVCube>& cube,
     const boost::shared_ptr<CubeInterpretation>& cubeInterpretation,
-    const boost::shared_ptr<AggregationScenarioData>& scenarioData, Real quantile, Size horizonCalendarDays)
+    const boost::shared_ptr<AggregationScenarioData>& scenarioData, Real quantile, Size horizonCalendarDays,
+    const std::map<std::string, Real>& currentIM)
     : portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation), scenarioData_(scenarioData),
-      quantile_(quantile), horizonCalendarDays_(horizonCalendarDays) {
+      quantile_(quantile), horizonCalendarDays_(horizonCalendarDays), currentIM_(currentIM) {
 
     QL_REQUIRE(portfolio_, "portfolio is null");
     QL_REQUIRE(cube_, "cube is null");
@@ -64,6 +65,10 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
 
     Size dates = cube_->dates().size();
     Size samples = cube_->samples();
+
+    if (!cubeInterpretation_->hasMporFlows(cube_)) {
+        WLOG("cube holds no mpor flows, will assume no flows in the dim calculation");
+    }
 
     // initialise aggregate NPV and Flow by date and scenario
     set<string> nettingSets;
@@ -83,7 +88,8 @@ DynamicInitialMarginCalculator::DynamicInitialMarginCalculator(
             for (Size k = 0; k < samples; ++k) {
                 Real defaultNpv = cubeInterpretation_->getDefaultNpv(cube_, i, j, k);
                 Real closeOutNpv = cubeInterpretation_->getCloseOutNpv(cube_, i, j, k);
-                Real mporFlow = cubeInterpretation_->getMporFlows(cube_, i, j, k);
+                Real mporFlow =
+                    cubeInterpretation_->hasMporFlows(cube_) ? cubeInterpretation_->getMporFlows(cube_, i, j, k) : 0.0;
                 nettingSetNPV_[nettingSetId][j][k] += defaultNpv;
                 nettingSetCloseOutNPV_[nettingSetId][j][k] += closeOutNpv;
                 nettingSetFLOW_[nettingSetId][j][k] += mporFlow;

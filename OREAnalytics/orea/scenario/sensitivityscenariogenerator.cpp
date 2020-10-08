@@ -1021,10 +1021,6 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
     }
 
     // generate scenarios
-
-    vector<vector<vector<Real>>> volData;
-    vector<vector<vector<Real>>> shiftedVolData;
-
     for (auto s : shiftData) {
         std::string qualifier = s.first;
 
@@ -1035,8 +1031,8 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
         vector<Real> volTermTimes(n_term, 0.0);
         Size n_strike = getVolStrikes(qualifier).size();
 
-        volData.resize(n_strike, vector<vector<Real>>(n_expiry, vector<Real>(n_term, 0.0)));
-        shiftedVolData.resize(n_strike, vector<vector<Real>>(n_expiry, vector<Real>(n_term, 0.0)));
+        vector<vector<vector<Real>>> volData(n_strike, vector<vector<Real>>(n_expiry, vector<Real>(n_term, 0.0)));
+        vector<vector<vector<Real>>> shiftedVolData = volData;
 
         SensitivityScenarioData::GenericYieldVolShiftData data = s.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
