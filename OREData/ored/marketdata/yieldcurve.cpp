@@ -175,10 +175,10 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
                        const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves,
                        const map<string, boost::shared_ptr<DefaultCurve>>& requiredDefaultCurves,
                        const FXTriangulation& fxTriangulation,
-                       const boost::shared_ptr<ReferenceDataManager>& referenceData)
+                       const boost::shared_ptr<ReferenceDataManager>& referenceData, const bool preserveQuoteLinkage)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), conventions_(conventions),
       requiredYieldCurves_(requiredYieldCurves), requiredDefaultCurves_(requiredDefaultCurves),
-      fxTriangulation_(fxTriangulation), referenceData_(referenceData) {
+      fxTriangulation_(fxTriangulation), referenceData_(referenceData), preserveQuoteLinkage_(preserveQuoteLinkage) {
 
     try {
 
@@ -419,36 +419,40 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
         QL_FAIL("Interpolation variable not recognised.");
     }
 
-    // Build fixed zero/discount curve that matches the boostrapped curve
-    // initially, but does NOT react to quote changes: This is a workaround
-    // for a QuantLib problem, where a fixed reference date piecewise
-    // yield curve reacts to evaluation date changes because the bootstrap
-    // helper recompute their start date (because they are realtive date
-    // helper for deposits, fras, swaps, etc.).
-    vector<Date> dates(instruments.size() + 1, asofDate_);
-    vector<Real> zeros(instruments.size() + 1, 0.0);
-    vector<Real> discounts(instruments.size() + 1, 1.0);
-    vector<Real> forwards(instruments.size() + 1, 0.0);
+    if (preserveQuoteLinkage_)
+        p_ = yieldts;
+    else {
+        // Build fixed zero/discount curve that matches the boostrapped curve
+        // initially, but does NOT react to quote changes: This is a workaround
+        // for a QuantLib problem, where a fixed reference date piecewise
+        // yield curve reacts to evaluation date changes because the bootstrap
+        // helper recompute their start date (because they are realtive date
+        // helper for deposits, fras, swaps, etc.).
+        vector<Date> dates(instruments.size() + 1, asofDate_);
+        vector<Real> zeros(instruments.size() + 1, 0.0);
+        vector<Real> discounts(instruments.size() + 1, 1.0);
+        vector<Real> forwards(instruments.size() + 1, 0.0);
 
-    if (extrapolation_) {
-        yieldts->enableExtrapolation();
+        if (extrapolation_) {
+            yieldts->enableExtrapolation();
+        }
+        for (Size i = 0; i < instruments.size(); i++) {
+            dates[i + 1] = instruments[i]->latestDate();
+            zeros[i + 1] = yieldts->zeroRate(dates[i + 1], zeroDayCounter_, Continuous);
+            discounts[i + 1] = yieldts->discount(dates[i + 1]);
+            forwards[i + 1] = yieldts->forwardRate(dates[i + 1], dates[i + 1], zeroDayCounter_, Continuous);
+        }
+        zeros[0] = zeros[1];
+        forwards[0] = forwards[1];
+        if (interpolationVariable_ == InterpolationVariable::Zero)
+            p_ = zerocurve(dates, zeros, zeroDayCounter_, interpolationMethod_);
+        else if (interpolationVariable_ == InterpolationVariable::Discount)
+            p_ = discountcurve(dates, discounts, zeroDayCounter_, interpolationMethod_);
+        else if (interpolationVariable_ == InterpolationVariable::Forward)
+            p_ = forwardcurve(dates, forwards, zeroDayCounter_, interpolationMethod_);
+        else
+            QL_FAIL("Interpolation variable not recognised.");
     }
-    for (Size i = 0; i < instruments.size(); i++) {
-        dates[i + 1] = instruments[i]->latestDate();
-        zeros[i + 1] = yieldts->zeroRate(dates[i + 1], zeroDayCounter_, Continuous);
-        discounts[i + 1] = yieldts->discount(dates[i + 1]);
-        forwards[i + 1] = yieldts->forwardRate(dates[i + 1], dates[i + 1], zeroDayCounter_, Continuous);
-    }
-    zeros[0] = zeros[1];
-    forwards[0] = forwards[1];
-    if (interpolationVariable_ == InterpolationVariable::Zero)
-        p_ = zerocurve(dates, zeros, zeroDayCounter_, interpolationMethod_);
-    else if (interpolationVariable_ == InterpolationVariable::Discount)
-        p_ = discountcurve(dates, discounts, zeroDayCounter_, interpolationMethod_);
-    else if (interpolationVariable_ == InterpolationVariable::Forward)
-        p_ = forwardcurve(dates, forwards, zeroDayCounter_, interpolationMethod_);
-    else
-        QL_FAIL("Interpolation variable not recognised.");
 
     return p_;
 }

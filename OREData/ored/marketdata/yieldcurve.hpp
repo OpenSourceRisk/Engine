@@ -92,7 +92,10 @@ public:
         //! FxTriangultion to get FX rate from cross if needed
         const FXTriangulation& fxTriangulation = FXTriangulation(),
         //! optional pointer to reference data, needed to build fitted bond curves
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        //! if true keep qloader quotes linked to yield ts, otherwise detach them
+        const bool preserveQuoteLinkage = false
+        );
 
     //! \name Inspectors
     //@{
@@ -139,6 +142,7 @@ private:
     map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
     const FXTriangulation& fxTriangulation_;
     const boost::shared_ptr<ReferenceDataManager> referenceData_;
+    const bool preserveQuoteLinkage_;
 
     boost::shared_ptr<YieldTermStructure> piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instruments);
 
