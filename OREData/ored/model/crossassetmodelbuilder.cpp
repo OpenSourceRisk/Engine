@@ -678,8 +678,9 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data,
                 inflationCalibrationErrors_[modelIdx] = getCalibrationError(allHelpers);
             }
 
-            DLOG("Bootstrap calibration of JY model stopped with number of iterations " <<
-                numIts << " and rmse equal to " << inflationCalibrationErrors_[modelIdx] << ".");
+            DLOG("Bootstrap calibration of JY model stopped with number of iterations " << numIts <<
+                " and rmse equal to " << std::scientific << std::setprecision(6) <<
+                inflationCalibrationErrors_[modelIdx] << ".");
 
         } else {
             QL_FAIL("JY inflation bootstrap calibration does not support the combination of real rate volatility = " <<

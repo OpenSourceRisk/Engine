@@ -631,19 +631,17 @@
   <InflationCapFloorVolatilities>
     <InflationCapFloorVolatility>
       <CurveId>EUHICPXT_ZC_CF</CurveId>
-      <CurveDescription>EUHICPXT CPI Cap/Floor vol surface</CurveDescription>
+      <CurveDescription>EUHICPXT cap floor premium surface</CurveDescription>
       <Type>ZC</Type>
-      <!-- QuoteType>Price</QuoteType -->
-      <QuoteType>Volatility</QuoteType>
+      <QuoteType>Price</QuoteType>
       <VolatilityType>Lognormal</VolatilityType>
       <Extrapolation>Y</Extrapolation>
       <DayCounter>ACT</DayCounter>
       <Calendar>TARGET</Calendar>
       <BusinessDayConvention>MF</BusinessDayConvention>
-      <Tenors>2Y,5Y,7Y,10Y,20Y</Tenors>
-      <!-- CapStrikes/ -->
-      <!-- FloorStrikes>0.00,0.01</FloorStrikes -->
-      <Strikes>0.00,0.01</Strikes>
+      <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y</Tenors>
+      <CapStrikes>-0.03,-0.02,-0.01,0.00,0.01.0.02,0.03,0.04</CapStrikes>
+      <FloorStrikes>-0.03,-0.02,-0.01,0.00,0.01.0.02,0.03,0.04</FloorStrikes>
       <Index>EUHICPXT</Index>
       <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
       <IndexInterpolated>false</IndexInterpolated>
@@ -652,19 +650,17 @@
     </InflationCapFloorVolatility>
     <InflationCapFloorVolatility>
       <CurveId>UKRPI_ZC_CF</CurveId>
-      <CurveDescription>UKRPI CPI Cap/Floor vol surface</CurveDescription>
+      <CurveDescription>UKRPI cap floor premium surface</CurveDescription>
       <Type>ZC</Type>
-      <!-- QuoteType>Price</QuoteType -->
-      <QuoteType>Volatility</QuoteType>
+      <QuoteType>Price</QuoteType>
       <VolatilityType>Lognormal</VolatilityType>
       <Extrapolation>Y</Extrapolation>
       <DayCounter>Actual/365 (Fixed)</DayCounter>
       <Calendar>GBP</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
-      <Tenors>2Y,5Y,7Y,10Y,20Y</Tenors>
-      <!-- CapStrikes/ -->
-      <!-- FloorStrikes>0.00,0.01</FloorStrikes -->
-      <Strikes>0.00,0.01</Strikes>
+      <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y</Tenors>
+      <CapStrikes>-0.03,-0.02,-0.01,0.00,0.01.0.02,0.03,0.04</CapStrikes>
+      <FloorStrikes>-0.03,-0.02,-0.01,0.00,0.01.0.02,0.03,0.04</FloorStrikes>
       <Index>UKRPI</Index>
       <IndexCurve>Inflation/UKRPI/UKRPI_ZC_Swaps</IndexCurve>
       <IndexInterpolated>false</IndexInterpolated>

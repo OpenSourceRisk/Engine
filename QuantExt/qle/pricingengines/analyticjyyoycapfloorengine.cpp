@@ -21,6 +21,7 @@
 #include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/pricingengines/analyticjycpicapfloorengine.hpp>
+#include <qle/utilities/inflation.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/cpicapfloor.hpp>
@@ -102,9 +103,12 @@ void AnalyticJyYoYCapFloorEngine::calculate() const {
     // 1. The YoY optionlet payment has already occured (depends on some settings) => skip it.
     // 2. The underlying YoY rate is known but has not been paid. Deterministic discounted value.
     // 3. The denominator in the underlying YoY rate is known but the numerator is not known. We have a CPI 
-    //    optionlet that should be valued using the JY CPI engine.
+    //    optionlet.
     // 4. Both the denominator and numerator in the underlying YoY rate are not yet known. We have a "true" YoY 
-    //    optionlet and we use the JY YoY optionlet formula from Chapter 13 of the book.
+    //    optionlet.
+    // Both 3 and 4 are covered by the JY YoY optionlet formula from Chapter 13 of the book. In the case of 3, the 
+    // formula for the mean and variance collapses to that of a CPI optionlet.
+    results_.value = 0.0;
     for (Size i = 0; i < arguments_.payDates.size(); ++i) {
 
         // Check for scenario 1.
@@ -120,11 +124,10 @@ void AnalyticJyYoYCapFloorEngine::calculate() const {
         const auto& dt = arguments_.accrualTimes[i];
         const auto& n = arguments_.nominals[i];
         const auto& g = arguments_.gearings[i];
-        const auto& c = 1.0 + arguments_.capRates[i];
-        const auto& f = 1.0 + arguments_.floorRates[i];
+        auto c = 1.0 + arguments_.capRates[i];
+        auto f = 1.0 + arguments_.floorRates[i];
 
         // Check for scenario 2.
-        // TODO: patch QL so that the index is made available by YoYInflationCapFloor::setupArguments.
         const auto& fixingDate = arguments_.fixingDates[i];
         if (fixingDate <= today) {
             
@@ -143,41 +146,15 @@ void AnalyticJyYoYCapFloorEngine::calculate() const {
             continue;
         }
 
-        // Check for scenario 3.
+        // If we get to here, we are in scenario 3 or 4.
         Date denFixingDate = fixingDate - 1 * Years;
-        auto freq = arguments_.index->frequency();
-        auto ip = inflationPeriod(today - arguments_.index->availabilityLag(), freq);
-        bool isInterp = arguments_.index->interpolated();
-        
-        if ((!isInterp && denFixingDate < ip.first) || (isInterp && denFixingDate < ip.first - Period(freq))) {
-           
-            // Build a CPI cap or floor and value it
-            Real baseCpi = arguments_.index->fixing(denFixingDate);
-            Date start = arguments_.startDates[i];
-            Real payoff = 0.0;
-            
-            if (type == yoyCap || type == yoyClr) {
-                payoff = cpiCapFlrValue(model_, index_, Option::Call, n, start, baseCpi, payDate, c - 1.0,
-                    arguments_.index, arguments_.observationLag);
-            }
-            
-            if (type == yoyFlr || type == yoyClr) {
-                payoff += indFlr * cpiCapFlrValue(model_, index_, Option::Put, n, start, baseCpi, payDate,
-                    f - 1.0, arguments_.index, arguments_.observationLag);
-            }
-
-            results_.value += g * dt * payoff;
-            continue;
-        }
-
-        // If we get to here, we are in scenario 4.
         auto zts = model_->infjy(index_)->realRate()->termStructure();
-        auto S = zts->timeFromReference(denFixingDate);
-        auto T = zts->timeFromReference(fixingDate);
-        
+        auto S = inflationTime(denFixingDate, *zts);
+        auto T = inflationTime(fixingDate, *zts);
+
         Real mean = jyExpectedIndexRatio(model_, index_, S, T);
         Real stdDev = sqrt(varianceLogRatio(S, T));
-        
+
         Real payoff = 0.0;
         if (type == yoyCap || type == yoyClr) {
             payoff = blackFormula(Option::Call, c, mean, stdDev, df, 0.0);

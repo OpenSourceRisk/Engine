@@ -246,6 +246,12 @@
               <Tenor>2Y</Tenor>
             </YoYSwap>
             <YoYSwap>
+              <Tenor>5Y</Tenor>
+            </YoYSwap>
+            <YoYSwap>
+              <Tenor>7Y</Tenor>
+            </YoYSwap>
+            <YoYSwap>
               <Tenor>10Y</Tenor>
             </YoYSwap>
             <YoYSwap>
