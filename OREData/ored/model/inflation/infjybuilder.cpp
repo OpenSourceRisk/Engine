@@ -36,6 +36,7 @@
 #include <qle/utilities/inflation.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/time/daycounters/thirty360.hpp>
 
 using QuantExt::CPIBlackCapFloorEngine;
 using QuantExt::CpiCapFloorHelper;
@@ -48,6 +49,7 @@ using QuantExt::YoYInflationBachelierCapFloorEngine;
 using QuantExt::YoYInflationBlackCapFloorEngine;
 using QuantExt::YoYSwapHelper;
 using QuantLib::DiscountingSwapEngine;
+using QuantLib::Thirty360;
 using QuantLib::YoYInflationCoupon;
 using std::lower_bound;
 using std::set;
@@ -388,7 +390,7 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb,
     // Some of these should possibly come from conventions. Also some variables used in the loop below.
     Natural settlementDays = 2;
     auto calendar = yoyInflationIndex_->fixingCalendar();
-    auto dc = yoyTs->dayCounter();
+    DayCounter dc = Thirty360();
     auto bdc = Following;
     auto obsLag = yoyVolatility_->observationLag();
     Date today = Settings::instance().evaluationDate();
@@ -492,7 +494,7 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
     // Also some variables used in the loop below.
     Natural settlementDays = 2;
     auto calendar = yoyInflationIndex_->fixingCalendar();
-    auto dc = yoyTs->dayCounter();
+    auto dc = Thirty360();
     auto bdc = Following;
     auto obsLag = yoyTs->observationLag();
     Date today = Settings::instance().evaluationDate();
