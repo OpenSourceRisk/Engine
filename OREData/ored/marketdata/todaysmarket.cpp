@@ -121,8 +121,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                            const bool continueOnError, const bool loadFixings,
                            const boost::shared_ptr<ReferenceDataManager>& referenceData)
     : MarketImpl(conventions), params_(params), loader_(loader), curveConfigs_(curveConfigs),
-      continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(false), referenceData_(referenceData),
-      preserveQuoteLinkage_(false) {
+      continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(false), preserveQuoteLinkage_(false),
+      referenceData_(referenceData) {
     // this ctor does not allow for lazy builds, since we store references to the inputs only
     initialise(asof);
 }
