@@ -125,27 +125,27 @@
           <CalibrationBasket parameter="Index">
             <CpiCapFloor>
               <Type>Floor</Type>
-              <Tenor>2Y</Tenor>
+              <Maturity>2Y</Maturity>
               <Strike>0.0</Strike>
             </CpiCapFloor>
             <CpiCapFloor>
               <Type>Floor</Type>
-              <Tenor>5Y</Tenor>
+              <Maturity>5Y</Maturity>
               <Strike>0.0</Strike>
             </CpiCapFloor>
             <CpiCapFloor>
               <Type>Floor</Type>
-              <Tenor>7Y</Tenor>
+              <Maturity>7Y</Maturity>
               <Strike>0.0</Strike>
             </CpiCapFloor>
             <CpiCapFloor>
               <Type>Floor</Type>
-              <Tenor>10Y</Tenor>
+              <Maturity>10Y</Maturity>
               <Strike>0.0</Strike>
             </CpiCapFloor>
             <CpiCapFloor>
               <Type>Floor</Type>
-              <Tenor>20Y</Tenor>
+              <Maturity>20Y</Maturity>
               <Strike>0.0</Strike>
             </CpiCapFloor>
           </CalibrationBasket>
@@ -217,27 +217,27 @@
           <CalibrationBasket parameter="Index">
             <CpiCapFloor>
               <Type>Floor</Type>
-              <Tenor>2Y</Tenor>
+              <Maturity>2Y</Maturity>
               <Strike>0.0</Strike>
             </CpiCapFloor>
             <CpiCapFloor>
               <Type>Floor</Type>
-              <Tenor>5Y</Tenor>
+              <Maturity>5Y</Maturity>
               <Strike>0.0</Strike>
             </CpiCapFloor>
             <CpiCapFloor>
               <Type>Floor</Type>
-              <Tenor>7Y</Tenor>
+              <Maturity>7Y</Maturity>
               <Strike>0.0</Strike>
             </CpiCapFloor>
             <CpiCapFloor>
               <Type>Floor</Type>
-              <Tenor>10Y</Tenor>
+              <Maturity>10Y</Maturity>
               <Strike>0.0</Strike>
             </CpiCapFloor>
             <CpiCapFloor>
               <Type>Floor</Type>
-              <Tenor>20Y</Tenor>
+              <Maturity>20Y</Maturity>
               <Strike>0.0</Strike>
             </CpiCapFloor>
           </CalibrationBasket>
