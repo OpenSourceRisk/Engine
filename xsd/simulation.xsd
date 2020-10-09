@@ -6,7 +6,7 @@
     <xs:all>
       <xs:element type="parameters" name="Parameters" minOccurs="0" maxOccurs="1"/>
       <xs:element type="crossAssetModel" name="CrossAssetModel" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="market" name="Market" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="market" name="Market" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -162,7 +162,15 @@
     </xs:restriction>
   </xs:simpleType>
   
-  <xs:complexType name="calibrationInflationCapFloor">
+  <xs:complexType name="calibrationCpiCapFloor">
+    <xs:sequence>
+      <xs:element type="capFloor" name="Type"/>
+      <xs:element type="xs:string" name="Maturity"/>
+      <xs:element type="xs:string" name="Strike"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="calibrationYoYCapFloor">
     <xs:sequence>
       <xs:element type="capFloor" name="Type"/>
       <xs:element type="xs:string" name="Tenor"/>
@@ -178,8 +186,8 @@
   
   <xs:complexType name="calibrationBasket">
     <xs:choice>
-      <xs:element type="calibrationInflationCapFloor" name="CpiCapFloor" minOccurs="1" maxOccurs="unbounded"/>
-      <xs:element type="calibrationInflationCapFloor" name="YoYCapFloor" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element type="calibrationCpiCapFloor" name="CpiCapFloor" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element type="calibrationYoYCapFloor" name="YoYCapFloor" minOccurs="1" maxOccurs="unbounded"/>
       <xs:element type="calibrationYoYSwap" name="YoYSwap" minOccurs="1" maxOccurs="unbounded"/>
     </xs:choice>
     <xs:attribute type="xs:string" name="parameter" />

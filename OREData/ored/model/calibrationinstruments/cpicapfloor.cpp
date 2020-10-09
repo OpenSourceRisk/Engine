@@ -20,51 +20,49 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
-using QuantLib::Period;
 using QuantLib::CapFloor;
+using QuantLib::Date;
+using QuantLib::Period;
 
 namespace ore {
 namespace data {
 
 CalibrationInstrumentRegister<CpiCapFloor> CpiCapFloor::reg_("CpiCapFloor");
 
-CpiCapFloor::CpiCapFloor() 
- : CalibrationInstrument("CpiCapFloor"), type_(CapFloor::Floor) {}
+CpiCapFloor::CpiCapFloor() : CalibrationInstrument("CpiCapFloor"), type_(CapFloor::Floor) {}
 
 CpiCapFloor::CpiCapFloor(CapFloor::Type type,
-    const Period& tenor,
+    const boost::variant<QuantLib::Date, Period> & maturity,
     const boost::shared_ptr<BaseStrike>& strike)
     : CalibrationInstrument("CpiCapFloor"),
       type_(type),
-      tenor_(tenor),
+      maturity_(maturity),
       strike_(strike) {}
 
 CapFloor::Type CpiCapFloor::type() const {
     return type_;
 }
 
-const QuantLib::Period& CpiCapFloor::tenor() const {
-    return tenor_;
+const boost::variant<Date, Period>& CpiCapFloor::maturity() const {
+    return maturity_;
 }
 
-const boost::shared_ptr<BaseStrike>& CpiCapFloor::strike() const {
-    return strike_;
-}
+const boost::shared_ptr<BaseStrike>& CpiCapFloor::strike() const { return strike_; }
 
 void CpiCapFloor::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, instrumentType_);
     type_ = parseCapFloorType(XMLUtils::getChildValue(node, "Type", true));
-    tenor_ = parsePeriod(XMLUtils::getChildValue(node, "Tenor", true));
+    maturity_ = parseDateOrPeriod(XMLUtils::getChildValue(node, "Maturity", true));
     strike_ = parseBaseStrike(XMLUtils::getChildValue(node, "Strike", true));
 }
 
 XMLNode* CpiCapFloor::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(instrumentType_);
     XMLUtils::addChild(doc, node, "Type", to_string(type_));
-    XMLUtils::addChild(doc, node, "Tenor", to_string(tenor_));
+    XMLUtils::addChild(doc, node, "Maturity", to_string(maturity_));
     XMLUtils::addChild(doc, node, "Strike", strike_->toString());
     return node;
 }
 
-}
-}
+} // namespace data
+} // namespace ore

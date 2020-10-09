@@ -43,12 +43,13 @@ NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const str
                                            const Real& thresholdRcv, const Real& mtaPay, const Real& mtaRcv,
                                            const Real& iaHeld, const string& iaType, const string& marginCallFreq,
                                            const string& marginPostFreq, const string& mpr, const Real& collatSpreadPay,
-                                           const Real& collatSpreadRcv, const vector<string>& eligCollatCcys)
+                                           const Real& collatSpreadRcv, const vector<string>& eligCollatCcys,
+					   bool applyInitialMargin)
     : nettingSetId_(nettingSetId), ctp_(ctp), activeCsaFlag_(true), csaTypeStr_(bilateral), csaCurrency_(csaCurrency),
       index_(index), thresholdPay_(thresholdPay), thresholdRcv_(thresholdRcv), mtaPay_(mtaPay), mtaRcv_(mtaRcv),
       iaHeld_(iaHeld), iaType_(iaType), marginCallFreqStr_(marginCallFreq), marginPostFreqStr_(marginPostFreq),
       mprStr_(mpr), collatSpreadPay_(collatSpreadPay), collatSpreadRcv_(collatSpreadRcv),
-      eligCollatCcys_(eligCollatCcys) {
+      eligCollatCcys_(eligCollatCcys), applyInitialMargin_(applyInitialMargin) {
 
     QL_REQUIRE(activeCsaFlag_, "NettingSetDefinition construction error... "
                                    << nettingSetId_ << "; this constructor is intended for "
@@ -98,6 +99,9 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         XMLNode* collatChild = XMLUtils::getChildNode(csaChild, "EligibleCollaterals");
         XMLUtils::checkNode(collatChild, "EligibleCollaterals");
         eligCollatCcys_ = XMLUtils::getChildrenValues(collatChild, "Currencies", "Currency", true);
+	
+	applyInitialMargin_ = false;
+	applyInitialMargin_ = XMLUtils::getChildValueAsBool(csaChild, "ApplyInitialMargin", false);
     }
 
     isLoaded_ = true;
@@ -138,6 +142,8 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
         XMLNode* collatSubNode = doc.allocNode("EligibleCollaterals");
         XMLUtils::appendNode(csaSubNode, collatSubNode);
         XMLUtils::addChildren(doc, collatSubNode, "Currencies", "Currency", eligCollatCcys_);
+
+        XMLUtils::addChild(doc, node, "ApplyInitialMargin", applyInitialMargin_);
     }
 
     return node;

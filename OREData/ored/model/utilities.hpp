@@ -31,6 +31,7 @@
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infjyparameterization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
+#include <boost/variant.hpp>
 
 namespace ore {
 namespace data {
@@ -70,6 +71,12 @@ std::string getCalibrationDetails(
     const std::vector<boost::shared_ptr<CalibrationHelper>>& indexBasket,
     const boost::shared_ptr<InfJyParameterization>& parameterization,
     bool calibrateRealRateVol = false);
+
+//! Return an option's maturity date, given an explicit date or a period.
+QuantLib::Date optionMaturity(const boost::variant<QuantLib::Date, QuantLib::Period>& maturity,
+    const QuantLib::Calendar& calendar,
+    const QuantLib::Date& referenceDate = Settings::instance().evaluationDate());
+
 
 } // namespace data
 } // namespace ore

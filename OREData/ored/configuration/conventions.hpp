@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+#include <ql/experimental/futures/overnightindexfuture.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
@@ -257,6 +258,7 @@ private:
  */
 class FutureConvention : public Convention {
 public:
+    enum class DateGenerationRule { IMM, FirstDayOfMonth };
     //! \name Constructors
     //@{
     //! Default constructor
@@ -265,10 +267,16 @@ public:
     explicit FutureConvention(const Conventions* conventions) : conventions_(conventions) {}
     //! Index based constructor
     FutureConvention(const string& id, const string& index, const Conventions* conventions = nullptr);
+    //! Index based constructor taking in addition a netting type for ON indices and a date generation rule
+    FutureConvention(const string& id, const string& index,
+                     const QuantLib::OvernightIndexFuture::NettingType overnightIndexFutureNettingType,
+                     const DateGenerationRule dateGeneration, const Conventions* conventions = nullptr);
     //@}
     //! \name Inspectors
     //@{
     const boost::shared_ptr<IborIndex>& index() const { return index_; }
+    QuantLib::OvernightIndexFuture::NettingType overnightIndexFutureNettingType() const { return overnightIndexFutureNettingType_; }
+    DateGenerationRule dateGenerationRule() const { return dateGenerationRule_; }
     //@}
 
     //! Serialisation
@@ -281,6 +289,8 @@ public:
 private:
     string strIndex_;
     boost::shared_ptr<IborIndex> index_;
+    QuantLib::OvernightIndexFuture::NettingType overnightIndexFutureNettingType_;
+    DateGenerationRule dateGenerationRule_;
     const Conventions* conventions_;
 };
 
@@ -449,9 +459,10 @@ private:
 class SwapIndexConvention : public Convention {
 public:
     SwapIndexConvention() {}
-    SwapIndexConvention(const string& id, const string& conventions);
+    SwapIndexConvention(const string& id, const string& conventions, const string& fixingCalendar = "");
 
     const string& conventions() const { return strConventions_; }
+    const string& fixingCalendar() const { return fixingCalendar_; }
 
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
@@ -459,6 +470,7 @@ public:
 
 private:
     string strConventions_;
+    string fixingCalendar_;
 };
 
 //! Container for storing Interest Rate Swap conventions

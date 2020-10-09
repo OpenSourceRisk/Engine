@@ -24,10 +24,12 @@
 #pragma once
 
 #include <ored/utilities/log.hpp>
+#include <ored/configuration/conventions.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
+#include <ql/experimental/futures/overnightindexfuture.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/instruments/capfloor.hpp>
@@ -48,6 +50,7 @@
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/variant.hpp>
 
 namespace ore {
 namespace data {
@@ -171,6 +174,12 @@ QuantLib::Exercise::Type parseExerciseType(const string& s);
 QuantLib::Option::Type parseOptionType(const string& s);
 
 //! Convert text to QuantLib::Period or QuantLib::Date
+/*!
+\ingroup utilities
+*/
+boost::variant<QuantLib::Date, QuantLib::Period> parseDateOrPeriod(const string& s);
+
+//! Convert text to QuantLib::Period or QuantLib::Date (deprecated version)
 /*!
 \ingroup utilities
 */
@@ -324,6 +333,18 @@ QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const std::string& s
     \ingroup utilities
 */
 std::pair<string, string> parseBoostAny(const boost::any& anyType);
+
+//! Convert text to QuantLib::OvernightIndexFuture::NettingType
+QuantLib::OvernightIndexFuture::NettingType parseOvernightIndexFutureNettingType(const std::string& s);
+
+//! Write QuantLib::OvernightIndexFuture::NettingType to stream
+std::ostream& operator<<(std::ostream& os, QuantLib::OvernightIndexFuture::NettingType t);
+
+//! Convert text to FutureConvention::DateGeneration
+FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::string& s);
+
+//! Write QuantLib::OvernightIndexFuture::NettingType to stream
+std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule t);
 
 } // namespace data
 } // namespace ore

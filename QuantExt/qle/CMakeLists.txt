@@ -79,7 +79,6 @@ instruments/makeaverageois.cpp
 instruments/makecds.cpp
 instruments/oibasisswap.cpp
 instruments/oiccbasisswap.cpp
-instruments/overnightindexfuture.cpp
 instruments/payment.cpp
 instruments/rebatedexercise.cpp
 instruments/subperiodsswap.cpp
@@ -190,7 +189,6 @@ termstructures/oisratehelper.cpp
 termstructures/optionletstripper.cpp
 termstructures/optionletstripper1.cpp
 termstructures/optionletstripper2.cpp
-termstructures/overnightindexfutureratehelper.cpp
 termstructures/pricetermstructure.cpp
 termstructures/pricetermstructureadapter.cpp
 termstructures/spreadeddiscountcurve.cpp
@@ -279,6 +277,8 @@ indexes/ibor/brlcdi.hpp
 indexes/ibor/chfsaron.hpp
 indexes/ibor/chftois.hpp
 indexes/ibor/clpcamara.hpp
+indexes/ibor/cnhhibor.hpp
+indexes/ibor/cnhshibor.hpp
 indexes/ibor/copibr.hpp
 indexes/ibor/corra.hpp
 indexes/ibor/czkpribor.hpp
@@ -288,12 +288,12 @@ indexes/ibor/dkkois.hpp
 indexes/ibor/ester.hpp
 indexes/ibor/hkdhibor.hpp
 indexes/ibor/hufbubor.hpp
-indexes/ibor/jpyeytibor.hpp
 indexes/ibor/idridrfix.hpp
 indexes/ibor/idrjibor.hpp
 indexes/ibor/ilstelbor.hpp
 indexes/ibor/inrmiborois.hpp
 indexes/ibor/inrmifor.hpp
+indexes/ibor/jpyeytibor.hpp
 indexes/ibor/krwcd.hpp
 indexes/ibor/krwkoribor.hpp
 indexes/ibor/mxntiie.hpp
@@ -342,7 +342,6 @@ instruments/makeaverageois.hpp
 instruments/makecds.hpp
 instruments/oibasisswap.hpp
 instruments/oiccbasisswap.hpp
-instruments/overnightindexfuture.hpp
 instruments/payment.hpp
 instruments/rebatedexercise.hpp
 instruments/subperiodsswap.hpp
@@ -492,7 +491,6 @@ termstructures/optionletstripper1.hpp
 termstructures/optionletstripper2.hpp
 termstructures/optionletstripperwithatm.hpp
 termstructures/optionpricesurface.hpp
-termstructures/overnightindexfutureratehelper.hpp
 termstructures/piecewiseatmoptionletcurve.hpp
 termstructures/piecewiseoptionletcurve.hpp
 termstructures/piecewiseoptionletstripper.hpp

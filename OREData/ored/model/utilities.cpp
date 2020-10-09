@@ -343,5 +343,31 @@ string getCalibrationDetails(
     return log.str();
 }
 
+namespace {
+
+struct MaturityGetter : boost::static_visitor<Date> {
+
+    MaturityGetter(const Calendar& calendar, const Date& referenceDate)
+        : calendar(calendar), referenceDate(referenceDate) {}
+
+    Date operator()(const Date& d) const { return d; }
+
+    Date operator()(const Period& p) const {
+        return calendar.advance(referenceDate, p);
+    }
+
+    Calendar calendar;
+    Date referenceDate;
+};
+
+}
+
+Date optionMaturity(const boost::variant<Date, Period>& maturity,
+    const QuantLib::Calendar& calendar,
+    const QuantLib::Date& referenceDate) {
+    
+    return boost::apply_visitor(MaturityGetter(calendar, referenceDate), maturity);
+}
+
 } // namespace data
 } // namespace ore

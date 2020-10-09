@@ -20,6 +20,7 @@
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
 #include <ored/model/calibrationinstruments/yoycapfloor.hpp>
 #include <ored/model/calibrationinstruments/yoyswap.hpp>
+#include <ored/model/utilities.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/log.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
@@ -298,7 +299,7 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
 
         auto cpiCapFloor = boost::dynamic_pointer_cast<CpiCapFloor>(ci[i]);
         QL_REQUIRE(cpiCapFloor, "InfJyBuilder: expected CpiCapFloor calibration instrument.");
-        auto maturity = calendar.advance(today, cpiCapFloor->tenor());
+        auto maturity = optionMaturity(cpiCapFloor->maturity(), calendar);
 
         // Deal with reference calibration date grid stuff.
         auto rcDate = lower_bound(rcDates.begin(), rcDates.end(), maturity);
@@ -375,7 +376,7 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb,
 
     // Create the engine which depends on the type of the YoY volatility and the shift.
     boost::shared_ptr<PricingEngine> engine;
-    Handle<YoYOptionletVolatilitySurface> hovs(yoyVolatility_->yoyVolSurface());
+    Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(yoyVolatility_->yoyVolSurface());
     auto ovsType = yoyVolatility_->volatilityType();
     if (ovsType == Normal)
         engine = boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyInflationIndex_, hovs, yts);
