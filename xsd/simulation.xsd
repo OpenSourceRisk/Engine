@@ -141,6 +141,16 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element name="CreditModels" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:choice maxOccurs="unbounded">
+              <xs:element type="lgm" name="LGM"/>
+              <xs:element type="cir" name="CIR"/>
+            </xs:choice>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="InstantaneousCorrelations">
         <xs:complexType>
           <xs:sequence>
@@ -312,6 +322,30 @@
       </xs:element>
     </xs:sequence>
     <xs:attribute type="xs:string" name="index" />
+  </xs:complexType>
+
+  <xs:complexType name="cir">
+    <xs:sequence>
+      <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="calibrationTypeType" name="CalibrationType"/>
+      <xs:element type="xs:string" name="CalibrationStrategy"/>
+      <xs:element type="xs:float" name="StartValue"/>
+      <xs:element type="xs:float" name="ReversionValue"/>
+      <xs:element type="xs:float" name="LongTermValue"/>
+      <xs:element type="xs:float" name="Volatility"/>
+      <xs:element type="bool" name="RelaxedFeller"/>
+      <xs:element type="xs:float" name="FellerFactor"/>
+      <xs:element type="xs:float" name="Tolerance"/>
+      <xs:element name="CalibrationCdsOptions">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="Expiries"/>
+            <xs:element type="xs:string" name="Terms"/>
+            <xs:element type="xs:string" name="Strikes"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:simpleType name="calibrationTypeType">
