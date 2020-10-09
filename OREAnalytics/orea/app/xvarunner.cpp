@@ -69,8 +69,10 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
     // ensure date is reset
     Settings::instance().evaluationDate() = asof_;
 
-    CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, "", "", "", "", "", ActualActual(), false,
-                                        continueOnErr);
+    CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, Market::defaultConfiguration,
+                                        Market::defaultConfiguration, Market::defaultConfiguration,
+                                        Market::defaultConfiguration, Market::defaultConfiguration, ActualActual(),
+                                        false, continueOnErr);
     boost::shared_ptr<QuantExt::CrossAssetModel> model = *modelBuilder.model();
 
     ScenarioGeneratorBuilder sgb(scenarioGeneratorData_);
