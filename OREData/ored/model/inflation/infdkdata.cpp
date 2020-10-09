@@ -114,7 +114,7 @@ void InfDkData::populateCalibrationBaskets(XMLNode* node) {
     // Create a vector of CPI cap floor calibration instruments.
     vector<boost::shared_ptr<CalibrationInstrument>> instruments;
     for (Size i = 0; i < maturities.size(); ++i) {
-        Period p = parsePeriod(maturities[i]);
+        auto p = parseDateOrPeriod(maturities[i]);
         boost::shared_ptr<BaseStrike> s = parseBaseStrike(strikes[i]);
         instruments.push_back(boost::make_shared<CpiCapFloor>(type, p, s));
     }

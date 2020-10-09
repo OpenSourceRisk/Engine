@@ -383,13 +383,8 @@ public:
 
 boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldTermStructure>& f,
                                             const Handle<YieldTermStructure>& d,
-                                            boost::shared_ptr<Convention> convention) {
-
-    boost::shared_ptr<data::IRSwapConvention> irSwapConvention;
-    if (convention) {
-        irSwapConvention = boost::dynamic_pointer_cast<IRSwapConvention>(convention);
-        QL_REQUIRE(irSwapConvention, "expected swap convention in parseSwapIndex() for '" << convention->id() << "'");
-    }
+                                            boost::shared_ptr<IRSwapConvention> irSwapConvention,
+                                            boost::shared_ptr<SwapIndexConvention> swapIndexConvention) {
 
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
@@ -405,20 +400,21 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
     string familyName = tokens.size() == 4 ? tokens[0] + "-CMS-" + tokens[2] : tokens[0] + "LiborSwapIsdaFix";
     Currency ccy = parseCurrency(tokens[0]);
 
-    boost::shared_ptr<IborIndex> index =
-        f.empty() || !convention ? boost::shared_ptr<IborIndex>() : irSwapConvention->index()->clone(f);
+    boost::shared_ptr<IborIndex> index;
+    if(irSwapConvention) {
+        index =  irSwapConvention->index()->clone(f);
+    }
     QuantLib::Natural settlementDays = index ? index->fixingDays() : 0;
-    QuantLib::Calendar calender = convention ? irSwapConvention->fixedCalendar() : NullCalendar();
-    Period fixedLegTenor = convention ? Period(irSwapConvention->fixedFrequency()) : Period(1, Months);
-    BusinessDayConvention fixedLegConvention = convention ? irSwapConvention->fixedConvention() : ModifiedFollowing;
-    DayCounter fixedLegDayCounter = convention ? irSwapConvention->fixedDayCounter() : ActualActual();
+    QuantLib::Calendar fixingCalendar = irSwapConvention ? irSwapConvention->fixedCalendar() : NullCalendar();
+    if(swapIndexConvention && !swapIndexConvention->fixingCalendar().empty()) {
+        fixingCalendar = parseCalendar(swapIndexConvention->fixingCalendar());
+    }
+    Period fixedLegTenor = irSwapConvention ? Period(irSwapConvention->fixedFrequency()) : Period(1, Months);
+    BusinessDayConvention fixedLegConvention = irSwapConvention ? irSwapConvention->fixedConvention() : ModifiedFollowing;
+    DayCounter fixedLegDayCounter = irSwapConvention ? irSwapConvention->fixedDayCounter() : ActualActual();
 
-    if (d.empty())
-        return boost::make_shared<SwapIndex>(familyName, p, settlementDays, ccy, calender, fixedLegTenor,
-                                             fixedLegConvention, fixedLegDayCounter, index);
-    else
-        return boost::make_shared<SwapIndex>(familyName, p, settlementDays, ccy, calender, fixedLegTenor,
-                                             fixedLegConvention, fixedLegDayCounter, index, d);
+    return boost::make_shared<SwapIndex>(familyName, p, settlementDays, ccy, fixingCalendar, fixedLegTenor,
+                                         fixedLegConvention, fixedLegDayCounter, index, d);
 }
 
 // Zero Inflation Index Parser
@@ -539,8 +535,9 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
             QL_REQUIRE(conventions.has(c->conventions(), Convention::Type::Swap),
                        "do not have swap conventions for '" << c->conventions()
                                                             << "', required from swap index convention '" << s << "'");
-            ret_idx = parseSwapIndex(s, Handle<YieldTermStructure>(), Handle<YieldTermStructure>(),
-                                     conventions.get(c->conventions()));
+            ret_idx =
+                parseSwapIndex(s, Handle<YieldTermStructure>(), Handle<YieldTermStructure>(),
+                               boost::dynamic_pointer_cast<IRSwapConvention>(conventions.get(c->conventions())), c);
         } else {
             // otherwise try to parse a swap index without conventions
             try {

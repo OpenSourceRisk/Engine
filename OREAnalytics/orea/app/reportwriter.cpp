@@ -124,6 +124,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         .addColumn("Currency", string())
         .addColumn("Coupon", double(), 10)
         .addColumn("Accrual", double(), 10)
+        .addColumn("AccrualStartDate", Date(), 4)
+        .addColumn("AccrualEndDate", Date(), 4)
+        .addColumn("AccruedAmount", double(), 4)
         .addColumn("fixingDate", Date())
         .addColumn("fixingValue", double(), 10)
         .addColumn("Notional", double(), 4);
@@ -132,6 +135,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         report.addColumn("DiscountFactor", double(), 10);
         report.addColumn("PresentValue", double(), 10);
     }
+
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
     for (Size k = 0; k < trades.size(); k++) {
@@ -163,15 +167,24 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                         Real coupon;
                         Real accrual;
                         Real notional;
+                        Date accrualStartDate, accrualEndDate;
+                        Real accruedAmount;
                         if (ptrCoupon) {
                             coupon = ptrCoupon->rate();
                             accrual = ptrCoupon->accrualPeriod();
                             notional = ptrCoupon->nominal();
+                            accrualStartDate = ptrCoupon->accrualStartDate();
+                            accrualEndDate = ptrCoupon->accrualEndDate();
+                            accruedAmount = ptrCoupon->accruedAmount(asof);
+                            if (payer)
+                                accruedAmount *= -1.0;
                             flowType = "Interest";
                         } else {
                             coupon = Null<Real>();
                             accrual = Null<Real>();
                             notional = Null<Real>();
+                            accrualStartDate = accrualEndDate = Null<Date>();
+                            accruedAmount = Null<Real>();
                             flowType = "Notional";
                         }
                         // This BMA part here (and below) is necessary because the fixingDay() method of
@@ -226,6 +239,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             .add(ccy)
                             .add(coupon)
                             .add(accrual)
+                            .add(accrualStartDate)
+                            .add(accrualEndDate)
+                            .add(accruedAmount * (accruedAmount == Null<Real>() ? 1.0 : multiplier))
                             .add(fixingDate)
                             .add(fixingValue)
                             .add(notional * (notional == Null<Real>() ? 1.0 : multiplier));
@@ -236,6 +252,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             Real presentValue = discountFactor * effectiveAmount;
                             report.add(presentValue);
                         }
+
                     }
                 }
             }
@@ -279,6 +296,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             .add(effectiveAmount)
                             .add(condCfCurrenciesVec[i])
                             .add(Null<Real>())
+                            .add(Null<Real>())
+                            .add(Null<Date>())
+                            .add(Null<Date>())
                             .add(Null<Real>())
                             .add(Null<Date>())
                             .add(Null<Real>())

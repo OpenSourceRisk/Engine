@@ -33,6 +33,7 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
+#include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/austria.hpp>
 #include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>
@@ -42,7 +43,6 @@
 #include <qle/calendars/ice.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/largejointcalendar.hpp>
-#include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/netherlands.hpp>
@@ -746,18 +746,38 @@ Option::Type parseOptionType(const std::string& s) {
     }
 }
 
-void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
+boost::variant<QuantLib::Date, QuantLib::Period> parseDateOrPeriod(const string& s) {
     QL_REQUIRE(!s.empty(), "Cannot parse empty string as date or period");
     string c(1, s.back());
     bool isPeriod = c.find_first_of("DdWwMmYy") != string::npos;
     if (isPeriod) {
-        p = ore::data::parsePeriod(s);
-        isDate = false;
+        return ore::data::parsePeriod(s);
     } else {
-        d = ore::data::parseDate(s);
-        QL_REQUIRE(d != Date(), "Cannot parse \"" << s << "\" as date");
-        isDate = true;
+        return ore::data::parseDate(s);
     }
+}
+
+namespace {
+struct legacy_date_or_period_visitor : public boost::static_visitor<> {
+    legacy_date_or_period_visitor(Date& res_d, Period& res_p, bool& res_is_date)
+        : res_d(res_d), res_p(res_p), res_is_date(res_is_date) {}
+    void operator()(const QuantLib::Date& d) const {
+        res_d = d;
+        res_is_date = true;
+    }
+    void operator()(const QuantLib::Period& p) const {
+        res_p = p;
+        res_is_date = false;
+    }
+    Date& res_d;
+    Period& res_p;
+    bool& res_is_date;
+};
+} // namespace
+
+void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
+    auto r = parseDateOrPeriod(s);
+    boost::apply_visitor(legacy_date_or_period_visitor(d, p, isDate), r);
 }
 
 QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s) {
@@ -1072,6 +1092,48 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         resultType = "unsupported_type";
     }
     return make_pair(resultType, oss.str());
+}
+
+QuantLib::OvernightIndexFuture::NettingType parseOvernightIndexFutureNettingType(const std::string& s) {
+    if (s == "Averaging") {
+        return QuantLib::OvernightIndexFuture::NettingType::Averaging;
+    } else if (s == "Compounding") {
+        return QuantLib::OvernightIndexFuture::NettingType::Compounding;
+    } else {
+        QL_FAIL("Overnight Index Future Netting Type '" << s << "' not known, expected 'Averaging' or 'Compounding'");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, QuantLib::OvernightIndexFuture::NettingType t) {
+    if (t == QuantLib::OvernightIndexFuture::NettingType::Averaging)
+        return os << "Averaging";
+    else if (t == QuantLib::OvernightIndexFuture::NettingType::Compounding)
+        return os << "Compounding";
+    else {
+        QL_FAIL("Internal error: unknown OvernightIndexFuture::NettingType - check implementation of operator<< "
+                "for this enum");
+    }
+}
+
+FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::string& s) {
+    if (s == "IMM")
+        return FutureConvention::DateGenerationRule::IMM;
+    else if (s == "FirstDayOfMonth")
+        return FutureConvention::DateGenerationRule::FirstDayOfMonth;
+    else {
+        QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM' or 'FirstDayOfMonth'");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule t) {
+    if (t == FutureConvention::DateGenerationRule::IMM)
+        return os << "IMM";
+    else if (t == FutureConvention::DateGenerationRule::FirstDayOfMonth)
+        return os << "FirstDayOfMonth";
+    else {
+        QL_FAIL("Internal error: unknown FutureConvention::DateGenerationRule - check implementation of operator<< "
+                "for this enum");
+    }
 }
 
 } // namespace data

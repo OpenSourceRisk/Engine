@@ -335,8 +335,12 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                     // for every point, or just a vol at every point
                     if (quoteRelevant) {
                         Date tmpDate = getDateFromDateOrPeriod(q->expiry(), asof, calendar_);
-                        QL_REQUIRE(tmpDate > asof,
+                        QL_REQUIRE(tmpDate >= asof,
                                    "Option quote for a past date (" << ore::data::to_string(tmpDate) << ")");
+                        if (tmpDate == asof) {
+                            DLOG("Option quote for as of date (" << ore::data::to_string(tmpDate) << ") ignored.");
+                            continue;
+                        }
                         if (q->isCall()) {
                             callStrikes.push_back(absoluteStrike->strike());
                             callData.push_back(q->quote()->value());
