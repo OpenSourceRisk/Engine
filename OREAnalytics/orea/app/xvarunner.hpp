@@ -76,12 +76,14 @@ public:
     void generatePostProcessor(const boost::shared_ptr<Market>& market, const boost::shared_ptr<NPVCube>& npvCube,
                                const boost::shared_ptr<NPVCube>& nettingCube);
 
-    // get a vector of netting set ids for the portfolio, sorted in alphabetical order
-    std::vector<std::string> getNettingSetIds() const { return nettingSetIds_; }
+    // get a vector of netting set ids for the given portfolio sorted in alphabetical order, if no portfolio
+    // is given here, the netting sets for the global portfolio set in the ctor are returned
+    std::vector<std::string> getNettingSetIds(const boost::shared_ptr<Portfolio>& portfolio = nullptr) const;
 
 protected:
     virtual boost::shared_ptr<NPVCube>
-    getNettingSetCube(std::vector<boost::shared_ptr<ValuationCalculator>>& calculators) {
+    getNettingSetCube(std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
+                      const boost::shared_ptr<Portfolio>& portfolio) {
         return nullptr;
     };
 
@@ -117,7 +119,6 @@ protected:
     bool storeFlows_;
 
     // generated data
-    std::vector<std::string> nettingSetIds_;
     boost::shared_ptr<QuantExt::CrossAssetModel> model_;
     boost::shared_ptr<ScenarioSimMarket> simMarket_;
     boost::shared_ptr<EngineFactory> simFactory_;

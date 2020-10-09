@@ -61,12 +61,6 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
         analytics_["kva"] = false;
         analytics_["cvaSensi"] = true;
     }
-
-    // collect netting set ids from portfolio
-    std::set<std::string> nettingSetIds;
-    for (auto const& t : portfolio_->trades())
-        nettingSetIds.insert(t->envelope().nettingSetId());
-    nettingSetIds_ = std::vector<std::string>(nettingSetIds.begin(), nettingSetIds.end());
 }
 
 void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const bool continueOnErr) {
@@ -124,7 +118,7 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
     boost::shared_ptr<NPVCalculator> npvCalculator = boost::make_shared<NPVCalculator>(baseCurrency_);
     if (scenarioGeneratorData_->withCloseOutLag()) {
         // depth 2: NPV and close-out NPV
-        cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, portfolio_->ids(),
+        cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, portfolio->ids(),
                                                                  scenarioGeneratorData_->grid()->valuationDates(),
                                                                  scenarioGeneratorData_->samples(),
                                                                  2); // depth 2: default date and close-out date NPV
@@ -138,14 +132,14 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
     } else {
         if (storeFlows_) {
             // regular, depth 2: NPV and cash flow
-            cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, portfolio_->ids(),
+            cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, portfolio->ids(),
                                                                      scenarioGeneratorData_->grid()->dates(),
                                                                      scenarioGeneratorData_->samples(), 2, 0.0f);
             calculators.push_back(
                 boost::make_shared<CashflowCalculator>(baseCurrency_, asof_, scenarioGeneratorData_->grid(), 1));
         } else
             // regular, depth 1
-            cube_ = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, portfolio_->ids(),
+            cube_ = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, portfolio->ids(),
                                                                     scenarioGeneratorData_->grid()->dates(),
                                                                     scenarioGeneratorData_->samples(), 0.0f);
 
@@ -156,7 +150,7 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
 
     DLOG("get netting cube");
 
-    nettingCube_ = getNettingSetCube(calculators);
+    nettingCube_ = getNettingSetCube(calculators, portfolio);
 
     DLOG("build scenario data");
 
@@ -207,6 +201,14 @@ boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(
         dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
 
     return dimCalculator;
+}
+
+std::vector<std::string> XvaRunner::getNettingSetIds(const boost::shared_ptr<Portfolio>& portfolio) const {
+    // collect netting set ids from portfolio
+    std::set<std::string> nettingSetIds;
+    for (auto const& t : portfolio == nullptr ? portfolio_->trades() : portfolio->trades())
+        nettingSetIds.insert(t->envelope().nettingSetId());
+    return std::vector<std::string>(nettingSetIds.begin(), nettingSetIds.end());
 }
 
 } // namespace analytics
