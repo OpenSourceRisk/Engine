@@ -145,7 +145,7 @@
         <xs:complexType>
           <xs:sequence>
             <xs:choice maxOccurs="unbounded">
-              <xs:element type="lgm" name="LGM"/>
+              <xs:element type="crlgm" name="LGM"/>
               <xs:element type="cir" name="CIR"/>
             </xs:choice>
           </xs:sequence>
@@ -346,6 +346,52 @@
         </xs:complexType>
       </xs:element>
     </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="crlgm">
+    <xs:all>
+      <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="calibrationTypeType" name="CalibrationType"/>
+      <xs:element name="Volatility">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="bool" name="Calibrate"/>
+            <xs:element type="volatilityTypeType" name="VolatilityType"/>
+            <xs:element type="paramTypeType" name="ParamType"/>
+            <xs:element type="xs:string" name="TimeGrid"/>
+            <xs:element type="xs:string" name="InitialValue"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Reversion">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="bool" name="Calibrate"/>
+            <xs:element type="reversionTypeType" name="ReversionType"/>
+            <xs:element type="paramTypeType" name="ParamType"/>
+            <xs:element type="xs:string" name="TimeGrid"/>
+            <xs:element type="xs:string" name="InitialValue"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="CalibrationCdsSwaptions" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="Expiries"/>
+            <xs:element type="xs:string" name="Terms"/>
+            <xs:element type="xs:string" name="Strikes"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="ParameterTransformation">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:float" name="ShiftHorizon"/>
+            <xs:element type="xs:float" name="Scaling"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
   </xs:complexType>
 
   <xs:simpleType name="calibrationTypeType">
