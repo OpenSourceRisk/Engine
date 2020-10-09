@@ -99,8 +99,10 @@ void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const
 }
 
 void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds, const bool continueOnErr) {
+
     LOG("XvaRunner::buildCube called");
-    boost::shared_ptr<Portfolio> portfolio;
+
+    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     if (tradeIds) {
         for (auto const& t : *tradeIds) {
             QL_REQUIRE(portfolio_->has(t), "XvaRunner::buildCube(): portfolio does not contain trade with id '"
@@ -110,8 +112,14 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
     } else {
         portfolio = portfolio_;
     }
+
+    DLOG("build portfolio");
+
     portfolio->reset();
     portfolio->build(simFactory_);
+
+    DLOG("build calculators");
+
     std::vector<boost::shared_ptr<ValuationCalculator>> calculators;
     boost::shared_ptr<NPVCalculator> npvCalculator = boost::make_shared<NPVCalculator>(baseCurrency_);
     if (scenarioGeneratorData_->withCloseOutLag()) {
@@ -146,16 +154,21 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
         calculationType_ = inputCalculationType_;
     }
 
+    DLOG("get netting cube");
+
     nettingCube_ = getNettingSetCube(calculators);
+
+    DLOG("build scenario data");
 
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(
         scenarioGeneratorData_->grid()->valuationDates().size(), scenarioGeneratorData_->samples());
 
     simMarket_->aggregationScenarioData() = scenarioData_; // ??? simMarket gets agg data?
 
-    LOG("Build Cube");
+    DLOG("run valuation engine");
+
     ValuationEngine engine(asof_, scenarioGeneratorData_->grid(), simMarket_);
-    engine.buildCube(portfolio_, cube_, calculators, scenarioGeneratorData_->withMporStickyDate(), nettingCube_);
+    engine.buildCube(portfolio, cube_, calculators, scenarioGeneratorData_->withMporStickyDate(), nettingCube_);
 }
 
 void XvaRunner::generatePostProcessor(const boost::shared_ptr<Market>& market,
