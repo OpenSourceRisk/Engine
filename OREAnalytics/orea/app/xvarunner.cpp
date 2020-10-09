@@ -61,6 +61,12 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
         analytics_["kva"] = false;
         analytics_["cvaSensi"] = true;
     }
+
+    // collect netting set ids from portfolio
+    std::set<std::string> nettingSetIds;
+    for (auto const& t : portfolio_->trades())
+        nettingSetIds.insert(t->envelope().nettingSetId());
+    nettingSetIds_ = std::vector<std::string>(nettingSetIds.begin(), nettingSetIds.end());
 }
 
 void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const bool continueOnErr) {

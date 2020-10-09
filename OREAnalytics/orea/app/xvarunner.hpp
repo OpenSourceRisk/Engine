@@ -81,6 +81,9 @@ protected:
     getNettingSetCube(std::vector<boost::shared_ptr<ValuationCalculator>>& calculators) {
         return nullptr;
     };
+
+    virtual std::vector<std::string> getNettingSetIds() const { return nettingSetIds_; }
+
     virtual boost::shared_ptr<DynamicInitialMarginCalculator>
     getDimCalculator(const boost::shared_ptr<NPVCube>& cube,
                      const boost::shared_ptr<CubeInterpretation>& cubeInterpreter,
