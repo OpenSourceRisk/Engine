@@ -146,7 +146,7 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
         calculationType_ = inputCalculationType_;
     }
 
-    boost::shared_ptr<NPVCube> nettingCube = getNettingSetCube(calculators);
+    nettingCube_ = getNettingSetCube(calculators);
 
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(
         scenarioGeneratorData_->grid()->valuationDates().size(), scenarioGeneratorData_->samples());
