@@ -366,7 +366,6 @@ void ValueAdjustmentCalculator::build() {
         nettingSetFba_exAllSp_[nid] = 0.0;
         nettingSetMva_[nid] = 0.0;
         for (Size j = 0; j < numDates; ++j) {
-
             // CVA / DVA
             Date d0 = j == 0 ? today : dates()[j - 1];
             Date d1 = dates()[j];

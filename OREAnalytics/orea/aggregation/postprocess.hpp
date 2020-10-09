@@ -163,7 +163,7 @@ public:
     //! Return list of netting set IDs in the portfolio
     const vector<string>& nettingSetIds() { return netCube()->ids(); }
     //! Return the map of counterparty Ids
-    const map<string, string>& counterpartyId() { return counterpartyId_; }
+    const map<string, string>& counterpartyId() { return nettedExposureCalculator_->counterpartyMap(); }
 
     //! Return trade level Expected Positive Exposure evolution
     const vector<Real>& tradeEPE(const string& tradeId);
@@ -210,9 +210,9 @@ public:
     const vector<Real>& allocatedTradeENE(const string& tradeId);
   
     //! Return Netting Set CVA Hazard Rate Sensitvity vector
-    const vector<Real>& netCvaHazardRateSensitivity(const string& nettingSetId);
+    vector<Real> netCvaHazardRateSensitivity(const string& nettingSetId);
     //! Return Netting Set CVA Spread Sensitvity vector
-    const vector<Real>& netCvaSpreadSensitivity(const string& nettingSetId);
+    vector<Real> netCvaSpreadSensitivity(const string& nettingSetId);
     //! Return Netting Set CVA Spread Sensitvity vector
     const std::map<std::string, std::vector<QuantLib::Real>>& netCvaSpreadSensitivity() const { return netCvaSpreadSensi_; }
 
@@ -315,7 +315,6 @@ protected:
 
     // vector<string> tradeIds_;
     // vector<string> nettingSetIds_;
-    map<string, string> counterpartyId_; // for each nettingSetId
     string baseCurrency_;
     Real quantile_;
     CollateralExposureHelper::CalculationType calcType_;

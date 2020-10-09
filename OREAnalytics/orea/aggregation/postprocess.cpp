@@ -305,6 +305,7 @@ PostProcess::PostProcess(
 }
 
 void PostProcess::updateNettingSetKVA() {
+
     // Loop over all netting sets
     for (auto nettingSetId : nettingSetIds()) {
         // Init results
@@ -317,6 +318,8 @@ void PostProcess::updateNettingSetKVA() {
     if (!analytics_["kva"])
         return;
 
+    LOG("Update netting set KVA");
+    
     vector<Date> dateVector = cube_->dates();
     Size dates = dateVector.size();
     Date today = market_->asofDate();
@@ -325,7 +328,7 @@ void PostProcess::updateNettingSetKVA() {
 
     // Loop over all netting sets
     for (auto nettingSetId : nettingSetIds()) {
-        string cid = counterpartyId_[nettingSetId];
+        string cid = nettedExposureCalculator_->counterparty(nettingSetId);
         LOG("KVA for netting set " << nettingSetId);
 
         // Main input are the EPE and ENE profiles, previously computed
@@ -498,16 +501,23 @@ void PostProcess::updateNettingSetKVA() {
             theirNettingSetKVACVA_[nettingSetId] += kvaCVAIncrement2;
         }
     }
+
+    LOG("Update netting set KVA done");
 }
 
 void PostProcess::updateNettingSetCvaSensitivity() {
+
+    if (!analytics_["cvaSensi"])
+        return;
+
+    LOG("Update netting set CVA sensitvities");
 
     Handle<YieldTermStructure> discountCurve = market_->discountCurve(baseCurrency_, configuration_);
 
     for (auto n : netEPE_) {
         string nettingSetId = n.first;
         vector<Real> epe = netEPE_[nettingSetId];	
-        string cid = counterpartyId_[nettingSetId];
+        string cid = nettedExposureCalculator_->counterparty(nettingSetId);
         Handle<DefaultProbabilityTermStructure> cvaDts = market_->defaultCurve(cid);
         QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
         Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
@@ -534,6 +544,8 @@ void PostProcess::updateNettingSetCvaSensitivity() {
 	    netCvaSpreadSensi_[nettingSetId] = vector<Real>();
 	}
     }
+
+    LOG("Update netting set CVA sensitivities done");
 }
   
 const vector<Real>& PostProcess::tradeEPE(const string& tradeId) {
@@ -578,16 +590,18 @@ const vector<Real>& PostProcess::netENE(const string& nettingSetId) {
     return netENE_[nettingSetId];
 }
 
-const vector<Real>& PostProcess::netCvaHazardRateSensitivity(const string& nettingSetId) {
-    QL_REQUIRE(netCvaHazardRateSensi_.find(nettingSetId) != netCvaHazardRateSensi_.end(),
-               "Netting set " << nettingSetId << " not found in netCvaHazardRateSensi map");
-    return netCvaHazardRateSensi_[nettingSetId];
+vector<Real> PostProcess::netCvaHazardRateSensitivity(const string& nettingSetId) {
+    if (netCvaHazardRateSensi_.find(nettingSetId) != netCvaHazardRateSensi_.end())
+        return netCvaHazardRateSensi_[nettingSetId];
+    else
+        return vector<Real>();
 }
 
-const vector<Real>& PostProcess::netCvaSpreadSensitivity(const string& nettingSetId) {
-    QL_REQUIRE(netCvaSpreadSensi_.find(nettingSetId) != netCvaSpreadSensi_.end(),
-               "Netting set " << nettingSetId << " not found in netCvaSpreadSensi map");
-    return netCvaSpreadSensi_[nettingSetId];
+vector<Real> PostProcess::netCvaSpreadSensitivity(const string& nettingSetId) {
+    if (netCvaSpreadSensi_.find(nettingSetId) != netCvaSpreadSensi_.end())
+        return netCvaSpreadSensi_[nettingSetId];
+    else
+        return vector<Real>();
 }
 
 const vector<Real>& PostProcess::netEE_B(const string& nettingSetId) {

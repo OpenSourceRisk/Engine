@@ -92,6 +92,12 @@ void NettedExposureCalculator::build() {
         const auto& trade = portfolio_->trades()[i];
         string tradeId = trade->id();
         string nettingSetId = trade->envelope().nettingSetId();
+	string cp = trade->envelope().counterparty();
+	if (counterpartyMap_.find(nettingSetId) == counterpartyMap_.end())
+	    counterpartyMap_[nettingSetId] = trade->envelope().counterparty();
+	else {
+	    QL_REQUIRE(counterpartyMap_[nettingSetId] == cp, "counterparty name is not unique withint the netting set");
+	}
         Real npv = cube_->getT0(i);
 
         if (nettingSetValueToday.find(nettingSetId) == nettingSetValueToday.end()) {
@@ -402,6 +408,12 @@ vector<Real> NettedExposureCalculator::getMeanExposure(const string& tid, Exposu
         exp[i + 1] /= exposureCube_->samples();
     }
     return exp;
+}
+
+const string& NettedExposureCalculator::counterparty(const string nettingSetId) {
+    QL_REQUIRE(counterpartyMap_.find(nettingSetId) != counterpartyMap_.end(),
+	       "counterparty not found for netting set id " << nettingSetId);
+    return counterpartyMap_[nettingSetId];
 }
 
 } // namespace analytics

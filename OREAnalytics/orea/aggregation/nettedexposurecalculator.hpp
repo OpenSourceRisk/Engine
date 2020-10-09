@@ -88,6 +88,9 @@ public:
     Real& colva(const string& nid) { return colva_[nid]; }
     Real& collateralFloor(const string& nid) { return collateralFloor_[nid]; }
 
+    const string& counterparty(const string nettingSetId);
+    const map<string, string>& counterpartyMap() { return counterpartyMap_; }
+
 protected:
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<Market> market_;
@@ -114,7 +117,7 @@ protected:
     // Output
     boost::shared_ptr<NPVCube> nettedCube_;
     boost::shared_ptr<NPVCube> exposureCube_;
-
+    map<string, string> counterpartyMap_; // map netting set id to counterparty name
     map<string, std::vector<Real>> ee_b_;
     map<string, std::vector<Real>> eee_b_;
     map<string, std::vector<Real>> pfe_;
