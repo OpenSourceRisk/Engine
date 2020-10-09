@@ -76,13 +76,14 @@ public:
     void generatePostProcessor(const boost::shared_ptr<Market>& market, const boost::shared_ptr<NPVCube>& npvCube,
                                const boost::shared_ptr<NPVCube>& nettingCube);
 
+    // get a vector of netting set ids for the portfolio, sorted in alphabetical order
+    std::vector<std::string> getNettingSetIds() const { return nettingSetIds_; }
+
 protected:
     virtual boost::shared_ptr<NPVCube>
     getNettingSetCube(std::vector<boost::shared_ptr<ValuationCalculator>>& calculators) {
         return nullptr;
     };
-
-    virtual std::vector<std::string> getNettingSetIds() const { return nettingSetIds_; }
 
     virtual boost::shared_ptr<DynamicInitialMarginCalculator>
     getDimCalculator(const boost::shared_ptr<NPVCube>& cube,
