@@ -174,9 +174,7 @@ void XvaRunner::generatePostProcessor(const boost::shared_ptr<Market>& market,
 void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnErr) {
     LOG("XvaRunner::runXva called");
     prepareSimulation(market, continueOnErr);
-    auto ids = portfolio_->ids();
-    std::set<std::string> tradeIds(ids.begin(), ids.end());
-    buildCube(tradeIds, continueOnErr);
+    buildCube(boost::none, continueOnErr);
     generatePostProcessor(market, npvCube(), nettingCube());
 }
 

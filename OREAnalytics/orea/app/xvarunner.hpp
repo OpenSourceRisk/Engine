@@ -63,7 +63,7 @@ public:
     void prepareSimulation(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true);
 
     // partial step 2: build trade and netting set cubes, optionally filtered on a subset of given trade ids
-    //                 if the filter is given, the order of the trades will follow the given filter set
+    //                 if the filter is given, the order of the trades will follow the one in the given filter set
     void buildCube(const boost::optional<std::set<std::string>>& tradeIds, bool continueOnErr = true);
 
     // get generated trade cube from last buildCube() or runXva() run
@@ -117,6 +117,7 @@ protected:
     bool storeFlows_;
 
     // generated data
+    std::vector<std::string> nettingSetIds_;
     boost::shared_ptr<QuantExt::CrossAssetModel> model_;
     boost::shared_ptr<ScenarioSimMarket> simMarket_;
     boost::shared_ptr<EngineFactory> simFactory_;
