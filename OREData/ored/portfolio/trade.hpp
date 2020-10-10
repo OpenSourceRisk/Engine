@@ -90,17 +90,7 @@ public:
     //@}
 
     //! Reset trade, clear all base class data
-    void reset() {
-        instrument_ = nullptr;
-        legs_.clear();
-        legCurrencies_.clear();
-        legPayers_.clear();
-        npvCurrency_ = "";
-        notional_ = Null<Real>();
-        notionalCurrency_ = "";
-        maturity_ = Date();
-        requiredFixings_.clear();
-    }
+    void reset();
 
     //! \name Setters
     //@{

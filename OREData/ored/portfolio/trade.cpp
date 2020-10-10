@@ -99,5 +99,17 @@ void Trade::validate() const {
     }
 }
 
+void Trade::reset() {
+    instrument_ = boost::shared_ptr<InstrumentWrapper>();
+    legs_.clear();
+    legCurrencies_.clear();
+    legPayers_.clear();
+    npvCurrency_ = "";
+    notional_ = Null<Real>();
+    notionalCurrency_ = "";
+    maturity_ = Date();
+    requiredFixings_.clear();
+}
+
 } // namespace data
 } // namespace ore
