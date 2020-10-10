@@ -111,9 +111,9 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
     }
 
     DLOG("build portfolio");
-
-    portfolio->reset();
-    portfolio->build(simFactory_);
+    // FIXME why?? portfolio_->reset() is not sufficient to ensure XVA simulation run fast (and this is called before)
+    portfolio_->build(simFactory_);
+    // portfolio->build(simFactory_);
 
     DLOG("build calculators");
 
