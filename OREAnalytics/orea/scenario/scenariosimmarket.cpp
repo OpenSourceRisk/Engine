@@ -2016,6 +2016,9 @@ void ScenarioSimMarket::reset() {
     Settings::instance().evaluationDate() = baseScenario_->asof();
     // reset numeraire
     numeraire_ = baseScenario_->getNumeraire();
+    // delete the sim data cache
+    cachedSimData_.clear();
+    cachedSimDataActive_.clear();
     // reset term structures
     applyScenario(baseScenario_);
     // see the comment in update() for why this is necessary...
@@ -2027,9 +2030,6 @@ void ScenarioSimMarket::reset() {
     fixingManager_->reset();
     // restore the filter
     filter_ = filterBackup;
-    // delete the sim data cache
-    cachedSimData_.clear();
-    cachedSimDataActive_.clear();
 }
 
 void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenario) {
