@@ -175,9 +175,8 @@ PostProcess::PostProcess(
         boost::make_shared<NettedExposureCalculator>(
             portfolio_, market_, cube_, baseCurrency, configuration_, quantile_,
             calcType_, analytics_["dynamicCredit"], nettingSetManager_,
-            calcType_ == CollateralExposureHelper::CalculationType::NoLag ?
-                         exposureCalculator_->nettingSetCloseOutValue() :
-                         exposureCalculator_->nettingSetDefaultValue(),
+	    exposureCalculator_->nettingSetDefaultValue(),
+	    exposureCalculator_->nettingSetCloseOutValue(),
             scenarioData_, cubeInterpretation_, analytics_["dim"],
             dimCalculator_, fullInitialCollateralisation_,
             allocationMethod == ExposureAllocator::AllocationMethod::Marginal, marginalAllocationLimit,

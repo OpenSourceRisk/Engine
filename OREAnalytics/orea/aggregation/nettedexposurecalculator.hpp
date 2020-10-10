@@ -50,7 +50,8 @@ public:
         const string& baseCurrency, const string& configuration, const Real quantile,
         const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
         const boost::shared_ptr<NettingSetManager>& nettingSetManager,
-        const map<string, vector<vector<Real>>>& nettingSetValue,
+        const map<string, vector<vector<Real>>>& nettingSetDefaultValue,
+        const map<string, vector<vector<Real>>>& nettingSetCloseOutValue,
         const boost::shared_ptr<AggregationScenarioData>& scenarioData,
         const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
         const bool applyInitialMargin,
@@ -101,7 +102,8 @@ protected:
     CollateralExposureHelper::CalculationType calcType_;
     bool multiPath_;
     const boost::shared_ptr<NettingSetManager> nettingSetManager_;
-    map<string, vector<vector<Real>>> nettingSetValue_;
+    map<string, vector<vector<Real>>> nettingSetDefaultValue_;
+    map<string, vector<vector<Real>>> nettingSetCloseOutValue_;
     const boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
     const bool applyInitialMargin_;

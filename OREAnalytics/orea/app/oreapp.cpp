@@ -189,20 +189,26 @@ int OREApp::run() {
 
         if (simulate_ && xva_ && useXvaRunner) {
 
-            if (cptyCube_) {
-                QL_REQUIRE(cptyCube_->numIds() == portfolio_->counterparties().size() + 1,
-                          "cptyCube x dimension (" << cptyCube_->numIds() << ") does not match portfolio size ("
-                                                   << portfolio_->counterparties().size() << " minus 1)");
-            }
+	    LOG("Use XvaRunner");
 
-            // Use pre-generared scenarios
-            if (!scenarioData_)
-                loadScenarioData();
+	    // if (cptyCube_) {
+	    //     LOG("with cptyCube");
+	    // 	QL_REQUIRE(cptyCube_->numIds() == portfolio_->counterparties().size() + 1,
+            //               "cptyCube x dimension (" << cptyCube_->numIds() << ") does not match portfolio size ("
+            //                                        << portfolio_->counterparties().size() << " minus 1)");
+            // }
+	    // else {
+	    //    LOG("without cptyCube");
+	    // }
 
-            QL_REQUIRE(scenarioData_->dimDates() == cube_->dates().size(),
-                       "scenario dates do not match cube grid size");
-            QL_REQUIRE(scenarioData_->dimSamples() == cube_->samples(),
-                       "scenario sample size does not match cube sample size");
+            // // Use pre-generared scenarios
+            // if (!scenarioData_)
+            //     loadScenarioData();
+
+            // QL_REQUIRE(scenarioData_->dimDates() == cube_->dates().size(),
+            //            "scenario dates do not match cube grid size");
+            // QL_REQUIRE(scenarioData_->dimSamples() == cube_->samples(),
+            //            "scenario sample size does not match cube sample size");
 
 	    out_ << setw(tab_) << left << "XVA simulation... " << flush;
 	    boost::shared_ptr<XvaRunner> xva = getXvaRunner();
@@ -1185,7 +1191,7 @@ void OREApp::writeXVAReports() {
         CSVFileReport nettingSetColvaReport(nettingSetColvaFile);
         getReportWriter()->writeNettingSetColva(nettingSetColvaReport, postProcess_, n);
 
-        ostringstream o3;
+	ostringstream o3;
         o3 << outputPath_ << "/cva_sensitivity_nettingset_" << n << ".csv";
         string nettingSetCvaSensiFile = o3.str();
         CSVFileReport nettingSetCvaSensitivityReport(nettingSetCvaSensiFile);

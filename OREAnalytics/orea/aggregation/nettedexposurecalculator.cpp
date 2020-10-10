@@ -33,7 +33,8 @@ NettedExposureCalculator::NettedExposureCalculator(
     const string& baseCurrency, const string& configuration, const Real quantile,
     const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
     const boost::shared_ptr<NettingSetManager>& nettingSetManager,
-    const map<string, vector<vector<Real>>>& nettingSetValue,
+    const map<string, vector<vector<Real>>>& nettingSetDefaultValue,
+    const map<string, vector<vector<Real>>>& nettingSetCloseOutValue,
     const boost::shared_ptr<AggregationScenarioData>& scenarioData,
     const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
     const bool applyInitialMargin,
@@ -48,7 +49,8 @@ NettedExposureCalculator::NettedExposureCalculator(
       baseCurrency_(baseCurrency), configuration_(configuration),
       quantile_(quantile), calcType_(calcType),
       multiPath_(multiPath), nettingSetManager_(nettingSetManager),
-      nettingSetValue_(nettingSetValue),
+      nettingSetDefaultValue_(nettingSetDefaultValue),
+      nettingSetCloseOutValue_(nettingSetCloseOutValue),
       scenarioData_(scenarioData), cubeInterpretation_(cubeInterpretation),
       applyInitialMargin_(applyInitialMargin), dimCalculator_(dimCalculator),
       fullInitialCollateralisation_(fullInitialCollateralisation),
@@ -58,7 +60,7 @@ NettedExposureCalculator::NettedExposureCalculator(
       allocatedEpeIndex_(allocatedEpeIndex), allocatedEneIndex_(allocatedEneIndex) {
 
     vector<string> nettingSetIds;
-    for(auto nettingSet : nettingSetValue)
+    for(auto nettingSet : nettingSetDefaultValue)
         nettingSetIds.push_back(nettingSet.first);
 
     nettedCube_= boost::make_shared<SinglePrecisionInMemoryCube>(
@@ -116,8 +118,11 @@ void NettedExposureCalculator::build() {
     vector<vector<Real>> averagePositiveAllocation(portfolio_->size(), vector<Real>(cube_->dates().size(), 0.0));
     vector<vector<Real>> averageNegativeAllocation(portfolio_->size(), vector<Real>(cube_->dates().size(), 0.0));
 
+    map<string, vector<vector<Real>>> nettingSetValue = (calcType_ == CollateralExposureHelper::CalculationType::NoLag
+							 ? nettingSetCloseOutValue_
+							 : nettingSetDefaultValue_);
     Size nettingSetCount = 0;
-    for (auto n : nettingSetValue_) {
+    for (auto n : nettingSetValue) {
         string nettingSetId = n.first;
 
         LOG("Aggregate exposure for netting set " << nettingSetId);
@@ -128,7 +133,7 @@ void NettedExposureCalculator::build() {
         boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>> collateral =
             collateralPaths(nettingSetId,
                             nettingSetValueToday[nettingSetId],
-                            nettingSetValue_[nettingSetId],
+                            nettingSetDefaultValue_[nettingSetId],
                             nettingSetMaturity[nettingSetId]);
 
 	// Get the CSA index for Eonia Floor calculation below
@@ -199,13 +204,12 @@ void NettedExposureCalculator::build() {
                     balance = collateral->at(k)->accountBalance(date);
                 eab[j + 1] += balance / cube_->samples();
                 Real exposure = data[j][k] - balance;
-                Real dim = 0.0;
+		Real dim = 0.0;
                 if (applyInitialMargin && collateral) { // don't apply initial margin without VM, i.e. inactive CSA
                     // Initial Margin
                     // Use IM to reduce exposure
                     // Size dimIndex = j == 0 ? 0 : j - 1;
                     Size dimIndex = j;
-                    // dim = nettingSetDIM_[nettingSetId][dimIndex][k];
                     dim = dimCalculator_->dynamicIM(nettingSetId)[dimIndex][k];
                     QL_REQUIRE(dim >= 0, "negative DIM for set " << nettingSetId << ", date " << j << ", sample " << k
                                                                  << ": " << dim);
@@ -402,10 +406,15 @@ vector<Real> NettedExposureCalculator::getMeanExposure(const string& tid, Exposu
     vector<Real> exp(cube_->dates().size() + 1, 0.0);
     exp[0] = exposureCube_->getT0(tid, index);
     for (Size i = 0; i < cube_->dates().size(); i++) {
-        for (Size k = 0; k < exposureCube_->samples(); k++) {
-            exp[i + 1] += exposureCube_->get(tid, cube_->dates()[i], k, index);
-        }
-        exp[i + 1] /= exposureCube_->samples();
+        if (multiPath_) {
+	    for (Size k = 0; k < exposureCube_->samples(); k++) {
+	        exp[i + 1] += exposureCube_->get(tid, cube_->dates()[i], k, index);
+	    }
+	    exp[i + 1] /= exposureCube_->samples();
+	}
+	else {
+	    exp[i + 1] = exposureCube_->get(tid, cube_->dates()[i], 0, index);
+	}
     }
     return exp;
 }
