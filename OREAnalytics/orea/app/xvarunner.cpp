@@ -63,7 +63,8 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
     }
 }
 
-void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const bool continueOnErr) {
+void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const bool continueOnErr,
+                                  const boost::optional<std::set<std::string>>& currencies) {
     LOG("XvaRunner::buildCamModel called");
     // ensure date is reset
     Settings::instance().evaluationDate() = asof_;
@@ -76,10 +77,12 @@ void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const
 
     ScenarioGeneratorBuilder sgb(scenarioGeneratorData_);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
-    boost::shared_ptr<ScenarioGenerator> sg = sgb.build(model_, sf, simMarketData_, asof_, market, "");
+    boost::shared_ptr<ScenarioGenerator> sg =
+        sgb.build(model_, sf, simMarketData_, asof_, market, Market::defaultConfiguration, currencies);
 
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(market, simMarketData_, *conventions_, "", *curveConfigs_,
-                                                       *todaysMarketParams_, true);
+    simMarket_ =
+        boost::make_shared<ScenarioSimMarket>(market, simMarketData_, *conventions_, Market::defaultConfiguration,
+                                              *curveConfigs_, *todaysMarketParams_, true);
     simMarket_->scenarioGenerator() = sg;
 
     for (auto b : extraEngineBuilders_)

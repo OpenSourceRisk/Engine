@@ -29,6 +29,8 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
 
+#include <boost/optional.hpp>
+
 namespace ore {
 namespace analytics {
 
@@ -60,7 +62,8 @@ public:
     const boost::shared_ptr<PostProcess>& postProcess() { return postProcess_; }
 
     // partial step 1: prepare simulation (build cam model and sim market / factory
-    void prepareSimulation(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true);
+    void prepareSimulation(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true,
+                           const boost::optional<std::set<std::string>>& currencies = boost::none);
 
     // partial step 2: build trade and netting set cubes, optionally filtered on a subset of given trade ids
     //                 if the filter is given, the order of the trades will follow the one in the given filter set
