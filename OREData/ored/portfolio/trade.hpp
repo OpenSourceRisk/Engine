@@ -91,8 +91,7 @@ public:
 
     //! Reset trade, clear all base class data
     void reset() {
-        // This is now being done in the build() function.
-        // instrument_ = boost::shared_ptr<QuantLib::Instrument>(); //TODO Wrapper
+        instrument_ = nullptr;
         legs_.clear();
         legCurrencies_.clear();
         legPayers_.clear();
