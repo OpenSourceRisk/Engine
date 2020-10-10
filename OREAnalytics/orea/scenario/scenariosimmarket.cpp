@@ -2103,7 +2103,7 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
             if (!scenario->has(it.first))
                 ALOG("Key " << it.first << " missing in scenario");
         }
-        QL_FAIL("mismatch between scenario and sim data size, exit.");
+        // QL_FAIL("mismatch between scenario and sim data size, exit.");
     }
 
     // update market asof date
