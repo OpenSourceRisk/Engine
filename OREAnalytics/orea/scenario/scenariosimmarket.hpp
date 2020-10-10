@@ -192,6 +192,9 @@ protected:
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simData_;
     boost::shared_ptr<Scenario> baseScenario_;
 
+    std::vector<boost::shared_ptr<SimpleQuote>> cachedSimData_;
+    std::vector<bool> cachedSimDataActive_;
+
     std::set<RiskFactorKey::KeyType> nonSimulatedFactors_;
 
     // if generate spread scenario values for keys, we store the absolute values in this map

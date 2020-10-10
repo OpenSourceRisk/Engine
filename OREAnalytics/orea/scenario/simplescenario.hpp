@@ -70,6 +70,9 @@ public:
 
     boost::shared_ptr<Scenario> clone() const override;
 
+    //! get data map
+    const std::map<RiskFactorKey, Real> data() const { return data_; }
+
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int) {

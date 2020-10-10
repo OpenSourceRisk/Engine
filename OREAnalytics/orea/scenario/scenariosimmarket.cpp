@@ -2027,9 +2027,56 @@ void ScenarioSimMarket::reset() {
     fixingManager_->reset();
     // restore the filter
     filter_ = filterBackup;
+    // delete the sim data cache
+    cachedSimData_.clear();
+    cachedSimDataActive_.clear();
 }
 
-  void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenario) {
+void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenario) {
+
+    // apply scenario based on cached indices for simData_ for a SimpleScenario
+    // this assumes that all scenarios have an identical key structure in their data map
+
+    if (auto s = boost::dynamic_pointer_cast<SimpleScenario>(scenario)) {
+
+        // fill cache
+
+        if (cachedSimData_.empty()) {
+            Size count = 0;
+            for (auto const& d : s->data()) {
+                auto it = simData_.find(d.first);
+                if (it == simData_.end()) {
+                    ALOG("simulation data point missing for key " << d.first);
+                    cachedSimData_.push_back(boost::shared_ptr<SimpleQuote>());
+                    cachedSimDataActive_.push_back(false);
+                } else {
+                    ++count;
+                    cachedSimData_.push_back(it->second);
+                    cachedSimDataActive_.push_back(filter_->allow(d.first));
+                }
+            }
+            if (count != simData_.size()) {
+                ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
+                for (auto it : simData_) {
+                    if (!scenario->has(it.first))
+                        ALOG("Key " << it.first << " missing in scenario");
+                }
+                QL_FAIL("mismatch between scenario and sim data size, exit.");
+            }
+        }
+
+        // apply scenario data according to cached indices
+
+        Size i = 0;
+        for (auto const& q : s->data()) {
+            if (cachedSimDataActive_[i])
+                cachedSimData_[i]->setValue(q.second);
+            ++i;
+        }
+
+        return;
+    }
+
     const vector<RiskFactorKey>& keys = scenario->keys();
 
     Size count = 0;
