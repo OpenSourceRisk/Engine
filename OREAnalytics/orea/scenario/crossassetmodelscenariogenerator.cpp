@@ -22,8 +22,6 @@
 
 #include <qle/indexes/inflationindexobserver.hpp>
 
-#include <boost/timer/timer.hpp>
-
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
@@ -254,8 +252,6 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 }
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
-    boost::timer::auto_cpu_timer autotimer;
-
     std::vector<boost::shared_ptr<Scenario>> scenarios(dates_.size());
     Sample<MultiPath> sample = pathGenerator_->next();
     DayCounter dc = model_->irlgm1f(0)->termStructure()->dayCounter();
