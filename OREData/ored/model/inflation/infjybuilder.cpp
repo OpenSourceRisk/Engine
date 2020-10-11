@@ -38,6 +38,7 @@
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
+#include <boost/range/join.hpp>
 
 using QuantExt::CPIBlackCapFloorEngine;
 using QuantExt::CpiCapFloorHelper;
@@ -128,13 +129,15 @@ bool InfJyBuilder::requiresRecalibration() const {
         data_->realRateReversion().calibrate() ||
         data_->indexVolatility().calibrate()) &&
         (marketObserver_->hasUpdated(false) ||
-            forceCalibration_);
+            forceCalibration_ ||
+            pricesChanged(false));
 }
 
 void InfJyBuilder::performCalculations() const {
     if (requiresRecalibration()) {
         marketObserver_->hasUpdated(true);
         buildCalibrationBaskets();
+        pricesChanged(true);
     }
 }
 
@@ -777,6 +780,43 @@ void InfJyBuilder::initialiseMarket() {
     }
 
     TLOG("InfJyBuilder: finished initialising market data members.");
+}
+
+bool InfJyBuilder::pricesChanged(bool updateCache) const {
+
+    // Resize the cache to match the number of calibration instruments
+    auto numInsts = realRateBasket_.size() + indexBasket_.size();
+    if (priceCache_.size() != numInsts)
+        priceCache_ = vector<Real>(numInsts, Null<Real>());
+
+    // Check if any market prices have changed. Return true if they have and false if they have not.
+    // If asked to update the cached prices, via updateCache being true, update the prices, if necessary.
+    bool result = false;
+    Size ctr = 0;
+    for (const auto& ci : boost::range::join(realRateBasket_, indexBasket_)) {
+        auto mp = marketPrice(ci);
+        if (!close_enough(priceCache_[ctr], mp)) {
+            if (updateCache)
+                priceCache_[ctr] = mp;
+            result = true;
+        }
+        ctr++;
+    }
+
+    return result;
+}
+
+Real InfJyBuilder::marketPrice(const boost::shared_ptr<CalibrationHelper>& helper) const {
+
+    if (auto h = boost::dynamic_pointer_cast<BlackCalibrationHelper>(helper)) {
+        return h->marketValue();
+    }
+
+    if (boost::shared_ptr<YoYSwapHelper> h = boost::dynamic_pointer_cast<YoYSwapHelper>(helper)) {
+        return h->marketRate();
+    }
+
+    QL_FAIL("InfJyBuilder: unrecognised calibration instrument for JY calibration.");
 }
 
 }

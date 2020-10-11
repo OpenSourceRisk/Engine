@@ -105,6 +105,9 @@ private:
     mutable std::vector<bool> indexInstActive_;
     mutable QuantLib::Array indexInstExpiries_;
 
+    //! Cache the prices of all of the active calibration helper instruments.
+    mutable std::vector<QuantLib::Real> priceCache_;
+
     //! \name LazyObject interface
     //@{
     void performCalculations() const override;
@@ -148,6 +151,14 @@ private:
 
     //! Attempt to initialise market data members that may be needed for building calibration instruments.
     void initialiseMarket();
+
+    /*! Returns \c true if the market value of any of the calibration helpers has changed. If \p updateCache is 
+        \c true, the cached prices are updated if they have changed.
+    */
+    bool pricesChanged(bool updateCache) const;
+
+    //! Return the market value of the given calibration helper
+    QuantLib::Real marketPrice(const boost::shared_ptr<QuantLib::CalibrationHelper>& helper) const;
 };
 
 }
