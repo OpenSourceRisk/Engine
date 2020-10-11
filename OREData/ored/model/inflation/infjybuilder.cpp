@@ -784,6 +784,11 @@ void InfJyBuilder::initialiseMarket() {
 
 bool InfJyBuilder::pricesChanged(bool updateCache) const {
 
+    // Build the calibration instruments again before checking the market price below.
+    // Don't need to do this if updateCache is true, because only called above after buildCalibrationBaskets().
+    if (!updateCache)
+        buildCalibrationBaskets();
+
     // Resize the cache to match the number of calibration instruments
     auto numInsts = realRateBasket_.size() + indexBasket_.size();
     if (priceCache_.size() != numInsts)
