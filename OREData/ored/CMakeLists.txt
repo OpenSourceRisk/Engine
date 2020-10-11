@@ -57,6 +57,7 @@ model/calibrationconfiguration.cpp
 model/calibrationinstrumentfactory.cpp
 model/calibrationinstruments/cpicapfloor.cpp
 model/calibrationinstruments/yoycapfloor.cpp
+model/calibrationinstruments/yoyswap.cpp
 model/crossassetmodelbuilder.cpp
 model/crossassetmodeldata.cpp
 model/eqbsbuilder.cpp
@@ -206,6 +207,7 @@ model/calibrationconfiguration.hpp
 model/calibrationinstrumentfactory.hpp
 model/calibrationinstruments/cpicapfloor.hpp
 model/calibrationinstruments/yoycapfloor.hpp
+model/calibrationinstruments/yoyswap.hpp
 model/crossassetmodelbuilder.hpp
 model/crossassetmodeldata.hpp
 model/eqbsbuilder.hpp

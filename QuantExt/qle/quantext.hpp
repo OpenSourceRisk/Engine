@@ -40,6 +40,7 @@
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/quantocouponpricer.hpp>
@@ -185,11 +186,15 @@
 #include <qle/models/piecewiseconstanthelper.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/models/pseudoparameter.hpp>
+#include <qle/models/yoycapfloorhelper.hpp>
 #include <qle/models/yoyinflationmodeltermstructure.hpp>
+#include <qle/models/yoyswaphelper.hpp>
 #include <qle/models/zeroinflationmodeltermstructure.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
+#include <qle/pricingengines/analyticjycpicapfloorengine.hpp>
+#include <qle/pricingengines/analyticjyyoycapfloorengine.hpp>
 #include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
@@ -315,4 +320,5 @@
 #include <qle/time/actual364.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/utilities/inflation.hpp>
 #include <qle/version.hpp>
