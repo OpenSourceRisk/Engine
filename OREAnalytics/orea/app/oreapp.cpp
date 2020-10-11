@@ -1027,7 +1027,8 @@ void OREApp::runPostProcessor() {
     Size dimHorizonCalendarDays = 14;
     Size dimRegressionOrder = 0;
     vector<string> dimRegressors;
-    Real dimScaling = 1.0;
+    // Warning dimScaling set but not used.
+    // Real dimScaling = 1.0;
     Size dimLocalRegressionEvaluations = 0;
     Real dimLocalRegressionBandwidth = 0.25;
 
@@ -1056,7 +1057,7 @@ void OREApp::runPostProcessor() {
         dimRegressionOrder = parseInteger(params_->get("xva", "dimRegressionOrder"));
         string dimRegressorsString = params_->get("xva", "dimRegressors");
         dimRegressors = parseListOfValues(dimRegressorsString);
-        dimScaling = parseReal(params_->get("xva", "dimScaling"));
+        // dimScaling = parseReal(params_->get("xva", "dimScaling"));
         dimLocalRegressionEvaluations = parseInteger(params_->get("xva", "dimLocalRegressionEvaluations"));
         dimLocalRegressionBandwidth = parseReal(params_->get("xva", "dimLocalRegressionBandwidth"));
     }
