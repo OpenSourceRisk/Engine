@@ -607,7 +607,7 @@ void CrossAssetModel::calibrateInfJyGlobal(Size index,
         if (kv.second) {
             vector<bool> tmp = MoveParameter(INF, kv.first, index, Null<Size>());
             std::transform(fixedParams.begin(), fixedParams.end(), tmp.begin(),
-                fixedParams.begin(), std::logical_and<>());
+                fixedParams.begin(), std::logical_and<bool>());
         }
     }
 
