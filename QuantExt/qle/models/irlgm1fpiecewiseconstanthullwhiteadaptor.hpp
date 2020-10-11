@@ -89,7 +89,7 @@ Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::Lgm1fPiecewiseConstantHullWhiteAdapt
     const boost::shared_ptr<QuantLib::Constraint>& sigmaConstraint,
     const boost::shared_ptr<QuantLib::Constraint>& kappaConstraint)
     : Lgm1fParametrization<TS>(currency, termStructure, name),
-      PiecewiseConstantHelper3(sigmaDates, kappaDates, termStructure, , sigmaConstraint, kappaConstraint),
+      PiecewiseConstantHelper3(sigmaDates, kappaDates, termStructure, sigmaConstraint, kappaConstraint),
       PiecewiseConstantHelper2(kappaDates, termStructure, kappaConstraint) {
     initialize(sigma, kappa);
 }
