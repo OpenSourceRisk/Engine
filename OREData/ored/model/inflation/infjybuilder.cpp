@@ -394,7 +394,6 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb,
     DayCounter dc = Thirty360();
     auto bdc = Following;
     auto obsLag = yoyVolatility_->observationLag();
-    Date today = Settings::instance().evaluationDate();
 
     // Avoid instruments with duplicate expiry times in the loop below
     set<Time, CloseCmp> expiryTimes;
@@ -498,7 +497,6 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
     auto dc = Thirty360();
     auto bdc = Following;
     auto obsLag = yoyTs->observationLag();
-    Date today = Settings::instance().evaluationDate();
 
     // Avoid instruments with duplicate expiry times in the loop below
     set<Time, CloseCmp> expiryTimes;
@@ -680,10 +678,6 @@ boost::shared_ptr<FxBsParametrization> InfJyBuilder::createIndexParam() const {
 
     // Perform checks and in the event of bootstrap calibration, may need to restructure the parameters.
     setupParams(idxVolatility, idxVolatilityTimes, idxVolatilityValues, indexInstExpiries_, "Index volatility");
-
-    // Create the JY parameterization.
-    using RT = LgmData::ReversionType;
-    using VT = LgmData::VolatilityType;
 
     // Create the index portion of the parameterization
     boost::shared_ptr<QuantExt::FxBsParametrization> indexParam;
