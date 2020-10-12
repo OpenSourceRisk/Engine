@@ -67,7 +67,8 @@ public:
 
     // partial step 2: build trade and netting set cubes, optionally filtered on a subset of given trade ids
     //                 if the filter is given, the order of the trades will follow the one in the given filter set
-    void buildCube(const boost::optional<std::set<std::string>>& tradeIds, bool continueOnErr = true);
+    void buildCube(const boost::optional<std::set<std::string>>& tradeIds, bool continueOnErr = true,
+                   const bool generateAggregationScenarioData = true);
 
     // get generated trade cube from last buildCube() or runXva() run
     boost::shared_ptr<NPVCube> npvCube() const { return cube_; }
@@ -75,9 +76,13 @@ public:
     // get generated netting set cube from last buildCube() or runXva() run
     boost::shared_ptr<NPVCube> nettingCube() const { return nettingCube_; }
 
-    // partial step 3: build post processor on given cubes (requires runXva() or buildCube() run before)
+    // get aggregation scenario data from last buildCube() (if enabled there) or runXVA() run
+    boost::shared_ptr<AggregationScenarioData> aggregationScenarioData() { return scenarioData_; }
+
+    // partial step 3: build post processor on given cubes / agg scen data (requires runXva() or buildCube() run before)
     void generatePostProcessor(const boost::shared_ptr<Market>& market, const boost::shared_ptr<NPVCube>& npvCube,
-                               const boost::shared_ptr<NPVCube>& nettingCube);
+                               const boost::shared_ptr<NPVCube>& nettingCube,
+                               const boost::shared_ptr<AggregationScenarioData>& scenarioData);
 
     // get a vector of netting set ids for the given portfolio sorted in alphabetical order, if no portfolio
     // is given here, the netting sets for the global portfolio set in the ctor are returned

@@ -95,7 +95,8 @@ void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const
                                                     extraEngineBuilders_, extraLegBuilders_, referenceData_);
 }
 
-void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds, const bool continueOnErr) {
+void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds, const bool continueOnErr,
+                          const bool generateAggregationScenarioData) {
 
     LOG("XvaRunner::buildCube called");
 
@@ -157,10 +158,11 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
 
     DLOG("build scenario data");
 
-    scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(
-        scenarioGeneratorData_->grid()->valuationDates().size(), scenarioGeneratorData_->samples());
-
-    simMarket_->aggregationScenarioData() = scenarioData_; // ??? simMarket gets agg data?
+    if(generateAggregationScenarioData) {
+        scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(
+            scenarioGeneratorData_->grid()->valuationDates().size(), scenarioGeneratorData_->samples());
+        simMarket_->aggregationScenarioData() = scenarioData_; // ??? simMarket gets agg data?
+    }
 
     DLOG("run valuation engine");
 
@@ -170,12 +172,13 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
 
 void XvaRunner::generatePostProcessor(const boost::shared_ptr<Market>& market,
                                       const boost::shared_ptr<NPVCube>& npvCube,
-                                      const boost::shared_ptr<NPVCube>& nettingCube) {
+                                      const boost::shared_ptr<NPVCube>& nettingCube,
+                                      const boost::shared_ptr<AggregationScenarioData>& scenarioData) {
     LOG("XvaRunner::generatePostProcessor called");
     QL_REQUIRE(analytics_.size() > 0, "analytics map not set");
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator =
         getDimCalculator(npvCube, cubeInterpreter_, scenarioData_, model_, nettingCube);
-    postProcess_ = boost::make_shared<PostProcess>(portfolio_, netting_, market, "", npvCube, scenarioData_, analytics_,
+    postProcess_ = boost::make_shared<PostProcess>(portfolio_, netting_, market, "", npvCube, scenarioData, analytics_,
                                                    baseCurrency_, "None", 1.0, 0.95, calculationType_, dvaName_,
                                                    fvaBorrowingCurve_, fvaLendingCurve_, dimCalculator,
                                                    cubeInterpreter_, fullInitialCollateralisation_);
@@ -185,7 +188,7 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
     LOG("XvaRunner::runXva called");
     prepareSimulation(market, continueOnErr);
     buildCube(boost::none, continueOnErr);
-    generatePostProcessor(market, npvCube(), nettingCube());
+    generatePostProcessor(market, npvCube(), nettingCube(), aggregationScenarioData());
 }
 
 boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(
