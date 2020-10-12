@@ -702,9 +702,10 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data,
                 TLOGGERSTREAM << "rmse = " << inflationCalibrationErrors_[modelIdx];
             }
         } else {
-            string exceptionMessage = "INF (JY) " + std::to_string(modelIdx) + " calibration error " +
-                std::to_string(inflationCalibrationErrors_[modelIdx]) + " exceeds tolerance " +
-                std::to_string(cc.rmseTolerance());
+            std::stringstream ss;
+            ss << "INF (JY) " << modelIdx << " calibration error " << std::scientific <<
+                inflationCalibrationErrors_[modelIdx] << " exceeds tolerance " << cc.rmseTolerance();
+            string exceptionMessage = ss.str();
             WLOG(StructuredModelErrorMessage("Failed to calibrate INF JY Model", exceptionMessage));
             WLOGGERSTREAM << "Calibration details:";
             WLOGGERSTREAM << getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate());
