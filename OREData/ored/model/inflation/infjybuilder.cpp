@@ -813,7 +813,11 @@ bool InfJyBuilder::pricesChanged(bool updateCache) const {
 
 Real InfJyBuilder::marketPrice(const boost::shared_ptr<CalibrationHelper>& helper) const {
 
-    if (auto h = boost::dynamic_pointer_cast<BlackCalibrationHelper>(helper)) {
+    if (auto h = boost::dynamic_pointer_cast<CpiCapFloorHelper>(helper)) {
+        return h->marketValue();
+    }
+
+    if (auto h = boost::dynamic_pointer_cast<YoYCapFloorHelper>(helper)) {
         return h->marketValue();
     }
 
