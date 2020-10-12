@@ -5,7 +5,7 @@
  This file is part of ORE, a free-software/open-source library
  for transparent pricing and risk analysis - http://opensourcerisk.org
 
- ORE is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it1
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program.
  The license is also available online at <http://opensourcerisk.org>
@@ -20,9 +20,11 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 
+#include <qle/models/cirppimplieddefaulttermstructure.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
 #include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
+#include <qle/models/lgmimplieddefaulttermstructure.hpp>
 #include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
@@ -171,6 +173,19 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             }
         }
     }
+
+    // Cache default curve keys
+    Size n_cr = model_->components(CR);
+    defaultCurveKeys_.reserve(n_cr * simMarketConfig_->defaultTenors("").size());
+    for (Size j = 0; j < model_->components(CR); j++) {
+        std::string cr_name = model_->cr(j)->name();
+        ten_dfc_.push_back(simMarketConfig_->defaultTenors(cr_name));
+        Size n_ten = ten_dfc_.back().size();
+        for (Size k = 0; k < n_ten; k++) {
+            defaultCurveKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, cr_name, k); // j * n_ten + k
+        }
+        // defaultCurveKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, cr_name, -1); // for numeraie
+    }
 }
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
@@ -179,10 +194,12 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     Size n_ccy = model_->components(IR);
     Size n_eq = model_->components(EQ);
     Size n_inf = model_->components(INF);
+    Size n_cr = model_->components(CR);
     Size n_indices = simMarketConfig_->indices().size();
     Size n_curves = simMarketConfig_->yieldCurveNames().size();
     vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> curves, fwdCurves, yieldCurves;
-    
+    vector<boost::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>> lgmDefaultCurves;
+    vector<boost::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>> cirppDefaultCurves;
     vector<boost::shared_ptr<IborIndex>> indices;
     vector<Currency> yieldCurveCurrency;
     vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> equityForecastCurves;
@@ -251,6 +268,18 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             ts = boost::make_shared<JyImpliedYoYInflationTermStructure>(model_, idx);
         }
         yoyInfCurves.emplace_back(idx, ccyIdx, mt, ts);
+    }
+
+    for (Size j = 0; j < n_cr; ++j) {
+        if (model_->modelType(CR, j) == ModelType::LGM1F) {
+            lgmDefaultCurves.push_back(boost::make_shared<QuantExt::LgmImpliedDefaultTermStructure>(
+                model_, j, model_->ccyIndex(model_->crlgm1f(j)->currency())));
+            cirppDefaultCurves.push_back(boost::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>());
+        } else if (model_->modelType(CR, j) == ModelType::CIRPP) {
+            lgmDefaultCurves.push_back(boost::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>());
+            cirppDefaultCurves.push_back(boost::make_shared<QuantExt::CirppImpliedDefaultTermStructure>(
+                model_->crcirppModel(j), j));
+        }
     }
 
     for (Size j = 0; j < n_eq; ++j) {
@@ -439,6 +468,32 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             auto yoyRates = ts->yoyRates(pillarDates);
             for (Size k = 0; k < pillarDates.size(); ++k) {
                 scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + k], yoyRates.at(pillarDates[k]));
+            }
+        }
+
+        for (Size j = 0; j < n_cr; ++j) {
+            if (model_->modelType(CR, j) == ModelType::LGM1F) {
+                Real z = sample.value[model_->pIdx(CR, j, 0)][i + 1];
+                Real y = sample.value[model_->pIdx(CR, j, 1)][i + 1];
+                lgmDefaultCurves[j]->move(dates_[i], z, y);
+                for (Size k = 0; k < ten_dfc_[j].size(); k++) {
+                    Date d = dates_[i] + ten_dfc_[j][k];
+                    Time T = dc.yearFraction(dates_[i], d);
+                    Real survProb = std::max(lgmDefaultCurves[j]->survivalProbability(T), 0.00001);
+                    scenarios[i]->add(defaultCurveKeys_[j * ten_dfc_[j].size() + k], survProb);
+                }
+            } else if (model_->modelType(CR, j) == ModelType::CIRPP) {
+                Real y = sample.value[model_->pIdx(CR, j, 0)][i + 1];
+                cirppDefaultCurves[j]->move(dates_[i], y);
+                for (Size k = 0; k < ten_dfc_[j].size(); k++) {
+                    Date d = dates_[i] + ten_dfc_[j][k];
+                    Time T = dc.yearFraction(dates_[i], d);
+                    Real survProb = std::max(cirppDefaultCurves[j]->survivalProbability(T), 0.00001);
+                    scenarios[i]->add(defaultCurveKeys_[j * (ten_dfc_[j].size() + 1) + k], survProb);
+                }
+                // numeraie
+                Real s = sample.value[model_->pIdx(CR, j, 1)][i + 1];
+                scenarios[i]->add(defaultCurveKeys_[j * (ten_dfc_[j].size() + 1) + ten_dfc_[j].size()], s);
             }
         }
 

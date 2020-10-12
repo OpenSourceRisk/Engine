@@ -631,8 +631,13 @@
     <ClInclude Include="qle\math\trace.hpp" />
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
     <ClInclude Include="qle\models\cdsoptionhelper.hpp" />
+    <ClInclude Include="qle\models\cirppconstantfellerparametrization.hpp" />
+    <ClInclude Include="qle\models\cirppconstantparametrization.hpp" />
+    <ClInclude Include="qle\models\cirppimplieddefaulttermstructure.hpp" />
+    <ClInclude Include="qle\models\cirppparametrization.hpp" />
     <ClInclude Include="qle\models\cmscaphelper.hpp" />
     <ClInclude Include="qle\models\cpicapfloorhelper.hpp" />
+    <ClInclude Include="qle\models\crcirpp.hpp" />
     <ClInclude Include="qle\models\crlgm1fparametrization.hpp" />
     <ClInclude Include="qle\models\crossassetanalytics.hpp" />
     <ClInclude Include="qle\models\crossassetanalyticsbase.hpp" />
@@ -695,6 +700,7 @@
     <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp" />
+    <ClInclude Include="qle\processes\crcirppstateprocess.hpp" />
     <ClInclude Include="qle\processes\crossassetstateprocess.hpp" />
     <ClInclude Include="qle\processes\irlgm1fstateprocess.hpp" />
     <ClInclude Include="qle\quotes\exceptionquote.hpp" />
@@ -885,8 +891,10 @@
     <ClCompile Include="qle\math\fillemptymatrix.cpp" />
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
     <ClCompile Include="qle\models\cdsoptionhelper.cpp" />
+    <ClCompile Include="qle\models\cirppimplieddefaulttermstructure.cpp" />
     <ClCompile Include="qle\models\cmscaphelper.cpp" />
     <ClCompile Include="qle\models\cpicapfloorhelper.cpp" />
+    <ClCompile Include="qle\models\crcirpp.cpp" />
     <ClCompile Include="qle\models\crossassetanalytics.cpp" />
     <ClCompile Include="qle\models\crossassetmodel.cpp" />
     <ClCompile Include="qle\models\crossassetmodelimpliedeqvoltermstructure.cpp" />
@@ -940,6 +948,7 @@
     <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\oiccbasisswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\paymentdiscountingengine.cpp" />
+    <ClCompile Include="qle\processes\crcirppstateprocess.cpp" />
     <ClCompile Include="qle\processes\crossassetstateprocess.cpp" />
     <ClCompile Include="qle\processes\irlgm1fstateprocess.cpp" />
     <ClCompile Include="qle\quotes\logquote.cpp" />

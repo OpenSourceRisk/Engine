@@ -24,6 +24,8 @@
 #ifndef quantext_crossasset_model_hpp
 #define quantext_crossasset_model_hpp
 
+#include <qle/models/crcirpp.hpp>
+#include <qle/models/cirppparametrization.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
 #include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
@@ -118,6 +120,9 @@ public:
     /*! return index for inflation (0 = first inflation index) */
     Size infIndex(const std::string& index) const;
 
+    /*! return index for credit (0 = first credit name) */
+    Size crName(const std::string& name) const;
+
     /*! observer and linked calibrated model interface */
     void update();
     void generateArguments();
@@ -162,6 +167,10 @@ public:
 
     /*! CR LGM 1F components */
     const boost::shared_ptr<CrLgm1fParametrization> crlgm1f(const Size i) const;
+
+    /*! CR CIR++ components */
+    const boost::shared_ptr<CrCirpp> crcirppModel(const Size i) const;
+    const boost::shared_ptr<CrCirppParametrization> crcirpp(const Size i) const;
 
     /*! EQBS components */
     const boost::shared_ptr<EqBsParametrization> eqbs(const Size ccy) const;
@@ -217,6 +226,10 @@ public:
     std::pair<Real, Real> crlgm1fS(const Size i, const Size ccy, const Time t, const Time T, const Real z,
                                    const Real y) const;
 
+    /*! returns (S(t), S^tilde(t,T)) in the notation of the book */
+    std::pair<Real, Real> crcirppS(const Size i, const Time t, const Time T,
+                                   const Real y, const Real s) const;
+    
     /*! tentative: more generic interface that is agnostic of the model type - so far only for CR */
     virtual Handle<DefaultProbabilityTermStructure> crTs(const Size i) const;
     virtual std::pair<Real, Real> crS(const Size i, const Size ccy, const Time t, const Time T, const Real z,
@@ -380,6 +393,7 @@ protected:
     // parametrizations, models
     std::vector<boost::shared_ptr<Parametrization> > p_;
     std::vector<boost::shared_ptr<LinearGaussMarkovModel> > lgm_;
+    std::vector<boost::shared_ptr<CrCirpp>> crcirppModel_;
     Matrix rho_;
     SalvagingAlgorithm::Type salvaging_;
     mutable boost::shared_ptr<Integrator> integrator_;
@@ -455,6 +469,7 @@ inline const boost::shared_ptr<LinearGaussMarkovModel> CrossAssetModel::lgm(cons
     return tmp;
 }
 
+
 inline const boost::shared_ptr<IrLgm1fParametrization> CrossAssetModel::irlgm1f(const Size ccy) const {
     return lgm(ccy)->parametrization();
 }
@@ -474,6 +489,18 @@ inline const boost::shared_ptr<InfJyParameterization> CrossAssetModel::infjy(con
 inline const boost::shared_ptr<CrLgm1fParametrization> CrossAssetModel::crlgm1f(const Size i) const {
     boost::shared_ptr<CrLgm1fParametrization> tmp = boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[idx(CR, i)]);
     QL_REQUIRE(tmp, "model at " << i << " is not CR-LGM");
+    return tmp;
+}
+
+inline const boost::shared_ptr<CrCirpp> CrossAssetModel::crcirppModel(const Size i) const {
+    boost::shared_ptr<CrCirpp> tmp = crcirppModel_[i];
+    QL_REQUIRE(tmp, "model at " << i << " is not CR-CIRPP");
+    return tmp;
+}
+
+inline const boost::shared_ptr<CrCirppParametrization> CrossAssetModel::crcirpp(const Size i) const {
+    boost::shared_ptr<CrCirppParametrization> tmp = boost::dynamic_pointer_cast<CrCirppParametrization>(p_[idx(CR, i)]);
+    QL_REQUIRE(tmp, "model at " << i << " is not CR-CIRPP");
     return tmp;
 }
 
@@ -515,12 +542,22 @@ inline const Matrix& CrossAssetModel::correlation() const { return rho_; }
 inline const boost::shared_ptr<Integrator> CrossAssetModel::integrator() const { return integrator_; }
 
 inline Handle<DefaultProbabilityTermStructure> CrossAssetModel::crTs(const Size i) const {
-    return crlgm1f(i)->termStructure();
+    if (modelType(CR, i) == LGM1F)
+        return crlgm1f(i)->termStructure();
+    if (modelType(CR, i) == CIRPP)
+        return crcirpp(i)->termStructure();
+    QL_FAIL("model at " << i << " is not CR-*");
 }
 
 inline std::pair<Real, Real> CrossAssetModel::crS(const Size i, const Size ccy, const Time t, const Time T,
                                                   const Real z, const Real y) const {
-    return crlgm1fS(i, ccy, t, T, z, y);
+    if (modelType(CR, i) == LGM1F)
+        return crlgm1fS(i, ccy, t, T, z, y);
+    if (modelType(CR, i) == CIRPP) {
+        QL_REQUIRE(ccy == 0, "CrossAssetModelPlus::crS() only implemented for ccy=0, got " << ccy);
+        return crcirppS(i, t, T, z, y);
+    }
+    QL_FAIL("model at " << i << " is not CR-*");
 }
 
 } // namespace QuantExt
