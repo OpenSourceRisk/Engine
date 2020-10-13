@@ -41,8 +41,7 @@ boost::shared_ptr<ScenarioGenerator>
 ScenarioGeneratorBuilder::build(boost::shared_ptr<QuantExt::CrossAssetModel> model,
                                 boost::shared_ptr<ScenarioFactory> scenarioFactory,
                                 boost::shared_ptr<ScenarioSimMarketParameters> marketConfig, Date asof,
-                                boost::shared_ptr<ore::data::Market> initMarket, const std::string& configuration,
-                                const boost::optional<std::set<std::string>>& currencies) {
+                                boost::shared_ptr<ore::data::Market> initMarket, const std::string& configuration) {
 
     LOG("ScenarioGeneratorBuilder::build() started");
 
@@ -55,7 +54,7 @@ ScenarioGeneratorBuilder::build(boost::shared_ptr<QuantExt::CrossAssetModel> mod
                                data_->ordering(), data_->directionIntegers());
 
     boost::shared_ptr<ScenarioGenerator> scenGen = boost::make_shared<CrossAssetModelScenarioGenerator>(
-        model, pathGen, scenarioFactory, marketConfig, asof, data_->grid(), initMarket, configuration, currencies);
+        model, pathGen, scenarioFactory, marketConfig, asof, data_->grid(), initMarket, configuration);
     LOG("ScenarioGeneratorBuilder::build() done");
 
     return scenGen;

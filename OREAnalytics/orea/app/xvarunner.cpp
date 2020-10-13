@@ -65,11 +65,31 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
     }
 }
 
+boost::shared_ptr<ScenarioSimMarketParameters>
+XvaRunner::projectSsmData(const std::set<std::string>& currencies) const {
+    QL_FAIL("XvaRunner::projectSsmData() is only available in ORE+");
+}
+
+boost::shared_ptr<ore::analytics::ScenarioGenerator>
+XvaRunner::getProjectedScenarioGenerator(const boost::optional<std::set<std::string>>& currencies,
+                                         const boost::shared_ptr<Market>& market,
+                                         const boost::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
+                                         const boost::shared_ptr<ScenarioFactory>& sf) const {
+    QL_REQUIRE(!currencies,
+               "XvaRunner::getProjectedScenarioGenerator() with currency filter is only available in ORE+");
+    ScenarioGeneratorBuilder sgb(scenarioGeneratorData_);
+    return sgb.build(model_, sf, projectedSsmData, asof_, market, Market::defaultConfiguration);
+}
+
 void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const bool continueOnErr,
                                   const boost::optional<std::set<std::string>>& currencies) {
     LOG("XvaRunner::buildCamModel called");
+
     // ensure date is reset
+
     Settings::instance().evaluationDate() = asof_;
+
+    // build the "full" model
 
     CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, Market::defaultConfiguration,
                                         Market::defaultConfiguration, Market::defaultConfiguration,
@@ -77,28 +97,20 @@ void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const
                                         Market::defaultConfiguration, ActualActual(), false, continueOnErr);
     model_ = *modelBuilder.model();
 
-    ScenarioGeneratorBuilder sgb(scenarioGeneratorData_);
-    boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
-    boost::shared_ptr<ScenarioGenerator> sg =
-        sgb.build(model_, sf, simMarketData_, asof_, market, Market::defaultConfiguration, currencies);
+    // build projected ssm data and scenario generator if a currency filter is given
 
-    // remove asd ir indices from the ssm data not in the currency filter (if given)
-    auto ssmData = boost::make_shared<ScenarioSimMarketParameters>(*simMarketData_);
+    boost::shared_ptr<ScenarioSimMarketParameters> projectedSsmData;
     if (currencies) {
-        auto& asdInd = ssmData->additionalScenarioDataIndices();
-        for (auto it = asdInd.begin(); it != asdInd.end();) {
-            auto irIndex = boost::dynamic_pointer_cast<InterestRateIndex>(parseIndex(*it));
-            if (irIndex && std::find((*currencies).begin(), (*currencies).end(), irIndex->currency().code()) ==
-                               (*currencies).end()) {
-                it = asdInd.erase(it);
-            } else {
-                ++it;
-            }
-        }
+        projectedSsmData = projectSsmData(*currencies);
+    } else {
+        projectedSsmData = simMarketData_;
     }
 
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(market, ssmData, *conventions_, Market::defaultConfiguration,
-                                                       *curveConfigs_, *todaysMarketParams_, true, false, true, true);
+    boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
+    boost::shared_ptr<ScenarioGenerator> sg = getProjectedScenarioGenerator(currencies, market, projectedSsmData, sf);
+    simMarket_ =
+        boost::make_shared<ScenarioSimMarket>(market, projectedSsmData, *conventions_, Market::defaultConfiguration,
+                                              *curveConfigs_, *todaysMarketParams_, true, false, true, true);
     simMarket_->scenarioGenerator() = sg;
 
     for (auto b : extraEngineBuilders_)
@@ -127,6 +139,7 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
     }
 
     DLOG("build portfolio");
+
     // FIXME why?? portfolio_->reset() is not sufficient to ensure XVA simulation run fast (and this is called before)
     portfolio_->build(simFactory_);
     // portfolio->build(simFactory_);

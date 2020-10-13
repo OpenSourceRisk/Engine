@@ -61,7 +61,7 @@ public:
     // get post processor from runXva() or generatePostProcessor() call
     const boost::shared_ptr<PostProcess>& postProcess() { return postProcess_; }
 
-    // partial step 1: prepare simulation (build cam model and sim market / factory)
+    // partial step 1: prepare simulation (build cam model and sim market / factory), with optional ccy filter
     void prepareSimulation(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true,
                            const boost::optional<std::set<std::string>>& currencies = boost::none);
 
@@ -100,6 +100,15 @@ protected:
                      const boost::shared_ptr<AggregationScenarioData>& scenarioData,
                      const boost::shared_ptr<QuantExt::CrossAssetModel>& model = nullptr,
                      const boost::shared_ptr<NPVCube>& nettingCube = nullptr);
+
+    virtual boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>
+    projectSsmData(const std::set<std::string>& currencies) const;
+
+    virtual boost::shared_ptr<ore::analytics::ScenarioGenerator>
+    getProjectedScenarioGenerator(const boost::optional<std::set<std::string>>& currencies,
+                                  const boost::shared_ptr<Market>& market,
+                                  const boost::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
+                                  const boost::shared_ptr<ScenarioFactory>& scenarioFactory) const;
 
     QuantLib::Date asof_;
     std::string baseCurrency_;
