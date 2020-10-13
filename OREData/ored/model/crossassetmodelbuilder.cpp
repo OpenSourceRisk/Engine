@@ -304,8 +304,8 @@ void CrossAssetModelBuilder::buildModel() const {
         boost::shared_ptr<QuantExt::CrLgm1fParametrization> parametrization = builder->parametrization();
         crLgmParametrizations.push_back(parametrization);
         crNames.push_back(crName);
-        subBuilders_.insert(builder);
-	processInfo[CT::CR].emplace_back(crName, 1);
+        subBuilders_[CT::CR][i] = builder;
+        processInfo[CT::CR].emplace_back(crName, 1);
     }
 
     // CIR (if any)
@@ -318,8 +318,8 @@ void CrossAssetModelBuilder::buildModel() const {
         boost::shared_ptr<QuantExt::CrCirppParametrization> parametrization = builder->parametrization();
         crCirParametrizations.push_back(parametrization);
         crNames.push_back(crName);
-        subBuilders_.insert(builder);
-	processInfo[CT::CR].emplace_back(crName, 1);
+        subBuilders_[CT::CR][i] = builder;
+        processInfo[CT::CR].emplace_back(crName, 1);
     }
 
     std::vector<boost::shared_ptr<QuantExt::Parametrization>> parametrizations;
