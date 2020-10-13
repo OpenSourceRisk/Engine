@@ -631,18 +631,20 @@ boost::shared_ptr<Lgm1fParametrization<ZeroInflationTermStructure>> InfJyBuilder
         realRateParam = boost::make_shared<Lgm1fPiecewiseConstantHullWhiteAdaptor<ZeroInflationTermStructure>>(
             zeroInflationIndex_->currency(), zeroInflationIndex_->zeroInflationTermStructure(), rrVolatilityTimes,
             rrVolatilityValues, rrReversionTimes, rrReversionValues, data_->index(), rrVolConstraint, rrRevConstraint);
-    } else if (rrReversion.reversionType() == RT::HullWhite) {
+    } else if (rrReversion.reversionType() == RT::HullWhite && rrVolatility.volatilityType() == VT::Hagan) {
         using QuantExt::Lgm1fPiecewiseConstantParametrization;
         DLOG("InfJyBuilder: real rate parameterization is Lgm1fPiecewiseConstantParametrization");
         realRateParam = boost::make_shared<Lgm1fPiecewiseConstantParametrization<ZeroInflationTermStructure>>(
             zeroInflationIndex_->currency(), zeroInflationIndex_->zeroInflationTermStructure(), rrVolatilityTimes,
             rrVolatilityValues, rrReversionTimes, rrReversionValues, data_->index(), rrVolConstraint, rrRevConstraint);
-    } else {
+    } else if (rrReversion.reversionType() == RT::Hagan && rrVolatility.volatilityType() == VT::Hagan) {
         using QuantExt::Lgm1fPiecewiseLinearParametrization;
         DLOG("InfJyBuilder: real rate parameterization is Lgm1fPiecewiseLinearParametrization");
         realRateParam = boost::make_shared<Lgm1fPiecewiseLinearParametrization<ZeroInflationTermStructure>>(
             zeroInflationIndex_->currency(), zeroInflationIndex_->zeroInflationTermStructure(), rrVolatilityTimes,
             rrVolatilityValues, rrReversionTimes, rrReversionValues, data_->index(), rrVolConstraint, rrRevConstraint);
+    } else {
+        QL_FAIL("InfJyBuilder: reversion type Hagan and volatility type HullWhite not supported.");
     }
 
     Time horizon = data_->reversionTransformation().horizon();
