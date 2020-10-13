@@ -82,7 +82,7 @@ void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const
 
     simMarket_ =
         boost::make_shared<ScenarioSimMarket>(market, simMarketData_, *conventions_, Market::defaultConfiguration,
-                                              *curveConfigs_, *todaysMarketParams_, true);
+                                              *curveConfigs_, *todaysMarketParams_, true, false, true, true);
     simMarket_->scenarioGenerator() = sg;
 
     for (auto b : extraEngineBuilders_)
