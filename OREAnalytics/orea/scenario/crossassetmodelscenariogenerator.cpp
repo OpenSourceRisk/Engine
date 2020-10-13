@@ -171,7 +171,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     modelCcyRelevant_ = std::vector<bool>(model_->components(IR), true);
     if (currencies_) {
         for (Size i = 0; i < model_->components(IR); ++i) {
-            modelCcyRelevant_[i] = (*currencies_).find(model_->ir(i)->currency().code()) != (*currencies_).end();
+            modelCcyRelevant_[i] =
+                (*currencies_).find(model_->ir(i)->currency().code()) != (*currencies_).end() || i == 0;
         }
     }
 
