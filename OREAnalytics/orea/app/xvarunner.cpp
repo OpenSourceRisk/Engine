@@ -24,6 +24,8 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
 
+#include <algorithm>
+
 using namespace std;
 using namespace ore::data;
 
@@ -80,9 +82,23 @@ void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const
     boost::shared_ptr<ScenarioGenerator> sg =
         sgb.build(model_, sf, simMarketData_, asof_, market, Market::defaultConfiguration, currencies);
 
-    simMarket_ =
-        boost::make_shared<ScenarioSimMarket>(market, simMarketData_, *conventions_, Market::defaultConfiguration,
-                                              *curveConfigs_, *todaysMarketParams_, true, false, true, true);
+    // remove asd ir indices from the ssm data not in the currency filter (if given)
+    auto ssmData = boost::make_shared<ScenarioSimMarketParameters>(*simMarketData_);
+    if (currencies) {
+        auto& asdInd = ssmData->additionalScenarioDataIndices();
+        for (auto it = asdInd.begin(); it != asdInd.end();) {
+            auto irIndex = boost::dynamic_pointer_cast<InterestRateIndex>(parseIndex(*it));
+            if (irIndex && std::find((*currencies).begin(), (*currencies).end(), irIndex->currency().code()) ==
+                               (*currencies).end()) {
+                it = asdInd.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    simMarket_ = boost::make_shared<ScenarioSimMarket>(market, ssmData, *conventions_, Market::defaultConfiguration,
+                                                       *curveConfigs_, *todaysMarketParams_, true, false, true, true);
     simMarket_->scenarioGenerator() = sg;
 
     for (auto b : extraEngineBuilders_)
@@ -95,8 +111,7 @@ void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const
                                                     extraEngineBuilders_, extraLegBuilders_, referenceData_);
 }
 
-void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds, const bool continueOnErr,
-                          const bool generateAggregationScenarioData) {
+void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds, const bool continueOnErr) {
 
     LOG("XvaRunner::buildCube called");
 
@@ -158,11 +173,9 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
 
     DLOG("build scenario data");
 
-    if(generateAggregationScenarioData) {
-        scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(
-            scenarioGeneratorData_->grid()->valuationDates().size(), scenarioGeneratorData_->samples());
-        simMarket_->aggregationScenarioData() = scenarioData_; // ??? simMarket gets agg data?
-    }
+    scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(
+        scenarioGeneratorData_->grid()->valuationDates().size(), scenarioGeneratorData_->samples());
+    simMarket_->aggregationScenarioData() = scenarioData_;
 
     DLOG("run valuation engine");
 

@@ -61,14 +61,13 @@ public:
     // get post processor from runXva() or generatePostProcessor() call
     const boost::shared_ptr<PostProcess>& postProcess() { return postProcess_; }
 
-    // partial step 1: prepare simulation (build cam model and sim market / factory
+    // partial step 1: prepare simulation (build cam model and sim market / factory)
     void prepareSimulation(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true,
                            const boost::optional<std::set<std::string>>& currencies = boost::none);
 
     // partial step 2: build trade and netting set cubes, optionally filtered on a subset of given trade ids
     //                 if the filter is given, the order of the trades will follow the one in the given filter set
-    void buildCube(const boost::optional<std::set<std::string>>& tradeIds, bool continueOnErr = true,
-                   const bool generateAggregationScenarioData = true);
+    void buildCube(const boost::optional<std::set<std::string>>& tradeIds, bool continueOnErr = true);
 
     // get generated trade cube from last buildCube() or runXva() run
     boost::shared_ptr<NPVCube> npvCube() const { return cube_; }
