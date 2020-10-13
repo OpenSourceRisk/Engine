@@ -137,7 +137,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const boost::shared_ptr<TodaysMarke
     : MarketImpl(conventions), params_ref_(params), loader_ref_(loader), curveConfigs_ref_(curveConfigs),
       conventions_ref_(conventions), params_(*params_ref_), loader_(*loader_ref_), curveConfigs_(*curveConfigs_ref_),
       continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(lazyBuild),
-      referenceData_(referenceData), preserveQuoteLinkage_(preserveQuoteLinkage) {
+      preserveQuoteLinkage_(preserveQuoteLinkage), referenceData_(referenceData) {
     QL_REQUIRE(params_ref_, "TodaysMarket: TodaysMarketParameters are null");
     QL_REQUIRE(loader_ref_, "TodaysMarket: Loader is null");
     QL_REQUIRE(curveConfigs_ref_, "TodaysMarket: CurveConfigurations are null");
