@@ -12,7 +12,7 @@
       <FXForeignCurveID>Yield/EUR/EUR-EONIA</FXForeignCurveID>
       <FXDomesticCurveID>Yield/GBP/GBP-SONIA</FXDomesticCurveID>
       <Calendar>TARGET,UK</Calendar>
-      <DayCounter/>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
     </FXVolatility>
   </FXVolatilities>
   <SwaptionVolatilities>

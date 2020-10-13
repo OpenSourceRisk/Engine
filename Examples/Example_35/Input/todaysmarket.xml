@@ -62,12 +62,12 @@
   <DefaultCurves id="default">
     <DefaultCurve name="CPTY">Default/USD/CPTY</DefaultCurve>
   </DefaultCurves>
-  <ZeroInflationCapFloorVolatilities id="default">
-    <ZeroInflationCapFloorVolatility name="EUHICPXT">InflationCapFloorVolatility/EUHICPXT/EUHICPXT_ZC_CF</ZeroInflationCapFloorVolatility>
-    <ZeroInflationCapFloorVolatility name="UKRPI">InflationCapFloorVolatility/UKRPI/UKRPI_ZC_CF</ZeroInflationCapFloorVolatility>
-  </ZeroInflationCapFloorVolatilities>
   <YYInflationCapFloorVolatilities id="default">
     <YYInflationCapFloorVolatility name="EUHICPXT">InflationCapFloorVolatility/EUHICPXT/EUHICPXT_YY_CF</YYInflationCapFloorVolatility>
     <YYInflationCapFloorVolatility name="UKRPI">InflationCapFloorVolatility/UKRPI/UKRPI_YY_CF</YYInflationCapFloorVolatility>
   </YYInflationCapFloorVolatilities>
+  <ZeroInflationCapFloorVolatilities id="default">
+    <ZeroInflationCapFloorVolatility name="EUHICPXT">InflationCapFloorVolatility/EUHICPXT/EUHICPXT_ZC_CF</ZeroInflationCapFloorVolatility>
+    <ZeroInflationCapFloorVolatility name="UKRPI">InflationCapFloorVolatility/UKRPI/UKRPI_ZC_CF</ZeroInflationCapFloorVolatility>
+  </ZeroInflationCapFloorVolatilities>
 </TodaysMarket>
