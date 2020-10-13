@@ -25,6 +25,7 @@
 
 #include <ored/model/inflation/inflationmodeldata.hpp>
 #include <ored/model/calibrationbasket.hpp>
+#include <ored/model/calibrationconfiguration.hpp>
 #include <ored/model/modelparameter.hpp>
 #include <string>
 #include <vector>
@@ -54,7 +55,8 @@ public:
         const ReversionParameter& realRateReversion,
         const VolatilityParameter& realRateVolatility,
         const VolatilityParameter& indexVolatility,
-        const LgmReversionTransformation& reversionTransformation = LgmReversionTransformation());
+        const LgmReversionTransformation& reversionTransformation = LgmReversionTransformation(),
+        const CalibrationConfiguration& calibrationConfiguration = CalibrationConfiguration());
 
     //! \name Inspectors
     //@{
@@ -62,6 +64,7 @@ public:
     const VolatilityParameter& realRateVolatility() const;
     const VolatilityParameter& indexVolatility() const;
     const LgmReversionTransformation& reversionTransformation() const;
+    const CalibrationConfiguration& calibrationConfiguration() const;
     //@}
 
     //! \name Serialisation
@@ -75,6 +78,7 @@ private:
     VolatilityParameter realRateVolatility_;
     VolatilityParameter indexVolatility_;
     LgmReversionTransformation reversionTransformation_;
+    CalibrationConfiguration calibrationConfiguration_;
 };
 
 }

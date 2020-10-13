@@ -537,6 +537,15 @@
     <ClInclude Include="ored\model\inflation\infjybuilder.hpp">
       <Filter>model\inflation</Filter>
     </ClInclude>
+    <ClInclude Include="ored\model\calibrationinstruments\yoycapfloor.hpp">
+      <Filter>model\calibrationinstruments</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\calibrationinstruments\yoyswap.hpp">
+      <Filter>model\calibrationinstruments</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\calibrationconfiguration.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
     <ClInclude Include="ored\portfolio\creditdefaultswapoption.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
@@ -964,6 +973,15 @@
     </ClCompile>
     <ClCompile Include="ored\model\inflation\infjybuilder.cpp">
       <Filter>model\inflation</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\calibrationinstruments\yoycapfloor.cpp">
+      <Filter>model\calibrationinstruments</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\calibrationinstruments\yoyswap.cpp">
+      <Filter>model\calibrationinstruments</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\calibrationconfiguration.cpp">
+      <Filter>model</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\creditdefaultswapoption.cpp">
       <Filter>portfolio</Filter>

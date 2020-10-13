@@ -53,8 +53,11 @@ marketdata/todaysmarketparameters.cpp
 marketdata/yieldcurve.cpp
 marketdata/yieldvolcurve.cpp
 model/calibrationbasket.cpp
+model/calibrationconfiguration.cpp
 model/calibrationinstrumentfactory.cpp
 model/calibrationinstruments/cpicapfloor.cpp
+model/calibrationinstruments/yoycapfloor.cpp
+model/calibrationinstruments/yoyswap.cpp
 model/crcirbuilder.cpp
 model/crcirdata.cpp
 model/crlgmbuilder.cpp
@@ -205,8 +208,11 @@ marketdata/todaysmarketparameters.hpp
 marketdata/yieldcurve.hpp
 marketdata/yieldvolcurve.hpp
 model/calibrationbasket.hpp
+model/calibrationconfiguration.hpp
 model/calibrationinstrumentfactory.hpp
 model/calibrationinstruments/cpicapfloor.hpp
+model/calibrationinstruments/yoycapfloor.hpp
+model/calibrationinstruments/yoyswap.hpp
 model/crcirbuilder.hpp
 model/crcirdata.hpp
 model/crlgmbuilder.hpp

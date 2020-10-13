@@ -187,10 +187,27 @@
     </xs:sequence>
   </xs:complexType>
   
+  <xs:complexType name="calibrationYoYCapFloor">
+    <xs:sequence>
+      <xs:element type="capFloor" name="Type"/>
+      <xs:element type="xs:string" name="Tenor"/>
+      <xs:element type="xs:string" name="Strike"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="calibrationYoYSwap">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Tenor"/>
+    </xs:sequence>
+  </xs:complexType>
+  
   <xs:complexType name="calibrationBasket">
     <xs:choice>
       <xs:element type="calibrationCpiCapFloor" name="CpiCapFloor" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element type="calibrationYoYCapFloor" name="YoYCapFloor" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element type="calibrationYoYSwap" name="YoYSwap" minOccurs="1" maxOccurs="unbounded"/>
     </xs:choice>
+    <xs:attribute type="xs:string" name="parameter" />
   </xs:complexType>
   
   <xs:complexType name="lgm">
@@ -293,9 +310,31 @@
     </xs:sequence>
   </xs:complexType>
   
+  <xs:complexType name="boundaryConstraint">
+    <xs:sequence>
+      <xs:element type="xs:decimal" name="LowerBound"/>
+      <xs:element type="xs:decimal" name="UpperBound"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="parameter" use="required"/>
+  </xs:complexType>
+  
+  <xs:complexType name="calibrationConfiguration">
+    <xs:sequence>
+      <xs:element type="positiveDecimal" name="RmseTolerance" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:positiveInteger" name="MaxIterations" maxOccurs="1" minOccurs="0"/>
+      <xs:element name="Constraints" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="boundaryConstraint" name="BoundaryConstraint" maxOccurs="unbounded" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  
   <xs:complexType name="jarrowYildrim">
     <xs:sequence>
-      <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="calibrationTypeType" name="CalibrationType"/>
       <xs:element name="RealRate">
         <xs:complexType>
@@ -320,6 +359,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element type="calibrationConfiguration" name="CalibrationConfiguration" maxOccurs="1" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="index" />
   </xs:complexType>

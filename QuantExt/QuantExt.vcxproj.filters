@@ -942,6 +942,24 @@
     <ClInclude Include="qle\models\projectedcrossassetmodel.hpp">
       <Filter>models</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\yoyswaphelper.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\yoycapfloorhelper.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticjycpicapfloorengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\jyyoyinflationcouponpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticjyyoycapfloorengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\utilities\inflation.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
     <ClInclude Include="qle\models\crcirpp.hpp">
       <Filter>models</Filter>
     </ClInclude>
@@ -1623,6 +1641,24 @@
     </ClCompile>
     <ClCompile Include="qle\models\projectedcrossassetmodel.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\yoyswaphelper.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\yoycapfloorhelper.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticjycpicapfloorengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\jyyoyinflationcouponpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticjyyoycapfloorengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\utilities\inflation.cpp">
+      <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="qle\models\crcirpp.cpp">
       <Filter>models</Filter>

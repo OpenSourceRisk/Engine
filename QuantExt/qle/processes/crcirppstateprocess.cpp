@@ -43,7 +43,6 @@ Disposable<Array> CrCirppStateProcess::evolve(Time t0, const Array& x0, Time dt,
     y0 = model_->parametrization()->y0(t0);
 
     const Real sdt = std::sqrt(dt);
-    Real ySqrt;
     switch (discretization_) {
 
     case BrigoAlfonsi: {
