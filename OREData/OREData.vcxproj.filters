@@ -546,6 +546,21 @@
     <ClInclude Include="ored\model\calibrationconfiguration.hpp">
       <Filter>model</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\creditdefaultswapoption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\crcirbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\crcirdata.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\crlgmbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\crlgmdata.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -966,6 +981,21 @@
       <Filter>model\calibrationinstruments</Filter>
     </ClCompile>
     <ClCompile Include="ored\model\calibrationconfiguration.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\creditdefaultswapoption.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\crcirbuilder.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\crcirdata.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\crlgmbuilder.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\crlgmdata.cpp">
       <Filter>model</Filter>
     </ClCompile>
   </ItemGroup>

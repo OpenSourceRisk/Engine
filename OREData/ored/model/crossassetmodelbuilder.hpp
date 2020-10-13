@@ -72,6 +72,8 @@ public:
         const std::string& configurationEqCalibration = Market::defaultConfiguration,
         //! Market configuration for INF model calibration
         const std::string& configurationInfCalibration = Market::defaultConfiguration,
+        //! Market configuration for CR model calibration
+        const std::string& configurationCrCalibration = Market::defaultConfiguration,
         //! Market configuration for simulation
         const std::string& configurationFinalModel = Market::defaultConfiguration,
         //! Daycounter for date/time conversions
@@ -128,7 +130,7 @@ private:
     const boost::shared_ptr<ore::data::Market> market_;
     const boost::shared_ptr<CrossAssetModelData> config_;
     const std::string configurationLgmCalibration_, configurationFxCalibration_, configurationEqCalibration_,
-        configurationInfCalibration_, configurationFinalModel_;
+        configurationInfCalibration_, configurationCrCalibration_, configurationFinalModel_;
     const DayCounter dayCounter_;
     const bool dontCalibrate_;
     const bool continueOnError_;

@@ -17,6 +17,8 @@
 */
 
 #include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/model/crcirbuilder.hpp>
+#include <ored/model/crlgmbuilder.hpp>
 #include <ored/model/eqbsbuilder.hpp>
 #include <ored/model/fxbsbuilder.hpp>
 #include <ored/model/inflation/infdkbuilder.hpp>
@@ -74,11 +76,13 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
     const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<CrossAssetModelData>& config,
     const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
     const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
-    const std::string& configurationFinalModel, const DayCounter& dayCounter, const bool dontCalibrate,
+    const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
+    const DayCounter& dayCounter, const bool dontCalibrate,
     const bool continueOnError, const std::string& referenceCalibrationGrid)
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
-      configurationInfCalibration_(configurationInfCalibration), configurationFinalModel_(configurationFinalModel),
+      configurationInfCalibration_(configurationInfCalibration), configurationCrCalibration_(configurationCrCalibration),
+      configurationFinalModel_(configurationFinalModel),
       dayCounter_(dayCounter), dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
       referenceCalibrationGrid_(referenceCalibrationGrid),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
@@ -155,8 +159,8 @@ void CrossAssetModelBuilder::buildModel() const {
     LOG("Start building CrossAssetModel");
     DLOG("configurations: LgmCalibration "
          << configurationLgmCalibration_ << ", FxCalibration " << configurationFxCalibration_ << ", EqCalibration "
-         << configurationEqCalibration_ << ", InfCalibration " << configurationInfCalibration_ << ", FinalModel "
-         << configurationFinalModel_);
+         << configurationEqCalibration_ << ", InfCalibration " << configurationInfCalibration_ << ", CrCalibration"
+         << configurationCrCalibration_ << ", FinalModel " << configurationFinalModel_);
     if (dontCalibrate_) {
         DLOG("Calibration of the model is disabled.");
     }
@@ -287,6 +291,37 @@ void CrossAssetModelBuilder::buildModel() const {
         infIndices.push_back(imData->index());
     }
 
+    /*******************************************************
+     * Build the CR parametrizations and calibration baskets
+     */
+    // LGM (if any)
+    std::vector<boost::shared_ptr<QuantExt::CrLgm1fParametrization>> crLgmParametrizations;
+    for (Size i = 0; i < config_->crLgmConfigs().size(); ++i) {
+        LOG("CR LGM Parametrization " << i);
+        boost::shared_ptr<CrLgmData> cr = config_->crLgmConfigs()[i];
+        string crName = cr->name();
+        boost::shared_ptr<CrLgmBuilder> builder = boost::make_shared<CrLgmBuilder>(market_, cr, configurationCrCalibration_);
+        boost::shared_ptr<QuantExt::CrLgm1fParametrization> parametrization = builder->parametrization();
+        crLgmParametrizations.push_back(parametrization);
+        crNames.push_back(crName);
+        subBuilders_.insert(builder);
+	processInfo[CT::CR].emplace_back(crName, 1);
+    }
+
+    // CIR (if any)
+    std::vector<boost::shared_ptr<QuantExt::CrCirppParametrization>> crCirParametrizations;
+    for (Size i = 0; i < config_->crCirConfigs().size(); ++i) {
+        LOG("CR CIR Parametrization " << i);
+        boost::shared_ptr<CrCirData> cr = config_->crCirConfigs()[i];
+        string crName = cr->name();
+        boost::shared_ptr<CrCirBuilder> builder = boost::make_shared<CrCirBuilder>(market_, cr, configurationCrCalibration_);
+        boost::shared_ptr<QuantExt::CrCirppParametrization> parametrization = builder->parametrization();
+        crCirParametrizations.push_back(parametrization);
+        crNames.push_back(crName);
+        subBuilders_.insert(builder);
+	processInfo[CT::CR].emplace_back(crName, 1);
+    }
+
     std::vector<boost::shared_ptr<QuantExt::Parametrization>> parametrizations;
     for (Size i = 0; i < irParametrizations.size(); i++)
         parametrizations.push_back(irParametrizations[i]);
@@ -295,6 +330,10 @@ void CrossAssetModelBuilder::buildModel() const {
     for (Size i = 0; i < eqParametrizations.size(); i++)
         parametrizations.push_back(eqParametrizations[i]);
     parametrizations.insert(parametrizations.end(), infParameterizations.begin(), infParameterizations.end());
+    for (Size i = 0; i < crLgmParametrizations.size(); i++)
+        parametrizations.push_back(crLgmParametrizations[i]);
+    for (Size i = 0; i < crCirParametrizations.size(); i++)
+        parametrizations.push_back(crCirParametrizations[i]);
 
     QL_REQUIRE(fxParametrizations.size() == irParametrizations.size() - 1, "mismatch in IR/FX parametrization sizes");
 

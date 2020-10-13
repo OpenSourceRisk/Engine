@@ -24,6 +24,7 @@
 // clang-format on
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
+#include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
 #include <qle/models/crossassetanalytics.hpp>
@@ -764,15 +765,18 @@ struct Lgm5fTestData {
 }; // LGM5FTestData
 
 struct IrFxCrModelTestData {
-    IrFxCrModelTestData()
-        : referenceDate(30, July, 2015), eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
+    IrFxCrModelTestData(bool includeCirr = false)
+        : referenceDate(30, July, 2015), N(includeCirr ? 11 : 8),
+          eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
           usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
           gbpYts(boost::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed())),
           fxEurUsd(boost::make_shared<SimpleQuote>(0.90)), fxEurGbp(boost::make_shared<SimpleQuote>(1.35)),
           n1Ts(boost::make_shared<FlatHazardRate>(referenceDate, 0.01, Actual365Fixed())),
           n2Ts(boost::make_shared<FlatHazardRate>(referenceDate, 0.05, Actual365Fixed())),
           n3Ts(boost::make_shared<FlatHazardRate>(referenceDate, 0.10, Actual365Fixed())), n1Alpha(0.01), n1Kappa(0.01),
-          n2Alpha(0.015), n2Kappa(0.015), n3Alpha(0.0050), n3Kappa(0.0050), c(8, 8, 0.0) {
+          n2Alpha(0.015), n2Kappa(0.015), n3Alpha(0.0050), n3Kappa(0.0050),
+          cirppKappa(0.206), cirppTheta(0.04), cirppSigma(sqrt(2 * cirppKappa * cirppTheta) - 1E-10),
+          cirppY0(cirppTheta), c(N, N, 0.0) {
 
         Settings::instance().evaluationDate() = referenceDate;
         volstepdates.push_back(Date(15, July, 2016));
@@ -834,10 +838,18 @@ struct IrFxCrModelTestData {
         fxGbp_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(GBPCurrency(), fxEurGbp, volsteptimesFx_a,
                                                                            fxSigmasGbp_a);
 
-        // credit
+        // credit LGM
         n1_p = boost::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n1Ts, n1Alpha, n1Kappa);
         n2_p = boost::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n2Ts, n2Alpha, n2Kappa);
         n3_p = boost::make_shared<CrLgm1fConstantParametrization>(EURCurrency(), n3Ts, n3Alpha, n3Kappa);
+
+        // credit cir++ (shifted = true), parameters are taken from CrCirppModelTest
+        n1_cirpp = boost::make_shared<CrCirppConstantWithFellerParametrization>(
+            EURCurrency(), n1Ts, cirppKappa, cirppTheta, cirppSigma, cirppY0, true);
+        n2_cirpp = boost::make_shared<CrCirppConstantWithFellerParametrization>(
+            USDCurrency(), n2Ts, cirppKappa, cirppTheta, cirppSigma, cirppY0, true);
+        n3_cirpp = boost::make_shared<CrCirppConstantWithFellerParametrization>(
+            GBPCurrency(), n3Ts, cirppKappa, cirppTheta, cirppSigma, cirppY0, true);
 
         singleModels.push_back(eurLgm_p);
         singleModels.push_back(usdLgm_p);
@@ -847,32 +859,65 @@ struct IrFxCrModelTestData {
         singleModels.push_back(n1_p);
         singleModels.push_back(n2_p);
         singleModels.push_back(n3_p);
+        if (includeCirr) {
+            singleModels.push_back(n1_cirpp);
+            singleModels.push_back(n2_cirpp);
+            singleModels.push_back(n3_cirpp);
+        }
 
-        Real tmp[8][8] = {
-            // EUR   USD   GBP    FX1  FX2   N1   N2   N3
-            { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // EUR
-            { 0.6, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // USD
-            { 0.3, 0.1, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // GBP
-            { 0.2, 0.2, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0 }, // FX1
-            { 0.3, 0.1, 0.1, 0.3, 1.0, 0.0, 0.0, 0.0 }, // FX2
-            { 0.8, 0.2, 0.1, 0.4, 0.2, 1.0, 0.0, 0.0 }, // N1
-            { 0.6, 0.1, 0.2, 0.2, 0.5, 0.5, 1.0, 0.0 }, // N2
-            { 0.3, 0.2, 0.1, 0.1, 0.3, 0.4, 0.2, 1.0 }  // N3
+        std::vector<std::vector<Real>> tmp;
+        if (includeCirr) {
+            tmp = {
+                // EUR USD  GBP  FX1  FX2   N1   N2   N3  NC1  NC2  NC3
+                { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // EUR
+                { 0.6, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // USD
+                { 0.3, 0.1, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // GBP
+                { 0.2, 0.2, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // FX1
+                { 0.3, 0.1, 0.1, 0.3, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // FX2
+                { 0.8, 0.2, 0.1, 0.4, 0.2, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // N1
+                { 0.6, 0.1, 0.2, 0.2, 0.5, 0.5, 1.0, 0.0, 0.0, 0.0, 0.0 }, // N2
+                { 0.3, 0.2, 0.1, 0.1, 0.3, 0.4, 0.2, 1.0, 0.0, 0.0, 0.0 }, // N3
+                { 0.0, 0.2, 0.1, 0.4, 0.2, 0.5, 0.3, 0.2, 1.0, 0.0, 0.0 }, // N1 (CIR++)
+                { 0.0, 0.1, 0.2, 0.0, 0.5, 0.4, 0.2, 0.1, 0.4, 1.0, 0.0 }, // N2 (CIR++)
+                { 0.0, 0.2, 0.1, 0.1, 0.0, 0.3, 0.2, 0.2, 0.3, 0.5, 1.0 } // N3 (CIR++)
+            };
+        } else {
+            tmp = {
+                // EUR USD  GBP  FX1  FX2   N1   N2   N3
+                { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // EUR
+                { 0.6, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // USD
+                { 0.3, 0.1, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0 }, // GBP
+                { 0.2, 0.2, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0 }, // FX1
+                { 0.3, 0.1, 0.1, 0.3, 1.0, 0.0, 0.0, 0.0 }, // FX2
+                { 0.8, 0.2, 0.1, 0.4, 0.2, 1.0, 0.0, 0.0 }, // N1
+                { 0.6, 0.1, 0.2, 0.2, 0.5, 0.5, 1.0, 0.0 }, // N2
+                { 0.3, 0.2, 0.1, 0.1, 0.3, 0.4, 0.2, 1.0 } // N3
+            };
         };
 
-        for (Size i = 0; i < 8; ++i) {
+        for (Size i = 0; i < N; ++i) {
             for (Size j = 0; j <= i; ++j) {
                 c[i][j] = c[j][i] = tmp[i][j];
             }
         }
 
-        BOOST_TEST_MESSAGE("correlation matrix is\n" << c);
-
-        model = boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None);
+        BOOST_TEST_MESSAGE("input correlation matrix is\n" << c);
+        Matrix ctmp = pseudoSqrt(c, SalvagingAlgorithm::Spectral);
+        Matrix cs = ctmp * transpose(ctmp);
+        // this leads technically to non-zero correlations EUR/CIR++ and FX/CIR++, but
+        // these are small, so that the missing drift adjustment in the state process
+        // evolve method can be ignored
+        BOOST_TEST_MESSAGE("salvaged correlation matrix is\n" << cs);
+        if (includeCirr)
+            model = boost::make_shared<CrossAssetModel>(singleModels, cs, SalvagingAlgorithm::None);
+        else
+            model = boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None);
+        BOOST_TEST_MESSAGE("cam+ model built.");
     }
 
     SavedSettings backup;
     Date referenceDate;
+    Size N;
     // ir-fx
     Handle<YieldTermStructure> eurYts, usdYts, gbpYts;
     std::vector<Date> volstepdates, volstepdatesFx;
@@ -885,8 +930,12 @@ struct IrFxCrModelTestData {
     boost::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
     // cr
     Handle<DefaultProbabilityTermStructure> n1Ts, n2Ts, n3Ts;
+    // LGM
     boost::shared_ptr<CrLgm1fParametrization> n1_p, n2_p, n3_p;
     Real n1Alpha, n1Kappa, n2Alpha, n2Kappa, n3Alpha, n3Kappa;
+    // CIR++
+    boost::shared_ptr<CrCirppParametrization> n1_cirpp, n2_cirpp, n3_cirpp;
+    Real cirppKappa, cirppTheta, cirppSigma, cirppY0;
     // model
     std::vector<boost::shared_ptr<Parametrization> > singleModels;
     Matrix c;
@@ -1396,24 +1445,25 @@ BOOST_AUTO_TEST_CASE(testLgmMcWithShift) {
 
 } // testLgmMcWithShift
 
-BOOST_AUTO_TEST_CASE(testIrFxCrMartingaleProperty) {
+BOOST_AUTO_TEST_CASE(testIrFxCrCirppMartingaleProperty) {
 
-    BOOST_TEST_MESSAGE("Testing martingale property in ir-fx-cr model for "
+    BOOST_TEST_MESSAGE("Testing martingale property in ir-fx-cr(lgm)-cf(cir++) model for "
                        "Euler and exact discretizations...");
 
-    IrFxCrModelTestData d;
+    IrFxCrModelTestData d(false);
+    IrFxCrModelTestData d_cirpp(true);
 
     boost::shared_ptr<StochasticProcess> process1 = d.model->stateProcess(CrossAssetStateProcess::exact);
-    boost::shared_ptr<StochasticProcess> process2 = d.model->stateProcess(CrossAssetStateProcess::euler);
+    boost::shared_ptr<StochasticProcess> process2 = d_cirpp.model->stateProcess(CrossAssetStateProcess::euler);
 
     Size n = 50000;                         // number of paths
     Size seed = 18;                         // rng seed
     Time T = 10.0;                          // maturity of payoff
     Time T2 = 20.0;                         // zerobond maturity
-    Size steps = static_cast<Size>(T * 24); // number of steps taken (euler)
+    Size steps = static_cast<Size>(T * 24); // number of steps taken (euler / Brigo-Alfonsi)
 
     LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(d.model->dimension() * 1, seed);
-    LowDiscrepancy::rsg_type sg2 = LowDiscrepancy::make_sequence_generator(d.model->dimension() * steps, seed);
+    LowDiscrepancy::rsg_type sg2 = LowDiscrepancy::make_sequence_generator(d_cirpp.model->dimension() * steps, seed);
 
     TimeGrid grid1(T, 1);
     MultiPathGenerator<LowDiscrepancy::rsg_type> pg1(process1, grid1, sg1, false);
@@ -1423,7 +1473,7 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMartingaleProperty) {
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > eurzb1, usdzb1, gbpzb1, n1eur1, n2usd1,
         n3gbp1;
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > eurzb2, usdzb2, gbpzb2, n1eur2, n2usd2,
-        n3gbp2;
+        n3gbp2, n1cir2, n2cir2, n3cir2;
 
     for (Size j = 0; j < n; ++j) {
         Sample<MultiPath> path1 = pg1.next();
@@ -1446,12 +1496,18 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMartingaleProperty) {
         Real zgbp2 = path2.value[2][l2];
         Real fxusd2 = std::exp(path2.value[3][l2]);
         Real fxgbp2 = std::exp(path2.value[4][l2]);
-        Real crzn12 = path2.value[5][l2];
+        Real crzn12 = path2.value[5][l2]; // CR LGM
         Real cryn12 = path2.value[6][l2];
         Real crzn22 = path2.value[7][l2];
         Real cryn22 = path2.value[8][l2];
         Real crzn32 = path2.value[9][l2];
         Real cryn32 = path2.value[10][l2];
+        Real ciry12 = path2.value[11][l2]; // CR CIR++
+        Real cirn12 = path2.value[12][l2];
+        Real ciry22 = path2.value[13][l2];
+        Real cirn22 = path2.value[14][l2];
+        Real ciry32 = path2.value[15][l2];
+        Real cirn32 = path2.value[16][l2];
 
         // EUR zerobond
         eurzb1(d.model->discountBond(0, T, T2, zeur1) / d.model->numeraire(0, T, zeur1));
@@ -1472,22 +1528,33 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMartingaleProperty) {
                d.model->numeraire(0, T, zeur1));
 
         // EUR zerobond
-        eurzb2(d.model->discountBond(0, T, T2, zeur2) / d.model->numeraire(0, T, zeur2));
+        eurzb2(d_cirpp.model->discountBond(0, T, T2, zeur2) / d_cirpp.model->numeraire(0, T, zeur2));
         // USD zerobond
-        usdzb2(d.model->discountBond(1, T, T2, zusd2) * fxusd2 / d.model->numeraire(0, T, zeur2));
+        usdzb2(d_cirpp.model->discountBond(1, T, T2, zusd2) * fxusd2 / d_cirpp.model->numeraire(0, T, zeur2));
         // GBP zerobond
-        gbpzb2(d.model->discountBond(2, T, T2, zgbp2) * fxgbp2 / d.model->numeraire(0, T, zeur2));
+        gbpzb2(d_cirpp.model->discountBond(2, T, T2, zgbp2) * fxgbp2 / d_cirpp.model->numeraire(0, T, zeur2));
         // EUR defaultable zerobond for name 1
-        std::pair<Real, Real> sn12 = d.model->crlgm1fS(0, 0, T, T2, crzn12, cryn12);
-        n1eur2(sn12.first * sn12.second * d.model->discountBond(0, T, T2, zeur2) / d.model->numeraire(0, T, zeur2));
+        std::pair<Real, Real> sn12 = d_cirpp.model->crlgm1fS(0, 0, T, T2, crzn12, cryn12);
+        n1eur2(sn12.first * sn12.second * d_cirpp.model->discountBond(0, T, T2, zeur2) / d_cirpp.model->numeraire(0, T, zeur2));
         // USD defaultable zerobond for name 2
-        std::pair<Real, Real> sn22 = d.model->crlgm1fS(1, 1, T, T2, crzn22, cryn22);
-        n2usd2(sn22.first * sn22.second * d.model->discountBond(1, T, T2, zusd2) * fxusd2 /
-               d.model->numeraire(0, T, zeur2));
+        std::pair<Real, Real> sn22 = d_cirpp.model->crlgm1fS(1, 1, T, T2, crzn22, cryn22);
+        n2usd2(sn22.first * sn22.second * d_cirpp.model->discountBond(1, T, T2, zusd2) * fxusd2 /
+               d_cirpp.model->numeraire(0, T, zeur2));
         // GBP defaultable zerobond for name 3
-        std::pair<Real, Real> sn32 = d.model->crlgm1fS(2, 2, T, T2, crzn32, cryn32);
-        n3gbp2(sn32.first * sn32.second * d.model->discountBond(2, T, T2, zgbp2) * fxgbp2 /
-               d.model->numeraire(0, T, zeur2));
+        std::pair<Real, Real> sn32 = d_cirpp.model->crlgm1fS(2, 2, T, T2, crzn32, cryn32);
+        n3gbp2(sn32.first * sn32.second * d_cirpp.model->discountBond(2, T, T2, zgbp2) * fxgbp2 /
+               d_cirpp.model->numeraire(0, T, zeur2));
+        // EUR defaultable zerobond for name 1 (CIR++)
+        std::pair<Real, Real> sc12 = d_cirpp.model->crcirppS(3, T, T2, ciry12, cirn12);
+        n1cir2(sc12.first * sc12.second * d_cirpp.model->discountBond(0, T, T2, zeur2) / d_cirpp.model->numeraire(0, T, zeur2));
+        // USD defaultable zerobond for name 2 (CIR++)
+        std::pair<Real, Real> sc22 = d_cirpp.model->crcirppS(4, T, T2, ciry22, cirn22);
+        n2cir2(sc22.first * sc22.second * d_cirpp.model->discountBond(1, T, T2, zusd2) * fxusd2 /
+               d_cirpp.model->numeraire(0, T, zeur2));
+        // GBP defaultable zerobond for name 3 (CIR++)
+        std::pair<Real, Real> sc32 = d_cirpp.model->crcirppS(5, T, T2, ciry32, cirn32);
+        n3cir2(sc32.first * sc32.second * d_cirpp.model->discountBond(2, T, T2, zgbp2) * fxgbp2 /
+               d_cirpp.model->numeraire(0, T, zeur2));
     }
 
     BOOST_TEST_MESSAGE("EXACT:");
@@ -1508,19 +1575,27 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMartingaleProperty) {
 
     BOOST_TEST_MESSAGE("\nEULER:");
     BOOST_TEST_MESSAGE("EUR zb = " << mean(eurzb2) << " +- " << error_of<tag::mean>(eurzb2) << " vs analytical "
-                                   << d.eurYts->discount(T2));
+                                   << d_cirpp.eurYts->discount(T2));
     BOOST_TEST_MESSAGE("USD zb = " << mean(usdzb2) << " +- " << error_of<tag::mean>(usdzb2) << " vs analytical "
-                                   << d.usdYts->discount(T2) * d.fxEurUsd->value());
+                                   << d_cirpp.usdYts->discount(T2) * d_cirpp.fxEurUsd->value());
     BOOST_TEST_MESSAGE("GBP zb = " << mean(gbpzb2) << " +- " << error_of<tag::mean>(gbpzb2) << " vs analytical "
-                                   << d.gbpYts->discount(T2) * d.fxEurGbp->value());
+                                   << d_cirpp.gbpYts->discount(T2) * d_cirpp.fxEurGbp->value());
     BOOST_TEST_MESSAGE("N1 zb EUR = " << mean(n1eur2) << " +- " << error_of<tag::mean>(n1eur2) << " vs analytical "
-                                      << d.eurYts->discount(T2) * d.n1Ts->survivalProbability(T2));
+                                      << d_cirpp.eurYts->discount(T2) * d_cirpp.n1Ts->survivalProbability(T2));
     BOOST_TEST_MESSAGE("N2 zb USD = " << mean(n2usd2) << " +- " << error_of<tag::mean>(n2usd2) << " vs analytical "
-                                      << d.fxEurUsd->value() * d.usdYts->discount(T2) *
-                                             d.n2Ts->survivalProbability(T2));
+                                      << d_cirpp.fxEurUsd->value() * d_cirpp.usdYts->discount(T2) *
+                                             d_cirpp.n2Ts->survivalProbability(T2));
     BOOST_TEST_MESSAGE("N3 zb GBP = " << mean(n3gbp2) << " +- " << error_of<tag::mean>(n3gbp2) << " vs analytical "
-                                      << d.fxEurGbp->value() * d.gbpYts->discount(T2) *
-                                             d.n3Ts->survivalProbability(T2));
+                                      << d_cirpp.fxEurGbp->value() * d_cirpp.gbpYts->discount(T2) *
+                                             d_cirpp.n3Ts->survivalProbability(T2));
+    BOOST_TEST_MESSAGE("N1 zb EUR = " << mean(n1cir2) << " +- " << error_of<tag::mean>(n1cir2) << " vs analytical "
+                                      << d_cirpp.eurYts->discount(T2) * d_cirpp.n1Ts->survivalProbability(T2));
+    BOOST_TEST_MESSAGE("N2 zb USD = " << mean(n2cir2) << " +- " << error_of<tag::mean>(n2cir2) << " vs analytical "
+                                      << d_cirpp.fxEurUsd->value() * d_cirpp.usdYts->discount(T2) *
+                                             d_cirpp.n2Ts->survivalProbability(T2));
+    BOOST_TEST_MESSAGE("N3 zb GBP = " << mean(n3cir2) << " +- " << error_of<tag::mean>(n3cir2) << " vs analytical "
+                                      << d_cirpp.fxEurGbp->value() * d_cirpp.gbpYts->discount(T2) *
+                                             d_cirpp.n3Ts->survivalProbability(T2));
 
     Real tol1 = 2.0E-4;  // EXACT
     Real tol2 = 12.0E-4; // EULER
@@ -1531,48 +1606,64 @@ BOOST_AUTO_TEST_CASE(testIrFxCrMartingaleProperty) {
                                                                                  << ", tolerance " << tol1);
     ev = d.usdYts->discount(T2) * d.fxEurUsd->value();
     if (std::abs(mean(usdzb1) - ev) > tol1)
-        BOOST_FAIL("Martingale test failed for eurzb (exact discr.), excpected " << ev << ", got " << mean(usdzb1)
+        BOOST_FAIL("Martingale test failed for usdzb (exact discr.), excpected " << ev << ", got " << mean(usdzb1)
                                                                                  << ", tolerance " << tol1);
     ev = d.gbpYts->discount(T2) * d.fxEurGbp->value();
     if (std::abs(mean(gbpzb1) - ev) > tol1)
-        BOOST_FAIL("Martingale test failed for eurzb (exact discr.), excpected " << ev << ", got " << mean(gbpzb1)
+        BOOST_FAIL("Martingale test failed for gbpzb (exact discr.), excpected " << ev << ", got " << mean(gbpzb1)
                                                                                  << ", tolerance " << tol1);
     ev = d.eurYts->discount(T2) * d.n1Ts->survivalProbability(T2);
     if (std::abs(mean(n1eur1) - ev) > tol1)
-        BOOST_FAIL("Martingale test failed for eurzb (exact discr.), excpected " << ev << ", got " << mean(n1eur1)
+        BOOST_FAIL("Martingale test failed for n1eur (exact discr.), excpected " << ev << ", got " << mean(n1eur1)
                                                                                  << ", tolerance " << tol1);
     ev = d.fxEurUsd->value() * d.usdYts->discount(T2) * d.n2Ts->survivalProbability(T2);
     if (std::abs(mean(n2usd1) - ev) > tol1)
-        BOOST_FAIL("Martingale test failed for eurzb (exact discr.), excpected " << ev << ", got " << mean(n2usd1)
+        BOOST_FAIL("Martingale test failed for n2usd (exact discr.), excpected " << ev << ", got " << mean(n2usd1)
                                                                                  << ", tolerance " << tol1);
     ev = d.fxEurGbp->value() * d.gbpYts->discount(T2) * d.n3Ts->survivalProbability(T2);
     if (std::abs(mean(n3gbp1) - ev) > tol1)
-        BOOST_FAIL("Martingale test failed for eurzb (exact discr.), excpected " << ev << ", got " << mean(n3gbp1)
+        BOOST_FAIL("Martingale test failed for n3gbp (exact discr.), excpected " << ev << ", got " << mean(n3gbp1)
                                                                                  << ", tolerance " << tol1);
 
-    ev = d.eurYts->discount(T2);
+    ev = d_cirpp.eurYts->discount(T2);
     if (std::abs(mean(eurzb2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for eurzb (Euler discr.), excpected " << ev << ", got " << mean(eurzb2)
                                                                                  << ", tolerance " << tol2);
-    ev = d.usdYts->discount(T2) * d.fxEurUsd->value();
+    ev = d_cirpp.usdYts->discount(T2) * d_cirpp.fxEurUsd->value();
     if (std::abs(mean(usdzb2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for usdzb (Euler discr.), excpected "
                    << ev << ", got " << mean(usdzb2) << ", tolerance " << tol2 * error_of<tag::mean>(usdzb2));
-    ev = d.gbpYts->discount(T2) * d.fxEurGbp->value();
+    ev = d_cirpp.gbpYts->discount(T2) * d_cirpp.fxEurGbp->value();
     if (std::abs(mean(gbpzb2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for gbpzb (Euler discr.), excpected " << ev << ", got " << mean(gbpzb2)
                                                                                  << ", tolerance " << tol2);
-    ev = d.eurYts->discount(T2) * d.n1Ts->survivalProbability(T2);
+
+    // CR LGM
+    ev = d_cirpp.eurYts->discount(T2) * d_cirpp.n1Ts->survivalProbability(T2);
     if (std::abs(mean(n1eur2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for n1eur (Euler discr.), excpected " << ev << ", got " << mean(n1eur2)
                                                                                  << ", tolerance " << tol2);
-    ev = d.fxEurUsd->value() * d.usdYts->discount(T2) * d.n2Ts->survivalProbability(T2);
+    ev = d_cirpp.fxEurUsd->value() * d_cirpp.usdYts->discount(T2) * d_cirpp.n2Ts->survivalProbability(T2);
     if (std::abs(mean(n2usd2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for n2usd (Euler discr.), excpected " << ev << ", got " << mean(n2usd2)
                                                                                  << ", tolerance " << tol2);
-    ev = d.fxEurGbp->value() * d.gbpYts->discount(T2) * d.n3Ts->survivalProbability(T2);
+    ev = d_cirpp.fxEurGbp->value() * d_cirpp.gbpYts->discount(T2) * d_cirpp.n3Ts->survivalProbability(T2);
     if (std::abs(mean(n3gbp2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for n3gbp (Euler discr.), excpected " << ev << ", got " << mean(n3gbp2)
+                                                                                 << ", tolerance " << tol2);
+
+    // CR CIR
+    ev = d_cirpp.eurYts->discount(T2) * d_cirpp.n1Ts->survivalProbability(T2);
+    if (std::abs(mean(n1cir2) - ev) > tol2)
+        BOOST_FAIL("Martingale test failed for n1cir (Euler discr.), excpected " << ev << ", got " << mean(n1cir2)
+                                                                                 << ", tolerance " << tol2);
+    ev = d_cirpp.fxEurUsd->value() * d_cirpp.usdYts->discount(T2) * d_cirpp.n2Ts->survivalProbability(T2);
+    if (std::abs(mean(n2cir2) - ev) > tol2)
+        BOOST_FAIL("Martingale test failed for n2cir2 (Euler discr.), excpected " << ev << ", got " << mean(n2cir2)
+                                                                                 << ", tolerance " << tol2);
+    ev = d_cirpp.fxEurGbp->value() * d_cirpp.gbpYts->discount(T2) * d_cirpp.n3Ts->survivalProbability(T2);
+    if (std::abs(mean(n3cir2) - ev) > tol2)
+        BOOST_FAIL("Martingale test failed for n3cir2 (Euler discr.), excpected " << ev << ", got " << mean(n3cir2)
                                                                                  << ", tolerance " << tol2);
 
 } // testIrFxCrMartingaleProperty

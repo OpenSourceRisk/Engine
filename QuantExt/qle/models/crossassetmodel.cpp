@@ -98,6 +98,14 @@ Size CrossAssetModel::infIndex(const std::string& index) const {
     return i;
 }
 
+Size CrossAssetModel::crName(const std::string& name) const {
+    Size i = 0;
+    while (i < components(CR) && cr(i)->name() != name)
+        ++i;
+    QL_REQUIRE(i < components(INF), "credit name " << name << " not present in cross asset model");
+    return i;
+}
+
 void CrossAssetModel::update() {
     cache_crlgm1fS_.clear();
     cache_infdkI_.clear();
@@ -234,6 +242,8 @@ std::pair<AssetType, ModelType> CrossAssetModel::getComponentType(const Size i) 
         return std::make_pair(INF, JY);
     if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
         return std::make_pair(CR, LGM1F);
+    if (boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]))
+        return std::make_pair(CR, CIRPP);
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return std::make_pair(EQ, BS);
     QL_FAIL("parametrization " << i << " has unknown type");
@@ -250,6 +260,8 @@ Size CrossAssetModel::getNumberOfParameters(const Size i) const {
         return 3;
     if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
         return 2;
+    if (boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]))
+        return 4;
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return 1;
     QL_FAIL("parametrization " << i << " has unknown type");
@@ -266,6 +278,8 @@ Size CrossAssetModel::getNumberOfBrownians(const Size i) const {
         return 2;
     if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
         return 1;
+    if (boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]))
+        return 1;
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return 1;
     QL_FAIL("parametrization " << i << " has unknown type");
@@ -281,6 +295,8 @@ Size CrossAssetModel::getNumberOfStateVariables(const Size i) const {
     if (boost::dynamic_pointer_cast<InfJyParameterization>(p_[i]))
         return 2;
     if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
+        return 2;
+    if (boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]))
         return 2;
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return 1;
@@ -402,6 +418,15 @@ void CrossAssetModel::initializeParametrizations() {
 
     j = 0;
     while (i < p_.size() && getComponentType(i).first == CR) {
+
+        if (getComponentType(i).second == CIRPP) {
+            auto tmp = boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]);
+            QL_REQUIRE(tmp,
+                       "CrossAssetModelPlus::initializeParametrizations(): expected CrCirppParametrization");
+            crcirppModel_.push_back(boost::make_shared<CrCirpp>(tmp));
+        } else
+            crcirppModel_.push_back(boost::shared_ptr<CrCirpp>());
+
         updateIndices(CR, i, cIdxTmp, pIdxTmp, aIdxTmp);
         cIdxTmp += getNumberOfBrownians(i);
         pIdxTmp += getNumberOfStateVariables(i);
@@ -718,6 +743,7 @@ std::pair<Real, Real> CrossAssetModel::crlgm1fS(const Size i, const Size ccy, co
                                                 const Real y) const {
     QL_REQUIRE(ccy < components(IR), "ccy index (" << ccy << ") must be in 0..." << (components(IR) - 1));
     QL_REQUIRE(t < T || close_enough(t, T), "crlgm1fS: t (" << t << ") <= T (" << T << ") required");
+    QL_REQUIRE(modelType(CR, i) == LGM1F, "model at " << i << " is not CR-LGM1F");
     cache_key k = { i, ccy, t, T };
     boost::unordered_map<cache_key, std::pair<Real, Real> >::const_iterator it = cache_crlgm1fS_.find(k);
     Real V0, V_tilde;
@@ -756,6 +782,15 @@ std::pair<Real, Real> CrossAssetModel::crlgm1fS(const Size i, const Size ccy, co
     Real Stilde_t_T = crlgm1f(i)->termStructure()->survivalProbability(T) /
                       crlgm1f(i)->termStructure()->survivalProbability(t) * std::exp(-(HlT - Hlt) * z + V_tilde);
     return std::make_pair(St, Stilde_t_T);
+}
+
+std::pair<Real, Real> CrossAssetModel::crcirppS(const Size i, const Time t, const Time T,
+                                                const Real y, const Real s) const {
+    QL_REQUIRE(modelType(CR, i) == CIRPP, "model at " << i << " is not CR-CIR")
+    if (close_enough(t, T))
+        return std::make_pair(s, 1.0);
+    else
+        return std::make_pair(s, crcirppModel_[i]->survivalProbability(t, T, y));
 }
 
 Real CrossAssetModel::infV(const Size i, const Size ccy, const Time t, const Time T) const {
