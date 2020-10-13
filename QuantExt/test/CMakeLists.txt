@@ -12,6 +12,7 @@ cashflow.cpp
 commodityforward.cpp
 correlationtermstructure.cpp
 cpicapfloor.cpp
+crcirpp.cpp
 crossassetmodel.cpp
 crossassetmodel2.cpp
 crossassetmodelparametrizations.cpp

@@ -71,8 +71,8 @@ void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const
 
     CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, Market::defaultConfiguration,
                                         Market::defaultConfiguration, Market::defaultConfiguration,
-                                        Market::defaultConfiguration, Market::defaultConfiguration, ActualActual(),
-                                        false, continueOnErr);
+                                        Market::defaultConfiguration, Market::defaultConfiguration,
+                                        Market::defaultConfiguration, ActualActual(), false, continueOnErr);
     model_ = *modelBuilder.model();
 
     ScenarioGeneratorBuilder sgb(scenarioGeneratorData_);

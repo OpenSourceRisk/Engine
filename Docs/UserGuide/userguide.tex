@@ -106,6 +106,8 @@
 \newcommand{\EEPE}{\mathit{EEPE}}
 \newcommand{\EEE}{\mathit{EEE}}
 \newcommand{\EAD}{\mathit{EAD}}
+\newcommand{\PE}{\mathit{PE}}
+\newcommand{\NE}{\mathit{NE}}
 \newcommand{\RC}{\mathit{RC}}
 \newcommand{\RW}{\mathit{RW}}
 \newcommand{\NS}{\mathit{NS}}
@@ -2482,7 +2484,10 @@ needed for subsequent XVA analytics.
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="storeFlows">Y</Parameter>
+    <Parameter name="storeSurvivalProbabilities">Y</Parameter>
     <Parameter name="cubeFile">cube_A.dat</Parameter>
+    <Parameter name="nettingSetCubeFile">nettingSetCube_A.dat</Parameter>
+    <Parameter name="cptyCubeFile">cptyCube_A.dat</Parameter>
     <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
     <Parameter name="aggregationScenarioDump">scenariodump.csv</Parameter>
   </Analytic>
@@ -2494,9 +2499,11 @@ needed for subsequent XVA analytics.
 
 The pricing engines file specifies how trades are priced under future scenarios which can differ from pricing as of
 today (specified in section Setup).  Key base currency determines into which currency all NPVs will be converted. Key
-store scenarios (Y or N) determines whether the market scenarios are written to a file for later reuse. And finally, the
-key `store flows' (Y or N) controls whether cumulative cash flows between simulation dates are stored in the (hyper-)
-cube for post processing in the context of Dynamic Initial Margin and Variation Margin calculations. The additional
+store scenarios (Y or N) determines whether the market scenarios are written to a file for later reuse. Key
+`store flows' (Y or N) controls whether cumulative cash flows between simulation dates are stored in the (hyper-)
+cube for post processing in the context of Dynamic Initial Margin and Variation Margin calculations. And finally, the
+key `store survival probabilities' (Y or N) controls whether survival probabilities on simulation dates are stored in the
+cube for post processing in the context of Dynamic Credit XVA calculation. The additional
 scenario data (written to the specified file here) is likewise required in the post processor step. These data comprise
 simulated index fixing e.g. for collateral compounding and simulated FX rates for cash collateral conversion into base
 currency. The scenario dump file, if specified here, causes ORE to write simulated market data to a human-readable csv
@@ -2538,6 +2545,7 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
     <Parameter name="colva">Y</Parameter>
     <Parameter name="collateralFloor">Y</Parameter>
+    <Parameter name="dynamicCredit">N</Parameter>
     <Parameter name="kva">Y</Parameter>
     <Parameter name="kvaCapitalDiscountRate">0.10</Parameter>
     <Parameter name="kvaAlpha">1.4</Parameter>
@@ -2587,7 +2595,7 @@ FX rates)
 settled after the margin period of risk; AsymmetricCVA - margin requested from the counterparty settles with delay,
 margin requested from us settles immediately; AsymmetricDVA - vice versa). \todo[inline]{Move calculationType into the
 {\tt csaFile}?}
-\item {\tt allocationMethod:} XVA allocation method, choices are {\em None, Marginal, RelativeXVA}
+\item {\tt allocationMethod:} XVA allocation method, choices are {\em None, Marginal, RelativeXVA, RelativeFairValueGross, RelativeFairValueNet}
 \item {\tt marginalAllocationLimit:} The marginal allocation method a la Pykhtin/Rosen breaks down when the netting set
 value vanishes while the exposure does not. This parameter acts as a cutoff for the marginal allocation when the
 absolute netting set value falls below this limit and switches to equal distribution of the exposure in this case.
@@ -2602,6 +2610,7 @@ collateral rates floor to the collateral model file (netting.xml)}
 %basis point is 0.0001) assuming the day count convention of the
 %collateral rate. 
 %basis point is 0.0001) assuming the day count convention of the collateral rate.
+\item {\tt dynamicCredit:} Flag to enable using pathwise survival probabilies when calculating CVA, DVA, FVA and MVA increments from exposures. If set to N the survival probabilities are extracted from T0 curves.
 \item {\tt kva:} Flag to enable setting the kva ccr parameters.
 \item {\tt kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight:} the kva CCR parameters (see \ref{sec:app_kva} and \ref{sec:app_kva_cva}.
 \item {\tt dimQuantile:} Quantile for Dynamic Initial Margin (DIM) calculation
@@ -5380,10 +5389,11 @@ This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning
 \subsection{Risk Factor Evolution Model}\label{sec:app_rfe}
 
 ORE applies the cross asset model described in detail in \cite{Lichters} to evolve  the market through time. So far the
-evolution model in ORE supports IR and FX risk factors for any number of currencies, Equity and Inflation as well as Credit (for $t0$-pricing). Extensions to full simulation of Credit and Commodity is planned. \\
+evolution model in ORE supports IR and FX risk factors for any number of currencies, Equity and Inflation as well as Credit. Extensions to full simulation of Commodity is planned. \\
 
 The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates, lognormal FX and equity 
-processes and the Dodgson-Kainth model for inflation. We identify a single {\em domestic} currency; its LGM process, 
+processes, Dodgson-Kainth model for inflation, LGM or Extended Cox-Ingersoll-Ross model (CIR++) for credit.
+We identify a single {\em domestic} currency; its LGM process,
 which is labelled $z_0$; and a set of $n$ foreign currencies with associated LGM processes that are labelled $z_i$, 
 $i=1,\dots,n$. 
 
@@ -5392,7 +5402,9 @@ currency for the equity process as $\phi(j)$. The dividend yield corresponding t
 by $q_j$.
 
 Following \cite{Lichters}, 13.27 - 13.29 we write the inflation processes 
-in the domestic LGM measure with state variables $z_{I,k}$ and $y_{I,k}$ for $k=1,\ldots,K$.  If we consider $n$ 
+in the domestic LGM measure with state variables $z_{I,k}$ and $y_{I,k}$ for $k=1,\ldots,K$
+and the credit processes in the domestic LGM measure with state variables ${C,k}$ and $y_{C,k}$ for $k=1,\ldots,K$.
+If we consider $n$ 
 foreign exchange rates for converting foreign currency amounts into the single domestic currency by multiplication, 
 $x_i$, $i=1,\dots,n$, then the cross asset model is given by the system of SDEs
 \begin{eqnarray*}
@@ -5401,7 +5413,9 @@ dz_i &=& \gamma_i\,dt + \alpha_i\,dW_i^z,  \qquad i>0 \\
 \frac{d x_i}{x_i} &=& \mu_i\, dt + \sigma_i\,dW_i^x, \qquad i > 0 \\
 \frac{d s_j}{s_j} &=& \mu_j^S\, dt + \sigma_j^S\,dW_j^S \\
 dz_{I,k} &=& \alpha_{I,k}(t)dW_k^I \\
-dy_{I,k} &=& \alpha_{I,k}(t)H_{I,k}(t)dW_k^I \\ \\
+dy_{I,k} &=& \alpha_{I,k}(t)H_{I,k}(t)dW_k^I \\
+dz_{C,k} &=& \alpha_{C,k}(t)dW_k^C \\
+dy_{C,k} &=& H_{C,k}(t)\alpha_{C,k}(t)dW_k^C \\ \\
 \gamma_i &=&
 -\alpha_i^2\,H_i -\rho_{ii}^{zx}\,\sigma_i\,\alpha_i + \rho_{i0}^{zz}\,\alpha_i\,\alpha_0\,H_0\\
 \mu_i &=& r_0 - r_i + \rho_{0i}^{zx}\,\alpha_0\,H_0\,\sigma_i\\
@@ -5409,7 +5423,7 @@ dy_{I,k} &=& \alpha_{I,k}(t)H_{I,k}(t)dW_k^I \\ \\
 \rho_{j \phi(j)}^{sx}\sigma_j^S \sigma_{\phi(j)}) \\
 r_i &=& f_i(0,t) + z_i(t)\,H'_i(t) + \zeta_i(t)\,H_i(t)\,H'_i(t),
 \quad \zeta_i(t) = \int_0^t \alpha_i^2(s)\,ds  \\ \\
-dW^\alpha_a\,dW^\beta_b &=& \rho^{\alpha\beta}_{ij}\,dt, \qquad \alpha, \beta \in \{z, x, I\}, \qquad a, b \text{
+dW^\alpha_a\,dW^\beta_b &=& \rho^{\alpha\beta}_{ij}\,dt, \qquad \alpha, \beta \in \{z, x, I, C\}, \qquad a, b \text{
                               suitable indices }
 %\zeta_i(t) &=& \int_0^t \alpha_i^2(s)\,ds,
 %\qquad H_i(t) = \int_0^t e^{-\beta_i(s)} \,ds \\
@@ -5635,7 +5649,58 @@ The equity/inflation covariances over the interval $[s,t] := [t_0, t_0+\Delta t]
 	&&+ \rho_{ij}^{sI} \int_s^t \sigma_i^S (u) H_{I,j} (u) \alpha_{I,j} (u) du\\
 \end{eqnarray*}
 
+The expectation of the Credit processes $z_{C,k}, y_{C,k}$ conditional on $\mathcal{F}_{t_0}$ at any time $t>t_0$ is
+equal to $z_{C,k}(t_0)$ resp. $y_{C,k}(t_0)$ since both processes are drift free.
 
+The credit/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+	Cov \left[\Delta z_{C,a}, \Delta z_{C,b} \right] &=&
+	\rho_{ab}^{CC}\int_s^t \alpha_{C, a}(u) \alpha_{C, b}(u) du\\
+  Cov \left[\Delta z_{C,a}, \Delta y_{C,b} \right] &=&
+	\rho_{ab}^{CC}\int_s^t \alpha_{C, a}(u) H_{C,b}(u) \alpha_{C, b}(u) du\\
+  Cov \left[\Delta y_{C,a}, \Delta y_{C,b} \right] &=&
+	\rho_{ab}^{CC}\int_s^t \alpha_{C, a}(u) H_{C,a}(u) \alpha_{C, b}(u) H_{C,b}(u) du\\
+\end{eqnarray*}
+
+The IR/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+	Cov \left[\Delta z_a, \Delta z_{C,b} \right] &=&
+	\rho_{ab}^{zC}\int_s^t \alpha_a(u) \alpha_{C, b}(u) du\\
+  Cov \left[\Delta z_a, \Delta y_{C,b} \right] &=&
+	\rho_{ab}^{zC}\int_s^t \alpha_a(u) H_{C,b}(u) \alpha_{C, b}(u) du\\
+\end{eqnarray*}
+
+The FX/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta x_a, \Delta z_{C,b} ] & = & \rho_{0b}^{zC} \int_s^t \alpha_0(s) (H_0(t)-H_0(s)) \alpha_{C,b}(s) ds \\
+                                             & & -\rho_{ab}^{zC} \int_s^t \alpha_a(s)(H_a(t)-H_a(s))\alpha_{C,b}(s) ds \\
+                                             & & +\rho_{ab}^{xC}\int_s^t \sigma_a(s) \alpha_{C,b}(s) ds \\
+  \mathrm{Cov}[ \Delta x_a, \Delta y_{C,b} ] & = & \rho_{0b}^{zC} \int_s^t \alpha_0(s) (H_0(t)-H_0(s)) H_{C,b}(s)\alpha_{C,b}(s) ds \\
+                                             & & -\rho_{ab}^{zC} \int_s^t \alpha_a(s)(H_a(t)-H_a(s))H_{C,b}(s)\alpha_{C,b}(s) ds \\
+                                             & & +\rho_{ab}^{xC}\int_s^t \sigma_a(s) H_{C,b}(s)\alpha_{C,b}(s) ds
+\end{eqnarray*}
+
+The inflation/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta z_{I,a}, \Delta z_{C,b} ] &=&
+  \rho_{ab}^{IC}\int_s^t \alpha_{I,a} \alpha_{C,b}(u) du\\
+  \mathrm{Cov}[ \Delta z_{I,a}, \Delta y_{C,b} ] &=&
+  \rho_{ab}^{IC}\int_s^t \alpha_{I,a} H_{C,b}(u) \alpha_{C,b}(u) du\\
+  \mathrm{Cov}[ \Delta y_{I,a}, \Delta z_{C,b} ] &=&
+  \rho_{ab}^{IC}\int_s^t \alpha_{I,a} H_{I,a}(u) \alpha_{C,b}(u) du\\
+  \mathrm{Cov}[ \Delta y_{I,a}, \Delta y_{C,b} ] &=&
+  \rho_{ab}^{IC}\int_s^t \alpha_{I,a} H_{I,a}(u) \alpha_{C,b}(u) H_{C,b}(u) du\\
+\end{eqnarray*}
+
+The equity/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+	Cov \left[\Delta ln[s_i], \Delta z_{C,j} \right] &=&
+	\rho_{\phi(i)j}^{zC} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) \alpha_{C,j} (u) du\\
+	&&+ \rho_{ij}^{sC} \int_s^t \sigma_i^S (u) \alpha_{C,j} (u) du\\	
+	Cov \left[\Delta ln[s_i], \Delta y_{C,j} \right] &=&
+	\rho_{\phi(i)j}^{zC} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) H_{C,j} (u) \alpha_{C,j} (u) du\\
+	&&+ \rho_{ij}^{sC} \int_s^t \sigma_i^S (u) H_{C,j} (u) \alpha_{C,j} (u) du\\
+\end{eqnarray*}
 
 \subsection{Exposures}\label{sec:app_exposure}
 
@@ -5707,7 +5772,21 @@ changed in the ORE source code or made configurable. \\
 
 Moreover, formulas (\ref{CVA}, \ref{DVA}) assume independence of credit and other market risk factors, so that $\PD$ and
 $\LGD$ factors are outside the expectations. With the extension of ORE to credit asset classes and in particular for
-wrong-way-risk analysis, CVA/DVA formulas will be generalised.
+wrong-way-risk analysis, CVA/DVA formulas is generaised and is applicable to calculations with dynamic credit
+
+\begin{align}
+\CVA^{dyn} &= \sum_{i} \E^N\left[\frac{\PD^{dyn}(t_{i-1},t_i)\times \PE(t_i)}{N(t)} \right]\times\LGD \label{CVA_dynamic} \\
+\DVA^{dyn} &= \sum_{i} \E^N\left[\frac{\PD^{dyn}_{Bank}(t_{i-1},t_i)\times \NE(t_i)}{N(t)} \right]\times\LGD_{Bank} \label{DVA_dynamic}
+\end{align}
+where
+\begin{align*}
+\PE(t) & \mbox{ random variables representing positive exposure at } t: (NPV(t)-C(t))^+\\
+\NE(t) & \mbox{ random variables representing negative exposure at } t: (-NPV(t)+C(t))^+\\
+PD^{dyn}(t_i,t_j) & \mbox{ random variables representing counterparty probability of default in } [t_i;t_j]\\
+PD^{dyn}_{Bank}(t_i,t_j) & \mbox{ random variables representing our probability of default in } [t_i;t_j]\\
+LGD & \mbox{ counterparty loss given default}\\
+LGD_{Bank} & \mbox{ our loss given default}\\
+\end{align*}
 
 \subsection{FVA}\label{sec:fva}
 

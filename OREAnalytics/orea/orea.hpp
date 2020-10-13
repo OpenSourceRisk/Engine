@@ -10,7 +10,13 @@
 #include <orea/aggregation/cvaspreadsensitivitycalculator.hpp>
 #include <orea/aggregation/dimcalculator.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
+#include <orea/aggregation/dynamiccreditxvacalculator.hpp>
+#include <orea/aggregation/exposureallocator.hpp>
+#include <orea/aggregation/exposurecalculator.hpp>
+#include <orea/aggregation/nettedexposurecalculator.hpp>
 #include <orea/aggregation/postprocess.hpp>
+#include <orea/aggregation/staticcreditxvacalculator.hpp>
+#include <orea/aggregation/xvacalculator.hpp>
 #include <orea/app/oreapp.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/app/reportwriter.hpp>
@@ -24,6 +30,7 @@
 #include <orea/cube/npvsensicube.hpp>
 #include <orea/cube/sensicube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
+#include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/mporcalculator.hpp>
 #include <orea/engine/observationmode.hpp>

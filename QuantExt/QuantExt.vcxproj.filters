@@ -942,6 +942,24 @@
     <ClInclude Include="qle\models\projectedcrossassetmodel.hpp">
       <Filter>models</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\crcirpp.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\processes\crcirppstateprocess.hpp">
+      <Filter>processes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\cirppconstantfellerparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\cirppconstantparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\cirppimplieddefaulttermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\cirppparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1604,6 +1622,15 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\models\projectedcrossassetmodel.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\crcirpp.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\processes\crcirppstateprocess.cpp">
+      <Filter>processes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\cirppimplieddefaulttermstructure.cpp">
       <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>

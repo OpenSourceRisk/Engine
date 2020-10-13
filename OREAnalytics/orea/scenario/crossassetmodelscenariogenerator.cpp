@@ -46,9 +46,16 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
     // TODO, curve tenors might be overwritten by dates in simMarketConfig_, here we just take the tenors
 
+    DayCounter dc = model_->irlgm1f(0)->termStructure()->dayCounter();
+    n_ccy_ = model_->components(IR);
+    n_eq_ = model_->components(EQ);
+    n_inf_ = model_->components(INF);
+    n_cr_ = model_->components(CR);
+    n_indices_ = simMarketConfig_->indices().size();
+    n_curves_ = simMarketConfig_->yieldCurveNames().size();
+
     // Cache yield curve keys
-    Size n_ccy = model_->components(IR);
-    discountCurveKeys_.reserve(n_ccy * simMarketConfig_->yieldCurveTenors("").size());
+    discountCurveKeys_.reserve(n_ccy_ * simMarketConfig_->yieldCurveTenors("").size());
     for (Size j = 0; j < model_->components(IR); j++) {
         std::string ccy = model_->irlgm1f(j)->currency().code();
         ten_dsc_.push_back(simMarketConfig_->yieldCurveTenors(ccy));
@@ -58,9 +65,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // Cache index curve keys
-    Size n_indices = simMarketConfig_->indices().size();
-    indexCurveKeys_.reserve(n_indices * simMarketConfig_->yieldCurveTenors("").size());
-    for (Size j = 0; j < n_indices; ++j) {
+    indexCurveKeys_.reserve(n_indices_ * simMarketConfig_->yieldCurveTenors("").size());
+    for (Size j = 0; j < n_indices_; ++j) {
         ten_idx_.push_back(simMarketConfig_->yieldCurveTenors(simMarketConfig_->indices()[j]));
         Size n_ten = ten_idx_.back().size();
         for (Size k = 0; k < n_ten; ++k) {
@@ -80,8 +86,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // Cache FX rate keys
-    fxKeys_.reserve(n_ccy - 1);
-    for (Size k = 0; k < n_ccy - 1; k++) {
+    fxKeys_.reserve(n_ccy_ - 1);
+    for (Size k = 0; k < n_ccy_ - 1; k++) {
         const string& foreign = model_->irlgm1f(k + 1)->currency().code(); // Is this safe?
         const string& domestic = model_->irlgm1f(0)->currency().code();
         fxKeys_.emplace_back(RiskFactorKey::KeyType::FXSpot, foreign + domestic); // k
@@ -132,7 +138,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         }
     }
 
-    // Cache INF rate keys0
+    // Cache INF rate keys
     Size n_inf = model_->components(INF);
     if (n_inf > 0) {
         cpiKeys_.reserve(n_inf);
@@ -167,28 +173,26 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         }
     }
 
-    // relevant model ccy indices
-    modelCcyRelevant_ = std::vector<bool>(model_->components(IR), true);
-    if (currencies_) {
-        for (Size i = 0; i < model_->components(IR); ++i) {
-            modelCcyRelevant_[i] =
-                (*currencies_).find(model_->ir(i)->currency().code()) != (*currencies_).end() || i == 0;
+    // Cache default curve keys
+    Size n_cr = model_->components(CR);
+    defaultCurveKeys_.reserve(n_cr * simMarketConfig_->defaultTenors("").size());
+    for (Size j = 0; j < model_->components(CR); j++) {
+        std::string cr_name = model_->cr(j)->name();
+        ten_dfc_.push_back(simMarketConfig_->defaultTenors(cr_name));
+        Size n_ten = ten_dfc_.back().size();
+        for (Size k = 0; k < n_ten; k++) {
+            defaultCurveKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, cr_name, k); // j * n_ten + k
         }
+        // defaultCurveKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, cr_name, -1); // for numeraie
     }
 
-    n_ccy_ = model_->components(IR);
-    n_eq_ = model_->components(EQ);
-    n_inf_ = model_->components(INF);
-    n_indices_ = simMarketConfig_->indices().size();
-    n_curves_ = simMarketConfig_->yieldCurveNames().size();
+    // cache curves
 
-    DayCounter dc = model_->irlgm1f(0)->termStructure()->dayCounter();
-
-    for (Size j = 0; j < n_ccy; ++j) {
+    for (Size j = 0; j < n_ccy_; ++j) {
         curves_.push_back(boost::make_shared<QuantExt::LgmImpliedYieldTermStructure>(model_->lgm(j), dc, true));
     }
 
-    for (Size j = 0; j < n_indices; ++j) {
+    for (Size j = 0; j < n_indices_; ++j) {
         std::string indexName = simMarketConfig_->indices()[j];
         boost::shared_ptr<IborIndex> index = *initMarket_->iborIndex(indexName, configuration_);
         Handle<YieldTermStructure> fts = index->forwardingTermStructure();
@@ -198,7 +202,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         indices_.push_back(index->clone(Handle<YieldTermStructure>(impliedFwdCurve)));
     }
 
-    for (Size j = 0; j < n_curves; ++j) {
+    for (Size j = 0; j < n_curves_; ++j) {
         std::string curveName = simMarketConfig_->yieldCurveNames()[j];
         Currency ccy = ore::data::parseCurrency(simMarketConfig_->yieldCurveCurrencies().at(curveName));
         Handle<YieldTermStructure> yts = initMarket_->yieldCurve(curveName, configuration_);
@@ -243,10 +247,32 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         yoyInfCurves_.emplace_back(idx, ccyIdx, mt, ts);
     }
 
+    for (Size j = 0; j < n_cr_; ++j) {
+        if (model_->modelType(CR, j) == ModelType::LGM1F) {
+            lgmDefaultCurves_.push_back(boost::make_shared<QuantExt::LgmImpliedDefaultTermStructure>(
+                model_, j, model_->ccyIndex(model_->crlgm1f(j)->currency())));
+            cirppDefaultCurves_.push_back(boost::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>());
+        } else if (model_->modelType(CR, j) == ModelType::CIRPP) {
+            lgmDefaultCurves_.push_back(boost::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>());
+            cirppDefaultCurves_.push_back(
+                boost::make_shared<QuantExt::CirppImpliedDefaultTermStructure>(model_->crcirppModel(j), j));
+        }
+    }
+
     for (Size j = 0; j < n_eq; ++j) {
         std::string curveName = simMarketConfig_->equityNames()[j];
         Currency ccy = model_->eqbs(j)->currency();
         equityForecastCurrency_.push_back(ccy);
+    }
+
+    // relevant model ccy indices
+
+    modelCcyRelevant_ = std::vector<bool>(model_->components(IR), true);
+    if (currencies_) {
+        for (Size i = 0; i < model_->components(IR); ++i) {
+            modelCcyRelevant_[i] =
+                (*currencies_).find(model_->ir(i)->currency().code()) != (*currencies_).end() || i == 0;
+        }
     }
 }
 
@@ -437,6 +463,33 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             auto yoyRates = ts->yoyRates(pillarDates);
             for (Size k = 0; k < pillarDates.size(); ++k) {
                 scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + k], yoyRates.at(pillarDates[k]));
+            }
+        }
+
+        // Credit curves
+        for (Size j = 0; j < n_cr_; ++j) {
+            if (model_->modelType(CR, j) == ModelType::LGM1F) {
+                Real z = sample.value[model_->pIdx(CR, j, 0)][i + 1];
+                Real y = sample.value[model_->pIdx(CR, j, 1)][i + 1];
+                lgmDefaultCurves_[j]->move(dates_[i], z, y);
+                for (Size k = 0; k < ten_dfc_[j].size(); k++) {
+                    Date d = dates_[i] + ten_dfc_[j][k];
+                    Time T = dc.yearFraction(dates_[i], d);
+                    Real survProb = std::max(lgmDefaultCurves_[j]->survivalProbability(T), 0.00001);
+                    scenarios[i]->add(defaultCurveKeys_[j * ten_dfc_[j].size() + k], survProb);
+                }
+            } else if (model_->modelType(CR, j) == ModelType::CIRPP) {
+                Real y = sample.value[model_->pIdx(CR, j, 0)][i + 1];
+                cirppDefaultCurves_[j]->move(dates_[i], y);
+                for (Size k = 0; k < ten_dfc_[j].size(); k++) {
+                    Date d = dates_[i] + ten_dfc_[j][k];
+                    Time T = dc.yearFraction(dates_[i], d);
+                    Real survProb = std::max(cirppDefaultCurves_[j]->survivalProbability(T), 0.00001);
+                    scenarios[i]->add(defaultCurveKeys_[j * (ten_dfc_[j].size() + 1) + k], survProb);
+                }
+                // numeraie
+                Real s = sample.value[model_->pIdx(CR, j, 1)][i + 1];
+                scenarios[i]->add(defaultCurveKeys_[j * (ten_dfc_[j].size() + 1) + ten_dfc_[j].size()], s);
             }
         }
 

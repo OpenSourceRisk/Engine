@@ -240,10 +240,11 @@ protected:
     Size samples_;
 
     Size cubeDepth_; // depth of cube_ defined below
-    bool storeFlows_, useCloseOutLag_, useMporStickyDate_;
+    bool storeFlows_, useCloseOutLag_, useMporStickyDate_, storeSp_;
 
     boost::shared_ptr<NPVCube> cube_;           // cube to store results on trade level (e.g. NPVs, flows)
     boost::shared_ptr<NPVCube> nettingSetCube_; // cube to store results on netting set level
+    boost::shared_ptr<NPVCube> cptyCube_; // cube to store results at counterparty level (e.g. survival probability)
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
     boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
