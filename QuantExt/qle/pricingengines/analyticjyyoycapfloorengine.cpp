@@ -46,34 +46,6 @@ using std::max;
 using std::pow;
 using std::sqrt;
 
-namespace {
-
-using QuantExt::CrossAssetModel;
-using QuantExt::AnalyticJyCpiCapFloorEngine;
-
-Real cpiCapFlrValue(const boost::shared_ptr<CrossAssetModel>& model, Size index,
-    Option::Type type, Real nominal, const Date& start, Real baseCpi, const Date& payDate,
-    Rate strike, const boost::shared_ptr<YoYInflationIndex>& yoyIndex, const Period& observationLag) {
-
-    // Create a zero inflation index from the YoY index.
-    Handle<ZeroInflationIndex> zIndex(boost::make_shared<ZeroInflationIndex>(yoyIndex->familyName(),
-        yoyIndex->region(), yoyIndex->revised(), yoyIndex->interpolated(), yoyIndex->frequency(),
-        yoyIndex->availabilityLag(), yoyIndex->currency()));
-
-    // Create the CPI cap/floor.
-    CPICapFloor inst(type, nominal, start, baseCpi, payDate, NullCalendar(), Unadjusted, NullCalendar(),
-        Unadjusted, strike, zIndex, observationLag);
-
-    // Set the pricing engine.
-    auto engine = boost::make_shared<AnalyticJyCpiCapFloorEngine>(model, index);
-    inst.setPricingEngine(engine);
-
-    // Return the NPV.
-    return inst.NPV();
-}
-
-}
-
 namespace QuantExt {
 
 AnalyticJyYoYCapFloorEngine::AnalyticJyYoYCapFloorEngine(
