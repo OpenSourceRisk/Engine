@@ -3,6 +3,8 @@
  All rights reserved.
 */
 
+#include "utilities.hpp"
+#include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
 #include <ql/experimental/callablebonds/callablebond.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
