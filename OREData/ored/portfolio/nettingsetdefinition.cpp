@@ -31,7 +31,7 @@ NettingSetDefinition::NettingSetDefinition(XMLNode* node) : isLoaded_(false), is
 }
 
 NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const string& ctp)
-    : nettingSetId_(nettingSetId), ctp_(ctp), activeCsaFlag_(false) {
+  : nettingSetId_(nettingSetId), ctp_(ctp), activeCsaFlag_(false), applyInitialMargin_(false) {
     isLoaded_ = true;
     isBuilt_ = false;
     build();
@@ -101,7 +101,9 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         eligCollatCcys_ = XMLUtils::getChildrenValues(collatChild, "Currencies", "Currency", true);
 	
 	applyInitialMargin_ = false;
-	applyInitialMargin_ = XMLUtils::getChildValueAsBool(csaChild, "ApplyInitialMargin", false);
+	XMLNode* applyInitialMarginNode = XMLUtils::getChildNode(csaChild, "ApplyInitialMargin");
+	if (applyInitialMarginNode)
+	    applyInitialMargin_ = XMLUtils::getChildValueAsBool(csaChild, "ApplyInitialMargin", true);
     }
 
     isLoaded_ = true;
