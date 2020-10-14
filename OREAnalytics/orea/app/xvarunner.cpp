@@ -83,7 +83,7 @@ XvaRunner::getProjectedScenarioGenerator(const boost::optional<std::set<std::str
 
 void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const bool continueOnErr,
                                   const boost::optional<std::set<std::string>>& currencies) {
-    LOG("XvaRunner::buildCamModel called");
+    LOG("XvaRunner::prepareSimulation called");
 
     // ensure date is reset
 
