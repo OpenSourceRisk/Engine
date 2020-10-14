@@ -36,10 +36,10 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator,
     boost::shared_ptr<ScenarioFactory> scenarioFactory, boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
     Date today, boost::shared_ptr<DateGrid> grid, boost::shared_ptr<ore::data::Market> initMarket,
-    const std::string& configuration, const boost::optional<std::set<std::string>>& currencies)
+    const std::string& configuration)
     : ScenarioPathGenerator(today, grid->dates(), grid->timeGrid()), model_(model), pathGenerator_(pathGenerator),
       scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig), initMarket_(initMarket),
-      configuration_(configuration), currencies_(currencies) {
+      configuration_(configuration) {
 
     QL_REQUIRE(initMarket != NULL, "CrossAssetScenarioGenerator: initMarket is null");
     QL_REQUIRE(timeGrid_.size() == dates_.size() + 1, "date/time grid size mismatch");
@@ -264,16 +264,6 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         Currency ccy = model_->eqbs(j)->currency();
         equityForecastCurrency_.push_back(ccy);
     }
-
-    // relevant model ccy indices
-
-    modelCcyRelevant_ = std::vector<bool>(model_->components(IR), true);
-    if (currencies_) {
-        for (Size i = 0; i < model_->components(IR); ++i) {
-            modelCcyRelevant_[i] =
-                (*currencies_).find(model_->ir(i)->currency().code()) != (*currencies_).end() || i == 0;
-        }
-    }
 }
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
@@ -293,8 +283,6 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
         // Discount curves
         for (Size j = 0; j < n_ccy_; j++) {
-            if (!modelCcyRelevant_[j])
-                continue;
             // LGM factor value, second index = 0 holds initial values
             Real z = sample.value[model_->pIdx(IR, j)][i + 1];
             curves_[j]->move(t, z);
@@ -308,8 +296,6 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
         // Index curves and Index fixings
         for (Size j = 0; j < n_indices_; ++j) {
-            if (!modelCcyRelevant_[model_->ccyIndex(indices_[j]->currency())])
-                continue;
             Real z = sample.value[model_->pIdx(IR, model_->ccyIndex(indices_[j]->currency()))][i + 1];
             fwdCurves_[j]->move(dates_[i], z);
             for (Size k = 0; k < ten_idx_[j].size(); ++k) {
@@ -322,8 +308,6 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
         // Yield curves
         for (Size j = 0; j < n_curves_; ++j) {
-            if (!modelCcyRelevant_[model_->ccyIndex(yieldCurveCurrency_[j])])
-                continue;
             Real z = sample.value[model_->pIdx(IR, model_->ccyIndex(yieldCurveCurrency_[j]))][i + 1];
             yieldCurves_[j]->move(dates_[i], z);
             for (Size k = 0; k < ten_yc_[j].size(); ++k) {

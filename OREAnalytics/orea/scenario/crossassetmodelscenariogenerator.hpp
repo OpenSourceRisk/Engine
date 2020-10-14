@@ -70,8 +70,7 @@ public:
                                      boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
                                      QuantLib::Date today, boost::shared_ptr<DateGrid> grid,
                                      boost::shared_ptr<ore::data::Market> initMarket,
-                                     const std::string& configuration = Market::defaultConfiguration,
-                                     const boost::optional<std::set<std::string>>& currencies = boost::none);
+                                     const std::string& configuration = Market::defaultConfiguration);
     //! Default destructor
     ~CrossAssetModelScenarioGenerator(){};
     std::vector<boost::shared_ptr<Scenario>> nextPath();
@@ -84,7 +83,6 @@ private:
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
     boost::shared_ptr<ore::data::Market> initMarket_;
     const std::string configuration_;
-    const boost::optional<std::set<std::string>> currencies_;
     // generated data
     std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_, zeroInflationKeys_,
         yoyInflationKeys_, defaultCurveKeys_;
