@@ -3,6 +3,7 @@
  All rights reserved.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <ql/experimental/callablebonds/callablebond.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
 #include <ql/instruments/callabilityschedule.hpp>
@@ -32,8 +33,6 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/processes/crcirppstateprocess.hpp>
 
-#include <test-suite/utilities.hpp>
-
 #include <boost/make_shared.hpp>
 
 #include <fstream>
@@ -55,7 +54,6 @@
 using namespace QuantLib;
 using namespace QuantExt;
 
-using boost::unit_test_framework::test_suite;
 using namespace boost::accumulators;
 
 namespace {
