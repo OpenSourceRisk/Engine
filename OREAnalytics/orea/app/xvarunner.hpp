@@ -104,11 +104,10 @@ protected:
     virtual boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>
     projectSsmData(const std::set<std::string>& currencies) const;
 
-    virtual boost::shared_ptr<ore::analytics::ScenarioGenerator>
-    getProjectedScenarioGenerator(const boost::optional<std::set<std::string>>& currencies,
-                                  const boost::shared_ptr<Market>& market,
-                                  const boost::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
-                                  const boost::shared_ptr<ScenarioFactory>& scenarioFactory) const;
+    virtual boost::shared_ptr<ore::analytics::ScenarioGenerator> getProjectedScenarioGenerator(
+        const boost::optional<std::set<std::string>>& currencies, const boost::shared_ptr<Market>& market,
+        const boost::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
+        const boost::shared_ptr<ScenarioFactory>& scenarioFactory, const bool continueOnErr) const;
 
     QuantLib::Date asof_;
     std::string baseCurrency_;

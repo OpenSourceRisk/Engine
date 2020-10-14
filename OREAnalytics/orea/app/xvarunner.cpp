@@ -74,7 +74,7 @@ boost::shared_ptr<ore::analytics::ScenarioGenerator>
 XvaRunner::getProjectedScenarioGenerator(const boost::optional<std::set<std::string>>& currencies,
                                          const boost::shared_ptr<Market>& market,
                                          const boost::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
-                                         const boost::shared_ptr<ScenarioFactory>& sf) const {
+                                         const boost::shared_ptr<ScenarioFactory>& sf, const bool continueOnErr) const {
     QL_REQUIRE(!currencies,
                "XvaRunner::getProjectedScenarioGenerator() with currency filter is only available in ORE+");
     ScenarioGeneratorBuilder sgb(scenarioGeneratorData_);
@@ -107,7 +107,8 @@ void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const
     }
 
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
-    boost::shared_ptr<ScenarioGenerator> sg = getProjectedScenarioGenerator(currencies, market, projectedSsmData, sf);
+    boost::shared_ptr<ScenarioGenerator> sg =
+        getProjectedScenarioGenerator(currencies, market, projectedSsmData, sf, continueOnErr);
     simMarket_ =
         boost::make_shared<ScenarioSimMarket>(market, projectedSsmData, *conventions_, Market::defaultConfiguration,
                                               *curveConfigs_, *todaysMarketParams_, true, false, true, true);
