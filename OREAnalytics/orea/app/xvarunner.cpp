@@ -141,9 +141,16 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
 
     DLOG("build portfolio");
 
-    // FIXME why?? portfolio_->reset() is not sufficient to ensure XVA simulation run fast (and this is called before)
-    portfolio_->build(simFactory_);
-    // portfolio->build(simFactory_);
+    // FIXME why do we need this? portfolio_->reset() is not sufficient to ensure XVA simulation run fast (and this is called before)
+    for (auto const& t : portfolio_->trades()) {
+        try {
+            t->build(simFactory_);
+        } catch(...) {
+            // we don't care, this is just to reset the portfolio, the real build is below
+        }
+    }
+
+    portfolio->build(simFactory_);
 
     DLOG("build calculators");
 
