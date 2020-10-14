@@ -3,6 +3,11 @@
  All rights reserved.
 */
 
+#include "utilities.hpp"
+
+#include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
+
 #include <ql/experimental/callablebonds/callablebond.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
 #include <ql/instruments/callabilityschedule.hpp>
@@ -31,8 +36,6 @@
 #include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/processes/crcirppstateprocess.hpp>
-
-#include <test-suite/utilities.hpp>
 
 #include <boost/make_shared.hpp>
 
