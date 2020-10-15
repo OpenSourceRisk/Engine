@@ -99,7 +99,7 @@ void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const
     CrossAssetModelBuilder modelBuilder(
         market, crossAssetModelData_, Market::defaultConfiguration, Market::defaultConfiguration,
         Market::defaultConfiguration, Market::defaultConfiguration, Market::defaultConfiguration,
-        Market::defaultConfiguration, ActualActual(), modelIsCalibrated_, continueOnErr);
+        Market::defaultConfiguration, ActualActual(), !modelIsCalibrated_, continueOnErr);
     model_ = *modelBuilder.model();
 
     // build projected ssm data and scenario generator if a currency filter is given
