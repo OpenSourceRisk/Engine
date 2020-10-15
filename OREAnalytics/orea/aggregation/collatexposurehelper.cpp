@@ -70,9 +70,9 @@ Real CollateralExposureHelper::marginRequirementCalc(const boost::shared_ptr<Col
 
     Real mta;
     if (collatShortfall >= 0.0)
-        mta = collat->csaDef()->mtaRcv();
+      mta = collat->csaDef()->csaDetails()->mtaRcv();
     else
-        mta = collat->csaDef()->mtaPay();
+      mta = collat->csaDef()->csaDetails()->mtaPay();
 
     Real deliveryAmount = fabs(collatShortfall) >= mta ? (collatShortfall) : 0.0;
 
@@ -83,14 +83,14 @@ Real CollateralExposureHelper::marginRequirementCalc(const boost::shared_ptr<Col
     const boost::shared_ptr<ore::data::NettingSetDefinition>& nettingSet, 
     const Real& uncollatValueCsaCur) {
 
-    Real ia = nettingSet->independentAmountHeld();
+   Real ia = nettingSet->csaDetails()->independentAmountHeld();
     Real threshold, csa;
     if (uncollatValueCsaCur - ia >= 0) {
-        threshold = nettingSet->thresholdRcv();
+        threshold = nettingSet->csaDetails()->thresholdRcv();
         csa = max(uncollatValueCsaCur - ia - threshold, 0.0);
     }
     else {
-        threshold = nettingSet->thresholdPay();
+        threshold = nettingSet->csaDetails()->thresholdPay();
         // N.B. the min and change of sign on threshold.
         csa = min(uncollatValueCsaCur - ia + threshold, 0.0);
     }
@@ -172,7 +172,7 @@ void CollateralExposureHelper::updateMarginCall(const boost::shared_ptr<Collater
 	//    Collateral balances are delayed by the MPoR (if possible, i.e. the valuation grid has MPoR spacing),
 	//    and we use the default date NPV.
 	//    This is the treatment in the ORE releases up to June 2020).
-	Period lag = (calcType == NoLag ? 0*Days : collat->csaDef()->marginPeriodOfRisk());
+	Period lag = (calcType == NoLag ? 0*Days : collat->csaDef()->csaDetails()->marginPeriodOfRisk());
         if (margin > 0.0 && eligMarginReqDateUs) {
 	    marginPayDate =
                 (calcType == AsymmetricDVA ? simulationDate : simulationDate + lag);
@@ -208,7 +208,7 @@ boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>> CollateralExposu
         // step 4; start loop over scenarios
         Size numScenarios = nettingSetValues.front().size();
         QL_REQUIRE(numScenarios == csaFxScenarioRates.front().size(), "netting values -v- scenario FX rate mismatch");
-        Date simEndDate = std::min(nettingSet_maturity, dateGrid.back()) + csaDef->marginPeriodOfRisk();
+        Date simEndDate = std::min(nettingSet_maturity, dateGrid.back()) + csaDef->csaDetails()->marginPeriodOfRisk();
         for (unsigned i = 0; i < numScenarios; i++) {
             boost::shared_ptr<CollateralAccount> collat(new CollateralAccount(baseAcc));
             Date tmpDate = date_t0; // the date which gets evolved
@@ -229,9 +229,9 @@ boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>> CollateralExposu
                                  eligMarginReqDateCtp);
 
                 if (nextMarginReqDateUs == tmpDate)
-                    nextMarginReqDateUs = tmpDate + collat->csaDef()->marginCallFrequency();
+                    nextMarginReqDateUs = tmpDate + collat->csaDef()->csaDetails()->marginCallFrequency();
                 if (nextMarginReqDateCtp == tmpDate)
-                    nextMarginReqDateCtp = tmpDate + collat->csaDef()->marginPostFrequency();
+                    nextMarginReqDateCtp = tmpDate + collat->csaDef()->csaDetails()->marginPostFrequency();
                 tmpDate = std::min(nextMarginReqDateUs, nextMarginReqDateCtp);
             }
             QL_REQUIRE(tmpDate > simEndDate,
