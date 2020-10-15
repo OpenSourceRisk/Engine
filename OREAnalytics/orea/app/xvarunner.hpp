@@ -53,7 +53,7 @@ public:
               string calculationType = "Symmetric", string dvaName = "", string fvaBorrowingCurve = "",
               string fvaLendingCurve = "", bool fullInitialCollateralisation = true, bool storeFlows = false);
 
-    void runXva(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true);
+    void runXva(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true, const std::map<std::string, QuantLib::Real>& currentIM = std::map<std::string, QuantLib::Real>());
 
     const boost::shared_ptr<PostProcess>& postProcess() { return postProcess_; }
 
@@ -67,7 +67,8 @@ protected:
                      const boost::shared_ptr<CubeInterpretation>& cubeInterpreter,
                      const boost::shared_ptr<AggregationScenarioData>& scenarioData,
                      const boost::shared_ptr<QuantExt::CrossAssetModel>& model = nullptr,
-                     const boost::shared_ptr<NPVCube>& nettingCube = nullptr);
+                     const boost::shared_ptr<NPVCube>& nettingCube = nullptr,
+                     const std::map<std::string, QuantLib::Real>& currentIM = std::map<std::string, QuantLib::Real>());
 
     QuantLib::Date asof_;
     std::string baseCurrency_;
@@ -93,6 +94,7 @@ protected:
     bool fullInitialCollateralisation_;
     bool storeFlows_;
     boost::shared_ptr<PostProcess> postProcess_;
+    std::map<std::string, QuantLib::Real> currentIM_;
 };
 
 } // namespace analytics
