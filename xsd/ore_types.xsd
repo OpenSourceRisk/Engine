@@ -119,6 +119,10 @@
       <xs:enumeration value="NGN"/>
       <xs:enumeration value="MAD"/>
       <xs:enumeration value="UYU"/>
+      <xs:enumeration value="KES"/>
+      <xs:enumeration value="LKR"/>
+      <xs:enumeration value="PKR"/>
+      <xs:enumeration value="RSD"/>
       <!-- valid as currency too -->
       <xs:enumeration value="XAU"/>
       <xs:enumeration value="XAG"/>
