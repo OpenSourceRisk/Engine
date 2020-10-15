@@ -25,6 +25,8 @@ getProjectedCrossAssetModel(const boost::shared_ptr<CrossAssetModel>& model,
                             const std::vector<std::pair<CrossAssetModelTypes::AssetType, Size> >& selectedComponents,
                             std::vector<Size>& projectedStateProcessIndices) {
 
+    projectedStateProcessIndices.clear();
+
     // vectors holding the selected parametrizations and associated indices in the correlation matrix
 
     std::vector<boost::shared_ptr<Parametrization> > parametrizations;

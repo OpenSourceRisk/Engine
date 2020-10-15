@@ -81,28 +81,47 @@ XvaRunner::getProjectedScenarioGenerator(const boost::optional<std::set<std::str
     return sgb.build(model_, sf, projectedSsmData, asof_, market, Market::defaultConfiguration);
 }
 
-void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const bool continueOnErr,
-                                  const boost::optional<std::set<std::string>>& currencyFilter) {
-    LOG("XvaRunner::prepareSimulation called");
+void XvaRunner::buildCamModel(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr) {
 
-    // ensure date is reset
+    LOG("XvaRunner::buildCamModel() called");
 
     Settings::instance().evaluationDate() = asof_;
-
-    // build the "full" model, we only calibrate it if there is no currency filter though, because with the filter
-    // we will use projected cam models anyhow that are calibrated themselves (we still need the full model to
-    // derive the projected cam models)
-    // TODO would it be easier to get the projected cam models from the full (calibrated) model directly using
-    // getProjectedCrossAssetModel() instead of stripping down the cam data and rebuilding the models from scratch?
-
-    modelIsCalibrated_ = (currencyFilter == boost::none);
-    CrossAssetModelBuilder modelBuilder(
-        market, crossAssetModelData_, Market::defaultConfiguration, Market::defaultConfiguration,
-        Market::defaultConfiguration, Market::defaultConfiguration, Market::defaultConfiguration,
-        Market::defaultConfiguration, ActualActual(), !modelIsCalibrated_, continueOnErr);
+    CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, Market::defaultConfiguration,
+                                        Market::defaultConfiguration, Market::defaultConfiguration,
+                                        Market::defaultConfiguration, Market::defaultConfiguration,
+                                        Market::defaultConfiguration, ActualActual(), false, continueOnErr);
     model_ = *modelBuilder.model();
+}
 
-    // build projected ssm data and scenario generator if a currency filter is given
+void XvaRunner::bufferSimulationPaths() {
+
+    LOG("XvaRunner::bufferSimulationPaths() called");
+
+    auto stateProcess = model_->stateProcess(scenarioGeneratorData_->discretization());
+    auto pathGen = MultiPathGeneratorFactory().build(scenarioGeneratorData_->sequenceType(), stateProcess,
+                                                     scenarioGeneratorData_->grid()->timeGrid(),
+                                                     scenarioGeneratorData_->seed(), scenarioGeneratorData_->ordering(),
+                                                     scenarioGeneratorData_->directionIntegers());
+    bufferedPaths_.clear();
+    bufferedPaths_.resize(
+        scenarioGeneratorData_->samples(),
+        std::vector<Array>(scenarioGeneratorData_->grid()->timeGrid().size(), Array(stateProcess->size())));
+    for (Size p = 0; p < scenarioGeneratorData_->samples(); ++p) {
+        const MultiPath& path = pathGen->next().value;
+        for (Size i = 0; i < scenarioGeneratorData_->grid()->timeGrid().size(); ++i) {
+            for (Size d = 0; d < stateProcess->size(); ++d) {
+                bufferedPaths_[p][i][d] = path[d][i];
+            }
+        }
+    }
+}
+
+void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& market,
+                               const boost::optional<std::set<std::string>>& currencyFilter, const bool continueOnErr) {
+
+    LOG("XvaRunner::buildSimMarket() called");
+
+    Settings::instance().evaluationDate() = asof_;
 
     boost::shared_ptr<ScenarioSimMarketParameters> projectedSsmData;
     if (currencyFilter) {
@@ -132,6 +151,8 @@ void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const
 void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds, const bool continueOnErr) {
 
     LOG("XvaRunner::buildCube called");
+
+    Settings::instance().evaluationDate() = asof_;
 
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     if (tradeIds) {
@@ -216,16 +237,10 @@ void XvaRunner::generatePostProcessor(const boost::shared_ptr<Market>& market,
                                       const boost::shared_ptr<AggregationScenarioData>& scenarioData,
                                       const bool continueOnErr,
                                       const std::map<std::string, QuantLib::Real>& currentIM) {
-    LOG("XvaRunner::generatePostProcessor called");
-    QL_REQUIRE(analytics_.size() > 0, "analytics map not set");
 
-    if (!modelIsCalibrated_) {
-        CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, Market::defaultConfiguration,
-                                            Market::defaultConfiguration, Market::defaultConfiguration,
-                                            Market::defaultConfiguration, Market::defaultConfiguration,
-                                            Market::defaultConfiguration, ActualActual(), false, continueOnErr);
-        model_ = *modelBuilder.model();
-    }
+    LOG("XvaRunner::generatePostProcessor called");
+
+    QL_REQUIRE(analytics_.size() > 0, "analytics map not set");
 
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator =
         getDimCalculator(npvCube, cubeInterpreter_, scenarioData_, model_, nettingCube, currentIM);
@@ -238,8 +253,11 @@ void XvaRunner::generatePostProcessor(const boost::shared_ptr<Market>& market,
 
 void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnErr,
                        const std::map<std::string, QuantLib::Real>& currentIM) {
+
     LOG("XvaRunner::runXva called");
-    prepareSimulation(market, continueOnErr);
+
+    buildCamModel(market);
+    buildSimMarket(market, boost::none, true);
     buildCube(boost::none, continueOnErr);
     generatePostProcessor(market, npvCube(), nettingCube(), aggregationScenarioData(), continueOnErr, currentIM);
 }
