@@ -18,8 +18,8 @@
 
 #include <ored/portfolio/nettingsetdefinition.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/utilities/to_string.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/utilities/dataparsers.hpp>
 
 namespace ore {
@@ -108,17 +108,12 @@ NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const str
                                            const string& marginPostFreq, const string& mpr, const Real& collatSpreadPay,
                                            const Real& collatSpreadRcv, const vector<string>& eligCollatCcys,
                                            bool applyInitialMargin)
-    : nettingSetId_(nettingSetId), ctp_(ctp) {
+    : nettingSetId_(nettingSetId), ctp_(ctp), activeCsaFlag_(true) {
 
-    QL_REQUIRE(activeCsaFlag_, "NettingSetDefinition construction error... "
-                                   << nettingSetId_ << "; this constructor is intended for "
-                                   << "collateralised netting sets, or uncollateralised sets "
-                                   << "use alternative constructor.");
-
-    csa_ = boost::make_shared<CSA>(parseCsaType(bilateral), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay,
-                                   mtaRcv, iaHeld, iaType, parsePeriod(marginCallFreq), parsePeriod(marginPostFreq),
-                                   parsePeriod(mpr), collatSpreadPay, collatSpreadRcv, eligCollatCcys,
-                                   applyInitialMargin);
+    csa_ =
+        boost::make_shared<CSA>(parseCsaType(bilateral), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay, mtaRcv,
+                                iaHeld, iaType, parsePeriod(marginCallFreq), parsePeriod(marginPostFreq),
+                                parsePeriod(mpr), collatSpreadPay, collatSpreadRcv, eligCollatCcys, applyInitialMargin);
 
     validate();
     DLOG("collateralised NettingSetDefinition built... " << nettingSetId_);
