@@ -102,7 +102,10 @@ Schedule makeSchedule(const ScheduleDates& data) {
     BusinessDayConvention convention = Unadjusted;
     if (data.convention() != "")
         convention = parseBusinessDayConvention(data.convention());
-    boost::optional<Period> tenor = boost::none;
+    // Avoid compiler warning on gcc
+    // https://www.boost.org/doc/libs/1_74_0/libs/optional/doc/html/boost_optional/tutorial/
+    // gotchas/false_positive_with__wmaybe_uninitialized.html
+    auto tenor = boost::make_optional(false, Period());
     if (data.tenor() != "")
         tenor = parsePeriod(data.tenor());
     bool endOfMonth = false;

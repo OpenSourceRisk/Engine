@@ -648,13 +648,6 @@ struct rls {
     const Size i_, j_;
 };
 
-/*! Utility for calculating the ratio \f$ \frac{P_r(0, t)}{P_n(0, t)} \f$ where \f$ P_r(0, t) \f$ is the real zero 
-    coupon bond price at time zero for maturity \f$ t \f$ and \f$ P_n(0, t) \f$ is the nominal zero coupon bond price.
-*/
-QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts, QuantLib::Time t,
-    const QuantLib::DayCounter& dc);
-QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts, QuantLib::Time t);
-
 /*! H(t+T)-H(t) component (needed for analytical covariances of zero rates) */
 struct HTtz {
     HTtz(const Size i, const Real T) : i_(i), T_(T) {}

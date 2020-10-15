@@ -300,7 +300,7 @@
           }
         ]
       },
-      "*sensitivity*": {
+      "sensitivity.csv": {
         "keys": [
           "TradeId",
           "IsPar",

@@ -43,8 +43,9 @@ public:
     CpiCapFloor();
 
     //! Detailed constructor
-    CpiCapFloor(QuantLib::CapFloor::Type type, const boost::variant<QuantLib::Date, QuantLib::Period>& maturity,
-                const boost::shared_ptr<BaseStrike>& strike);
+    CpiCapFloor(QuantLib::CapFloor::Type type,
+        const boost::variant<QuantLib::Date, QuantLib::Period> & maturity,
+        const boost::shared_ptr<BaseStrike>& strike);
 
     //! \name Inspectors
     //@{

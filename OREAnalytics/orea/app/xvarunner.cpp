@@ -146,11 +146,12 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
 
     DLOG("build portfolio");
 
-    // FIXME why do we need this? portfolio_->reset() is not sufficient to ensure XVA simulation run fast (and this is called before)
+    // FIXME why do we need this? portfolio_->reset() is not sufficient to ensure XVA simulation run fast (and this is
+    // called before)
     for (auto const& t : portfolio_->trades()) {
         try {
             t->build(simFactory_);
-        } catch(...) {
+        } catch (...) {
             // we don't care, this is just to reset the portfolio, the real build is below
         }
     }
@@ -213,37 +214,41 @@ void XvaRunner::generatePostProcessor(const boost::shared_ptr<Market>& market,
                                       const boost::shared_ptr<NPVCube>& npvCube,
                                       const boost::shared_ptr<NPVCube>& nettingCube,
                                       const boost::shared_ptr<AggregationScenarioData>& scenarioData,
-                                      const bool continueOnErr) {
+                                      const bool continueOnErr,
+                                      const std::map<std::string, QuantLib::Real>& currentIM) {
     LOG("XvaRunner::generatePostProcessor called");
     QL_REQUIRE(analytics_.size() > 0, "analytics map not set");
 
     if (!modelIsCalibrated_) {
-        CrossAssetModelBuilder modelBuilder(
-            market, crossAssetModelData_, Market::defaultConfiguration, Market::defaultConfiguration,
-            Market::defaultConfiguration, Market::defaultConfiguration, Market::defaultConfiguration,
-            Market::defaultConfiguration, ActualActual(), false, continueOnErr);
+        CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, Market::defaultConfiguration,
+                                            Market::defaultConfiguration, Market::defaultConfiguration,
+                                            Market::defaultConfiguration, Market::defaultConfiguration,
+                                            Market::defaultConfiguration, ActualActual(), false, continueOnErr);
         model_ = *modelBuilder.model();
     }
 
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator =
-        getDimCalculator(npvCube, cubeInterpreter_, scenarioData_, model_, nettingCube);
+        getDimCalculator(npvCube, cubeInterpreter_, scenarioData_, model_, nettingCube, currentIM);
+
     postProcess_ = boost::make_shared<PostProcess>(portfolio_, netting_, market, "", npvCube, scenarioData, analytics_,
                                                    baseCurrency_, "None", 1.0, 0.95, calculationType_, dvaName_,
                                                    fvaBorrowingCurve_, fvaLendingCurve_, dimCalculator,
                                                    cubeInterpreter_, fullInitialCollateralisation_);
 }
 
-void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnErr) {
+void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnErr,
+                       const std::map<std::string, QuantLib::Real>& currentIM) {
     LOG("XvaRunner::runXva called");
     prepareSimulation(market, continueOnErr);
     buildCube(boost::none, continueOnErr);
-    generatePostProcessor(market, npvCube(), nettingCube(), aggregationScenarioData(), continueOnErr);
+    generatePostProcessor(market, npvCube(), nettingCube(), aggregationScenarioData(), continueOnErr, currentIM);
 }
 
 boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(
     const boost::shared_ptr<NPVCube>& cube, const boost::shared_ptr<CubeInterpretation>& cubeInterpreter,
     const boost::shared_ptr<AggregationScenarioData>& scenarioData,
-    const boost::shared_ptr<QuantExt::CrossAssetModel>& model, const boost::shared_ptr<NPVCube>& nettingCube) {
+    const boost::shared_ptr<QuantExt::CrossAssetModel>& model, const boost::shared_ptr<NPVCube>& nettingCube,
+    const std::map<std::string, QuantLib::Real>& currentIM) {
 
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator;
     Size dimRegressionOrder = 0;
@@ -253,7 +258,7 @@ boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(
 
     dimCalculator = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
         portfolio_, cube, cubeInterpreter, scenarioData, dimQuantile_, dimHorizonCalendarDays_, dimRegressionOrder,
-        dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
+        dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, currentIM);
 
     return dimCalculator;
 }

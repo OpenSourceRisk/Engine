@@ -20,6 +20,7 @@
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/utilities/inflation.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
@@ -180,7 +181,6 @@ Real JyImpliedYoYInflationTermStructure::yoySwaplet(Time S, Time T) const {
     auto rrRatio = exp(-(H_r_T - H_r_S) * state_[0] - 0.5 * (H_r_T * H_r_T - H_r_S * H_r_S) * zeta_r_t);
     
     const auto& zts = model_->infjy(index_)->realRate()->termStructure();
-    using CrossAssetAnalytics::inflationGrowth;
     rrRatio *= (irTs->discount(T) * inflationGrowth(zts, T)) / (irTs->discount(S) * inflationGrowth(zts, S));
 
     // Calculate the correction term C(t,S,T)

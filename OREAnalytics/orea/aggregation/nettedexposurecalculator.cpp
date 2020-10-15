@@ -142,23 +142,25 @@ void NettedExposureCalculator::build() {
         boost::shared_ptr<NettingSetDefinition> netting = nettingSetManager_->get(nettingSetId);
         string csaIndexName;
         Handle<IborIndex> csaIndex;
+	bool applyInitialMargin = false;
         if (netting->activeCsaFlag()) {
-            csaIndexName = netting->index();
+	    csaIndexName = netting->csaDetails()->index();
             if (csaIndexName != "") {
                 csaIndex = market_->iborIndex(csaIndexName);
                 QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
                            "scenario data does not provide index values for " << csaIndexName);
             }
+	    QL_REQUIRE(netting->csaDetails(), "active CSA for netting set " << nettingSetId
+		       << ", but CSA detailsd not initialised");	    
+	    applyInitialMargin = netting->csaDetails()->applyInitialMargin() && applyInitialMargin_;
+	    LOG("ApplyInitialMargin=" << applyInitialMargin << " for netting set " << nettingSetId 
+		<< ", CSA IM=" << netting->csaDetails()->applyInitialMargin()
+		<< ", Analytics DIM=" << applyInitialMargin_);
+	    if (applyInitialMargin_ && !netting->csaDetails()->applyInitialMargin())
+	        ALOG("ApplyInitialMargin deactivated at netting set level " << nettingSetId);
+	    if (!applyInitialMargin_ && netting->csaDetails()->applyInitialMargin())
+	        ALOG("ApplyInitialMargin deactivated in analytics, but active at netting set level " << nettingSetId);
         }
-
-	bool applyInitialMargin = netting->applyInitialMargin() && applyInitialMargin_;
-	LOG("ApplyInitialMargin=" << applyInitialMargin << " for netting set " << nettingSetId 
-	    << ", CSA IM=" << netting->applyInitialMargin()
-	    << ", Analytics DIM=" << applyInitialMargin_);
-	if (applyInitialMargin_ && !netting->applyInitialMargin())
-	    ALOG("ApplyInitialMargin deactivated at netting set level " << nettingSetId);
-	if (!applyInitialMargin_ && netting->applyInitialMargin())
-	    ALOG("ApplyInitialMargin deactivated in analytics, but active at netting set level " << nettingSetId);
 
         Handle<YieldTermStructure> curve = market_->discountCurve(baseCurrency_, configuration_);
         vector<Real> epe(cube_->dates().size() + 1, 0.0);
@@ -233,7 +235,7 @@ void NettedExposureCalculator::build() {
                         dc = csaIndex->dayCounter();
                     }
                     Real dcf = dc.yearFraction(prevDate, date);
-                    Real collateralSpread = (balance >= 0.0 ? netting->collatSpreadRcv() : netting->collatSpreadPay());
+                    Real collateralSpread = (balance >= 0.0 ? netting->csaDetails()->collatSpreadRcv() : netting->csaDetails()->collatSpreadPay());
                     Real colvaDelta = -balance * collateralSpread * dcf / cube_->samples();
                     // inutuitive floorDelta including collateralSpread would be:
                     // -balance * (max(indexValue - collateralSpread,0) - (indexValue - collateralSpread)) * dcf /
@@ -348,23 +350,23 @@ NettedExposureCalculator::collateralPaths(
 
     LOG("Build collateral account balance paths for netting set " << nettingSetId);
     boost::shared_ptr<NettingSetDefinition> netting = nettingSetManager_->get(nettingSetId);
-    string csaFxPair = netting->csaCurrency() + baseCurrency_;
+    string csaFxPair = netting->csaDetails()->csaCurrency() + baseCurrency_;
     Real csaFxRateToday = 1.0;
-    if (netting->csaCurrency() != baseCurrency_)
+    if (netting->csaDetails()->csaCurrency() != baseCurrency_)
         csaFxRateToday = market_->fxSpot(csaFxPair, configuration_)->value();
     LOG("CSA FX rate for pair " << csaFxPair << " = " << csaFxRateToday);
 
     // Don't use Settings::instance().evaluationDate() here, this has moved to simulation end date.
     Date today = market_->asofDate();
-    string csaIndexName = netting->index();
+    string csaIndexName = netting->csaDetails()->index();
     Real csaRateToday = market_->iborIndex(csaIndexName, configuration_)->fixing(today);
     LOG("CSA compounding rate for index " << csaIndexName << " = " << csaRateToday);
 
     // Copy scenario data to keep the collateral exposure helper unchanged
     vector<vector<Real>> csaScenFxRates(cube_->dates().size(), vector<Real>(cube_->samples(), 0.0));
     vector<vector<Real>> csaScenRates(cube_->dates().size(), vector<Real>(cube_->samples(), 0.0));
-    if (netting->csaCurrency() != baseCurrency_) {
-        QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::FXSpot, netting->csaCurrency()),
+    if (netting->csaDetails()->csaCurrency() != baseCurrency_) {
+        QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::FXSpot, netting->csaDetails()->csaCurrency()),
                    "scenario data does not provide FX rates for " << csaFxPair);
     }
     if (csaIndexName != "") {
@@ -373,7 +375,7 @@ NettedExposureCalculator::collateralPaths(
     }
     for (Size j = 0; j < cube_->dates().size(); ++j) {
         for (Size k = 0; k < cube_->samples(); ++k) {
-            if (netting->csaCurrency() != baseCurrency_)
+	  if (netting->csaDetails()->csaCurrency() != baseCurrency_)
                 csaScenFxRates[j][k] = cubeInterpretation_->getDefaultAggrionScenarioData(
                     scenarioData_, AggregationScenarioDataType::FXSpot, j, k, csaFxPair);
             else

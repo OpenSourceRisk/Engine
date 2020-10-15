@@ -56,7 +56,8 @@ public:
               string fvaLendingCurve = "", bool fullInitialCollateralisation = true, bool storeFlows = false);
 
     // run xva on full portfolio, generate post processor
-    void runXva(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true);
+    void runXva(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true,
+                const std::map<std::string, QuantLib::Real>& currentIM = std::map<std::string, QuantLib::Real>());
 
     // get post processor from runXva() or generatePostProcessor() call
     const boost::shared_ptr<PostProcess>& postProcess() { return postProcess_; }
@@ -79,10 +80,11 @@ public:
     boost::shared_ptr<AggregationScenarioData> aggregationScenarioData() { return scenarioData_; }
 
     // partial step 3: build post processor on given cubes / agg scen data (requires runXva() or buildCube() run before)
-    void generatePostProcessor(const boost::shared_ptr<Market>& market, const boost::shared_ptr<NPVCube>& npvCube,
-                               const boost::shared_ptr<NPVCube>& nettingCube,
-                               const boost::shared_ptr<AggregationScenarioData>& scenarioData,
-                               const bool continueOnErr = true);
+    void generatePostProcessor(
+        const boost::shared_ptr<Market>& market, const boost::shared_ptr<NPVCube>& npvCube,
+        const boost::shared_ptr<NPVCube>& nettingCube, const boost::shared_ptr<AggregationScenarioData>& scenarioData,
+        const bool continueOnErr = true,
+        const std::map<std::string, QuantLib::Real>& currentIM = std::map<std::string, QuantLib::Real>());
 
     // get a vector of netting set ids for the given portfolio sorted in alphabetical order, if no portfolio
     // is given here, the netting sets for the global portfolio set in the ctor are returned
@@ -100,7 +102,8 @@ protected:
                      const boost::shared_ptr<CubeInterpretation>& cubeInterpreter,
                      const boost::shared_ptr<AggregationScenarioData>& scenarioData,
                      const boost::shared_ptr<QuantExt::CrossAssetModel>& model = nullptr,
-                     const boost::shared_ptr<NPVCube>& nettingCube = nullptr);
+                     const boost::shared_ptr<NPVCube>& nettingCube = nullptr,
+                     const std::map<std::string, QuantLib::Real>& currentIM = std::map<std::string, QuantLib::Real>());
 
     virtual boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>
     projectSsmData(const std::set<std::string>& currencyFilter) const;
@@ -144,6 +147,7 @@ protected:
     boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
     std::string calculationType_;
     boost::shared_ptr<PostProcess> postProcess_;
+    std::map<std::string, QuantLib::Real> currentIM_;
 };
 
 } // namespace analytics

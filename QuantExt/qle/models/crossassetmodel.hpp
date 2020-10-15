@@ -305,6 +305,35 @@ public:
                                         const Constraint& constraint = Constraint(),
                                         const std::vector<Real>& weights = std::vector<Real>());
 
+    /*! Calibrate JY inflation parameters globally.
+        
+        The parameter \p toCalibrate indicates which parameters of the JY inflation model that we want to calibrate. 
+        The map key should be in {0, 1, 2} where 0 indicates the real rate volatility, 1 indicates the real rate 
+        reversion and 2 indicates the inflation index volatility. The value is \c true if we wish to calibrate 
+        the parameter and \p false if we do not want to calibrate it.
+    */
+    void calibrateInfJyGlobal(QuantLib::Size index,
+        const std::vector<boost::shared_ptr<QuantLib::CalibrationHelper> >& helpers,
+        QuantLib::OptimizationMethod& method,
+        const QuantLib::EndCriteria& endCriteria,
+        const std::map<QuantLib::Size, bool>& toCalibrate,
+        const QuantLib::Constraint& constraint = QuantLib::Constraint(),
+        const std::vector<QuantLib::Real>& weights = std::vector<QuantLib::Real>());
+
+    /*! Calibrate a single JY inflation parameter iteratively.
+        
+        Calibrate one of real rate volatility, real rate reversion or inflation index volatility. The 
+        \p parameterIndex indicates the parameter that should be calibrated where 0 indicates the real rate 
+        volatility, 1 indicates the real rate reversion and 2 indicates the inflation index volatility.
+    */
+    void calibrateInfJyIterative(QuantLib::Size inflationModelIndex,
+        QuantLib::Size parameterIndex,
+        const std::vector<boost::shared_ptr<QuantLib::CalibrationHelper> >& helpers,
+        QuantLib::OptimizationMethod& method,
+        const QuantLib::EndCriteria& endCriteria,
+        const QuantLib::Constraint& constraint = QuantLib::Constraint(),
+        const std::vector<QuantLib::Real>& weights = std::vector<QuantLib::Real>());
+
     /*! calibrate crlgm1f volatilities to a sequence of cds options with
         expiry times equal to step times in the parametrization */
     void calibrateCrLgm1fVolatilitiesIterative(const Size index,

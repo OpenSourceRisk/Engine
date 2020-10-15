@@ -2204,12 +2204,8 @@ vector<bool> infGbpFlags{ true, false };
 vector<bool> flatVolsFlags{ true, false };
 
 BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
-    bdata::make(flatVolsFlags), flatVols) {
-
-    // Come back to this later. Tolerances need to be reduced or euler steps increased.
-    // For example, existing DK inflation tests fail if steps below increased!
-    bool infEurIsDk = true;
-    bool infGbpIsDk = true;
+    bdata::make(infEurFlags) * bdata::make(infGbpFlags) * bdata::make(flatVolsFlags),
+    infEurIsDk, infGbpIsDk, flatVols) {
 
     BOOST_TEST_MESSAGE("Testing martingale property in ir-fx-inf-cr model for Euler and exact discretizations...");
     BOOST_TEST_MESSAGE("EUR inflation model is: " << (infEurIsDk ? "DK" : "JY"));
@@ -2225,10 +2221,8 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
     Size seed = 18;                         // rng seed
     Time T = 10.0;                          // maturity of payoff
     Time T2 = 20.0;                         // zerobond maturity
-    Size steps = static_cast<Size>(T * 24); // number of steps taken (euler)
+    Size steps = static_cast<Size>(T * 40); // number of steps taken (euler)
 
-    // this can be made more accurate by using LowDiscrepancy instead
-    // of PseudoRandom, but we use an error estimator for the check
     LowDiscrepancy::rsg_type sg1 = LowDiscrepancy::make_sequence_generator(d.model->dimension() * 1, seed);
     LowDiscrepancy::rsg_type sg2 = LowDiscrepancy::make_sequence_generator(d.model->dimension() * steps, seed);
 
@@ -2431,7 +2425,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
 } // testIrFxInfCrMartingaleProperty
 
 BOOST_DATA_TEST_CASE(testIrFxInfCrMoments,
-    bdata::make(infEurFlags)* bdata::make(infGbpFlags)* bdata::make(flatVolsFlags),
+    bdata::make(infEurFlags) * bdata::make(infGbpFlags) * bdata::make(flatVolsFlags),
     infEurIsDk, infGbpIsDk, flatVols) {
 
     BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler and exact discretization in ir-fx-inf-cr model...");
