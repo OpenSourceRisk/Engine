@@ -142,23 +142,25 @@ void NettedExposureCalculator::build() {
         boost::shared_ptr<NettingSetDefinition> netting = nettingSetManager_->get(nettingSetId);
         string csaIndexName;
         Handle<IborIndex> csaIndex;
+	bool applyInitialMargin = false;
         if (netting->activeCsaFlag()) {
-	  csaIndexName = netting->csaDetails()->index();
+	    csaIndexName = netting->csaDetails()->index();
             if (csaIndexName != "") {
                 csaIndex = market_->iborIndex(csaIndexName);
                 QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
                            "scenario data does not provide index values for " << csaIndexName);
             }
+	    QL_REQUIRE(netting->csaDetails(), "active CSA for netting set " << nettingSetId
+		       << ", but CSA detailsd not initialised");	    
+	    applyInitialMargin = netting->csaDetails()->applyInitialMargin() && applyInitialMargin_;
+	    LOG("ApplyInitialMargin=" << applyInitialMargin << " for netting set " << nettingSetId 
+		<< ", CSA IM=" << netting->csaDetails()->applyInitialMargin()
+		<< ", Analytics DIM=" << applyInitialMargin_);
+	    if (applyInitialMargin_ && !netting->csaDetails()->applyInitialMargin())
+	        ALOG("ApplyInitialMargin deactivated at netting set level " << nettingSetId);
+	    if (!applyInitialMargin_ && netting->csaDetails()->applyInitialMargin())
+	        ALOG("ApplyInitialMargin deactivated in analytics, but active at netting set level " << nettingSetId);
         }
-
-	bool applyInitialMargin = netting->csaDetails()->applyInitialMargin() && applyInitialMargin_;
-	LOG("ApplyInitialMargin=" << applyInitialMargin << " for netting set " << nettingSetId 
-	    << ", CSA IM=" << netting->csaDetails()->applyInitialMargin()
-	    << ", Analytics DIM=" << applyInitialMargin_);
-	if (applyInitialMargin_ && !netting->csaDetails()->applyInitialMargin())
-	    ALOG("ApplyInitialMargin deactivated at netting set level " << nettingSetId);
-	if (!applyInitialMargin_ && netting->csaDetails()->applyInitialMargin())
-	    ALOG("ApplyInitialMargin deactivated in analytics, but active at netting set level " << nettingSetId);
 
         Handle<YieldTermStructure> curve = market_->discountCurve(baseCurrency_, configuration_);
         vector<Real> epe(cube_->dates().size() + 1, 0.0);
