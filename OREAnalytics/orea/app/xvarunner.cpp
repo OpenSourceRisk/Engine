@@ -89,12 +89,17 @@ void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const
 
     Settings::instance().evaluationDate() = asof_;
 
-    // build the "full" model
+    // build the "full" model, we only calibrate it if there is no currency filter though, because with the filter
+    // we will use projected cam models anyhow that are calibrated themselves (we still need the full model to
+    // derive the projected cam models)
+    // TODO would it be easier to get the projected cam models from the full (calibrated) model directly using
+    // getProjectedCrossAssetModel() instead of stripping down the cam data and rebuilding the models from scratch?
 
-    CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, Market::defaultConfiguration,
-                                        Market::defaultConfiguration, Market::defaultConfiguration,
-                                        Market::defaultConfiguration, Market::defaultConfiguration,
-                                        Market::defaultConfiguration, ActualActual(), false, continueOnErr);
+    modelIsCalibrated_ = (currencies == boost::none);
+    CrossAssetModelBuilder modelBuilder(
+        market, crossAssetModelData_, Market::defaultConfiguration, Market::defaultConfiguration,
+        Market::defaultConfiguration, Market::defaultConfiguration, Market::defaultConfiguration,
+        Market::defaultConfiguration, ActualActual(), modelIsCalibrated_, continueOnErr);
     model_ = *modelBuilder.model();
 
     // build projected ssm data and scenario generator if a currency filter is given
@@ -207,9 +212,19 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
 void XvaRunner::generatePostProcessor(const boost::shared_ptr<Market>& market,
                                       const boost::shared_ptr<NPVCube>& npvCube,
                                       const boost::shared_ptr<NPVCube>& nettingCube,
-                                      const boost::shared_ptr<AggregationScenarioData>& scenarioData) {
+                                      const boost::shared_ptr<AggregationScenarioData>& scenarioData,
+                                      const bool continueOnErr) {
     LOG("XvaRunner::generatePostProcessor called");
     QL_REQUIRE(analytics_.size() > 0, "analytics map not set");
+
+    if (!modelIsCalibrated_) {
+        CrossAssetModelBuilder modelBuilder(
+            market, crossAssetModelData_, Market::defaultConfiguration, Market::defaultConfiguration,
+            Market::defaultConfiguration, Market::defaultConfiguration, Market::defaultConfiguration,
+            Market::defaultConfiguration, ActualActual(), false, continueOnErr);
+        model_ = *modelBuilder.model();
+    }
+
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator =
         getDimCalculator(npvCube, cubeInterpreter_, scenarioData_, model_, nettingCube);
     postProcess_ = boost::make_shared<PostProcess>(portfolio_, netting_, market, "", npvCube, scenarioData, analytics_,
@@ -222,7 +237,7 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
     LOG("XvaRunner::runXva called");
     prepareSimulation(market, continueOnErr);
     buildCube(boost::none, continueOnErr);
-    generatePostProcessor(market, npvCube(), nettingCube(), aggregationScenarioData());
+    generatePostProcessor(market, npvCube(), nettingCube(), aggregationScenarioData(), continueOnErr);
 }
 
 boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(

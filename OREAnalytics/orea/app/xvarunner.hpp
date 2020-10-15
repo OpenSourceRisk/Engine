@@ -81,7 +81,8 @@ public:
     // partial step 3: build post processor on given cubes / agg scen data (requires runXva() or buildCube() run before)
     void generatePostProcessor(const boost::shared_ptr<Market>& market, const boost::shared_ptr<NPVCube>& npvCube,
                                const boost::shared_ptr<NPVCube>& nettingCube,
-                               const boost::shared_ptr<AggregationScenarioData>& scenarioData);
+                               const boost::shared_ptr<AggregationScenarioData>& scenarioData,
+                               const bool continueOnErr = true);
 
     // get a vector of netting set ids for the given portfolio sorted in alphabetical order, if no portfolio
     // is given here, the netting sets for the global portfolio set in the ctor are returned
@@ -135,6 +136,7 @@ protected:
 
     // generated data
     boost::shared_ptr<QuantExt::CrossAssetModel> model_;
+    bool modelIsCalibrated_;
     boost::shared_ptr<ScenarioSimMarket> simMarket_;
     boost::shared_ptr<EngineFactory> simFactory_;
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
