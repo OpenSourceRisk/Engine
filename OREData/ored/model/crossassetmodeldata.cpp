@@ -132,7 +132,7 @@ bool InstantaneousCorrelations::operator!=(const InstantaneousCorrelations& rhs)
 
 bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
 
-    if (correlations_ != rhs.correlations_)
+    if (*correlations_ != *rhs.correlations_)
         return false;
 
     if (domesticCurrency_ != rhs.domesticCurrency_ || currencies_ != rhs.currencies_ || equities_ != rhs.equities_ ||

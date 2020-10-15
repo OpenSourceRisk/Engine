@@ -113,7 +113,9 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CrossAssetModelData() : bootstrapTolerance_(0.0) {}
+    CrossAssetModelData() : bootstrapTolerance_(0.0) {
+        correlations_ = boost::make_shared<InstantaneousCorrelations>();
+    }
     
     //! Detailed constructor (IR/FX only)
     CrossAssetModelData( //! Vector of IR model specifications
