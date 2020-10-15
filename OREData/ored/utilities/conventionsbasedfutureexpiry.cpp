@@ -136,8 +136,31 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
 
     // If we want the option contract expiry, do the extra work here.
     if (forOption) {
-        expiry =
-            convention_.expiryCalendar().advance(expiry, -static_cast<Integer>(convention_.optionExpiryOffset()), Days);
+        if (convention_.optionExpiryDay() != Null<Natural>()) {
+
+            // Option expiry may be specified as n months before future expiry. Adjust here if necessary.
+            auto optionMonth = expiry.month();
+            auto optionYear = expiry.year();
+
+            if (convention_.optionExpiryMonthLag() > 0) {
+                Date newDate = Date(15, optionMonth, optionYear) - convention_.optionExpiryMonthLag() * Months;
+                optionMonth = newDate.month();
+                optionYear = newDate.year();
+            }
+
+            auto d = convention_.optionExpiryDay();
+            expiry = Date(d, optionMonth, optionYear);
+            expiry = convention_.expiryCalendar().adjust(expiry, convention_.optionBusinessDayConvention());
+
+        } else {
+
+            QL_REQUIRE(convention_.optionExpiryMonthLag() == 0 ||
+                convention_.expiryMonthLag() == convention_.optionExpiryMonthLag(), "The expiry month lag " <<
+                "and the option expiry month lag should be the same if using option expiry offset days.");
+
+            expiry = convention_.expiryCalendar().advance(expiry,
+                -static_cast<Integer>(convention_.optionExpiryOffset()), Days);
+        }
 
         // If expiry date is one of the prohibited dates, move to preceding business day
         while (convention_.prohibitedExpiries().count(expiry) > 0) {
