@@ -881,12 +881,18 @@
     </ClInclude>
     <ClInclude Include="qle\termstructures\equityblackvolsurfaceproxy.hpp">
       <Filter>termstructures</Filter>
-	</ClInclude>
+    </ClInclude>
     <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp">
       <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\logquadraticinterpolation.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\quadraticinterpolation.hpp">
+      <Filter>math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1530,6 +1536,9 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="test\quadraticinterpolation.cpp">
+      <Filter>time</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

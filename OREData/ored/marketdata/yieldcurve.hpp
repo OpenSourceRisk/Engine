@@ -65,7 +65,11 @@ public:
         ConvexMonotone,
         ExponentialSplines, // fitted bond curves only
         NelsonSiegel,       // fitted bond curves only
-        Svensson            // fitted bond curves only
+        Svensson,            // fitted bond curves only
+        CubicSpline,
+        Quadratic,
+        LogQuadratic,
+        Hermite
     };
 
     //! Constructor

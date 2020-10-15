@@ -43,6 +43,7 @@ piecewiseoptionletstripper.cpp
 pricecurve.cpp
 pricetermstructureadapter.cpp
 qle_calendars.cpp
+quadraticinterpolation.cpp
 ratehelpers.cpp
 stabilisedglls.cpp
 staticallycorrectedyieldtermstructure.cpp
