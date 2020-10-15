@@ -51,9 +51,10 @@ public:
         const vector<string>& eligCollatCcys, // vector of three letter ISO codes
         bool applyInitialMargin)
         : type_(type), csaCurrency_(csaCurrency), index_(index), thresholdPay_(thresholdPay),
-          thresholdRcv_(thresholdRcv), mtaPay_(mtaPay), mtaRcv_(mtaRcv), marginCallFreq_(marginCallFreq),
-          marginPostFreq_(marginPostFreq), mpr_(mpr), collatSpreadPay_(collatSpreadPay),
-          collatSpreadRcv_(collatSpreadRcv), eligCollatCcys_(eligCollatCcys), applyInitialMargin_(applyInitialMargin) {}
+          thresholdRcv_(thresholdRcv), mtaPay_(mtaPay), mtaRcv_(mtaRcv), iaHeld_(iaHeld), iaType_(iaType),
+          marginCallFreq_(marginCallFreq), marginPostFreq_(marginPostFreq), mpr_(mpr),
+          collatSpreadPay_(collatSpreadPay), collatSpreadRcv_(collatSpreadRcv), eligCollatCcys_(eligCollatCcys),
+          applyInitialMargin_(applyInitialMargin) {}
 
     //! Inspectors
     //@{
@@ -237,7 +238,6 @@ private:
     // Real collatSpreadRcv_;
     // vector<string> eligCollatCcys_;
     // bool applyInitialMargin_;
-
 };
 } // namespace data
 } // namespace ore
