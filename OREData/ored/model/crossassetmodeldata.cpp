@@ -100,11 +100,13 @@ XMLNode* InstantaneousCorrelations::toXML(XMLDocument& doc) {
 
         CorrelationFactor f_1 = it->first.first;
         XMLUtils::addAttribute(doc, node, "factor1", to_string(f_1.type) + ":" + f_1.name);
-        XMLUtils::addAttribute(doc, node, "index1", to_string(f_1.index));
+        if(f_1.index != Null<Size>())
+            XMLUtils::addAttribute(doc, node, "index1", to_string(f_1.index));
 
         CorrelationFactor f_2 = it->first.second;
         XMLUtils::addAttribute(doc, node, "factor2", to_string(f_2.type) + ":" + f_2.name);
-        XMLUtils::addAttribute(doc, node, "index2", to_string(f_2.index));
+        if (f_2.index != Null<Size>())
+            XMLUtils::addAttribute(doc, node, "index2", to_string(f_2.index));
     }
 
     return instantaneousCorrelationsNode;
