@@ -45,7 +45,7 @@ ScenarioGeneratorBuilder::build(boost::shared_ptr<QuantExt::CrossAssetModel> mod
                                 boost::shared_ptr<ore::data::Market> initMarket, const std::string& configuration,
                                 const boost::shared_ptr<PathGeneratorFactory>& pf) {
 
-    LOG("ScenarioGeneratorBuilder::build() started");
+    LOG("ScenarioGeneratorBuilder::build() called");
 
     QL_REQUIRE(initMarket != NULL, "ScenarioGeneratorBuilder: initMarket is null");
 
