@@ -705,6 +705,47 @@ BOOST_DATA_TEST_CASE(testCommodityApoSurface, bdata::make(asofDates), asof) {
     }
 }
 
+// Main point of this test is to test that the option expiries are interpreted correctly.
+BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceMyrCrudePalmOil) {
+
+    BOOST_TEST_MESSAGE("Testing commodity volatility delta surface building for MYR Crude Palm Oil");
+
+    Date asof(14, Oct, 2020);
+    auto todaysMarket = createTodaysMarket(asof, "myr_crude_palm_oil", "curveconfig.xml", "market.txt");
+
+    // Get the built commodity volatility surface
+    auto vts = todaysMarket->commodityVolatility("XKLS:FCPO");
+
+    // Check that it built ok i.e. can query a volatility.
+    BOOST_CHECK_NO_THROW(vts->blackVol(1.0, 2800));
+
+    // Cast to expected type and check that it succeeds
+    // For some reason, todaysmarket wraps the surface built in CommodityVolCurve in a BlackVolatilityWithATM.
+    auto bvwa = dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
+    BOOST_REQUIRE(bvwa);
+    auto bvsd = boost::dynamic_pointer_cast<BlackVolatilitySurfaceDelta>(bvwa->surface());
+    BOOST_REQUIRE(bvsd);
+
+    // Now check that the surface dates are as expected.
+
+    // Calculated surface dates.
+    const vector<Date>& surfaceDates = bvsd->dates();
+
+    // Read in the expected dates.
+    vector<Date> expectedDates;
+    string filename = "myr_crude_palm_oil/expected_expiries.csv";
+    CSVFileReader reader(TEST_INPUT_FILE(filename), true, ",");
+    BOOST_REQUIRE_EQUAL(reader.numberOfColumns(), 1);
+    while (reader.next()) {
+        expectedDates.push_back(parseDate(reader.get(0)));
+    }
+
+    // Check equal.
+    BOOST_CHECK_EQUAL_COLLECTIONS(surfaceDates.begin(), surfaceDates.end(),
+        expectedDates.begin(), expectedDates.end());
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
