@@ -302,7 +302,7 @@ boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
     cmb.addCorrelation("IR:USD", "CR:CDX.NA.S33v1", 1.0);
     cmb.addCorrelation("CR:ItraxxEuropeS9V1", "CR:CDX.NA.S33v1", 1.0);
 
-    crossAssetData->correlations() = cmb.correlations();
+    crossAssetData->setCorrelations(cmb.correlations());
 
     crossAssetData->bootstrapTolerance() = 0.001;
 

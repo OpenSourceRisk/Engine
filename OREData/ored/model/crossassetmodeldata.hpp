@@ -85,7 +85,7 @@ public:
     //! \name Setters
     //@{
     //!
-    std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& correlations() { return correlations(); }
+    void correlations(const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& corrs) { correlations_ = corrs; }
     //@}
     
     //! \name Operators
@@ -220,7 +220,8 @@ public:
     vector<boost::shared_ptr<InflationModelData>>& infConfigs() { return infConfigs_; }
     vector<boost::shared_ptr<CrLgmData>>& crLgmConfigs() { return crLgmConfigs_; }
     vector<boost::shared_ptr<CrCirData>>& crCirConfigs() { return crCirConfigs_; }
-    std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& correlations() { return correlations_->correlations(); }
+    void setCorrelations(const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& corrs) { correlations_ = boost::make_shared<InstantaneousCorrelations>(corrs); }
+    void setCorrelations(const boost::shared_ptr<InstantaneousCorrelations>& corrs) { correlations_ = corrs; }
     Real& bootstrapTolerance() { return bootstrapTolerance_; }
     //@}
 

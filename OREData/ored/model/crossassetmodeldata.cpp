@@ -71,7 +71,7 @@ namespace data {
 void InstantaneousCorrelations::fromXML(XMLNode* node) {
     // Configure correlation structure
     LOG("CrossAssetModelData: adding correlations.");
-    XMLNode* correlationNode = XMLUtils::getChildNode(node, "InstantaneousCorrelations");
+    XMLNode* correlationNode = XMLUtils::locateNode(node, "InstantaneousCorrelations");
     CorrelationMatrixBuilder cmb;
     if (correlationNode) {
         vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(correlationNode, "Correlation");
