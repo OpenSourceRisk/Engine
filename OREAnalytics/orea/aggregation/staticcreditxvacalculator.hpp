@@ -41,21 +41,34 @@ public:
     StaticCreditXvaCalculator(
         //! Driving portfolio consistent with the cube below
         const boost::shared_ptr<Portfolio> portfolio,
+	//! Today's market
         const boost::shared_ptr<Market> market,
+	//! Market configuration to be used
         const string& configuration,
+	//! Base currency amounts will be converted to
         const string& baseCurrency,
-        //!
+        //! Own party name for DVA calculations
         const string& dvaName,
         //! FVA borrowing curve
         const string& fvaBorrowingCurve,
         //! FVA lending curve
         const string& fvaLendingCurve,
+	//! Deactivate initial margin calculation even if active at netting set level
         const bool applyDynamicInitialMargin,
+	//! Dynamic Initial Margin calculator
         const boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator,
+	//! Storage ofdefault NPVs, close-out NPVs, cash flows at trade level
         const boost::shared_ptr<NPVCube> tradeExposureCube,
+	//! Storage of sensitivity vectors at netting set level
         const boost::shared_ptr<NPVCube> nettingSetExposureCube,
-        const Size tradeEpeIndex = 0, const Size tradeEneIndex = 1,
-        const Size nettingSetEpeIndex = 0, const Size nettingSetEneIndex = 1);
+	//! Index of the trade EPE storage in the internal exposure cube
+	const Size tradeEpeIndex = 0,
+	//! Index of the trade ENE storage in the internal exposure cube
+	const Size tradeEneIndex = 1,
+        //! Index of the netting set EPE storage in the internal exposure cube
+	const Size nettingSetEpeIndex = 1,
+	//! Index of the netting set ENE storage in the internal exposure cube
+	const Size nettingSetEneIndex = 2);
 
     virtual const Real calculateCvaIncrement(const string& tid, const string& cid,
                                              const Date& d0, const Date& d1, const Real& rr);
