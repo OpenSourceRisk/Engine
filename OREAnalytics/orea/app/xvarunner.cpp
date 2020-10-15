@@ -66,23 +66,23 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
 }
 
 boost::shared_ptr<ScenarioSimMarketParameters>
-XvaRunner::projectSsmData(const std::set<std::string>& currencies) const {
+XvaRunner::projectSsmData(const std::set<std::string>& currencyFilter) const {
     QL_FAIL("XvaRunner::projectSsmData() is only available in ORE+");
 }
 
 boost::shared_ptr<ore::analytics::ScenarioGenerator>
-XvaRunner::getProjectedScenarioGenerator(const boost::optional<std::set<std::string>>& currencies,
+XvaRunner::getProjectedScenarioGenerator(const boost::optional<std::set<std::string>>& currencyFilter,
                                          const boost::shared_ptr<Market>& market,
                                          const boost::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
                                          const boost::shared_ptr<ScenarioFactory>& sf, const bool continueOnErr) const {
-    QL_REQUIRE(!currencies,
+    QL_REQUIRE(!currencyFilter,
                "XvaRunner::getProjectedScenarioGenerator() with currency filter is only available in ORE+");
     ScenarioGeneratorBuilder sgb(scenarioGeneratorData_);
     return sgb.build(model_, sf, projectedSsmData, asof_, market, Market::defaultConfiguration);
 }
 
 void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const bool continueOnErr,
-                                  const boost::optional<std::set<std::string>>& currencies) {
+                                  const boost::optional<std::set<std::string>>& currencyFilter) {
     LOG("XvaRunner::prepareSimulation called");
 
     // ensure date is reset
@@ -95,7 +95,7 @@ void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const
     // TODO would it be easier to get the projected cam models from the full (calibrated) model directly using
     // getProjectedCrossAssetModel() instead of stripping down the cam data and rebuilding the models from scratch?
 
-    modelIsCalibrated_ = (currencies == boost::none);
+    modelIsCalibrated_ = (currencyFilter == boost::none);
     CrossAssetModelBuilder modelBuilder(
         market, crossAssetModelData_, Market::defaultConfiguration, Market::defaultConfiguration,
         Market::defaultConfiguration, Market::defaultConfiguration, Market::defaultConfiguration,
@@ -105,15 +105,15 @@ void XvaRunner::prepareSimulation(const boost::shared_ptr<Market>& market, const
     // build projected ssm data and scenario generator if a currency filter is given
 
     boost::shared_ptr<ScenarioSimMarketParameters> projectedSsmData;
-    if (currencies) {
-        projectedSsmData = projectSsmData(*currencies);
+    if (currencyFilter) {
+        projectedSsmData = projectSsmData(*currencyFilter);
     } else {
         projectedSsmData = simMarketData_;
     }
 
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
     boost::shared_ptr<ScenarioGenerator> sg =
-        getProjectedScenarioGenerator(currencies, market, projectedSsmData, sf, continueOnErr);
+        getProjectedScenarioGenerator(currencyFilter, market, projectedSsmData, sf, continueOnErr);
     simMarket_ =
         boost::make_shared<ScenarioSimMarket>(market, projectedSsmData, *conventions_, Market::defaultConfiguration,
                                               *curveConfigs_, *todaysMarketParams_, true, false, true, false);

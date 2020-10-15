@@ -63,7 +63,7 @@ public:
 
     // partial step 1: prepare simulation (build cam model and sim market / factory), with optional ccy filter
     void prepareSimulation(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true,
-                           const boost::optional<std::set<std::string>>& currencies = boost::none);
+                           const boost::optional<std::set<std::string>>& currencyFilter = boost::none);
 
     // partial step 2: build trade and netting set cubes, optionally filtered on a subset of given trade ids
     //                 if the filter is given, the order of the trades will follow the one in the given filter set
@@ -103,10 +103,10 @@ protected:
                      const boost::shared_ptr<NPVCube>& nettingCube = nullptr);
 
     virtual boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>
-    projectSsmData(const std::set<std::string>& currencies) const;
+    projectSsmData(const std::set<std::string>& currencyFilter) const;
 
     virtual boost::shared_ptr<ore::analytics::ScenarioGenerator> getProjectedScenarioGenerator(
-        const boost::optional<std::set<std::string>>& currencies, const boost::shared_ptr<Market>& market,
+        const boost::optional<std::set<std::string>>& currencyFilter, const boost::shared_ptr<Market>& market,
         const boost::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
         const boost::shared_ptr<ScenarioFactory>& scenarioFactory, const bool continueOnErr) const;
 
