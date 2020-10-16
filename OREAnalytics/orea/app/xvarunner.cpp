@@ -103,16 +103,15 @@ void XvaRunner::bufferSimulationPaths() {
                                                      scenarioGeneratorData_->seed(), scenarioGeneratorData_->ordering(),
                                                      scenarioGeneratorData_->directionIntegers());
 
-    if (bufferedPaths_.empty())
-        bufferedPaths_.resize(
-            scenarioGeneratorData_->samples(),
-            std::vector<Array>(scenarioGeneratorData_->grid()->timeGrid().size(), Array(stateProcess->size())));
+    if (!bufferedPaths_) {
+        bufferedPaths_ = boost::make_shared<std::vector<std::vector<Path>>>(
+            scenarioGeneratorData_->samples(), std::vector<Path>(stateProcess->size(), TimeGrid()));
+    }
+
     for (Size p = 0; p < scenarioGeneratorData_->samples(); ++p) {
         const MultiPath& path = pathGen->next().value;
-        for (Size i = 0; i < scenarioGeneratorData_->grid()->timeGrid().size(); ++i) {
-            for (Size d = 0; d < stateProcess->size(); ++d) {
-                bufferedPaths_[p][i][d] = path[d][i];
-            }
+        for (Size d = 0; d < stateProcess->size(); ++d) {
+            (*bufferedPaths_)[p][d] = path[d];
         }
     }
 

@@ -152,7 +152,8 @@ protected:
     boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
     std::string calculationType_;
     boost::shared_ptr<PostProcess> postProcess_;
-    std::vector<std::vector<QuantLib::Array>> bufferedPaths_;
+
+    boost::shared_ptr<std::vector<std::vector<QuantLib::Path>>> bufferedPaths_;
 };
 
 } // namespace analytics
