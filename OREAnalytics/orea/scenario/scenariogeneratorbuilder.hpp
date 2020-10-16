@@ -25,8 +25,6 @@
 
 #include <vector>
 
-#include <boost/optional.hpp>
-
 #include <ql/types.hpp>
 
 #include <qle/models/crossassetmodel.hpp>
