@@ -531,6 +531,9 @@ void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report, bo
         .addColumn("CvaHazardRateSensitivity", double(), 6)
         .addColumn("CvaSpreadSensitivity", double(), 6);
 
+    if (sensiHazardRate.size() == 0 || sensiCdsSpread.size() == 0)
+        return; 
+    
     for (Size j = 0; j < grid.size(); ++j) {
         report.next()
             .add(nettingSetId)

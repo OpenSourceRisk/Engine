@@ -22,15 +22,19 @@ namespace QuantExt {
 
 FxBsPiecewiseConstantParametrization::FxBsPiecewiseConstantParametrization(const Currency& currency,
                                                                            const Handle<Quote>& fxSpotToday,
-                                                                           const Array& times, const Array& sigma)
-    : FxBsParametrization(currency, fxSpotToday), PiecewiseConstantHelper1(times) {
+                                                                           const Array& times, const Array& sigma,
+    const boost::shared_ptr<Constraint>& sigmaConstraint)
+    : FxBsParametrization(currency, fxSpotToday),
+      PiecewiseConstantHelper1(times, sigmaConstraint) {
     initialize(sigma);
 }
 
 FxBsPiecewiseConstantParametrization::FxBsPiecewiseConstantParametrization(
     const Currency& currency, const Handle<Quote>& fxSpotToday, const std::vector<Date>& dates, const Array& sigma,
-    const Handle<YieldTermStructure>& domesticTermStructure)
-    : FxBsParametrization(currency, fxSpotToday), PiecewiseConstantHelper1(dates, domesticTermStructure) {
+    const Handle<YieldTermStructure>& domesticTermStructure,
+    const boost::shared_ptr<Constraint>& sigmaConstraint)
+    : FxBsParametrization(currency, fxSpotToday),
+      PiecewiseConstantHelper1(dates, domesticTermStructure, sigmaConstraint) {
     initialize(sigma);
 }
 

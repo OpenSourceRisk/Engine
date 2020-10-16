@@ -39,6 +39,7 @@
       <xs:element type="bondData" name="BondData"/>
       <xs:element type="forwardBondData" name="ForwardBondData"/>
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
+      <xs:element type="creditDefaultSwapOptionData" name="CreditDefaultSwapOptionData"/>
       <xs:element type="commodityOptionData" name="CommodityOptionData"/>
     </xs:choice>
   </xs:group>
@@ -616,6 +617,7 @@
       <xs:enumeration value="Bond"/>
       <xs:enumeration value="ForwardBond"/>
       <xs:enumeration value="CreditDefaultSwap"/>
+      <xs:enumeration value="CreditDefaultSwapOption"/>
       <xs:enumeration value="CMS"/>
     </xs:restriction>
   </xs:simpleType>
@@ -794,6 +796,19 @@
       <xs:element type="xs:float" name="FixedRecoveryRate" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="1" minOccurs="1"/>
     </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="creditDefaultSwapOptionData">
+    <xs:choice>
+      <xs:sequence>
+        <xs:element type="optionData" name="OptionData"/>
+        <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
+      </xs:sequence>
+      <xs:sequence>
+        <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
+        <xs:element type="optionData" name="OptionData"/>
+      </xs:sequence>
+    </xs:choice>
   </xs:complexType>
 
   <xs:simpleType name="tradeActionType">

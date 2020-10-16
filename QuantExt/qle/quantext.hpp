@@ -40,6 +40,7 @@
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/quantocouponpricer.hpp>
@@ -150,8 +151,13 @@
 #include <qle/math/trace.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
+#include <qle/models/cirppconstantfellerparametrization.hpp>
+#include <qle/models/cirppconstantparametrization.hpp>
+#include <qle/models/cirppimplieddefaulttermstructure.hpp>
+#include <qle/models/cirppparametrization.hpp>
 #include <qle/models/cmscaphelper.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
+#include <qle/models/crcirpp.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetanalyticsbase.hpp>
@@ -185,11 +191,15 @@
 #include <qle/models/piecewiseconstanthelper.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/models/pseudoparameter.hpp>
+#include <qle/models/yoycapfloorhelper.hpp>
 #include <qle/models/yoyinflationmodeltermstructure.hpp>
+#include <qle/models/yoyswaphelper.hpp>
 #include <qle/models/zeroinflationmodeltermstructure.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
+#include <qle/pricingengines/analyticjycpicapfloorengine.hpp>
+#include <qle/pricingengines/analyticjyyoycapfloorengine.hpp>
 #include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
@@ -214,6 +224,7 @@
 #include <qle/pricingengines/numericlgmswaptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
+#include <qle/processes/crcirppstateprocess.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
 #include <qle/quotes/exceptionquote.hpp>
@@ -315,4 +326,5 @@
 #include <qle/time/actual364.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/utilities/inflation.hpp>
 #include <qle/version.hpp>

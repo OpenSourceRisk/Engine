@@ -290,9 +290,12 @@ map<AssetClass, set<string>> Swap::underlyingIndices() const {
     map<AssetClass, set<string>> result;
     for (const auto& ld : legData_) {
         for (auto ind : ld.indices()) {
+            // only handle equity and commodity for now
+            if (ind.substr(0, 5) != "COMM-" && ind.substr(0, 3) != "EQ-")
+                continue;
+
             boost::shared_ptr<Index> index = parseIndex(ind);
 
-            // only handle equity and commodity for now
             if (auto ei = boost::dynamic_pointer_cast<EquityIndex>(index)) {
                 result[AssetClass::EQ].insert(ei->name());
             } else if (auto ci = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {

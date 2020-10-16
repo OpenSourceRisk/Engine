@@ -564,6 +564,12 @@
       <xs:enumeration value="FirstDayOfMonth"/>
     </xs:restriction>
   </xs:simpleType>
-  
-</xs:schema>
 
+  <xs:simpleType name="dayOfMonth">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="31"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

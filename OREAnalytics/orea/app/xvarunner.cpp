@@ -63,13 +63,13 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
     }
 }
 
-void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnErr) {
+void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnErr, const std::map<std::string, QuantLib::Real>& currentIM) {
     LOG("XvaRunner::runXva called");
 
     // ensure date is reset
     Settings::instance().evaluationDate() = asof_;
 
-    CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, "", "", "", "", "", ActualActual(), false,
+    CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, "", "", "", "", "", "", ActualActual(), false,
                                         continueOnErr);
     boost::shared_ptr<QuantExt::CrossAssetModel> model = *modelBuilder.model();
 
@@ -144,7 +144,7 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
     LOG("Run post processor");
     QL_REQUIRE(analytics_.size() > 0, "analytics map not set");
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator =
-        getDimCalculator(cube, cubeInterpreter, scenarioData, model, nettingCube);
+        getDimCalculator(cube, cubeInterpreter, scenarioData, model, nettingCube, currentIM);
     postProcess_ = boost::make_shared<PostProcess>(portfolio_, netting_, market, "", cube, scenarioData, analytics_,
                                                    baseCurrency_, "None", 1.0, 0.95, calculationType, dvaName_,
                                                    fvaBorrowingCurve_, fvaLendingCurve_, dimCalculator, cubeInterpreter,
@@ -154,7 +154,7 @@ void XvaRunner::runXva(const boost::shared_ptr<Market>& market, bool continueOnE
 boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(
     const boost::shared_ptr<NPVCube>& cube, const boost::shared_ptr<CubeInterpretation>& cubeInterpreter,
     const boost::shared_ptr<AggregationScenarioData>& scenarioData,
-    const boost::shared_ptr<QuantExt::CrossAssetModel>& model, const boost::shared_ptr<NPVCube>& nettingCube) {
+    const boost::shared_ptr<QuantExt::CrossAssetModel>& model, const boost::shared_ptr<NPVCube>& nettingCube, const std::map<std::string, QuantLib::Real>& currentIM) {
 
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator;
     Size dimRegressionOrder = 0;
@@ -164,7 +164,7 @@ boost::shared_ptr<DynamicInitialMarginCalculator> XvaRunner::getDimCalculator(
 
     dimCalculator = boost::make_shared<RegressionDynamicInitialMarginCalculator>(
         portfolio_, cube, cubeInterpreter, scenarioData, dimQuantile_, dimHorizonCalendarDays_, dimRegressionOrder,
-        dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth);
+        dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, currentIM);
 
     return dimCalculator;
 }

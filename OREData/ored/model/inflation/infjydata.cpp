@@ -20,6 +20,8 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 
+using QuantLib::Real;
+using QuantLib::Size;
 using std::vector;
 
 namespace ore {
@@ -34,12 +36,14 @@ InfJyData::InfJyData(CalibrationType calibrationType,
     const ReversionParameter& realRateReversion,
     const VolatilityParameter& realRateVolatility,
     const VolatilityParameter& indexVolatility,
-    const LgmReversionTransformation& reversionTransformation)
+    const LgmReversionTransformation& reversionTransformation,
+    const CalibrationConfiguration& calibrationConfiguration)
     : InflationModelData(calibrationType, calibrationBaskets, currency, index),
       realRateReversion_(realRateReversion),
       realRateVolatility_(realRateVolatility),
       indexVolatility_(indexVolatility),
-      reversionTransformation_(reversionTransformation) {}
+      reversionTransformation_(reversionTransformation),
+      calibrationConfiguration_(calibrationConfiguration) {}
 
 const ReversionParameter& InfJyData::realRateReversion() const {
     return realRateReversion_;
@@ -55,6 +59,10 @@ const VolatilityParameter& InfJyData::indexVolatility() const {
 
 const LgmReversionTransformation& InfJyData::reversionTransformation() const {
     return reversionTransformation_;
+}
+
+const CalibrationConfiguration& InfJyData::calibrationConfiguration() const {
+    return calibrationConfiguration_;
 }
 
 void InfJyData::fromXML(XMLNode* node) {
@@ -77,6 +85,11 @@ void InfJyData::fromXML(XMLNode* node) {
     XMLNode* idxNode = XMLUtils::getChildNode(node, "Index");
     QL_REQUIRE(idxNode, "JarrowYildirim inflation model data should have Index node.");
     indexVolatility_.fromXML(XMLUtils::getChildNode(idxNode, "Volatility"));
+
+    // Get the calibration configuration
+    XMLNode* ccNode = XMLUtils::getChildNode(node, "CalibrationConfiguration");
+    if (ccNode)
+        calibrationConfiguration_.fromXML(ccNode);
 }
 
 XMLNode* InfJyData::toXML(XMLDocument& doc) {
@@ -93,7 +106,9 @@ XMLNode* InfJyData::toXML(XMLDocument& doc) {
     XMLNode* idxNode = doc.allocNode("Index");
     XMLUtils::appendNode(idxNode, indexVolatility_.toXML(doc));
     XMLUtils::appendNode(node, idxNode);
-    
+
+    XMLUtils::appendNode(node, calibrationConfiguration_.toXML(doc));
+
     return node;
 }
 

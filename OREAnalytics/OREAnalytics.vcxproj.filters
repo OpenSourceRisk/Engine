@@ -194,6 +194,27 @@
     <ClInclude Include="orea\app\xvarunner.hpp">
       <Filter>app</Filter>
     </ClInclude>
+    <ClInclude Include="orea\aggregation\dynamiccreditxvacalculator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\exposureallocator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\exposurecalculator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\nettedexposurecalculator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\staticcreditxvacalculator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\xvacalculator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\cptycalculator.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -336,6 +357,27 @@
     </ClCompile>
     <ClCompile Include="orea\aggregation\dimregressioncalculator.cpp">
       <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\dynamiccreditxvacalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\exposureallocator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\exposurecalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\nettedexposurecalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\staticcreditxvacalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\xvacalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\cptycalculator.cpp">
+      <Filter>engine</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

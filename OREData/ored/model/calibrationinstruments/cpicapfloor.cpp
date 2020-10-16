@@ -21,6 +21,7 @@
 #include <ored/utilities/to_string.hpp>
 
 using QuantLib::CapFloor;
+using QuantLib::Date;
 using QuantLib::Period;
 
 namespace ore {
@@ -30,13 +31,21 @@ CalibrationInstrumentRegister<CpiCapFloor> CpiCapFloor::reg_("CpiCapFloor");
 
 CpiCapFloor::CpiCapFloor() : CalibrationInstrument("CpiCapFloor"), type_(CapFloor::Floor) {}
 
-CpiCapFloor::CpiCapFloor(CapFloor::Type type, const boost::variant<QuantLib::Date, Period>& maturity,
-                         const boost::shared_ptr<BaseStrike>& strike)
-    : CalibrationInstrument("CpiCapFloor"), type_(type), maturity_(maturity), strike_(strike) {}
+CpiCapFloor::CpiCapFloor(CapFloor::Type type,
+    const boost::variant<QuantLib::Date, Period> & maturity,
+    const boost::shared_ptr<BaseStrike>& strike)
+    : CalibrationInstrument("CpiCapFloor"),
+      type_(type),
+      maturity_(maturity),
+      strike_(strike) {}
 
-CapFloor::Type CpiCapFloor::type() const { return type_; }
+CapFloor::Type CpiCapFloor::type() const {
+    return type_;
+}
 
-const boost::variant<QuantLib::Date, QuantLib::Period>& CpiCapFloor::maturity() const { return maturity_; }
+const boost::variant<Date, Period>& CpiCapFloor::maturity() const {
+    return maturity_;
+}
 
 const boost::shared_ptr<BaseStrike>& CpiCapFloor::strike() const { return strike_; }
 

@@ -33,6 +33,7 @@
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/instruments/capfloor.hpp>
+#include <ql/instruments/inflationcapfloor.hpp>
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/position.hpp>
@@ -317,6 +318,11 @@ QuantLib::VolatilityType parseVolatilityQuoteType(const std::string& s);
     \ingroup utilities
 */
 QuantLib::CapFloor::Type parseCapFloorType(const std::string& s);
+
+/*! Convert text to QuantLib::YoYInflationCapFloor::Type
+    \ingroup utilities
+*/
+QuantLib::YoYInflationCapFloor::Type parseYoYInflationCapFloorType(const std::string& s);
 
 /*! Convert text to QuantExt::CrossAssetModelTypes::AssetType
     \ingroup utilities
