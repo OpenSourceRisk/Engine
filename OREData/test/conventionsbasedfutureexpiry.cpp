@@ -34,12 +34,14 @@ using namespace ore::data;
 
 namespace bdata = boost::unit_test::data;
 
-namespace {
-
 // List of commodity names for data test case below
-vector<string> commodityNames = {"ice_brent", "ice_brent_old", "nymex_cl", "ice_cig_basis"};
-
-} // namespace
+vector<string> commodityNames = {
+    "ice_brent",
+    "ice_brent_old",
+    "nymex_cl",
+    "ice_cig_basis",
+    "myr_palm_oil"
+};
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
