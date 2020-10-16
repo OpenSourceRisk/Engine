@@ -128,6 +128,7 @@ public:
                       const DayCounter& lastPeriodDayCounter = DayCounter());
     //! CDS quoted as running-spread only and with amortized notional structure
     /*! @param side  Whether the protection is bought or sold.
+		@param notional  Initial Notional value
         @param amortized_leg  Amortizing Notional structure
         @param spread  Running spread in fractional units.
         @param schedule  Coupon schedule.
@@ -150,6 +151,7 @@ public:
                       const DayCounter& lastPeriodDayCounter = DayCounter());
     //! CDS quoted as upfront and running spread and with amortized notional structure
     /*! @param side  Whether the protection is bought or sold.
+		@param notional  Initial Notional value
         @param amortized_leg  Amortizing Notional structure
         @param upfront Upfront in fractional units.
         @param spread Running spread in fractional units.

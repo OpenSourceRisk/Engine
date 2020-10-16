@@ -22,7 +22,6 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/time/daycounters/actual360.hpp>
-#include <ql/cashflows/simplecashflow.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
