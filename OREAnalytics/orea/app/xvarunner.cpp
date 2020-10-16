@@ -102,10 +102,11 @@ void XvaRunner::bufferSimulationPaths() {
                                                      scenarioGeneratorData_->grid()->timeGrid(),
                                                      scenarioGeneratorData_->seed(), scenarioGeneratorData_->ordering(),
                                                      scenarioGeneratorData_->directionIntegers());
-    bufferedPaths_.clear();
-    bufferedPaths_.resize(
-        scenarioGeneratorData_->samples(),
-        std::vector<Array>(scenarioGeneratorData_->grid()->timeGrid().size(), Array(stateProcess->size())));
+
+    if (bufferedPaths_.empty())
+        bufferedPaths_.resize(
+            scenarioGeneratorData_->samples(),
+            std::vector<Array>(scenarioGeneratorData_->grid()->timeGrid().size(), Array(stateProcess->size())));
     for (Size p = 0; p < scenarioGeneratorData_->samples(); ++p) {
         const MultiPath& path = pathGen->next().value;
         for (Size i = 0; i < scenarioGeneratorData_->grid()->timeGrid().size(); ++i) {
@@ -114,6 +115,8 @@ void XvaRunner::bufferSimulationPaths() {
             }
         }
     }
+
+    LOG("XvaRunner::bufferSimulationPaths() finished");
 }
 
 void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& market,
