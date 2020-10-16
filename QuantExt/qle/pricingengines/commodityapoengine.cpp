@@ -54,9 +54,10 @@ pair<Real, Size> CommodityAveragePriceOptionBaseEngine::calculateAccrued() const
         result.second++;
     }
 
-    // We should have hit some pricing dates by now
-    QL_REQUIRE(result.second > 0, "APO coupon accrued calculation has a degenerate coupon");
-    result.first /= result.second;
+    // We should have pricing dates in the period but check.
+    auto n = arguments_.flow->indices().size();
+    QL_REQUIRE(n > 0, "APO coupon accrued calculation has a degenerate coupon.");
+    result.first /= n;
 
     return result;
 }
@@ -118,8 +119,20 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     // Calculate the accrued portion
     pair<Real, Size> accrued = calculateAccrued();
 
+    // Populate some additional results that don't change
+    auto& mp = results_.additionalResults;
+    Real discount = discountCurve_->discount(arguments_.flow->date());
+    mp["gearing"] = arguments_.flow->gearing();
+    mp["spread"] = arguments_.flow->spread();
+    mp["strike"] = arguments_.strikePrice;
+    mp["payment_date"] = arguments_.flow->date();
+    mp["accrued"] = accrued.first;
+    mp["discount"] = discount;
+
     // If not model dependent, return early.
     if (!isModelDependent(accrued)) {
+        mp["effective_strike"] = arguments_.effectiveStrike;
+        mp["npv"] = results_.value;
         return;
     }
 
@@ -132,12 +145,14 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     Date today = Settings::instance().evaluationDate();
 
     // Expected value of the non-accrued portion of the average commodity prices
+    // In general, m will equal n below if there is no accrued. If accrued, m > n.
     Real EA = 0.0;
     vector<Real> forwards;
     vector<Time> times;
     vector<Date> futureExpiries;
     map<Date, Real> futureVols;
     vector<Real> spotVars;
+    auto m = arguments_.flow->indices().size();
     for (const auto& p : arguments_.flow->indices()) {
         if (p.first > today) {
             forwards.push_back(p.second->fixing(p.first));
@@ -154,7 +169,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
             EA += forwards.back();
         }
     }
-    EA /= forwards.size();
+    EA /= m;
 
     // Expected value of A^2. Different calculation depending on whether APO references future prices or spot price.
     Real EA2 = 0.0;
@@ -180,18 +195,24 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
             }
         }
     }
-    EA2 /= n * n;
+    EA2 /= m * m;
 
     // Calculate value
     Real tn = times.back();
     Real sigma = sqrt(log(EA2 / (EA * EA)) / tn);
-    Real discount = discountCurve_->discount(arguments_.flow->date());
 
     // Populate results
     results_.value = arguments_.quantity * arguments_.flow->gearing() *
                      blackFormula(arguments_.type, effectiveStrike, EA, sigma * sqrt(tn), discount);
-    results_.underlyingForwardValue = EA;
-    results_.sigma = sigma;
+
+    // Add more additional results
+    // Could be part of a strip so we add the value also.
+    mp["effective_strike"] = effectiveStrike;
+    mp["forward"] = EA;
+    mp["exp_A_2"] = EA2;
+    mp["tte"] = tn;
+    mp["sigma"] = sigma;
+    mp["npv"] = results_.value;
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculate() const {
@@ -256,6 +277,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const pair<Real,
     Array factors = expHalfFwdVar * fwdRatio;
 
     // Loop over each sample
+    auto m = arguments_.flow->indices().size();
     for (Size k = 0; k < samples_; k++) {
 
         // Sequence is n independent standard normal random variables
@@ -276,7 +298,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const pair<Real,
         }
 
         // Average price on this sample
-        samplePayoff /= dt.size();
+        samplePayoff /= m;
 
         // Finally, the payoff on this sample
         samplePayoff = max(omega * (samplePayoff - effectiveStrike), 0.0);
@@ -288,8 +310,6 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const pair<Real,
 
     // Populate the result value
     results_.value = arguments_.quantity * arguments_.flow->gearing() * payoff * discount;
-    results_.underlyingForwardValue = Null<Real>();
-    results_.sigma = Null<Real>();
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const pair<Real, Size>& accrued) const {
@@ -339,6 +359,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const pair<Rea
     }
 
     // Loop over each sample
+    auto m = arguments_.flow->indices().size();
     for (Size k = 0; k < samples_; k++) {
 
         // Sequence is N x n independent standard normal random variables
@@ -373,7 +394,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const pair<Rea
         }
 
         // Average price on this sample
-        samplePayoff /= dt.size();
+        samplePayoff /= m;
 
         // Finally, the payoff on this sample
         samplePayoff = max(omega * (samplePayoff - effectiveStrike), 0.0);
@@ -385,8 +406,6 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const pair<Rea
 
     // Populate the result value
     results_.value = arguments_.quantity * arguments_.flow->gearing() * payoff * discount;
-    results_.underlyingForwardValue = Null<Real>();
-    results_.sigma = Null<Real>();
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::setupFuture(vector<Real>& outVolatilities, Matrix& outSqrtCorr,

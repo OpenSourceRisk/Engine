@@ -160,7 +160,9 @@ void ApoFutureSurface::performCalculations() const {
             apo.setPricingEngine(apoEngine_);
             apo.NPV();
 
-            sigmas[i] = apo.sigma();
+            auto it = apo.additionalResults().find("sigma");
+            QL_REQUIRE(it != apo.additionalResults().end(), "Expected APO additional results to contain sigma.");
+            sigmas[i] = boost::any_cast<Real>(it->second);
         }
 
         QL_REQUIRE(sigmas.back() != Null<Real>(), "All of the sigmas are null.");
