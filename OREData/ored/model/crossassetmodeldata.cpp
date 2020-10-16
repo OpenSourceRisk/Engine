@@ -68,16 +68,71 @@ CorrelationFactor fromNode(ore::data::XMLNode* node, bool firstFactor) {
 namespace ore {
 namespace data {
 
-bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
+void InstantaneousCorrelations::fromXML(XMLNode* node) {
+    // Configure correlation structure
+    LOG("CrossAssetModelData: adding correlations.");
+    XMLNode* correlationNode = XMLUtils::locateNode(node, "InstantaneousCorrelations");
+    CorrelationMatrixBuilder cmb;
+    if (correlationNode) {
+        vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(correlationNode, "Correlation");
+        for (Size i = 0; i < nodes.size(); ++i) {
+            CorrelationFactor factor_1 = fromNode(nodes[i], true);
+            CorrelationFactor factor_2 = fromNode(nodes[i], false);
+            Real corr = parseReal(XMLUtils::getNodeValue(nodes[i]));
+            cmb.addCorrelation(factor_1, factor_2, corr);
+        }
+    }
+    else {
+        QL_FAIL("No InstantaneousCorrelations found in model configuration XML");
+    }
 
+    correlations_ = cmb.correlations();
+}
+
+XMLNode* InstantaneousCorrelations::toXML(XMLDocument& doc) {
+    
+    XMLNode* instantaneousCorrelationsNode = doc.allocNode("InstantaneousCorrelations");
+
+    for (auto it = correlations_.begin(); it != correlations_.end(); it++) {
+
+        XMLNode* node = doc.allocNode("Correlation", to_string(it->second->value()));
+        XMLUtils::appendNode(instantaneousCorrelationsNode, node);
+
+        CorrelationFactor f_1 = it->first.first;
+        XMLUtils::addAttribute(doc, node, "factor1", to_string(f_1.type) + ":" + f_1.name);
+        if(f_1.index != Null<Size>())
+            XMLUtils::addAttribute(doc, node, "index1", to_string(f_1.index));
+
+        CorrelationFactor f_2 = it->first.second;
+        XMLUtils::addAttribute(doc, node, "factor2", to_string(f_2.type) + ":" + f_2.name);
+        if (f_2.index != Null<Size>())
+            XMLUtils::addAttribute(doc, node, "index2", to_string(f_2.index));
+    }
+
+    return instantaneousCorrelationsNode;
+}
+
+bool InstantaneousCorrelations::operator==(const InstantaneousCorrelations& rhs) {
     // compare correlations by value (not the handle links)
     map<CorrelationKey, Handle<Quote>>::const_iterator corr1, corr2;
     for (corr1 = correlations_.begin(), corr2 = rhs.correlations_.begin();
-         corr1 != correlations_.end() && corr2 != rhs.correlations_.end(); ++corr1, ++corr2) {
+        corr1 != correlations_.end() && corr2 != rhs.correlations_.end(); ++corr1, ++corr2) {
         if (corr1->first != corr2->first || !close_enough(corr1->second->value(), corr2->second->value()))
             return false;
     }
     if (corr1 != correlations_.end() || corr2 != rhs.correlations_.end())
+        return false;
+
+    return true;
+}
+
+bool InstantaneousCorrelations::operator!=(const InstantaneousCorrelations& rhs) {
+    return !(*this == rhs);
+}
+
+bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
+
+    if (*correlations_ != *rhs.correlations_)
         return false;
 
     if (domesticCurrency_ != rhs.domesticCurrency_ || currencies_ != rhs.currencies_ || equities_ != rhs.equities_ ||
@@ -135,7 +190,7 @@ void CrossAssetModelData::clear() {
     infConfigs_.clear();
     crLgmConfigs_.clear();
     crCirConfigs_.clear();
-    correlations_.clear();
+    correlations_->clear();
 }
 
 void CrossAssetModelData::validate() {
@@ -363,21 +418,8 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
 
     // Configure correlation structure
     LOG("CrossAssetModelData: adding correlations.");
-    XMLNode* correlationNode = XMLUtils::getChildNode(modelNode, "InstantaneousCorrelations");
-    CorrelationMatrixBuilder cmb;
-    if (correlationNode) {
-        vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(correlationNode, "Correlation");
-        for (Size i = 0; i < nodes.size(); ++i) {
-            CorrelationFactor factor_1 = fromNode(nodes[i], true);
-            CorrelationFactor factor_2 = fromNode(nodes[i], false);
-            Real corr = parseReal(XMLUtils::getNodeValue(nodes[i]));
-            cmb.addCorrelation(factor_1, factor_2, corr);
-        }
-    } else {
-        QL_FAIL("No InstantaneousCorrelations found in model configuration XML");
-    }
-
-    correlations_ = cmb.correlations();
+    correlations_ = boost::make_shared<InstantaneousCorrelations>();
+    correlations_->fromXML(modelNode);
 
     validate();
 
@@ -588,22 +630,8 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(crModelsNode, crossAssetCrCirNode);
     }
 
-    XMLNode* instantaneousCorrelationsNode = doc.allocNode("InstantaneousCorrelations");
+    XMLNode* instantaneousCorrelationsNode = correlations_->toXML(doc);
     XMLUtils::appendNode(crossAssetModelNode, instantaneousCorrelationsNode);
-
-    for (auto it = correlations_.begin(); it != correlations_.end(); it++) {
-        
-        XMLNode* node = doc.allocNode("Correlation", to_string(it->second->value()));
-        XMLUtils::appendNode(instantaneousCorrelationsNode, node);
-        
-        CorrelationFactor f_1 = it->first.first;
-        XMLUtils::addAttribute(doc, node, "factor1", to_string(f_1.type) + ":" + f_1.name);
-        XMLUtils::addAttribute(doc, node, "index1", to_string(f_1.index));
-
-        CorrelationFactor f_2 = it->first.second;
-        XMLUtils::addAttribute(doc, node, "factor2", to_string(f_2.type) + ":" + f_2.name);
-        XMLUtils::addAttribute(doc, node, "index2", to_string(f_2.index));
-    }
 
     return crossAssetModelNode;
 }
