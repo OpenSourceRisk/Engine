@@ -41,6 +41,10 @@
 #include <ql/instruments/claim.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
+#include <stdio.h>
+
+
+
 namespace QuantExt {
 
 MidPointCdsEngine::MidPointCdsEngine(const Handle<DefaultProbabilityTermStructure>& probability, Real recoveryRate,
@@ -98,6 +102,7 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
 
     results.couponLegNPV = 0.0;
     results.defaultLegNPV = 0.0;
+
     for (Size i = 0; i < arguments.leg.size(); ++i) {
         if (arguments.leg[i]->hasOccurred(settlementDate, includeSettlementDateFlows_))
             continue;
@@ -139,8 +144,24 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
                 P * coupon->accruedAmount(defaultDate) * discountCurve_->discount(protectionPaymentDate);
         }
 
-        // on the other side, we add the payment in case of default.
-        results.defaultLegNPV += expectedLoss(defaultDate, effectiveStartDate, endDate, arguments.notional) *
+        Real notionalMidPoint;
+        if (i < arguments.leg.size() - 1){
+            boost::shared_ptr<FixedRateCoupon> couponNext = boost::dynamic_pointer_cast<FixedRateCoupon>(arguments.leg[i + 1]);
+            Real notionalCurrent = coupon->nominal();
+            Real notionalNext = couponNext->nominal();
+            if (notionalCurrent > 0 && notionalNext > 0){
+                notionalMidPoint = std::sqrt(notionalCurrent * notionalNext);
+            }
+            else{
+                notionalMidPoint = (notionalCurrent + notionalNext) / 2;
+            }
+        }
+        else{
+            notionalMidPoint = coupon->nominal();
+        }
+
+//         on the other side, we add the payment in case of default.
+        results.defaultLegNPV += expectedLoss(defaultDate, effectiveStartDate, endDate, notionalMidPoint) *
                                  discountCurve_->discount(protectionPaymentDate);
     }
 

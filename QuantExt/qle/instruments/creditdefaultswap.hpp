@@ -126,6 +126,52 @@ public:
                       ProtectionPaymentTime protectionPaymentTime = atDefault, const Date& protectionStart = Date(),
                       const Date& upfrontDate = Date(), const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
                       const DayCounter& lastPeriodDayCounter = DayCounter());
+    //! CDS quoted as running-spread only and with amortized notional structure
+    /*! @param side  Whether the protection is bought or sold.
+        @param amortized_leg  Amortizing Notional structure
+        @param spread  Running spread in fractional units.
+        @param schedule  Coupon schedule.
+        @param paymentConvention  Business-day convention for
+                                  payment-date adjustment.
+        @param dayCounter  Day-count convention for accrual.
+        @param settlesAccrual  Whether or not the accrued coupon is
+                               due in the event of a default.
+        @param protectionPaymentTime timing of protection and default accrual payments
+        @param protectionStart  The first date where a default
+                                event will trigger the contract.
+        @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to
+                                     allow for possibility of including maturity date in the last
+                                     period's coupon accrual which is standard.
+    */
+    CreditDefaultSwap(Protection::Side side, Real notional, Leg& amortized_leg, Rate spread, const Schedule& schedule,
+                      BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
+                      ProtectionPaymentTime protectionPaymentTime = atDefault, const Date& protectionStart = Date(),
+                      const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
+                      const DayCounter& lastPeriodDayCounter = DayCounter());
+    //! CDS quoted as upfront and running spread and with amortized notional structure
+    /*! @param side  Whether the protection is bought or sold.
+        @param amortized_leg  Amortizing Notional structure
+        @param upfront Upfront in fractional units.
+        @param spread Running spread in fractional units.
+        @param schedule  Coupon schedule.
+        @param paymentConvention  Business-day convention for
+                                  payment-date adjustment.
+        @param dayCounter  Day-count convention for accrual.
+        @param settlesAccrual Whether or not the accrued coupon is
+                              due in the event of a default.
+        @param protectionPaymentTime timing of protection and default accrual payments
+        @param protectionStart The first date where a default
+                               event will trigger the contract.
+        @param upfrontDate Settlement date for the upfront payment.
+        @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to
+                                     allow for possibility of including maturity date in the last
+                                     period's coupon accrual which is standard.
+    */
+    CreditDefaultSwap(Protection::Side side, Real notional, Leg& amortized_leg, Rate upfront, Rate spread, const Schedule& schedule,
+                      BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
+                      ProtectionPaymentTime protectionPaymentTime = atDefault, const Date& protectionStart = Date(),
+                      const Date& upfrontDate = Date(), const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
+                      const DayCounter& lastPeriodDayCounter = DayCounter());
     //@}
     //! \name Instrument interface
     //@{
@@ -192,7 +238,6 @@ public:
     */
     Rate impliedHazardRate(Real targetNPV, const Handle<YieldTermStructure>& discountCurve,
                            const DayCounter& dayCounter, Real recoveryRate = 0.4, Real accuracy = 1.0e-6) const;
-
     //! Conventional/standard upfront-to-spread conversion
     /*! Under a standard ISDA model and a set of standardised
         instrument characteristics, it is the running only quoted
@@ -265,6 +310,7 @@ public:
     virtual ~arguments() {}
     Protection::Side side;
     Real notional;
+
     boost::optional<Rate> upfront;
     Rate spread;
     Leg leg;

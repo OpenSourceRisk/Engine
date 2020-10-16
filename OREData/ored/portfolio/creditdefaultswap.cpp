@@ -22,6 +22,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/time/daycounters/actual360.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -38,14 +39,21 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     QL_REQUIRE(swap_.leg().legType() == "Fixed", "CreditDefaultSwap requires Fixed leg");
     Schedule schedule = makeSchedule(swap_.leg().schedule());
 
+    const LegData leg_ = swap_.leg();
     BusinessDayConvention payConvention = Following;
     if (!swap_.leg().paymentConvention().empty()) {
         payConvention = parseBusinessDayConvention(swap_.leg().paymentConvention());
     }
 
     Protection::Side prot = swap_.leg().isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
-    QL_REQUIRE(swap_.leg().notionals().size() == 1, "CreditDefaultSwap requires single notional");
     notional_ = swap_.leg().notionals().front();
+
+    Leg amortized_leg;
+    if (swap_.leg().notionals().size() > 1){
+        auto configuration = builder->configuration(MarketContext::pricing);
+        auto legBuilder = engineFactory->legBuilder(swap_.leg().legType());
+        amortized_leg = legBuilder->buildLeg(swap_.leg(), engineFactory, requiredFixings_, configuration);
+    }
 
     DayCounter dc = Actual360(true);
     if (!swap_.leg().dayCounter().empty()) {
@@ -65,17 +73,33 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     boost::shared_ptr<QuantExt::CreditDefaultSwap> cds;
 
-    if (swap_.upfrontDate() == Null<Date>())
-        cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
-            prot, swap_.leg().notionals().front(), fixedData->rates().front(), schedule, payConvention, dc,
-            swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), boost::shared_ptr<Claim>(),
-            lastPeriodDayCounter);
+    if (swap_.leg().notionals().size() == 1) {
+        if (swap_.upfrontDate() == Null<Date>())
+            cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
+                prot, swap_.leg().notionals().front(), fixedData->rates().front(), schedule, payConvention, dc,
+                swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), boost::shared_ptr<Claim>(),
+                lastPeriodDayCounter);
+        else {
+            QL_REQUIRE(swap_.upfrontFee() != Null<Real>(), "CreditDefaultSwap: upfront date given, but no upfront fee");
+            cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
+                prot, notional_, swap_.upfrontFee(), fixedData->rates().front(), schedule, payConvention, dc,
+                swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), swap_.upfrontDate(),
+                boost::shared_ptr<Claim>(), lastPeriodDayCounter);
+        }
+    }
     else {
-        QL_REQUIRE(swap_.upfrontFee() != Null<Real>(), "CreditDefaultSwap: upfront date given, but no upfront fee");
-        cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
-            prot, notional_, swap_.upfrontFee(), fixedData->rates().front(), schedule, payConvention, dc,
-            swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), swap_.upfrontDate(),
-            boost::shared_ptr<Claim>(), lastPeriodDayCounter);
+        if (swap_.upfrontDate() == Null<Date>())
+            cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
+                prot, notional_, amortized_leg, fixedData->rates().front(), schedule, payConvention, dc,
+                swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), boost::shared_ptr<Claim>(),
+                lastPeriodDayCounter);
+        else {
+            QL_REQUIRE(swap_.upfrontFee() != Null<Real>(), "CreditDefaultSwap: upfront date given, but no upfront fee");
+            cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
+                prot, notional_, amortized_leg, swap_.upfrontFee(), fixedData->rates().front(), schedule, payConvention, dc,
+                swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), swap_.upfrontDate(),
+                boost::shared_ptr<Claim>(), lastPeriodDayCounter);
+        }
     }
 
     boost::shared_ptr<CreditDefaultSwapEngineBuilder> cdsBuilder =
