@@ -75,6 +75,8 @@ public:
     const map<string, string>& swapIndices() const { return swapIndices_; }
     const string& interpolation() const { return interpolation_; }
     bool extrapolate() const { return extrapolate_; }
+    const map<string, vector<Period>>& yieldCurveTenors() const { return yieldCurveTenors_; }
+    const map<string, string>& yieldCurveDayCounters() const { return yieldCurveDayCounters_; }
 
     bool simulateFxSpots() const { return paramsSimulate(RiskFactorKey::KeyType::FXSpot); }
     vector<string> fxCcyPairs() const { return paramsLookup(RiskFactorKey::KeyType::FXSpot); }

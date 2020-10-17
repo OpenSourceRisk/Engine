@@ -94,7 +94,9 @@ public:
         //! If yes, build market objects lazily
         const bool lazyBuild = false,
         //! Optional reference data manager, needed to build fitted bond curves
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        //! If true, preserve link to loader quotes, this might heavily interfere with XVA simulations!
+        const bool preserveQuoteLinkage = false);
 
     /*! Constructor taking references. This ctor is deprecated, use the second ctor taking pointers instead.
         TODO remove this ctor, remove the member reference variables */
@@ -135,6 +137,7 @@ private:
     const bool continueOnError_;
     const bool loadFixings_;
     const bool lazyBuild_;
+    const bool preserveQuoteLinkage_;
     const boost::shared_ptr<ReferenceDataManager> referenceData_;
 
     // initialise market
