@@ -2,7 +2,7 @@ version: '3'
 
 services:
   env_quantlib:
-    image: env_quantlib:1.18_d123ec8c7
+    image: env_quantlib:1.18_ef48e21f7
     build:
       context: ../
       dockerfile: Docker/Dockerfile-QuantLib
