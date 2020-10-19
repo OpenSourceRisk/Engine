@@ -161,8 +161,10 @@ void ApoFutureSurface::performCalculations() const {
             apo.NPV();
 
             auto it = apo.additionalResults().find("sigma");
-            QL_REQUIRE(it != apo.additionalResults().end(), "Expected APO additional results to contain sigma.");
-            sigmas[i] = boost::any_cast<Real>(it->second);
+            if (it != apo.additionalResults().end())
+                sigmas[i] = boost::any_cast<Real>(it->second);
+            else
+                sigmas[i] = Null<Real>();
         }
 
         QL_REQUIRE(sigmas.back() != Null<Real>(), "All of the sigmas are null.");
