@@ -86,9 +86,9 @@ BaseCorrelationCurve::BaseCorrelationCurve(Date asof, BaseCorrelationCurveSpec s
             QL_FAIL("could not build base correlation curve");
         }
 
-        // FIXME: The QuantLib interpolator expects at least two terms, so add a second column, copying the first
+        // The QuantLib interpolator expects at least two terms, so add a second column, copying the first
         if (terms.size() == 1) {
-            terms.push_back(terms[0] + 1 * Days); // arbitrary, but larger than the first term
+            terms.push_back(terms[0] + 1 * terms[0].units());
             for (Size i = 0; i < detachmentPoints.size(); ++i)
                 data[i].push_back(data[i][0]);
         }
