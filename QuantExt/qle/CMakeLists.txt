@@ -88,9 +88,9 @@ math/fillemptymatrix.cpp
 methods/multipathgeneratorbase.cpp
 models/cdsoptionhelper.cpp
 models/cirppimplieddefaulttermstructure.cpp
-models/crcirpp.cpp
 models/cmscaphelper.cpp
 models/cpicapfloorhelper.cpp
+models/crcirpp.cpp
 models/crossassetanalytics.cpp
 models/crossassetmodel.cpp
 models/crossassetmodelimpliedeqvoltermstructure.cpp
@@ -358,14 +358,15 @@ math/nadarayawatson.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
 methods/multipathgeneratorbase.hpp
+methods/pathgeneratorfactory.hpp
 models/cdsoptionhelper.hpp
 models/cirppconstantfellerparametrization.hpp
 models/cirppconstantparametrization.hpp
 models/cirppimplieddefaulttermstructure.hpp
 models/cirppparametrization.hpp
-models/crcirpp.hpp
 models/cmscaphelper.hpp
 models/cpicapfloorhelper.hpp
+models/crcirpp.hpp
 models/crlgm1fparametrization.hpp
 models/crossassetanalytics.hpp
 models/crossassetanalyticsbase.hpp

@@ -693,6 +693,7 @@ BOOST_DATA_TEST_CASE(testCommodityApoSurface, bdata::make(asofDates), asof) {
     CSVFileReader reader(TEST_INPUT_FILE(filename), true, ",");
     BOOST_REQUIRE_EQUAL(reader.numberOfColumns(), 3);
 
+    BOOST_TEST_MESSAGE("exp_vol,calc_vol,difference");
     while (reader.next()) {
 
         // Get the expected expiry date, strike and volatility grid point
@@ -701,7 +702,11 @@ BOOST_DATA_TEST_CASE(testCommodityApoSurface, bdata::make(asofDates), asof) {
         Real volatility = parseReal(reader.get(2));
 
         // Check the surface on the grid point.
-        BOOST_CHECK_SMALL(volatility - vts->blackVol(expiryDate, strike), tol);
+        auto calcVolatility = vts->blackVol(expiryDate, strike);
+        auto difference = volatility - calcVolatility;
+        BOOST_TEST_MESSAGE(std::fixed << std::setprecision(12) << strike << "," << volatility << "," <<
+            calcVolatility << "," << difference);
+        BOOST_CHECK_SMALL(difference, tol);
     }
 }
 

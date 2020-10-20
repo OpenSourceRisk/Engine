@@ -90,18 +90,7 @@ public:
     //@}
 
     //! Reset trade, clear all base class data
-    void reset() {
-        // This is now being done in the build() function.
-        // instrument_ = boost::shared_ptr<QuantLib::Instrument>(); //TODO Wrapper
-        legs_.clear();
-        legCurrencies_.clear();
-        legPayers_.clear();
-        npvCurrency_ = "";
-        notional_ = Null<Real>();
-        notionalCurrency_ = "";
-        maturity_ = Date();
-        requiredFixings_.clear();
-    }
+    void reset();
 
     //! \name Setters
     //@{
