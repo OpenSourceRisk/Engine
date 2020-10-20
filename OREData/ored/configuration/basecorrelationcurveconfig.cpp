@@ -26,14 +26,33 @@ using ore::data::XMLUtils;
 namespace ore {
 namespace data {
 
-BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID, const string& curveDescription,
-                                                       const vector<string>& detachmentPoints,
-                                                       const vector<string>& terms)
-    : CurveConfig(curveID, curveDescription), detachmentPoints_(detachmentPoints), terms_(terms) {}
+BaseCorrelationCurveConfig::BaseCorrelationCurveConfig()
+    : settlementDays_(0), businessDayConvention_(Following), extrapolate_(true) {}
+
+BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
+    const string& curveDescription,
+    const vector<string>& detachmentPoints,
+    const vector<string>& terms,
+    Size settlementDays,
+    const Calendar& calendar,
+    BusinessDayConvention businessDayConvention,
+    DayCounter dayCounter,
+    bool extrapolate,
+    const string& quoteName)
+    : CurveConfig(curveID, curveDescription),
+      detachmentPoints_(detachmentPoints),
+      terms_(terms),
+      settlementDays_(settlementDays),
+      calendar_(calendar),
+      businessDayConvention_(businessDayConvention),
+      dayCounter_(dayCounter),
+      extrapolate_(extrapolate),
+      quoteName_(quoteName) {}
 
 const vector<string>& BaseCorrelationCurveConfig::quotes() {
     if (quotes_.size() == 0) {
-        string base = "CDS_INDEX/BASE_CORRELATION/" + curveID_ + "/";
+        string quoteName = quoteName_.empty() ? curveID_ : quoteName_;
+        string base = "CDS_INDEX/BASE_CORRELATION/" + quoteName + "/";
         for (auto t : terms_) {
             for (auto dp : detachmentPoints_) {
                 quotes_.push_back(base + t + "/" + dp);
@@ -55,6 +74,7 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     businessDayConvention_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));
     dayCounter_ = parseDayCounter(XMLUtils::getChildValue(node, "DayCounter", true));
     extrapolate_ = parseBool(XMLUtils::getChildValue(node, "Extrapolate", true));
+    quoteName_ = XMLUtils::getChildValue(node, "QuoteName", false);
 }
 
 XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) {
@@ -69,6 +89,10 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "Extrapolate", extrapolate_);
+
+    if(!quoteName_.empty())
+        XMLUtils::addChild(doc, node, "QuoteName", quoteName_);
+
     return node;
 }
 } // namespace data
