@@ -341,6 +341,23 @@ static struct test_data swap_index_data[] = {
     {"JPY-CMS-30Y", "JPYLiborSwapIsdaFix30Y Actual/365 (Fixed)", 30 * Years},
 };
 
+//name_ = region_.name() + " " + familyName_;
+static struct test_data inflation_index_data[] = {
+    {"AUCPI", "Australia CPI"},
+    {"BEHICP", "Belgium HICP"},
+    {"EUHICP", "EU HICP"},
+    {"EUHICPXT", "EU HICPXT"},
+    {"FRHICP", "France HICP"},
+    {"FRCPI", "France CPI"},
+    {"UKRPI", "UK RPI"},
+    {"USCPI", "USA CPI"},
+    {"ZACPI", "South Africa CPI"},
+    {"SECPI", "Sweden CPI"},
+    {"DKCPI", "Denmark CPI"},
+    {"CACPI", "Canada CPI"},
+    {"ESCPI", "Spain CPI"},
+};
+
 } // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
@@ -420,6 +437,35 @@ BOOST_AUTO_TEST_CASE(testSwapIndexParsing) {
             BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << swap->name());
         } else
             BOOST_FAIL("Swap Parser(" << str << ") returned null pointer");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testInfaltionIndexParsing) {
+
+    BOOST_TEST_MESSAGE("Testing Inflation Index name parsing...");
+
+    Size len = sizeof(index_data) / sizeof(index_data[0]);
+    for (Size i = 0; i < len; ++i) {
+        string str(ore::data::internalIndexName(index_data[i].str));
+        string index_name(index_data[i].index_name);
+        Period tenor(index_data[i].tenor);
+
+        boost::shared_ptr<ZeroInflationIndex> cpi;
+        try {
+            cpi = ore::data::parseZeroInflationIndex(str);
+        } catch (std::exception& e) {
+            BOOST_FAIL("Inflation Index Parser failed to parse \"" << str << "\" [exception:" << e.what() << "]");
+        } catch (...) {
+            BOOST_FAIL("Inflation Index Parser failed to parse \"" << str << "\" [unhandled]");
+        }
+        if (cpi) {
+            BOOST_CHECK_EQUAL(cpi->name(), index_name);
+            //Frequency
+            //Availability lag?
+
+            BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << cpi->name());
+        } else
+            BOOST_FAIL("Inflation Index Parser(" << str << ") returned null pointer");
     }
 }
 
