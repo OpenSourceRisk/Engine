@@ -47,12 +47,11 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
       businessDayConvention_(businessDayConvention),
       dayCounter_(dayCounter),
       extrapolate_(extrapolate),
-      quoteName_(quoteName) {}
+      quoteName_(quoteName.empty() ? curveID : quoteName) {}
 
 const vector<string>& BaseCorrelationCurveConfig::quotes() {
     if (quotes_.size() == 0) {
-        string quoteName = quoteName_.empty() ? curveID_ : quoteName_;
-        string base = "CDS_INDEX/BASE_CORRELATION/" + quoteName + "/";
+        string base = "CDS_INDEX/BASE_CORRELATION/" + quoteName_ + "/";
         for (auto t : terms_) {
             for (auto dp : detachmentPoints_) {
                 quotes_.push_back(base + t + "/" + dp);
@@ -75,6 +74,8 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     dayCounter_ = parseDayCounter(XMLUtils::getChildValue(node, "DayCounter", true));
     extrapolate_ = parseBool(XMLUtils::getChildValue(node, "Extrapolate", true));
     quoteName_ = XMLUtils::getChildValue(node, "QuoteName", false);
+    if (quoteName_.empty())
+        quoteName_ = curveID_;
 }
 
 XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) {
@@ -89,9 +90,7 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "Extrapolate", extrapolate_);
-
-    if(!quoteName_.empty())
-        XMLUtils::addChild(doc, node, "QuoteName", quoteName_);
+    XMLUtils::addChild(doc, node, "QuoteName", quoteName_);
 
     return node;
 }
