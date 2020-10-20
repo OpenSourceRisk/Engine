@@ -437,6 +437,8 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
                                                               const Handle<ZeroInflationTermStructure>& h) {
 
     static map<string, boost::shared_ptr<ZeroInflationIndexParserBase>> m = {
+        {"AUCPI", boost::make_shared<ZeroInflationIndexParser<AUCPI>>()},
+        {"AU CPI", boost::make_shared<ZeroInflationIndexParser<AUCPI>>()},
         {"BEHICP", boost::make_shared<ZeroInflationIndexParser<BEHICP>>()},
         {"BE HICP", boost::make_shared<ZeroInflationIndexParser<BEHICP>>()},
         {"EUHICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
