@@ -47,7 +47,6 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 
-
 namespace QuantExt {
 
 CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate spread, const Schedule& schedule,
@@ -138,13 +137,13 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
     maturity_ = schedule.dates().back();
 }
 
-CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Leg& amortized_leg, Rate spread, const Schedule& schedule,
-                                     BusinessDayConvention convention, const DayCounter& dayCounter,
-                                     bool settlesAccrual, ProtectionPaymentTime protectionPaymentTime,
-                                     const Date& protectionStart, const boost::shared_ptr<Claim>& claim,
-                                     const DayCounter& lastPeriodDayCounter)
-    : side_(side), notional_(notional), leg_(amortized_leg), upfront_(boost::none), runningSpread_(spread), settlesAccrual_(settlesAccrual),
-      protectionPaymentTime_(protectionPaymentTime), claim_(claim),
+CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate spread,
+                                     const Schedule& schedule, BusinessDayConvention convention,
+                                     const DayCounter& dayCounter, bool settlesAccrual,
+                                     ProtectionPaymentTime protectionPaymentTime, const Date& protectionStart,
+                                     const boost::shared_ptr<Claim>& claim, const DayCounter& lastPeriodDayCounter)
+    : side_(side), notional_(notional), leg_(amortized_leg), upfront_(boost::none), runningSpread_(spread),
+      settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime), claim_(claim),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
 
     QL_REQUIRE((schedule.hasRule() &&
@@ -175,8 +174,8 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Leg& 
     maturity_ = schedule.dates().back();
 }
 
-CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Leg& amortized_leg, Rate upfront, Rate runningSpread,
-                                     const Schedule& schedule, BusinessDayConvention convention,
+CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate upfront,
+                                     Rate runningSpread, const Schedule& schedule, BusinessDayConvention convention,
                                      const DayCounter& dayCounter, bool settlesAccrual,
                                      ProtectionPaymentTime protectionPaymentTime, const Date& protectionStart,
                                      const Date& upfrontDate, const boost::shared_ptr<Claim>& claim,

@@ -144,7 +144,7 @@ public:
                                      allow for possibility of including maturity date in the last
                                      period's coupon accrual which is standard.
     */
-    CreditDefaultSwap(Protection::Side side, Real notional, Leg& amortized_leg, Rate spread, const Schedule& schedule,
+    CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
                       ProtectionPaymentTime protectionPaymentTime = atDefault, const Date& protectionStart = Date(),
                       const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
@@ -169,7 +169,7 @@ public:
                                      allow for possibility of including maturity date in the last
                                      period's coupon accrual which is standard.
     */
-    CreditDefaultSwap(Protection::Side side, Real notional, Leg& amortized_leg, Rate upfront, Rate spread, const Schedule& schedule,
+    CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate upfront, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
                       ProtectionPaymentTime protectionPaymentTime = atDefault, const Date& protectionStart = Date(),
                       const Date& upfrontDate = Date(), const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
