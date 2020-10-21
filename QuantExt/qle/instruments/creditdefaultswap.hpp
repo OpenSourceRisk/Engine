@@ -128,7 +128,7 @@ public:
                       const DayCounter& lastPeriodDayCounter = DayCounter());
     //! CDS quoted as running-spread only and with amortized notional structure
     /*! @param side  Whether the protection is bought or sold.
-	@param notional  Initial Notional value
+        @param notional  Initial Notional value
         @param amortized_leg  Amortizing Notional structure
         @param spread  Running spread in fractional units.
         @param schedule  Coupon schedule.
@@ -144,14 +144,15 @@ public:
                                      allow for possibility of including maturity date in the last
                                      period's coupon accrual which is standard.
     */
-    CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate spread, const Schedule& schedule,
-                      BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
-                      ProtectionPaymentTime protectionPaymentTime = atDefault, const Date& protectionStart = Date(),
+    CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate spread,
+                      const Schedule& schedule, BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
+                      bool settlesAccrual = true, ProtectionPaymentTime protectionPaymentTime = atDefault,
+                      const Date& protectionStart = Date(),
                       const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
                       const DayCounter& lastPeriodDayCounter = DayCounter());
     //! CDS quoted as upfront and running spread and with amortized notional structure
     /*! @param side  Whether the protection is bought or sold.
-	@param notional  Initial Notional value
+        @param notional  Initial Notional value
         @param amortized_leg  Amortizing Notional structure
         @param upfront Upfront in fractional units.
         @param spread Running spread in fractional units.
@@ -169,10 +170,11 @@ public:
                                      allow for possibility of including maturity date in the last
                                      period's coupon accrual which is standard.
     */
-    CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate upfront, Rate spread, const Schedule& schedule,
-                      BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
-                      ProtectionPaymentTime protectionPaymentTime = atDefault, const Date& protectionStart = Date(),
-                      const Date& upfrontDate = Date(), const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
+    CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate upfront, Rate spread,
+                      const Schedule& schedule, BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
+                      bool settlesAccrual = true, ProtectionPaymentTime protectionPaymentTime = atDefault,
+                      const Date& protectionStart = Date(), const Date& upfrontDate = Date(),
+                      const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
                       const DayCounter& lastPeriodDayCounter = DayCounter());
     //@}
     //! \name Instrument interface
@@ -275,6 +277,10 @@ public:
     */
     Rate conventionalSpread(Real conventionalRecovery, const Handle<YieldTermStructure>& discountCurve,
                             const DayCounter& dayCounter) const;
+
+    void withoutUpfront(const Schedule& schedule, BusinessDayConvention convention);
+    void withUpfront(const Schedule& schedule, const Date& upfrontDate, BusinessDayConvention convention, Real notional,
+                     Rate upfront);
     //@}
 protected:
     //! \name Instrument interface
