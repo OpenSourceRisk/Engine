@@ -49,10 +49,20 @@ public:
     //! \name Constructors/Destructors
     //@{
     //! Default constructor
-    BaseCorrelationCurveConfig() {}
+    BaseCorrelationCurveConfig();
+
     //! Detailed constructor
-    BaseCorrelationCurveConfig(const string& curveID, const string& curveDescription,
-                               const vector<string>& detachmentPoints, const vector<string>& terms);
+    BaseCorrelationCurveConfig(
+        const string& curveID,
+        const string& curveDescription,
+        const vector<string>& detachmentPoints,
+        const vector<string>& terms,
+        QuantLib::Size settlementDays,
+        const QuantLib::Calendar& calendar,
+        QuantLib::BusinessDayConvention businessDayConvention,
+        QuantLib::DayCounter dayCounter,
+        bool extrapolate,
+        const std::string& quoteName = "");
     //@}
 
     //! \name Serialisation
@@ -70,6 +80,7 @@ public:
     const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const bool& extrapolate() const { return extrapolate_; }
+    const std::string& quoteName() const { return quoteName_; }
     const vector<string>& quotes() override;
     //@}
 
@@ -91,6 +102,7 @@ private:
     BusinessDayConvention businessDayConvention_;
     DayCounter dayCounter_;
     bool extrapolate_;
+    std::string quoteName_;
 };
 } // namespace data
 } // namespace ore

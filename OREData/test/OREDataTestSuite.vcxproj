@@ -636,6 +636,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="basecorrelationcurve.cpp" />
     <ClCompile Include="bond.cpp" />
     <ClCompile Include="calendaradjustment.cpp" />
     <ClCompile Include="calendars.cpp" />
