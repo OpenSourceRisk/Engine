@@ -49,6 +49,7 @@ public:
     //! Detailed constructor
     EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader,
                    const CurveConfigurations& curveConfigs, const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex,
+                   const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves = {},
                    const map<string, boost::shared_ptr<EquityCurve>>& requiredEquityCurves = {},
                    const map<string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves = {});
     //@}
@@ -57,11 +58,11 @@ public:
     //@{
     const EquityVolatilityCurveSpec& spec() const { return spec_; }
 
-    //! Build a volatility structure from a single constant volatlity quote
+    //! Build a volatility structure from a single constant volatility quote
     void buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveConfig& vc,
                          const ConstantVolatilityConfig& cvc, const Loader& loader);
 
-    //! Build a volatility curve from a 1-D curve of volatlity quotes
+    //! Build a volatility curve from a 1-D curve of volatility quotes
     void buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveConfig& vc,
                          const VolatilityCurveConfig& vcc, const Loader& loader);
 
@@ -69,6 +70,11 @@ public:
     void buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
                          const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
                          const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex);
+
+    /*! Build a volatility surface from a collection of expiry and strike pairs where the strikes are defined in
+    terms of moneyness levels.*/
+    void buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
+                         const VolatilityMoneynessSurfaceConfig& vmsc, const Loader& loader);
 
     //! Build a volatility surface as a proxy from another volatility surface
     void buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
@@ -83,6 +89,19 @@ private:
     boost::shared_ptr<BlackVolTermStructure> vol_;
     QuantLib::Calendar calendar_;
     QuantLib::DayCounter dayCounter_;
+
+    // Populated for delta and moneyness surfaces and left empty for others
+    QuantLib::Handle<QuantExt::EquityIndex> eqInd_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> yts_;
+
+    //! Populate equity index, \p eqInd_, and yield curve, \p yts_.
+    void populateCurves(const EquityVolatilityCurveConfig& config,
+                        const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                        const std::map<std::string, boost::shared_ptr<EquityCurve>>& equityCurves,
+                        const bool deltaOrFwdMoneyness);
+
+    // Control validity of moneynesses and populate returning vector
+    std::vector<QuantLib::Real> checkMoneyness(const std::vector<std::string>& strMoneynessLevels) const;
 };
 } // namespace data
 } // namespace ore

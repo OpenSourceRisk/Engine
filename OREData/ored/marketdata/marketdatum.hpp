@@ -1531,21 +1531,21 @@ public:
     EquityOptionQuote() {}
     //! Constructor
     EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy,
-                      string expiry, string strike, bool isCall = true);
+                      string expiry, const boost::shared_ptr<BaseStrike>& strike, bool isCall = true);
 
     //! \name Inspectors
     //@{
     const string& eqName() const { return eqName_; }
     const string& ccy() const { return ccy_; }
     const string& expiry() const { return expiry_; }
-    const string& strike() const { return strike_; }
+    const boost::shared_ptr<BaseStrike>& strike() const { return strike_; }
     bool isCall() { return isCall_; }
     //@}
 private:
     string eqName_;
     string ccy_;
     string expiry_;
-    string strike_;
+    boost::shared_ptr<BaseStrike> strike_;
     bool isCall_;
     //! Serialization
     friend class boost::serialization::access;
