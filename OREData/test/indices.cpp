@@ -440,15 +440,14 @@ BOOST_AUTO_TEST_CASE(testSwapIndexParsing) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(testInfaltionIndexParsing) {
+BOOST_AUTO_TEST_CASE(testInflationIndexParsing) {
 
     BOOST_TEST_MESSAGE("Testing Inflation Index name parsing...");
 
-    Size len = sizeof(index_data) / sizeof(index_data[0]);
+    Size len = sizeof(inflation_index_data) / sizeof(inflation_index_data[0]);
     for (Size i = 0; i < len; ++i) {
-        string str(ore::data::internalIndexName(index_data[i].str));
-        string index_name(index_data[i].index_name);
-        Period tenor(index_data[i].tenor);
+        string str(inflation_index_data[i].str);
+        string index_name(inflation_index_data[i].index_name);
 
         boost::shared_ptr<ZeroInflationIndex> cpi;
         try {
