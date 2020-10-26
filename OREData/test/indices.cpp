@@ -94,6 +94,12 @@ struct test_data {
     Period tenor;
 };
 
+struct test_data_inf {
+    const char* str;
+    const char* index_name;
+    Frequency frequency;
+};
+
 static struct test_data index_data[] = {
     // parsing string,     index name,                     tenor
     {"EUR-EONIA-1D", "EoniaON Actual/360", 1 * Days},
@@ -343,20 +349,20 @@ static struct test_data swap_index_data[] = {
 };
 
 //name_ = region_.name() + " " + familyName_;
-static struct test_data inflation_index_data[] = {
-    {"AUCPI", "Australia CPI"},
-    {"BEHICP", "Belgium HICP"},
-    {"EUHICP", "EU HICP"},
-    {"EUHICPXT", "EU HICPXT"},
-    {"FRHICP", "France HICP"},
-    {"FRCPI", "France CPI"},
-    {"UKRPI", "UK RPI"},
-    {"USCPI", "USA CPI"},
-    {"ZACPI", "South Africa CPI"},
-    {"SECPI", "Sweden CPI"},
-    {"DKCPI", "Denmark CPI"},
-    {"CACPI", "Canada CPI"},
-    {"ESCPI", "Spain CPI"},
+static struct test_data_inf inflation_index_data[] = {
+    {"AUCPI", "Australia CPI", Quarterly},
+    {"BEHICP", "Belgium HICP", Monthly},
+    {"EUHICP", "EU HICP", Monthly},
+    {"EUHICPXT", "EU HICPXT", Monthly},
+    {"FRHICP", "France HICP", Monthly},
+    {"FRCPI", "France CPI", Monthly},
+    {"UKRPI", "UK RPI", Monthly},
+    {"USCPI", "USA CPI", Monthly},
+    {"ZACPI", "South Africa CPI", Monthly},
+    {"SECPI", "Sweden CPI", Monthly},
+    {"DKCPI", "Denmark CPI", Monthly},
+    {"CACPI", "Canada CPI", Monthly},
+    {"ESCPI", "Spain CPI", Monthly},
 };
 
 } // namespace
@@ -449,6 +455,7 @@ BOOST_AUTO_TEST_CASE(testInflationIndexParsing) {
     for (Size i = 0; i < len; ++i) {
         string str(inflation_index_data[i].str);
         string index_name(inflation_index_data[i].index_name);
+        Frequency frequency(inflation_index_data[i].frequency);
 
         boost::shared_ptr<ZeroInflationIndex> cpi;
         try {
@@ -460,7 +467,8 @@ BOOST_AUTO_TEST_CASE(testInflationIndexParsing) {
         }
         if (cpi) {
             BOOST_CHECK_EQUAL(cpi->name(), index_name);
-            //Frequency
+            BOOST_CHECK_EQUAL(cpi->frequency(), frequency);
+            // Frequency
             //Availability lag?
 
             BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << cpi->name());
