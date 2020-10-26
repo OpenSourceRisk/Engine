@@ -61,6 +61,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("CounterParty", string())
         // Custom outputs added below:
         .addColumn("Volatility(VanOpt)", double(), 6) // Vanilla Options
+        .addColumn("ForwardPrice(VanOpt)", double(), 6)
         .addColumn("DiscountFactorAtMat(dom)", double(), 6);
 
     for (auto trade : portfolio->trades()) {
@@ -98,12 +99,24 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trade->instrument()->qlInstrument());
             if (qlVanOpt) {
                 Volatility blackVol = 0.0;
+                Real fwdPrice = 0.0;
 
                 if (trade->tradeType() == "EquityOption") {
                     boost::shared_ptr<ore::data::EquityOption> eqoTrn =
                         boost::dynamic_pointer_cast<ore::data::EquityOption>(trade);
                     const std::string& assetName = eqoTrn->asset(); // or equivalently equityName()
                     blackVol = market->equityVol(assetName)->blackVol(maturity, eqoTrn->strike());
+
+                    DayCounter dcA365 = Actual365Fixed();
+                    Time t = dcA365.yearFraction(today, maturity);
+                    Real divDisc = market->equityDividendCurve(assetName, configuration)->discount(t);
+                    Real domDisc =
+                        market->discountCurve(trade->notionalCurrency(), configuration)->discount(t);
+                    Real eqSpot = market->equitySpot(assetName, configuration)->value();
+                    fwdPrice = eqSpot * divDisc / domDisc;
+
+                    DLOG("Derived forward price " << std::setprecision(12) << std::fixed << fwdPrice << " for time " << t << ", spot " << eqSpot
+                        << ", dividend discount " << divDisc << ", and domestic discount " << domDisc << ".");
                 } else if (trade->tradeType() == "FxOption") {
                     boost::shared_ptr<ore::data::FxOption> fxoTrn =
                         boost::dynamic_pointer_cast<ore::data::FxOption>(trade);
@@ -116,8 +129,11 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                     // blackVol = market->commodityVolatility(assetName)->blackVol(maturity, comoTrn->strike());
                 }
                 report.add(blackVol);
+                report.add(fwdPrice);
             } else {
-                report.add(Null<Real>()); // Need to output something if not VanillaOption trade
+                // Need to output something if not VanillaOption trade
+                report.add(Null<Real>());
+                report.add(Null<Real>());
             }
 
             // Maturity (domestic) discount rate output
@@ -139,6 +155,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(Null<Real>())
                 .add(nullString_)
                 .add(nullString_)
+                .add(Null<Real>())
                 .add(Null<Real>())
                 .add(Null<Real>());
         }
