@@ -60,9 +60,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("NettingSet", string())
         .addColumn("CounterParty", string())
         // Custom outputs added below:
+        .addColumn("DiscountFactorAtMat(dom)", double(), 6)
         .addColumn("Volatility(VanOpt)", double(), 6) // Vanilla Options
-        .addColumn("ForwardPrice(VanOpt)", double(), 6)
-        .addColumn("DiscountFactorAtMat(dom)", double(), 6);
+        .addColumn("ForwardPrice(Eq)", double(), 6);
 
     for (auto trade : portfolio->trades()) {
         try {
@@ -94,6 +94,10 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(trade->envelope().counterparty());
 
             // Custom outputs below
+            // Domestic discount factor at maturity
+            Real domDisc = market->discountCurve(trade->notionalCurrency(), configuration)->discount(maturity);
+            report.add(domDisc);
+
             // Option volatility output
             boost::shared_ptr<QuantLib::VanillaOption> qlVanOpt =
                 boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trade->instrument()->qlInstrument());
@@ -106,16 +110,12 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                         boost::dynamic_pointer_cast<ore::data::EquityOption>(trade);
                     const std::string& assetName = eqoTrn->asset(); // or equivalently equityName()
                     blackVol = market->equityVol(assetName)->blackVol(maturity, eqoTrn->strike());
-
-                    DayCounter dcA365 = Actual365Fixed();
-                    Time t = dcA365.yearFraction(today, maturity);
-                    Real divDisc = market->equityDividendCurve(assetName, configuration)->discount(t);
-                    Real domDisc =
-                        market->discountCurve(trade->notionalCurrency(), configuration)->discount(t);
+                    
+                    Real divDisc = market->equityDividendCurve(assetName, configuration)->discount(maturity);
                     Real eqSpot = market->equitySpot(assetName, configuration)->value();
                     fwdPrice = eqSpot * divDisc / domDisc;
 
-                    DLOG("Derived forward price " << std::setprecision(12) << std::fixed << fwdPrice << " for time " << t << ", spot " << eqSpot
+                    DLOG("Derived forward price " << std::setprecision(12) << std::fixed << fwdPrice << " for maturity " << maturity << ", spot " << eqSpot
                         << ", dividend discount " << divDisc << ", and domestic discount " << domDisc << ".");
                 } else if (trade->tradeType() == "FxOption") {
                     boost::shared_ptr<ore::data::FxOption> fxoTrn =
@@ -135,9 +135,6 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 report.add(Null<Real>());
                 report.add(Null<Real>());
             }
-
-            // Maturity (domestic) discount rate output
-            report.add(market->discountCurve(trade->notionalCurrency(), configuration)->discount(maturity));
         } catch (std::exception& e) {
             ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during trade pricing", e.what()));
             Date maturity = trade->maturity();
