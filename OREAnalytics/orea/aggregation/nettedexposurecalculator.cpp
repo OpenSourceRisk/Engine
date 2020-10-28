@@ -142,24 +142,27 @@ void NettedExposureCalculator::build() {
         boost::shared_ptr<NettingSetDefinition> netting = nettingSetManager_->get(nettingSetId);
         string csaIndexName;
         Handle<IborIndex> csaIndex;
-	bool applyInitialMargin = false;
+        bool applyInitialMargin = false;
+        CSA::Type initialMarginType = CSA::Bilateral;
         if (netting->activeCsaFlag()) {
-	    csaIndexName = netting->csaDetails()->index();
+            csaIndexName = netting->csaDetails()->index();
             if (csaIndexName != "") {
                 csaIndex = market_->iborIndex(csaIndexName);
                 QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
                            "scenario data does not provide index values for " << csaIndexName);
             }
-	    QL_REQUIRE(netting->csaDetails(), "active CSA for netting set " << nettingSetId
-		       << ", but CSA detailsd not initialised");	    
-	    applyInitialMargin = netting->csaDetails()->applyInitialMargin() && applyInitialMargin_;
-	    LOG("ApplyInitialMargin=" << applyInitialMargin << " for netting set " << nettingSetId 
-		<< ", CSA IM=" << netting->csaDetails()->applyInitialMargin()
-		<< ", Analytics DIM=" << applyInitialMargin_);
-	    if (applyInitialMargin_ && !netting->csaDetails()->applyInitialMargin())
-	        ALOG("ApplyInitialMargin deactivated at netting set level " << nettingSetId);
-	    if (!applyInitialMargin_ && netting->csaDetails()->applyInitialMargin())
-	        ALOG("ApplyInitialMargin deactivated in analytics, but active at netting set level " << nettingSetId);
+            QL_REQUIRE(netting->csaDetails(), "active CSA for netting set " << nettingSetId
+                    << ", but CSA detailsd not initialised");
+            applyInitialMargin = netting->csaDetails()->applyInitialMargin() && applyInitialMargin_;
+            initialMarginType = netting->csaDetails()->initialMarginType();
+            LOG("ApplyInitialMargin=" << applyInitialMargin << " for netting set " << nettingSetId 
+                << ", CSA IM=" << netting->csaDetails()->applyInitialMargin()
+                << ", CSA IM Type=" << initialMarginType
+                << ", Analytics DIM=" << applyInitialMargin_);
+            if (applyInitialMargin_ && !netting->csaDetails()->applyInitialMargin())
+                ALOG("ApplyInitialMargin deactivated at netting set level " << nettingSetId);
+            if (!applyInitialMargin_ && netting->csaDetails()->applyInitialMargin())
+                ALOG("ApplyInitialMargin deactivated in analytics, but active at netting set level " << nettingSetId);
         }
 
         Handle<YieldTermStructure> curve = market_->discountCurve(baseCurrency_, configuration_);
@@ -206,7 +209,7 @@ void NettedExposureCalculator::build() {
                     balance = collateral->at(k)->accountBalance(date);
                 eab[j + 1] += balance / cube_->samples();
                 Real exposure = data[j][k] - balance;
-		Real dim = 0.0;
+                Real dim = 0.0;
                 if (applyInitialMargin && collateral) { // don't apply initial margin without VM, i.e. inactive CSA
                     // Initial Margin
                     // Use IM to reduce exposure
@@ -216,15 +219,21 @@ void NettedExposureCalculator::build() {
                     QL_REQUIRE(dim >= 0, "negative DIM for set " << nettingSetId << ", date " << j << ", sample " << k
                                                                  << ": " << dim);
                 }
-                epe[j + 1] += std::max(exposure - dim, 0.0) /
+                Real dim_epe = 0;
+                Real dim_ene = 0;
+                if (initialMarginType != CSA::Type::PostOnly)
+                    dim_epe = dim;
+                if (initialMarginType != CSA::Type::CallOnly)
+                    dim_ene = dim;
+                epe[j + 1] += std::max(exposure - dim_epe, 0.0) /
                               cube_->samples(); // dim here represents the held IM, and is expressed as a positive number
-                ene[j + 1] += std::max(-exposure - dim, 0.0) /
+                ene[j + 1] += std::max(-exposure - dim_ene, 0.0) /
                               cube_->samples(); // dim here represents the posted IM, and is expressed as a positive number
                 distribution[k] = exposure;
                 nettedCube_->set(exposure, nettingSetCount, j, k);
                 if (multiPath_) {
-                    exposureCube_->set(std::max(exposure - dim, 0.0), nettingSetCount, j, k, ExposureIndex::EPE);
-                    exposureCube_->set(std::max(-exposure - dim, 0.0), nettingSetCount, j, k, ExposureIndex::ENE);
+                    exposureCube_->set(std::max(exposure - dim_epe, 0.0), nettingSetCount, j, k, ExposureIndex::EPE);
+                    exposureCube_->set(std::max(-exposure - dim_ene, 0.0), nettingSetCount, j, k, ExposureIndex::ENE);
                 }
 
                 if (netting->activeCsaFlag()) {
