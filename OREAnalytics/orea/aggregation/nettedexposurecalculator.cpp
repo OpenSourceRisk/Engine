@@ -205,8 +205,15 @@ void NettedExposureCalculator::build() {
             vector<Real> distribution(cube_->samples(), 0.0);
             for (Size k = 0; k < cube_->samples(); ++k) {
                 Real balance = 0.0;
-                if (collateral)
+                if (collateral) {
                     balance = collateral->at(k)->accountBalance(date);
+                    if (netting->csaDetails()->csaCurrency() != baseCurrency_) {
+                        // Convert from CSACurrency to baseCurrency
+                        double fxRate = scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot,
+                                                           netting->csaDetails()->csaCurrency());
+                        balance *= fxRate;
+                    }
+                }
                 eab[j + 1] += balance / cube_->samples();
                 Real exposure = data[j][k] - balance;
                 Real dim = 0.0;
@@ -387,7 +394,7 @@ NettedExposureCalculator::collateralPaths(
         for (Size k = 0; k < cube_->samples(); ++k) {
 	  if (netting->csaDetails()->csaCurrency() != baseCurrency_)
                 csaScenFxRates[j][k] = cubeInterpretation_->getDefaultAggrionScenarioData(
-                    scenarioData_, AggregationScenarioDataType::FXSpot, j, k, csaFxPair);
+                    scenarioData_, AggregationScenarioDataType::FXSpot, j, k, netting->csaDetails()->csaCurrency());
             else
                 csaScenFxRates[j][k] = 1.0;
             if (csaIndexName != "") {
