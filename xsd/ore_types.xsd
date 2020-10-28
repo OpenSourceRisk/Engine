@@ -119,6 +119,16 @@
       <xs:enumeration value="NGN"/>
       <xs:enumeration value="MAD"/>
       <xs:enumeration value="UYU"/>
+      <xs:enumeration value="COU"/>
+      <xs:enumeration value="KES"/>
+      <xs:enumeration value="MUR"/>
+      <xs:enumeration value="UGX"/>
+      <xs:enumeration value="ZMW"/>
+      <xs:enumeration value="GHS"/>
+      <xs:enumeration value="JOD"/>
+      <xs:enumeration value="LKR"/>
+      <xs:enumeration value="HRK"/>
+      <xs:enumeration value="RSD"/>
       <!-- valid as currency too -->
       <xs:enumeration value="XAU"/>
       <xs:enumeration value="XAG"/>
