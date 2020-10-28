@@ -65,6 +65,28 @@ public:
     OMRCurrency();
 };
 
+//! Kuwaiti dinar
+/*! The ISO three-letter code is KWD; the numeric code is 003.
+ It is divided into 100 qirshes.
+
+ \ingroup currencies
+ */
+class KWDCurrency : public Currency {
+public:
+    KWDCurrency();
+};
+
+//! Jordanian dinar
+/*! The ISO three-letter code is JOD; the numeric code is 400.
+ It is divided into 100 qirshes.
+
+ \ingroup currencies
+ */
+class JODCurrency : public Currency {
+public:
+    JODCurrency();
+};
+
 //! United Arab Emirates dirham
 /*! The ISO three-letter code is AED; the numeric code is 784.
  It is divided into 100 fils.
@@ -76,7 +98,7 @@ public:
     AEDCurrency();
 };
 
-//! Philippine piso
+//! Philippine peso
 /*! The ISO three-letter code is PHP; the numeric code is 608.
  It is divided into 100 centavo.
 

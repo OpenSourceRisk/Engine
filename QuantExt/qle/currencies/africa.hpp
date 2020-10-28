@@ -55,6 +55,39 @@ public:
     EGPCurrency();
 };
 
+//! Mauritian rupee
+/*! The ISO three-letter code is MUR; the numeric code is 480.
+ It is divided into 100 cents.
+
+ \ingroup currencies
+*/
+class MURCurrency : public Currency {
+public:
+    MURCurrency();
+};
+
+//! Ugandan shilling
+/*! The ISO three-letter code is UGX; the numeric code is 800.
+It is the smallest unit.
+
+ \ingroup currencies
+*/
+class UGXCurrency : public Currency {
+public:
+    UGXCurrency();
+};
+
+//! Zambian kwacha
+/*! The ISO three-letter code is ZMW; the numeric code is 967.
+It is divided into 100 ngwee.
+
+ \ingroup currencies
+*/
+class ZMWCurrency : public Currency {
+public:
+    ZMWCurrency();
+};
+
 //! Nigerian naira
 /*! The ISO three-letter code is NGN; the numeric code is 566.
  It is divided into 100 kobo.
