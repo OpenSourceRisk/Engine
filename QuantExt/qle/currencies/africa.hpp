@@ -121,5 +121,16 @@ public:
     KESCurrency();
 };
 
+//! Ghanaian cedi
+/*! The ISO three-letter code is GHS; the numeric code is 936.
+ It is divided into 100 pesewas.
+
+ \ingroup currencies
+*/
+class GHSCurrency : public Currency {
+public:
+    GHSCurrency();
+};
+
 } // namespace QuantExt
 #endif
