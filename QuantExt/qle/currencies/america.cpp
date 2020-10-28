@@ -32,7 +32,7 @@ MXVCurrency::MXVCurrency() {
 // Unidad de Valor Real
 COUCurrency::COUCurrency() {
     static boost::shared_ptr<Data> couData(
-        new Data("Unidad de Valor Real (UVR) (funds code)", "COU", 970, "COU", "", 1, Rounding(), "1$.2f %3%"));
+        new Data("Unidad de Valor Real (UVR) (funds code)", "COU", 970, "COU", "", 100, Rounding(), "1$.2f %3%"));
     data_ = couData;
 }
 
