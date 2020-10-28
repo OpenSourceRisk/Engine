@@ -65,17 +65,6 @@ public:
     OMRCurrency();
 };
 
-//! Kuwaiti dinar
-/*! The ISO three-letter code is KWD; the numeric code is 003.
- It is divided into 100 qirshes.
-
- \ingroup currencies
- */
-class KWDCurrency : public Currency {
-public:
-    KWDCurrency();
-};
-
 //! Jordanian dinar
 /*! The ISO three-letter code is JOD; the numeric code is 400.
  It is divided into 100 qirshes.
