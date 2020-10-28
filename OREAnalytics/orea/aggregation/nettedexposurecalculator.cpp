@@ -245,11 +245,12 @@ void NettedExposureCalculator::build() {
                     }
                     Real dcf = dc.yearFraction(prevDate, date);
                     Real collateralSpread = (balance >= 0.0 ? netting->csaDetails()->collatSpreadRcv() : netting->csaDetails()->collatSpreadPay());
-                    Real colvaDelta = -balance * collateralSpread * dcf / cube_->samples();
+                    Real numeraire = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
+                    Real colvaDelta = -balance * collateralSpread * dcf / numeraire / cube_->samples();
                     // inutuitive floorDelta including collateralSpread would be:
                     // -balance * (max(indexValue - collateralSpread,0) - (indexValue - collateralSpread)) * dcf /
                     // samples
-                    Real floorDelta = -balance * std::max(-(indexValue - collateralSpread), 0.0) * dcf / cube_->samples();
+                    Real floorDelta = -balance * std::max(-(indexValue - collateralSpread), 0.0) * dcf / numeraire / cube_->samples();
                     colvaInc[j + 1] += colvaDelta;
                     colva_[nettingSetId] += colvaDelta;
                     eoniaFloorInc[j + 1] += floorDelta;
