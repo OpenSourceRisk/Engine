@@ -794,7 +794,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredBaseCorrelationCurves_.end()) {
                 DLOG("Building BaseCorrelation for asof " << asof_);
                 boost::shared_ptr<BaseCorrelationCurve> baseCorrelationCurve =
-                    boost::make_shared<BaseCorrelationCurve>(asof_, *baseCorrelationSpec, loader_, curveConfigs_);
+                    boost::make_shared<BaseCorrelationCurve>(asof_, *baseCorrelationSpec, loader_,
+                        curveConfigs_, referenceData_);
                 itr =
                     requiredBaseCorrelationCurves_.insert(make_pair(baseCorrelationSpec->name(), baseCorrelationCurve))
                         .first;

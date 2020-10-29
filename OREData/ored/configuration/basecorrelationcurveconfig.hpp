@@ -66,7 +66,8 @@ public:
         bool extrapolate,
         const std::string& quoteName = "",
         const QuantLib::Date& startDate = QuantLib::Date(),
-        boost::optional<QuantLib::DateGeneration::Rule> rule = boost::none);
+        boost::optional<QuantLib::DateGeneration::Rule> rule = boost::none,
+        bool adjustForLosses = true);
     //@}
 
     //! \name Serialisation
@@ -87,6 +88,7 @@ public:
     const std::string& quoteName() const { return quoteName_; }
     const QuantLib::Date& startDate() const { return startDate_; }
     const boost::optional<QuantLib::DateGeneration::Rule>& rule() const { return rule_; }
+    const bool& adjustForLosses() const { return adjustForLosses_; }
     const vector<string>& quotes() override;
     //@}
 
@@ -112,6 +114,7 @@ private:
     std::string quoteName_;
     QuantLib::Date startDate_;
     boost::optional<QuantLib::DateGeneration::Rule> rule_;
+    bool adjustForLosses_;
 };
 } // namespace data
 } // namespace ore

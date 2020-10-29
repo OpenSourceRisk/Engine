@@ -17,6 +17,8 @@
 */
 
 #include <ored/marketdata/basecorrelationcurve.hpp>
+#include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 
@@ -26,6 +28,20 @@
 using namespace QuantLib;
 using namespace std;
 
+namespace {
+
+using std::string;
+
+// Check that weight, prior Weight or recovery is in [0, 1]
+void validateWeightRec(Real value, const string& name, const string& varName) {
+    QL_REQUIRE(value <= 1.0, "The " << varName << " value (" << value << ") for name " << name <<
+        " should not be greater than 1.0.");
+    QL_REQUIRE(value >= 0.0, "The " << varName << " value (" << value << ") for name " << name <<
+        " should not be less than 0.0.");
+}
+
+}
+
 namespace ore {
 namespace data {
 
@@ -33,13 +49,15 @@ BaseCorrelationCurve::BaseCorrelationCurve(
     Date asof,
     BaseCorrelationCurveSpec spec,
     const Loader& loader,
-    const CurveConfigurations& curveConfigs) {
+    const CurveConfigurations& curveConfigs,
+    const boost::shared_ptr<ReferenceDataManager>& referenceData)
+    : spec_(spec), referenceData_(referenceData) {
 
-    DLOG("BaseCorrelationCurve: start building base correlation structure with ID " << spec.curveConfigID());
+    DLOG("BaseCorrelationCurve: start building base correlation structure with ID " << spec_.curveConfigID());
     
     try {
 
-        const auto& config = *curveConfigs.baseCorrelationCurveConfig(spec.curveConfigID());
+        const auto& config = *curveConfigs.baseCorrelationCurveConfig(spec_.curveConfigID());
 
         // The base correlation surface is of the form term x detachment point. We need at least two detachment points 
         // and at least one term. The list of terms may be explicit or contain a single wildcard character '*'. 
@@ -166,6 +184,13 @@ BaseCorrelationCurve::BaseCorrelationCurve(
         vector<Period> tmpTerms(terms.begin(), terms.end());
         vector<Real> tmpDps(dps.begin(), dps.end());
 
+        if (config.adjustForLosses()) {
+            DLOG("Adjust for losses is true for base correlation " << spec_.curveConfigID());
+            DLOG("Detachment points before: " << Array(tmpDps.begin(), tmpDps.end()));
+            tmpDps = adjustForLosses(tmpDps);
+            DLOG("Detachment points after: " << Array(tmpDps.begin(), tmpDps.end()));
+        }
+
         // The QuantLib interpolator expects at least two terms, so add a second column, copying the first
         if (tmpTerms.size() == 1) {
             tmpTerms.push_back(tmpTerms[0] + 1 * tmpTerms[0].units());
@@ -185,7 +210,108 @@ BaseCorrelationCurve::BaseCorrelationCurve(
         QL_FAIL("BaseCorrelationCurve: curve building failed: unknown error");
     }
 
-    DLOG("BaseCorrelationCurve: finished building base correlation structure with ID " << spec.curveConfigID());
+    DLOG("BaseCorrelationCurve: finished building base correlation structure with ID " << spec_.curveConfigID());
+}
+
+vector<Real> BaseCorrelationCurve::adjustForLosses(const vector<Real>& detachPoints) const {
+
+    const auto& cId = spec_.curveConfigID();
+    DLOG("BaseCorrelationCurve::adjustForLosses: start adjusting for losses for base correlation " << cId);
+
+    if (!referenceData_) {
+        DLOG("Reference data manager is null so cannot adjust for losses.");
+        return detachPoints;
+    }
+
+    if (!referenceData_->hasData(CreditIndexReferenceDatum::TYPE, cId)) {
+        DLOG("Reference data manager does not have index credit data for " << cId << " so cannot adjust for losses.");
+        return detachPoints;
+    }
+
+    auto crd = boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(
+        referenceData_->getData(CreditIndexReferenceDatum::TYPE, cId));
+    if (!crd) {
+        DLOG("Index credit data for " << cId << " is not of correct type so cannot adjust for losses.");
+        return detachPoints;
+    }
+
+    // Process the credit index reference data
+    Real totalRemainingWeight = 0.0;
+    Real totalPriorWeight = 0.0;
+    Real lost = 0.0;
+    Real recovered = 0.0;
+
+    for (const auto& c : crd->constituents()) {
+
+        const auto& name = c.name();
+        auto weight = c.weight();
+        validateWeightRec(weight, name, "weight");
+
+        if (!close(0.0, weight)) {
+            totalRemainingWeight += weight;
+        } else {
+            auto priorWeight = c.priorWeight();
+            QL_REQUIRE(priorWeight != Null<Real>(), "Expecting a valid prior weight for name " << name << ".");
+            validateWeightRec(priorWeight, name, "prior weight");
+            auto recovery = c.recovery();
+            QL_REQUIRE(recovery != Null<Real>(), "Expecting a valid recovery for name " << name << ".");
+            validateWeightRec(recovery, name, "recovery");
+            lost += (1.0 - recovery) * priorWeight;
+            recovered += recovery * priorWeight;
+            totalPriorWeight += priorWeight;
+        }
+    }
+
+    Real totalWeight = totalRemainingWeight + totalPriorWeight;
+    TLOG("Total remaining weight = " << totalRemainingWeight);
+    TLOG("Total prior weight = " << totalPriorWeight);
+    TLOG("Total weight = " << totalWeight);
+
+    if (!close(totalRemainingWeight, 1.0) && totalRemainingWeight > 1.0) {
+        ALOG("Total remaining weight is greater than 1, possible error in CreditIndexReferenceDatum for " << cId);
+    }
+
+    if (!close(totalWeight, 1.0)) {
+        ALOG("Expected the total weight (" << totalWeight << " = " << totalRemainingWeight << " + " <<
+            totalPriorWeight << ") to equal 1, possible error in CreditIndexReferenceDatum for " << cId);
+    }
+
+    if (close(totalRemainingWeight, 0.0)) {
+        ALOG("The total remaining weight is 0 so cannot adjust for losses.");
+        return detachPoints;
+    }
+
+    if (close(totalRemainingWeight, 1.0)) {
+        DLOG("Index factor for " << cId << " is 1 so adjustment for losses not required.");
+        return detachPoints;
+    }
+
+    // Index factor is less than 1 so need to adjust each of the detachment points.
+    vector<Real> result;
+    for (Size i = 0; i < detachPoints.size(); ++i) {
+
+        // Amounts below, for tranche and above for original (quoted) attachment and detachment points.
+        Real below = i == 0 ? 0.0 : detachPoints[i-1];
+        Real tranche = detachPoints[i] - below;
+        Real above = 1.0 - detachPoints[i];
+        Real newBelow = max(below - lost, 0.0);
+        Real newTranche = tranche - max(min(recovered - above, tranche), 0.0) - max(min(lost - below, tranche), 0.0);
+        Real newDetach = (newBelow + newTranche) / totalRemainingWeight;
+
+        TLOG("Quoted detachment point " << detachPoints[i] << " adjusted to " << newDetach << ".");
+
+        if (i > 0 && (newDetach < result.back() || close(newDetach, result.back()))) {
+            ALOG("The " << io::ordinal(i + 1) << " adjusted detachment point is not greater than the previous " <<
+                "adjusted detachment point so cannot adjust for losses.");
+            return detachPoints;
+        }
+
+        result.push_back(newDetach);
+    }
+
+    DLOG("BaseCorrelationCurve::adjustForLosses: finished adjusting for losses for base correlation " << cId);
+
+    return result;
 }
 
 } // namespace data

@@ -95,17 +95,17 @@ int OREApp::run() {
         // readSetup();
 
         /*********
-         * Build Markets
-         */
-        out_ << setw(tab_) << left << "Market... " << flush;
-        buildMarket();
-        out_ << "OK" << endl;
-
-        /*********
          * Load Reference Data
          */
         out_ << setw(tab_) << left << "Reference... " << flush;
         getReferenceData();
+        out_ << "OK" << endl;
+
+        /*********
+         * Build Markets
+         */
+        out_ << setw(tab_) << left << "Market... " << flush;
+        buildMarket();
         out_ << "OK" << endl;
 
         /************************
