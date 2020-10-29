@@ -103,7 +103,7 @@ BaseCorrelationCurve::BaseCorrelationCurve(
         auto mpCmp = [](pair<Period, Real> k_1, pair<Period, Real> k_2) {
             return k_1.first < k_2.first && (!close_enough(k_1.second, k_2.second) && k_1.second < k_2.second);
         };
-        map<pair<Period, Real>, Handle<Quote>> data;
+        map<pair<Period, Real>, Handle<Quote>, decltype(mpCmp)> data(mpCmp);
 
         for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
 
