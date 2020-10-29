@@ -101,7 +101,10 @@ BaseCorrelationCurve::BaseCorrelationCurve(
         // Read in quotes relevant for the base correlation surface. The points that will be used are stored in data 
         // where the key is the term, detachment point pair and value is the base correlation quote.
         auto mpCmp = [](pair<Period, Real> k_1, pair<Period, Real> k_2) {
-            return k_1.first < k_2.first && (!close_enough(k_1.second, k_2.second) && k_1.second < k_2.second);
+            if (k_1.first != k_2.first)
+                return k_1.first < k_2.first;
+            else
+                return !close_enough(k_1.second, k_2.second) && k_1.second < k_2.second;
         };
         map<pair<Period, Real>, Handle<Quote>, decltype(mpCmp)> data(mpCmp);
 
