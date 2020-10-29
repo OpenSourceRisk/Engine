@@ -317,10 +317,12 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
         zeroInflationIndices = marketConfig.mapping(MarketObject::ZeroInflationCurve, configID);
     if (marketConfig.hasMarketObject(MarketObject::DefaultCurve))
         defaultCurves = marketConfig.mapping(MarketObject::DefaultCurve, configID);
+    map<string, string> EquityCurves = marketConfig.mapping(MarketObject::EquityCurve, configID);
 
     vector<Handle<YieldTermStructure>> yieldCurves;
     vector<Handle<ZeroInflationIndex>> zeroInflationFixings;
     vector<Handle<DefaultProbabilityTermStructure>> probabilityCurves;
+    vector<std::tuple<Handle<YieldTermStructure>, Handle<YieldTermStructure>>> equityCurves;
 
     report.addColumn("Tenor", Period()).addColumn("Date", Date());
 
@@ -389,16 +391,32 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
             }
         }
     }
+    for (auto it : EquityCurves) {
+        DLOG("equity curve - " << it.first);
+        try {
+            equityCurves.push_back(std::make_tuple(market->equityCurve(it.first, configID)->equityForecastCurve(),
+                                   market->equityCurve(it.first, configID)->equityDividendCurve()));
+            report.addColumn(it.first + " Fwd", double(), 15);
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skip this curve: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
+    }
 
     for (Size j = 0; j < grid.size(); ++j) {
         Date date = grid[j];
         report.next().add(grid.tenors()[j]).add(date);
-        for (Size i = 0; i < yieldCurves.size(); ++i)
-            report.add(yieldCurves[i]->discount(date));
-        for (Size i = 0; i < zeroInflationFixings.size(); ++i)
-            report.add(zeroInflationFixings[i]->fixing(date));
-        for (Size i = 0; i < probabilityCurves.size(); ++i)
-            report.add(probabilityCurves[i]->survivalProbability(date));
+        for (auto yC : yieldCurves)
+            report.add(yC->discount(date));
+        for (auto zInfF : zeroInflationFixings)
+            report.add(zInfF->fixing(date));
+        for (auto prC : probabilityCurves)
+            report.add(prC->survivalProbability(date));
+        for (auto eqC : equityCurves)
+            report.add(std::get<0>(eqC)->discount(date) / std::get<1>(eqC)->discount(date));
     }
     report.end();
 }
