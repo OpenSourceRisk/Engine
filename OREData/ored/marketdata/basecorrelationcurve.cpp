@@ -175,7 +175,7 @@ BaseCorrelationCurve::BaseCorrelationCurve(
 
         baseCorrelation_ = boost::make_shared<BilinearBaseCorrelationTermStructure>(
             config.settlementDays(), config.calendar(), config.businessDayConvention(), tmpTerms,
-            tmpDps, quotes, config.dayCounter());
+            tmpDps, quotes, config.dayCounter(), config.startDate(), config.rule());
 
         baseCorrelation_->enableExtrapolation(config.extrapolate());
 

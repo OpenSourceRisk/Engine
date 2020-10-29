@@ -530,6 +530,8 @@
       <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolate" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="QuoteName" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="date" name="StartDate" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="dateRule" name="Rule" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
