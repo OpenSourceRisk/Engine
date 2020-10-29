@@ -1196,7 +1196,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     vector<Real> fwds;
                                     vector<Real> atmVols;                                    
                                     for (Size i = 0; i < expiries.size(); i++) {
-                                        auto eqForward = eqCurve->fixing(dates[i]);
+                                        auto eqForward = eqCurve->forecastFixing(dates[i]);
                                         fwds.push_back(eqForward);
                                         atmVols.push_back(wrapper->blackVol(dates[i], eqForward));
                                         DLOG("atmVol(s) is " << atmVols.back() << " on date " << dates[i]);
