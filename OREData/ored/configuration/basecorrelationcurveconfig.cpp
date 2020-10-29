@@ -27,7 +27,7 @@ namespace ore {
 namespace data {
 
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig()
-    : settlementDays_(0), businessDayConvention_(Following), extrapolate_(true) {}
+    : settlementDays_(0), businessDayConvention_(Following), extrapolate_(true), adjustForLosses_(true) {}
 
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
     const string& curveDescription,
@@ -38,7 +38,10 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
     BusinessDayConvention businessDayConvention,
     DayCounter dayCounter,
     bool extrapolate,
-    const string& quoteName)
+    const string& quoteName,
+    const Date& startDate,
+    boost::optional<DateGeneration::Rule> rule,
+    bool adjustForLosses)
     : CurveConfig(curveID, curveDescription),
       detachmentPoints_(detachmentPoints),
       terms_(terms),
@@ -47,7 +50,10 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
       businessDayConvention_(businessDayConvention),
       dayCounter_(dayCounter),
       extrapolate_(extrapolate),
-      quoteName_(quoteName.empty() ? curveID : quoteName) {}
+      quoteName_(quoteName.empty() ? curveID : quoteName),
+      startDate_(startDate),
+      rule_(rule),
+      adjustForLosses_(adjustForLosses) {}
 
 const vector<string>& BaseCorrelationCurveConfig::quotes() {
     if (quotes_.size() == 0) {
@@ -76,6 +82,17 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     quoteName_ = XMLUtils::getChildValue(node, "QuoteName", false);
     if (quoteName_.empty())
         quoteName_ = curveID_;
+
+    startDate_ = Date();
+    if (auto n = XMLUtils::getChildNode(node, "StartDate"))
+        startDate_ = parseDate(XMLUtils::getNodeValue(n));
+
+    if (auto n = XMLUtils::getChildNode(node, "Rule"))
+        rule_ = parseDateGenerationRule(XMLUtils::getNodeValue(n));
+
+    adjustForLosses_ = true;
+    if (auto n = XMLUtils::getChildNode(node, "AdjustForLosses"))
+        adjustForLosses_ = parseBool(XMLUtils::getNodeValue(n));
 }
 
 XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) {
@@ -91,6 +108,14 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "Extrapolate", extrapolate_);
     XMLUtils::addChild(doc, node, "QuoteName", quoteName_);
+
+    if (startDate_ != Date())
+        XMLUtils::addChild(doc, node, "StartDate", to_string(startDate_));
+
+    if (rule_)
+        XMLUtils::addChild(doc, node, "Rule", to_string(*rule_));
+
+    XMLUtils::addChild(doc, node, "AdjustForLosses", adjustForLosses_);
 
     return node;
 }

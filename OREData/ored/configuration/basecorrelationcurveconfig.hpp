@@ -25,9 +25,11 @@
 
 #include <ored/configuration/curveconfig.hpp>
 #include <ql/time/calendar.hpp>
+#include <ql/time/dategenerationrule.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
+#include <boost/optional/optional.hpp>
 
 namespace ore {
 namespace data {
@@ -62,7 +64,10 @@ public:
         QuantLib::BusinessDayConvention businessDayConvention,
         QuantLib::DayCounter dayCounter,
         bool extrapolate,
-        const std::string& quoteName = "");
+        const std::string& quoteName = "",
+        const QuantLib::Date& startDate = QuantLib::Date(),
+        boost::optional<QuantLib::DateGeneration::Rule> rule = boost::none,
+        bool adjustForLosses = true);
     //@}
 
     //! \name Serialisation
@@ -81,6 +86,9 @@ public:
     const DayCounter& dayCounter() const { return dayCounter_; }
     const bool& extrapolate() const { return extrapolate_; }
     const std::string& quoteName() const { return quoteName_; }
+    const QuantLib::Date& startDate() const { return startDate_; }
+    const boost::optional<QuantLib::DateGeneration::Rule>& rule() const { return rule_; }
+    const bool& adjustForLosses() const { return adjustForLosses_; }
     const vector<string>& quotes() override;
     //@}
 
@@ -94,6 +102,7 @@ public:
     DayCounter& dayCounter() { return dayCounter_; }
     bool& extrapolate() { return extrapolate_; }
     //@}
+
 private:
     vector<string> detachmentPoints_;
     vector<string> terms_;
@@ -103,6 +112,9 @@ private:
     DayCounter dayCounter_;
     bool extrapolate_;
     std::string quoteName_;
+    QuantLib::Date startDate_;
+    boost::optional<QuantLib::DateGeneration::Rule> rule_;
+    bool adjustForLosses_;
 };
 } // namespace data
 } // namespace ore

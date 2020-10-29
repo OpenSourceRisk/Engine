@@ -581,5 +581,19 @@
       <xs:maxInclusive value="31"/>
     </xs:restriction>
   </xs:simpleType>
+  
+  <xs:simpleType name="recoveryRate">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="1"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="weightType">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="1"/>
+    </xs:restriction>
+  </xs:simpleType>
 
 </xs:schema>
