@@ -312,12 +312,14 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     map<string, string> discountCurves = marketConfig.mapping(MarketObject::DiscountCurve, configID);
     map<string, string> YieldCurves = marketConfig.mapping(MarketObject::YieldCurve, configID);
     map<string, string> indexCurves = marketConfig.mapping(MarketObject::IndexCurve, configID);
-    map<string, string> zeroInflationIndices, defaultCurves;
+    map<string, string> zeroInflationIndices, defaultCurves, EquityCurves;
     if (marketConfig.hasMarketObject(MarketObject::ZeroInflationCurve))
         zeroInflationIndices = marketConfig.mapping(MarketObject::ZeroInflationCurve, configID);
     if (marketConfig.hasMarketObject(MarketObject::DefaultCurve))
         defaultCurves = marketConfig.mapping(MarketObject::DefaultCurve, configID);
-    map<string, string> EquityCurves = marketConfig.mapping(MarketObject::EquityCurve, configID);
+    if (marketConfig.hasMarketObject(MarketObject::EquityCurve))
+        EquityCurves = marketConfig.mapping(MarketObject::EquityCurve, configID);
+
 
     vector<Handle<YieldTermStructure>> yieldCurves;
     vector<Handle<ZeroInflationIndex>> zeroInflationFixings;
