@@ -2178,7 +2178,8 @@ The close-out date value can be computed in two ways in ORE
 
 We are reusing one case from Example 10 here, perfect CSA with zero threshold and
 minimum transfer amount, so that the remaining exposure is solely due to the MPoR
-effect. The portfolio consists of a single at-the-money Swap in GBP. The essential change in the configuration that triggers this modelling is in the Parameters section of {\tt simulation.xml} as shown in Listing \ref{lst:close_out_grid}.
+effect. The portfolio consists of a single at-the-money Swap in GBP. 
+The relevant configuration changes that trigger this modelling are in the Parameters section of {\tt simulation.xml} as shown in Listing \ref{lst:close_out_grid}
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -2196,6 +2197,20 @@ effect. The portfolio consists of a single at-the-money Swap in GBP. The essenti
 \end{minted}
 \caption{Close-out grid specification}
 \label{lst:close_out_grid}
+\end{listing}
+
+and moreover in the XVA analytics section of {\tt ore\_mpor.xml} as shown in Listing \ref{lst:calctype_nolag}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Analytic type="xva">
+    ...
+    <Parameter name="calculationType"> NoLag </Parameter>
+    ...
+  </Parameters>
+\end{minted}
+\caption{Close-out grid specification}
+\label{lst:calctype_nolag}
 \end{listing}
 
 Run as usual calling {\tt python run.py}.
@@ -2217,7 +2232,7 @@ to this directory and follow instructions in the {\tt Readme.txt}. In a nutshell
 \centerline{\tt jupyter notebook}
 \medskip
 
-to start the ipyton console and open a browser window. From the list of files displayed in the browser then click
+to start the ipython console and open a browser window. From the list of files displayed in the browser then click
 
 \medskip
 \centerline{\tt ore\_jupyter\_dashboard.ipynb} 
@@ -2651,10 +2666,15 @@ FX rates)
 \item {\tt exposureProfiles:} Flag to enable/disable exposure output for each netting set
 \item {\tt exposureProfilesByTrade:} Flag to enable/disable stand-alone exposure output for each trade
 \item {\tt quantile} Confidence level for Potential Future Exposure (PFE) reporting
-\item {\tt calculationType} Determines the settlement of margin calls: Symmetric - margin for both counterparties
-settled after the margin period of risk; AsymmetricCVA - margin requested from the counterparty settles with delay,
-margin requested from us settles immediately; AsymmetricDVA - vice versa). \todo[inline]{Move calculationType into the
-{\tt csaFile}?}
+\item {\tt calculationType} Determines the settlement of margin calls, choices are: \\
+	\begin{itemize}
+	\item {\em Symmetric} - margin for both counterparties settled after the margin period of risk; 
+	\item {\em AsymmetricCVA} - margin requested from the counterparty settles with delay,
+	margin requested from us settles immediately; 
+	\item {\em AsymmetricDVA} - vice versa 
+	\item {\em NoLag} - used to disable any delayed settlement of the margin; this option is applied in combination with a ``close-out'' grid, see section \ref{sec:simulation}. 
+	\end{itemize}
+	\todo[inline]{Move calculationType into the {\tt csaFile}?}
 \item {\tt allocationMethod:} XVA allocation method, choices are {\em None, Marginal, RelativeXVA, RelativeFairValueGross, RelativeFairValueNet}
 \item {\tt marginalAllocationLimit:} The marginal allocation method a la Pykhtin/Rosen breaks down when the netting set
 value vanishes while the exposure does not. This parameter acts as a cutoff for the marginal allocation when the
@@ -3527,6 +3547,9 @@ Let us discuss this section using the following example
   <Samples>1000</Samples>
   <Ordering>Steps</Ordering>
   <DirectionIntegers>JoeKuoD7</DirectionIntegers>
+  <!-- The following two nodes are optional -->
+  <CloseOutLag>2W</CloseOutLag>
+  <MporMode>StickyDate</MporMode>
 </Parameters>
 \end{minted}
 \caption{Simulation configuration}
@@ -3556,6 +3579,8 @@ to use if one of the {\em Forward } related methods is chosen.
 \item {\tt DirectionIntegers:} If the sequence type {\em SobolBrownianBridge} or {\em Sobol} is used, type of direction
   integers in Sobol generator ({\em Unit, Jaeckel, SobolLevitan, SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo,
     Kuo2, Kuo3})
+\item {\tt CloseOutLag}: If this tag is present, this specifies the close-out period length (e.g. 2W) used; otherwise no close-out grid is built. The close-out grid is an auxiliary time grid that is offset from the main default date grid by the close-out period, typically set to the applicable margin period of risk. If present, it is used to evolve the portfolio value and determine close-out values associated with the preceding default date valuation.
+\item {\tt MporMode}: This tag is expected if the previous one is present, permissible values are then {\tt StickyDate} and {\tt ActualDate}. {\tt StickyDate} means that only market data is evolved from the default date to close-out date for close-out date valuation, the valuation as of date remains unchanged and trades do not ``age'' over the period. As a consequence, exposure evolutions will not show spikes caused by cash flows within the close-out period. {\tt ActualDate} means that trades will also age over the close-out period so that one can experience exposure evolution spikes due to cash flows. 
 \end{itemize}
 
 \subsubsection{Model}\label{sec:sim_model}
@@ -6143,6 +6168,9 @@ where $MTA$ is the minimum transfer amount.
 (MPoR) which leads to residual exposure and XVA even for daily margining, zero thresholds and minimum transfer amounts,
 see for example \cite{Pykhtin2010}. A more detailed framework for collateralised exposure modelling is introduced in the
 2016 article \cite{Andersen2016}, indicating a potential route for extending ORE.
+
+\medskip
+In case we use an auxiliary ``close-out'' grid in the simulation (see section \ref{sec:simulation}), we do {\em not} settle the delivery amount with the delay mentioned above. With a close-out grid the portfolio value is rather evolved relative to the collateral balance, also leading to residual exposure. However, the close-out valuation approach allows more detailed modelling of what happens in the close-out period; currently ORE supports two options, with and without portfolio ``ageing'' over the close-out period. The option ``without ageing'' is more aggressive in that it avoids any exposure evolution spikes due to contractual cashflows that occur in the close-out period after default, the only exposure effect is due to market evolution over the period. The ``with ageing'' option is more conservative in that it includes the effect of all contractual cash flows in the close-out period, in particular outgoing cashflows at any time in the period which cause an exposure jump upwards. 
 
 \subsection{Exposure Allocation}\label{sec:app_allocation}
 
