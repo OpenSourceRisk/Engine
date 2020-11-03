@@ -1032,6 +1032,10 @@ Example & Description \\
 \hline
 30 & USD-Prime Curve Building via Prime-LIBOR Basis Swap\\
 \hline
+33 & Credit Default Swap Exposure with dynamic credit\\
+\hline
+34 & Interest Rate Swap Exposure with dynamic credit\\
+\hline
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -2139,6 +2143,109 @@ the 3\% rule observed on the market: {\tt U.S. Prime Rate = (The Fed Funds Targe
 
 Running ORE in directory {\tt Examples/Example\_30} with {\tt python run.py }
 yields the USD-Prime curve in {\tt Examples/Example\_30/Output/curves.csv.}
+
+%--------------------------------------------------------
+\subsection{Credit Default Swap Exposure with dynamic credit}\label{sec:example33}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_33} is the credit variant of the example in
+\ref{sec:example1}. Running ORE in directory {\tt Examples/Example\_33} with
+
+\medskip
+\centerline{\tt python run.py } 
+\medskip
+
+yields the exposure evolution in 
+
+\medskip
+\centerline{\tt Examples/Example\_33/Output/*.pdf } 
+\medskip
+
+and shown in figure \ref{fig_33}. 
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_cds_33_2w_10k.pdf}
+\end{center}
+\caption{Credit Default Swap expected exposure in a flat market environment from both parties' perspectives. The symbols are CDS Option prices. The simulation was run with bi-weekly time steps and 10,000 Monte Carlo samples to demonstrate the convergence of EPE and ENE profiles. A similar
+outcome can be obtained more quickly with 5,000 samples on a monthly time grid which is the default setting of Example\_33. }
+\label{fig_33}
+\end{figure}
+Both CDS simulation and CDS Option pricing are run with calls to the ORE executable, essentially 
+
+\medskip
+\centerline{\tt ore[.exe] ore.xml} 
+
+\centerline{\tt ore[.exe] ore\_cds\_option.xml} 
+\medskip
+
+which are wrapped into the script {\tt Examples/Example\_33/run.py} provided with the ORE release.
+
+This example demonstrates credit simulation using the LGM model and the calculation of Wrong Way Risk due to credit
+correlation between the underlying entity of the CDS and the counterparty of the CDS trade via dynamic credit.
+Positive correlation between the two names weakens the protection of the CDS whilst
+negative correlation strengthens the protection.
+
+The following table lists the XVA result from the example at different levels of correlation.
+
+
+\begin{table}[hbt]
+\scriptsize
+\begin{center}
+\begin{tabular}{|r|l|r|r|r|r|}
+\hline
+Correlation & NettingSetId & CVA & DVA & FBA & FCA \\
+\hline
+-100\%  &  CPTY\_B  &  -2,638  &  2,906  &  486  &  -1,057 \\
+ -90\%  &  CPTY\_B  &  -2,204  &  2,906  &  488  &  -1,053 \\
+ -50\%  &  CPTY\_B  &    -485  &  2,906  &  493  &  -1,040 \\
+ -40\%  &  CPTY\_B  &     -60  &  2,906  &  495  &  -1,037 \\
+ -30\%  &  CPTY\_B  &     363  &  2,906  &  496  &  -1,033 \\
+ -20\%  &  CPTY\_B  &     784  &  2,906  &  498  &  -1,030 \\
+ -10\%  &  CPTY\_B  &   1,204  &  2,906  &  500  &  -1,027 \\
+   0\%  &  CPTY\_B  &   1,621  &  2,906  &  501  &  -1,023 \\
+  10\%  &  CPTY\_B  &   2,036  &  2,906  &  503  &  -1,020 \\
+  20\%  &  CPTY\_B  &   2,450  &  2,906  &  504  &  -1,017 \\
+  30\%  &  CPTY\_B  &   2,861  &  2,906  &  506  &  -1,013 \\
+  40\%  &  CPTY\_B  &   3,271  &  2,906  &  507  &  -1,010 \\
+  50\%  &  CPTY\_B  &   3,679  &  2,906  &  509  &  -1,017 \\
+  90\%  &  CPTY\_B  &   5,290  &  2,906  &  515  &    -994 \\
+ 100\%  &  CPTY\_B  &   5,689  &  2,906  &  517  &    -991 \\
+\hline
+\end{tabular}
+\caption{CDS XVA results with LGM model}
+\end{center}
+\end{table}
+
+%--------------------------------------------------------
+\subsection{Interest Rate Swap Exposure with dynamic credit}\label{sec:example34}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_34} is an extension of the example in
+\ref{sec:example1} with dynamic credit and IR-CR correlation. As we are paying
+float, negative correlation implies that we pay more when the counterparty's credit
+worsens, leading to a surge of CVA.
+
+The following table lists the XVA result from the example at different levels of correlation.
+
+\begin{table}[hbt]
+\scriptsize
+\begin{center}
+\begin{tabular}{|r|l|r|r|r|r|}
+\hline
+Correlation & NettingSetId & CVA & DVA & FBA & FCA \\
+\hline
+ -30\%  &  CPTY\_A  & 105,146  &  68,061  &  31,519  &  -4,127 \\
+ -20\%  &  CPTY\_A  &  88,442  &  68,061  &  30,976  &  -4,219 \\
+ -10\%  &  CPTY\_A  &  71,059  &  68,061  &  30,439  &  -4,314 \\
+   0\%  &  CPTY\_A  &  52,983  &  68,061  &  29,909  &  -4,411 \\
+  10\%  &  CPTY\_A  &  34,199  &  68,061  &  29,386  &  -4,511 \\
+  20\%  &  CPTY\_A  &  14,691  &  68,061  &  28,869  &  -4,614 \\
+  30\%  &  CPTY\_A  &  -5,554  &  68,061  &  28,360  &  -4,719 \\
+\hline
+\end{tabular}
+\caption{IR Swap XVA results with LGM model}
+\end{center}
+\end{table}
 
 \clearpage
 %========================================================
