@@ -2,7 +2,7 @@
 
 % Avoid useless warnings about included images
 % Reference: https://tex.stackexchange.com/a/78020
-\pdfsuppresswarningpagegroup=1
+%\pdfsuppresswarningpagegroup=1
 
 % Use \hypersetup here to get rid of the ugly boxes around links
 \usepackage{hyperref}
@@ -129,7 +129,8 @@
 %\date{28 April 2017}
 %\date{7 December 2017}
 %\date{28 May 2019}
-\date{19 June 2020}
+%\date{19 June 2020}
+\date{30 October 2020}
 \maketitle
 
 \newpage
@@ -147,6 +148,7 @@ Date & Author & Comment \\
 7 December 2017 & Quaternion & updates for release 3\\
 20 March 2019 & Quaternion & updates for release 4\\
 19 June 2020 & Quaternion & updates for release 5\\
+30 October 2020 & Quaternion & updates for release 5b\\
 \hline
 \end{supertabular}
 \end{center}
@@ -439,6 +441,9 @@ OTHER
 \end{itemize}
 
 
+\subsection*{Changes between release 5 (June 2020) and 5b (end of October 2020)}
+
+TODO
 
 %========================================================
 \section{ORE Data Flow}\label{sec:process}
@@ -1031,6 +1036,20 @@ Example & Description \\
 29 & Curve Building using Fixed vs. Float Cross Currency Helpers\\
 \hline
 30 & USD-Prime Curve Building via Prime-LIBOR Basis Swap\\
+\hline
+31 & Exposure Simulation using a Close-out Grid\\
+\hline
+32 & Inflation Swap Exposure Simulation using Dodgson-Kainth demonstrating Calibration Baskets\\
+\hline
+33 & Inflation Swap Exposure Simulation using Jarrow-Yildirim\\
+\hline
+34 & Inflation Swap Exposure (TODO) \\
+\hline
+35 & CDS Exposure Simulation \\
+\hline
+36 & Inflation Swap Exposure (TODO) \\
+\hline
+37 & TODO: Wrong way risk \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -2119,7 +2138,6 @@ The portfolio contains an at-market fixed vs. float cross currency swap that is
 included in the curve building. The NPV of this swap should be zero when the example is run,
 using {\tt python run.py} or ``directly'' calling {\tt ore[.exe] ore.xml}.
 
-% Missing examples 30, 31, 32
 %--------------------------------------------------------
 \subsection{USD-Prime Curve Building via Prime-LIBOR Basis Swap}% Example 30
 \label{example:30}
@@ -2139,6 +2157,48 @@ the 3\% rule observed on the market: {\tt U.S. Prime Rate = (The Fed Funds Targe
 
 Running ORE in directory {\tt Examples/Example\_30} with {\tt python run.py }
 yields the USD-Prime curve in {\tt Examples/Example\_30/Output/curves.csv.}
+
+%--------------------------------------------------------
+\subsection{Exposure Simulation using a Close-Out Grid}% Example 31
+\label{example:31}
+%--------------------------------------------------------
+
+In the previous examples we have used a ``lagged'' approach, described at the end of appendix \ref{sec:app_collateral}, to take the Margin Period of Risk into account in exposure modelling. This has the disadvantage in ORE that we need to use equally-spaced time grids with time steps that match the MPoR, e.g. 2W, out to final portfolio maturity. 
+
+In this example we demonstrate an alternative approach supported by ORE since release 6. In this approach we use two nested grids: The (almost) arbitrary main simulation grid is used to compute ``default values'' which feed into the collateral balance $C(t)$ filtered by MTA and Threshold etc; an auxiliary ``close-out'' grid, offset from the main grid by the MPoR, is used to compute the delayed close-out values $V(t)$ associated with time default time $t$. The difference between $V(t)$ and $C(t)$ causes a residual exposure $[V(t)-C(t)]^+$ even if minimum transfer amounts and thresholds are zero.
+
+The close-out date value can be computed in two ways in ORE
+\begin{itemize}
+\item as of default date, by just evolving the market from default date to close-out date
+   (``sticky date''), or 
+\item  as of close-out date, by evolving both valuation date and market over the 
+   close-out period (``actual date''), i.e., the portfolio ages and cash flows might occur
+   in the close-out period causing spikes in the evolution of exposures. 
+\end{itemize}
+
+We are reusing one case from Example 10 here, perfect CSA with zero threshold and
+minimum transfer amount, so that the remaining exposure is solely due to the MPoR
+effect. The portfolio consists of a single at-the-money Swap in GBP. The essential change in the configuration that triggers this modelling is in the Parameters section of {\tt simulation.xml} as shown in Listing \ref{lst:close_out_grid}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Parameters>
+    <Discretization> ... </Discretization>
+    <Grid> ... </Grid>
+    <Calendar> ... </Calendar>
+    <Sequence> ... </Sequence>
+    <Scenario> ... </Scenario>
+    <Seed> ... </Seed>
+    <Samples> ... </Samples>
+    <CloseOutLag> 2W </CloseOutLag>
+    <MporMode> StickyDate </MporMode><!-- Alternative: ActualDate -->
+  </Parameters>
+\end{minted}
+\caption{Close-out grid specification}
+\label{lst:close_out_grid}
+\end{listing}
+
+Run as usual calling {\tt python run.py}.
 
 \clearpage
 %========================================================
