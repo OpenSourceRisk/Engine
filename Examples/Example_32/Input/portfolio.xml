@@ -1,10 +1,9 @@
 <Portfolio>
-  <Trade id="CPI_Swap_1">
+  <Trade id="trade_01">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <CounterParty>CPTY_A</CounterParty>
-      <NettingSetId>CPTY_A</NettingSetId>
-      <AdditionalFields/>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
     </Envelope>
     <SwapData>
       <LegData>
@@ -18,23 +17,21 @@
         </Notionals>
         <ScheduleData>
           <Rules>
-            <StartDate>2016-02-05</StartDate>
-            <EndDate>2036-02-05</EndDate>
+            <StartDate>2020-10-07</StartDate>
+            <EndDate>2040-10-07</EndDate>
             <Tenor>20Y</Tenor>
-            <Calendar>TARGET</Calendar>
+            <Calendar>UK</Calendar>
             <Convention>MF</Convention>
             <TermConvention>MF</TermConvention>
             <Rule>Zero</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
           </Rules>
         </ScheduleData>
         <ZeroCouponFixedLegData>
           <Rates>
-            <Rate>0.056467309</Rate>
+            <Rate>0.031925</Rate>
           </Rates>
           <Compounding>Compounded</Compounding>
+          <SubtractNotional>false</SubtractNotional>
         </ZeroCouponFixedLegData>
       </LegData>
       <LegData>
@@ -53,7 +50,7 @@
           <Dates>
             <Calendar>UK</Calendar>
             <Dates>
-              <Date>2036-02-05</Date>
+              <Date>2040-10-07</Date>
             </Dates>
           </Dates>
         </ScheduleData>
@@ -62,8 +59,8 @@
           <Rates>
             <Rate>1</Rate>
           </Rates>
-          <BaseCPI>210</BaseCPI>
-          <StartDate>2016-02-05</StartDate>
+          <BaseCPI>293.3</BaseCPI>
+          <StartDate>2020-10-07</StartDate>
           <ObservationLag>2M</ObservationLag>
           <Interpolation>AsIndex</Interpolation>
           <SubtractInflationNotional>false</SubtractInflationNotional>
@@ -71,87 +68,80 @@
       </LegData>
     </SwapData>
   </Trade>
-  <Trade id="CPI_Swap_2">
+  <Trade id="trade_02">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <CounterParty>CPTY_A</CounterParty>
-      <NettingSetId>CPTY_A</NettingSetId>
-      <AdditionalFields/>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
     </Envelope>
     <SwapData>
       <LegData>
-        <LegType>Floating</LegType>
+        <LegType>ZeroCouponFixed</LegType>
         <Payer>true</Payer>
-        <Currency>GBP</Currency>
+        <Currency>EUR</Currency>
+        <DayCounter>Year</DayCounter>
+        <PaymentConvention>Unadjusted</PaymentConvention>
         <Notionals>
           <Notional>10000000</Notional>
         </Notionals>
-        <DayCounter>ACT/ACT</DayCounter>
-        <PaymentConvention>ModifiedFollowing</PaymentConvention>
-        <FloatingLegData>
-          <Index>GBP-LIBOR-6M</Index>
-          <Spreads>
-            <Spread>0.0</Spread>
-          </Spreads>
-          <IsInArrears>false</IsInArrears>
-        </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>2016-07-18</StartDate>
-            <EndDate>2021-07-18</EndDate>
-            <Tenor>6M</Tenor>
-            <Calendar>UK</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
+            <StartDate>2020-10-07</StartDate>
+            <EndDate>2040-10-07</EndDate>
+            <Tenor>20Y</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Zero</Rule>
           </Rules>
         </ScheduleData>
+        <ZeroCouponFixedLegData>
+          <Rates>
+            <Rate>0.0116875</Rate>
+          </Rates>
+          <Compounding>Compounded</Compounding>
+          <SubtractNotional>false</SubtractNotional>
+        </ZeroCouponFixedLegData>
       </LegData>
       <LegData>
         <LegType>CPI</LegType>
         <Payer>false</Payer>
-        <Currency>GBP</Currency>
+        <Currency>EUR</Currency>
         <Notionals>
           <Notional>10000000</Notional>
+          <Exchanges>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
+          </Exchanges>
         </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>Following</PaymentConvention>
         <ScheduleData>
-          <Rules>
-            <StartDate>2016-07-18</StartDate>
-            <EndDate>2021-07-18</EndDate>
-            <Tenor>1Y</Tenor>
-            <Calendar>UK</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
+          <Dates>
+            <Calendar>TARGET</Calendar>
+            <Dates>
+              <Date>2040-10-07</Date>
+            </Dates>
+          </Dates>
         </ScheduleData>
         <CPILegData>
-          <Index>UKRPI</Index>
+          <Index>EUHICPXT</Index>
           <Rates>
-            <Rate>0.02</Rate>
+            <Rate>1</Rate>
           </Rates>
-          <BaseCPI>210</BaseCPI>
-          <StartDate>2016-07-18</StartDate>
-          <ObservationLag>2M</ObservationLag>
+          <BaseCPI>104.9</BaseCPI>
+          <StartDate>2020-10-07</StartDate>
+          <ObservationLag>3M</ObservationLag>
           <Interpolation>AsIndex</Interpolation>
+          <SubtractInflationNotional>false</SubtractInflationNotional>
         </CPILegData>
       </LegData>
     </SwapData>
   </Trade>
-  <Trade id="YearOnYear_Swap">
+  <Trade id="trade_03">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <CounterParty>CPTY_A</CounterParty>
-      <NettingSetId>CPTY_A</NettingSetId>
-      <AdditionalFields/>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
     </Envelope>
     <SwapData>
       <LegData>
@@ -159,27 +149,24 @@
         <Payer>true</Payer>
         <Currency>EUR</Currency>
         <Notionals>
-          <Notional>10000000.000000</Notional>
+          <Notional>10000000</Notional>
         </Notionals>
         <DayCounter>30/360</DayCounter>
-        <PaymentConvention>F</PaymentConvention>
+        <PaymentConvention>MF</PaymentConvention>
         <FixedLegData>
           <Rates>
-            <Rate>0.008375</Rate>
+            <Rate>0.010963</Rate>
           </Rates>
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>2016-02-05</StartDate>
-            <EndDate>2021-02-05</EndDate>
+            <StartDate>2020-10-07</StartDate>
+            <EndDate>2040-10-07</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
-            <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Backward</Rule>
           </Rules>
         </ScheduleData>
       </LegData>
@@ -190,25 +177,83 @@
         <Notionals>
           <Notional>10000000</Notional>
         </Notionals>
-        <DayCounter>ACT/ACT</DayCounter>
-        <PaymentConvention>Following</PaymentConvention>
+        <DayCounter>30/360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
         <ScheduleData>
           <Rules>
-            <StartDate>2016-02-05</StartDate>
-            <EndDate>2021-02-05</EndDate>
+            <StartDate>2020-10-07</StartDate>
+            <EndDate>2040-10-07</EndDate>
             <Tenor>1Y</Tenor>
-            <Calendar>UK</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Backward</Rule>
           </Rules>
         </ScheduleData>
         <YYLegData>
           <Index>EUHICPXT</Index>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
+          <ObservationLag>3M</ObservationLag>
+        </YYLegData>
+      </LegData>
+    </SwapData>
+  </Trade>
+  <Trade id="trade_04">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>true</Payer>
+        <Currency>GBP</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>30/360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.031356</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2020-10-07</StartDate>
+            <EndDate>2040-10-07</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>UK</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Backward</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>YY</LegType>
+        <Payer>false</Payer>
+        <Currency>GBP</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>30/360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2020-10-07</StartDate>
+            <EndDate>2040-10-07</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>UK</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Backward</Rule>
+          </Rules>
+        </ScheduleData>
+        <YYLegData>
+          <Index>UKRPI</Index>
+          <FixingDays>0</FixingDays>
           <ObservationLag>2M</ObservationLag>
         </YYLegData>
       </LegData>

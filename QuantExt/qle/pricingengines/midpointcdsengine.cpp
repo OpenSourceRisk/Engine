@@ -98,6 +98,7 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
 
     results.couponLegNPV = 0.0;
     results.defaultLegNPV = 0.0;
+
     for (Size i = 0; i < arguments.leg.size(); ++i) {
         if (arguments.leg[i]->hasOccurred(settlementDate, includeSettlementDateFlows_))
             continue;
@@ -139,8 +140,8 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
                 P * coupon->accruedAmount(defaultDate) * discountCurve_->discount(protectionPaymentDate);
         }
 
-        // on the other side, we add the payment in case of default.
-        results.defaultLegNPV += expectedLoss(defaultDate, effectiveStartDate, endDate, arguments.notional) *
+        //         on the other side, we add the payment in case of default.
+        results.defaultLegNPV += expectedLoss(defaultDate, effectiveStartDate, endDate, coupon->nominal()) *
                                  discountCurve_->discount(protectionPaymentDate);
     }
 

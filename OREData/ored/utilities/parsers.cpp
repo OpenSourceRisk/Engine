@@ -598,7 +598,8 @@ Currency parseCurrency(const string& s) {
         {"VND", VNDCurrency()}, {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()},
         {"MAD", MADCurrency()}, {"UYU", UYUCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()},
         {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"KES", KESCurrency()}, {"LKR", LKRCurrency()},
-        {"RSD", RSDCurrency()}};
+        {"RSD", RSDCurrency()}, {"COU", COUCurrency()}, {"MUR", MURCurrency()}, {"UGX", UGXCurrency()},
+        {"ZMW", ZMWCurrency()}, {"GHS", GHSCurrency()}, {"JOD", JODCurrency()}, {"HRK", HRKCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {

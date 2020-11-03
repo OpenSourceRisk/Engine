@@ -1,3 +1,6 @@
-This example is a copy of Example_17 showing the new approach to specifying calibration baskets.
+The example has a EUR and GBP market with inflation.
 
-The example has a EUR and GBP market with inflation in both modeled using a Dodgson Kainth (DK) model. The reversion is piecewise and calibrated to CPI floors with the volatility fixed.
+Both EUR inflation and GBP inflation follows a Jarrow Yildrim (JY) model:
+- the real rate volatility is piecewise and calibrated to year on year inflation swaps.
+- the inflation index volatility is piecewise and calibrated to CPI zero strike floors.
+- the real rate reversion is constant and fixed.

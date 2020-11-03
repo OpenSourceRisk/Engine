@@ -35,6 +35,27 @@ EGPCurrency::EGPCurrency() {
     data_ = egpData;
 }
 
+// Mauritian rupee
+MURCurrency::MURCurrency() {
+    static boost::shared_ptr<Data> murData(
+        new Data("Mauritian rupee", "MUR", 480, "MUR", "", 100, Rounding(), "1$.2f %3%"));
+    data_ = murData;
+}
+
+// Ugandan shilling
+UGXCurrency::UGXCurrency() {
+    static boost::shared_ptr<Data> ugxData(
+        new Data("Ugandan shilling", "UGX", 800, "UGX", "", 1, Rounding(), "1$.2f %3%"));
+    data_ = ugxData;
+}
+
+// Zambian kwacha
+ZMWCurrency::ZMWCurrency() {
+    static boost::shared_ptr<Data> zmwData(
+        new Data("Zambian kwacha", "ZMW", 967, "ZMW", "", 100, Rounding(), "1$.2f %3%"));
+    data_ = zmwData;
+}
+
 // Nigerian naira
 NGNCurrency::NGNCurrency() {
     static boost::shared_ptr<Data> ngnData(
@@ -54,6 +75,13 @@ KESCurrency::KESCurrency() {
     static boost::shared_ptr<Data> kesData(
         new Data("Kenyan shilling", "KES", 404, "KES", "", 100, Rounding(), "1$.2f %3%"));
     data_ = kesData;
+}
+
+// Ghanaian cedi
+GHSCurrency::GHSCurrency() {
+    static boost::shared_ptr<Data> ghsData(
+        new Data("Ghanaian cedi", "GHS", 936, "GHS", "", 100, Rounding(), "1$.2f %3%"));
+    data_ = ghsData;
 }
 
 } // namespace QuantExt

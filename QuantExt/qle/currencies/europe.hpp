@@ -40,5 +40,16 @@ public:
     RSDCurrency();
 };
 
+//! Croatian kuna
+/*! The ISO three-letter code is HRK; the numeric code is 191.
+ It is divided into 100 lipa.
+
+ \ingroup currencies
+*/
+class HRKCurrency : public Currency {
+public:
+    HRKCurrency();
+};
+
 } // namespace QuantExt
 #endif

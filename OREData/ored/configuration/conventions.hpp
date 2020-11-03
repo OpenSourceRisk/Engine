@@ -1348,9 +1348,6 @@ private:
     QuantLib::BusinessDayConvention bdc_;
     QuantLib::Natural optionExpiryOffset_;
     std::set<QuantLib::Date> prohibitedExpiries_;
-    QuantLib::Natural optionExpiryMonthLag_;
-    Natural optionExpiryDay_;
-    QuantLib::BusinessDayConvention optionBdc_;
 
     std::string strDayOfMonth_;
     std::string strNth_;
@@ -1367,6 +1364,9 @@ private:
     bool isAveraging_;
     std::string strOptionExpiryOffset_;
     std::vector<std::string> strProhibitedExpiries_;
+    QuantLib::Natural optionExpiryMonthLag_;
+    Natural optionExpiryDay_;
+    QuantLib::BusinessDayConvention optionBdc_;
     std::string strOptionBdc_;
     std::map<QuantLib::Natural, QuantLib::Natural> futureContinuationMappings_;
     std::map<QuantLib::Natural, QuantLib::Natural> optionContinuationMappings_;

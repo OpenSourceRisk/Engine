@@ -29,4 +29,11 @@ RSDCurrency::RSDCurrency() {
     data_ = rsdData;
 }
 
+// Croatian kuna
+HRKCurrency::HRKCurrency() {
+    static boost::shared_ptr<Data> hrkData(
+        new Data("Croatian kuna", "HRK", 191, "HRK", "", 100, Rounding(), "1$.2f %3%"));
+    data_ = hrkData;
+}
+
 } // namespace QuantExt
