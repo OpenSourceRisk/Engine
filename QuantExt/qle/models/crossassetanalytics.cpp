@@ -17,6 +17,7 @@
 */
 
 #include <qle/models/crossassetanalytics.hpp>
+#include <qle/utilities/inflation.hpp>
 
 using std::pair;
 using std::make_pair;
@@ -605,16 +606,6 @@ Real eq_eq_covariance(const CrossAssetModel* x, const Size k, const Size l, cons
     res -= Hj_b * integral(x, P(Hz(i), rzz(i, j), az(i), az(j)), t0, t0 + dt);
     res += integral(x, P(Hz(i), Hz(j), rzz(i, j), az(i), az(j)), t0, t0 + dt);
     return res;
-}
-
-Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const DayCounter& dc) {
-    auto lag = inflationYearFraction(ts->frequency(), ts->indexIsInterpolated(),
-        dc, ts->baseDate(), ts->referenceDate());
-    return std::pow(1.0 + ts->zeroRate(t - lag), t);
-}
-
-Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t) {
-    return inflationGrowth(ts, t, ts->dayCounter());
 }
 
 } // namespace CrossAssetAnalytics

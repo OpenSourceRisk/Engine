@@ -27,6 +27,7 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/time/date.hpp>
+#include <set>
 
 namespace ore {
 namespace data {
@@ -111,6 +112,63 @@ public:
 private:
     BondData bondData_;
     static ReferenceDatumRegister<ReferenceDatumBuilder<BondReferenceDatum>> reg_;
+};
+
+/*! Hold reference data on a constituent of a credit index.
+
+    Gives the name and the weight of the credit index constituent. A weight of zero indicates that there has been a
+    credit event relating to the constituent. In this case, the weight of the constituent prior to the credit event
+    is supplied along with the recovery rate, i.e. final auction price.
+*/
+class CreditIndexConstituent : public XMLSerializable {
+public:
+    CreditIndexConstituent();
+
+    CreditIndexConstituent(const std::string& name,
+        QuantLib::Real weight,
+        QuantLib::Real priorWeight = QuantLib::Null<QuantLib::Real>(),
+        QuantLib::Real recovery = QuantLib::Null<QuantLib::Real>());
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+    const std::string& name() const;
+    QuantLib::Real weight() const;
+    QuantLib::Real priorWeight() const;
+    QuantLib::Real recovery() const;
+
+private:
+    std::string name_;
+    QuantLib::Real weight_;
+    QuantLib::Real priorWeight_;
+    QuantLib::Real recovery_;
+};
+
+//! Compare CreditIndexConstituent instances using their name
+bool operator<(const CreditIndexConstituent& lhs, const CreditIndexConstituent& rhs);
+
+//! Credit index reference data, contains a set of index constituents.
+class CreditIndexReferenceDatum : public ReferenceDatum {
+public:
+    static constexpr const char* TYPE = "CreditIndex";
+
+    CreditIndexReferenceDatum();
+
+    CreditIndexReferenceDatum(const std::string& name);
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+    //! Add a constituent. The constituent is not added if already present.
+    void add(const CreditIndexConstituent& c);
+
+    //! Get all of the underlying constituents.
+    const std::set<CreditIndexConstituent>& constituents() const;
+
+private:
+    std::set<CreditIndexConstituent> constituents_;
+
+    static ReferenceDatumRegister<ReferenceDatumBuilder<CreditIndexReferenceDatum>> reg_;
 };
 
 //! Interface for Reference Data lookups

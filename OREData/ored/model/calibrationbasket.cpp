@@ -58,6 +58,10 @@ const vector<boost::shared_ptr<CalibrationInstrument>>& CalibrationBasket::instr
     return instruments_;
 }
 
+const string& CalibrationBasket::parameter() const {
+    return parameter_;
+}
+
 void CalibrationBasket::fromXML(XMLNode* node) {
     
     QL_REQUIRE(empty(), "The calibration basket should be empty before calling fromXML.");
@@ -86,11 +90,17 @@ void CalibrationBasket::fromXML(XMLNode* node) {
     }
 
     QL_REQUIRE(!empty(), "The calibration basket should have at least one calibration instrument.");
+
+    parameter_ = XMLUtils::getAttribute(node, "parameter");
 }
 
 XMLNode* CalibrationBasket::toXML(XMLDocument& doc) {
 
     XMLNode* node = doc.allocNode("CalibrationBasket");
+
+    if (!parameter_.empty())
+        XMLUtils::addAttribute(doc, node, "parameter", parameter_);
+
     for (const auto& instrument : instruments_) {
         XMLUtils::appendNode(node, instrument->toXML(doc));
     }

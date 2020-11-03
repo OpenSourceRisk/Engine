@@ -1251,7 +1251,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CommodityFutureConvention() {}
+    CommodityFutureConvention();
 
     //! Day of month based constructor
     CommodityFutureConvention(const std::string& id, const DayOfMonth& dayOfMonth, const std::string& contractFrequency,
@@ -1260,7 +1260,12 @@ public:
                               const std::string& offsetDays = "", const std::string& bdc = "",
                               bool adjustBeforeOffset = true, bool isAveraging = false,
                               const std::string& optionExpiryOffset = "",
-                              const std::vector<std::string>& prohibitedExpiries = {});
+                              const std::vector<std::string>& prohibitedExpiries = {},
+                              QuantLib::Natural optionExpiryMonthLag = 0,
+                              QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
+                              const std::string& optionBdc = "",
+                              const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
+                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {});
 
     //! N-th weekday based constructor
     CommodityFutureConvention(const std::string& id, const std::string& nth, const std::string& weekday,
@@ -1269,7 +1274,12 @@ public:
                               const std::string& oneContractMonth = "", const std::string& offsetDays = "",
                               const std::string& bdc = "", bool adjustBeforeOffset = true, bool isAveraging = false,
                               const std::string& optionExpiryOffset = "",
-                              const std::vector<std::string>& prohibitedExpiries = {});
+                              const std::vector<std::string>& prohibitedExpiries = {},
+                              QuantLib::Natural optionExpiryMonthLag = 0,
+                              QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
+                              const std::string& optionBdc = "",
+                              const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
+                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {});
 
     //! Calendar days before based constructor
     CommodityFutureConvention(const std::string& id, const CalendarDaysBefore& calendarDaysBefore,
@@ -1278,7 +1288,12 @@ public:
                               const std::string& oneContractMonth = "", const std::string& offsetDays = "",
                               const std::string& bdc = "", bool adjustBeforeOffset = true, bool isAveraging = false,
                               const std::string& optionExpiryOffset = "",
-                              const std::vector<std::string>& prohibitedExpiries = {});
+                              const std::vector<std::string>& prohibitedExpiries = {},
+                              QuantLib::Natural optionExpiryMonthLag = 0,
+                              QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
+                              const std::string& optionBdc = "",
+                              const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
+                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {});
     //@}
 
     //! \name Inspectors
@@ -1299,6 +1314,15 @@ public:
     bool isAveraging() const { return isAveraging_; }
     QuantLib::Natural optionExpiryOffset() const { return optionExpiryOffset_; }
     const std::set<QuantLib::Date>& prohibitedExpiries() const { return prohibitedExpiries_; }
+    QuantLib::Natural optionExpiryMonthLag() const { return optionExpiryMonthLag_; }
+    QuantLib::Natural optionExpiryDay() const { return optionExpiryDay_; }
+    QuantLib::BusinessDayConvention optionBusinessDayConvention() const { return optionBdc_; }
+    const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings() const {
+        return futureContinuationMappings_;
+    }
+    const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings() const {
+        return optionContinuationMappings_;
+    }
     //@}
 
     //! Serialisation
@@ -1340,6 +1364,12 @@ private:
     bool isAveraging_;
     std::string strOptionExpiryOffset_;
     std::vector<std::string> strProhibitedExpiries_;
+    QuantLib::Natural optionExpiryMonthLag_;
+    Natural optionExpiryDay_;
+    QuantLib::BusinessDayConvention optionBdc_;
+    std::string strOptionBdc_;
+    std::map<QuantLib::Natural, QuantLib::Natural> futureContinuationMappings_;
+    std::map<QuantLib::Natural, QuantLib::Natural> optionContinuationMappings_;
 };
 
 //! Container for storing FX Option conventions

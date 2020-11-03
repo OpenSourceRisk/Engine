@@ -22,8 +22,10 @@
 namespace QuantExt {
 
 FxBsConstantParametrization::FxBsConstantParametrization(const Currency& currency, const Handle<Quote>& fxSpotToday,
-                                                         const Real sigma)
-    : FxBsParametrization(currency, fxSpotToday), sigma_(boost::make_shared<PseudoParameter>(1)) {
+                                                         const Real sigma,
+    const boost::shared_ptr<Constraint>& sigmaConstraint)
+    : FxBsParametrization(currency, fxSpotToday),
+      sigma_(boost::make_shared<PseudoParameter>(1, *sigmaConstraint)) {
     sigma_->setParam(0, inverse(0, sigma));
 }
 

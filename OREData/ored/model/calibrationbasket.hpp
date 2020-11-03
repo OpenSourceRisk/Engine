@@ -68,6 +68,7 @@ public:
     //@{
     const std::string& instrumentType() const;
     const std::vector<boost::shared_ptr<CalibrationInstrument>>& instruments() const;
+    const std::string& parameter() const;
     //@}
 
     //! \name Serialisation
@@ -82,6 +83,9 @@ public:
 private:
     std::vector<boost::shared_ptr<CalibrationInstrument>> instruments_;
     std::string instrumentType_;
+    //! The parameter tag may be given so that builders know how to use the calibration basket.
+    std::string parameter_;
+
 };
 
 

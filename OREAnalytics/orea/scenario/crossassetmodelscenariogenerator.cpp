@@ -21,11 +21,6 @@
 #include <ored/utilities/parsers.hpp>
 
 #include <qle/indexes/inflationindexobserver.hpp>
-#include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
-#include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
-#include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
-#include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
-#include <qle/models/lgmimpliedyieldtermstructure.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -51,9 +46,16 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
     // TODO, curve tenors might be overwritten by dates in simMarketConfig_, here we just take the tenors
 
+    DayCounter dc = model_->irlgm1f(0)->termStructure()->dayCounter();
+    n_ccy_ = model_->components(IR);
+    n_eq_ = model_->components(EQ);
+    n_inf_ = model_->components(INF);
+    n_cr_ = model_->components(CR);
+    n_indices_ = simMarketConfig_->indices().size();
+    n_curves_ = simMarketConfig_->yieldCurveNames().size();
+
     // Cache yield curve keys
-    Size n_ccy = model_->components(IR);
-    discountCurveKeys_.reserve(n_ccy * simMarketConfig_->yieldCurveTenors("").size());
+    discountCurveKeys_.reserve(n_ccy_ * simMarketConfig_->yieldCurveTenors("").size());
     for (Size j = 0; j < model_->components(IR); j++) {
         std::string ccy = model_->irlgm1f(j)->currency().code();
         ten_dsc_.push_back(simMarketConfig_->yieldCurveTenors(ccy));
@@ -63,9 +65,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // Cache index curve keys
-    Size n_indices = simMarketConfig_->indices().size();
-    indexCurveKeys_.reserve(n_indices * simMarketConfig_->yieldCurveTenors("").size());
-    for (Size j = 0; j < n_indices; ++j) {
+    indexCurveKeys_.reserve(n_indices_ * simMarketConfig_->yieldCurveTenors("").size());
+    for (Size j = 0; j < n_indices_; ++j) {
         ten_idx_.push_back(simMarketConfig_->yieldCurveTenors(simMarketConfig_->indices()[j]));
         Size n_ten = ten_idx_.back().size();
         for (Size k = 0; k < n_ten; ++k) {
@@ -85,8 +86,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // Cache FX rate keys
-    fxKeys_.reserve(n_ccy - 1);
-    for (Size k = 0; k < n_ccy - 1; k++) {
+    fxKeys_.reserve(n_ccy_ - 1);
+    for (Size k = 0; k < n_ccy_ - 1; k++) {
         const string& foreign = model_->irlgm1f(k + 1)->currency().code(); // Is this safe?
         const string& domestic = model_->irlgm1f(0)->currency().code();
         fxKeys_.emplace_back(RiskFactorKey::KeyType::FXSpot, foreign + domestic); // k
@@ -137,7 +138,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         }
     }
 
-    // Cache INF rate keys0
+    // Cache INF rate keys
     Size n_inf = model_->components(INF);
     if (n_inf > 0) {
         cpiKeys_.reserve(n_inf);
@@ -171,48 +172,44 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             }
         }
     }
-}
 
-std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
-    std::vector<boost::shared_ptr<Scenario>> scenarios(dates_.size());
-    Sample<MultiPath> sample = pathGenerator_->next();
-    Size n_ccy = model_->components(IR);
-    Size n_eq = model_->components(EQ);
-    Size n_inf = model_->components(INF);
-    Size n_indices = simMarketConfig_->indices().size();
-    Size n_curves = simMarketConfig_->yieldCurveNames().size();
-    vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> curves, fwdCurves, yieldCurves;
-    
-    vector<boost::shared_ptr<IborIndex>> indices;
-    vector<Currency> yieldCurveCurrency;
-    vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> equityForecastCurves;
-    vector<Currency> equityForecastCurrency;
-    vector<string> zeroInflationIndex, yoyInflationIndex;
-
-    DayCounter dc = model_->irlgm1f(0)->termStructure()->dayCounter();
-
-    for (Size j = 0; j < n_ccy; ++j) {
-        curves.push_back(boost::make_shared<QuantExt::LgmImpliedYieldTermStructure>(model_->lgm(j), dc, true));
+    // Cache default curve keys
+    Size n_cr = model_->components(CR);
+    defaultCurveKeys_.reserve(n_cr * simMarketConfig_->defaultTenors("").size());
+    for (Size j = 0; j < model_->components(CR); j++) {
+        std::string cr_name = model_->cr(j)->name();
+        ten_dfc_.push_back(simMarketConfig_->defaultTenors(cr_name));
+        Size n_ten = ten_dfc_.back().size();
+        for (Size k = 0; k < n_ten; k++) {
+            defaultCurveKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, cr_name, k); // j * n_ten + k
+        }
+        // defaultCurveKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, cr_name, -1); // for numeraie
     }
 
-    for (Size j = 0; j < n_indices; ++j) {
+    // cache curves
+
+    for (Size j = 0; j < n_ccy_; ++j) {
+        curves_.push_back(boost::make_shared<QuantExt::LgmImpliedYieldTermStructure>(model_->lgm(j), dc, true));
+    }
+
+    for (Size j = 0; j < n_indices_; ++j) {
         std::string indexName = simMarketConfig_->indices()[j];
         boost::shared_ptr<IborIndex> index = *initMarket_->iborIndex(indexName, configuration_);
         Handle<YieldTermStructure> fts = index->forwardingTermStructure();
         auto impliedFwdCurve = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
             model_->lgm(model_->ccyIndex(index->currency())), fts, dc, false);
-        fwdCurves.push_back(impliedFwdCurve);
-        indices.push_back(index->clone(Handle<YieldTermStructure>(impliedFwdCurve)));
+        fwdCurves_.push_back(impliedFwdCurve);
+        indices_.push_back(index->clone(Handle<YieldTermStructure>(impliedFwdCurve)));
     }
 
-    for (Size j = 0; j < n_curves; ++j) {
+    for (Size j = 0; j < n_curves_; ++j) {
         std::string curveName = simMarketConfig_->yieldCurveNames()[j];
         Currency ccy = ore::data::parseCurrency(simMarketConfig_->yieldCurveCurrencies().at(curveName));
         Handle<YieldTermStructure> yts = initMarket_->yieldCurve(curveName, configuration_);
         auto impliedYieldCurve =
             boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model_->lgm(model_->ccyIndex(ccy)), yts, dc, false);
-        yieldCurves.push_back(impliedYieldCurve);
-        yieldCurveCurrency.push_back(ccy);
+        yieldCurves_.push_back(impliedYieldCurve);
+        yieldCurveCurrency_.push_back(ccy);
     }
 
     // Cache data regarding the zero inflation curves to avoid repeating in date loop below.
@@ -221,8 +218,6 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     // 2nd element in tuple is the index of the inflation component's currency in the CAM.
     // 3rd element in tuple is the type of inflation model in the CAM.
     // 4th element in tuple is the CAM implied inflation term structure.
-    using CT = CrossAssetModelTypes::ModelType;
-    vector<tuple<Size, Size, CT, boost::shared_ptr<ZeroInflationModelTermStructure>>> zeroInfCurves;
     for (const auto& name : simMarketConfig_->zeroInflationIndices()) {
         auto idx = model_->infIndex(name);
         auto ccyIdx = model_->ccyIndex(model_->inf(idx)->currency());
@@ -234,11 +229,10 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         } else {
             ts = boost::make_shared<JyImpliedZeroInflationTermStructure>(model_, idx);
         }
-        zeroInfCurves.emplace_back(idx, ccyIdx, mt, ts);
+        zeroInfCurves_.emplace_back(idx, ccyIdx, mt, ts);
     }
 
     // Same logic here as for the zeroInfCurves above.
-    vector<tuple<Size, Size, CT, boost::shared_ptr<YoYInflationModelTermStructure>>> yoyInfCurves;
     for (const auto& name : simMarketConfig_->yoyInflationIndices()) {
         auto idx = model_->infIndex(name);
         auto ccyIdx = model_->ccyIndex(model_->inf(idx)->currency());
@@ -250,14 +244,32 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         } else {
             ts = boost::make_shared<JyImpliedYoYInflationTermStructure>(model_, idx);
         }
-        yoyInfCurves.emplace_back(idx, ccyIdx, mt, ts);
+        yoyInfCurves_.emplace_back(idx, ccyIdx, mt, ts);
+    }
+
+    for (Size j = 0; j < n_cr_; ++j) {
+        if (model_->modelType(CR, j) == ModelType::LGM1F) {
+            lgmDefaultCurves_.push_back(boost::make_shared<QuantExt::LgmImpliedDefaultTermStructure>(
+                model_, j, model_->ccyIndex(model_->crlgm1f(j)->currency())));
+            cirppDefaultCurves_.push_back(boost::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>());
+        } else if (model_->modelType(CR, j) == ModelType::CIRPP) {
+            lgmDefaultCurves_.push_back(boost::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>());
+            cirppDefaultCurves_.push_back(
+                boost::make_shared<QuantExt::CirppImpliedDefaultTermStructure>(model_->crcirppModel(j), j));
+        }
     }
 
     for (Size j = 0; j < n_eq; ++j) {
         std::string curveName = simMarketConfig_->equityNames()[j];
         Currency ccy = model_->eqbs(j)->currency();
-        equityForecastCurrency.push_back(ccy);
+        equityForecastCurrency_.push_back(ccy);
     }
+}
+
+std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
+    std::vector<boost::shared_ptr<Scenario>> scenarios(dates_.size());
+    Sample<MultiPath> sample = pathGenerator_->next();
+    DayCounter dc = model_->irlgm1f(0)->termStructure()->dayCounter();
 
     for (Size i = 0; i < dates_.size(); i++) {
         Real t = timeGrid_[i + 1]; // recall: time grid has inserted t=0
@@ -270,49 +282,44 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         scenarios[i]->setNumeraire(model_->numeraire(0, t, z0));
 
         // Discount curves
-        for (Size j = 0; j < n_ccy; j++) {
+        for (Size j = 0; j < n_ccy_; j++) {
             // LGM factor value, second index = 0 holds initial values
             Real z = sample.value[model_->pIdx(IR, j)][i + 1];
-            curves[j]->move(t, z);
+            curves_[j]->move(t, z);
             for (Size k = 0; k < ten_dsc_[j].size(); k++) {
                 Date d = dates_[i] + ten_dsc_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
-                Real discount = std::max(curves[j]->discount(T), 0.00001);
+                Real discount = std::max(curves_[j]->discount(T), 0.00001);
                 scenarios[i]->add(discountCurveKeys_[j * ten_dsc_[j].size() + k], discount);
             }
         }
 
         // Index curves and Index fixings
-        for (Size j = 0; j < n_indices; ++j) {
-            Real z = sample.value[model_->pIdx(IR, model_->ccyIndex(indices[j]->currency()))][i + 1];
-            fwdCurves[j]->move(dates_[i], z);
+        for (Size j = 0; j < n_indices_; ++j) {
+            Real z = sample.value[model_->pIdx(IR, model_->ccyIndex(indices_[j]->currency()))][i + 1];
+            fwdCurves_[j]->move(dates_[i], z);
             for (Size k = 0; k < ten_idx_[j].size(); ++k) {
                 Date d = dates_[i] + ten_idx_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
-                Real discount = std::max(fwdCurves[j]->discount(T), 0.00001);
+                Real discount = std::max(fwdCurves_[j]->discount(T), 0.00001);
                 scenarios[i]->add(indexCurveKeys_[j * ten_idx_[j].size() + k], discount);
             }
         }
 
         // Yield curves
-        for (Size j = 0; j < n_curves; ++j) {
-            Real z = sample.value[model_->pIdx(IR, model_->ccyIndex(yieldCurveCurrency[j]))][i + 1];
-            yieldCurves[j]->move(dates_[i], z);
+        for (Size j = 0; j < n_curves_; ++j) {
+            Real z = sample.value[model_->pIdx(IR, model_->ccyIndex(yieldCurveCurrency_[j]))][i + 1];
+            yieldCurves_[j]->move(dates_[i], z);
             for (Size k = 0; k < ten_yc_[j].size(); ++k) {
                 Date d = dates_[i] + ten_yc_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
-                Real discount = std::max(yieldCurves[j]->discount(T), 0.00001);
+                Real discount = std::max(yieldCurves_[j]->discount(T), 0.00001);
                 scenarios[i]->add(yieldCurveKeys_[j * ten_yc_[j].size() + k], discount);
             }
         }
 
         // FX rates
-        for (Size k = 0; k < n_ccy - 1; k++) {
-            // if (i == 0) { // construct the labels at the first scenario date only
-            //     const string& foreign = model_->irlgm1f(k+1)->currency().code(); // Is this safe?
-            //     const string& domestic = model_->irlgm1f(0)->currency().code();
-            //     ccyPairs[k] = foreign + domestic; // x USDEUR means 1 USD is worth x EUR
-            // }
+        for (Size k = 0; k < n_ccy_ - 1; k++) {
             Real fx = std::exp(sample.value[model_->pIdx(FX, k)][i + 1]); // multiplies USD amount to get EUR
             scenarios[i]->add(fxKeys_[k], fx);
         }
@@ -325,7 +332,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
                 Size fxIndex = fxVols_[k]->fxIndex();
                 Real zFor = sample.value[fxIndex + 1][i + 1];
-                Real logFx = sample.value[n_ccy + fxIndex][i + 1]; // multiplies USD amount to get EUR
+                Real logFx = sample.value[n_ccy_ + fxIndex][i + 1]; // multiplies USD amount to get EUR
                 fxVols_[k]->move(dates_[i], z0, zFor, logFx);
 
                 for (Size j = 0; j < expires.size(); j++) {
@@ -336,7 +343,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         }
 
         // Equity spots
-        for (Size k = 0; k < n_eq; k++) {
+        for (Size k = 0; k < n_eq_; k++) {
             Real eqSpot = std::exp(sample.value[model_->pIdx(EQ, k)][i + 1]);
             scenarios[i]->add(eqKeys_[k], eqSpot);
         }
@@ -362,8 +369,8 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         }
 
         // Inflation index values
-        for (Size j = 0; j < n_inf; j++) {
-            
+        for (Size j = 0; j < n_inf_; j++) {
+
             // Depending on type of model, i.e. DK or JY, z and y mean different things.
             Real z = sample.value[model_->pIdx(INF, j, 0)][i + 1];
             Real y = sample.value[model_->pIdx(INF, j, 1)][i + 1];
@@ -376,21 +383,22 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                 auto index = *initMarket_->zeroInflationIndex(model_->inf(j)->name());
                 Date baseDate = index->zeroInflationTermStructure()->baseDate();
                 auto zts = index->zeroInflationTermStructure();
-                Time relativeTime = inflationYearFraction(zts->frequency(), zts->indexIsInterpolated(),
-                    zts->dayCounter(), baseDate, dates_[i] - zts->observationLag());
+                Time relativeTime =
+                    inflationYearFraction(zts->frequency(), zts->indexIsInterpolated(), zts->dayCounter(), baseDate,
+                                          dates_[i] - zts->observationLag());
                 std::tie(cpi, std::ignore) = model_->infdkI(j, relativeTime, relativeTime, z, y);
                 cpi *= index->fixing(baseDate);
             } else {
                 QL_FAIL("CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
             }
-            
+
             scenarios[i]->add(cpiKeys_[j], cpi);
         }
 
         // Zero inflation curves
-        for (Size j = 0; j < zeroInfCurves.size(); ++j) {
-            
-            auto tup = zeroInfCurves[j];
+        for (Size j = 0; j < zeroInfCurves_.size(); ++j) {
+
+            auto tup = zeroInfCurves_[j];
 
             // State variables needed depends on model, 3 for JY and 2 for DK.
             auto idx = std::get<0>(tup);
@@ -415,9 +423,9 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         }
 
         // YoY inflation curves
-        for (Size j = 0; j < yoyInfCurves.size(); ++j) {
-            
-            auto tup = yoyInfCurves[j];
+        for (Size j = 0; j < yoyInfCurves_.size(); ++j) {
+
+            auto tup = yoyInfCurves_[j];
 
             // For YoY model implied term structure, JY and DK both need 3 state variables.
             auto idx = std::get<0>(tup);
@@ -439,6 +447,33 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             auto yoyRates = ts->yoyRates(pillarDates);
             for (Size k = 0; k < pillarDates.size(); ++k) {
                 scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + k], yoyRates.at(pillarDates[k]));
+            }
+        }
+
+        // Credit curves
+        for (Size j = 0; j < n_cr_; ++j) {
+            if (model_->modelType(CR, j) == ModelType::LGM1F) {
+                Real z = sample.value[model_->pIdx(CR, j, 0)][i + 1];
+                Real y = sample.value[model_->pIdx(CR, j, 1)][i + 1];
+                lgmDefaultCurves_[j]->move(dates_[i], z, y);
+                for (Size k = 0; k < ten_dfc_[j].size(); k++) {
+                    Date d = dates_[i] + ten_dfc_[j][k];
+                    Time T = dc.yearFraction(dates_[i], d);
+                    Real survProb = std::max(lgmDefaultCurves_[j]->survivalProbability(T), 0.00001);
+                    scenarios[i]->add(defaultCurveKeys_[j * ten_dfc_[j].size() + k], survProb);
+                }
+            } else if (model_->modelType(CR, j) == ModelType::CIRPP) {
+                Real y = sample.value[model_->pIdx(CR, j, 0)][i + 1];
+                cirppDefaultCurves_[j]->move(dates_[i], y);
+                for (Size k = 0; k < ten_dfc_[j].size(); k++) {
+                    Date d = dates_[i] + ten_dfc_[j][k];
+                    Time T = dc.yearFraction(dates_[i], d);
+                    Real survProb = std::max(cirppDefaultCurves_[j]->survivalProbability(T), 0.00001);
+                    scenarios[i]->add(defaultCurveKeys_[j * (ten_dfc_[j].size() + 1) + k], survProb);
+                }
+                // numeraie
+                Real s = sample.value[model_->pIdx(CR, j, 1)][i + 1];
+                scenarios[i]->add(defaultCurveKeys_[j * (ten_dfc_[j].size() + 1) + ten_dfc_[j].size()], s);
             }
         }
 

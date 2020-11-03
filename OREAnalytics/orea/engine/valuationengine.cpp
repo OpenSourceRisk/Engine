@@ -53,7 +53,9 @@ ValuationEngine::ValuationEngine(const Date& today, const boost::shared_ptr<Date
 void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfolio,
                                 boost::shared_ptr<analytics::NPVCube> outputCube,
                                 vector<boost::shared_ptr<ValuationCalculator>> calculators, bool mporStickyDate,
-                                boost::shared_ptr<analytics::NPVCube> outputCubeNettingSet) {
+                                boost::shared_ptr<analytics::NPVCube> outputCubeNettingSet,
+                                boost::shared_ptr<analytics::NPVCube> outputCptyCube,
+                                vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators) {
 
     LOG("Build cube with mporStickyDate=" << mporStickyDate);
 
@@ -68,6 +70,18 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                                     << "different from number of valuation dates (" << dg_->valuationDates().size()
                                     << ")");
 
+    if (outputCptyCube) {
+        QL_REQUIRE(outputCptyCube->numIds() == portfolio->counterparties().size() + 1,
+                   "cptyCube x dimension (" << outputCptyCube->numIds() << "minus 1) "
+                                        << "different from portfolio counterparty size ("
+                                        << portfolio->counterparties().size() << ")");
+
+        QL_REQUIRE(outputCptyCube->numDates() == dg_->dates().size(),
+                   "outputCptyCube y dimension (" << outputCptyCube->numDates() << ") "
+                                        << "different from number of time steps ("
+                                        << dg_->dates().size() << ")");
+    }
+
     LOG("Starting ValuationEngine for " << portfolio->size() << " trades, " << outputCube->samples() << " samples and "
                                         << dg_->size() << " dates.");
 
@@ -79,6 +93,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     // Loop is Samples, Dates, Trades
     const auto& dates = dg_->dates();
     const auto& trades = portfolio->trades();
+    auto& counterparties = outputCptyCube ? outputCptyCube->ids() : vector<string>();
 
     LOG("Initialise state objects...");
     Size numFRC = 0;
@@ -197,9 +212,11 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 timer.stop();
                 updateTime += timer.elapsed().wall * 1e-9;
 
-                // loop over trades
                 timer.start();
+                // loop over trades
                 runCalculators(false, trades, calculators, outputCube, outputCubeNettingSet, d, cubeDateIndex, sample);
+                // loop over counterparty names
+                runCalculators(false, counterparties, cptyCalculators, outputCptyCube, d, cubeDateIndex, sample);
                 timer.stop();
                 pricingTime += timer.elapsed().wall * 1e-9;
             }
@@ -234,6 +251,19 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<boos
         for (auto calc : calculators)
             calc->calculate(trade, j, simMarket_, outputCube, outputCubeNettingSet, d, cubeDateIndex, sample,
                             isCloseOutDate);
+    }
+}
+
+void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<std::string>& counterparties,
+                                     const std::vector<boost::shared_ptr<CounterpartyCalculator>>& calculators,
+                                     boost::shared_ptr<analytics::NPVCube>& cptyCube,
+                                     const Date& d,
+                                     const Size cubeDateIndex, const Size sample) {
+    // loop over counterparties
+    for (Size j = 0; j < counterparties.size(); ++j) {
+        auto counterparty = counterparties[j];
+        for (auto calc : calculators)
+            calc->calculate(counterparty, j, simMarket_, cptyCube, d, cubeDateIndex, sample, isCloseOutDate);
     }
 }
 

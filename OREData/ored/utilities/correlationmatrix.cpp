@@ -34,22 +34,6 @@ string invertFx(const string& ccyPair) {
     return ccyPair.substr(3, 3) + ccyPair.substr(0, 3);
 }
 
-void checkMatrix(const Matrix& m) {
-    
-    QL_REQUIRE(m.rows() == m.columns(), "Matrix is not square. Dimension is " << m.rows() << " x " << m.columns());
-    
-    for (Size i = 0; i < m.rows(); ++i)
-        QL_REQUIRE(m[i][i] == 1.0, "Diagonal is not equal to 1 at point " << i << ". Got " << m[i][i] << ".");
-    
-    for (Size i = 0; i < m.rows(); i++) {
-        for (Size j = 0; j < i; j++) {
-            QL_REQUIRE(m[i][j] == m[j][i], "Matrix is not symmetric at [" << i << "," << j << "]");
-            QL_REQUIRE(m[i][j] >= -1.0 && m[i][j] <= 1.0, "Invalid correlation value, " << m[i][j] <<
-                ", at [" << i << "," << j << "]");
-        }
-    }
-}
-
 }
 
 namespace ore {

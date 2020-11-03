@@ -46,13 +46,23 @@ inline void setValue(Array& a, const Real& value, const QuantExt::CrossAssetMode
 
 CrossAssetStateProcess::CrossAssetStateProcess(const CrossAssetModel* const model, discretization disc,
                                                SalvagingAlgorithm::Type salvaging)
-    : StochasticProcess(), model_(model), disc_(disc), salvaging_(salvaging) {
+    : StochasticProcess(), model_(model), disc_(disc), salvaging_(salvaging), cirppCount_(0) {
 
     updateSqrtCorrelation();
     if (disc_ == euler) {
         discretization_ = boost::make_shared<EulerDiscretization>();
     } else {
         discretization_ = boost::make_shared<CrossAssetStateProcess::ExactDiscretization>(model, salvaging);
+    }
+
+    // set up CR CIR++ processes, defer the euler discretisation check to evolve()
+    for (Size i = 0; i < model_->components(CR); ++i) {
+        if (model_->modelType(CR, i) == CIRPP) {
+            crCirpp_.push_back(model->crcirppModel(i)->stateProcess());
+            cirppCount_++;
+        } else {
+            crCirpp_.push_back(boost::shared_ptr<CrCirppStateProcess>());
+        }
     }
 }
 
@@ -128,6 +138,16 @@ Disposable<Array> CrossAssetStateProcess::initialValues() const {
         /* eqbs processes are in log spot */
         res[model_->pIdx(EQ, i, 0)] = std::log(model_->eqbs(i)->eqSpotToday()->value());
     }
+    // CR CIR++ components
+    for (Size i = 0; i < model_->components(CR); ++i) {
+        if (model_->modelType(CR, i) != CIRPP)
+            continue;
+        QL_REQUIRE(crCirpp_[i], "crcirpp is null!");
+        Array r = crCirpp_[i]->initialValues();
+        res[model_->pIdx(CR, i, 0)] = r[0]; // y0
+        res[model_->pIdx(CR, i, 1)] = r[1]; // S(0,0) = 1
+    }
+    
     for (Size i = 0; i < model_->components(INF); ++i) {
         // Second component of JY model is the inflation index process.
         if (model_->modelType(INF, i) == JY) {
@@ -391,12 +411,38 @@ Disposable<Array> CrossAssetStateProcess::marginalDiffusionImpl(Time t, const Ar
 }
 
 Disposable<Array> CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Array& dw) const {
+
+    Array res;
     if (disc_ == euler) {
         const Array dz = sqrtCorrelation_ * dw;
         const Array df = marginalDiffusion(t0, x0);
-        return apply(expectation(t0, x0, dt), df * dz * std::sqrt(dt));
-    } else
-        return StochasticProcess::evolve(t0, x0, dt, dw);
+        res = apply(expectation(t0, x0, dt), df * dz * std::sqrt(dt));
+        
+        // CR CIRPP components
+        if (cirppCount_ > 0) {
+            for (Size i = 0; i < model_->components(CR); ++i) {
+                if (!crCirpp_[i]) continue; // ignore non-cir cr model
+                Size idx1 = model_->pIdx(CR, i, 0);
+                Size idx2 = model_->pIdx(CR, i, 1);
+                Array x0Tmp(2), dwTmp(2);
+                x0Tmp[0] = x0[idx1];
+                x0Tmp[1] = x0[idx2];
+                dwTmp[0] = dz[idx1];
+                dwTmp[1] = 0.0; // not used
+                // evolve original process
+                auto r = crCirpp_[i]->evolve(t0, x0Tmp, dt, dwTmp);
+
+                // set result
+                res[idx1] = r[0]; // y
+                res[idx2] = r[1]; // S(0,T)
+            }
+        }
+    } else {
+        QL_REQUIRE(cirppCount_ == 0, "only euler discretization is supported for CIR++");
+        res = StochasticProcess::evolve(t0, x0, dt, dw);
+    }
+
+    return res;
 }
 
 CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(const CrossAssetModel* const model,

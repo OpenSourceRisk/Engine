@@ -32,6 +32,8 @@
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/market.hpp>
+#include <ored/model/crlgmdata.hpp>
+#include <ored/model/crcirdata.hpp>
 #include <ored/model/eqbsdata.hpp>
 #include <ored/model/fxbsdata.hpp>
 #include <ored/model/inflation/inflationmodeldata.hpp>
@@ -47,6 +49,56 @@ using std::pair;
 using std::string;
 using std::vector;
 
+//! InstantaneousCorrelations
+/*! InstantaneousCorrelations is a class to store the correlations required by 
+    the CrossAssetModelData class
+    \ingroup models
+*/
+class InstantaneousCorrelations : public XMLSerializable {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    InstantaneousCorrelations() {}
+
+    //! Detailed constructor
+    InstantaneousCorrelations(const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& correlations) : correlations_(correlations) {}
+    //@}
+
+    //! \name Serialisation
+    //@{
+    //! Populate members from XML
+    virtual void fromXML(XMLNode* node);
+    //! Write class mambers to XML
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+
+    //! \name Getters
+    //@{
+    //!
+    const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& correlations() const { return correlations_; }
+    //@}
+
+     //! Clear all vectors and maps
+    void clear() { correlations_.clear(); }
+
+    //! \name Setters
+    //@{
+    //!
+    void correlations(const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& corrs) { correlations_ = corrs; }
+    //@}
+    
+    //! \name Operators
+    //@{
+    bool operator==(const InstantaneousCorrelations& rhs);
+    bool operator!=(const InstantaneousCorrelations& rhs);
+    //@}
+
+private:
+    std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> correlations_;
+};
+
+
 //! Cross Asset Model Parameters
 /*! CrossAssetModelData comprises the specification of how to build and calibrate
   the CrossAssetModel. It contains
@@ -61,7 +113,9 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CrossAssetModelData() : bootstrapTolerance_(0.0) {}
+    CrossAssetModelData() : bootstrapTolerance_(0.0) {
+        correlations_ = boost::make_shared<InstantaneousCorrelations>();
+    }
     
     //! Detailed constructor (IR/FX only)
     CrossAssetModelData( //! Vector of IR model specifications
@@ -73,7 +127,8 @@ public:
         //! Bootstrap tolerance used in model calibration
         Real tolerance = 1e-4)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(std::vector<boost::shared_ptr<EqBsData>>()),
-          correlations_(c), bootstrapTolerance_(tolerance) {
+          bootstrapTolerance_(tolerance) {
+        correlations_ = boost::make_shared<InstantaneousCorrelations>(c);
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
         for (Size i = 0; i < irConfigs_.size(); ++i)
@@ -92,8 +147,9 @@ public:
         const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& c,
         //! Bootstrap tolerance used in model calibration
         Real tolerance = 1e-4)
-        : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs), correlations_(c),
+        : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs),
           bootstrapTolerance_(tolerance) {
+        correlations_ = boost::make_shared<InstantaneousCorrelations>(c);
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
         for (Size i = 0; i < irConfigs_.size(); ++i)
@@ -110,12 +166,18 @@ public:
         const std::vector<boost::shared_ptr<EqBsData>>& eqConfigs,
         //! Vector of INF model specifications
         const std::vector<boost::shared_ptr<InflationModelData>>& infConfigs,
+        //! Vector of CR LGM model specifications
+	const std::vector<boost::shared_ptr<CrLgmData>>& crLgmConfigs,
+        //! Vector of CR CIR model specifications
+        const std::vector<boost::shared_ptr<CrCirData>>& crCirConfigs,
         //! Correlation map
         const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& c,
         //! Bootstrap tolerance used in model calibration
         Real tolerance = 1e-4)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs), infConfigs_(infConfigs),
-          correlations_(c), bootstrapTolerance_(tolerance) {
+          crLgmConfigs_(crLgmConfigs), crCirConfigs_(crCirConfigs),
+          bootstrapTolerance_(tolerance) {
+        correlations_ = boost::make_shared<InstantaneousCorrelations>(c);
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
         for (Size i = 0; i < irConfigs_.size(); ++i)
@@ -136,11 +198,14 @@ public:
     const vector<string>& currencies() const { return currencies_; }
     const vector<string>& equities() const { return equities_; }
     const vector<string>& infIndices() const { return infindices_; }
+    const vector<string>& creditNames() const { return creditNames_; }
     const vector<boost::shared_ptr<IrLgmData>>& irConfigs() const { return irConfigs_; }
     const vector<boost::shared_ptr<FxBsData>>& fxConfigs() const { return fxConfigs_; }
     const vector<boost::shared_ptr<EqBsData>>& eqConfigs() const { return eqConfigs_; }
     const vector<boost::shared_ptr<InflationModelData>>& infConfigs() const { return infConfigs_; }
-    const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& correlations() const { return correlations_; }
+    const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& correlations() const { return correlations_->correlations(); }
+    const vector<boost::shared_ptr<CrLgmData>>& crLgmConfigs() const { return crLgmConfigs_; }
+    const vector<boost::shared_ptr<CrCirData>>& crCirConfigs() const { return crCirConfigs_; }
     Real bootstrapTolerance() const { return bootstrapTolerance_; }
     //@}
 
@@ -150,11 +215,15 @@ public:
     vector<string>& currencies() { return currencies_; }
     vector<string>& equities() { return equities_; }
     vector<string>& infIndices() { return infindices_; }
+    vector<string>& creditNames() { return creditNames_; }
     vector<boost::shared_ptr<IrLgmData>>& irConfigs() { return irConfigs_; }
     vector<boost::shared_ptr<FxBsData>>& fxConfigs() { return fxConfigs_; }
     vector<boost::shared_ptr<EqBsData>>& eqConfigs() { return eqConfigs_; }
     vector<boost::shared_ptr<InflationModelData>>& infConfigs() { return infConfigs_; }
-    std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& correlations() { return correlations_; }
+    vector<boost::shared_ptr<CrLgmData>>& crLgmConfigs() { return crLgmConfigs_; }
+    vector<boost::shared_ptr<CrCirData>>& crCirConfigs() { return crCirConfigs_; }
+    void setCorrelations(const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& corrs) { correlations_ = boost::make_shared<InstantaneousCorrelations>(corrs); }
+    void setCorrelations(const boost::shared_ptr<InstantaneousCorrelations>& corrs) { correlations_ = corrs; }
     Real& bootstrapTolerance() { return bootstrapTolerance_; }
     //@}
 
@@ -179,7 +248,9 @@ public:
     void buildEqConfigs(std::map<std::string, boost::shared_ptr<EqBsData>>& eqMap);
     //! helper to convert INF data, possibly including defaults, into an EQ config vector
     void buildInfConfigs(const std::map<std::string, boost::shared_ptr<InflationModelData>>& mp);
-
+    //! helper to convert CR LGM data, possibly including defaults, into CR config vectors
+    void buildCrConfigs(std::map<std::string, boost::shared_ptr<CrLgmData>>& crLgmMap,
+                        std::map<std::string, boost::shared_ptr<CrCirData>>& crCirMap);
 
 private:    
     struct HandleComp {
@@ -192,11 +263,14 @@ private:
     vector<std::string> currencies_;
     vector<std::string> equities_;
     vector<std::string> infindices_;
+    vector<std::string> creditNames_;
     vector<boost::shared_ptr<IrLgmData>> irConfigs_;
     vector<boost::shared_ptr<FxBsData>> fxConfigs_;
     vector<boost::shared_ptr<EqBsData>> eqConfigs_;
     vector<boost::shared_ptr<InflationModelData>> infConfigs_;
-    std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>> correlations_;
+    vector<boost::shared_ptr<CrLgmData>> crLgmConfigs_;
+    vector<boost::shared_ptr<CrCirData>> crCirConfigs_;
+    boost::shared_ptr<InstantaneousCorrelations> correlations_;
     Real bootstrapTolerance_;
 };
 } // namespace data

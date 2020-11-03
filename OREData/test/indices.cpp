@@ -94,6 +94,12 @@ struct test_data {
     Period tenor;
 };
 
+struct test_data_inf {
+    const char* str;
+    const char* index_name;
+    Frequency frequency;
+};
+
 static struct test_data index_data[] = {
     // parsing string,     index name,                     tenor
     {"EUR-EONIA-1D", "EoniaON Actual/360", 1 * Days},
@@ -292,6 +298,7 @@ static struct test_data index_data[] = {
     {"MXN-TIIE-6M", "MXN-TIIE6M Actual/360", 6 * Months},
     {"PLN-WIBOR-6M", "PLN-WIBOR6M Actual/365 (Fixed)", 6 * Months},
     {"SKK-BRIBOR-6M", "SKK-BRIBOR6M Actual/360", 6 * Months},
+    {"THB-THBFIX-6M", "THBFIX6M Actual/365 (Fixed)", 6 * Months},
 
     {"NZD-BKBM-1M", "NZD-BKBM1M Actual/Actual (ISDA)", 1 * Months},
     {"NZD-BKBM-2M", "NZD-BKBM2M Actual/Actual (ISDA)", 2 * Months},
@@ -339,6 +346,23 @@ static struct test_data swap_index_data[] = {
     {"CHF-CMS-30Y", "CHFLiborSwapIsdaFix30Y 30/360 (Bond Basis)", 30 * Years},
     {"JPY-CMS-2Y", "JPYLiborSwapIsdaFix2Y Actual/365 (Fixed)", 2 * Years},
     {"JPY-CMS-30Y", "JPYLiborSwapIsdaFix30Y Actual/365 (Fixed)", 30 * Years},
+};
+
+//name_ = region_.name() + " " + familyName_;
+static struct test_data_inf inflation_index_data[] = {
+    {"AUCPI", "Australia CPI", Quarterly},
+    {"BEHICP", "Belgium HICP", Monthly},
+    {"EUHICP", "EU HICP", Monthly},
+    {"EUHICPXT", "EU HICPXT", Monthly},
+    {"FRHICP", "France HICP", Monthly},
+    {"FRCPI", "France CPI", Monthly},
+    {"UKRPI", "UK RPI", Monthly},
+    {"USCPI", "USA CPI", Monthly},
+    {"ZACPI", "South Africa CPI", Monthly},
+    {"SECPI", "Sweden CPI", Monthly},
+    {"DKCPI", "Denmark CPI", Monthly},
+    {"CACPI", "Canada CPI", Monthly},
+    {"ESCPI", "Spain CPI", Monthly},
 };
 
 } // namespace
@@ -420,6 +444,36 @@ BOOST_AUTO_TEST_CASE(testSwapIndexParsing) {
             BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << swap->name());
         } else
             BOOST_FAIL("Swap Parser(" << str << ") returned null pointer");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testInflationIndexParsing) {
+
+    BOOST_TEST_MESSAGE("Testing Inflation Index name parsing...");
+
+    Size len = sizeof(inflation_index_data) / sizeof(inflation_index_data[0]);
+    for (Size i = 0; i < len; ++i) {
+        string str(inflation_index_data[i].str);
+        string index_name(inflation_index_data[i].index_name);
+        Frequency frequency(inflation_index_data[i].frequency);
+
+        boost::shared_ptr<ZeroInflationIndex> cpi;
+        try {
+            cpi = ore::data::parseZeroInflationIndex(str);
+        } catch (std::exception& e) {
+            BOOST_FAIL("Inflation Index Parser failed to parse \"" << str << "\" [exception:" << e.what() << "]");
+        } catch (...) {
+            BOOST_FAIL("Inflation Index Parser failed to parse \"" << str << "\" [unhandled]");
+        }
+        if (cpi) {
+            BOOST_CHECK_EQUAL(cpi->name(), index_name);
+            BOOST_CHECK_EQUAL(cpi->frequency(), frequency);
+            // Frequency
+            //Availability lag?
+
+            BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << cpi->name());
+        } else
+            BOOST_FAIL("Inflation Index Parser(" << str << ") returned null pointer");
     }
 }
 

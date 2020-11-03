@@ -305,6 +305,19 @@
     </xs:all>
   </xs:complexType>
 
+  <xs:complexType name="continuationMappingType">
+    <xs:sequence>
+      <xs:element type="xs:positiveInteger" name="From"/>
+      <xs:element type="xs:positiveInteger" name="To"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="continuationMappingsType">
+    <xs:sequence>
+      <xs:element type="continuationMappingType" name="ContinuationMapping" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="commodityFutureType">
     <xs:all>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
@@ -312,15 +325,8 @@
         <xs:complexType>
           <xs:choice>
             <xs:element type="nthWeekdayType" name="NthWeekday"/>
-            <xs:element name="DayOfMonth">
-              <xs:simpleType>
-                <xs:restriction base="xs:integer">
-                  <xs:minInclusive value="1"/>
-                  <xs:maxInclusive value="31"/>
-                </xs:restriction> 
-              </xs:simpleType>
-            </xs:element>
-            <xs:element type="xs:nonNegativeInteger" name="CalendarDaysBefore" />
+            <xs:element type="dayOfMonth" name="DayOfMonth"/>
+            <xs:element type="xs:nonNegativeInteger" name="CalendarDaysBefore"/>
           </xs:choice>
         </xs:complexType>
       </xs:element>
@@ -335,6 +341,11 @@
       <xs:element type="bool" name="IsAveraging" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="OptionExpiryOffset" minOccurs="0" maxOccurs="1"/>
       <xs:element type="prohibitedExpiriesType" name="ProhibitedExpiries" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="OptionExpiryMonthLag" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="dayOfMonth" name="OptionExpiryDay" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="OptionBusinessDayConvention" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="continuationMappingsType" name="FutureContinuationMappings" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="continuationMappingsType" name="OptionContinuationMappings" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 

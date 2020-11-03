@@ -17,7 +17,7 @@
 */
 
 /*! \file models/projectedcrossassetmodel.hpp
-    \brief get cross asset model with a subset of the original components
+    \brief cross asset model projection utils
     \ingroup crossassetmodel
 */
 
@@ -27,9 +27,18 @@
 
 namespace QuantExt {
 
+/* Input is a "big" model from which we select components to build a "small" model.
+   The projectedStateProcessIndices vector size is the number of state variables of the small model and maps
+   a state process component index of the small model to the corresponding index of the big model. */
 boost::shared_ptr<CrossAssetModel>
 getProjectedCrossAssetModel(const boost::shared_ptr<CrossAssetModel>& model,
                             const std::vector<std::pair<CrossAssetModelTypes::AssetType, Size> >& selectedComponents,
                             std::vector<Size>& projectedStateProcessIndices);
+
+/* Input is a "big" and a "small" (projected) model, where the small model's components are assumed to be a subset of
+  the big model's components. The result is a vector of size equal to the number of state variables of the small model.
+  Each state process component index of the small model is mapped to the corresponding index of the big model. */
+std::vector<Size> getStateProcessProjection(const boost::shared_ptr<CrossAssetModel>& model,
+                                            const boost::shared_ptr<CrossAssetModel>& projectedModel);
 
 } // namespace QuantExt

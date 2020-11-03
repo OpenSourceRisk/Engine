@@ -119,6 +119,16 @@
       <xs:enumeration value="NGN"/>
       <xs:enumeration value="MAD"/>
       <xs:enumeration value="UYU"/>
+      <xs:enumeration value="COU"/>
+      <xs:enumeration value="KES"/>
+      <xs:enumeration value="MUR"/>
+      <xs:enumeration value="UGX"/>
+      <xs:enumeration value="ZMW"/>
+      <xs:enumeration value="GHS"/>
+      <xs:enumeration value="JOD"/>
+      <xs:enumeration value="LKR"/>
+      <xs:enumeration value="HRK"/>
+      <xs:enumeration value="RSD"/>
       <!-- valid as currency too -->
       <xs:enumeration value="XAU"/>
       <xs:enumeration value="XAG"/>
@@ -564,6 +574,26 @@
       <xs:enumeration value="FirstDayOfMonth"/>
     </xs:restriction>
   </xs:simpleType>
-  
-</xs:schema>
 
+  <xs:simpleType name="dayOfMonth">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="31"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="recoveryRate">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="1"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="weightType">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="1"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

@@ -97,7 +97,7 @@ public:
 protected:
     virtual Size index(const std::string& id) const {
         auto it = std::find(ids().begin(), ids().end(), id);
-        QL_REQUIRE(it != ids().end(), "NPVCube can't find an index for trade " << id);
+        QL_REQUIRE(it != ids().end(), "NPVCube can't find an index for id " << id);
         return std::distance(ids().begin(), it);
     };
 

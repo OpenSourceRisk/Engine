@@ -121,7 +121,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                            const bool continueOnError, const bool loadFixings,
                            const boost::shared_ptr<ReferenceDataManager>& referenceData)
     : MarketImpl(conventions), params_(params), loader_(loader), curveConfigs_(curveConfigs),
-      continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(false), referenceData_(referenceData) {
+      continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(false), preserveQuoteLinkage_(false),
+      referenceData_(referenceData) {
     // this ctor does not allow for lazy builds, since we store references to the inputs only
     initialise(asof);
 }
@@ -131,11 +132,12 @@ TodaysMarket::TodaysMarket(const Date& asof, const boost::shared_ptr<TodaysMarke
                            const boost::shared_ptr<CurveConfigurations>& curveConfigs,
                            const boost::shared_ptr<Conventions>& conventions, const bool continueOnError,
                            const bool loadFixings, const bool lazyBuild,
-                           const boost::shared_ptr<ReferenceDataManager>& referenceData)
+                           const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                           const bool preserveQuoteLinkage)
     : MarketImpl(conventions), params_ref_(params), loader_ref_(loader), curveConfigs_ref_(curveConfigs),
       conventions_ref_(conventions), params_(*params_ref_), loader_(*loader_ref_), curveConfigs_(*curveConfigs_ref_),
       continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(lazyBuild),
-      referenceData_(referenceData) {
+      preserveQuoteLinkage_(preserveQuoteLinkage), referenceData_(referenceData) {
     QL_REQUIRE(params_ref_, "TodaysMarket: TodaysMarketParameters are null");
     QL_REQUIRE(loader_ref_, "TodaysMarket: Loader is null");
     QL_REQUIRE(curveConfigs_ref_, "TodaysMarket: CurveConfigurations are null");
@@ -587,9 +589,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredYieldCurves_.find(ycspec->name());
             if (itr == requiredYieldCurves_.end()) {
                 DLOG("Building YieldCurve for asof " << asof_);
-                boost::shared_ptr<YieldCurve> yieldCurve =
-                    boost::make_shared<YieldCurve>(asof_, *ycspec, curveConfigs_, loader_, conventions_,
-                                                   requiredYieldCurves_, requiredDefaultCurves_, fxT_, referenceData_);
+                boost::shared_ptr<YieldCurve> yieldCurve = boost::make_shared<YieldCurve>(
+                    asof_, *ycspec, curveConfigs_, loader_, conventions_, requiredYieldCurves_, requiredDefaultCurves_,
+                    fxT_, referenceData_, preserveQuoteLinkage_);
                 itr = requiredYieldCurves_.insert(make_pair(ycspec->name(), yieldCurve)).first;
                 DLOG("Added YieldCurve \"" << ycspec->name() << "\" to requiredYieldCurves map");
                 if (itr->second->currency().code() != ycspec->ccy()) {
@@ -792,7 +794,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredBaseCorrelationCurves_.end()) {
                 DLOG("Building BaseCorrelation for asof " << asof_);
                 boost::shared_ptr<BaseCorrelationCurve> baseCorrelationCurve =
-                    boost::make_shared<BaseCorrelationCurve>(asof_, *baseCorrelationSpec, loader_, curveConfigs_);
+                    boost::make_shared<BaseCorrelationCurve>(asof_, *baseCorrelationSpec, loader_,
+                        curveConfigs_, referenceData_);
                 itr =
                     requiredBaseCorrelationCurves_.insert(make_pair(baseCorrelationSpec->name(), baseCorrelationCurve))
                         .first;

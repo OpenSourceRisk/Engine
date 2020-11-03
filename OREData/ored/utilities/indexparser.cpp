@@ -310,6 +310,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>()},
         {"RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>()},
         {"THB-BIBOR", boost::make_shared<IborIndexParserWithPeriod<THBBibor>>()},
+        {"THB-THBFIX", boost::make_shared<IborIndexParserWithPeriod<THBFIX>>()},
         {"PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>()},
         {"RON-ROBOR", boost::make_shared<IborIndexParserWithPeriod<Robor>>()},
         {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()}};
@@ -433,10 +434,24 @@ public:
     }
 };
 
+template <class T> class ZeroInflationIndexParserWithFrequency : public ZeroInflationIndexParserBase {
+public:
+    ZeroInflationIndexParserWithFrequency(Frequency frequency) : frequency_(frequency) {}
+    boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
+                                                const Handle<ZeroInflationTermStructure>& h) const override {
+        return boost::make_shared<T>(frequency_, false, isInterpolated, h);
+    }
+
+private:
+    Frequency frequency_;
+};
+
 boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, bool isInterpolated,
                                                               const Handle<ZeroInflationTermStructure>& h) {
 
     static map<string, boost::shared_ptr<ZeroInflationIndexParserBase>> m = {
+        {"AUCPI", boost::make_shared<ZeroInflationIndexParserWithFrequency<AUCPI>>(Quarterly)},
+        {"AU CPI", boost::make_shared<ZeroInflationIndexParserWithFrequency<AUCPI>>(Quarterly)},
         {"BEHICP", boost::make_shared<ZeroInflationIndexParser<BEHICP>>()},
         {"BE HICP", boost::make_shared<ZeroInflationIndexParser<BEHICP>>()},
         {"EUHICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},

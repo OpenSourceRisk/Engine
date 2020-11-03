@@ -548,6 +548,9 @@ void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report,
         .addColumn("CvaHazardRateSensitivity", double(), 6)
         .addColumn("CvaSpreadSensitivity", double(), 6);
 
+    if (sensiHazardRate.size() == 0 || sensiCdsSpread.size() == 0)
+        return; 
+    
     for (Size j = 0; j < grid.size(); ++j) {
         report.next()
             .add(nettingSetId)
@@ -798,34 +801,66 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     LOG("Sensitivity report finished");
 }
 
-void ReportWriter::writeAdditionalResultsReport(ore::data::Report& report,
-                            boost::shared_ptr<Portfolio> portfolio) {
+void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_ptr<Portfolio> portfolio) {
+    
     LOG("Writing AdditionalResults report");
+
     report.addColumn("TradeId", string())
         .addColumn("ResultId", string())
         .addColumn("ResultType", string())
         .addColumn("ResultValue", string());
 
     for (auto trade : portfolio->trades()) {
-        auto underlyingInst = trade->instrument()->qlInstrument();
-        if (!underlyingInst)
-            continue;
-        std::map<std::string,boost::any> additionalResults = 
-            underlyingInst->additionalResults();
+        
+        // Just use the unadjusted trade ID in the additional results report for the main instrument.
+        // If we have one or more additional instruments, use "_i" as suffix where i = 1, 2, 3, ... for each 
+        // additional instrument in turn and underscore as prefix to reduce risk of ID clash. We also add the 
+        // multiplier as an extra additional result if additional results exist.
+        auto instruments = trade->instrument()->additionalInstruments();
+        auto multipliers = trade->instrument()->additionalMultipliers();
+        QL_REQUIRE(instruments.size() == multipliers.size(), "Expected the number of " <<
+            "additional instruments (" << instruments.size() << ") to equal the number of " <<
+            "additional multipliers (" << multipliers.size() << ").");
+        instruments.insert(instruments.begin(), trade->instrument()->qlInstrument());
+        multipliers.insert(multipliers.begin(), trade->instrument()->multiplier());
 
-        if (additionalResults.size() > 0) {
-            for (auto r : additionalResults) {
-                pair<string, string> result = parseBoostAny(r.second);
+        for (Size i = 0; i < instruments.size(); ++i) {
+
+            const auto& instrument = instruments[i];
+
+            if (!instrument)
+                continue;
+
+            // Trade ID suffix for additional instruments. Put underscores to reduce risk of clash with other IDs in 
+            // the portfolio (still a risk).
+            string tradeId = i == 0 ? trade->id() : ("_" + trade->id() + "_" + to_string(i));
+
+            // Get the additional results for the current instrument.
+            auto additionalResults = instrument->additionalResults();
+
+            // Add the multiplier if there are additional results.
+            // Check on 'inst_multiplier' already existing is probably unnecessary.
+            if (!additionalResults.empty() && additionalResults.count("inst_multiplier") == 0) {
+                additionalResults["inst_multiplier"] = multipliers[i];
+            }
+
+            // Write current instrument's additional results.
+            for (const auto& kv : additionalResults) {
+                auto p = parseBoostAny(kv.second);
                 report.next()
-                    .add(trade->id())
-                    .add(r.first)
-                    .add(result.first)
-                    .add(result.second);
+                    .add(tradeId)
+                    .add(kv.first)
+                    .add(p.first)
+                    .add(p.second);
             }
         }
+
     }
+
     report.end();
+
     LOG("AdditionalResults report written");
 }
+
 } // namespace analytics
 } // namespace ore

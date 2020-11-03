@@ -64,8 +64,15 @@
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/yieldvolcurve.hpp>
 #include <ored/model/calibrationbasket.hpp>
+#include <ored/model/calibrationconfiguration.hpp>
 #include <ored/model/calibrationinstrumentfactory.hpp>
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
+#include <ored/model/calibrationinstruments/yoycapfloor.hpp>
+#include <ored/model/calibrationinstruments/yoyswap.hpp>
+#include <ored/model/crcirbuilder.hpp>
+#include <ored/model/crcirdata.hpp>
+#include <ored/model/crlgmbuilder.hpp>
+#include <ored/model/crlgmdata.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/model/eqbsbuilder.hpp>
@@ -101,6 +108,7 @@
 #include <ored/portfolio/builders/commodityoption.hpp>
 #include <ored/portfolio/builders/cpicapfloor.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
+#include <ored/portfolio/builders/creditdefaultswapoption.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
@@ -115,6 +123,7 @@
 #include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
+#include <ored/portfolio/creditdefaultswapoption.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>

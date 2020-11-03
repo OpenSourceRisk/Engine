@@ -23,15 +23,14 @@ void Underlying::fromXML(XMLNode* node) {
     if (auto n = XMLUtils::getChildNode(node, "Weight"))
         weight_ = parseReal(XMLUtils::getNodeValue(n));
     else
-        weight_ = Null<Real>();
+        weight_ = 1.0;
 }
 
 XMLNode* Underlying::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(nodeName_);
     XMLUtils::addChild(doc, node, "Type", type_);
     XMLUtils::addChild(doc, node, "Name", name_);
-    if (weight_ != Null<Real>())
-        XMLUtils::addChild(doc, node, "Weight", weight_);
+    XMLUtils::addChild(doc, node, "Weight", weight_);
     return node;
 }
 

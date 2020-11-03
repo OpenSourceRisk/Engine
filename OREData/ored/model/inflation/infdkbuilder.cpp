@@ -25,6 +25,7 @@
 
 #include <ored/model/calibrationinstruments/cpicapfloor.hpp>
 #include <ored/model/inflation/infdkbuilder.hpp>
+#include <ored/model/utilities.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -181,18 +182,6 @@ void InfDkBuilder::performCalculations() const {
     }
 }
 
-namespace {
-struct option_maturity_date_getter : boost::static_visitor<QuantLib::Date> {
-    option_maturity_date_getter(const boost::shared_ptr<ZeroInflationIndex>& index) : index(index) {}
-    Date operator()(const Date& d) const { return d; }
-    Date operator()(const Period& p) const {
-        Date today = Settings::instance().evaluationDate();
-        return index->fixingCalendar().advance(today, p);
-    }
-    boost::shared_ptr<ZeroInflationIndex> index;
-};
-} // namespace
-
 Date InfDkBuilder::optionMaturityDate(const Size j) const {
     Date today = Settings::instance().evaluationDate();
     const auto& ci = data_->calibrationBaskets()[0].instruments();
@@ -201,7 +190,7 @@ Date InfDkBuilder::optionMaturityDate(const Size j) const {
     auto cf = boost::dynamic_pointer_cast<CpiCapFloor>(ci.at(j));
     QL_REQUIRE(cf, "InfDkBuilder::optionMaturityDate("
                        << j << "): expected CpiCapFloor calibration instruments, could not cast");
-    Date res = boost::apply_visitor(option_maturity_date_getter(inflationIndex_), cf->maturity());
+    Date res = optionMaturity(cf->maturity(), inflationIndex_->fixingCalendar());
     QL_REQUIRE(res > today, "expired calibration option expiry " << io::iso_date(res));
     return res;
 }

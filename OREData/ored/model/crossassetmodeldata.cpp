@@ -68,22 +68,78 @@ CorrelationFactor fromNode(ore::data::XMLNode* node, bool firstFactor) {
 namespace ore {
 namespace data {
 
-bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
+void InstantaneousCorrelations::fromXML(XMLNode* node) {
+    // Configure correlation structure
+    LOG("CrossAssetModelData: adding correlations.");
+    XMLNode* correlationNode = XMLUtils::locateNode(node, "InstantaneousCorrelations");
+    CorrelationMatrixBuilder cmb;
+    if (correlationNode) {
+        vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(correlationNode, "Correlation");
+        for (Size i = 0; i < nodes.size(); ++i) {
+            CorrelationFactor factor_1 = fromNode(nodes[i], true);
+            CorrelationFactor factor_2 = fromNode(nodes[i], false);
+            Real corr = parseReal(XMLUtils::getNodeValue(nodes[i]));
+            cmb.addCorrelation(factor_1, factor_2, corr);
+        }
+    }
+    else {
+        QL_FAIL("No InstantaneousCorrelations found in model configuration XML");
+    }
 
+    correlations_ = cmb.correlations();
+}
+
+XMLNode* InstantaneousCorrelations::toXML(XMLDocument& doc) {
+    
+    XMLNode* instantaneousCorrelationsNode = doc.allocNode("InstantaneousCorrelations");
+
+    for (auto it = correlations_.begin(); it != correlations_.end(); it++) {
+
+        XMLNode* node = doc.allocNode("Correlation", to_string(it->second->value()));
+        XMLUtils::appendNode(instantaneousCorrelationsNode, node);
+
+        CorrelationFactor f_1 = it->first.first;
+        XMLUtils::addAttribute(doc, node, "factor1", to_string(f_1.type) + ":" + f_1.name);
+        if(f_1.index != Null<Size>())
+            XMLUtils::addAttribute(doc, node, "index1", to_string(f_1.index));
+
+        CorrelationFactor f_2 = it->first.second;
+        XMLUtils::addAttribute(doc, node, "factor2", to_string(f_2.type) + ":" + f_2.name);
+        if (f_2.index != Null<Size>())
+            XMLUtils::addAttribute(doc, node, "index2", to_string(f_2.index));
+    }
+
+    return instantaneousCorrelationsNode;
+}
+
+bool InstantaneousCorrelations::operator==(const InstantaneousCorrelations& rhs) {
     // compare correlations by value (not the handle links)
     map<CorrelationKey, Handle<Quote>>::const_iterator corr1, corr2;
     for (corr1 = correlations_.begin(), corr2 = rhs.correlations_.begin();
-         corr1 != correlations_.end() && corr2 != rhs.correlations_.end(); ++corr1, ++corr2) {
+        corr1 != correlations_.end() && corr2 != rhs.correlations_.end(); ++corr1, ++corr2) {
         if (corr1->first != corr2->first || !close_enough(corr1->second->value(), corr2->second->value()))
             return false;
     }
     if (corr1 != correlations_.end() || corr2 != rhs.correlations_.end())
         return false;
 
+    return true;
+}
+
+bool InstantaneousCorrelations::operator!=(const InstantaneousCorrelations& rhs) {
+    return !(*this == rhs);
+}
+
+bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
+
+    if (*correlations_ != *rhs.correlations_)
+        return false;
+
     if (domesticCurrency_ != rhs.domesticCurrency_ || currencies_ != rhs.currencies_ || equities_ != rhs.equities_ ||
         infindices_ != rhs.infindices_ || bootstrapTolerance_ != rhs.bootstrapTolerance_ ||
         irConfigs_.size() != rhs.irConfigs_.size() || fxConfigs_.size() != rhs.fxConfigs_.size() ||
-        eqConfigs_.size() != rhs.eqConfigs_.size() || infConfigs_.size() != rhs.infConfigs_.size()) {
+        eqConfigs_.size() != rhs.eqConfigs_.size() || infConfigs_.size() != rhs.infConfigs_.size() ||
+        crLgmConfigs_.size() != rhs.crLgmConfigs_.size() || crCirConfigs_.size() != rhs.crCirConfigs_.size()) {
         return false;
     }
 
@@ -108,6 +164,18 @@ bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
     // Not checking inflation model data for equality. The equality operators were only written to support 
     // unit testing toXML and fromXML. Questionable if it should be done this way.
 
+    for (Size i = 0; i < crLgmConfigs_.size(); i++) {
+        if (*crLgmConfigs_[i] != *(rhs.crLgmConfigs_[i])) {
+            return false;
+        }
+    }
+
+    for (Size i = 0; i < crCirConfigs_.size(); i++) {
+        if (*crCirConfigs_[i] != *(rhs.crCirConfigs_[i])) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -120,7 +188,9 @@ void CrossAssetModelData::clear() {
     fxConfigs_.clear();
     eqConfigs_.clear();
     infConfigs_.clear();
-    correlations_.clear();
+    crLgmConfigs_.clear();
+    crCirConfigs_.clear();
+    correlations_->clear();
 }
 
 void CrossAssetModelData::validate() {
@@ -159,6 +229,11 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     infindices_ = XMLUtils::getChildrenValues(modelNode, "InflationIndices", "InflationIndex");
     for (auto inf : infindices_) {
         LOG("CrossAssetModelData inflation index " << inf);
+    }
+
+    creditNames_ = XMLUtils::getChildrenValues(modelNode, "CreditNames", "CreditName");
+    for (auto cr : creditNames_) {
+        LOG("CrossAssetModelData credit name " << cr);
     }
 
     bootstrapTolerance_ = XMLUtils::getChildValueAsDouble(modelNode, "BootstrapTolerance", true);
@@ -291,23 +366,60 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
         LOG("No InflationIndexModels node found so no inflation models configured.");
     }
 
-    // Configure correlation structure
-    LOG("CrossAssetModelData: adding correlations.");
-    XMLNode* correlationNode = XMLUtils::getChildNode(modelNode, "InstantaneousCorrelations");
-    CorrelationMatrixBuilder cmb;
-    if (correlationNode) {
-        vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(correlationNode, "Correlation");
-        for (Size i = 0; i < nodes.size(); ++i) {
-            CorrelationFactor factor_1 = fromNode(nodes[i], true);
-            CorrelationFactor factor_2 = fromNode(nodes[i], false);
-            Real corr = parseReal(XMLUtils::getNodeValue(nodes[i]));
-            cmb.addCorrelation(factor_1, factor_2, corr);
-        }
-    } else {
-        QL_FAIL("No InstantaneousCorrelations found in model configuration XML");
+    // Configure CR model components
+
+    std::map<std::string, boost::shared_ptr<CrLgmData>> crLgmDataMap;
+    std::map<std::string, boost::shared_ptr<CrCirData>> crCirDataMap;
+    XMLNode* crNode = XMLUtils::getChildNode(modelNode, "CreditModels");
+    if (crNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(crNode, "LGM"); child;
+             child = XMLUtils::getNextSibling(child, "LGM")) {
+
+            boost::shared_ptr<CrLgmData> config(new CrLgmData());
+            config->fromXML(child);
+
+            for (Size i = 0; i < config->optionExpiries().size(); i++) {
+                LOG("LGM calibration cds option " << config->optionExpiries()[i] << " x " << config->optionTerms()[i]
+                                                  << " " << config->optionStrikes()[i]);
+            }
+
+            crLgmDataMap[config->name()] = config;
+
+            LOG("CrossAssetModelData: CR LGM config built for key " << config->name());
+
+        } // end of  for (XMLNode* child = XMLUtils::getChildNode(irNode, "LGM"); child;
+        for (XMLNode* child = XMLUtils::getChildNode(crNode, "CIR"); child;
+             child = XMLUtils::getNextSibling(child, "CIR")) {
+
+            boost::shared_ptr<CrCirData> config(new CrCirData());
+            config->fromXML(child);
+
+            for (Size i = 0; i < config->optionExpiries().size(); i++) {
+                LOG("CIR calibration cds option " << config->optionExpiries()[i] << " x " << config->optionTerms()[i]
+                                                  << " " << config->optionStrikes()[i]);
+            }
+
+            crCirDataMap[config->name()] = config;
+
+            LOG("CrossAssetModelData: CR CIR config built for key " << config->name());
+
+        } // end of  for (XMLNode* child = XMLUtils::getChildNode(irNode, "CIR"); child;
+    }     // end of if (irNode)
+    else {
+        LOG("No CR model section found");
     }
 
-    correlations_ = cmb.correlations();
+    buildCrConfigs(crLgmDataMap, crCirDataMap);
+
+    for (Size i = 0; i < crLgmConfigs_.size(); i++)
+        LOG("CrossAssetModelData: CR LGM config name " << i << " = " << crLgmConfigs_[i]->name());
+    for (Size i = 0; i < crCirConfigs_.size(); i++)
+        LOG("CrossAssetModelData: CR CIR config name " << i << " = " << crCirConfigs_[i]->name());
+
+    // Configure correlation structure
+    LOG("CrossAssetModelData: adding correlations.");
+    correlations_ = boost::make_shared<InstantaneousCorrelations>();
+    correlations_->fromXML(modelNode);
 
     validate();
 
@@ -436,6 +548,43 @@ void CrossAssetModelData::buildInfConfigs(const map<string, boost::shared_ptr<In
     }
 }
 
+void CrossAssetModelData::buildCrConfigs(std::map<std::string, boost::shared_ptr<CrLgmData>>& crLgmDataMap,
+                                         std::map<std::string, boost::shared_ptr<CrCirData>>& crCirDataMap) {
+    // Append IR configurations into the irConfigs vector in the order of the currencies
+    // in the currencies vector.
+    // If there is an IR configuration for any of the currencies missing, then we will
+    // look up the configuration with key "default" and use this instead. If this is
+    // not provided either we will throw an exception.
+    crLgmConfigs_.clear();
+    crCirConfigs_.clear();
+
+    for (Size i = 0; i < creditNames_.size(); i++) {
+        string name = creditNames_[i];
+        if (crLgmDataMap.find(name) != crLgmDataMap.end()) {
+            QL_REQUIRE(crCirDataMap.find(name) == crCirDataMap.end(), "");
+            crLgmConfigs_.push_back(crLgmDataMap[name]);
+        }
+        else if (crCirDataMap.find(name) != crCirDataMap.end()) {
+            crCirConfigs_.push_back(crCirDataMap[name]);
+        }
+        else { // copy from LGM default, CIR default is not used
+            LOG("CR configuration missing for name " << name << ", using default");
+            if (crLgmDataMap.find("default") == crLgmDataMap.end()) {
+                ALOG("Both default CR LGM and " << name << " CR configuration missing");
+                QL_FAIL("Both default CR and " << name << " CR configuration missing");
+            }
+            boost::shared_ptr<CrLgmData> def = crLgmDataMap["default"];
+            crLgmConfigs_.push_back(boost::make_shared<CrLgmData>(
+                name, // overwrite this and keep the others
+                def->calibrationType(), def->reversionType(), def->volatilityType(), def->calibrateH(),
+                def->hParamType(), def->hTimes(), def->hValues(), def->calibrateA(), def->aParamType(), def->aTimes(),
+                def->aValues(), def->shiftHorizon(), def->scaling(), def->optionExpiries(), def->optionTerms(),
+                def->optionStrikes()));
+        }
+        LOG("CrossAssetModelData: CR config added for name " << name << " " << name);
+    }
+}
+
 XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
 
     XMLNode* crossAssetModelNode = doc.allocNode("CrossAssetModel");
@@ -444,6 +593,7 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, crossAssetModelNode, "Currencies", "Currency", currencies_);
     XMLUtils::addChildren(doc, crossAssetModelNode, "Equities", "Equity", equities_);
     XMLUtils::addChildren(doc, crossAssetModelNode, "InflationIndices", "InflationIndex", infindices_);
+    XMLUtils::addChildren(doc, crossAssetModelNode, "CreditNames", "CreditName", creditNames_);
     XMLUtils::addChild(doc, crossAssetModelNode, "BootstrapTolerance", bootstrapTolerance_);
 
     XMLNode* interestRateModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "InterestRateModels");
@@ -470,22 +620,18 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(infModelsNode, crossAssetInfNode);
     }
 
-    XMLNode* instantaneousCorrelationsNode = doc.allocNode("InstantaneousCorrelations");
-    XMLUtils::appendNode(crossAssetModelNode, instantaneousCorrelationsNode);
-
-    for (auto it = correlations_.begin(); it != correlations_.end(); it++) {
-        
-        XMLNode* node = doc.allocNode("Correlation", to_string(it->second->value()));
-        XMLUtils::appendNode(instantaneousCorrelationsNode, node);
-        
-        CorrelationFactor f_1 = it->first.first;
-        XMLUtils::addAttribute(doc, node, "factor1", to_string(f_1.type) + ":" + f_1.name);
-        XMLUtils::addAttribute(doc, node, "index1", to_string(f_1.index));
-
-        CorrelationFactor f_2 = it->first.second;
-        XMLUtils::addAttribute(doc, node, "factor2", to_string(f_2.type) + ":" + f_2.name);
-        XMLUtils::addAttribute(doc, node, "index2", to_string(f_2.index));
+    XMLNode* crModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "CreditModels");
+    for (Size crLgmConfigs_Iterator = 0; crLgmConfigs_Iterator < crLgmConfigs_.size(); crLgmConfigs_Iterator++) {
+        XMLNode* crossAssetCrLgmNode = crLgmConfigs_[crLgmConfigs_Iterator]->toXML(doc);
+        XMLUtils::appendNode(crModelsNode, crossAssetCrLgmNode);
     }
+    for (Size crCirConfigs_Iterator = 0; crCirConfigs_Iterator < crCirConfigs_.size(); crCirConfigs_Iterator++) {
+        XMLNode* crossAssetCrCirNode = crCirConfigs_[crCirConfigs_Iterator]->toXML(doc);
+        XMLUtils::appendNode(crModelsNode, crossAssetCrCirNode);
+    }
+
+    XMLNode* instantaneousCorrelationsNode = correlations_->toXML(doc);
+    XMLUtils::appendNode(crossAssetModelNode, instantaneousCorrelationsNode);
 
     return crossAssetModelNode;
 }

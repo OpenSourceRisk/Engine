@@ -598,7 +598,8 @@ Currency parseCurrency(const string& s) {
         {"VND", VNDCurrency()}, {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()},
         {"MAD", MADCurrency()}, {"UYU", UYUCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()},
         {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"KES", KESCurrency()}, {"LKR", LKRCurrency()},
-        {"RSD", RSDCurrency()}};
+        {"RSD", RSDCurrency()}, {"COU", COUCurrency()}, {"MUR", MURCurrency()}, {"UGX", UGXCurrency()},
+        {"ZMW", ZMWCurrency()}, {"GHS", GHSCurrency()}, {"JOD", JODCurrency()}, {"HRK", HRKCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -1017,6 +1018,18 @@ CapFloor::Type parseCapFloorType(const string& s) {
     }
 }
 
+YoYInflationCapFloor::Type parseYoYInflationCapFloorType(const string& s) {
+    if (s == "Cap" || s == "YoYInflationCap") {
+        return YoYInflationCapFloor::Cap;
+    } else if (s == "Floor" || s == "YoYInflationFloor") {
+        return YoYInflationCapFloor::Floor;
+    } else if (s == "Collar" || s == "YoYInflationCollar") {
+        return YoYInflationCapFloor::Collar;
+    } else {
+        QL_FAIL("Unknown year on year inflation cap floor type " << s);
+    }
+}
+
 QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const string& s) {
     namespace CT = QuantExt::CrossAssetModelTypes;
     if (s == "IR") {
@@ -1050,6 +1063,9 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         resultType = "string";
         std::string r = boost::any_cast<std::string>(anyType);
         oss << std::fixed << std::setprecision(8) << r;
+    } else if (anyType.type() == typeid(Date)) {
+        resultType = "date";
+        oss << io::iso_date(boost::any_cast<Date>(anyType));
     } else if (anyType.type() == typeid(std::vector<double>)) {
         resultType = "vector_double";
         std::vector<double> r = boost::any_cast<std::vector<double>>(anyType);
