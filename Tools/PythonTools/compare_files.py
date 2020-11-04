@@ -3,7 +3,6 @@ import os
 import argparse
 import collections
 import copy
-import difflib
 import json
 import logging
 import numpy as np
@@ -293,14 +292,30 @@ def compare_files_direct(name, file_1, file_2):
     logger = logging.getLogger(__name__)
 
     logger.debug('%s: Comparing file %s directly against %s', name, file_1, file_2)
-    diff = difflib.unified_diff(open(file_1,'r').readlines(), open(file_2,'r').readlines(), fromfile = file_1, tofile = file_2)
-    match = True
 
-    for line in diff:
-        match = False
-        logger.warning(line.rstrip('\n'))
+    # We get the difference between the files.
+    with open(file_1, 'r') as f_1:
+        with open(file_2, 'r') as f_2:
+            set_1 = set(f_1)
+            set_2 = set(f_2)
+            diff_1 = set_1.difference(set_2)
+            diff_2 = set_2.difference(set_1)
 
-    return match
+    # Discard differences we don't care about
+    diff_1.discard('\n')
+    diff_1.discard('^M')
+
+    # If length of differences is 0, we are matching.
+    if len(diff_1) == 0:
+        logger.debug('%s: Files %s and %s match.', name, file_1, file_2)
+        return True
+    else:
+        logger.info('Test output:')
+        logger.info(diff_1)
+        logger.info('Expected Output:')
+        logger.info(diff_2)
+        return False
+
 
 if __name__ == "__main__":
     # Parse input parameters
