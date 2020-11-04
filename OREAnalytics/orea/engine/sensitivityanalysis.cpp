@@ -94,7 +94,8 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVSensiCube>& cube) {
     }
 
     sensiCube_ = boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
-                                                     scenarioGenerator_->shiftSizes());
+        scenarioGenerator_->shiftSizes(), sensitivityData_->twoSidedDeltas());
+
     initialized_ = true;
 }
 

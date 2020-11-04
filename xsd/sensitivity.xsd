@@ -29,6 +29,8 @@
       <xs:element type="correlationcurves" name="Correlations" minOccurs="0"/>
       <xs:element type="crossgammafilter" name="CrossGammaFilter" minOccurs="0"/>
       <xs:element type="bool" name="ComputeGamma" minOccurs="0"/>
+      <xs:element type="bool" name="UseSpreadedTermStructures" minOccurs="0"/>
+      <xs:element type="setRiskFactorKeyTypes" name="TwoSidedDeltaKeyTypes" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -576,5 +578,11 @@
       <xs:enumeration value="Relative"/>
     </xs:restriction>
   </xs:simpleType>
+  
+  <xs:complexType name="setRiskFactorKeyTypes">
+    <xs:sequence>
+      <xs:element type="riskFactorKeyType" name="RiskFactorKeyType"/>
+    </xs:sequence>
+  </xs:complexType>
 
 </xs:schema>
