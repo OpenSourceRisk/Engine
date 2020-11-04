@@ -148,7 +148,7 @@ Date & Author & Comment \\
 7 December 2017 & Quaternion & updates for release 3\\
 20 March 2019 & Quaternion & updates for release 4\\
 19 June 2020 & Quaternion & updates for release 5\\
-30 October 2020 & Quaternion & updates for release 5b\\
+30 October 2020 & Quaternion & updates for pre-release 6\\
 \hline
 \end{supertabular}
 \end{center}
@@ -262,7 +262,7 @@ Commodity Options & Y & Y & N & N \\
 \hline
 CPI Swaps & Y & Y & N & Y \\
 \hline
-CPI Caps/Floors & Y & Y & N \\
+CPI Caps/Floors & Y & Y & N & N\\
 \hline
 Year-on-Year Inflation Swaps & Y & Y & N & Y \\
 \hline
@@ -308,6 +308,7 @@ parametrisation and the structure of trade and market data input.
 %========================================================
 
 This section summarises the high level changes between release 4 (May 2019) and 5 (June 2020).
+Further changes between releases 5 and 6 are summarised in the next subsection.
 
 \bigskip
 INSTRUMENTS
@@ -441,9 +442,16 @@ OTHER
 \end{itemize}
 
 
-\subsection*{Changes between release 5 (June 2020) and 5b (end of October 2020)}
+%========================================================
+\subsection*{Changes between releases 5 and 6}
+%========================================================
 
-TODO
+\begin{itemize}
+\item Introduce an optional close-out grid for exposure simulation, see Example 31, section \ref{example:31}
+\item Add inflation exposure simulation and XVA using Jarrow-Yildirim, see Example 32, section \ref{example:32}
+\item Add credit exposure simulation and XVA using Gaussian and Cox-Ingersoll-Ross models, see Examples 33 and 34, sections \ref{example:33} and \ref{example:34}
+\item Refactoring of the exposure and XVA post processor, separating out various classes  
+\end{itemize}
 
 %========================================================
 \section{ORE Data Flow}\label{sec:process}
@@ -2225,6 +2233,16 @@ The example here is similar to that in Section \ref{example:17} in that we are g
 \end{itemize}
 
 The example generates cash flows, NPVs, exposure evolutions and XVAs.
+
+%--------------------------------------------------------------------
+\subsection{TODO - CDS Exposure}% Example 33
+\label{example:33}
+%--------------------------------------------------------------------
+
+%--------------------------------------------------------------------
+\subsection{TODO - Wrong-Way Risk}% Example 34
+\label{example:34}
+%--------------------------------------------------------------------
 
 \clearpage
 %========================================================
