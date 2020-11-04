@@ -118,9 +118,14 @@ void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAn
     auto baseCurrency = sensiAnalysis->simMarketData()->baseCcy();
     auto ss = boost::make_shared<SensitivityCubeStream>(sensiAnalysis->sensiCube(), baseCurrency);
 
+    Size outputPrecision = 2;
+    if (params_->has("sensitivity", "outputPrecision")) {
+        outputPrecision = parseInteger(params_->get("sensitivity", "outputPrecision"));
+    }
+
     outputFile = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
     CSVFileReport sensiReport(outputFile);
-    ReportWriter().writeSensitivityReport(sensiReport, ss, sensiThreshold);
+    ReportWriter().writeSensitivityReport(sensiReport, ss, sensiThreshold, outputPrecision);
 }
 
 } // namespace analytics
