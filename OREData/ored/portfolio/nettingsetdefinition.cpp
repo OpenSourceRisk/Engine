@@ -107,13 +107,14 @@ NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const str
                                            const Real& iaHeld, const string& iaType, const string& marginCallFreq,
                                            const string& marginPostFreq, const string& mpr, const Real& collatSpreadPay,
                                            const Real& collatSpreadRcv, const vector<string>& eligCollatCcys,
-                                           bool applyInitialMargin)
+                                           bool applyInitialMargin, const string& initialMarginType)
     : nettingSetId_(nettingSetId), ctp_(ctp), activeCsaFlag_(true) {
 
     csa_ =
         boost::make_shared<CSA>(parseCsaType(bilateral), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay, mtaRcv,
                                 iaHeld, iaType, parsePeriod(marginCallFreq), parsePeriod(marginPostFreq),
-                                parsePeriod(mpr), collatSpreadPay, collatSpreadRcv, eligCollatCcys, applyInitialMargin);
+                                parsePeriod(mpr), collatSpreadPay, collatSpreadRcv, eligCollatCcys, applyInitialMargin,
+                                parseCsaType(initialMarginType));
 
     validate();
     DLOG("collateralised NettingSetDefinition built... " << nettingSetId_);
@@ -162,10 +163,15 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         if (applyInitialMarginNode)
             applyInitialMargin = XMLUtils::getChildValueAsBool(csaChild, "ApplyInitialMargin", true);
 
+        string initialMarginType = XMLUtils::getChildValue(csaChild, "InitialMarginType", false);
+        if (initialMarginType == "")
+            initialMarginType = "Bilateral";
+
         csa_ = boost::make_shared<CSA>(parseCsaType(csaTypeStr), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay,
                                        mtaRcv, iaHeld, iaType, parsePeriod(marginCallFreqStr),
                                        parsePeriod(marginPostFreqStr), parsePeriod(mprStr), collatSpreadPay,
-                                       collatSpreadRcv, eligCollatCcys, applyInitialMargin);
+                                       collatSpreadRcv, eligCollatCcys, applyInitialMargin,
+                                       parseCsaType(initialMarginType));
     }
 
     validate();
@@ -211,6 +217,7 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
         XMLUtils::addChildren(doc, collatSubNode, "Currencies", "Currency", csa_->eligCollatCcys());
 
         XMLUtils::addChild(doc, node, "ApplyInitialMargin", csa_->applyInitialMargin());
+        XMLUtils::addChild(doc, node, "InitialMarginType", to_string(csa_->initialMarginType()));
     }
 
     return node;
