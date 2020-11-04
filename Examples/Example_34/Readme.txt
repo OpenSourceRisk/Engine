@@ -24,7 +24,7 @@
 5) Simulation
 
    Cross Asset Model with CR and IR simulation
-   Instantaneous Correlations between CPTY A and EUR is at 80%
+   Instantaneous Correlations between CPTY A and EUR is at -20%
 
 6) Run Example
 
