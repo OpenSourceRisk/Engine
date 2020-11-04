@@ -259,29 +259,7 @@
       </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="xs:string" name="Shifts"  minOccurs="0"/>
-      <xs:element name="ParConversion" minOccurs="0">
-        <xs:complexType>
-          <xs:all>
-            <xs:element type="xs:string" name="Instruments"/>
-            <xs:element type="xs:boolean" name="SingleCurve"/>
-            <xs:element name="Conventions">
-              <xs:complexType>
-                <xs:sequence>
-                  <xs:element name="Convention" maxOccurs="unbounded" minOccurs="0">
-                    <xs:complexType>
-                      <xs:simpleContent>
-                        <xs:extension base="xs:string">
-                          <xs:attribute name="id" type="xs:string" />
-                        </xs:extension>
-                      </xs:simpleContent>
-                    </xs:complexType>
-                  </xs:element>
-                </xs:sequence>
-              </xs:complexType>
-            </xs:element>
-          </xs:all>
-        </xs:complexType>
-      </xs:element>
+      <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
