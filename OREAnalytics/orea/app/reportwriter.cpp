@@ -266,33 +266,49 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                 auto condCfAmounts = qlInstr->additionalResults().find("cashflowAmounts");
                 auto condCfDates = qlInstr->additionalResults().find("cashflowDates");
                 auto condCfCurrencies = qlInstr->additionalResults().find("cashflowCurrencies");
+                auto condCfLegNumbers = qlInstr->additionalResults().find("cashflowLegNumbers");
+                auto condCfTypes = qlInstr->additionalResults().find("cashflowTypes");
                 if (condCfAmounts != qlInstr->additionalResults().end() &&
                     condCfDates != qlInstr->additionalResults().end() &&
-                    condCfCurrencies != qlInstr->additionalResults().end()) {
+                    condCfCurrencies != qlInstr->additionalResults().end() &&
+                    condCfLegNumbers != qlInstr->additionalResults().end() &&
+                    condCfTypes != qlInstr->additionalResults().end()) {
                     QL_REQUIRE(condCfAmounts->second.type() == typeid(std::vector<Real>),
                                "cashflowAmounts type not handled");
-                    QL_REQUIRE(condCfAmounts->second.type() == typeid(std::vector<Real>),
+                    QL_REQUIRE(condCfDates->second.type() == typeid(std::vector<Date>),
                                "cashflowDates type not handled");
-                    QL_REQUIRE(condCfAmounts->second.type() == typeid(std::vector<Real>),
+                    QL_REQUIRE(condCfCurrencies->second.type() == typeid(std::vector<string>),
                                "cashflowCurrencies type not handled");
+                    QL_REQUIRE(condCfLegNumbers->second.type() == typeid(std::vector<Size>),
+                               "cashflowLegNumbers type not handled");
+                    QL_REQUIRE(condCfTypes->second.type() == typeid(std::vector<string>),
+                               "cashflowTypes type not handled");
                     std::vector<Real> condCfAmountsVec = boost::any_cast<std::vector<Real>>(condCfAmounts->second);
                     std::vector<Date> condCfDatesVec = boost::any_cast<std::vector<Date>>(condCfDates->second);
                     std::vector<string> condCfCurrenciesVec =
                         boost::any_cast<std::vector<string>>(condCfCurrencies->second);
+                    std::vector<Size> condCfLegNumbersVec =
+                        boost::any_cast<std::vector<Size>>(condCfLegNumbers->second);
+                    std::vector<string> condCfTypesVec = boost::any_cast<std::vector<string>>(condCfTypes->second);
                     QL_REQUIRE(condCfAmountsVec.size() == condCfDatesVec.size(),
                                "cashflowAmounts and cashflowDates size mismatch");
                     QL_REQUIRE(condCfAmountsVec.size() == condCfCurrenciesVec.size(),
                                "cashflowAmounts and cashflowCurrencies size mismatch");
+                    QL_REQUIRE(condCfAmountsVec.size() == condCfLegNumbersVec.size(),
+                               "cashflowAmounts and cashflowLegNumbers size mismatch");
+                    QL_REQUIRE(condCfAmountsVec.size() == condCfTypesVec.size(),
+                               "cashflowAmounts and cashflowTypes size mismatch");
+                    std::map<Size,Size> cashflowNumber;
                     for (Size i = 0; i < condCfAmountsVec.size(); ++i) {
                         Real effectiveAmount =
                             condCfAmountsVec[i] * (condCfAmountsVec[i] == Null<Real>() ? 1.0 : multiplier);
                         report.next()
                             .add(trades[k]->id())
                             .add(trades[k]->tradeType())
-                            .add(i + 1)
-                            .add(i)
+                            .add(++cashflowNumber[condCfLegNumbersVec[i]])
+                            .add(condCfLegNumbersVec[i])
                             .add(condCfDatesVec[i])
-                            .add("")
+                            .add(condCfTypesVec[i])
                             .add(effectiveAmount)
                             .add(condCfCurrenciesVec[i])
                             .add(Null<Real>())
@@ -521,8 +537,9 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
     report.end();
 }
 
-void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
-                                            const string& nettingSetId) {
+void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report,
+                                                   boost::shared_ptr<PostProcess> postProcess,
+                                                   const string& nettingSetId) {
     const vector<Real> grid = postProcess->spreadSensitivityTimes();
     const vector<Real>& sensiHazardRate = postProcess->netCvaHazardRateSensitivity(nettingSetId);
     const vector<Real>& sensiCdsSpread = postProcess->netCvaSpreadSensitivity(nettingSetId);

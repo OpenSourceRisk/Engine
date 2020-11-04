@@ -2,7 +2,7 @@
 
 % Avoid useless warnings about included images
 % Reference: https://tex.stackexchange.com/a/78020
-\pdfsuppresswarningpagegroup=1
+%\pdfsuppresswarningpagegroup=1
 
 % Use \hypersetup here to get rid of the ugly boxes around links
 \usepackage{hyperref}
@@ -129,7 +129,8 @@
 %\date{28 April 2017}
 %\date{7 December 2017}
 %\date{28 May 2019}
-\date{19 June 2020}
+%\date{19 June 2020}
+\date{30 October 2020}
 \maketitle
 
 \newpage
@@ -147,6 +148,7 @@ Date & Author & Comment \\
 7 December 2017 & Quaternion & updates for release 3\\
 20 March 2019 & Quaternion & updates for release 4\\
 19 June 2020 & Quaternion & updates for release 5\\
+30 October 2020 & Quaternion & updates for release 5b\\
 \hline
 \end{supertabular}
 \end{center}
@@ -439,6 +441,9 @@ OTHER
 \end{itemize}
 
 
+\subsection*{Changes between release 5 (June 2020) and 5b (end of October 2020)}
+
+TODO
 
 %========================================================
 \section{ORE Data Flow}\label{sec:process}
@@ -1004,7 +1009,7 @@ Example & Description \\
 \hline
 16 & Equity Derivatives Exposure \\
 \hline
-17 & Inflation Swap Exposure \\
+17 & Inflation Swap Exposure under Dodgson-Kainth\\
 \hline
 18 & Bonds and Amortisation Structures\\
 \hline
@@ -1032,9 +1037,13 @@ Example & Description \\
 \hline
 30 & USD-Prime Curve Building via Prime-LIBOR Basis Swap\\
 \hline
-33 & Credit Default Swap Exposure with dynamic credit\\
+31 & Exposure Simulation using a Close-out Grid\\
 \hline
-34 & Interest Rate Swap Exposure with dynamic credit\\
+32 & Inflation Swap Exposure under Jarrow-Yildrim\\ 
+\hline
+33 & CDS Exposure Simulation \\
+\hline
+34 & Wrong way risk \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -1858,7 +1867,8 @@ and \ref{sec:fxoption}.
 \end{figure}
 
 %--------------------------------------------------------
-\subsection{Inflation Swap Exposures}% Example 17
+\subsection{Inflation Swap Exposure under Dodgson-Kainth}% Example 17
+\label{example:17}
 %--------------------------------------------------------
 
 The example portfolio in folder {\tt Examples/Example\_17} contains two CPI Swaps and one Year-on-Year Inflation Swap.
@@ -2123,7 +2133,6 @@ The portfolio contains an at-market fixed vs. float cross currency swap that is
 included in the curve building. The NPV of this swap should be zero when the example is run,
 using {\tt python run.py} or ``directly'' calling {\tt ore[.exe] ore.xml}.
 
-% Missing examples 30, 31, 32
 %--------------------------------------------------------
 \subsection{USD-Prime Curve Building via Prime-LIBOR Basis Swap}% Example 30
 \label{example:30}
@@ -2144,8 +2153,80 @@ the 3\% rule observed on the market: {\tt U.S. Prime Rate = (The Fed Funds Targe
 Running ORE in directory {\tt Examples/Example\_30} with {\tt python run.py }
 yields the USD-Prime curve in {\tt Examples/Example\_30/Output/curves.csv.}
 
+\subsection{Exposure Simulation using a Close-Out Grid}% Example 31
+\label{example:31}
 %--------------------------------------------------------
-\subsection{Credit Default Swap Exposure with dynamic credit}\label{sec:example33}
+
+In the previous examples we have used a ``lagged'' approach, described at the end of appendix \ref{sec:app_collateral}, to take the Margin Period of Risk into account in exposure modelling. This has the disadvantage in ORE that we need to use equally-spaced time grids with time steps that match the MPoR, e.g. 2W, out to final portfolio maturity. 
+
+In this example we demonstrate an alternative approach supported by ORE since release 6. In this approach we use two nested grids: The (almost) arbitrary main simulation grid is used to compute ``default values'' which feed into the collateral balance $C(t)$ filtered by MTA and Threshold etc; an auxiliary ``close-out'' grid, offset from the main grid by the MPoR, is used to compute the delayed close-out values $V(t)$ associated with time default time $t$. The difference between $V(t)$ and $C(t)$ causes a residual exposure $[V(t)-C(t)]^+$ even if minimum transfer amounts and thresholds are zero.
+
+The close-out date value can be computed in two ways in ORE
+\begin{itemize}
+\item as of default date, by just evolving the market from default date to close-out date
+   (``sticky date''), or 
+\item  as of close-out date, by evolving both valuation date and market over the 
+   close-out period (``actual date''), i.e., the portfolio ages and cash flows might occur
+   in the close-out period causing spikes in the evolution of exposures. 
+\end{itemize}
+
+We are reusing one case from Example 10 here, perfect CSA with zero threshold and
+minimum transfer amount, so that the remaining exposure is solely due to the MPoR
+effect. The portfolio consists of a single at-the-money Swap in GBP. 
+The relevant configuration changes that trigger this modelling are in the Parameters section of {\tt simulation.xml} as shown in Listing \ref{lst:close_out_grid}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Parameters>
+    <Discretization> ... </Discretization>
+    <Grid> ... </Grid>
+    <Calendar> ... </Calendar>
+    <Sequence> ... </Sequence>
+    <Scenario> ... </Scenario>
+    <Seed> ... </Seed>
+    <Samples> ... </Samples>
+    <CloseOutLag> 2W </CloseOutLag>
+    <MporMode> StickyDate </MporMode><!-- Alternative: ActualDate -->
+  </Parameters>
+\end{minted}
+\caption{Close-out grid specification}
+\label{lst:close_out_grid}
+\end{listing}
+
+and moreover in the XVA analytics section of {\tt ore\_mpor.xml} as shown in Listing \ref{lst:calctype_nolag}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Analytic type="xva">
+    ...
+    <Parameter name="calculationType"> NoLag </Parameter>
+    ...
+  </Parameters>
+\end{minted}
+\caption{Close-out grid specification}
+\label{lst:calctype_nolag}
+\end{listing}
+
+Run as usual calling {\tt python run.py}.
+
+%--------------------------------------------------------------------
+\subsection{Inflation Swap Exposure under Jarrow-Yildrim}% Example 32
+\label{example:32}
+%--------------------------------------------------------------------
+
+The example here is similar to that in Section \ref{example:17} in that we are generating exposures for inflation swaps. The example in Section \ref{example:17} uses the Dodgson-Kainth model whereas this example uses the Jarrow-Yildrim model. The valuation date is 5 Oct 2020 and the portfolio contains four spot starting inflation swaps:
+
+\begin{itemize}
+\item trade\_01: 20Y standard UKRPI ZCIIS struck at the fair market rate of 3.1925\% giving an NPV of 0.0. 
+\item trade\_02: 20Y standard EUHICPXT ZCIIS struck at the fair market rate of 1.16875\% giving an NPV of 0.0.
+\item trade\_03: 20Y year on year EUHICPXT swap.
+\item trade\_04: 20Y year on year UKRPI swap.
+\end{itemize}
+
+The example generates cash flows, NPVs, exposure evolutions and XVAs.
+
+%--------------------------------------------------------
+\subsection{CDS Exposure Simulation}\label{sec:example33}
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_33} is the credit variant of the example in
@@ -2217,7 +2298,7 @@ Correlation & NettingSetId & CVA & DVA & FBA & FCA \\
 \end{table}
 
 %--------------------------------------------------------
-\subsection{Interest Rate Swap Exposure with dynamic credit}\label{sec:example34}
+\subsection{Wrong Way Risk}\label{sec:example34}
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_34} is an extension of the example in
@@ -2264,7 +2345,7 @@ to this directory and follow instructions in the {\tt Readme.txt}. In a nutshell
 \centerline{\tt jupyter notebook}
 \medskip
 
-to start the ipyton console and open a browser window. From the list of files displayed in the browser then click
+to start the ipython console and open a browser window. From the list of files displayed in the browser then click
 
 \medskip
 \centerline{\tt ore\_jupyter\_dashboard.ipynb} 
@@ -2331,7 +2412,7 @@ scripts. The Excel demo is available in Example\_1. Launch {\tt Example\_1.xlsm}
 sheet, and kick off the ORE process.
 
 %========================================================
-\section{Parametrisation}\label{sec:configuration}
+\section{Parameterisation}\label{sec:configuration}
 %========================================================
 
 A run of ORE is kicked off with a single command line parameter 
@@ -2698,10 +2779,15 @@ FX rates)
 \item {\tt exposureProfiles:} Flag to enable/disable exposure output for each netting set
 \item {\tt exposureProfilesByTrade:} Flag to enable/disable stand-alone exposure output for each trade
 \item {\tt quantile} Confidence level for Potential Future Exposure (PFE) reporting
-\item {\tt calculationType} Determines the settlement of margin calls: Symmetric - margin for both counterparties
-settled after the margin period of risk; AsymmetricCVA - margin requested from the counterparty settles with delay,
-margin requested from us settles immediately; AsymmetricDVA - vice versa). \todo[inline]{Move calculationType into the
-{\tt csaFile}?}
+\item {\tt calculationType} Determines the settlement of margin calls, choices are: \\
+	\begin{itemize}
+	\item {\em Symmetric} - margin for both counterparties settled after the margin period of risk; 
+	\item {\em AsymmetricCVA} - margin requested from the counterparty settles with delay,
+	margin requested from us settles immediately; 
+	\item {\em AsymmetricDVA} - vice versa 
+	\item {\em NoLag} - used to disable any delayed settlement of the margin; this option is applied in combination with a ``close-out'' grid, see section \ref{sec:simulation}. 
+	\end{itemize}
+	\todo[inline]{Move calculationType into the {\tt csaFile}?}
 \item {\tt allocationMethod:} XVA allocation method, choices are {\em None, Marginal, RelativeXVA, RelativeFairValueGross, RelativeFairValueNet}
 \item {\tt marginalAllocationLimit:} The marginal allocation method a la Pykhtin/Rosen breaks down when the netting set
 value vanishes while the exposure does not. This parameter acts as a cutoff for the marginal allocation when the
@@ -3574,6 +3660,9 @@ Let us discuss this section using the following example
   <Samples>1000</Samples>
   <Ordering>Steps</Ordering>
   <DirectionIntegers>JoeKuoD7</DirectionIntegers>
+  <!-- The following two nodes are optional -->
+  <CloseOutLag>2W</CloseOutLag>
+  <MporMode>StickyDate</MporMode>
 </Parameters>
 \end{minted}
 \caption{Simulation configuration}
@@ -3603,6 +3692,8 @@ to use if one of the {\em Forward } related methods is chosen.
 \item {\tt DirectionIntegers:} If the sequence type {\em SobolBrownianBridge} or {\em Sobol} is used, type of direction
   integers in Sobol generator ({\em Unit, Jaeckel, SobolLevitan, SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo,
     Kuo2, Kuo3})
+\item {\tt CloseOutLag}: If this tag is present, this specifies the close-out period length (e.g. 2W) used; otherwise no close-out grid is built. The close-out grid is an auxiliary time grid that is offset from the main default date grid by the close-out period, typically set to the applicable margin period of risk. If present, it is used to evolve the portfolio value and determine close-out values associated with the preceding default date valuation.
+\item {\tt MporMode}: This tag is expected if the previous one is present, permissible values are then {\tt StickyDate} and {\tt ActualDate}. {\tt StickyDate} means that only market data is evolved from the default date to close-out date for close-out date valuation, the valuation as of date remains unchanged and trades do not ``age'' over the period. As a consequence, exposure evolutions will not show spikes caused by cash flows within the close-out period. {\tt ActualDate} means that trades will also age over the close-out period so that one can experience exposure evolution spikes due to cash flows. 
 \end{itemize}
 
 \subsubsection{Model}\label{sec:sim_model}
@@ -3832,7 +3923,12 @@ FX model parameterisations.  Within each CrossAssetLGM section, the interpretati
 \end{itemize}
 
 \medskip
-The inflation model components are specified by a block as follows
+
+For the inflation model component, there is a choice between a Dodgson Kainth model and a Jarrow Yildrim model. The Dodgson Kainth 
+model is specified in a \lstinline!LGM! or \lstinline!DodgsonKainth! node as outlined in Listing \ref{lst:simulation_model_dk_inflation_configuration}.
+The inflation model parameterisation inherits from the LGM parameterisation for interest rate components, in particular the \lstinline!CalibrationType!, 
+\lstinline!Volatility! and \lstinline!Reversion! elements. The \lstinline!CalibrationCapFloors! element specify the model's calibration to a selection of 
+either CPI caps or CPI floors with specified strike.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -3865,11 +3961,163 @@ The inflation model components are specified by a block as follows
   ...
 <CrossAssetModel>	
 \end{minted}
-\caption{Simulation model inflation component configuration}
-\label{lst:simulation_model_inflation_configuration}
+\caption{Simulation model DK inflation component configuration}
+\label{lst:simulation_model_dk_inflation_configuration}
 \end{listing}
 
-The inflation model parameterisation inherits from the LGM parameterisation for interest rate components, in particular the CalibrationType, Volatility and Reversion elements.  The additional elements specify the model's calibration to a selection of either Caps or Floors.
+The calibration instruments may be specified in an alternative way via a \lstinline!CalibrationBaskets! node. In general, a \lstinline!CalibrationBaskets! node 
+can contain multiple \lstinline!CalibrationBasket! nodes each containing a list of calibration instruments of the same type. For Dodgson Kainth, only a single 
+calibration basket is allowed and the instruments must be of type \lstinline!CpiCapFloor!. So, for example, the \lstinline!CalibrationCapFloors! node in 
+Listing \ref{lst:simulation_model_dk_inflation_configuration} could be replaced with the \lstinline!CalibrationBaskets! node in \ref{lst:dk_inflation_calibration_basket}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CalibrationBaskets>
+  <CalibrationBasket>
+    <CpiCapFloor>
+      <Type>Floor</Type>
+      <Maturity>2Y</Maturity>
+      <Strike>0.03</Strike>
+    </CpiCapFloor>
+    <CpiCapFloor>
+      <Type>Floor</Type>
+      <Maturity>4Y</Maturity>
+      <Strike>0.03</Strike>
+    </CpiCapFloor>
+    <CpiCapFloor>
+      <Type>Floor</Type>
+      <Maturity>6Y</Maturity>
+      <Strike>0.03</Strike>
+    </CpiCapFloor>
+    <CpiCapFloor>
+      <Type>Floor</Type>
+      <Maturity>8Y</Maturity>
+      <Strike>0.03</Strike>
+    </CpiCapFloor>
+    <CpiCapFloor>
+      <Type>Floor</Type>
+      <Maturity>10Y</Maturity>
+      <Strike>0.03</Strike>
+    </CpiCapFloor>
+  </CalibrationBasket>
+</CalibrationBaskets>
+\end{minted}
+\caption{Calibration basket for DK inflation model component}
+\label{lst:dk_inflation_calibration_basket}
+\end{listing}
+
+The Jarrow Yildrim model is specified in a \lstinline!JarrowYildirim! node as outlined in Listing \ref{lst:simulation_model_jy_inflation_configuration}. The \lstinline!RealRate! 
+node describes the JY real rate process and has \lstinline!Volatility! and \lstinline!Reversion! nodes that follow those outlined in the interest rate LGM section above. The  
+\lstinline!Index! node describes the JY index process and has a \lstinline!Volatility! component that follows the \lstinline!Sigma! component of the FX model above. The 
+\lstinline!CalibrationBaskets! node is as outlined above for Dodgson Kainth but up to two baskets may be used and extra inflation instruments are supported in the calibration. More 
+information is provided below.
+
+The \lstinline!CalibrationType! determines the calibration approach, if any, that is used to calibrate the various parameters of the model i.e.\ the real rate reversion, the real 
+rate volatility and the index volatility. If the \lstinline!CalibrationType! is \lstinline!None!, no calibration is attempted and all parameter values must be explicitly specified.
+If the \lstinline!CalibrationType! is \lstinline!BestFit!, the parameters that have \lstinline!Calibrate! set to \lstinline!Y! will be calibrated to the instruments specified in 
+the \lstinline!CalibrationBaskets! node. If the \lstinline!CalibrationType! is \lstinline!Bootstrap!, there are a number of options:
+
+\begin{enumerate}
+\item
+The index volatility parameter may be calibrated, indicated by setting \lstinline!Calibrate! to \lstinline!Y! for that parameter, with both of the real rate parameters not calibrated 
+and set explicitly in the \lstinline!RealRate! node. There should be exactly one \lstinline!CalibrationBasket! in the \lstinline!CalibrationBaskets! node and its \lstinline!parameter! 
+attribute may be set to \lstinline!Index! or omitted.
+
+\item
+One of the real rate parameters may be calibrated, indicated by setting \lstinline!Calibrate! to \lstinline!Y! for that parameter, with the index volatility not calibrated and set 
+explicitly in the \lstinline!Volatility! node. There should be exactly one \lstinline!CalibrationBasket! in the \lstinline!CalibrationBaskets! node and its \lstinline!parameter! 
+attribute may be set to \lstinline!RealRate! or omitted.
+
+\item
+One of the real rate parameters and the index volatility parameter may be calibrated together. There should be exactly two \lstinline!CalibrationBasket! nodes in the \lstinline!CalibrationBaskets! 
+node. The \lstinline!parameter! attribute should be set to \lstinline!RealRate! on the \lstinline!CalibrationBasket! node that should be used for the real rate parameter calibration. 
+Similarly, the \lstinline!parameter! attribute should be set to \lstinline!Index! on the \lstinline!CalibrationBasket! node that should be used for the index volatility parameter calibration. 
+The parameters are calibrated iteratively in turn until the root mean squared error over all calibration instruments in the two baskets is below the tolerance specified by the 
+\lstinline!RmseTolerance! in the \lstinline!CalibrationConfiguration! node or until the maximum number of iterations as specified by the \lstinline!MaxIterations! in the 
+\lstinline!CalibrationConfiguration! node has been reached. The \lstinline!CalibrationConfiguration! node is optional. If it is omitted, the \lstinline!RmseTolerance! defaults to 0.0001 and the 
+\lstinline!MaxIterations! defaults to 50.
+
+\end{enumerate}
+
+Note that it is an error to attempt to calibrate both of the real rate parameters together when \lstinline!CalibrationType! is \lstinline!Bootstrap!. If a parameter is being calibrated 
+with \lstinline!CalibrationType! set to \lstinline!Bootstrap!, the \lstinline!ParamType! should be \lstinline!Piecewise!. The \lstinline!TimeGrid! will be overridden for that parameter by 
+the relevant calibration instrument times and the parameter's initial values are set to the first element of the \lstinline!InitialValue! list. So, leaving the \lstinline!TimeGrid! node 
+empty and giving a single value in the \lstinline!InitialValue! node is the clearest XML setup in this case.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}	
+<JarrowYildirim index="EUHICPXT">
+  <Currency>EUR</Currency>
+  <CalibrationType>Bootstrap</CalibrationType>
+  <RealRate>
+    <Volatility>
+      <Calibrate>Y</Calibrate>
+      <VolatilityType>Hagan</VolatilityType>
+      <ParamType>Piecewise</ParamType>
+      <TimeGrid/>
+      <InitialValue>0.0001</InitialValue>
+    </Volatility>
+    <Reversion>
+      <Calibrate>N</Calibrate>
+      <ReversionType>HullWhite</ReversionType>
+      <ParamType>Constant</ParamType>
+      <TimeGrid/>
+      <InitialValue>0.5</InitialValue>
+    </Reversion>
+    <ParameterTransformation>
+      <ShiftHorizon>0.0</ShiftHorizon>
+      <Scaling>1.0</Scaling>
+    </ParameterTransformation>
+  </RealRate>
+  <Index>
+    <Volatility>
+      <Calibrate>Y</Calibrate>
+      <ParamType>Piecewise</ParamType>
+      <TimeGrid/>
+      <InitialValue>0.0001</InitialValue>
+    </Volatility>
+  </Index>
+  <CalibrationBaskets>
+    <CalibrationBasket parameter="Index">
+      <CpiCapFloor>
+        <Type>Floor</Type>
+        <Maturity>2Y</Maturity>
+        <Strike>0.0</Strike>
+      </CpiCapFloor>
+      ...
+    </CalibrationBasket>
+    <CalibrationBasket parameter="RealRate">
+      <YoYSwap>
+        <Tenor>2Y</Tenor>
+      </YoYSwap>
+      ...
+    </CalibrationBasket>
+  </CalibrationBaskets>
+  <CalibrationConfiguration>
+    <RmseTolerance>0.00000001</RmseTolerance>
+    <MaxIterations>40</MaxIterations>
+  </CalibrationConfiguration>
+</JarrowYildirim>
+\end{minted}
+\caption{Simulation model JY inflation component configuration}
+\label{lst:simulation_model_jy_inflation_configuration}
+\end{listing}
+
+The \lstinline!CpiCapFloor! and \lstinline!YoYSwap! calibration instruments can be seen in Listing \ref{lst:simulation_model_jy_inflation_configuration}. A \lstinline!YoYCapFloor! is 
+also allowed and it has the structure shown in Listing \ref{lst:yoy_cf_calibration_inst}. The \lstinline!Type! may be \lstinline!Cap! or \lstinline!Floor!. The \lstinline!Tenor! should 
+be a maturity period e.g.\ \lstinline!5Y!. The \lstinline!Strike! should be an absolute strike level for the year on year cap or floor e.g.\ \lstinline!0.01! for 1\%.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}	
+<YoYCapFloor>
+  <Type>...</Type>
+  <Tenor>...</Tenor>
+  <Strike>...</Strike>
+</YoYCapFloor>
+\end{minted}
+\caption{Layout for \lstinline!YoYCapFloor! calibration instrument.}
+\label{lst:yoy_cf_calibration_inst}
+\end{listing}
 
 \medskip
 Finally, the instantaneous correlation structure is specified as follows.
@@ -6190,6 +6438,9 @@ where $MTA$ is the minimum transfer amount.
 (MPoR) which leads to residual exposure and XVA even for daily margining, zero thresholds and minimum transfer amounts,
 see for example \cite{Pykhtin2010}. A more detailed framework for collateralised exposure modelling is introduced in the
 2016 article \cite{Andersen2016}, indicating a potential route for extending ORE.
+
+\medskip
+In case we use an auxiliary ``close-out'' grid in the simulation (see section \ref{sec:simulation}), we do {\em not} settle the delivery amount with the delay mentioned above. With a close-out grid the portfolio value is rather evolved relative to the collateral balance, also leading to residual exposure. However, the close-out valuation approach allows more detailed modelling of what happens in the close-out period; currently ORE supports two options, with and without portfolio ``ageing'' over the close-out period. The option ``without ageing'' is more aggressive in that it avoids any exposure evolution spikes due to contractual cashflows that occur in the close-out period after default, the only exposure effect is due to market evolution over the period. The ``with ageing'' option is more conservative in that it includes the effect of all contractual cash flows in the close-out period, in particular outgoing cashflows at any time in the period which cause an exposure jump upwards. 
 
 \subsection{Exposure Allocation}\label{sec:app_allocation}
 
