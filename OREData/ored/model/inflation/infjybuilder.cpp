@@ -329,23 +329,29 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
         auto premium = inst->NPV();
         auto helper = boost::make_shared<CpiCapFloorHelper>(capfloor, baseCpi, maturity, calendar, bdc,
             calendar, bdc, strikeValue, inflationIndex, obsLag, premium);
-        helpers.push_back(helper);
+
 
         // Add the helper's time to expiry.
         auto fixingDate = helper->instrument()->fixingDate();
         auto t = inflationTime(fixingDate, *zts);
         auto p = expiryTimes.insert(t);
-        QL_REQUIRE(p.second, "InfJyBuilder: a CPI cap floor calibration " <<
-            "instrument with the expiry time, " << t << ", was already added.");
+        QL_REQUIRE(data_->ignoreDuplicateCalibrationExpiryTimes() || p.second,
+                   "InfJyBuilder: a CPI cap floor calibration "
+                       << "instrument with the expiry time, " << t << ", was already added.");
 
-        TLOG("InfJyBuilder: added CPICapFloor helper" <<
-            ": index = " << data_->index() <<
-            ", type = " << cpiCapFloor->type() <<
-            ", expiry = " << io::iso_date(maturity) <<
-            ", base CPI = " << baseCpi <<
-            ", strike = " << strikeValue <<
-            ", obs lag = " << obsLag <<
-            ", market premium = " << premium);
+        if(p.second)
+            helpers.push_back(helper);
+
+        TLOG("InfJyBuilder: " << (p.second ?
+                                  "added CPICapFloor helper" :
+                                  "skipped CPICapFloor helper due to duplicate expiry time (" + std::to_string(t) + ")") <<
+             ": index = " << data_->index() <<
+             ", type = " << cpiCapFloor->type() <<
+             ", expiry = " << io::iso_date(maturity) <<
+             ", base CPI = " << baseCpi <<
+             ", strike = " << strikeValue <<
+             ", obs lag = " << obsLag <<
+             ", market premium = " << premium);
     }
 
     // Populate the expiry times array with the unique sorted expiry times.
@@ -444,17 +450,21 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb,
         // Update the helper's market quote with the fair rate.
         quote->setValue(helperInst->NPV());
 
-        // Add the helper to the calibration helpers.
-        helpers.push_back(helper);
-
         // Add the helper's time to expiry.
         auto fixingDate = helperInst->lastYoYInflationCoupon()->fixingDate();
         auto t = inflationTime(fixingDate, *yoyTs);
         auto p = expiryTimes.insert(t);
-        QL_REQUIRE(p.second, "InfJyBuilder: a YoY cap floor calibration " <<
-            "instrument with the expiry time, " << t << ", was already added.");
+        QL_REQUIRE(data_->ignoreDuplicateCalibrationExpiryTimes() || p.second,
+                   "InfJyBuilder: a YoY cap floor calibration "
+                       << "instrument with the expiry time, " << t << ", was already added.");
 
-        TLOG("InfJyBuilder: added YoYCapFloor helper" <<
+        // Add the helper to the calibration helpers.
+        if(p.second)
+            helpers.push_back(helper);
+
+        TLOG("InfJyBuilder: " << (p.second ?
+                                  "added YoYCapFloor helper" :
+                                  "skipped YoYCapFloor helper due to duplicate expiry time (" + std::to_string(t) + ")") <<
             ": index = " << data_->index() <<
             ", type = " << yoyCapFloor->type() <<
             ", expiry = " << io::iso_date(maturity) <<

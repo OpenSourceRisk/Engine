@@ -43,16 +43,24 @@ public:
         \param calibrationBaskets the calibration baskets for the model.
         \param currency           the currency of the inflation model.
         \param index              the name of the inflation index being modelled.
+        \param ignoreDuplicateCalibrationExpiryTimes if true a calibration instrument
+               with an expiry time equal to that of a previously added instrument
+               is skipped, if false an error is thrown if such an isntrument is found
+               Notice that two instruments with different option expiry dates can
+               still have the same expiry time due to the way dates are converted
+               to times for inflation instruments.
      */
     InflationModelData(CalibrationType calibrationType,
         const std::vector<CalibrationBasket>& calibrationBaskets,
         const std::string& currency,
-        const std::string& index);
+        const std::string& index,
+        const bool ignoreDuplicateCalibrationExpiryTimes);
 
     //! \name Inspectors
     //@{
     const std::string& currency() const;
     const std::string& index() const;
+    bool ignoreDuplicateCalibrationExpiryTimes() const;
     //@}
 
     //! \name Serialisation
@@ -67,6 +75,7 @@ protected:
 private:
     std::string currency_;
     std::string index_;
+    bool ignoreDuplicateCalibrationExpiryTimes_;
 };
 
 }

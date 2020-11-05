@@ -327,11 +327,16 @@ void InfDkBuilder::buildCapFloorBasket() const {
                 if (refCalDate != referenceCalibrationDates.end())
                     lastRefCalDate = *refCalDate;
             } else {
-                DLOG("Skipped InflationOptionHelper index="
-                     << data_->index() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
-                     << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
-                     << ", strike=" << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem
-                     << ", tte=" << tte << " since we already have a helper with the same expiry time.");
+                if(data_->ignoreDuplicateCalibrationExpiryTimes()) {
+                    DLOG("Skipped InflationOptionHelper index="
+                         << data_->index() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
+                         << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
+                         << ", strike=" << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem
+                         << ", tte=" << tte << " since we already have a helper with the same expiry time.");
+                } else {
+                    QL_FAIL("InfDkBuilder: a CPI cap floor calibration instrument with the expiry time, "
+                            << tte << ", was already added.");
+                }
             }
         }
     }

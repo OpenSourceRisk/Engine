@@ -33,8 +33,9 @@ InfDkData::InfDkData(CalibrationType calibrationType,
     const std::string& index,
     const ReversionParameter& reversion,
     const VolatilityParameter& volatility,
-    const LgmReversionTransformation& reversionTransformation)
-    : InflationModelData(calibrationType, calibrationBaskets, currency, index),
+    const LgmReversionTransformation& reversionTransformation,
+    const bool ignoreDuplicateCalibrationExpiryTimes)
+    : InflationModelData(calibrationType, calibrationBaskets, currency, index, ignoreDuplicateCalibrationExpiryTimes),
       reversion_(reversion),
       volatility_(volatility),
       reversionTransformation_(reversionTransformation) {}
