@@ -315,9 +315,11 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
             prevRcDate = *rcDate;
 
         // Build the CPI calibration instrument in order to calculate its NPV.
-        auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(cpiCapFloor->strike());
-        QL_REQUIRE(strike, "Expected CpiCapFloor in inflation model data to have absolute strikes.");
-        Real strikeValue = strike->strike();
+
+        /* FIXME - the maturity date is not adjusted on eval date changes even if given as a tenor
+                 - if the strike is atm, the value will not be updated on eval date changes */
+        Real strikeValue =
+            cpiCapFloorStrikeValue(cpiCapFloor->strike(), *zeroInflationIndex_->zeroInflationTermStructure(), maturity);
         Option::Type capfloor = cpiCapFloor->type() == CapFloor::Cap ? Option::Call : Option::Put;
         auto inst = boost::make_shared<CPICapFloor>(capfloor, nominal, today, baseCpi, maturity, calendar,
                 bdc, calendar, bdc, strikeValue, inflationIndex, obsLag);
@@ -413,10 +415,11 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb,
         auto yoyCapFloor = boost::dynamic_pointer_cast<YoYCapFloor>(ci[i]);
         QL_REQUIRE(yoyCapFloor, "InfJyBuilder: expected YoYCapFloor calibration instrument.");
 
-        // Get the configured strike.
-        auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(yoyCapFloor->strike());
-        QL_REQUIRE(strike, "Expected CpiCapFloor in inflation model data to have absolute strikes.");
-        Real strikeValue = strike->strike();
+        /*! Get the configured strike.
+            FIXME If the strike is atm, the value will not be updated on evaluation date */
+        Date today = Settings::instance().evaluationDate();
+        Date maturityDate = calendar.advance(calendar.advance(today, settlementDays * Days), yoyCapFloor->tenor(), bdc);
+        Real strikeValue = yoyCapFloorStrikeValue(yoyCapFloor->strike(), *yoyTs, maturityDate);
 
         // Build the YoY cap floor helper.
         auto quote = boost::make_shared<SimpleQuote>(0.01);
