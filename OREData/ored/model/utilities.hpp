@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <vector>
+#include <ored/marketdata/strike.hpp>
 
 #include <ql/models/calibrationhelper.hpp>
 #include <qle/models/eqbsparametrization.hpp>
@@ -31,15 +31,17 @@
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infjyparameterization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
+
 #include <boost/variant.hpp>
+
+#include <vector>
 
 namespace ore {
 namespace data {
 using namespace QuantExt;
 using namespace QuantLib;
 
-template <typename Helper>
-Real getCalibrationError(const std::vector<boost::shared_ptr<Helper>>& basket) {
+template <typename Helper> Real getCalibrationError(const std::vector<boost::shared_ptr<Helper>>& basket) {
     Real rmse = 0.0;
     for (auto const& h : basket) {
         Real tmp = h->calibrationError();
@@ -66,17 +68,25 @@ std::string getCalibrationDetails(
     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
     const boost::shared_ptr<InfDkParametrization>& parametrization = boost::shared_ptr<InfDkParametrization>());
 
-std::string getCalibrationDetails(
-    const std::vector<boost::shared_ptr<CalibrationHelper>>& realRateBasket,
-    const std::vector<boost::shared_ptr<CalibrationHelper>>& indexBasket,
-    const boost::shared_ptr<InfJyParameterization>& parameterization,
-    bool calibrateRealRateVol = false);
+std::string getCalibrationDetails(const std::vector<boost::shared_ptr<CalibrationHelper>>& realRateBasket,
+                                  const std::vector<boost::shared_ptr<CalibrationHelper>>& indexBasket,
+                                  const boost::shared_ptr<InfJyParameterization>& parameterization,
+                                  bool calibrateRealRateVol = false);
 
 //! Return an option's maturity date, given an explicit date or a period.
 QuantLib::Date optionMaturity(const boost::variant<QuantLib::Date, QuantLib::Period>& maturity,
-    const QuantLib::Calendar& calendar,
-    const QuantLib::Date& referenceDate = Settings::instance().evaluationDate());
+                              const QuantLib::Calendar& calendar,
+                              const QuantLib::Date& referenceDate = Settings::instance().evaluationDate());
 
+//! Return a cpi cap/floor strike value, the input strike can be of type absolute or atm forward
+Real cpiCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
+                            const boost::shared_ptr<ZeroInflationTermStructure>& curve,
+                            const QuantLib::Date& optionMaturityDate);
+
+//! Return a yoy cap/floor strike value, the input strike can be of type absolute or atm forward
+Real yoyCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
+                            const boost::shared_ptr<YoYInflationTermStructure>& curve,
+                            const QuantLib::Date& optionMaturityDate);
 
 } // namespace data
 } // namespace ore
