@@ -234,8 +234,9 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
 std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                                   const boost::shared_ptr<InfDkParametrization>& parametrization) {
     std::ostringstream log;
-    log << std::right << std::setw(3) << "#" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
-        << std::setw(14) << "(diff)" << std::setw(14) << "infdkAlpha" << std::setw(14) << "infdkH\n";
+    log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelValue"
+        << std::setw(14) << "marketValue" << std::setw(14) << "(diff)" << std::setw(14) << "infdkAlpha" << std::setw(14)
+        << "infdkH\n";
     Real t = 0.0, modelAlpha = 0.0, modelH = 0.0;
     for (Size j = 0; j < basket.size(); j++) {
         Real modelValue = basket[j]->modelValue();
@@ -254,8 +255,9 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
             modelH = parametrization->H(t);
         }
         // TODO handle other calibration helpers, too (capfloor)
-        log << std::setw(3) << j << std::setprecision(6) << std::setw(14) << modelValue << std::setw(14) << marketValue
-            << std::setw(14) << valueDiff << std::setw(14) << modelAlpha << std::setw(14) << modelH << "\n";
+        log << std::setw(3) << j << std::setprecision(6) << std::setw(14) << t << std::setw(14) << modelValue
+            << std::setw(14) << marketValue << std::setw(14) << valueDiff << std::setw(14) << modelAlpha
+            << std::setw(14) << modelH << "\n";
     }
     if (parametrization != nullptr) {
         // report alpha, kappa at t_expiry^+ for last expiry
