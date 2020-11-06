@@ -129,6 +129,7 @@
       <xs:enumeration value="LKR"/>
       <xs:enumeration value="HRK"/>
       <xs:enumeration value="RSD"/>
+      <xs:enumeration value="PKR"/>
       <!-- valid as currency too -->
       <xs:enumeration value="XAU"/>
       <xs:enumeration value="XAG"/>
