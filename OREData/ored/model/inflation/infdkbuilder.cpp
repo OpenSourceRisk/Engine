@@ -202,15 +202,7 @@ Real InfDkBuilder::optionStrikeValue(const Size j) const {
     auto cf = boost::dynamic_pointer_cast<CpiCapFloor>(ci.at(j));
     QL_REQUIRE(cf,
                "InfDkBuilder::optionStrike(" << j << "): expected CpiCapFloor calibration instruments, could not cast");
-    if (auto abs = boost::dynamic_pointer_cast<AbsoluteStrike>(cf->strike())) {
-        return abs->strike();
-    } else if (auto atm = boost::dynamic_pointer_cast<AtmStrike>(cf->strike())) {
-        return inflationIndex_->zeroInflationTermStructure()->zeroRate(optionMaturityDate(j));
-    } else {
-        QL_FAIL("InfDkBuilder::optionStrike("
-                << j << "): strike type not supported, expected absolute strike or atm fwd strike, got '"
-                << cf->strike()->toString());
-    }
+    return cpiCapFloorStrikeValue(cf->strike(), *inflationIndex_->zeroInflationTermStructure(), optionMaturityDate(j));
 }
 
 bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
@@ -335,11 +327,16 @@ void InfDkBuilder::buildCapFloorBasket() const {
                 if (refCalDate != referenceCalibrationDates.end())
                     lastRefCalDate = *refCalDate;
             } else {
-                DLOG("Skipped InflationOptionHelper index="
-                     << data_->index() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
-                     << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
-                     << ", strike=" << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem
-                     << ", tte=" << tte << " since we already have a helper with the same expiry time.");
+                if(data_->ignoreDuplicateCalibrationExpiryTimes()) {
+                    DLOG("Skipped InflationOptionHelper index="
+                         << data_->index() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
+                         << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
+                         << ", strike=" << strikeValue << ", lag=" << lag << ", marketPremium=" << marketPrem
+                         << ", tte=" << tte << " since we already have a helper with the same expiry time.");
+                } else {
+                    QL_FAIL("InfDkBuilder: a CPI cap floor calibration instrument with the expiry time, "
+                            << tte << ", was already added.");
+                }
             }
         }
     }

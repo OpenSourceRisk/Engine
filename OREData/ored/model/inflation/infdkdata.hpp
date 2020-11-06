@@ -53,7 +53,8 @@ public:
         const std::string& index,
         const ReversionParameter& reversion,
         const VolatilityParameter& volatility,
-        const LgmReversionTransformation& reversionTransformation = LgmReversionTransformation());
+        const LgmReversionTransformation& reversionTransformation = LgmReversionTransformation(),
+        const bool ignoreDuplicateCalibrationExpiryTimes = false);
 
     //! \name Inspectors
     //@{

@@ -30,6 +30,7 @@
 #include <boost/optional.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
+#include <boost/serialization/version.hpp>
 #include <boost/serialization/optional.hpp>
 #include <boost/shared_ptr.hpp>
 

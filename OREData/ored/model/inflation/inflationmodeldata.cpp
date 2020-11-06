@@ -30,10 +30,12 @@ InflationModelData::InflationModelData(
     CalibrationType calibrationType,
     const vector<CalibrationBasket>& calibrationBaskets,
     const string& currency,
-    const string& index)
+    const string& index,
+    const bool ignoreDuplicateCalibrationExpiryTimes)
     : ModelData(calibrationType, calibrationBaskets),
       currency_(currency),
-      index_(index) {}
+      index_(index),
+      ignoreDuplicateCalibrationExpiryTimes_(ignoreDuplicateCalibrationExpiryTimes) {}
 
 const std::string& InflationModelData::currency() const {
     return currency_;
@@ -41,6 +43,10 @@ const std::string& InflationModelData::currency() const {
 
 const std::string& InflationModelData::index() const {
     return index_;
+}
+
+bool InflationModelData::ignoreDuplicateCalibrationExpiryTimes() const {
+    return ignoreDuplicateCalibrationExpiryTimes_;
 }
 
 void InflationModelData::fromXML(XMLNode* node) {
