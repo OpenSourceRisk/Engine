@@ -348,6 +348,9 @@ void CrossAssetModelBuilder::buildModel() const {
 
     Matrix corrMatrix = cmb.correlationMatrix(processInfo);
 
+    TLOG("CAM correlation matrix:");
+    TLOGGERSTREAM << corrMatrix;
+
     /*****************************
      * Build the cross asset model
      */
