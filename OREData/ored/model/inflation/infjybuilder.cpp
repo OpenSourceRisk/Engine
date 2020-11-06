@@ -422,7 +422,7 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb,
         QL_REQUIRE(yoyCapFloor, "InfJyBuilder: expected YoYCapFloor calibration instrument.");
 
         /*! Get the configured strike.
-            FIXME If the strike is atm, the value will not be updated on evaluation date */
+            FIXME If the strike is atm, the value will not be updated on evaluation date changes */
         Date today = Settings::instance().evaluationDate();
         Date maturityDate = calendar.advance(calendar.advance(today, settlementDays * Days), yoyCapFloor->tenor(), bdc);
         Real strikeValue = yoyCapFloorStrikeValue(yoyCapFloor->strike(), *yoyTs, maturityDate);

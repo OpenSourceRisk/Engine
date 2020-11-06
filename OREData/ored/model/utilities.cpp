@@ -389,7 +389,7 @@ Real yoyCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
                    "only atm forward allowed as atm strike for cpi cap floors");
         return curve->yoyRate(optionMaturityDate);
     } else {
-        QL_FAIL("cpi cap floor strike type not supported, expected absolute strike or atm fwd strike, got '"
+        QL_FAIL("yoy cap floor strike type not supported, expected absolute strike or atm fwd strike, got '"
                 << strike->toString());
     }
 }
