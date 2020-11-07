@@ -37,8 +37,9 @@ InfJyData::InfJyData(CalibrationType calibrationType,
     const VolatilityParameter& realRateVolatility,
     const VolatilityParameter& indexVolatility,
     const LgmReversionTransformation& reversionTransformation,
-    const CalibrationConfiguration& calibrationConfiguration)
-    : InflationModelData(calibrationType, calibrationBaskets, currency, index),
+    const CalibrationConfiguration& calibrationConfiguration,
+    const bool ignoreDuplicateCalibrationExpiryTimes)
+    : InflationModelData(calibrationType, calibrationBaskets, currency, index, ignoreDuplicateCalibrationExpiryTimes),
       realRateReversion_(realRateReversion),
       realRateVolatility_(realRateVolatility),
       indexVolatility_(indexVolatility),

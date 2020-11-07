@@ -50,13 +50,21 @@ public:
         const boost::shared_ptr<Portfolio>& portfolio,
         //! NPV cube resulting from the Monte Carlo simulation loop
         const boost::shared_ptr<NPVCube>& cube,
+        //! Interpreter for cube storage (where to find which data items)
         const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
+        //! Market data object to access e.g. discounting and funcing curves
         const boost::shared_ptr<Market>& market,
+	//! Flag to indicate exposure termination at the next break date
         const bool exerciseNextBreak,
+        //! Expression currency for all results
         const string& baseCurrency,
+        //! Market configuration to use
         const string& configuration,
+        //! Quantile for Potential Future Exposure output
         const Real quantile,
+        //! Collateral calculation type to be used, see class %CollateralExposureHelper
         const CollateralExposureHelper::CalculationType calcType,
+	//! Flag to indicate exposure evaluation with dynamic credit
         const bool multiPath
     );
 

@@ -56,7 +56,8 @@ public:
         const VolatilityParameter& realRateVolatility,
         const VolatilityParameter& indexVolatility,
         const LgmReversionTransformation& reversionTransformation = LgmReversionTransformation(),
-        const CalibrationConfiguration& calibrationConfiguration = CalibrationConfiguration());
+        const CalibrationConfiguration& calibrationConfiguration = CalibrationConfiguration(),
+        const bool ignoreDuplicateCalibrationExpiryTimes = false);
 
     //! \name Inspectors
     //@{

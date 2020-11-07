@@ -49,12 +49,12 @@ public:
         const Real& iaHeld, const string& iaType, const Period& marginCallFreq, const Period& marginPostFreq,
         const Period& mpr, const Real& collatSpreadPay, const Real& collatSpreadRcv,
         const vector<string>& eligCollatCcys, // vector of three letter ISO codes
-        bool applyInitialMargin)
+        bool applyInitialMargin, Type initialMarginType)
         : type_(type), csaCurrency_(csaCurrency), index_(index), thresholdPay_(thresholdPay),
           thresholdRcv_(thresholdRcv), mtaPay_(mtaPay), mtaRcv_(mtaRcv), iaHeld_(iaHeld), iaType_(iaType),
           marginCallFreq_(marginCallFreq), marginPostFreq_(marginPostFreq), mpr_(mpr),
           collatSpreadPay_(collatSpreadPay), collatSpreadRcv_(collatSpreadRcv), eligCollatCcys_(eligCollatCcys),
-          applyInitialMargin_(applyInitialMargin) {}
+          applyInitialMargin_(applyInitialMargin), initialMarginType_(initialMarginType) {}
 
     //! Inspectors
     //@{
@@ -91,6 +91,9 @@ public:
     /*! Apply (dynamic) initial margin in addition to variation margin */
     bool applyInitialMargin() { return applyInitialMargin_; }
     //@}
+    /*! Direction of (dynamic) initial margin */
+    Type initialMarginType() { return initialMarginType_; }
+    //@}
 
     void validate(string nettingSetId);
 
@@ -111,6 +114,7 @@ private:
     Real collatSpreadRcv_;
     vector<string> eligCollatCcys_;
     bool applyInitialMargin_;
+    Type initialMarginType_;
 };
 
 CSA::Type parseCsaType(const string& s);
@@ -147,7 +151,8 @@ public:
                          const string& mpr,            // e.g. "1D", "2W", "3M", "4Y"
                          const Real& collatSpreadPay, const Real& collatSpreadRcv,
                          const vector<string>& eligCollatCcys, // vector of three letter ISO codes
-                         bool applyInitialMargin = false);
+                         bool applyInitialMargin = false,
+                         const string& initialMarginType = "Bilateral");
 
     /*!
       loads NettingSetDefinition object from XML
