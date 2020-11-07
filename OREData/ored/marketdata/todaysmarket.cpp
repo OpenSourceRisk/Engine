@@ -1090,6 +1090,11 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
             }
             if (found) {
                 node = *v;
+                // if the node is already built, we are done
+                if (g[node].built) {
+                    DLOG("node already built, do nothing.");
+                    return;
+                }
                 break;
             }
         }
@@ -1107,13 +1112,6 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
 
     if (!found) {
         DLOG("not found, do nothing");
-        return;
-    }
-
-    // if the node is already built, we are done
-    
-    if (g[node].built) {
-        DLOG("node already built, do nothing.");
         return;
     }
 
