@@ -79,8 +79,11 @@ public:
         std::vector<boost::shared_ptr<ValuationCalculator>> calculators,
         //! Use sticky date in MPOR evaluation?
         bool mporStickyDate = true,
+        //! Output cube for netting set-level results
         boost::shared_ptr<analytics::NPVCube> outputCubeNettingSet = nullptr,
+        //! Output cube for storing counterparty-level survival probabilities
         boost::shared_ptr<analytics::NPVCube> outputCptyCube = nullptr,
+        //! Calculators for filling counterparty-level results
         std::vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators = {});
 
 private:
