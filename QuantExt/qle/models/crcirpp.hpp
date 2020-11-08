@@ -21,9 +21,8 @@
 
 #include <ql/math/distributions/chisquaredistribution.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Cox-Ingersoll-Ross ++  credit model class.
 /*! This class implements the Cox-Ingersoll-Ross model defined by
