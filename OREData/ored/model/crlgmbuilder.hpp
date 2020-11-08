@@ -16,11 +16,10 @@
 #include <ored/model/crlgmdata.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
 
-using namespace QuantLib;
-
 namespace ore {
 using namespace data;
 namespace data {
+using namespace QuantLib;
 
 class CrLgmBuilder : public ModelBuilder {
 public:
