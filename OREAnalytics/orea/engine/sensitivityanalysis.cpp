@@ -36,6 +36,7 @@
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/yield/oisratehelper.hpp>
+#include <qle/currencies/metals.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
 #include <qle/instruments/deposit.hpp>
 #include <qle/instruments/fxforward.hpp>
@@ -194,11 +195,21 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
             Size tradeIdx = sensiCube_->tradeIdx().at(trade->id());
 
             const auto& domCcy = fxo->soldCurrency();
+            if (isMetal(parseCurrency(domCcy))) {
+                DLOG("addAnalyticFxSensitivities: FX option " << trade->id() <<
+                    " references the price of a metal, " << domCcy << ", so skipping it.");
+                continue;
+            }
             string pairDomBase = domCcy + baseCcy;
             RiskFactorKey domCcyKey(RiskFactorKey::KeyType::FXSpot, pairDomBase);
             Real domCcySensi = Null<Real>();
 
             const auto& forCcy = fxo->boughtCurrency();
+            if (isMetal(parseCurrency(forCcy))) {
+                DLOG("addAnalyticFxSensitivities: FX option " << trade->id() <<
+                    " references the price of a metal, " << forCcy << ", so skipping it.");
+                continue;
+            }
             string pairForBase = forCcy + baseCcy;
             RiskFactorKey forCcyKey(RiskFactorKey::KeyType::FXSpot, pairForBase);
             Real forCcySensi = Null<Real>();
@@ -209,7 +220,17 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
 
             if (auto vo = boost::dynamic_pointer_cast<VanillaOption>(qlInst)) {
 
-                Real delta = vo->delta();
+                // Some engines don't populate delta, e.g. AnalyticEuropeanEngineDeltaGamma, so need a try catch here.
+                Real delta = Null<Real>();
+                try {
+                    delta = vo->delta();
+                } catch (...) {
+                    DLOG("addAnalyticFxSensitivities: underlying engine for trade id " << trade->id() <<
+                        " does not provide delta so skipping this trade.");
+                    continue;
+                }
+
+                // Delta may possibly still not populated at this point in some cases but unlikely.
                 if (delta == Null<Real>()) {
                     DLOG("addAnalyticFxSensitivities: underlying engine for trade id " << trade->id() <<
                         " does not populate delta so skipping this trade.");
@@ -259,12 +280,27 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
                 if (auto fee = boost::dynamic_pointer_cast<QuantExt::Payment>(addInsts[0])) {
                     string feeCcy = fee->currency().code();
                     if (feeCcy != baseCcy && (feeCcy == domCcy || feeCcy == forCcy)) {
-                        Real shiftSize = getShiftSize(domCcyKey, *sensitivityData_, simMarket_);
-                        Real feeCcySensi = addMults[0] * shiftSize * fee->NPV();
-                        TLOG("addAnalyticFxSensitivities: fee sensitivity " << feeCcySensi <<
-                            ". (feeCcy, baseCcy, feeNpvDomCcy, " << pairDomBase << " shift, mult) = (" <<
-                            std::fixed << std::setprecision(9) << feeCcy << "," << baseCcy << "," << fee->NPV() <<
-                            "," << shiftSize << "," << addMults[0] << ").");
+
+                        Real feeCcySensi;
+                        if (domCcy == baseCcy) {
+                            Real spot = simMarket_->fxSpot(pairForBase)->value();
+                            Real feeNpvForCcy = fee->NPV() / spot;
+                            Real shiftSize = getShiftSize(forCcyKey, *sensitivityData_, simMarket_);
+                            feeCcySensi = addMults[0] * shiftSize * feeNpvForCcy;
+                            TLOG("addAnalyticFxSensitivities: fee sensitivity " << feeCcySensi <<
+                                ". (feeCcy, baseCcy, feeNpvForCcy, " << pairForBase << ", " << pairForBase <<
+                                " shift, mult) = (" << std::fixed << std::setprecision(9) << feeCcy << "," <<
+                                baseCcy << "," << feeNpvForCcy << "," << spot << "," << shiftSize << "," <<
+                                addMults[0] << ").");
+                        } else {
+                            Real shiftSize = getShiftSize(domCcyKey, *sensitivityData_, simMarket_);
+                            feeCcySensi = addMults[0] * shiftSize * fee->NPV();
+                            TLOG("addAnalyticFxSensitivities: fee sensitivity " << feeCcySensi <<
+                                ". (feeCcy, baseCcy, feeNpvDomCcy, " << pairDomBase << " shift, mult) = (" <<
+                                std::fixed << std::setprecision(9) << feeCcy << "," << baseCcy << "," << fee->NPV() <<
+                                "," << shiftSize << "," << addMults[0] << ").");
+                        }
+
                         if (feeCcy == domCcy) {
                             domCcySensi += feeCcySensi;
                         } else {
