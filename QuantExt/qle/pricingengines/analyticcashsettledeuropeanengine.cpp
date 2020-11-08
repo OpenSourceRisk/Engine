@@ -63,21 +63,24 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
     if (expiryDate <= today) {
 
         // If expiry has occurred, we attempt to establish the payoff amount, if any, and discount it.
+        Real payoffAmount = 0.0;
         Real priceAtExercise = 0.0;
         if (arguments_.automaticExercise) {
             // If we have automatic exercise, we base the payoff on the value of the index on the expiry date.
             QL_REQUIRE(arguments_.underlying, "Expect a valid underlying index when exercise is automatic.");
             priceAtExercise = arguments_.underlying->fixing(expiryDate);
+            payoffAmount = (*arguments_.payoff)(priceAtExercise);
         } else if (arguments_.exercised) {
             // If we have manually exercised, we base the payoff on the value at exercise.
             QL_REQUIRE(arguments_.priceAtExercise != Null<Real>(), "Expect a valid price at exercise when option "
                                                                        << "has been manually exercised.");
             priceAtExercise = arguments_.priceAtExercise;
+            payoffAmount = (*arguments_.payoff)(priceAtExercise);
         } else if (expiryDate == today) {
             // Expiry date is today, not automatic exercise and hasn't been manually exercised - use spot.
             priceAtExercise = bsp_->x0();
+            payoffAmount = (*arguments_.payoff)(priceAtExercise);
         }
-        Real payoffAmount = (*arguments_.payoff)(priceAtExercise);
 
         // Discount factor to payment date.
         DiscountFactor df_tp = dts->discount(arguments_.paymentDate);
