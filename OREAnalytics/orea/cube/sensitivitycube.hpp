@@ -43,6 +43,8 @@ public:
     typedef ShiftScenarioGenerator::ScenarioDescription ShiftScenarioDescription;
 
     struct FactorData {
+        FactorData() : index(0), shiftSize(0.0) {}
+
         QuantLib::Size index;
         QuantLib::Real shiftSize;
         string factorDesc;
