@@ -91,9 +91,9 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, const
                                      const DayCounter& dayCounter, bool settlesAccrual,
                                      ProtectionPaymentTime protectionPaymentTime, const Date& protectionStart,
                                      const boost::shared_ptr<Claim>& claim, const DayCounter& lastPeriodDayCounter)
-    : side_(side), notional_(notional), leg_(amortized_leg), upfront_(boost::none), runningSpread_(spread),
+    : side_(side), notional_(notional), upfront_(boost::none), runningSpread_(spread),
       settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime), claim_(claim),
-      protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
+      leg_(amortized_leg), protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
 
     withoutUpfront(schedule, convention);
 }
@@ -104,9 +104,9 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, const
                                      ProtectionPaymentTime protectionPaymentTime, const Date& protectionStart,
                                      const Date& upfrontDate, const boost::shared_ptr<Claim>& claim,
                                      const DayCounter& lastPeriodDayCounter)
-    : side_(side), notional_(notional), leg_(amortized_leg), upfront_(upfront), runningSpread_(runningSpread),
+    : side_(side), notional_(notional), upfront_(upfront), runningSpread_(runningSpread),
       settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime), claim_(claim),
-      protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
+      leg_(amortized_leg), protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
 
     withUpfront(schedule, upfrontDate, convention, notional, upfront);
 }
