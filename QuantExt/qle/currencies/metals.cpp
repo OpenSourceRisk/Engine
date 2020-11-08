@@ -17,8 +17,10 @@
 */
 
 #include <qle/currencies/metals.hpp>
+#include <set>
 
 using namespace QuantLib;
+using std::set;
 
 namespace QuantExt {
 
@@ -49,4 +51,20 @@ XPDCurrency::XPDCurrency() {
         new Data("Troy Ounce of Palladium", "XPD", 964, "XPD", "", 1, Rounding(), "1$.2f %3%"));
     data_ = xpdData;
 }
+
+bool isMetal(const Currency& currency) {
+
+    static auto cmpCcy = [](const Currency& c1, const Currency& c2) { return c1.name() < c2.name(); };
+    static set<Currency, decltype(cmpCcy)> metals(cmpCcy);
+
+    if (metals.empty()) {
+        metals.insert(XAUCurrency());
+        metals.insert(XAGCurrency());
+        metals.insert(XPTCurrency());
+        metals.insert(XPDCurrency());
+    }
+
+    return metals.count(currency) == 1;
+}
+
 } // namespace QuantExt
