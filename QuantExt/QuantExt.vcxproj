@@ -501,6 +501,9 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="indexes\ibor\dkkcita.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\calendars\austria.hpp" />
     <ClInclude Include="qle\calendars\belgium.hpp" />
@@ -589,6 +592,7 @@
     <ClInclude Include="qle\indexes\ibor\saibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\seksior.hpp" />
     <ClInclude Include="qle\indexes\ibor\sekstibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\sekstina.hpp" />
     <ClInclude Include="qle\indexes\ibor\sgdsibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\sgdsor.hpp" />
     <ClInclude Include="qle\indexes\ibor\skkbribor.hpp" />

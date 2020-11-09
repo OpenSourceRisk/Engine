@@ -49,7 +49,7 @@ struct ZeroDatum {
     double zero;
 };
 
-struct ExpectedResults {
+struct ExpectedResult {
     string date;
     double rate;
     double discount;
