@@ -24,6 +24,7 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
+#include <orea/scenario/spreadscenario.hpp>
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
@@ -41,6 +42,7 @@
 #include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/calendars/target.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
@@ -57,6 +59,7 @@
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/pricecurve.hpp>
+#include <qle/termstructures/spreadeddiscountcurve.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
@@ -131,7 +134,7 @@ ReactionToTimeDecay parseDecayMode(const string& s) {
 
 void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
                                       const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
-                                      const string& dayCounter, bool simulate) {
+                                      const string& dayCounter, bool simulate, bool spreaded) {
     Handle<YieldTermStructure> wrapper = initMarket->yieldCurve(riskFactorYieldCurve(rf), key, configuration);
     QL_REQUIRE(!wrapper.empty(), "yield curve not provided for " << key);
     QL_REQUIRE(tenors.front() > 0 * Days, "yield curve tenors must not include t=0");
@@ -152,25 +155,35 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
     vector<Real> discounts(yieldCurveTimes.size());
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
     for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(yieldCurveDates[i + 1])));
+        Real val = wrapper->discount(yieldCurveDates[i + 1]);
+        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(spreaded ? 1.0 : val));
         Handle<Quote> qh(q);
         quotes.push_back(qh);
 
         // Check if the risk factor is simulated before adding it
         if (simulate) {
             simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
-            DLOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << q->value());
+            DLOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << val);
+            // if generating spreaded scenarios, add the absolute value as well
+            if (spreaded) {
+                absoluteSimData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i),
+                                         std::forward_as_tuple(val));
+            }
         }
     }
 
     boost::shared_ptr<YieldTermStructure> yieldCurve;
 
-    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister && !spreaded) {
         yieldCurve = boost::shared_ptr<YieldTermStructure>(
             new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), dc));
     } else {
-        yieldCurve = boost::shared_ptr<YieldTermStructure>(
-            new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+        if (spreaded)
+            yieldCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::SpreadedDiscountCurve(wrapper, yieldCurveTimes, quotes, dc));
+        else
+            yieldCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
     }
 
     Handle<YieldTermStructure> ych(yieldCurve);
@@ -185,17 +198,22 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                                      const Conventions& conventions, const std::string& configuration,
                                      const CurveConfigurations& curveConfigs,
-                                     const TodaysMarketParameters& todaysMarketParams, const bool continueOnError)
+                                     const TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
+                                     const bool useSpreadedTermStructures, const bool cacheSimData,
+                                     const bool allowPartialScenarios)
     : ScenarioSimMarket(initMarket, parameters, conventions, boost::make_shared<FixingManager>(initMarket->asofDate()),
-                        configuration, curveConfigs, todaysMarketParams, continueOnError) {}
+                        configuration, curveConfigs, todaysMarketParams, continueOnError, useSpreadedTermStructures,
+                        cacheSimData, allowPartialScenarios) {}
 
 ScenarioSimMarket::ScenarioSimMarket(
     const boost::shared_ptr<Market>& initMarket, const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
     const Conventions& conventions, const boost::shared_ptr<FixingManager>& fixingManager,
     const std::string& configuration, const ore::data::CurveConfigurations& curveConfigs,
-    const ore::data::TodaysMarketParameters& todaysMarketParams, const bool continueOnError)
+    const ore::data::TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
+    const bool useSpreadedTermStructures, const bool cacheSimData, const bool allowPartialScenarios)
     : SimMarket(conventions), parameters_(parameters), fixingManager_(fixingManager),
-      filter_(boost::make_shared<ScenarioFilter>()) {
+      filter_(boost::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures),
+      cacheSimData_(cacheSimData), allowPartialScenarios_(allowPartialScenarios) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
@@ -237,7 +255,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         LOG("building " << name << " yield curve..");
                         vector<Period> tenors = parameters->yieldCurveTenors(name);
                         addYieldCurve(initMarket, configuration, param.first, name, tenors,
-                                      parameters->yieldCurveDayCounter(name), param.second.first);
+                                      parameters->yieldCurveDayCounter(name), param.second.first,
+                                      useSpreadedTermStructures_);
                         LOG("building " << name << " yield curve done");
                     } catch (const std::exception& e) {
                         processException(continueOnError, e);
@@ -282,24 +301,35 @@ ScenarioSimMarket::ScenarioSimMarket(
                         quotes.push_back(Handle<Quote>(q));
 
                         for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
-                            boost::shared_ptr<SimpleQuote> q(
-                                new SimpleQuote(wrapperIndex->discount(yieldCurveDates[i + 1])));
+                            Real val = wrapperIndex->discount(yieldCurveDates[i + 1]);
+                            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(useSpreadedTermStructures_ ? 1.0 : val));
                             Handle<Quote> qh(q);
                             quotes.push_back(qh);
 
                             simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name, i),
                                                std::forward_as_tuple(q));
-
-                            DLOG("ScenarioSimMarket index curve " << name << " discount[" << i << "]=" << q->value());
+                            if (useSpreadedTermStructures_) {
+                                absoluteSimData_.emplace(std::piecewise_construct,
+                                                         std::forward_as_tuple(param.first, name, i),
+                                                         std::forward_as_tuple(val));
+                            }
+                            // FIXME where do we check whether the risk factor is simulated?
+                            DLOG("ScenarioSimMarket index curve " << name << " discount[" << i << "]=" << val);
                         }
+
                         // FIXME interpolation fixed to linear, added to xml??
                         boost::shared_ptr<YieldTermStructure> indexCurve;
-                        if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+                        if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister &&
+                            !useSpreadedTermStructures_) {
                             indexCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
                                 yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
                         } else {
-                            indexCurve = boost::shared_ptr<YieldTermStructure>(
-                                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+                            if (useSpreadedTermStructures_)
+                                indexCurve = boost::shared_ptr<YieldTermStructure>(
+                                    new QuantExt::SpreadedDiscountCurve(wrapperIndex, yieldCurveTimes, quotes, dc));
+                            else
+                                indexCurve = boost::shared_ptr<YieldTermStructure>(
+                                    new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
                         }
 
                         // wrapped curve, is slower than a native curve
@@ -552,6 +582,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                 !convertToNormal && wrapper->volatilityType() == ShiftedLognormal
                                                     ? wrapper->shift(optionTenors[i], underlyingTenors[j])
                                                     : 0.0;
+                                            DLOG("AtmVol at " << optionTenors.at(i) << "/" << underlyingTenors.at(j)
+                                                              << " is " << vol << ", shift is " << shift[i][j]
+                                                              << ", (name,index) = (" << name << "," << index << ")");
+                                        } else {
+                                            DLOG("SmileVol at " << optionTenors.at(i) << "/" << underlyingTenors.at(j)
+                                                                << "/" << strikeSpreads.at(k) << " is " << vol
+                                                                << ", (name,index) = (" << name << "," << index << ")");
                                         }
                                     }
                                 }
@@ -642,7 +679,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             // We use this to convert Period to Date below to sample from `wrapper`
                             boost::shared_ptr<IborIndex> iborIndex;
                             Date spotDate;
-                            Calendar capCalendar;
+                            Calendar iborCalendar;
                             string strIborIndex;
                             Natural settleDays = 0;
                             if (curveConfigs.hasCapFloorVolCurveConfig(name)) {
@@ -652,10 +689,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 settleDays = config->settleDays();
                                 strIborIndex = config->iborIndex();
                                 if (tryParseIborIndex(strIborIndex, iborIndex)) {
-                                    capCalendar = iborIndex->fixingCalendar();
+                                    iborCalendar = iborIndex->fixingCalendar();
                                     Natural settlementDays = iborIndex->fixingDays();
-                                    spotDate = capCalendar.adjust(asof_);
-                                    spotDate = capCalendar.advance(spotDate, settlementDays * Days);
+                                    spotDate = iborCalendar.adjust(asof_);
+                                    spotDate = iborCalendar.advance(spotDate, settlementDays * Days);
                                 }
                             }
 
@@ -680,10 +717,10 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                             for (Size i = 0; i < optionTenors.size(); ++i) {
 
-                                if (iborIndex) {
+                                if (parameters_->capFloorVolAdjustOptionletPillars() && iborIndex) {
                                     // If we ask for cap pillars at tenors t_i for i = 1,...,N, we should attempt to
                                     // place the optionlet pillars at the fixing date of the last optionlet in the cap
-                                    // with tenor t_i
+                                    // with tenor t_i, if capFloorVolAdjustOptionletPillars is true.
                                     QL_REQUIRE(optionTenors[i] > iborIndex->tenor(),
                                                "The cap floor tenor must be greater than the ibor index tenor");
                                     boost::shared_ptr<CapFloor> capFloor =
@@ -692,7 +729,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     DLOG("Option [tenor, date] pair is [" << optionTenors[i] << ", "
                                                                           << io::iso_date(optionDates[i]) << "]");
                                 } else {
+                                    // Otherwise, just place the optionlet pillars at the configured tenors.
                                     optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
+                                    if (iborCalendar != Calendar()) {
+                                        // In case the original cap floor surface has the incorrect calendar configured.
+                                        optionDates[i] = iborCalendar.adjust(optionDates[i]);
+                                    }
                                 }
 
                                 // If ATM, use initial market's discount curve and ibor index to calculate ATM rate
@@ -700,11 +742,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 if (isAtm) {
                                     QL_REQUIRE(!strIborIndex.empty(), "Expected cap floor vol curve config for "
                                                                           << name << " to have an ibor index name");
-                                    initMarket->iborIndex(strIborIndex, configuration);
-                                    boost::shared_ptr<CapFloor> cap = MakeCapFloor(
-                                        CapFloor::Cap, optionTenors[i],
-                                        *initMarket->iborIndex(strIborIndex, configuration), 0.0, 0 * Days);
-                                    strike = cap->atmRate(**initMarket->discountCurve(name, configuration));
+                                    auto iborIndex = *initMarket->iborIndex(strIborIndex, configuration);
+                                    if (parameters_->capFloorVolUseCapAtm()) {
+                                        boost::shared_ptr<CapFloor> cap = MakeCapFloor(
+                                            CapFloor::Cap, optionTenors[i], iborIndex, 0.0, 0 * Days);
+                                        strike = cap->atmRate(**initMarket->discountCurve(name, configuration));
+                                    } else {
+                                        strike = iborIndex->fixing(optionDates[i]);
+                                    }
                                 }
 
                                 for (Size j = 0; j < strikes.size(); ++j) {
@@ -790,7 +835,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Calendar cal = ore::data::parseCalendar(parameters->defaultCurveCalendar(name));
                         // FIXME riskmarket uses SurvivalProbabilityCurve but this isn't added to ore
                         boost::shared_ptr<DefaultProbabilityTermStructure> defaultCurve(
-                            new QuantExt::SurvivalProbabilityCurve<Linear>(dates, quotes, dc, cal));
+                            new QuantExt::SurvivalProbabilityCurve<LogLinear>(dates, quotes, dc, cal));
                         Handle<DefaultProbabilityTermStructure> dch(defaultCurve);
 
                         dch->enableExtrapolation();
@@ -1024,6 +1069,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     forTS = discountCurve(forCcy);
                                     domTS = discountCurve(domCcy);
                                 }
+                                // set up a FX Index
+                                boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>(name, 0, parseCurrency(forCcy), 
+                                    parseCurrency(domCcy), cal, spot, forTS, domTS);
+
                                 bool stickyStrike = true;
                                 bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
 
@@ -1033,10 +1082,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             cal, spot, times, parameters->fxVolMoneyness(name), quotes, dc, forTS,
                                             domTS, stickyStrike, flatExtrapolation));
                                 } else { // standard deviations
-                                    fxVolCurve =
-                                        boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceSurfaceStdDevs(
-                                            cal, spot, times, parameters->fxVolStdDevs(name), quotes, dc, forTS, domTS,
-                                            stickyStrike, flatExtrapolation));
+                                    fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
+                                        new BlackVarianceSurfaceStdDevs(cal, spot, times, parameters->fxVolStdDevs(name), quotes, 
+                                            dc, fxIndex, stickyStrike, flatExtrapolation));
                                 }
 
                             } else {
@@ -1081,62 +1129,139 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     try {
                         Handle<BlackVolTermStructure> wrapper = initMarket->equityVol(name, configuration);
-
                         Handle<BlackVolTermStructure> evh;
 
                         if (param.second.first) {
-                            Handle<Quote> spot = equitySpots_[make_pair(Market::defaultConfiguration, name)];
-                            Size n = parameters->equityVolMoneyness().size();
-                            Size m = parameters->equityVolExpiries().size();
-                            vector<vector<Handle<Quote>>> quotes(n, vector<Handle<Quote>>(m, Handle<Quote>()));
+                            auto eqCurve = equityCurve(name, Market::defaultConfiguration);
+                            Handle<Quote> spot = eqCurve->equitySpot();
+                            auto expiries = parameters->equityVolExpiries(name);
+                            
+                            Size m = expiries.size();
+                            vector<vector<Handle<Quote>>> quotes;
                             vector<Time> times(m);
-                            Calendar cal = wrapper->calendar();
+                            vector<Date> dates(m);
+                            Calendar cal;
+                            if (curveConfigs.hasEquityVolCurveConfig(name)) {
+                                auto cfg = curveConfigs.equityVolCurveConfig(name);
+                                cal = parseCalendar(cfg->calendar());
+                            }
+                            if (cal.empty() || cal == NullCalendar()) {
+                                // take the equity curves calendar - this at least ensures fixings align
+                                cal = eqCurve->fixingCalendar();
+                            }
                             DayCounter dc = ore::data::parseDayCounter(parameters->equityVolDayCounter(name));
-                            bool atmOnly = parameters->simulateEquityVolATMOnly();
+                            
+                            for (Size k = 0; k < m; k++) {
+                                dates[k] = cal.advance(asof_, expiries[k]);
+                                times[k] = dc.yearFraction(asof_, dates[k]);
+                            }
 
-                            for (Size i = 0; i < n; i++) {
-                                Real mon = parameters->equityVolMoneyness()[i];
-                                // strike
-                                Real k = atmOnly ? Null<Real>() : spot->value() * mon;
+                            boost::shared_ptr<BlackVolTermStructure> eqVolCurve;
 
+                            if (parameters->equityVolIsSurface(name)) {
+                                vector<Real> strikes;
+                                strikes = parameters->equityUseMoneyness(name) ? parameters->equityVolMoneyness(name) :
+                                    parameters->equityVolStandardDevs(name);
+                                Size n = strikes.size();
+                                quotes.resize(n, vector<Handle<Quote>>(m, Handle<Quote>()));
+
+                                if (parameters->equityUseMoneyness(name)) { // moneyness surface
+                                    for (Size j = 0; j < m; j++) {
+                                        for (Size i = 0; i < n; i++) {
+                                            Real mon = strikes[i];
+                                            // strike
+                                            Real k = spot->value() * mon;
+                                        
+                                            Size idx = i * m + j;
+                                            Volatility vol = wrapper->blackVol(asof_ + expiries[j], k);
+                                            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                                            simDataTmp.emplace(std::piecewise_construct,
+                                                std::forward_as_tuple(param.first, name, idx),
+                                                std::forward_as_tuple(q));
+                                            quotes[i][j] = Handle<Quote>(q);
+                                        }
+                                    }
+                                    LOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << name);
+                                    // If true, the strikes are fixed, if false they move with the spot handle
+                                    // Should probably be false, but some people like true for sensi runs.
+                                    bool stickyStrike = true;
+
+                                    eqVolCurve =
+                                        boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceSurfaceMoneynessSpot(
+                                            cal, spot, times, parameters->equityVolMoneyness(name), quotes, dc, stickyStrike));
+                                    eqVolCurve->enableExtrapolation();
+
+                                } else { // standard deviations surface
+                                    //forwards
+                                    vector<Real> fwds;
+                                    vector<Real> atmVols;                                    
+                                    for (Size i = 0; i < expiries.size(); i++) {
+                                        auto eqForward = eqCurve->forecastFixing(dates[i]);
+                                        fwds.push_back(eqForward);
+                                        atmVols.push_back(wrapper->blackVol(dates[i], eqForward));
+                                        DLOG("atmVol(s) is " << atmVols.back() << " on date " << dates[i]);
+                                    }
+
+                                    // interpolations
+                                    Interpolation forwardCurve = Linear().interpolate(times.begin(), times.end(), fwds.begin());
+                                    Interpolation atmVolCurve = Linear().interpolate(times.begin(), times.end(), atmVols.begin());
+
+                                    // populate quotes
+                                    BlackVarianceSurfaceStdDevs::populateVolMatrix(wrapper, quotes,
+                                        expiries, strikes, forwardCurve, atmVolCurve);
+
+                                    // add to simDataTemp
+                                    for (Size i = 0; i < m; i++) {
+                                        for (Size j = 0; j < n; j++) {
+                                            Size idx = j * m + i;
+                                            boost::shared_ptr<Quote> q = quotes[j][i].currentLink();
+                                            boost::shared_ptr<SimpleQuote> sq = boost::dynamic_pointer_cast<SimpleQuote>(q);
+                                            QL_REQUIRE(sq, "Quote is not a SimpleQuote"); // why do we need this?
+                                            simDataTmp.emplace(std::piecewise_construct,
+                                                std::forward_as_tuple(param.first, name, idx),
+                                                std::forward_as_tuple(sq));
+                                        }
+                                    }
+                                    // If true, the strikes are fixed, if false they move with the spot handle
+                                    // Should probably be false, but some people like true for sensi runs.
+                                    bool stickyStrike = true;
+                                    bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
+                                    eqVolCurve = boost::shared_ptr<BlackVolTermStructure>(
+                                        new BlackVarianceSurfaceStdDevs(cal, spot, times, parameters->equityVolStandardDevs(name), 
+                                            quotes, dc, eqCurve.currentLink(), stickyStrike, flatExtrapolation));
+                                }
+                            } else { // not a surface - case for ATM or simulateATMOnly
+                                quotes.resize(1, vector<Handle<Quote>>(m, Handle<Quote>()));
+                                // Only need ATM quotes in this case
                                 for (Size j = 0; j < m; j++) {
                                     // Index is expires then moneyness. TODO: is this the best?
-                                    Size idx = i * m + j;
-                                    times[j] = dc.yearFraction(asof_, asof_ + parameters->equityVolExpiries()[j]);
-                                    Volatility vol = wrapper->blackVol(asof_ + parameters->equityVolExpiries()[j], k);
+                                    Size idx = j;
+                                    auto eqForward = eqCurve->fixing(dates[j]);
+                                    Volatility vol = wrapper->blackVol(dates[j], eqForward);
                                     boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                                     simDataTmp.emplace(std::piecewise_construct,
-                                                       std::forward_as_tuple(param.first, name, idx),
-                                                       std::forward_as_tuple(q));
-                                    quotes[i][j] = Handle<Quote>(q);
+                                        std::forward_as_tuple(param.first, name, idx),
+                                        std::forward_as_tuple(q));
+                                    quotes[0][j] = Handle<Quote>(q);
                                 }
-                            }
-                            boost::shared_ptr<BlackVolTermStructure> eqVolCurve;
-                            if (!parameters->simulateEquityVolATMOnly()) {
-                                LOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << name);
-                                // If true, the strikes are fixed, if false they move with the spot handle
-                                // Should probably be false, but some people like true for sensi runs.
-                                bool stickyStrike = true;
 
-                                eqVolCurve =
-                                    boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceSurfaceMoneynessSpot(
-                                        cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
-                                eqVolCurve->enableExtrapolation();
-                            } else {
-                                LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << name);
-                                eqVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
+                                LOG("ATM EQ Vols (BlackVarianceCurve3) for " << name);
+                                auto atmCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
                                     0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false));
-                            }
+                                
+                                // if we have a surface but are only simulating atm vols we wrap the atm curve and the full
+                                // t0 surface
+                                if (parameters->simulateEquityVolATMOnly()) {
+                                    LOG("Simulating EQ Vols (EquityVolatilityConstantSpread) for " << name);
+                                    eqVolCurve = boost::make_shared<EquityVolatilityConstantSpread>(
+                                        Handle<BlackVolTermStructure>(atmCurve), wrapper);
+                                } else {
+                                    eqVolCurve = atmCurve;
+                                }
 
-                            // if we have a surface but are only simulating atm vols we wrap the atm curve and the full
-                            // t0 surface
-                            if (parameters->equityVolIsSurface() && parameters->simulateEquityVolATMOnly()) {
-                                LOG("Simulating EQ Vols (EquityVolatilityConstantSpread) for " << name);
-                                evh = Handle<BlackVolTermStructure>(boost::make_shared<EquityVolatilityConstantSpread>(
-                                    Handle<BlackVolTermStructure>(eqVolCurve), wrapper));
-                            } else {
-                                evh = Handle<BlackVolTermStructure>(eqVolCurve);
-                            }
+                            }                            
+                            evh = Handle<BlackVolTermStructure>(eqVolCurve);
+                            
                         } else {
                             string decayModeString = parameters->equityVolDecayMode();
                             DLOG("Deterministic EQ Vols with decay mode " << decayModeString << " for " << name);
@@ -1866,14 +1991,95 @@ ScenarioSimMarket::ScenarioSimMarket(
     }
 
     LOG("building base scenario");
-    baseScenario_ = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
+    auto absolute = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
     for (auto const& data : simData_) {
-        baseScenario_->add(data.first, data.second->value());
+        absolute->add(data.first, data.second->value());
+    }
+    if (useSpreadedTermStructures) {
+        // overwrite the keys for which we have both a spread and absolute value
+        auto spread = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
+        for (auto const& data : absoluteSimData_) {
+            absolute->add(data.first, data.second);
+            spread->add(data.first, simData_.at(data.first)->value());
+        }
+        baseScenario_ = boost::make_shared<SpreadScenario>(absolute, spread);
+    } else {
+        baseScenario_ = absolute;
     }
     LOG("building base scenario done");
 }
 
+void ScenarioSimMarket::reset() {
+    auto filterBackup = filter_;
+    // no filter
+    filter_ = boost::make_shared<ScenarioFilter>();
+    // reset eval date
+    Settings::instance().evaluationDate() = baseScenario_->asof();
+    // reset numeraire
+    numeraire_ = baseScenario_->getNumeraire();
+    // delete the sim data cache
+    cachedSimData_.clear();
+    cachedSimDataActive_.clear();
+    // reset term structures
+    applyScenario(baseScenario_);
+    // see the comment in update() for why this is necessary...
+    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+        boost::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
+        obs->notifyObservers();
+    }
+    // reset fixing manager
+    fixingManager_->reset();
+    // restore the filter
+    filter_ = filterBackup;
+}
+
 void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenario) {
+
+    // apply scenario based on cached indices for simData_ for a SimpleScenario
+    // this assumes that all scenarios have an identical key structure in their data map
+
+    if (cacheSimData_) {
+        if (auto s = boost::dynamic_pointer_cast<SimpleScenario>(scenario)) {
+
+            // fill cache
+
+            if (cachedSimData_.empty()) {
+                Size count = 0;
+                for (auto const& d : s->data()) {
+                    auto it = simData_.find(d.first);
+                    if (it == simData_.end()) {
+                        ALOG("simulation data point missing for key " << d.first);
+                        cachedSimData_.push_back(boost::shared_ptr<SimpleQuote>());
+                        cachedSimDataActive_.push_back(false);
+                    } else {
+                        ++count;
+                        cachedSimData_.push_back(it->second);
+                        cachedSimDataActive_.push_back(filter_->allow(d.first));
+                    }
+                }
+                if (count != simData_.size() && !allowPartialScenarios_) {
+                    ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
+                    for (auto it : simData_) {
+                        if (!scenario->has(it.first))
+                            WLOG("Key " << it.first << " missing in scenario");
+                    }
+                    QL_FAIL("mismatch between scenario and sim data size, exit.");
+                }
+            }
+
+            // apply scenario data according to cached indices
+
+            Size i = 0;
+            for (auto const& q : s->data()) {
+                if (cachedSimDataActive_[i])
+                    cachedSimData_[i]->setValue(q.second);
+                ++i;
+            }
+
+            return;
+        }
+    }
+
     const vector<RiskFactorKey>& keys = scenario->keys();
 
     Size count = 0;
@@ -1894,7 +2100,7 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
         }
     }
 
-    if (count != simData_.size()) {
+    if (count != simData_.size() && !allowPartialScenarios_) {
         ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
         for (auto it : simData_) {
             if (!scenario->has(it.first))
@@ -1904,45 +2110,21 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
     }
 
     // update market asof date
-    asof_ = scenario->asof();
+    // asof_ = scenario->asof();
 }
 
-void ScenarioSimMarket::reset() {
-    auto filterBackup = filter_;
-    // no filter
-    filter_ = boost::make_shared<ScenarioFilter>();
-    // reset eval date
-    Settings::instance().evaluationDate() = baseScenario_->asof();
-    // reset numeraire
-    numeraire_ = baseScenario_->getNumeraire();
-    // reset term structures
-    applyScenario(baseScenario_);
-    // see the comment in update() for why this is necessary...
-    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
-        boost::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
-        obs->notifyObservers();
-    }
-    // reset fixing manager
-    fixingManager_->reset();
-    // restore the filter
-    filter_ = filterBackup;
-}
-
+/*
 void ScenarioSimMarket::update(const Date& d) {
     // DLOG("ScenarioSimMarket::update called with Date " << QuantLib::io::iso_date(d));
-    QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
 
+    // pre update observable settings
     ObservationMode::Mode om = ObservationMode::instance().mode();
     if (om == ObservationMode::Mode::Disable)
         ObservableSettings::instance().disableUpdates(false);
     else if (om == ObservationMode::Mode::Defer)
         ObservableSettings::instance().disableUpdates(true);
 
-    boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
-    QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
-
-    numeraire_ = scenario->getNumeraire();
-
+    // update date
     if (d != Settings::instance().evaluationDate())
         Settings::instance().evaluationDate() = d;
     else if (om == ObservationMode::Mode::Unregister) {
@@ -1956,9 +2138,14 @@ void ScenarioSimMarket::update(const Date& d) {
         obs->notifyObservers();
     }
 
+    // update scenario and market quotes
+    QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
+    boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
+    QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
+    numeraire_ = scenario->getNumeraire();
     applyScenario(scenario);
 
-    // Observation Mode - key to update these before fixings are set
+    // post market update observable settings and refresh - key to update these before fixings are set
     if (om == ObservationMode::Mode::Disable) {
         refresh();
         ObservableSettings::instance().enableUpdates();
@@ -1996,6 +2183,83 @@ void ScenarioSimMarket::update(const Date& d) {
     }
 
     // DLOG("ScenarioSimMarket::update done");
+}
+*/
+  
+void ScenarioSimMarket::preUpdate() {
+    ObservationMode::Mode om = ObservationMode::instance().mode();
+    if (om == ObservationMode::Mode::Disable)
+        ObservableSettings::instance().disableUpdates(false);
+    else if (om == ObservationMode::Mode::Defer)
+        ObservableSettings::instance().disableUpdates(true);
+ }
+  
+void ScenarioSimMarket::updateDate(const Date& d) {
+    ObservationMode::Mode om = ObservationMode::instance().mode();
+    if (d != Settings::instance().evaluationDate())
+        Settings::instance().evaluationDate() = d;
+    else if (om == ObservationMode::Mode::Unregister) {
+        // Due to some of the notification chains having been unregistered,
+        // it is possible that some lazy objects might be missed in the case
+        // that the evaluation date has not been updated. Therefore, we
+        // manually kick off an observer notification from this level.
+        // We have unit regression tests in OREAnalyticsTestSuite to ensure
+        // the various ObservationMode settings return the anticipated results.
+        boost::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
+        obs->notifyObservers();
+    }
+}
+
+void ScenarioSimMarket::updateScenario(const Date& d) {
+    QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
+    boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
+    QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
+    numeraire_ = scenario->getNumeraire();
+    applyScenario(scenario);
+}
+
+void ScenarioSimMarket::postUpdate(const Date& d, bool withFixings) {
+    ObservationMode::Mode om = ObservationMode::instance().mode();
+
+    // Observation Mode - key to update these before fixings are set
+    if (om == ObservationMode::Mode::Disable) {
+        refresh();
+        ObservableSettings::instance().enableUpdates();
+    } else if (om == ObservationMode::Mode::Defer) {
+        ObservableSettings::instance().enableUpdates();
+    }
+
+    // Apply fixings as historical fixings. Must do this before we populate ASD
+    if (withFixings)
+        fixingManager_->update(d);
+}
+
+void ScenarioSimMarket::updateAsd(const Date& d) {
+    if (asd_) {
+        // add additional scenario data to the given container, if required
+        for (auto i : parameters_->additionalScenarioDataIndices()) {
+	    boost::shared_ptr<QuantLib::Index> index;
+	    try {
+	        index = *iborIndex(i);
+            } catch (...) {
+            }
+            try {
+                index = *swapIndex(i);
+            } catch (...) {
+            }
+            QL_REQUIRE(index != nullptr, "ScenarioSimMarket::update() index " << i << " not found in sim market");
+	    asd_->set(index->fixing(d), AggregationScenarioDataType::IndexFixing, i);
+	}
+
+        for (auto c : parameters_->additionalScenarioDataCcys()) {
+            if (c != parameters_->baseCcy())
+                asd_->set(fxSpot(c + parameters_->baseCcy())->value(), AggregationScenarioDataType::FXSpot, c);
+        }
+
+        asd_->set(numeraire_, AggregationScenarioDataType::Numeraire);
+
+        asd_->next();
+    }
 }
 
 bool ScenarioSimMarket::isSimulated(const RiskFactorKey::KeyType& factor) const {

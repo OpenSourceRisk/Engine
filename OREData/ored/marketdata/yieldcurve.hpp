@@ -30,6 +30,7 @@
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/market.hpp>
+#include <ored/marketdata/yieldcurve.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
 namespace ore {
@@ -41,6 +42,7 @@ using ore::data::YieldCurveConfig;
 using ore::data::YieldCurveConfigMap;
 using ore::data::YieldCurveSegment;
 
+class DefaultCurve;
 class ReferenceDataManager;
 
 //! Wrapper class for building yield term structures
@@ -84,10 +86,16 @@ public:
         //! Map of underlying yield curves if required
         const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves =
             map<string, boost::shared_ptr<YieldCurve>>(),
+        //! Map of underlying default curves if required
+        const map<string, boost::shared_ptr<DefaultCurve>>& requiredDefaultCurves =
+            map<string, boost::shared_ptr<DefaultCurve>>(),
         //! FxTriangultion to get FX rate from cross if needed
         const FXTriangulation& fxTriangulation = FXTriangulation(),
         //! optional pointer to reference data, needed to build fitted bond curves
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        //! if true keep qloader quotes linked to yield ts, otherwise detach them
+        const bool preserveQuoteLinkage = false
+        );
 
     //! \name Inspectors
     //@{
@@ -118,6 +126,11 @@ private:
     void buildDiscountRatioCurve();
     //! Build a yield curve that uses QuantLib::FittedBondCurve
     void buildFittedBondCurve();
+    //! Build a yield curve that uses QuantExt::WeightedYieldTermStructure
+    void buildWeightedAverageCurve();
+    //! Build a yield curve that uses QuantExt::YieldPlusDefaultYieldTermStructure
+    void buildYieldPlusDefaultCurve();
+
     //! Return the yield curve with the given \p id from the requiredYieldCurves_ map
     boost::shared_ptr<YieldCurve> getYieldCurve(const std::string& ccy, const std::string& id) const;
 
@@ -126,8 +139,10 @@ private:
     InterpolationVariable interpolationVariable_;
     InterpolationMethod interpolationMethod_;
     map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
+    map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
     const FXTriangulation& fxTriangulation_;
     const boost::shared_ptr<ReferenceDataManager> referenceData_;
+    const bool preserveQuoteLinkage_;
 
     boost::shared_ptr<YieldTermStructure> piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instruments);
 

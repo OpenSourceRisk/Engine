@@ -19,6 +19,7 @@
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/pseudoparameter.hpp>
+#include <qle/utilities/inflation.hpp>
 
 #include <ql/experimental/math/piecewiseintegral.hpp>
 #include <ql/math/integrals/simpsonintegral.hpp>
@@ -26,8 +27,31 @@
 #include <ql/processes/eulerdiscretization.hpp>
 
 using namespace QuantExt::CrossAssetAnalytics;
+using std::map;
+using std::vector;
 
 namespace QuantExt {
+
+namespace CrossAssetModelTypes {
+
+std::ostream& operator<<(std::ostream& out, const AssetType& type) {
+    switch (type) {
+    case IR:
+        return out << "IR";
+    case FX:
+        return out << "FX";
+    case INF:
+        return out << "INF";
+    case CR:
+        return out << "CR";
+    case EQ:
+        return out << "EQ";
+    default:
+        QL_FAIL("Did not recognise cross asset model type " << static_cast<int>(type) << ".");
+    }
+}
+
+}
 
 CrossAssetModel::CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization> >& parametrizations,
                                  const Matrix& correlation, SalvagingAlgorithm::Type salvaging)
@@ -71,6 +95,14 @@ Size CrossAssetModel::infIndex(const std::string& index) const {
     while (i < components(INF) && inf(i)->name() != index)
         ++i;
     QL_REQUIRE(i < components(INF), "inflation index " << index << " not present in cross asset model");
+    return i;
+}
+
+Size CrossAssetModel::crName(const std::string& name) const {
+    Size i = 0;
+    while (i < components(CR) && cr(i)->name() != name)
+        ++i;
+    QL_REQUIRE(i < components(INF), "credit name " << name << " not present in cross asset model");
     return i;
 }
 
@@ -206,8 +238,12 @@ std::pair<AssetType, ModelType> CrossAssetModel::getComponentType(const Size i) 
         return std::make_pair(FX, BS);
     if (boost::dynamic_pointer_cast<InfDkParametrization>(p_[i]))
         return std::make_pair(INF, DK);
+    if (boost::dynamic_pointer_cast<InfJyParameterization>(p_[i]))
+        return std::make_pair(INF, JY);
     if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
         return std::make_pair(CR, LGM1F);
+    if (boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]))
+        return std::make_pair(CR, CIRPP);
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return std::make_pair(EQ, BS);
     QL_FAIL("parametrization " << i << " has unknown type");
@@ -220,8 +256,12 @@ Size CrossAssetModel::getNumberOfParameters(const Size i) const {
         return 1;
     if (boost::dynamic_pointer_cast<InfDkParametrization>(p_[i]))
         return 2;
+    if (boost::dynamic_pointer_cast<InfJyParameterization>(p_[i]))
+        return 3;
     if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
         return 2;
+    if (boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]))
+        return 4;
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return 1;
     QL_FAIL("parametrization " << i << " has unknown type");
@@ -234,7 +274,11 @@ Size CrossAssetModel::getNumberOfBrownians(const Size i) const {
         return 1;
     if (boost::dynamic_pointer_cast<InfDkParametrization>(p_[i]))
         return 1;
+    if (boost::dynamic_pointer_cast<InfJyParameterization>(p_[i]))
+        return 2;
     if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
+        return 1;
+    if (boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]))
         return 1;
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return 1;
@@ -248,7 +292,11 @@ Size CrossAssetModel::getNumberOfStateVariables(const Size i) const {
         return 1;
     if (boost::dynamic_pointer_cast<InfDkParametrization>(p_[i]))
         return 2;
+    if (boost::dynamic_pointer_cast<InfJyParameterization>(p_[i]))
+        return 2;
     if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
+        return 2;
+    if (boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]))
         return 2;
     if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
         return 1;
@@ -370,6 +418,15 @@ void CrossAssetModel::initializeParametrizations() {
 
     j = 0;
     while (i < p_.size() && getComponentType(i).first == CR) {
+
+        if (getComponentType(i).second == CIRPP) {
+            auto tmp = boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]);
+            QL_REQUIRE(tmp,
+                       "CrossAssetModelPlus::initializeParametrizations(): expected CrCirppParametrization");
+            crcirppModel_.push_back(boost::make_shared<CrCirpp>(tmp));
+        } else
+            crcirppModel_.push_back(boost::shared_ptr<CrCirpp>());
+
         updateIndices(CR, i, cIdxTmp, pIdxTmp, aIdxTmp);
         cIdxTmp += getNumberOfBrownians(i);
         pIdxTmp += getNumberOfStateVariables(i);
@@ -558,6 +615,49 @@ void CrossAssetModel::calibrateInfDkReversionsGlobal(
     update();
 }
 
+void CrossAssetModel::calibrateInfJyGlobal(Size index,
+    const vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+    OptimizationMethod& method,
+    const EndCriteria& endCriteria,
+    const map<Size, bool>& toCalibrate,
+    const Constraint& constraint,
+    const vector<Real>& weights) {
+
+    // Initialise the parameters to move first to get the size.
+    vector<bool> fixedParams = MoveParameter(INF, 0, index, Null<Size>());
+    std::fill(fixedParams.begin(), fixedParams.end(), true);
+
+    // Update fixedParams with parameters that need to be calibrated.
+    for (const auto& kv : toCalibrate) {
+        if (kv.second) {
+            vector<bool> tmp = MoveParameter(INF, kv.first, index, Null<Size>());
+            std::transform(fixedParams.begin(), fixedParams.end(), tmp.begin(),
+                fixedParams.begin(), std::logical_and<bool>());
+        }
+    }
+
+    // Perform the calibration
+    calibrate(helpers, method, endCriteria, constraint, weights, fixedParams);
+
+    update();
+}
+
+void CrossAssetModel::calibrateInfJyIterative(Size mIdx,
+    Size pIdx,
+    const vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+    OptimizationMethod& method,
+    const EndCriteria& endCriteria,
+    const Constraint& constraint,
+    const vector<Real>& weights) {
+
+    for (Size i = 0; i < helpers.size(); ++i) {
+        vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
+        calibrate(h, method, endCriteria, constraint, weights, MoveParameter(INF, pIdx, mIdx, i));
+    }
+
+    update();
+}
+
 void CrossAssetModel::calibrateCrLgm1fVolatilitiesIterative(
     const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
     OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
@@ -607,21 +707,13 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
     Real Hyt = Hy(i).eval(this, t);
     Real HyT = Hy(i).eval(this, T);
 
-    // lag computation
-    Date baseDate = infdk(i)->termStructure()->baseDate();
-    Frequency freq = infdk(i)->termStructure()->frequency();
-    Real lag = inflationYearFraction(freq, infdk(i)->termStructure()->indexIsInterpolated(),
-                                     irlgm1f(0)->termStructure()->dayCounter(), baseDate,
-                                     infdk(i)->termStructure()->referenceDate());
-
-    //    Period lag = infdk(i)->termStructure()->observationLag();
-
     // TODO account for seasonality ...
     // compute final results depending on z and y
-    Real It = std::pow(1.0 + infdk(i)->termStructure()->zeroRate(t - lag), t) * std::exp(Hyt * z - y - V0);
-    Real Itilde_t_T = std::pow(1.0 + infdk(i)->termStructure()->zeroRate(T - lag), T) /
-                      std::pow(1.0 + infdk(i)->termStructure()->zeroRate(t - lag), t) *
-                      std::exp((HyT - Hyt) * z + V_tilde);
+    const auto& zts = infdk(i)->termStructure();
+    auto dc = irlgm1f(0)->termStructure()->dayCounter();
+    Real growth_t = inflationGrowth(zts, t, dc);
+    Real It = growth_t * std::exp(Hyt * z - y - V0);
+    Real Itilde_t_T = inflationGrowth(zts, T, dc) / growth_t * std::exp((HyT - Hyt) * z + V_tilde);
     // concerning interpolation there is an inaccuracy here: if the index
     // is not interpolated, we still simulate the index value as of t
     // (and T), although we should go back to t, T which corresponds to
@@ -651,6 +743,7 @@ std::pair<Real, Real> CrossAssetModel::crlgm1fS(const Size i, const Size ccy, co
                                                 const Real y) const {
     QL_REQUIRE(ccy < components(IR), "ccy index (" << ccy << ") must be in 0..." << (components(IR) - 1));
     QL_REQUIRE(t < T || close_enough(t, T), "crlgm1fS: t (" << t << ") <= T (" << T << ") required");
+    QL_REQUIRE(modelType(CR, i) == LGM1F, "model at " << i << " is not CR-LGM1F");
     cache_key k = { i, ccy, t, T };
     boost::unordered_map<cache_key, std::pair<Real, Real> >::const_iterator it = cache_crlgm1fS_.find(k);
     Real V0, V_tilde;
@@ -689,6 +782,15 @@ std::pair<Real, Real> CrossAssetModel::crlgm1fS(const Size i, const Size ccy, co
     Real Stilde_t_T = crlgm1f(i)->termStructure()->survivalProbability(T) /
                       crlgm1f(i)->termStructure()->survivalProbability(t) * std::exp(-(HlT - Hlt) * z + V_tilde);
     return std::make_pair(St, Stilde_t_T);
+}
+
+std::pair<Real, Real> CrossAssetModel::crcirppS(const Size i, const Time t, const Time T,
+                                                const Real y, const Real s) const {
+    QL_REQUIRE(modelType(CR, i) == CIRPP, "model at " << i << " is not CR-CIR")
+    if (close_enough(t, T))
+        return std::make_pair(s, 1.0);
+    else
+        return std::make_pair(s, crcirppModel_[i]->survivalProbability(t, T, y));
 }
 
 Real CrossAssetModel::infV(const Size i, const Size ccy, const Time t, const Time T) const {
@@ -737,6 +839,18 @@ Real CrossAssetModel::crV(const Size i, const Size ccy, const Time t, const Time
                     integral(this, P(Hz(ccy), az(ccy), Hl(i), al(i)), t, T)) -
            rhoxl *
                (HlT * integral(this, P(sx(ccy - 1), al(i)), t, T) - integral(this, P(sx(ccy - 1), Hl(i), al(i)), t, T));
+}
+
+Handle<ZeroInflationTermStructure> inflationTermStructure(
+    const boost::shared_ptr<CrossAssetModel>& model, Size index) {
+    
+    if (model->modelType(INF, index) == DK) {
+        return model->infdk(index)->termStructure();
+    } else if (model->modelType(INF, index) == JY) {
+        return model->infjy(index)->realRate()->termStructure();
+    } else {
+        QL_FAIL("Expected inflation model to be either DK or JY.");
+    }
 }
 
 } // namespace QuantExt

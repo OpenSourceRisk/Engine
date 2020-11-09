@@ -90,19 +90,7 @@ public:
     //@}
 
     //! Reset trade, clear all base class data
-    void reset() {
-        // This is now being done in the build() function.
-        // instrument_ = boost::shared_ptr<QuantLib::Instrument>(); //TODO Wrapper
-        legs_.clear();
-        legCurrencies_.clear();
-        legPayers_.clear();
-        npvCurrency_ = "";
-        notional_ = Null<Real>();
-        notionalCurrency_ = "";
-        maturity_ = Date();
-        tradeActions_.clear();
-        requiredFixings_.clear();
-    }
+    void reset();
 
     //! \name Setters
     //@{
@@ -176,9 +164,9 @@ protected:
     // into the InstrumentWrapper. This utility creates the additional instrument. The actual insertion into the
     // instrument wrapper is done in the individual trade builders when they instantiate the InstrumentWrapper.
     void addPayment(std::vector<boost::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
-                    const Date& paymentDate, const Real& paymentAmount, const Currency& paymentCurrency,
-                    const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
-                    const string& configuration);
+                    const Real tradeMultiplier, const Date& paymentDate, const Real& paymentAmount,
+                    const Currency& paymentCurrency, const Currency& tradeCurrency,
+                    const boost::shared_ptr<EngineFactory>& factory, const string& configuration);
 
     RequiredFixings requiredFixings_;
 

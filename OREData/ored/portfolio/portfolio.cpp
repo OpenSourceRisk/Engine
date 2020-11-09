@@ -71,7 +71,6 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
         string id = XMLUtils::getAttribute(nodes[i], "id");
         QL_REQUIRE(id != "", "No id attribute in Trade Node");
         DLOG("Parsing trade id:" << id);
-
         boost::shared_ptr<Trade> trade = factory->build(tradeType);
 
         if (trade) {
@@ -130,6 +129,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     auto trade = trades_.begin();
     while (trade != trades_.end()) {
         try {
+            (*trade)->reset();
             (*trade)->build(engineFactory);
             TLOG("Required Fixings for trade " << (*trade)->id() << ":");
             TLOGGERSTREAM << (*trade)->requiredFixings();
@@ -164,6 +164,22 @@ map<string, string> Portfolio::nettingSetMap() const {
     for (auto t : trades_)
         nettingSetMap[t->id()] = t->envelope().nettingSetId();
     return nettingSetMap;
+}
+
+std::vector<std::string> Portfolio::counterparties() const {
+    vector<string> counterparties;
+    for (auto t : trades_)
+        counterparties.push_back(t->envelope().counterparty());
+    sort(counterparties.begin(), counterparties.end());
+    counterparties.erase(unique(counterparties.begin(),counterparties.end()), counterparties.end());
+    return counterparties;
+}
+
+map<string, set<string>> Portfolio::counterpartyNettingSets() const {
+    map<string, set<string>> cpNettingSets;
+    for (auto t : trades_)
+        cpNettingSets[t->envelope().counterparty()].insert(t->envelope().nettingSetId());
+    return cpNettingSets;
 }
 
 void Portfolio::add(const boost::shared_ptr<Trade>& trade, const bool checkForDuplicateIds) {

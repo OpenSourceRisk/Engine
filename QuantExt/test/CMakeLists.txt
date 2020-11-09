@@ -12,6 +12,7 @@ cashflow.cpp
 commodityforward.cpp
 correlationtermstructure.cpp
 cpicapfloor.cpp
+crcirpp.cpp
 crossassetmodel.cpp
 crossassetmodel2.cpp
 crossassetmodelparametrizations.cpp
@@ -20,6 +21,7 @@ crossccybasismtmresetswaphelper.cpp
 crossccyfixfloatswap.cpp
 crossccyfixfloatswaphelper.cpp
 currency.cpp
+dategeneration.cpp
 deltagammavar.cpp
 deposit.cpp
 discountcurve.cpp
@@ -51,7 +53,6 @@ strippedoptionletadapter2.cpp
 survivalprobabilitycurve.cpp
 swaptionvolatilityconverter.cpp
 swaptionvolconstantspread.cpp
-dategeneration.cpp
 testsuite.cpp)
 
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})

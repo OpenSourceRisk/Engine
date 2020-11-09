@@ -259,6 +259,61 @@ set<string> CurveConfigurations::yieldCurveConfigIds() {
     return curves;
 }
 
+namespace {
+template <typename T>
+void addRequiredCurveIds(const std::string& curveId, const std::map<std::string, boost::shared_ptr<T>>& configs,
+                         std::map<CurveSpec::CurveType, std::set<string>>& result) {
+    auto c = configs.find(curveId);
+    if (c != configs.end()) {
+        auto r = c->second->requiredCurveIds();
+        result.insert(r.begin(), r.end());
+    }
+}
+} // namespace
+
+std::map<CurveSpec::CurveType, std::set<string>>
+CurveConfigurations::requiredCurveIds(const CurveSpec::CurveType& type, const std::string& curveId) const {
+    std::map<CurveSpec::CurveType, std::set<string>> result;
+    if (type == CurveSpec::CurveType::Yield)
+        addRequiredCurveIds(curveId, yieldCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::FXVolatility)
+        addRequiredCurveIds(curveId, fxVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::SwaptionVolatility)
+        addRequiredCurveIds(curveId, swaptionVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::YieldVolatility)
+        addRequiredCurveIds(curveId, yieldVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::CapFloorVolatility)
+        addRequiredCurveIds(curveId, capFloorVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::Default)
+        addRequiredCurveIds(curveId, defaultCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::CDSVolatility)
+        addRequiredCurveIds(curveId, cdsVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::BaseCorrelation)
+        addRequiredCurveIds(curveId, baseCorrelationCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::Inflation)
+        addRequiredCurveIds(curveId, inflationCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::InflationCapFloorVolatility)
+        addRequiredCurveIds(curveId, inflationCapFloorVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::Equity)
+        addRequiredCurveIds(curveId, equityCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::EquityVolatility)
+        addRequiredCurveIds(curveId, equityVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::Security)
+        addRequiredCurveIds(curveId, securityConfigs_, result);
+    else if (type == CurveSpec::CurveType::FX)
+        addRequiredCurveIds(curveId, fxSpotConfigs_, result);
+    else if (type == CurveSpec::CurveType::Commodity)
+        addRequiredCurveIds(curveId, commodityCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::CommodityVolatility)
+        addRequiredCurveIds(curveId, commodityVolatilityConfigs_, result);
+    else if (type == CurveSpec::CurveType::Correlation)
+        addRequiredCurveIds(curveId, correlationCurveConfigs_, result);
+    else {
+        QL_FAIL("CurveConfigurations::requiredCurveIds(): unhandled curve spec type");
+    }
+    return result;
+}
+
 bool CurveConfigurations::hasYieldCurveConfig(const string& curveID) const { return has(curveID, yieldCurveConfigs_); }
 
 const boost::shared_ptr<YieldCurveConfig>& CurveConfigurations::yieldCurveConfig(const string& curveID) const {

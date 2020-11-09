@@ -25,6 +25,7 @@
 #include <map>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
@@ -32,6 +33,7 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
+#include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/austria.hpp>
 #include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>
@@ -168,7 +170,7 @@ bool parseBool(const string& s) {
     }
 }
 
-Calendar parseCalendar(const string& s, bool adjustCalendar) {
+Calendar parseCalendar(const string& s, const string& newName) {
     static map<string, Calendar> m = {
         {"TGT", TARGET()},
         {"TARGET", TARGET()},
@@ -447,18 +449,13 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
     auto it = m.find(s);
     if (it != m.end()) {
         Calendar cal = it->second;
-        if (adjustCalendar) {
-            // add custom holidays from populated calendar adjustments
-            const CalendarAdjustmentConfig& config = CalendarAdjustments::instance().config();
-            for (auto h : config.getHolidays(s)) {
-                cal.addHoliday(h);
-            }
-            for (auto b : config.getBusinessDays(s)) {
-                cal.removeHoliday(b);
-            }
+        if (newName != "") {
+            Calendar newCal = AmendedCalendar(cal, newName);
+            m[newName] = newCal;
+            return newCal;
+        } else {
+            return cal;
         }
-        return cal;
-
     } else {
         // Try to split them up
         vector<string> calendarNames;
@@ -477,7 +474,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
         for (Size i = 0; i < calendarNames.size(); i++) {
             boost::trim(calendarNames[i]);
             try {
-                calendars.push_back(parseCalendar(calendarNames[i], adjustCalendar));
+                calendars.push_back(parseCalendar(calendarNames[i]));
             } catch (std::exception& e) {
                 QL_FAIL("Cannot convert \"" << s << "\" to Calendar [exception:" << e.what() << "]");
             } catch (...) {
@@ -601,7 +598,8 @@ Currency parseCurrency(const string& s) {
         {"VND", VNDCurrency()}, {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()},
         {"MAD", MADCurrency()}, {"UYU", UYUCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()},
         {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"KES", KESCurrency()}, {"LKR", LKRCurrency()},
-        {"RSD", RSDCurrency()}};
+        {"RSD", RSDCurrency()}, {"COU", COUCurrency()}, {"MUR", MURCurrency()}, {"UGX", UGXCurrency()},
+        {"ZMW", ZMWCurrency()}, {"GHS", GHSCurrency()}, {"JOD", JODCurrency()}, {"HRK", HRKCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -749,18 +747,38 @@ Option::Type parseOptionType(const std::string& s) {
     }
 }
 
-void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
+boost::variant<QuantLib::Date, QuantLib::Period> parseDateOrPeriod(const string& s) {
     QL_REQUIRE(!s.empty(), "Cannot parse empty string as date or period");
     string c(1, s.back());
     bool isPeriod = c.find_first_of("DdWwMmYy") != string::npos;
     if (isPeriod) {
-        p = ore::data::parsePeriod(s);
-        isDate = false;
+        return ore::data::parsePeriod(s);
     } else {
-        d = ore::data::parseDate(s);
-        QL_REQUIRE(d != Date(), "Cannot parse \"" << s << "\" as date");
-        isDate = true;
+        return ore::data::parseDate(s);
     }
+}
+
+namespace {
+struct legacy_date_or_period_visitor : public boost::static_visitor<> {
+    legacy_date_or_period_visitor(Date& res_d, Period& res_p, bool& res_is_date)
+        : res_d(res_d), res_p(res_p), res_is_date(res_is_date) {}
+    void operator()(const QuantLib::Date& d) const {
+        res_d = d;
+        res_is_date = true;
+    }
+    void operator()(const QuantLib::Period& p) const {
+        res_p = p;
+        res_is_date = false;
+    }
+    Date& res_d;
+    Period& res_p;
+    bool& res_is_date;
+};
+} // namespace
+
+void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
+    auto r = parseDateOrPeriod(s);
+    boost::apply_visitor(legacy_date_or_period_visitor(d, p, isDate), r);
 }
 
 QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s) {
@@ -974,6 +992,163 @@ std::ostream& operator<<(std::ostream& os, Extrapolation extrap) {
         return os << "Flat";
     default:
         QL_FAIL("Unknown Extrapolation");
+    }
+}
+
+VolatilityType parseVolatilityQuoteType(const string& s) {
+
+    if (s == "Normal") {
+        return Normal;
+    } else if (s == "ShiftedLognormal") {
+        return ShiftedLognormal;
+    } else {
+        QL_FAIL("Unknown volatility quote type " << s);
+    }
+}
+
+CapFloor::Type parseCapFloorType(const string& s) {
+    if (s == "Cap") {
+        return CapFloor::Cap;
+    } else if (s == "Floor") {
+        return CapFloor::Floor;
+    } else if (s == "Collar") {
+        return CapFloor::Collar;
+    } else {
+        QL_FAIL("Unknown cap floor type " << s);
+    }
+}
+
+YoYInflationCapFloor::Type parseYoYInflationCapFloorType(const string& s) {
+    if (s == "Cap" || s == "YoYInflationCap") {
+        return YoYInflationCapFloor::Cap;
+    } else if (s == "Floor" || s == "YoYInflationFloor") {
+        return YoYInflationCapFloor::Floor;
+    } else if (s == "Collar" || s == "YoYInflationCollar") {
+        return YoYInflationCapFloor::Collar;
+    } else {
+        QL_FAIL("Unknown year on year inflation cap floor type " << s);
+    }
+}
+
+QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const string& s) {
+    namespace CT = QuantExt::CrossAssetModelTypes;
+    if (s == "IR") {
+        return CT::IR;
+    } else if (s == "FX") {
+        return CT::FX;
+    } else if (s == "INF") {
+        return CT::INF;
+    } else if (s == "CR") {
+        return CT::CR;
+    } else if (s == "EQ") {
+        return CT::EQ;
+    } else {
+        QL_FAIL("Unknown cross asset model type " << s);
+    }
+}
+
+pair<string, string> parseBoostAny(const boost::any& anyType) {
+    string resultType;
+    std::ostringstream oss;
+
+    if (anyType.type() == typeid(int)) {
+        resultType = "int";
+        int r = boost::any_cast<int>(anyType);
+        oss << std::fixed << std::setprecision(8) << r;
+    } else if (anyType.type() == typeid(double)) {
+        resultType = "double";
+        double r = boost::any_cast<double>(anyType);
+        oss << std::fixed << std::setprecision(8) << r; 
+    } else if (anyType.type() == typeid(std::string)) {
+        resultType = "string";
+        std::string r = boost::any_cast<std::string>(anyType);
+        oss << std::fixed << std::setprecision(8) << r;
+    } else if (anyType.type() == typeid(Date)) {
+        resultType = "date";
+        oss << io::iso_date(boost::any_cast<Date>(anyType));
+    } else if (anyType.type() == typeid(std::vector<double>)) {
+        resultType = "vector_double";
+        std::vector<double> r = boost::any_cast<std::vector<double>>(anyType);
+        if (r.size() == 0) {
+            oss << "";
+        } else {
+            oss << std::fixed << std::setprecision(8) << r[0];
+            for (Size i = 1; i < r.size(); i++) {
+                oss << ", " << r[i];
+            }
+        }
+    } else if (anyType.type() == typeid(std::vector<Date>)) {
+        resultType = "vector_date";
+        std::vector<Date> r = boost::any_cast<std::vector<Date>>(anyType);
+        if (r.size() == 0) {
+            oss << "";
+        } else {
+            oss << std::fixed << std::setprecision(8) << to_string(r[0]);
+            for (Size i = 1; i < r.size(); i++) {
+                oss << ", " << to_string(r[i]);
+            }
+        }
+    } else if (anyType.type() == typeid(std::vector<std::string>)) {
+        resultType = "vector_string";
+        std::vector<std::string> r = boost::any_cast<std::vector<std::string>>(anyType);
+        if (r.size() == 0) {
+            oss << "";
+        } else {
+            oss << std::fixed << std::setprecision(8) << r[0];
+            for (Size i = 1; i < r.size(); i++) {
+                oss << ", " << r[i];
+            }
+        }
+    } else if (anyType.type() == typeid(QuantLib::Matrix)) {
+        resultType = "matrix";
+        QuantLib::Matrix r = boost::any_cast<QuantLib::Matrix>(anyType);
+        oss << std::fixed << std::setprecision(8) << r; 
+    } else {
+        ALOG("Unsupported Boost::Any type");
+        resultType = "unsupported_type";
+    }
+    return make_pair(resultType, oss.str());
+}
+
+QuantLib::OvernightIndexFuture::NettingType parseOvernightIndexFutureNettingType(const std::string& s) {
+    if (s == "Averaging") {
+        return QuantLib::OvernightIndexFuture::NettingType::Averaging;
+    } else if (s == "Compounding") {
+        return QuantLib::OvernightIndexFuture::NettingType::Compounding;
+    } else {
+        QL_FAIL("Overnight Index Future Netting Type '" << s << "' not known, expected 'Averaging' or 'Compounding'");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, QuantLib::OvernightIndexFuture::NettingType t) {
+    if (t == QuantLib::OvernightIndexFuture::NettingType::Averaging)
+        return os << "Averaging";
+    else if (t == QuantLib::OvernightIndexFuture::NettingType::Compounding)
+        return os << "Compounding";
+    else {
+        QL_FAIL("Internal error: unknown OvernightIndexFuture::NettingType - check implementation of operator<< "
+                "for this enum");
+    }
+}
+
+FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::string& s) {
+    if (s == "IMM")
+        return FutureConvention::DateGenerationRule::IMM;
+    else if (s == "FirstDayOfMonth")
+        return FutureConvention::DateGenerationRule::FirstDayOfMonth;
+    else {
+        QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM' or 'FirstDayOfMonth'");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule t) {
+    if (t == FutureConvention::DateGenerationRule::IMM)
+        return os << "IMM";
+    else if (t == FutureConvention::DateGenerationRule::FirstDayOfMonth)
+        return os << "FirstDayOfMonth";
+    else {
+        QL_FAIL("Internal error: unknown FutureConvention::DateGenerationRule - check implementation of operator<< "
+                "for this enum");
     }
 }
 

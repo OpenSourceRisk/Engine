@@ -29,6 +29,8 @@
 
 #include <boost/optional.hpp>
 #include <boost/serialization/base_object.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/version.hpp>
 #include <boost/serialization/optional.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -58,7 +60,7 @@ protected:
 private:
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {}
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 /*! Strike implementation where the strike is described by a single number that represents the absolute strike level.
@@ -91,10 +93,7 @@ private:
     QuantLib::Real strike_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<BaseStrike>(*this);
-        ar& strike_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 /*! Strike implementation where the strike is described by a delta type, an option type and a delta level.
@@ -142,12 +141,7 @@ private:
     QuantLib::Real delta_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<BaseStrike>(*this);
-        ar& deltaType_;
-        ar& optionType_;
-        ar& delta_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 /*! Strike implementation for an at-the-money strike of various types.
@@ -204,11 +198,7 @@ private:
 
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<BaseStrike>(*this);
-        ar& atmType_;
-        ar& deltaType_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 /*! Strike implementation where the strike is described by a moneyness type and a moneyness level.
@@ -259,11 +249,7 @@ private:
 
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<BaseStrike>(*this);
-        ar& type_;
-        ar& moneyness_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Write \p strike to stream.
@@ -284,5 +270,17 @@ MoneynessStrike::Type parseMoneynessType(const std::string& type);
 //! Parse a Strike from its string representation, \p strStrike.
 boost::shared_ptr<BaseStrike> parseBaseStrike(const std::string& strStrike);
 
+template <class Archive> void registerBaseStrike(Archive& ar) {
+    ar.template register_type<AbsoluteStrike>();
+    ar.template register_type<DeltaStrike>();
+    ar.template register_type<AtmStrike>();
+    ar.template register_type<MoneynessStrike>();
+}
+
 } // namespace data
 } // namespace ore
+
+BOOST_CLASS_EXPORT_KEY(ore::data::AbsoluteStrike);
+BOOST_CLASS_EXPORT_KEY(ore::data::DeltaStrike);
+BOOST_CLASS_EXPORT_KEY(ore::data::AtmStrike);
+BOOST_CLASS_EXPORT_KEY(ore::data::MoneynessStrike);

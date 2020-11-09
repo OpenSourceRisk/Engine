@@ -3,7 +3,7 @@
   <xs:element type="sensitivityanalysis" name="SensitivityAnalysis"/>
 
   <xs:complexType name="sensitivityanalysis">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="xs:boolean" name="ParConversion" minOccurs="0"/>
       <xs:element type="discountcurves" name="DiscountCurves"/>
       <xs:element type="indexcurves" name="IndexCurves" minOccurs="0"/>
@@ -28,7 +28,10 @@
       <xs:element type="commodityvolatilities" name="CommodityVolatilities" minOccurs="0"/>
       <xs:element type="correlationcurves" name="Correlations" minOccurs="0"/>
       <xs:element type="crossgammafilter" name="CrossGammaFilter" minOccurs="0"/>
-    </xs:sequence>
+      <xs:element type="bool" name="ComputeGamma" minOccurs="0"/>
+      <xs:element type="bool" name="UseSpreadedTermStructures" minOccurs="0"/>
+      <xs:element type="setRiskFactorKeyTypes" name="TwoSidedDeltaKeyTypes" minOccurs="0"/>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="parconversion">
@@ -256,29 +259,7 @@
       </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="xs:string" name="Shifts"  minOccurs="0"/>
-      <xs:element name="ParConversion" minOccurs="0">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element type="xs:string" name="Instruments"/>
-            <xs:element type="xs:boolean" name="SingleCurve"/>
-            <xs:element name="Conventions">
-              <xs:complexType>
-                <xs:sequence>
-                  <xs:element name="Convention" maxOccurs="unbounded" minOccurs="0">
-                    <xs:complexType>
-                      <xs:simpleContent>
-                        <xs:extension base="xs:string">
-                          <xs:attribute name="id" type="xs:string" />
-                        </xs:extension>
-                      </xs:simpleContent>
-                    </xs:complexType>
-                  </xs:element>
-                </xs:sequence>
-              </xs:complexType>
-            </xs:element>
-          </xs:sequence>
-        </xs:complexType>
-      </xs:element>
+      <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
@@ -575,5 +556,11 @@
       <xs:enumeration value="Relative"/>
     </xs:restriction>
   </xs:simpleType>
+  
+  <xs:complexType name="setRiskFactorKeyTypes">
+    <xs:sequence>
+      <xs:element type="riskFactorKeyType" name="RiskFactorKeyType"/>
+    </xs:sequence>
+  </xs:complexType>
 
 </xs:schema>

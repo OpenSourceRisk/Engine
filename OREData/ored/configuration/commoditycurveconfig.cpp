@@ -37,6 +37,8 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& 
     if (!commoditySpotQuote.empty()) {
         quotes_.insert(quotes_.begin(), commoditySpotQuote);
     }
+
+    populateRequiredCurveIds();
 }
 
 CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& curveDescription,
@@ -45,7 +47,9 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& 
                                            bool extrapolation)
     : CurveConfig(curveId, curveDescription), type_(Type::CrossCurrency), currency_(currency),
       basePriceCurveId_(basePriceCurveId), baseYieldCurveId_(baseYieldCurveId), yieldCurveId_(yieldCurveId),
-      extrapolation_(extrapolation), addBasis_(true), monthOffset_(0) {}
+      extrapolation_(extrapolation), addBasis_(true), monthOffset_(0) {
+    populateRequiredCurveIds();
+}
 
 CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& curveDescription,
                                            const string& currency, const string& basePriceCurveId,
@@ -56,7 +60,18 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& 
     : CurveConfig(curveId, curveDescription), type_(Type::Basis), fwdQuotes_(basisQuotes), currency_(currency),
       dayCountId_(dayCountId), interpolationMethod_(interpolationMethod), basePriceCurveId_(basePriceCurveId),
       extrapolation_(extrapolation), conventionsId_(basisConventionsId), baseConventionsId_(baseConventionsId),
-      addBasis_(addBasis), monthOffset_(monthOffset) {}
+      addBasis_(addBasis), monthOffset_(monthOffset) {
+    populateRequiredCurveIds();
+}
+
+void CommodityCurveConfig::populateRequiredCurveIds() {
+    if (!baseYieldCurveId().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(baseYieldCurveId());
+    if (!yieldCurveId().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(yieldCurveId());
+    if (!basePriceCurveId().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Commodity].insert(basePriceCurveId());
+}
 
 void CommodityCurveConfig::fromXML(XMLNode* node) {
 
@@ -100,6 +115,8 @@ void CommodityCurveConfig::fromXML(XMLNode* node) {
     }
 
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation");
+
+    populateRequiredCurveIds();
 }
 
 XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {

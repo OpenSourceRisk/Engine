@@ -19,22 +19,85 @@
 #include <ored/portfolio/nettingsetdefinition.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/utilities/dataparsers.hpp>
 
 namespace ore {
 namespace data {
 
-NettingSetDefinition::NettingSetDefinition(XMLNode* node) : isLoaded_(false), isBuilt_(false) {
+CSA::Type parseCsaType(const string& s) {
+    static map<string, CSA::Type> t = {
+        {"Bilateral", CSA::Bilateral}, {"CallOnly", CSA::CallOnly}, {"PostOnly", CSA::PostOnly}};
+
+    auto it = t.find(s);
+    if (it != t.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Cannot convert \"" << s << "\" to CSA::Type");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, CSA::Type t) {
+    switch (t) {
+    case CSA::Bilateral:
+        return out << "Bilateral";
+    case CSA::CallOnly:
+        return out << "CallOnly";
+    case CSA::PostOnly:
+        return out << "PostOnly";
+    default:
+        QL_FAIL("csa type not covered");
+    }
+}
+
+void CSA::validate(string nettingSetId) {
+    QL_REQUIRE(csaCurrency_.size() == 3, "NettingSetDefinition build error;"
+                                             << " csa currency should be a three-letter ISO code");
+
+    QL_REQUIRE(thresholdPay_ >= 0, "NettingSetDefinition build error; negative thresholdPay");
+    QL_REQUIRE(thresholdRcv_ >= 0, "NettingSetDefinition build error; negative thresholdRcv");
+    QL_REQUIRE(mtaPay_ >= 0, "NettingSetDefinition build error; negative mtaPay");
+    QL_REQUIRE(mtaRcv_ >= 0, "NettingSetDefinition build error; negative mtaRcv");
+    QL_REQUIRE(iaType_ == "FIXED", "NettingSetDefinition build error;"
+                                       << " unsupported independent amount type; " << iaType_);
+
+    QL_REQUIRE(marginCallFreq_ > Period(0, Days) && marginPostFreq_ > Period(0, Days),
+               "NettingSetDefinition build error;"
+                   << " non-positive margining frequency");
+    QL_REQUIRE(mpr_ >= Period(0, Days), "NettingSetDefinition build error;"
+                                            << " negative margin period of risk");
+    if (mpr_ < marginCallFreq_ || mpr_ < marginPostFreq_) {
+        LOG("NettingSet " << nettingSetId << " has CSA margining frequency (" << marginCallFreq_ << ", "
+                          << marginPostFreq_ << ") longer than assumed margin period of risk " << mpr_);
+    }
+
+    for (Size i = 0; i < eligCollatCcys_.size(); i++) {
+        QL_REQUIRE(eligCollatCcys_[i].size() == 3, "NettingSetDefinition build error;"
+                                                       << " three-letter ISO code expected");
+    }
+
+    // unilateral CSA - set threshold near infinity to disable margining
+    switch (type_) {
+    case CallOnly: {
+        thresholdPay_ = std::numeric_limits<double>::max();
+        break;
+    }
+    case PostOnly: {
+        thresholdRcv_ = std::numeric_limits<double>::max();
+    }
+    default:
+        break;
+    }
+}
+
+NettingSetDefinition::NettingSetDefinition(XMLNode* node) {
     fromXML(node);
-    build();
     DLOG("NettingSetDefinition built from XML... " << nettingSetId_);
 }
 
 NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const string& ctp)
     : nettingSetId_(nettingSetId), ctp_(ctp), activeCsaFlag_(false) {
-    isLoaded_ = true;
-    isBuilt_ = false;
-    build();
+    validate();
     DLOG("uncollateralised NettingSetDefinition built... " << nettingSetId_);
 }
 
@@ -43,21 +106,17 @@ NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const str
                                            const Real& thresholdRcv, const Real& mtaPay, const Real& mtaRcv,
                                            const Real& iaHeld, const string& iaType, const string& marginCallFreq,
                                            const string& marginPostFreq, const string& mpr, const Real& collatSpreadPay,
-                                           const Real& collatSpreadRcv, const vector<string>& eligCollatCcys)
-    : nettingSetId_(nettingSetId), ctp_(ctp), activeCsaFlag_(true), csaTypeStr_(bilateral), csaCurrency_(csaCurrency),
-      index_(index), thresholdPay_(thresholdPay), thresholdRcv_(thresholdRcv), mtaPay_(mtaPay), mtaRcv_(mtaRcv),
-      iaHeld_(iaHeld), iaType_(iaType), marginCallFreqStr_(marginCallFreq), marginPostFreqStr_(marginPostFreq),
-      mprStr_(mpr), collatSpreadPay_(collatSpreadPay), collatSpreadRcv_(collatSpreadRcv),
-      eligCollatCcys_(eligCollatCcys) {
+                                           const Real& collatSpreadRcv, const vector<string>& eligCollatCcys,
+                                           bool applyInitialMargin, const string& initialMarginType)
+    : nettingSetId_(nettingSetId), ctp_(ctp), activeCsaFlag_(true) {
 
-    QL_REQUIRE(activeCsaFlag_, "NettingSetDefinition construction error... "
-                                   << nettingSetId_ << "; this constructor is intended for "
-                                   << "collateralised netting sets, or uncollateralised sets "
-                                   << "use alternative constructor.");
+    csa_ =
+        boost::make_shared<CSA>(parseCsaType(bilateral), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay, mtaRcv,
+                                iaHeld, iaType, parsePeriod(marginCallFreq), parsePeriod(marginPostFreq),
+                                parsePeriod(mpr), collatSpreadPay, collatSpreadRcv, eligCollatCcys, applyInitialMargin,
+                                parseCsaType(initialMarginType));
 
-    isLoaded_ = true;
-    isBuilt_ = false; // gets overwritten after invocation of build()
-    build();
+    validate();
     DLOG("collateralised NettingSetDefinition built... " << nettingSetId_);
 }
 
@@ -74,32 +133,48 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         XMLNode* csaChild = XMLUtils::getChildNode(node, "CSADetails");
         XMLUtils::checkNode(csaChild, "CSADetails");
 
-        csaTypeStr_ = XMLUtils::getChildValue(csaChild, "Bilateral", true);
-        csaCurrency_ = XMLUtils::getChildValue(csaChild, "CSACurrency", true);
-        index_ = XMLUtils::getChildValue(csaChild, "Index", true);
-        thresholdPay_ = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdPay", true);
-        thresholdRcv_ = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdReceive", true);
-        mtaPay_ = XMLUtils::getChildValueAsDouble(csaChild, "MinimumTransferAmountPay", true);
-        mtaRcv_ = XMLUtils::getChildValueAsDouble(csaChild, "MinimumTransferAmountReceive", true);
-        mprStr_ = XMLUtils::getChildValue(csaChild, "MarginPeriodOfRisk", true);
-        collatSpreadRcv_ = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadReceive", true);
-        collatSpreadPay_ = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadPay", true);
+        string csaTypeStr = XMLUtils::getChildValue(csaChild, "Bilateral", true);
+        string csaCurrency = XMLUtils::getChildValue(csaChild, "CSACurrency", true);
+        string index = XMLUtils::getChildValue(csaChild, "Index", true);
+        Real thresholdPay = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdPay", true);
+        Real thresholdRcv = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdReceive", true);
+        Real mtaPay = XMLUtils::getChildValueAsDouble(csaChild, "MinimumTransferAmountPay", true);
+        Real mtaRcv = XMLUtils::getChildValueAsDouble(csaChild, "MinimumTransferAmountReceive", true);
+        string mprStr = XMLUtils::getChildValue(csaChild, "MarginPeriodOfRisk", true);
+        Real collatSpreadRcv = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadReceive", true);
+        Real collatSpreadPay = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadPay", true);
 
         XMLNode* freqChild = XMLUtils::getChildNode(csaChild, "MarginingFrequency");
         XMLUtils::checkNode(freqChild, "MarginingFrequency");
-        marginCallFreqStr_ = XMLUtils::getChildValue(freqChild, "CallFrequency", true);
-        marginPostFreqStr_ = XMLUtils::getChildValue(freqChild, "PostFrequency", true);
+        string marginCallFreqStr = XMLUtils::getChildValue(freqChild, "CallFrequency", true);
+        string marginPostFreqStr = XMLUtils::getChildValue(freqChild, "PostFrequency", true);
 
         XMLNode* iaChild = XMLUtils::getChildNode(csaChild, "IndependentAmount");
         XMLUtils::checkNode(iaChild, "IndependentAmount");
-        iaHeld_ = XMLUtils::getChildValueAsDouble(iaChild, "IndependentAmountHeld", true);
-        iaType_ = XMLUtils::getChildValue(iaChild, "IndependentAmountType", true);
+        Real iaHeld = XMLUtils::getChildValueAsDouble(iaChild, "IndependentAmountHeld", true);
+        string iaType = XMLUtils::getChildValue(iaChild, "IndependentAmountType", true);
 
         XMLNode* collatChild = XMLUtils::getChildNode(csaChild, "EligibleCollaterals");
         XMLUtils::checkNode(collatChild, "EligibleCollaterals");
-        eligCollatCcys_ = XMLUtils::getChildrenValues(collatChild, "Currencies", "Currency", true);
+        vector<string> eligCollatCcys = XMLUtils::getChildrenValues(collatChild, "Currencies", "Currency", true);
+
+        bool applyInitialMargin = false;
+        XMLNode* applyInitialMarginNode = XMLUtils::getChildNode(csaChild, "ApplyInitialMargin");
+        if (applyInitialMarginNode)
+            applyInitialMargin = XMLUtils::getChildValueAsBool(csaChild, "ApplyInitialMargin", true);
+
+        string initialMarginType = XMLUtils::getChildValue(csaChild, "InitialMarginType", false);
+        if (initialMarginType == "")
+            initialMarginType = "Bilateral";
+
+        csa_ = boost::make_shared<CSA>(parseCsaType(csaTypeStr), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay,
+                                       mtaRcv, iaHeld, iaType, parsePeriod(marginCallFreqStr),
+                                       parsePeriod(marginPostFreqStr), parsePeriod(mprStr), collatSpreadPay,
+                                       collatSpreadRcv, eligCollatCcys, applyInitialMargin,
+                                       parseCsaType(initialMarginType));
     }
-    isLoaded_ = true;
+
+    validate();
 }
 
 XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
@@ -108,106 +183,56 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
 
     // Add the mandatory members.
     XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId_);
-    XMLUtils::addChild(doc, node, "Counterparty_", ctp_);
+    XMLUtils::addChild(doc, node, "Counterparty", ctp_);
     XMLUtils::addChild(doc, node, "ActiveCSAFlag", activeCsaFlag_);
 
     XMLNode* csaSubNode = doc.allocNode("CSADetails");
     XMLUtils::appendNode(node, csaSubNode);
+
     if (activeCsaFlag_) {
-        XMLUtils::addChild(doc, csaSubNode, "Bilateral", csaTypeStr_);
-        XMLUtils::addChild(doc, csaSubNode, "CSACurrency", csaCurrency_);
-        XMLUtils::addChild(doc, csaSubNode, "ThresholdPay", thresholdPay_);
-        XMLUtils::addChild(doc, csaSubNode, "ThresholdReceive", thresholdRcv_);
-        XMLUtils::addChild(doc, csaSubNode, "MinimumTransferAmountPay", mtaPay_);
-        XMLUtils::addChild(doc, csaSubNode, "MinimumTransferAmountReceive", mtaRcv_);
-        XMLUtils::addChild(doc, csaSubNode, "MarginPeriodOfRisk", mprStr_);
-        XMLUtils::addChild(doc, csaSubNode, "CollateralCompoundingSpreadPay", collatSpreadPay_);
-        XMLUtils::addChild(doc, csaSubNode, "CollateralCompoundingSpreadReceive", collatSpreadRcv_);
+        QL_REQUIRE(csa_, "CSA details not defined");
+
+        XMLUtils::addChild(doc, csaSubNode, "Bilateral", to_string(csa_->type()));
+        XMLUtils::addChild(doc, csaSubNode, "CSACurrency", csa_->csaCurrency());
+        XMLUtils::addChild(doc, csaSubNode, "ThresholdPay", csa_->thresholdPay());
+        XMLUtils::addChild(doc, csaSubNode, "ThresholdReceive", csa_->thresholdRcv());
+        XMLUtils::addChild(doc, csaSubNode, "MinimumTransferAmountPay", csa_->mtaPay());
+        XMLUtils::addChild(doc, csaSubNode, "MinimumTransferAmountReceive", csa_->mtaRcv());
+        XMLUtils::addChild(doc, csaSubNode, "MarginPeriodOfRisk", to_string(csa_->marginPeriodOfRisk()));
+        XMLUtils::addChild(doc, csaSubNode, "CollateralCompoundingSpreadPay", csa_->collatSpreadPay());
+        XMLUtils::addChild(doc, csaSubNode, "CollateralCompoundingSpreadReceive", csa_->collatSpreadRcv());
 
         XMLNode* freqSubNode = doc.allocNode("MarginingFrquency");
         XMLUtils::appendNode(csaSubNode, freqSubNode);
-        XMLUtils::addChild(doc, freqSubNode, "CallFrequency", marginCallFreqStr_);
-        XMLUtils::addChild(doc, freqSubNode, "PostFrequency", marginPostFreqStr_);
+        XMLUtils::addChild(doc, freqSubNode, "CallFrequency", to_string(csa_->marginCallFrequency()));
+        XMLUtils::addChild(doc, freqSubNode, "PostFrequency", to_string(csa_->marginPostFrequency()));
 
         XMLNode* iaSubNode = doc.allocNode("IndependentAmount");
         XMLUtils::appendNode(csaSubNode, iaSubNode);
-        XMLUtils::addChild(doc, iaSubNode, "IndependentAmountHeld", iaHeld_);
-        XMLUtils::addChild(doc, iaSubNode, "IndependentAmountType", iaType_);
+        XMLUtils::addChild(doc, iaSubNode, "IndependentAmountHeld", csa_->independentAmountHeld());
+        XMLUtils::addChild(doc, iaSubNode, "IndependentAmountType", csa_->independentAmountType());
 
         XMLNode* collatSubNode = doc.allocNode("EligibleCollaterals");
         XMLUtils::appendNode(csaSubNode, collatSubNode);
-        XMLUtils::addChildren(doc, collatSubNode, "Currencies", "Currency", eligCollatCcys_);
+        XMLUtils::addChildren(doc, collatSubNode, "Currencies", "Currency", csa_->eligCollatCcys());
+
+        XMLUtils::addChild(doc, node, "ApplyInitialMargin", csa_->applyInitialMargin());
+        XMLUtils::addChild(doc, node, "InitialMarginType", to_string(csa_->initialMarginType()));
     }
+
     return node;
 }
 
-void NettingSetDefinition::build() {
-
-    QL_REQUIRE(isLoaded_, "NettingSetDefinition build error; object data not correctly loaded" << nettingSetId_);
-
-    QL_REQUIRE(!isBuilt_, "NettingSetDefinition build error; already built " << nettingSetId_);
+void NettingSetDefinition::validate() {
 
     QL_REQUIRE(nettingSetId_.size() > 0, "NettingSetDefinition build error; no netting set Id");
 
     QL_REQUIRE(ctp_.size() > 0, "NettingSetDefinition build error; no counterparty specified for " << nettingSetId_);
 
     if (activeCsaFlag_) {
-        QL_REQUIRE(csaTypeStr_.size() > 0, "NettingSetDefinition build error; csa-type not defined");
-        if (csaTypeStr_ == "Bilateral")
-            csaType_ = Bilateral;
-        else if (csaTypeStr_ == "CallOnly")
-            csaType_ = CallOnly;
-        else if (csaTypeStr_ == "PostOnly")
-            csaType_ = PostOnly;
-        else
-            QL_FAIL("NettingSetDefinition build error;"
-                    << " unsupported csa-type");
-
-        QL_REQUIRE(csaCurrency_.size() == 3, "NettingSetDefinition build error;"
-                                                 << " csa currency should be a three-letter ISO code");
-
-        QL_REQUIRE(thresholdPay_ >= 0, "NettingSetDefinition build error; negative thresholdPay");
-        QL_REQUIRE(thresholdRcv_ >= 0, "NettingSetDefinition build error; negative thresholdRcv");
-        QL_REQUIRE(mtaPay_ >= 0, "NettingSetDefinition build error; negative mtaPay");
-        QL_REQUIRE(mtaRcv_ >= 0, "NettingSetDefinition build error; negative mtaRcv");
-        QL_REQUIRE(iaType_ == "FIXED", "NettingSetDefinition build error;"
-                                           << " unsupported independent amount type; " << iaType_);
-
-        // assumption - input defined as string (e.g. 10d, 3W, 6M, 4Y)
-        marginCallFreq_ = QuantLib::PeriodParser::parse(marginCallFreqStr_);
-        marginPostFreq_ = QuantLib::PeriodParser::parse(marginPostFreqStr_);
-        mpr_ = QuantLib::PeriodParser::parse(mprStr_);
-
-        QL_REQUIRE(marginCallFreq_ > Period(0, Days) && marginPostFreq_ > Period(0, Days),
-                   "NettingSetDefinition build error;"
-                       << " non-positive margining frequency");
-        QL_REQUIRE(mpr_ >= Period(0, Days), "NettingSetDefinition build error;"
-                                                << " negative margin period of risk");
-        if (mpr_ < marginCallFreq_ || mpr_ < marginPostFreq_) {
-            LOG("NettingSet " << nettingSetId_ << " has CSA margining frequency (" << marginCallFreq_ << ", "
-                              << marginPostFreq_ << ") longer than assumed margin period of risk " << mpr_);
-        }
-
-        for (unsigned i = 0; i < eligCollatCcys_.size(); i++) {
-            QL_REQUIRE(eligCollatCcys_[i].size() == 3, "NettingSetDefinition build error;"
-                                                           << " three-letter ISO code expected");
-        }
-
-        // unilateral CSA - set threshold near infinity to disable margining
-        switch (csaType_) {
-        case CallOnly: {
-            thresholdPay_ = std::numeric_limits<double>::max();
-            break;
-        }
-        case PostOnly: {
-            thresholdRcv_ = std::numeric_limits<double>::max();
-        }
-        default:
-            break;
-        }
+        QL_REQUIRE(csa_, "CSA not defined yet");
+        csa_->validate(nettingSetId_);
     }
-
-    isBuilt_ = true;
 }
 } // namespace data
 } // namespace ore

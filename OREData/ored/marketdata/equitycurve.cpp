@@ -138,7 +138,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
                 if (wcFlag) {
                     // is the quote 'in' the config? (also check expiry not before asof)
-                    if (regex_match(q->name(), reg1) && asof <= q->expiryDate()) {
+                    if (regex_match(q->name(), reg1) && asof < q->expiryDate()) {
                         QL_REQUIRE(find(qt.begin(), qt.end(), q) == qt.end(),
                                    "duplicate market datum found for " << q->name());
                         DLOG("EquityCurve Forward Price found for quote: " << q->name());
@@ -170,7 +170,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
                 if (wcFlag) {
                     // is the quote 'in' the config? (also check expiry not before asof)
-                    if (regex_match(q->name(), reg1) && asof <= expiryDate) {
+                    if (regex_match(q->name(), reg1) && asof < expiryDate) {
                         QL_REQUIRE(find(oqt.begin(), oqt.end(), q) == oqt.end(),
                                    "duplicate market datum found for " << q->name());
                         DLOG("EquityCurve Volatility Price found for quote: " << q->name());
@@ -282,15 +282,21 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 // We only want overlapping expiry/strike pairs
                 for (Size i = 0; i < calls.size(); i++) {
                     for (Size j = 0; j < puts.size(); j++) {
-                        if (calls[i]->expiry() == puts[j]->expiry() && calls[i]->strike() == puts[j]->strike()) {
-                            TLOG("Adding Call and Put for strike/expiry pair : " << calls[i]->expiry() << "/"
-                                                                                 << calls[i]->strike());
-                            callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
-                            putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
-                            callStrikes.push_back(parseReal(calls[i]->strike()));
-                            putStrikes.push_back(parseReal(puts[j]->strike()));
-                            callPremiums.push_back(calls[i]->quote()->value());
-                            putPremiums.push_back(puts[j]->quote()->value());
+                        if (calls[i]->expiry() == puts[j]->expiry()) {
+                            auto callAbsoluteStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(calls[i]->strike());
+                            auto putAbsoluteStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(puts[j]->strike());
+                            QL_REQUIRE(callAbsoluteStrike, "Expected absolute strike for quote " << calls[i]->name());
+                            QL_REQUIRE(putAbsoluteStrike, "Expected absolute strike for quote " << puts[j]->name());
+                            if (*calls[i]->strike() == *puts[j]->strike()) {
+                                TLOG("Adding Call and Put for strike/expiry pair : " << calls[i]->expiry() << "/"
+                                                                                     << calls[i]->strike()->toString());
+                                callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
+                                putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
+                                callStrikes.push_back(callAbsoluteStrike->strike());
+                                putStrikes.push_back(putAbsoluteStrike->strike());
+                                callPremiums.push_back(calls[i]->quote()->value());
+                                putPremiums.push_back(puts[j]->quote()->value());
+                            }
                         }
                     }
                 }

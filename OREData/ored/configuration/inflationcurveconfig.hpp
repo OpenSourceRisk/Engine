@@ -52,7 +52,8 @@ public:
                          const bool extrapolate, const Calendar& calendar, const DayCounter& dayCounter,
                          const Period& lag, const Frequency& frequency, const Real baseRate, const Real tolerance,
                          const Date& seasonalityBaseDate, const Frequency& seasonalityFrequency,
-                         const vector<string>& seasonalityFactors);
+                         const vector<string>& seasonalityFactors,
+                         const vector<double>& overrideSeasonalityFactors = std::vector<double>());
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
@@ -71,6 +72,7 @@ public:
     const Date& seasonalityBaseDate() const { return seasonalityBaseDate_; }
     const Frequency& seasonalityFrequency() const { return seasonalityFrequency_; }
     const vector<string>& seasonalityFactors() const { return seasonalityFactors_; }
+    const vector<double>& overrideSeasonalityFactors() const { return overrideSeasonalityFactors_; }
     const vector<string>& swapQuotes() { return swapQuotes_; }
 
     // Setters
@@ -87,8 +89,11 @@ public:
     Date& seasonalityBaseDate() { return seasonalityBaseDate_; }
     Frequency& seasonalityFrequency() { return seasonalityFrequency_; }
     vector<string>& seasonalityFactors() { return seasonalityFactors_; }
+    vector<double>& overrideSeasonalityFactors() { return overrideSeasonalityFactors_; }
 
 private:
+    void populateRequiredCurveIds();
+
     vector<string> swapQuotes_;
     string nominalTermStructure_;
     Type type_;
@@ -104,6 +109,7 @@ private:
     Date seasonalityBaseDate_;
     Frequency seasonalityFrequency_;
     vector<string> seasonalityFactors_;
+    vector<double> overrideSeasonalityFactors_;
 };
 } // namespace data
 } // namespace ore

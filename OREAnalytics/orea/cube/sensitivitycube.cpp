@@ -59,15 +59,18 @@ std::ostream& operator<<(std::ostream& out, const SensitivityCube::crossPair& cp
 
 SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
                                  const vector<ShiftScenarioDescription>& scenarioDescriptions,
-                                 const map<RiskFactorKey, QuantLib::Real>& shiftsizes)
-    : cube_(cube), scenarioDescriptions_(scenarioDescriptions), shiftSizes_(shiftsizes) {
+                                 const map<RiskFactorKey, QuantLib::Real>& shiftsizes,
+                                 const set<RiskFactorKey::KeyType>& twoSidedDeltas)
+    : cube_(cube), scenarioDescriptions_(scenarioDescriptions), shiftSizes_(shiftsizes),
+      twoSidedDeltas_(twoSidedDeltas) {
     initialise();
 }
 
 SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
                                  const vector<string>& scenarioDescriptions,
-                                 const map<RiskFactorKey, QuantLib::Real>& shiftsizes)
-    : cube_(cube), shiftSizes_(shiftsizes) {
+                                 const map<RiskFactorKey, QuantLib::Real>& shiftsizes,
+                                 const set<RiskFactorKey::KeyType>& twoSidedDeltas)
+    : cube_(cube), shiftSizes_(shiftsizes), twoSidedDeltas_(twoSidedDeltas) {
 
     // Populate scenarioDescriptions_ from string descriptions
     scenarioDescriptions_.reserve(scenarioDescriptions.size());
@@ -136,18 +139,6 @@ void SensitivityCube::initialise() {
         crossFactors_[cf.first] = make_tuple(id_1, id_2, cf.second);
     }
 
-    // Check that up factors and down factors align (if down factors are given)
-    QL_REQUIRE(downFactors_.empty() || upFactors_.size() == downFactors_.size(),
-               "The number of 'Up' shifts (" << upFactors_.size() << ") should equal the number of 'Down' shifts ("
-                                             << downFactors_.size() << ")");
-
-    auto pred = [](decltype(*upFactors_.left.begin()) a, pair<RiskFactorKey, FactorData> b) {
-        return a.first == b.first;
-    };
-    QL_REQUIRE(downFactors_.empty() ||
-                   equal(upFactors_.left.begin(), upFactors_.left.end(), downFactors_.begin(), pred),
-               "The set of risk factor keys with an 'Up' shift and 'Down' shift should match");
-
     // Log warnings if each factor does not have a shift size entry and that it is not a Null<Real>()
     if (upFactors_.size() != shiftSizes_.size()) {
         WLOG("The number of 'Up' shifts (" << upFactors_.size() << ") does not equal "
@@ -215,10 +206,19 @@ Real SensitivityCube::delta(Size id, Size scenarioIdx) const {
     return cube_->get(id, scenarioIdx) - cube_->getT0(id, 0);
 }
 
+Real SensitivityCube::delta(Size id, Size upIdx, Size downIdx) const {
+    return (cube_->get(id, upIdx) - cube_->get(id, downIdx)) / 2.0;
+}
+
 Real SensitivityCube::delta(const string& tradeId, const RiskFactorKey& riskFactorKey) const {
     Size scenarioIdx = index(riskFactorKey, upFactors_.left).index;
     Size tradeIdx = cube_->getTradeIndex(tradeId);
-    return delta(tradeIdx, scenarioIdx);
+    if (!twoSidedDelta(riskFactorKey.keytype)) {
+        return delta(tradeIdx, scenarioIdx);
+    } else {
+        Size downIdx = index(riskFactorKey, downFactors_).index;
+        return delta(tradeIdx, scenarioIdx, downIdx);
+    }
 }
 
 Real SensitivityCube::gamma(Size id, Size upScenarioIdx, Size downScenarioIdx) const {
@@ -269,6 +269,10 @@ Real SensitivityCube::crossGamma(const string& tradeId, const crossPair& riskFac
     tradeIdx = cube_->getTradeIndex(tradeId);
 
     return crossGamma(tradeIdx, upIdx_1, upIdx_2, crossIdx);
+}
+
+bool SensitivityCube::twoSidedDelta(const RiskFactorKey::KeyType& keyType) const {
+    return twoSidedDeltas_.count(keyType) == 1;
 }
 
 } // namespace analytics

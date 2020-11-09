@@ -64,7 +64,7 @@ Real CommodityIndexedAverageCashFlow::amount() const {
     averagePrice /= indices_.size();
 
     // Amount is just average price times quantity
-    return quantity_ * gearing_ * (averagePrice + spread_);
+    return quantity_ * (gearing_ * averagePrice + spread_);
 }
 
 void CommodityIndexedAverageCashFlow::accept(AcyclicVisitor& v) {

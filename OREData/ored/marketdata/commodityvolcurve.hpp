@@ -63,6 +63,7 @@ private:
     CommodityVolatilityCurveSpec spec_;
     boost::shared_ptr<QuantLib::BlackVolTermStructure> volatility_;
     boost::shared_ptr<QuantExt::FutureExpiryCalculator> expCalc_;
+    boost::shared_ptr<CommodityFutureConvention> convention_;
     QuantLib::Calendar calendar_;
     QuantLib::DayCounter dayCounter_;
 

@@ -58,16 +58,65 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
       protectionPaymentTime_(protectionPaymentTime), claim_(claim),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
 
-    QL_REQUIRE((schedule.hasRule() &&
-                (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
-                   protectionStart_ <= schedule[0],
-               "protection can not start after accrual for (pre big bang-) CDS");
-
     leg_ = FixedRateLeg(schedule)
                .withNotionals(notional)
                .withCouponRates(spread, dayCounter)
                .withPaymentAdjustment(convention)
                .withLastPeriodDayCounter(lastPeriodDayCounter);
+
+    withoutUpfront(schedule, convention);
+}
+
+CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate upfront, Rate runningSpread,
+                                     const Schedule& schedule, BusinessDayConvention convention,
+                                     const DayCounter& dayCounter, bool settlesAccrual,
+                                     ProtectionPaymentTime protectionPaymentTime, const Date& protectionStart,
+                                     const Date& upfrontDate, const boost::shared_ptr<Claim>& claim,
+                                     const DayCounter& lastPeriodDayCounter)
+    : side_(side), notional_(notional), upfront_(upfront), runningSpread_(runningSpread),
+      settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime), claim_(claim),
+      protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
+
+    leg_ = FixedRateLeg(schedule)
+               .withNotionals(notional)
+               .withCouponRates(runningSpread, dayCounter)
+               .withPaymentAdjustment(convention)
+               .withLastPeriodDayCounter(lastPeriodDayCounter);
+
+    withUpfront(schedule, upfrontDate, convention, notional, upfront);
+}
+
+CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate spread,
+                                     const Schedule& schedule, BusinessDayConvention convention,
+                                     const DayCounter& dayCounter, bool settlesAccrual,
+                                     ProtectionPaymentTime protectionPaymentTime, const Date& protectionStart,
+                                     const boost::shared_ptr<Claim>& claim, const DayCounter& lastPeriodDayCounter)
+    : side_(side), notional_(notional), upfront_(boost::none), runningSpread_(spread),
+      settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime), claim_(claim),
+      leg_(amortized_leg), protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
+
+    withoutUpfront(schedule, convention);
+}
+
+CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate upfront,
+                                     Rate runningSpread, const Schedule& schedule, BusinessDayConvention convention,
+                                     const DayCounter& dayCounter, bool settlesAccrual,
+                                     ProtectionPaymentTime protectionPaymentTime, const Date& protectionStart,
+                                     const Date& upfrontDate, const boost::shared_ptr<Claim>& claim,
+                                     const DayCounter& lastPeriodDayCounter)
+    : side_(side), notional_(notional), upfront_(upfront), runningSpread_(runningSpread),
+      settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime), claim_(claim),
+      leg_(amortized_leg), protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
+
+    withUpfront(schedule, upfrontDate, convention, notional, upfront);
+}
+
+void CreditDefaultSwap::withoutUpfront(const Schedule& schedule, BusinessDayConvention convention) {
+
+    QL_REQUIRE((schedule.hasRule() &&
+                (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
+                   protectionStart_ <= schedule[0],
+               "protection can not start after accrual for (pre big bang-) CDS");
 
     // acrual rebate
     if (schedule.hasRule() && (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) {
@@ -92,26 +141,13 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
     maturity_ = schedule.dates().back();
 }
 
-CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate upfront, Rate runningSpread,
-                                     const Schedule& schedule, BusinessDayConvention convention,
-                                     const DayCounter& dayCounter, bool settlesAccrual,
-                                     ProtectionPaymentTime protectionPaymentTime, const Date& protectionStart,
-                                     const Date& upfrontDate, const boost::shared_ptr<Claim>& claim,
-                                     const DayCounter& lastPeriodDayCounter)
-    : side_(side), notional_(notional), upfront_(upfront), runningSpread_(runningSpread),
-      settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime), claim_(claim),
-      protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
+void CreditDefaultSwap::withUpfront(const Schedule& schedule, const Date& upfrontDate, BusinessDayConvention convention,
+                                    Real notional, Rate upfront) {
 
     QL_REQUIRE((schedule.hasRule() &&
                 (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
                    protectionStart_ <= schedule[0],
                "protection can not start after accrual for (pre big bang-) CDS");
-
-    leg_ = FixedRateLeg(schedule)
-               .withNotionals(notional)
-               .withCouponRates(runningSpread, dayCounter)
-               .withPaymentAdjustment(convention)
-               .withLastPeriodDayCounter(lastPeriodDayCounter);
 
     // If empty, adjust to T+3 standard settlement
     Date effectiveUpfrontDate =

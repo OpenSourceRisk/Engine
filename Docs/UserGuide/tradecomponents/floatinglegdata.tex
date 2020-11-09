@@ -163,7 +163,7 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
   the fixing observation dates. In the context of the Ibor reform the FixingDays parameter is sometimes also called
   ``obervation lag''.
 
-  Allowable values: A non-negative whole number.  Defaults to the index's fixing days if blank or omitted.
+  Allowable values: A non-negative whole number.  Defaults to the index's fixing days if blank or omitted. See defaults per index in Table \ref{tab:fixingdaysdefaults}.
 
 \item Lookback [Optional]: Only applicable to OIS legs. A period by which the value dates schedule of (averaged,
   compounded) OIS legs is shifted into the past. On top of this the gap defined by the FixingDays is applied to get the
@@ -194,7 +194,7 @@ Allowable values: any non-negative whole number
   a spread of 0.5\% or 50 bp. 
 
 For the {\tt <Spreads>} section, the same applies as for notionals and
-rates - a list of changing spreads can be specified without or with individual starte dates as shown
+rates - a list of changing spreads can be specified without or with individual start dates as shown
 in Listing \ref{lst:spreads_dates}.
 \begin{listing}[H]
 %\hrule\medskip

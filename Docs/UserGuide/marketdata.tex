@@ -214,6 +214,7 @@ Example:
     Instrument Type & \emph{MM} & \\ \hline
     Quote Type & \emph{RATE} & \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Deposit rate\\ \hline
+    IndexName & Optional, any string & Generally used to differentiate money market rates referencing different interest rate indices with the same tenor\\ \hline
     Forward start & An integer followed by D, W, M or Y.  & Period from today to start \\ \hline
     Term & An integer followed by D, W, M or Y. & Period from start to maturity\\ \hline
   \end{tabular}
@@ -298,15 +299,13 @@ Example:
     Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
     Contract & String & Contract name\\ \hline
     Term & An integer followed by D, W, M or Y & Underlying Term\\ \hline
-  % date rule & {\tt string} &  \\
   \end{tabular}
   \caption{Money Market Futures Price}
   \label{tab:mmfp_quote}
 \end{table}
 
-Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule such as 3rd
-Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly, but
-defined in the futures contract.
+Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule defined in the future
+conventions, see \ref{ss:conventions_future}.
 
 \medskip
 Example:
@@ -315,7 +314,7 @@ Example:
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Overnight Index Futures Price}
+\subsection{Overnight Index Futures Price}\label{ss:market_data_oi_index_future_prices}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \begin{table}[H]
@@ -328,16 +327,14 @@ Example:
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Overnight Index Future price\\ \hline
     Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
     Contract & String & Contract name\\ \hline
-    Term & An integer followed by D, W, M or Y & Underlying Term\\ \hline
-  % date rule & {\tt string} &  \\
+    Term & An integer followed by M or Y & Underlying Term in months or years \\ \hline
   \end{tabular}
-  \caption{Money Market Futures Price}
-  \label{tab:mmfp_quote}
+  \caption{Overnight Index Futures Price}
+  \label{tab:oifp_quote}
 \end{table}
 
-Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule such as 3rd
-Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly, but
-defined in the futures contract.
+Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule defined in the future
+conventions, see \ref{ss:conventions_future}.
 
 \medskip
 Example: Three Months SOFR Futures (DEC 2019):
@@ -497,6 +494,7 @@ Example: Three Months SOFR Futures (DEC 2019):
     Instrument Type & \emph{IR\_SWAP} & \\ \hline
     Quote Type & \emph{RATE} & \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Swap rate\\ \hline
+    IndexName & Optional, any string & Generally used to differentiate swaps referencing different interest rate indices with the same tenor\\ \hline
     Forward start & An integer followed by D, W, M or Y & Generic period from today to start\\ \hline
     Tenor & An integer followed by D, W, M or Y & Underlying index period \\ \hline
     Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\ \hline
@@ -603,53 +601,87 @@ Example:
 \item {CC\_BASIS\_SWAP/BASIS\_SPREAD/USD/3M/JPY/6M/10Y}
 \end{itemize}
 
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{CDS Spread}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\label{md:cds_spread_quote}
 
 \begin{table}[H]
 \centering
   \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
-    Instrument Type & \emph{CDS} & \\ \hline
-    Quote Type & \emph{CREDIT\_SPREAD} & \\ \hline
-    Issuer & String &  Issuer name \\ \hline
-    Seniority & String &  Seniority status \\ \hline
-    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Spread currency\\ \hline
-    Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\ \hline
+    Instrument Type & \lstinline!CDS! & \\ \hline
+    Quote Type & \lstinline!CREDIT_SPREAD! & \\ \hline
+    Entity & String & The CDS reference entity name \\ \hline
+    Tier & String & The CDS tier \\ \hline
+    DocClause & String & Optional, the CDS doc clause \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & The CDS currency\\ \hline
+    Term & A valid tenor string & The CDS tenor\\ \hline
   \end{tabular}
-  \caption{CDS Spread}
+  \caption{CDS spread quote}
   \label{tab:cdsspread_quote}
 \end{table}
 
-Example:
+As noted in the table above, the CDS documentation clause is optional. The following list shows valid CDS spread quote examples.
 \begin{itemize}
-\item {CDS/CREDIT\_SPREAD/GE/SeniorUnsec/EUR/5Y}
+\item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/5Y!
+\item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/XR14/5Y!
+\item \lstinline!CDS/CREDIT_SPREAD/RBS/SUBLT2/EUR/MR14/10Y!
+\item \lstinline!CDS/CREDIT_SPREAD/RBS/SUBLT2/EUR/1Y!
 \end{itemize}
 
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{CDS Recovery Rate}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{CDS Upfront Price}
+\label{md:cds_price_quote}
 
 \begin{table}[H]
 \centering
   \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
-    Instrument Type & \emph{RECOVERY\_RATE} & \\ \hline
-    Quote Type & \emph{RATE} & \\ \hline
-    Issuer & String &  Issuer name \\ \hline
-    Seniority & String &  Seniority status \\ \hline
-    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Spread currency\\ \hline
+    Instrument Type & \lstinline!CDS! & \\ \hline
+    Quote Type & \lstinline!PRICE! & \\ \hline
+    Entity & String & The CDS reference entity name \\ \hline
+    Tier & String & The CDS tier \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & The CDS currency\\ \hline
+    DocClause & String & Optional, the CDS doc clause \\ \hline
+    Term & A valid tenor string & The CDS tenor\\ \hline
+  \end{tabular}
+  \caption{CDS upfront price quote}
+  \label{tab:cds_price_quote}
+\end{table}
+
+As noted in the table above, the CDS documentation clause is optional. The following list shows valid CDS upfront price quote examples.
+\begin{itemize}
+\item \lstinline!CDS/PRICE/JPM/SNRFOR/USD/5Y!
+\item \lstinline!CDS/PRICE/JPM/SNRFOR/USD/XR14/5Y!
+\item \lstinline!CDS/PRICE/RBS/SUBLT2/EUR/MR14/10Y!
+\item \lstinline!CDS/PRICE/RBS/SUBLT2/EUR/1Y!
+\end{itemize}
+
+\subsection{CDS Recovery Rate}
+\label{md:cds_recovery_rate_quote}
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \lstinline!RECOVERY_RATE! & \\ \hline
+    Quote Type & \lstinline!RATE! & \\ \hline
+    Entity & String & The CDS reference entity name \\ \hline
+    Tier & String & The CDS tier \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & The CDS currency\\ \hline
+    DocClause & String & Optional, the CDS doc clause \\ \hline
   \end{tabular}
   \caption{CDS Recovery Rate}
   \label{tab:cdsrecovery_quote}
 \end{table}
 
-Example:
+As noted in the table above, the CDS documentation clause is optional. The following list shows valid recovery rate quote examples.
 \begin{itemize}
-\item {RECOVERY\_RATE/RATE/GE/SeniorUnsec/EUR}
+\item \lstinline!RECOVERY_RATE/RATE/JPM/SNRFOR/USD!
+\item \lstinline!RECOVERY_RATE/RATE/JPM/SNRFOR/USD/XR14!
+\item \lstinline!RECOVERY_RATE/RATE/RBS/SUBLT2/EUR/MR14!
+\item \lstinline!RECOVERY_RATE/RATE/RBS/SUBLT2/EUR!
 \end{itemize}
 
 \subsection{CDS Option Implied Volatility}
@@ -987,7 +1019,7 @@ Examples:
 
 \begin{table}[H]
 	\centering
-	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+	\begin{tabular}{|p{3cm}|p{5.5cm}|p{5cm}|}
 		\hline
 		{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
         Instrument Type & \emph{EQUITY\_OPTION} & \\ \hline
@@ -995,21 +1027,27 @@ Examples:
         Name & String & Identifying name of the equity \\ \hline
         Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ \hline
         Expiry & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ \hline
-        Strike & {\tt ATMF}, or else any {\tt Real} & strike price \\ \hline
+        Strike & {\tt ATM/AtmSpot} (= {\tt ATM}), {\tt ATM/AtmFwd} (={\tt ATMF}), {\tt MNY/[Spot|Fwd]/1.2} where $1.2$
+                 is the moneyness level, or a {\tt Real} for an absolute strike & strike \\ \hline
+        CallPut & {\tt C} for Call, {\tt P} for Put & Optional Call/Put flag (defaults to Call) \\ \hline
 	\end{tabular}
 	\caption{Equity Option Implied Volatility}
 	\label{tab:eqimplvol_quote}
 \end{table}
 
-Volatilities are quoted as a function of strike price - either at-the-money forward ({\tt ATMF}) or else a specified 
-real number, corresponding to the absolute strike value.Only log-normal implied volatilities ({\tt RATE\_LNVOL}) are 
-supported.
+Volatilities are quoted as a function of strike price - either at-the-money spot or forward, a moneyness level or else a
+specified real number, corresponding to the absolute strike value. Only log-normal implied volatilities ({\tt
+  RATE\_LNVOL}) are supported.
+
+If $K$ is the absolute strike, $S$ the spot, $F$ the forward and $m$ the moneyness level, we have $K=Sm$ if spot
+moneyness and $K=Fm$ if forward moneyness is specified.
 
 \medskip
 Example:
 \begin{itemize}
 	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/6M/ATMF}
 	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/2018-06-30/ATMF}
+	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/6M/MNY/Fwd/1.2}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1019,28 +1057,30 @@ Example:
 
 \begin{table}[H]
 	\centering
-	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-		\hline
-		{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
-        Instrument Type & \emph{EQUITY\_OPTION} & \\ \hline
-        Quote Type & \emph{PRICE} & \\ \hline
-        Name & String & Identifying name of the equity \\ \hline
-        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ \hline
-        Expiry & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ \hline
-        Strike & {\tt ATMF}, or else any {\tt Real} & strike price \\ \hline
+	\begin{tabular}{|p{3cm}|p{5.5cm}|p{5cm}|}
+      \hline
+      {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+      Instrument Type & \emph{EQUITY\_OPTION} & \\ \hline
+      Quote Type & \emph{PRICE} & \\ \hline
+      Name & String & Identifying name of the equity \\ \hline
+      Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ \hline
+      Expiry & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ \hline
+      Strike & {\tt ATM/AtmSpot} (= {\tt ATM}), {\tt ATM/AtmFwd} (={\tt ATMF}) or a {\tt Real} for an absolute strike & strike \\ \hline
+      CallPut & {\tt C} for Call, {\tt P} for Put & Optional Call/Put flag (defaults to Call) \\ \hline
 	\end{tabular}
 	\caption{Equity Option Premium}
 	\label{tab:eqpremvol_quote}
 \end{table}
 
-Premiums are quoted as a function of strike price - either at-the-money forward ({\tt ATMF}) or else a specified 
-real number, corresponding to the absolute strike value.
+Premiums are quoted as a function of strike price - either at-the-money spot or forward or else a specified real number,
+corresponding to the absolute strike value.
 
 \medskip
 Example:
 \begin{itemize}
 	\item {EQUITY\_OPTION/PRICE/SP5/USD/6M/ATMF}
 	\item {EQUITY\_OPTION/PRICE/SP5/USD/2018-06-30/2000}
+	\item {EQUITY\_OPTION/PRICE/SP5/USD/2018-06-30/2000/C}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1068,7 +1108,7 @@ Examples:
 \item {ZC\_INFLATIONSWAP/RATE/EUHICPXT/2Y}
 \end{itemize}
 
-Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI, ZACPI.
+Examples for inflation index names include EUHICP, EUHICPXT, FRHICP, FRCPI, UKRPI, USCPI, ZACPI, BEHICP, AUCPI.
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Year on Year Inflation Swap Rate}
@@ -1095,7 +1135,7 @@ Examples:
 \item {YY\_INFLATIONSWAP/RATE/EUHICPXT/2Y}
 \end{itemize}
 
-Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI, ZACPI.
+Examples for inflation index names include EUHICP, EUHICPXT, FRHICP, FRCPI, UKRPI, USCPI, ZACPI, BEHICP.
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Zero Coupon Inflation Cap Floor Price}
@@ -1124,7 +1164,7 @@ Examples:
 \item {ZC\_INFLATIONCAPFLOOR/PRICE/EUHICPXT/2Y/C/0.01}
 \end{itemize}
 
-Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI, ZACPI.
+Examples for inflation index names include EUHICP, EUHICPXT, FRHICP, FRCPI, UKRPI, USCPI, ZACPI, BEHICP.
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Inflation Seasonality Correction Factors}
@@ -1153,7 +1193,7 @@ Examples:
 \item SEASONALITY/RATE/MULT/EUHICPXT/NOV
 \end{itemize}
 
-Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI, ZACPI.
+Examples for inflation index names include EUHICP, EUHICPXT, FRHICP, FRCPI, UKRPI, USCPI, ZACPI, BEHICP.
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Bond Yield Spreads}

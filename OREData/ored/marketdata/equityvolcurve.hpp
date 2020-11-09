@@ -70,6 +70,11 @@ public:
                          const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
                          const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex);
 
+    //! Build a volatility surface from a collection of expiry and moneyness strike pairs.
+    void buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
+                         const VolatilityMoneynessSurfaceConfig& vssc, const Loader& loader,
+                         const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex);
+
     //! Build a volatility surface as a proxy from another volatility surface
     void buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
                          const CurveConfigurations& curveConfigs,

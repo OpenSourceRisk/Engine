@@ -22,6 +22,8 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/currencies/europe.hpp>
+#include <qle/indexes/fxindex.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
 
 using namespace boost::unit_test_framework;
@@ -55,7 +57,9 @@ BOOST_AUTO_TEST_CASE(testFlatSurface) {
     Handle<YieldTermStructure> domTS(
         boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), ActualActual()));
 
-    QuantExt::BlackVarianceSurfaceStdDevs surface(cal, spot, times, stdDevs, blackVolMatrix, dc, forTS, domTS);
+    boost::shared_ptr<QuantExt::FxIndex> fxIndex = boost::make_shared<QuantExt::FxIndex>("dummy", 2, EURCurrency(),
+        GBPCurrency(), cal, spot, forTS, domTS);
+    QuantExt::BlackVarianceSurfaceStdDevs surface(cal, spot, times, stdDevs, blackVolMatrix, dc, fxIndex);
 
     // Now get a vol for different times and strikes
     for (Time t = 0.05; t < 5.0; t += 0.1) {

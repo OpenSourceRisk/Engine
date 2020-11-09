@@ -169,7 +169,8 @@ void FixingManager::update(Date d) {
         QL_REQUIRE(d >= fixingsEnd_, "Can't go back in time, fixings must be reset."
                                      " Update date "
                                          << d << " but current fixings go to " << fixingsEnd_);
-        applyFixings(fixingsEnd_, d);
+        if (d > fixingsEnd_)
+            applyFixings(fixingsEnd_, d);
     }
     fixingsEnd_ = d;
 }

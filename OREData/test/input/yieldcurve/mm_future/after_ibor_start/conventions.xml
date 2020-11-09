@@ -1,0 +1,6 @@
+<Conventions>
+  <Future>
+    <Id>USD-LIBOR-3M-FUTURES</Id>
+    <Index>USD-LIBOR-3M</Index>
+  </Future>
+</Conventions>

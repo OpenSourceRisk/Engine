@@ -17,6 +17,7 @@
 */
 
 #include <ored/configuration/equityvolcurveconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -33,6 +34,7 @@ EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, 
     : CurveConfig(curveID, curveDescription), ccy_(currency), volatilityConfig_(volatilityConfig),
       dayCounter_(dayCounter), calendar_(calendar) {
     populateQuotes();
+    populateRequiredCurveIds();
 }
 
 const string EquityVolatilityCurveConfig::quoteStem() const {
@@ -60,6 +62,16 @@ void EquityVolatilityCurveConfig::populateQuotes() {
             }
             quotes_.push_back(quoteStr);
         }
+    }
+}
+
+void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
+    if (!proxySurface().empty()) {
+        requiredCurveIds_[CurveSpec::CurveType::EquityVolatility].insert(proxySurface());
+        // see EquityVolCurve::buildVolatility(...) for proxy surfaces, there we require equity curves for
+        // the curveID of the vol curve and the proxy vol curve implicitly
+        requiredCurveIds_[CurveSpec::CurveType::Equity].insert(curveID_);
+        requiredCurveIds_[CurveSpec::CurveType::Equity].insert(proxySurface());
     }
 }
 
@@ -129,7 +141,7 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         } else if ((n = XMLUtils::getChildNode(node, "DeltaSurface"))) {
             QL_FAIL("DeltaSurface not currently supported for equity volatilities.");
         } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
-            QL_FAIL("MoneynessSurface not currently supported for equity volatilities.");
+            volatilityConfig_ = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "ApoFutureSurface"))) {
             QL_FAIL("ApoFutureSurface not supported for equity volatilities.");
         } else if ((n = XMLUtils::getChildNode(node, "ProxySurface"))) {
@@ -143,7 +155,9 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     } else {
         QL_FAIL("Only ATM and Smile dimensions, or Volatility Config supported for EquityVolatility " << curveID_);
     }
+
     populateQuotes();
+    populateRequiredCurveIds();
 }
 
 XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {

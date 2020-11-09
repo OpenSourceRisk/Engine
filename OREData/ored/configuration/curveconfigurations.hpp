@@ -177,6 +177,9 @@ public:
     /*! Return the Yields curves available */
     std::set<string> yieldCurveConfigIds();
 
+    /*! Return all curve ids required by a given curve id of a given type */
+    std::map<CurveSpec::CurveType, std::set<string>> requiredCurveIds(const CurveSpec::CurveType& type,
+                                                                      const std::string& curveId) const;
     //@}
 
     //! \name Serialisation

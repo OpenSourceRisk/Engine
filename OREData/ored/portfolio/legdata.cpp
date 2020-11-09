@@ -28,6 +28,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/vectorutils.hpp>
 
 #include <boost/make_shared.hpp>
 #include <ql/cashflow.hpp>
@@ -65,8 +66,11 @@
 using namespace QuantLib;
 using namespace QuantExt;
 
+
 namespace ore {
 namespace data {
+
+bool lessThan(const string& s1, const string& s2) { return s1 < s2; }
 
 LegDataRegister<CashflowData> CashflowData::reg_("Cashflow");
 
@@ -74,6 +78,10 @@ void CashflowData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     amounts_ =
         XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Cashflow", "Amount", "date", dates_, &parseReal, false);
+
+    auto p = sort_permutation(dates_, lessThan);
+    apply_permutation_in_place(dates_, p);
+    apply_permutation_in_place(amounts_, p);
 }
 
 XMLNode* CashflowData::toXML(XMLDocument& doc) {
@@ -1871,18 +1879,23 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
 
 Leg joinLegs(const std::vector<Leg>& legs) {
     Leg masterLeg;
+    Size lastLeg = Null<Size>();
     for (Size i = 0; i < legs.size(); ++i) {
+        // skip empty legs
+        if(legs[i].empty())
+            continue;
         // check if the periods of adjacent legs are consistent
-        if (i > 0) {
-            auto lcpn = boost::dynamic_pointer_cast<Coupon>(legs[i - 1].back());
+        if (lastLeg != Null<Size>()) {
+            auto lcpn = boost::dynamic_pointer_cast<Coupon>(legs[lastLeg].back());
             auto fcpn = boost::dynamic_pointer_cast<Coupon>(legs[i].front());
-            QL_REQUIRE(lcpn, "joinLegs: expected coupon as last cashflow in leg #" << (i - 1));
+            QL_REQUIRE(lcpn, "joinLegs: expected coupon as last cashflow in leg #" << lastLeg);
             QL_REQUIRE(fcpn, "joinLegs: expected coupon as first cashflow in leg #" << i);
             QL_REQUIRE(lcpn->accrualEndDate() == fcpn->accrualStartDate(),
                        "joinLegs: accrual end date of last coupon in leg #"
-                           << (i - 1) << " (" << lcpn->accrualEndDate()
+                           << lastLeg << " (" << lcpn->accrualEndDate()
                            << ") is not equal to accrual start date of first coupon in leg #" << i << " ("
                            << fcpn->accrualStartDate() << ")");
+            lastLeg = i;
         }
         // copy legs together
         masterLeg.insert(masterLeg.end(), legs[i].begin(), legs[i].end());

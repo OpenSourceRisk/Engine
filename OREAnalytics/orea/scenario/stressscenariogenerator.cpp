@@ -384,23 +384,22 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
                                                  boost::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
 
-    Size n_eqvol_exp = simMarketData_->equityVolExpiries().size();
-
-    std::vector<Real> values(n_eqvol_exp);
-    std::vector<Real> times(n_eqvol_exp);
-
-    // buffer for shifted zero curves
-    std::vector<Real> shiftedValues(n_eqvol_exp);
-
     for (auto d : std.equityVolShifts) {
         string equity = d.first;
         LOG("Apply stress scenario to equity vol structure " << equity);
+        Size n_eqvol_exp = simMarketData_->equityVolExpiries(equity).size();
+
+        std::vector<Real> values(n_eqvol_exp);
+        std::vector<Real> times(n_eqvol_exp);
+
+        // buffer for shifted zero curves
+        std::vector<Real> shiftedValues(n_eqvol_exp);
 
         StressTestScenarioData::VolShiftData data = d.second;
 
         DayCounter dc = parseDayCounter(simMarketData_->equityVolDayCounter(equity));
         for (Size j = 0; j < n_eqvol_exp; ++j) {
-            Date d = asof + simMarketData_->equityVolExpiries()[j];
+            Date d = asof + simMarketData_->equityVolExpiries(equity)[j];
 
             RiskFactorKey key(RiskFactorKey::KeyType::EquityVolatility, equity, j);
             values[j] = baseScenario_->get(key);

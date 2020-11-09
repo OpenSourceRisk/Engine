@@ -37,7 +37,7 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     const boost::shared_ptr<Market>& market = engineFactory->market();
 
     // If automatic exercise, check that we have a non-empty FX index string, parse it and attach curves from market.
-    if (option_.automaticExercise()) {
+    if (option_.isAutomaticExercise()) {
 
         QL_REQUIRE(!fxIndex_.empty(),
                    "FX option trade " << id() << " has automatic exercise so the FXIndex node needs to be populated.");
@@ -60,7 +60,7 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     if (expiryDate_ > Settings::instance().evaluationDate()) {
         const string& ccyPairCode = assetName_ + currency_;
         DLOG("Implied vol for " << tradeType_ << " on " << ccyPairCode << " with expiry " << expiryDate_
-                                << " and strike " << strike_ << " is "
+                                << " and strike " << std::setprecision(6) << strike_ << " is "
                                 << market->fxVol(ccyPairCode)->blackVol(expiryDate_, strike_));
     }
 }

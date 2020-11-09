@@ -1,0 +1,13 @@
+<TodaysMarket>
+  <YieldCurves id="default"/>
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="MYR">Yield/MYR/MYR-KLIBOR-3M</DiscountingCurve>
+  </DiscountingCurves>
+  <IndexForwardingCurves/>
+  <CommodityCurves id="default">
+    <CommodityCurve name="XKLS:FCPO">Commodity/MYR/XKLS:FCPO</CommodityCurve>
+  </CommodityCurves>
+  <CommodityVolatilities id="default">
+    <CommodityVolatility name="XKLS:FCPO">CommodityVolatility/MYR/XKLS:FCPO</CommodityVolatility>
+  </CommodityVolatilities>
+</TodaysMarket>

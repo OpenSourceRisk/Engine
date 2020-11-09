@@ -303,8 +303,8 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     parameters->setFxVolCcyPairs({"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"});
     parameters->setFxCcyPairs({"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"});
 
-    parameters->equityVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    parameters->equityVolDecayMode() = "ConstantVariance";
+    parameters->setEquityVolExpiries("", {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
+    parameters->setEquityVolDecayMode("ConstantVariance");
     parameters->setEquityVolDayCounters("", "ACT/ACT");
     parameters->setSimulateEquityVols(false);
 
@@ -375,8 +375,10 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     fxConfigs.push_back(boost::make_shared<FxBsData>("JPY", "EUR", calibrationType, true, ParamType::Piecewise,
                                                      sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 
-    std::map<std::pair<std::string, std::string>, Handle<Quote>> corr;
-    corr[std::make_pair("IR:EUR", "IR:USD")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.6));
+    map<CorrelationKey, Handle<Quote>> corr;
+    CorrelationFactor f_1{ CrossAssetModelTypes::IR, "EUR", 0 };
+    CorrelationFactor f_2{ CrossAssetModelTypes::IR, "USD", 0 };
+    corr[make_pair(f_1, f_2)] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.6));
 
     boost::shared_ptr<CrossAssetModelData> config(boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, corr));
 
