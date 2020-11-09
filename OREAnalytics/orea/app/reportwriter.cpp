@@ -761,20 +761,23 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
 }
 
 void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_ptr<SensitivityStream>& ss,
-                                          Real outputThreshold) {
+                                          Real outputThreshold, Size outputPrecision) {
 
     LOG("Writing Sensitivity report");
+
+    Size shiftSizePrecision = outputPrecision < 6 ? 6 : outputPrecision;
+    Size amountPrecision = outputPrecision < 2 ? 2 : outputPrecision;
 
     report.addColumn("TradeId", string());
     report.addColumn("IsPar", string());
     report.addColumn("Factor_1", string());
-    report.addColumn("ShiftSize_1", double(), 6);
+    report.addColumn("ShiftSize_1", double(), shiftSizePrecision);
     report.addColumn("Factor_2", string());
-    report.addColumn("ShiftSize_2", double(), 6);
+    report.addColumn("ShiftSize_2", double(), shiftSizePrecision);
     report.addColumn("Currency", string());
-    report.addColumn("Base NPV", double(), 2);
-    report.addColumn("Delta", double(), 2);
-    report.addColumn("Gamma", double(), 2);
+    report.addColumn("Base NPV", double(), amountPrecision);
+    report.addColumn("Delta", double(), amountPrecision);
+    report.addColumn("Gamma", double(), amountPrecision);
 
     // Make sure that we are starting from the start
     ss->reset();

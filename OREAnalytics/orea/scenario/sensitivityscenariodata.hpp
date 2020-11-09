@@ -137,6 +137,13 @@ public:
 
     //! Give back the shift data for the given risk factor type, \p keyType, with the given \p name
     const ShiftData& shiftData(const ore::analytics::RiskFactorKey::KeyType& keyType, const std::string& name) const;
+
+    //! Check if a two sided delta has been configured for the given risk factor key type, \p keyType.
+    bool twoSidedDelta(const RiskFactorKey::KeyType& keyType) const;
+
+    //! Return the set of risk factor key types configured for two sided delta.
+    const std::set<RiskFactorKey::KeyType>& twoSidedDeltas() const { return twoSidedDeltas_; }
+
     //@}
 
     //! \name Setters
@@ -176,6 +183,7 @@ public:
     bool& computeGamma() { return computeGamma_; }
     bool& useSpreadedTermStructures() { return useSpreadedTermStructures_; }
 
+    std::set<RiskFactorKey::KeyType>& twoSidedDeltas() { return twoSidedDeltas_; }
     //@}
 
     //! \name Serialisation
@@ -236,6 +244,10 @@ protected:
     vector<pair<string, string>> crossGammaFilter_;
     bool computeGamma_;
     bool useSpreadedTermStructures_;
+
+    /*! Set of risk factor keys for which a two sided delta has been configured.
+    */
+    std::set<RiskFactorKey::KeyType> twoSidedDeltas_;
 };
 } // namespace analytics
 } // namespace ore
