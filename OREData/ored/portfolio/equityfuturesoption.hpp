@@ -45,6 +45,10 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
+
+    //! Add underlying Equity names
+    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
+    
 private:
     boost::shared_ptr<ore::data::Underlying> underlying_;    
     QuantLib::Date futureExpiryDate_;

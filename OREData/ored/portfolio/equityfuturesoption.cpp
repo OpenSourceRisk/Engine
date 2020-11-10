@@ -93,5 +93,9 @@ XMLNode* EquityFutureOption::toXML(XMLDocument& doc) {
     return node;
 }
 
+std::map<AssetClass, std::set<std::string>> EquityFutureOption::underlyingIndices() const {
+    return {{AssetClass::EQ, std::set<std::string>({name()})}};
+}
+
 } // namespace data
 } // namespace ore
