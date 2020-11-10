@@ -136,7 +136,7 @@ void EquityOptionSurfaceStripper::performCalculations() const {
     // loop over each expiry
     for (auto exp : allExpiries) {
         // get the forward price at time
-        Real forward = eqIndex_->fixing(exp);
+        Real forward = eqIndex_->forecastFixing(exp);
 
         vector<Real> callStrikes, putStrikes;
         auto itc = std::find(callExpiries.begin(), callExpiries.end(), exp);
