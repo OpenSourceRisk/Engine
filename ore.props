@@ -21,7 +21,7 @@
   <PropertyGroup Label="UserMacros">
     <!--Additional warnings-->
     <additionalWarning/>
-    <additionalWarning Condition="'$(VisualStudioVersion)' == '15.0'">$(additionalWarning) /w35038</additionalWarning>
+    <additionalWarning Condition="'$(VisualStudioVersion)' &gt;= '15.3'">$(additionalWarning) /w35038</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34189</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34101</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34701</additionalWarning>
