@@ -325,6 +325,7 @@ indexes/region.hpp
 indexes/secpi.hpp
 instruments/averageois.hpp
 instruments/brlcdiswap.hpp
+instruments/cashflowresults.hpp
 instruments/cashsettledeuropeanoption.hpp
 instruments/cdsoption.hpp
 instruments/commodityapo.hpp

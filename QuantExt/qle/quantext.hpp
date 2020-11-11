@@ -117,6 +117,7 @@
 #include <qle/indexes/secpi.hpp>
 #include <qle/instruments/averageois.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/instruments/commodityapo.hpp>
