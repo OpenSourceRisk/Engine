@@ -59,6 +59,7 @@ indexes/inflationindexwrapper.cpp
 indexes/region.cpp
 instruments/averageois.cpp
 instruments/brlcdiswap.cpp
+instruments/cashflowresults.cpp
 instruments/cashsettledeuropeanoption.cpp
 instruments/cdsoption.cpp
 instruments/commodityapo.cpp
