@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/aggregation/exposure.hpp
+/*! \file orea/aggregation/nettedexposurecalculator.hpp
     \brief Exposure calculator
     \ingroup analytics
 */
