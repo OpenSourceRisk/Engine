@@ -35,6 +35,7 @@ libTermStructures_la_SOURCES = \
 	subperiodsswaphelper.cpp \
 	defaultprobabilityhelpers.cpp \
 	blackvariancesurfacemoneyness.cpp \
+	blackvolatilitysurfacemoneyness.cpp \
 	blackvolsurfacewithatm.cpp \
 	swaptionvolcube2.cpp \
 	fxvannavolgasmilesection.cpp \
@@ -92,6 +93,7 @@ this_include_HEADERS = \
 	swaptionvolcubewithatm.hpp \
 	swaptionvolconstantspread.hpp \
 	blackvariancesurfacemoneyness.hpp \
+	blackvolatilitysurfacemoneyness.hpp \
     equityvolconstantspread.hpp \
 	swaptionvolcube2.hpp \
 	yoyinflationcurveobserverstatic.hpp \
