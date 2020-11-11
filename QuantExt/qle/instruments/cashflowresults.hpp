@@ -46,4 +46,7 @@ struct CashFlowResults {
     QuantLib::Real notional = QuantLib::Null<QuantLib::Real>();
 };
 
+std::ostream& operator<<(std::ostream& out,
+                         const CashFlowResults& t);
+
 } // namespace QuantExt
