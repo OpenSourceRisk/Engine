@@ -45,7 +45,7 @@ bool checkCurrency(const string& s) {
 bool checkMinorCurrency(const string& s) {
     //! list of supported minor currencies
     const static std::vector<string> codes = {
-       "GBp", "GBX", "GBp", "GBX", "ILa", "ILX", "ZAc", "ZAC", "ZAX" };
+       "GBp", "GBX", "ILa", "ILX", "ZAc", "ZAC", "ZAX" };
     auto it = std::find(codes.begin(), codes.end(), s);
     return it != codes.end();
 }
