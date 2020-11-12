@@ -104,7 +104,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     vector<string> tokens;
     boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
     string base = "FX_OPTION/RATE_LNVOL/" + tokens[1] + "/" + tokens[2] + "/";
-    bool hasATM = false;
+    bool hasATM = false, hasCall = false, hasPut = false;
     for (Size i = 0; i < expiries.size(); i++) {
         Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries[i]) - unsortedExp.begin();
         string e = config->expiries()[idx];
@@ -122,12 +122,19 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                 vector<string> tokens2;
                 boost::split(tokens2, qs, boost::is_any_of("/"));
                 string delta = tokens2.back();
-                if (delta == "ATM")
+                if (delta == "ATM") {
                     hasATM = true;
-                if (delta.back() == 'P')
+                    QL_REQUIRE(!hasCall, "deltas must be sorted as puts => atm => calls");
+                }
+                if (delta.back() == 'P') {
                     putDeltas.push_back(-1 * parseReal(delta.substr(0, delta.size() - 1)) / 100);
-                if (delta.back() == 'C')
+                    hasPut = true;
+                    QL_REQUIRE(!hasATM && !hasCall, "deltas must be sorted as puts => atm => calls");
+                }
+                if (delta.back() == 'C') {
                     callDeltas.push_back(parseReal(delta.substr(0, delta.size() - 1)) / 100);
+                    hasCall = true;
+                }
             }
         }
     }
