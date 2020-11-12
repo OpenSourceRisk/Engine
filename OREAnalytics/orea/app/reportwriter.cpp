@@ -58,9 +58,15 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("NotionalCurrency", string())
         .addColumn("Notional(Base)", double(), 2)
         .addColumn("NettingSet", string())
-        .addColumn("CounterParty", string());
+        .addColumn("CounterParty", string())
+        // Custom outputs added below:
+        .addColumn("DiscountFactorAtMat(dom)", double(), 6)
+        .addColumn("Volatility(VanOpt)", double(), 6) // Vanilla Options
+        .addColumn("ForwardPrice(Eq)", double(), 6);
+
     for (auto trade : portfolio->trades()) {
         try {
+            DLOG("Writing npv data of trade id: " << trade->id());
             string npvCcy = trade->npvCurrency();
             Real fx = 1.0, fxNotional = 1.0;
             if (npvCcy != baseCurrency)
@@ -86,6 +92,49 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                          : trade->notional() * fxNotional)
                 .add(trade->envelope().nettingSetId())
                 .add(trade->envelope().counterparty());
+
+            // Custom outputs below
+            // Domestic discount factor at maturity
+            Real domDisc = market->discountCurve(trade->notionalCurrency(), configuration)->discount(maturity);
+            report.add(domDisc);
+
+            // Option volatility output
+            boost::shared_ptr<QuantLib::VanillaOption> qlVanOpt =
+                boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trade->instrument()->qlInstrument());
+            if (qlVanOpt) {
+                Volatility blackVol = 0.0;
+                Real fwdPrice = 0.0;
+
+                if (trade->tradeType() == "EquityOption") {
+                    boost::shared_ptr<ore::data::EquityOption> eqoTrn =
+                        boost::dynamic_pointer_cast<ore::data::EquityOption>(trade);
+                    const std::string& assetName = eqoTrn->asset(); // or equivalently equityName()
+                    blackVol = market->equityVol(assetName)->blackVol(maturity, eqoTrn->strike());
+                    
+                    Real divDisc = market->equityDividendCurve(assetName, configuration)->discount(maturity);
+                    Real eqSpot = market->equitySpot(assetName, configuration)->value();
+                    fwdPrice = eqSpot * divDisc / domDisc;
+
+                    DLOG("Derived forward price " << std::setprecision(12) << std::fixed << fwdPrice << " for maturity " << maturity << ", spot " << eqSpot
+                        << ", dividend discount " << divDisc << ", and domestic discount " << domDisc << ".");
+                } else if (trade->tradeType() == "FxOption") {
+                    boost::shared_ptr<ore::data::FxOption> fxoTrn =
+                        boost::dynamic_pointer_cast<ore::data::FxOption>(trade);
+                    const std::string& ccyPair = fxoTrn->boughtCurrency() + fxoTrn->soldCurrency();
+                    blackVol = market->fxVol(ccyPair)->blackVol(maturity, fxoTrn->strike());
+                } else if (trade->tradeType() == "CommodityOption") {
+                    //boost::shared_ptr<ore::data::CommodityOption> comoTrn =
+                    //    boost::dynamic_pointer_cast<ore::data::CommodityOption>(trade);
+                    // const std::string& assetName = comoTrn->asset();
+                    // blackVol = market->commodityVolatility(assetName)->blackVol(maturity, comoTrn->strike());
+                }
+                report.add(blackVol);
+                report.add(fwdPrice);
+            } else {
+                // Need to output something if not VanillaOption trade
+                report.add(Null<Real>());
+                report.add(Null<Real>());
+            }
         } catch (std::exception& e) {
             ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during trade pricing", e.what()));
             Date maturity = trade->maturity();
@@ -102,7 +151,10 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(nullString_)
                 .add(Null<Real>())
                 .add(nullString_)
-                .add(nullString_);
+                .add(nullString_)
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(Null<Real>());
         }
     }
     report.end();
