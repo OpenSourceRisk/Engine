@@ -21,6 +21,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/utilities/currencycheck.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
@@ -52,6 +53,18 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     }
 }
 
+void EquityOption::setCcyStrike() {
+    Currency ccy;
+    if (tryParse<Currency>(localCurrency_, ccy, &parseMinorCurrency)) {
+        // if we have a minor currency, convert the strike
+        currency_ = ccy.code();
+        strike_ = convertMinorToMajorCurrency(ccy, localStrike_);
+    } else {
+        currency_ = localCurrency_;
+        strike_ = localStrike_;
+    }
+}
+
 void EquityOption::fromXML(XMLNode* node) {
     VanillaOptionTrade::fromXML(node);
     XMLNode* eqNode = XMLUtils::getChildNode(node, "EquityOptionData");
@@ -61,9 +74,10 @@ void EquityOption::fromXML(XMLNode* node) {
     if (!tmp)
         tmp = XMLUtils::getChildNode(eqNode, "Name");
     equityUnderlying_.fromXML(tmp);
-    currency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
-    strike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
+    localCurrency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
+    localStrike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
+    setCcyStrike();
 }
 
 XMLNode* EquityOption::toXML(XMLDocument& doc) {
@@ -73,8 +87,8 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
 
     XMLUtils::appendNode(eqNode, option_.toXML(doc));
     XMLUtils::appendNode(eqNode, equityUnderlying_.toXML(doc));
-    XMLUtils::addChild(doc, eqNode, "Currency", currency_);
-    XMLUtils::addChild(doc, eqNode, "Strike", strike_);
+    XMLUtils::addChild(doc, eqNode, "Currency", localCurrency_);
+    XMLUtils::addChild(doc, eqNode, "Strike", localStrike_);
     XMLUtils::addChild(doc, eqNode, "Quantity", quantity_);
 
     return node;

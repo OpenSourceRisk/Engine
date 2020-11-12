@@ -609,6 +609,33 @@ Currency parseCurrency(const string& s) {
     }
 }
 
+Currency parseMinorCurrency(const string& s) {
+    static map<string, Currency> m = {
+        {"GBp", GBPCurrency()}, {"GBX", GBPCurrency()},
+        {"ILa", ILSCurrency()}, {"ILX", ILSCurrency()},
+        {"ZAc", ZARCurrency()}, {"ZAC", ZARCurrency()}, {"ZAX", ZARCurrency()} };
+    
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    }
+    else {
+        QL_FAIL("Currency \"" << s << "\" not recognized");
+    }
+}
+
+Currency parseCurrencyWithMinors(const string& s) {
+    try {
+        return parseCurrency(s);
+    } catch (...) {
+        try {
+            return parseMinorCurrency(s);
+        } catch (...) {
+            QL_FAIL("Currency \"" << s << "\" not recognized");
+        }
+    }
+}
+
 DateGeneration::Rule parseDateGenerationRule(const string& s) {
     static map<string, DateGeneration::Rule> m = {{"Backward", DateGeneration::Backward},
                                                   {"Forward", DateGeneration::Forward},

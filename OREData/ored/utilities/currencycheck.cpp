@@ -41,5 +41,17 @@ bool checkCurrency(const string& s) {
     auto it = std::find(codes.begin(), codes.end(), s);
     return it != codes.end();
 }
+
+bool checkMinorCurrency(const string& s) {
+    //! list of supported minor currencies
+    const static std::vector<string> codes = {
+       "GBp", "GBX", "GBp", "GBX", "ILa", "ILX", "ZAc", "ZAC", "ZAX" };
+    auto it = std::find(codes.begin(), codes.end(), s);
+    return it != codes.end();
+}
+
+QuantLib::Real convertMinorToMajorCurrency(const QuantLib::Currency& ccy, QuantLib::Real value) {
+    return value / ccy.fractionsPerUnit();
+}
 } // namespace data
 } // namespace ore

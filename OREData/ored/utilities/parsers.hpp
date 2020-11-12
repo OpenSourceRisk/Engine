@@ -125,6 +125,18 @@ QuantLib::DayCounter parseDayCounter(const string& s);
  */
 QuantLib::Currency parseCurrency(const string& s);
 
+//! Convert text to QuantLib::Currency for minor currencies e.g GBp -> GBPCurrency()
+/*!
+  \ingroup utilities
+ */
+QuantLib::Currency parseMinorCurrency(const string& s);
+
+//! Convert text to QuantLib::Currency, allows minor or major ccy
+/*!
+  \ingroup utilities
+ */
+QuantLib::Currency parseCurrencyWithMinors(const string& s);
+
 //! Convert text to QuantLib::DateGeneration::Rule
 /*!
   \ingroup utilities
