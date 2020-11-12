@@ -210,11 +210,6 @@ BOOST_AUTO_TEST_CASE(testEquityFutureOptionPrices) {
     eqPut.build(engineFactory);
     eqPutPremium.build(engineFactory);
 
-    Real npv_call = eqCall.instrument()->NPV();
-    Real npv_call_premium = eqCallPremium.instrument()->NPV();
-    Real npv_put = eqPut.instrument()->NPV();
-    Real npv_put_premium = eqPutPremium.instrument()->NPV();
-    
     BOOST_CHECK_CLOSE(eqCall.instrument()->NPV(), eqFwdCall.instrument()->NPV(), 0.001);
     BOOST_CHECK_CLOSE(eqCallPremium.instrument()->NPV(), eqFwdCallPremium.instrument()->NPV(), 0.001);
     BOOST_CHECK_CLOSE(eqPut.instrument()->NPV(), eqFwdPut.instrument()->NPV(), 0.001);
