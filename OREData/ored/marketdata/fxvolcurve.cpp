@@ -104,7 +104,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     vector<string> tokens;
     boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
     string base = "FX_OPTION/RATE_LNVOL/" + tokens[1] + "/" + tokens[2] + "/";
-    bool hasATM = false, hasCall = false, hasPut = false;
+    bool hasATM = false, hasCall = false;
     for (Size i = 0; i < expiries.size(); i++) {
         Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries[i]) - unsortedExp.begin();
         string e = config->expiries()[idx];
@@ -128,7 +128,6 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                 }
                 if (delta.back() == 'P') {
                     putDeltas.push_back(-1 * parseReal(delta.substr(0, delta.size() - 1)) / 100);
-                    hasPut = true;
                     QL_REQUIRE(!hasATM && !hasCall, "deltas must be sorted as puts => atm => calls");
                 }
                 if (delta.back() == 'C') {
