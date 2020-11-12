@@ -111,6 +111,12 @@ boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates,
     case YieldCurve::InterpolationMethod::ConvexMonotone:
         yieldts.reset(new CurveType<QuantLib::ConvexMonotone>(dates, rates, dayCounter));
         break;
+    case YieldCurve::InterpolationMethod::Quadratic:
+        yieldts.reset(new CurveType<QuantExt::Quadratic>(dates, rates, dayCounter, QuantExt::Quadratic(1, 0, 1, 0, 1)));
+        break;
+    case YieldCurve::InterpolationMethod::LogQuadratic:
+        yieldts.reset(new CurveType<QuantExt::LogQuadratic>(dates, rates, dayCounter, QuantExt::LogQuadratic(1, 0, -1, 0, 1)));
+        break;
     default:
         QL_FAIL("Interpolation method not recognised.");
     }
@@ -334,7 +340,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts =
                 boost::make_shared<my_curve>(
-					asofDate_, instruments, zeroDayCounter_, QuantExt::Quadratic(1, 0, 1, 0),
+					asofDate_, instruments, zeroDayCounter_, QuantExt::Quadratic(1, 0, 1, 0, 1),
 					QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
 														   minFactor, dontThrowSteps));
         } break;
@@ -342,7 +348,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef PiecewiseYieldCurve<ZeroYield, QuantExt::LogQuadratic, QuantExt::IterativeBootstrap> my_curve;
             ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_, QuantExt::LogQuadratic(1, 0, -1, 0),
+                asofDate_, instruments, zeroDayCounter_, QuantExt::LogQuadratic(1, 0, -1, 0, 1),
                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break; 
@@ -417,7 +423,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts =
                 boost::make_shared<my_curve>(
-					asofDate_, instruments, zeroDayCounter_, QuantExt::Quadratic(1, 0, 1, 0),
+					asofDate_, instruments, zeroDayCounter_, QuantExt::Quadratic(1, 0, 1, 0, 1),
 					QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
 														   minFactor, dontThrowSteps));
         } break;
@@ -425,7 +431,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef PiecewiseYieldCurve<Discount, QuantExt::LogQuadratic, QuantExt::IterativeBootstrap> my_curve;
             ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_, QuantExt::LogQuadratic(1, 0, -1, 0),
+                asofDate_, instruments, zeroDayCounter_, QuantExt::LogQuadratic(1, 0, -1, 0, 1),
                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break; 
@@ -499,7 +505,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef PiecewiseYieldCurve<ForwardRate, QuantExt::Quadratic, QuantExt::IterativeBootstrap> my_curve;
             ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_, QuantExt::Quadratic(1, 0, 1, 0),
+                asofDate_, instruments, zeroDayCounter_, QuantExt::Quadratic(1, 0, 1, 0, 1),
                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
@@ -507,7 +513,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             typedef PiecewiseYieldCurve<ForwardRate, QuantExt::LogQuadratic, QuantExt::IterativeBootstrap> my_curve;
             ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = boost::make_shared<my_curve>(
-                asofDate_, instruments, zeroDayCounter_, QuantExt::LogQuadratic(1, 0, -1, 0),
+                asofDate_, instruments, zeroDayCounter_, QuantExt::LogQuadratic(1, 0, -1, 0, 1),
                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
@@ -2134,8 +2140,8 @@ vector<Date> pillarDates(const Handle<YieldTermStructure>& h) {
     getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::LogLinear, QuantExt::IterativeBootstrap>>(p, d);
     getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, Cubic, QuantExt::IterativeBootstrap>>(p, d);
     getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, ConvexMonotone, QuantExt::IterativeBootstrap>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, QuantExt::Quadratic>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, QuantExt::LogQuadratic>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, QuantExt::Quadratic>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, QuantExt::LogQuadratic>>(p, d);
 
     return d;
 }

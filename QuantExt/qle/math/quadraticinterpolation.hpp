@@ -92,7 +92,7 @@ using namespace QuantLib;
                 x_mul_, x_offset_, y_mul_, y_offset_, skip_);
         }
         static const bool global = false;
-        static const Size requiredPoints = 2;
+        static const Size requiredPoints = 1;
         Real x_mul_;
         Real x_offset_;
         Real y_mul_;
@@ -134,7 +134,7 @@ using namespace QuantLib;
                 // Return if x <= 0 or y = 0
                 // Error will be thrown when calling value or
                 // derivative functions
-                 for(Size i=0; i < n_; ++i) {
+                for(Size i=0; i < n_; ++i) {
                     if(x_[i] <= 0 || close_enough(y_[i], 0.0)) {
                         p_ = Null<Real>();
                         return;
@@ -166,7 +166,7 @@ using namespace QuantLib;
                 }
             }
             Real value(Real x) const {
-                QL_REQUIRE(p_, "failed to calibrate lambda");
+                QL_REQUIRE(p_ != Null<Real>(), "failed to calibrate lambda");
                 x = x * x_mul_ + x_offset_;
                 Real l = lambdas_[0] * x;
                 Real b = 0;
