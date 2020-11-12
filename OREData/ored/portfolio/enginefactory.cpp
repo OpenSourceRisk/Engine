@@ -174,9 +174,6 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityAmericanOptionBAWEngineBuilder>());
 
     registerBuilder(boost::make_shared<EquityFutureEuropeanOptionEngineBuilder>());
-    registerBuilder(boost::make_shared<EquityFutureEuropeanCSOptionEngineBuilder>());
-    registerBuilder(boost::make_shared<EquityFutureAmericanOptionFDEngineBuilder>());
-    registerBuilder(boost::make_shared<EquityFutureAmericanOptionBAWEngineBuilder>());
     
     registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
     registerBuilder(boost::make_shared<DiscountingForwardBondEngineBuilder>());

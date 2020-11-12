@@ -24,11 +24,13 @@ using namespace ore::data;
 */
 class EquityFutureOption : public VanillaOptionTrade {
 public:
+
     //! Default constructor
     EquityFutureOption() : VanillaOptionTrade(AssetClass::EQ) { tradeType_ = "EquityFutureOption"; }
     //! Constructor
     EquityFutureOption(Envelope& env, OptionData option, const string& currency, Real quantity, 
-        const boost::shared_ptr<ore::data::Underlying>& underlying, Real strike, Date futureExpiryDate);
+        const boost::shared_ptr<ore::data::Underlying>& underlying, Real strike, QuantLib::Date forwardDate,
+        const boost::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "");
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
@@ -37,7 +39,6 @@ public:
     //@{
     const std::string& name() const { return underlying_->name(); }
     const boost::shared_ptr<ore::data::Underlying>& underlying() const { return underlying_; }
-    const QuantLib::Date& futureExpiryDate() const { return futureExpiryDate_; }
     //@}
 
     //! \name Serialisation
@@ -51,7 +52,6 @@ public:
     
 private:
     boost::shared_ptr<ore::data::Underlying> underlying_;    
-    QuantLib::Date futureExpiryDate_;
         
 };
 } // namespace data

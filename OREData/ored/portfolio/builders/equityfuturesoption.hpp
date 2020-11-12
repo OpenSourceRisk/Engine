@@ -31,37 +31,10 @@ namespace data {
 /*! Engine builder for European commodity options
     \ingroup builders
  */
-class EquityFutureEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
+class EquityFutureEuropeanOptionEngineBuilder : public EuropeanForwardOptionEngineBuilder {
 public:
     EquityFutureEuropeanOptionEngineBuilder()
-        : EuropeanOptionEngineBuilder("BlackScholes", {"EquityFutureOption"}, AssetClass::EQ) {}
-};
-
-/*! Engine builder for European cash-settled commodity options
-    \ingroup builders
- */
-class EquityFutureEuropeanCSOptionEngineBuilder : public EuropeanCSOptionEngineBuilder {
-public:
-    EquityFutureEuropeanCSOptionEngineBuilder()
-        : EuropeanCSOptionEngineBuilder("BlackScholes", {"EquityFutureOptionEuropeanCS"}, AssetClass::EQ) {}
-};
-
-/*! Engine builder for American commodity options using finite difference.
-    \ingroup builders
- */
-class EquityFutureAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
-public:
-    EquityFutureAmericanOptionFDEngineBuilder()
-        : AmericanOptionFDEngineBuilder("BlackScholes", {"EquityFutureOptionAmerican"}, AssetClass::EQ, expiryDate_) {}
-};
-
-/*! Engine builder for American commodity options using Barone-Adesi and Whaley approximation.
-    \ingroup builders
- */
-class EquityFutureAmericanOptionBAWEngineBuilder : public AmericanOptionBAWEngineBuilder {
-public:
-    EquityFutureAmericanOptionBAWEngineBuilder()
-        : AmericanOptionBAWEngineBuilder("BlackScholes", {"EquityFutureOptionAmerican"}, AssetClass::EQ) {}
+        : EuropeanForwardOptionEngineBuilder("BlackScholes", {"EquityFutureOption"}, AssetClass::EQ) {}
 };
 
 } // namespace data
