@@ -3,7 +3,7 @@
  All rights reserved.
 */
 
-/*! \file model/cirdata.hpp
+/*! \file ored/model/crcirdata.hpp
     \brief CIR credit model data
     \ingroup models
 */

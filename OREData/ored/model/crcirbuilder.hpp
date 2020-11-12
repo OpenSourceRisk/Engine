@@ -3,7 +3,7 @@
  All rights reserved.
 */
 
-/*! \file ored/model/cirbuilder.hpp
+/*! \file ored/model/crcirbuilder.hpp
     \brief Build an cir model
     \ingroup models
 */

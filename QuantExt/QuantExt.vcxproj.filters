@@ -885,6 +885,9 @@
     <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\cashflowresults.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
@@ -1073,6 +1076,9 @@
       <Filter>instruments</Filter>
     </ClCompile>
     <ClCompile Include="qle\instruments\tenorbasisswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\cashflowresults.cpp">
       <Filter>instruments</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\crossccyswapengine.cpp">

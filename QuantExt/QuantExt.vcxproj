@@ -624,6 +624,7 @@
     <ClInclude Include="qle\instruments\tenorbasisswap.hpp" />
     <ClInclude Include="qle\instruments\vanillaforwardoption.hpp" />
     <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp" />
+    <ClInclude Include="qle\instruments\cashflowresults.hpp" />
     <ClInclude Include="qle\interpolators\optioninterpolator2d.hpp" />
     <ClInclude Include="qle\math\deltagammavar.hpp" />
     <ClInclude Include="qle\math\fillemptymatrix.hpp" />
@@ -896,6 +897,7 @@
     <ClCompile Include="qle\instruments\subperiodsswap.cpp" />
     <ClCompile Include="qle\instruments\tenorbasisswap.cpp" />
     <ClCompile Include="qle\instruments\cashsettledeuropeanoption.cpp" />
+    <ClCompile Include="qle\instruments\cashflowresults.cpp" />
     <ClCompile Include="qle\math\deltagammavar.cpp" />
     <ClCompile Include="qle\math\fillemptymatrix.cpp" />
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
