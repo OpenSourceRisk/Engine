@@ -17,6 +17,7 @@
 */
 
 #include <ored/utilities/currencycheck.hpp>
+#include <ored/utilities/parsers.hpp>
 
 #include <algorithm>
 #include <vector>
@@ -37,7 +38,8 @@ bool checkCurrency(const string& s) {
         "RON", "RSD", "RUB", "RWF", "SAR", "SBD", "SCR", "SDG", "SEK", "SGD", "SHP", "SLL", "SOS", "SRD", "SSP",
         "STD", "SVC", "SYP", "SZL", "THB", "TJS", "TMT", "TND", "TOP", "TRY", "TTD", "TWD", "TZS", "UAH", "UGX",
         "USD", "USN", "UYI", "UYU", "UZS", "VEF", "VND", "VUV", "WST", "XAF", "XAG", "XAU", "XBA", "XBB", "XBC",
-        "XBD", "XCD", "XDR", "XOF", "XPD", "XPF", "XPT", "XSU", "XTS", "XUA", "XXX", "YER", "ZAR", "ZMW", "ZWL"};
+        "XBD", "XCD", "XDR", "XOF", "XPD", "XPF", "XPT", "XSU", "XTS", "XUA", "XXX", "YER", "ZAR", "ZMW", "ZWL",
+        "GBp", "GBX", "ILa", "ILX", "ZAc", "ZAC", "ZAX" };
     auto it = std::find(codes.begin(), codes.end(), s);
     return it != codes.end();
 }
@@ -50,8 +52,13 @@ bool checkMinorCurrency(const string& s) {
     return it != codes.end();
 }
 
-QuantLib::Real convertMinorToMajorCurrency(const QuantLib::Currency& ccy, QuantLib::Real value) {
-    return value / ccy.fractionsPerUnit();
+QuantLib::Real convertMinorToMajorCurrency(const string& s, QuantLib::Real value) {
+    if (checkMinorCurrency(s)) {
+        QuantLib::Currency ccy = parseCurrency(s);
+        return value / ccy.fractionsPerUnit();
+    } else {
+        return value;
+    }
 }
 } // namespace data
 } // namespace ore

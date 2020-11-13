@@ -27,6 +27,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/utilities/currencycheck.hpp>
 #include <ql/errors.hpp>
 #include <qle/instruments/equityforward.hpp>
 
@@ -37,14 +38,17 @@ namespace ore {
 namespace data {
 
 void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-    Currency ccy = parseCurrency(currency_);
+    Currency ccy = parseCurrencyWithMinors(currency_);
+    // convert strike to the major currency if needed
+    Real strike = convertMinorToMajorCurrency(currency_, strike_);
+
     QuantLib::Position::Type longShort = parsePositionType(longShort_);
     Date maturity = parseDate(maturityDate_);
 
     string name = eqName();
 
     boost::shared_ptr<Instrument> inst =
-        boost::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, strike_);
+        boost::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, strike);
 
     // Pricing engine
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
@@ -55,12 +59,12 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
     // set up other Trade details
     instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst));
-    npvCurrency_ = currency_;
+    npvCurrency_ = ccy.code();
     maturity_ = maturity;
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
-    notional_ = strike_ * quantity_;
-    notionalCurrency_ = currency_;
+    notional_ = strike * quantity_;
+    notionalCurrency_ = ccy.code();
 }
 
 void EquityForward::fromXML(XMLNode* node) {

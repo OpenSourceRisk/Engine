@@ -45,7 +45,7 @@ bool checkMinorCurrency(const string& s);
 /*! .i.e 100 GBp to 1 GBP
     \ingroup utilities
 */
-QuantLib::Real convertMinorToMajorCurrency(const QuantLib::Currency& ccy, QuantLib::Real value);
+QuantLib::Real convertMinorToMajorCurrency(const std::string& s, QuantLib::Real value);
 
 } // namespace data
 } // namespace ore

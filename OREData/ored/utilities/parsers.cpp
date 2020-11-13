@@ -599,7 +599,8 @@ Currency parseCurrency(const string& s) {
         {"MAD", MADCurrency()}, {"UYU", UYUCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()},
         {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"KES", KESCurrency()}, {"LKR", LKRCurrency()},
         {"RSD", RSDCurrency()}, {"COU", COUCurrency()}, {"MUR", MURCurrency()}, {"UGX", UGXCurrency()},
-        {"ZMW", ZMWCurrency()}, {"GHS", GHSCurrency()}, {"JOD", JODCurrency()}, {"HRK", HRKCurrency()}};
+        {"ZMW", ZMWCurrency()}, {"GHS", GHSCurrency()}, {"JOD", JODCurrency()}, {"HRK", HRKCurrency()},
+    };
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -628,11 +629,8 @@ Currency parseCurrencyWithMinors(const string& s) {
     try {
         return parseCurrency(s);
     } catch (...) {
-        try {
-            return parseMinorCurrency(s);
-        } catch (...) {
-            QL_FAIL("Currency \"" << s << "\" not recognized");
-        }
+        // try to parse as a minor currency if fails
+        return parseMinorCurrency(s);
     }
 }
 

@@ -131,7 +131,7 @@ QuantLib::Currency parseCurrency(const string& s);
  */
 QuantLib::Currency parseMinorCurrency(const string& s);
 
-//! Convert text to QuantLib::Currency, allows minor or major ccy
+//! Convert text to QuantLib::Currency
 /*!
   \ingroup utilities
  */

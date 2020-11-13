@@ -54,15 +54,9 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 }
 
 void EquityOption::setCcyStrike() {
-    Currency ccy;
-    if (tryParse<Currency>(localCurrency_, ccy, &parseMinorCurrency)) {
-        // if we have a minor currency, convert the strike
-        currency_ = ccy.code();
-        strike_ = convertMinorToMajorCurrency(ccy, localStrike_);
-    } else {
-        currency_ = localCurrency_;
-        strike_ = localStrike_;
-    }
+    currency_ = parseCurrencyWithMinors(localCurrency_).code();
+    // if we have a minor currency, convert the strike
+    strike_ = convertMinorToMajorCurrency(localCurrency_, localStrike_);
 }
 
 void EquityOption::fromXML(XMLNode* node) {
