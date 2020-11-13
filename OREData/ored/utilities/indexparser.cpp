@@ -187,11 +187,8 @@ boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
 }
 
 boost::shared_ptr<QuantLib::Index> parseGenericIndex(const string& s) {
-    std::vector<string> tokens;
-    split(tokens, s, boost::is_any_of("-"));
-    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": GENERIC-NAME");
-    QL_REQUIRE(tokens[0] == "GENERIC", "expected first token to be GENERIC");
-    return boost::make_shared<GenericIndex>(tokens[0] + "-" + tokens[1]);
+    QL_REQUIRE(boost::starts_with(s, "GENERIC-"), "generic index expected to be of the form GENERIC-*");
+    return boost::make_shared<GenericIndex>(s);
 }
 
 bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index, const boost::shared_ptr<Convention>& c) {

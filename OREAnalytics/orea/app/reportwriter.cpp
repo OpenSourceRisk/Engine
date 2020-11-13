@@ -30,6 +30,7 @@
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/errors.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <stdio.h>
 
 using ore::data::to_string;
@@ -257,72 +258,46 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                 }
             }
 
-            // write conditional cashflows that might be provided as additional results
-            // we assume fixed labels and types for these results, otherwise we don't
-            // write out any conditional flows
+            // write cashflows that are provided as additional results
+            // we assume a fixed label and type for these results, if we do not find that we do not write out anything
             auto qlInstr = trades[k]->instrument()->qlInstrument();
             // we don't require a ql instrument always
             if (qlInstr) {
-                auto condCfAmounts = qlInstr->additionalResults().find("cashflowAmounts");
-                auto condCfDates = qlInstr->additionalResults().find("cashflowDates");
-                auto condCfCurrencies = qlInstr->additionalResults().find("cashflowCurrencies");
-                auto condCfLegNumbers = qlInstr->additionalResults().find("cashflowLegNumbers");
-                auto condCfTypes = qlInstr->additionalResults().find("cashflowTypes");
-                if (condCfAmounts != qlInstr->additionalResults().end() &&
-                    condCfDates != qlInstr->additionalResults().end() &&
-                    condCfCurrencies != qlInstr->additionalResults().end() &&
-                    condCfLegNumbers != qlInstr->additionalResults().end() &&
-                    condCfTypes != qlInstr->additionalResults().end()) {
-                    QL_REQUIRE(condCfAmounts->second.type() == typeid(std::vector<Real>),
-                               "cashflowAmounts type not handled");
-                    QL_REQUIRE(condCfDates->second.type() == typeid(std::vector<Date>),
-                               "cashflowDates type not handled");
-                    QL_REQUIRE(condCfCurrencies->second.type() == typeid(std::vector<string>),
-                               "cashflowCurrencies type not handled");
-                    QL_REQUIRE(condCfLegNumbers->second.type() == typeid(std::vector<Size>),
-                               "cashflowLegNumbers type not handled");
-                    QL_REQUIRE(condCfTypes->second.type() == typeid(std::vector<string>),
-                               "cashflowTypes type not handled");
-                    std::vector<Real> condCfAmountsVec = boost::any_cast<std::vector<Real>>(condCfAmounts->second);
-                    std::vector<Date> condCfDatesVec = boost::any_cast<std::vector<Date>>(condCfDates->second);
-                    std::vector<string> condCfCurrenciesVec =
-                        boost::any_cast<std::vector<string>>(condCfCurrencies->second);
-                    std::vector<Size> condCfLegNumbersVec =
-                        boost::any_cast<std::vector<Size>>(condCfLegNumbers->second);
-                    std::vector<string> condCfTypesVec = boost::any_cast<std::vector<string>>(condCfTypes->second);
-                    QL_REQUIRE(condCfAmountsVec.size() == condCfDatesVec.size(),
-                               "cashflowAmounts and cashflowDates size mismatch");
-                    QL_REQUIRE(condCfAmountsVec.size() == condCfCurrenciesVec.size(),
-                               "cashflowAmounts and cashflowCurrencies size mismatch");
-                    QL_REQUIRE(condCfAmountsVec.size() == condCfLegNumbersVec.size(),
-                               "cashflowAmounts and cashflowLegNumbers size mismatch");
-                    QL_REQUIRE(condCfAmountsVec.size() == condCfTypesVec.size(),
-                               "cashflowAmounts and cashflowTypes size mismatch");
+                auto tmp = qlInstr->additionalResults().find("cashFlowResults");
+                if (tmp != qlInstr->additionalResults().end()) {
+                    QL_REQUIRE(tmp->second.type() == typeid(std::vector<CashFlowResults>),
+                               "cashflowResults type not handlded");
+                    std::vector<CashFlowResults> cfResults = boost::any_cast<std::vector<CashFlowResults>>(tmp->second);
                     std::map<Size,Size> cashflowNumber;
-                    for (Size i = 0; i < condCfAmountsVec.size(); ++i) {
+                    for (auto const& cf : cfResults) {
                         Real effectiveAmount =
-                            condCfAmountsVec[i] * (condCfAmountsVec[i] == Null<Real>() ? 1.0 : multiplier);
+                            cf.amount * (cf.amount == Null<Real>() ? 1.0 : multiplier);
                         report.next()
                             .add(trades[k]->id())
                             .add(trades[k]->tradeType())
-                            .add(++cashflowNumber[condCfLegNumbersVec[i]])
-                            .add(condCfLegNumbersVec[i])
-                            .add(condCfDatesVec[i])
-                            .add(condCfTypesVec[i])
+                            .add(++cashflowNumber[cf.legNumber])
+                            .add(cf.legNumber)
+                            .add(cf.payDate)
+                            .add(cf.type)
                             .add(effectiveAmount)
-                            .add(condCfCurrenciesVec[i])
-                            .add(Null<Real>())
-                            .add(Null<Real>())
-                            .add(Null<Date>())
-                            .add(Null<Date>())
-                            .add(Null<Real>())
-                            .add(Null<Date>())
-                            .add(Null<Real>())
-                            .add(Null<Real>());
+                            .add(cf.currency)
+                            .add(cf.rate)
+                            .add(cf.accrualPeriod)
+                            .add(cf.accrualStartDate)
+                            .add(cf.accrualEndDate)
+                            .add(cf.accruedAmount * (cf.accruedAmount == Null<Real>() ? 1.0 : multiplier))
+                            .add(cf.fixingDate)
+                            .add(cf.fixingValue)
+                            .add(cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier));
                         if (write_discount_factor) {
-                            Handle<YieldTermStructure> discountCurve = market->discountCurve(condCfCurrenciesVec[i]);
-                            Real discountFactor = discountCurve->discount(condCfDatesVec[i]);
-                            report.add(discountFactor).add(discountFactor * effectiveAmount);
+                            if (!cf.currency.empty() && cf.payDate != Null<Date>()) {
+                                Handle<YieldTermStructure> discountCurve = market->discountCurve(cf.currency);
+                                Real discountFactor = discountCurve->discount(cf.payDate);
+                                report.add(discountFactor).add(discountFactor * effectiveAmount);
+                            } else {
+                                // fallback if currency or pay date are not given in the additional results
+                                report.add(1.0).add(effectiveAmount);
+                            }
                         }
                     }
                 }
