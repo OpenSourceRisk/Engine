@@ -175,23 +175,23 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
 
     // Create the CDS instrument helpers
     vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>> helpers;
+    QuantExt::CreditDefaultSwap::ProtectionPaymentTime ppt = cdsConv->paysAtDefaultTime() ?
+        QuantExt::CreditDefaultSwap::atDefault : QuantExt::CreditDefaultSwap::atPeriodEnd;
+
     if (config.type() == DefaultCurveConfig::Type::SpreadCDS) {
         for (auto quote : quotes) {
             helpers.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
                 quote.second, quote.first, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                 cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                config.startDate(), cdsConv->settlesAccrual(),
-                cdsConv->paysAtDefaultTime() ? QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault
-                                             : QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd));
+                config.startDate(), cdsConv->settlesAccrual(), ppt));
         }
     } else {
         for (auto quote : quotes) {
             helpers.push_back(boost::make_shared<QuantExt::UpfrontCdsHelper>(
                 quote.second, config.runningSpread(), quote.first, cdsConv->settlementDays(), cdsConv->calendar(),
                 cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
-                recoveryRate_, discountCurve, config.startDate(), cdsConv->settlesAccrual(),
-                cdsConv->paysAtDefaultTime() ? QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault
-                                             : QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd));
+                recoveryRate_, discountCurve, config.startDate(), cdsConv->upfrontSettlementDays(),
+                cdsConv->settlesAccrual(), ppt));
         }
     }
 

@@ -691,7 +691,8 @@ public:
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
             const int paymentLag = 0, const std::string& paymentCalendar = "",
             const std::vector<std::string>& paymentDates = std::vector<std::string>(),
-            const std::vector<Indexing>& indexing = {}, const bool indexingFromAssetLeg = false);
+            const std::vector<Indexing>& indexing = {}, const bool indexingFromAssetLeg = false,
+            const string& lastPeriodDayCounter = "");
 
     //! \name Serialisation
     //@{
@@ -726,6 +727,7 @@ public:
     const std::vector<std::string>& paymentDates() const { return paymentDates_; }
     const std::vector<Indexing>& indexing() const { return indexing_; }
     const bool indexingFromAssetLeg() const { return indexingFromAssetLeg_; }
+    const string& lastPeriodDayCounter() const { return lastPeriodDayCounter_; }
     //@}
 
     //! \name modifiers
@@ -773,6 +775,7 @@ private:
     std::vector<std::string> paymentDates_;
     std::vector<Indexing> indexing_;
     bool indexingFromAssetLeg_;
+    string lastPeriodDayCounter_;
 };
 
 //! \name Utilities for building QuantLib Legs

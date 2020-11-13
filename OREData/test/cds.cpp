@@ -21,7 +21,11 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 // clang-format on
+#include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/csvloader.hpp>
+#include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketimpl.hpp>
+#include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/enginedata.hpp>
@@ -188,6 +192,24 @@ Real expNpvs[] = {0, 0, 0.050659, -0.05062};
 // List of trades that will feed the data-driven test below to check CDS trade building.
 vector<string> trades = {"cds_minimal_with_rules", "cds_minimal_with_dates"};
 
+// Create todaysmarket from input files.
+boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir) {
+
+    Conventions conventions;
+    conventions.fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
+
+    CurveConfigurations curveConfigs;
+    curveConfigs.fromFile(TEST_INPUT_FILE(string(inputDir + "/curveconfig.xml")));
+
+    TodaysMarketParameters todaysMarketParameters;
+    todaysMarketParameters.fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
+
+    CSVLoader loader(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
+        TEST_INPUT_FILE(string(inputDir + "/fixings.txt")), false);
+
+    return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs, conventions);
+}
+
 } // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
@@ -226,6 +248,36 @@ BOOST_DATA_TEST_CASE_F(TopLevelFixture, testCreditDefaultSwapBuilding, bdata::ma
     Real npv;
     BOOST_CHECK_NO_THROW(npv = p.trades().at(0)->instrument()->NPV());
     BOOST_TEST_MESSAGE("CDS NPV is: " << npv);
+}
+
+// Create CDS curve from upfront quotes. Price portfolio of CDS that match the curve instruments. Check that the 
+// value of each instrument is zero as expected. Notional is $10M and bootstrap accuracy is 1e-12 => tol of 1e-4 
+// should be adequate.
+BOOST_AUTO_TEST_CASE(testUpfrontDefaultCurveConsistency) {
+
+    BOOST_TEST_MESSAGE("Testing upfront default curve consistency ...");
+
+    Date asof(6, Nov, 2020);
+    Settings::instance().evaluationDate() = Date(6, Nov, 2020);
+    string dir("upfront");
+    Real tol = 0.0001;
+
+    boost::shared_ptr<TodaysMarket> tm;
+    BOOST_REQUIRE_NO_THROW(tm = createTodaysMarket(asof, dir));
+
+    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    data->fromFile(TEST_INPUT_FILE(string(dir + "/pricingengine.xml")));
+    boost::shared_ptr<EngineFactory> ef = boost::make_shared<EngineFactory>(data, tm);
+
+    Portfolio portfolio;
+    portfolio.load(TEST_INPUT_FILE(string(dir + "/portfolio.xml")));
+    portfolio.build(ef);
+
+    for (const auto& trade : portfolio.trades()) {
+        auto npv = trade->instrument()->NPV();
+        BOOST_TEST_MESSAGE("NPV of trade " << trade->id() << " is " << fixed << setprecision(12) << npv);
+        BOOST_CHECK_SMALL(trade->instrument()->NPV(), tol);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

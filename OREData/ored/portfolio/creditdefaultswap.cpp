@@ -53,15 +53,21 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
         amortized_leg = legBuilder->buildLeg(swap_.leg(), engineFactory, requiredFixings_, configuration);
     }
 
-    DayCounter dc = Actual360(true);
+    DayCounter dc = Actual360();
     if (!swap_.leg().dayCounter().empty()) {
         dc = parseDayCounter(swap_.leg().dayCounter());
     }
 
     // In general for CDS and CDS index trades, the standard day counter is Actual/360 and the final
     // period coupon accrual includes the maturity date.
-    Actual360 standardDayCounter;
-    DayCounter lastPeriodDayCounter = dc == standardDayCounter ? Actual360(true) : dc;
+    DayCounter lastPeriodDayCounter;
+    auto strLpdc = swap_.leg().lastPeriodDayCounter();
+    if (!strLpdc.empty()) {
+        lastPeriodDayCounter = parseDayCounter(strLpdc);
+    } else {
+        Actual360 standardDayCounter;
+        lastPeriodDayCounter = dc == standardDayCounter ? Actual360(true) : dc;
+    }
 
     boost::shared_ptr<FixedLegData> fixedData =
         boost::dynamic_pointer_cast<FixedLegData>(swap_.leg().concreteLegData());

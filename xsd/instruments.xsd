@@ -536,6 +536,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element type="dayCounter" name="LastPeriodDayCounter" minOccurs="0"/>
       <xs:element ref="legDataType"/>
     </xs:all>
   </xs:complexType>

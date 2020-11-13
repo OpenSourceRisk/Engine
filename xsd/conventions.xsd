@@ -53,8 +53,10 @@
       <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="1" maxOccurs="1"/>
       <xs:element type="dateRule" name="Rule" minOccurs="1" maxOccurs="1"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="UpfrontSettlementDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="SettlesAccrual" minOccurs="1" maxOccurs="1"/>
       <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="LastPeriodDayCounter" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
