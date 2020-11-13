@@ -3,7 +3,7 @@
  All rights reserved.
 */
 
-/*! \file ored/model/cirbuilder.hpp
+/*! \file ored/model/crcirbuilder.hpp
     \brief Build an cir model
     \ingroup models
 */
@@ -19,10 +19,9 @@
 #include <ored/model/modelbuilder.hpp>
 #include <ored/model/crcirdata.hpp>
 
-using namespace QuantLib;
-
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! Builder for a cir model component
 class CrCirBuilder : public ModelBuilder {

@@ -86,122 +86,122 @@ void SensitivityScenarioGenerator::generateScenarios() {
                "filter must be empty");
 
     generateDiscountCurveScenarios(true);
-    if (sensitivityData_->computeGamma())
+    if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::DiscountCurve))
         generateDiscountCurveScenarios(false);
 
     generateIndexCurveScenarios(true);
-    if (sensitivityData_->computeGamma())
+    if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::IndexCurve))
         generateIndexCurveScenarios(false);
 
     generateYieldCurveScenarios(true);
-    if (sensitivityData_->computeGamma())
+    if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::YieldCurve))
         generateYieldCurveScenarios(false);
 
     if (simMarketData_->simulateFxSpots()) {
         generateFxScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::FXSpot))
             generateFxScenarios(false);
     }
 
     generateEquityScenarios(true);
-    if (sensitivityData_->computeGamma())
+    if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::EquitySpot))
         generateEquityScenarios(false);
 
     if (simMarketData_->simulateDividendYield()) {
         generateDividendYieldScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::DividendYield))
             generateDividendYieldScenarios(false);
     }
 
     generateZeroInflationScenarios(true);
-    if (sensitivityData_->computeGamma())
+    if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::ZeroInflationCurve))
         generateZeroInflationScenarios(false);
 
     generateYoYInflationScenarios(true);
-    if (sensitivityData_->computeGamma())
+    if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::YoYInflationCurve))
         generateYoYInflationScenarios(false);
 
     if (simMarketData_->simulateYoYInflationCapFloorVols()) {
         generateYoYInflationCapFloorVolScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::YoYInflationCapFloorVolatility))
             generateYoYInflationCapFloorVolScenarios(false);
     }
 
     if (simMarketData_->simulateZeroInflationCapFloorVols()) {
         generateZeroInflationCapFloorVolScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::ZeroInflationCapFloorVolatility))
             generateZeroInflationCapFloorVolScenarios(false);
     }
 
     if (simMarketData_->simulateFXVols()) {
         generateFxVolScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::FXVolatility))
             generateFxVolScenarios(false);
     }
 
     if (simMarketData_->simulateEquityVols()) {
         generateEquityVolScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::EquityVolatility))
             generateEquityVolScenarios(false);
     }
 
     if (simMarketData_->simulateSwapVols()) {
         generateSwaptionVolScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::SwaptionVolatility))
             generateSwaptionVolScenarios(false);
     }
 
     if (simMarketData_->simulateYieldVols()) {
         generateYieldVolScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::YieldVolatility))
             generateYieldVolScenarios(false);
     }
 
     if (simMarketData_->simulateCapFloorVols()) {
         generateCapFloorVolScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::OptionletVolatility))
             generateCapFloorVolScenarios(false);
     }
 
     if (simMarketData_->simulateSurvivalProbabilities()) {
         generateSurvivalProbabilityScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::SurvivalProbability))
             generateSurvivalProbabilityScenarios(false);
     }
 
     if (simMarketData_->simulateCdsVols()) {
         generateCdsVolScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::CDSVolatility))
             generateCdsVolScenarios(false);
     }
 
     if (simMarketData_->simulateBaseCorrelations()) {
         generateBaseCorrelationScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::BaseCorrelation))
             generateBaseCorrelationScenarios(false);
     }
 
     if (simMarketData_->commodityCurveSimulate()) {
         generateCommodityCurveScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::CommodityCurve))
             generateCommodityCurveScenarios(false);
     }
 
     if (simMarketData_->commodityVolSimulate()) {
         generateCommodityVolScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::CommodityVolatility))
             generateCommodityVolScenarios(false);
     }
 
     if (simMarketData_->securitySpreadsSimulate()) {
         generateSecuritySpreadScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::SecuritySpread))
             generateSecuritySpreadScenarios(false);
     }
 
     if (simMarketData_->simulateCorrelations()) {
         generateCorrelationScenarios(true);
-        if (sensitivityData_->computeGamma())
+        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::Correlation))
             generateCorrelationScenarios(false);
     }
 

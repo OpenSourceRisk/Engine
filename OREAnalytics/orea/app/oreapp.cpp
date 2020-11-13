@@ -835,6 +835,7 @@ void OREApp::buildNPVCube() {
         const string configuration = params_->get("markets", "simulation");
         cptyCalculators.push_back(boost::make_shared<SurvivalProbabilityCalculator>(configuration));
     }
+
     LOG("Build cube");
     ValuationEngine engine(asof_, grid_, simMarket_);
     ostringstream o;

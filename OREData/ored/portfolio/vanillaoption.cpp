@@ -12,6 +12,7 @@
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <qle/instruments/vanillaforwardoption.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
 
 using namespace QuantLib;
@@ -21,23 +22,18 @@ namespace ore {
 namespace data {
 
 void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
-
     Currency ccy = parseCurrency(currency_);
-
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for VanillaOption");
 
     // Payoff
     Option::Type type = parseOptionType(option_.callPut());
     boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_));
-
     QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
     expiryDate_ = parseDate(option_.exerciseDates().front());
-
     // Set the maturity date equal to the expiry date. It may get updated below if option is cash settled with
     // payment after expiry.
     maturity_ = expiryDate_;
-
     // Exercise
     boost::shared_ptr<Exercise> exercise;
     switch (exerciseType) {
@@ -52,13 +48,11 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     default:
         QL_FAIL("Option Style " << option_.style() << " is not supported");
     }
-
     // Create the instrument and the populate the name for the engine builder.
     boost::shared_ptr<Instrument> vanilla;
     string tradeTypeBuider = tradeType_;
     Settlement::Type settlementType = parseSettlementType(option_.settlement());
     if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
-
         // We have a European cash settled option.
 
         // Get the payment date.
@@ -119,18 +113,24 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
             maturity_ = paymentDate;
 
         } else {
-            // If payment date is not greater than expiry, build QuantLib::VanillaOption.
-            vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+            if (forwardDate_ == QuantLib::Date()) {
+                // If payment date is not greater than expiry, build QuantLib::VanillaOption.
+                vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+            } else {
+                vanilla = boost::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
+            }
         }
 
     } else {
-
-        // If not European or not cash settled, build QuantLib::VanillaOption.
-        vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
-
+        if (forwardDate_ == QuantLib::Date()) {
+            // If not European or not cash settled, build QuantLib::VanillaOption.
+            vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+        } else {
+            QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European, "Only European Forward Options currently supported");
+            vanilla = boost::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
+        }
         tradeTypeBuider = tradeType_ + (exerciseType == QuantLib::Exercise::Type::European ? "" : "American");
     }
-
     // Only try to set an engine on the option instrument if it is not expired. This avoids errors in
     // engine builders that rely on the expiry date being in the future e.g. AmericanOptionFDEngineBuilder.
     string configuration = Market::defaultConfiguration;
@@ -148,7 +148,6 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
         DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate_)
                                                        << " because it is expired.");
     }
-
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real mult = quantity_ * bsInd;
@@ -166,10 +165,8 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
                    engineFactory, configuration);
         DLOG("option premium added for vanilla option " << id());
     }
-
     instrument_ = boost::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
-
     npvCurrency_ = currency_;
 
     // Notional - we really need todays spot to get the correct notional.

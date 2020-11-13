@@ -57,6 +57,7 @@
 #include <qle/currencies/asia.hpp>
 #include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/actual364.hpp>
 #include <qle/time/yearcounter.hpp>
 
@@ -1099,10 +1100,19 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
                 oss << ", " << r[i];
             }
         }
+    } else if (anyType.type() == typeid(std::vector<CashFlowResults>)) {
+        resultType = "vector_cashflows";
+        std::vector<CashFlowResults> r = boost::any_cast<std::vector<CashFlowResults>>(anyType);
+        if (!r.empty()) {
+            oss << std::fixed << std::setprecision(8) << r[0];
+            for (Size i = 1; i < r.size(); ++i) {
+                oss << ", " << r[i];
+            }
+        }
     } else if (anyType.type() == typeid(QuantLib::Matrix)) {
         resultType = "matrix";
         QuantLib::Matrix r = boost::any_cast<QuantLib::Matrix>(anyType);
-        oss << std::fixed << std::setprecision(8) << r; 
+        oss << std::fixed << std::setprecision(8) << r;
     } else {
         ALOG("Unsupported Boost::Any type");
         resultType = "unsupported_type";

@@ -1073,7 +1073,7 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
         }
     }
 
-    Vertex node;
+    Vertex node = nullptr;
 
     Graph& g = tmp->second;
     IndexMap index = boost::get(boost::vertex_index, g);
@@ -1111,7 +1111,7 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
     }
 
     // if the node is already built, we are done
-    
+
     if (g[node].built) {
         DLOG("node already built, do nothing.");
         return;

@@ -3,7 +3,7 @@
  All rights reserved.
 */
 
-/*! \file model/cirdata.hpp
+/*! \file ored/model/crcirdata.hpp
     \brief CIR credit model data
     \ingroup models
 */
@@ -20,10 +20,9 @@
 #include <ored/model/lgmdata.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-using namespace QuantLib;
-
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 class CrCirData : public XMLSerializable {
 public:

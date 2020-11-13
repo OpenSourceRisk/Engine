@@ -8,13 +8,13 @@
     <Parameters>
 
       <Discretization>Exact</Discretization>
-      <Grid>128,2W</Grid>
+      <Grid>60,1M</Grid>
       <!--<Grid>242,1M</Grid>-->
       <Calendar>EUR,USD,GBP,CHF</Calendar>
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
       <Seed>42</Seed>
-      <Samples>50</Samples>
+      <Samples>5000</Samples>
       <Ordering>Steps</Ordering>
       <DirectionIntegers>JoeKuoD7</DirectionIntegers>
 

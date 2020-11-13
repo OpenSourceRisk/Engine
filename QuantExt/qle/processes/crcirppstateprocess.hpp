@@ -26,9 +26,8 @@
 
 #include <ql/stochasticprocess.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 class CrCirpp;
 
