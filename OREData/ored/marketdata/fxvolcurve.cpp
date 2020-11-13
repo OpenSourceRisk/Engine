@@ -138,7 +138,6 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries[i]) - unsortedExp.begin();
         string e = config->expiries()[idx];
         dates.push_back(asof + expiries[i]);
-        Size j = 0;
         for (Size j = 0; j < deltaNames.size(); ++j) {
             string qs = base + e + "/" + deltaNames[j];
             boost::shared_ptr<MarketDatum> md = loader.get(qs, asof);
