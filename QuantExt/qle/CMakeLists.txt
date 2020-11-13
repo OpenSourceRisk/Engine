@@ -121,6 +121,7 @@ models/yoyinflationmodeltermstructure.cpp
 models/yoyswaphelper.cpp
 models/zeroinflationmodeltermstructure.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
+pricingengines/analyticeuropeanforwardengine.cpp
 pricingengines/analyticcclgmfxoptionengine.cpp
 pricingengines/analyticdkcpicapfloorengine.cpp
 pricingengines/analyticjycpicapfloorengine.cpp
@@ -351,6 +352,7 @@ instruments/payment.hpp
 instruments/rebatedexercise.hpp
 instruments/subperiodsswap.hpp
 instruments/tenorbasisswap.hpp
+instruments/vanillaforwardoption.hpp
 interpolators/optioninterpolator2d.hpp
 math/covariancesalvage.hpp
 math/deltagammavar.hpp
@@ -435,6 +437,7 @@ pricingengines/midpointcdsengine.hpp
 pricingengines/numericlgmswaptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
+pricingengines/analyticeuropeanforwardengine.hpp
 processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
 processes/irlgm1fstateprocess.hpp

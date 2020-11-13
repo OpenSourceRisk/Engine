@@ -99,6 +99,7 @@ portfolio/enginedata.cpp
 portfolio/enginefactory.cpp
 portfolio/envelope.cpp
 portfolio/equityforward.cpp
+portfolio/equityfuturesoption.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
 portfolio/fixingdates.cpp
@@ -254,6 +255,7 @@ portfolio/builders/cpicapfloor.hpp
 portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/creditdefaultswapoption.hpp
 portfolio/builders/equityforward.hpp
+portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
 portfolio/builders/forwardbond.hpp
 portfolio/builders/fxforward.hpp
@@ -272,6 +274,7 @@ portfolio/enginedata.hpp
 portfolio/enginefactory.hpp
 portfolio/envelope.hpp
 portfolio/equityforward.hpp
+portfolio/equityfuturesoption.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
 portfolio/fixingdates.hpp
