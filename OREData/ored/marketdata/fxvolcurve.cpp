@@ -95,46 +95,56 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     vector<Period> unsortedExp = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
     std::sort(expiries.begin(), expiries.end());
 
-    vector<string> deltas = config->deltas();
-    vector<Real> putDeltas;
-    vector<Real> callDeltas;
+    vector<std::pair<Real, string>> putDeltas, callDeltas;
+    bool hasATM = false;
+
+    for (auto const& delta : config->deltas()) {
+        if (delta == "ATM")
+            hasATM = true;
+        else if (!delta.empty() && delta.back() == 'P')
+            putDeltas.push_back(std::make_pair(-1 * parseReal(delta.substr(0, delta.size() - 1)) / 100, delta));
+        else if (!delta.empty() && delta.back() == 'C')
+            callDeltas.push_back(std::make_pair(parseReal(delta.substr(0, delta.size() - 1)) / 100, delta));
+        else {
+            QL_FAIL("invalid delta '" << delta << "', expected 10P, 40C, ATM, ...");
+        }
+    }
+
+    // sort puts 10P, 15P, 20P, ... and calls 45C, 40C, 35C, ... (notice put deltas have a negative sign)
+    auto comp = [](const std::pair<Real, string>& x, const std::pair<Real, string>& y) { return x.first > y.first; };
+    std::sort(putDeltas.begin(), putDeltas.end(), comp);
+    std::sort(callDeltas.begin(), callDeltas.end(), comp);
+
     vector<Date> dates;
     Matrix blackVolMatrix(expiries.size(), config->deltas().size());
 
     vector<string> tokens;
     boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
     string base = "FX_OPTION/RATE_LNVOL/" + tokens[1] + "/" + tokens[2] + "/";
-    bool hasATM = false, hasCall = false;
+
+    // build quote names
+    std::vector<std::string> deltaNames;
+    for (auto const& d : putDeltas) {
+        deltaNames.push_back(d.second);
+    }
+    if (hasATM) {
+        deltaNames.push_back("ATM");
+    }
+    for (auto const& d : callDeltas) {
+        deltaNames.push_back(d.second);
+    }
+
     for (Size i = 0; i < expiries.size(); i++) {
         Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries[i]) - unsortedExp.begin();
         string e = config->expiries()[idx];
         dates.push_back(asof + expiries[i]);
         Size j = 0;
-
-        for (auto d : deltas) {
-            string qs = base + e + "/" + d;
+        for (Size j = 0; j < deltaNames.size(); ++j) {
+            string qs = base + e + "/" + deltaNames[j];
             boost::shared_ptr<MarketDatum> md = loader.get(qs, asof);
             boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
             QL_REQUIRE(q, "quote not found, " << qs);
             blackVolMatrix[i][j] = q->quote()->value();
-            j++;
-            if (i == 0) {
-                vector<string> tokens2;
-                boost::split(tokens2, qs, boost::is_any_of("/"));
-                string delta = tokens2.back();
-                if (delta == "ATM") {
-                    hasATM = true;
-                    QL_REQUIRE(!hasCall, "deltas must be sorted as puts => atm => calls");
-                }
-                if (delta.back() == 'P') {
-                    putDeltas.push_back(-1 * parseReal(delta.substr(0, delta.size() - 1)) / 100);
-                    QL_REQUIRE(!hasATM && !hasCall, "deltas must be sorted as puts => atm => calls");
-                }
-                if (delta.back() == 'C') {
-                    callDeltas.push_back(parseReal(delta.substr(0, delta.size() - 1)) / 100);
-                    hasCall = true;
-                }
-            }
         }
     }
 
@@ -160,8 +170,13 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     auto fxSpot = fxSpots.fxPairLookup(config->fxSpotID());
     auto domYTS = getHandle<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
     auto forYTS = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
+    std::vector<Real> putDeltasNum, callDeltasNum;
+    std::transform(putDeltas.begin(), putDeltas.end(), std::back_inserter(putDeltasNum),
+                   [](const std::pair<Real, string>& x) { return x.first; });
+    std::transform(callDeltas.begin(), callDeltas.end(), std::back_inserter(callDeltasNum),
+                   [](const std::pair<Real, string>& x) { return x.first; });
     vol_ = boost::shared_ptr<BlackVolTermStructure>(new QuantExt::BlackVolatilitySurfaceDelta(
-        asof, dates, putDeltas, callDeltas, hasATM, blackVolMatrix, dc, cal, fxSpot, domYTS, forYTS));
+        asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot, domYTS, forYTS));
 
     vol_->enableExtrapolation();
 }
