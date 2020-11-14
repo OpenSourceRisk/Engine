@@ -119,10 +119,10 @@ std::vector<Date> EquityCoupon::fixingDates() const {
 
 EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
                      const boost::shared_ptr<FxIndex>& fxIndex)
-    : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentAdjustment_(Following),
-      paymentCalendar_(Calendar()), isTotalReturn_(true), initialPrice_(Null<Real>()),
-      initialPriceIsInTargetCcy_(false), dividendFactor_(1.0), fixingDays_(0), notionalReset_(false),
-      quantity_(Null<Real>()) {}
+    : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentLag_(0)
+	  paymentAdjustment_(Following), paymentCalendar_(Calendar()), isTotalReturn_(true),
+	  initialPrice_(Null<Real>()), initialPriceIsInTargetCcy_(false), dividendFactor_(1.0),
+	  fixingDays_(0), notionalReset_(false), quantity_(Null<Real>()) {}
 
 EquityLeg& EquityLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -141,6 +141,11 @@ EquityLeg& EquityLeg::withPaymentDayCounter(const DayCounter& dayCounter) {
 
 EquityLeg& EquityLeg::withPaymentAdjustment(BusinessDayConvention convention) {
     paymentAdjustment_ = convention;
+    return *this;
+}
+
+EquityLeg& EquityLeg::withPaymentLag(Natural paymentLag) {
+    paymentLag_ = paymentLag;
     return *this;
 }
 
@@ -208,7 +213,7 @@ EquityLeg::operator Leg() const {
     for (Size i = 0; i < numPeriods; ++i) {
         startDate = schedule_.date(i);
         endDate = schedule_.date(i + 1);
-        paymentDate = calendar.adjust(endDate, paymentAdjustment_);
+        paymentDate = calendar.advance(endDate, paymentLag_, Days, paymentAdjustment_);
 
         Date fixingStartDate = Date();
         Date fixingEndDate = Date();
