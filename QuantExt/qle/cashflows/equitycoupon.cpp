@@ -119,7 +119,7 @@ std::vector<Date> EquityCoupon::fixingDates() const {
 
 EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
                      const boost::shared_ptr<FxIndex>& fxIndex)
-    : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentLag_(0)
+    : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentLag_(0),
 	  paymentAdjustment_(Following), paymentCalendar_(Calendar()), isTotalReturn_(true),
 	  initialPrice_(Null<Real>()), initialPriceIsInTargetCcy_(false), dividendFactor_(1.0),
 	  fixingDays_(0), notionalReset_(false), quantity_(Null<Real>()) {}
