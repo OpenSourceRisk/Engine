@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/aggregation/cvacalculator.hpp
+/*! \file orea/aggregation/xvacalculator.hpp
     \brief CVA calculator base class
     \ingroup analytics
 */

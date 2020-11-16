@@ -293,12 +293,13 @@ def compare_files_direct(name, file_1, file_2):
     logger = logging.getLogger(__name__)
 
     logger.debug('%s: Comparing file %s directly against %s', name, file_1, file_2)
-    diff = difflib.unified_diff(open(file_1,'r').readlines(), open(file_2,'r').readlines(), fromfile = file_1, tofile = file_2)
-    match = True
 
-    for line in diff:
-        match = False
-        logger.warning(line.rstrip('\n'))
+    with open(file_1,'r') as f1, open(file_2,'r') as f2:
+        diff = difflib.unified_diff(f1.readlines(), f2.readlines(), fromfile = file_1, tofile = file_2)
+        match = True
+        for line in diff:
+            match = False
+            logger.warning(line.rstrip('\n'))
 
     return match
 
