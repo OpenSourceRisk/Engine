@@ -11,6 +11,7 @@
 #include <ored/portfolio/builders/vanillaoption.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/currencycheck.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <qle/instruments/vanillaforwardoption.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
@@ -22,7 +23,7 @@ namespace ore {
 namespace data {
 
 void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
-    Currency ccy = parseCurrency(currency_);
+    Currency ccy = parseCurrencyWithMinors(currency_);
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for VanillaOption");
 
     // Payoff
@@ -159,7 +160,10 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     std::vector<Real> additionalMultipliers;
     if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
         Real premiumAmount = -bsInd * option_.premium(); // pay if long, receive if short
-        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
+        // Premium could be in minor currency units, convert if needed
+        Currency premiumCurrency = parseCurrencyWithMinors(option_.premiumCcy());
+        premiumAmount = convertMinorToMajorCurrency(option_.premiumCcy(), premiumAmount);
+
         Date premiumDate = parseDate(option_.premiumPayDate());
         addPayment(additionalInstruments, additionalMultipliers, mult, premiumDate, premiumAmount, premiumCurrency, ccy,
                    engineFactory, configuration);

@@ -54,7 +54,7 @@ bool checkMinorCurrency(const string& s) {
 
 QuantLib::Real convertMinorToMajorCurrency(const string& s, QuantLib::Real value) {
     if (checkMinorCurrency(s)) {
-        QuantLib::Currency ccy = parseCurrency(s);
+        QuantLib::Currency ccy = parseMinorCurrency(s);
         return value / ccy.fractionsPerUnit();
     } else {
         return value;

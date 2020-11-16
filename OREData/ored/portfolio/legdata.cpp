@@ -25,6 +25,7 @@
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/utilities/currencycheck.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -1517,13 +1518,29 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     Real dividendFactor = eqLegData->dividendFactor();
     Real initialPrice = eqLegData->initialPrice();
     bool initialPriceIsInTargetCcy = false;
+
     if (!eqLegData->initialPriceCurrency().empty()) {
-        QL_REQUIRE(eqLegData->initialPriceCurrency() == data.currency() ||
-                       eqLegData->initialPriceCurrency() == eqLegData->eqCurrency() || eqLegData->eqCurrency().empty(),
-                   "initial price ccy (" << eqLegData->initialPriceCurrency() << ") must match either leg ccy ("
-                                         << data.currency() << ") or equity ccy (if given, got '"
-                                         << eqLegData->eqCurrency() << "')");
-        initialPriceIsInTargetCcy = eqLegData->initialPriceCurrency() == data.currency();
+        // parse currencies to handle minor currencies
+        Currency initialPriceCurrency = parseCurrencyWithMinors(eqLegData->initialPriceCurrency());
+        Currency dataCurrency = parseCurrencyWithMinors(data.currency());
+        Currency eqCurrency;
+        // set equity currency
+        if (!eqLegData->eqCurrency().empty())
+            eqCurrency = parseCurrencyWithMinors(eqLegData->eqCurrency());
+        else if (!equityCurve->currency().empty())
+            eqCurrency = equityCurve->currency();
+        else
+            TLOG("Cannot find currency for equity " << equityCurve->name());
+
+        // initial price currency must match leg or equity currency
+        QL_REQUIRE(initialPriceCurrency == dataCurrency ||
+            initialPriceCurrency == eqCurrency || eqCurrency.empty(),
+                   "initial price ccy (" << initialPriceCurrency << ") must match either leg ccy ("
+                                         << dataCurrency << ") or equity ccy (if given, got '"
+                                         << eqCurrency << "')");
+        initialPriceIsInTargetCcy = initialPriceCurrency == dataCurrency;
+        // adjust for minor currency
+        initialPrice = convertMinorToMajorCurrency(eqLegData->initialPriceCurrency(), initialPrice);
     }
     bool notionalReset = eqLegData->notionalReset();
     Natural fixingDays = eqLegData->fixingDays();

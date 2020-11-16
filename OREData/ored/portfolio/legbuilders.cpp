@@ -158,23 +158,33 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
     string eqName = eqData->eqName();
     auto eqCurve = *engineFactory->market()->equityCurve(eqName, configuration);
 
-    bool curveCcyCheck = false;
+    Currency dataCurrency = parseCurrencyWithMinors(data.currency());
+    Currency eqCurrency;
+    // Set the equity currency if provided
+    if (!eqData->eqCurrency().empty())
+        eqCurrency = parseCurrencyWithMinors(eqData->eqCurrency());
+
     if (eqCurve->currency().empty()) {
         WLOG("No equity currency set in EquityIndex for equity " << eqCurve->name());
     } else {
-        curveCcyCheck = data.currency() != eqCurve->currency().code();
+        // check if it equity currency not set, use from market else check if it matches what is in market
+        if (!eqCurrency.empty())
+            QL_REQUIRE(eqCurve->currency() == eqCurrency,
+                "Equity Currency provided does not match currency of Equity Curve");
+        else
+            eqCurrency = eqCurve->currency();
     }
 
     boost::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
     // if equity currency differs from the leg currency we need an FxIndex
-    if ((eqData->eqCurrency() != "" && eqData->eqCurrency() != data.currency()) || curveCcyCheck) {
+    if (!eqCurrency.empty() && dataCurrency != eqCurrency) {
         QL_REQUIRE(eqData->fxIndex() != "",
                    "No FxIndex - if equity currency differs from leg currency an FxIndex must be provided");
 
         // An extra check, this ensures that the equity currency provided to use in the FX Index, matches that in
         // equity curves in the market, this is required as future cashflows will be in the equity curve currency
-        if (!eqCurve->currency().empty())
-            QL_REQUIRE(eqCurve->currency() == parseCurrency(eqData->eqCurrency()), 
+        if (!eqCurve->currency().empty() && !eqCurrency.empty())
+            QL_REQUIRE(eqCurve->currency() == eqCurrency,
                 "Equity Currency provided does not match currency of Equity Curve");
 
         fxIndex = buildFxIndex(eqData->fxIndex(), data.currency(), eqData->eqCurrency(), engineFactory->market(),
