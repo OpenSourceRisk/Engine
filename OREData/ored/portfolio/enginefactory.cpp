@@ -32,6 +32,7 @@
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/builders/creditdefaultswapoption.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
+#include <ored/portfolio/builders/equityfuturesoption.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
@@ -172,6 +173,8 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityAmericanOptionFDEngineBuilder>());
     registerBuilder(boost::make_shared<EquityAmericanOptionBAWEngineBuilder>());
 
+    registerBuilder(boost::make_shared<EquityFutureEuropeanOptionEngineBuilder>());
+    
     registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
     registerBuilder(boost::make_shared<DiscountingForwardBondEngineBuilder>());
 
