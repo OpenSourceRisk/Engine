@@ -5,7 +5,7 @@ node has one and exactly one \lstinline!OptionData! trade component sub-node, an
 component sub-node.  These trade components are outlined in section \ref{ss:option_data} and section
 \ref{ss:leg_data}.\\
 \vspace{5mm}
-Supported swaption exercise styles are European and Bermudan.  Swaptions of both exercise styles must have two legs, with
+Supported swaption exercise styles are \emph{European} and \emph{Bermudan}.  Swaptions of both exercise styles must have two legs, with
 each leg represented by a \lstinline!LegData! sub-node.  Cross currency swaptions are not supported for either exercise style, i.e. the Currency element must
 have the same value for all \lstinline!LegData! sub-nodes of a swaption. There must be at least one full coupon period after the exercise date for European 
 Swaptions, and after the last exercise date for Bermudan Swaptions. See Table \ref{tab:swaption_requirements} for further details on requirements for
@@ -19,14 +19,26 @@ The structure of an example \lstinline!SwaptionData!  node of a European swaptio
 \begin{minted}[fontsize=\footnotesize]{xml}
 <SwaptionData>
     <OptionData>
+        <LongShort>Long</LongShort>
         <Style>European</Style>
+        <Settlement>Physical</Settlement>
+        <ExerciseDates>
+          <ExerciseDate>2027-03-02</ExerciseDate>
+        </ExerciseDates>
         ...
+        <PremiumAmount>807000</PremiumAmount>
+        <PremiumCurrency>GBP</PremiumCurrency>
+        <PremiumPayDate>2021-06-15</PremiumPayDate>
     </OptionData>
     <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>    
         <Currency>GBP</Currency>
         ...
     </LegData>
     <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>     
         <Currency>GBP</Currency>
         ...
     </LegData>
@@ -56,3 +68,41 @@ The structure of an example \lstinline!SwaptionData!  node of a European swaptio
   \caption{Requirements for Swaptions}
   \label{tab:swaption_requirements}
 \end{table}
+
+The OptionData trade component sub-node is outlined in section \ref{ss:option_data}. 
+The relevant fields in the \lstinline!OptionData! node for a Swaption are:
+
+\begin{itemize}
+\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}. Note that the payer and receiver legs in the underlying swap are always from the perspective of the party that is \emph{Long}. E.g. for a \emph{Short} swaption with a fixed leg where the Payer flag is set to \emph{false}, it means that the counterparty receives the fixed flows.  
+
+\item \lstinline!OptionType![Optional] This flag is optional for swaptions, and even if set, has no impact. Whether a swaption is a payer or receiver swaption is determined by the Payer flags on the legs of the underlying swap.
+
+\item  \lstinline!Style! The allowable values are \emph{European} or \emph{Bermudan}.
+
+\item \lstinline!NoticePeriod![Optional]: The notice period defining the date (relative to the exercise date) on which the exercise
+  decision has to be taken. If not given the notice period defaults to \emph{0D}, i.e. the notice date is identical to the
+  exercise date. Allowable values: A number followed by \emph{D, W, M, or Y}
+
+\item \lstinline!NoticeCalendar![Optional]: The calendar used to compute the notice date from the exercise date. If not given
+  defaults to the \emph{NullCalendar} (no holidays, weekends are no holidays either). Allowable values: See Table \ref{tab:calendar} Calendar.
+
+\item \lstinline!NoticeConvention![Optional]: The convention used to compute the notice date from the exercise date. Defaults to
+  \emph{Unadjusted} if not given. Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
+
+\item  \lstinline!Settlement! Delivery Type. The allowable values are \emph{Cash} or \emph{Physical}.
+
+\item \lstinline!SettlementMethod![Optional]: Specifies the method to calculate the settlement amount for Swaptions and CallableSwaps. Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice}, \emph{ParYieldCurve}. Defaults to \emph{ParYieldCurve} if Settlement is \emph{Cash} and defaults to \emph{PhysicalOTC} if Settlement is \emph{Physical}.
+
+\emph{PhysicalOTC} = OTC traded swaptions with physical settlement\\
+\emph{PhysicalCleared} = Cleared swaptions with physical settlement\\
+\emph{CollateralizedCashPrice} = Cash settled swaptions with settlement price calculation using zero coupon curve discounting \\
+\emph{ParYieldCurve}  = Cash settled swaptions with settlement price calculation using par yield discounting \footnote{https://www.isda.org/book/2006-isda-definitions/} \footnote{https://www.isda.org/a/TlAEE/Supplement-No-58-to-ISDA-2006-Definitions.pdf} \\
+
+\item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given for \emph{European} style swaptions, and for \emph{Bermudan} style swaptions  at least two ExerciseDate date elements must be given. \\
+
+\item Optional \lstinline!PremiumAmount!,  \lstinline!PremiumCurrency!, and \lstinline!PremiumPayDate! fields to specify the Swaption premium. 
+
+\end{itemize}
+
+
+
