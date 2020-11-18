@@ -105,19 +105,20 @@ void CdsHelper::initializeDates() {
 
     protectionStart_ = evaluationDate_ + settlementDays_;
 
-    Date startDate, endDate;
-    if (startDate_ == Date()) {
-        startDate = calendar_.adjust(protectionStart_, paymentConvention_);
-        if (rule_ == DateGeneration::CDS || rule_ == DateGeneration::CDS2015) { // for standard CDS ..
-            // .. the start date is not adjusted
-            startDate = protectionStart_;
-        }
-        endDate = protectionStart_ + tenor_;
+    Date startDate = startDate_ == Date() ? protectionStart_ : startDate_;
+    // Only adjust start date if rule is not CDS or CDS2015. Unsure about OldCDS.
+    if (rule_ != DateGeneration::CDS && rule_ != DateGeneration::CDS2015) {
+        startDate = calendar_.adjust(startDate, paymentConvention_);
+    }
+
+    Date endDate;
+    if (rule_ == DateGeneration::CDS2015 || rule_ == DateGeneration::CDS || rule_ == DateGeneration::OldCDS) {
+        Date refDate = startDate_ == Date() ? evaluationDate_ : startDate_;
+        endDate = cdsMaturity(refDate, tenor_, rule_);
     } else {
-        if (!schedule_.empty())
-            return; // no need to update schedule
-        startDate = calendar_.adjust(startDate_, paymentConvention_);
-        endDate = startDate_ + settlementDays_ + tenor_;
+        // Keep the old logic here
+        Date refDate = startDate_ == Date() ? protectionStart_ : startDate_ + settlementDays_;
+        endDate = refDate + tenor_;
     }
 
     schedule_ = MakeSchedule()
@@ -159,7 +160,8 @@ void SpreadCdsHelper::resetEngine() {
 
     swap_ = boost::make_shared<QuantExt::CreditDefaultSwap>(
         Protection::Buyer, 100.0, 0.01, schedule_, paymentConvention_, dayCounter_, settlesAccrual_,
-        protectionPaymentTime_, protectionStart_, boost::shared_ptr<Claim>(), lastPeriodDayCounter_);
+        protectionPaymentTime_, protectionStart_, boost::shared_ptr<Claim>(), lastPeriodDayCounter_,
+        evaluationDate_);
 
     swap_->setPricingEngine(
         boost::make_shared<QuantExt::MidPointCdsEngine>(probability_, recoveryRate_, discountCurve_));
@@ -207,7 +209,8 @@ Real UpfrontCdsHelper::impliedQuote() const {
 void UpfrontCdsHelper::resetEngine() {
     swap_ = boost::make_shared<CreditDefaultSwap>(
         Protection::Buyer, 100.0, 0.01, runningSpread_, schedule_, paymentConvention_, dayCounter_, settlesAccrual_,
-        protectionPaymentTime_, protectionStart_, upfrontDate_, boost::shared_ptr<Claim>(), lastPeriodDayCounter_);
+        protectionPaymentTime_, protectionStart_, upfrontDate_, boost::shared_ptr<Claim>(), lastPeriodDayCounter_,
+        evaluationDate_);
     swap_->setPricingEngine(
         boost::make_shared<QuantExt::MidPointCdsEngine>(probability_, recoveryRate_, discountCurve_, true));
 }
