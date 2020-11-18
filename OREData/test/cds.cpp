@@ -193,18 +193,19 @@ Real expNpvs[] = {0, 0, 0.050659, -0.05062};
 vector<string> trades = {"cds_minimal_with_rules", "cds_minimal_with_dates"};
 
 // Create todaysmarket from input files.
-boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir) {
+boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir,
+    const string& market = "market.txt", const string& curveConfig = "curveconfig.xml") {
 
     Conventions conventions;
     conventions.fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
 
     CurveConfigurations curveConfigs;
-    curveConfigs.fromFile(TEST_INPUT_FILE(string(inputDir + "/curveconfig.xml")));
+    curveConfigs.fromFile(TEST_INPUT_FILE(string(inputDir + "/" + curveConfig)));
 
     TodaysMarketParameters todaysMarketParameters;
     todaysMarketParameters.fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
 
-    CSVLoader loader(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
+    CSVLoader loader(TEST_INPUT_FILE(string(inputDir + "/" + market)),
         TEST_INPUT_FILE(string(inputDir + "/fixings.txt")), false);
 
     return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs, conventions);
@@ -250,20 +251,35 @@ BOOST_DATA_TEST_CASE_F(TopLevelFixture, testCreditDefaultSwapBuilding, bdata::ma
     BOOST_TEST_MESSAGE("CDS NPV is: " << npv);
 }
 
+// Various file combinations for the upfront consistency test below.
+struct UpfrontFiles {
+    string market;
+    string curveConfig;
+};
+
+ostream& operator<<(ostream& os, const UpfrontFiles& upfrontFiles) {
+    return os << "[" << upfrontFiles.market << "," << upfrontFiles.curveConfig << "]";
+}
+
+UpfrontFiles upfrontFiles[] = {
+    {"market.txt", "curveconfig.xml"},
+    {"market_rs.txt", "curveconfig_rs.xml"}
+};
+
 // Create CDS curve from upfront quotes. Price portfolio of CDS that match the curve instruments. Check that the 
 // value of each instrument is zero as expected. Notional is $10M and bootstrap accuracy is 1e-12 => tol of 1e-4 
 // should be adequate.
-BOOST_AUTO_TEST_CASE(testUpfrontDefaultCurveConsistency) {
+BOOST_DATA_TEST_CASE(testUpfrontDefaultCurveConsistency, bdata::make(upfrontFiles), files) {
 
     BOOST_TEST_MESSAGE("Testing upfront default curve consistency ...");
 
     Date asof(6, Nov, 2020);
-    Settings::instance().evaluationDate() = Date(6, Nov, 2020);
+    Settings::instance().evaluationDate() = asof;
     string dir("upfront");
     Real tol = 0.0001;
 
     boost::shared_ptr<TodaysMarket> tm;
-    BOOST_REQUIRE_NO_THROW(tm = createTodaysMarket(asof, dir));
+    BOOST_REQUIRE_NO_THROW(tm = createTodaysMarket(asof, dir, files.market, files.curveConfig));
 
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
     data->fromFile(TEST_INPUT_FILE(string(dir + "/pricingengine.xml")));
@@ -275,9 +291,21 @@ BOOST_AUTO_TEST_CASE(testUpfrontDefaultCurveConsistency) {
 
     for (const auto& trade : portfolio.trades()) {
         auto npv = trade->instrument()->NPV();
-        BOOST_TEST_MESSAGE("NPV of trade " << trade->id() << " is " << fixed << setprecision(12) << npv);
-        BOOST_CHECK_SMALL(trade->instrument()->NPV(), tol);
+        auto tradeId = trade->id();
+        BOOST_TEST_CONTEXT("NPV of trade " << tradeId << " is " << fixed << setprecision(12) << npv) {
+            BOOST_CHECK_SMALL(trade->instrument()->NPV(), tol);
+        }
     }
+}
+
+BOOST_AUTO_TEST_CASE(testUpfrontCurveBuildFailsIfNoRunningSpread) {
+
+    BOOST_TEST_MESSAGE("Testing upfront failure when no running spread ...");
+
+    Date asof(6, Nov, 2020);
+    Settings::instance().evaluationDate() = Date(6, Nov, 2020);
+    BOOST_CHECK_THROW(createTodaysMarket(asof, "upfront", "market.txt", "curveconfig_no_rs.xml"), QuantLib::Error);
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()
