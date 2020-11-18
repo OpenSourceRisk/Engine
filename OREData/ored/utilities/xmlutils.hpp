@@ -180,7 +180,7 @@ public:
     static string getChildValue(XMLNode* node, const string& name, bool mandatory = false);
     static Real getChildValueAsDouble(XMLNode* node, const string& name, bool mandatory = false);
     static int getChildValueAsInt(XMLNode* node, const string& name, bool mandatory = false);
-    static bool getChildValueAsBool(XMLNode* node, const string& name, bool mandatory = false); // default is true
+    static bool getChildValueAsBool(XMLNode* node, const string& name, bool mandatory = false, bool defaultValue = true);
     static vector<string> getChildrenValues(XMLNode* node, const string& names, const string& name,
                                             bool mandatory = false);
     static vector<string>

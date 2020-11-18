@@ -33,17 +33,31 @@ using crossPair = SensitivityCube::crossPair;
 SensitivityCubeStream::SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, const string& currency)
     : cube_(cube), currency_(currency), upRiskFactor_(cube_->upFactors().begin()),
       downRiskFactor_(cube_->downFactors().begin()), itCrossPair_(cube_->crossFactors().begin()),
-      tradeIdx_(cube_->tradeIdx().begin()) {}
+      tradeIdx_(cube_->tradeIdx().begin()), canComputeGamma_(false) {
+
+    // Set the value of canComputeGamma_ based on up and down risk factors.
+    const auto& upFactors = cube_->upFactors();
+    const auto& downFactors = cube_->downFactors();
+    if (upFactors.size() == downFactors.size()) {
+        auto pred = [](decltype(*upFactors.left.begin()) a, pair<RiskFactorKey, SensitivityCube::FactorData> b) {
+            return a.first == b.first;
+        };
+        canComputeGamma_ = equal(upFactors.left.begin(), upFactors.left.end(), downFactors.begin(), pred);
+    }
+}
 
 SensitivityRecord SensitivityCubeStream::next() {
 
     SensitivityRecord sr;
 
+    const auto& upFactors = cube_->upFactors();
+    const auto& downFactors = cube_->downFactors();
+
     // If exhausted deltas, gammas AND cross gammas, update to next trade and reset iterators
-    if (upRiskFactor_ == cube_->upFactors().end() && itCrossPair_ == cube_->crossFactors().end()) {
+    if (upRiskFactor_ == upFactors.end() && itCrossPair_ == cube_->crossFactors().end()) {
         tradeIdx_++;
-        upRiskFactor_ = cube_->upFactors().begin();
-        downRiskFactor_ = cube_->downFactors().begin();
+        upRiskFactor_ = upFactors.begin();
+        downRiskFactor_ = downFactors.begin();
         itCrossPair_ = cube_->crossFactors().begin();
     }
 
@@ -56,13 +70,20 @@ SensitivityRecord SensitivityCubeStream::next() {
         sr.baseNpv = cube_->npv(tradeIdx);
 
         // Are there more deltas and gammas for current trade ID
-        if (upRiskFactor_ != cube_->upFactors().end()) {
+        if (upRiskFactor_ != upFactors.end()) {
             Size usrx = upRiskFactor_->right.index;
             sr.key_1 = upRiskFactor_->left;
             sr.desc_1 = upRiskFactor_->right.factorDesc;
             sr.shift_1 = upRiskFactor_->right.shiftSize;
-            sr.delta = cube_->delta(tradeIdx, usrx);
-            if (downRiskFactor_ != cube_->downFactors().end()) {
+
+            if (!cube_->twoSidedDelta(sr.key_1.keytype)) {
+                sr.delta = cube_->delta(tradeIdx, usrx);
+            } else {
+                Size downIdx = downFactors.at(sr.key_1).index;
+                sr.delta = cube_->delta(tradeIdx, usrx, downIdx);
+            }
+
+            if (canComputeGamma_ && downRiskFactor_ != downFactors.end()) {
                 Size dsrx = downRiskFactor_->second.index;
                 sr.gamma = cube_->gamma(tradeIdx, usrx, dsrx);
                 downRiskFactor_++;

@@ -31,6 +31,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 
+//! Lgm Implied Default Term Structure
 /*! The termstructure has the reference date of the model's
     termstructure at construction, but you can vary this
     as well as the state.

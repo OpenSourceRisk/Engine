@@ -60,10 +60,15 @@ void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market,
     bool recalibrateModels =
         params_->has("sensitivity", "recalibrateModels") && parseBool(params_->get("sensitivity", "recalibrateModels"));
 
+    bool analyticFxSensis = false;
+    if (params_->has("sensitivity", "analyticFxSensis")) {
+        analyticFxSensis = parseBool(params_->get("sensitivity", "analyticFxSensis"));
+    }
+
     boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
         sensiPortfolio, market, marketConfiguration, engineData, simMarketData, sensiData_, conventions,
         recalibrateModels, curveConfigs, todaysMarketParams, false, extraEngineBuilders_, extraLegBuilders_,
-        referenceData_, continueOnError_);
+        referenceData_, continueOnError_, false, analyticFxSensis);
     sensiAnalysis->generateSensitivities();
 
     simMarket_ = sensiAnalysis->simMarket();
@@ -118,9 +123,14 @@ void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAn
     auto baseCurrency = sensiAnalysis->simMarketData()->baseCcy();
     auto ss = boost::make_shared<SensitivityCubeStream>(sensiAnalysis->sensiCube(), baseCurrency);
 
+    Size outputPrecision = 2;
+    if (params_->has("sensitivity", "outputPrecision")) {
+        outputPrecision = parseInteger(params_->get("sensitivity", "outputPrecision"));
+    }
+
     outputFile = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
     CSVFileReport sensiReport(outputFile);
-    ReportWriter().writeSensitivityReport(sensiReport, ss, sensiThreshold);
+    ReportWriter().writeSensitivityReport(sensiReport, ss, sensiThreshold, outputPrecision);
 }
 
 } // namespace analytics

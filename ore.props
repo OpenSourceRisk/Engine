@@ -20,12 +20,15 @@
   </PropertyGroup>
   <PropertyGroup Label="UserMacros">
     <!--Additional warnings-->
-    <additionalWarning></additionalWarning>
-    <additionalWarning Condition="'$(VisualStudioVersion)' == '15.0'">$(additionalWarning) /w35038</additionalWarning>
+    <additionalWarning/>
+    <additionalWarning Condition="'$(VisualStudioVersion)' &gt;= '15.3'">$(additionalWarning) /w35038</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34189</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34101</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34701</additionalWarning>
-  </PropertyGroup>  
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);BOOST_ENABLE_ASSERT_HANDLER</PreprocessorDefinitions>

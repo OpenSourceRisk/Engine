@@ -98,6 +98,8 @@ case the netting set can be defined within the following XML template:
                     <Currency>AUD</Currency>
                 </Currencies>
             </EligibleCollaterals>
+            <ApplyInitialMargin>Y</ApplyInitialMargin>
+            <InitialMarginType>Bilateral</InitialMarginType>
         </CSADetails>
     </NettingSet>
 \end{minted}
@@ -200,3 +202,16 @@ collateral is cash. If the CSA specifies a set of currencies which
 are eligible as collateral, these can be listed using
 \lstinline!Currency! nodes.
 
+\paragraph*{ApplyInitialMargin} Apply (dynamic) initial Margin in
+addition to variation margin
+
+\paragraph*{InitialMarginType} There are three possible values here:
+\begin{itemize}
+\item Bilateral: Both parties to the CSA are legally entitled to
+  request collateral to cover their MPOR risk exposure
+  on the underlying portfolio.
+\item CallOnly: Only we are entitled to hold collateral; the
+  counterparty has no such entitlement.
+\item PostOnly: Only the counterparty is entitled to hold collateral;
+  we have no such entitlement.
+\end{itemize}

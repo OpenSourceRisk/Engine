@@ -24,10 +24,13 @@
 #ifndef quantext_crossasset_model_hpp
 #define quantext_crossasset_model_hpp
 
+#include <qle/models/crcirpp.hpp>
+#include <qle/models/cirppparametrization.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
 #include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
+#include <qle/models/infjyparameterization.hpp>
 #include <qle/models/lgm.hpp>
 
 #include <qle/processes/crossassetstateprocess.hpp>
@@ -48,9 +51,11 @@ namespace CrossAssetModelTypes {
 enum AssetType { IR, FX, INF, CR, EQ };
 static constexpr Size crossAssetModelAssetTypes = 5;
 
+std::ostream& operator<<(std::ostream& out, const AssetType& type);
+
 /*! the model types supported by the CrossAssetModel or derived classes;
   a model type may applicable to several asset types (like BS for FX, EQ) */
-enum ModelType { LGM1F, BS, DK, CIRPP };
+enum ModelType { LGM1F, BS, DK, CIRPP, JY };
 } // namespace CrossAssetModelTypes
 
 using namespace CrossAssetModelTypes;
@@ -115,9 +120,15 @@ public:
     /*! return index for inflation (0 = first inflation index) */
     Size infIndex(const std::string& index) const;
 
+    /*! return index for credit (0 = first credit name) */
+    Size crName(const std::string& name) const;
+
     /*! observer and linked calibrated model interface */
     void update();
     void generateArguments();
+
+    /*! the vector of parametrizations */
+    const std::vector<boost::shared_ptr<Parametrization> >& parametrizations() const { return p_; }
 
     /*! components per asset class, see below for specific model type inspectors */
     const boost::shared_ptr<Parametrization> ir(const Size ccy) const;
@@ -151,8 +162,15 @@ public:
     /*! INF DK components */
     const boost::shared_ptr<InfDkParametrization> infdk(const Size i) const;
 
+    //! Inflation JY component
+    const boost::shared_ptr<InfJyParameterization> infjy(const Size i) const;
+
     /*! CR LGM 1F components */
     const boost::shared_ptr<CrLgm1fParametrization> crlgm1f(const Size i) const;
+
+    /*! CR CIR++ components */
+    const boost::shared_ptr<CrCirpp> crcirppModel(const Size i) const;
+    const boost::shared_ptr<CrCirppParametrization> crcirpp(const Size i) const;
 
     /*! EQBS components */
     const boost::shared_ptr<EqBsParametrization> eqbs(const Size ccy) const;
@@ -183,6 +201,9 @@ public:
     void correlation(const AssetType s, const Size i, const AssetType t, const Size j, const Real value,
                      const Size iOffset = 0, const Size jOffset = 0);
 
+    /*! get salvaging algorithm */
+    SalvagingAlgorithm::Type salvagingAlgorithm() const { return salvaging_; }
+
     /*! analytical moments require numerical integration,
       which can be customized here */
     void setIntegrationPolicy(const boost::shared_ptr<Integrator> integrator,
@@ -205,6 +226,10 @@ public:
     std::pair<Real, Real> crlgm1fS(const Size i, const Size ccy, const Time t, const Time T, const Real z,
                                    const Real y) const;
 
+    /*! returns (S(t), S^tilde(t,T)) in the notation of the book */
+    std::pair<Real, Real> crcirppS(const Size i, const Time t, const Time T,
+                                   const Real y, const Real s) const;
+    
     /*! tentative: more generic interface that is agnostic of the model type - so far only for CR */
     virtual Handle<DefaultProbabilityTermStructure> crTs(const Size i) const;
     virtual std::pair<Real, Real> crS(const Size i, const Size ccy, const Time t, const Time T, const Real z,
@@ -279,6 +304,35 @@ public:
                                         OptimizationMethod& method, const EndCriteria& endCriteria,
                                         const Constraint& constraint = Constraint(),
                                         const std::vector<Real>& weights = std::vector<Real>());
+
+    /*! Calibrate JY inflation parameters globally.
+        
+        The parameter \p toCalibrate indicates which parameters of the JY inflation model that we want to calibrate. 
+        The map key should be in {0, 1, 2} where 0 indicates the real rate volatility, 1 indicates the real rate 
+        reversion and 2 indicates the inflation index volatility. The value is \c true if we wish to calibrate 
+        the parameter and \p false if we do not want to calibrate it.
+    */
+    void calibrateInfJyGlobal(QuantLib::Size index,
+        const std::vector<boost::shared_ptr<QuantLib::CalibrationHelper> >& helpers,
+        QuantLib::OptimizationMethod& method,
+        const QuantLib::EndCriteria& endCriteria,
+        const std::map<QuantLib::Size, bool>& toCalibrate,
+        const QuantLib::Constraint& constraint = QuantLib::Constraint(),
+        const std::vector<QuantLib::Real>& weights = std::vector<QuantLib::Real>());
+
+    /*! Calibrate a single JY inflation parameter iteratively.
+        
+        Calibrate one of real rate volatility, real rate reversion or inflation index volatility. The 
+        \p parameterIndex indicates the parameter that should be calibrated where 0 indicates the real rate 
+        volatility, 1 indicates the real rate reversion and 2 indicates the inflation index volatility.
+    */
+    void calibrateInfJyIterative(QuantLib::Size inflationModelIndex,
+        QuantLib::Size parameterIndex,
+        const std::vector<boost::shared_ptr<QuantLib::CalibrationHelper> >& helpers,
+        QuantLib::OptimizationMethod& method,
+        const QuantLib::EndCriteria& endCriteria,
+        const QuantLib::Constraint& constraint = QuantLib::Constraint(),
+        const std::vector<QuantLib::Real>& weights = std::vector<QuantLib::Real>());
 
     /*! calibrate crlgm1f volatilities to a sequence of cds options with
         expiry times equal to step times in the parametrization */
@@ -368,6 +422,7 @@ protected:
     // parametrizations, models
     std::vector<boost::shared_ptr<Parametrization> > p_;
     std::vector<boost::shared_ptr<LinearGaussMarkovModel> > lgm_;
+    std::vector<boost::shared_ptr<CrCirpp>> crcirppModel_;
     Matrix rho_;
     SalvagingAlgorithm::Type salvaging_;
     mutable boost::shared_ptr<Integrator> integrator_;
@@ -408,6 +463,10 @@ protected:
     }
 };
 
+//! Utility function to return a handle to the inflation term structure given the inflation index.
+QuantLib::Handle<QuantLib::ZeroInflationTermStructure> inflationTermStructure(
+    const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
+
 // inline
 
 inline const boost::shared_ptr<StochasticProcess>
@@ -439,6 +498,7 @@ inline const boost::shared_ptr<LinearGaussMarkovModel> CrossAssetModel::lgm(cons
     return tmp;
 }
 
+
 inline const boost::shared_ptr<IrLgm1fParametrization> CrossAssetModel::irlgm1f(const Size ccy) const {
     return lgm(ccy)->parametrization();
 }
@@ -449,9 +509,27 @@ inline const boost::shared_ptr<InfDkParametrization> CrossAssetModel::infdk(cons
     return tmp;
 }
 
+inline const boost::shared_ptr<InfJyParameterization> CrossAssetModel::infjy(const Size i) const {
+    auto tmp = boost::dynamic_pointer_cast<InfJyParameterization>(p_[idx(INF, i)]);
+    QL_REQUIRE(tmp, "model at " << i << " is not INF-JY");
+    return tmp;
+}
+
 inline const boost::shared_ptr<CrLgm1fParametrization> CrossAssetModel::crlgm1f(const Size i) const {
     boost::shared_ptr<CrLgm1fParametrization> tmp = boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[idx(CR, i)]);
     QL_REQUIRE(tmp, "model at " << i << " is not CR-LGM");
+    return tmp;
+}
+
+inline const boost::shared_ptr<CrCirpp> CrossAssetModel::crcirppModel(const Size i) const {
+    boost::shared_ptr<CrCirpp> tmp = crcirppModel_[i];
+    QL_REQUIRE(tmp, "model at " << i << " is not CR-CIRPP");
+    return tmp;
+}
+
+inline const boost::shared_ptr<CrCirppParametrization> CrossAssetModel::crcirpp(const Size i) const {
+    boost::shared_ptr<CrCirppParametrization> tmp = boost::dynamic_pointer_cast<CrCirppParametrization>(p_[idx(CR, i)]);
+    QL_REQUIRE(tmp, "model at " << i << " is not CR-CIRPP");
     return tmp;
 }
 
@@ -493,12 +571,22 @@ inline const Matrix& CrossAssetModel::correlation() const { return rho_; }
 inline const boost::shared_ptr<Integrator> CrossAssetModel::integrator() const { return integrator_; }
 
 inline Handle<DefaultProbabilityTermStructure> CrossAssetModel::crTs(const Size i) const {
-    return crlgm1f(i)->termStructure();
+    if (modelType(CR, i) == LGM1F)
+        return crlgm1f(i)->termStructure();
+    if (modelType(CR, i) == CIRPP)
+        return crcirpp(i)->termStructure();
+    QL_FAIL("model at " << i << " is not CR-*");
 }
 
 inline std::pair<Real, Real> CrossAssetModel::crS(const Size i, const Size ccy, const Time t, const Time T,
                                                   const Real z, const Real y) const {
-    return crlgm1fS(i, ccy, t, T, z, y);
+    if (modelType(CR, i) == LGM1F)
+        return crlgm1fS(i, ccy, t, T, z, y);
+    if (modelType(CR, i) == CIRPP) {
+        QL_REQUIRE(ccy == 0, "CrossAssetModelPlus::crS() only implemented for ccy=0, got " << ccy);
+        return crcirppS(i, t, T, z, y);
+    }
+    QL_FAIL("model at " << i << " is not CR-*");
 }
 
 } // namespace QuantExt

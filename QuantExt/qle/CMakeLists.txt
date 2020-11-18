@@ -34,6 +34,7 @@ cashflows/floatingannuitycoupon.cpp
 cashflows/floatingannuitynominal.cpp
 cashflows/fxlinkedcashflow.cpp
 cashflows/indexedcoupon.cpp
+cashflows/jyyoyinflationcouponpricer.cpp
 cashflows/lognormalcmsspreadpricer.cpp
 cashflows/overnightindexedcoupon.cpp
 cashflows/quantocouponpricer.cpp
@@ -58,6 +59,7 @@ indexes/inflationindexwrapper.cpp
 indexes/region.cpp
 instruments/averageois.cpp
 instruments/brlcdiswap.cpp
+instruments/cashflowresults.cpp
 instruments/cashsettledeuropeanoption.cpp
 instruments/cdsoption.cpp
 instruments/commodityapo.cpp
@@ -78,7 +80,6 @@ instruments/makeaverageois.cpp
 instruments/makecds.cpp
 instruments/oibasisswap.cpp
 instruments/oiccbasisswap.cpp
-instruments/overnightindexfuture.cpp
 instruments/payment.cpp
 instruments/rebatedexercise.cpp
 instruments/subperiodsswap.cpp
@@ -87,8 +88,10 @@ math/deltagammavar.cpp
 math/fillemptymatrix.cpp
 methods/multipathgeneratorbase.cpp
 models/cdsoptionhelper.cpp
+models/cirppimplieddefaulttermstructure.cpp
 models/cmscaphelper.cpp
 models/cpicapfloorhelper.cpp
+models/crcirpp.cpp
 models/crossassetanalytics.cpp
 models/crossassetmodel.cpp
 models/crossassetmodelimpliedeqvoltermstructure.cpp
@@ -103,15 +106,26 @@ models/fxbsparametrization.cpp
 models/fxbspiecewiseconstantparametrization.cpp
 models/fxeqoptionhelper.cpp
 models/gaussian1dcrossassetadaptor.cpp
+models/infjyparameterization.cpp
+models/jyimpliedyoyinflationtermstructure.cpp
+models/jyimpliedzeroinflationtermstructure.cpp
 models/lgm.cpp
 models/lgmimplieddefaulttermstructure.cpp
 models/lgmimpliedyieldtermstructure.cpp
 models/linkablecalibratedmodel.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
+models/projectedcrossassetmodel.cpp
+models/yoycapfloorhelper.cpp
+models/yoyinflationmodeltermstructure.cpp
+models/yoyswaphelper.cpp
+models/zeroinflationmodeltermstructure.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
 pricingengines/analyticcclgmfxoptionengine.cpp
 pricingengines/analyticdkcpicapfloorengine.cpp
+pricingengines/analyticeuropeanforwardengine.cpp
+pricingengines/analyticjycpicapfloorengine.cpp
+pricingengines/analyticjyyoycapfloorengine.cpp
 pricingengines/analyticlgmcdsoptionengine.cpp
 pricingengines/analyticlgmswaptionengine.cpp
 pricingengines/analyticxassetlgmeqoptionengine.cpp
@@ -136,6 +150,7 @@ pricingengines/midpointcdsengine.cpp
 pricingengines/numericlgmswaptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
+processes/crcirppstateprocess.cpp
 processes/crossassetstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
 quotes/logquote.cpp
@@ -179,7 +194,6 @@ termstructures/oisratehelper.cpp
 termstructures/optionletstripper.cpp
 termstructures/optionletstripper1.cpp
 termstructures/optionletstripper2.cpp
-termstructures/overnightindexfutureratehelper.cpp
 termstructures/pricetermstructure.cpp
 termstructures/pricetermstructureadapter.cpp
 termstructures/spreadeddiscountcurve.cpp
@@ -195,7 +209,8 @@ termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
 time/actual364.cpp
-time/yearcounter.cpp)
+time/yearcounter.cpp
+utilities/inflation.cpp)
 
 # hpp files, this list is maintained manually
 
@@ -235,6 +250,7 @@ cashflows/floatingannuitynominal.hpp
 cashflows/floatingratefxlinkednotionalcoupon.hpp
 cashflows/fxlinkedcashflow.hpp
 cashflows/indexedcoupon.hpp
+cashflows/jyyoyinflationcouponpricer.hpp
 cashflows/lognormalcmsspreadpricer.hpp
 cashflows/overnightindexedcoupon.hpp
 cashflows/quantocouponpricer.hpp
@@ -260,11 +276,14 @@ indexes/escpi.hpp
 indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
+indexes/genericindex.hpp
 indexes/ibor/audbbsw.hpp
 indexes/ibor/brlcdi.hpp
 indexes/ibor/chfsaron.hpp
 indexes/ibor/chftois.hpp
 indexes/ibor/clpcamara.hpp
+indexes/ibor/cnhhibor.hpp
+indexes/ibor/cnhshibor.hpp
 indexes/ibor/copibr.hpp
 indexes/ibor/corra.hpp
 indexes/ibor/czkpribor.hpp
@@ -279,6 +298,7 @@ indexes/ibor/idrjibor.hpp
 indexes/ibor/ilstelbor.hpp
 indexes/ibor/inrmiborois.hpp
 indexes/ibor/inrmifor.hpp
+indexes/ibor/jpyeytibor.hpp
 indexes/ibor/krwcd.hpp
 indexes/ibor/krwkoribor.hpp
 indexes/ibor/mxntiie.hpp
@@ -307,6 +327,7 @@ indexes/region.hpp
 indexes/secpi.hpp
 instruments/averageois.hpp
 instruments/brlcdiswap.hpp
+instruments/cashflowresults.hpp
 instruments/cashsettledeuropeanoption.hpp
 instruments/cdsoption.hpp
 instruments/commodityapo.hpp
@@ -327,11 +348,11 @@ instruments/makeaverageois.hpp
 instruments/makecds.hpp
 instruments/oibasisswap.hpp
 instruments/oiccbasisswap.hpp
-instruments/overnightindexfuture.hpp
 instruments/payment.hpp
 instruments/rebatedexercise.hpp
 instruments/subperiodsswap.hpp
 instruments/tenorbasisswap.hpp
+instruments/vanillaforwardoption.hpp
 interpolators/optioninterpolator2d.hpp
 math/covariancesalvage.hpp
 math/deltagammavar.hpp
@@ -341,9 +362,15 @@ math/nadarayawatson.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
 methods/multipathgeneratorbase.hpp
+methods/pathgeneratorfactory.hpp
 models/cdsoptionhelper.hpp
+models/cirppconstantfellerparametrization.hpp
+models/cirppconstantparametrization.hpp
+models/cirppimplieddefaulttermstructure.hpp
+models/cirppparametrization.hpp
 models/cmscaphelper.hpp
 models/cpicapfloorhelper.hpp
+models/crcirpp.hpp
 models/crlgm1fparametrization.hpp
 models/crossassetanalytics.hpp
 models/crossassetanalyticsbase.hpp
@@ -361,21 +388,32 @@ models/fxbspiecewiseconstantparametrization.hpp
 models/fxeqoptionhelper.hpp
 models/gaussian1dcrossassetadaptor.hpp
 models/infdkparametrization.hpp
+models/infjyparameterization.hpp
 models/irlgm1fconstantparametrization.hpp
 models/irlgm1fparametrization.hpp
 models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp
 models/irlgm1fpiecewiseconstantparametrization.hpp
 models/irlgm1fpiecewiselinearparametrization.hpp
+models/jyimpliedyoyinflationtermstructure.hpp
+models/jyimpliedzeroinflationtermstructure.hpp
 models/lgm.hpp
 models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
 models/linkablecalibratedmodel.hpp
 models/parametrization.hpp
 models/piecewiseconstanthelper.hpp
+models/projectedcrossassetmodel.hpp
 models/pseudoparameter.hpp
+models/yoycapfloorhelper.hpp
+models/yoyinflationmodeltermstructure.hpp
+models/yoyswaphelper.hpp
+models/zeroinflationmodeltermstructure.hpp
 pricingengines/analyticcashsettledeuropeanengine.hpp
 pricingengines/analyticcclgmfxoptionengine.hpp
 pricingengines/analyticdkcpicapfloorengine.hpp
+pricingengines/analyticeuropeanforwardengine.hpp
+pricingengines/analyticjycpicapfloorengine.hpp
+pricingengines/analyticjyyoycapfloorengine.hpp
 pricingengines/analyticlgmcdsoptionengine.hpp
 pricingengines/analyticlgmswaptionengine.hpp
 pricingengines/analyticxassetlgmeqoptionengine.hpp
@@ -400,6 +438,7 @@ pricingengines/midpointcdsengine.hpp
 pricingengines/numericlgmswaptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
+processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
 quotes/exceptionquote.hpp
@@ -467,7 +506,6 @@ termstructures/optionletstripper1.hpp
 termstructures/optionletstripper2.hpp
 termstructures/optionletstripperwithatm.hpp
 termstructures/optionpricesurface.hpp
-termstructures/overnightindexfutureratehelper.hpp
 termstructures/piecewiseatmoptionletcurve.hpp
 termstructures/piecewiseoptionletcurve.hpp
 termstructures/piecewiseoptionletstripper.hpp
@@ -502,6 +540,7 @@ termstructures/zeroinflationcurveobserverstatic.hpp
 time/actual364.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
+utilities/inflation.hpp
 version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")

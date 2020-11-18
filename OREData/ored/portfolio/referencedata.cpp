@@ -92,6 +92,113 @@ XMLNode* BondReferenceDatum::toXML(XMLDocument& doc) {
     return node;
 }
 
+CreditIndexConstituent::CreditIndexConstituent()
+    : weight_(Null<Real>()), priorWeight_(Null<Real>()), recovery_(Null<Real>()) {}
+
+CreditIndexConstituent::CreditIndexConstituent(const string& name, Real weight, Real priorWeight, Real recovery)
+    : name_(name), weight_(weight), priorWeight_(priorWeight), recovery_(recovery) {}
+
+void CreditIndexConstituent::fromXML(XMLNode* node) {
+
+    name_ = XMLUtils::getChildValue(node, "Name", true);
+    weight_ = XMLUtils::getChildValueAsDouble(node, "Weight", true);
+
+    priorWeight_ = Null<Real>();
+    if (auto n = XMLUtils::getChildNode(node, "PriorWeight"))
+        priorWeight_ = parseReal(XMLUtils::getNodeValue(n));
+
+    recovery_ = Null<Real>();
+    if (auto n = XMLUtils::getChildNode(node, "RecoveryRate"))
+        recovery_ = parseReal(XMLUtils::getNodeValue(n));
+}
+
+XMLNode* CreditIndexConstituent::toXML(ore::data::XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("Underlying");
+
+    XMLUtils::addChild(doc, node, "Name", name_);
+    XMLUtils::addChild(doc, node, "Weight", weight_);
+
+    if (priorWeight_ != Null<Real>())
+        XMLUtils::addChild(doc, node, "PriorWeight", priorWeight_);
+
+    if (recovery_ != Null<Real>())
+        XMLUtils::addChild(doc, node, "RecoveryRate", recovery_);
+
+    return node;
+}
+
+const string& CreditIndexConstituent::name() const {
+    return name_;
+}
+
+Real CreditIndexConstituent::weight() const {
+    return weight_;
+}
+
+Real CreditIndexConstituent::priorWeight() const {
+    return priorWeight_;
+}
+
+Real CreditIndexConstituent::recovery() const {
+    return recovery_;
+}
+
+bool operator<(const CreditIndexConstituent& lhs, const CreditIndexConstituent& rhs) {
+    return lhs.name() < rhs.name();
+}
+
+ReferenceDatumRegister<ReferenceDatumBuilder<CreditIndexReferenceDatum>> CreditIndexReferenceDatum::reg_(TYPE);
+
+CreditIndexReferenceDatum::CreditIndexReferenceDatum() {}
+
+CreditIndexReferenceDatum::CreditIndexReferenceDatum(const string& name)
+    : ReferenceDatum(TYPE, name) {}
+
+void CreditIndexReferenceDatum::fromXML(XMLNode* node) {
+
+    ReferenceDatum::fromXML(node);
+
+    XMLNode* cird = XMLUtils::getChildNode(node, "CreditIndexReferenceData");
+    QL_REQUIRE(cird, "Expected a CreditIndexReferenceData node.");
+
+    constituents_.clear();
+
+    for (XMLNode* child = XMLUtils::getChildNode(cird, "Underlying"); child;
+        child = XMLUtils::getNextSibling(child, "Underlying")) {
+        CreditIndexConstituent c;
+        c.fromXML(child);
+        add(c);
+    }
+}
+
+XMLNode* CreditIndexReferenceDatum::toXML(ore::data::XMLDocument& doc) {
+
+    XMLNode* node = ReferenceDatum::toXML(doc);
+    XMLNode* cird = XMLUtils::addChild(doc, node, "CreditIndexReferenceData");
+
+    for (auto c : constituents_) {
+        auto cNode = c.toXML(doc);
+        XMLUtils::appendNode(cird, cNode);
+    }
+
+    return node;
+}
+
+void CreditIndexReferenceDatum::add(const CreditIndexConstituent& c) {
+    auto it = constituents_.find(c);
+    if (it != constituents_.end()) {
+        DLOG("Constituent " << c.name() << " not added to credit index " << id() << " because already present.");
+    } else {
+        constituents_.insert(c);
+        DLOG("Constituent " << c.name() << " added to credit index " << id() << ".");
+    }
+}
+
+const set<CreditIndexConstituent>& CreditIndexReferenceDatum::constituents() const {
+    return constituents_;
+}
+
 // BasicReferenceDataManager
 
 void BasicReferenceDataManager::fromXML(XMLNode* node) {

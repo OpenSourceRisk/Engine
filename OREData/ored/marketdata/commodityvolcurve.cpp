@@ -61,14 +61,12 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
         auto config = *curveConfigs.commodityVolatilityConfig(spec.curveConfigID());
 
         if (!config.futureConventionsId().empty()) {
-            QL_REQUIRE(conventions.has(config.futureConventionsId()),
-                       "Conventions, " << config.futureConventionsId() << " for config " << config.curveID()
-                                       << " not found.");
-            auto convention =
-                boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(config.futureConventionsId()));
-            QL_REQUIRE(convention, "Convention with ID '" << config.futureConventionsId()
-                                                          << "' should be of type CommodityFutureConvention");
-            expCalc_ = boost::make_shared<ConventionsBasedFutureExpiry>(*convention);
+            const auto& cId = config.futureConventionsId();
+            QL_REQUIRE(conventions.has(cId), "Conventions, " << cId <<
+                " for config " << config.curveID() << " not found.");
+            convention_ = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(cId));
+            QL_REQUIRE(convention_, "Convention with ID '" << cId << "' should be of type CommodityFutureConvention");
+            expCalc_ = boost::make_shared<ConventionsBasedFutureExpiry>(*convention_);
         }
 
         calendar_ = parseCalendar(config.calendar());
@@ -1240,11 +1238,10 @@ Date CommodityVolCurve::getExpiry(const Date& asof, const boost::shared_ptr<Expi
     } else if (auto fcExpiry = boost::dynamic_pointer_cast<FutureContinuationExpiry>(expiry)) {
 
         QL_REQUIRE(expCalc_, "CommodityVolCurve::getExpiry: need a future expiry calculator for continuation quotes.");
+        QL_REQUIRE(convention_, "CommodityVolCurve::getExpiry: need a future convention for continuation quotes.");
         DLOG("Future option continuation expiry is " << *fcExpiry);
 
-        // Get the c1 expiry first. All subsequent expiries are relative to this.
-
-        // Get the next option expiry on or after the asof date
+        // Firstly, get the next option expiry on or after the asof date
         result = expCalc_->nextExpiry(true, asof, 0, true);
         TLOG("CommodityVolCurve::getExpiry: next option expiry relative to " << io::iso_date(asof) << " is "
                                                                              << io::iso_date(result) << ".");
@@ -1266,18 +1263,26 @@ Date CommodityVolCurve::getExpiry(const Date& asof, const boost::shared_ptr<Expi
             }
         }
 
-        // At this stage, result should hold the c1 expiry.
-        TLOG("CommodityVolCurve::getExpiry: c1 option expiry is " << io::iso_date(result) << ".");
+        // At this stage, 'result' should hold the next option expiry on or after the asof date accounting for roll 
+        // days.
+        TLOG("CommodityVolCurve::getExpiry: first option expiry is " << io::iso_date(result) << ".");
 
         // If the continuation index is greater than 1 get the corresponding expiry.
         Natural fcIndex = fcExpiry->expiryIndex();
+
+        // The option continuation expiry may be mapped to another one.
+        const auto& ocm = convention_->optionContinuationMappings();
+        auto it = ocm.find(fcIndex);
+        if (it != ocm.end())
+            fcIndex = it->second;
+
         if (fcIndex > 1) {
             result += 1 * Days;
             result = expCalc_->nextExpiry(true, result, fcIndex - 2, true);
         }
 
-        DLOG("Expiry date corresponding to continuation expiry, " << *fcExpiry << ", is " << io::iso_date(result)
-                                                                  << ".");
+        DLOG("Expiry date corresponding to continuation expiry, " << *fcExpiry <<
+            ", is " << io::iso_date(result) << ".");
 
     } else {
         QL_FAIL("CommodityVolCurve::getExpiry: cannot determine expiry type.");

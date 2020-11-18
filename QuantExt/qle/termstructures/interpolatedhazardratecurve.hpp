@@ -48,9 +48,9 @@
 #include <ql/termstructures/interpolatedcurve.hpp>
 #include <utility>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
     //! DefaultProbabilityTermStructure based on interpolation of hazard rates
     /*! This is an exact copy of the QuantLib class, but with the option to

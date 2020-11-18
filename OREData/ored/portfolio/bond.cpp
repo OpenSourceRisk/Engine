@@ -18,6 +18,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/lexical_cast.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondutils.hpp>
@@ -100,8 +101,8 @@ void BondData::initialise() {
                 currency_ = coupons()[i].currency();
             else {
                 QL_REQUIRE(currency_ == coupons()[i].currency(),
-                           "leg #" << i << " currency (" << coupons()[i].currency()
-                                   << ") not equal to leg #0 currency (" << coupons()[0].currency());
+                           "bond leg #" << i << " currency (" << coupons()[i].currency()
+                                        << ") not equal to leg #0 currency (" << coupons()[0].currency());
             }
         }
 
@@ -112,8 +113,8 @@ void BondData::initialise() {
                 isPayer_ = coupons()[i].isPayer();
             else {
                 QL_REQUIRE(isPayer_ == coupons()[i].isPayer(),
-                           "leg #" << i << " isPayer (" << std::boolalpha << coupons()[i].isPayer()
-                                   << ") not equal to leg #0 isPayer (" << coupons()[0].isPayer());
+                           "bond leg #" << i << " isPayer (" << std::boolalpha << coupons()[i].isPayer()
+                                        << ") not equal to leg #0 isPayer (" << coupons()[0].isPayer());
             }
         }
     }
@@ -124,29 +125,34 @@ void BondData::populateFromBondReferenceData(const boost::shared_ptr<BondReferen
     ore::data::populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, creditCurveId_,
                                              referenceCurveId_, proxySecurityId_, incomeCurveId_, volatilityCurveId_,
                                              coupons_, securityId_, referenceDatum);
-    // initialise data
-
     initialise();
-
-    // plausibility checks to check whether the reference data was set up at all
-
-    QL_REQUIRE(!settlementDays_.empty(),
-               "settlement days not given, check bond reference data for '" << securityId_ << "'");
-
-    QL_REQUIRE(!currency_.empty(), "currency not given, check bond reference data for '" << securityId_ << "'");
+    checkData();
 }
 
 void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData) {
-
     QL_REQUIRE(!securityId_.empty(), "BondData::populateFromBondReferenceData(): no security id given");
     if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, securityId_)) {
         DLOG("could not get BondReferenceDatum for name " << securityId_ << " leave data in trade unchanged");
+        initialise();
+        checkData();
     } else {
         auto bondRefData = boost::dynamic_pointer_cast<BondReferenceDatum>(
             referenceData->getData(BondReferenceDatum::TYPE, securityId_));
         QL_REQUIRE(bondRefData, "could not cast to BondReferenceDatum, this is unexpected");
         populateFromBondReferenceData(bondRefData);
     }
+}
+
+void BondData::checkData() const {
+    QL_REQUIRE(!securityId_.empty(), "BondData invalid: no security id given");
+    std::vector<std::string> missingElements;
+    if (settlementDays_.empty())
+        missingElements.push_back("SettlementDays");
+    if (currency_.empty())
+        missingElements.push_back("Currency");
+    QL_REQUIRE(missingElements.empty(), "BondData invalid: missing " + boost::algorithm::join(missingElements, ", ") +
+                                                " - check if reference data is set up for '"
+                                            << securityId_ << "'");
 }
 
 void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
@@ -158,7 +164,9 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Date issueDate = parseDate(bondData_.issueDate());
     Calendar calendar = parseCalendar(bondData_.calendar());
-    QL_REQUIRE(!bondData_.settlementDays().empty(), "no bond settlement days given");
+    QL_REQUIRE(!bondData_.settlementDays().empty(),
+               "no bond settlement days given, if reference data is used, check if securityId '"
+                   << bondData_.securityId() << "' is present.");
     Natural settlementDays = parseInteger(bondData_.settlementDays());
     boost::shared_ptr<QuantLib::Bond> bond;
 

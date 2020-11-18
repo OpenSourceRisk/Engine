@@ -199,20 +199,21 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                                      const Conventions& conventions, const std::string& configuration,
                                      const CurveConfigurations& curveConfigs,
                                      const TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
-                                     const bool useSpreadedTermStructures)
+                                     const bool useSpreadedTermStructures, const bool cacheSimData,
+                                     const bool allowPartialScenarios)
     : ScenarioSimMarket(initMarket, parameters, conventions, boost::make_shared<FixingManager>(initMarket->asofDate()),
-                        configuration, curveConfigs, todaysMarketParams, continueOnError, useSpreadedTermStructures) {}
+                        configuration, curveConfigs, todaysMarketParams, continueOnError, useSpreadedTermStructures,
+                        cacheSimData, allowPartialScenarios) {}
 
-ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
-                                     const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
-                                     const Conventions& conventions,
-                                     const boost::shared_ptr<FixingManager>& fixingManager,
-                                     const std::string& configuration,
-                                     const ore::data::CurveConfigurations& curveConfigs,
-                                     const ore::data::TodaysMarketParameters& todaysMarketParams,
-                                     const bool continueOnError, const bool useSpreadedTermStructures)
+ScenarioSimMarket::ScenarioSimMarket(
+    const boost::shared_ptr<Market>& initMarket, const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
+    const Conventions& conventions, const boost::shared_ptr<FixingManager>& fixingManager,
+    const std::string& configuration, const ore::data::CurveConfigurations& curveConfigs,
+    const ore::data::TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
+    const bool useSpreadedTermStructures, const bool cacheSimData, const bool allowPartialScenarios)
     : SimMarket(conventions), parameters_(parameters), fixingManager_(fixingManager),
-      filter_(boost::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures) {
+      filter_(boost::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures),
+      cacheSimData_(cacheSimData), allowPartialScenarios_(allowPartialScenarios) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
@@ -1195,7 +1196,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                                     vector<Real> fwds;
                                     vector<Real> atmVols;                                    
                                     for (Size i = 0; i < expiries.size(); i++) {
-                                        auto eqForward = eqCurve->fixing(dates[i]);
+                                        auto eqForward = eqCurve->forecastFixing(dates[i]);
                                         fwds.push_back(eqForward);
                                         atmVols.push_back(wrapper->blackVol(dates[i], eqForward));
                                         DLOG("atmVol(s) is " << atmVols.back() << " on date " << dates[i]);
@@ -2016,6 +2017,9 @@ void ScenarioSimMarket::reset() {
     Settings::instance().evaluationDate() = baseScenario_->asof();
     // reset numeraire
     numeraire_ = baseScenario_->getNumeraire();
+    // delete the sim data cache
+    cachedSimData_.clear();
+    cachedSimDataActive_.clear();
     // reset term structures
     applyScenario(baseScenario_);
     // see the comment in update() for why this is necessary...
@@ -2029,7 +2033,53 @@ void ScenarioSimMarket::reset() {
     filter_ = filterBackup;
 }
 
-  void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenario) {
+void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenario) {
+
+    // apply scenario based on cached indices for simData_ for a SimpleScenario
+    // this assumes that all scenarios have an identical key structure in their data map
+
+    if (cacheSimData_) {
+        if (auto s = boost::dynamic_pointer_cast<SimpleScenario>(scenario)) {
+
+            // fill cache
+
+            if (cachedSimData_.empty()) {
+                Size count = 0;
+                for (auto const& d : s->data()) {
+                    auto it = simData_.find(d.first);
+                    if (it == simData_.end()) {
+                        ALOG("simulation data point missing for key " << d.first);
+                        cachedSimData_.push_back(boost::shared_ptr<SimpleQuote>());
+                        cachedSimDataActive_.push_back(false);
+                    } else {
+                        ++count;
+                        cachedSimData_.push_back(it->second);
+                        cachedSimDataActive_.push_back(filter_->allow(d.first));
+                    }
+                }
+                if (count != simData_.size() && !allowPartialScenarios_) {
+                    ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
+                    for (auto it : simData_) {
+                        if (!scenario->has(it.first))
+                            WLOG("Key " << it.first << " missing in scenario");
+                    }
+                    QL_FAIL("mismatch between scenario and sim data size, exit.");
+                }
+            }
+
+            // apply scenario data according to cached indices
+
+            Size i = 0;
+            for (auto const& q : s->data()) {
+                if (cachedSimDataActive_[i])
+                    cachedSimData_[i]->setValue(q.second);
+                ++i;
+            }
+
+            return;
+        }
+    }
+
     const vector<RiskFactorKey>& keys = scenario->keys();
 
     Size count = 0;
@@ -2050,7 +2100,7 @@ void ScenarioSimMarket::reset() {
         }
     }
 
-    if (count != simData_.size()) {
+    if (count != simData_.size() && !allowPartialScenarios_) {
         ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
         for (auto it : simData_) {
             if (!scenario->has(it.first))

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug (static runtime)|Win32">
@@ -37,14 +37,22 @@
   <ItemGroup>
     <ClInclude Include="orea\aggregation\collateralaccount.hpp" />
     <ClInclude Include="orea\aggregation\collatexposurehelper.hpp" />
+    <ClInclude Include="orea\aggregation\cvaspreadsensitivitycalculator.hpp" />
     <ClInclude Include="orea\aggregation\dimcalculator.hpp" />
     <ClInclude Include="orea\aggregation\dimregressioncalculator.hpp" />
+    <ClInclude Include="orea\aggregation\dynamiccreditxvacalculator.hpp" />
+    <ClInclude Include="orea\aggregation\exposureallocator.hpp" />
+    <ClInclude Include="orea\aggregation\exposurecalculator.hpp" />
+    <ClInclude Include="orea\aggregation\nettedexposurecalculator.hpp" />
     <ClInclude Include="orea\aggregation\postprocess.hpp" />
+    <ClInclude Include="orea\aggregation\staticcreditxvacalculator.hpp" />
+    <ClInclude Include="orea\aggregation\xvacalculator.hpp" />
     <ClInclude Include="orea\app\oreapp.hpp" />
     <ClInclude Include="orea\app\parameters.hpp" />
     <ClInclude Include="orea\app\reportwriter.hpp" />
     <ClInclude Include="orea\app\sensitivityrunner.hpp" />
     <ClInclude Include="orea\app\structuredanalyticserror.hpp" />
+    <ClInclude Include="orea\app\xvarunner.hpp" />
     <ClInclude Include="orea\auto_link.hpp" />
     <ClInclude Include="orea\cube\cubeinterpretation.hpp" />
     <ClInclude Include="orea\cube\cubewriter.hpp" />
@@ -53,6 +61,7 @@
     <ClInclude Include="orea\cube\npvsensicube.hpp" />
     <ClInclude Include="orea\cube\sensicube.hpp" />
     <ClInclude Include="orea\cube\sensitivitycube.hpp" />
+    <ClInclude Include="orea\engine\cptycalculator.hpp" />
     <ClInclude Include="orea\engine\filteredsensitivitystream.hpp" />
     <ClInclude Include="orea\engine\mporcalculator.hpp" />
     <ClInclude Include="orea\engine\observationmode.hpp" />
@@ -96,17 +105,26 @@
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp" />
     <ClCompile Include="orea\aggregation\collatexposurehelper.cpp" />
+    <ClCompile Include="orea\aggregation\cvaspreadsensitivitycalculator.cpp" />
     <ClCompile Include="orea\aggregation\dimcalculator.cpp" />
     <ClCompile Include="orea\aggregation\dimregressioncalculator.cpp" />
+    <ClCompile Include="orea\aggregation\dynamiccreditxvacalculator.cpp" />
+    <ClCompile Include="orea\aggregation\exposureallocator.cpp" />
+    <ClCompile Include="orea\aggregation\exposurecalculator.cpp" />
+    <ClCompile Include="orea\aggregation\nettedexposurecalculator.cpp" />
     <ClCompile Include="orea\aggregation\postprocess.cpp" />
+    <ClCompile Include="orea\aggregation\staticcreditxvacalculator.cpp" />
+    <ClCompile Include="orea\aggregation\xvacalculator.cpp" />
     <ClCompile Include="orea\app\oreapp.cpp" />
     <ClCompile Include="orea\app\parameters.cpp" />
     <ClCompile Include="orea\app\reportwriter.cpp" />
     <ClCompile Include="orea\app\sensitivityrunner.cpp" />
     <ClCompile Include="orea\app\structuredanalyticserror.cpp" />
+    <ClCompile Include="orea\app\xvarunner.cpp" />
     <ClCompile Include="orea\cube\cubeinterpretation.cpp" />
     <ClCompile Include="orea\cube\cubewriter.cpp" />
     <ClCompile Include="orea\cube\sensitivitycube.cpp" />
+    <ClCompile Include="orea\engine\cptycalculator.cpp" />
     <ClCompile Include="orea\engine\filteredsensitivitystream.cpp" />
     <ClCompile Include="orea\engine\mporcalculator.cpp" />
     <ClCompile Include="orea\engine\parametricvar.cpp" />

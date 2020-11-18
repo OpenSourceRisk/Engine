@@ -171,11 +171,17 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::MM: {
-        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() == 5 || tokens.size() == 6, "5 or 6 tokens expected in " << datumName);
         const string& ccy = tokens[2];
-        Period fwdStart = parsePeriod(tokens[3]);
-        Period term = parsePeriod(tokens[4]);
-        return boost::make_shared<MoneyMarketQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term);
+        Size offset = 0;
+        string indexName;
+        if (tokens.size() == 6) {
+            indexName = tokens[3];
+            offset = 1;
+        }
+        Period fwdStart = parsePeriod(tokens[3 + offset]);
+        Period term = parsePeriod(tokens[4 + offset]);
+        return boost::make_shared<MoneyMarketQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term, indexName);
     }
 
     case MarketDatum::InstrumentType::MM_FUTURE: {
@@ -216,12 +222,18 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::IR_SWAP: {
-        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7, "6 or 7 tokens expected in " << datumName);
         const string& ccy = tokens[2];
-        Period fwdStart = parsePeriod(tokens[3]);
-        Period tenor = parsePeriod(tokens[4]);
-        Period term = parsePeriod(tokens[5]);
-        return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term, tenor);
+        Size offset = 0;
+        string indexName;
+        if (tokens.size() == 7) {
+            indexName = tokens[3];
+            offset = 1;
+        }
+        Period fwdStart = parsePeriod(tokens[3 + offset]);
+        Period tenor = parsePeriod(tokens[4 + offset]);
+        Period term = parsePeriod(tokens[5 + offset]);
+        return boost::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term, tenor, indexName);
     }
 
     case MarketDatum::InstrumentType::BASIS_SWAP: {
@@ -488,7 +500,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         if (hasCallPutToken) {
             QL_REQUIRE(tokens.back() == "C" || tokens.back() == "P",
                        "excepted C or P for Call or Put at position " << tokens.size() << " in " << datumName);
-            isCall = tokens[6] == "C";
+            isCall = tokens.back() == "C";
         }
         // note how we only store the expiry string - to ensure we can support both Periods and Dates being specified in
         // the vol curve-config.

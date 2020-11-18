@@ -25,6 +25,9 @@
 
 #include <orea/aggregation/collatexposurehelper.hpp>
 #include <orea/aggregation/dimcalculator.hpp>
+#include <orea/aggregation/exposurecalculator.hpp>
+#include <orea/aggregation/nettedexposurecalculator.hpp>
+#include <orea/aggregation/xvacalculator.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
@@ -41,18 +44,6 @@ namespace ore {
 namespace analytics {
 using namespace QuantLib;
 using namespace data;
-
-enum class AllocationMethod {
-    None,
-    Marginal, // Pykhtin & Rosen, 2010
-    RelativeFairValueGross,
-    RelativeFairValueNet,
-    RelativeXVA
-};
-
-std::ostream& operator<<(std::ostream& out, AllocationMethod m);
-
-AllocationMethod parseAllocationMethod(const string& s);
 
 //! Exposure Aggregation and XVA Calculation
 /*!
@@ -131,12 +122,16 @@ public:
         const string& fvaBorrowingCurve = "",
         //! Lending curve name to be used in FVA calculations
         const string& fvaLendingCurve = "",
-	//! Dynamic Initial Margin Calculator
-	const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator = boost::shared_ptr<DynamicInitialMarginCalculator>(),
+        //! Dynamic Initial Margin Calculator
+        const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator = boost::shared_ptr<DynamicInitialMarginCalculator>(),
         //! Interpreter for cube storage (where to find which data items)
         const boost::shared_ptr<CubeInterpretation>& cubeInterpretation = boost::shared_ptr<CubeInterpretation>(),
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
         bool fullInitialCollateralisation = false,
+	//! CVA spread sensitvitiy grid
+	vector<Period> cvaSpreadSensiGrid = { 6*Months, 1*Years, 3*Years, 5*Years, 10*Years },
+	//! CVA spread sensitivity shift size
+	Real cvaSpreadSensiShiftSize = 0.0001,
         //! own capital discounting rate for discounting expected capital for KVA
         Real kvaCapitalDiscountRate = 0.10,
         //! alpha to adjust EEPE to give EAD for risk capital
@@ -152,16 +147,23 @@ public:
         //! Our KVA CVA Risk Weight
         Real kvaOurCvaRiskWeight = 0.05,
         //! Their KVA CVA Risk Weight,
-        Real kvaTheirCvaRiskWeight = 0.05);
+        Real kvaTheirCvaRiskWeight = 0.05,
+        //! Input Counterparty Cube
+        const boost::shared_ptr<NPVCube>& cptyCube_ = nullptr);
 
     void setDimCalculator(boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
     }
 
+    const vector<Real>& spreadSensitivityTimes() { return cvaSpreadSensiTimes_; }
+    const vector<Period>& spreadSensitivityGrid() { return cvaSpreadSensiGrid_; }
+    
     //! Return list of Trade IDs in the portfolio
-    const vector<string>& tradeIds() { return tradeIds_; }
+    const vector<string>& tradeIds() { return cube_->ids(); }
     //! Return list of netting set IDs in the portfolio
-    const vector<string>& nettingSetIds() { return nettingSetIds_; }
+    const vector<string>& nettingSetIds() { return netCube()->ids(); }
+    //! Return the map of counterparty Ids
+    const map<string, string>& counterpartyId() { return nettedExposureCalculator_->counterpartyMap(); }
 
     //! Return trade level Expected Positive Exposure evolution
     const vector<Real>& tradeEPE(const string& tradeId);
@@ -206,6 +208,13 @@ public:
     const vector<Real>& allocatedTradeEPE(const string& tradeId);
     //! Return trade ENE, allocated down from the netting set level
     const vector<Real>& allocatedTradeENE(const string& tradeId);
+  
+    //! Return Netting Set CVA Hazard Rate Sensitvity vector
+    vector<Real> netCvaHazardRateSensitivity(const string& nettingSetId);
+    //! Return Netting Set CVA Spread Sensitvity vector
+    vector<Real> netCvaSpreadSensitivity(const string& nettingSetId);
+    //! Return Netting Set CVA Spread Sensitvity vector
+    const std::map<std::string, std::vector<QuantLib::Real>>& netCvaSpreadSensitivity() const { return netCvaSpreadSensi_; }
 
     //! Return trade (stand-alone) CVA
     Real tradeCVA(const string& tradeId);
@@ -262,8 +271,10 @@ public:
 
     //! Inspector for the input NPV cube (by trade, time, scenario)
     const boost::shared_ptr<NPVCube>& cube() { return cube_; }
+    //! Inspector for the input Cpty cube (by name, time, scenario)
+    const boost::shared_ptr<NPVCube>& cptyCube() { return cptyCube_; }
     //! Return the  for the input NPV cube after netting and collateral (by netting set, time, scenario)
-    const boost::shared_ptr<NPVCube>& netCube() { return nettedCube_; }
+    const boost::shared_ptr<NPVCube>& netCube() { return nettedExposureCalculator_->nettedCube(); }
     //! Return the dynamic initial margin cube (regression approach)
     //const boost::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
     //! Write average (over samples) DIM evolution through time for all netting sets
@@ -272,6 +283,9 @@ public:
     void exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
                              const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports);
 
+    //! get the cvaSpreadSensiShiftSize
+    QuantLib::Real cvaSpreadSensiShiftSize() { return cvaSpreadSensiShiftSize_; }
+  
 protected:
     //! Helper function to return the collateral account evolution for a given netting set
     boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>>
@@ -282,37 +296,25 @@ protected:
                     const Date& nettingSetMaturity);
 
     void updateNettingSetKVA();
-    void updateStandAloneXVA();
-    void updateAllocatedXVA();
+    void updateNettingSetCvaSensitivity();
 
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<NettingSetManager> nettingSetManager_;
     boost::shared_ptr<Market> market_;
     const std::string configuration_;
     boost::shared_ptr<NPVCube> cube_;
+    boost::shared_ptr<NPVCube> cptyCube_;
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     map<string, bool> analytics_;
 
-    map<string, vector<Real>> tradeEPE_, tradeENE_, tradeEE_B_, tradeEEE_B_, tradePFE_, tradeVAR_;
-    map<string, Real> tradeEPE_B_, tradeEEPE_B_;
+    map<string, vector<Real>> tradeEPE_, tradeENE_;
     map<string, vector<Real>> allocatedTradeEPE_, allocatedTradeENE_;
-    map<string, vector<Real>> netEPE_, netENE_, netEE_B_, netEEE_B_, netPFE_, netVAR_, expectedCollateral_;
-    map<string, Real> netEPE_B_, netEEPE_B_;
-    map<string, vector<Real>> colvaInc_, eoniaFloorInc_;
-    map<string, Real> tradeCVA_, tradeDVA_, tradeMVA_, tradeFBA_, tradeFCA_, tradeFBA_exOwnSP_, tradeFCA_exOwnSP_,
-        tradeFBA_exAllSP_, tradeFCA_exAllSP_;
-    map<string, Real> sumTradeCVA_, sumTradeDVA_; // per netting set
-    map<string, Real> allocatedTradeCVA_, allocatedTradeDVA_;
-    map<string, Real> nettingSetCVA_, nettingSetDVA_, nettingSetMVA_;
-    map<string, Real> nettingSetCOLVA_, nettingSetCollateralFloor_;
+    map<string, vector<Real>> netEPE_, netENE_;
     map<string, Real> ourNettingSetKVACCR_, theirNettingSetKVACCR_, ourNettingSetKVACVA_, theirNettingSetKVACVA_;
-    map<string, Real> nettingSetFCA_, nettingSetFBA_, nettingSetFCA_exOwnSP_, nettingSetFBA_exOwnSP_,
-        nettingSetFCA_exAllSP_, nettingSetFBA_exAllSP_;
-    boost::shared_ptr<NPVCube> nettedCube_;
+    map<string, vector<Real>> netCvaSpreadSensi_, netCvaHazardRateSensi_;
 
-    vector<string> tradeIds_;
-    vector<string> nettingSetIds_;
-    map<string, string> counterpartyId_; // for each nettingSetId
+    // vector<string> tradeIds_;
+    // vector<string> nettingSetIds_;
     string baseCurrency_;
     Real quantile_;
     CollateralExposureHelper::CalculationType calcType_;
@@ -320,8 +322,15 @@ protected:
     string fvaBorrowingCurve_;
     string fvaLendingCurve_;
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
+    boost::shared_ptr<ExposureCalculator> exposureCalculator_;
+    boost::shared_ptr<NettedExposureCalculator> nettedExposureCalculator_;
+    boost::shared_ptr<ValueAdjustmentCalculator> cvaCalculator_;
+    boost::shared_ptr<ValueAdjustmentCalculator> allocatedCvaCalculator_;
     boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
     bool fullInitialCollateralisation_;
+    vector<Period> cvaSpreadSensiGrid_;
+    vector<Time> cvaSpreadSensiTimes_;
+    Real cvaSpreadSensiShiftSize_;
     Real kvaCapitalDiscountRate_;
     Real kvaAlpha_;
     Real kvaRegAdjustment_;

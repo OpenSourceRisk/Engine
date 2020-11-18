@@ -163,6 +163,15 @@ map<string, string> Portfolio::nettingSetMap() const {
     return nettingSetMap;
 }
 
+std::vector<std::string> Portfolio::counterparties() const {
+    vector<string> counterparties;
+    for (auto t : trades_)
+        counterparties.push_back(t->envelope().counterparty());
+    sort(counterparties.begin(), counterparties.end());
+    counterparties.erase(unique(counterparties.begin(),counterparties.end()), counterparties.end());
+    return counterparties;
+}
+
 map<string, set<string>> Portfolio::counterpartyNettingSets() const {
     map<string, set<string>> cpNettingSets;
     for (auto t : trades_)

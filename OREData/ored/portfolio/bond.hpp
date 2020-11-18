@@ -97,10 +97,14 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
 
-    //! populate data from reference datum
+    //! populate data from reference datum and check data for completeness
     void populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum);
-    //! look up reference datum in ref data manager and populate
+
+    //! look up reference datum in ref data manager and populate, check data for completeness
     void populateFromBondReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData);
+
+    //! check data for completeness
+    void checkData() const;
 
 private:
     void initialise();

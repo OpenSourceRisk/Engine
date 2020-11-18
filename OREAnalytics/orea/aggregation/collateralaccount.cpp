@@ -65,8 +65,8 @@ void CollateralAccount::updateAccountBalance(const Date& simulationDate, const R
                            "CollateralAccount error; balance update failed due to invalid dates");
                 int accrualDays = marginCalls_[i].marginPayDate() - accountDates_.back();
                 // apply "effective" accrual rate (i.e. adjust for spread specified in netting set definition)
-                Real accrualRate = (accountBalances_.back() >= 0.0) ? (annualisedZeroRate - csaDef_->collatSpreadRcv())
-                                                                    : (annualisedZeroRate - csaDef_->collatSpreadPay());
+                Real accrualRate = (accountBalances_.back() >= 0.0) ? (annualisedZeroRate - csaDef_->csaDetails()->collatSpreadRcv())
+                                                                    : (annualisedZeroRate - csaDef_->csaDetails()->collatSpreadPay());
                 // bring collateral account up to margin payment date (note accrual rate is assumed to be compounded
                 // daily)
                 accountBalances_.push_back(accountBalances_.back() * std::pow(1.0 + accrualRate / 365.0, accrualDays) +
@@ -81,8 +81,8 @@ void CollateralAccount::updateAccountBalance(const Date& simulationDate, const R
     if (simulationDate > accountDates_.back()) { // bring the collateral account up to simulation date
         int accrualDays = simulationDate - accountDates_.back();
         // apply "effective" accrual rate (i.e. adjust for spread specified in netting set definition)
-        Real accrualRate = (accountBalances_.back() >= 0.0) ? (annualisedZeroRate - csaDef_->collatSpreadRcv())
-                                                            : (annualisedZeroRate - csaDef_->collatSpreadPay());
+        Real accrualRate = (accountBalances_.back() >= 0.0) ? (annualisedZeroRate - csaDef_->csaDetails()->collatSpreadRcv())
+                                                            : (annualisedZeroRate - csaDef_->csaDetails()->collatSpreadPay());
         accountDates_.push_back(simulationDate);
         accountBalances_.push_back(accountBalances_.back() * std::pow(1.0 + accrualRate / 365.0, accrualDays));
     }

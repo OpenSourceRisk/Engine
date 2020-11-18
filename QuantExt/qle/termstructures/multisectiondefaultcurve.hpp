@@ -26,9 +26,8 @@
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! multi section default ts
 /*! the instantaneous hazard rate is defined by the ith source curve for dates before the ith switch date and after

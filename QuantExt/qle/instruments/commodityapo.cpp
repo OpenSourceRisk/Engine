@@ -40,19 +40,13 @@ void CommodityAveragePriceOption::setupArguments(PricingEngine::arguments* args)
     arguments->flow = flow_;
 }
 
-void CommodityAveragePriceOption::fetchResults(const PricingEngine::results* r) const {
-    Option::fetchResults(r);
-    const CommodityAveragePriceOption::results* results = dynamic_cast<const CommodityAveragePriceOption::results*>(r);
-    QL_ENSURE(results != 0, "wrong results type");
-    underlyingForwardValue_ = results->underlyingForwardValue;
-    sigma_ = results->sigma;
-}
-
-void CommodityAveragePriceOption::results::reset() {
-    Option::results::reset();
-    underlyingForwardValue = Null<Real>();
-    sigma = Null<Real>();
-}
+CommodityAveragePriceOption::arguments::arguments()
+    : quantity(0.0),
+      strikePrice(0.0),
+      effectiveStrike(0.0),
+      type(Option::Call),
+      settlementType(Settlement::Physical),
+      settlementMethod(Settlement::PhysicalOTC) {}
 
 void CommodityAveragePriceOption::arguments::validate() const {
     QL_REQUIRE(flow, "underlying not set");
@@ -60,4 +54,4 @@ void CommodityAveragePriceOption::arguments::validate() const {
     QuantLib::Settlement::checkTypeAndMethodConsistency(settlementType, settlementMethod);
 }
 
-} // namespace QuantExt
+}

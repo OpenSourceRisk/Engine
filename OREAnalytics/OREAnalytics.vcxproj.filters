@@ -27,6 +27,9 @@
     <ClInclude Include="orea\aggregation\collatexposurehelper.hpp">
       <Filter>aggregation</Filter>
     </ClInclude>
+    <ClInclude Include="orea\aggregation\cvaspreadsensitivitycalculator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
     <ClInclude Include="orea\aggregation\dimcalculator.hpp">
       <Filter>aggregation</Filter>
     </ClInclude>
@@ -188,6 +191,30 @@
     <ClInclude Include="orea\scenario\spreadscenariofactory.hpp">
       <Filter>scenario</Filter>
     </ClInclude>
+    <ClInclude Include="orea\app\xvarunner.hpp">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\dynamiccreditxvacalculator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\exposureallocator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\exposurecalculator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\nettedexposurecalculator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\staticcreditxvacalculator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\xvacalculator.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\cptycalculator.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -196,12 +223,9 @@
     <ClCompile Include="orea\aggregation\collatexposurehelper.cpp">
       <Filter>aggregation</Filter>
     </ClCompile>
-    <ClInclude Include="orea\aggregation\dimcalculator.cpp">
+    <ClCompile Include="orea\aggregation\cvaspreadsensitivitycalculator.cpp">
       <Filter>aggregation</Filter>
-    </ClInclude>
-    <ClInclude Include="orea\aggregation\dimregressioncalculator.cpp">
-      <Filter>aggregation</Filter>
-    </ClInclude>
+    </ClCompile>
     <ClCompile Include="orea\aggregation\postprocess.cpp">
       <Filter>aggregation</Filter>
     </ClCompile>
@@ -324,6 +348,36 @@
     </ClCompile>
     <ClCompile Include="orea\scenario\spreadscenariofactory.cpp">
       <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\app\xvarunner.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\dimcalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\dimregressioncalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\dynamiccreditxvacalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\exposureallocator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\exposurecalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\nettedexposurecalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\staticcreditxvacalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\xvacalculator.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\cptycalculator.cpp">
+      <Filter>engine</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -33,6 +33,7 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
+#include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/austria.hpp>
 #include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>
@@ -42,7 +43,6 @@
 #include <qle/calendars/ice.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/largejointcalendar.hpp>
-#include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/netherlands.hpp>
@@ -57,6 +57,7 @@
 #include <qle/currencies/asia.hpp>
 #include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/actual364.hpp>
 #include <qle/time/yearcounter.hpp>
 
@@ -598,7 +599,8 @@ Currency parseCurrency(const string& s) {
         {"VND", VNDCurrency()}, {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()},
         {"MAD", MADCurrency()}, {"UYU", UYUCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()},
         {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"KES", KESCurrency()}, {"LKR", LKRCurrency()},
-        {"RSD", RSDCurrency()}};
+        {"RSD", RSDCurrency()}, {"COU", COUCurrency()}, {"MUR", MURCurrency()}, {"UGX", UGXCurrency()},
+        {"ZMW", ZMWCurrency()}, {"GHS", GHSCurrency()}, {"JOD", JODCurrency()}, {"HRK", HRKCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -746,18 +748,38 @@ Option::Type parseOptionType(const std::string& s) {
     }
 }
 
-void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
+boost::variant<QuantLib::Date, QuantLib::Period> parseDateOrPeriod(const string& s) {
     QL_REQUIRE(!s.empty(), "Cannot parse empty string as date or period");
     string c(1, s.back());
     bool isPeriod = c.find_first_of("DdWwMmYy") != string::npos;
     if (isPeriod) {
-        p = ore::data::parsePeriod(s);
-        isDate = false;
+        return ore::data::parsePeriod(s);
     } else {
-        d = ore::data::parseDate(s);
-        QL_REQUIRE(d != Date(), "Cannot parse \"" << s << "\" as date");
-        isDate = true;
+        return ore::data::parseDate(s);
     }
+}
+
+namespace {
+struct legacy_date_or_period_visitor : public boost::static_visitor<> {
+    legacy_date_or_period_visitor(Date& res_d, Period& res_p, bool& res_is_date)
+        : res_d(res_d), res_p(res_p), res_is_date(res_is_date) {}
+    void operator()(const QuantLib::Date& d) const {
+        res_d = d;
+        res_is_date = true;
+    }
+    void operator()(const QuantLib::Period& p) const {
+        res_p = p;
+        res_is_date = false;
+    }
+    Date& res_d;
+    Period& res_p;
+    bool& res_is_date;
+};
+} // namespace
+
+void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
+    auto r = parseDateOrPeriod(s);
+    boost::apply_visitor(legacy_date_or_period_visitor(d, p, isDate), r);
 }
 
 QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s) {
@@ -985,6 +1007,47 @@ VolatilityType parseVolatilityQuoteType(const string& s) {
     }
 }
 
+CapFloor::Type parseCapFloorType(const string& s) {
+    if (s == "Cap") {
+        return CapFloor::Cap;
+    } else if (s == "Floor") {
+        return CapFloor::Floor;
+    } else if (s == "Collar") {
+        return CapFloor::Collar;
+    } else {
+        QL_FAIL("Unknown cap floor type " << s);
+    }
+}
+
+YoYInflationCapFloor::Type parseYoYInflationCapFloorType(const string& s) {
+    if (s == "Cap" || s == "YoYInflationCap") {
+        return YoYInflationCapFloor::Cap;
+    } else if (s == "Floor" || s == "YoYInflationFloor") {
+        return YoYInflationCapFloor::Floor;
+    } else if (s == "Collar" || s == "YoYInflationCollar") {
+        return YoYInflationCapFloor::Collar;
+    } else {
+        QL_FAIL("Unknown year on year inflation cap floor type " << s);
+    }
+}
+
+QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const string& s) {
+    namespace CT = QuantExt::CrossAssetModelTypes;
+    if (s == "IR") {
+        return CT::IR;
+    } else if (s == "FX") {
+        return CT::FX;
+    } else if (s == "INF") {
+        return CT::INF;
+    } else if (s == "CR") {
+        return CT::CR;
+    } else if (s == "EQ") {
+        return CT::EQ;
+    } else {
+        QL_FAIL("Unknown cross asset model type " << s);
+    }
+}
+
 pair<string, string> parseBoostAny(const boost::any& anyType) {
     string resultType;
     std::ostringstream oss;
@@ -1001,6 +1064,9 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         resultType = "string";
         std::string r = boost::any_cast<std::string>(anyType);
         oss << std::fixed << std::setprecision(8) << r;
+    } else if (anyType.type() == typeid(Date)) {
+        resultType = "date";
+        oss << io::iso_date(boost::any_cast<Date>(anyType));
     } else if (anyType.type() == typeid(std::vector<double>)) {
         resultType = "vector_double";
         std::vector<double> r = boost::any_cast<std::vector<double>>(anyType);
@@ -1034,15 +1100,67 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
                 oss << ", " << r[i];
             }
         }
+    } else if (anyType.type() == typeid(std::vector<CashFlowResults>)) {
+        resultType = "vector_cashflows";
+        std::vector<CashFlowResults> r = boost::any_cast<std::vector<CashFlowResults>>(anyType);
+        if (!r.empty()) {
+            oss << std::fixed << std::setprecision(8) << r[0];
+            for (Size i = 1; i < r.size(); ++i) {
+                oss << ", " << r[i];
+            }
+        }
     } else if (anyType.type() == typeid(QuantLib::Matrix)) {
         resultType = "matrix";
         QuantLib::Matrix r = boost::any_cast<QuantLib::Matrix>(anyType);
-        oss << std::fixed << std::setprecision(8) << r; 
+        oss << std::fixed << std::setprecision(8) << r;
     } else {
         ALOG("Unsupported Boost::Any type");
         resultType = "unsupported_type";
     }
     return make_pair(resultType, oss.str());
 }
+
+QuantLib::OvernightIndexFuture::NettingType parseOvernightIndexFutureNettingType(const std::string& s) {
+    if (s == "Averaging") {
+        return QuantLib::OvernightIndexFuture::NettingType::Averaging;
+    } else if (s == "Compounding") {
+        return QuantLib::OvernightIndexFuture::NettingType::Compounding;
+    } else {
+        QL_FAIL("Overnight Index Future Netting Type '" << s << "' not known, expected 'Averaging' or 'Compounding'");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, QuantLib::OvernightIndexFuture::NettingType t) {
+    if (t == QuantLib::OvernightIndexFuture::NettingType::Averaging)
+        return os << "Averaging";
+    else if (t == QuantLib::OvernightIndexFuture::NettingType::Compounding)
+        return os << "Compounding";
+    else {
+        QL_FAIL("Internal error: unknown OvernightIndexFuture::NettingType - check implementation of operator<< "
+                "for this enum");
+    }
+}
+
+FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::string& s) {
+    if (s == "IMM")
+        return FutureConvention::DateGenerationRule::IMM;
+    else if (s == "FirstDayOfMonth")
+        return FutureConvention::DateGenerationRule::FirstDayOfMonth;
+    else {
+        QL_FAIL("FutureConvention /  DateGenerationRule '" << s << "' not known, expect 'IMM' or 'FirstDayOfMonth'");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule t) {
+    if (t == FutureConvention::DateGenerationRule::IMM)
+        return os << "IMM";
+    else if (t == FutureConvention::DateGenerationRule::FirstDayOfMonth)
+        return os << "FirstDayOfMonth";
+    else {
+        QL_FAIL("Internal error: unknown FutureConvention::DateGenerationRule - check implementation of operator<< "
+                "for this enum");
+    }
+}
+
 } // namespace data
 } // namespace ore

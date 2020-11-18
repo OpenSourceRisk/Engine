@@ -70,7 +70,7 @@ public:
         future contract settlement prices, i.e. \c useFirstFuture() is \c true, the commodity index is the commodity
         future contract \em index relevant for that pricing date.
     */
-    const std::map<QuantLib::Date, ext::shared_ptr<CommodityIndex> > indices() const { return indices_; }
+    const std::map<QuantLib::Date, ext::shared_ptr<CommodityIndex> >& indices() const { return indices_; }
     //@}
 
     //! \name Event interface
