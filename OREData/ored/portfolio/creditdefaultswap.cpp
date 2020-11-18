@@ -78,30 +78,28 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     boost::shared_ptr<QuantExt::CreditDefaultSwap> cds;
 
     if (swap_.leg().notionals().size() == 1) {
-        if (swap_.upfrontDate() == Null<Date>())
+        if (swap_.upfrontFee() == Null<Real>()) {
             cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
                 prot, swap_.leg().notionals().front(), fixedData->rates().front(), schedule, payConvention, dc,
                 swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(),
-                boost::shared_ptr<Claim>(), lastPeriodDayCounter);
-        else {
-            QL_REQUIRE(swap_.upfrontFee() != Null<Real>(), "CreditDefaultSwap: upfront date given, but no upfront fee");
+                boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.tradeDate(), swap_.cashSettlementDays());
+        } else {
             cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
                 prot, notional_, swap_.upfrontFee(), fixedData->rates().front(), schedule, payConvention, dc,
                 swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), swap_.upfrontDate(),
-                boost::shared_ptr<Claim>(), lastPeriodDayCounter);
+                boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.tradeDate(), swap_.cashSettlementDays());
         }
     } else {
-        if (swap_.upfrontDate() == Null<Date>())
+        if (swap_.upfrontFee() == Null<Real>()) {
             cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
                 prot, notional_, amortized_leg, fixedData->rates().front(), schedule, payConvention, dc,
                 swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(),
-                boost::shared_ptr<Claim>(), lastPeriodDayCounter);
-        else {
-            QL_REQUIRE(swap_.upfrontFee() != Null<Real>(), "CreditDefaultSwap: upfront date given, but no upfront fee");
+                boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.tradeDate(), swap_.cashSettlementDays());
+        } else {
             cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
                 prot, notional_, amortized_leg, swap_.upfrontFee(), fixedData->rates().front(), schedule, payConvention,
                 dc, swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), swap_.upfrontDate(),
-                boost::shared_ptr<Claim>(), lastPeriodDayCounter);
+                boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.tradeDate(), swap_.cashSettlementDays());
         }
     }
 

@@ -796,6 +796,8 @@
       <xs:element type="xs:float" name="UpfrontFee" minOccurs="0"/>
       <xs:element type="xs:float" name="FixedRecoveryRate" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="date" name="TradeDate" minOccurs="0"/>
+      <xs:element type="xs:nonNegativeInteger" name="CashSettlementDays" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
