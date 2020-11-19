@@ -127,6 +127,7 @@ protected:
     Real quantity_;
     Date fixingStartDate_;
     Date fixingEndDate_;
+    Natural paymentLag_;
     boost::shared_ptr<FxIndex> fxIndex_;
 };
 
@@ -153,6 +154,7 @@ public:
     EquityLeg& withNotionals(const std::vector<Real>& notionals);
     EquityLeg& withPaymentDayCounter(const DayCounter& dayCounter);
     EquityLeg& withPaymentAdjustment(BusinessDayConvention convention);
+    EquityLeg& withPaymentLag(Natural paymentLag);
     EquityLeg& withPaymentCalendar(const Calendar& calendar);
     EquityLeg& withTotalReturn(bool);
     EquityLeg& withDividendFactor(Real);
@@ -170,6 +172,7 @@ private:
     boost::shared_ptr<FxIndex> fxIndex_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
+    Natural paymentLag_;
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
     bool isTotalReturn_;
