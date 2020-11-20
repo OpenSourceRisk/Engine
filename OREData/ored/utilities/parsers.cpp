@@ -582,7 +582,7 @@ DayCounter parseDayCounter(const string& s) {
 Currency parseCurrency(const string& s) {
     static map<string, Currency> m = {
         {"AED", AEDCurrency()}, {"ARS", ARSCurrency()}, {"ATS", ATSCurrency()}, {"AUD", AUDCurrency()},
-        {"BEF", BEFCurrency()}, {"BGL", BGLCurrency()}, {"BHD", BHDCurrency()}, {"BRL", BRLCurrency()},
+        {"BEF", BEFCurrency()}, {"BGN", BGNCurrency()}, {"BHD", BHDCurrency()}, {"BRL", BRLCurrency()},
         {"CAD", CADCurrency()}, {"CHF", CHFCurrency()}, {"CLF", CLFCurrency()}, {"CLP", CLPCurrency()},
         {"CNH", CNHCurrency()}, {"CNY", CNYCurrency()}, {"COP", COPCurrency()}, {"COU", COUCurrency()},
         {"CZK", CZKCurrency()}, {"DEM", DEMCurrency()}, {"DKK", DKKCurrency()}, {"EGP", EGPCurrency()},
