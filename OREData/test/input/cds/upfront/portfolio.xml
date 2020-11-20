@@ -1,4 +1,92 @@
 <Portfolio>
+  <Trade id="cds_0M">
+    <TradeType>CreditDefaultSwap</TradeType>
+    <Envelope>
+      <CounterParty>CP</CounterParty>
+      <NettingSetId>BNP_CSA_FIM</NettingSetId>
+      <AdditionalFields>
+        <valuation_date>2020-11-06</valuation_date>
+      </AdditionalFields>
+    </Envelope>
+    <CreditDefaultSwapData>
+      <CreditCurveId>RED:8B69AP|SNRFOR|USD|CR</CreditCurveId>
+      <SettlesAccrual>true</SettlesAccrual>
+      <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
+      <ProtectionStart>2020-11-06</ProtectionStart>
+      <UpfrontDate>2020-11-11</UpfrontDate>
+      <UpfrontFee>-0.00109908</UpfrontFee>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <PaymentConvention>Following</PaymentConvention>
+        <DayCounter>ACT/360</DayCounter>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.01</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2020-11-06</StartDate>
+            <EndDate>2020-12-20</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>WeekendsOnly</Calendar>
+            <Convention>Following</Convention>
+            <TermConvention>Unadjusted</TermConvention>
+            <Rule>CDS2015</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </CreditDefaultSwapData>
+  </Trade>
+  <Trade id="cds_3M">
+    <TradeType>CreditDefaultSwap</TradeType>
+    <Envelope>
+      <CounterParty>CP</CounterParty>
+      <NettingSetId>BNP_CSA_FIM</NettingSetId>
+      <AdditionalFields>
+        <valuation_date>2020-11-06</valuation_date>
+      </AdditionalFields>
+    </Envelope>
+    <CreditDefaultSwapData>
+      <CreditCurveId>RED:8B69AP|SNRFOR|USD|CR</CreditCurveId>
+      <SettlesAccrual>true</SettlesAccrual>
+      <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
+      <ProtectionStart>2020-11-06</ProtectionStart>
+      <UpfrontDate>2020-11-11</UpfrontDate>
+      <UpfrontFee>-0.00333371</UpfrontFee>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <PaymentConvention>Following</PaymentConvention>
+        <DayCounter>ACT/360</DayCounter>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.01</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2020-11-06</StartDate>
+            <EndDate>2021-03-20</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>WeekendsOnly</Calendar>
+            <Convention>Following</Convention>
+            <TermConvention>Unadjusted</TermConvention>
+            <Rule>CDS2015</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </CreditDefaultSwapData>
+  </Trade>
   <Trade id="cds_6M">
     <TradeType>CreditDefaultSwap</TradeType>
     <Envelope>
@@ -33,6 +121,50 @@
           <Rules>
             <StartDate>2020-11-06</StartDate>
             <EndDate>2021-06-20</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>WeekendsOnly</Calendar>
+            <Convention>Following</Convention>
+            <TermConvention>Unadjusted</TermConvention>
+            <Rule>CDS2015</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </CreditDefaultSwapData>
+  </Trade>
+  <Trade id="cds_9M">
+    <TradeType>CreditDefaultSwap</TradeType>
+    <Envelope>
+      <CounterParty>CP</CounterParty>
+      <NettingSetId>BNP_CSA_FIM</NettingSetId>
+      <AdditionalFields>
+        <valuation_date>2020-11-06</valuation_date>
+      </AdditionalFields>
+    </Envelope>
+    <CreditDefaultSwapData>
+      <CreditCurveId>RED:8B69AP|SNRFOR|USD|CR</CreditCurveId>
+      <SettlesAccrual>true</SettlesAccrual>
+      <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
+      <ProtectionStart>2020-11-06</ProtectionStart>
+      <UpfrontDate>2020-11-11</UpfrontDate>
+      <UpfrontFee>-0.00800474</UpfrontFee>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <PaymentConvention>Following</PaymentConvention>
+        <DayCounter>ACT/360</DayCounter>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.01</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2020-11-06</StartDate>
+            <EndDate>2021-09-20</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>WeekendsOnly</Calendar>
             <Convention>Following</Convention>
