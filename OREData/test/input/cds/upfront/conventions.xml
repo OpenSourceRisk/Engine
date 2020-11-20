@@ -30,7 +30,7 @@
   </AverageOIS>
   <CDS>
     <Id>CDS-STANDARD-CONVENTIONS</Id>
-    <SettlementDays>1</SettlementDays>
+    <SettlementDays>0</SettlementDays>
     <Calendar>WeekendsOnly</Calendar>
     <Frequency>Quarterly</Frequency>
     <PaymentConvention>Following</PaymentConvention>

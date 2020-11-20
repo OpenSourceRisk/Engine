@@ -12,7 +12,7 @@
       <CreditCurveId>RED:8B69AP|SNRFOR|USD|CR</CreditCurveId>
       <SettlesAccrual>true</SettlesAccrual>
       <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
-      <ProtectionStart>2020-11-07</ProtectionStart>
+      <ProtectionStart>2020-11-06</ProtectionStart>
       <UpfrontDate>2020-11-11</UpfrontDate>
       <UpfrontFee>-0.00562036</UpfrontFee>
       <LegData>
@@ -56,7 +56,7 @@
       <CreditCurveId>RED:8B69AP|SNRFOR|USD|CR</CreditCurveId>
       <SettlesAccrual>true</SettlesAccrual>
       <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
-      <ProtectionStart>2020-11-07</ProtectionStart>
+      <ProtectionStart>2020-11-06</ProtectionStart>
       <UpfrontDate>2020-11-11</UpfrontDate>
       <UpfrontFee>-0.01013285</UpfrontFee>
       <LegData>
@@ -100,7 +100,7 @@
       <CreditCurveId>RED:8B69AP|SNRFOR|USD|CR</CreditCurveId>
       <SettlesAccrual>true</SettlesAccrual>
       <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
-      <ProtectionStart>2020-11-07</ProtectionStart>
+      <ProtectionStart>2020-11-06</ProtectionStart>
       <UpfrontDate>2020-11-11</UpfrontDate>
       <UpfrontFee>-0.01856284</UpfrontFee>
       <LegData>
@@ -144,7 +144,7 @@
       <CreditCurveId>RED:8B69AP|SNRFOR|USD|CR</CreditCurveId>
       <SettlesAccrual>true</SettlesAccrual>
       <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
-      <ProtectionStart>2020-11-07</ProtectionStart>
+      <ProtectionStart>2020-11-06</ProtectionStart>
       <UpfrontDate>2020-11-11</UpfrontDate>
       <UpfrontFee>-0.02547479</UpfrontFee>
       <LegData>
@@ -188,7 +188,7 @@
       <CreditCurveId>RED:8B69AP|SNRFOR|USD|CR</CreditCurveId>
       <SettlesAccrual>true</SettlesAccrual>
       <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
-      <ProtectionStart>2020-11-07</ProtectionStart>
+      <ProtectionStart>2020-11-06</ProtectionStart>
       <UpfrontDate>2020-11-11</UpfrontDate>
       <UpfrontFee>-0.0304898</UpfrontFee>
       <LegData>
@@ -232,7 +232,7 @@
       <CreditCurveId>RED:8B69AP|SNRFOR|USD|CR</CreditCurveId>
       <SettlesAccrual>true</SettlesAccrual>
       <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
-      <ProtectionStart>2020-11-07</ProtectionStart>
+      <ProtectionStart>2020-11-06</ProtectionStart>
       <UpfrontDate>2020-11-11</UpfrontDate>
       <UpfrontFee>-0.0335928</UpfrontFee>
       <LegData>
@@ -276,7 +276,7 @@
       <CreditCurveId>RED:8B69AP|SNRFOR|USD|CR</CreditCurveId>
       <SettlesAccrual>true</SettlesAccrual>
       <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
-      <ProtectionStart>2020-11-07</ProtectionStart>
+      <ProtectionStart>2020-11-06</ProtectionStart>
       <UpfrontDate>2020-11-11</UpfrontDate>
       <UpfrontFee>-0.04135552</UpfrontFee>
       <LegData>
@@ -320,7 +320,7 @@
       <CreditCurveId>RED:8B69AP|SNRFOR|USD|CR</CreditCurveId>
       <SettlesAccrual>true</SettlesAccrual>
       <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
-      <ProtectionStart>2020-11-07</ProtectionStart>
+      <ProtectionStart>2020-11-06</ProtectionStart>
       <UpfrontDate>2020-11-11</UpfrontDate>
       <UpfrontFee>-0.05032961</UpfrontFee>
       <LegData>
@@ -364,7 +364,7 @@
       <CreditCurveId>RED:8B69AP|SNRFOR|USD|CR</CreditCurveId>
       <SettlesAccrual>true</SettlesAccrual>
       <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
-      <ProtectionStart>2020-11-07</ProtectionStart>
+      <ProtectionStart>2020-11-06</ProtectionStart>
       <UpfrontDate>2020-11-11</UpfrontDate>
       <UpfrontFee>-0.05859074</UpfrontFee>
       <LegData>
@@ -408,7 +408,7 @@
       <CreditCurveId>RED:8B69AP|SNRFOR|USD|CR</CreditCurveId>
       <SettlesAccrual>true</SettlesAccrual>
       <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
-      <ProtectionStart>2020-11-07</ProtectionStart>
+      <ProtectionStart>2020-11-06</ProtectionStart>
       <UpfrontDate>2020-11-11</UpfrontDate>
       <UpfrontFee>-0.06945512</UpfrontFee>
       <LegData>
@@ -452,7 +452,7 @@
       <CreditCurveId>RED:8B69AP|SNRFOR|USD|CR</CreditCurveId>
       <SettlesAccrual>true</SettlesAccrual>
       <ProtectionPaymentTime>atDefault</ProtectionPaymentTime>
-      <ProtectionStart>2020-11-07</ProtectionStart>
+      <ProtectionStart>2020-11-06</ProtectionStart>
       <UpfrontDate>2020-11-11</UpfrontDate>
       <UpfrontFee>-0.0909346</UpfrontFee>
       <LegData>
