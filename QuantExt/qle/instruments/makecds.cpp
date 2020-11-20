@@ -46,13 +46,13 @@ MakeCreditDefaultSwap::MakeCreditDefaultSwap(const Period& tenor, const Real cou
     : side_(Protection::Buyer), nominal_(1.0), tenor_(tenor), termDate_(boost::none), couponTenor_(3 * Months),
       couponRate_(couponRate), upfrontRate_(0.0),
       dayCounter_(Actual360()), lastPeriodDayCounter_(Actual360(true)),
-      rule_(DateGeneration::CDS), cashSettlementDays_(3) {}
+      rule_(DateGeneration::CDS2015), cashSettlementDays_(3) {}
 
 MakeCreditDefaultSwap::MakeCreditDefaultSwap(const Date& termDate, const Real couponRate)
     : side_(Protection::Buyer), nominal_(1.0), tenor_(boost::none), termDate_(termDate), couponTenor_(3 * Months),
       couponRate_(couponRate), upfrontRate_(0.0),
       dayCounter_(Actual360()), lastPeriodDayCounter_(Actual360(true)),
-      rule_(DateGeneration::CDS), cashSettlementDays_(3) {}
+      rule_(DateGeneration::CDS2015), cashSettlementDays_(3) {}
 
 MakeCreditDefaultSwap::operator CreditDefaultSwap() const {
     boost::shared_ptr<CreditDefaultSwap> swap = *this;
