@@ -930,7 +930,7 @@ void CdsConvention::build() {
     if (!strUpfrontSettlementDays_.empty())
         upfrontSettlementDays_ = lexical_cast<Natural>(strUpfrontSettlementDays_);
 
-    lastPeriodDayCounter_ = dayCounter_;
+    lastPeriodDayCounter_ = DayCounter();
     if (!strLastPeriodDayCounter_.empty())
         lastPeriodDayCounter_ = parseDayCounter(strLastPeriodDayCounter_);
 }

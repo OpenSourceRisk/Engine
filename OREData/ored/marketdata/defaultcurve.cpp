@@ -294,7 +294,7 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
             helpers.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
                 quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                 cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                config.startDate(), cdsConv->settlesAccrual(), ppt));
+                config.startDate(), cdsConv->settlesAccrual(), ppt, cdsConv->lastPeriodDayCounter()));
         }
     } else {
         for (auto quote : quotes) {
@@ -311,7 +311,7 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
                 quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
                 cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
                 recoveryRate_, discountCurve, config.startDate(), cdsConv->upfrontSettlementDays(),
-                cdsConv->settlesAccrual(), ppt));
+                cdsConv->settlesAccrual(), ppt, cdsConv->lastPeriodDayCounter()));
         }
     }
 
