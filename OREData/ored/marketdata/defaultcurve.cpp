@@ -262,24 +262,6 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     // Get the CDS spread / price curve quotes
     set<QuoteData> quotes = getConfiguredQuotes(config, asof, loader);
 
-    // If date generation rule is DateGeneration::CDS2015, need to ensure that the CDS tenor is a multiple of
-    // 6M. The wrong CDS maturity date is generated if it is not. Additionally, you can end up with a curve that
-    // has multiple identical maturity dates which leads to a crash. Issue opened with QuantLib on this:
-    // https://github.com/lballabio/QuantLib/issues/727
-    if (cdsConv->rule() == DateGeneration::CDS2015) {
-        // Erase any elements with a tenor that is not a multiple of 6 months. Intentionally getting rid of anything
-        // here that is in units of days or weeks also.
-        for (auto it = quotes.cbegin(); it != quotes.cend();) {
-            if ((it->term.units() == Months && it->term.length() % 6 == 0) || it->term.units() == Years) {
-                ++it;
-            } else {
-                WLOG("Removing CDS with tenor " << it->term << " from curve " << spec.name()
-                     << " since date generation rule is CDS2015 and the tenor is not a multiple of 6 months");
-                it = quotes.erase(it);
-            }
-        }
-    }
-
     // If the configuration instructs us to imply a default from the market data, we do it here.
     if (config.implyDefaultFromMarket() && *config.implyDefaultFromMarket()) {
         if (recoveryRate_ != Null<Real>() && quotes.empty()) {
