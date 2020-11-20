@@ -262,18 +262,6 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     // Get the CDS spread / price curve quotes
     set<QuoteData> quotes = getConfiguredQuotes(config, asof, loader);
 
-    // 0M as a tenor should be allowable with CDS date generation but it is not yet supported so we
-    // remove any CDS pillars that have a Period with length == 0. For the erasing logic while iterating map:
-    // https://stackoverflow.com/questions/8234779/how-to-remove-from-a-map-while-iterating-it
-    for (auto it = quotes.cbegin(); it != quotes.cend();) {
-        if (it->term.length() == 0) {
-            WLOG("Removing CDS with tenor zero from curve " << spec.name() << " since it is not supported yet");
-            it = quotes.erase(it);
-        } else {
-            ++it;
-        }
-    }
-
     // If date generation rule is DateGeneration::CDS2015, need to ensure that the CDS tenor is a multiple of
     // 6M. The wrong CDS maturity date is generated if it is not. Additionally, you can end up with a curve that
     // has multiple identical maturity dates which leads to a crash. Issue opened with QuantLib on this:
