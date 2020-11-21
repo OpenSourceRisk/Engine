@@ -51,5 +51,16 @@ public:
     HRKCurrency();
 };
 
+//! Bulgarian lev
+/*! The ISO three-letter code is BGN; the numeric code is 975.
+ It is divided into 100 stotinki.
+
+ \ingroup currencies
+*/
+class BGNCurrency : public Currency {
+public:
+    BGNCurrency();
+};
+
 } // namespace QuantExt
 #endif

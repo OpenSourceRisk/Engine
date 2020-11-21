@@ -36,4 +36,11 @@ HRKCurrency::HRKCurrency() {
     data_ = hrkData;
 }
 
+// Bulgarian lev
+BGNCurrency::BGNCurrency() {
+	static boost::shared_ptr<Data> bgnData(
+        new Data("Bulgarian lev", "BGN", 975, "BGN", "", 100, Rounding(), "1$.2F %3%"));
+    data_ = bgnData;
+}
+
 } // namespace QuantExt
