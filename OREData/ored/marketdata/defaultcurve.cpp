@@ -78,6 +78,9 @@ void addQuote(set<QuoteData>& quotes, const string& configId, const string& name
 set<QuoteData> getRegexQuotes(string strRegex, const string& configId, DefaultCurveConfig::Type type,
     const Date& asof, const Loader& loader) {
 
+    using DCCT = DefaultCurveConfig::Type;
+    using MDQT = MarketDatum::QuoteType;
+    using MDIT = MarketDatum::InstrumentType;
     LOG("Loading regex quotes for default curve " << configId);
 
     // "*" is used as wildcard in strRegex in our quotes. Need to replace with ".*" here for regex to work.
@@ -94,27 +97,26 @@ set<QuoteData> getRegexQuotes(string strRegex, const string& configId, DefaultCu
         if (md->asofDate() != asof)
             continue;
 
+        auto mdit = md->instrumentType();
+        auto mdqt = md->quoteType();
+
         // If we have a CDS spread or hazard rate quote, check it and populate tenor and value if it matches
-        if (type == DefaultCurveConfig::Type::SpreadCDS && (md->instrumentType() == MarketDatum::InstrumentType::CDS &&
-            md->quoteType() == MarketDatum::QuoteType::CREDIT_SPREAD)) {
+        if (type == DCCT::SpreadCDS && mdit == MDIT::CDS &&
+            (mdqt == MDQT::CREDIT_SPREAD || mdqt == MDQT::CONV_CREDIT_SPREAD)) {
 
             auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
             if (regex_match(q->name(), expression)) {
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->runningSpread());
             }
 
-        } else if (type == DefaultCurveConfig::Type::Price &&
-            (md->instrumentType() == MarketDatum::InstrumentType::CDS &&
-                md->quoteType() == MarketDatum::QuoteType::PRICE)) {
+        } else if (type == DCCT::Price && (mdit == MDIT::CDS && mdqt == MDQT::PRICE)) {
 
             auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
             if (regex_match(q->name(), expression)) {
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->runningSpread());
             }
 
-        } else if (type == DefaultCurveConfig::Type::HazardRate &&
-            (md->instrumentType() == MarketDatum::InstrumentType::HAZARD_RATE &&
-                md->quoteType() == MarketDatum::QuoteType::RATE)) {
+        } else if (type == DCCT::HazardRate && (mdit == MDIT::HAZARD_RATE && mdqt == MDQT::RATE)) {
 
             auto q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
             if (regex_match(q->name(), expression)) {
@@ -125,7 +127,7 @@ set<QuoteData> getRegexQuotes(string strRegex, const string& configId, DefaultCu
 
     // We don't check for an empty set of CDS quotes here. We check it later because under some circumstances,
     // it may be allowable to have no quotes.
-    if (type != DefaultCurveConfig::Type::SpreadCDS && type != DefaultCurveConfig::Type::Price) {
+    if (type != DCCT::SpreadCDS && type != DCCT::Price) {
         QL_REQUIRE(!result.empty(), "No market points found for curve config " << configId);
     }
 
@@ -137,16 +139,19 @@ set<QuoteData> getRegexQuotes(string strRegex, const string& configId, DefaultCu
 set<QuoteData> getExplicitQuotes(const vector<pair<string, bool>>& quotes, const string& configId,
     DefaultCurveConfig::Type type, const Date& asof, const Loader& loader) {
 
+    using DCCT = DefaultCurveConfig::Type;
     LOG("Loading explicit quotes for default curve " << configId);
 
     set<QuoteData> result;
     for (const auto& p : quotes) {
         if (boost::shared_ptr<MarketDatum> md = loader.get(p, asof)) {
-            if (type == DefaultCurveConfig::Type::SpreadCDS || type == DefaultCurveConfig::Type::Price) {
+            if (type == DCCT::SpreadCDS || type == DCCT::Price) {
                 auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
+                QL_REQUIRE(q, "Quote " << p.first << " for config " << configId << " should be a CdsQuote");
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->runningSpread());
             } else {
                 auto q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
+                QL_REQUIRE(q, "Quote " << p.first << " for config " << configId << " should be a HazardRateQuote");
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value());
             }
         }
@@ -154,7 +159,7 @@ set<QuoteData> getExplicitQuotes(const vector<pair<string, bool>>& quotes, const
 
     // We don't check for an empty set of CDS quotes here. We check it later because under some circumstances,
     // it may be allowable to have no quotes.
-    if (type != DefaultCurveConfig::Type::SpreadCDS && type != DefaultCurveConfig::Type::Price) {
+    if (type != DCCT::SpreadCDS && type != DCCT::Price) {
         QL_REQUIRE(!result.empty(), "No market points found for curve config " << configId);
     }
 
@@ -166,11 +171,10 @@ set<QuoteData> getExplicitQuotes(const vector<pair<string, bool>>& quotes, const
 
 set<QuoteData> getConfiguredQuotes(DefaultCurveConfig& config, const Date& asof, const Loader& loader) {
 
-    QL_REQUIRE(config.type() == DefaultCurveConfig::Type::SpreadCDS ||
-        config.type() == DefaultCurveConfig::Type::Price ||
-        config.type() == DefaultCurveConfig::Type::HazardRate,
-        "DefaultCurve::getConfiguredQuotes expected a default curve configuration with type SpreadCDS, Price or "
-        "HazardRate");
+    using DCCT = DefaultCurveConfig::Type;
+    auto type = config.type();
+    QL_REQUIRE(type == DCCT::SpreadCDS || type == DCCT::Price || type == DCCT::HazardRate,
+        "getConfiguredQuotes expects a curve type of SpreadCDS, Price or HazardRate.");
     QL_REQUIRE(!config.cdsQuotes().empty(), "No quotes configured for curve " << config.curveID());
 
     // We may have a _single_ regex quote or a list of explicit quotes. Check if we have single regex quote.

@@ -192,21 +192,29 @@ Real expNpvs[] = {0, 0, 0.050659, -0.05062};
 // List of trades that will feed the data-driven test below to check CDS trade building.
 vector<string> trades = {"cds_minimal_with_rules", "cds_minimal_with_dates"};
 
+struct TodaysMarketFiles {
+    string todaysMarket = "todaysmarket.xml";
+    string conventions = "conventions.xml";
+    string curveConfig = "curveconfig.xml";
+    string market = "market.txt";
+    string fixings = "fixings.txt";
+};
+
 // Create todaysmarket from input files.
 boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir,
-    const string& market = "market.txt", const string& curveConfig = "curveconfig.xml") {
+    const TodaysMarketFiles& tmf) {
 
     Conventions conventions;
-    conventions.fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
+    conventions.fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.conventions)));
 
     CurveConfigurations curveConfigs;
-    curveConfigs.fromFile(TEST_INPUT_FILE(string(inputDir + "/" + curveConfig)));
+    curveConfigs.fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.curveConfig)));
 
     TodaysMarketParameters todaysMarketParameters;
-    todaysMarketParameters.fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
+    todaysMarketParameters.fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.todaysMarket)));
 
-    CSVLoader loader(TEST_INPUT_FILE(string(inputDir + "/" + market)),
-        TEST_INPUT_FILE(string(inputDir + "/fixings.txt")), false);
+    CSVLoader loader(TEST_INPUT_FILE(string(inputDir + "/" + tmf.market)),
+        TEST_INPUT_FILE(string(inputDir + "/" + tmf.fixings)), false);
 
     return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs, conventions);
 }
@@ -278,8 +286,12 @@ BOOST_DATA_TEST_CASE(testUpfrontDefaultCurveConsistency, bdata::make(upfrontFile
     string dir("upfront");
     Real tol = 0.0001;
 
+    TodaysMarketFiles tmf;
+    tmf.market = files.market;
+    tmf.curveConfig = files.curveConfig;
+
     boost::shared_ptr<TodaysMarket> tm;
-    BOOST_REQUIRE_NO_THROW(tm = createTodaysMarket(asof, dir, files.market, files.curveConfig));
+    BOOST_REQUIRE_NO_THROW(tm = createTodaysMarket(asof, dir, tmf));
 
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
     data->fromFile(TEST_INPUT_FILE(string(dir + "/pricingengine.xml")));
@@ -302,9 +314,43 @@ BOOST_AUTO_TEST_CASE(testUpfrontCurveBuildFailsIfNoRunningSpread) {
 
     BOOST_TEST_MESSAGE("Testing upfront failure when no running spread ...");
 
+    TodaysMarketFiles tmf;
+    tmf.curveConfig = "curveconfig_no_rs.xml";
+
     Date asof(6, Nov, 2020);
     Settings::instance().evaluationDate() = Date(6, Nov, 2020);
-    BOOST_CHECK_THROW(createTodaysMarket(asof, "upfront", "market.txt", "curveconfig_no_rs.xml"), QuantLib::Error);
+    BOOST_CHECK_THROW(createTodaysMarket(asof, "upfront", tmf), QuantLib::Error);
+
+}
+
+BOOST_AUTO_TEST_CASE(testSimultaneousUsageCdsQuoteTypes) {
+
+    BOOST_TEST_MESSAGE("Testing different CDS quote types can be used together ...");
+
+    TodaysMarketFiles tmf;
+    tmf.todaysMarket = "todaysmarket_all_cds_quote_types.xml";
+
+    Date asof(6, Nov, 2020);
+    Settings::instance().evaluationDate() = Date(6, Nov, 2020);
+
+    // Check that todaysmarket instance is created without error.
+    boost::shared_ptr<TodaysMarket> tm;
+    BOOST_CHECK_NO_THROW(tm = createTodaysMarket(asof, "upfront", tmf));
+
+    // Check that each of the three expected curves exist and give survival probability.
+    vector<string> curveNames = {
+        "RED:8B69AP|SNRFOR|USD|CR-UPFRONT",
+        "RED:8B69AP|SNRFOR|USD|CR-PAR_SPREAD",
+        "RED:8B69AP|SNRFOR|USD|CR-CONV_SPREAD",
+    };
+
+    for (const string& curveName : curveNames) {
+        BOOST_TEST_CONTEXT("Checking default curve " << curveName) {
+            Handle<DefaultProbabilityTermStructure> dpts;
+            BOOST_CHECK_NO_THROW(dpts = tm->defaultCurve(curveName));
+            BOOST_CHECK_NO_THROW(dpts->survivalProbability(1.0));
+        }
+    }
 
 }
 

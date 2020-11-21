@@ -123,6 +123,7 @@ public:
     enum class QuoteType {
         BASIS_SPREAD,
         CREDIT_SPREAD,
+        CONV_CREDIT_SPREAD,
         YIELD_SPREAD,
         HAZARD_RATE,
         RATE,
@@ -684,7 +685,9 @@ private:
 
 /*! CDS Spread data class
     This class holds single market points of type
-    - CREDIT_SPREAD PRICE
+    - CREDIT_SPREAD
+    - CONV_CREDIT_SPREAD
+    - PRICE
     \ingroup marketdata
 */
 class CdsQuote : public MarketDatum {

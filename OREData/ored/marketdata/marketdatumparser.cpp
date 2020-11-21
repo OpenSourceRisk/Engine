@@ -92,6 +92,7 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
     static map<string, MarketDatum::QuoteType> b = {
         {"BASIS_SPREAD", MarketDatum::QuoteType::BASIS_SPREAD},
         {"CREDIT_SPREAD", MarketDatum::QuoteType::CREDIT_SPREAD},
+        {"CONV_CREDIT_SPREAD", MarketDatum::QuoteType::CONV_CREDIT_SPREAD},
         {"YIELD_SPREAD", MarketDatum::QuoteType::YIELD_SPREAD},
         {"RATE", MarketDatum::QuoteType::RATE},
         {"RATIO", MarketDatum::QuoteType::RATIO},
@@ -284,10 +285,10 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::CDS: {
-        // CDS/CREDIT_SPREAD/Name/Seniority/ccy/term
-        // CDS/CREDIT_SPREAD/Name/Seniority/ccy/term/runningSpread
-        // CDS/CREDIT_SPREAD/Name/Seniority/ccy/doc/term
-        // CDS/CREDIT_SPREAD/Name/Seniority/ccy/doc/term/runningSpread
+        // CDS/[CONV_]CREDIT_SPREAD/Name/Seniority/ccy/term
+        // CDS/[CONV_]CREDIT_SPREAD/Name/Seniority/ccy/term/runningSpread
+        // CDS/[CONV_]CREDIT_SPREAD/Name/Seniority/ccy/doc/term
+        // CDS/[CONV_]CREDIT_SPREAD/Name/Seniority/ccy/doc/term/runningSpread
         // CDS/PRICE/Name/Seniority/ccy/term
         // CDS/PRICE/Name/Seniority/ccy/term/runningSpread
         // CDS/PRICE/Name/Seniority/ccy/doc/term

@@ -96,6 +96,19 @@
       <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
     </DefaultCurve>
     <DefaultCurve>
+      <CurveId>RED:8B69AP|SNRFOR|USD|CR-CONV_SPREAD</CurveId>
+      <CurveDescription>SG</CurveDescription>
+      <Currency>USD</Currency>
+      <Type>SpreadCDS</Type>
+      <DiscountCurve>Yield/USD/USD-FedFunds</DiscountCurve>
+      <DayCounter>A365</DayCounter>
+      <RecoveryRate>RECOVERY_RATE/RATE/8B69AP/SNRFOR/USD/CR</RecoveryRate>
+      <Quotes>
+        <Quote>CDS/CONV_CREDIT_SPREAD/8B69AP/SNRFOR/USD/CR/*</Quote>
+      </Quotes>
+      <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+    </DefaultCurve>
+    <DefaultCurve>
       <CurveId>RED:8B69AP|SNRFOR|USD|CR-UPFRONT</CurveId>
       <CurveDescription>SG</CurveDescription>
       <Currency>USD</Currency>
