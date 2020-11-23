@@ -2,16 +2,16 @@
 
 set(OREAnalytics_SRC aggregation/collateralaccount.cpp
 aggregation/collatexposurehelper.cpp
-aggregation/exposureallocator.cpp
-aggregation/exposurecalculator.cpp
 aggregation/cvaspreadsensitivitycalculator.cpp
 aggregation/dimcalculator.cpp
 aggregation/dimregressioncalculator.cpp
 aggregation/dynamiccreditxvacalculator.cpp
+aggregation/exposureallocator.cpp
+aggregation/exposurecalculator.cpp
 aggregation/nettedexposurecalculator.cpp
+aggregation/postprocess.cpp
 aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
-aggregation/postprocess.cpp
 app/oreapp.cpp
 app/parameters.cpp
 app/reportwriter.cpp
@@ -59,16 +59,16 @@ simulation/simmarket.cpp)
 
 set(OREAnalytics_HDR aggregation/collateralaccount.hpp
 aggregation/collatexposurehelper.hpp
-aggregation/exposureallocator.hpp
-aggregation/exposurecalculator.hpp
 aggregation/cvaspreadsensitivitycalculator.hpp
 aggregation/dimcalculator.hpp
 aggregation/dimregressioncalculator.hpp
 aggregation/dynamiccreditxvacalculator.hpp
+aggregation/exposureallocator.hpp
+aggregation/exposurecalculator.hpp
 aggregation/nettedexposurecalculator.hpp
+aggregation/postprocess.hpp
 aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
-aggregation/postprocess.hpp
 app/oreapp.hpp
 app/parameters.hpp
 app/reportwriter.hpp

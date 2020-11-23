@@ -142,6 +142,7 @@
 #include <qle/instruments/rebatedexercise.hpp>
 #include <qle/instruments/subperiodsswap.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
+#include <qle/instruments/vanillaforwardoption.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 #include <qle/math/covariancesalvage.hpp>
 #include <qle/math/deltagammavar.hpp>
@@ -200,6 +201,7 @@
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
+#include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
 #include <qle/pricingengines/analyticjycpicapfloorengine.hpp>
 #include <qle/pricingengines/analyticjyyoycapfloorengine.hpp>
 #include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
