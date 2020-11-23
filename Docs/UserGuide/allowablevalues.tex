@@ -10,12 +10,13 @@
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
     \lstinline!Date! & \begin{tabular}[l]{@{}l@{}} The following date formats are supported: \\  \emph{yyyymmdd} \\ \emph{yyyy-mm-dd} \\ \emph{yyyy/mm/dd} \\ \emph{yyyy.mm.dd} \\ \emph{dd-mm-yy} \\  \emph{dd/mm/yy} \\  \emph{dd.mm.yy} \\  \emph{dd-mm-yyyy} \\  \emph{dd/mm/yyyy} \\  \emph{dd.mm.yyyy} \\ and \\ Dates as  serial numbers, comparable to Microsoft Excel \\dates, with a minimum of 367 for Jan 1, 1901,\\ and a maximum of 109574 for Dec 31, 2199.  \end{tabular}  \\ \hline
-    \lstinline!Currency! & \emph{ATS, AUD, BEF, BRL, CAD, CHF, CNY,
-      CZK, DEM, DKK, EUR, ESP, FIM, FRF, GBP, GRD, HKD, HUF, IEP, ITL,
-      INR, ISK, JPY, KRW, LUF, NLG, NOK, NZD, PLN, PTE, RON, SEK, SGD,
-      THB, TRY, TWD, USD, ZAR, ARS, CLP, COP, IDR, ILS, KWD, PEN, MXN,
-      SAR, RUB, TND, MYR, UAH, KZT, QAR, MXV, CLF, EGP, BHD, OMR, VND,
-      AED, PHP, NGN, MAD, UYU, CNH, KES, LKR, PKR, RSD, XAG, XAU, XPD, XPT},  
+    \lstinline!Currency! & \emph{AED, ARS, ATS, AUD, BEF, BGN, BHD,
+      BRL, CAD, CHF, CLF, CLP, CNH, CNY, COP, COU, CZK, DEM, DKK, EGP,
+      ESP, EUR, FIM, FRF, GBP, GHS, GRD, HKD, HRK, HUF, IDR, IEP, ILS,
+      INR, ISK, ITL, JOD, JPY, KES, KRW, KWD, KZT, LKR, LUF, MAD, MUR,
+      MXN, MXV, MYR, NGN, NLG, NOK, NZD, OMR, PEN, PHP, PKR, PLN, PTE,
+      QAR, RON, RSD, RUB, SAR, SEK, SGD, THB, TND, TRY, TWD, UAH, UGX,
+      USD, UYU, VND, ZAR, ZMW, XAG, XAU, XPD, XPT},  
     Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
     %\lstinline!DayCount!  \lstinline!Convention! & \begin{tabular}[l]{@{}l@{}}\indent Actual 360 can be expressed by:\\ \emph{A360, Actual/360, ACT/360}\\ \indent Actual 365 Fixed can be expressed by: \\ \emph{A365, A365F, Actual/365, Actual/365 (fixed)} \\ \indent Thirty 360 (US) can be expressed by: \\ \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT} \\ \indent Thirty 360 (European) can be expressed by: \\ \emph{30E/360, 30E/360 (Eurobond Basis)}\\ \indent Thirty 360 (Italian) is expressed by: \\ \emph{30/360 (Italian)}  \\ \indent Actual Actual (ISDA) can be expressed by: \\ \emph{ActActISDA, ActualActual (ISDA), ACT/ACT, ACT} \\ \indent Actual Actual (ISMA) can be expressed by: \\ \emph{ActActISMA, ActualActual (ISMA)} \\ \indent Actual Actual (AFB) can be expressed by:\\ \emph{ActActAFB, Actual/Actual (AFB)} \end{tabular}  \\ \hline
     \lstinline!Roll Convention! & \begin{tabular}[l]{@{}l@{}} 
