@@ -27,13 +27,13 @@ namespace ore {
 namespace data {
 
 EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveDescription,
-                                     const string& forecastingCurve, const string& currency,
+                                     const string& forecastingCurve, const string& currency, const string& calendar,
                                      const EquityCurveConfig::Type& type, const string& equitySpotQuote,
                                      const vector<string>& fwdQuotes, const string& dayCountID,
                                      const string& dividendInterpVariable, const string& dividendInterpMethod,
                                      bool extrapolation, const QuantLib::Exercise::Type& exerciseStyle)
     : CurveConfig(curveID, curveDescription), fwdQuotes_(fwdQuotes), forecastingCurve_(forecastingCurve),
-      currency_(currency), type_(type), equitySpotQuoteID_(equitySpotQuote), dayCountID_(dayCountID),
+      currency_(currency), calendar_(calendar), type_(type), equitySpotQuoteID_(equitySpotQuote), dayCountID_(dayCountID),
       divInterpVariable_(dividendInterpVariable), divInterpMethod_(dividendInterpMethod), extrapolation_(extrapolation),
       exerciseStyle_(exerciseStyle) {
     quotes_ = fwdQuotes;
@@ -53,6 +53,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     forecastingCurve_ = XMLUtils::getChildValue(node, "ForecastingCurve", true);
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
+    calendar_ = XMLUtils::getChildValue(node, "Calendar", true);
     type_ = parseEquityCurveConfigType(XMLUtils::getChildValue(node, "Type", true));
     if (type_ == EquityCurveConfig::Type::OptionPremium)
         exerciseStyle_ = parseExerciseType(XMLUtils::getChildValue(node, "ExerciseStyle", true));
@@ -90,6 +91,7 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
+    XMLUtils::addChild(doc, node, "Calendar", calendar_);
     XMLUtils::addChild(doc, node, "ForecastingCurve", forecastingCurve_);
     XMLUtils::addChild(doc, node, "Type", to_string(type_));
     if (type_ == EquityCurveConfig::Type::OptionPremium)

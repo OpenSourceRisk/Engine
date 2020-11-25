@@ -55,6 +55,16 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             dc_ = parseDayCounter(config->dayCountID());
         }
 
+        // set the calendar to the ccy based calendar, if provided by config we try to use that
+        Calendar calendar = parseCalendar(config->currency());
+        if (!config->calendar().empty()) {
+            try {
+                parseCalendar(config->calendar());
+            } catch (exception& ex) {
+                WLOG("Failed to get Calendar name for  " << config->calendar() << ":" << ex.what());
+            }
+        }
+
         // Set the Curve type - EquityFwd / OptionPrice / DividendYield
         curveType_ = config->type();
 
@@ -343,7 +353,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             DLOG("Building flat Equity Dividend Yield curve as no quotes provided");
             // Return a flat curve @ 0%
             dividendYieldTermStructure = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(asof, 0.0, dc_));
-            equityIndex_ = boost::make_shared<EquityIndex>(spec.curveConfigID(), parseCalendar(config->currency()),
+            equityIndex_ = boost::make_shared<EquityIndex>(spec.curveConfigID(), calendar,
                                                            parseCurrency(config->currency()), equitySpot,
                                                            forecastYieldTermStructure, dividendYieldTermStructure);
             return;
@@ -399,7 +409,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         }
         dividendYieldTermStructure = Handle<YieldTermStructure>(divCurve);
 
-        equityIndex_ = boost::make_shared<EquityIndex>(spec.curveConfigID(), parseCalendar(config->currency()),
+        equityIndex_ = boost::make_shared<EquityIndex>(spec.curveConfigID(), calendar,
                                                        parseCurrency(config->currency()), equitySpot,
                                                        forecastYieldTermStructure, dividendYieldTermStructure);
 
