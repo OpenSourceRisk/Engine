@@ -313,6 +313,7 @@
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="calendar" name="Calendar"/>
       <xs:element type="xs:string" name="ForecastingCurve"/>
       <xs:element type="equityType" name="Type"/>
       <xs:element type="exerciseStyle" name="ExerciseStyle" minOccurs="0" maxOccurs="1"/>
