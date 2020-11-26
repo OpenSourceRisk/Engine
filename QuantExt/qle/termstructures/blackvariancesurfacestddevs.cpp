@@ -92,17 +92,14 @@ Real BlackVarianceSurfaceStdDevs::moneyness(Time t, Real strike) const {
 
 void BlackVarianceSurfaceStdDevs::populateVolMatrix(
     const QuantLib::Handle<QuantLib::BlackVolTermStructure>& termStructre,
-    vector<vector<Handle<Quote> > >& quotesToPopulate, const std::vector<QuantLib::Period>& expiries,
+    vector<vector<Handle<Quote> > >& quotesToPopulate, const std::vector<Real>& times,
     const std::vector<Real>& stdDevPoints, const QuantLib::Interpolation& forwardCurve,
     const QuantLib::Interpolation atmVolCurve) {
 
-    for (Size j = 0; j < expiries.size(); j++) {
-        Date tmpDate = termStructre->referenceDate() +
-                       expiries[j]; // todo: is the reference date of this termstructure as the asof date
-        Time tmpTime = termStructre->timeFromReference(tmpDate);
+    for (Size j = 0; j < times.size(); j++) {
         for (Size i = 0; i < stdDevPoints.size(); i++) {
-            Real tmpStrike = forwardCurve(tmpTime) * exp(atmVolCurve(tmpTime) * sqrt(tmpTime) * stdDevPoints[i]);
-            Volatility vol = termStructre->blackVol(tmpDate, tmpStrike, true);
+            Real tmpStrike = forwardCurve(times[j]) * exp(atmVolCurve(times[j]) * sqrt(times[j]) * stdDevPoints[i]);
+            Volatility vol = termStructre->blackVol(times[j], tmpStrike, true);
             boost::shared_ptr<QuantLib::SimpleQuote> q(new SimpleQuote(vol));
             quotesToPopulate[i][j] = Handle<Quote>(q);
         }
