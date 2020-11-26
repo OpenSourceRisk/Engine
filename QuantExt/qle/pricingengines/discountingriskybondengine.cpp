@@ -67,6 +67,17 @@ void DiscountingRiskyBondEngine::calculate() const {
     results_.valuationDate = (*discountCurve_)->referenceDate();
     results_.value = calculateNpv(results_.valuationDate, arguments_.cashflows);
 
+    results_.additionalResults["securitySpread"] = securitySpread_.empty() ? 0.0 : securitySpread_->value();
+    Date maturity = CashFlows::maturityDate(arguments_.cashflows);
+    if (maturity > results_.valuationDate) {
+        Real t = discountCurve_->timeFromReference(maturity);
+        results_.additionalResults["maturityTime"] = t;
+        results_.additionalResults["maturityDiscountFactor"] = discountCurve_->discount(t);
+        results_.additionalResults["maturitySurvivalProb"] =
+            defaultCurve_.empty() ? 1.0 : defaultCurve_->survivalProbability(t);
+        results_.additionalResults["recoveryRate"] = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
+    }
+
     bool includeRefDateFlows =
         includeSettlementDateFlows_ ? *includeSettlementDateFlows_ : Settings::instance().includeReferenceDateEvents();
     // a bond's cashflow on settlement date is never taken into
