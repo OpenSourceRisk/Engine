@@ -53,7 +53,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     forecastingCurve_ = XMLUtils::getChildValue(node, "ForecastingCurve", true);
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
-    calendar_ = XMLUtils::getChildValue(node, "Calendar", true);
+    calendar_ = XMLUtils::getChildValue(node, "Calendar", false);
     type_ = parseEquityCurveConfigType(XMLUtils::getChildValue(node, "Type", true));
     if (type_ == EquityCurveConfig::Type::OptionPremium)
         exerciseStyle_ = parseExerciseType(XMLUtils::getChildValue(node, "ExerciseStyle", true));

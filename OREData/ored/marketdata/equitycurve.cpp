@@ -56,13 +56,16 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         }
 
         // set the calendar to the ccy based calendar, if provided by config we try to use that
-        Calendar calendar = parseCalendar(config->currency());
+        Calendar calendar;
         if (!config->calendar().empty()) {
             try {
-                parseCalendar(config->calendar());
+                calendar = parseCalendar(config->calendar());
             } catch (exception& ex) {
                 WLOG("Failed to get Calendar name for  " << config->calendar() << ":" << ex.what());
             }
+        }
+        if (calendar.empty()) {
+            calendar = parseCalendar(config->currency());
         }
 
         // Set the Curve type - EquityFwd / OptionPrice / DividendYield
