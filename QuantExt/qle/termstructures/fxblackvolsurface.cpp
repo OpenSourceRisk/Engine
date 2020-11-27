@@ -121,8 +121,7 @@ boost::shared_ptr<FxSmileSection> FxBlackVannaVolgaVolatilitySurface::blackVolSm
         at = longTermAtmType_;
         dt = longTermDeltaType_;
     }
-    return boost::make_shared<VannaVolgaSmileSection>(spot, rd, rf, t, atm, rr, bf, firstApprox_, atmType_, deltaType_,
-                                                      delta_);
+    return boost::make_shared<VannaVolgaSmileSection>(spot, rd, rf, t, atm, rr, bf, firstApprox_, at, dt, delta_);
 }
 
 } // namespace QuantExt

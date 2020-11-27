@@ -1407,9 +1407,11 @@ private:
     Period switchTenor_;
 
     // Strings to store the inputs
-    string strAtmType_, strLongTermAtmType_;
-    string strDeltaType_, strLongTermDeltaType_;
+    string strAtmType_;
+    string strDeltaType_;
     string strSwitchTenor_;
+    string strLongTermAtmType_;
+    string strLongTermDeltaType_;
 };
 
 } // namespace data
