@@ -67,7 +67,7 @@ public:
 
 protected:
     /*! Store the set of ORE index names that appear on this leg.
-        Should be populated by dervied classes.
+        Should be populated by derived classes.
     */
     std::set<std::string> indices_;
 

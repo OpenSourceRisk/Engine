@@ -282,9 +282,9 @@ int XMLUtils::getChildValueAsInt(XMLNode* node, const string& name, bool mandato
     return s == "" ? 0 : parseInteger(s);
 }
 
-bool XMLUtils::getChildValueAsBool(XMLNode* node, const string& name, bool mandatory) {
+bool XMLUtils::getChildValueAsBool(XMLNode* node, const string& name, bool mandatory, bool defaultValue) {
     string s = getChildValue(node, name, mandatory);
-    return s == "" ? true : parseBool(s);
+    return s == "" ? defaultValue : parseBool(s);
 }
 
 vector<string> XMLUtils::getChildrenValues(XMLNode* parent, const string& names, const string& name, bool mandatory) {

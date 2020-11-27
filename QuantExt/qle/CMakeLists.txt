@@ -121,9 +121,9 @@ models/yoyinflationmodeltermstructure.cpp
 models/yoyswaphelper.cpp
 models/zeroinflationmodeltermstructure.cpp
 pricingengines/analyticcashsettledeuropeanengine.cpp
-pricingengines/analyticeuropeanforwardengine.cpp
 pricingengines/analyticcclgmfxoptionengine.cpp
 pricingengines/analyticdkcpicapfloorengine.cpp
+pricingengines/analyticeuropeanforwardengine.cpp
 pricingengines/analyticjycpicapfloorengine.cpp
 pricingengines/analyticjyyoycapfloorengine.cpp
 pricingengines/analyticlgmcdsoptionengine.cpp
@@ -411,6 +411,7 @@ models/zeroinflationmodeltermstructure.hpp
 pricingengines/analyticcashsettledeuropeanengine.hpp
 pricingengines/analyticcclgmfxoptionengine.hpp
 pricingengines/analyticdkcpicapfloorengine.hpp
+pricingengines/analyticeuropeanforwardengine.hpp
 pricingengines/analyticjycpicapfloorengine.hpp
 pricingengines/analyticjyyoycapfloorengine.hpp
 pricingengines/analyticlgmcdsoptionengine.hpp
@@ -437,7 +438,6 @@ pricingengines/midpointcdsengine.hpp
 pricingengines/numericlgmswaptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
-pricingengines/analyticeuropeanforwardengine.hpp
 processes/crcirppstateprocess.hpp
 processes/crossassetstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
