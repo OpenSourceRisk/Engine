@@ -1031,7 +1031,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                                 // populate quotes
                                 BlackVarianceSurfaceStdDevs::populateVolMatrix(
-                                    wrapper, quotes, parameters->fxVolExpiries(), parameters->fxVolStdDevs(name),
+                                    wrapper, quotes, times, parameters->fxVolStdDevs(name),
                                     forwardCurve, atmVolCurve);
 
                                 // sort out simDataTemp
@@ -1209,7 +1209,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                                     // populate quotes
                                     BlackVarianceSurfaceStdDevs::populateVolMatrix(wrapper, quotes,
-                                        expiries, strikes, forwardCurve, atmVolCurve);
+                                        times, strikes, forwardCurve, atmVolCurve);
 
                                     // add to simDataTemp
                                     for (Size i = 0; i < m; i++) {
