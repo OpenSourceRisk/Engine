@@ -150,6 +150,9 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     std::string conventionsID = config->conventionsID();
     DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
     DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot;
+    Period switchTenor = 2 * Years;
+    DeltaVolQuote::AtmType longTermAtmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
+    DeltaVolQuote::DeltaType longTermDeltaType = DeltaVolQuote::DeltaType::Fwd;
 
     if (conventionsID != "") {
         boost::shared_ptr<Convention> conv = conventions.get(conventionsID);
@@ -157,10 +160,8 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         QL_REQUIRE(fxOptConv, "unable to cast convention (" << conventionsID << ") into FxOptionConvention");
         atmType = fxOptConv->atmType();
         deltaType = fxOptConv->deltaType();
-
-        QL_REQUIRE(atmType == DeltaVolQuote::AtmType::AtmDeltaNeutral,
-                   "only AtmDeltaNeutral ATM vol quotes are currently supported");
-        QL_REQUIRE(deltaType == DeltaVolQuote::DeltaType::Spot, "only spot Delta vol quotes are currently supported");
+        longTermAtmType = fxOptConv->longTermAtmType();
+        longTermDeltaType = fxOptConv->longTermDeltaType();
     }
     // daycounter used for interpolation in time.
     // TODO: push into conventions or config
@@ -174,8 +175,9 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                    [](const std::pair<Real, string>& x) { return x.first; });
     std::transform(callDeltas.begin(), callDeltas.end(), std::back_inserter(callDeltasNum),
                    [](const std::pair<Real, string>& x) { return x.first; });
-    vol_ = boost::shared_ptr<BlackVolTermStructure>(new QuantExt::BlackVolatilitySurfaceDelta(
-        asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot, domYTS, forYTS));
+    vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
+        asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot, domYTS, forYTS, deltaType,
+        atmType, boost::none, switchTenor, longTermDeltaType, longTermAtmType);
 
     vol_->enableExtrapolation();
 }
@@ -299,6 +301,9 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
             std::string conventionsID = config->conventionsID();
             DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
             DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot;
+            Period switchTenor = 2 * Years;
+            DeltaVolQuote::AtmType longTermAtmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
+            DeltaVolQuote::DeltaType longTermDeltaType = DeltaVolQuote::DeltaType::Fwd;
 
             if (conventionsID != "") {
                 boost::shared_ptr<Convention> conv = conventions.get(conventionsID);
@@ -306,6 +311,8 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
                 QL_REQUIRE(fxOptConv, "unable to cast convention (" << conventionsID << ") into FxOptionConvention");
                 atmType = fxOptConv->atmType();
                 deltaType = fxOptConv->deltaType();
+                longTermAtmType = fxOptConv->longTermAtmType();
+                longTermDeltaType = fxOptConv->longTermDeltaType();
             }
 
             bool vvFirstApprox = false; // default to VannaVolga second approximation
@@ -313,9 +320,9 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
                 vvFirstApprox = true;
             }
 
-            vol_ = boost::shared_ptr<BlackVolTermStructure>(new QuantExt::FxBlackVannaVolgaVolatilitySurface(
+            vol_ = boost::make_shared<QuantExt::FxBlackVannaVolgaVolatilitySurface>(
                 asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot, domYTS, forYTS, false, vvFirstApprox, atmType,
-                deltaType, smileDelta / 100.0));
+                deltaType, smileDelta / 100.0, switchTenor, longTermAtmType, longTermDeltaType);
         }
     }
     vol_->enableExtrapolation();
