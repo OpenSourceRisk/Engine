@@ -162,6 +162,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         deltaType = fxOptConv->deltaType();
         longTermAtmType = fxOptConv->longTermAtmType();
         longTermDeltaType = fxOptConv->longTermDeltaType();
+        switchTenor = fxOptConv->switchTenor();
     }
     // daycounter used for interpolation in time.
     // TODO: push into conventions or config
@@ -313,6 +314,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
                 deltaType = fxOptConv->deltaType();
                 longTermAtmType = fxOptConv->longTermAtmType();
                 longTermDeltaType = fxOptConv->longTermDeltaType();
+                switchTenor = fxOptConv->switchTenor();
             }
 
             bool vvFirstApprox = false; // default to VannaVolga second approximation
