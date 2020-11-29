@@ -47,7 +47,10 @@ public:
                              const Handle<YieldTermStructure>& foreignTS, bool requireMonotoneVariance = true,
                              const DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral,
                              const DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot,
-                             const Real delta = 0.25);
+                             const Real delta = 0.25, const Period& switchTenor = 0 * Days,
+                             const DeltaVolQuote::AtmType longTermAtmType = DeltaVolQuote::AtmType::AtmDeltaNeutral,
+                             const DeltaVolQuote::DeltaType longTermDeltaType = DeltaVolQuote::DeltaType::Spot);
+
     //! \name TermStructure interface
     //@{
     DayCounter dayCounter() const { return dayCounter_; }
@@ -86,6 +89,9 @@ protected:
     DeltaVolQuote::AtmType atmType_;
     DeltaVolQuote::DeltaType deltaType_;
     Real delta_;
+    Period switchTenor_;
+    DeltaVolQuote::AtmType longTermAtmType_;
+    DeltaVolQuote::DeltaType longTermDeltaType_;
     Interpolation rrCurve_;
     Interpolation bfCurve_;
     Date maxDate_;
@@ -106,28 +112,24 @@ inline void FxBlackVolatilitySurface::accept(AcyclicVisitor& v) {
 */
 class FxBlackVannaVolgaVolatilitySurface : public FxBlackVolatilitySurface {
 public:
-    FxBlackVannaVolgaVolatilitySurface(const Date& refDate, const std::vector<Date>& dates,
-                                       const std::vector<Volatility>& atmVols, const std::vector<Volatility>& rr,
-                                       const std::vector<Volatility>& bf, const DayCounter& dc, const Calendar& cal,
-                                       const Handle<Quote>& fx, const Handle<YieldTermStructure>& dom,
-                                       const Handle<YieldTermStructure>& fore, bool requireMonotoneVariance = true,
-                                       const bool firstApprox = false,
-                                       const DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral,
-                                       const DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot,
-                                       const Real delta = 0.25)
+    FxBlackVannaVolgaVolatilitySurface(
+        const Date& refDate, const std::vector<Date>& dates, const std::vector<Volatility>& atmVols,
+        const std::vector<Volatility>& rr, const std::vector<Volatility>& bf, const DayCounter& dc, const Calendar& cal,
+        const Handle<Quote>& fx, const Handle<YieldTermStructure>& dom, const Handle<YieldTermStructure>& fore,
+        bool requireMonotoneVariance = true, const bool firstApprox = false,
+        const DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral,
+        const DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot, const Real delta = 0.25,
+        const Period& switchTenor = 0 * Days,
+        const DeltaVolQuote::AtmType longTermAtmType = DeltaVolQuote::AtmType::AtmDeltaNeutral,
+        const DeltaVolQuote::DeltaType longTermDeltaType = DeltaVolQuote::DeltaType::Spot)
         : FxBlackVolatilitySurface(refDate, dates, atmVols, rr, bf, dc, cal, fx, dom, fore, requireMonotoneVariance,
-                                   atmType, deltaType, delta),
+                                   atmType, deltaType, delta, switchTenor, longTermAtmType, longTermDeltaType),
           firstApprox_(firstApprox) {}
 
 protected:
     bool firstApprox_;
-
     virtual boost::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,
-                                                                Volatility rr, Volatility bf) const {
-        QL_REQUIRE(t > 0, "FxBlackVannaVolgaVolatilitySurface::blackVolSmileImpl(): positive expiry time expected");
-        return boost::shared_ptr<FxSmileSection>(
-            new VannaVolgaSmileSection(spot, rd, rf, t, atm, rr, bf, firstApprox_, atmType_, deltaType_, delta_));
-    }
+                                                                Volatility rr, Volatility bf) const override;
 };
 } // namespace QuantExt
 
