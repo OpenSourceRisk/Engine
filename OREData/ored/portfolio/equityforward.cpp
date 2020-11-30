@@ -44,6 +44,7 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     Currency equityCcy = engineFactory->market()->equityCurve(eqName())->currency();
 
     // ensure forward currency matches the equity currency
+    QL_REQUIRE(!equityCcy.empty(), "No equity currency in equityCurve for equity " << eqName());
     QL_REQUIRE(ccy == equityCcy, "EquityForward currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
 
     // convert strike to the major currency if needed

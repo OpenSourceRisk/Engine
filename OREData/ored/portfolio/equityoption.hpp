@@ -40,9 +40,9 @@ public:
     EquityOption() : VanillaOptionTrade(AssetClass::EQ) { tradeType_ = "EquityOption"; }
     //! Constructor
     EquityOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, string currency, double strike,
-                 double quantity)
+                 double quantity, string strikeCurrency = "")
         : VanillaOptionTrade(env, AssetClass::EQ, option, equityUnderlying.name(), currency, strike, quantity),
-          equityUnderlying_(equityUnderlying), localCurrency_(currency), localStrike_(strike) {
+          equityUnderlying_(equityUnderlying), localCurrency_(currency), localStrike_(strike), strikeCurrency_(strikeCurrency) {
         tradeType_ = "EquityOption";
         setCcyStrike();
     }
@@ -59,6 +59,7 @@ public:
     //! \name Inspectors
     //@{
     const string& equityName() const { return equityUnderlying_.name(); }
+    const string& strikeCurrency() const { return strikeCurrency_; }
     //@}
 
     //! \name Serialisation
@@ -71,6 +72,7 @@ protected:
     EquityUnderlying equityUnderlying_;
     string localCurrency_;
     double localStrike_;
+    string strikeCurrency_;
 };
 } // namespace data
 } // namespace ore
