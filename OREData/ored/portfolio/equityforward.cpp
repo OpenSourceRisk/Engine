@@ -39,8 +39,24 @@ namespace data {
 
 void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency ccy = parseCurrencyWithMinors(currency_);
+
+    // get the equity currency from the market
+    Currency equityCcy = engineFactory->market()->equityCurve(eqName())->currency();
+
+    // ensure forward currency matches the equity currency
+    QL_REQUIRE(ccy == equityCcy, "EquityForward currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
+
     // convert strike to the major currency if needed
-    Real strike = convertMinorToMajorCurrency(currency_, strike_);
+    Real strike;
+    if (!strikeCurrency_.empty()) {
+        Currency strikeCcy = parseCurrencyWithMinors(strikeCurrency_);
+        strike = convertMinorToMajorCurrency(strikeCurrency_, strike_);
+        // ensure strike currency matches equity currency
+        QL_REQUIRE(strikeCcy == equityCcy, "Stike currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
+    } else {        
+        WLOG("No Strike Currency provide for trade " << id() << ", assuming trade currency " << ccy);
+        strike = convertMinorToMajorCurrency(currency_, strike_);
+    }
 
     QuantLib::Position::Type longShort = parsePositionType(longShort_);
     Date maturity = parseDate(maturityDate_);
@@ -79,6 +95,7 @@ void EquityForward::fromXML(XMLNode* node) {
     equityUnderlying_.fromXML(tmp);
     currency_ = XMLUtils::getChildValue(eNode, "Currency", true);
     strike_ = XMLUtils::getChildValueAsDouble(eNode, "Strike", true);
+    strikeCurrency_ = XMLUtils::getChildValue(eNode, "StrikeCurrency", false);
     quantity_ = XMLUtils::getChildValueAsDouble(eNode, "Quantity", true);
 }
 
@@ -92,6 +109,8 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(eNode, equityUnderlying_.toXML(doc));
     XMLUtils::addChild(doc, eNode, "Currency", currency_);
     XMLUtils::addChild(doc, eNode, "Strike", strike_);
+    if (!strikeCurrency_.empty())
+        XMLUtils::addChild(doc, eNode, "StrikeCurrency", strikeCurrency_);
     XMLUtils::addChild(doc, eNode, "Quantity", quantity_);
     return node;
 }

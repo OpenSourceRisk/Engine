@@ -39,9 +39,9 @@ class EquityForward : public Trade {
 public:
     EquityForward() : Trade("EquityForward") {}
     EquityForward(Envelope& env, string longShort, EquityUnderlying equityUnderlying, string currency, double quantity,
-                  string maturityDate, double strike)
+                  string maturityDate, double strike, string strikeCurrency)
         : Trade("EquityForward", env), longShort_(longShort), equityUnderlying_(equityUnderlying), currency_(currency),
-          quantity_(quantity), maturityDate_(maturityDate), strike_(strike) {}
+          quantity_(quantity), maturityDate_(maturityDate), strike_(strike), strikeCurrency_(strikeCurrency){}
 
     void build(const boost::shared_ptr<EngineFactory>&) override;
 
@@ -54,6 +54,7 @@ public:
     double quantity() { return quantity_; }
     string maturityDate() { return maturityDate_; }
     double strike() { return strike_; }
+    string strikeCurrency() { return strikeCurrency_; }
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
@@ -65,6 +66,7 @@ private:
     double quantity_;
     string maturityDate_;
     double strike_;
+    string strikeCurrency_;
 };
 } // namespace data
 } // namespace ore
