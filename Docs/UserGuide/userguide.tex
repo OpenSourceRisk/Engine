@@ -4824,7 +4824,7 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
     <CurveDescription>SP 500 equity price projection curve</CurveDescription>
     <Currency>USD</Currency>
     <ForecastingCurve>EUR1D</ForecastingCurve>
-    <!-- DividendYield, ForwardPrice, OptionPremium -->
+    <!-- DividendYield, ForwardPrice, OptionPremium, ForwardDividendPrice -->
     <Type>DividendYield</Type> 
     <!-- Optional node, only used when Type is OptionPremium -->
     <ExerciseStyle>American</ExerciseStyle>
@@ -4848,7 +4848,8 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
 \end{longlisting}
 
 The equity curves here consists of a spot equity price, as well as a set of either forward prices or else dividend 
-yields. Upon construction, ORE stores internally an equity spot price quote, a forecasting curve and a dividend yield 
+yields. If the index is a dividend futures index then curve type should be entered as ForwardDividendPrice. In this case the curve will be built from forward prices as normal, but excluded from the SIMM calculations as required by the SIMM methodology.
+Upon construction, ORE stores internally an equity spot price quote, a forecasting curve and a dividend yield 
 term structure, which are then used together for projection of forward prices.
 
 \subsubsection{Equity Volatility Structures}
