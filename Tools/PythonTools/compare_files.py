@@ -34,7 +34,7 @@ def create_df(file, col_types=None):
     _, filename = os.path.split(file)
     _, file_extension = os.path.splitext(file)
 
-    if file_extension == '.csv':
+    if file_extension == '.csv' or file_extension == '.txt':
         logger.debug('Creating DataFrame from csv file %s.', file)
         return pd.read_csv(file, dtype=col_types)
     elif file_extension == '.json':
