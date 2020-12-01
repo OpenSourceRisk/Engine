@@ -183,9 +183,10 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
 
         // An extra check, this ensures that the equity currency provided to use in the FX Index, matches that in
         // equity curves in the market, this is required as future cashflows will be in the equity curve currency
-        if ((!eqCurve->currency().empty()) && (!eqCurrency.empty()))
+        if (!eqCurve->currency().empty() && !eqCurrency.empty()) {
             QL_REQUIRE(eqCurve->currency() == eqCurrency,
                 "Equity Currency provided does not match currency of Equity Curve");
+        }
 
         fxIndex = buildFxIndex(eqData->fxIndex(), data.currency(), eqData->eqCurrency(), engineFactory->market(),
                                configuration, eqData->fxIndexCalendar(), eqData->fxIndexFixingDays());
