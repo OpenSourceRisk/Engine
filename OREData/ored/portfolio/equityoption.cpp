@@ -84,7 +84,7 @@ void EquityOption::fromXML(XMLNode* node) {
     equityUnderlying_.fromXML(tmp);
     localCurrency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
     localStrike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
-    strikeCurrency_ = XMLUtils::getChildValue(eqNode, "StrikeCurrency", true);
+    strikeCurrency_ = XMLUtils::getChildValue(eqNode, "StrikeCurrency", false);
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
     setCcyStrike();
 }
