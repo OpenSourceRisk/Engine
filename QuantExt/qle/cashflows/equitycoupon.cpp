@@ -69,7 +69,8 @@ void EquityCoupon::setPricer(const boost::shared_ptr<EquityCouponPricer>& pricer
 
 Real EquityCoupon::nominal() const {
     if (notionalReset_) {
-        return initialPrice() * (initialPriceIsInTargetCcy_ ? 1.0 : fxRate()) * quantity_;
+        Real mult = (initialPrice_ == 0) ? 1 : initialPrice();
+        return mult * (initialPriceIsInTargetCcy_ ? 1.0 : fxRate()) * quantity_;
     } else {
         return nominal_;
     }
@@ -235,7 +236,7 @@ EquityLeg::operator Leg() const {
                 QL_REQUIRE(!notionals_.empty(), "EquityLeg: can not compute qunantity, since no notional is given");
                 QL_REQUIRE(initialPrice_ != Null<Real>(),
                            "EquityLeg: can not compute quantity, since no initialPrice is given");
-                quantity = notionals_.front() / initialPrice_;
+                quantity = (initialPrice_ == 0) ? notionals_.front() : notionals_.front() / initialPrice_;
             }
         } else {
             if (!notionals_.empty()) {
@@ -248,7 +249,7 @@ EquityLeg::operator Leg() const {
                            "EquityLeg: can not compute notional, since no quantity is given");
                 QL_REQUIRE(initialPrice_ != Null<Real>(),
                            "EquityLeg: can not compute notional, since no intialPrice is given");
-                notional = quantity_ * initialPrice_;
+                notional = (initialPrice_ == 0) ? quantity_ : quantity_ * initialPrice_;
             }
         }
 

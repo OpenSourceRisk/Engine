@@ -324,6 +324,7 @@
   <xs:simpleType name="equityType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="ForwardPrice"/>
+      <xs:enumeration value="ForwardDividendPrice"/>
       <xs:enumeration value="OptionPremium"/>
       <xs:enumeration value="DividendYield"/>
       <xs:enumeration value="NoDividends"/>
