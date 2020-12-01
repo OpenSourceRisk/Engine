@@ -116,6 +116,8 @@ std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t) {
         return out << "DividendYield";
     case EquityCurveConfig::Type::ForwardPrice:
         return out << "ForwardPrice";
+    case EquityCurveConfig::Type::ForwardDividendPrice:
+        return out << "ForwardDividendPrice";
     case EquityCurveConfig::Type::OptionPremium:
         return out << "OptionPremium";
     case EquityCurveConfig::Type::NoDividends:
@@ -130,6 +132,8 @@ EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str) {
         return EquityCurveConfig::Type::DividendYield;
     else if (str == "ForwardPrice")
         return EquityCurveConfig::Type::ForwardPrice;
+    else if (str == "ForwardDividendPrice")
+        return EquityCurveConfig::Type::ForwardDividendPrice;
     else if (str == "OptionPremium")
         return EquityCurveConfig::Type::OptionPremium;
     else if (str == "NoDividends")
