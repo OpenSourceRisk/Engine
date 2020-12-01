@@ -112,6 +112,24 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // 2 now build the swap using the updated leg data
 
     Swap::build(engineFactory);
+
+    notionalCurrency_ = legCurrencies_[equityLegIndex_];
+}
+
+QuantLib::Real EquitySwap::notional() const {
+    Date asof = Settings::instance().evaluationDate();
+    // Get the current resp. next cash flow amount (quantity * spot/forward price) from the equity leg,
+    // include gearings and spreads.
+    Size i = equityLegIndex_;
+    for (Size j = 0; j < legs_[i].size(); ++j) {
+        boost::shared_ptr<CashFlow> flow = legs_[i][j];
+        // pick flow with earliest payment date on this leg
+        if (flow->date() > asof)
+            return flow->amount();
+    }
+
+    ALOG("Error retrieving current notional for equity swap " << id() << " as of " << io::iso_date(asof));
+    return Null<Real>();
 }
 
 } // namespace data

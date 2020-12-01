@@ -44,7 +44,7 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     }
 
     Protection::Side prot = swap_.leg().isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
-    notional_ = swap_.leg().notionals().front();
+    notional_ = Null<Real>();
 
     Leg amortized_leg;
     if (swap_.leg().notionals().size() > 1) {
@@ -115,6 +115,20 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {swap_.leg().isPayer()};
     notionalCurrency_ = swap_.leg().currency();
+}
+
+QuantLib::Real CreditDefaultSwap::notional() const {
+    Date asof = Settings::instance().evaluationDate();
+    // get the current notional from CDS premium leg
+    for (Size i = 0; i < legs_[0].size(); ++i) {
+        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[0][i]);
+        if (coupon->date() > asof)
+            return coupon->nominal();
+    }
+
+    // if not provided, return null
+    ALOG("Error retrieving current notional for credit default swap " << id() << " as of " << io::iso_date(asof));
+    return Null<Real>();
 }
 
 void CreditDefaultSwap::fromXML(XMLNode* node) {

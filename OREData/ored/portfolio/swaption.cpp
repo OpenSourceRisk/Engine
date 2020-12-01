@@ -84,7 +84,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         legCurrencies_ = {swap_[0].currency()};
         legPayers_ = {false};
         npvCurrency_ = swap_[0].currency();
-        notional_ = 0.0;
+        notional_ = Null<Real>();
         notionalCurrency_ = npvCurrency_;
         maturity_ = latestExerciseDate;
         return;
@@ -149,6 +149,7 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
 
     boost::shared_ptr<VanillaSwap> swap = buildVanillaSwap(engineFactory, exDate);
     underlyingLeg_ = swap->floatingLeg();
+    underlyingFixedLeg_ = swap->fixedLeg();
 
     string ccy = swap_[0].currency();
     Currency currency = parseCurrency(ccy);
@@ -195,7 +196,9 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
     } else {
         instrument_ = boost::shared_ptr<InstrumentWrapper>(
             new VanillaInstrument(swaption, multiplier, additionalInstruments, additionalMultipliers));
-        maturity_ = exDate;
+	// Align with ISDA AANA/GRID guidance as of November 2020
+	// maturity_ = exDate;
+        maturity_ = std::max(swap->fixedSchedule().dates().back(), swap->floatingSchedule().dates().back());
     }
 
     DLOG("Building European Swaption done");
@@ -226,10 +229,12 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     if (!isNonStandard) {
         vanillaSwap = buildVanillaSwap(engineFactory);
         underlyingLeg_ = vanillaSwap->floatingLeg();
+        underlyingFixedLeg_ = vanillaSwap->fixedLeg();
         swap = vanillaSwap;
     } else {
         nonstandardSwap = buildNonStandardSwap(engineFactory);
         underlyingLeg_ = nonstandardSwap->floatingLeg();
+        underlyingFixedLeg_ = nonstandardSwap->fixedLeg();
         swap = nonstandardSwap;
     }
 
@@ -527,7 +532,7 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
 
     // Set other ore::data::Trade details
     npvCurrency_ = ccy;
-    notional_ = nominal;
+    notional_ = Null<Real>();
     notionalCurrency_ = ccy;
     legCurrencies_ = vector<string>(2, ccy);
     legs_.push_back(swap->fixedLeg());
@@ -608,8 +613,8 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
 
     // Set other ore::data::Trade details
     npvCurrency_ = ccy;
-    notional_ = std::max(currentNotional(swap->fixedLeg()), currentNotional(swap->floatingLeg()));
-    notionalCurrency_ = npvCurrency_;
+    notional_ = Null<Real>();
+    notionalCurrency_ = ccy;
     legCurrencies_ = vector<string>(2, ccy);
     legs_.push_back(swap->fixedLeg());
     legs_.push_back(swap->floatingLeg());
@@ -652,6 +657,17 @@ Swaption::buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>& swapEngin
         }
     }
     return swaps;
+}
+
+QuantLib::Real Swaption::notional() const {
+    // So far we cover single currency swaptions with fixed/float underlying swaps only.
+    return std::max(currentNotional(underlyingLeg_), currentNotional(underlyingFixedLeg_));
+}
+
+std::string Swaption::notionalCurrency() const {
+    // So far we cover single currency swaptions only,
+    // but leave this function override for the cross currency case later 
+    return notionalCurrency_;
 }
 
 void Swaption::fromXML(XMLNode* node) {
