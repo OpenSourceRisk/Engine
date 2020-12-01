@@ -110,6 +110,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             foundRegex |= config->fwdQuotes()[i].find("*") != string::npos;
         }
         if ((config->type() == EquityCurveConfig::Type::ForwardPrice ||
+             config->type() == EquityCurveConfig::Type::ForwardDividendPrice ||
              config->type() == EquityCurveConfig::Type::OptionPremium) &&
             foundRegex) {
             QL_REQUIRE(config->fwdQuotes().size() == 1,
@@ -143,7 +144,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 }
             }
 
-            if (config->type() == EquityCurveConfig::Type::ForwardPrice && md->asofDate() == asof &&
+            if ((config->type() == EquityCurveConfig::Type::ForwardPrice || config->type() == EquityCurveConfig::Type::ForwardDividendPrice) && md->asofDate() == asof &&
                 md->instrumentType() == MarketDatum::InstrumentType::EQUITY_FWD &&
                 md->quoteType() == MarketDatum::QuoteType::PRICE) {
 
@@ -247,7 +248,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         EquityCurveConfig::Type buildCurveType = curveType_;
 
         // for curveType ForwardPrice or OptionPremium poputuate the terms_ and quotes_ with forward prices
-        if (curveType_ == EquityCurveConfig::Type::ForwardPrice) {
+        if (curveType_ == EquityCurveConfig::Type::ForwardPrice || curveType_ == EquityCurveConfig::Type::ForwardDividendPrice) {
 
             DLOG("Building Equity Dividend Yield curve from Forward/Future prices");
 
@@ -339,6 +340,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         // Build the Dividend Yield curve from the quotes loaded
         vector<Rate> dividendRates;
         if (buildCurveType == EquityCurveConfig::Type::ForwardPrice ||
+            buildCurveType == EquityCurveConfig::Type::ForwardDividendPrice ||
             buildCurveType == EquityCurveConfig::Type::OptionPremium) {
             // Convert Fwds into dividends.
             // Fwd = Spot e^{(r-q)T}

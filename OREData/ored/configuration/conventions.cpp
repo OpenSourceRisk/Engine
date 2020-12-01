@@ -1465,14 +1465,26 @@ void CommodityFutureConvention::build() {
     checkContinuationMappings(optionContinuationMappings_, "option");
 }
 
-FxOptionConvention::FxOptionConvention(const string& id, const string& atmType, const string& deltaType)
-    : Convention(id, Type::FxOption), strAtmType_(atmType), strDeltaType_(deltaType) {
+FxOptionConvention::FxOptionConvention(const string& id, const string& atmType, const string& deltaType,
+                                       const string& switchTenor, const string& longTermAtmType,
+                                       const string& longTermDeltaType)
+    : Convention(id, Type::FxOption), strAtmType_(atmType), strDeltaType_(deltaType), strSwitchTenor_(switchTenor),
+      strLongTermAtmType_(longTermAtmType), strLongTermDeltaType_(longTermDeltaType) {
     build();
 }
 
 void FxOptionConvention::build() {
     atmType_ = parseAtmType(strAtmType_);
     deltaType_ = parseDeltaType(strDeltaType_);
+    if (!strSwitchTenor_.empty()) {
+        switchTenor_ = parsePeriod(strSwitchTenor_);
+        longTermAtmType_ = parseAtmType(strLongTermAtmType_);
+        longTermDeltaType_ = parseDeltaType(strLongTermDeltaType_);
+    } else {
+        switchTenor_ = 0 * Days;
+        longTermAtmType_ = atmType_;
+        longTermDeltaType_ = deltaType_;
+    }
 }
 
 void FxOptionConvention::fromXML(XMLNode* node) {
@@ -1484,6 +1496,9 @@ void FxOptionConvention::fromXML(XMLNode* node) {
     // Get string values from xml
     strAtmType_ = XMLUtils::getChildValue(node, "AtmType", true);
     strDeltaType_ = XMLUtils::getChildValue(node, "DeltaType", true);
+    strSwitchTenor_ = XMLUtils::getChildValue(node, "SwitchTenor", false);
+    strLongTermAtmType_ = XMLUtils::getChildValue(node, "LongTermAtmType", false);
+    strLongTermDeltaType_ = XMLUtils::getChildValue(node, "LongTermDeltaType", false);
     build();
 }
 
@@ -1493,6 +1508,9 @@ XMLNode* FxOptionConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Id", id_);
     XMLUtils::addChild(doc, node, "AtmType", strAtmType_);
     XMLUtils::addChild(doc, node, "DeltaType", strDeltaType_);
+    XMLUtils::addChild(doc, node, "SwitchTenor", strSwitchTenor_);
+    XMLUtils::addChild(doc, node, "LongTermAtmType", strLongTermAtmType_);
+    XMLUtils::addChild(doc, node, "LongTermDeltaType", strLongTermDeltaType_);
 
     return node;
 }
