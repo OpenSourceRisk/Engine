@@ -1793,58 +1793,114 @@ ScenarioSimMarket::ScenarioSimMarket(
             case RiskFactorKey::KeyType::CommodityVolatility:
                 for (const auto& name : param.second.second) {
                     try {
+                        LOG("building commodity volatility for " << name);
+
                         // Get initial base volatility structure
                         Handle<BlackVolTermStructure> baseVol = initMarket->commodityVolatility(name, configuration);
 
                         Handle<BlackVolTermStructure> newVol;
                         if (param.second.first) {
-                            Handle<Quote> spot(boost::make_shared<SimpleQuote>(
-                                initMarket->commodityPriceCurve(name, configuration)->price(0)));
-                            const vector<Real>& moneyness = parameters->commodityVolMoneyness(name);
+
+                            // Check and reorg moneyness and/or expiries to simplify subsequent code.
+                            vector<Real> moneyness = parameters->commodityVolMoneyness(name);
                             QL_REQUIRE(!moneyness.empty(), "Commodity volatility moneyness for "
-                                                               << name << " should have at least one element");
-                            const vector<Period>& expiries = parameters->commodityVolExpiries(name);
+                                << name << " should have at least one element.");
+                            sort(moneyness.begin(), moneyness.end());
+                            auto mIt = unique(moneyness.begin(), moneyness.end(),
+                                [](const Real& x, const Real& y) { return close(x, y); });
+                            QL_REQUIRE(mIt == moneyness.end(), "Commodity volatility moneyness values for "
+                                << name << " should be unique.");
+
+                            vector<Period> expiries = parameters->commodityVolExpiries(name);
                             QL_REQUIRE(!expiries.empty(), "Commodity volatility expiries for "
-                                                              << name << " should have at least one element");
+                                << name << " should have at least one element.");
+                            sort(expiries.begin(), expiries.end());
+                            auto eIt = unique(expiries.begin(), expiries.end());
+                            QL_REQUIRE(eIt == expiries.end(), "Commodity volatility expiries for "
+                                << name << " should be unique.");
 
-                            // Create surface of quotes
-                            vector<vector<Handle<Quote>>> quotes(moneyness.size(),
-                                                                 vector<Handle<Quote>>(expiries.size()));
+                            // Get this scenario simulation market's commodity price curve. An exception is expected 
+                            // if there is no commodity curve but there is a commodity volatility.
+                            const auto& priceCurve = *commodityPriceCurve(name, configuration);
+
+                            // More than one moneyness implies a surface. If we have a surface, we will build a 
+                            // forward surface below which requires two yield term structures, one for the commodity 
+                            // price currency and another that recovers the commodity forward prices. We don't want 
+                            // the commodity prices changing with changes in the commodity price currency yield curve 
+                            // so we take a copy here - it will work for sticky strike false also.
+                            bool isSurface = moneyness.size() > 1;
+                            Handle<YieldTermStructure> yts;
+                            Handle<YieldTermStructure> priceYts;
+
+                            if (isSurface) {
+
+                                vector<Date> dates{ asof_ };
+                                vector<Real> dfs{ 1.0 };
+
+                                auto discCurve = discountCurve(priceCurve->currency().code(), configuration);
+                                for (const auto& expiry : expiries) {
+                                    auto d = asof_ + expiry;
+                                    if (d == asof_)
+                                        continue;
+                                    dates.push_back(d);
+                                    dfs.push_back(discCurve->discount(d, true));
+                                }
+
+                                auto ytsPtr = boost::make_shared<DiscountCurve>(
+                                    dates, dfs, discCurve->dayCounter());
+                                ytsPtr->enableExtrapolation();
+                                yts = Handle<YieldTermStructure>(ytsPtr);
+                                priceYts = Handle<YieldTermStructure>(boost::make_shared<PriceTermStructureAdapter>(
+                                    priceCurve, ytsPtr));
+                                priceYts->enableExtrapolation();
+                            }
+
+                            // Create surface of quotes, rows are moneyness, columns are expiries.
+                            using QuoteRow = vector<Handle<Quote>>;
+                            using QuoteMatrix = vector<QuoteRow>;
+                            QuoteMatrix quotes(moneyness.size(), QuoteRow(expiries.size()));
+
+                            // Calculate up front the expiry times, dates and forward prices.
+                            vector<Date> expiryDates(expiries.size());
                             vector<Time> expiryTimes(expiries.size());
-                            Size index = 0;
+                            vector<Real> forwards(expiries.size());
                             DayCounter dayCounter = baseVol->dayCounter();
+                            for (Size j = 0; j < expiries.size(); ++j) {
+                                Date d = asof_ + expiries[j];
+                                expiryDates[j] = d;
+                                expiryTimes[j] = dayCounter.yearFraction(asof_, d);
+                                forwards[j] = priceCurve->price(d);
+                            }
 
-                            for (Size i = 0; i < quotes.size(); i++) {
-                                Real strike = moneyness[i] * spot->value();
-                                for (Size j = 0; j < quotes[0].size(); j++) {
-                                    if (i == 0)
-                                        expiryTimes[j] = dayCounter.yearFraction(asof_, asof_ + expiries[j]);
-                                    boost::shared_ptr<SimpleQuote> quote =
-                                        boost::make_shared<SimpleQuote>(baseVol->blackVol(asof_ + expiries[j], strike));
+                            // Store the quotes.
+                            Size index = 0;
+                            for (Size i = 0; i < moneyness.size(); ++i) {
+                                for (Size j = 0; j < expiries.size(); ++j) {
+                                    Real strike = moneyness[i] * forwards[j];
+                                    auto vol = baseVol->blackVol(expiryDates[j], strike);
+                                    auto quote = boost::make_shared<SimpleQuote>(vol);
                                     simDataTmp.emplace(piecewise_construct,
-                                                       forward_as_tuple(param.first, name, index++),
-                                                       forward_as_tuple(quote));
+                                        forward_as_tuple(param.first, name, index++),
+                                        forward_as_tuple(quote));
                                     quotes[i][j] = Handle<Quote>(quote);
                                 }
                             }
 
                             // Create volatility structure
-                            if (moneyness.size() == 1) {
-                                // We have a term structure of volatilities with no strike dependence
-                                LOG("Simulating commodity volatilites for " << name << " using BlackVarianceCurve3.");
+                            if (!isSurface) {
+                                DLOG("Ssm comm vol for " << name << " uses BlackVarianceCurve3.");
                                 newVol = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceCurve3>(
                                     0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes,
                                     quotes[0], false));
                             } else {
-                                // We have a volatility surface
-                                LOG("Simulating commodity volatilites for "
-                                    << name << " using BlackVarianceSurfaceMoneynessSpot.");
+                                DLOG("Ssm comm vol for " << name << " uses BlackVarianceSurfaceMoneynessSpot.");
                                 bool stickyStrike = true;
                                 bool flatExtrapMoneyness = true;
-                                newVol =
-                                    Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceSurfaceMoneynessSpot>(
+                                Handle<Quote> spot(boost::make_shared<SimpleQuote>(priceCurve->price(0)));
+                                newVol = Handle<BlackVolTermStructure>(
+                                    boost::make_shared<BlackVarianceSurfaceMoneynessForward>(
                                         baseVol->calendar(), spot, expiryTimes, moneyness, quotes, dayCounter,
-                                        stickyStrike, flatExtrapMoneyness));
+                                        priceYts, yts, stickyStrike, flatExtrapMoneyness));
                             }
 
                         } else {
@@ -1860,10 +1916,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
 
                         newVol->enableExtrapolation(baseVol->allowsExtrapolation());
-
                         commodityVols_.emplace(piecewise_construct,
-                                               forward_as_tuple(Market::defaultConfiguration, name),
-                                               forward_as_tuple(newVol));
+                            forward_as_tuple(Market::defaultConfiguration, name),
+                            forward_as_tuple(newVol));
 
                         DLOG("Commodity volatility curve built for " << name);
                     } catch (const std::exception& e) {
