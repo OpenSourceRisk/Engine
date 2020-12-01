@@ -48,7 +48,11 @@ Rate EquityCouponPricer::swapletRate() const {
         dividends += equityCurve_->dividendsBetweenDates(coupon_->fixingStartDate(), coupon_->fixingEndDate());
     }
 
-    return ((end + dividends * dividendFactor_) * fxEnd - start * fxStart) / (start * fxStart);
+    if (start == 0) {
+        return (end + dividends * dividendFactor_) * fxEnd;
+    } else {
+        return ((end + dividends * dividendFactor_) * fxEnd - start * fxStart) / (start * fxStart);
+    }
 }
 
 void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
