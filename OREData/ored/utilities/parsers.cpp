@@ -359,6 +359,15 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"BEF", Belgium()},
         {"LUF", Luxembourg()},
         {"ATS", QuantExt::Austria()},
+         
+        // Minor Currencies
+        { "GBp", UnitedKingdom() },
+        { "GBX", UnitedKingdom() },
+        { "ILa", QuantLib::Israel() },
+        { "ILX", QuantLib::Israel() },
+        { "ZAc", SouthAfrica() },
+        { "ZAC", SouthAfrica() },
+        { "ZAX", SouthAfrica() },
 
         // fallback to TARGET for these emerging ccys
         {"AED", TARGET()},
