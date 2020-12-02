@@ -534,7 +534,8 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
                  const double foreignAmount, const string& fxIndex, int fixingDays, const string& fixingCalendar,
                  const std::vector<AmortizationData>& amortizationData, const int paymentLag,
                  const string& paymentCalendar, const vector<string>& paymentDates,
-                 const std::vector<Indexing>& indexing, const bool indexingFromAssetLeg)
+                 const std::vector<Indexing>& indexing, const bool indexingFromAssetLeg,
+                 const string& lastPeriodDayCounter)
     : concreteLegData_(concreteLegData), isPayer_(isPayer), currency_(currency), schedule_(scheduleData),
       dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
       paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
@@ -542,7 +543,7 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
       isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
       fxIndex_(fxIndex), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar), amortizationData_(amortizationData),
       paymentLag_(paymentLag), paymentCalendar_(paymentCalendar), paymentDates_(paymentDates), indexing_(indexing),
-      indexingFromAssetLeg_(indexingFromAssetLeg) {
+      indexingFromAssetLeg_(indexingFromAssetLeg), lastPeriodDayCounter_(lastPeriodDayCounter) {
 
     indices_ = concreteLegData_->indices();
 
@@ -622,6 +623,8 @@ void LegData::fromXML(XMLNode* node) {
         }
     }
 
+    lastPeriodDayCounter_ = XMLUtils::getChildValue(node, "LastPeriodDayCounter", false);
+
     concreteLegData_ = initialiseConcreteLegData(legType);
     concreteLegData_->fromXML(XMLUtils::getChildNode(node, concreteLegData_->legNodeName()));
 
@@ -693,6 +696,9 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
         }
         XMLUtils::appendNode(node, indexingsNode);
     }
+
+    if (!lastPeriodDayCounter_.empty())
+        XMLUtils::addChild(doc, node, "LastPeriodDayCounter", lastPeriodDayCounter_);
 
     XMLUtils::appendNode(node, concreteLegData_->toXML(doc));
     return node;

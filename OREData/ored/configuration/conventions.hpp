@@ -965,11 +965,13 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CdsConvention() {}
+    CdsConvention();
+
     //! Detailed constructor
     CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                   const string& strFrequency, const string& strPaymentConvention, const string& strRule,
-                  const string& dayCounter, const string& settlesAccrual, const string& paysAtDefaultTime);
+                  const string& dayCounter, const string& settlesAccrual, const string& paysAtDefaultTime,
+                  const string& strUpfrontSettlementDays = "", const string& lastPeriodDayCounter = "");
     //@}
 
     //! \name Inspectors
@@ -982,6 +984,8 @@ public:
     const DayCounter& dayCounter() const { return dayCounter_; }
     bool settlesAccrual() const { return settlesAccrual_; }
     bool paysAtDefaultTime() const { return paysAtDefaultTime_; }
+    Natural upfrontSettlementDays() const { return upfrontSettlementDays_; }
+    const DayCounter& lastPeriodDayCounter() const { return lastPeriodDayCounter_; }
     //@}
 
     //! \name Serialisation
@@ -999,6 +1003,8 @@ private:
     DayCounter dayCounter_;
     bool settlesAccrual_;
     bool paysAtDefaultTime_;
+    Natural upfrontSettlementDays_;
+    DayCounter lastPeriodDayCounter_;
 
     // Strings to store the inputs
     string strSettlementDays_;
@@ -1009,6 +1015,8 @@ private:
     string strDayCounter_;
     string strSettlesAccrual_;
     string strPaysAtDefaultTime_;
+    string strUpfrontSettlementDays_;
+    string strLastPeriodDayCounter_;
 };
 
 class InflationSwapConvention : public Convention {

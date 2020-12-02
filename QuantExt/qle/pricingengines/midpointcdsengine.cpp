@@ -74,26 +74,21 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
     Date today = Settings::instance().evaluationDate();
     Date settlementDate = discountCurve_->referenceDate();
 
-    // Upfront Flow NPV and accrual rebate NPV. Either we are on-the-run (no flow)
-    // or we are forward start
-
-    // date determining the probability survival so we have to pay
-    // the upfront flows (did not knock out)
-    Date effectiveProtectionStart = arguments.protectionStart > refDate ? arguments.protectionStart : refDate;
-    Probability nonKnockOut = survivalProbability(effectiveProtectionStart);
-
+    // Upfront amount.
     Real upfPVO1 = 0.0;
     results.upfrontNPV = 0.0;
     if (arguments.upfrontPayment &&
         !arguments.upfrontPayment->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
-        upfPVO1 = nonKnockOut * discountCurve_->discount(arguments.upfrontPayment->date());
+        upfPVO1 = discountCurve_->discount(arguments.upfrontPayment->date());
         results.upfrontNPV = upfPVO1 * arguments.upfrontPayment->amount();
     }
 
+    // Accrual rebate.
     results.accrualRebateNPV = 0.;
-    if (arguments.accrualRebate && !arguments.accrualRebate->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
-        results.accrualRebateNPV =
-            nonKnockOut * discountCurve_->discount(arguments.accrualRebate->date()) * arguments.accrualRebate->amount();
+    if (arguments.accrualRebate &&
+        !arguments.accrualRebate->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+        results.accrualRebateNPV = discountCurve_->discount(arguments.accrualRebate->date()) *
+            arguments.accrualRebate->amount();
     }
 
     results.couponLegNPV = 0.0;
@@ -171,9 +166,9 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
     }
 
     Real upfrontSensitivity = upfPVO1 * arguments.notional;
-    if (upfrontSensitivity != 0.0) {
-        results.fairUpfront = -upfrontSign * (results.defaultLegNPV + results.couponLegNPV + results.accrualRebateNPV) /
-                              upfrontSensitivity;
+    if (upfrontSensitivity > 0.0) {
+        results.fairUpfront = -upfrontSign * (results.defaultLegNPV + results.couponLegNPV +
+            results.accrualRebateNPV) / upfrontSensitivity;
     } else {
         results.fairUpfront = Null<Rate>();
     }

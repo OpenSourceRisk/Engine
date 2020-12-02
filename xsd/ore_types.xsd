@@ -182,6 +182,9 @@
       <xs:enumeration value="A360"/>
       <xs:enumeration value="Actual/360"/>
       <xs:enumeration value="ACT/360"/>
+      <xs:enumeration value="A360 (Incl Last)"/>
+      <xs:enumeration value="Actual/360 (Incl Last)"/>
+      <xs:enumeration value="ACT/360 (Incl Last)"/>
       <xs:enumeration value="A365"/>
       <xs:enumeration value="A365F"/>
       <xs:enumeration value="Actual/365 (Fixed)"/>
