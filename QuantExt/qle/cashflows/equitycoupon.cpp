@@ -69,7 +69,8 @@ void EquityCoupon::setPricer(const boost::shared_ptr<EquityCouponPricer>& pricer
 
 Real EquityCoupon::nominal() const {
     if (notionalReset_) {
-        return initialPrice() * (initialPriceIsInTargetCcy_ ? 1.0 : fxRate()) * quantity_;
+        Real mult = (initialPrice_ == 0) ? 1 : initialPrice();
+        return mult * (initialPriceIsInTargetCcy_ ? 1.0 : fxRate()) * quantity_;
     } else {
         return nominal_;
     }
@@ -119,10 +120,10 @@ std::vector<Date> EquityCoupon::fixingDates() const {
 
 EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
                      const boost::shared_ptr<FxIndex>& fxIndex)
-    : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentAdjustment_(Following),
-      paymentCalendar_(Calendar()), isTotalReturn_(true), initialPrice_(Null<Real>()),
-      initialPriceIsInTargetCcy_(false), dividendFactor_(1.0), fixingDays_(0), notionalReset_(false),
-      quantity_(Null<Real>()) {}
+    : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentLag_(0),
+      paymentAdjustment_(Following), paymentCalendar_(Calendar()), isTotalReturn_(true),
+      initialPrice_(Null<Real>()), initialPriceIsInTargetCcy_(false), dividendFactor_(1.0),
+      fixingDays_(0), notionalReset_(false), quantity_(Null<Real>()) {}
 
 EquityLeg& EquityLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -141,6 +142,11 @@ EquityLeg& EquityLeg::withPaymentDayCounter(const DayCounter& dayCounter) {
 
 EquityLeg& EquityLeg::withPaymentAdjustment(BusinessDayConvention convention) {
     paymentAdjustment_ = convention;
+    return *this;
+}
+
+EquityLeg& EquityLeg::withPaymentLag(Natural paymentLag) {
+    paymentLag_ = paymentLag;
     return *this;
 }
 
@@ -208,7 +214,7 @@ EquityLeg::operator Leg() const {
     for (Size i = 0; i < numPeriods; ++i) {
         startDate = schedule_.date(i);
         endDate = schedule_.date(i + 1);
-        paymentDate = calendar.adjust(endDate, paymentAdjustment_);
+        paymentDate = calendar.advance(endDate, paymentLag_, Days, paymentAdjustment_);
 
         Date fixingStartDate = Date();
         Date fixingEndDate = Date();
@@ -230,7 +236,7 @@ EquityLeg::operator Leg() const {
                 QL_REQUIRE(!notionals_.empty(), "EquityLeg: can not compute qunantity, since no notional is given");
                 QL_REQUIRE(initialPrice_ != Null<Real>(),
                            "EquityLeg: can not compute quantity, since no initialPrice is given");
-                quantity = notionals_.front() / initialPrice_;
+                quantity = (initialPrice_ == 0) ? notionals_.front() : notionals_.front() / initialPrice_;
             }
         } else {
             if (!notionals_.empty()) {
@@ -243,7 +249,7 @@ EquityLeg::operator Leg() const {
                            "EquityLeg: can not compute notional, since no quantity is given");
                 QL_REQUIRE(initialPrice_ != Null<Real>(),
                            "EquityLeg: can not compute notional, since no intialPrice is given");
-                notional = quantity_ * initialPrice_;
+                notional = (initialPrice_ == 0) ? quantity_ : quantity_ * initialPrice_;
             }
         }
 

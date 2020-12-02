@@ -900,14 +900,19 @@ XMLNode* CrossCcyFixFloatSwapConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+CdsConvention::CdsConvention() : settlementDays_(0), frequency_(Quarterly), paymentConvention_(Following),
+    rule_(DateGeneration::CDS2015), settlesAccrual_(true), paysAtDefaultTime_(true), upfrontSettlementDays_(3) {}
+
 CdsConvention::CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                              const string& strFrequency, const string& strPaymentConvention, const string& strRule,
                              const string& strDayCounter, const string& strSettlesAccrual,
-                             const string& strPaysAtDefaultTime)
+                             const string& strPaysAtDefaultTime, const string& strUpfrontSettlementDays,
+                             const string& lastPeriodDayCounter)
     : Convention(id, Type::CDS), strSettlementDays_(strSettlementDays), strCalendar_(strCalendar),
       strFrequency_(strFrequency), strPaymentConvention_(strPaymentConvention), strRule_(strRule),
       strDayCounter_(strDayCounter), strSettlesAccrual_(strSettlesAccrual),
-      strPaysAtDefaultTime_(strPaysAtDefaultTime) {
+      strPaysAtDefaultTime_(strPaysAtDefaultTime), strUpfrontSettlementDays_(strUpfrontSettlementDays),
+      strLastPeriodDayCounter_(lastPeriodDayCounter) {
     build();
 }
 
@@ -920,6 +925,14 @@ void CdsConvention::build() {
     dayCounter_ = parseDayCounter(strDayCounter_);
     settlesAccrual_ = parseBool(strSettlesAccrual_);
     paysAtDefaultTime_ = parseBool(strPaysAtDefaultTime_);
+
+    upfrontSettlementDays_ = 3;
+    if (!strUpfrontSettlementDays_.empty())
+        upfrontSettlementDays_ = lexical_cast<Natural>(strUpfrontSettlementDays_);
+
+    lastPeriodDayCounter_ = DayCounter();
+    if (!strLastPeriodDayCounter_.empty())
+        lastPeriodDayCounter_ = parseDayCounter(strLastPeriodDayCounter_);
 }
 
 void CdsConvention::fromXML(XMLNode* node) {
@@ -937,6 +950,9 @@ void CdsConvention::fromXML(XMLNode* node) {
     strDayCounter_ = XMLUtils::getChildValue(node, "DayCounter", true);
     strSettlesAccrual_ = XMLUtils::getChildValue(node, "SettlesAccrual", true);
     strPaysAtDefaultTime_ = XMLUtils::getChildValue(node, "PaysAtDefaultTime", true);
+    strUpfrontSettlementDays_ = XMLUtils::getChildValue(node, "UpfrontSettlementDays", false);
+    strLastPeriodDayCounter_ = XMLUtils::getChildValue(node, "LastPeriodDayCounter", false);
+
     build();
 }
 
@@ -952,6 +968,10 @@ XMLNode* CdsConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "DayCounter", strDayCounter_);
     XMLUtils::addChild(doc, node, "SettlesAccrual", strSettlesAccrual_);
     XMLUtils::addChild(doc, node, "PaysAtDefaultTime", strPaysAtDefaultTime_);
+    if (!strUpfrontSettlementDays_.empty())
+        XMLUtils::addChild(doc, node, "UpfrontSettlementDays", strUpfrontSettlementDays_);
+    if (!strLastPeriodDayCounter_.empty())
+        XMLUtils::addChild(doc, node, "LastPeriodDayCounter", strLastPeriodDayCounter_);
     return node;
 }
 
@@ -1465,14 +1485,26 @@ void CommodityFutureConvention::build() {
     checkContinuationMappings(optionContinuationMappings_, "option");
 }
 
-FxOptionConvention::FxOptionConvention(const string& id, const string& atmType, const string& deltaType)
-    : Convention(id, Type::FxOption), strAtmType_(atmType), strDeltaType_(deltaType) {
+FxOptionConvention::FxOptionConvention(const string& id, const string& atmType, const string& deltaType,
+                                       const string& switchTenor, const string& longTermAtmType,
+                                       const string& longTermDeltaType)
+    : Convention(id, Type::FxOption), strAtmType_(atmType), strDeltaType_(deltaType), strSwitchTenor_(switchTenor),
+      strLongTermAtmType_(longTermAtmType), strLongTermDeltaType_(longTermDeltaType) {
     build();
 }
 
 void FxOptionConvention::build() {
     atmType_ = parseAtmType(strAtmType_);
     deltaType_ = parseDeltaType(strDeltaType_);
+    if (!strSwitchTenor_.empty()) {
+        switchTenor_ = parsePeriod(strSwitchTenor_);
+        longTermAtmType_ = parseAtmType(strLongTermAtmType_);
+        longTermDeltaType_ = parseDeltaType(strLongTermDeltaType_);
+    } else {
+        switchTenor_ = 0 * Days;
+        longTermAtmType_ = atmType_;
+        longTermDeltaType_ = deltaType_;
+    }
 }
 
 void FxOptionConvention::fromXML(XMLNode* node) {
@@ -1484,6 +1516,9 @@ void FxOptionConvention::fromXML(XMLNode* node) {
     // Get string values from xml
     strAtmType_ = XMLUtils::getChildValue(node, "AtmType", true);
     strDeltaType_ = XMLUtils::getChildValue(node, "DeltaType", true);
+    strSwitchTenor_ = XMLUtils::getChildValue(node, "SwitchTenor", false);
+    strLongTermAtmType_ = XMLUtils::getChildValue(node, "LongTermAtmType", false);
+    strLongTermDeltaType_ = XMLUtils::getChildValue(node, "LongTermDeltaType", false);
     build();
 }
 
@@ -1493,6 +1528,9 @@ XMLNode* FxOptionConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Id", id_);
     XMLUtils::addChild(doc, node, "AtmType", strAtmType_);
     XMLUtils::addChild(doc, node, "DeltaType", strDeltaType_);
+    XMLUtils::addChild(doc, node, "SwitchTenor", strSwitchTenor_);
+    XMLUtils::addChild(doc, node, "LongTermAtmType", strLongTermAtmType_);
+    XMLUtils::addChild(doc, node, "LongTermDeltaType", strLongTermDeltaType_);
 
     return node;
 }

@@ -62,8 +62,8 @@ The meaning of Call and Put values depend on the asset class of the option, see 
 \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
     \hline
       \bfseries{Asset Class and Trade Type}  & \bfseries{Call / Put Specifications} \\  \hline
-Equity/ Commodity Option & \emph{Call}: The right to buy the underlying equity/commodity at the strike price.
-\newline \emph{Put}: The right to sell the underlying equity/commodity at the strike price. \\  \hline
+Equity/ Commodity/Bond Option & \emph{Call}: The right to buy the underlying equity/commodity/bond at the strike price.
+\newline \emph{Put}: The right to sell the underlying equity/commodity/bond at the strike price. \\  \hline
  IR Swaption, CallableSwap, Commodity Swaption&  \emph{Call/Put} values are ignored, and the OptionType field is optional. Payer/Receiver swaption is determined by the  \lstinline!Payer! fields in the Leg Data nodes of the underlying swap. \\ \hline
 FX Options (all variants, except Asian) &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the trade data node. 
 \newline \emph{Put}: Bought and Sold currencies/amounts are switched compared to the trade data node.  \\ \hline
@@ -139,7 +139,7 @@ Note that for \lstinline!IndexCreditDefaultSwapOption! PayOffAtExpiry must be se
 
 %TBC: Do not see payoffatexpiry used in either fxoption or swaption build() functions, to be logged as a bug.       
 
-\item ExerciseFees [Optional]: This node contains child elements of tpye ExerciseFee. Similar to a list of notionals
+\item ExerciseFees [Optional]: This node contains child elements of type ExerciseFee. Similar to a list of notionals
   (see \ref{ss:leg_data}) the fees can be given either
 
   \begin{itemize}
@@ -158,14 +158,20 @@ Note that for \lstinline!IndexCreditDefaultSwapOption! PayOffAtExpiry must be se
 
   Only supported for Swaptions and Callable Swaps currently.
 
-\item ExerciseFeeSettlementPeriod [Optional]: The settlement lag for exercise fee payments. Defaults to 0D if not
+\item ExerciseFeeSettlementPeriod [Optional]: The settlement lag for exercise fee payments. Defaults to \emph{0D} if not
   given. This lag is relative to the exercise date (as opposed to the notice date).
+  
+  Allowable values: A number followed by \emph{D, W, M, or Y}
 
 \item ExerciseFeeSettlementCalendar [Optional]: The calendar used to compute the exercise fee settlement date from the
-  exercise date. If not given defaults to the null calendar (no holidays, weekends are no holidays either).
+  exercise date. If not given defaults to the  \emph{NullCalendar} (no holidays, weekends are no holidays either).
+  
+  Allowable values: See Table \ref{tab:calendar} Calendar.
 
 \item ExerciseFeeSettlementConvention [Optional]: The convention used to compute the exercise fee settlement date from
-  the exercise date. Defaults to Unadjusted if not given.
+  the exercise date. Defaults to \emph{Unadjusted} if not given.
+  
+  Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
 
 \item ExerciseDates: This node contains child elements of type
   \lstinline!ExerciseDate!.  Options of style \emph{European} or

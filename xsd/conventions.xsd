@@ -53,8 +53,10 @@
       <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="1" maxOccurs="1"/>
       <xs:element type="dateRule" name="Rule" minOccurs="1" maxOccurs="1"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="UpfrontSettlementDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="SettlesAccrual" minOccurs="1" maxOccurs="1"/>
       <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="LastPeriodDayCounter" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -354,6 +356,9 @@
       <xs:element type="xs:string" name="Id"/>
       <xs:element type="xs:string" name="AtmType"/>
       <xs:element type="xs:string" name="DeltaType"/>
+      <xs:element type="xs:string" name="SwitchTenor" minOccurs="0"/>
+      <xs:element type="xs:string" name="LongTermAtmType" minOccurs="0"/>
+      <xs:element type="xs:string" name="LongTermDeltaType" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 

@@ -30,6 +30,7 @@
 \usepackage{epstopdf}
 \usepackage{longtable}
 \usepackage{floatrow}
+\usepackage{makecell}
 
 % Use \setminted here to get horizontal line above and below listings
 \usepackage{minted}
@@ -4797,7 +4798,9 @@ Allowable values:
 VannaVolga1/VannaVolga2 refer to the first/second approximation in (eq. 13) and (eq. 14) of the reference above.
 \item {\tt Linear} or {\tt Cubic} in case of SmileType {\tt Delta} with default {\tt Linear} if left blank
 \end{itemize}
-\item Conventions [Optional]: FX conventions object ID that is used to determine the at-the-money type and delta type of the volatility quotes, these default to {\tt AtmDeltaNeutral} and {\tt Spot} if the conventions ID is omitted or left blank
+\item Conventions [Optional]: FX conventions object ID that is used to determine the at-the-money type and delta type of
+  the volatility quotes, these default to {\tt AtmDeltaNeutral} and {\tt Spot} for option tenors <= 2Y and {\tt
+    AtmDeltaNeutral} and {\tt Fwd} for option tenors > 2Y  if the conventions ID is omitted or left blank
 \item Expiries: Option expiries in period form
 \item Deltas [Optional]: Strike grid, required in case of SmileType {\tt Delta} \\
 Allowable values: {\tt ATM, *P, *C}, see example in Listing \ref{lst:fxoptionvol_configuration}
@@ -4821,7 +4824,7 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
     <CurveDescription>SP 500 equity price projection curve</CurveDescription>
     <Currency>USD</Currency>
     <ForecastingCurve>EUR1D</ForecastingCurve>
-    <!-- DividendYield, ForwardPrice, OptionPremium -->
+    <!-- DividendYield, ForwardPrice, OptionPremium, ForwardDividendPrice -->
     <Type>DividendYield</Type> 
     <!-- Optional node, only used when Type is OptionPremium -->
     <ExerciseStyle>American</ExerciseStyle>
@@ -4845,7 +4848,8 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
 \end{longlisting}
 
 The equity curves here consists of a spot equity price, as well as a set of either forward prices or else dividend 
-yields. Upon construction, ORE stores internally an equity spot price quote, a forecasting curve and a dividend yield 
+yields. If the index is a dividend futures index then curve type should be entered as ForwardDividendPrice. In this case the curve will be built from forward prices as normal, but excluded from the SIMM calculations as required by the SIMM methodology.
+Upon construction, ORE stores internally an equity spot price quote, a forecasting curve and a dividend yield 
 term structure, which are then used together for projection of forward prices.
 
 \subsubsection{Equity Volatility Structures}

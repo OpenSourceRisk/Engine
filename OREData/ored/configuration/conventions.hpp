@@ -965,11 +965,13 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CdsConvention() {}
+    CdsConvention();
+
     //! Detailed constructor
     CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                   const string& strFrequency, const string& strPaymentConvention, const string& strRule,
-                  const string& dayCounter, const string& settlesAccrual, const string& paysAtDefaultTime);
+                  const string& dayCounter, const string& settlesAccrual, const string& paysAtDefaultTime,
+                  const string& strUpfrontSettlementDays = "", const string& lastPeriodDayCounter = "");
     //@}
 
     //! \name Inspectors
@@ -982,6 +984,8 @@ public:
     const DayCounter& dayCounter() const { return dayCounter_; }
     bool settlesAccrual() const { return settlesAccrual_; }
     bool paysAtDefaultTime() const { return paysAtDefaultTime_; }
+    Natural upfrontSettlementDays() const { return upfrontSettlementDays_; }
+    const DayCounter& lastPeriodDayCounter() const { return lastPeriodDayCounter_; }
     //@}
 
     //! \name Serialisation
@@ -999,6 +1003,8 @@ private:
     DayCounter dayCounter_;
     bool settlesAccrual_;
     bool paysAtDefaultTime_;
+    Natural upfrontSettlementDays_;
+    DayCounter lastPeriodDayCounter_;
 
     // Strings to store the inputs
     string strSettlementDays_;
@@ -1009,6 +1015,8 @@ private:
     string strDayCounter_;
     string strSettlesAccrual_;
     string strPaysAtDefaultTime_;
+    string strUpfrontSettlementDays_;
+    string strLastPeriodDayCounter_;
 };
 
 class InflationSwapConvention : public Convention {
@@ -1373,7 +1381,8 @@ private:
 };
 
 //! Container for storing FX Option conventions
-/*!
+/*! Defining a switchTenor is optional. It is set to 0 * Days if no switch tenor is defined. In this case
+    longTermAtmType and longTermDeltaType are set to atmType and deltaType respectively.
 \ingroup marketdata
 */
 class FxOptionConvention : public Convention {
@@ -1381,13 +1390,17 @@ public:
     //! \name Constructors
     //@{
     FxOptionConvention() {}
-    FxOptionConvention(const string& id, const string& atmType, const string& deltaType);
+    FxOptionConvention(const string& id, const string& atmType, const string& deltaType, const string& switchTenor = "",
+                       const string& longTermAtmType = "", const string& longTermDeltaType = "");
     //@}
 
     //! \name Inspectors
     //@{
     const DeltaVolQuote::AtmType& atmType() const { return atmType_; }
     const DeltaVolQuote::DeltaType& deltaType() const { return deltaType_; }
+    const Period& switchTenor() const { return switchTenor_; }
+    const DeltaVolQuote::AtmType& longTermAtmType() const { return longTermAtmType_; }
+    const DeltaVolQuote::DeltaType& longTermDeltaType() const { return longTermDeltaType_; }
     //@}
 
     //! \name Serialisation
@@ -1397,12 +1410,16 @@ public:
     virtual void build();
     //@}
 private:
-    DeltaVolQuote::AtmType atmType_;
-    DeltaVolQuote::DeltaType deltaType_;
+    DeltaVolQuote::AtmType atmType_, longTermAtmType_;
+    DeltaVolQuote::DeltaType deltaType_, longTermDeltaType_;
+    Period switchTenor_;
 
     // Strings to store the inputs
     string strAtmType_;
     string strDeltaType_;
+    string strSwitchTenor_;
+    string strLongTermAtmType_;
+    string strLongTermDeltaType_;
 };
 
 } // namespace data

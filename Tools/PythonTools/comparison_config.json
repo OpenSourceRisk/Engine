@@ -341,7 +341,7 @@
           }
         ]
       },
-      "dim_evolution.csv": {
+      "dim_evolution*": {
         "keys": [
             "TimeStep",
             "NettingSet"

@@ -55,6 +55,19 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             dc_ = parseDayCounter(config->dayCountID());
         }
 
+        // set the calendar to the ccy based calendar, if provided by config we try to use that
+        Calendar calendar;
+        if (!config->calendar().empty()) {
+            try {
+                calendar = parseCalendar(config->calendar());
+            } catch (exception& ex) {
+                WLOG("Failed to get Calendar name for  " << config->calendar() << ":" << ex.what());
+            }
+        }
+        if (calendar.empty()) {
+            calendar = parseCalendar(config->currency());
+        }
+
         // Set the Curve type - EquityFwd / OptionPrice / DividendYield
         curveType_ = config->type();
 
@@ -97,6 +110,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             foundRegex |= config->fwdQuotes()[i].find("*") != string::npos;
         }
         if ((config->type() == EquityCurveConfig::Type::ForwardPrice ||
+             config->type() == EquityCurveConfig::Type::ForwardDividendPrice ||
              config->type() == EquityCurveConfig::Type::OptionPremium) &&
             foundRegex) {
             QL_REQUIRE(config->fwdQuotes().size() == 1,
@@ -130,7 +144,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 }
             }
 
-            if (config->type() == EquityCurveConfig::Type::ForwardPrice && md->asofDate() == asof &&
+            if ((config->type() == EquityCurveConfig::Type::ForwardPrice || config->type() == EquityCurveConfig::Type::ForwardDividendPrice) && md->asofDate() == asof &&
                 md->instrumentType() == MarketDatum::InstrumentType::EQUITY_FWD &&
                 md->quoteType() == MarketDatum::QuoteType::PRICE) {
 
@@ -234,7 +248,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         EquityCurveConfig::Type buildCurveType = curveType_;
 
         // for curveType ForwardPrice or OptionPremium poputuate the terms_ and quotes_ with forward prices
-        if (curveType_ == EquityCurveConfig::Type::ForwardPrice) {
+        if (curveType_ == EquityCurveConfig::Type::ForwardPrice || curveType_ == EquityCurveConfig::Type::ForwardDividendPrice) {
 
             DLOG("Building Equity Dividend Yield curve from Forward/Future prices");
 
@@ -326,6 +340,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         // Build the Dividend Yield curve from the quotes loaded
         vector<Rate> dividendRates;
         if (buildCurveType == EquityCurveConfig::Type::ForwardPrice ||
+            buildCurveType == EquityCurveConfig::Type::ForwardDividendPrice ||
             buildCurveType == EquityCurveConfig::Type::OptionPremium) {
             // Convert Fwds into dividends.
             // Fwd = Spot e^{(r-q)T}
@@ -343,7 +358,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             DLOG("Building flat Equity Dividend Yield curve as no quotes provided");
             // Return a flat curve @ 0%
             dividendYieldTermStructure = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(asof, 0.0, dc_));
-            equityIndex_ = boost::make_shared<EquityIndex>(spec.curveConfigID(), parseCalendar(config->currency()),
+            equityIndex_ = boost::make_shared<EquityIndex>(spec.curveConfigID(), calendar,
                                                            parseCurrency(config->currency()), equitySpot,
                                                            forecastYieldTermStructure, dividendYieldTermStructure);
             return;
@@ -399,7 +414,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         }
         dividendYieldTermStructure = Handle<YieldTermStructure>(divCurve);
 
-        equityIndex_ = boost::make_shared<EquityIndex>(spec.curveConfigID(), parseCalendar(config->currency()),
+        equityIndex_ = boost::make_shared<EquityIndex>(spec.curveConfigID(), calendar,
                                                        parseCurrency(config->currency()), equitySpot,
                                                        forecastYieldTermStructure, dividendYieldTermStructure);
 

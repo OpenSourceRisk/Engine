@@ -47,12 +47,12 @@ using std::vector;
 class EquityCurveConfig : public CurveConfig {
 public:
     //! Supported equity curve types
-    enum class Type { DividendYield, ForwardPrice, OptionPremium, NoDividends };
+    enum class Type { DividendYield, ForwardPrice, OptionPremium, NoDividends, ForwardDividendPrice};
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
     EquityCurveConfig(const string& curveID, const string& curveDescription, const string& forecastingCurve,
-                      const string& currency, const Type& type, const string& equitySpotQuote,
+                      const string& currency, const string& calendar, const Type& type, const string& equitySpotQuote,
                       const vector<string>& quotes, const string& dayCountID = "",
                       const string& dividendInterpVariable = "Zero", const string& dividendInterpMethod = "Linear",
                       bool extrapolation = true,
@@ -71,6 +71,7 @@ public:
     //@{
     const string& forecastingCurve() const { return forecastingCurve_; }
     const string& currency() const { return currency_; }
+    const string& calendar() const { return calendar_; }
     const Type& type() const { return type_; }
     const string& equitySpotQuoteID() const { return equitySpotQuoteID_; }
     const string& dayCountID() const { return dayCountID_; }
@@ -85,6 +86,7 @@ public:
     //@{
     string& forecastingCurve() { return forecastingCurve_; }
     string& currency() { return currency_; }
+    string& calendar() { return calendar_; }
     Type& type() { return type_; }
     string& equitySpotQuoteID() { return equitySpotQuoteID_; }
     string& dayCountID() { return dayCountID_; }
@@ -100,6 +102,7 @@ private:
     vector<string> fwdQuotes_;
     string forecastingCurve_;
     string currency_;
+    string calendar_;
     Type type_;
     string equitySpotQuoteID_;
     string dayCountID_;

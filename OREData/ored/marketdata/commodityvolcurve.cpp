@@ -837,7 +837,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     bool hasAtm = true;
     volatility_ = boost::make_shared<BlackVolatilitySurfaceDelta>(
         asof, expiryDates, putDeltas, callDeltas, hasAtm, vols, dayCounter_, calendar_, spot, yts_, pyts, deltaType,
-        atmType, atmDeltaType, im, flatExtrapolation);
+        atmType, atmDeltaType, 0 * Days, deltaType, atmType, atmDeltaType, im, flatExtrapolation);
 
     DLOG("Setting BlackVolatilitySurfaceDelta extrapolation to " << to_string(vdsc.extrapolation()));
     volatility_->enableExtrapolation(vdsc.extrapolation());
