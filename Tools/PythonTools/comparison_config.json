@@ -361,7 +361,7 @@
       },
       "dim_regression*": {
         "keys": [
-            "Sample",
+            "Sample"
         ],
         "column_settings": [
           {
