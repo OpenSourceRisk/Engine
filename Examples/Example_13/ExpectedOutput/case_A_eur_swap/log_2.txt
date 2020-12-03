@@ -1,2 +1,0 @@
-WARNING  [2020-Dec-03 00:15:48.007638] (...cdsvolcurveconfig.cpp:86) : Using an Expiries node only in CDSVolatilityCurveConfig is deprecated. A volatility configuration node should be used instead.
-ALERT    [2020-Dec-03 00:15:48.693804] (...orea\app\oreapp.cpp:1145) : dim calculator not set, create RegressionDynamicInitialMarginCalculator
