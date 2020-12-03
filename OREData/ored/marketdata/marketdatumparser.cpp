@@ -453,9 +453,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::PRICE, "Invalid quote type for " << datumName);
         const string& equityName = tokens[2];
         const string& ccy = tokens[3];
-        // equities may be quoted in minor currencies, convert to major
-        Real adjValue = convertMinorToMajorCurrency(ccy, value);
-        return boost::make_shared<EquitySpotQuote>(adjValue, asof, datumName, quoteType, equityName, ccy);
+        return boost::make_shared<EquitySpotQuote>(value, asof, datumName, quoteType, equityName, ccy);
     }
 
     case MarketDatum::InstrumentType::EQUITY_FWD: {
@@ -463,10 +461,8 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::PRICE, "Invalid quote type for " << datumName);
         const string& equityName = tokens[2];
         const string& ccy = tokens[3];
-        // equities may be quoted in minor currencies, convert to major
-        Real adjValue = convertMinorToMajorCurrency(ccy, value);
         Date expiryDate = getDateFromDateOrPeriod(tokens[4], asof);
-        return boost::make_shared<EquityForwardQuote>(adjValue, asof, datumName, quoteType, equityName, ccy, expiryDate);
+        return boost::make_shared<EquityForwardQuote>(value, asof, datumName, quoteType, equityName, ccy, expiryDate);
     }
 
     case MarketDatum::InstrumentType::EQUITY_DIVIDEND: {
@@ -507,14 +503,10 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
                        "excepted C or P for Call or Put at position " << tokens.size() << " in " << datumName);
             isCall = tokens.back() == "C";
         }
-        Real adjValue = value;
-        // equities may be quoted in minor currencies, convert to major - only if a premium quote
-        if (quoteType == MarketDatum::QuoteType::PRICE)
-            adjValue = convertMinorToMajorCurrency(ccy, value);
 
         // note how we only store the expiry string - to ensure we can support both Periods and Dates being specified in
         // the vol curve-config.
-        return boost::make_shared<EquityOptionQuote>(adjValue, asof, datumName, quoteType, equityName, ccy, expiryString,
+        return boost::make_shared<EquityOptionQuote>(value, asof, datumName, quoteType, equityName, ccy, expiryString,
                                                      strike, isCall);
     }
 

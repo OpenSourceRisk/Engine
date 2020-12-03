@@ -22,6 +22,7 @@
 #include <boost/range/adaptor/indexed.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
+#include <ored/utilities/currencycheck.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -113,7 +114,8 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
             if (q->name() == cvc.quote()) {
                 TLOG("Found the constant volatility quote " << q->name());
                 QL_REQUIRE(quoteValue == Null<Real>(), "Duplicate quote found for quote with id " << cvc.quote());
-                quoteValue = q->quote()->value();
+                // convert quote from minor to major currency if needed
+                quoteValue = convertMinorToMajorCurrency(q->ccy(), q->quote()->value());
             }
         }
     }
@@ -178,7 +180,8 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
                                                                      << io::iso_date(expiryDate)
                                                                      << " provided by equity volatility config "
                                                                      << vc.curveID());
-                    curveData[expiryDate] = q->quote()->value();
+                    // convert quote from minor to major currency if needed
+                    curveData[expiryDate] = convertMinorToMajorCurrency(q->ccy(), q->quote()->value());
 
                     TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
                                         << setprecision(9) << q->quote()->value() << ")");
@@ -214,7 +217,9 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
                                                                      << io::iso_date(expiryDate)
                                                                      << " provided by equity volatility config "
                                                                      << vc.curveID());
-                    curveData[expiryDate] = q->quote()->value();
+
+                    // convert quote from minor to major currency if needed
+                    curveData[expiryDate] = convertMinorToMajorCurrency(q->ccy(), q->quote()->value());
 
                     TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
                                         << setprecision(9) << q->quote()->value() << ")");
@@ -341,14 +346,20 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                             DLOG("Option quote for as of date (" << ore::data::to_string(tmpDate) << ") ignored.");
                             continue;
                         }
+                        // get values and strikes, convert from minor to major currency if needed
+                        Real quoteValue = q->quote()->value();
+                        if (vc.quoteType() == MarketDatum::QuoteType::PRICE)
+                            quoteValue = convertMinorToMajorCurrency(q->ccy(), quoteValue);
+                        Real strikeValue = convertMinorToMajorCurrency(q->ccy(), absoluteStrike->strike());
+
                         if (q->isCall()) {
-                            callStrikes.push_back(absoluteStrike->strike());
-                            callData.push_back(q->quote()->value());
+                            callStrikes.push_back(strikeValue);
+                            callData.push_back(quoteValue);
                             callExpiries.push_back(tmpDate);
                             callQuotesAdded++;
                         } else {
-                            putStrikes.push_back(absoluteStrike->strike());
-                            putData.push_back(q->quote()->value());
+                            putStrikes.push_back(strikeValue);
+                            putData.push_back(quoteValue);
                             putExpiries.push_back(tmpDate);
                             putQuotesAdded++;
                         }
@@ -503,8 +514,6 @@ vector<Real> checkMoneyness(const vector<string>& strMoneynessLevels) {
 void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilityMoneynessSurfaceConfig& vmsc, const Loader& loader,
                                      const QuantLib::Handle<EquityIndex>& eqIndex) {
-
-    // this follows ComoodityVolCurve::buildVolatility() for moneyness surface configs
 
     using boost::adaptors::transformed;
     using boost::algorithm::join;
