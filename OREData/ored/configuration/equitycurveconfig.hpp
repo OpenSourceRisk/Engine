@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ql/exercise.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
@@ -70,7 +71,7 @@ public:
     //! \name Inspectors
     //@{
     const string& forecastingCurve() const { return forecastingCurve_; }
-    const string& currency() const { return currency_; }
+    const string& currency() const { return parseCurrencyWithMinors(currency_).code(); }
     const string& calendar() const { return calendar_; }
     const Type& type() const { return type_; }
     const string& equitySpotQuoteID() const { return equitySpotQuoteID_; }
@@ -85,8 +86,6 @@ public:
     //! \name Setters
     //@{
     string& forecastingCurve() { return forecastingCurve_; }
-    string& currency() { return currency_; }
-    string& calendar() { return calendar_; }
     Type& type() { return type_; }
     string& equitySpotQuoteID() { return equitySpotQuoteID_; }
     string& dayCountID() { return dayCountID_; }
@@ -94,6 +93,9 @@ public:
     string& dividendInterpolationMethod() { return divInterpMethod_; }
     bool& extrapolation() { return extrapolation_; }
     QuantLib::Exercise::Type& exerciseStyle() { return exerciseStyle_; }
+
+    void setCurrency(const string& currency) { currency_ = currency; }
+    void setCalendar(const string& calendar) { calendar_ = calendar; }
     //@}
 
 private:

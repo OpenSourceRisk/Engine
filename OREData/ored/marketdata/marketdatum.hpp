@@ -123,6 +123,7 @@ public:
     enum class QuoteType {
         BASIS_SPREAD,
         CREDIT_SPREAD,
+        CONV_CREDIT_SPREAD,
         YIELD_SPREAD,
         HAZARD_RATE,
         RATE,
@@ -682,25 +683,28 @@ private:
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
-//! CDS Spread data class
-/*!
-  This class holds single market points of type
-  - CREDIT_SPREAD PRICE
-
-  \ingroup marketdata
+/*! CDS Spread data class
+    This class holds single market points of type
+    - CREDIT_SPREAD
+    - CONV_CREDIT_SPREAD
+    - PRICE
+    \ingroup marketdata
 */
 class CdsQuote : public MarketDatum {
 public:
-    CdsQuote() {}
+    CdsQuote() : runningSpread_(Null<Real>()) {}
+
     //! Constructor
     CdsQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& underlyingName,
-             const string& seniority, const string& ccy, Period term, const string& docClause = "")
+             const string& seniority, const string& ccy, Period term, const string& docClause = "",
+             Real runningSpread = Null<Real>())
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS), underlyingName_(underlyingName),
-          seniority_(seniority), ccy_(ccy), term_(term), docClause_(docClause) {}
+          seniority_(seniority), ccy_(ccy), term_(term), docClause_(docClause), runningSpread_(runningSpread) {}
 
     //! Make a copy of the market datum
     boost::shared_ptr<MarketDatum> clone() {
-        return boost::make_shared<CdsQuote>(quote_->value(), asofDate_, name_, quoteType_, underlyingName_, seniority_, ccy_, term_, docClause_);
+        return boost::make_shared<CdsQuote>(quote_->value(), asofDate_, name_, quoteType_, underlyingName_,
+            seniority_, ccy_, term_, docClause_, runningSpread_);
     }
 
     //! \name Inspectors
@@ -710,13 +714,17 @@ public:
     const string& ccy() const { return ccy_; }
     const string& underlyingName() const { return underlyingName_; }
     const string& docClause() const { return docClause_; }
+    Real runningSpread() const { return runningSpread_; }
     //@}
+
 private:
     string underlyingName_;
     string seniority_;
     string ccy_;
     Period term_;
     string docClause_;
+    Real runningSpread_;
+
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);

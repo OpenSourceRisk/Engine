@@ -40,25 +40,28 @@ void Portfolio::reset() {
         t->reset();
 }
 
-void Portfolio::load(const string& fileName, const boost::shared_ptr<TradeFactory>& factory) {
+void Portfolio::load(const string& fileName, const boost::shared_ptr<TradeFactory>& factory,
+                     const bool checkForDuplicateIds) {
 
     LOG("Parsing XML " << fileName.c_str());
     XMLDocument doc(fileName);
     LOG("Loaded XML file");
     XMLNode* node = doc.getFirstNode("Portfolio");
-    fromXML(node, factory);
+    fromXML(node, factory, checkForDuplicateIds);
 }
 
-void Portfolio::loadFromXMLString(const string& xmlString, const boost::shared_ptr<TradeFactory>& factory) {
+void Portfolio::loadFromXMLString(const string& xmlString, const boost::shared_ptr<TradeFactory>& factory,
+                                  const bool checkForDuplicateIds) {
     LOG("Parsing XML string");
     XMLDocument doc;
     doc.fromXMLString(xmlString);
     LOG("Loaded XML string");
     XMLNode* node = doc.getFirstNode("Portfolio");
-    fromXML(node, factory);
+    fromXML(node, factory, checkForDuplicateIds);
 }
 
-void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& factory) {
+void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& factory,
+                        const bool checkForDuplicateIds) {
     XMLUtils::checkNode(node, "Portfolio");
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(node, "Trade");
     for (Size i = 0; i < nodes.size(); i++) {
@@ -74,7 +77,7 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
             try {
                 trade->fromXML(nodes[i]);
                 trade->id() = id;
-                add(trade);
+                add(trade, checkForDuplicateIds);
 
                 DLOG("Added Trade " << id << " (" << trade->id() << ")"
                                     << " type:" << tradeType);
@@ -179,8 +182,9 @@ map<string, set<string>> Portfolio::counterpartyNettingSets() const {
     return cpNettingSets;
 }
 
-void Portfolio::add(const boost::shared_ptr<Trade>& trade) {
-    QL_REQUIRE(!has(trade->id()), "Attempted to add a trade to the portfolio with an id, which already exists.");
+void Portfolio::add(const boost::shared_ptr<Trade>& trade, const bool checkForDuplicateIds) {
+    QL_REQUIRE(!checkForDuplicateIds || !has(trade->id()),
+               "Attempted to add a trade to the portfolio with an id, which already exists.");
     trades_.push_back(trade);
 }
 

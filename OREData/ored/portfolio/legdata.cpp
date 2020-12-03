@@ -25,6 +25,7 @@
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/utilities/currencycheck.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -534,7 +535,8 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
                  const double foreignAmount, const string& fxIndex, int fixingDays, const string& fixingCalendar,
                  const std::vector<AmortizationData>& amortizationData, const int paymentLag,
                  const string& paymentCalendar, const vector<string>& paymentDates,
-                 const std::vector<Indexing>& indexing, const bool indexingFromAssetLeg)
+                 const std::vector<Indexing>& indexing, const bool indexingFromAssetLeg,
+                 const string& lastPeriodDayCounter)
     : concreteLegData_(concreteLegData), isPayer_(isPayer), currency_(currency), schedule_(scheduleData),
       dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
       paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
@@ -542,7 +544,7 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
       isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
       fxIndex_(fxIndex), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar), amortizationData_(amortizationData),
       paymentLag_(paymentLag), paymentCalendar_(paymentCalendar), paymentDates_(paymentDates), indexing_(indexing),
-      indexingFromAssetLeg_(indexingFromAssetLeg) {
+      indexingFromAssetLeg_(indexingFromAssetLeg), lastPeriodDayCounter_(lastPeriodDayCounter) {
 
     indices_ = concreteLegData_->indices();
 
@@ -622,6 +624,8 @@ void LegData::fromXML(XMLNode* node) {
         }
     }
 
+    lastPeriodDayCounter_ = XMLUtils::getChildValue(node, "LastPeriodDayCounter", false);
+
     concreteLegData_ = initialiseConcreteLegData(legType);
     concreteLegData_->fromXML(XMLUtils::getChildNode(node, concreteLegData_->legNodeName()));
 
@@ -693,6 +697,9 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
         }
         XMLUtils::appendNode(node, indexingsNode);
     }
+
+    if (!lastPeriodDayCounter_.empty())
+        XMLUtils::addChild(doc, node, "LastPeriodDayCounter", lastPeriodDayCounter_);
 
     XMLUtils::appendNode(node, concreteLegData_->toXML(doc));
     return node;
@@ -1517,13 +1524,29 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     Real dividendFactor = eqLegData->dividendFactor();
     Real initialPrice = eqLegData->initialPrice();
     bool initialPriceIsInTargetCcy = false;
+
     if (!eqLegData->initialPriceCurrency().empty()) {
-        QL_REQUIRE(eqLegData->initialPriceCurrency() == data.currency() ||
-                       eqLegData->initialPriceCurrency() == eqLegData->eqCurrency() || eqLegData->eqCurrency().empty(),
-                   "initial price ccy (" << eqLegData->initialPriceCurrency() << ") must match either leg ccy ("
-                                         << data.currency() << ") or equity ccy (if given, got '"
-                                         << eqLegData->eqCurrency() << "')");
-        initialPriceIsInTargetCcy = eqLegData->initialPriceCurrency() == data.currency();
+        // parse currencies to handle minor currencies
+        Currency initialPriceCurrency = parseCurrencyWithMinors(eqLegData->initialPriceCurrency());
+        Currency dataCurrency = parseCurrencyWithMinors(data.currency());
+        Currency eqCurrency;
+        // set equity currency
+        if (!eqLegData->eqCurrency().empty())
+            eqCurrency = parseCurrencyWithMinors(eqLegData->eqCurrency());
+        else if (!equityCurve->currency().empty())
+            eqCurrency = equityCurve->currency();
+        else
+            TLOG("Cannot find currency for equity " << equityCurve->name());
+
+        // initial price currency must match leg or equity currency
+        QL_REQUIRE(initialPriceCurrency == dataCurrency ||
+            initialPriceCurrency == eqCurrency || eqCurrency.empty(),
+                   "initial price ccy (" << initialPriceCurrency << ") must match either leg ccy ("
+                                         << dataCurrency << ") or equity ccy (if given, got '"
+                                         << eqCurrency << "')");
+        initialPriceIsInTargetCcy = initialPriceCurrency == dataCurrency;
+        // adjust for minor currency
+        initialPrice = convertMinorToMajorCurrency(eqLegData->initialPriceCurrency(), initialPrice);
     }
     bool notionalReset = eqLegData->notionalReset();
     Natural fixingDays = eqLegData->fixingDays();
