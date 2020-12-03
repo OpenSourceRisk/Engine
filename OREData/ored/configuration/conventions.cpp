@@ -900,14 +900,19 @@ XMLNode* CrossCcyFixFloatSwapConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+CdsConvention::CdsConvention() : settlementDays_(0), frequency_(Quarterly), paymentConvention_(Following),
+    rule_(DateGeneration::CDS2015), settlesAccrual_(true), paysAtDefaultTime_(true), upfrontSettlementDays_(3) {}
+
 CdsConvention::CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                              const string& strFrequency, const string& strPaymentConvention, const string& strRule,
                              const string& strDayCounter, const string& strSettlesAccrual,
-                             const string& strPaysAtDefaultTime)
+                             const string& strPaysAtDefaultTime, const string& strUpfrontSettlementDays,
+                             const string& lastPeriodDayCounter)
     : Convention(id, Type::CDS), strSettlementDays_(strSettlementDays), strCalendar_(strCalendar),
       strFrequency_(strFrequency), strPaymentConvention_(strPaymentConvention), strRule_(strRule),
       strDayCounter_(strDayCounter), strSettlesAccrual_(strSettlesAccrual),
-      strPaysAtDefaultTime_(strPaysAtDefaultTime) {
+      strPaysAtDefaultTime_(strPaysAtDefaultTime), strUpfrontSettlementDays_(strUpfrontSettlementDays),
+      strLastPeriodDayCounter_(lastPeriodDayCounter) {
     build();
 }
 
@@ -920,6 +925,14 @@ void CdsConvention::build() {
     dayCounter_ = parseDayCounter(strDayCounter_);
     settlesAccrual_ = parseBool(strSettlesAccrual_);
     paysAtDefaultTime_ = parseBool(strPaysAtDefaultTime_);
+
+    upfrontSettlementDays_ = 3;
+    if (!strUpfrontSettlementDays_.empty())
+        upfrontSettlementDays_ = lexical_cast<Natural>(strUpfrontSettlementDays_);
+
+    lastPeriodDayCounter_ = DayCounter();
+    if (!strLastPeriodDayCounter_.empty())
+        lastPeriodDayCounter_ = parseDayCounter(strLastPeriodDayCounter_);
 }
 
 void CdsConvention::fromXML(XMLNode* node) {
@@ -937,6 +950,9 @@ void CdsConvention::fromXML(XMLNode* node) {
     strDayCounter_ = XMLUtils::getChildValue(node, "DayCounter", true);
     strSettlesAccrual_ = XMLUtils::getChildValue(node, "SettlesAccrual", true);
     strPaysAtDefaultTime_ = XMLUtils::getChildValue(node, "PaysAtDefaultTime", true);
+    strUpfrontSettlementDays_ = XMLUtils::getChildValue(node, "UpfrontSettlementDays", false);
+    strLastPeriodDayCounter_ = XMLUtils::getChildValue(node, "LastPeriodDayCounter", false);
+
     build();
 }
 
@@ -952,6 +968,10 @@ XMLNode* CdsConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "DayCounter", strDayCounter_);
     XMLUtils::addChild(doc, node, "SettlesAccrual", strSettlesAccrual_);
     XMLUtils::addChild(doc, node, "PaysAtDefaultTime", strPaysAtDefaultTime_);
+    if (!strUpfrontSettlementDays_.empty())
+        XMLUtils::addChild(doc, node, "UpfrontSettlementDays", strUpfrontSettlementDays_);
+    if (!strLastPeriodDayCounter_.empty())
+        XMLUtils::addChild(doc, node, "LastPeriodDayCounter", strLastPeriodDayCounter_);
     return node;
 }
 

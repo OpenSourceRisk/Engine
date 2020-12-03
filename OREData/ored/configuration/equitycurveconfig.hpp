@@ -47,7 +47,7 @@ using std::vector;
 class EquityCurveConfig : public CurveConfig {
 public:
     //! Supported equity curve types
-    enum class Type { DividendYield, ForwardPrice, OptionPremium, NoDividends };
+    enum class Type { DividendYield, ForwardPrice, OptionPremium, NoDividends, ForwardDividendPrice};
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor

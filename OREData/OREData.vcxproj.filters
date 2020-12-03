@@ -561,6 +561,12 @@
     <ClInclude Include="ored\model\crlgmdata.hpp">
       <Filter>model</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\equityfuturesoption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\equityfuturesoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -997,6 +1003,9 @@
     </ClCompile>
     <ClCompile Include="ored\model\crlgmdata.cpp">
       <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\equityfuturesoption.cpp">
+      <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
