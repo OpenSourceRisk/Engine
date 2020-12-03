@@ -313,12 +313,12 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
                                 // convert strike to major currency if quoted in minor
                                 Real callStrike = convertMinorToMajorCurrency(calls[i]->ccy(), callAbsoluteStrike->strike());
-                                Real putStrike = convertMinorToMajorCurrency(puts[i]->ccy(), putAbsoluteStrike->strike());
+                                Real putStrike = convertMinorToMajorCurrency(puts[j]->ccy(), putAbsoluteStrike->strike());
                                 callStrikes.push_back(callStrike);
                                 putStrikes.push_back(putStrike);
                                 // convert premium to major currency if quoted in minor
                                 callPremiums.push_back(convertMinorToMajorCurrency(calls[i]->ccy(), calls[i]->quote()->value()));
-                                putPremiums.push_back(convertMinorToMajorCurrency(puts[i]->ccy(), puts[j]->quote()->value()));
+                                putPremiums.push_back(convertMinorToMajorCurrency(puts[j]->ccy(), puts[j]->quote()->value()));
                             }
                         }
                     }
