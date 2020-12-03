@@ -29,6 +29,7 @@
 #include <qle/termstructures/optionpricesurface.hpp>
 
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/currencycheck.hpp>
 
 #include <algorithm>
 #include <regex>
@@ -140,7 +141,9 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
                 if (q->name() == config->equitySpotQuoteID()) {
                     QL_REQUIRE(equitySpot.empty(), "duplicate equity spot quote " << q->name() << " found.");
-                    equitySpot = Handle<Quote>(boost::make_shared<SimpleQuote>(q->quote()->value()));
+                    // convert quote from minor to major currency if needed
+                    Real spot = convertMinorToMajorCurrency(q->ccy(), q->quote()->value());
+                    equitySpot = Handle<Quote>(boost::make_shared<SimpleQuote>(spot));
                 }
             }
 
@@ -169,7 +172,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         QL_REQUIRE(terms_[pos] == Null<Date>(),
                                    "duplicate market datum found for " << config->fwdQuotes()[pos]);
                         terms_[pos] = q->expiryDate();
-                        quotes_[pos] = q->quote()->value();
+                        // convert quote from minor to major currency if needed
+                        quotes_[pos] = convertMinorToMajorCurrency(q->ccy(), q->quote()->value());
                         quotesRead++;
                     }
                 }
@@ -266,7 +270,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 // populate individual quote, term vectors
                 for (Size i = 0; i < qt.size(); i++) {
                     terms_.push_back(qt[i]->expiryDate());
-                    quotes_.push_back(qt[i]->quote()->value());
+                    // convert quote from minor to major currency if needed
+                    quotes_.push_back(convertMinorToMajorCurrency(qt[i]->ccy(), qt[i]->quote()->value()));
                 }
             }
         } else if (curveType_ == EquityCurveConfig::Type::OptionPremium) {
@@ -306,10 +311,15 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                                                                                      << calls[i]->strike()->toString());
                                 callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
                                 putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
-                                callStrikes.push_back(callAbsoluteStrike->strike());
-                                putStrikes.push_back(putAbsoluteStrike->strike());
-                                callPremiums.push_back(calls[i]->quote()->value());
-                                putPremiums.push_back(puts[j]->quote()->value());
+
+                                // convert strike to major currency if quoted in minor
+                                Real callStrike = convertMinorToMajorCurrency(calls[i]->ccy(), callAbsoluteStrike->strike());
+                                Real putStrike = convertMinorToMajorCurrency(puts[j]->ccy(), putAbsoluteStrike->strike());
+                                callStrikes.push_back(callStrike);
+                                putStrikes.push_back(putStrike);
+                                // convert premium to major currency if quoted in minor
+                                callPremiums.push_back(convertMinorToMajorCurrency(calls[i]->ccy(), calls[i]->quote()->value()));
+                                putPremiums.push_back(convertMinorToMajorCurrency(puts[j]->ccy(), puts[j]->quote()->value()));
                             }
                         }
                     }

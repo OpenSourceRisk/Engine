@@ -26,6 +26,7 @@
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/currencycheck.hpp>
 
 using namespace std;
 using QuantLib::Currency;
@@ -529,6 +530,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
                        "excepted C or P for Call or Put at position " << tokens.size() << " in " << datumName);
             isCall = tokens.back() == "C";
         }
+
         // note how we only store the expiry string - to ensure we can support both Periods and Dates being specified in
         // the vol curve-config.
         return boost::make_shared<EquityOptionQuote>(value, asof, datumName, quoteType, equityName, ccy, expiryString,

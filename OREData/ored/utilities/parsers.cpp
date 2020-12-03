@@ -359,6 +359,15 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"BEF", Belgium()},
         {"LUF", Luxembourg()},
         {"ATS", QuantExt::Austria()},
+         
+        // Minor Currencies
+        { "GBp", UnitedKingdom() },
+        { "GBX", UnitedKingdom() },
+        { "ILa", QuantLib::Israel() },
+        { "ILX", QuantLib::Israel() },
+        { "ZAc", SouthAfrica() },
+        { "ZAC", SouthAfrica() },
+        { "ZAX", SouthAfrica() },
 
         // fallback to TARGET for these emerging ccys
         {"AED", TARGET()},
@@ -615,6 +624,30 @@ Currency parseCurrency(const string& s) {
         return it->second;
     } else {
         QL_FAIL("Currency \"" << s << "\" not recognized");
+    }
+}
+
+Currency parseMinorCurrency(const string& s) {
+    static map<string, Currency> m = {
+        {"GBp", GBPCurrency()}, {"GBX", GBPCurrency()},
+        {"ILa", ILSCurrency()}, {"ILX", ILSCurrency()},
+        {"ZAc", ZARCurrency()}, {"ZAC", ZARCurrency()}, {"ZAX", ZARCurrency()} };
+    
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    }
+    else {
+        QL_FAIL("Currency \"" << s << "\" not recognized");
+    }
+}
+
+Currency parseCurrencyWithMinors(const string& s) {
+    try {
+        return parseCurrency(s);
+    } catch (...) {
+        // try to parse as a minor currency if fails
+        return parseMinorCurrency(s);
     }
 }
 
