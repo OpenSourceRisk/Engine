@@ -1,0 +1,32 @@
+WARNING  [2020-Dec-03 00:15:54.730676] (...cdsvolcurveconfig.cpp:86) : Using an Expiries node only in CDSVolatilityCurveConfig is deprecated. A volatility configuration node should be used instead.
+WARNING  [2020-Dec-03 00:15:55.307932] (...app\reportwriter.cpp:144) : cashflow for Swaption SwaptionPhysical skipped
+WARNING  [2020-Dec-03 00:15:55.366488] (...model\lgmbuilder.cpp:339) : StructuredErrorMessage { "errorType":"Model", "exceptionType":"Failed to calibrate LGM Model", "exceptionMessage":"LGM (EUR) calibration error 0.001089 exceeds tolerance 0.000100"}
+WARNING  [2020-Dec-03 00:15:55.366488] (...model\lgmbuilder.cpp:340) : Basket details:
+WARNING  [2020-Dec-03 00:15:55.368448] (...model\lgmbuilder.cpp:341) :   #          expiry      swapLength          strike      atmForward         annuity            vega            vol
+WARNING  [2020-Dec-03 00:15:55.368448] (...model\lgmbuilder.cpp:341) :   0         1.00548              29       0.0199911       0.0199911          21.413         8.56591           0.005
+WARNING  [2020-Dec-03 00:15:55.368448] (...model\lgmbuilder.cpp:341) :   1         2.00274              28       0.0199985       0.0199985         20.4531         11.5473           0.005
+WARNING  [2020-Dec-03 00:15:55.368448] (...model\lgmbuilder.cpp:341) :   2         3.00274              27       0.0199985       0.0199985         19.5109         13.4879           0.005
+WARNING  [2020-Dec-03 00:15:55.368448] (...model\lgmbuilder.cpp:341) :   3         4.00274              26       0.0199985       0.0199985         18.5871         14.8354           0.005
+WARNING  [2020-Dec-03 00:15:55.368448] (...model\lgmbuilder.cpp:341) :   4         5.00548              25       0.0199986       0.0199986         17.6795         15.7799           0.005
+WARNING  [2020-Dec-03 00:15:55.368448] (...model\lgmbuilder.cpp:341) :   5         7.00822              23       0.0199986       0.0199986         15.9222         16.8158           0.005
+WARNING  [2020-Dec-03 00:15:55.368448] (...model\lgmbuilder.cpp:341) :   6         10.0082              20       0.0199986       0.0199986         13.4113         16.9262           0.005
+WARNING  [2020-Dec-03 00:15:55.368448] (...model\lgmbuilder.cpp:341) :   7         12.0137              18       0.0199985       0.0199985         11.8189         16.3427           0.005
+WARNING  [2020-Dec-03 00:15:55.368448] (...model\lgmbuilder.cpp:341) :   8          15.011              15       0.0199985       0.0199985         9.54647         14.7556           0.005
+WARNING  [2020-Dec-03 00:15:55.368448] (...model\lgmbuilder.cpp:341) :   9         20.0137              10       0.0199985       0.0199985         6.04462          10.788           0.005
+WARNING  [2020-Dec-03 00:15:55.368448] (...model\lgmbuilder.cpp:341) :  10         25.0192               5       0.0199984       0.0199984         2.87284         5.73268           0.005
+WARNING  [2020-Dec-03 00:15:55.368448] (...model\lgmbuilder.cpp:342) : Calibration details:
+WARNING  [2020-Dec-03 00:15:55.377424] (...model\lgmbuilder.cpp:343) :   #          time      modelVol     marketVol        (diff)    modelValue   marketValue        (diff)  irlgm1fAlpha  irlgm1fKappa irlgm1fHwSigma
+WARNING  [2020-Dec-03 00:15:55.377424] (...model\lgmbuilder.cpp:343) :   0       1.00538         0.005         0.005             0     0.0428963     0.0428296   6.67556e-05    0.00491101             0      0.00491101
+WARNING  [2020-Dec-03 00:15:55.377424] (...model\lgmbuilder.cpp:343) :   1       2.00264         0.005         0.005             0     0.0577925     0.0577366   5.59692e-05    0.00491101             0      0.00491101
+WARNING  [2020-Dec-03 00:15:55.377424] (...model\lgmbuilder.cpp:343) :   2       3.00264         0.005         0.005             0     0.0674657     0.0674396   2.61214e-05    0.00491101             0      0.00491101
+WARNING  [2020-Dec-03 00:15:55.377424] (...model\lgmbuilder.cpp:343) :   3       4.00264         0.005         0.005             0     0.0741704     0.0741772  -6.81551e-06    0.00491101             0      0.00491101
+WARNING  [2020-Dec-03 00:15:55.377424] (...model\lgmbuilder.cpp:343) :   4       5.00538         0.005         0.005             0      0.078851     0.0788995   -4.8499e-05    0.00491101             0      0.00491101
+WARNING  [2020-Dec-03 00:15:55.377424] (...model\lgmbuilder.cpp:343) :   5       7.00812         0.005         0.005             0     0.0839846     0.0840791   -9.4509e-05    0.00491101             0      0.00491101
+WARNING  [2020-Dec-03 00:15:55.377424] (...model\lgmbuilder.cpp:343) :   6       10.0081         0.005         0.005             0     0.0845071      0.084631  -0.000123868    0.00491101             0      0.00491101
+WARNING  [2020-Dec-03 00:15:55.377424] (...model\lgmbuilder.cpp:343) :   7       12.0136         0.005         0.005             0     0.0816099     0.0817136  -0.000103629    0.00491101             0      0.00491101
+WARNING  [2020-Dec-03 00:15:55.377424] (...model\lgmbuilder.cpp:343) :   8       15.0109         0.005         0.005             0     0.0737187      0.073778  -5.92807e-05    0.00491101             0      0.00491101
+WARNING  [2020-Dec-03 00:15:55.377424] (...model\lgmbuilder.cpp:343) :   9       20.0136         0.005         0.005             0     0.0539759     0.0539402   3.56381e-05    0.00491101             0      0.00491101
+WARNING  [2020-Dec-03 00:15:55.377424] (...model\lgmbuilder.cpp:343) :  10       25.0191         0.005         0.005             0     0.0287133     0.0286634   4.99429e-05    0.00491101             0      0.00491101
+WARNING  [2020-Dec-03 00:15:55.377424] (...model\lgmbuilder.cpp:343) : t >= 25.0193: irlgm1fAlpha = 0.00491101 irlgm1fKappa = 0 irlgm1fHwSigma = 0.00491101
+WARNING  [2020-Dec-03 00:15:55.377424] (...model\lgmbuilder.cpp:344) : rmse = 0.00108868
+ALERT    [2020-Dec-03 00:19:53.045256] (...orea\app\oreapp.cpp:1145) : dim calculator not set, create RegressionDynamicInitialMarginCalculator
