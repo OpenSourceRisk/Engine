@@ -366,7 +366,12 @@
         "column_settings": [
           {
             "names": [
-              "LocalDIM"
+              "RegressionDIM",
+              "LocalDIM",
+              "ExpectedDIM",
+              "ZeroOrderDIM",
+              "DeltaNPV",
+              "SimpleDIM"
             ],
             "abs_tol": 0.01,
             "rel_tol": null
