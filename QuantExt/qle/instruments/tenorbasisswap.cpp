@@ -95,30 +95,15 @@ TenorBasisSwap::TenorBasisSwap(const Date& effectiveDate, Real nominal, const Pe
                         .withRule(rule)
                         .endOfMonth(longIndex_->endOfMonth());
 
-    if (shortPayTenor_ == shortIndex_->tenor()) {
-        shortSchedule_ = MakeSchedule()
-                             .from(effectiveDate)
-                             .to(terminationDate)
-                             .withTenor(shortPayTenor_)
-                             .withCalendar(shortIndexCalendar_)
-                             .withConvention(shortIndex_->businessDayConvention())
-                             .withTerminationDateConvention(shortIndex_->businessDayConvention())
-                             .withRule(rule)
-                             .endOfMonth(shortIndex_->endOfMonth());
-    } else {
-        /* Where the payment tenor is longer, the SubPeriodsLeg
-           will handle the adjustments. We just need to give the
-           anchor dates. */
-        shortSchedule_ = MakeSchedule()
-                             .from(effectiveDate)
-                             .to(terminationDate)
-                             .withTenor(shortPayTenor_)
-                             .withCalendar(NullCalendar())
-                             .withConvention(QuantLib::Unadjusted)
-                             .withTerminationDateConvention(QuantLib::Unadjusted)
-                             .withRule(rule)
-                             .endOfMonth(shortIndex_->endOfMonth());
-    }
+    shortSchedule_ = MakeSchedule()
+                        .from(effectiveDate)
+                        .to(terminationDate)
+                        .withTenor(shortPayTenor_)
+                        .withCalendar(shortIndexCalendar_)
+                        .withConvention(shortIndex_->businessDayConvention())
+                        .withTerminationDateConvention(shortIndex_->businessDayConvention())
+                        .withRule(rule)
+                        .endOfMonth(shortIndex_->endOfMonth());
 
     // Create legs
     initializeLegs();
