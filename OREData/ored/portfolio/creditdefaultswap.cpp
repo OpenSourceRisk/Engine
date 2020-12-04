@@ -44,7 +44,7 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     }
 
     Protection::Side prot = swap_.leg().isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
-    notional_ = Null<Real>();
+    notional_ = swap_.leg().notionals().front();
 
     Leg amortized_leg;
     if (swap_.leg().notionals().size() > 1) {
@@ -130,9 +130,8 @@ QuantLib::Real CreditDefaultSwap::notional() const {
             return coupon->nominal();
     }
 
-    // if not provided, return null
-    ALOG("Error retrieving current notional for credit default swap " << id() << " as of " << io::iso_date(asof));
-    return Null<Real>();
+    // if no coupons are given, return the initial notional by default
+    return notional_;
 }
 
 void CreditDefaultSwap::fromXML(XMLNode* node) {
