@@ -610,23 +610,28 @@ Example:
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
     Instrument Type & \lstinline!CDS! & \\ \hline
-    Quote Type & \lstinline!CREDIT_SPREAD! & \\ \hline
+    Quote Type & \lstinline!CREDIT_SPREAD! or \lstinline!CONV_CREDIT_SPREAD! & \\ \hline
     Entity & String & The CDS reference entity name \\ \hline
     Tier & String & The CDS tier \\ \hline
     DocClause & String & Optional, the CDS doc clause \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & The CDS currency\\ \hline
     Term & A valid tenor string & The CDS tenor\\ \hline
+    RunningSpread & A number & The CDS running coupon in bps e.g.\ 100 for 0.01\\ \hline
   \end{tabular}
   \caption{CDS spread quote}
   \label{tab:cdsspread_quote}
 \end{table}
 
-As noted in the table above, the CDS documentation clause is optional. The following list shows valid CDS spread quote examples.
+There are two possible quote types to allow for the presence of two CDS spread types in the market data. In particular, there is typically a conventional CDS spread and a par CDS spread quoted in the market. The quote type distinction here would allow the conventional spreads to be stored with quote type set to \lstinline!CONV_CREDIT_SPREAD! and the par spreads to be stored with quote type set to \lstinline!CREDIT_SPREAD!. As noted in the table above, the CDS documentation clause and CDS running spread is optional. The following list shows valid CDS spread quote examples.
 \begin{itemize}
 \item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/5Y!
+\item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/5Y/100!
 \item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/XR14/5Y!
+\item \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/XR14/5Y/100!
 \item \lstinline!CDS/CREDIT_SPREAD/RBS/SUBLT2/EUR/MR14/10Y!
+\item \lstinline!CDS/CREDIT_SPREAD/RBS/SUBLT2/EUR/MR14/10Y/500!
 \item \lstinline!CDS/CREDIT_SPREAD/RBS/SUBLT2/EUR/1Y!
+\item \lstinline!CDS/CREDIT_SPREAD/RBS/SUBLT2/EUR/1Y/500!
 \end{itemize}
 
 \subsection{CDS Upfront Price}
@@ -644,17 +649,22 @@ As noted in the table above, the CDS documentation clause is optional. The follo
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & The CDS currency\\ \hline
     DocClause & String & Optional, the CDS doc clause \\ \hline
     Term & A valid tenor string & The CDS tenor\\ \hline
+    RunningSpread & A number & The CDS running coupon in bps e.g.\ 100 for 0.01\\ \hline
   \end{tabular}
   \caption{CDS upfront price quote}
   \label{tab:cds_price_quote}
 \end{table}
 
-As noted in the table above, the CDS documentation clause is optional. The following list shows valid CDS upfront price quote examples.
+As noted in the table above, the CDS documentation clause and CDS running spread is optional. Note that if the running spread is omitted from the CDS upfront price quote string, it should be included in any default curve configuration that uses those quotes. In other words, to bootstrap a default curve from CDS price quotes, the contractual running spread needs to be provided in either the quote string or in the default curve configuration. If both are provided, the running spread in the quote string takes precedence. The following list shows valid CDS upfront price quote examples.
 \begin{itemize}
 \item \lstinline!CDS/PRICE/JPM/SNRFOR/USD/5Y!
+\item \lstinline!CDS/PRICE/JPM/SNRFOR/USD/5Y/100!
 \item \lstinline!CDS/PRICE/JPM/SNRFOR/USD/XR14/5Y!
+\item \lstinline!CDS/PRICE/JPM/SNRFOR/USD/XR14/5Y/100!
 \item \lstinline!CDS/PRICE/RBS/SUBLT2/EUR/MR14/10Y!
+\item \lstinline!CDS/PRICE/RBS/SUBLT2/EUR/MR14/10Y/500!
 \item \lstinline!CDS/PRICE/RBS/SUBLT2/EUR/1Y!
+\item \lstinline!CDS/PRICE/RBS/SUBLT2/EUR/1Y/500!
 \end{itemize}
 
 \subsection{CDS Recovery Rate}

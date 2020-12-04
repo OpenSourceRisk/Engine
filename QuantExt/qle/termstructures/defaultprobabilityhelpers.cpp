@@ -51,11 +51,13 @@ CdsHelper::CdsHelper(const Handle<Quote>& quote, const Period& tenor, Integer se
                      Frequency frequency, BusinessDayConvention paymentConvention, DateGeneration::Rule rule,
                      const DayCounter& dayCounter, Real recoveryRate, const Handle<YieldTermStructure>& discountCurve,
                      const Date& startDate, bool settlesAccrual,
-                     CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime)
+                     CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime,
+                     const DayCounter& lastPeriodDayCounter)
     : RelativeDateDefaultProbabilityHelper(quote), tenor_(tenor), settlementDays_(settlementDays), calendar_(calendar),
       frequency_(frequency), paymentConvention_(paymentConvention), rule_(rule), dayCounter_(dayCounter),
       recoveryRate_(recoveryRate), discountCurve_(discountCurve), settlesAccrual_(settlesAccrual),
-      protectionPaymentTime_(protectionPaymentTime), startDate_(startDate) {
+      protectionPaymentTime_(protectionPaymentTime), lastPeriodDayCounter_(lastPeriodDayCounter),
+      startDate_(startDate) {
 
     initializeDates();
 
@@ -66,11 +68,13 @@ CdsHelper::CdsHelper(Rate quote, const Period& tenor, Integer settlementDays, co
                      Frequency frequency, BusinessDayConvention paymentConvention, DateGeneration::Rule rule,
                      const DayCounter& dayCounter, Real recoveryRate, const Handle<YieldTermStructure>& discountCurve,
                      const Date& startDate, bool settlesAccrual,
-                     CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime)
+                     CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime,
+                     const DayCounter& lastPeriodDayCounter)
     : RelativeDateDefaultProbabilityHelper(quote), tenor_(tenor), settlementDays_(settlementDays), calendar_(calendar),
       frequency_(frequency), paymentConvention_(paymentConvention), rule_(rule), dayCounter_(dayCounter),
       recoveryRate_(recoveryRate), discountCurve_(discountCurve), settlesAccrual_(settlesAccrual),
-      protectionPaymentTime_(protectionPaymentTime), startDate_(startDate) {
+      protectionPaymentTime_(protectionPaymentTime), lastPeriodDayCounter_(lastPeriodDayCounter),
+      startDate_(startDate) {
 
     initializeDates();
 
@@ -91,21 +95,30 @@ void CdsHelper::update() {
 }
 
 void CdsHelper::initializeDates() {
+
+    // For CDS, the standard day counter is Actual/360 and the final period coupon accrual includes the maturity date.
+    // If the main day counter is Act/360 and no lastPeriodDayCounter_ is given, default to Act/360 including last.
+    Actual360 standardDayCounter;
+    if (lastPeriodDayCounter_.empty()) {
+        lastPeriodDayCounter_ = dayCounter_ == standardDayCounter ? Actual360(true) : dayCounter_;
+    }
+
     protectionStart_ = evaluationDate_ + settlementDays_;
 
-    Date startDate, endDate;
-    if (startDate_ == Date()) {
-        startDate = calendar_.adjust(protectionStart_, paymentConvention_);
-        if (rule_ == DateGeneration::CDS || rule_ == DateGeneration::CDS2015) { // for standard CDS ..
-            // .. the start date is not adjusted
-            startDate = protectionStart_;
-        }
-        endDate = protectionStart_ + tenor_;
+    Date startDate = startDate_ == Date() ? protectionStart_ : startDate_;
+    // Only adjust start date if rule is not CDS or CDS2015. Unsure about OldCDS.
+    if (rule_ != DateGeneration::CDS && rule_ != DateGeneration::CDS2015) {
+        startDate = calendar_.adjust(startDate, paymentConvention_);
+    }
+
+    Date endDate;
+    if (rule_ == DateGeneration::CDS2015 || rule_ == DateGeneration::CDS || rule_ == DateGeneration::OldCDS) {
+        Date refDate = startDate_ == Date() ? evaluationDate_ : startDate_;
+        endDate = cdsMaturity(refDate, tenor_, rule_);
     } else {
-        if (!schedule_.empty())
-            return; // no need to update schedule
-        startDate = calendar_.adjust(startDate_, paymentConvention_);
-        endDate = startDate_ + settlementDays_ + tenor_;
+        // Keep the old logic here
+        Date refDate = startDate_ == Date() ? protectionStart_ : startDate_ + settlementDays_;
+        endDate = refDate + tenor_;
     }
 
     schedule_ = MakeSchedule()
@@ -124,17 +137,19 @@ SpreadCdsHelper::SpreadCdsHelper(const Handle<Quote>& runningSpread, const Perio
                                  const Calendar& calendar, Frequency frequency, BusinessDayConvention paymentConvention,
                                  DateGeneration::Rule rule, const DayCounter& dayCounter, Real recoveryRate,
                                  const Handle<YieldTermStructure>& discountCurve, const Date& startDate,
-                                 bool settlesAccrual, CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime)
+                                 bool settlesAccrual, CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime,
+                                 const DayCounter& lastPeriodDayCounter)
     : CdsHelper(runningSpread, tenor, settlementDays, calendar, frequency, paymentConvention, rule, dayCounter,
-                recoveryRate, discountCurve, startDate, settlesAccrual, protectionPaymentTime) {}
+                recoveryRate, discountCurve, startDate, settlesAccrual, protectionPaymentTime, lastPeriodDayCounter) {}
 
 SpreadCdsHelper::SpreadCdsHelper(Rate runningSpread, const Period& tenor, Integer settlementDays,
                                  const Calendar& calendar, Frequency frequency, BusinessDayConvention paymentConvention,
                                  DateGeneration::Rule rule, const DayCounter& dayCounter, Real recoveryRate,
                                  const Handle<YieldTermStructure>& discountCurve, const Date& startDate,
-                                 bool settlesAccrual, CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime)
+                                 bool settlesAccrual, CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime,
+                                 const DayCounter& lastPeriodDayCounter)
     : CdsHelper(runningSpread, tenor, settlementDays, calendar, frequency, paymentConvention, rule, dayCounter,
-                recoveryRate, discountCurve, startDate, settlesAccrual, protectionPaymentTime) {}
+                recoveryRate, discountCurve, startDate, settlesAccrual, protectionPaymentTime, lastPeriodDayCounter) {}
 
 Real SpreadCdsHelper::impliedQuote() const {
     swap_->recalculate();
@@ -143,13 +158,10 @@ Real SpreadCdsHelper::impliedQuote() const {
 
 void SpreadCdsHelper::resetEngine() {
 
-    // For CDS, the standard day counter is Actual/360 and the final period coupon accrual includes the maturity date.
-    Actual360 standardDayCounter;
-    DayCounter lastPeriodDayCounter = dayCounter_ == standardDayCounter ? Actual360(true) : dayCounter_;
-
-    swap_ = boost::shared_ptr<QuantExt::CreditDefaultSwap>(new QuantExt::CreditDefaultSwap(
+    swap_ = boost::make_shared<QuantExt::CreditDefaultSwap>(
         Protection::Buyer, 100.0, 0.01, schedule_, paymentConvention_, dayCounter_, settlesAccrual_,
-        protectionPaymentTime_, protectionStart_, boost::shared_ptr<Claim>(), lastPeriodDayCounter));
+        protectionPaymentTime_, protectionStart_, boost::shared_ptr<Claim>(), lastPeriodDayCounter_,
+        evaluationDate_);
 
     swap_->setPricingEngine(
         boost::make_shared<QuantExt::MidPointCdsEngine>(probability_, recoveryRate_, discountCurve_));
@@ -161,11 +173,12 @@ UpfrontCdsHelper::UpfrontCdsHelper(const Handle<Quote>& upfront, Rate runningSpr
                                    const DayCounter& dayCounter, Real recoveryRate,
                                    const Handle<YieldTermStructure>& discountCurve, const Date& startDate,
                                    Natural upfrontSettlementDays, bool settlesAccrual,
-                                   CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime)
+                                   CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime,
+                                   const DayCounter& lastPeriodDayCounter)
     : CdsHelper(upfront, tenor, settlementDays, calendar, frequency, paymentConvention, rule, dayCounter, recoveryRate,
-                discountCurve, startDate, settlesAccrual, protectionPaymentTime),
+                discountCurve, startDate, settlesAccrual, protectionPaymentTime, lastPeriodDayCounter),
       upfrontSettlementDays_(upfrontSettlementDays), runningSpread_(runningSpread) {
-    initializeDates();
+    initializeUpfront();
 }
 
 UpfrontCdsHelper::UpfrontCdsHelper(Rate upfrontSpread, Rate runningSpread, const Period& tenor, Integer settlementDays,
@@ -174,15 +187,15 @@ UpfrontCdsHelper::UpfrontCdsHelper(Rate upfrontSpread, Rate runningSpread, const
                                    const DayCounter& dayCounter, Real recoveryRate,
                                    const Handle<YieldTermStructure>& discountCurve, const Date& startDate,
                                    Natural upfrontSettlementDays, bool settlesAccrual,
-                                   CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime)
+                                   CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime,
+                                   const DayCounter& lastPeriodDayCounter)
     : CdsHelper(upfrontSpread, tenor, settlementDays, calendar, frequency, paymentConvention, rule, dayCounter,
-                recoveryRate, discountCurve, startDate, settlesAccrual, protectionPaymentTime),
+                recoveryRate, discountCurve, startDate, settlesAccrual, protectionPaymentTime, lastPeriodDayCounter),
       upfrontSettlementDays_(upfrontSettlementDays), runningSpread_(runningSpread) {
-    initializeDates();
+    initializeUpfront();
 }
 
-void UpfrontCdsHelper::initializeDates() {
-    CdsHelper::initializeDates();
+void UpfrontCdsHelper::initializeUpfront() {
     upfrontDate_ = calendar_.advance(evaluationDate_, upfrontSettlementDays_, Days, paymentConvention_);
 }
 
@@ -194,9 +207,10 @@ Real UpfrontCdsHelper::impliedQuote() const {
 }
 
 void UpfrontCdsHelper::resetEngine() {
-    swap_ = boost::shared_ptr<CreditDefaultSwap>(new CreditDefaultSwap(
+    swap_ = boost::make_shared<CreditDefaultSwap>(
         Protection::Buyer, 100.0, 0.01, runningSpread_, schedule_, paymentConvention_, dayCounter_, settlesAccrual_,
-        protectionPaymentTime_, protectionStart_, upfrontDate_, boost::shared_ptr<Claim>()));
+        protectionPaymentTime_, protectionStart_, upfrontDate_, boost::shared_ptr<Claim>(), lastPeriodDayCounter_,
+        evaluationDate_);
     swap_->setPricingEngine(
         boost::make_shared<QuantExt::MidPointCdsEngine>(probability_, recoveryRate_, discountCurve_, true));
 }

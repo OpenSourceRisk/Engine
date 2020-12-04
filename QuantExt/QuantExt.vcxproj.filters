@@ -981,6 +981,12 @@
     <ClInclude Include="qle\models\cirppparametrization.hpp">
       <Filter>models</Filter>
     </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticeuropeanforwardengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\vanillaforwardoption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1674,6 +1680,9 @@
     </ClCompile>
     <ClCompile Include="qle\models\cirppimplieddefaulttermstructure.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticeuropeanforwardengine.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -109,7 +109,7 @@ void CrossCcyBasisMtMResetSwap::setupArguments(PricingEngine::arguments* args) c
     if (!arguments)
         return;
 
-    arguments->foreignSpread = foreignSpread_;
+    arguments->domesticSpread = domesticSpread_;
     arguments->foreignSpread = foreignSpread_;
 }
 

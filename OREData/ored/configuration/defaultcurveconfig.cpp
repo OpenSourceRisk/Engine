@@ -154,7 +154,10 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         }
 
         string s = XMLUtils::getChildValue(node, "RunningSpread", false);
-        QL_REQUIRE(s != "" || type_ != Type::Price, "'RunningSpread' required when type is 'Price'")
+        if (s.empty() && type_ == Type::Price) {
+            DLOG("'RunningSpread' is empty and type is 'Price' for default curve " << curveID_ <<
+                " so the running spread will need to be provided in the market quote.");
+        }
         if (s != "") {
             if (type_ == Type::Price) {
                 runningSpread_ = parseReal(s);

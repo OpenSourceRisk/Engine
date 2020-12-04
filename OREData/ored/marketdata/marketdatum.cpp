@@ -35,6 +35,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) 
         return out << "BASIS_SPREAD";
     case MarketDatum::QuoteType::CREDIT_SPREAD:
         return out << "CREDIT_SPREAD";
+    case MarketDatum::QuoteType::CONV_CREDIT_SPREAD:
+        return out << "CONV_CREDIT_SPREAD";
     case MarketDatum::QuoteType::YIELD_SPREAD:
         return out << "YIELD_SPREAD";
     case MarketDatum::QuoteType::RATE:

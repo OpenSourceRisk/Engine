@@ -62,8 +62,8 @@ The meaning of Call and Put values depend on the asset class of the option, see 
 \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
     \hline
       \bfseries{Asset Class and Trade Type}  & \bfseries{Call / Put Specifications} \\  \hline
-Equity/ Commodity Option & \emph{Call}: The right to buy the underlying equity/commodity at the strike price.
-\newline \emph{Put}: The right to sell the underlying equity/commodity at the strike price. \\  \hline
+Equity/ Commodity/Bond Option & \emph{Call}: The right to buy the underlying equity/commodity/bond at the strike price.
+\newline \emph{Put}: The right to sell the underlying equity/commodity/bond at the strike price. \\  \hline
  IR Swaption, CallableSwap, Commodity Swaption&  \emph{Call/Put} values are ignored, and the OptionType field is optional. Payer/Receiver swaption is determined by the  \lstinline!Payer! fields in the Leg Data nodes of the underlying swap. \\ \hline
 FX Options (all variants, except Asian) &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the trade data node. 
 \newline \emph{Put}: Bought and Sold currencies/amounts are switched compared to the trade data node.  \\ \hline

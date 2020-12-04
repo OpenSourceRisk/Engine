@@ -151,24 +151,23 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
     underlyingLeg_ = swap->floatingLeg();
     underlyingFixedLeg_ = swap->fixedLeg();
 
+    Position::Type positionType = parsePositionType(option_.longShort());
+    Real multiplier = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
+
     string ccy = swap_[0].currency();
     Currency currency = parseCurrency(ccy);
 
-    exercise_ = boost::make_shared<EuropeanExercise>(exDate);
-
-    // Build Swaption
-    boost::shared_ptr<QuantLib::Swaption> swaption(new QuantLib::Swaption(swap, exercise_, settleType, settleMethod));
-
-    // Add Engine
+    // Check for existence of swaption engine builder.
     string tt("EuropeanSwaption");
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tt);
     QL_REQUIRE(builder, "No builder found for " << tt);
     boost::shared_ptr<EuropeanSwaptionEngineBuilder> swaptionBuilder =
         boost::dynamic_pointer_cast<EuropeanSwaptionEngineBuilder>(builder);
-    swaption->setPricingEngine(swaptionBuilder->engine(currency));
 
-    Position::Type positionType = parsePositionType(option_.longShort());
-    Real multiplier = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
+    exercise_ = boost::make_shared<EuropeanExercise>(exDate);
+
+    // Build Swaption
+    boost::shared_ptr<QuantLib::Swaption> swaption(new QuantLib::Swaption(swap, exercise_, settleType, settleMethod));
 
     // If premium data is provided
     // 1) build the fee trade and pass it to the instrument wrapper for pricing
@@ -183,6 +182,9 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
                    currency, engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
         DLOG("option premium added for european swaption " << id());
     }
+
+    // Set the engine.
+    swaption->setPricingEngine(swaptionBuilder->engine(currency));
 
     // Now set the instrument wrapper, depending on delivery
     if (settleType == Settlement::Physical) {

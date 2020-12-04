@@ -26,6 +26,7 @@
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/volatilityconfig.hpp>
 #include <ored/marketdata/marketdatum.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/types.hpp>
 
@@ -61,7 +62,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& ccy() const { return ccy_; }
+    const string& ccy() const { return parseCurrencyWithMinors(ccy_).code(); }
     const MarketDatum::QuoteType& quoteType() const { return volatilityConfig_->quoteType(); }
     const QuantLib::Exercise::Type& exerciseType() const { return volatilityConfig_->exerciseType(); }
     const string& dayCounter() const { return dayCounter_; }

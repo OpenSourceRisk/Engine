@@ -23,7 +23,7 @@ Allowable values: See \lstinline!Name! for equity trades in Table \ref{tab:equit
 \item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
 
 \item InitialPrice [Optional]: Initial Price of the equity, if not present, the first valuation date is used to
-  determine the initial price. The Initial price can be either given in the currency of the equity or in the leg
+  determine the initial price. If InitialPrice is zero then each coupon's price is just the discounted fixing from the coupon's FixingEndDate. For any divisions we assume the value is one, i.e. when NotionalReset = true we have instead Quantity = Notional. The Initial price can be either given in the currency of the equity or in the leg
   currency, see InitialPriceCurrency.
 
 Allowable values: Any positive real number
@@ -32,7 +32,7 @@ Allowable values: Any positive real number
   or the leg currency (if these are different). This field determines in which currency the initial price is given. If
   omitted, it is assumed that the initial price is given in equity currency.
 
-Allowable values: A valid currency code, see \ref{tab:allow_stand_data}.
+Allowable values: A valid currency code, See \lstinline!Currency! and \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data}.
 
 \item NotionalReset [Optional]: Defaults to \emph{true}.  Notional resets only affect the equity leg. If NotionalReset
   is set to \emph{true} the quantity or number of shares of the underlying equity is fixed for all the coupons on the
@@ -76,7 +76,7 @@ Allowable values: Any non-negative integer.
 \begin{itemize}
 	\item EquityCurrency [Mandatory within \lstinline!FXTerms!]: Currency underlying equity is quoted in. Required if FXTerms is present.
 
-	Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+	Allowable values: See \lstinline!Currency! and \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data}.
 
 	\item FXIndex [Mandatory within \lstinline!FXTerms!]: Name of the index for FX fixings for the leg vs equity currency pair, e.g. FX-TR20H-EUR-USD for Thomson Reuters 20:00 EURUSD FX fixing. Required if FXTerms present.
 
