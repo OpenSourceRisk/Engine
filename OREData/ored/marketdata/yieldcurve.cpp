@@ -1912,18 +1912,22 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
                 Handle<YieldTermStructure> foreignDiscount = resetsOnFlatLeg ? spreadDiscountCurve : flatDiscountCurve;
                 boost::shared_ptr<IborIndex> domesticIndex = resetsOnFlatLeg ? flatIndex : spreadIndex;
                 Handle<YieldTermStructure> domesticDiscount = resetsOnFlatLeg ? flatDiscountCurve : spreadDiscountCurve;
-                bool invertFxQuote = (foreignIndex->currency().code() !=
-                                      fxSpotQuote->unitCcy()); // set to true if the spotFXQuote is DOM/FOR
+                Handle<Quote> finalFxSpotQuote = fxSpotQuote->quote();
+                // we might have to flip the given fx spot quote
+                if (foreignIndex->currency().code() != fxSpotQuote->unitCcy()) {
+                    finalFxSpotQuote = Handle<Quote>(
+                        boost::make_shared<DerivedQuote<divide<Real>>>(fxSpotQuote->quote(), divide<Real>(1.0)));
+                }
                 Period foreignTenor = resetsOnFlatLeg ? spreadTenor : flatTenor;
                 Period domesticTenor = resetsOnFlatLeg ? flatTenor : spreadTenor;
 
                 // Use foreign and dom discount curves for projecting FX forward rates (for e.g. resetting cashflows)
                 boost::shared_ptr<RateHelper> basisSwapHelper(new CrossCcyBasisMtMResetSwapHelper(
-                    basisSwapQuote->quote(), fxSpotQuote->quote(), basisSwapConvention->settlementDays(),
+                    basisSwapQuote->quote(), finalFxSpotQuote, basisSwapConvention->settlementDays(),
                     basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(),
                     foreignIndex, domesticIndex, foreignDiscount, domesticDiscount, Handle<YieldTermStructure>(),
-                    Handle<YieldTermStructure>(), basisSwapConvention->eom(), spreadOnForeignCcy, invertFxQuote,
-                    foreignTenor, domesticTenor));
+                    Handle<YieldTermStructure>(), basisSwapConvention->eom(), spreadOnForeignCcy, foreignTenor,
+                    domesticTenor));
                 instruments.push_back(basisSwapHelper);
             }
         }
