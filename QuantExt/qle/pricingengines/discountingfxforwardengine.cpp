@@ -95,10 +95,10 @@ void DiscountingFxForwardEngine::calculate() const {
 	// Align notional with ISDA AANA/GRID guidance as of November 2020 for deliverable forwards
         if (tmpNominal1 > tmpNominal2 * fxfwd) {
             results_.additionalResults["currentNotional"] = tmpNominal1;
-            results_.additionalResults["notionalCurrency"] = ccy1_;
+            results_.additionalResults["notionalCurrency"] = ccy1_.code();
         } else {
             results_.additionalResults["currentNotional"] = tmpNominal2;
-            results_.additionalResults["notionalCurrency"] = ccy2_;
+            results_.additionalResults["notionalCurrency"] = ccy2_.code();
         }
     }
     results_.npv = Money(ccy1_, results_.value);
