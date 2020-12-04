@@ -67,7 +67,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         else
             currencies[i] = parseCurrency(legData_[i].currency());
         if (currencies[i] != currency)
-            isXCCY = true;
+            isXCCY_ = true;
     }
 
     boost::shared_ptr<EngineBuilder> builder =
@@ -252,8 +252,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             notional_ = legData_[notionalTakenFromLeg_].notionals().at(0);
         }
         // parse for currrency in case leg is Equity, we only want the major currency for NPV and Notional
-        notionalCurrency_ = parseCurrencyWithMinors(legData_[notionalTakenFromLeg].currency()).code();
-        npvCurrency_ = parseCurrencyWithMinors(legData_[notionalTakenFromLeg].currency()).code();
+        notionalCurrency_ = parseCurrencyWithMinors(legData_[notionalTakenFromLeg_].currency()).code();
+        npvCurrency_ = parseCurrencyWithMinors(legData_[notionalTakenFromLeg_].currency()).code();
         DLOG("Notional is " << notional_ << " " << notionalCurrency_);
     }
 
