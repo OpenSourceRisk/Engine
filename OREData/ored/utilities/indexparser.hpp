@@ -87,17 +87,28 @@ boost::shared_ptr<IborIndex> parseIborIndex(
 bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index,
                        const boost::shared_ptr<Convention>& c = nullptr);
 
-//! Return true if the \p indexName is that of a generic index, otherwise false
+//! Return true if the \p indexName is that of a generic ibor index, otherwise false
 /*!
     \ingroup utilities
 */
-bool isGenericIndex(const string& indexName);
+bool isGenericIborIndex(const string& indexName);
 
 //! Return true if the \p indexName is that of an InflationIndex, otherwise false
 /*!
     \ingroup utilities
 */
 bool isInflationIndex(const std::string& indexName);
+
+//! Return true if the \p indexName is that of an EquityIndex, otherwise false
+/*!
+    \ingroup utilities
+*/
+bool isEquityIndex(const std::string& indexName);
+
+/*! Return true if the \p indexName is that of an GenericIndex, otherwise false
+    \ingroup utilities
+*/
+bool isGenericIndex(const std::string& indexName);
 
 //! Convert std::string (e.g SP5) to QuantExt::EquityIndex
 /*!
