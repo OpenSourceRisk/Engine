@@ -350,13 +350,32 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     QL_FAIL("parseIborIndex \"" << s << "\" not recognized");
 }
 
-bool isGenericIndex(const string& indexName) { return indexName.find("-GENERIC-") != string::npos; }
+bool isGenericIborIndex(const string& indexName) { return indexName.find("-GENERIC-") != string::npos; }
 
 bool isInflationIndex(const string& indexName) {
     try {
         // Currently, only way to have an inflation index is to have a ZeroInflationIndex
         parseZeroInflationIndex(indexName);
     } catch (...) {
+        return false;
+    }
+    return true;
+}
+
+bool isEquityIndex(const string& indexName) {
+    try {
+        parseEquityIndex(indexName);
+    } catch (...) {
+        return false;
+    }
+    return true;
+}
+
+bool isGenericIndex(const string& indexName) {
+    try {
+        parseGenericIndex(indexName);
+    }
+    catch (...) {
         return false;
     }
     return true;
