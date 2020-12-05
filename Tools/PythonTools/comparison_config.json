@@ -271,6 +271,74 @@
           }
         ]
       },
+      "saccr.csv": {
+        "keys": [
+          "NettingSet",
+          "AssetClass",
+          "HedgingSet"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "NPV",
+              "RC",
+              "AddOn",
+              "Multiplier",
+              "PFE",
+              "EAD",
+              "CC"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "saccrdetail.csv": {
+        "keys": [
+          "TradeId",
+          "TradeType",
+          "NettingSet",
+          "AssetClass",
+          "HedgingSet"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "NPV",
+              "NpvCcy",
+              "CurrentNotional",
+              "delta",
+              "d",
+              "MF",
+              "M",
+              "S",
+              "E",
+              "T",
+              "NumNominalFlows",
+              "Price",
+              "Strike"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "bacva.csv": {
+        "keys": [
+          "Counterparty",
+          "NettingSet",
+          "Analytic"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Value"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       ".*scenario.csv": {
         "keys": [
           "TradeId",
