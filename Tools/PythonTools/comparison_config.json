@@ -20,8 +20,8 @@
             "names": [
               "InitialMargin"
             ],
-            "abs_tol": 0.01,
-            "rel_tol": null
+            "abs_tol": null,
+            "rel_tol": 1e-12
           }
         ]
       },
@@ -43,62 +43,14 @@
             "Amount"
           ],
           "threshold": 0.0
-        }
-      },
-      "simm_par_sensitivity.csv": {
-        "keys": [
-          "TradeId",
-          "IsPar",
-          "Factor_1",
-          "ShiftSize_1",
-          "Factor_2",
-          "ShiftSize_2",
-          "Currency"
-        ],
+        },
         "column_settings": [
           {
             "names": [
-              "Base NPV",
-              "Delta"
+              "Amount"
             ],
-            "abs_tol": 0.01,
-            "rel_tol": null
-          }
-        ]
-      },
-      "scenario.csv": {
-        "keys": [
-          "TradeId",
-          "Factor",
-          "Up/Down"
-        ],
-        "column_settings": [
-          {
-            "names": [
-              "Base NPV",
-              "Scenario NPV",
-              "Difference"
-            ],
-            "abs_tol": 0.01,
-            "rel_tol": null
-          }
-        ]
-      },
-      "simm_scenario.csv": {
-        "keys": [
-          "TradeId",
-          "Factor",
-          "Up/Down"
-        ],
-        "column_settings": [
-          {
-            "names": [
-              "Base NPV",
-              "Scenario NPV",
-              "Difference"
-            ],
-            "abs_tol": 0.01,
-            "rel_tol": null
+            "abs_tol": null,
+            "rel_tol": 1e-12
           }
         ]
       },
@@ -118,8 +70,82 @@
               "Base NPV",
               "Delta"
             ],
-            "abs_tol": 0.01,
-            "rel_tol": null
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "cva_sensitivities.csv": {
+        "keys": [
+          "NettingSet",
+          "RiskFactor",
+          "ShiftType",
+          "Currency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "ShiftSize",
+              "BaseCva",
+              "Delta"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "cva_scenario.csv": {
+        "keys": [
+          "DatumId"
+        ],
+        "column_settings": [
+          {
+            "names": [],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "sensitivity.csv": {
+        "keys": [
+          "TradeId",
+          "IsPar",
+          "Factor_1",
+          "ShiftSize_1",
+          "Factor_2",
+          "ShiftSize_2",
+          "Currency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Base NPV",
+              "Delta",
+              "Gamma"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "simm_par_sensitivity.csv": {
+        "keys": [
+          "TradeId",
+          "IsPar",
+          "Factor_1",
+          "ShiftSize_1",
+          "Factor_2",
+          "ShiftSize_2",
+          "Currency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Base NPV",
+              "Delta"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
           }
         ]
       },
@@ -148,22 +174,122 @@
             "AmountUSD"
           ],
           "threshold": 0.0
-        }
+        },
+        "column_settings": [
+          {
+            "names": [
+              "Amount",
+              "AmountUSD"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
       },
-      "*curves*": {
+      "sa_cva_pricer.csv": {
         "keys": [
-          "Tenor",
-          "Date"
+          "RiskType",
+          "Bucket",
+          "Analytic"
         ],
         "column_settings": [
           {
-            "names": [],
-            "abs_tol": 0.0000000001,
+            "names": [
+              "Value"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "sa_cva_sensitivities.csv": {
+        "keys": [
+          "NettingSet",
+          "RiskType",
+          "CvaType",
+          "MarginType",
+          "RiskFactor",
+          "Bucket"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Value"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "sacvadetail.csv": {
+        "keys": [
+          "NettingSetId",
+          "RiskType",
+          "Bucket",
+          "MarginType",
+          "RiskFactor",
+          "CvaType"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Sensitivity"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "sacva.csv": {
+        "keys": [
+          "NettingSetId",
+          "RiskType",
+          "Bucket",
+          "Analytic"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Value"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "product_class_mapping.csv": {
+        "keys": [
+          "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "ProductClass"
+            ],
+            "abs_tol": null,
             "rel_tol": null
           }
         ]
       },
-      "*npv*": {
+      ".*scenario.csv": {
+        "keys": [
+          "TradeId",
+          "Factor",
+          "Up/Down"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Base NPV",
+              "Scenario NPV",
+              "Difference"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      ".*npv.*.csv": {
         "keys": [
           "TradeId"
         ],
@@ -173,12 +299,32 @@
               "NPV",
               "NPV(Base)"
             ],
-            "abs_tol": 0.01,
-            "rel_tol": null
+            "abs_tol": null,
+            "rel_tol": 1e-12
           }
         ]
       },
-      "*flows*": {
+      ".*additional_results.*.csv": {
+        "keys": [
+          "TradeId",
+          "ResultId",
+          "ResultType"
+        ]
+      },
+      ".*curves.*.csv": {
+        "keys": [
+          "Tenor",
+          "Date"
+        ],
+        "column_settings": [
+          {
+            "names": [],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      ".*(flows|cashflow).*.csv": {
         "keys": [
           "TradeId",
           "Type",
@@ -188,22 +334,18 @@
         "column_settings": [
           {
             "names": [
-              "Amount",
-              "PresentValue"
+              "Amount"
             ],
-            "abs_tol": 0.01,
-            "rel_tol": null
-          },
-          {
-            "names": [
+            "optional_names": [
+              "PresentValue",
               "DiscountFactor"
             ],
-            "abs_tol": 0.0000000001,
-            "rel_tol": null
+            "abs_tol": null,
+            "rel_tol": 1e-12
           }
         ]
       },
-      "*xva*": {
+      ".*xva.*.csv": {
         "keys": [
           "TradeId",
           "NettingSetId"
@@ -220,12 +362,12 @@
               "FBAexAllSP",
               "FCAexAllSP"
             ],
-            "abs_tol": 0.01,
-            "rel_tol": null
+            "abs_tol": null,
+            "rel_tol": 1e-12
           }
         ]
       },
-      "*colva*": {
+      ".*colva.*.csv": {
         "keys": [
           "NettingSet",
           "Date"
@@ -235,12 +377,12 @@
             "names": [
               "COLVA"
             ],
-            "abs_tol": 0.01,
-            "rel_tol": null
+            "abs_tol": null,
+            "rel_tol": 1e-12
           }
         ]
       },
-      "*exposure_nettingset*": {
+      ".*exposure_nettingset.*.csv": {
         "keys": [
           "NettingSet",
           "Date"
@@ -255,12 +397,12 @@
               "BaselEE",
               "BaselEEE"
             ],
-            "abs_tol": 0.01,
-            "rel_tol": null
+            "abs_tol": null,
+            "rel_tol": 1e-12
           }
         ]
       },
-      "*exposure_trade*": {
+      ".*exposure_trade.*.csv": {
         "keys": [
           "TradeId",
           "Date"
@@ -276,12 +418,12 @@
               "BaselEE",
               "BaselEEE"
             ],
-            "abs_tol": 0.01,
-            "rel_tol": null
+            "abs_tol": null,
+            "rel_tol": 1e-12
           }
         ]
       },
-      "*rawcube*": {
+      ".*rawcube.*.csv": {
         "keys": [
           "Id",
           "NettingSet",
@@ -295,34 +437,12 @@
             "names": [
               "Value"
             ],
-            "abs_tol": 0.01,
-            "rel_tol": null
+            "abs_tol": null,
+            "rel_tol": 1e-12
           }
         ]
       },
-      "sensitivity.csv": {
-        "keys": [
-          "TradeId",
-          "IsPar",
-          "Factor_1",
-          "ShiftSize_1",
-          "Factor_2",
-          "ShiftSize_2",
-          "Currency"
-        ],
-        "column_settings": [
-          {
-            "names": [
-              "Base NPV",
-              "Delta",
-              "Gamma"
-            ],
-            "abs_tol": 0.01,
-            "rel_tol": null
-          }
-        ]
-      },
-      "*netcube*": {
+      ".*netcube.*.csv": {
         "keys": [
           "Id",
           "NettingSet",
@@ -336,12 +456,12 @@
             "names": [
               "Value"
             ],
-            "abs_tol": 0.01,
-            "rel_tol": null
+            "abs_tol": null,
+            "rel_tol": 1e-12
           }
         ]
       },
-      "dim_evolution*": {
+      "dim_evolution.*.(txt|csv)": {
         "keys": [
             "TimeStep",
             "NettingSet"
@@ -354,12 +474,12 @@
               "AverageFLOW",
               "SimpleDIM"
             ],
-            "abs_tol": 0.01,
-            "rel_tol": null
+            "abs_tol": null,
+            "rel_tol": 1e-12
           }
         ]
       },
-      "dim_regression*": {
+      "dim_regression.*.(txt|csv)": {
         "keys": [
             "Sample"
         ],
@@ -373,8 +493,8 @@
               "DeltaNPV",
               "SimpleDIM"
             ],
-            "abs_tol": 0.01,
-            "rel_tol": null
+            "abs_tol": null,
+            "rel_tol": 1e-12
           }
         ]
       }
