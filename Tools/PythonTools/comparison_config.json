@@ -194,8 +194,8 @@
             "names": [
               "Value"
             ],
-            "abs_tol": null,
-            "rel_tol": 1e-12
+            "abs_tol": 0.01,
+            "rel_tol": null
           }
         ]
       },
@@ -213,8 +213,8 @@
             "names": [
               "Sensitivity"
             ],
-            "abs_tol": null,
-            "rel_tol": 1e-12
+            "abs_tol": 0.01,
+            "rel_tol": null
           }
         ]
       },
@@ -230,8 +230,8 @@
             "names": [
               "Value"
             ],
-            "abs_tol": null,
-            "rel_tol": 1e-12
+            "abs_tol": 0.01,
+            "rel_tol": null
           }
         ]
       },
