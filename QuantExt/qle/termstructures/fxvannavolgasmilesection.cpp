@@ -40,7 +40,10 @@ VannaVolgaSmileSection::VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time
                                sqrt(t) * atmVol);
         k_atm_ = a.atmStrike(atmType);
     } catch (const std::exception& e) {
-        QL_FAIL("VannaVolgaSmileSection: Error during calculating atm strike: " << e.what());
+        QL_FAIL("VannaVolgaSmileSection: Error during calculating atm strike: "
+                << e.what() << " (t=" << t << ", atmVol=" << atmVol << ", bf=" << bf_ << ", rr=" << rr << ", vol_c="
+                << vol_c_ << ", vol_p=" << vol_p_ << ", atmType=" << atmType << ", deltaType=" << deltaType
+                << ", spot=" << spot << ", domDsc=" << domesticDiscount() << ", forDsc=" << foreignDiscount() << ")");
     }
 
     try {
@@ -48,7 +51,10 @@ VannaVolgaSmileSection::VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time
                                sqrt(t) * vol_c_);
         k_c_ = c.strikeFromDelta(delta);
     } catch (const std::exception& e) {
-        QL_FAIL("VannaVolgaSmileSection: Error during calculating call strike at delta " << delta << ": " << e.what());
+        QL_FAIL("VannaVolgaSmileSection: Error during calculating call strike at delta "
+                << delta << ": " << e.what() << " (t=" << t << ", atmVol=" << atmVol << ", bf=" << bf_ << ", rr=" << rr
+                << ", vol_c=" << vol_c_ << ", vol_p=" << vol_p_ << ", deltaType=" << deltaType << ", spot=" << spot
+                << ", domDsc=" << domesticDiscount() << ", forDsc=" << foreignDiscount() << ")");
     }
 
     try {
@@ -56,9 +62,11 @@ VannaVolgaSmileSection::VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time
                                sqrt(t) * vol_p_);
         k_p_ = p.strikeFromDelta(-delta);
     } catch (const std::exception& e) {
-        QL_FAIL("VannaVolgaSmileSection: Error during calculating put strike at delta " << delta << ": " << e.what());
+        QL_FAIL("VannaVolgaSmileSection: Error during calculating put strike at delta "
+                << delta << ": " << e.what() << " (t=" << t << ", atmVol=" << atmVol << ", bf=" << bf_ << ", rr=" << rr
+                << ", vol_c=" << vol_c_ << ", vol_p=" << vol_p_ << ", deltaType=" << deltaType << ", spot=" << spot
+                << ", domDsc=" << domesticDiscount() << ", forDsc=" << foreignDiscount() << ")");
     }
-
 }
 
 Real VannaVolgaSmileSection::d1(Real x) const {

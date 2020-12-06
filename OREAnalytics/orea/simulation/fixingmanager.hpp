@@ -22,11 +22,13 @@
  */
 #pragma once
 
+#include <ored/marketdata/market.hpp>
 #include <ored/portfolio/portfolio.hpp>
 
 namespace ore {
 namespace analytics {
 using namespace QuantLib;
+using ore::data::Market;
 using ore::data::Portfolio;
 
 //! Pseudo Fixings Manager
@@ -50,7 +52,8 @@ public:
     virtual ~FixingManager() {}
 
     //! Initialise the manager with these flows and indices from the given portfolio
-    void initialise(const boost::shared_ptr<Portfolio>& portfolio);
+    void initialise(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<Market>& market,
+                    const std::string& configuration = Market::defaultConfiguration);
 
     virtual void processCashFlows(const boost::shared_ptr<QuantLib::CashFlow> cf);
 
