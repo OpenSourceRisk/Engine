@@ -589,8 +589,8 @@
               "AverageFLOW",
               "SimpleDIM"
             ],
-            "abs_tol": null,
-            "rel_tol": 1e-12
+            "abs_tol": 0.01,
+            "rel_tol": null
           }
         ]
       },
