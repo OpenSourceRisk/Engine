@@ -663,6 +663,7 @@
       <xs:element type="currencyCode" name="SoldCurrency"/>
       <xs:element type="xs:float" name="SoldAmount"/>
       <xs:element type="settlementType" name="Settlement" minOccurs="0"/>
+      <xs:element type="fxForwardPaymentData" name="PaymentData" maxOccurs="1" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -689,6 +690,21 @@
       <xs:element type="xs:float" name="SoldAmount"/>
       <xs:element type="xs:string" name="FXIndex" minOccurs="0"/>
     </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="fxForwardPaymentData">
+    <xs:choice>
+      <xs:element type="date" name="Date" maxOccurs="1" minOccurs="0"/>
+      <xs:element name="Rules">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:nonNegativeInteger" name="Lag" maxOccurs="1" minOccurs="0"/>
+            <xs:element type="calendar" name="Calendar" maxOccurs="1" minOccurs="0"/>
+            <xs:element type="businessDayConvention" name="Convention" maxOccurs="1" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
   </xs:complexType>
 
   <xs:complexType name="capFloorData">
