@@ -134,7 +134,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     LOG("Total number of swaps = " << portfolio->size());
     LOG("Total number of FRC = " << numFRC);
 
-    simMarket_->fixingManager()->initialise(portfolio);
+    simMarket_->fixingManager()->initialise(portfolio, simMarket_);
 
     cpu_timer timer;
     cpu_timer loopTimer;

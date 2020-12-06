@@ -244,7 +244,8 @@ std::map<std::string, std::set<Date>> RequiredFixings::fixingDatesIndices(const 
 
 void RequiredFixings::addFixingDate(const QuantLib::Date& fixingDate, const std::string& indexName,
                                     const QuantLib::Date& payDate, const bool alwaysAddIfPaysOnSettlement) {
-    fixingDates_.insert(std::make_tuple(indexName, fixingDate, payDate, alwaysAddIfPaysOnSettlement));
+    fixingDates_.insert(
+        std::make_tuple(indexName, fixingDate, payDate, payDate == Date::maxDate() || alwaysAddIfPaysOnSettlement));
 }
 
 void RequiredFixings::addFixingDates(const std::vector<QuantLib::Date>& fixingDates, const std::string& indexName,
