@@ -232,7 +232,7 @@ def compare_files_df(name, file_1, file_2, config):
                         continue
 
             if not names:
-                logger.warning('No column names provided. Use joint columns from both files except keys')
+                logger.debug('No column names provided. Use joint columns from both files except keys')
                 names = [s for s in list(set(list(df_1.columns) + list(df_2.columns))) if s not in keys]
 
             logger.info('Performing comparison of files for column names: %s.', str(names))
