@@ -289,9 +289,9 @@ def compare_files_df(name, file_1, file_2, config):
             if comp.matches():
                 logger.debug('The columns, %s, in the files match.', str(names))
             else:
-                logger.debug('The columns, %s, in the files do not match.', str(names))
+                logger.warning('The columns, %s, in the files do not match.', str(names))
                 is_match = False
-                logger.info(comp.report())
+                logger.warning(comp.report())
 
     # Get the remaining columns that have not been compared.
     rem_cols_1 = [col for col in df_1.columns if col not in cols_compared]
@@ -306,9 +306,9 @@ def compare_files_df(name, file_1, file_2, config):
     if comp.all_columns_match() and comp.matches():
         logger.debug('The remaining columns in the files match.', )
     else:
-        logger.info('The remaining columns in the files do not match:')
+        logger.warning('The remaining columns in the files do not match:')
         is_match = False
-        logger.info(comp.report())
+        logger.warning(comp.report())
 
     logger.debug('%s: Finished comparing file %s against %s using configuration: %s.', name, file_1, file_2, is_match)
 
