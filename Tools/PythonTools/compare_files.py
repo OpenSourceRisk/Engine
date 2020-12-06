@@ -211,7 +211,7 @@ def compare_files_df(name, file_1, file_2, config):
 
         for col_group_config in config['column_settings']:
 
-            names = col_group_config['names']
+            names = col_group_config['names'].copy()
 
             # If there are optional names, add them to compare if they are in both dataframes. If in one but not
             # another, mark the match as false.
