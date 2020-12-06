@@ -323,7 +323,11 @@ def compare_files_direct(name, file_1, file_2):
     logger.debug('%s: Comparing file %s directly against %s', name, file_1, file_2)
 
     with open(file_1, 'r') as f1, open(file_2, 'r') as f2:
-        diff = difflib.unified_diff(f1.readlines(), f2.readlines(), fromfile=file_1, tofile=file_2)
+        s1 = f1.readlines()
+        s2 = f2.readlines()
+        s1.sort() 
+        s2.sort()
+        diff = difflib.unified_diff(s1, s2, fromfile=file_1, tofile=file_2)
         match = True
         for line in diff:
             match = False
