@@ -106,28 +106,6 @@
           }
         ]
       },
-      "sensitivity.csv": {
-        "keys": [
-          "TradeId",
-          "IsPar",
-          "Factor_1",
-          "ShiftSize_1",
-          "Factor_2",
-          "ShiftSize_2",
-          "Currency"
-        ],
-        "column_settings": [
-          {
-            "names": [
-              "Base NPV",
-              "Delta",
-              "Gamma"
-            ],
-            "abs_tol": null,
-            "rel_tol": 1e-12
-          }
-        ]
-      },
       "simm_par_sensitivity.csv": {
         "keys": [
           "TradeId",
@@ -339,7 +317,38 @@
           }
         ]
       },
-      ".*scenario.csv": {
+      "stresstest.csv": {
+        "keys": [
+          "TradeId",
+          "ScenarioLabel"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Base NPV",
+              "Scenario NPV",
+              "Sensitivity"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "var.csv": {
+        "keys": [
+          "Portfolio",
+          "RiskClass",
+          "RiskType"
+        ],
+        "column_settings": [
+          {
+            "names": [],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      ".*scenario.*.csv": {
         "keys": [
           "TradeId",
           "Factor",
@@ -351,6 +360,44 @@
               "Base NPV",
               "Scenario NPV",
               "Difference"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "cva_sensitivity_nettingset_.*.csv": {
+        "keys": [
+          "NettingSet"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Time",
+              "CvaHazardRateSensitivity",
+              "CvaSpreadSensitivity"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      ".*sensitivity.*.csv": {
+        "keys": [
+          "TradeId",
+          "IsPar",
+          "Factor_1",
+          "ShiftSize_1",
+          "Factor_2",
+          "ShiftSize_2",
+          "Currency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Base NPV",
+              "Delta",
+              "Gamma"
             ],
             "abs_tol": null,
             "rel_tol": 1e-12
