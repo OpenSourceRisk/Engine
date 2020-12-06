@@ -36,6 +36,17 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency boughtCcy = parseCurrency(boughtCurrency_);
     Currency soldCcy = parseCurrency(soldCurrency_);
     Date maturityDate = parseDate(maturityDate_);
+    
+	// Derive pay date from payment data parameters
+    Date payDate; 
+    if (payDate_.empty())
+        payDate = payCalendar_.advance(maturityDate, payLag_, payConvention_);
+    else {
+        payDate = parseDate(payDate_);
+        QL_REQUIRE(payDate >= maturityDate,
+			       "FX Forward settlement date should equal or exceed the maturity date.");
+	}
+    
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxForward");
 
@@ -43,7 +54,8 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         DLOG("Build FxForward with maturity date " << QuantLib::io::iso_date(maturityDate));
 
         boost::shared_ptr<QuantLib::Instrument> instrument = boost::make_shared<QuantExt::FxForward>(
-            boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false, settlement_ == "Physical");
+            boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false, settlement_ == "Physical",
+			payDate);
         instrument_.reset(new VanillaInstrument(instrument));
 
         npvCurrency_ = soldCurrency_;
@@ -57,8 +69,8 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     // Set up Legs
-    legs_ = {{boost::make_shared<SimpleCashFlow>(boughtAmount_, maturityDate)},
-             {boost::make_shared<SimpleCashFlow>(soldAmount_, maturityDate)}};
+    legs_ = {{boost::make_shared<SimpleCashFlow>(boughtAmount_, payDate)},
+             {boost::make_shared<SimpleCashFlow>(soldAmount_, payDate)}};
     legCurrencies_ = {boughtCurrency_, soldCurrency_};
     legPayers_ = {false, true};
 
@@ -85,6 +97,24 @@ void FxForward::fromXML(XMLNode* node) {
     settlement_ = XMLUtils::getChildValue(fxNode, "Settlement", false);
     if (settlement_ == "")
         settlement_ = "Physical";
+
+    XMLNode* paymentData = XMLUtils::getChildNode(fxNode, "PaymentData");
+    payDate_ = XMLUtils::getChildValue(paymentData, "Date", false);
+
+	if (payDate_.empty()) {
+        XMLNode* rules = XMLUtils::getChildNode(paymentData, "Rules");
+        payLag_ = XMLUtils::getChildValueAsPeriod(rules, "Lag", false);
+
+        string payCalendar = XMLUtils::getChildValue(rules, "Calendar", false);
+        payCalendar_ = payCalendar.empty()
+			         ? NullCalendar()
+			         : parseCalendar(payCalendar);
+
+        string payConvention = XMLUtils::getChildValue(rules, "Convention", false);
+        payConvention_ = payConvention.empty()
+			           ? Unadjusted
+			           : parseBusinessDayConvention(payConvention);
+	}
 }
 
 XMLNode* FxForward::toXML(XMLDocument& doc) {
@@ -97,6 +127,19 @@ XMLNode* FxForward::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, fxNode, "SoldCurrency", soldCurrency_);
     XMLUtils::addChild(doc, fxNode, "SoldAmount", soldAmount_);
     XMLUtils::addChild(doc, fxNode, "Settlement", settlement_);
+    
+	XMLNode* paymentDataNode = doc.allocNode("PaymentData");
+    XMLUtils::appendNode(fxNode, paymentDataNode);
+    if (!payDate_.empty())
+        XMLUtils::addChild(doc, paymentDataNode, "Date", payDate_);
+    else {
+        XMLNode* rules = doc.allocNode("Rules");
+        XMLUtils::addChild(doc, rules, "Lag", payLag_);
+        XMLUtils::addChild(doc, rules, "Calendar", payCalendar_.name());
+        XMLUtils::addChild(doc, rules, "Convention", payConvention_);
+		XMLUtils::appendNode(paymentDataNode, rules);
+	}
+
     return node;
 }
 } // namespace data

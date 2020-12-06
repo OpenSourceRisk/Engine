@@ -38,9 +38,12 @@ public:
     FxForward() : Trade("FxForward"), boughtAmount_(0.0), soldAmount_(0.0) {}
     //! Constructor
     FxForward(Envelope& env, const string& maturityDate, const string& boughtCurrency, double boughtAmount,
-              const string& soldCurrency, double soldAmount, const string& settlement = "Physical")
+              const string& soldCurrency, double soldAmount, const string& settlement = "Physical",
+              const string& payDate = "", Period& payLag = 0 * Days, Calendar& payCalendar = NullCalendar(),
+		      BusinessDayConvention payConvention = Unadjusted)
         : Trade("FxForward", env), maturityDate_(maturityDate), boughtCurrency_(boughtCurrency),
-          boughtAmount_(boughtAmount), soldCurrency_(soldCurrency), soldAmount_(soldAmount), settlement_(settlement) {}
+          boughtAmount_(boughtAmount), soldCurrency_(soldCurrency), soldAmount_(soldAmount), settlement_(settlement),
+          payDate_(payDate), payLag_(payLag), payCalendar_(payCalendar), payConvention_(payConvention) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
@@ -54,6 +57,10 @@ public:
     double soldAmount() const { return soldAmount_; }
     //! Settlement Type can be set to "Cash" for NDF. Default value is "Physical"
     const string& settlement() const { return settlement_; }
+    const string& paymentDate() const { return payDate_; }
+    const Period& paymentLag() const { return payLag_; }
+    const Calendar& paymentCalendar() const { return payCalendar_; }
+    const BusinessDayConvention& paymentConvention() const { return payConvention_; }
     //@}
 
     //! \name Serialisation
@@ -69,6 +76,10 @@ private:
     string soldCurrency_;
     double soldAmount_;
     string settlement_;
+    string payDate_;
+    Period payLag_;
+    Calendar payCalendar_;
+    BusinessDayConvention payConvention_;
 };
 } // namespace data
 } // namespace ore

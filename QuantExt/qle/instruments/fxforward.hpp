@@ -59,7 +59,8 @@ public:
                if true fx forward is physically settled
     */
     FxForward(const Real& nominal1, const Currency& currency1, const Real& nominal2, const Currency& currency2,
-              const Date& maturityDate, const bool& payCurrency1, const bool isPhysicallySettled = true);
+              const Date& maturityDate, const bool& payCurrency1, const bool isPhysicallySettled = true,
+		      const Date& payDate = Date());
 
     /*! \param nominal1
                FX forward nominal amount (domestic currency)
@@ -73,7 +74,7 @@ public:
                if true fx forward is physically settled
     */
     FxForward(const Money& nominal1, const ExchangeRate& forwardRate, const Date& forwardDate, bool sellingNominal,
-              const bool isPhysicallySettled = true);
+              const bool isPhysicallySettled = true, const Date& payDate = Date());
 
     /*! \param nominal1
                FX forward nominal amount 1 (domestic currency)
@@ -90,7 +91,8 @@ public:
                if true fx forward is physically settled
     */
     FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote, const Currency& currency2,
-              const Date& maturityDate, bool sellingNominal, const bool isPhysicallySettled = true);
+              const Date& maturityDate, bool sellingNominal, const bool isPhysicallySettled = true,
+              const Date& payDate = Date());
     //@}
 
     //! \name Results
@@ -121,6 +123,7 @@ public:
     Currency currency1() const { return currency1_; }
     Currency currency2() const { return currency2_; }
     Date maturityDate() const { return maturityDate_; }
+    Date payDate() const { return payDate_; }
     bool payCurrency1() const { return payCurrency1_; }
     //@}
 
@@ -135,6 +138,7 @@ private:
     Real nominal2_;
     Currency currency2_;
     Date maturityDate_;
+    Date payDate_;
     bool payCurrency1_;
     bool isPhysicallySettled_;
 
@@ -151,6 +155,7 @@ public:
     Real nominal2;
     Currency currency2;
     Date maturityDate;
+    Date payDate;
     bool payCurrency1;
     bool isPhysicallySettled;
     void validate() const;
