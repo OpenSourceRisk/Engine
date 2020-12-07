@@ -5,11 +5,11 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/equityfuturesoption.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/utilities/to_string.hpp>
-#include <ored/portfolio/equityfuturesoption.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
 using namespace QuantLib;
@@ -17,10 +17,13 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-EquityFutureOption::EquityFutureOption(Envelope& env, OptionData option, const string& currency, Real quantity, 
-        const boost::shared_ptr<ore::data::Underlying>& underlying, Real strike, QuantLib::Date forwardDate,
-        const boost::shared_ptr<QuantLib::Index>& index, const std::string& indexName)
-    : VanillaOptionTrade(env, AssetClass::EQ, option, underlying->name(), currency, strike, quantity, index, indexName, forwardDate), underlying_(underlying) {
+EquityFutureOption::EquityFutureOption(Envelope& env, OptionData option, const string& currency, Real quantity,
+                                       const boost::shared_ptr<ore::data::Underlying>& underlying, Real strike,
+                                       QuantLib::Date forwardDate, const boost::shared_ptr<QuantLib::Index>& index,
+                                       const std::string& indexName)
+    : VanillaOptionTrade(env, AssetClass::EQ, option, underlying->name(), currency, strike, quantity, index, indexName,
+                         forwardDate),
+      underlying_(underlying) {
     tradeType_ = "EquityFutureOption";
 }
 
@@ -34,12 +37,11 @@ void EquityFutureOption::build(const boost::shared_ptr<EngineFactory>& engineFac
     // index_ = boost::make_shared<EquityFuturesIndex>(underlying_->name(), forwardDate, NullCalendar(), priceCurve);
 
     // FIXME: we set the automatic exercise to false until the Equity Futures Index is implemented
-   
+
     QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
     QL_REQUIRE(exerciseType == Exercise::European, "only european option currently supported");
     option_.setAutomaticExercise(false);
     VanillaOptionTrade::build(engineFactory);
-
 }
 
 void EquityFutureOption::fromXML(XMLNode* node) {
@@ -67,19 +69,20 @@ XMLNode* EquityFutureOption::toXML(XMLDocument& doc) {
     XMLNode* eqNode = doc.allocNode("EquityFutureOptionData");
     XMLUtils::appendNode(node, eqNode);
     XMLUtils::appendNode(eqNode, option_.toXML(doc));
-    
+
     XMLUtils::addChild(doc, eqNode, "Currency", currency_);
     XMLUtils::addChild(doc, eqNode, "Quantity", quantity_);
-    
+
     XMLUtils::appendNode(eqNode, underlying_->toXML(doc));
-    
+
     XMLUtils::addChild(doc, eqNode, "Strike", strike_);
     XMLUtils::addChild(doc, eqNode, "FutureExpiryDate", to_string(forwardDate_));
 
     return node;
 }
 
-std::map<AssetClass, std::set<std::string>> EquityFutureOption::underlyingIndices() const {
+std::map<AssetClass, std::set<std::string>>
+EquityFutureOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::EQ, std::set<std::string>({name()})}};
 }
 

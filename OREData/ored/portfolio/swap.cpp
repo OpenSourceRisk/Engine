@@ -293,7 +293,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 }
 
-map<AssetClass, set<string>> Swap::underlyingIndices() const {
+map<AssetClass, set<string>>
+Swap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
 
     map<AssetClass, set<string>> result;
     for (const auto& ld : legData_) {

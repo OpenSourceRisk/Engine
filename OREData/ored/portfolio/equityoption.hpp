@@ -51,7 +51,8 @@ public:
     void build(const boost::shared_ptr<EngineFactory>&) override;
 
     //! Add underlying Equity names
-    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! set the strike & ccy, might need minor to major currency conversion
     void setCcyStrike();

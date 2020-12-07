@@ -48,8 +48,9 @@ public:
     //@}
 
     //! Add underlying Equity names
-    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
-    
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
 private:
     boost::shared_ptr<ore::data::Underlying> underlying_;    
         
