@@ -23,6 +23,7 @@
 #include <ored/utilities/parsers.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
@@ -45,7 +46,8 @@ namespace analytics {
 
 //! Initialise the manager-
 
-void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
+void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<Market>& market,
+                               const std::string& configuration) {
 
     // loop over all cashflows, populate index map
 
@@ -54,7 +56,16 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
             for (auto cf : leg) {
                 processCashFlows(cf);
             }
-            // processLegs(leg);
+        }
+        // some trades require fixings, but don't have legs - actually we might switch to the
+        // logic here for all trade types eventually, see ore ticket 1157
+        if (trade->tradeType() == "ForwardRateAgreement") {
+            for (auto const& m : trade->fixings(QuantLib::Date::maxDate())) {
+                auto index = market->iborIndex(m.first, configuration);
+                for (auto const& d : m.second) {
+                    fixingMap_[*index].insert(d);
+                }
+            }
         }
     }
 
@@ -160,6 +171,15 @@ void FixingManager::processCashFlows(const boost::shared_ptr<QuantLib::CashFlow>
     if (cpcf) {
         fixingMap_[cpcf->index()].insert(cpcf->fixingDate());
         return;
+    }
+
+    boost::shared_ptr<EquityCoupon> ec = boost::dynamic_pointer_cast<EquityCoupon>(cf);
+    if (ec) {
+        for (auto const& f : ec->fixingDates())
+            fixingMap_[ec->equityCurve()].insert(f);
+        if (ec->fxIndex() != nullptr) {
+            fixingMap_[ec->fxIndex()].insert(ec->fixingStartDate());
+        }
     }
 }
 
