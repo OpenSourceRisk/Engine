@@ -94,6 +94,11 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
     results.couponLegNPV = 0.0;
     results.defaultLegNPV = 0.0;
 
+    std::vector<Date> protectionPaymentDates;
+    std::vector<Real> midpointDiscounts;
+    std::vector<Real> expectedLosses;
+    std::vector<Real> defaultProbabilities;
+
     for (Size i = 0; i < arguments.leg.size(); ++i) {
         if (arguments.leg[i]->hasOccurred(settlementDate, includeSettlementDateFlows_))
             continue;
@@ -136,9 +141,21 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
         }
 
         //         on the other side, we add the payment in case of default.
-        results.defaultLegNPV += expectedLoss(defaultDate, effectiveStartDate, endDate, coupon->nominal()) *
-                                 discountCurve_->discount(protectionPaymentDate);
+        Real midpointDiscount = discountCurve_->discount(protectionPaymentDate);
+        Real expectLoss = expectedLoss(defaultDate, effectiveStartDate, endDate, coupon->nominal());
+        results.defaultLegNPV += expectLoss *
+                                 midpointDiscount;
+
+        protectionPaymentDates.push_back(protectionPaymentDate);
+        midpointDiscounts.push_back(midpointDiscount);
+        expectedLosses.push_back(expectLoss);
+        defaultProbabilities.push_back(P);
     }
+
+    results.additionalResults["protectionPaymentDates"] = protectionPaymentDates;
+    results.additionalResults["midpointDiscounts"] = midpointDiscounts;
+    results.additionalResults["expectedLosses"] = expectedLosses;
+    results.additionalResults["defaultProbabilities"] = defaultProbabilities;
 
     Real upfrontSign = 1.0;
     switch (arguments.side) {
