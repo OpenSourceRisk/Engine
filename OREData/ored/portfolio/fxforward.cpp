@@ -36,17 +36,16 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency boughtCcy = parseCurrency(boughtCurrency_);
     Currency soldCcy = parseCurrency(soldCurrency_);
     Date maturityDate = parseDate(maturityDate_);
-    
-	// Derive pay date from payment data parameters
-    Date payDate; 
-    if (payDate_.empty())
+
+    // Derive pay date from payment data parameters
+    Date payDate;
+    if (payDate_.empty()) {
+        LOG("Attempting paydate advance");
         payDate = payCalendar_.advance(maturityDate, payLag_, payConvention_);
-    else {
+    } else {
         payDate = parseDate(payDate_);
-        QL_REQUIRE(payDate >= maturityDate,
-			       "FX Forward settlement date should equal or exceed the maturity date.");
-	}
-    
+        QL_REQUIRE(payDate >= maturityDate, "FX Forward settlement date should equal or exceed the maturity date.");
+    }
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxForward");
 
@@ -54,8 +53,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         DLOG("Build FxForward with maturity date " << QuantLib::io::iso_date(maturityDate));
 
         boost::shared_ptr<QuantLib::Instrument> instrument = boost::make_shared<QuantExt::FxForward>(
-            boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false, settlement_ == "Physical",
-			payDate);
+            boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false, settlement_ == "Physical", payDate);
         instrument_.reset(new VanillaInstrument(instrument));
 
         npvCurrency_ = soldCurrency_;
@@ -77,7 +75,8 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // set Pricing engine
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<FxForwardEngineBuilderBase> fxBuilder = boost::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
+    boost::shared_ptr<FxForwardEngineBuilderBase> fxBuilder =
+        boost::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
 
     instrument_->qlInstrument()->setPricingEngine(fxBuilder->engine(boughtCcy, soldCcy));
 
@@ -99,21 +98,24 @@ void FxForward::fromXML(XMLNode* node) {
         settlement_ = "Physical";
 
     XMLNode* paymentData = XMLUtils::getChildNode(fxNode, "PaymentData");
-    payDate_ = XMLUtils::getChildValue(paymentData, "Date", false);
+    if (paymentData) {
+        payDate_ = XMLUtils::getChildValue(paymentData, "Date", false);
 
-	if (payDate_.empty()) {
-        XMLNode* rules = XMLUtils::getChildNode(paymentData, "Rules");
-        payLag_ = XMLUtils::getChildValueAsPeriod(rules, "Lag", false);
+        if (payDate_.empty()) {
+            XMLNode* rulesNode = XMLUtils::getChildNode(paymentData, "Rules");
 
-        string payCalendar = XMLUtils::getChildValue(rules, "Calendar", false);
-        payCalendar_ = payCalendar.empty()
-			         ? NullCalendar()
-			         : parseCalendar(payCalendar);
+			if (rulesNode) {
+                payLag_ = XMLUtils::getChildValueAsPeriod(rulesNode, "Lag", false);
 
-        string payConvention = XMLUtils::getChildValue(rules, "Convention", false);
-        payConvention_ = payConvention.empty()
-			           ? Unadjusted
-			           : parseBusinessDayConvention(payConvention);
+                string payCalendar = XMLUtils::getChildValue(rulesNode, "Calendar", false);
+                payCalendar_ = parseCalendar(payCalendar);
+
+                string payConvention = XMLUtils::getChildValue(rulesNode, "Convention", false);
+                payConvention_ = payConvention.empty() ? Unadjusted : parseBusinessDayConvention(payConvention);
+			}
+        }
+    } else {
+        payDate_ = maturityDate_;
 	}
 }
 
@@ -128,16 +130,25 @@ XMLNode* FxForward::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, fxNode, "SoldAmount", soldAmount_);
     XMLUtils::addChild(doc, fxNode, "Settlement", settlement_);
     
-	XMLNode* paymentDataNode = doc.allocNode("PaymentData");
-    XMLUtils::appendNode(fxNode, paymentDataNode);
-    if (!payDate_.empty())
-        XMLUtils::addChild(doc, paymentDataNode, "Date", payDate_);
-    else {
-        XMLNode* rules = doc.allocNode("Rules");
-        XMLUtils::addChild(doc, rules, "Lag", payLag_);
-        XMLUtils::addChild(doc, rules, "Calendar", payCalendar_.name());
-        XMLUtils::addChild(doc, rules, "Convention", payConvention_);
-		XMLUtils::appendNode(paymentDataNode, rules);
+	// Only fill in PaymentData node if payDate_ is not equal to maturityDate_
+	if (payDate_ != maturityDate_) {
+        XMLNode* paymentDataNode = doc.allocNode("PaymentData");
+
+		if (payLag_ != 0 * Days || payCalendar_ != NullCalendar() || payConvention_ != Unadjusted) {
+            XMLNode* rulesNode = doc.allocNode("Rules");
+            XMLUtils::appendNode(paymentDataNode, rulesNode);
+
+			if (payLag_ != 0 * Days)
+                XMLUtils::addChild(doc, rulesNode, "Lag", payLag_);
+            if (payCalendar_ != NullCalendar())
+                XMLUtils::addChild(doc, rulesNode, "Calendar", payCalendar_.name());
+            if (payConvention_ != Unadjusted)
+                XMLUtils::addChild(doc, rulesNode, "Convention", payConvention_);
+		} else {
+            XMLUtils::addChild(doc, paymentDataNode, "Date", payDate_);
+		}
+
+		XMLUtils::appendNode(fxNode, paymentDataNode);
 	}
 
     return node;
