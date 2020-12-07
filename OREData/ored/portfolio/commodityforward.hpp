@@ -56,6 +56,7 @@ public:
     //! \name Trade interface
     //@{
     void build(const boost::shared_ptr<EngineFactory>&) override;
+    QuantLib::Real notional() const override;
 
     //! Add underlying Commodity names
     std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;

@@ -47,8 +47,8 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         instrument_.reset(new VanillaInstrument(instrument));
 
         npvCurrency_ = soldCurrency_;
-        notional_ = soldAmount_;
-        notionalCurrency_ = soldCurrency_;
+        notional_ = Null<Real>(); //soldAmount_;
+        notionalCurrency_ = ""; //soldCurrency_;
         maturity_ = maturityDate;
 
     } catch (std::exception&) {
@@ -71,6 +71,30 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("FxForward leg 0: " << legs_[0][0]->date() << " " << legs_[0][0]->amount());
     DLOG("FxForward leg 1: " << legs_[1][0]->date() << " " << legs_[1][0]->amount());
+}
+
+QuantLib::Real FxForward::notional() const {
+    // try to get the notional from the additional results of the instrument
+    try {
+        return instrument_->qlInstrument()->result<Real>("currentNotional");
+    } catch (const std::exception& e) {
+        if (strcmp(e.what(), "currentNotional not provided"))
+	    ALOG("error when retrieving notional: " << e.what());
+    }
+    // if not provided, return null
+    return Null<Real>();
+}
+
+std::string FxForward::notionalCurrency() const {
+    // try to get the notional ccy from the additional results of the instrument
+    try {
+        return instrument_->qlInstrument()->result<std::string>("notionalCurrency");
+    } catch (const std::exception& e) {
+        if (strcmp(e.what(), "notionalCurrency not provided"))
+            ALOG("error when retrieving notional ccy: " << e.what());
+    }
+    // if not provided, return an empty string
+    return "";
 }
 
 void FxForward::fromXML(XMLNode* node) {

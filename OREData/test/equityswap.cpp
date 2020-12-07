@@ -69,6 +69,7 @@ public:
         // add fixings
         hUSD->addFixing(Date(14, July, 2016), 0.035);
         hUSD->addFixing(Date(18, October, 2016), 0.037);
+	hSP5->addFixing(Date(18, October, 2016), 2100.0);
     }
 
     Handle<IborIndex> hUSD;
