@@ -116,7 +116,8 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
     return node;
 }
 
-std::map<AssetClass, std::set<std::string>> EquityForward::underlyingIndices() const {
+std::map<AssetClass, std::set<std::string>>
+EquityForward::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::EQ, std::set<std::string>({eqName()})}};
 }
 
