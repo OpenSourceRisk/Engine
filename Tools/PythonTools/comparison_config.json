@@ -1,30 +1,6 @@
 {
   "csv_settings": {
     "files": {
-      "simm.csv": {
-        "keys": [
-          "Portfolio",
-          "ProductClass",
-          "RiskClass",
-          "MarginType"
-        ],
-        "rename_cols": {
-          "portfolio": "Portfolio",
-          "product_class": "ProductClass",
-          "riskClass": "RiskClass",
-          "marginType": "MarginType",
-          "initialMargin": "InitialMargin"
-        },
-        "column_settings": [
-          {
-            "names": [
-              "InitialMargin"
-            ],
-            "abs_tol": null,
-            "rel_tol": 1e-12
-          }
-        ]
-      },
       "simm_margin_data.csv": {
         "keys": [
           "Portfolio",
@@ -343,6 +319,121 @@
         "column_settings": [
           {
             "names": [],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "backtest_summary.csv": {
+        "keys": [
+          "Counterparty",
+          "Nettingset",
+          "ProductClass",
+          "RiskClass",
+          "MarginType",
+          "Side",
+          "PLMode"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "InitialMargin",
+              "HistSimVaR",
+              "HistSimTaylorVaR",
+              "ParametricVaR",
+              "LCHVaR"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "TimeWindow",
+              "Observations",
+              "OverlappingPL",
+              "Exceptions",
+              "GreenUpTo",
+              "AmberUpTo",
+              "Zone"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
+          }
+        ]
+      },
+      "backtest_distribution.csv": {
+        "keys": [
+          "Date",
+          "Key"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Bound"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "Count"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
+          }
+        ]
+      },
+      "backtest_detail.csv": {
+        "keys": [
+          "Counterparty",
+          "Nettingset",
+          "ProductClass",
+          "RiskClass",
+          "MarginType",
+          "Side",
+          "PLDate1",
+          "PLDate2",
+          "PLType"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "InitialMargin",
+              "PLAmount"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "Overlap",
+              "Status"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
+          }
+        ]
+      },
+      ".*simm.csv": {
+        "keys": [
+          "Portfolio",
+          "ProductClass",
+          "RiskClass",
+          "MarginType",
+          "SimmSide"
+        ],
+        "rename_cols": {
+          "portfolio": "Portfolio",
+          "product_class": "ProductClass",
+          "riskClass": "RiskClass",
+          "marginType": "MarginType",
+          "initialMargin": "InitialMargin"
+        },
+        "column_settings": [
+          {
+            "names": [
+              "InitialMargin"
+            ],
             "abs_tol": null,
             "rel_tol": 1e-12
           }
