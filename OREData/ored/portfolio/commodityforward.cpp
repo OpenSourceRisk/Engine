@@ -76,6 +76,7 @@ QuantLib::Real CommodityForward::notional() const {
     return Null<Real>();
 }
 
+std::map<AssetClass, std::set<std::string>>
 CommodityForward::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::COM, std::set<std::string>({commodityName_})}};
 }
