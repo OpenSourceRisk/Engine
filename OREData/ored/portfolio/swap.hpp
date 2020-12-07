@@ -50,6 +50,8 @@ public:
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    QuantLib::Real notional() const override;
+    std::string notionalCurrency() const override;
 
     //! Add underlying index names
     std::map<AssetClass, std::set<std::string>>
@@ -75,6 +77,9 @@ protected:
 
 private:
     string settlement_;
+    bool isXCCY_;
+    bool isResetting_;
+    Size notionalTakenFromLeg_;
 };
 } // namespace data
 } // namespace ore

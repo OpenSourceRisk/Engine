@@ -77,6 +77,8 @@ void DiscountingFxForwardEngine::calculate() const {
 
     results_.value = 0.0;
     results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, tmpNominal1 / tmpNominal2); // strike rate
+    results_.additionalResults["currentNotional"] = 0.0;
+    results_.additionalResults["notionalCurrency"] = ccy1_;
 
     if (!detail::simple_event(arguments_.maturityDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
         Real disc1near = currency1Discountcurve_->discount(npvDate);
@@ -89,6 +91,15 @@ void DiscountingFxForwardEngine::calculate() const {
         //                                       tmpNominal2 * disc2far / disc2near * spotFX_->value());
         results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * disc1far / disc1near * (tmpNominal1 - tmpNominal2 * fxfwd);
         results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, fxfwd);
+
+	// Align notional with ISDA AANA/GRID guidance as of November 2020 for deliverable forwards
+        if (tmpNominal1 > tmpNominal2 * fxfwd) {
+            results_.additionalResults["currentNotional"] = tmpNominal1;
+            results_.additionalResults["notionalCurrency"] = ccy1_.code();
+        } else {
+            results_.additionalResults["currentNotional"] = tmpNominal2;
+            results_.additionalResults["notionalCurrency"] = ccy2_.code();
+        }
     }
     results_.npv = Money(ccy1_, results_.value);
 

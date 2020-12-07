@@ -121,6 +121,19 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     notionalCurrency_ = swap_.leg().currency();
 }
 
+QuantLib::Real CreditDefaultSwap::notional() const {
+    Date asof = Settings::instance().evaluationDate();
+    // get the current notional from CDS premium leg
+    for (Size i = 0; i < legs_[0].size(); ++i) {
+        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[0][i]);
+        if (coupon->date() > asof)
+            return coupon->nominal();
+    }
+
+    // if no coupons are given, return the initial notional by default
+    return notional_;
+}
+
 void CreditDefaultSwap::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* cdsNode = XMLUtils::getChildNode(node, "CreditDefaultSwapData");

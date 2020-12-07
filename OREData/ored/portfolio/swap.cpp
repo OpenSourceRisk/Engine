@@ -56,8 +56,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     std::vector<QuantLib::Currency> currencies(numLegs);
     legs_.resize(numLegs);
 
-    bool isXCCY = false;
-    bool isResetting = false;
+    isXCCY_ = false;
+    isResetting_ = false;
 
     for (Size i = 0; i < numLegs; ++i) {
         // allow minor currencies for Equity legs as some exchanges trade in these, e.g LSE in pence - GBX or GBp
@@ -67,11 +67,11 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         else
             currencies[i] = parseCurrency(legData_[i].currency());
         if (currencies[i] != currency)
-            isXCCY = true;
+            isXCCY_ = true;
     }
 
     boost::shared_ptr<EngineBuilder> builder =
-        isXCCY ? engineFactory->builder("CrossCurrencySwap") : engineFactory->builder("Swap");
+        isXCCY_ ? engineFactory->builder("CrossCurrencySwap") : engineFactory->builder("Swap");
     auto configuration = builder->configuration(MarketContext::pricing);
 
     for (Size i = 0; i < numLegs; ++i) {
@@ -136,7 +136,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
             DLOG("Building Resetting XCCY Notional leg");
             Real foreignNotional = legData_[i].foreignAmount();
-            isResetting = true;
+            isResetting_ = true;
 
             Leg resettingLeg;
             for (Size j = 0; j < legs_[i].size(); j++) {
@@ -218,25 +218,25 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // appears in the XML that has a notional. If no such leg exists the notional currency
     // and current notional are left empty and the npv currency is set to the first leg's currency
 
-    Size notionalTakenFromLeg = 0;
-    for (; notionalTakenFromLeg < legData_.size(); ++notionalTakenFromLeg) {
-        const LegData& d = legData_[notionalTakenFromLeg];
+    notionalTakenFromLeg_ = 0;
+    for (; notionalTakenFromLeg_ < legData_.size(); ++notionalTakenFromLeg_) {
+        const LegData& d = legData_[notionalTakenFromLeg_];
         if (!d.notionals().empty())
             break;
     }
 
-    if (notionalTakenFromLeg == legData_.size()) {
+    if (notionalTakenFromLeg_ == legData_.size()) {
         ALOG("no suitable leg found to set notional, set to null and notionalCurrency to empty string");
         notional_ = Null<Real>();
         notionalCurrency_ = "";
         // parse for currrency in case first leg is Equity, we only want the major currency for NPV
         npvCurrency_ = parseCurrencyWithMinors(legData_.front().currency()).code();
     } else {
-        if (legData_[notionalTakenFromLeg].schedule().hasData()) {
-            Schedule schedule = makeSchedule(legData_[notionalTakenFromLeg].schedule());
+        if (legData_[notionalTakenFromLeg_].schedule().hasData()) {
+            Schedule schedule = makeSchedule(legData_[notionalTakenFromLeg_].schedule());
             auto notional =
-                buildScheduledVectorNormalised(legData_[notionalTakenFromLeg].notionals(),
-                                               legData_[notionalTakenFromLeg].notionalDates(), schedule, 0.0);
+                buildScheduledVectorNormalised(legData_[notionalTakenFromLeg_].notionals(),
+                                               legData_[notionalTakenFromLeg_].notionalDates(), schedule, 0.0);
             Date today = Settings::instance().evaluationDate();
             auto d = std::upper_bound(schedule.dates().begin(), schedule.dates().end(), today);
             // forward starting => take first notional
@@ -249,20 +249,20 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             else
                 notional_ = notional.at(std::distance(schedule.dates().begin(), d) - 1);
         } else {
-            notional_ = legData_[notionalTakenFromLeg].notionals().at(0);
+            notional_ = legData_[notionalTakenFromLeg_].notionals().at(0);
         }
         // parse for currrency in case leg is Equity, we only want the major currency for NPV and Notional
-        notionalCurrency_ = parseCurrencyWithMinors(legData_[notionalTakenFromLeg].currency()).code();
-        npvCurrency_ = parseCurrencyWithMinors(legData_[notionalTakenFromLeg].currency()).code();
+        notionalCurrency_ = parseCurrencyWithMinors(legData_[notionalTakenFromLeg_].currency()).code();
+        npvCurrency_ = parseCurrencyWithMinors(legData_[notionalTakenFromLeg_].currency()).code();
         DLOG("Notional is " << notional_ << " " << notionalCurrency_);
     }
 
     Currency npvCcy = parseCurrency(npvCurrency_);
     DLOG("npv currency is " << npvCurrency_);
 
-    if (isXCCY) {
+    if (isXCCY_) {
         boost::shared_ptr<QuantExt::CurrencySwap> swap(
-            new QuantExt::CurrencySwap(legs_, legPayers_, currencies, settlement_ == "Physical", isResetting));
+            new QuantExt::CurrencySwap(legs_, legPayers_, currencies, settlement_ == "Physical", isResetting_));
         boost::shared_ptr<CrossCurrencySwapEngineBuilderBase> swapBuilder =
             boost::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
@@ -290,6 +290,36 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     for (auto const& l : legs_) {
         if (!l.empty())
             maturity_ = std::max(maturity_, l.back()->date());
+    }
+}
+
+QuantLib::Real Swap::notional() const {
+    // try to get the notional from the additional results of the instrument
+    try {
+        return instrument_->qlInstrument()->result<Real>("currentNotional");
+    } catch (const std::exception& e) {
+        if (strcmp(e.what(), "currentNotional not provided"))
+            WLOG("swap engine does not provide current notional: " << e.what() << ", using fallback");
+        // Try getting current notional from coupons
+        Real n = currentNotional(legs_[notionalTakenFromLeg_]);
+        if (fabs(n) > QL_EPSILON) {
+            return n;
+        } else {
+            // else return the face value
+            WLOG("swap does not provide coupon notionals, useing face value");
+            return notional_;
+        }
+    }
+}
+
+std::string Swap::notionalCurrency() const {
+    // try to get the notional ccy from the additional results of the instrument
+    try {
+        return instrument_->qlInstrument()->result<std::string>("notionalCurrency");
+    } catch (const std::exception& e) {
+        if (strcmp(e.what(), "notionalCurrency not provided"))
+            WLOG("swap engine does not provide notional ccy: " << e.what() << ", using fallback");
+        return notionalCurrency_;
     }
 }
 
