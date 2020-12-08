@@ -54,7 +54,8 @@ public:
     std::string notionalCurrency() const override;
 
     //! Add underlying index names
-    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! Settlement Type can be set to "Cash" for NDF. Default value is "Physical"
     const string& settlement() const { return settlement_; }

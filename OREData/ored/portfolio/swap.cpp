@@ -299,16 +299,16 @@ QuantLib::Real Swap::notional() const {
         return instrument_->qlInstrument()->result<Real>("currentNotional");
     } catch (const std::exception& e) {
         if (strcmp(e.what(), "currentNotional not provided"))
-	    WLOG("swap engine does not provide current notional: " << e.what() << ", using fallback");
-	// Try getting current notional from coupons
-	Real n = currentNotional(legs_[notionalTakenFromLeg_]);
-	if (fabs(n) > QL_EPSILON) {
-	    return n;
-	} else {
-	    // else return the face value
-	    WLOG("swap does not provide coupon notionals, useing face value");
-	    return notional_;
-	}
+            WLOG("swap engine does not provide current notional: " << e.what() << ", using fallback");
+        // Try getting current notional from coupons
+        Real n = currentNotional(legs_[notionalTakenFromLeg_]);
+        if (fabs(n) > QL_EPSILON) {
+            return n;
+        } else {
+            // else return the face value
+            WLOG("swap does not provide coupon notionals, useing face value");
+            return notional_;
+        }
     }
 }
 
@@ -318,12 +318,13 @@ std::string Swap::notionalCurrency() const {
         return instrument_->qlInstrument()->result<std::string>("notionalCurrency");
     } catch (const std::exception& e) {
         if (strcmp(e.what(), "notionalCurrency not provided"))
-	    WLOG("swap engine does not provide notional ccy: " << e.what() << ", using fallback");
-	return notionalCurrency_;
+            WLOG("swap engine does not provide notional ccy: " << e.what() << ", using fallback");
+        return notionalCurrency_;
     }
 }
 
-map<AssetClass, set<string>> Swap::underlyingIndices() const {
+map<AssetClass, set<string>>
+Swap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
 
     map<AssetClass, set<string>> result;
     for (const auto& ld : legData_) {
