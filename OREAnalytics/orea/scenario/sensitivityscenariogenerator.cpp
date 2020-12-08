@@ -750,6 +750,9 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+            auto spreadScenario = boost::dynamic_pointer_cast<SpreadScenario>(scenario);
+            QL_REQUIRE(!sensitivityData_->useSpreadedTermStructures() || spreadScenario,
+                       "Can not generate spread scenarios, because scenario factory does not create SpreadScenario");
 
             scenarioDescriptions_.push_back(dividendYieldScenarioDescription(name, j, up));
 
@@ -758,10 +761,15 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
 
             // store shifted discount curve in the scenario
             for (Size k = 0; k < n_ten; ++k) {
-                RiskFactorKey key(RFType::DividendYield, name, k);
-
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
-                scenario->add(key, shiftedDiscount);
+                RiskFactorKey key(RFType::DividendYield, name, k);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    Real discount = exp(-zeros[k] * times[k]);
+                    spreadScenario->add(key, discount);
+                    spreadScenario->addSpreadValue(key, shiftedDiscount / discount);
+                } else {
+                    scenario->add(key, shiftedDiscount);
+                }
 
                 // Possibly store valid shift size
                 if (validShiftSize && up && j == k) {
@@ -1092,6 +1100,10 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
                 for (Size l = 0; l < shiftStrikes.size(); ++l) {
                     Size strikeBucket = l;
                     boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+                    auto spreadScenario = boost::dynamic_pointer_cast<SpreadScenario>(scenario);
+                    QL_REQUIRE(
+                        !sensitivityData_->useSpreadedTermStructures() || spreadScenario,
+                        "Can not generate spread scenarios, because scenario factory does not create SpreadScenario");
 
                     scenarioDescriptions_.push_back(getScenarioDescription(qualifier, j, k, strikeBucket, up));
 
@@ -1109,11 +1121,22 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
                     for (Size jj = 0; jj < n_expiry; ++jj) {
                         for (Size kk = 0; kk < n_term; ++kk) {
                             for (Size ll = 0; ll < n_strike; ++ll) {
+
                                 Size idx = jj * n_term * n_strike + kk * n_strike + ll;
                                 RiskFactorKey key(rfType, qualifier, idx);
 
                                 if (ll >= loopStart && ll < loopEnd) {
-                                    scenario->add(key, shiftedVolData[ll][jj][kk]);
+                                    if (sensitivityData_->useSpreadedTermStructures()) {
+                                        spreadScenario->add(key, volData[ll][jj][kk]);
+                                        // for non-atm strike we don't set a spread, but the absolute scenario value,
+                                        // because the scenario sim market does not expect spreads for these points
+                                        // currently
+                                        Real tmp = shiftedVolData[ll][jj][kk] -
+                                                   (close_enough(shiftStrikes[ll], 0.0) ? volData[ll][jj][kk] : 0.0);
+                                        spreadScenario->addSpreadValue(key, tmp);
+                                    } else {
+                                        scenario->add(key, shiftedVolData[ll][jj][kk]);
+                                    }
                                 } else {
                                     scenario->add(key, volData[ll][jj][kk]);
                                 }

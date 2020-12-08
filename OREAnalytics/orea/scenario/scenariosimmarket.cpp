@@ -52,6 +52,7 @@
 #include <ored/utilities/log.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/termstructures/atmspreadedswaptionvolatility.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamiccpivolatilitystructure.hpp>
@@ -380,7 +381,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         LOG("building " << name << " equity dividend yield curve..");
                         vector<Period> tenors = parameters->equityDividendTenors(name);
                         addYieldCurve(initMarket, configuration, param.first, name, tenors,
-                                      parameters->yieldCurveDayCounter(name), param.second.first);
+                                      parameters->yieldCurveDayCounter(name), param.second.first,
+                                      useSpreadedTermStructures_);
                         LOG("building " << name << " equity dividend yield curve done");
 
                         // Equity spots and Yield/Index curves added first so we can now build equity index
@@ -530,9 +532,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                             // c) we are not in the situation of simulating ATM only and having a non-normal cube in T0,
                             //    since in this case the T0 structure is dynamically used to determine the sim market
                             //    vols
+                            // d) we do not use spreaded term structures, in which case we keep the original T0
+                            //    term structure in any case
                             bool convertToNormal = wrapper->volatilityType() != Normal &&
                                                    param.first == RiskFactorKey::KeyType::SwaptionVolatility &&
-                                                   (!simulateAtmOnly || isAtm);
+                                                   (!simulateAtmOnly || isAtm) && !useSpreadedTermStructures_;
                             DLOG("T0 ts is normal             : " << (wrapper->volatilityType() == Normal ? "True"
                                                                                                           : "False"));
                             DLOG("Have swaption vol           : "
@@ -567,7 +571,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             vol =
                                                 wrapper->volatility(optionTenors[i], underlyingTenors[j], strike, true);
                                         }
-                                        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                                        boost::shared_ptr<SimpleQuote> q(
+                                            new SimpleQuote(useSpreadedTermStructures_ ? 0.0 : vol));
 
                                         Size index = i * underlyingTenors.size() * strikeSpreads.size() +
                                                      j * strikeSpreads.size() + k;
@@ -575,6 +580,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         simDataTmp.emplace(std::piecewise_construct,
                                                            std::forward_as_tuple(param.first, name, index),
                                                            std::forward_as_tuple(q));
+                                        if (useSpreadedTermStructures_) {
+                                            absoluteSimData_.emplace(std::piecewise_construct,
+                                                                     std::forward_as_tuple(param.first, name, index),
+                                                                     std::forward_as_tuple(vol));
+                                        }
                                         auto tmp = Handle<Quote>(q);
                                         quotes[i * underlyingTenors.size() + j][k] = tmp;
                                         if (k == atmSlice) {
@@ -597,12 +607,19 @@ ScenarioSimMarket::ScenarioSimMarket(
                             bool flatExtrapolation = true; // FIXME: get this from curve configuration
                             VolatilityType volType = convertToNormal ? Normal : wrapper->volatilityType();
                             DayCounter dc = ore::data::parseDayCounter(parameters->swapVolDayCounter(name));
-                            Handle<SwaptionVolatilityStructure> atm(boost::make_shared<SwaptionVolatilityMatrix>(
-                                wrapper->calendar(), wrapper->businessDayConvention(), optionTenors, underlyingTenors,
-                                atmQuotes, dc, flatExtrapolation, volType, shift));
+                            Handle<SwaptionVolatilityStructure> base;
+                            if (useSpreadedTermStructures_) {
+                                base = Handle<SwaptionVolatilityStructure>(
+                                    boost::make_shared<AtmSpreadedSwaptionVolatility>(wrapper, optionTenors,
+                                                                                      underlyingTenors, atmQuotes));
+                            } else {
+                                base = Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolatilityMatrix>(
+                                    wrapper->calendar(), wrapper->businessDayConvention(), optionTenors,
+                                    underlyingTenors, atmQuotes, dc, flatExtrapolation, volType, shift));
+                            }
                             if (simulateAtmOnly) {
                                 if (isAtm) {
-                                    svp = atm;
+                                    svp = base;
                                 } else {
                                     // floating reference date matrix in sim market
                                     // if we have a cube, we keep the vol spreads constant under scenarios
@@ -610,20 +627,29 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     // means that we keep the smiles constant in terms of vol spreads when moving
                                     // forward in time; notice also that the volatility will be "sticky strike", i.e. it
                                     // will not react to changes in the ATM level
-                                    svp = Handle<SwaptionVolatilityStructure>(
-                                        boost::make_shared<SwaptionVolatilityConstantSpread>(atm, wrapper));
+                                    svp =
+                                        useSpreadedTermStructures_
+                                            ? base
+                                            : Handle<SwaptionVolatilityStructure>(
+                                                  boost::make_shared<SwaptionVolatilityConstantSpread>(base, wrapper));
                                 }
                             } else {
                                 if (isCube) {
+                                    // TODO this is not a truly spreaded cube, only the atm slice is spreaded
+                                    if (useSpreadedTermStructures_) {
+                                        ALOG(StructuredCurveErrorMessage(
+                                            name, "approximatating scenario sim market object",
+                                            "simulated swaption cube is not built as spread over t0"));
+                                    }
                                     boost::shared_ptr<SwaptionVolatilityCube> tmp(new QuantExt::SwaptionVolCube2(
-                                        atm, optionTenors, underlyingTenors, strikeSpreads, quotes,
+                                        base, optionTenors, underlyingTenors, strikeSpreads, quotes,
                                         *initMarket->swapIndex(swapIndexBase, configuration),
                                         *initMarket->swapIndex(shortSwapIndexBase, configuration), false,
                                         flatExtrapolation, false));
                                     svp = Handle<SwaptionVolatilityStructure>(
                                         boost::make_shared<SwaptionVolCubeWithATM>(tmp));
                                 } else {
-                                    svp = atm;
+                                    svp = base;
                                 }
                             }
                         } else {
@@ -2051,7 +2077,7 @@ ScenarioSimMarket::ScenarioSimMarket(
     for (auto const& data : simData_) {
         absolute->add(data.first, data.second->value());
     }
-    if (useSpreadedTermStructures) {
+    if (useSpreadedTermStructures_) {
         // overwrite the keys for which we have both a spread and absolute value
         auto spread = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
         for (auto const& data : absoluteSimData_) {
