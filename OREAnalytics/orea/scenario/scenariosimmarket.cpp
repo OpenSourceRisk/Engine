@@ -380,8 +380,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         LOG("building " << name << " equity dividend yield curve..");
                         vector<Period> tenors = parameters->equityDividendTenors(name);
                         addYieldCurve(initMarket, configuration, param.first, name, tenors,
-                                      parameters->yieldCurveDayCounter(name), param.second.first,
-                                      useSpreadedTermStructures_);
+                                      parameters->yieldCurveDayCounter(name), param.second.first);
                         LOG("building " << name << " equity dividend yield curve done");
 
                         // Equity spots and Yield/Index curves added first so we can now build equity index
