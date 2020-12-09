@@ -24,7 +24,6 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
-#include <orea/scenario/spreadscenario.hpp>
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
@@ -165,7 +164,6 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
         // Check if the risk factor is simulated before adding it
         if (simulate) {
             simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
-            DLOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << val);
             // if generating spreaded scenarios, add the absolute value as well
             if (spreaded) {
                 absoluteSimData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i),
@@ -2077,20 +2075,21 @@ ScenarioSimMarket::ScenarioSimMarket(
     }
 
     LOG("building base scenario");
-    auto absolute = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
-    for (auto const& data : simData_) {
-        absolute->add(data.first, data.second->value());
-    }
-    if (useSpreadedTermStructures_) {
-        // overwrite the keys for which we have both a spread and absolute value
-        auto spread = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
-        for (auto const& data : absoluteSimData_) {
-            absolute->add(data.first, data.second);
-            spread->add(data.first, simData_.at(data.first)->value());
+    baseScenario_ = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
+    if (!useSpreadedTermStructures_) {
+        for (auto const& data : simData_) {
+            baseScenario_->add(data.first, data.second->value());
         }
-        baseScenario_ = boost::make_shared<SpreadScenario>(absolute, spread);
+        baseScenarioAbsolute_ = baseScenario_;
     } else {
-        baseScenario_ = absolute;
+        baseScenarioAbsolute_ = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
+        for (auto const& data : simData_) {
+            baseScenario_->add(data.first, data.second->value());
+            baseScenarioAbsolute_->add(data.first, data.second->value());
+        }
+        for (auto const& data : absoluteSimData_) {
+            baseScenarioAbsolute_->add(data.first, data.second);
+        }
     }
     LOG("building base scenario done");
 }
