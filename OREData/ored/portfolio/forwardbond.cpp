@@ -118,8 +118,8 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
     notionalCurrency_ = currency_;
 
-    // Add legs (only 1)
-    legs_ = {bond->cashflows()};
+    // cashflows will be generated as additional results in the pricing engine
+    legs_ = {};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {firstLegIsPayer};
 
