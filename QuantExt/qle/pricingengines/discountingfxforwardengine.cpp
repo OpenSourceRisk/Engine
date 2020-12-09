@@ -49,7 +49,7 @@ void DiscountingFxForwardEngine::calculate() const {
     bool tmpPayCurrency1;
     if (ccy1_ == arguments_.currency1) {
         QL_REQUIRE(ccy2_ == arguments_.currency2, "mismatched currency pairs ("
-                                                      << ccy1_ << "," << ccy2_ << ") in the egine and ("
+                                                      << ccy1_ << "," << ccy2_ << ") in the engine and ("
                                                       << arguments_.currency1 << "," << arguments_.currency2
                                                       << ") in the instrument");
         tmpNominal1 = arguments_.nominal1;
@@ -57,7 +57,7 @@ void DiscountingFxForwardEngine::calculate() const {
         tmpPayCurrency1 = arguments_.payCurrency1;
     } else {
         QL_REQUIRE(ccy1_ == arguments_.currency2 && ccy2_ == arguments_.currency1,
-                   "mismatched currency pairs (" << ccy1_ << "," << ccy2_ << ") in the egine and ("
+                   "mismatched currency pairs (" << ccy1_ << "," << ccy2_ << ") in the engine and ("
                                                  << arguments_.currency1 << "," << arguments_.currency2
                                                  << ") in the instrument");
         tmpNominal1 = arguments_.nominal2;
@@ -82,24 +82,27 @@ void DiscountingFxForwardEngine::calculate() const {
 
     if (!detail::simple_event(arguments_.maturityDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
         Real disc1near = currency1Discountcurve_->discount(npvDate);
-        Real disc1far = currency1Discountcurve_->discount(arguments_.maturityDate);
+        Real disc1far = currency1Discountcurve_->discount(arguments_.payDate);
         Real disc2near = currency2Discountcurve_->discount(npvDate);
-        Real disc2far = currency2Discountcurve_->discount(arguments_.maturityDate);
-        Real fxfwd = disc1near / disc1far * disc2far / disc2near * spotFX_->value();
-        // results_.value =
-        //     (tmpPayCurrency1 ? -1.0 : 1.0) * (tmpNominal1 * disc1far / disc1near -
-        //                                       tmpNominal2 * disc2far / disc2near * spotFX_->value());
-        results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * disc1far / disc1near * (tmpNominal1 - tmpNominal2 * fxfwd);
-        results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, fxfwd);
+        Real disc2far = currency2Discountcurve_->discount(arguments_.payDate);
 
-	// Align notional with ISDA AANA/GRID guidance as of November 2020 for deliverable forwards
-        if (tmpNominal1 > tmpNominal2 * fxfwd) {
-            results_.additionalResults["currentNotional"] = tmpNominal1;
-            results_.additionalResults["notionalCurrency"] = ccy1_.code();
-        } else {
-            results_.additionalResults["currentNotional"] = tmpNominal2;
-            results_.additionalResults["notionalCurrency"] = ccy2_.code();
-        }
+        if (arguments_.isPhysicallySettled) {
+            Real fxfwd = disc1near / disc1far * disc2far / disc2near * spotFX_->value();
+            // results_.value =
+            //     (tmpPayCurrency1 ? -1.0 : 1.0) * (tmpNominal1 * disc1far / disc1near -
+            //                                       tmpNominal2 * disc2far / disc2near * spotFX_->value());
+            results_.value =
+                (tmpPayCurrency1 ? -1.0 : 1.0) * disc1far / disc1near * (tmpNominal1 - tmpNominal2 * fxfwd);
+            results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, fxfwd);
+
+			// Align notional with ISDA AANA/GRID guidance as of November 2020 for deliverable forwards
+			if (tmpNominal1 > tmpNominal2 * fxfwd) {
+				results_.additionalResults["currentNotional"] = tmpNominal1;
+				results_.additionalResults["notionalCurrency"] = ccy1_.code();
+			} else {
+				results_.additionalResults["currentNotional"] = tmpNominal2;
+				results_.additionalResults["notionalCurrency"] = ccy2_.code();
+			}
     }
     results_.npv = Money(ccy1_, results_.value);
 
