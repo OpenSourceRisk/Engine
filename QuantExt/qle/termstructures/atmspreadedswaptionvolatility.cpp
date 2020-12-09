@@ -68,12 +68,12 @@ boost::shared_ptr<SmileSection> AtmSpreadedSwaptionVolatility::smileSectionImpl(
                                                                                 Time swapLength) const {
     calculate();
     return boost::make_shared<AtmSpreadedSmileSection>(base_->smileSection(optionTime, swapLength),
-                                                       spread_(optionTime, swapLength));
+                                                       spread_(swapLength, optionTime));
 }
 
 Volatility AtmSpreadedSwaptionVolatility::volatilityImpl(Time optionTime, Time swapLength, Rate strike) const {
     calculate();
-    return base_->volatility(optionTime, swapLength, strike) + spread_(optionTime, swapLength);
+    return base_->volatility(optionTime, swapLength, strike) + spread_(swapLength, optionTime);
 }
 
 void AtmSpreadedSwaptionVolatility::performCalculations() const {
