@@ -57,7 +57,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<QuantLib::Bond>& underlying();
+    const boost::shared_ptr<QuantLib::Bond>& underlying() { return underlying_; }
     //@}
 
 private:
