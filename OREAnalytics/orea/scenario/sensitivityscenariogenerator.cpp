@@ -226,7 +226,6 @@ void SensitivityScenarioGenerator::generateScenarios() {
         if (iDesc.type() != ScenarioDescription::Type::Up)
             continue;
         string iKeyName = iDesc.keyName1();
-        RiskFactorKey iKey = iDesc.key1();
 
         // check if iKey matches filter
         if (find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(),
@@ -238,22 +237,23 @@ void SensitivityScenarioGenerator::generateScenarios() {
             if (jDesc.type() != ScenarioDescription::Type::Up)
                 continue;
             string jKeyName = jDesc.keyName1();
-            RiskFactorKey jKey = jDesc.key1();
 
             // check if jKey matches filter
             if (find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(),
                         findPair(iKeyName, jKeyName)) == sensitivityData_->crossGammaFilter().end())
                 continue;
 
-            QL_REQUIRE(
-                iKey != jKey,
-                "SensitivityScenarioGenerator: expected different keys during construction of cross scenarios, got "
-                    << iKey << " for both contributing scenarios.");
-
             // build cross scenario
             boost::shared_ptr<Scenario> crossScenario = sensiScenarioFactory_->buildScenario(asof);
-            crossScenario->add(iKey, scenarios_[i]->get(iKey));
-            crossScenario->add(jKey, scenarios_[j]->get(jKey));
+
+            for (auto const& k : baseScenario_->keys()) {
+                Real v1 = scenarios_[i]->get(k);
+                Real v2 = scenarios_[j]->get(k);
+                Real b = baseScenario_->get(k);
+                if (!close_enough(v1, b) || !close_enough(v2, b))
+                    // FIXME, see ore ticket 1478
+                    crossScenario->add(k, v1 + v2 - b);
+            }
 
             scenarioDescriptions_.push_back(ScenarioDescription(iDesc, jDesc));
             crossScenario->label(to_string(scenarioDescriptions_.back()));
