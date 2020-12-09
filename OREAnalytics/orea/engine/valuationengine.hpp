@@ -88,6 +88,7 @@ public:
 
 private:
     void runCalculators(bool isCloseOutDate, const std::vector<boost::shared_ptr<Trade>>& trades,
+                        std::vector<bool>& tradeHasError,
                         const std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
                         boost::shared_ptr<analytics::NPVCube>& outputCube,
                         boost::shared_ptr<analytics::NPVCube>& outputCubeSensis, const Date& d,

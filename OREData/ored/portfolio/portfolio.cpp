@@ -171,7 +171,7 @@ std::vector<std::string> Portfolio::counterparties() const {
     for (auto t : trades_)
         counterparties.push_back(t->envelope().counterparty());
     sort(counterparties.begin(), counterparties.end());
-    counterparties.erase(unique(counterparties.begin(),counterparties.end()), counterparties.end());
+    counterparties.erase(unique(counterparties.begin(), counterparties.end()), counterparties.end());
     return counterparties;
 }
 
@@ -225,7 +225,8 @@ map<string, set<Date>> Portfolio::fixings(const Date& settlementDate) const {
     return result;
 }
 
-std::map<AssetClass, std::set<std::string>> Portfolio::underlyingIndices() {
+std::map<AssetClass, std::set<std::string>>
+Portfolio::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) {
 
     if (!underlyingIndicesCache_.empty())
         return underlyingIndicesCache_;
@@ -233,7 +234,7 @@ std::map<AssetClass, std::set<std::string>> Portfolio::underlyingIndices() {
     map<AssetClass, std::set<std::string>> result;
 
     for (const auto& t : trades_) {
-        auto underlyings = t->underlyingIndices();
+        auto underlyings = t->underlyingIndices(referenceDataManager);
         for (const auto& kv : underlyings) {
             result[kv.first].insert(kv.second.begin(), kv.second.end());
         }
@@ -242,9 +243,11 @@ std::map<AssetClass, std::set<std::string>> Portfolio::underlyingIndices() {
     return underlyingIndicesCache_;
 }
 
-std::set<std::string> Portfolio::underlyingIndices(AssetClass assetClass) {
+std::set<std::string>
+Portfolio::underlyingIndices(AssetClass assetClass,
+                             const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) {
 
-    std::map<AssetClass, std::set<std::string>> indices = underlyingIndices();
+    std::map<AssetClass, std::set<std::string>> indices = underlyingIndices(referenceDataManager);
     auto it = indices.find(assetClass);
     if (it != indices.end()) {
         return it->second;

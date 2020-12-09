@@ -9,19 +9,18 @@ import logging
 import numpy as np
 import pandas as pd
 from datacompy.core import Compare
+import re
 
 
 def has_csv_config(config, filename_1, filename_2):
     # Check if config has a configuration for filename_1 or filename_2
 
-    file_config = None
-
     for filename in [filename_1, filename_2]:
         for key in config['csv_settings']['files']:
-            if key.replace('*', '') in filename:
-                file_config = config['csv_settings']['files'][key]
+            if re.match(key, filename):
+                return config['csv_settings']['files'][key]
 
-    return file_config
+    return None
 
 
 def create_df(file, col_types=None):
@@ -82,6 +81,17 @@ def compare_files(file_1, file_2, name, config=None):
         _, filename_1 = os.path.split(file_1)
         _, filename_2 = os.path.split(file_2)
         csv_comp_config = has_csv_config(config, filename_1, filename_2)
+
+    # If the file extension is csv or json, enforce the use of a comparison configuration.
+    # If the file is a txt file, attempt to find a comparison config. If none, proceed with direct comparison.
+    _, ext_1 = os.path.splitext(file_1)
+    _, ext_2 = os.path.splitext(file_2)
+
+    if csv_comp_config is None:
+        if ext_1 == '.csv' or ext_1 == '.json':
+            raise ValueError('File, ' + file_1 + ', requires a comparison configuration but none given.')
+        if ext_2 == '.csv' or ext_2 == '.json':
+            raise ValueError('File, ' + file_2 + ', requires a comparison configuration but none given.')
 
     if csv_comp_config is None:
         # If there was no configuration then fall back to a straight file comparison.
@@ -201,10 +211,28 @@ def compare_files_df(name, file_1, file_2, config):
 
         for col_group_config in config['column_settings']:
 
-            names = col_group_config['names']
+            names = col_group_config['names'].copy()
+
+            # If there are optional names, add them to compare if they are in both dataframes. If in one but not
+            # another, mark the match as false.
+            if 'optional_names' in col_group_config:
+                optional_names = col_group_config['optional_names']
+                for optional_name in optional_names:
+                    if optional_name in df_1.columns and optional_name in df_2.columns:
+                        names.append(optional_name)
+                    elif optional_name not in df_1.columns and optional_name in df_2.columns:
+                        logger.warning('The optional name, %s, is in df_1 but not in df_2.', optional_name)
+                        logger.info('Skipping comparison for this group of names and marking files as different.')
+                        is_match = False
+                        continue
+                    elif optional_name in df_1.columns and optional_name not in df_2.columns:
+                        logger.warning('The optional name, %s, is in df_2 but not in df_1.', optional_name)
+                        logger.info('Skipping comparison for this group of names and marking files as different.')
+                        is_match = False
+                        continue
 
             if not names:
-                logger.warning('No column names provided. Use joint columns from both files except keys')
+                logger.debug('No column names provided. Use joint columns from both files except keys')
                 names = [s for s in list(set(list(df_1.columns) + list(df_2.columns))) if s not in keys]
 
             logger.info('Performing comparison of files for column names: %s.', str(names))
@@ -261,9 +289,9 @@ def compare_files_df(name, file_1, file_2, config):
             if comp.matches():
                 logger.debug('The columns, %s, in the files match.', str(names))
             else:
-                logger.debug('The columns, %s, in the files do not match.', str(names))
+                logger.warning('The columns, %s, in the files do not match.', str(names))
                 is_match = False
-                logger.info(comp.report())
+                logger.warning(comp.report())
 
     # Get the remaining columns that have not been compared.
     rem_cols_1 = [col for col in df_1.columns if col not in cols_compared]
@@ -278,9 +306,9 @@ def compare_files_df(name, file_1, file_2, config):
     if comp.all_columns_match() and comp.matches():
         logger.debug('The remaining columns in the files match.', )
     else:
-        logger.info('The remaining columns in the files do not match:')
+        logger.warning('The remaining columns in the files do not match:')
         is_match = False
-        logger.info(comp.report())
+        logger.warning(comp.report())
 
     logger.debug('%s: Finished comparing file %s against %s using configuration: %s.', name, file_1, file_2, is_match)
 
@@ -294,14 +322,19 @@ def compare_files_direct(name, file_1, file_2):
 
     logger.debug('%s: Comparing file %s directly against %s', name, file_1, file_2)
 
-    with open(file_1,'r') as f1, open(file_2,'r') as f2:
-        diff = difflib.unified_diff(f1.readlines(), f2.readlines(), fromfile = file_1, tofile = file_2)
+    with open(file_1, 'r') as f1, open(file_2, 'r') as f2:
+        s1 = f1.readlines()
+        s2 = f2.readlines()
+        s1.sort() 
+        s2.sort()
+        diff = difflib.unified_diff(s1, s2, fromfile=file_1, tofile=file_2)
         match = True
         for line in diff:
             match = False
             logger.warning(line.rstrip('\n'))
 
     return match
+
 
 if __name__ == "__main__":
     # Parse input parameters

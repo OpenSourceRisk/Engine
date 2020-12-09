@@ -92,7 +92,7 @@ void DiscountingFxForwardEngine::calculate() const {
         results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * disc1far / disc1near * (tmpNominal1 - tmpNominal2 * fxfwd);
         results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, fxfwd);
 
-        // Align notional with ISDA AANA/GRID guidance as of November 2020 for deliverable forwards
+	// Align notional with ISDA AANA/GRID guidance as of November 2020 for deliverable forwards
         if (tmpNominal1 > tmpNominal2 * fxfwd) {
             results_.additionalResults["currentNotional"] = tmpNominal1;
             results_.additionalResults["notionalCurrency"] = ccy1_.code();

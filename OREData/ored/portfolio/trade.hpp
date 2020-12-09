@@ -81,7 +81,10 @@ public:
     /*! Return the full required fixing information */
     const RequiredFixings& requiredFixings() const { return requiredFixings_; }
 
-    virtual std::map<AssetClass, std::set<std::string>> underlyingIndices() const { return {}; }
+    virtual std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const {
+        return {};
+    }
 
     //! \name Serialisation
     //@{

@@ -105,7 +105,7 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
     return node;
 }
 
-std::map<AssetClass, std::set<std::string>> EquityOption::underlyingIndices() const {
+std::map<AssetClass, std::set<std::string>> EquityOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::EQ, std::set<std::string>({equityName()})}};
 }
 

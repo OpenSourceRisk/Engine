@@ -95,7 +95,8 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     }
 }
 
-std::map<AssetClass, std::set<std::string>> CommodityOption::underlyingIndices() const {
+std::map<AssetClass, std::set<std::string>>
+CommodityOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::COM, std::set<std::string>({assetName_})}};
 }
 

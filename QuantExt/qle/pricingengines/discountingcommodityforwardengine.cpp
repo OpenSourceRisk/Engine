@@ -51,6 +51,8 @@ void DiscountingCommodityForwardEngine::calculate() const {
 
         results_.value = (forwardPrice - arguments_.strike) * discount;
         results_.value *= arguments_.quantity * buySellIndicator;
+
+	results_.additionalResults["currentNotional"] = forwardPrice * arguments_.quantity;
     }
 }
 

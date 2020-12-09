@@ -34,6 +34,8 @@
 namespace ore {
 namespace data {
 
+class ReferenceDataManager;
+
 //! Serializable portfolio
 /*!
   \ingroup portfolio
@@ -120,8 +122,11 @@ public:
     fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const;
 
     /*! Returns the names of the underlying instruments for each asset class */
-    std::map<AssetClass, std::set<std::string>> underlyingIndices();
-    std::set<std::string> underlyingIndices(AssetClass assetClass);
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr);
+    std::set<std::string>
+    underlyingIndices(AssetClass assetClass,
+                      const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr);
 
 private:
     std::vector<boost::shared_ptr<Trade>> trades_;
