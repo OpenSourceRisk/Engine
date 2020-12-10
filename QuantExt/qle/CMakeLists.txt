@@ -155,7 +155,6 @@ processes/crossassetstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
-termstructures/atmspreadedswaptionvolatility.cpp
 termstructures/averageoisratehelper.cpp
 termstructures/basistwoswaphelper.cpp
 termstructures/blackvariancecurve3.cpp
@@ -445,7 +444,6 @@ processes/irlgm1fstateprocess.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
 termstructures/aposurface.hpp
-termstructures/atmspreadedswaptionvolatility.hpp
 termstructures/averageoisratehelper.hpp
 termstructures/basistwoswaphelper.hpp
 termstructures/blackinvertedvoltermstructure.hpp

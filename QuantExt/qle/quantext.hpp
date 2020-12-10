@@ -234,7 +234,6 @@
 #include <qle/quotes/exceptionquote.hpp>
 #include <qle/quotes/logquote.hpp>
 #include <qle/termstructures/aposurface.hpp>
-#include <qle/termstructures/atmspreadedswaptionvolatility.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
