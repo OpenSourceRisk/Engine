@@ -39,10 +39,10 @@ public:
     //! Constructor
     FxForward(Envelope& env, const string& maturityDate, const string& boughtCurrency, double boughtAmount,
               const string& soldCurrency, double soldAmount, const string& settlement = "Physical",
-              const string& payDate = "")
+              const string& payDate = "", const string& payCurrency = "", const string& fxIndex = "")
         : Trade("FxForward", env), maturityDate_(maturityDate), boughtCurrency_(boughtCurrency),
           boughtAmount_(boughtAmount), soldCurrency_(soldCurrency), soldAmount_(soldAmount), settlement_(settlement),
-          payDate_(payDate) {}
+          payDate_(payDate), payCurrency_(payCurrency), fxIndex_(fxIndex) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
@@ -78,6 +78,10 @@ private:
     double soldAmount_;
     string settlement_;
     string payDate_;
+    string payCurrency_;
+    string fxIndex_;
+    Natural fxFixingDays_ = 0;
+    string fxFixingCalendar_ = "";
     Period payLag_ = 0 * Days;
     Calendar payCalendar_ = NullCalendar();
     BusinessDayConvention payConvention_ = Unadjusted;

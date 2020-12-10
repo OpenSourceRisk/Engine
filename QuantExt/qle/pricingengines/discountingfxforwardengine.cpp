@@ -103,8 +103,20 @@ void DiscountingFxForwardEngine::calculate() const {
 				results_.additionalResults["currentNotional"] = tmpNominal2;
 				results_.additionalResults["notionalCurrency"] = ccy2_.code();
 			}
-    }
-    results_.npv = Money(ccy1_, results_.value);
+
+			results_.npv = Money(ccy1_, results_.value);
+		} else {
+            bool ccy1Fixing = ccy1_ == arguments_.payCcy ? 1.0 : arguments_.fxIndex->fixing(arguments_.fixingDate);
+            bool ccy2Fixing = ccy2_ == arguments_.payCcy ? 1.0 : arguments_.fxIndex->fixing(arguments_.fixingDate);
+			
+			results_.value = (tmpPayCurrency1 ? -1.0 : 1.0)
+				 * disc1far / disc1near * ( (tmpNominal1 * ccy1Fixing) - (tmpNominal2 * ccy2Fixing) );
+
+			results_.additionalResults["currentNotional"] =
+                            ccy1_ == arguments_.payCcy ? ccy1_.code() : ccy2_.code();
+			results_.additionalResults["notionalCurrency"] = arguments_.payCcy.code();
+		}
+	}
 
 } // calculate
 
