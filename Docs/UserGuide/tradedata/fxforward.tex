@@ -27,12 +27,60 @@ The meanings and allowable values of the various elements in the \lstinline!FXFo
 \item BoughtAmount: The amount to be bought on value date.  \\ Allowable values:  Any positive real number.
 \item SoldCurrency: The currency to be sold on value date.  \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 \item SoldAmount: The amount to be sold on value date.  \\ Allowable values:  Any positive real number.
-\item Settlement [Optional]: Delivery type.  Note that Non-Deliverable Forwards can be represented by \emph{Cash} settlement. Delivery type does not impact pricing in ORE.  
-
+\item Settlement [Optional]: Delivery type.  Note that Non-Deliverable Forwards can be represented by \emph{Cash} settlement.
 Allowable values: \emph{Cash} or \emph{Physical}.  Defaults to \emph{Physical} if left blank or omitted.
 
+\item SettlementCurrency [Optional]: The currency in which the FX Forward is settled. This is only needed if Settlement is \emph{Cash}. \\
+Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}. Defaults to the SoldCurrency if left blank or omitted.
 
+\item FXIndex [Optional]: The reference index for determining the FX fixing at the value date. This field is mandatory if Settlement is \emph{Cash}
+and the payment date is greater than the ValueDate. \\
+Allowable values: A valid FX index from Table \ref{tab:fxindex_data}.
+
+\item PaymentData [Optional]: This node is used to specify a payment date, using either a \lstinline!<Dates>! sub-node or a \lstinline!<Rules>! sub-node. If this node is omitted, the payment date defaults to the ValueDate.
+\end{itemize}
+
+The \lstinline!<Dates>! sub-node should contain one and only one \lstinline!Date! node, as shown in Listing \ref{lst:fxforward_dates_payment_data}.
+For allowable values, see \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+The meanings and allowable values of the \lstinline!<Rules>! sub-node, shown in listing \ref{lst:fxforward_rules_payment_data}, are as follows:
+
+\begin{itemize}
+	\item Lag [Optional]: The payment lag.
+	Allowable values: A string where the last character must be \emph{D} or \emph{W} or \emph{M} or \emph{Y}. \\ The characters before that must be a positive integer. \\ \emph{D} = Day, \emph{W} = Week, \emph{M} = Month, \emph{Y} = Year.
+
+	\item Calendar [Optional]: The payment calendar adjustment. \\
+	Allowable values: See \lstinline!Calendar! in Table \ref{tab:calendar}
+
+	\item Convention [Optional]: The payment convention adjustment. \\
+	Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}
 \end{itemize}
 
 Note that FX Forwards also cover Precious Metals forwards, i.e. with
 currencies XAU, XAG, XPT, XPD.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<PaymentData>
+  <Dates>
+    <Date>...</Date>
+  </Dates>
+</PaymentData>
+\end{minted}
+\caption{Dates based \lstinline!PaymentData!}
+\label{lst:fxforward_dates_payment_data}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<PaymentData>
+  <Rules>
+    <Lag>...</Lag>
+    <Calendar>...</Calendar>
+    <Convention>...</Convention>
+  </Rules>
+</PaymentData>
+\end{minted}
+\caption{Rules based \lstinline!PaymentData!}
+\label{lst:fxforward_rules_payment_data}
+\end{listing}
