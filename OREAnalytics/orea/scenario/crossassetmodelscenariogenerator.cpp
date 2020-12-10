@@ -183,7 +183,6 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         for (Size k = 0; k < n_ten; k++) {
             defaultCurveKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, cr_name, k); // j * n_ten + k
         }
-        // defaultCurveKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, cr_name, -1); // for numeraie
     }
 
     // cache curves
@@ -469,11 +468,8 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                     Date d = dates_[i] + ten_dfc_[j][k];
                     Time T = dc.yearFraction(dates_[i], d);
                     Real survProb = std::max(cirppDefaultCurves_[j]->survivalProbability(T), 0.00001);
-                    scenarios[i]->add(defaultCurveKeys_[j * (ten_dfc_[j].size() + 1) + k], survProb);
+                    scenarios[i]->add(defaultCurveKeys_[j * ten_dfc_[j].size() + k], survProb);
                 }
-                // numeraie
-                Real s = sample.value[model_->pIdx(CR, j, 1)][i + 1];
-                scenarios[i]->add(defaultCurveKeys_[j * (ten_dfc_[j].size() + 1) + ten_dfc_[j].size()], s);
             }
         }
 
