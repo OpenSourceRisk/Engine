@@ -244,7 +244,7 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
 
     Size s1, s2;
 
-    if (tokens1[0] == "CMS")
+    if (tokens1[1] == "CMS")
         s1 = 4;
     else if (tokens1[0] == "FX")
         s1 = 2;
@@ -255,7 +255,7 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
     else
         s1 = 3; // assume Ibor
 
-    if (tokens2[0] == "CMS")
+    if (tokens2[1] == "CMS")
         s2 = 4;
     else if (tokens2[0] == "FX")
         s2 = 2;
