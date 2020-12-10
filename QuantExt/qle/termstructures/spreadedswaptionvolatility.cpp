@@ -33,7 +33,7 @@ SpreadedSwaptionSmileSection::SpreadedSwaptionSmileSection(const boost::shared_p
     QL_REQUIRE(strikeSpreads_.size() == volSpreads.size(),
                "SpreadedSwaptionSmileSection: strike spreads ("
                    << strikeSpreads.size() << ") inconsistent with vol spreads (" << volSpreads.size() << ")");
-    if (atmLevel_ != Null<Real>()) {
+    if (atmLevel_ != Null<Real>() && volSpreads_.size() > 1) {
         volSpreadInterpolation_ =
             LinearFlat().interpolate(strikeSpreads_.begin(), strikeSpreads_.end(), volSpreads_.begin());
     } else {
@@ -49,7 +49,7 @@ Rate SpreadedSwaptionSmileSection::atmLevel() const {
 }
 
 Volatility SpreadedSwaptionSmileSection::volatilityImpl(Rate strike) const {
-    if (atmLevel_ == Null<Real>())
+    if (atmLevel_ == Null<Real>() || volSpreads_.size() == 1)
         return base_->volatility(strike) + volSpreads_.front();
     else
         return base_->volatility(strike) + volSpreadInterpolation_(strike - atmLevel_);
@@ -73,9 +73,9 @@ SpreadedSwaptionVolatility::SpreadedSwaptionVolatility(const Handle<SwaptionVola
                "SpreadedSwaptionVolatility: swapIndexBase and shortSwapIndexBase must be both null or non-null");
     QL_REQUIRE(swapIndexBase != nullptr || strikeSpreads.size() == 1 && close_enough(strikeSpreads.front(), 0.0),
                "SpreadedSwaptionVolatility: if no swapIndexBase is given, exactly one strike spread = 0 is allowed");
-    QL_REQUIRE(strikeSpreads_.empty(), "SpreadedSwaptionVolatility: empty strike spreads");
-    QL_REQUIRE(optionTenors_.empty(), "SpreadedSwaptionVolatility: empty option tenors");
-    QL_REQUIRE(swapTenors_.empty(), "SpreadedSwaptionVolatility: empty swap tenors");
+    QL_REQUIRE(!strikeSpreads_.empty(), "SpreadedSwaptionVolatility: empty strike spreads");
+    QL_REQUIRE(!optionTenors_.empty(), "SpreadedSwaptionVolatility: empty option tenors");
+    QL_REQUIRE(!swapTenors_.empty(), "SpreadedSwaptionVolatility: empty swap tenors");
     QL_REQUIRE(optionTenors.size() * swapTenors.size() == volSpreads.size(),
                "SpreadedSwaptionVolatility: optionTenors (" << optionTenors.size() << ") * swapTenors ("
                                                             << swapTenors.size() << ") inconsistent with vol spreads ("
