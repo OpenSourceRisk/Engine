@@ -32,17 +32,15 @@ FxForward::FxForward(const Real& nominal1, const Currency& currency1, const Real
       maturityDate_(maturityDate), payCurrency1_(payCurrency1), isPhysicallySettled_(isPhysicallySettled),
       payDate_(payDate), payCcy_(payCcy), fxIndex_(fxIndex), fixingDate_(fixingDate) {
 
-	if (payDate == Null<Date>()) {
-        payDate_ = maturityDate;
-    }
-
     if (!isPhysicallySettled) {
+        QL_REQUIRE(fxIndex != nullptr, "FxForward: no FX index given for non-deliverable forward.");
         QL_REQUIRE(payCcy != Currency(), "FxForward: no settlement currency given for non-deliverable forward.");
-        if (payDate_ > fixingDate) {
-            QL_REQUIRE(fxIndex != nullptr, "FxForward: no FX index given for non-deliverable forward.");
-            QL_REQUIRE(fixingDate != Null<Date>(), "FxForward: no FX fixing date given for non-deliverable forward.");        
-			registerWith(fxIndex);
-		}
+        QL_REQUIRE(fixingDate != Null<Date>(), "FxForward: no FX fixing date given for non-deliverable forward.");
+    }
+    registerWith(fxIndex);
+
+    if (payDate == Null<Date>()) {
+        payDate_ = maturityDate;
     }
 }
 
@@ -56,22 +54,20 @@ FxForward::FxForward(const Money& nominal1, const ExchangeRate& forwardRate, con
     QL_REQUIRE(currency1_ == forwardRate.target(), "Currency of nominal1 does not match target (domestic) "
                                                    "currency in the exchange rate.");
 
-	if (payDate == Null<Date>()) {
-        payDate_ = maturityDate;
-    }
-
     if (!isPhysicallySettled) {
+        QL_REQUIRE(fxIndex != nullptr, "FxForward: no FX index given for non-deliverable forward.");
         QL_REQUIRE(payCcy != Currency(), "FxForward: no settlement currency given for non-deliverable forward.");
-        if (payDate_ > fixingDate) {
-            QL_REQUIRE(fxIndex != nullptr, "FxForward: no FX index given for non-deliverable forward.");
-            QL_REQUIRE(fixingDate != Null<Date>(), "FxForward: no FX fixing date given for non-deliverable forward.");
-            registerWith(fxIndex);
-        }
+        QL_REQUIRE(fixingDate != Null<Date>(), "FxForward: no FX fixing date given for non-deliverable forward.");
     }
+    registerWith(fxIndex);
 
     Money otherNominal = forwardRate.exchange(nominal1);
     nominal2_ = otherNominal.value();
     currency2_ = otherNominal.currency();
+
+    if (payDate_ == Null<Date>()) {
+        payDate_ = maturityDate_;
+    }
 }
 
 FxForward::FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote, const Currency& currency2,
@@ -84,20 +80,18 @@ FxForward::FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote,
 
     QL_REQUIRE(fxForwardQuote->isValid(), "The FX Forward quote is not valid.");
 
-	if (payDate == Null<Date>()) {
-        payDate_ = maturityDate;
-    }
-
     if (!isPhysicallySettled) {
+        QL_REQUIRE(fxIndex != nullptr, "FxForward: no FX index given for non-deliverable forward.");
         QL_REQUIRE(payCcy != Currency(), "FxForward: no settlement currency given for non-deliverable forward.");
-        if (payDate_ > fixingDate) {
-            QL_REQUIRE(fxIndex != nullptr, "FxForward: no FX index given for non-deliverable forward.");
-            QL_REQUIRE(fixingDate != Null<Date>(), "FxForward: no FX fixing date given for non-deliverable forward.");
-            registerWith(fxIndex);
-        }
+        QL_REQUIRE(fixingDate != Null<Date>(), "FxForward: no FX fixing date given for non-deliverable forward.");
     }
+    registerWith(fxIndex);
 
     nominal2_ = nominal1_ / fxForwardQuote->value();
+
+    if (payDate_ == Null<Date>()) {
+        payDate_ == maturityDate_;
+    }
 }
 
 bool FxForward::isExpired() const { return detail::simple_event(maturityDate_).hasOccurred(); }
