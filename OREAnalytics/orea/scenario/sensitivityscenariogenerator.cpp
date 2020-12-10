@@ -1083,18 +1083,10 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
                                 RiskFactorKey key(rfType, qualifier, idx);
 
                                 if (ll >= loopStart && ll < loopEnd) {
-                                    if (sensitivityData_->useSpreadedTermStructures() &&
-                                        close_enough(shiftStrikes[ll], 0.0)) {
+                                    if (sensitivityData_->useSpreadedTermStructures()) {
                                         scenario->add(key, shiftedVolData[ll][jj][kk] - volData[ll][jj][kk]);
                                     } else {
                                         scenario->add(key, shiftedVolData[ll][jj][kk]);
-                                    }
-                                } else {
-                                    if (sensitivityData_->useSpreadedTermStructures() &&
-                                        close_enough(shiftStrikes[ll], 0.0)) {
-                                        // add nothing
-                                    } else {
-                                        scenario->add(key, volData[ll][jj][kk]);
                                     }
                                 }
 
