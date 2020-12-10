@@ -23,7 +23,6 @@
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 #include <qle/instruments/fxforward.hpp>
-#include <qle/indexes/fxindex.hpp>
 
 using ore::data::XMLUtils;
 using namespace QuantLib;

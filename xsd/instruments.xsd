@@ -663,7 +663,7 @@
       <xs:element type="currencyCode" name="SoldCurrency"/>
       <xs:element type="xs:float" name="SoldAmount"/>
       <xs:element type="settlementType" name="Settlement" minOccurs="0"/>
-      <xs:element type="fxForwardSettlementData" name="SettlementData" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="fxForwardPaymentData" name="PaymentData" maxOccurs="1" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -692,17 +692,9 @@
     </xs:all>
   </xs:complexType>
 
-  <xs:complexType name="fxForwardSettlementData">
-    <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0">
-    <xs:element type="string" name="FXIndex" maxOccurs="1" minOccurs="0">
-    <xs:choice maxOccurs="1" minOccurs="0">
-      <xs:element name="Dates">
-        <xs:complexType>
-          <xs:sequence>
-            <xs:element type="date" name="Date" maxOccurs="1" minOccurs="1"/>
-          </xs:sequence>
-        </xs:complexType>
-      </xs:element>
+  <xs:complexType name="fxForwardPaymentData">
+    <xs:choice>
+      <xs:element type="date" name="Date" maxOccurs="1" minOccurs="0"/>
       <xs:element name="Rules">
         <xs:complexType>
           <xs:all>
