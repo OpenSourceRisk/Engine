@@ -86,8 +86,16 @@ void DiscountingFxForwardEngine::calculate() const {
         Real disc2near = currency2Discountcurve_->discount(npvDate);
         Real disc2far = currency2Discountcurve_->discount(arguments_.payDate);
 
-        if (arguments_.isPhysicallySettled) {
-            Real fxfwd = disc1near / disc1far * disc2far / disc2near * spotFX_->value();
+		// Calculate npv
+		if (!arguments_.isPhysicallySettled && arguments_.payDate > arguments_.maturityDate) {
+            Real ccy1Fixing = ccy1_ == arguments_.payCcy ? 1.0 : arguments_.fxIndex->fixing(arguments_.fixingDate);
+            Real ccy2Fixing = ccy2_ == arguments_.payCcy ? 1.0 : arguments_.fxIndex->fixing(arguments_.fixingDate);
+
+            results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * disc1far / disc1near *
+                             ((tmpNominal1 * ccy1Fixing) - (tmpNominal2 * ccy2Fixing));
+		} else {
+			Real fxfwd;
+            fxfwd = disc1near / disc1far * disc2far / disc2near * spotFX_->value();
             // results_.value =
             //     (tmpPayCurrency1 ? -1.0 : 1.0) * (tmpNominal1 * disc1far / disc1near -
             //                                       tmpNominal2 * disc2far / disc2near * spotFX_->value());
@@ -95,26 +103,24 @@ void DiscountingFxForwardEngine::calculate() const {
                 (tmpPayCurrency1 ? -1.0 : 1.0) * disc1far / disc1near * (tmpNominal1 - tmpNominal2 * fxfwd);
             results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, fxfwd);
 
-			// Align notional with ISDA AANA/GRID guidance as of November 2020 for deliverable forwards
-			if (tmpNominal1 > tmpNominal2 * fxfwd) {
-				results_.additionalResults["currentNotional"] = tmpNominal1;
-				results_.additionalResults["notionalCurrency"] = ccy1_.code();
-			} else {
-				results_.additionalResults["currentNotional"] = tmpNominal2;
-				results_.additionalResults["notionalCurrency"] = ccy2_.code();
+            results_.npv = Money(ccy1_, results_.value);       
+
+			if (arguments_.isPhysicallySettled) {
+				// Align notional with ISDA AANA/GRID guidance as of November 2020 for deliverable forwards
+				if (tmpNominal1 > tmpNominal2 * fxfwd) {
+					results_.additionalResults["currentNotional"] = tmpNominal1;
+					results_.additionalResults["notionalCurrency"] = ccy1_.code();
+				} else {
+					results_.additionalResults["currentNotional"] = tmpNominal2;
+					results_.additionalResults["notionalCurrency"] = ccy2_.code();
+				}
 			}
+		}
 
-			results_.npv = Money(ccy1_, results_.value);
-		} else {
-            bool ccy1Fixing = ccy1_ == arguments_.payCcy ? 1.0 : arguments_.fxIndex->fixing(arguments_.fixingDate);
-            bool ccy2Fixing = ccy2_ == arguments_.payCcy ? 1.0 : arguments_.fxIndex->fixing(arguments_.fixingDate);
-			
-			results_.value = (tmpPayCurrency1 ? -1.0 : 1.0)
-				 * disc1far / disc1near * ( (tmpNominal1 * ccy1Fixing) - (tmpNominal2 * ccy2Fixing) );
-
-			results_.additionalResults["currentNotional"] =
-                            ccy1_ == arguments_.payCcy ? ccy1_.code() : ccy2_.code();
-			results_.additionalResults["notionalCurrency"] = arguments_.payCcy.code();
+		// Add currentNotional and notionalCurrency to additionalResults
+		if (!arguments_.isPhysicallySettled) {
+            results_.additionalResults["currentNotional"] = ccy1_ == arguments_.payCcy ? ccy1_.code() : ccy2_.code();
+            results_.additionalResults["notionalCurrency"] = arguments_.payCcy.code();        
 		}
 	}
 
