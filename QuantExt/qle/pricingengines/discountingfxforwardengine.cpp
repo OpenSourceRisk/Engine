@@ -95,16 +95,17 @@ void DiscountingFxForwardEngine::calculate() const {
                 (tmpPayCurrency1 ? -1.0 : 1.0) * disc1far / disc1near * (tmpNominal1 - tmpNominal2 * fxfwd);
             results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, fxfwd);
 
-			// Align notional with ISDA AANA/GRID guidance as of November 2020 for deliverable forwards
-			if (tmpNominal1 > tmpNominal2 * fxfwd) {
-				results_.additionalResults["currentNotional"] = tmpNominal1;
-				results_.additionalResults["notionalCurrency"] = ccy1_.code();
-			} else {
-				results_.additionalResults["currentNotional"] = tmpNominal2;
-				results_.additionalResults["notionalCurrency"] = ccy2_.code();
-			}
+            // Align notional with ISDA AANA/GRID guidance as of November 2020 for deliverable forwards
+            if (tmpNominal1 > tmpNominal2 * fxfwd) {
+                results_.additionalResults["currentNotional"] = tmpNominal1;
+                results_.additionalResults["notionalCurrency"] = ccy1_.code();
+            } else {
+                results_.additionalResults["currentNotional"] = tmpNominal2;
+                results_.additionalResults["notionalCurrency"] = ccy2_.code();
+            }
+        }
+        results_.npv = Money(ccy1_, results_.value);
     }
-    results_.npv = Money(ccy1_, results_.value);
 
 } // calculate
 
