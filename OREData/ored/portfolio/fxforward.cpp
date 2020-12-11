@@ -79,18 +79,24 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxForward");
 
-    DLOG("Build FxForward with maturity date " << QuantLib::io::iso_date(maturityDate) << " and pay date "
-                                               << QuantLib::io::iso_date(payDate));
+    try {
+        DLOG("Build FxForward with maturity date " << QuantLib::io::iso_date(maturityDate) << " and pay date "
+                                                   << QuantLib::io::iso_date(payDate));
 
-    boost::shared_ptr<QuantLib::Instrument> instrument =
-        boost::make_shared<QuantExt::FxForward>(boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false,
-                                                settlement_ == "Physical", payDate, payCcy, fixingDate, fxIndex);
-    instrument_.reset(new VanillaInstrument(instrument));
+        boost::shared_ptr<QuantLib::Instrument> instrument = boost::make_shared<QuantExt::FxForward>(
+            boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false, settlement_ == "Physical", payDate,
+            payCcy, fixingDate, fxIndex);
+        instrument_.reset(new VanillaInstrument(instrument));
 
-    npvCurrency_ = soldCurrency_;
-    notional_ = Null<Real>(); // soldAmount_;
-    notionalCurrency_ = "";   // soldCurrency_;
-    maturity_ = maturityDate;
+        npvCurrency_ = soldCurrency_;
+        notional_ = Null<Real>(); // soldAmount_;
+        notionalCurrency_ = "";   // soldCurrency_;
+        maturity_ = maturityDate;
+
+    } catch (std::exception&) {
+        instrument_.reset();
+        throw;
+    }
 
     // Set up Legs
     legs_ = {{boost::make_shared<SimpleCashFlow>(boughtAmount_, payDate)},
