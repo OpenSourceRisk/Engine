@@ -152,11 +152,11 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 parseVectorOfValues<Period>(config->smileUnderlyingTenors(), &parsePeriod);
             vector<Spread> spreads = parseVectorOfValues<Real>(config->smileSpreads(), &parseReal);
 
-            // add smile spread 0, if not already existent
-            auto spr = std::upper_bound(spreads.begin(), spreads.end(), 0.0);
-            if (!close_enough(*spr, 0.0)) {
-                spreads.insert(spr, 0.0);
-            }
+            // add smile spread 0, if not already existent and sort the spreads
+            if (std::find_if(spreads.begin(), spreads.end(), [](const Real x) { return close_enough(x, 0.0); }) ==
+                spreads.end())
+                spreads.push_back(0.0);
+            std::sort(spreads.begin(), spreads.end());
 
             vector<vector<bool>> zero(smileOptionTenors.size() * smileUnderlyingTenors.size(),
                                       std::vector<bool>(spreads.size(), true));
