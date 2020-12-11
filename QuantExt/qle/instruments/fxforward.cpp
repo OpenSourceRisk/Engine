@@ -35,8 +35,10 @@ FxForward::FxForward(const Real& nominal1, const Currency& currency1, const Real
     if (payDate_ == Date())
         payDate_ = maturityDate_;
 
+    QL_REQUIRE(!isPhysicallySettled || !payCcy_.empty(),
+               "FxForward: no settlement currency given for non-deliverable forward.");
+
     if (!isPhysicallySettled && payDate_ > fixingDate_) {
-        QL_REQUIRE(!payCcy_.empty(), "FxForward: no settlement currency given for non-deliverable forward.");
         QL_REQUIRE(fxIndex_, "FxForward: no FX index given for non-deliverable forward.");
         QL_REQUIRE(fixingDate_ != Date(), "FxForward: no FX fixing date given for non-deliverable forward.");
         registerWith(fxIndex_);
