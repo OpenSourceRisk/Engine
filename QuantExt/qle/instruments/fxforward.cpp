@@ -65,11 +65,16 @@ FxForward::FxForward(const Money& nominal1, const ExchangeRate& forwardRate, con
     if (payDate_ == Date())
         payDate_ = maturityDate_;
 
-    if (!isPhysicallySettled && payDate > fixingDate) {
-        QL_REQUIRE(!payCcy.empty(), "FxForward: no settlement currency given for non-deliverable forward.");
-        QL_REQUIRE(fxIndex, "FxForward: no FX index given for non-deliverable forward.");
-        QL_REQUIRE(fixingDate != Date(), "FxForward: no FX fixing date given for non-deliverable forward.");
-        registerWith(fxIndex);
+    if (payCcy_.empty())
+        payCcy_ = currency2_;
+
+    if (fixingDate_ == Date())
+        fixingDate_ = maturityDate_;
+
+    if (!isPhysicallySettled && payDate_ > fixingDate_) {
+        QL_REQUIRE(fxIndex_, "FxForward: no FX index given for non-deliverable forward.");
+        QL_REQUIRE(fixingDate_ != Date(), "FxForward: no FX fixing date given for non-deliverable forward.");
+        registerWith(fxIndex_);
     }
 }
 
@@ -86,13 +91,18 @@ FxForward::FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote,
     nominal2_ = nominal1_ / fxForwardQuote->value();
 
     if (payDate_ == Date())
-        payDate_ == maturityDate_;
+        payDate_ = maturityDate_;
 
-    if (!isPhysicallySettled && payDate > fixingDate) {
-        QL_REQUIRE(!payCcy.empty(), "FxForward: no settlement currency given for non-deliverable forward.");
-        QL_REQUIRE(fxIndex, "FxForward: no FX index given for non-deliverable forward.");
-        QL_REQUIRE(fixingDate != Date(), "FxForward: no FX fixing date given for non-deliverable forward.");
-        registerWith(fxIndex);
+    if (payCcy_.empty())
+        payCcy_ = currency2_;
+
+    if (fixingDate_ == Date())
+        fixingDate_ = maturityDate_;
+
+    if (!isPhysicallySettled && payDate_ > fixingDate_) {
+        QL_REQUIRE(fxIndex_, "FxForward: no FX index given for non-deliverable forward.");
+        QL_REQUIRE(fixingDate_ != Date(), "FxForward: no FX fixing date given for non-deliverable forward.");
+        registerWith(fxIndex_);
     }
 }
 
