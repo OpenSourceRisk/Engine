@@ -227,7 +227,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                                  << config->curveID() << "/" << smileOptionTenors[i] << "/" << smileUnderlyingTenors[j]
                                  << "/" << spreads[spreads.size() - 1 - k] << " with " << lastNonZeroValue
                                  << " since market quote is zero");
-                        } else {
+                        }
+                        // update last non-zero value
+                        if (!zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]) {
                             lastNonZeroValue = q->value();
                         }
                     }
