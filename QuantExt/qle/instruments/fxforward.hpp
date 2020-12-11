@@ -191,8 +191,8 @@ public:
     bool payCurrency1;
     bool isPhysicallySettled;
     Date payDate;
-    //Currency payCcy;
-    //boost::shared_ptr<FxIndex> fxIndex;
+    Currency payCcy;
+    boost::shared_ptr<FxIndex> fxIndex;
     Date fixingDate;
     void validate() const;
 };

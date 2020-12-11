@@ -86,20 +86,18 @@ void DiscountingFxForwardEngine::calculate() const {
         Real disc2near = currency2Discountcurve_->discount(npvDate);
         Real disc2far = currency2Discountcurve_->discount(arguments_.payDate);
 
-        //if (!arguments_.isPhysicallySettled && arguments_.payDate > arguments_.fixingDate) {
-        //    Real ccy1Fixing = ccy1_ == arguments_.payCcy ? 1.0 : arguments_.fxIndex->fixing(arguments_.fixingDate);
-        //    Real ccy2Fixing = ccy2_ == arguments_.payCcy ? 1.0 : arguments_.fxIndex->fixing(arguments_.fixingDate);
+        if (!arguments_.isPhysicallySettled && arguments_.payDate > arguments_.fixingDate) {
+            Real ccy1Fixing = ccy1_ == arguments_.payCcy ? 1.0 : arguments_.fxIndex->fixing(arguments_.fixingDate);
+            Real ccy2Fixing = ccy2_ == arguments_.payCcy ? 1.0 : arguments_.fxIndex->fixing(arguments_.fixingDate);
 
-        //    results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * disc1far / disc1near *
-        //                     ((tmpNominal1 * ccy1Fixing) - (tmpNominal2 * ccy2Fixing));
+            results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * disc1far / disc1near *
+                             ((tmpNominal1 * ccy1Fixing) - (tmpNominal2 * ccy2Fixing));
 
-        //    results_.npv = Money(arguments_.payCcy, results_.value);
-        //} else {
-        //if (arguments_.isPhysicallySettled) {
+            results_.npv = Money(arguments_.payCcy, results_.value);
+        } else {
             Real fxfwd = disc1near / disc1far * disc2far / disc2near * spotFX_->value();
-            // results_.value =
-            //     (tmpPayCurrency1 ? -1.0 : 1.0) * (tmpNominal1 * disc1far / disc1near -
-            //                                       tmpNominal2 * disc2far / disc2near * spotFX_->value());
+            results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * (tmpNominal1 * disc1far / disc1near -
+                                                               tmpNominal2 * disc2far / disc2near * spotFX_->value());
             results_.value =
                 (tmpPayCurrency1 ? -1.0 : 1.0) * disc1far / disc1near * (tmpNominal1 - tmpNominal2 * fxfwd);
             results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, fxfwd);
@@ -113,7 +111,7 @@ void DiscountingFxForwardEngine::calculate() const {
                 results_.additionalResults["notionalCurrency"] = ccy2_.code();
             }
             results_.npv = Money(ccy1_, results_.value);
-        //}
+        }
     }
 
 } // calculate

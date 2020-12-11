@@ -35,11 +35,11 @@ FxForward::FxForward(const Real& nominal1, const Currency& currency1, const Real
     if (payDate_ == Date())
         payDate_ = maturityDate_;
 
-    if (!isPhysicallySettled && payDate > fixingDate) {
-        QL_REQUIRE(payCcy != Currency(), "FxForward: no settlement currency given for non-deliverable forward.");
-        QL_REQUIRE(fxIndex, "FxForward: no FX index given for non-deliverable forward.");
-        QL_REQUIRE(fixingDate != Date(), "FxForward: no FX fixing date given for non-deliverable forward.");
-        registerWith(fxIndex);
+    if (!isPhysicallySettled && payDate_ > fixingDate_) {
+        QL_REQUIRE(!payCcy_.empty(), "FxForward: no settlement currency given for non-deliverable forward.");
+        QL_REQUIRE(fxIndex_, "FxForward: no FX index given for non-deliverable forward.");
+        QL_REQUIRE(fixingDate_ != Date(), "FxForward: no FX fixing date given for non-deliverable forward.");
+        registerWith(fxIndex_);
     }
 }
 
@@ -47,8 +47,8 @@ FxForward::FxForward(const Money& nominal1, const ExchangeRate& forwardRate, con
                      bool sellingNominal, const bool isPhysicallySettled, const Date& payDate, const Currency& payCcy,
                      const Date& fixingDate, const boost::shared_ptr<QuantExt::FxIndex>& fxIndex)
     : nominal1_(nominal1.value()), currency1_(nominal1.currency()), maturityDate_(maturityDate),
-      payCurrency1_(sellingNominal), isPhysicallySettled_(isPhysicallySettled), payDate_(payDate),
-	  payCcy_(payCcy), fxIndex_(fxIndex), fixingDate_(fixingDate) {
+      payCurrency1_(sellingNominal), isPhysicallySettled_(isPhysicallySettled), payDate_(payDate), payCcy_(payCcy),
+      fxIndex_(fxIndex), fixingDate_(fixingDate) {
 
     QL_REQUIRE(currency1_ == forwardRate.target(), "Currency of nominal1 does not match target (domestic) "
                                                    "currency in the exchange rate.");
@@ -61,7 +61,7 @@ FxForward::FxForward(const Money& nominal1, const ExchangeRate& forwardRate, con
         payDate_ = maturityDate_;
 
     if (!isPhysicallySettled && payDate > fixingDate) {
-        QL_REQUIRE(payCcy != Currency(), "FxForward: no settlement currency given for non-deliverable forward.");
+        QL_REQUIRE(!payCcy.empty(), "FxForward: no settlement currency given for non-deliverable forward.");
         QL_REQUIRE(fxIndex, "FxForward: no FX index given for non-deliverable forward.");
         QL_REQUIRE(fixingDate != Date(), "FxForward: no FX fixing date given for non-deliverable forward.");
         registerWith(fxIndex);
@@ -73,8 +73,8 @@ FxForward::FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote,
                      const Currency& payCcy, const Date& fixingDate,
                      const boost::shared_ptr<QuantExt::FxIndex>& fxIndex)
     : nominal1_(nominal1.value()), currency1_(nominal1.currency()), currency2_(currency2), maturityDate_(maturityDate),
-      payCurrency1_(sellingNominal), isPhysicallySettled_(isPhysicallySettled), payDate_(payDate),
-	  payCcy_(payCcy), fxIndex_(fxIndex), fixingDate_(fixingDate) {
+      payCurrency1_(sellingNominal), isPhysicallySettled_(isPhysicallySettled), payDate_(payDate), payCcy_(payCcy),
+      fxIndex_(fxIndex), fixingDate_(fixingDate) {
 
     QL_REQUIRE(fxForwardQuote->isValid(), "The FX Forward quote is not valid.");
 
@@ -84,7 +84,7 @@ FxForward::FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote,
         payDate_ == maturityDate_;
 
     if (!isPhysicallySettled && payDate > fixingDate) {
-        QL_REQUIRE(payCcy != Currency(), "FxForward: no settlement currency given for non-deliverable forward.");
+        QL_REQUIRE(!payCcy.empty(), "FxForward: no settlement currency given for non-deliverable forward.");
         QL_REQUIRE(fxIndex, "FxForward: no FX index given for non-deliverable forward.");
         QL_REQUIRE(fixingDate != Date(), "FxForward: no FX fixing date given for non-deliverable forward.");
         registerWith(fxIndex);
@@ -113,8 +113,8 @@ void FxForward::setupArguments(PricingEngine::arguments* args) const {
     arguments->payCurrency1 = payCurrency1_;
     arguments->isPhysicallySettled = isPhysicallySettled_;
     arguments->payDate = payDate_;
-    //arguments->payCcy = payCcy_;
-    //arguments->fxIndex = fxIndex_;
+    arguments->payCcy = payCcy_;
+    arguments->fxIndex = fxIndex_;
     arguments->fixingDate = fixingDate_;
 }
 
