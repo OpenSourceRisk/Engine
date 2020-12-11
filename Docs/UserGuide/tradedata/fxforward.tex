@@ -38,10 +38,9 @@ Allowable values: \emph{Cash} or \emph{Physical}.  Defaults to \emph{Physical} i
 A \lstinline!SettlementData! node is shown in Listing \ref{lst:settlement_data_node}, and the meanings and allowable values of its elements follow below.
 
 \begin{itemize}
-\item Currency: The currency in which the FX Forward is settled. This field is used only if Settlement is \emph{Cash} and the payment date is greater
-than the value date. Otherwise, it is ignored. \\
+\item Currency: The currency in which the FX Forward is settled. This field is only used if settlement is \emph{Cash}. \\
 Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}. Defaults to the sold currency if left blank or omitted.
-\item FXIndex: The FX reference index for determining the FX fixing at the value date. This field is required if Settlement is \emph{Cash}
+\item FXIndex: The FX reference index for determining the FX fixing at the value date. This field is required if settlement is \emph{Cash}
 and the payment date is greater than the value date. Otherwise, it is ignored. \\
 Allowable values: The format of the \lstinline!FXIndex! is ``FX-FixingSource-CCY1-CCY2'' as described in Table \ref{tab:fxindex_data}.
 \item Date [Optional]: If specified, this will be the payment date. \\
