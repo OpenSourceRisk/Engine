@@ -70,7 +70,7 @@ public:
     FxForward(const Real& nominal1, const Currency& currency1, const Real& nominal2, const Currency& currency2,
               const Date& maturityDate, const bool& payCurrency1, const bool isPhysicallySettled = true,
               const Date& payDate = Date(), const Currency& payCcy = Currency(), const Date& fixingDate = Date(),
-              const boost::shared_ptr<QuantExt::FxIndex>& = nullptr);
+              const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
 
     /*! \param nominal1
                FX forward nominal amount (domestic currency)
@@ -93,7 +93,7 @@ public:
     */
     FxForward(const Money& nominal1, const ExchangeRate& forwardRate, const Date& forwardDate, bool sellingNominal,
               const bool isPhysicallySettled = true, const Date& payDate = Date(), const Currency& payCcy = Currency(),
-              const Date& fixingDate = Date(), const boost::shared_ptr<QuantExt::FxIndex>& = nullptr);
+              const Date& fixingDate = Date(), const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
 
     /*! \param nominal1
                FX forward nominal amount 1 (domestic currency)
@@ -120,7 +120,7 @@ public:
     FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote, const Currency& currency2,
               const Date& maturityDate, bool sellingNominal, const bool isPhysicallySettled = true,
               const Date& payDate = Date(), const Currency& payCcy = Currency(), const Date& fixingDate = Date(),
-              const boost::shared_ptr<QuantExt::FxIndex>& = nullptr);
+              const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
     //@}
 
     //! \name Results
