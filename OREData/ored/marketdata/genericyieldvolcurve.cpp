@@ -216,8 +216,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 for (Size j = 0; j < smileUnderlyingTenors.size(); ++j) {
                     Real lastNonZeroValue = 0.0;
                     for (Size k = 0; k < spreads.size(); ++k) {
-                        boost::shared_ptr<SimpleQuote> q = boost::static_pointer_cast<SimpleQuote>(
+                        boost::shared_ptr<SimpleQuote> q = boost::dynamic_pointer_cast<SimpleQuote>(
                             *volSpreadHandles[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]);
+                        QL_REQUIRE(q, "internal error: expected simple quote");
                         // do not overwrite vol spread for zero strike spread (ATM point)
                         if (zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k] &&
                             !close_enough(spreads[spreads.size() - 1 - k], 0.0)) {
