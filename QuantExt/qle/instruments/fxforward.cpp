@@ -35,8 +35,11 @@ FxForward::FxForward(const Real& nominal1, const Currency& currency1, const Real
     if (payDate_ == Date())
         payDate_ = maturityDate_;
 
-    if(payCcy_.empty())
+    if (payCcy_.empty())
         payCcy_ = currency2_;
+
+    if (fixingDate_ == Date())
+        fixingDate_ = maturityDate_;
 
     if (!isPhysicallySettled && payDate_ > fixingDate_) {
         QL_REQUIRE(fxIndex_, "FxForward: no FX index given for non-deliverable forward.");
