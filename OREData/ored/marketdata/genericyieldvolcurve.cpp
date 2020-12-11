@@ -125,6 +125,12 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 isSln ? shifts : Matrix(vols.rows(), vols.columns(), 0.0)));
 
             atm->enableExtrapolation(config->extrapolate());
+            TLOG("built atm surface with vols:");
+            TLOGGERSTREAM << vols;
+            if(isSln) {
+                TLOG("built atm surface with shifts:");
+                TLOGGERSTREAM << shifts;
+            }
         } else {
             // Constant volatility
             atm = boost::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
