@@ -56,10 +56,6 @@ public:
     Real A(Real t, Real T) const;
     Real B(Real t, Real T) const;
 
-    Real intensity(Time t, Real y_t) const;
-    Real psi(Time t) const;
-    Real dlnPCir(Time t) const;
-
     /*! observer and linked calibrated model interface */
     void update();
     void generateArguments();
