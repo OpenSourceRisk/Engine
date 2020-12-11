@@ -168,8 +168,10 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             QL_REQUIRE(spreads.size() > 0, "Need at least 1 strike spread for a SwaptionVolCube");
 
             Size n = smileOptionTenors.size() * smileUnderlyingTenors.size();
-            vector<vector<Handle<Quote>>> volSpreadHandles(
-                n, vector<Handle<Quote>>(spreads.size(), Handle<Quote>(boost::make_shared<SimpleQuote>(0.0))));
+            vector<vector<Handle<Quote>>> volSpreadHandles(n, vector<Handle<Quote>>(spreads.size()));
+            for (auto& i : volSpreadHandles)
+                for (auto& j : i)
+                    j = Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
 
             LOG("vol cube smile option tenors " << smileOptionTenors.size());
             LOG("vol cube smile swap tenors " << smileUnderlyingTenors.size());
