@@ -77,14 +77,13 @@ void DiscountingFxForwardEngine::calculate() const {
 
     results_.value = 0.0;
     results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, tmpNominal1 / tmpNominal2); // strike rate
-    results_.additionalResults["currentNotional"] = 0.0;
-    results_.additionalResults["notionalCurrency"] = ccy1_;
 
     if (!detail::simple_event(arguments_.maturityDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
         Real disc1near = currency1Discountcurve_->discount(npvDate);
         Real disc1far = currency1Discountcurve_->discount(arguments_.payDate);
         Real disc2near = currency2Discountcurve_->discount(npvDate);
         Real disc2far = currency2Discountcurve_->discount(arguments_.payDate);
+        Real fxfwd = disc1near / disc1far * disc2far / disc2near * spotFX_->value();
 
         if (!arguments_.isPhysicallySettled && arguments_.payDate > arguments_.fixingDate) {
             Real ccy1Fixing = ccy1_ == arguments_.payCcy ? 1.0 : arguments_.fxIndex->fixing(arguments_.fixingDate);
@@ -95,13 +94,15 @@ void DiscountingFxForwardEngine::calculate() const {
 
             results_.npv = Money(arguments_.payCcy, results_.value);
         } else {
-            Real fxfwd = disc1near / disc1far * disc2far / disc2near * spotFX_->value();
-            results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * (tmpNominal1 * disc1far / disc1near -
-                                                               tmpNominal2 * disc2far / disc2near * spotFX_->value());
             results_.value =
                 (tmpPayCurrency1 ? -1.0 : 1.0) * disc1far / disc1near * (tmpNominal1 - tmpNominal2 * fxfwd);
-            results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, fxfwd);
+            results_.npv = Money(ccy1_, results_.value);
+        }
 
+        results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, fxfwd);
+
+        // set notional
+        if (arguments_.isPhysicallySettled) {
             // Align notional with ISDA AANA/GRID guidance as of November 2020 for deliverable forwards
             if (tmpNominal1 > tmpNominal2 * fxfwd) {
                 results_.additionalResults["currentNotional"] = tmpNominal1;
@@ -110,7 +111,11 @@ void DiscountingFxForwardEngine::calculate() const {
                 results_.additionalResults["currentNotional"] = tmpNominal2;
                 results_.additionalResults["notionalCurrency"] = ccy2_.code();
             }
-            results_.npv = Money(ccy1_, results_.value);
+        } else {
+            // for cash settled forwards we take the notional from the settlement ccy leg
+            results_.additionalResults["currentNotional"] =
+                arguments_.currency1 == arguments_.payCcy ? arguments_.nominal1 : arguments_.nominal2;
+            results_.additionalResults["notionalCurrency"] = arguments_.payCcy.code();
         }
     }
 
