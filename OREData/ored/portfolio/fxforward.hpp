@@ -39,10 +39,10 @@ public:
     //! Constructor
     FxForward(Envelope& env, const string& maturityDate, const string& boughtCurrency, double boughtAmount,
               const string& soldCurrency, double soldAmount, const string& settlement = "Physical",
-              const string& payDate = "")
+              const string& fxIndex = "", const string& payDate = "")
         : Trade("FxForward", env), maturityDate_(maturityDate), boughtCurrency_(boughtCurrency),
           boughtAmount_(boughtAmount), soldCurrency_(soldCurrency), soldAmount_(soldAmount), settlement_(settlement),
-          payDate_(payDate) {}
+          fxIndex_(fxIndex), payDate_(payDate) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
@@ -81,7 +81,7 @@ private:
     string payCalendar_;
     string payConvention_;
     Natural fxIndexDays_ = 0;
-    string fxIndexCalendar_ = "NullCalendar";
+    string fxIndexCalendar_ = "";
 };
 } // namespace data
 } // namespace ore
