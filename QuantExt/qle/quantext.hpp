@@ -190,6 +190,9 @@
 #include <qle/models/lgmimplieddefaulttermstructure.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
+#include <qle/models/normalsabr.hpp>
+#include <qle/models/normalsabrinterpolation.hpp>
+#include <qle/models/normalsabrsmilesection.hpp>
 #include <qle/models/parametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>

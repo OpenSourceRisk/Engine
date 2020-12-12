@@ -3,8 +3,8 @@
  All rights reserved.
 */
 
-#include <qlep/models/normalsabr.hpp>
-#include <qlep/models/normalsabrsmilesection.hpp>
+#include <qle/models/normalsabr.hpp>
+#include <qle/models/normalsabrsmilesection.hpp>
 
 #include <ql/termstructures/volatility/sabr.hpp>
 #include <ql/utilities/dataformatters.hpp>

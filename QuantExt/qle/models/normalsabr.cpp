@@ -3,7 +3,7 @@
  All rights reserved.
 */
 
-#include <qlep/models/normalsabr.hpp>
+#include <qle/models/normalsabr.hpp>
 
 #include <ql/errors.hpp>
 #include <ql/math/comparison.hpp>
@@ -26,7 +26,7 @@ Real normalSabrVolatility(Rate strike, Rate forward, Time expiryTime, Real alpha
     return std::max(vol, 0.00001);
 }
 
-Real normalSabrAlphaFromAtm(Rate forward, Time expiryTime, Real atmVol, Real nu, Real rho) {
+Real normalSabrAlphaFromAtmVol(Rate forward, Time expiryTime, Real atmVol, Real nu, Real rho) {
     return std::max(atmVol / (1.0 + expiryTime * (2.0 - 3.0 * rho * rho) * nu * nu / 24.0), 0.00001);
 }
 

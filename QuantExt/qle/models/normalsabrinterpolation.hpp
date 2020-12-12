@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <qlep/termstructures/normalsabr.hpp>
+#include <qle/models/normalsabr.hpp>
 
 #include <ql/math/interpolations/xabrinterpolation.hpp>
 #include <ql/termstructures/volatility/sabr.hpp>
@@ -82,10 +82,11 @@ struct NormalSABRSpecs {
     typedef NormalSABRWrapper type;
     boost::shared_ptr<type> instance(const Time t, const Real& forward, const std::vector<Real>& params,
                                      const std::vector<Real>& addParams) {
+        std::vector<Real> updatedParams(params);
         if (!addParams.empty()) {
-            params[0] = normalSabrAlphaFromAtmVol(forward, t, addParams.front(), params[1], params[2]);
+            updatedParams[0] = normalSabrAlphaFromAtmVol(forward, t, addParams.front(), params[1], params[2]);
         }
-        return boost::make_shared<type>(t, forward, params, addParams);
+        return boost::make_shared<type>(t, forward, updatedParams, addParams);
     }
 };
 } // namespace detail
@@ -101,7 +102,7 @@ public:
         const I2& yBegin, // y = volatilities
         Time t,           // option expiry
         const Real& forward, Real alpha, Real nu, Real rho, bool alphaIsFixed, bool nuIsFixed, bool rhoIsFixed,
-        bool vegaWeighted = true, , const Size atmStrikeIndex = Null<Size>(), const bool implyAlphaFromAtmVol = false,
+        bool vegaWeighted = true, const Size atmStrikeIndex = Null<Size>(), const bool implyAlphaFromAtmVol = false,
         const boost::shared_ptr<EndCriteria>& endCriteria = boost::shared_ptr<EndCriteria>(),
         const boost::shared_ptr<OptimizationMethod>& optMethod = boost::shared_ptr<OptimizationMethod>(),
         const Real errorAccept = 0.0002, const bool useMaxError = false, const Size maxGuesses = 50) {
