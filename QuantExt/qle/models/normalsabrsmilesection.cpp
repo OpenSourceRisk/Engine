@@ -16,7 +16,7 @@ NormalSabrSmileSection::NormalSabrSmileSection(Time timeToExpiry, Rate forward, 
     alpha_ = sabrParams[0];
     nu_ = sabrParams[1];
     rho_ = sabrParams[2];
-    validateSabrParameters(alpha_, 0.0, nu_, rho_);
+    // validateSabrParameters(alpha_, 0.0, nu_, rho_);
 }
 
 NormalSabrSmileSection::NormalSabrSmileSection(const Date& d, Rate forward, const std::vector<Real>& sabrParams,
@@ -25,7 +25,7 @@ NormalSabrSmileSection::NormalSabrSmileSection(const Date& d, Rate forward, cons
     alpha_ = sabrParams[0];
     nu_ = sabrParams[1];
     rho_ = sabrParams[2];
-    validateSabrParameters(alpha_, 0.0, nu_, rho_);
+    // validateSabrParameters(alpha_, 0.0, nu_, rho_);
 }
 
 Real NormalSabrSmileSection::varianceImpl(Rate strike) const {

@@ -28,13 +28,13 @@ public:
     NormalSABRWrapper(const Time t, const Real& forward, const std::vector<Real>& params,
                       const std::vector<Real>& addParams)
         : t_(t), forward_(forward), params_(params) {
-        validateSabrParameters(params[0], 0.0, params[1], params[2]);
+        // validateSabrParameters(params[0], 0.0, params[1], params[2]);
     }
     Real volatility(const Real x) { return normalSabrVolatility(x, forward_, t_, params_[0], params_[1], params_[2]); }
 
 private:
     const Real t_, &forward_;
-    const std::vector<Real>& params_;
+    const std::vector<Real> params_;
 };
 
 struct NormalSABRSpecs {
@@ -113,7 +113,7 @@ public:
 
         std::vector<Real> addParams;
         if (implyAlphaFromAtmVol) {
-            addParams.push_back(*std::next(xBegin, atmStrikeIndex));
+            addParams.push_back(*std::next(yBegin, atmStrikeIndex));
         }
 
         impl_ = boost::shared_ptr<Interpolation::Impl>(
