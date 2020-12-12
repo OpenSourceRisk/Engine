@@ -11,13 +11,19 @@
 namespace QuantExt {
 
 Real normalSabrVolatility(Rate strike, Rate forward, Time expiryTime, Real alpha, Real nu, Real rho) {
-    // B59.A in Hagan, Managing Smile Risk
-    if (alpha < 1E-6)
-        return 0.0;
+
+    // update extreme parameters
+
+    alpha = std::max(alpha, 1E-5);
+    if (rho < -1 + 1E-5)
+        rho = -1 + 1E-5;
+    else if (rho > 1 - 1E-5)
+        rho = 1 - 1E-5;
+
+    // calculate result
+
     Real zeta = nu / alpha * (forward - strike);
-    Real x = close_enough(rho, 1.0)
-                 ? 0.0
-                 : std::log((std::sqrt(1.0 - 2.0 * rho * zeta + zeta * zeta) - rho + zeta) / (1.0 - rho));
+    Real x = std::log((std::sqrt(1.0 - 2.0 * rho * zeta + zeta * zeta) - rho + zeta) / (1.0 - rho));
     Real f = close_enough(x, 0.0) ? 1.0 : zeta / x;
     Real vol = alpha * f * (1.0 + expiryTime * (2.0 - 3.0 * rho * rho) * nu * nu / 24.0);
     QL_REQUIRE(std::isfinite(vol), "normalSabrVolatility: computed invalid vol for strike="
