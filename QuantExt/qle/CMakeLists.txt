@@ -113,6 +113,8 @@ models/lgm.cpp
 models/lgmimplieddefaulttermstructure.cpp
 models/lgmimpliedyieldtermstructure.cpp
 models/linkablecalibratedmodel.cpp
+models/normalsabr.cpp
+models/normalsabrsmilesection.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
 models/projectedcrossassetmodel.cpp
@@ -400,6 +402,9 @@ models/lgm.hpp
 models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
 models/linkablecalibratedmodel.hpp
+models/normalsabr.hpp
+models/normalsabrinterpolation.hpp
+models/normalsabrsmilesection.hpp
 models/parametrization.hpp
 models/piecewiseconstanthelper.hpp
 models/projectedcrossassetmodel.hpp
