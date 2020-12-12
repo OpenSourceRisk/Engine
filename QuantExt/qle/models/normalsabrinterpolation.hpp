@@ -64,16 +64,16 @@ struct NormalSABRSpecs {
     Real dilationFactor() { return 0.001; }
     Array inverse(const Array& y, const std::vector<bool>&, const std::vector<Real>&, const Real) {
         Array x(3);
-        x[0] = y[0] < 25.0 + eps1() ? std::sqrt(y[0] - eps1()) : (y[0] - eps1() + 25.0) / 10.0;
-        x[1] = y[1] < 25.0 + eps1() ? std::sqrt(y[1] - eps1()) : (y[1] - eps1() + 25.0) / 10.0;
-        x[2] = std::asin(y[2] / eps2());
+        x[0] = std::tan(y[0] * M_PI / 0.02 - M_PI_2);
+        x[1] = std::tan(y[1] * M_PI / 5.00 - M_PI_2);
+        x[2] = std::tan((y[2] + 1.0) * M_PI / 2.0 - M_PI_2);
         return x;
     }
     Array direct(const Array& x, const std::vector<bool>&, const std::vector<Real>&, const Real) {
         Array y(3);
-        y[0] = std::fabs(x[0]) < 5.0 ? x[0] * x[0] + eps1() : (10.0 * std::fabs(x[0]) - 25.0) + eps1();
-        y[1] = std::fabs(x[1]) < 5.0 ? x[1] * x[1] + eps1() : (10.0 * std::fabs(x[1]) - 25.0) + eps1();
-        y[2] = std::fabs(x[2]) < 2.5 * M_PI ? eps2() * std::sin(x[2]) : eps2() * (x[2] > 0.0 ? 1.0 : (-1.0));
+        y[0] = 0.02 * (std::atan(x[0]) + M_PI_2) / M_PI;
+        y[1] = 5.00 * (std::atan(x[1]) + M_PI_2) / M_PI;
+        y[2] = 2.0 * (std::atan(x[2]) + M_PI_2) / M_PI - 1.0;
         return y;
     }
     Real weight(const Real strike, const Real forward, const Real stdDev, const std::vector<Real>& addParams) {
