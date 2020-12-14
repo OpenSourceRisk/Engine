@@ -43,6 +43,7 @@ public:
         : t_(t), forward_(forward), params_(params) {
         // validateSabrParameters(params[0], 0.0, params[1], params[2]);
     }
+    const std::vector<Real>& params() const { return params_; }
     Real volatility(const Real x) { return normalSabrVolatility(x, forward_, t_, params_[0], params_[1], params_[2]); }
 
 private:
@@ -138,9 +139,9 @@ public:
     }
     Real expiry() const { return coeffs_->t_; }
     Real forward() const { return coeffs_->forward_; }
-    Real alpha() const { return coeffs_->params_[0]; }
-    Real nu() const { return coeffs_->params_[1]; }
-    Real rho() const { return coeffs_->params_[2]; }
+    Real alpha() const { return coeffs_->modelInstance_->params()[0]; }
+    Real nu() const { return coeffs_->modelInstance_->params()[1]; }
+    Real rho() const { return coeffs_->modelInstance_->params()[2]; }
     Real rmsError() const { return coeffs_->error_; }
     Real maxError() const { return coeffs_->maxError_; }
     const std::vector<Real>& interpolationWeights() const { return coeffs_->weights_; }
