@@ -39,10 +39,12 @@ public:
     bool arbitrageFree() const;
     const std::vector<bool> violationsType1() const;
     const std::vector<bool> violationsType2() const;
+    const std::vector<Real> density() const;
 
 private:
     std::vector<Real> strikes_, callPrices_;
     std::vector<bool> violationsType1_, violationsType2_;
+    std::vector<Real> q_;
 };
 
 std::string arbitrageViolationsAsString(const CarrMadanMarginalProbability& cm);

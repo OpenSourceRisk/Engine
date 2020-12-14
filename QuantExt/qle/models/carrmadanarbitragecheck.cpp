@@ -34,7 +34,8 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
                                                         << strikes.size() << ") inconsistent to callPrices ("
                                                         << callPrices.size() << ")";)
 
-    QL_REQUIRE(!strikes.empty(), "CarrMadanMarginalProbability: empty strikes");
+    QL_REQUIRE(strikes.size() >= 2,
+               "CarrMadanMarginalProbability: at least 2 strikes required (got " << strikes.size() << ")");
 
     // compute Q
     std::vector<Real> Q(strikes.size() - 1);
@@ -68,6 +69,12 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
             violationsType2_[i] = true;
         }
     }
+
+    // compute q
+    q_.resize(Q.size() - 1);
+    for (Size i = 0; i < Q.size() - 1; ++i) {
+        q_[i] = Q[i] - Q[i + 1];
+    }
 }
 
 const std::vector<Real>& CarrMadanMarginalProbability::strikes() const { return strikes_; }
@@ -94,5 +101,7 @@ std::string arbitrageViolationsAsString(const CarrMadanMarginalProbability& cm) 
     }
     return out.str();
 }
+
+const std::vector<Real> CarrMadanMarginalProbability::density() const { return q_; }
 
 } // namespace QuantExt
