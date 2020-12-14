@@ -87,6 +87,7 @@ instruments/tenorbasisswap.cpp
 math/deltagammavar.cpp
 math/fillemptymatrix.cpp
 methods/multipathgeneratorbase.cpp
+models/carrmadanarbitragecheck.cpp
 models/cdsoptionhelper.cpp
 models/cirppimplieddefaulttermstructure.cpp
 models/cmscaphelper.cpp
@@ -365,6 +366,7 @@ math/stabilisedglls.hpp
 math/trace.hpp
 methods/multipathgeneratorbase.hpp
 methods/pathgeneratorfactory.hpp
+models/carrmadanarbitragecheck.hpp
 models/cdsoptionhelper.hpp
 models/cirppconstantfellerparametrization.hpp
 models/cirppconstantparametrization.hpp

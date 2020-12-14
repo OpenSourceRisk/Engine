@@ -153,6 +153,7 @@
 #include <qle/math/trace.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/pathgeneratorfactory.hpp>
+#include <qle/models/carrmadanarbitragecheck.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/cirppconstantparametrization.hpp>
