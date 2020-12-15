@@ -29,9 +29,9 @@ using namespace QuantLib;
 namespace {
 
 static boost::math::normal_distribution<double> normal_dist;
-
 Real phi(const Real x) { return boost::math::pdf(normal_dist, x); }
 Real Phi(const Real x) { return boost::math::cdf(normal_dist, x); }
+
 Real PhiTilde(const Real x) { return Phi(x) + phi(x) / x; }
 
 Real inversePhiTilde(const Real PhiTildeStar) {
@@ -39,18 +39,18 @@ Real inversePhiTilde(const Real PhiTildeStar) {
     Real xbar;
     if (PhiTildeStar < -0.001882039271) {
         Real g = 1.0 / (PhiTildeStar - 0.5);
-        Real xibar =
-            0.032114372355 - g * g * (0.016969777977 - g * g * (2.6207332461E-3 - 9.6066952861E-5 * g * g)) /
-                                 (1.0 - g * g * (0.6635646938 - g * g * (0.14528712196 - 0.010472855461 * g * g)));
+        Real xibar = (0.032114372355 - g * g * (0.016969777977 - g * g * (2.6207332461E-3 - 9.6066952861E-5 * g * g))) /
+                     (1.0 - g * g * (0.6635646938 - g * g * (0.14528712196 - 0.010472855461 * g * g)));
         xbar = g * (0.3989422804014326 + xibar * g * g);
     } else {
-        Real h = std::sqrt(std::log(-PhiTildeStar));
-        xbar = 9.4883409779 - h * (9.6320903635 - h * (0.58556997323 + 2.1464093351 * h)) /
-                                  (1.0 - h * (0.65174820867 + h * (1.5120247828 + 6.6437847132E-5 * h)));
+        Real h = std::sqrt(-std::log(-PhiTildeStar));
+        xbar = (9.4883409779 - h * (9.6320903635 - h * (0.58556997323 + 2.1464093351 * h))) /
+               (1.0 - h * (0.65174820867 + h * (1.5120247828 + 6.6437847132E-5 * h)));
     }
     Real q = (PhiTilde(xbar) - PhiTildeStar) / phi(xbar);
-    Real xstar = 3.0 * q * xbar * xbar * (2.0 - q * xbar * (2.0 + xbar * xbar)) /
-                 (6.0 + q * xbar * (-12.0 + xbar * (6.0 * q + xbar * (-6.0 + q * xbar * (3.0 + xbar * xbar)))));
+    Real xstar =
+        xbar + 3.0 * q * xbar * xbar * (2.0 - q * xbar * (2.0 + xbar * xbar)) /
+                   (6.0 + q * xbar * (-12.0 + xbar * (6.0 * q + xbar * (-6.0 + q * xbar * (3.0 + xbar * xbar)))));
     return xstar;
 }
 
@@ -67,24 +67,25 @@ Real exactBachelierImpliedVolatility(Option::Type optionType, Real strike, Real 
 
     // handle case strike = forward
 
-    if (close_enough(strike, forward)) {
+    if (std::abs(strike - forward) < 1E-15) {
         return bachelierPrice / (std::sqrt(tte) * phi(0.0));
     }
 
     // handle case strike != forward
 
-    Real timeValue = bachelierPrice - theta * std::max(forward - strike, 0.0);
+    Real timeValue = bachelierPrice - std::max(theta * (forward - strike), 0.0);
 
-    if (close_enough(timeValue, 0.0))
+    if (std::abs(timeValue) < 1E-15)
         return 0.0;
 
-    QL_REQUIRE(timeValue > 0.0, "exactBachelierImpliedVolatility(" << theta << "," << strike << "," << forward << ","
-                                                                   << tte << "," << bachelierPrice
-                                                                   << "): option price implies negative time value");
+    QL_REQUIRE(timeValue > 0.0, "exactBachelierImpliedVolatility(theta="
+                                    << theta << ",strike=" << strike << ",forward=" << forward << ",tte=" << tte
+                                    << ",price=" << bachelierPrice << "): option price implies negative time value ("
+                                    << timeValue << ")");
 
     Real PhiTildeStar = -std::abs(timeValue / (strike - forward));
     Real xstar = inversePhiTilde(PhiTildeStar);
-    Real impliedVol = std::abs((strike - forward) / xstar * std::sqrt(tte));
+    Real impliedVol = std::abs((strike - forward) / (xstar * std::sqrt(tte)));
 
     return impliedVol;
 }
