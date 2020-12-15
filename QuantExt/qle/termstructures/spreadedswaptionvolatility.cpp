@@ -17,43 +17,15 @@
 */
 
 #include <qle/math/flatextrapolation.hpp>
+#include <qle/termstructures/spreadedsmilesection2.hpp>
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
 
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/flatextrapolation2d.hpp>
 
+#include <iostream>
+
 namespace QuantExt {
-
-SpreadedSwaptionSmileSection::SpreadedSwaptionSmileSection(const boost::shared_ptr<SmileSection>& base,
-                                                           const std::vector<Real>& strikeSpreads,
-                                                           const std::vector<Real>& volSpreads, const Real atmLevel)
-    : SmileSection(base->exerciseTime(), base->dayCounter(), base->volatilityType(),
-                   base->volatilityType() == ShiftedLognormal ? base_->shift() : 0.0),
-      base_(base), strikeSpreads_(strikeSpreads), volSpreads_(volSpreads), atmLevel_(atmLevel) {
-    QL_REQUIRE(strikeSpreads_.size() == volSpreads.size(),
-               "SpreadedSwaptionSmileSection: strike spreads ("
-                   << strikeSpreads.size() << ") inconsistent with vol spreads (" << volSpreads.size() << ")");
-    if (atmLevel_ != Null<Real>() && volSpreads_.size() > 1) {
-        volSpreadInterpolation_ =
-            LinearFlat().interpolate(strikeSpreads_.begin(), strikeSpreads_.end(), volSpreads_.begin());
-    } else {
-        QL_REQUIRE(strikeSpreads_.size() == 1 && close_enough(strikeSpreads_.front(), 0.0),
-                   "SpreadedSwaptionSmileSection: if no atm level is given, exactly one strike spread 0 must be given");
-    }
-}
-
-Rate SpreadedSwaptionSmileSection::minStrike() const { return base_->minStrike(); }
-Rate SpreadedSwaptionSmileSection::maxStrike() const { return base_->maxStrike(); }
-Rate SpreadedSwaptionSmileSection::atmLevel() const {
-    return atmLevel_ != Null<Real>() ? atmLevel_ : base_->atmLevel();
-}
-
-Volatility SpreadedSwaptionSmileSection::volatilityImpl(Rate strike) const {
-    if (atmLevel_ == Null<Real>() || volSpreads_.size() == 1)
-        return base_->volatility(strike) + volSpreads_.front();
-    else
-        return base_->volatility(strike) + volSpreadInterpolation_(strike - atmLevel_);
-}
 
 SpreadedSwaptionVolatility::SpreadedSwaptionVolatility(const Handle<SwaptionVolatilityStructure>& base,
                                                        const std::vector<Period>& optionTenors,
@@ -71,8 +43,6 @@ SpreadedSwaptionVolatility::SpreadedSwaptionVolatility(const Handle<SwaptionVola
     QL_REQUIRE((swapIndexBase_ == nullptr && shortSwapIndexBase_ == nullptr) ||
                    (swapIndexBase_ != nullptr && shortSwapIndexBase_ != nullptr),
                "SpreadedSwaptionVolatility: swapIndexBase and shortSwapIndexBase must be both null or non-null");
-    QL_REQUIRE(swapIndexBase != nullptr || strikeSpreads.size() == 1 && close_enough(strikeSpreads.front(), 0.0),
-               "SpreadedSwaptionVolatility: if no swapIndexBase is given, exactly one strike spread = 0 is allowed");
     QL_REQUIRE(!strikeSpreads_.empty(), "SpreadedSwaptionVolatility: empty strike spreads");
     QL_REQUIRE(!optionTenors_.empty(), "SpreadedSwaptionVolatility: empty option tenors");
     QL_REQUIRE(!swapTenors_.empty(), "SpreadedSwaptionVolatility: empty swap tenors");
@@ -87,7 +57,6 @@ SpreadedSwaptionVolatility::SpreadedSwaptionVolatility(const Handle<SwaptionVola
         for (auto const& q : s)
             registerWith(q);
     }
-    atmLevelValues_ = Matrix(optionTenors.size(), swapTenors.size());
     volSpreadValues_ = std::vector<Matrix>(strikeSpreads_.size(), Matrix(optionTenors.size(), swapTenors.size(), 0.0));
     volSpreadInterpolation_ = std::vector<Interpolation2D>(strikeSpreads_.size());
 }
@@ -109,37 +78,62 @@ void SpreadedSwaptionVolatility::deepUpdate() {
 const Handle<SwaptionVolatilityStructure>& SpreadedSwaptionVolatility::baseVol() { return base_; }
 boost::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSectionImpl(Time optionTime, Time swapLength) const {
     calculate();
+    auto baseSection = base_->smileSection(optionTime, swapLength);
+    Real atmLevel = Null<Real>();
+    if (baseSection->atmLevel() == Null<Real>() && strikeSpreads_.size() > 1) {
+        // determine atm level if it is required (more than one strike spread) and the base section does not have it
+        QL_REQUIRE(swapIndexBase_ != nullptr,
+                   "SpreadedSwaptionVolatility::smileSectionImpl: require swapIndexBase, since the base vol smile "
+                   "section does not provide an atm level and we have more than one strike spread given ("
+                       << strikeSpreads_.size() << ")");
+        Date optionDate = optionDateFromTime(optionTime);
+        Rounding rounder(0);
+        Period swapTenor(static_cast<Integer>(rounder(swapLength * 12.0)), Months);
+        optionDate = swapTenor > shortSwapIndexBase_->tenor()
+                         ? swapIndexBase_->fixingCalendar().adjust(optionDate, Following)
+                         : shortSwapIndexBase_->fixingCalendar().adjust(optionDate, Following);
+        Real atm = Null<Real>();
+        if (swapTenor > shortSwapIndexBase_->tenor()) {
+            atm = swapIndexBase_->clone(swapTenor)->fixing(optionDate);
+        } else {
+            atm = shortSwapIndexBase_->clone(swapTenor)->fixing(optionDate);
+        }
+    }
+    // interpolate vol spreads
     std::vector<Real> volSpreads(strikeSpreads_.size());
     for (Size k = 0; k < volSpreads.size(); ++k) {
         volSpreads[k] = volSpreadInterpolation_[k](swapLength, optionTime);
     }
-    return boost::make_shared<SpreadedSwaptionSmileSection>(
-        base_->smileSection(optionTime, swapLength), strikeSpreads_, volSpreads,
-        swapIndexBase_ == nullptr ? Null<Real>() : atmLevelInterpolation_(swapLength, optionTime));
+    // create smile section
+    return boost::make_shared<SpreadedSmileSection2>(base_->smileSection(optionTime, swapLength), volSpreads,
+                                                     strikeSpreads_, true, atmLevel);
 }
 
 Volatility SpreadedSwaptionVolatility::volatilityImpl(Time optionTime, Time swapLength, Rate strike) const {
-    return smileSectionImpl(optionTime, swapLength)->volatility(strike);
+    if (strike == Null<Real>()) {
+        calculate();
+        // support input strike null, interpret this as atm
+        std::vector<Real> volSpreads(strikeSpreads_.size());
+        for (Size k = 0; k < volSpreads.size(); ++k) {
+            volSpreads[k] = volSpreadInterpolation_[k](swapLength, optionTime);
+        }
+        Real volSpread;
+        if (volSpreads.size() > 1) {
+            auto spreadInterpolation =
+                LinearFlat().interpolate(strikeSpreads_.begin(), strikeSpreads_.end(), volSpreads.begin());
+            volSpread = spreadInterpolation(0.0);
+        } else {
+            volSpread = volSpreads.front();
+        }
+        return base_->volatility(optionTime, swapLength, strike) + volSpread;
+    } else {
+        // if input strike != null, use smile section implementation
+        return smileSectionImpl(optionTime, swapLength)->volatility(strike);
+    }
 }
 
 void SpreadedSwaptionVolatility::performCalculations() const {
     SwaptionVolatilityDiscrete::performCalculations();
-    for (Size i = 0; i < optionTenors_.size(); ++i) {
-        for (Size j = 0; j < swapTenors_.size(); ++j) {
-            Real atm = Null<Real>();
-            if (swapIndexBase_ == nullptr) {
-                if (swapTenors_[j] > shortSwapIndexBase_->tenor()) {
-                    atm = swapIndexBase_->clone(swapTenors_[j])->fixing(optionDateFromTenor(optionTenors_[i]));
-                } else {
-                    atm = shortSwapIndexBase_->clone(swapTenors_[j])->fixing(optionDateFromTenor(optionTenors_[i]));
-                }
-            } else {
-                atmLevelValues_[i][j] = atm;
-            }
-        }
-    }
-    atmLevelInterpolation_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
-        swapLengths_.begin(), swapLengths_.end(), optionTimes_.begin(), optionTimes_.end(), atmLevelValues_));
     for (Size k = 0; k < strikeSpreads_.size(); ++k) {
         for (Size i = 0; i < optionTenors_.size(); ++i) {
             for (Size j = 0; j < swapTenors_.size(); ++j) {

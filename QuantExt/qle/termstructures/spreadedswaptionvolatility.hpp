@@ -34,29 +34,12 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-class SpreadedSwaptionSmileSection : public SmileSection {
-public:
-    SpreadedSwaptionSmileSection(const boost::shared_ptr<SmileSection>& base, const std::vector<Real>& strikeSpreads,
-                                 const std::vector<Real>& volSpreads, const Real atmLevel = Null<Real>());
-    Rate minStrike() const;
-    Rate maxStrike() const;
-    Rate atmLevel() const;
-
-protected:
-    Volatility volatilityImpl(Rate strike) const;
-
-private:
-    boost::shared_ptr<SmileSection> base_;
-    std::vector<Real> strikeSpreads_, volSpreads_;
-    Real atmLevel_;
-    Interpolation volSpreadInterpolation_;
-};
-
 class SpreadedSwaptionVolatility : public SwaptionVolatilityDiscrete {
 public:
-    /* The swap indices define the atm level for the vol spreads. They should be consistent with the base's swap
-       indices, if applicable. If the swap indices are not given, only one strike spread 0 is allowed for the vol
-       spreads. */
+    /* If the base vol has smile sections which provide atm levels, these are also used to define the atm levels for the
+      vol spreads. Otherwise, the atm levels for the vol spreads are computed from the swap indices passed to this
+      class. The swap indices are only required / used if a) the base vol smile sections do not provide atm levels and
+      b) more than one strike spread is given.  */
     SpreadedSwaptionVolatility(const Handle<SwaptionVolatilityStructure>& base, const std::vector<Period>& optionTenors,
                                const std::vector<Period>& swapTenors, const std::vector<Real>& strikeSpreads,
                                const std::vector<std::vector<Handle<Quote>>>& volSpreads,
@@ -97,9 +80,7 @@ private:
     std::vector<std::vector<Handle<Quote>>> volSpreads_;
     boost::shared_ptr<SwapIndex> swapIndexBase_, shortSwapIndexBase_;
     mutable std::vector<Matrix> volSpreadValues_;
-    mutable Matrix atmLevelValues_;
     mutable std::vector<Interpolation2D> volSpreadInterpolation_;
-    mutable Interpolation2D atmLevelInterpolation_;
 };
 
 } // namespace QuantExt
