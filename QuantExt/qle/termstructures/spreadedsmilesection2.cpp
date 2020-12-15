@@ -50,13 +50,12 @@ Rate SpreadedSmileSection2::atmLevel() const { return atmLevel_ != Null<Real>() 
 Volatility SpreadedSmileSection2::volatilityImpl(Rate strike) const {
     if (volSpreads_.size() == 1)
         return base_->volatility(strike) + volSpreads_.front();
-    else {
+    else if (strikesRelativeToAtm_) {
         Real f = atmLevel();
         QL_REQUIRE(f != Null<Real>(), "SpreadedSmileSection2: atm level required");
-        if (strike == Null<Real>())
-            strike = f;
-        Real tmp = strikesRelativeToAtm_ ? strike - f : strike;
-        return base_->volatility(strike) + volSpreadInterpolation_(tmp);
+        return base_->volatility(strike) + volSpreadInterpolation_(strike - f);
+    } else {
+        return base_->volatility(strike) + volSpreadInterpolation_(strike);
     }
 }
 
