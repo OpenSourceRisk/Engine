@@ -173,6 +173,7 @@
 #include <qle/models/eqbsconstantparametrization.hpp>
 #include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/eqbspiecewiseconstantparametrization.hpp>
+#include <qle/models/exactbachelierimpliedvolatility.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>

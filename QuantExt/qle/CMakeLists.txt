@@ -102,6 +102,7 @@ models/dkimpliedzeroinflationtermstructure.cpp
 models/eqbsconstantparametrization.cpp
 models/eqbsparametrization.cpp
 models/eqbspiecewiseconstantparametrization.cpp
+models/exactbachelierimpliedvolatility.cpp
 models/fxbsconstantparametrization.cpp
 models/fxbsparametrization.cpp
 models/fxbspiecewiseconstantparametrization.cpp
@@ -386,6 +387,7 @@ models/dkimpliedzeroinflationtermstructure.hpp
 models/eqbsconstantparametrization.hpp
 models/eqbsparametrization.hpp
 models/eqbspiecewiseconstantparametrization.hpp
+models/exactbachelierimpliedvolatility.hpp
 models/fxbsconstantparametrization.hpp
 models/fxbsparametrization.hpp
 models/fxbspiecewiseconstantparametrization.hpp
