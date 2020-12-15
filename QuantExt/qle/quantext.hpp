@@ -305,7 +305,9 @@
 #include <qle/termstructures/probabilitytraits.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility.hpp>
+#include <qle/termstructures/spreadedoptionletvolatility2.hpp>
 #include <qle/termstructures/spreadedsmilesection.hpp>
+#include <qle/termstructures/spreadedsmilesection2.hpp>
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>

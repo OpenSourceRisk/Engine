@@ -60,6 +60,7 @@
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
+#include <qle/termstructures/spreadedoptionletvolatility2.hpp>
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
@@ -780,26 +781,39 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     DLOG("Vol at [date, strike] pair [" << optionDates[i] << ", " << std::fixed
                                                                         << std::setprecision(4) << strike << "] is "
                                                                         << std::setprecision(12) << vol);
-                                    boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(vol);
+                                    boost::shared_ptr<SimpleQuote> q =
+                                        boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : vol);
                                     Size index = i * strikes.size() + j;
                                     simDataTmp.emplace(std::piecewise_construct,
                                                        std::forward_as_tuple(param.first, name, index),
                                                        std::forward_as_tuple(q));
+                                    if (useSpreadedTermStructures_) {
+                                        absoluteSimData_.emplace(std::piecewise_construct,
+                                                                 std::forward_as_tuple(param.first, name, index),
+                                                                 std::forward_as_tuple(vol));
+                                    }
                                     quotes[i][j] = Handle<Quote>(q);
                                 }
                             }
 
                             DayCounter dc = ore::data::parseDayCounter(parameters->capFloorVolDayCounter(name));
 
-                            // FIXME: Works as of today only, i.e. for sensitivity/scenario analysis.
-                            // TODO: Build floating reference date StrippedOptionlet class for MC path generators
-                            boost::shared_ptr<StrippedOptionlet> optionlet = boost::make_shared<StrippedOptionlet>(
-                                settleDays, wrapper->calendar(), wrapper->businessDayConvention(), iborIndex,
-                                optionDates, strikes, quotes, dc, wrapper->volatilityType(), wrapper->displacement());
+                            if (useSpreadedTermStructures_) {
+                                hCapletVol = Handle<OptionletVolatilityStructure>(
+                                    boost::make_shared<QuantExt::SpreadedOptionletVolatility2>(wrapper, optionDates,
+                                                                                               strikes, quotes));
+                            } else {
+                                // FIXME: Works as of today only, i.e. for sensitivity/scenario analysis.
+                                // TODO: Build floating reference date StrippedOptionlet class for MC path generators
+                                boost::shared_ptr<StrippedOptionlet> optionlet = boost::make_shared<StrippedOptionlet>(
+                                    settleDays, wrapper->calendar(), wrapper->businessDayConvention(), iborIndex,
+                                    optionDates, strikes, quotes, dc, wrapper->volatilityType(),
+                                    wrapper->displacement());
 
-                            hCapletVol = Handle<OptionletVolatilityStructure>(
-                                boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(
-                                    optionlet));
+                                hCapletVol = Handle<OptionletVolatilityStructure>(
+                                    boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(
+                                        optionlet));
+                            }
                         } else {
                             string decayModeString = parameters->capFloorVolDecayMode();
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);

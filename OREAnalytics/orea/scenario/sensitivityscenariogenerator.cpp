@@ -1221,7 +1221,11 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
                         Size idx = jj * n_cfvol_strikes + kk;
                         RiskFactorKey key(RFType::OptionletVolatility, ccy, idx);
 
-                        scenario->add(key, shiftedVolData[jj][kk]);
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedVolData[jj][kk] - volData[jj][kk]);
+                        } else {
+                            scenario->add(key, shiftedVolData[jj][kk]);
+                        }
 
                         // Possibly store valid shift size
                         if (validShiftSize && up && j == jj && k == kk) {

@@ -198,7 +198,9 @@ termstructures/pricetermstructure.cpp
 termstructures/pricetermstructureadapter.cpp
 termstructures/spreadeddiscountcurve.cpp
 termstructures/spreadedoptionletvolatility.cpp
+termstructures/spreadedoptionletvolatility2.cpp
 termstructures/spreadedsmilesection.cpp
+termstructures/spreadedsmilesection2.cpp
 termstructures/spreadedswaptionvolatility.cpp
 termstructures/strippedoptionletadapter2.cpp
 termstructures/strippedyoyinflationoptionletvol.cpp
@@ -515,7 +517,9 @@ termstructures/pricetermstructureadapter.hpp
 termstructures/probabilitytraits.hpp
 termstructures/spreadeddiscountcurve.hpp
 termstructures/spreadedoptionletvolatility.hpp
+termstructures/spreadedoptionletvolatility2.hpp
 termstructures/spreadedsmilesection.hpp
+termstructures/spreadedsmilesection2.hpp
 termstructures/spreadedswaptionvolatility.hpp
 termstructures/staticallycorrectedyieldtermstructure.hpp
 termstructures/strippedcpivolatilitystructure.hpp

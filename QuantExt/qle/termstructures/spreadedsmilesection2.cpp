@@ -31,6 +31,7 @@ SpreadedSmileSection2::SpreadedSmileSection2(const boost::shared_ptr<SmileSectio
                    base->volatilityType() == ShiftedLognormal ? base_->shift() : 0.0),
       base_(base), volSpreads_(volSpreads), strikes_(strikes), strikesRelativeToAtm_(strikesRelativeToAtm),
       atmLevel_(atmLevel) {
+    registerWith(base_);
     QL_REQUIRE(!strikes_.empty(), "SpreadedSwaptionSmileSection: strikes empty");
     QL_REQUIRE(strikes_.size() == volSpreads_.size(), "SpreadedSwaptionSmileSection: strike spreads ("
                                                           << strikes_.size() << ") inconsistent with vol spreads ("
@@ -40,6 +41,7 @@ SpreadedSmileSection2::SpreadedSmileSection2(const boost::shared_ptr<SmileSectio
                "is required");
     if (volSpreads_.size() > 1) {
         volSpreadInterpolation_ = LinearFlat().interpolate(strikes_.begin(), strikes_.end(), volSpreads_.begin());
+        volSpreadInterpolation_.enableExtrapolation();
     }
 }
 
