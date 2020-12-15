@@ -300,6 +300,8 @@ void LgmBuilder::performCalculations() const {
         // reset model parameters, this ensures that a calibration gives the same
         // result if the input market data is the same
         model_->setParams(params_);
+        parametrization_->shift() = 0.0;
+        parametrization_->scaling() = 1.0;
 
         if (data_->calibrationType() != CalibrationType::None) {
             if (data_->calibrateA() && !data_->calibrateH()) {
@@ -355,9 +357,6 @@ void LgmBuilder::performCalculations() const {
 
         QL_REQUIRE(data_->shiftHorizon() >= 0.0, "shift horizon must be non negative");
         QL_REQUIRE(data_->scaling() > 0.0, "scaling must be positive");
-
-        parametrization_->shift() = 0.0;
-        parametrization_->scaling() = 1.0;
 
         if (data_->shiftHorizon() > 0.0) {
             Real value = -parametrization_->H(data_->shiftHorizon());
