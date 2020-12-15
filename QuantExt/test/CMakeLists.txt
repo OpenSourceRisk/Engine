@@ -31,6 +31,7 @@ dynamicblackvoltermstructure.cpp
 dynamicswaptionvolmatrix.cpp
 equityblackvolsurfaceproxy.cpp
 equityforwardcurvestripper.cpp
+exactbachelierimpliedvolatility.cpp
 fillemptymatrix.cpp
 forwardbond.cpp
 fxvolsmile.cpp
