@@ -64,10 +64,8 @@ Real R(const Real t, const Real s) {
     Real t2 = t * t;
     Real t3 = t2 * t;
     Real g = gfct(s);
-    Real g2 = g * g;
-    Real g3 = g2 * g;
-    return 1.0 + 3.0 * t * g / (8.0 * s2) - (5.0 * t2 * (-8.0 * s2 + 3.0 * g2 + 24.0 * g)) / (128.0 * s4) +
-           (35.0 * t3 * (-40.0 * s2 + 3.0 * g3 + 24.0 * g2 + 120.0 * g)) / (1024.0 * s6);
+    return 1.0 + 3.0 * t * g / (8.0 * s2) - (5.0 * t2 * (-8.0 * s2 + g * (24.0 + 3.0 * g))) / (128.0 * s4) +
+           (35.0 * t3 * (-40.0 * s2 + g * (120 + g * (24.0 + 3.0 * g)))) / (1024.0 * s6);
 }
 
 Real G(const Real t, const Real s) {
