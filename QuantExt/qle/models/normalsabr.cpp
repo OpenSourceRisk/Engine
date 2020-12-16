@@ -53,7 +53,7 @@ Real normalSabrAlphaFromAtmVol(Rate forward, Time expiryTime, Real atmVol, Real 
 
 namespace {
 
-Real deltaR(const Real t, const Real s) { return std::exp(t / 8.0) - (3072.0 + t * (384.0 * t * (24.0 + t))) / 3072.0; }
+Real deltaR(const Real t, const Real s) { return std::exp(t / 8.0) - (3072.0 + t * (384.0 + t * (24.0 + t))) / 3072.0; }
 
 Real gfct(const Real s) { return s / std::tanh(s) - 1.0; }
 
