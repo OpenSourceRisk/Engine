@@ -16,10 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/models/exactbachelierimpliedvolatility.hpp>
 #include <qle/models/normalsabr.hpp>
 
 #include <ql/errors.hpp>
 #include <ql/math/comparison.hpp>
+#include <ql/math/integrals/gausslobattointegral.hpp>
 
 namespace QuantExt {
 
@@ -69,11 +71,43 @@ Real R(const Real t, const Real s) {
 }
 
 Real G(const Real t, const Real s) {
-    std::sqrt(std::sinh(s) / s) * std::exp(-s * s / (2.0 * t) - t / 8.0) * (R(t, s) + deltaR(t, s));
+    return std::sqrt(std::sinh(s) / s) * std::exp(-s * s / (2.0 * t) - t / 8.0) * (R(t, s) + deltaR(t, s));
 }
 
 } // namespace
 
-Real normalFreeBoundarySabrVolatility(Rate strike, Rate forward, Time expiryTime, Real alpha, Real nu, Real rho);
+Real normalFreeBoundarySabrVolatility(Rate strike, Rate forward, Time expiryTime, Real alpha, Real nu, Real rho) {
+
+    // update extreme parameters
+
+    nu = std::max(nu, 1E-6);
+    if (rho < -1 + 1E-5)
+        rho = -1 + 1E-5;
+    else if (rho > 1 - 1E-5)
+        rho = 1 - 1E-5;
+
+    // compute option price
+
+    Real V0 = alpha / nu;
+    Real k = (strike - forward) / V0 + rho;
+    Real rhobar = std::sqrt(1.0 - rho * rho);
+    Real s0 = std::acosh((-rho * k + std::sqrt(k * k + rhobar * rhobar)) / (rhobar * rhobar));
+
+    auto integrand = [k, rho, nu, expiryTime](const Real s) {
+        Real tmp = (k - rho * std::cosh(s));
+        return G(nu * nu * expiryTime, s) / std::sinh(s) * std::sqrt(std::sinh(s) * std::sinh(s) - tmp * tmp);
+    };
+
+    Real upperBound = 1.5 * s0;
+    while (integrand(upperBound) > 1E-10)
+        upperBound *= 1.5;
+
+    GaussLobattoIntegral gl(1000, 1E-8);
+    Real price = V0 / M_PI * gl(integrand, s0, upperBound);
+
+    // back out implied volatility
+
+    return exactBachelierImpliedVolatility(Option::Call, strike, forward, expiryTime, price);
+}
 
 } // namespace QuantExt
