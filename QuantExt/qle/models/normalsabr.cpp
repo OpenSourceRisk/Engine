@@ -101,11 +101,11 @@ Real normalFreeBoundarySabrVolatility(Rate strike, Rate forward, Time expiryTime
     };
 
     Real upperBound = std::max(1.5 * s0, 1.0);
-    while (integrand(upperBound) > 1E-10)
+    while (integrand(upperBound) > 1E-12)
         upperBound *= 1.5;
 
     GaussLobattoIntegral gl(10000, 1E-8);
-    Real price = V0 / M_PI * gl(integrand, s0, upperBound);
+    Real price = V0 / M_PI * gl(integrand, std::max(s0, 1E-12), upperBound);
     price += std::max(forward - strike, 0.0);
 
     // back out implied volatility
