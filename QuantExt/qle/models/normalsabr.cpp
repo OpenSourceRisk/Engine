@@ -49,4 +49,31 @@ Real normalSabrAlphaFromAtmVol(Rate forward, Time expiryTime, Real atmVol, Real 
     return std::max(atmVol / (1.0 + expiryTime * (2.0 - 3.0 * rho * rho) * nu * nu / 24.0), 0.00001);
 }
 
+namespace {
+
+Real deltaR(const Real t, const Real s) { return std::exp(t / 8.0) - (3072.0 + t * (384.0 * t * (24.0 + t))) / 3072.0; }
+
+Real gfct(const Real s) { return s / std::tanh(s) - 1.0; }
+
+Real R(const Real t, const Real s) {
+    Real s2 = s * s;
+    Real s4 = s2 * s2;
+    Real s6 = s2 * s4;
+    Real t2 = t * t;
+    Real t3 = t2 * t;
+    Real g = gfct(s);
+    Real g2 = g * g;
+    Real g3 = g2 * g;
+    return 1.0 + 3.0 * t * g / (8.0 * s2) - (5.0 * t2 * (-8.0 * s2 + 3.0 * g2 + 24.0 * g)) / (128.0 * s4) +
+           (35.0 * t3 * (-40.0 * s2 + 3.0 * g3 + 24.0 * g2 + 120.0 * g)) / (1024.0 * s6);
+}
+
+Real G(const Real t, const Real s) {
+    std::sqrt(std::sinh(s) / s) * std::exp(-s * s / (2.0 * t) - t / 8.0) * (R(t, s) + deltaR(t, s));
+}
+
+} // namespace
+
+Real normalSabrVolatilityAntonov(Rate strike, Rate forward, Time expiryTime, Real alpha, Real nu, Real rho);
+
 } // namespace QuantExt
