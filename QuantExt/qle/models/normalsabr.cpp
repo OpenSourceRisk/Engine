@@ -74,6 +74,6 @@ Real G(const Real t, const Real s) {
 
 } // namespace
 
-Real normalSabrVolatilityAntonov(Rate strike, Rate forward, Time expiryTime, Real alpha, Real nu, Real rho);
+Real normalFreeBoundarySabrVolatility(Rate strike, Rate forward, Time expiryTime, Real alpha, Real nu, Real rho);
 
 } // namespace QuantExt
