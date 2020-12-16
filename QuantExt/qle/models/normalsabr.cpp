@@ -89,19 +89,24 @@ Real normalFreeBoundarySabrVolatility(Rate strike, Rate forward, Time expiryTime
     Real V0 = alpha / nu;
     Real k = (strike - forward) / V0 + rho;
     Real rhobar = std::sqrt(1.0 - rho * rho);
-    Real s0 = std::acosh((-rho * k + std::sqrt(k * k + rhobar * rhobar)) / (rhobar * rhobar));
+    Real arg = (-rho * k + std::sqrt(k * k + rhobar * rhobar)) / (rhobar * rhobar);
+    QL_REQUIRE(arg > 1.0 - 1E-12, "invalid arg (" << arg << "), must be >= 1");
+    Real s0 = std::acosh(std::max(1.0, arg));
 
     auto integrand = [k, rho, nu, expiryTime](const Real s) {
         Real tmp = (k - rho * std::cosh(s));
-        return G(nu * nu * expiryTime, s) / std::sinh(s) * std::sqrt(std::sinh(s) * std::sinh(s) - tmp * tmp);
+        Real arg = std::sinh(s) * std::sinh(s) - tmp * tmp;
+        QL_REQUIRE(arg > -1E-12, "invalid arg (" << arg << "), must be >= 0 (tmp=" << tmp << ")");
+        return G(nu * nu * expiryTime, s) / std::sinh(s) * std::sqrt(std::max(0.0, arg));
     };
 
-    Real upperBound = 1.5 * s0;
+    Real upperBound = std::max(1.5 * s0, 1.0);
     while (integrand(upperBound) > 1E-10)
         upperBound *= 1.5;
 
-    GaussLobattoIntegral gl(1000, 1E-8);
+    GaussLobattoIntegral gl(10000, 1E-8);
     Real price = V0 / M_PI * gl(integrand, s0, upperBound);
+    price += std::max(forward - strike, 0.0);
 
     // back out implied volatility
 
