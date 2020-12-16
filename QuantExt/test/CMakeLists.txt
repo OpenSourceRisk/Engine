@@ -38,6 +38,7 @@ fxvolsmile.cpp
 index.cpp
 interpolatedyoycapfloortermpricesurface.cpp
 logquote.cpp
+normalfreeboundarysabr.cpp
 optionletstripper.cpp
 payment.cpp
 piecewiseatmoptionletcurve.cpp
