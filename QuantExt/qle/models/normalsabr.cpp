@@ -53,23 +53,27 @@ Real normalSabrAlphaFromAtmVol(Rate forward, Time expiryTime, Real atmVol, Real 
 
 namespace {
 
-Real deltaR(const Real t, const Real s) { return std::exp(t / 8.0) - (3072.0 + t * (384.0 + t * (24.0 + t))) / 3072.0; }
+Real deltaR(const Real t) { return std::exp(t / 8.0) - (3072.0 + t * (384.0 + t * (24.0 + t))) / 3072.0; }
 
-Real gfct(const Real s) { return s / std::tanh(s) - 1.0; }
+Real g(const Real s) { return s / std::tanh(s) - 1.0; }
 
 Real R(const Real t, const Real s) {
     Real s2 = s * s;
     Real s4 = s2 * s2;
+    if (s < 0.03) {
+        return (3072.0 + t * (384.0 + t * (24.0 + t))) / 3072.0 - t * (2688.0 + t * (80.0 + 21.0 * t)) / 322560 * s2 +
+               t * (2816.0 - t * (88.0 + 63.0 * t)) / 3548160 * s4;
+    }
     Real s6 = s2 * s4;
     Real t2 = t * t;
     Real t3 = t2 * t;
-    Real g = gfct(s);
-    return 1.0 + 3.0 * t * g / (8.0 * s2) - (5.0 * t2 * (-8.0 * s2 + g * (24.0 + 3.0 * g))) / (128.0 * s4) +
-           (35.0 * t3 * (-40.0 * s2 + g * (120 + g * (24.0 + 3.0 * g)))) / (1024.0 * s6);
+    Real gval = g(s);
+    return 1.0 + 3.0 * t * gval / (8.0 * s2) - (5.0 * t2 * (-8.0 * s2 + gval * (24.0 + 3.0 * gval))) / (128.0 * s4) +
+           (35.0 * t3 * (-40.0 * s2 + gval * (120 + gval * (24.0 + 3.0 * gval)))) / (1024.0 * s6);
 }
 
 Real G(const Real t, const Real s) {
-    return std::sqrt(std::sinh(s) / s) * std::exp(-s * s / (2.0 * t) - t / 8.0) * (R(t, s) + deltaR(t, s));
+    return std::sqrt(std::sinh(s) / s) * std::exp(-s * s / (2.0 * t) - t / 8.0) * (R(t, s) + deltaR(t));
 }
 
 } // namespace
@@ -100,12 +104,13 @@ Real normalFreeBoundarySabrVolatility(Rate strike, Rate forward, Time expiryTime
         return G(nu * nu * expiryTime, s) / std::sinh(s) * std::sqrt(std::max(0.0, arg));
     };
 
+    Real lowerBound = std::max(s0, 1E-12);
     Real upperBound = std::max(1.5 * s0, 1.0);
     while (integrand(upperBound) > 1E-12)
         upperBound *= 1.5;
 
     GaussLobattoIntegral gl(10000, 1E-8);
-    Real price = V0 / M_PI * gl(integrand, std::max(s0, 1E-12), upperBound);
+    Real price = V0 / M_PI * gl(integrand, lowerBound, upperBound);
     price += std::max(forward - strike, 0.0);
 
     // back out implied volatility
