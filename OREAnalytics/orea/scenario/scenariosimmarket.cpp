@@ -1017,9 +1017,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 vector<Real> fwds;
                                 vector<Real> atmVols;
                                 for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
-                                    fwds.push_back(spot->value() * forTS->discount(times[i]) /
-                                                   domTS->discount(times[i]));
-                                    atmVols.push_back(wrapper->blackVol(dates[i], spot->value()));
+                                    Date date = asof_ + parameters->fxVolExpiries()[i];
+                                    Real k = spot->value() * forTS->discount(date) / domTS->discount(date);
+                                    fwds.push_back(k);
+                                    atmVols.push_back(wrapper->blackVol(dates[i], k));
                                     DLOG("atmVol(s) is " << atmVols.back() << " on date " << dates[i]);
                                 }
 
@@ -1171,11 +1172,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     for (Size j = 0; j < m; j++) {
                                         for (Size i = 0; i < n; i++) {
                                             Real mon = strikes[i];
-                                            // strike
-                                            Real k = spot->value() * mon;
-
+                                            // strike (assuming forward prices)
+                                            Real k = eqCurve->forecastFixing(dates[j]) * mon;
                                             Size idx = i * m + j;
-                                            Volatility vol = wrapper->blackVol(asof_ + expiries[j], k);
+                                            Volatility vol = wrapper->blackVol(dates[j], k);
                                             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                                             simDataTmp.emplace(std::piecewise_construct,
                                                                std::forward_as_tuple(param.first, name, idx),
