@@ -30,6 +30,7 @@
 #include <ql/instrument.hpp>
 #include <ql/money.hpp>
 #include <ql/quote.hpp>
+#include <qle/indexes/fxindex.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -57,9 +58,19 @@ public:
                Pay nominal1 if true, otherwise pay nominal2.
         \param isPhysicallySettled
                if true fx forward is physically settled
+        \param payDate
+               Date on which the cashflows are exchanged
+        \param payCcy
+               If cash settled, the settlement currency
+        \param fixingDate
+               If cash settled, the fixing date
+        \param fxIndex
+               If cash settled, the FX index from which to take the fixing on the fixing date
     */
     FxForward(const Real& nominal1, const Currency& currency1, const Real& nominal2, const Currency& currency2,
-              const Date& maturityDate, const bool& payCurrency1, const bool isPhysicallySettled = true);
+              const Date& maturityDate, const bool& payCurrency1, const bool isPhysicallySettled = true,
+              const Date& payDate = Date(), const Currency& payCcy = Currency(), const Date& fixingDate = Date(),
+              const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
 
     /*! \param nominal1
                FX forward nominal amount (domestic currency)
@@ -71,9 +82,18 @@ public:
                Sell (pay) nominal1 if true, otherwise buy (receive) nominal.
         \param isPhysicallySettled
                if true fx forward is physically settled
+        \param payDate
+               Date on which the cashflows are exchanged
+        \param payCcy
+               If cash settled, the settlement currency
+        \param fixingDate
+               If cash settled, the fixing date
+        \param fxIndex
+               If cash settled, the FX index from which to take the fixing on the fixing date
     */
     FxForward(const Money& nominal1, const ExchangeRate& forwardRate, const Date& forwardDate, bool sellingNominal,
-              const bool isPhysicallySettled = true);
+              const bool isPhysicallySettled = true, const Date& payDate = Date(), const Currency& payCcy = Currency(),
+              const Date& fixingDate = Date(), const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
 
     /*! \param nominal1
                FX forward nominal amount 1 (domestic currency)
@@ -88,9 +108,19 @@ public:
                Sell (pay) nominal1 if true, otherwise buy (receive) nominal1.
         \param isPhysicallySettled
                if true fx forward is physically settled
+        \param payDate
+               Date on which the cashflows are exchanged
+        \param payCcy
+               If cash settled, the settlement currency
+        \param fixingDate
+               If cash settled, the fixing date
+        \param fxIndex
+               If cash settled, the FX index from which to take the fixing on the fixing date
     */
     FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote, const Currency& currency2,
-              const Date& maturityDate, bool sellingNominal, const bool isPhysicallySettled = true);
+              const Date& maturityDate, bool sellingNominal, const bool isPhysicallySettled = true,
+              const Date& payDate = Date(), const Currency& payCcy = Currency(), const Date& fixingDate = Date(),
+              const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
     //@}
 
     //! \name Results
@@ -121,6 +151,9 @@ public:
     Currency currency1() const { return currency1_; }
     Currency currency2() const { return currency2_; }
     Date maturityDate() const { return maturityDate_; }
+    Date payDate() const { return payDate_; }
+    Currency payCcy() const { return payCcy_; }
+    boost::shared_ptr<QuantExt::FxIndex> fxIndex() const { return fxIndex_; }
     bool payCurrency1() const { return payCurrency1_; }
     //@}
 
@@ -137,6 +170,10 @@ private:
     Date maturityDate_;
     bool payCurrency1_;
     bool isPhysicallySettled_;
+    Date payDate_;
+    Currency payCcy_;
+    boost::shared_ptr<FxIndex> fxIndex_;
+    Date fixingDate_;
 
     // results
     mutable Money npv_;
@@ -153,6 +190,10 @@ public:
     Date maturityDate;
     bool payCurrency1;
     bool isPhysicallySettled;
+    Date payDate;
+    Currency payCcy;
+    boost::shared_ptr<FxIndex> fxIndex;
+    Date fixingDate;
     void validate() const;
 };
 
