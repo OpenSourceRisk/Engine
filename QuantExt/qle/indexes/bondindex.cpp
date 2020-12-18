@@ -123,6 +123,8 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
 Real BondIndex::pastFixing(const Date& fixingDate) const {
     QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date for '" << name() << "'");
     Real price = timeSeries()[fixingDate];
+    if (price == Null<Real>())
+        return price;
     if (dirty_) {
         QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for dirty prices");
         price += bond_->accruedAmount(fixingDate) / 100.0;

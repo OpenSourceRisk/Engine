@@ -900,7 +900,7 @@ Example:
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
     Instrument Type & \emph{CAPFLOOR} & \\ \hline
-    Quote Type & \lstinline!RATE_LNVOL!, \lstinline!RATE_NVOL!, \lstinline!RATE_SLNVOL! & Lognormal quoted volatility, normal quoted volatility, shifted lognormal quoted volatility. \\ \hline
+    Quote Type &  \emph{RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL, SHIFT} & Lognormal quoted volatility, normal quoted volatility, shifted lognormal quoted volatility, shift quote. \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the cap floor volatility. \\ \hline
     Term & A valid tenor string & Period from start to cap or floor maturity. \\ \hline
     IndexTenor & A valid tenor string & Underlying index tenor e.g.\ \lstinline!3M! for \lstinline!EUR-EURIBOR-3M!. \\ \hline
@@ -930,7 +930,7 @@ We have the following examples of cap floor implied volatility quotes:
     \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
     Instrument Type & \emph{SWAPTION} & \\ \hline
-    Quote Type & \emph{RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL} & Lognormal quoted volatility, Normal quoted volatility, shifted lognormal quoted volatility\\ \hline
+    Quote Type & \emph{RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL, SHIFT} & Lognormal quoted volatility, Normal quoted volatility, shifted lognormal quoted volatility, shift quote.\\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Swaption volatility\\ \hline
     Expiry & An integer followed by D, W, M or Y & Period from start to expiry \\ \hline
     Term & An integer followed by D, W, M or Y & Underlying Swap term \\ \hline
@@ -943,7 +943,9 @@ We have the following examples of cap floor implied volatility quotes:
 
 
 \medskip Note: The volatility quote is expected to be an absolute volatility, and not the deviation from the
-at-the-money volatility (the latter is e.g. the quotation convention used by BGC partners).
+at-the-money volatility (the latter is e.g. the quotation convention used by BGC partners).\\
+If a swaption shift quote needs to be provided, i.e. in the case of a shifted lognormal surface, the quote is of the form \lstinline!SWAPTION/SHIFT/Currency/Term! where the meaning of \lstinline!Currency! and \lstinline!Term! are given in Table \ref{tab:swaptimplvol_quote}.
+
 
 \medskip
 Examples:
