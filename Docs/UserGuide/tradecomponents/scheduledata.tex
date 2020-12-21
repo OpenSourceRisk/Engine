@@ -156,36 +156,4 @@ Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The
 
 
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|p{6cm}|}
-\hline
-\multicolumn{2}{|l|}{\lstinline!Rule!}                    \\ \hline
-\textbf{Allowable Values}                   & \textbf{Effect}                       \\ \hline
-\emph{Backward}   &   Backward from termination date to effective date.   \\ \hline
-\emph{Forward}   &   Forward from effective date to termination date.  \\ \hline
-\emph{Zero}   &   No intermediate dates between effective date and termination date.  \\ \hline
-\emph{ThirdWednesday}   &   All dates but effective date and
-                          termination date are taken to be on the
-                          third Wednesday of their month (with forward calculation.) \\ \hline
-\emph{ThirdThursday}   &   All dates but effective date and
-                          termination date are taken to be on the
-                          third Thursday of their month (with forward calculation.) \\ \hline
-\emph{ThirdFriday}   &   All dates but effective date and
-                          termination date are taken to be on the
-                          third Friday of their month (with forward calculation.) \\ \hline
-\emph{MondayAfterThirdFriday}   &   All dates but effective date and
-                          termination date are taken to be on the
-                          Monday following the third Friday of their month (with forward calculation.) \\ \hline
-\emph{TuesdayAfterThirdFriday}   &   All dates but effective date and
-                          termination date are taken to be on the
-                          Tuesday following the third Friday of their month (with forward calculation.) \\ \hline
-\emph{Twentieth}   &   All dates but the effective date are taken to be the twentieth of their month (used for CDS schedules in emerging markets.)  The termination date is also modified. \\ \hline
-\emph{TwentiethIMM}   &   All dates but the effective date are  taken to be the twentieth of an IMM month (used for CDS schedules.)  The termination date is also modified. \\ \hline
-\emph{OldCDS}   &   Same as TwentiethIMM with unrestricted date ends and long/short stub coupon period (old CDS convention).\\ \hline
-CDS   &   Credit derivatives standard rule defined in 'Big Bang' changes in 2009. \\ \hline
-CDS2015   &   Credit derivatives standard rule updated in 2015. Same as  \emph{CDS} but with termination dates adjusted to 20th June and 20th December. \\ \hline
-\end{tabular}
-  \caption{Allowable Values for Rule}
-  \label{tab:rule}
-\end{table}
+
