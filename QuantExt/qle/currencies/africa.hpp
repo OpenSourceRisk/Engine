@@ -132,5 +132,38 @@ public:
     GHSCurrency();
 };
 
+// Angolan kwanza
+/*! The ISO three-letter code is AOA; the numeric code is 973.
+ It is divided into 100 cêntimo.
+
+ \ingroup currencies
+*/
+class AOACurrency : public Currency {
+public:
+    AOACurrency();
+};
+
+// Ethiopian birr
+/*! The ISO three-letter code is ETB; the numeric code is 230.
+ It is divided into 100 santim.
+
+ \ingroup currencies
+*/
+class ETBCurrency : public Currency {
+public:
+    ETBCurrency();
+};
+
+// West African CFA franc
+/*! The ISO three-letter code is XOF; the numeric code is 952.
+ It is divided into 100 centime.
+
+ \ingroup currencies
+*/
+class XOFCurrency : public Currency {
+public:
+    XOFCurrency();
+};
+
 } // namespace QuantExt
 #endif
