@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file spreadedblackvariancecurve3.hpp
-    \brief Spreaded Black volatility curve modelled as variance curve
+/*! \file spreadedblackvolatilitycurve.hpp
+    \brief Spreaded Black volatility curve
     \ingroup termstructures
 */
 
@@ -32,11 +32,11 @@ namespace QuantExt {
 using namespace QuantLib;
 
 //! Spreaedd Black volatility curve modelled as variance curve
-class SpreadedBlackVarianceCurve3 : public LazyObject, public BlackVarianceTermStructure {
+class SpreadedBlackVolatilityCurve : public LazyObject, public BlackVolatilityTermStructure {
 public:
     //! times should be consistent with reference ts day counter
-    SpreadedBlackVarianceCurve3(const Handle<BlackVolTermStructure>& referenceVol, const std::vector<Time>& times,
-                                const std::vector<Handle<Quote>>& volSpreads);
+    SpreadedBlackVolatilityCurve(const Handle<BlackVolTermStructure>& referenceVol, const std::vector<Time>& times,
+                                 const std::vector<Handle<Quote>>& volSpreads);
     Date maxDate() const override;
     const Date& referenceDate() const override;
     Calendar calendar() const override;
@@ -47,7 +47,7 @@ public:
 
 private:
     void performCalculations() const override;
-    virtual Real blackVarianceImpl(Time t, Real) const override;
+    Real blackVolImpl(Time t, Real) const override;
 
     Handle<BlackVolTermStructure> referenceVol_;
     std::vector<Time> times_;
