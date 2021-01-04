@@ -303,7 +303,7 @@
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <qle/termstructures/probabilitytraits.hpp>
-#include <qle/termstructures/spreadedblackvariancecurve3.hpp>
+#include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility2.hpp>
