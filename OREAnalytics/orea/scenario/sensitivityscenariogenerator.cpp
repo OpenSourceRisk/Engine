@@ -1314,7 +1314,12 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
             for (Size k = 0; k < n_ten; ++k) {
                 RiskFactorKey key(RFType::SurvivalProbability, name, k);
                 Real shiftedProb = exp(-shiftedHazardRates[k] * times[k]);
-                scenario->add(key, shiftedProb);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    Real prob = exp(-hazardRates[k] * times[k]);
+                    scenario->add(key, shiftedProb / prob);
+                } else {
+                    scenario->add(key, shiftedProb);
+                }
 
                 // Possibly store valid shift size
                 if (validShiftSize && up && k == j) {

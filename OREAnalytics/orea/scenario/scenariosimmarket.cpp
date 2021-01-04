@@ -61,6 +61,7 @@
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility2.hpp>
+#include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
@@ -846,37 +847,49 @@ ScenarioSimMarket::ScenarioSimMarket(
                                    "default curve tenors must not include t=0");
 
                         vector<Date> dates(1, asof_);
+                        vector<Real> times(1, 0.0);
+
+                        DayCounter dc = ore::data::parseDayCounter(parameters->defaultCurveDayCounter(name));
 
                         for (Size i = 0; i < parameters->defaultTenors(name).size(); i++) {
                             dates.push_back(asof_ + parameters->defaultTenors(name)[i]);
+                            times.push_back(dc.yearFraction(asof_, dates.back()));
                         }
 
                         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
                         quotes.push_back(Handle<Quote>(q));
                         for (Size i = 0; i < dates.size() - 1; i++) {
                             Probability prob = wrapper->survivalProbability(dates[i + 1], true);
-                            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(prob));
+                            boost::shared_ptr<SimpleQuote> q =
+                                boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 1.0 : prob);
                             // Check if the risk factor is simulated before adding it
                             if (param.second.first) {
                                 simDataTmp.emplace(std::piecewise_construct,
                                                    std::forward_as_tuple(param.first, name, i),
                                                    std::forward_as_tuple(q));
                                 DLOG("ScenarioSimMarket default curve " << name << " survival[" << i << "]=" << prob);
+                                if (useSpreadedTermStructures_) {
+                                    absoluteSimData_.emplace(std::piecewise_construct,
+                                                             std::forward_as_tuple(param.first, name, i),
+                                                             std::forward_as_tuple(prob));
+                                }
                             }
                             Handle<Quote> qh(q);
                             quotes.push_back(qh);
                         }
-                        DayCounter dc = ore::data::parseDayCounter(parameters->defaultCurveDayCounter(name));
                         Calendar cal = ore::data::parseCalendar(parameters->defaultCurveCalendar(name));
-                        // FIXME riskmarket uses SurvivalProbabilityCurve but this isn't added to ore
-                        boost::shared_ptr<DefaultProbabilityTermStructure> defaultCurve(
-                            new QuantExt::SurvivalProbabilityCurve<LogLinear>(dates, quotes, dc, cal));
-                        Handle<DefaultProbabilityTermStructure> dch(defaultCurve);
-
-                        dch->enableExtrapolation();
-
+                        Handle<DefaultProbabilityTermStructure> defaultCurve;
+                        if (useSpreadedTermStructures_)
+                            defaultCurve = Handle<DefaultProbabilityTermStructure>(
+                                boost::make_shared<QuantExt::SpreadedSurvivalProbabilityTermStructure>(wrapper, times,
+                                                                                                       quotes, dc));
+                        else
+                            defaultCurve = Handle<DefaultProbabilityTermStructure>(
+                                boost::make_shared<QuantExt::SurvivalProbabilityCurve<LogLinear>>(dates, quotes, dc,
+                                                                                                  cal));
+                        defaultCurve->enableExtrapolation();
                         defaultCurves_.insert(pair<pair<string, string>, Handle<DefaultProbabilityTermStructure>>(
-                            make_pair(Market::defaultConfiguration, name), dch));
+                            make_pair(Market::defaultConfiguration, name), defaultCurve));
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name);
                     }
