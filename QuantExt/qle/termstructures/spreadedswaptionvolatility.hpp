@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/termstructures/atmspreadedswaptionvolatility.hpp
+/*! \file spreadedswaptionvolatility.hpp
     \brief swaption cube defined via atm vol spreads over another cube
     \ingroup termstructures
 */
