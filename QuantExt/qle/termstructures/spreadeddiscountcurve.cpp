@@ -52,7 +52,7 @@ Natural SpreadedDiscountCurve::settlementDays() const { return referenceCurve_->
 void SpreadedDiscountCurve::performCalculations() const {
     for (Size i = 0; i < times_.size(); ++i) {
         data_[i] = quotes_[i]->value();
-        QL_REQUIRE(data_[i] > 0, "SpreadedDiscountCurve2: invalid value " << data_[i] << " at index " << i);
+        QL_REQUIRE(data_[i] > 0, "SpreadedDiscountCurve: invalid value " << data_[i] << " at index " << i);
     }
     interpolation_->update();
 }
