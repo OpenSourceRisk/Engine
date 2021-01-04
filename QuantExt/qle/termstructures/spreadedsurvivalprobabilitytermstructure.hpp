@@ -34,12 +34,9 @@ using namespace QuantLib;
 //! Spreaded Default Term Structure, the spread is given in terms of loglinearly interpolated survival probabilities.
 class SpreadedSurvivalProbabilityTermStructure : public SurvivalProbabilityStructure, public LazyObject {
 public:
-    //! \name Constructors
-    //@{
-    //! times based constructor, note that times should be consistent with day counter dc passed
+    //! times should be consistent with reference ts day counter
     SpreadedSurvivalProbabilityTermStructure(const Handle<DefaultProbabilityTermStructure>& referenceCurve,
-                                             const std::vector<Time>& times, const std::vector<Handle<Quote>>& spreads,
-                                             const DayCounter& dc);
+                                             const std::vector<Time>& times, const std::vector<Handle<Quote>>& spreads);
     //@}
     //! \name TermStructure interface
     //@{

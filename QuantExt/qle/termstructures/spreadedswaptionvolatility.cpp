@@ -138,6 +138,8 @@ void SpreadedSwaptionVolatility::performCalculations() const {
         for (Size i = 0; i < optionTenors_.size(); ++i) {
             for (Size j = 0; j < swapTenors_.size(); ++j) {
                 Size index = i * swapTenors_.size() + j;
+                QL_REQUIRE(!volSpreads_[index][k].empty(), "SpreadedSwaptionVolatility: vol spread quote at index ("
+                                                               << i << "," << j << "," << k << ") is empty");
                 volSpreadValues_[k](i, j) = volSpreads_[index][k]->value();
             }
         }

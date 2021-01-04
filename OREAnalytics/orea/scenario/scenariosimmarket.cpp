@@ -181,11 +181,9 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
             new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), dc));
     } else {
         if (spreaded)
-            yieldCurve = boost::shared_ptr<YieldTermStructure>(
-                new QuantExt::SpreadedDiscountCurve(wrapper, yieldCurveTimes, quotes, dc));
+            yieldCurve = boost::make_shared<QuantExt::SpreadedDiscountCurve>(wrapper, yieldCurveTimes, quotes);
         else
-            yieldCurve = boost::shared_ptr<YieldTermStructure>(
-                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+            yieldCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(yieldCurveTimes, quotes, dc);
     }
 
     Handle<YieldTermStructure> ych(yieldCurve);
@@ -328,7 +326,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         } else {
                             if (useSpreadedTermStructures_)
                                 indexCurve = boost::shared_ptr<YieldTermStructure>(
-                                    new QuantExt::SpreadedDiscountCurve(wrapperIndex, yieldCurveTimes, quotes, dc));
+                                    new QuantExt::SpreadedDiscountCurve(wrapperIndex, yieldCurveTimes, quotes));
                             else
                                 indexCurve = boost::shared_ptr<YieldTermStructure>(
                                     new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
@@ -882,7 +880,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (useSpreadedTermStructures_)
                             defaultCurve = Handle<DefaultProbabilityTermStructure>(
                                 boost::make_shared<QuantExt::SpreadedSurvivalProbabilityTermStructure>(wrapper, times,
-                                                                                                       quotes, dc));
+                                                                                                       quotes));
                         else
                             defaultCurve = Handle<DefaultProbabilityTermStructure>(
                                 boost::make_shared<QuantExt::SurvivalProbabilityCurve<LogLinear>>(dates, quotes, dc,

@@ -41,7 +41,6 @@ public:
     const Date& referenceDate() const override;
     Calendar calendar() const override;
     Natural settlementDays() const override;
-    BusinessDayConvention businessDayConvention() const override;
     Real minStrike() const override;
     Real maxStrike() const override;
     void update() override;

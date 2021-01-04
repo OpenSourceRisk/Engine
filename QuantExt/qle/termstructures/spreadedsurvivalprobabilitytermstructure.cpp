@@ -22,14 +22,13 @@ namespace QuantExt {
 
 SpreadedSurvivalProbabilityTermStructure::SpreadedSurvivalProbabilityTermStructure(
     const Handle<DefaultProbabilityTermStructure>& referenceCurve, const std::vector<Time>& times,
-    const std::vector<Handle<Quote>>& spreads, const DayCounter& dc)
-    : SurvivalProbabilityStructure(dc), referenceCurve_(referenceCurve), times_(times), spreads_(spreads),
-      data_(times.size(), 1.0) {
+    const std::vector<Handle<Quote>>& spreads)
+    : SurvivalProbabilityStructure(referenceCurve->dayCounter()), referenceCurve_(referenceCurve), times_(times),
+      spreads_(spreads), data_(times.size(), 1.0) {
+    QL_REQUIRE(times_.size() > 1, "at least two times required");
+    QL_REQUIRE(times_.size() == spreads_.size(), "size of time and quote vectors do not match");
+    QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]);
     for (Size i = 0; i < spreads_.size(); ++i) {
-        QL_REQUIRE(times_.size() > 1, "at least two times required");
-        QL_REQUIRE(times_.size() == spreads_.size(), "size of time and quote vectors do not match");
-        QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]);
-        QL_REQUIRE(!spreads_[i].empty(), "quote at index " << i << " is empty");
         registerWith(spreads_[i]);
     }
     interpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
@@ -43,6 +42,8 @@ void SpreadedSurvivalProbabilityTermStructure::update() {
 
 void SpreadedSurvivalProbabilityTermStructure::performCalculations() const {
     for (Size i = 0; i < times_.size(); ++i) {
+        QL_REQUIRE(!spreads_[i].empty(),
+                   "SpreadedSurvivalProbabilityTermStructure: quote at index " << i << " is empty");
         data_[i] = spreads_[i]->value();
         QL_REQUIRE(data_[i] > 0,
                    "SpreadedSurvivalProbabilityTermStructure: invalid value " << data_[i] << " at index " << i);
