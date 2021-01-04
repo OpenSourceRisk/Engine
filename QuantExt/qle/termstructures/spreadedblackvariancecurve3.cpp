@@ -34,7 +34,7 @@ SpreadedBlackVarianceCurve3::SpreadedBlackVarianceCurve3(const Handle<BlackVolTe
     for (Size i = 0; i < volSpreads_.size(); ++i)
         registerWith(volSpreads_[i]);
     interpolation_ = boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
-    registerWith(Settings::instance().evaluationDate());
+    registerWith(referenceVol_);
 }
 
 Date SpreadedBlackVarianceCurve3::maxDate() const { return referenceVol_->maxDate(); }
@@ -63,6 +63,7 @@ void SpreadedBlackVarianceCurve3::performCalculations() const {
 }
 
 Real SpreadedBlackVarianceCurve3::blackVarianceImpl(Time t, Real k) const {
+    calculate();
     return referenceVol_->blackVariance(t, k) + (*interpolation_)(t);
 }
 
