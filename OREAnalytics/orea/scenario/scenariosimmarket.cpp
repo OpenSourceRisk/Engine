@@ -59,6 +59,7 @@
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/pricecurve.hpp>
+#include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility2.hpp>
 #include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
@@ -157,6 +158,7 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
     quotes.push_back(Handle<Quote>(q));
     vector<Real> discounts(yieldCurveTimes.size());
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
+    std::map<RiskFactorKey, Real> absoluteSimDataTmp;
     for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
         Real val = wrapper->discount(yieldCurveDates[i + 1]);
         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(spreaded ? 1.0 : val));
@@ -168,8 +170,8 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
             simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
             // if generating spreaded scenarios, add the absolute value as well
             if (spreaded) {
-                absoluteSimData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i),
-                                         std::forward_as_tuple(val));
+                absoluteSimDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i),
+                                           std::forward_as_tuple(val));
             }
         }
     }
@@ -192,6 +194,7 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
     yieldCurves_.insert(pair<tuple<string, ore::data::YieldCurveType, string>, Handle<YieldTermStructure>>(
         make_tuple(Market::defaultConfiguration, riskFactorYieldCurve(rf), key), ych));
     simData_.insert(simDataTmp.begin(), simDataTmp.end());
+    absoluteSimData_.insert(absoluteSimDataTmp.begin(), absoluteSimDataTmp.end());
 }
 
 ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
@@ -226,6 +229,7 @@ ScenarioSimMarket::ScenarioSimMarket(
     for (const auto& param : params) {
         try {
             std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
+            std::map<RiskFactorKey, Real> absoluteSimDataTmp;
 
             switch (param.first) {
             case RiskFactorKey::KeyType::FXSpot:
@@ -309,9 +313,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name, i),
                                                std::forward_as_tuple(q));
                             if (useSpreadedTermStructures_) {
-                                absoluteSimData_.emplace(std::piecewise_construct,
-                                                         std::forward_as_tuple(param.first, name, i),
-                                                         std::forward_as_tuple(val));
+                                absoluteSimDataTmp.emplace(std::piecewise_construct,
+                                                           std::forward_as_tuple(param.first, name, i),
+                                                           std::forward_as_tuple(val));
                             }
                             // FIXME where do we check whether the risk factor is simulated?
                             DLOG("ScenarioSimMarket index curve " << name << " discount[" << i << "]=" << val);
@@ -579,9 +583,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                            std::forward_as_tuple(param.first, name, index),
                                                            std::forward_as_tuple(q));
                                         if (useSpreadedTermStructures_) {
-                                            absoluteSimData_.emplace(std::piecewise_construct,
-                                                                     std::forward_as_tuple(param.first, name, index),
-                                                                     std::forward_as_tuple(vol));
+                                            absoluteSimDataTmp.emplace(std::piecewise_construct,
+                                                                       std::forward_as_tuple(param.first, name, index),
+                                                                       std::forward_as_tuple(vol));
                                         }
                                         auto tmp = Handle<Quote>(q);
                                         quotes[i * underlyingTenors.size() + j][k] = tmp;
@@ -787,9 +791,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                        std::forward_as_tuple(param.first, name, index),
                                                        std::forward_as_tuple(q));
                                     if (useSpreadedTermStructures_) {
-                                        absoluteSimData_.emplace(std::piecewise_construct,
-                                                                 std::forward_as_tuple(param.first, name, index),
-                                                                 std::forward_as_tuple(vol));
+                                        absoluteSimDataTmp.emplace(std::piecewise_construct,
+                                                                   std::forward_as_tuple(param.first, name, index),
+                                                                   std::forward_as_tuple(vol));
                                     }
                                     quotes[i][j] = Handle<Quote>(q);
                                 }
@@ -867,9 +871,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                    std::forward_as_tuple(q));
                                 DLOG("ScenarioSimMarket default curve " << name << " survival[" << i << "]=" << prob);
                                 if (useSpreadedTermStructures_) {
-                                    absoluteSimData_.emplace(std::piecewise_construct,
-                                                             std::forward_as_tuple(param.first, name, i),
-                                                             std::forward_as_tuple(prob));
+                                    absoluteSimDataTmp.emplace(std::piecewise_construct,
+                                                               std::forward_as_tuple(param.first, name, i),
+                                                               std::forward_as_tuple(prob));
                                 }
                             }
                             Handle<Quote> qh(q);
@@ -924,24 +928,32 @@ ScenarioSimMarket::ScenarioSimMarket(
                             LOG("Simulating CDS Vols for " << name);
                             vector<Handle<Quote>> quotes;
                             vector<Time> times;
+                            DayCounter dc = ore::data::parseDayCounter(parameters->cdsVolDayCounter(name));
                             for (Size i = 0; i < parameters->cdsVolExpiries().size(); i++) {
                                 Date date = asof_ + parameters->cdsVolExpiries()[i];
                                 Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
-                                times.push_back(wrapper->timeFromReference(date));
-                                boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                                times.push_back(dc.yearFraction(asof_, date));
+                                boost::shared_ptr<SimpleQuote> q =
+                                    boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : vol);
                                 if (parameters->simulateCdsVols()) {
                                     simDataTmp.emplace(std::piecewise_construct,
                                                        std::forward_as_tuple(param.first, name, i),
                                                        std::forward_as_tuple(q));
+                                    if (useSpreadedTermStructures_) {
+                                        absoluteSimDataTmp.emplace(std::piecewise_construct,
+                                                                   std::forward_as_tuple(param.first, name, i),
+                                                                   std::forward_as_tuple(vol));
+                                    }
                                 }
                                 quotes.emplace_back(q);
                             }
-
-                            DayCounter dc = ore::data::parseDayCounter(parameters->cdsVolDayCounter(name));
-                            boost::shared_ptr<BlackVolTermStructure> cdsVolCurve(new BlackVarianceCurve3(
-                                0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes, false));
-
-                            cvh = Handle<BlackVolTermStructure>(cdsVolCurve);
+                            if (useSpreadedTermStructures_) {
+                                cvh = Handle<BlackVolTermStructure>(
+                                    boost::make_shared<SpreadedBlackVolatilityCurve>(wrapper, times, quotes));
+                            } else {
+                                cvh = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceCurve3>(
+                                    0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes, false));
+                            }
                         } else {
                             string decayModeString = parameters->cdsVolDecayMode();
                             LOG("Deterministic CDS Vols with decay mode " << decayModeString << " for " << name);
@@ -2074,6 +2086,7 @@ ScenarioSimMarket::ScenarioSimMarket(
             }
 
             simData_.insert(simDataTmp.begin(), simDataTmp.end());
+            absoluteSimData_.insert(absoluteSimDataTmp.begin(), absoluteSimDataTmp.end());
         } catch (const std::exception& e) {
             ALOG("ScenarioSimMarket::ScenarioSimMarket() top level catch " << e.what());
             processException(continueOnError, e, "(ssm top level catch)");

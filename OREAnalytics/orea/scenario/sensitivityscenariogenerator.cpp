@@ -1396,7 +1396,11 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
             // add shifted vol data to the scenario
             for (Size jj = 0; jj < n_cdsvol_exp; ++jj) {
                 RiskFactorKey key(RFType::CDSVolatility, name, jj);
-                scenario->add(key, shiftedVolData[jj]);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    scenario->add(key, shiftedVolData[jj] - volData[jj]);
+                } else {
+                    scenario->add(key, shiftedVolData[jj]);
+                }
 
                 // Possibly store valid shift size
                 if (validShiftSize && up && j == jj) {
