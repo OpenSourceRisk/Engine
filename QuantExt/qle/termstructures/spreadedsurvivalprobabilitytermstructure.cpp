@@ -32,6 +32,7 @@ SpreadedSurvivalProbabilityTermStructure::SpreadedSurvivalProbabilityTermStructu
         registerWith(spreads_[i]);
     }
     interpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+    interpolation_->enableExtrapolation();
     registerWith(Settings::instance().evaluationDate());
 }
 

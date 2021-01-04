@@ -31,6 +31,7 @@ SpreadedDiscountCurve::SpreadedDiscountCurve(const Handle<YieldTermStructure>& r
         registerWith(quotes_[i]);
     }
     interpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+    interpolation_->enableExtrapolation();
     registerWith(referenceCurve_);
 }
 
