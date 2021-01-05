@@ -37,36 +37,7 @@ SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness
     : BlackVolatilityTermStructure(referenceVol->businessDayConvention(), referenceVol->dayCounter()),
       referenceVol_(referenceVol), spot_(spot), times_(times), moneyness_(moneyness), volSpreads_(volSpreads),
       stickyStrike_(stickyStrike) {
-    init();
-}
-
-Date SpreadedBlackVolatilitySurfaceMoneyness::maxDate() const { return referenceVol_->maxDate(); }
-
-const Date& SpreadedBlackVolatilitySurfaceMoneyness::referenceDate() const { return referenceVol_->referenceDate(); }
-
-Calendar SpreadedBlackVolatilitySurfaceMoneyness::calendar() const { return referenceVol_->calendar(); }
-
-Natural SpreadedBlackVolatilitySurfaceMoneyness::settlementDays() const { return referenceVol_->settlementDays(); }
-
-Real SpreadedBlackVolatilitySurfaceMoneyness::minStrike() const { return referenceVol_->minStrike(); }
-
-Real SpreadedBlackVolatilitySurfaceMoneyness::maxStrike() const { return referenceVol_->maxStrike(); }
-
-void SpreadedBlackVolatilitySurfaceMoneyness::update() {
-    LazyObject::update();
-    BlackVolatilityTermStructure::update();
-}
-
-void SpreadedBlackVolatilitySurfaceMoneyness::performCalculations() const {
-    for (Size j = 0; j < data_.columns(); ++j) {
-        for (Size i = 0; i < data_.rows(); ++i) {
-            data_(i, j) = volSpreads_[i][j]->value();
-        }
-    }
-    volSpreadSurface_.update();
-}
-
-void SpreadedBlackVolatilitySurfaceMoneyness::init() {
+    registerWith(referenceVol_);
 
     QL_REQUIRE(times_.size() == volSpreads_.front().size(), "mismatch between times vector and vol matrix colums");
     QL_REQUIRE(moneyness_.size() == volSpreads_.size(), "mismatch between moneyness vector and vol matrix rows");
@@ -98,6 +69,34 @@ void SpreadedBlackVolatilitySurfaceMoneyness::init() {
     volSpreadSurface_.enableExtrapolation();
 }
 
+Date SpreadedBlackVolatilitySurfaceMoneyness::maxDate() const { return referenceVol_->maxDate(); }
+
+const Date& SpreadedBlackVolatilitySurfaceMoneyness::referenceDate() const { return referenceVol_->referenceDate(); }
+
+Calendar SpreadedBlackVolatilitySurfaceMoneyness::calendar() const { return referenceVol_->calendar(); }
+
+Natural SpreadedBlackVolatilitySurfaceMoneyness::settlementDays() const { return referenceVol_->settlementDays(); }
+
+Real SpreadedBlackVolatilitySurfaceMoneyness::minStrike() const { return referenceVol_->minStrike(); }
+
+Real SpreadedBlackVolatilitySurfaceMoneyness::maxStrike() const { return referenceVol_->maxStrike(); }
+
+void SpreadedBlackVolatilitySurfaceMoneyness::update() {
+    LazyObject::update();
+    BlackVolatilityTermStructure::update();
+}
+
+std::vector<QuantLib::Real> SpreadedBlackVolatilitySurfaceMoneyness::moneyness() const { return moneyness_; }
+
+void SpreadedBlackVolatilitySurfaceMoneyness::performCalculations() const {
+    for (Size j = 0; j < data_.columns(); ++j) {
+        for (Size i = 0; i < data_.rows(); ++i) {
+            data_(i, j) = volSpreads_[i][j]->value();
+        }
+    }
+    volSpreadSurface_.update();
+}
+
 Real SpreadedBlackVolatilitySurfaceMoneyness::blackVolImpl(Time t, Real strike) const {
     calculate();
     return referenceVol_->blackVol(t, strike) + volSpreadSurface_(t, moneyness(t, strike));
@@ -122,11 +121,6 @@ SpreadedBlackVolatilitySurfaceMoneynessForward::SpreadedBlackVolatilitySurfaceMo
     const Handle<YieldTermStructure>& forTS, const Handle<YieldTermStructure>& domTS, bool stickyStrike)
     : SpreadedBlackVolatilitySurfaceMoneyness(referenceVol, spot, times, moneyness, volSpreads, stickyStrike),
       forTS_(forTS), domTS_(domTS) {
-    init();
-}
-
-void SpreadedBlackVolatilitySurfaceMoneynessForward::init() {
-
     if (!stickyStrike_) {
         QL_REQUIRE(!forTS_.empty(), "foreign discount curve required for atmf surface");
         QL_REQUIRE(!domTS_.empty(), "domestic discount curve required for atmf surface");

@@ -52,7 +52,7 @@ public:
     Real maxStrike() const override;
     void update() override;
 
-    std::vector<QuantLib::Real> moneyness() const { return moneyness_; }
+    std::vector<QuantLib::Real> moneyness() const;
 
 protected:
     virtual Real moneyness(Time t, Real strike) const = 0;
