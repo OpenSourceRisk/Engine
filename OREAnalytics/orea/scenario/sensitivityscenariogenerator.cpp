@@ -823,7 +823,11 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
                         Size idx = k * n_fxvol_exp + l;
                         RiskFactorKey key(RFType::FXVolatility, ccyPair, idx);
 
-                        scenario->add(key, shiftedValues[l][k]);
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedValues[l][k] - values[l][k]);
+                        } else {
+                            scenario->add(key, shiftedValues[l][k]);
+                        }
 
                         // Possibly store valid shift size
                         if (validShiftSize && up && j == l && strikeBucket == k) {
