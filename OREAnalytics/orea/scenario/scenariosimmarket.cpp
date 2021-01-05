@@ -182,10 +182,14 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
         yieldCurve = boost::shared_ptr<YieldTermStructure>(
             new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), dc));
     } else {
-        if (spreaded)
+        if (spreaded) {
+            QL_REQUIRE(dc == wrapper->dayCounter(),
+                       "when using spreaded curves in scenario sim market, the init curve day counter ("
+                           << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc << ")");
             yieldCurve = boost::make_shared<QuantExt::SpreadedDiscountCurve>(wrapper, yieldCurveTimes, quotes);
-        else
+        } else {
             yieldCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(yieldCurveTimes, quotes, dc);
+        }
     }
 
     Handle<YieldTermStructure> ych(yieldCurve);
@@ -328,12 +332,18 @@ ScenarioSimMarket::ScenarioSimMarket(
                             indexCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
                                 yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
                         } else {
-                            if (useSpreadedTermStructures_)
+                            if (useSpreadedTermStructures_) {
+                                QL_REQUIRE(
+                                    dc == wrapperIndex->dayCounter(),
+                                    "when using spreaded curves in scenario sim market, the init curve day counter ("
+                                        << wrapperIndex->dayCounter() << ") must be equal to the ssm day counter ("
+                                        << dc << ")");
                                 indexCurve = boost::shared_ptr<YieldTermStructure>(
                                     new QuantExt::SpreadedDiscountCurve(wrapperIndex, yieldCurveTimes, quotes));
-                            else
+                            } else {
                                 indexCurve = boost::shared_ptr<YieldTermStructure>(
                                     new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+                            }
                         }
 
                         // wrapped curve, is slower than a native curve
@@ -613,6 +623,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (useSpreadedTermStructures_) {
                                 // using the wrapper from t0 and init market swap indices means we
                                 // have a sticky strike dynamics
+                                QL_REQUIRE(
+                                    dc == wrapper->dayCounter(),
+                                    "when using spreaded curves in scenario sim market, the init curve day counter ("
+                                        << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc
+                                        << ")");
                                 svp =
                                     Handle<SwaptionVolatilityStructure>(boost::make_shared<SpreadedSwaptionVolatility>(
                                         wrapper, optionTenors, underlyingTenors, strikeSpreads, quotes,
@@ -802,6 +817,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DayCounter dc = ore::data::parseDayCounter(parameters->capFloorVolDayCounter(name));
 
                             if (useSpreadedTermStructures_) {
+                                QL_REQUIRE(
+                                    dc == wrapper->dayCounter(),
+                                    "when using spreaded curves in scenario sim market, the init curve day counter ("
+                                        << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc
+                                        << ")");
                                 hCapletVol = Handle<OptionletVolatilityStructure>(
                                     boost::make_shared<QuantExt::SpreadedOptionletVolatility2>(wrapper, optionDates,
                                                                                                strikes, quotes));
@@ -881,14 +901,19 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
                         Calendar cal = ore::data::parseCalendar(parameters->defaultCurveCalendar(name));
                         Handle<DefaultProbabilityTermStructure> defaultCurve;
-                        if (useSpreadedTermStructures_)
+                        if (useSpreadedTermStructures_) {
+                            QL_REQUIRE(dc == wrapper->dayCounter(),
+                                       "when using spreaded curves in scenario sim market, the init curve day counter ("
+                                           << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc
+                                           << ")");
                             defaultCurve = Handle<DefaultProbabilityTermStructure>(
                                 boost::make_shared<QuantExt::SpreadedSurvivalProbabilityTermStructure>(wrapper, times,
                                                                                                        quotes));
-                        else
+                        } else {
                             defaultCurve = Handle<DefaultProbabilityTermStructure>(
                                 boost::make_shared<QuantExt::SurvivalProbabilityCurve<LogLinear>>(dates, quotes, dc,
                                                                                                   cal));
+                        }
                         defaultCurve->enableExtrapolation();
                         defaultCurves_.insert(pair<pair<string, string>, Handle<DefaultProbabilityTermStructure>>(
                             make_pair(Market::defaultConfiguration, name), defaultCurve));
@@ -948,6 +973,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 quotes.emplace_back(q);
                             }
                             if (useSpreadedTermStructures_) {
+                                QL_REQUIRE(
+                                    dc == wrapper->dayCounter(),
+                                    "when using spreaded curves in scenario sim market, the init curve day counter ("
+                                        << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc
+                                        << ")");
                                 cvh = Handle<BlackVolTermStructure>(
                                     boost::make_shared<SpreadedBlackVolatilityCurve>(wrapper, times, quotes));
                             } else {
