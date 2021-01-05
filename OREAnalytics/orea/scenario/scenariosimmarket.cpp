@@ -1106,8 +1106,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
                                     fwds.push_back(spot->value() * forTS->discount(times[i]) /
                                                    domTS->discount(times[i]));
-                                    atmVols.push_back(wrapper->blackVol(dates[i], spot->value()));
-                                    DLOG("atmVol(s) is " << atmVols.back() << " on date " << dates[i]);
+                                    atmVols.push_back(wrapper->blackVol(dates[i], fwds.back()));
+                                    DLOG("on date " << dates[i] << ": fwd = " << fwds.back()
+                                                    << ", atmVol = " << atmVols.back());
                                 }
 
                                 // interpolations
@@ -1289,7 +1290,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         auto eqForward = eqCurve->forecastFixing(dates[i]);
                                         fwds.push_back(eqForward);
                                         atmVols.push_back(wrapper->blackVol(dates[i], eqForward));
-                                        DLOG("atmVol(s) is " << atmVols.back() << " on date " << dates[i]);
+                                        DLOG("on date " << dates[i] << ": fwd = " << fwds.back()
+                                                        << ", atmVol = " << atmVols.back());
                                     }
 
                                     // interpolations
