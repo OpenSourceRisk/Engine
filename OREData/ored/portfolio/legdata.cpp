@@ -1761,7 +1761,9 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                                         engineFactory->market()->commodityPriceCurve(tmp->underlyingName(), config));
             } else if (boost::starts_with(indexing.index(), "BOND-")) {
                 // if we build a bond index, we add the required fixings for the bond underlying
-                BondData bondData(parseBondIndex(indexing.index())->securityName(), 1.0);
+                boost::shared_ptr<BondIndex> bi = parseBondIndex(indexing.index());
+                QL_REQUIRE(!(boost::dynamic_pointer_cast<BondFuturesIndex>(bi)), "BondFuture Legs are not yet supported");
+                BondData bondData(bi->securityName(), 1.0);
                 index = buildBondIndex(bondData, indexing.indexIsDirty(), indexing.indexIsRelative(),
                                        parseCalendar(indexing.indexFixingCalendar()),
                                        indexing.indexIsConditionalOnSurvival(), engineFactory, requiredFixings);

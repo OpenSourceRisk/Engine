@@ -10,13 +10,13 @@
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
     \lstinline!Date! & \begin{tabular}[l]{@{}l@{}} The following date formats are supported: \\  \emph{yyyymmdd} \\ \emph{yyyy-mm-dd} \\ \emph{yyyy/mm/dd} \\ \emph{yyyy.mm.dd} \\ \emph{dd-mm-yy} \\  \emph{dd/mm/yy} \\  \emph{dd.mm.yy} \\  \emph{dd-mm-yyyy} \\  \emph{dd/mm/yyyy} \\  \emph{dd.mm.yyyy} \\ and \\ Dates as  serial numbers, comparable to Microsoft Excel \\dates, with a minimum of 367 for Jan 1, 1901,\\ and a maximum of 109574 for Dec 31, 2199.  \end{tabular}  \\ \hline
-    \lstinline!Currency! & \emph{AED, ARS, ATS, AUD, BEF, BGN, BHD,
+    \lstinline!Currency! & \emph{AED, AOA, ARS, ATS, AUD, BEF, BGN, BHD,
       BRL, CAD, CHF, CLF, CLP, CNH, CNY, COP, COU, CZK, DEM, DKK, EGP,
-      ESP, EUR, FIM, FRF, GBP, GHS, GRD, HKD, HRK, HUF, IDR, IEP, ILS,
-      INR, ISK, ITL, JOD, JPY, KES, KRW, KWD, KZT, LKR, LUF, MAD, MUR,
-      MXN, MXV, MYR, NGN, NLG, NOK, NZD, OMR, PEN, PHP, PKR, PLN, PTE,
-      QAR, RON, RSD, RUB, SAR, SEK, SGD, THB, TND, TRY, TWD, UAH, UGX,
-      USD, UYU, VND, ZAR, ZMW, XAG, XAU, XPD, XPT},  
+      ESP, ETB, EUR, FIM, FRF, GBP, GEL, GHS, GRD, HKD, HRK, HUF, IDR, 
+      IEP, ILS, INR, ISK, ITL, JOD, JPY, KES, KRW, KWD, KZT, LKR, LUF, MAD, 
+      MUR, MXN, MXV, MYR, NGN, NLG, NOK, NZD, OMR, PEN, PHP, PKR, PLN, 
+      PTE, QAR, RON, RSD, RUB, SAR, SEK, SGD, THB, TND, TRY, TWD, UAH, 
+      UGX, USD, UYU, VND, XOF, ZAR, ZMW, XAG, XAU, XPD, XPT},  
     Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
 	\lstinline!Minor Currencies! & \emph{GBp, GBX, ILa, ILX, ZAc, ZAC, ZAX},  
     Note: Minor Currency codes only supported for Equity products.  \\ \hline
@@ -31,6 +31,44 @@
   \caption{Allowable values for standard trade data.}
   \label{tab:allow_stand_data}
 \end{table}
+
+\newpage
+
+%\begin{table}[H]
+%\centering
+%\begin{tabular}{|l|p{6cm}|}
+\begin{longtable}{| p{.23\textwidth} | p{.80\textwidth} |}
+\hline
+\multicolumn{2}{|l|}{\lstinline!Rule!}                    \\ \hline
+\textbf{Allowable Values}                   & \textbf{Effect}                       \\ \hline
+\emph{Backward}   &   Backward from termination date to effective date.   \\ \hline
+\emph{Forward}   &   Forward from effective date to termination date.  \\ \hline
+\emph{Zero}   &   No intermediate dates between effective date and termination date.  \\ \hline
+\emph{ThirdWednesday}   &   All dates but effective date and
+                          termination date are taken to be on the
+                          third Wednesday of their month (with forward calculation.) \\ \hline
+\emph{ThirdThursday}   &   All dates but effective date and
+                          termination date are taken to be on the
+                          third Thursday of their month (with forward calculation.) \\ \hline
+\emph{ThirdFriday}   &   All dates but effective date and
+                          termination date are taken to be on the
+                          third Friday of their month (with forward calculation.) \\ \hline
+\emph{MondayAfterThird-} 
+\emph{Friday}  &   All dates but effective date and
+                          termination date are taken to be on the
+                          Monday following the third Friday of their month (with forward calculation.) \\ \hline
+\emph{TuesdayAfterThird-}
+\emph{Friday}   &   All dates but effective date and
+                          termination date are taken to be on the
+                          Tuesday following the third Friday of their month (with forward calculation.) \\ \hline
+\emph{Twentieth}   &   All dates but the effective date are taken to be the twentieth of their month (used for CDS schedules in emerging markets.)  The termination date is also modified. \\ \hline
+\emph{TwentiethIMM}   &   All dates but the effective date are  taken to be the twentieth of an IMM month (used for CDS schedules.)  The termination date is also modified. \\ \hline
+\emph{OldCDS}   &   Same as TwentiethIMM with unrestricted date ends and long/short stub coupon period (old CDS convention).\\ \hline
+\emph{CDS}   &    \makecell[tl]{Credit derivatives standard rule defined in 'Big Bang' changes in 2009. \\ \\ For quarterly periods (\lstinline!Tenor! set to \emph{3M}): \\ (Assuming no \lstinline!FirstDate!/\lstinline!LastDate!) \\ Dates fall on 20th of March, June, September, December. A \emph{Following} \\ roll convention will be applied if the 20th falls on a non-business day. \\ If the \lstinline!EndDate! in the schedule is set to a date beyond the rolled \\ quarterly CDS date, the actual trade termination date will be on the \\ following quarterly CDS date. \\ The first coupon will be paid on the quarterly CDS date following the \\ \lstinline!StartDate!, and be for the period since the previous quarterly CDS \\ date.  \\ \\ For monthly periods (\lstinline!Tenor! set to \emph{1M}): \\ (Assuming no \lstinline!FirstDate!/\lstinline!LastDate!)\\ Dates fall on 20th of each month, but the termination is still adjusted \\ to be in line with quarterly periods. \\ If the \lstinline!EndDate! in the schedule is set to a date beyond the rolled \\ quarterly CDS date (i.e. the 20th+roll Mar, Jun, Sep, Dec), \\ the actual termination date will be on the following quarterly CDS \\ date, causing a long final stub. \\ The first coupon will be paid on the next 20th monthly following the \\ \lstinline!StartDate!, and be for the period since the previous month's 20th.}\\ \hline
+\emph{CDS2015}   &    \makecell[tl]{Credit derivatives standard rule updated in 2015. \\ Same as  \emph{CDS} but with termination dates adjusted to \\ 20th June and 20th December. \\ For schedule \lstinline!EndDates!  from the 20th of March to the 19th September, \\ both included, the termination date will fall on the 20th June (with \\  \emph{Following} roll). \\ For schedule \lstinline!EndDates! from the 20th September to the 19th March, \\ both included, the termination date will fall on the 20th December \\ (with \emph{Following} roll).} \\ \hline
+  \caption{Allowable Values for Rule}
+  \label{tab:rule}
+  \end{longtable}
 
 \begin{longtable}{| p{.30\textwidth} | p{.70\textwidth} |}
     \hline
@@ -236,12 +274,7 @@ Overnight indices    &   0, except for the Overnight indices below:  \\ \hline
 \multicolumn{2}{|l|}{\tt FX Index}   \\ \hline
 \textbf{Index Format} &\textbf{Allowable Values}     \\ \hline
 FX-SOURCE-CCY1-CCY2    &    
-SOURCE is ECB (European Central Bank) for EUR pairs or TR20H (Thomson
-Reuters 20H) for USD pairs. For ECB CCY1 should always be EUR, and for
-TR20H CCY1 should always be USD, except for FX-TR20H-GBP-USD,
-FX-TR20H-AUD-USD and FX-TR20H-NZD-USD. Note that the FX- part of the
-string stays constant for all currency pairs. For the USD-EUR pair, ECB is used
-(FX-ECB-EUR-USD).\\ \hline
+The FX- part of the string stays constant for all currency pairs. SOURCE is the market data fixing source defined in the market configuration. CCY1 and CCY2 are the ISO currency codes of the fx pair. Fixings are expressed as amount in CCY2 for one unit of CCY1.\\ \hline
 \end{tabular}
   \caption{Allowable values for FX index fixings.}
   \label{tab:fxindex_data}

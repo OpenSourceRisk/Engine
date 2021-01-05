@@ -102,7 +102,7 @@ public:
 
     //! \name Fixing calculations
     //@{
-    Rate forecastFixing(const Date& fixingDate) const;
+    virtual Rate forecastFixing(const Date& fixingDate) const;
     Rate pastFixing(const Date& fixingDate) const;
     //@}
 
@@ -120,7 +120,8 @@ public:
     bool conditionalOnSurvival() const { return conditionalOnSurvival_; }
     //@}
 
-private:
+
+protected:
     std::string securityName_;
     bool dirty_, relative_;
     Calendar fixingCalendar_;
@@ -133,6 +134,40 @@ private:
     bool conditionalOnSurvival_;
 
     boost::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
+};
+
+//! Bond Futures Index
+/*! \ingroup indexes */
+class BondFuturesIndex : public BondIndex {
+public:
+    
+    BondFuturesIndex(const QuantLib::Date& expiryDate, const std::string& securityName, const bool dirty = false, const bool relative = true,
+              const Calendar& fixingCalendar = NullCalendar(), const boost::shared_ptr<QuantLib::Bond>& bond = nullptr,
+              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+              const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
+              const Handle<Quote>& recoveryRate = Handle<Quote>(),
+              const Handle<Quote>& securitySpread = Handle<Quote>(),
+              const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
+              const bool conditionalOnSurvival = true);
+
+    //! \name Index interface
+    //@{
+    std::string name() const override;
+    //@}
+
+    //! \name Fixing calculations
+    //@{
+    Rate forecastFixing(const Date& fixingDate) const override;
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const QuantLib::Date& expiryDate() const { return expiryDate_; }
+    //@}
+
+private:
+    Date expiryDate_;
+    mutable std::string name_;
 };
 
 } // namespace QuantExt
