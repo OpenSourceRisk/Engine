@@ -34,9 +34,13 @@ using namespace QuantLib;
 //! Spreaedd Black volatility curve modelled as variance curve
 class SpreadedBlackVolatilityCurve : public LazyObject, public BlackVolatilityTermStructure {
 public:
-    //! times should be consistent with reference ts day counter
+    /*! - times should be consistent with reference ts day counter
+        - if useAtmReferenceVolsOnly, only vols with strike Null<Real>() are read from the referenceVol,
+          otherwise the full reference vol surface (if it is one) is used
+     */
     SpreadedBlackVolatilityCurve(const Handle<BlackVolTermStructure>& referenceVol, const std::vector<Time>& times,
-                                 const std::vector<Handle<Quote>>& volSpreads);
+                                 const std::vector<Handle<Quote>>& volSpreads,
+                                 const bool useAtmReferenceVolsOnly = false);
     Date maxDate() const override;
     const Date& referenceDate() const override;
     Calendar calendar() const override;
@@ -52,6 +56,7 @@ private:
     Handle<BlackVolTermStructure> referenceVol_;
     std::vector<Time> times_;
     std::vector<Handle<Quote>> volSpreads_;
+    bool useAtmReferenceVolsOnly_;
     mutable std::vector<Real> data_;
     boost::shared_ptr<Interpolation> interpolation_;
 };

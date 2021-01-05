@@ -24,9 +24,11 @@ namespace QuantExt {
 
 SpreadedBlackVolatilityCurve::SpreadedBlackVolatilityCurve(const Handle<BlackVolTermStructure>& referenceVol,
                                                            const std::vector<Time>& times,
-                                                           const std::vector<Handle<Quote>>& volSpreads)
+                                                           const std::vector<Handle<Quote>>& volSpreads,
+                                                           const bool useAtmReferenceVolsOnly)
     : BlackVolatilityTermStructure(referenceVol->businessDayConvention(), referenceVol->dayCounter()),
-      referenceVol_(referenceVol), times_(times), volSpreads_(volSpreads), data_(times.size(), 0.0) {
+      referenceVol_(referenceVol), times_(times), volSpreads_(volSpreads),
+      useAtmReferenceVolsOnly_(useAtmReferenceVolsOnly), data_(times.size(), 0.0) {
     registerWith(referenceVol_);
     QL_REQUIRE(times_.size() >= 2, "at least two times required");
     QL_REQUIRE(times_.size() == volSpreads_.size(), "size of time and quote vectors do not match");
@@ -64,7 +66,7 @@ void SpreadedBlackVolatilityCurve::performCalculations() const {
 
 Real SpreadedBlackVolatilityCurve::blackVolImpl(Time t, Real k) const {
     calculate();
-    return referenceVol_->blackVol(t, k) + (*interpolation_)(t);
+    return referenceVol_->blackVol(t, useAtmReferenceVolsOnly_ ? Null<Real>() : k) + (*interpolation_)(t);
 }
 
 } // namespace QuantExt
