@@ -143,7 +143,7 @@
       <xs:element type="settlementMethod" name="SettlementMethod" minOccurs="0"/>
       <xs:element type="xs:string" name="PayOffAtExpiry" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumAmount" minOccurs="0"/>
-      <xs:element type="xs:string" name="PremiumCurrency" minOccurs="0"/>
+      <xs:element type="premiumCurrencyCode" name="PremiumCurrency" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumPayDate" minOccurs="0"/>
       <xs:element type="xs:string" name="ExercisePrices" minOccurs="0"/>
       <xs:element name="ExerciseFees" minOccurs="0">
@@ -919,7 +919,7 @@
       <xs:element type="xs:string" name="Type"/>
       <xs:element type="xs:string" name="Name"/>
       <xs:element type="xs:string" name="IdentifierType" minOccurs="0"/>	
-      <xs:element type="xs:string" name="Currency" minOccurs="0"/>
+      <xs:element type="currencyCode" name="Currency" minOccurs="0"/>
       <xs:element type="xs:string" name="Exchange" minOccurs="0"/>	  
       <xs:element type="xs:float" name="Weight" minOccurs="0"/>
       <xs:element type="xs:string" name="PriceType" minOccurs="0"/>
