@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/math/interpolation/flatextrapolation.hpp>
+#include <qle/math/flatextrapolation.hpp>
 #include <qle/termstructures/spreadedinflationcurve.hpp>
 
 namespace QuantExt {
@@ -39,6 +39,8 @@ SpreadedZeroInflationCurve::SpreadedZeroInflationCurve(const Handle<ZeroInflatio
     interpolation_->enableExtrapolation();
     registerWith(referenceCurve_);
 }
+
+Date SpreadedZeroInflationCurve::baseDate() const { return referenceCurve_->baseDate(); }
 
 Date SpreadedZeroInflationCurve::maxDate() const { return referenceCurve_->maxDate(); }
 
@@ -64,7 +66,7 @@ void SpreadedZeroInflationCurve::performCalculations() const {
 
 Real SpreadedZeroInflationCurve::zeroRateImpl(Time t) const {
     calculate();
-    referenceCurve_->zeroRate(t) + (*interpolation_)(t);
+    return referenceCurve_->zeroRate(t) + (*interpolation_)(t);
 }
 
 } // namespace QuantExt
