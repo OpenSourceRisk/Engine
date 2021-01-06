@@ -25,7 +25,7 @@ SpreadedZeroInflationCurve::SpreadedZeroInflationCurve(const Handle<ZeroInflatio
                                                        const std::vector<Time>& times,
                                                        const std::vector<Handle<Quote>>& quotes)
     : ZeroInflationTermStructure(referenceCurve->dayCounter(), referenceCurve->baseRate(),
-                                 referenceCurve->observationLag(), referenceCurve_->frequency(),
+                                 referenceCurve->observationLag(), referenceCurve->frequency(),
                                  referenceCurve->indexIsInterpolated(), referenceCurve->nominalTermStructure(),
                                  referenceCurve->seasonality()),
       referenceCurve_(referenceCurve), times_(times), quotes_(quotes), data_(times_.size(), 1.0) {
@@ -59,7 +59,6 @@ void SpreadedZeroInflationCurve::performCalculations() const {
     for (Size i = 0; i < times_.size(); ++i) {
         QL_REQUIRE(!quotes_[i].empty(), "SpreadedZeroInflationCurve: quote at index " << i << " is empty");
         data_[i] = quotes_[i]->value();
-        QL_REQUIRE(data_[i] > 0, "SpreadedZeroInflationCurve: invalid value " << data_[i] << " at index " << i);
     }
     interpolation_->update();
 }
