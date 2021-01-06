@@ -62,6 +62,7 @@
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacestddevs.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
+#include <qle/termstructures/spreadedinflationcurve.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility2.hpp>
 #include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
@@ -1576,6 +1577,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                         QL_REQUIRE(parameters->zeroInflationTenors(name).front() > 0 * Days,
                                    "zero inflation tenors must not include t=0");
 
+                        QL_REQUIRE(!useSpreadedTermStructures_ || dc == inflationTs->dayCounter(),
+                                   "when using spreaded curves in scenario sim market, the init curve day counter ("
+                                       << inflationTs->dayCounter() << ") must be equal to the ssm day counter (" << dc
+                                       << ")");
+
                         for (auto& tenor : parameters->zeroInflationTenors(name)) {
                             Date inflDate = inflationPeriod(date0 + tenor, inflationTs->frequency()).first;
                             zeroCurveTimes.push_back(dc.yearFraction(asof_, inflDate));
@@ -1583,18 +1589,22 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
 
                         for (Size i = 1; i < zeroCurveTimes.size(); i++) {
-                            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(inflationTs->zeroRate(quoteDates[i - 1])));
-                            Handle<Quote> qh(q);
+                            Real rate = inflationTs->zeroRate(quoteDates[i - 1]);
+                            auto q = boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : rate);
                             if (i == 1) {
                                 // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1
                                 // rate for time t T0 < t < T1
-                                quotes.push_back(qh);
+                                quotes.push_back(Handle<Quote>(q));
                             }
-                            quotes.push_back(qh);
+                            quotes.push_back(Handle<Quote>(q));
                             simDataTmp.emplace(std::piecewise_construct,
                                                std::forward_as_tuple(param.first, name, i - 1),
                                                std::forward_as_tuple(q));
-                            DLOG("ScenarioSimMarket index curve " << name << " zeroRate[" << i << "]=" << q->value());
+                            if (useSpreadedTermStructures_)
+                                absoluteSimDataTmp.emplace(std::piecewise_construct,
+                                                           std::forward_as_tuple(param.first, name, i - 1),
+                                                           std::forward_as_tuple(rate));
+                            DLOG("ScenarioSimMarket index curve " << name << " zeroRate[" << i << "]=" << rate);
                         }
 
                         // Get the configured nominal term structure from this scenario sim market if possible
@@ -1643,11 +1653,15 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // FIXME: Settlement days set to zero - needed for floating term structure implementation
                         boost::shared_ptr<ZeroInflationTermStructure> zeroCurve;
                         dc = ore::data::parseDayCounter(parameters->zeroInflationDayCounter(name));
-                        zeroCurve = boost::shared_ptr<ZeroInflationCurveObserverMoving<Linear>>(
-                            new ZeroInflationCurveObserverMoving<Linear>(
+                        if (useSpreadedTermStructures_) {
+                            zeroCurve =
+                                boost::make_shared<SpreadedZeroInflationCurve>(inflationTs, zeroCurveTimes, quotes);
+                        } else {
+                            zeroCurve = boost::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
                                 0, inflationIndex->fixingCalendar(), dc, inflationTs->observationLag(),
                                 inflationTs->frequency(), inflationTs->indexIsInterpolated(), nominalTs, zeroCurveTimes,
-                                quotes, inflationTs->seasonality()));
+                                quotes, inflationTs->seasonality());
+                        }
 
                         Handle<ZeroInflationTermStructure> its(zeroCurve);
                         its->enableExtrapolation();

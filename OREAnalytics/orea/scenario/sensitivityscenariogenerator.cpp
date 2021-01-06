@@ -1484,7 +1484,11 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
             // store shifted discount curve for this index in the scenario
             for (Size k = 0; k < n_ten; ++k) {
                 RiskFactorKey key(RFType::ZeroInflationCurve, indexName, k);
-                scenario->add(key, shiftedZeros[k]);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    scenario->add(key, shiftedZeros[k] - zeros[k]);
+                } else {
+                    scenario->add(key, shiftedZeros[k]);
+                }
 
                 // Possibly store valid shift size
                 if (validShiftSize && up && j == k) {
