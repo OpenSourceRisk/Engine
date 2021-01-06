@@ -143,6 +143,16 @@
     </xs:restriction>
   </xs:simpleType>
   
+  <xs:simpleType name="premiumCurrencyCode">
+    <xs:union memberTypes="currencyCode">
+      <xs:simpleType>
+        <xs:restriction base='xs:string'>
+          <xs:length value="0"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+
   <xs:simpleType name="extendedCurrencyCode">
      <xs:union memberTypes="currencyCode">
 		<xs:simpleType>
