@@ -307,6 +307,7 @@
 #include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacestddevs.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
+#include <qle/termstructures/spreadedinflationcurve.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility2.hpp>
 #include <qle/termstructures/spreadedsmilesection.hpp>
