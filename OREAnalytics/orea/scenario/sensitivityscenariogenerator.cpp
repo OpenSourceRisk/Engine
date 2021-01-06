@@ -927,7 +927,11 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
                         Size idx = k * n_eqvol_exp + l;
                         RiskFactorKey key(RFType::EquityVolatility, equity, idx);
 
-                        scenario->add(key, shiftedValues[k][l]);
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedValues[k][l] - values[k][l]);
+                        } else {
+                            scenario->add(key, shiftedValues[k][l]);
+                        }
 
                         // Possibly store valid shift size
                         if (validShiftSize && up && j == l && k == strikeBucket) {
