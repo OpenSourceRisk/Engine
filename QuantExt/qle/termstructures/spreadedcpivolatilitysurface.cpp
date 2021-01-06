@@ -47,6 +47,7 @@ Rate SpreadedCPIVolatilitySurface::minStrike() const { return baseVol_->minStrik
 Rate SpreadedCPIVolatilitySurface::maxStrike() const { return baseVol_->maxStrike(); }
 
 Volatility SpreadedCPIVolatilitySurface::volatilityImpl(Time length, Rate strike) const {
+    calculate();
     return baseVol_->volatility(length, strike) + volSpreadInterpolation_(length, strike);
 }
 
