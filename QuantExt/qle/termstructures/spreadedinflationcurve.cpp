@@ -29,8 +29,9 @@ SpreadedZeroInflationCurve::SpreadedZeroInflationCurve(const Handle<ZeroInflatio
                                  referenceCurve->indexIsInterpolated(), referenceCurve->nominalTermStructure(),
                                  referenceCurve->seasonality()),
       referenceCurve_(referenceCurve), times_(times), quotes_(quotes), data_(times_.size(), 1.0) {
-    QL_REQUIRE(times_.size() > 1, "SpreadedDiscountCurve: at least two times required");
-    QL_REQUIRE(times_.size() == quotes.size(), "SpreadedDiscountCurve: size of time and quote vectors do not match");
+    QL_REQUIRE(times_.size() > 1, "SpreadedZeroInflationCurve: at least two times required");
+    QL_REQUIRE(times_.size() == quotes.size(),
+               "SpreadedZeroInflationCurve: size of time and quote vectors do not match");
     for (Size i = 0; i < quotes.size(); ++i) {
         registerWith(quotes_[i]);
     }
@@ -66,6 +67,54 @@ void SpreadedZeroInflationCurve::performCalculations() const {
 Real SpreadedZeroInflationCurve::zeroRateImpl(Time t) const {
     calculate();
     return referenceCurve_->zeroRate(t) + (*interpolation_)(t);
+}
+
+SpreadedYoYInflationCurve::SpreadedYoYInflationCurve(const Handle<YoYInflationTermStructure>& referenceCurve,
+                                                     const std::vector<Time>& times,
+                                                     const std::vector<Handle<Quote>>& quotes)
+    : YoYInflationTermStructure(referenceCurve->dayCounter(), referenceCurve->baseRate(),
+                                referenceCurve->observationLag(), referenceCurve->frequency(),
+                                referenceCurve->indexIsInterpolated(), referenceCurve->nominalTermStructure(),
+                                referenceCurve->seasonality()),
+      referenceCurve_(referenceCurve), times_(times), quotes_(quotes), data_(times_.size(), 1.0) {
+    QL_REQUIRE(times_.size() > 1, "SpreadedZeroInflationCurve: at least two times required");
+    QL_REQUIRE(times_.size() == quotes.size(),
+               "SpreadedZeroInflationCurve: size of time and quote vectors do not match");
+    for (Size i = 0; i < quotes.size(); ++i) {
+        registerWith(quotes_[i]);
+    }
+    interpolation_ = boost::make_shared<FlatExtrapolation>(
+        boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin()));
+    interpolation_->enableExtrapolation();
+    registerWith(referenceCurve_);
+}
+
+Date SpreadedYoYInflationCurve::baseDate() const { return referenceCurve_->baseDate(); }
+
+Date SpreadedYoYInflationCurve::maxDate() const { return referenceCurve_->maxDate(); }
+
+void SpreadedYoYInflationCurve::update() {
+    LazyObject::update();
+    TermStructure::update();
+}
+
+const Date& SpreadedYoYInflationCurve::referenceDate() const { return referenceCurve_->referenceDate(); }
+
+Calendar SpreadedYoYInflationCurve::calendar() const { return referenceCurve_->calendar(); }
+
+Natural SpreadedYoYInflationCurve::settlementDays() const { return referenceCurve_->settlementDays(); }
+
+void SpreadedYoYInflationCurve::performCalculations() const {
+    for (Size i = 0; i < times_.size(); ++i) {
+        QL_REQUIRE(!quotes_[i].empty(), "SpreadedYoYInflationCurve: quote at index " << i << " is empty");
+        data_[i] = quotes_[i]->value();
+    }
+    interpolation_->update();
+}
+
+Real SpreadedYoYInflationCurve::yoyRateImpl(Time t) const {
+    calculate();
+    return referenceCurve_->yoyRate(t) + (*interpolation_)(t);
 }
 
 } // namespace QuantExt

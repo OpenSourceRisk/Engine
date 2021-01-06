@@ -59,4 +59,31 @@ private:
     boost::shared_ptr<Interpolation> interpolation_;
 };
 
+class SpreadedYoYInflationCurve : public YoYInflationTermStructure, public LazyObject {
+public:
+    //! times should be consistent with reference ts day counter
+    SpreadedYoYInflationCurve(const Handle<YoYInflationTermStructure>& referenceCurve, const std::vector<Time>& times,
+                              const std::vector<Handle<Quote>>& quotes);
+
+    Date maxDate() const override;
+    void update() override;
+    const Date& referenceDate() const override;
+
+    Calendar calendar() const override;
+    Natural settlementDays() const override;
+
+    Date baseDate() const override;
+
+protected:
+    void performCalculations() const override;
+    Rate yoyRateImpl(Time t) const override;
+
+private:
+    Handle<YoYInflationTermStructure> referenceCurve_;
+    std::vector<Time> times_;
+    std::vector<Handle<Quote>> quotes_;
+    mutable std::vector<Real> data_;
+    boost::shared_ptr<Interpolation> interpolation_;
+};
+
 } // namespace QuantExt
