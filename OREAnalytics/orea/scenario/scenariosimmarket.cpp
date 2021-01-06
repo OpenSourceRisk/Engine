@@ -61,6 +61,7 @@
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacestddevs.hpp>
+#include <qle/termstructures/spreadedcpivolatilitysurface.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
 #include <qle/termstructures/spreadedinflationcurve.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility2.hpp>
@@ -1694,6 +1695,15 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // Check if the risk factor is simulated before adding it
                         if (param.second.first) {
                             LOG("Simulating zero inflation cap/floor vols for index name " << name);
+
+                            DayCounter dc =
+                                ore::data::parseDayCounter(parameters->zeroInflationCapFloorVolDayCounter(name));
+
+                            QL_REQUIRE(!useSpreadedTermStructures_ || dc == wrapper->dayCounter(),
+                                       "when using spreaded curves in scenario sim market, the init curve day counter ("
+                                           << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc
+                                           << ")");
+
                             vector<Period> optionTenors = parameters->zeroInflationCapFloorVolExpiries(name);
                             vector<Date> optionDates(optionTenors.size());
                             vector<Real> strikes = parameters->zeroInflationCapFloorVolStrikes(name);
@@ -1705,40 +1715,30 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     Real vol =
                                         wrapper->volatility(optionTenors[i], strikes[j], wrapper->observationLag(),
                                                             wrapper->allowsExtrapolation());
-                                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                                    auto q = boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : vol);
                                     Size index = i * strikes.size() + j;
                                     simDataTmp.emplace(std::piecewise_construct,
                                                        std::forward_as_tuple(param.first, name, index),
                                                        std::forward_as_tuple(q));
+                                    if (useSpreadedTermStructures_) {
+                                        absoluteSimDataTmp.emplace(std::piecewise_construct,
+                                                                   std::forward_as_tuple(param.first, name, index),
+                                                                   std::forward_as_tuple(vol));
+                                    }
                                     quotes[i][j] = Handle<Quote>(q);
                                 }
                             }
-                            DayCounter dc =
-                                ore::data::parseDayCounter(parameters->zeroInflationCapFloorVolDayCounter(name));
-                            boost::shared_ptr<InterpolatedCPIVolatilitySurface<Bilinear>> interpolatedCpiVol =
-                                boost::make_shared<InterpolatedCPIVolatilitySurface<Bilinear>>(
-                                    optionTenors, strikes, quotes, zeroInflationIndex.currentLink(),
-                                    wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(),
-                                    wrapper->dayCounter(), wrapper->observationLag());
-                            boost::shared_ptr<CPIVolatilitySurface> cpiVol(interpolatedCpiVol);
-                            hCpiVol = Handle<CPIVolatilitySurface>(cpiVol);
 
-                            // Check that we have correctly copied today's market vol structure into the sim market
-                            // structure
-                            for (Size i = 0; i < optionTenors.size(); ++i) {
-                                for (Size j = 0; j < strikes.size(); ++j) {
-                                    Date d = optionDates[i];
-                                    Real vol1 = wrapper->volatility(d, strikes[j]);
-                                    Real vol2 = hCpiVol->volatility(d, strikes[j]);
-                                    // DLOG("CPI Vol Check " << i << " " << optionTenors[i] << " " << j << " "
-                                    //                       << std::setprecision(4) << strikes[j] << " "
-                                    //                       << std::setprecision(6) << vol1 << " " << vol2 << " "
-                                    //                       << vol2 - vol1);
-                                    QL_REQUIRE(
-                                        close_enough(vol1 - vol2, 0.0),
-                                        "Simulation market CPI vol does not match today's market CPI vol for expiry "
-                                            << optionTenors[i] << " and strike " << strikes[j]);
-                                }
+                            if (useSpreadedTermStructures_) {
+                                hCpiVol = Handle<CPIVolatilitySurface>(boost::make_shared<SpreadedCPIVolatilitySurface>(
+                                    wrapper, optionDates, strikes, quotes));
+                            } else {
+                                hCpiVol = Handle<CPIVolatilitySurface>(
+                                    boost::make_shared<InterpolatedCPIVolatilitySurface<Bilinear>>(
+                                        optionTenors, strikes, quotes, zeroInflationIndex.currentLink(),
+                                        wrapper->settlementDays(), wrapper->calendar(),
+                                        wrapper->businessDayConvention(), wrapper->dayCounter(),
+                                        wrapper->observationLag()));
                             }
 
                         } else {
