@@ -1361,13 +1361,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         Linear().interpolate(times.begin(), times.end(), atmVols.begin());
 
                                     // populate quotes
-                                    vector<vector<Handle<Quote>>> absQuotes(m,
-                                                                            vector<Handle<Quote>>(n, Handle<Quote>()));
+                                    vector<vector<Handle<Quote>>> absQuotes(n,
+                                                                            vector<Handle<Quote>>(m, Handle<Quote>()));
                                     BlackVarianceSurfaceStdDevs::populateVolMatrix(wrapper, absQuotes, times, strikes,
                                                                                    forwardCurve, atmVolCurve);
                                     if (useSpreadedTermStructures_) {
-                                        for (Size i = 0; i < m; ++i)
-                                            for (Size j = 0; j < n; ++j)
+                                        for (Size i = 0; i < n; ++i)
+                                            for (Size j = 0; j < m; ++j)
                                                 quotes[i][j] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
                                     } else {
                                         quotes = absQuotes;
@@ -1388,7 +1388,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                 absoluteSimDataTmp.emplace(
                                                     std::piecewise_construct,
                                                     std::forward_as_tuple(param.first, name, idx),
-                                                    std::forward_as_tuple(absQuotes[i][j]->value()));
+                                                    std::forward_as_tuple(absQuotes[j][i]->value()));
                                             }
                                         }
                                     }
