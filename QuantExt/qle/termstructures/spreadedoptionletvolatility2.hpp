@@ -25,9 +25,7 @@
 
 #include <ql/math/interpolations/interpolation2d.hpp>
 #include <ql/quote.hpp>
-#include <ql/termstructures/volatility/optionlet/optionletstripper.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
-#include <ql/termstructures/volatility/optionlet/strippedoptionletadapter.hpp>
 
 #include <boost/smart_ptr/shared_ptr.hpp>
 
