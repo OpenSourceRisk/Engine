@@ -2022,8 +2022,11 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
                 for (Size i = 0; i < moneyness.size(); i++) {
                     for (Size j = 0; j < expiries.size(); ++j) {
                         RiskFactorKey key(RFType::CommodityVolatility, name, counter++);
-                        scenario->add(key, shiftedValues[i][j]);
-
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedValues[i][j] - baseValues[i][j]);
+                        } else {
+                            scenario->add(key, shiftedValues[i][j]);
+                        }
                         // Possibly store valid shift size
                         if (validShiftSize && up && si == i && sj == j) {
                             shiftSizes_[key] = shiftedValues[i][j] - baseValues[i][j];

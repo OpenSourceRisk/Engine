@@ -2060,35 +2060,60 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 forwards[j] = priceCurve->price(d);
                             }
 
+                            QL_REQUIRE(!useSpreadedTermStructures_ || dayCounter == baseVol->dayCounter(),
+                                       "when using spreaded curves in scenario sim market, the init curve day counter ("
+                                           << baseVol->dayCounter() << ") must be equal to the ssm day counter ("
+                                           << dayCounter << ")");
+
                             // Store the quotes.
                             Size index = 0;
                             for (Size i = 0; i < moneyness.size(); ++i) {
                                 for (Size j = 0; j < expiries.size(); ++j) {
                                     Real strike = moneyness[i] * forwards[j];
                                     auto vol = baseVol->blackVol(expiryDates[j], strike);
-                                    auto quote = boost::make_shared<SimpleQuote>(vol);
-                                    simDataTmp.emplace(piecewise_construct,
-                                                       forward_as_tuple(param.first, name, index++),
+                                    auto quote =
+                                        boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : vol);
+                                    simDataTmp.emplace(piecewise_construct, forward_as_tuple(param.first, name, index),
                                                        forward_as_tuple(quote));
+                                    if (useSpreadedTermStructures_) {
+                                        absoluteSimDataTmp.emplace(piecewise_construct,
+                                                                   forward_as_tuple(param.first, name, index),
+                                                                   forward_as_tuple(vol));
+                                    }
                                     quotes[i][j] = Handle<Quote>(quote);
+                                    ++index;
                                 }
                             }
 
                             // Create volatility structure
                             if (!isSurface) {
                                 DLOG("Ssm comm vol for " << name << " uses BlackVarianceCurve3.");
-                                newVol = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceCurve3>(
-                                    0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes,
-                                    quotes[0], false));
+                                if (useSpreadedTermStructures_) {
+                                    newVol =
+                                        Handle<BlackVolTermStructure>(boost::make_shared<SpreadedBlackVolatilityCurve>(
+                                            Handle<BlackVolTermStructure>(baseVol), expiryTimes, quotes[0], true));
+                                } else {
+                                    newVol = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceCurve3>(
+                                        0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes,
+                                        quotes[0], false));
+                                }
                             } else {
                                 DLOG("Ssm comm vol for " << name << " uses BlackVarianceSurfaceMoneynessSpot.");
                                 bool stickyStrike = true;
                                 bool flatExtrapMoneyness = true;
                                 Handle<Quote> spot(boost::make_shared<SimpleQuote>(priceCurve->price(0)));
-                                newVol = Handle<BlackVolTermStructure>(
-                                    boost::make_shared<BlackVarianceSurfaceMoneynessForward>(
-                                        baseVol->calendar(), spot, expiryTimes, moneyness, quotes, dayCounter, priceYts,
-                                        yts, stickyStrike, flatExtrapMoneyness));
+                                if (useSpreadedTermStructures_) {
+                                    newVol = Handle<BlackVolTermStructure>(
+                                        boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
+                                            Handle<BlackVolTermStructure>(baseVol), spot, expiryTimes, moneyness,
+                                            quotes, priceYts, yts, stickyStrike));
+
+                                } else {
+                                    newVol = Handle<BlackVolTermStructure>(
+                                        boost::make_shared<BlackVarianceSurfaceMoneynessForward>(
+                                            baseVol->calendar(), spot, expiryTimes, moneyness, quotes, dayCounter,
+                                            priceYts, yts, stickyStrike, flatExtrapMoneyness));
+                                }
                             }
 
                         } else {
