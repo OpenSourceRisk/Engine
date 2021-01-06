@@ -199,6 +199,7 @@ termstructures/pricetermstructureadapter.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.cpp
 termstructures/spreadedblackvolatilitysurfacestddevs.cpp
+termstructures/spreadedcpivolatilitysurface.cpp
 termstructures/spreadeddiscountcurve.cpp
 termstructures/spreadedinflationcurve.cpp
 termstructures/spreadedoptionletvolatility.cpp
@@ -523,6 +524,7 @@ termstructures/probabilitytraits.hpp
 termstructures/spreadedblackvolatilitycurve.hpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.hpp
 termstructures/spreadedblackvolatilitysurfacestddevs.hpp
+termstructures/spreadedcpivolatilitysurface.hpp
 termstructures/spreadeddiscountcurve.hpp
 termstructures/spreadedinflationcurve.hpp
 termstructures/spreadedoptionletvolatility.hpp
