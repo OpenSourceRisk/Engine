@@ -200,6 +200,7 @@ termstructures/spreadedblackvolatilitycurve.cpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.cpp
 termstructures/spreadedblackvolatilitysurfacestddevs.cpp
 termstructures/spreadeddiscountcurve.cpp
+termstructures/spreadedinflationcurve.cpp
 termstructures/spreadedoptionletvolatility.cpp
 termstructures/spreadedoptionletvolatility2.cpp
 termstructures/spreadedsmilesection.cpp
@@ -523,6 +524,7 @@ termstructures/spreadedblackvolatilitycurve.hpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.hpp
 termstructures/spreadedblackvolatilitysurfacestddevs.hpp
 termstructures/spreadeddiscountcurve.hpp
+termstructures/spreadedinflationcurve.hpp
 termstructures/spreadedoptionletvolatility.hpp
 termstructures/spreadedoptionletvolatility2.hpp
 termstructures/spreadedsmilesection.hpp
