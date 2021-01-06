@@ -124,7 +124,6 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
         if (md->asofDate() == asof && (md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR ||
                                        md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR)) {
 
-            DLOG("Remaining quotes " << remainingQuotes);
             boost::shared_ptr<InflationCapFloorQuote> q = boost::dynamic_pointer_cast<InflationCapFloorQuote>(md);
 
             if (config->type() == InflationCapFloorVolatilityCurveConfig::Type::ZC) {
