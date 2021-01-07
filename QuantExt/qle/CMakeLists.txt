@@ -208,6 +208,7 @@ termstructures/spreadedsmilesection.cpp
 termstructures/spreadedsmilesection2.cpp
 termstructures/spreadedsurvivalprobabilitytermstructure.cpp
 termstructures/spreadedswaptionvolatility.cpp
+termstructures/spreadedyoyvolsurface.cpp
 termstructures/strippedoptionletadapter2.cpp
 termstructures/strippedyoyinflationoptionletvol.cpp
 termstructures/subperiodsswaphelper.cpp
@@ -533,6 +534,7 @@ termstructures/spreadedsmilesection.hpp
 termstructures/spreadedsmilesection2.hpp
 termstructures/spreadedsurvivalprobabilitytermstructure.hpp
 termstructures/spreadedswaptionvolatility.hpp
+termstructures/spreadedyoyvolsurface.hpp
 termstructures/staticallycorrectedyieldtermstructure.hpp
 termstructures/strippedcpivolatilitystructure.hpp
 termstructures/strippedoptionletadapter.hpp
