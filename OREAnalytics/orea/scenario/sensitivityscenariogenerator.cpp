@@ -1666,8 +1666,11 @@ void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool
                     for (Size kk = 0; kk < n_yoyvol_strikes; ++kk) {
                         Size idx = jj * n_yoyvol_strikes + kk;
                         RiskFactorKey key(RFType::YoYInflationCapFloorVolatility, name, idx);
-
-                        scenario->add(key, shiftedVolData[jj][kk]);
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedVolData[jj][kk] - volData[jj][kk]);
+                        } else {
+                            scenario->add(key, shiftedVolData[jj][kk]);
+                        }
 
                         // Possibly store valid shift size
                         if (validShiftSize && up && j == jj && k == kk) {

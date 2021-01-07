@@ -67,6 +67,7 @@
 #include <qle/termstructures/spreadedoptionletvolatility2.hpp>
 #include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
+#include <qle/termstructures/spreadedyoyvolsurface.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
@@ -1902,7 +1903,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     Real vol =
                                         wrapper->volatility(optionTenors[i], strikes[j], wrapper->observationLag(),
                                                             wrapper->allowsExtrapolation());
-                                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                                    boost::shared_ptr<SimpleQuote> q(
+                                        new SimpleQuote(useSpreadedTermStructures_ ? 0.0 : vol));
                                     Size index = i * strikes.size() + j;
                                     simDataTmp.emplace(std::piecewise_construct,
                                                        std::forward_as_tuple(param.first, name, index),
@@ -1914,16 +1916,24 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
                             DayCounter dc =
                                 ore::data::parseDayCounter(parameters->yoyInflationCapFloorVolDayCounter(name));
-                            boost::shared_ptr<StrippedYoYInflationOptionletVol> yoyoptionlet =
-                                boost::make_shared<StrippedYoYInflationOptionletVol>(
+
+                            QL_REQUIRE(!useSpreadedTermStructures_ || dc == wrapper->dayCounter(),
+                                       "when using spreaded curves in scenario sim market, the init curve day counter ("
+                                           << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc
+                                           << ")");
+
+                            boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyoptionletvolsurface;
+                            if (useSpreadedTermStructures_) {
+                                yoyoptionletvolsurface = boost::make_shared<QuantExt::SpreadedYoYVolatilitySurface>(
+                                    wrapper, optionDates, strikes, quotes);
+                            } else {
+                                yoyoptionletvolsurface = boost::make_shared<StrippedYoYInflationOptionletVol>(
                                     0, wrapper->yoyVolSurface()->calendar(),
                                     wrapper->yoyVolSurface()->businessDayConvention(), dc, wrapper->observationLag(),
                                     wrapper->yoyVolSurface()->frequency(),
                                     wrapper->yoyVolSurface()->indexIsInterpolated(), optionDates, strikes, quotes,
                                     wrapper->volatilityType(), wrapper->displacement());
-                            boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyoptionletvolsurface =
-                                boost::make_shared<QuantExt::YoYOptionletVolatilitySurface>(
-                                    yoyoptionlet, wrapper->volatilityType(), wrapper->displacement());
+                            }
                             hYoYCapletVol = Handle<QuantExt::YoYOptionletVolatilitySurface>(yoyoptionletvolsurface);
                         } else {
                             string decayModeString = parameters->yoyInflationCapFloorVolDecayMode();
