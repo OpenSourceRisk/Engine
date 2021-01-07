@@ -1898,7 +1898,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             vector<vector<Handle<Quote>>> quotes(
                                 optionTenors.size(), vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
                             for (Size i = 0; i < optionTenors.size(); ++i) {
-                                optionDates[i] = wrapper->yoyVolSurface()->optionDateFromTenor(optionTenors[i]);
+                                optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
                                 for (Size j = 0; j < strikes.size(); ++j) {
                                     Real vol =
                                         wrapper->volatility(optionTenors[i], strikes[j], wrapper->observationLag(),
@@ -1928,11 +1928,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     wrapper, optionDates, strikes, quotes);
                             } else {
                                 yoyoptionletvolsurface = boost::make_shared<StrippedYoYInflationOptionletVol>(
-                                    0, wrapper->yoyVolSurface()->calendar(),
-                                    wrapper->yoyVolSurface()->businessDayConvention(), dc, wrapper->observationLag(),
-                                    wrapper->yoyVolSurface()->frequency(),
-                                    wrapper->yoyVolSurface()->indexIsInterpolated(), optionDates, strikes, quotes,
-                                    wrapper->volatilityType(), wrapper->displacement());
+                                    0, wrapper->calendar(), wrapper->businessDayConvention(), dc,
+                                    wrapper->observationLag(), wrapper->frequency(), wrapper->indexIsInterpolated(),
+                                    optionDates, strikes, quotes, wrapper->volatilityType(), wrapper->displacement());
                             }
                             hYoYCapletVol = Handle<QuantExt::YoYOptionletVolatilitySurface>(yoyoptionletvolsurface);
                         } else {

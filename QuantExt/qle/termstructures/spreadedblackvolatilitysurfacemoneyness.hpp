@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file spreadedblackvolatilityesurfacemoneyness.hpp
+/*! \file spreadedblackvolatilitysurfacemoneyness.hpp
  \brief Spreaded Black volatility surface based on forward moneyness
  \ingroup termstructures
  */

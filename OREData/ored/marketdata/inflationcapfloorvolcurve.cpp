@@ -31,7 +31,6 @@
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
-#include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 #include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
 
@@ -504,14 +503,10 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
             boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex, hovs, nominalTS);
 
-        boost::shared_ptr<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>> interpVolSurface =
-            boost::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
-                yoySurface->settlementDays(), yoySurface->calendar(), yoySurface->businessDayConvention(),
-                yoySurface->dayCounter(), yoySurface->observationLag(), yoySurface, cfEngine, yoyStripper, 0);
-
-        boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> newSurface =
-            boost::make_shared<QuantExt::YoYOptionletVolatilitySurface>(interpVolSurface, VolatilityType::Normal);
-        yoyVolSurface_ = newSurface;
+        yoyVolSurface_ = boost::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
+            yoySurface->settlementDays(), yoySurface->calendar(), yoySurface->businessDayConvention(),
+            yoySurface->dayCounter(), yoySurface->observationLag(), yoySurface, cfEngine, yoyStripper, 0, Linear(),
+            VolatilityType::Normal);
     }
 }
 
