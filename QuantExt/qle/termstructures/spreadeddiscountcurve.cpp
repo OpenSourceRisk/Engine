@@ -18,6 +18,8 @@
 
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
 
+#include <ql/math/interpolations/loginterpolation.hpp>
+
 namespace QuantExt {
 
 SpreadedDiscountCurve::SpreadedDiscountCurve(const Handle<YieldTermStructure>& referenceCurve,

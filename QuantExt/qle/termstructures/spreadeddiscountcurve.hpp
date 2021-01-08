@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/math/interpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
