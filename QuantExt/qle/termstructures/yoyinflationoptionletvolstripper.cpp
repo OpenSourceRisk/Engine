@@ -16,8 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
+
 #include <ql/experimental/inflation/interpolatedyoyoptionletstripper.hpp>
-#include <ql/experimental/inflation/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <ql/instruments/makeyoyinflationcapfloor.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
@@ -147,7 +148,7 @@ void YoYInflationOptionletVolStripper::performCalculations() {
     boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
         boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs, nominalTs_);
 
-    yoyOptionletVolSurface_ = boost::make_shared<KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
+    yoyOptionletVolSurface_ = boost::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
         settDays, cal, bdc, dc, obsLag, yoySurface, cfEngine, yoyStripper, 0, Linear(), type_, displacement_);
     yoyOptionletVolSurface_->enableExtrapolation();
 }

@@ -502,6 +502,7 @@ termstructures/interpolatedhazardratecurve.hpp
 termstructures/interpolatedsurvivalprobabilitycurve.hpp
 termstructures/interpolatedyoycapfloortermpricesurface.hpp
 termstructures/iterativebootstrap.hpp
+termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/multisectiondefaultcurve.hpp
 termstructures/oibasisswaphelper.hpp
 termstructures/oiccbasisswaphelper.hpp

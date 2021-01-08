@@ -21,7 +21,6 @@
 #include <ored/utilities/log.hpp>
 
 #include <ql/experimental/inflation/interpolatedyoyoptionletstripper.hpp>
-#include <ql/experimental/inflation/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/matrix.hpp>
@@ -31,6 +30,7 @@
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
+#include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 #include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
 
