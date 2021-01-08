@@ -1154,7 +1154,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         if (useSpreadedTermStructures_) {
                                             absoluteSimDataTmp.emplace(std::piecewise_construct,
                                                                        std::forward_as_tuple(param.first, name, idx),
-                                                                       std::forward_as_tuple(absQuotes[i][j]->value()));
+                                                                       std::forward_as_tuple(absQuotes[j][i]->value()));
                                         }
                                     }
                                 }

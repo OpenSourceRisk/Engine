@@ -92,11 +92,10 @@ boost::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSectionImpl(Tim
         optionDate = swapTenor > shortSwapIndexBase_->tenor()
                          ? swapIndexBase_->fixingCalendar().adjust(optionDate, Following)
                          : shortSwapIndexBase_->fixingCalendar().adjust(optionDate, Following);
-        Real atm = Null<Real>();
         if (swapTenor > shortSwapIndexBase_->tenor()) {
-            atm = swapIndexBase_->clone(swapTenor)->fixing(optionDate);
+            atmLevel = swapIndexBase_->clone(swapTenor)->fixing(optionDate);
         } else {
-            atm = shortSwapIndexBase_->clone(swapTenor)->fixing(optionDate);
+            atmLevel = shortSwapIndexBase_->clone(swapTenor)->fixing(optionDate);
         }
     }
     // interpolate vol spreads
