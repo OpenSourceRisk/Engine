@@ -30,7 +30,7 @@ SpreadedYoYVolatilitySurface::SpreadedYoYVolatilitySurface(const Handle<YoYOptio
                                                            const std::vector<std::vector<Handle<Quote>>>& volSpreads)
     : YoYOptionletVolatilitySurface(baseVol->settlementDays(), baseVol->calendar(), baseVol->businessDayConvention(),
                                     baseVol->dayCounter(), baseVol->observationLag(), baseVol->frequency(),
-                                    baseVol->indexIsInterpolated()),
+                                    baseVol->indexIsInterpolated(), baseVol->volatilityType(), baseVol->displacement()),
       baseVol_(baseVol), optionDates_(optionDates), strikes_(strikes), volSpreads_(volSpreads) {
     registerWith(baseVol_);
     optionTimes_.resize(optionDates_.size());
