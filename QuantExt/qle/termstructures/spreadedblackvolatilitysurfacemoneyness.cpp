@@ -51,7 +51,7 @@ SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness
 
     data_ = Matrix(moneyness_.size(), times_.size(), 0.0);
 
-    for (Size j = 0; j < times_.size(); ++j) {
+    for (Size j = 1; j < times_.size(); ++j) {
         QL_REQUIRE(times_[j] > times_[j - 1], "Times must be sorted and unique but found that the "
                                                   << io::ordinal(j) << " time, " << times_[j]
                                                   << ", is not greater than the " << io::ordinal(j - 1) << " time, "

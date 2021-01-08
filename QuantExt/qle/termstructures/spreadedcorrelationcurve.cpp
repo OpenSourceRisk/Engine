@@ -41,6 +41,7 @@ SpreadedCorrelationCurve::SpreadedCorrelationCurve(const Handle<CorrelationTermS
         registerWith(q);
     interpolation_ = boost::make_shared<FlatExtrapolation>(
         boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin()));
+    interpolation_->enableExtrapolation();
     registerWith(referenceCorrelation_);
 }
 
