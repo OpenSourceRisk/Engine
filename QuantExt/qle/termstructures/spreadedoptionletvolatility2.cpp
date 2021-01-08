@@ -30,9 +30,26 @@ SpreadedOptionletVolatility2::SpreadedOptionletVolatility2(const Handle<Optionle
                                                            const std::vector<std::vector<Handle<Quote>>>& volSpreads)
     : baseVol_(baseVol), optionDates_(optionDates), strikes_(strikes), volSpreads_(volSpreads) {
     registerWith(baseVol_);
+
+    QL_REQUIRE(!optionDates_.empty(), "SpreadedOptionletVolatility2(): optionDates are empty");
+    QL_REQUIRE(!strikes_.empty(), "SpreadedOptionletVolatility2(): strikes are empty");
+
+    // add an artificial option date if we only have one to ensure the interpolation is working
+    if (optionDates_.size() == 1) {
+        optionDates_.push_back(optionDates_.back() + 1);
+        volSpreads_.push_back(volSpreads_.back());
+    }
+
+    // add an artificial strike if we only have one to ensure the interpolation is working
+    if (strikes_.size() == 1) {
+        strikes_.push_back(strikes_.back() + 0.01);
+        for (auto& v : volSpreads_)
+            v.push_back(v.back());
+    }
+
     optionTimes_.resize(optionDates_.size());
     volSpreadValues_ = Matrix(strikes_.size(), optionDates_.size());
-    for (auto const& v : volSpreads)
+    for (auto const& v : volSpreads_)
         for (auto const& q : v)
             registerWith(q);
 }
@@ -69,6 +86,8 @@ void SpreadedOptionletVolatility2::performCalculations() const {
         optionTimes_[i] = timeFromReference(optionDates_[i]);
     for (Size k = 0; k < strikes_.size(); ++k) {
         for (Size i = 0; i < optionDates_.size(); ++i) {
+            QL_REQUIRE(!volSpreads_[i][k].empty(), "SpreadedOptionletVolatility2::performCalculations(): volSpread at "
+                                                       << i << ", " << k << " is empty");
             volSpreadValues_(k, i) = volSpreads_[i][k]->value();
         }
     }
