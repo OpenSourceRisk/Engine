@@ -203,6 +203,7 @@ termstructures/spreadeddiscountcurve.cpp
 termstructures/spreadedinflationcurve.cpp
 termstructures/spreadedoptionletvolatility.cpp
 termstructures/spreadedoptionletvolatility2.cpp
+termstructures/spreadedpricetermstructure.cpp
 termstructures/spreadedsmilesection.cpp
 termstructures/spreadedsmilesection2.cpp
 termstructures/spreadedsurvivalprobabilitytermstructure.cpp
@@ -528,6 +529,7 @@ termstructures/spreadeddiscountcurve.hpp
 termstructures/spreadedinflationcurve.hpp
 termstructures/spreadedoptionletvolatility.hpp
 termstructures/spreadedoptionletvolatility2.hpp
+termstructures/spreadedpricetermstructure.hpp
 termstructures/spreadedsmilesection.hpp
 termstructures/spreadedsmilesection2.hpp
 termstructures/spreadedsurvivalprobabilitytermstructure.hpp

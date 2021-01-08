@@ -310,6 +310,7 @@
 #include <qle/termstructures/spreadedinflationcurve.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility2.hpp>
+#include <qle/termstructures/spreadedpricetermstructure.hpp>
 #include <qle/termstructures/spreadedsmilesection.hpp>
 #include <qle/termstructures/spreadedsmilesection2.hpp>
 #include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
