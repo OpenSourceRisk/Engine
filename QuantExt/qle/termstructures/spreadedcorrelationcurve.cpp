@@ -30,10 +30,13 @@ SpreadedCorrelationCurve::SpreadedCorrelationCurve(const Handle<CorrelationTermS
     : CorrelationTermStructure(referenceCorrelation->dayCounter()), referenceCorrelation_(referenceCorrelation),
       times_(times), corrSpreads_(corrSpreads), useAtmReferenceCorrsOnly_(useAtmReferenceCorrsOnly),
       data_(times.size()) {
-    QL_REQUIRE(times_.size() > 1, "SpreadedCorrelationCurve: at least two times required");
+    QL_REQUIRE(!times_.empty(), "SpreadedCorrelationCurve: times are empty");
     QL_REQUIRE(times_.size() == corrSpreads_.size(),
                "SpreadedCorrelationCurve: size of times and quote vectors do not match");
-    QL_REQUIRE(times_[0] == 0.0, "SpreadedCorrelationCurve: first time must b 0, got " << times_[0]);
+    if (times.size() == 1) {
+        times_.push_back(times_.back() + 1.0);
+        corrSpreads_.push_back(corrSpreads_.back());
+    }
     for (auto const& q : corrSpreads_)
         registerWith(q);
     interpolation_ = boost::make_shared<FlatExtrapolation>(

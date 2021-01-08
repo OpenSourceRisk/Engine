@@ -61,6 +61,7 @@
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacestddevs.hpp>
+#include <qle/termstructures/spreadedcorrelationcurve.hpp>
 #include <qle/termstructures/spreadedcpivolatilitysurface.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
 #include <qle/termstructures/spreadedinflationcurve.hpp>
@@ -2243,6 +2244,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                             Calendar cal = baseCorr->calendar();
                             DayCounter dc =
                                 ore::data::parseDayCounter(parameters->correlationDayCounter(pair.first, pair.second));
+                            QL_REQUIRE(!useSpreadedTermStructures || dc == baseCorr->dayCounter(),
+                                       "when using spreaded curves in scenario sim market, the init curve day counter ("
+                                           << baseCorr->dayCounter() << ") must be equal to the ssm day counter (" << dc
+                                           << ")");
 
                             for (Size i = 0; i < n; i++) {
                                 Real strike = parameters->correlationStrikes()[i];
@@ -2253,22 +2258,41 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     times[j] = dc.yearFraction(asof_, asof_ + parameters->correlationExpiries()[j]);
                                     Real correlation =
                                         baseCorr->correlation(asof_ + parameters->correlationExpiries()[j], strike);
-                                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(correlation));
+                                    boost::shared_ptr<SimpleQuote> q(
+                                        new SimpleQuote(useSpreadedTermStructures_ ? 0.0 : correlation));
                                     simDataTmp.emplace(
                                         std::piecewise_construct,
                                         std::forward_as_tuple(RiskFactorKey::KeyType::Correlation, name, idx),
                                         std::forward_as_tuple(q));
+                                    if (useSpreadedTermStructures_) {
+                                        absoluteSimDataTmp.emplace(
+                                            std::piecewise_construct,
+                                            std::forward_as_tuple(RiskFactorKey::KeyType::Correlation, name, idx),
+                                            std::forward_as_tuple(correlation));
+                                    }
                                     quotes[i][j] = Handle<Quote>(q);
                                 }
                             }
 
                             if (n == 1 && m == 1) {
-                                ch = Handle<QuantExt::CorrelationTermStructure>(boost::make_shared<FlatCorrelation>(
-                                    baseCorr->settlementDays(), cal, quotes[0][0], dc));
+                                if (useSpreadedTermStructures_) {
+                                    ch = Handle<QuantExt::CorrelationTermStructure>(
+                                        boost::make_shared<QuantExt::SpreadedCorrelationCurve>(baseCorr, times,
+                                                                                               quotes[0]));
+                                } else {
+                                    ch = Handle<QuantExt::CorrelationTermStructure>(boost::make_shared<FlatCorrelation>(
+                                        baseCorr->settlementDays(), cal, quotes[0][0], dc));
+                                }
                             } else if (n == 1) {
-                                ch = Handle<QuantExt::CorrelationTermStructure>(
-                                    boost::make_shared<InterpolatedCorrelationCurve<Linear>>(times, quotes[0], dc,
-                                                                                             cal));
+                                if (useSpreadedTermStructures_) {
+                                    ch = Handle<QuantExt::CorrelationTermStructure>(
+                                        boost::make_shared<QuantExt::SpreadedCorrelationCurve>(baseCorr, times,
+                                                                                               quotes[0]));
+                                } else {
+                                    ch = Handle<QuantExt::CorrelationTermStructure>(
+                                        boost::make_shared<InterpolatedCorrelationCurve<Linear>>(times, quotes[0], dc,
+                                                                                                 cal));
+                                }
                             } else {
                                 QL_FAIL("only atm or flat correlation termstructures currently supported");
                             }

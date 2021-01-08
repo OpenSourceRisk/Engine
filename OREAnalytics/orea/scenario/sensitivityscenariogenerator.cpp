@@ -2144,7 +2144,11 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
                             shiftedCorrData[jj][kk] = -1;
                         }
 
-                        scenario->add(key, shiftedCorrData[jj][kk]);
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedCorrData[jj][kk] - corrData[jj][kk]);
+                        } else {
+                            scenario->add(key, shiftedCorrData[jj][kk]);
+                        }
 
                         LOG(jj << " " << kk << " " << shiftedCorrData[jj][kk] << " " << corrData[jj][kk]);
                         // Possibly store valid shift size
