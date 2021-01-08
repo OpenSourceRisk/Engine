@@ -33,7 +33,7 @@ SpreadedPriceTermStructure::SpreadedPriceTermStructure(
     QL_REQUIRE(times_.size() == priceSpreads_.size(),
                "SpreadedPriceTermStructure: size of time and quote vectors do not match");
     QL_REQUIRE(times_[0] == 0.0, "SpreadedPriceTermStructure: first time must be 0, got " << times_[0]);
-    for (auto const& q : priceSpreads)
+    for (auto const& q : priceSpreads_)
         registerWith(q);
     interpolation_ = boost::make_shared<FlatExtrapolation>(
         boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin()));
