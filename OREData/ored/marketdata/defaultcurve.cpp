@@ -324,7 +324,7 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     Real globalAccuracy = config.bootstrapConfig().globalAccuracy();
     bool dontThrow = config.bootstrapConfig().dontThrow();
     Size maxAttempts = config.bootstrapConfig().maxAttempts();
-    Real maxFactor = config.bootstrapConfig().maxFactor();
+    Real maxFactor = config.allowNegativeRates() ? config.bootstrapConfig().maxFactor() : 1.0;
     Real minFactor = config.bootstrapConfig().minFactor();
     Size dontThrowSteps = config.bootstrapConfig().dontThrowSteps();
 
@@ -370,7 +370,7 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     LOG("DefaultCurve: copy piecewise curve to interpolated survival probability curve");
     curve_ = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
         dates, survivalProbs, config.dayCounter(), Calendar(), std::vector<Handle<Quote>>(), std::vector<Date>(),
-        LogLinear());
+        LogLinear(), config.allowNegativeRates());
     if (config.extrapolation()) {
         curve_->enableExtrapolation();
         DLOG("DefaultCurve: Enabled Extrapolation");

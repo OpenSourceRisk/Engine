@@ -44,6 +44,13 @@ A boolean value indicating if a reference entity's default should be implied fro
 \item \lstinline!BootstrapConfig! [Optional]:
 This node holds configuration details for the iterative bootstrap that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described in section \ref{sec:bootstrap_config} are used.
 
+\item AllowNegativeRates [Optional]: If set to false (default) negative instantaneous hazard rates implied by the CDS
+  quotes lead to an exception or - if the DontThrow flag in the BootstrapConfig is set to true - to a zero instantaneous
+  hazard rate in the relevant segment of the curve. In the latter case the market CDS instrument associated to the
+  critical curve segment will not match the market quote exactly. If set to true, negative instantaneous hazard rates
+  will be allowed during the bootstrap (in a range that is technically defined by the MaxFactor and MaxAttempts
+  parameters for the survival probability in the bootstrap config).
+
 \end{itemize}
 
 \begin{longlisting}
@@ -68,6 +75,7 @@ This node holds configuration details for the iterative bootstrap that are descr
   <BootstrapConfig>
     ...
   </BootstrapConfig>
+  <AllowNegativeRates>...</AllowNegativeRates>
 </DefaultCurve>
 \end{minted}
 \caption{Default curve configuration based on CDS quotes}
