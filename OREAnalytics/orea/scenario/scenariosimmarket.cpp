@@ -140,6 +140,20 @@ ReactionToTimeDecay parseDecayMode(const string& s) {
     }
 }
 
+void checkDayCounterConsistency(const std::string& curveId, const DayCounter& initCurveDayCounter,
+                                const DayCounter& simCurveDayCounter) {
+    if (initCurveDayCounter != simCurveDayCounter) {
+        std::string initDcName = initCurveDayCounter.empty() ? "(empty)" : initCurveDayCounter.name();
+        std::string ssmDcName = simCurveDayCounter.empty() ? "(empty)" : simCurveDayCounter.name();
+        ALOG(StructuredCurveErrorMessage(
+            curveId, "inconsistent day counters",
+            "when using spreaded curves in scenario sim market, the init curve day counter (" + initDcName +
+                ") should be equal to the ssm day counter (" + ssmDcName +
+                "), continuing anyway, please consider fixing this in either the initial market or ssm "
+                "configuration"));
+    }
+}
+
 } // namespace
 
 void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
@@ -189,9 +203,7 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
             new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), dc));
     } else {
         if (spreaded) {
-            QL_REQUIRE(dc == wrapper->dayCounter(),
-                       "when using spreaded curves in scenario sim market, the init curve day counter ("
-                           << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc << ")");
+            checkDayCounterConsistency(key, wrapper->dayCounter(), dc);
             yieldCurve = boost::make_shared<QuantExt::SpreadedDiscountCurve>(wrapper, yieldCurveTimes, quotes);
         } else {
             yieldCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(yieldCurveTimes, quotes, dc);
@@ -339,11 +351,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
                         } else {
                             if (useSpreadedTermStructures_) {
-                                QL_REQUIRE(
-                                    dc == wrapperIndex->dayCounter(),
-                                    "when using spreaded curves in scenario sim market, the init curve day counter ("
-                                        << wrapperIndex->dayCounter() << ") must be equal to the ssm day counter ("
-                                        << dc << ")");
+                                checkDayCounterConsistency(name, wrapperIndex->dayCounter(), dc);
                                 indexCurve = boost::shared_ptr<YieldTermStructure>(
                                     new QuantExt::SpreadedDiscountCurve(wrapperIndex, yieldCurveTimes, quotes));
                             } else {
@@ -629,11 +637,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (useSpreadedTermStructures_) {
                                 // using the wrapper from t0 and init market swap indices means we
                                 // have a sticky strike dynamics
-                                QL_REQUIRE(
-                                    dc == wrapper->dayCounter(),
-                                    "when using spreaded curves in scenario sim market, the init curve day counter ("
-                                        << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc
-                                        << ")");
+                                checkDayCounterConsistency(name, wrapper->dayCounter(), dc);
                                 svp =
                                     Handle<SwaptionVolatilityStructure>(boost::make_shared<SpreadedSwaptionVolatility>(
                                         wrapper, optionTenors, underlyingTenors, strikeSpreads, quotes,
@@ -823,11 +827,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DayCounter dc = ore::data::parseDayCounter(parameters->capFloorVolDayCounter(name));
 
                             if (useSpreadedTermStructures_) {
-                                QL_REQUIRE(
-                                    dc == wrapper->dayCounter(),
-                                    "when using spreaded curves in scenario sim market, the init curve day counter ("
-                                        << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc
-                                        << ")");
+                                checkDayCounterConsistency(name, wrapper->dayCounter(), dc);
                                 hCapletVol = Handle<OptionletVolatilityStructure>(
                                     boost::make_shared<QuantExt::SpreadedOptionletVolatility2>(wrapper, optionDates,
                                                                                                strikes, quotes));
@@ -908,10 +908,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Calendar cal = ore::data::parseCalendar(parameters->defaultCurveCalendar(name));
                         Handle<DefaultProbabilityTermStructure> defaultCurve;
                         if (useSpreadedTermStructures_) {
-                            QL_REQUIRE(dc == wrapper->dayCounter(),
-                                       "when using spreaded curves in scenario sim market, the init curve day counter ("
-                                           << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc
-                                           << ")");
+                            checkDayCounterConsistency(name, wrapper->dayCounter(), dc);
                             defaultCurve = Handle<DefaultProbabilityTermStructure>(
                                 boost::make_shared<QuantExt::SpreadedSurvivalProbabilityTermStructure>(wrapper, times,
                                                                                                        quotes));
@@ -979,11 +976,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 quotes.emplace_back(q);
                             }
                             if (useSpreadedTermStructures_) {
-                                QL_REQUIRE(
-                                    dc == wrapper->dayCounter(),
-                                    "when using spreaded curves in scenario sim market, the init curve day counter ("
-                                        << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc
-                                        << ")");
+                                checkDayCounterConsistency(name, wrapper->dayCounter(), dc);
                                 cvh = Handle<BlackVolTermStructure>(
                                     boost::make_shared<SpreadedBlackVolatilityCurve>(wrapper, times, quotes));
                             } else {
@@ -1057,10 +1050,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             vector<Time> times;
                             vector<Date> dates;
 
-                            QL_REQUIRE(!useSpreadedTermStructures_ || dc == wrapper->dayCounter(),
-                                       "when using spreaded curves in scenario sim market, the init curve day counter ("
-                                           << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc
-                                           << ")");
+                            if (useSpreadedTermStructures_) {
+                                checkDayCounterConsistency(name, wrapper->dayCounter(), dc);
+                            }
 
                             // Attempt to get the relevant yield curves from the initial market
                             Handle<YieldTermStructure> forTS =
@@ -1289,10 +1281,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
                             DayCounter dc = ore::data::parseDayCounter(parameters->equityVolDayCounter(name));
 
-                            QL_REQUIRE(!useSpreadedTermStructures_ || dc == wrapper->dayCounter(),
-                                       "when using spreaded curves in scenario sim market, the init curve day counter ("
-                                           << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc
-                                           << ")");
+                            if (useSpreadedTermStructures_) {
+                                checkDayCounterConsistency(name, wrapper->dayCounter(), dc);
+                            }
 
                             for (Size k = 0; k < m; k++) {
                                 dates[k] = cal.advance(asof_, expiries[k]);
@@ -1581,10 +1572,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         QL_REQUIRE(parameters->zeroInflationTenors(name).front() > 0 * Days,
                                    "zero inflation tenors must not include t=0");
 
-                        QL_REQUIRE(!useSpreadedTermStructures_ || dc == inflationTs->dayCounter(),
-                                   "when using spreaded curves in scenario sim market, the init curve day counter ("
-                                       << inflationTs->dayCounter() << ") must be equal to the ssm day counter (" << dc
-                                       << ")");
+                        if (useSpreadedTermStructures_) {
+                            checkDayCounterConsistency(name, inflationTs->dayCounter(), dc);
+                        }
 
                         for (auto& tenor : parameters->zeroInflationTenors(name)) {
                             Date inflDate = inflationPeriod(date0 + tenor, inflationTs->frequency()).first;
@@ -1702,10 +1692,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DayCounter dc =
                                 ore::data::parseDayCounter(parameters->zeroInflationCapFloorVolDayCounter(name));
 
-                            QL_REQUIRE(!useSpreadedTermStructures_ || dc == wrapper->dayCounter(),
-                                       "when using spreaded curves in scenario sim market, the init curve day counter ("
-                                           << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc
-                                           << ")");
+                            if (useSpreadedTermStructures_) {
+                                checkDayCounterConsistency(name, wrapper->dayCounter(), dc);
+                            }
 
                             vector<Period> optionTenors = parameters->zeroInflationCapFloorVolExpiries(name);
                             vector<Date> optionDates(optionTenors.size());
@@ -1783,10 +1772,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         QL_REQUIRE(parameters->yoyInflationTenors(name).front() > 0 * Days,
                                    "zero inflation tenors must not include t=0");
 
-                        QL_REQUIRE(!useSpreadedTermStructures_ || dc == yoyInflationTs->dayCounter(),
-                                   "when using spreaded curves in scenario sim market, the init curve day counter ("
-                                       << yoyInflationTs->dayCounter() << ") must be equal to the ssm day counter ("
-                                       << dc << ")");
+                        if (useSpreadedTermStructures_) {
+                            checkDayCounterConsistency(name, yoyInflationTs->dayCounter(), dc);
+                        }
 
                         for (auto& tenor : parameters->yoyInflationTenors(name)) {
                             Date inflDate = inflationPeriod(date0 + tenor, yoyInflationTs->frequency()).first;
@@ -1924,10 +1912,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DayCounter dc =
                                 ore::data::parseDayCounter(parameters->yoyInflationCapFloorVolDayCounter(name));
 
-                            QL_REQUIRE(!useSpreadedTermStructures_ || dc == wrapper->dayCounter(),
-                                       "when using spreaded curves in scenario sim market, the init curve day counter ("
-                                           << wrapper->dayCounter() << ") must be equal to the ssm day counter (" << dc
-                                           << ")");
+                            if (useSpreadedTermStructures_) {
+                                checkDayCounterConsistency(name, wrapper->dayCounter(), dc);
+                            }
 
                             boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyoptionletvolsurface;
                             if (useSpreadedTermStructures_) {
@@ -1989,12 +1976,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                             parameters->setCommodityCurveTenors(name, simulationTenors);
                         }
 
-                        QL_REQUIRE(!useSpreadedTermStructures_ ||
-                                       commodityCurveDayCounter == initialCommodityCurve->dayCounter(),
-                                   "when using spreaded curves in scenario sim market, the init curve day counter ("
-                                       << initialCommodityCurve->dayCounter()
-                                       << ") must be equal to the ssm day counter (" << commodityCurveDayCounter
-                                       << ")");
+                        if (useSpreadedTermStructures_) {
+                            checkDayCounterConsistency(name, initialCommodityCurve->dayCounter(),
+                                                       commodityCurveDayCounter);
+                        }
 
                         // Get prices at specified simulation times from time 0 market curve and place in quotes
                         vector<Handle<Quote>> quotes(simulationTenors.size());
@@ -2124,6 +2109,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                             vector<Date> expiryDates(expiries.size());
                             vector<Time> expiryTimes(expiries.size());
                             vector<Real> forwards(expiries.size());
+                            // TODO: do we want to use the base vol dc or - as elsewhere - a dc specified in the ssm
+                            // parameters?
                             DayCounter dayCounter = baseVol->dayCounter();
                             for (Size j = 0; j < expiries.size(); ++j) {
                                 Date d = asof_ + expiries[j];
@@ -2132,10 +2119,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 forwards[j] = priceCurve->price(d);
                             }
 
-                            QL_REQUIRE(!useSpreadedTermStructures_ || dayCounter == baseVol->dayCounter(),
-                                       "when using spreaded curves in scenario sim market, the init curve day counter ("
-                                           << baseVol->dayCounter() << ") must be equal to the ssm day counter ("
-                                           << dayCounter << ")");
+                            if (useSpreadedTermStructures_) {
+                                checkDayCounterConsistency(name, baseVol->dayCounter(), dayCounter);
+                            }
 
                             // Store the quotes.
                             Size index = 0;
@@ -2244,10 +2230,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                             Calendar cal = baseCorr->calendar();
                             DayCounter dc =
                                 ore::data::parseDayCounter(parameters->correlationDayCounter(pair.first, pair.second));
-                            QL_REQUIRE(!useSpreadedTermStructures || dc == baseCorr->dayCounter(),
-                                       "when using spreaded curves in scenario sim market, the init curve day counter ("
-                                           << baseCorr->dayCounter() << ") must be equal to the ssm day counter (" << dc
-                                           << ")");
+
+                            if (useSpreadedTermStructures_) {
+                                checkDayCounterConsistency(name, baseCorr->dayCounter(), dc);
+                            }
 
                             for (Size i = 0; i < n; i++) {
                                 Real strike = parameters->correlationStrikes()[i];
