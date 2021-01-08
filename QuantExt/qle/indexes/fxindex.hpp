@@ -87,6 +87,9 @@ public:
     const Currency& sourceCurrency() const { return sourceCurrency_; }
     const Currency& targetCurrency() const { return targetCurrency_; }
     const bool inverseIndex() const { return inverseIndex_; }
+    // fx quote does _not_ include the inversion, if inverseIndex() is true
+    const Handle<Quote>& fxQuote() const { return fxQuote_; }
+    const bool useQuote() const { return useQuote_; }
     //@}
     /*! \name Date calculations */
     virtual Date valueDate(const Date& fixingDate) const;

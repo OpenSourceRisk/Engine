@@ -498,12 +498,45 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
     }
 }
 
-boost::shared_ptr<BondIndex> parseBondIndex(const string& s) {
-    std::vector<string> tokens;
-    split(tokens, s, boost::is_any_of("-"));
-    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": BOND-SECURITY");
-    QL_REQUIRE(tokens[0] == "BOND", "expected first token to be BOND");
-    return boost::make_shared<BondIndex>(tokens[1]);
+boost::shared_ptr<BondIndex> parseBondIndex(const string& name) {
+
+    // Make sure the prefix is correct
+    string prefix = name.substr(0, 5);
+    QL_REQUIRE(prefix == "BOND-", "A bond index string must start with 'BOND-' but got " << prefix);
+
+    // Now take the remainder of the string
+    // for spot indices, this should just be the bond name
+    // for future indices, this is of the form NAME-YYYY-MM or NAME-YYYY-MM-DD where NAME is the commodity name
+    // (possibly containing hyphens) and YYYY-MM(-DD) is the expiry date of the futures contract
+    Date expiry;
+    string nameWoPrefix = name.substr(5);
+    string bondName = nameWoPrefix;
+
+    // Check for form NAME-YYYY-MM-DD
+    if (nameWoPrefix.size() > 10) {
+        string test = nameWoPrefix.substr(nameWoPrefix.size() - 10);
+        if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}-\\d{2}"))) {
+            expiry = parseDate(test);
+            bondName = nameWoPrefix.substr(0, nameWoPrefix.size() - test.size() - 1);
+        }
+    }
+
+    // Check for form NAME-YYYY-MM if NAME-YYYY-MM-DD failed
+    if (expiry == Date() && nameWoPrefix.size() > 7) {
+        string test = nameWoPrefix.substr(nameWoPrefix.size() - 7);
+        if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}"))) {
+            expiry = parseDate(test + "-01");
+            bondName = nameWoPrefix.substr(0, nameWoPrefix.size() - test.size() - 1);
+        }
+    }
+
+    // Create and return the required future index
+    if (expiry != Date()) {
+        return boost::make_shared<BondFuturesIndex>(expiry, bondName);
+    } else {
+        return boost::make_shared<BondIndex>(bondName);
+    }
+
 }
 
 boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name, const Calendar& cal,
