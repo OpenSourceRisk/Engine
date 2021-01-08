@@ -27,7 +27,8 @@ namespace QuantExt {
 SpreadedPriceTermStructure::SpreadedPriceTermStructure(
     const QuantLib::Handle<PriceTermStructure>& referenceCurve, const std::vector<QuantLib::Real>& times,
     const std::vector<QuantLib::Handle<QuantLib::Quote>>& priceSpreads)
-    : referenceCurve_(referenceCurve), times_(times), priceSpreads_(priceSpreads), data_(times.size()) {
+    : PriceTermStructure(referenceCurve->dayCounter()), referenceCurve_(referenceCurve), times_(times),
+      priceSpreads_(priceSpreads), data_(times.size()) {
     QL_REQUIRE(times_.size() > 1, "SpreadedPriceTermStructure: at least two times required");
     QL_REQUIRE(times_.size() == priceSpreads_.size(),
                "SpreadedPriceTermStructure: size of time and quote vectors do not match");
@@ -62,7 +63,6 @@ void SpreadedPriceTermStructure::performCalculations() const {
     for (Size i = 0; i < times_.size(); ++i) {
         QL_REQUIRE(!priceSpreads_[i].empty(), "SpreadedPriceTermStructure: quote at index " << i << " is empty");
         data_[i] = priceSpreads_[i]->value();
-        QL_REQUIRE(data_[i] > 0, "SpreadedPriceTermStructure: invalid value " << data_[i] << " at index " << i);
     }
     interpolation_->update();
 }

@@ -65,6 +65,7 @@
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
 #include <qle/termstructures/spreadedinflationcurve.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility2.hpp>
+#include <qle/termstructures/spreadedpricetermstructure.hpp>
 #include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
 #include <qle/termstructures/spreadedyoyvolsurface.hpp>
@@ -1987,26 +1988,57 @@ ScenarioSimMarket::ScenarioSimMarket(
                             parameters->setCommodityCurveTenors(name, simulationTenors);
                         }
 
+                        QL_REQUIRE(!useSpreadedTermStructures_ ||
+                                       commodityCurveDayCounter == initialCommodityCurve->dayCounter(),
+                                   "when using spreaded curves in scenario sim market, the init curve day counter ("
+                                       << initialCommodityCurve->dayCounter()
+                                       << ") must be equal to the ssm day counter (" << commodityCurveDayCounter
+                                       << ")");
+
                         // Get prices at specified simulation times from time 0 market curve and place in quotes
                         vector<Handle<Quote>> quotes(simulationTenors.size());
                         for (Size i = 0; i < simulationTenors.size(); i++) {
                             Date d = asof_ + simulationTenors[i];
                             Real price = initialCommodityCurve->price(d, allowsExtrapolation);
-                            boost::shared_ptr<SimpleQuote> quote = boost::make_shared<SimpleQuote>(price);
+                            // if we simulate the factors and use spreaded ts, the quote should be zero
+                            boost::shared_ptr<SimpleQuote> quote = boost::make_shared<SimpleQuote>(
+                                param.second.first && useSpreadedTermStructures_ ? 0.0 : price);
                             quotes[i] = Handle<Quote>(quote);
 
                             // If we are simulating commodities, add the quote to simData_
                             if (param.second.first) {
                                 simDataTmp.emplace(piecewise_construct, forward_as_tuple(param.first, name, i),
                                                    forward_as_tuple(quote));
+                                if (useSpreadedTermStructures_)
+                                    absoluteSimDataTmp.emplace(piecewise_construct,
+                                                               forward_as_tuple(param.first, name, i),
+                                                               forward_as_tuple(price));
                             }
                         }
 
-                        // Create a commodity price curve with simulation tenors as pillars and store
-                        // Hard-coded linear flat interpolation here - may need to make this more dynamic
-                        Handle<PriceTermStructure> simCommodityCurve(
-                            boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(
-                                simulationTenors, quotes, commodityCurveDayCounter, initialCommodityCurve->currency()));
+                        Handle<PriceTermStructure> simCommodityCurve;
+                        if (param.second.first && useSpreadedTermStructures_) {
+                            // Created spreaded commodity price curve if we simulate commodities and spreads should be
+                            // used
+                            vector<Real> simulationTimes;
+                            for (auto const& t : simulationTenors) {
+                                simulationTimes.push_back(commodityCurveDayCounter.yearFraction(asof_, asof_ + t));
+                            }
+                            if (simulationTimes.front() != 0.0) {
+                                simulationTimes.insert(simulationTimes.begin(), 0.0);
+                                quotes.insert(quotes.begin(), quotes.front());
+                            }
+                            simCommodityCurve =
+                                Handle<PriceTermStructure>(boost::make_shared<SpreadedPriceTermStructure>(
+                                    initialCommodityCurve, simulationTimes, quotes));
+                        } else {
+                            // Create a commodity price curve with simulation tenors as pillars and store
+                            // Hard-coded linear flat interpolation here - may need to make this more dynamic
+                            simCommodityCurve =
+                                Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(
+                                    simulationTenors, quotes, commodityCurveDayCounter,
+                                    initialCommodityCurve->currency()));
+                        }
                         simCommodityCurve->enableExtrapolation(allowsExtrapolation);
 
                         commodityCurves_.emplace(piecewise_construct,

@@ -1947,7 +1947,11 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
             // store shifted commodity price curve in the scenario
             for (Size k = 0; k < times.size(); ++k) {
                 RiskFactorKey key(RFType::CommodityCurve, name, k);
-                scenario->add(key, shiftedPrices[k]);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    scenario->add(key, shiftedPrices[k] - basePrices[k]);
+                } else {
+                    scenario->add(key, shiftedPrices[k]);
+                }
 
                 // Possibly store valid shift size
                 if (validShiftSize && up && j == k) {
