@@ -28,7 +28,7 @@ SpreadedSmileSection2::SpreadedSmileSection2(const boost::shared_ptr<SmileSectio
                                              const std::vector<Real>& volSpreads, const std::vector<Real>& strikes,
                                              const bool strikesRelativeToAtm, const Real atmLevel)
     : SmileSection(base->exerciseTime(), base->dayCounter(), base->volatilityType(),
-                   base->volatilityType() == ShiftedLognormal ? base_->shift() : 0.0),
+                   base->volatilityType() == ShiftedLognormal ? base->shift() : 0.0),
       base_(base), volSpreads_(volSpreads), strikes_(strikes), strikesRelativeToAtm_(strikesRelativeToAtm),
       atmLevel_(atmLevel) {
     registerWith(base_);
