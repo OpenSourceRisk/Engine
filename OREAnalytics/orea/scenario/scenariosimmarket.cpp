@@ -641,8 +641,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 svp =
                                     Handle<SwaptionVolatilityStructure>(boost::make_shared<SpreadedSwaptionVolatility>(
                                         wrapper, optionTenors, underlyingTenors, strikeSpreads, quotes,
-                                        *initMarket->swapIndex(swapIndexBase, configuration),
-                                        *initMarket->swapIndex(shortSwapIndexBase, configuration)));
+                                        swapIndexBase.empty() ? nullptr
+                                                              : *initMarket->swapIndex(swapIndexBase, configuration),
+                                        shortSwapIndexBase.empty()
+                                            ? nullptr
+                                            : *initMarket->swapIndex(shortSwapIndexBase, configuration)));
                             } else {
                                 Handle<SwaptionVolatilityStructure> atm;
                                 atm = Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolatilityMatrix>(
