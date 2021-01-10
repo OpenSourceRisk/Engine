@@ -304,7 +304,6 @@
 #include <qle/termstructures/probabilitytraits.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
-#include <qle/termstructures/spreadedblackvolatilitysurfacestddevs.hpp>
 #include <qle/termstructures/spreadedcorrelationcurve.hpp>
 #include <qle/termstructures/spreadedcpivolatilitysurface.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>

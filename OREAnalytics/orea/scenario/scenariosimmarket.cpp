@@ -60,7 +60,7 @@
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
-#include <qle/termstructures/spreadedblackvolatilitysurfacestddevs.hpp>
+#include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
 #include <qle/termstructures/spreadedcorrelationcurve.hpp>
 #include <qle/termstructures/spreadedcpivolatilitysurface.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
@@ -1196,11 +1196,27 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 bool stickyStrike = true;
                                 bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
 
+                                // get init market for and dom ts for spreaded ts construction below
+                                Handle<YieldTermStructure> initForTS, initDomTS;
+                                if (useSpreadedTermStructures_) {
+                                    initForTS =
+                                        getYieldCurve(foreignTsId, todaysMarketParams, configuration, initMarket);
+                                    initDomTS =
+                                        getYieldCurve(domesticTsId, todaysMarketParams, configuration, initMarket);
+                                    if (initForTS.empty() || initDomTS.empty()) {
+                                        // forTs and domTs are from the init market, see above
+                                        initForTS = forTS;
+                                        initDomTS = domTS;
+                                    }
+                                }
+
                                 if (parameters->useMoneyness(name)) { // moneyness
                                     if (useSpreadedTermStructures_) {
                                         fxVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
                                             Handle<BlackVolTermStructure>(wrapper), spot, times,
-                                            parameters->fxVolMoneyness(name), quotes, forTS, domTS, stickyStrike);
+                                            parameters->fxVolStdDevs(name), quotes,
+                                            Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value())), initForTS,
+                                            initDomTS, forTS, domTS, stickyStrike);
                                     } else {
                                         fxVolCurve = boost::make_shared<BlackVarianceSurfaceMoneynessForward>(
                                             cal, spot, times, parameters->fxVolMoneyness(name), quotes, dc, forTS,
@@ -1210,8 +1226,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     if (useSpreadedTermStructures_) {
                                         fxVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceStdDevs>(
                                             Handle<BlackVolTermStructure>(wrapper), spot, times,
-                                            parameters->fxVolStdDevs(name), quotes, fxIndex, stickyStrike);
-
+                                            parameters->fxVolStdDevs(name), quotes,
+                                            Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value())), initForTS,
+                                            initDomTS, forTS, domTS, stickyStrike);
                                     } else {
                                         fxVolCurve = boost::make_shared<BlackVarianceSurfaceStdDevs>(
                                             cal, spot, times, parameters->fxVolStdDevs(name), quotes, dc, fxIndex,
@@ -1337,7 +1354,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     if (useSpreadedTermStructures_) {
                                         eqVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessSpot>(
                                             Handle<BlackVolTermStructure>(wrapper), spot, times,
-                                            parameters->equityVolMoneyness(name), quotes, stickyStrike);
+                                            parameters->equityVolStandardDevs(name), quotes,
+                                            Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value())),
+                                            initMarket->equityCurve(name, configuration)->equityDividendCurve(),
+                                            initMarket->equityCurve(name, configuration)->equityForecastCurve(),
+                                            eqCurve->equityDividendCurve(), eqCurve->equityForecastCurve(),
+                                            stickyStrike);
                                     } else {
                                         eqVolCurve = boost::make_shared<BlackVarianceSurfaceMoneynessSpot>(
                                             cal, spot, times, parameters->equityVolMoneyness(name), quotes, dc,
@@ -1397,12 +1419,16 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     }
                                     // If true, the strikes are fixed, if false they move with the spot handle
                                     // Should probably be false, but some people like true for sensi runs.
-                                    bool stickyStrike = true;
+                                    bool stickyStrike = false;
                                     bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
                                     if (useSpreadedTermStructures_) {
                                         eqVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceStdDevs>(
                                             Handle<BlackVolTermStructure>(wrapper), spot, times,
-                                            parameters->equityVolStandardDevs(name), quotes, eqCurve.currentLink(),
+                                            parameters->equityVolStandardDevs(name), quotes,
+                                            Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value())),
+                                            initMarket->equityCurve(name, configuration)->equityDividendCurve(),
+                                            initMarket->equityCurve(name, configuration)->equityForecastCurve(),
+                                            eqCurve->equityDividendCurve(), eqCurve->equityForecastCurve(),
                                             stickyStrike);
                                     } else {
                                         eqVolCurve = boost::make_shared<BlackVarianceSurfaceStdDevs>(
@@ -2168,11 +2194,19 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 bool flatExtrapMoneyness = true;
                                 Handle<Quote> spot(boost::make_shared<SimpleQuote>(priceCurve->price(0)));
                                 if (useSpreadedTermStructures_) {
+                                    // get init market curves to populate sticky ts in vol surface ctor
+                                    Handle<YieldTermStructure> initMarketYts =
+                                        initMarket->discountCurve(priceCurve->currency().code(), configuration);
+                                    Handle<QuantExt::PriceTermStructure> priceCurve =
+                                        initMarket->commodityPriceCurve(name, configuration);
+                                    Handle<YieldTermStructure> initMarketPriceYts(
+                                        boost::make_shared<PriceTermStructureAdapter>(*priceCurve, *initMarketYts));
+                                    // create vol surface
                                     newVol = Handle<BlackVolTermStructure>(
                                         boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
                                             Handle<BlackVolTermStructure>(baseVol), spot, expiryTimes, moneyness,
-                                            quotes, priceYts, yts, stickyStrike));
-
+                                            quotes, Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value())),
+                                            initMarketPriceYts, initMarketYts, priceYts, yts, stickyStrike));
                                 } else {
                                     newVol = Handle<BlackVolTermStructure>(
                                         boost::make_shared<BlackVarianceSurfaceMoneynessForward>(

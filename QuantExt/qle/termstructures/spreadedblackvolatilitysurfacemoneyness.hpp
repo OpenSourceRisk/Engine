@@ -17,7 +17,7 @@
 */
 
 /*! \file spreadedblackvolatilitysurfacemoneyness.hpp
- \brief Spreaded Black volatility surface based on forward moneyness
+ \brief Spreaded Black volatility surface based on moneyness
  \ingroup termstructures
  */
 
@@ -35,14 +35,20 @@ namespace QuantExt {
 using namespace QuantLib;
 
 //! Abstract Spreaded Black volatility surface based on moneyness (moneyness defined in subclasses)
-// see non-spreaded class BlackVarianceSurfaceMoneyness for todos and other details
 class SpreadedBlackVolatilitySurfaceMoneyness : public LazyObject, public BlackVolatilityTermStructure {
 public:
+    /* The smile dynamics is defined in terms of the forward curve defined by the spot and moving term structure.
+       The sticky spot and term structures define the sticky forward curve of the reference vol instead, which
+       should not react to the moving forward curve. */
     SpreadedBlackVolatilitySurfaceMoneyness(const Handle<BlackVolTermStructure>& referenceVol,
-                                            const Handle<Quote>& spot, const std::vector<Time>& times,
+                                            const Handle<Quote>& movingSpot, const std::vector<Time>& times,
                                             const std::vector<Real>& moneyness,
                                             const std::vector<std::vector<Handle<Quote>>>& volSpreads,
-                                            bool stickyStrike);
+                                            const Handle<Quote>& stickySpot,
+                                            const Handle<YieldTermStructure>& stickyDividendTs,
+                                            const Handle<YieldTermStructure>& stickyRiskFreeTs,
+                                            const Handle<YieldTermStructure>& movingDividendTs,
+                                            const Handle<YieldTermStructure>& movingRiskFreeTs, bool stickyStrike);
 
     Date maxDate() const override;
     const Date& referenceDate() const override;
@@ -52,59 +58,80 @@ public:
     Real maxStrike() const override;
     void update() override;
 
-    std::vector<QuantLib::Real> moneyness() const;
+    const std::vector<QuantLib::Real>& moneyness() const;
 
 protected:
-    virtual Real moneyness(Time t, Real strike) const = 0;
+    virtual Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const = 0;
+    virtual Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const = 0;
 
     Handle<BlackVolTermStructure> referenceVol_;
-    Handle<Quote> spot_;
+    Handle<Quote> movingSpot_;
+    Handle<Quote> stickySpot_;
     std::vector<Time> times_;
     std::vector<Real> moneyness_;
     std::vector<std::vector<Handle<Quote>>> volSpreads_;
+    Handle<YieldTermStructure> stickyDividendTs_;
+    Handle<YieldTermStructure> stickyRiskFreeTs_;
+    Handle<YieldTermStructure> movingDividendTs_;
+    Handle<YieldTermStructure> movingRiskFreeTs_;
     bool stickyStrike_;
+
     mutable Matrix data_;
     mutable Interpolation2D volSpreadSurface_;
 
 private:
     void performCalculations() const override;
     Real blackVolImpl(Time t, Real strike) const override;
-
-    // Shared initialisation
-    void init();
 };
 
 //! Spreaded Black volatility surface based on spot moneyness
 class SpreadedBlackVolatilitySurfaceMoneynessSpot : public SpreadedBlackVolatilitySurfaceMoneyness {
 public:
-    SpreadedBlackVolatilitySurfaceMoneynessSpot(const Handle<BlackVolTermStructure>& referenceVol,
-                                                const Handle<Quote>& spot, const std::vector<Time>& times,
-                                                const std::vector<Real>& moneyness,
-                                                const std::vector<std::vector<Handle<Quote>>>& volSpreads,
-                                                bool stickyStrike = false);
+    using SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness;
 
 private:
-    Real moneyness(Time t, Real strike) const override;
+    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const override;
+    Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
 };
 
 //! Black volatility surface based on forward moneyness
 class SpreadedBlackVolatilitySurfaceMoneynessForward : public SpreadedBlackVolatilitySurfaceMoneyness {
 public:
-    SpreadedBlackVolatilitySurfaceMoneynessForward(const Handle<BlackVolTermStructure>& referenceVol,
-                                                   const Handle<Quote>& spot, const std::vector<Time>& times,
-                                                   const std::vector<Real>& moneyness,
-                                                   const std::vector<std::vector<Handle<Quote>>>& volSpreads,
-                                                   const Handle<YieldTermStructure>& forTS,
-                                                   const Handle<YieldTermStructure>& domTS, bool stickyStrike = false);
+    using SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness;
 
 private:
-    void init();
+    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const override;
+    Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
+};
 
-    virtual Real moneyness(Time t, Real strike) const;
-    Handle<YieldTermStructure> forTS_; // calculates fwd if StickyStrike==false
-    Handle<YieldTermStructure> domTS_;
-    std::vector<Real> forwards_; // cache fwd values if StickyStrike==true
-    QuantLib::Interpolation forwardCurve_;
+//! Spreaded Black volatility surface based on spot log moneyness
+class SpreadedBlackVolatilitySurfaceLogMoneynessSpot : public SpreadedBlackVolatilitySurfaceMoneyness {
+public:
+    using SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness;
+
+private:
+    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const override;
+    Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
+};
+
+//! Black volatility surface based on forward log moneyness
+class SpreadedBlackVolatilitySurfaceLogMoneynessForward : public SpreadedBlackVolatilitySurfaceMoneyness {
+public:
+    using SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness;
+
+private:
+    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const override;
+    Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
+};
+
+//! Black volatility surface based on std devs (standardised log moneyness)
+class SpreadedBlackVolatilitySurfaceStdDevs : public SpreadedBlackVolatilitySurfaceMoneyness {
+public:
+    using SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness;
+
+private:
+    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const override;
+    Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
 };
 
 } // namespace QuantExt
