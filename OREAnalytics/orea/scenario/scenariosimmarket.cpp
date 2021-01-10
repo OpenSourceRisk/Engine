@@ -636,7 +636,11 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                             if (useSpreadedTermStructures_) {
                                 // using the wrapper from t0 and init market swap indices means we
-                                // have a sticky strike dynamics
+                                // have a sticky strike dynamics - notice that it is not enough to
+                                // take the swap indices from the ssm for absolute moneyness dynamics
+                                // this would require an extension of the SpreadedSwaptionVolatility
+                                // too (the reference vol needs to be read from an adjusted strike
+                                // there as well)
                                 checkDayCounterConsistency(name, wrapper->dayCounter(), dc);
                                 svp =
                                     Handle<SwaptionVolatilityStructure>(boost::make_shared<SpreadedSwaptionVolatility>(
