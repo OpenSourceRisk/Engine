@@ -1352,9 +1352,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     bool stickyStrike = true;
 
                                     if (useSpreadedTermStructures_) {
-                                        eqVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessSpot>(
+                                        eqVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
                                             Handle<BlackVolTermStructure>(wrapper), spot, times,
-                                            parameters->equityVolStandardDevs(name), quotes,
+                                            parameters->equityVolMoneyness(name), quotes,
                                             Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value())),
                                             initMarket->equityCurve(name, configuration)->equityDividendCurve(),
                                             initMarket->equityCurve(name, configuration)->equityForecastCurve(),
