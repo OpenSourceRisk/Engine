@@ -66,10 +66,10 @@ protected:
 
     Handle<BlackVolTermStructure> referenceVol_;
     Handle<Quote> movingSpot_;
-    Handle<Quote> stickySpot_;
     std::vector<Time> times_;
     std::vector<Real> moneyness_;
     std::vector<std::vector<Handle<Quote>>> volSpreads_;
+    Handle<Quote> stickySpot_;
     Handle<YieldTermStructure> stickyDividendTs_;
     Handle<YieldTermStructure> stickyRiskFreeTs_;
     Handle<YieldTermStructure> movingDividendTs_;
