@@ -134,4 +134,24 @@ private:
     Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
 };
 
+//! Spreaded Black volatility surface based on absolute spot moneyness
+class SpreadedBlackVolatilitySurfaceMoneynessSpotAbsolute : public SpreadedBlackVolatilitySurfaceMoneyness {
+public:
+    using SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness;
+
+private:
+    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const override;
+    Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
+};
+
+//! Spreaded Black volatility surface based on absolute forward moneyness
+class SpreadedBlackVolatilitySurfaceMoneynessForwardAbsolute : public SpreadedBlackVolatilitySurfaceMoneyness {
+public:
+    using SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness;
+
+private:
+    Real strikeFromMoneyness(Time t, Real moneyness, const bool stickyReference) const override;
+    Real moneynessFromStrike(Time t, Real strike, const bool stickyReference) const override;
+};
+
 } // namespace QuantExt

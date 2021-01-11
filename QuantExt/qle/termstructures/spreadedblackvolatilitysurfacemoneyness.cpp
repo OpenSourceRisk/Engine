@@ -27,8 +27,6 @@
 
 #include <boost/make_shared.hpp>
 
-#include <iostream>
-
 using namespace std;
 
 namespace QuantExt {
@@ -308,6 +306,74 @@ Real SpreadedBlackVolatilitySurfaceStdDevs::strikeFromMoneyness(Time t, Real mon
     // we might want to revise this later.
     Real vol = referenceVol_->blackVol(t, stickyForward);
     return std::exp(moneyness * vol * std::sqrt(t)) * forward;
+}
+
+Real SpreadedBlackVolatilitySurfaceMoneynessSpotAbsolute::moneynessFromStrike(Time t, Real strike,
+                                                                              const bool stickyReference) const {
+    if (strike == Null<Real>() || strike == 0) {
+        return 0.0;
+    } else {
+        QL_REQUIRE(!stickyReference || !stickySpot_.empty(),
+                   "SpreadedBlackVolatilitySurfaceMoneynessSpot: stickySpot is empty");
+        QL_REQUIRE(stickyReference || !movingSpot_.empty(),
+                   "SpreadedBlackVolatilitySurfaceMoneynessSpot: movingSpot is empty");
+        return strike - (stickyReference ? stickySpot_->value() : movingSpot_->value());
+    }
+}
+
+Real SpreadedBlackVolatilitySurfaceMoneynessSpotAbsolute::strikeFromMoneyness(Time t, Real moneyness,
+                                                                              const bool stickyReference) const {
+    QL_REQUIRE(!stickyReference || !stickySpot_.empty(),
+               "SpreadedBlackVolatilitySurfaceMoneynessSpot: stickySpot is empty");
+    QL_REQUIRE(stickyReference || !movingSpot_.empty(),
+               "SpreadedBlackVolatilitySurfaceMoneynessSpot: movingSpot is empty");
+    return moneyness + (stickyReference ? stickySpot_->value() : movingSpot_->value());
+}
+
+Real SpreadedBlackVolatilitySurfaceMoneynessForwardAbsolute::moneynessFromStrike(Time t, Real strike,
+                                                                                 const bool stickyReference) const {
+    if (strike == Null<Real>() || strike == 0)
+        return 0.0;
+    else {
+        Real forward;
+        if (stickyReference) {
+            QL_REQUIRE(!stickySpot_.empty(), "SpreadedBlackVolatilitySurfaceMoneynessForward: stickySpot is empty");
+            QL_REQUIRE(!stickyDividendTs_.empty(),
+                       "SpreadedBlackVolatilitySurfaceMoneynessForward: stickyDividendTs is empty");
+            QL_REQUIRE(!stickyRiskFreeTs_.empty(),
+                       "SpreadedBlackVolatilitySurfaceMoneynessForward: stickyRiskFreeTs is empty");
+            forward = stickySpot_->value() * stickyDividendTs_->discount(t) / stickyRiskFreeTs_->discount(t);
+        } else {
+            QL_REQUIRE(!movingSpot_.empty(), "SpreadedBlackVolatilitySurfaceMoneynessForward: movingSpot is empty");
+            QL_REQUIRE(!movingDividendTs_.empty(),
+                       "SpreadedBlackVolatilitySurfaceMoneynessForward: movingDividendTs is empty");
+            QL_REQUIRE(!movingRiskFreeTs_.empty(),
+                       "SpreadedBlackVolatilitySurfaceMoneynessForward: mocingRiskFreeTs is empty");
+            forward = movingSpot_->value() * movingDividendTs_->discount(t) / movingRiskFreeTs_->discount(t);
+        }
+        return strike - forward;
+    }
+}
+
+Real SpreadedBlackVolatilitySurfaceMoneynessForwardAbsolute::strikeFromMoneyness(Time t, Real moneyness,
+                                                                                 const bool stickyReference) const {
+    Real forward;
+    if (stickyReference) {
+        QL_REQUIRE(!stickySpot_.empty(), "SpreadedBlackVolatilitySurfaceMoneynessForward: stickySpot is empty");
+        QL_REQUIRE(!stickyDividendTs_.empty(),
+                   "SpreadedBlackVolatilitySurfaceMoneynessForward: stickyDividendTs is empty");
+        QL_REQUIRE(!stickyRiskFreeTs_.empty(),
+                   "SpreadedBlackVolatilitySurfaceMoneynessForward: stickyRiskFreeTs is empty");
+        forward = stickySpot_->value() * stickyDividendTs_->discount(t) / stickyRiskFreeTs_->discount(t);
+    } else {
+        QL_REQUIRE(!movingSpot_.empty(), "SpreadedBlackVolatilitySurfaceMoneynessForward: movingSpot is empty");
+        QL_REQUIRE(!movingDividendTs_.empty(),
+                   "SpreadedBlackVolatilitySurfaceMoneynessForward: movingDividendTs is empty");
+        QL_REQUIRE(!movingRiskFreeTs_.empty(),
+                   "SpreadedBlackVolatilitySurfaceMoneynessForward: mocingRiskFreeTs is empty");
+        forward = movingSpot_->value() * movingDividendTs_->discount(t) / movingRiskFreeTs_->discount(t);
+    }
+    return moneyness + forward;
 }
 
 } // namespace QuantExt
