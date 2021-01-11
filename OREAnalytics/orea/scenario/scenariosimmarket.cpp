@@ -1353,15 +1353,17 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     bool stickyStrike = true;
 
                                     if (useSpreadedTermStructures_) {
-                                        eqVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
-                                            Handle<BlackVolTermStructure>(wrapper), spot, times,
-                                            parameters->equityVolMoneyness(name), quotes,
-                                            Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value())),
-                                            initMarket->equityCurve(name, configuration)->equityDividendCurve(),
-                                            initMarket->equityCurve(name, configuration)->equityForecastCurve(),
-                                            eqCurve->equityDividendCurve(), eqCurve->equityForecastCurve(),
-                                            stickyStrike);
+                                        eqVolCurve =
+                                            boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
+                                                Handle<BlackVolTermStructure>(wrapper), spot, times,
+                                                parameters->equityVolMoneyness(name), quotes,
+                                                Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value())),
+                                                initMarket->equityCurve(name, configuration)->equityDividendCurve(),
+                                                initMarket->equityCurve(name, configuration)->equityForecastCurve(),
+                                                eqCurve->equityDividendCurve(), eqCurve->equityForecastCurve(),
+                                                stickyStrike);
                                     } else {
+                                        // FIXME should that be Forward, since we read the vols at fwd moneyness above?
                                         eqVolCurve = boost::make_shared<BlackVarianceSurfaceMoneynessSpot>(
                                             cal, spot, times, parameters->equityVolMoneyness(name), quotes, dc,
                                             stickyStrike);
