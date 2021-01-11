@@ -1419,7 +1419,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     }
                                     // If true, the strikes are fixed, if false they move with the spot handle
                                     // Should probably be false, but some people like true for sensi runs.
-                                    bool stickyStrike = false;
+                                    bool stickyStrike = true;
                                     bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
                                     if (useSpreadedTermStructures_) {
                                         eqVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceStdDevs>(
