@@ -124,13 +124,29 @@ void SpreadedBlackVolatilitySurfaceMoneyness::performCalculations() const {
 Real SpreadedBlackVolatilitySurfaceMoneyness::blackVolImpl(Time t, Real strike) const {
     calculate();
     QL_REQUIRE(!referenceVol_.empty(), "SpreadedBlackVolatilitySurfaceMoneyness: reference vol is empty");
-    Real effStrike = stickyStrike_ ? strike : strikeFromMoneyness(t, moneynessFromStrike(t, strike, false), true);
-    return referenceVol_->blackVol(t, effStrike) + volSpreadSurface_(t, moneynessFromStrike(t, strike, false));
+    Real m = moneynessFromStrike(t, strike, false);
+    QL_REQUIRE(std::isfinite(m),
+               "SpreadedBlackVolatilitySurfaceMoneyness: got invalid moneyness (dynamic reference) at t = "
+                   << t << ", strike = " << strike << ": " << m);
+    Real effStrike;
+    if (stickyStrike_)
+        effStrike = strike;
+    else {
+        effStrike = strikeFromMoneyness(t, m, true);
+        QL_REQUIRE(std::isfinite(effStrike),
+                   "SpreadedBlackVolatilitySurfaceMoneyness: got invalid strike from moneyness at t = "
+                       << t << ", input strike = " << strike << ", moneyness = " << m);
+    }
+    Real m2 = moneynessFromStrike(t, strike, false);
+    QL_REQUIRE(std::isfinite(m2),
+               "SpreadedBlackVolatilitySurfaceMoneyness: got invalid moneyness (sticky reference) at t = "
+                   << t << ", strike = " << strike << ": " << m2);
+    return referenceVol_->blackVol(t, effStrike) + volSpreadSurface_(t, m2);
 }
 
 Real SpreadedBlackVolatilitySurfaceMoneynessSpot::moneynessFromStrike(Time t, Real strike,
                                                                       const bool stickyReference) const {
-    if (strike == Null<Real>() || strike == 0) {
+    if (strike == Null<Real>() || close_enough(strike, 0.0)) {
         return 1.0;
     } else {
         QL_REQUIRE(!stickyReference || !stickySpot_.empty(),
@@ -152,7 +168,7 @@ Real SpreadedBlackVolatilitySurfaceMoneynessSpot::strikeFromMoneyness(Time t, Re
 
 Real SpreadedBlackVolatilitySurfaceLogMoneynessSpot::moneynessFromStrike(Time t, Real strike,
                                                                          const bool stickyReference) const {
-    if (strike == Null<Real>() || strike == 0) {
+    if (strike == Null<Real>() || close_enough(strike, 0.0)) {
         return 0.0;
     } else {
         QL_REQUIRE(!stickyReference || !stickySpot_.empty(),
@@ -174,7 +190,7 @@ Real SpreadedBlackVolatilitySurfaceLogMoneynessSpot::strikeFromMoneyness(Time t,
 
 Real SpreadedBlackVolatilitySurfaceMoneynessForward::moneynessFromStrike(Time t, Real strike,
                                                                          const bool stickyReference) const {
-    if (strike == Null<Real>() || strike == 0)
+    if (strike == Null<Real>() || close_enough(strike, 0.0))
         return 1.0;
     else {
         Real forward;
@@ -220,7 +236,7 @@ Real SpreadedBlackVolatilitySurfaceMoneynessForward::strikeFromMoneyness(Time t,
 
 Real SpreadedBlackVolatilitySurfaceLogMoneynessForward::moneynessFromStrike(Time t, Real strike,
                                                                             const bool stickyReference) const {
-    if (strike == Null<Real>() || strike == 0)
+    if (strike == Null<Real>() || close_enough(strike, 0.0))
         return 0.0;
     else {
         Real forward;
@@ -265,8 +281,8 @@ Real SpreadedBlackVolatilitySurfaceLogMoneynessForward::strikeFromMoneyness(Time
 }
 
 Real SpreadedBlackVolatilitySurfaceStdDevs::moneynessFromStrike(Time t, Real strike, const bool stickyReference) const {
-    if (strike == Null<Real>() || strike == 0)
-        return 1.0;
+    if (strike == Null<Real>() || close_enough(strike, 0.0) || close_enough(t, 0.0))
+        return 0.0;
     else {
         QL_REQUIRE(!stickySpot_.empty(), "SpreadedBlackVolatilitySurfaceStdDevs: stickySpot is empty");
         QL_REQUIRE(!stickyDividendTs_.empty(), "SpreadedBlackVolatilitySurfaceStdDevs: stickyDividendTs is empty");
@@ -310,7 +326,7 @@ Real SpreadedBlackVolatilitySurfaceStdDevs::strikeFromMoneyness(Time t, Real mon
 
 Real SpreadedBlackVolatilitySurfaceMoneynessSpotAbsolute::moneynessFromStrike(Time t, Real strike,
                                                                               const bool stickyReference) const {
-    if (strike == Null<Real>() || strike == 0) {
+    if (strike == Null<Real>() || close_enough(strike, 0.0)) {
         return 0.0;
     } else {
         QL_REQUIRE(!stickyReference || !stickySpot_.empty(),
@@ -332,7 +348,7 @@ Real SpreadedBlackVolatilitySurfaceMoneynessSpotAbsolute::strikeFromMoneyness(Ti
 
 Real SpreadedBlackVolatilitySurfaceMoneynessForwardAbsolute::moneynessFromStrike(Time t, Real strike,
                                                                                  const bool stickyReference) const {
-    if (strike == Null<Real>() || strike == 0)
+    if (strike == Null<Real>() || close_enough(strike, 0.0))
         return 0.0;
     else {
         Real forward;
