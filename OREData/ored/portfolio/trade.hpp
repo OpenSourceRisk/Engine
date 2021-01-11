@@ -136,6 +136,10 @@ public:
     virtual string notionalCurrency() const { return notionalCurrency_; }
 
     const Date& maturity() const { return maturity_; }
+
+    //! returns all additional data returned by the trade once built
+    const std::map<std::string,boost::any>& additionalData() const;
+
     //@}
 
     //! \name Utility
@@ -172,6 +176,7 @@ protected:
                     const boost::shared_ptr<EngineFactory>& factory, const string& configuration);
 
     RequiredFixings requiredFixings_;
+    mutable std::map<std::string,boost::any> additionalData_;
 
 private:
     string id_;
