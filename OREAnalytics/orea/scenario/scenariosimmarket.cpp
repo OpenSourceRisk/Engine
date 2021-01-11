@@ -1237,6 +1237,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 }
                             } else {
                                 if (useSpreadedTermStructures_) {
+                                    // smile dynamics is sticky strike here always
                                     fxVolCurve = boost::make_shared<SpreadedBlackVolatilityCurve>(
                                         Handle<BlackVolTermStructure>(wrapper), times, quotes[0]);
                                 } else {
@@ -1459,6 +1460,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                                 if (useSpreadedTermStructures_) {
                                     // if simulate atm only is false, we use the ATM slice from the wrapper only
+                                    // the smile dynamics is sticky strike here always (if t0 is a surface)
                                     eqVolCurve = boost::make_shared<SpreadedBlackVolatilityCurve>(
                                         Handle<BlackVolTermStructure>(wrapper), times, quotes[0],
                                         !parameters->simulateEquityVolATMOnly());
