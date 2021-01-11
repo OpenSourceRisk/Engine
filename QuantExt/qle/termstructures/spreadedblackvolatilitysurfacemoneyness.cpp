@@ -27,6 +27,8 @@
 
 #include <boost/make_shared.hpp>
 
+#include <iostream>
+
 using namespace std;
 
 namespace QuantExt {
@@ -124,8 +126,8 @@ void SpreadedBlackVolatilitySurfaceMoneyness::performCalculations() const {
 Real SpreadedBlackVolatilitySurfaceMoneyness::blackVolImpl(Time t, Real strike) const {
     calculate();
     QL_REQUIRE(!referenceVol_.empty(), "SpreadedBlackVolatilitySurfaceMoneyness: reference vol is empty");
-    Real effStrike = stickyStrike_ ? strike : strikeFromMoneyness(t, moneynessFromStrike(t, strike, true), false);
-    return referenceVol_->blackVol(t, effStrike) + volSpreadSurface_(t, moneynessFromStrike(t, strike, true));
+    Real effStrike = stickyStrike_ ? strike : strikeFromMoneyness(t, moneynessFromStrike(t, strike, false), true);
+    return referenceVol_->blackVol(t, effStrike) + volSpreadSurface_(t, moneynessFromStrike(t, strike, false));
 }
 
 Real SpreadedBlackVolatilitySurfaceMoneynessSpot::moneynessFromStrike(Time t, Real strike,
