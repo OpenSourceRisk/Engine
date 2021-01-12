@@ -3,7 +3,7 @@
  All rights reserved.
 */
 
-/*! \file oredp/marketdata/compositeloader.hpp
+/*! \file ored/marketdata/compositeloader.hpp
     \brief Loader that is a composite of two loaders
     \ingroup marketdata
 */
