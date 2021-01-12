@@ -131,14 +131,14 @@ Real DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& s
     bool hasLiveCashFlow = false;
     for (Size i = 0; i < cashflows.size(); i++) {
         boost::shared_ptr<CashFlow> cf = cashflows[i];
-        if (cf->hasOccurred(npvDate, includeSettlementDateFlows_))
+        if (cf->hasOccurred(npvDate, includeRefDateFlows))
             continue;
         hasLiveCashFlow = true;
 
         // Coupon value is discounted future payment times the survival probability
         Probability S = creditCurvePtr->survivalProbability(cf->date()) / spNpv;
         Real tmp = cf->amount() * S * discountCurve_->discount(cf->date()) / dfNpv;
-        if (!cf->hasOccurred(settlementDate, includeSettlementDateFlows_))
+        if (!cf->hasOccurred(settlementDate, includeRefDateFlows))
             npvValue += tmp;
         else
             cashflowsBeforeSettlementValue_ += tmp;
