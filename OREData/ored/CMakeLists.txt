@@ -50,6 +50,7 @@ marketdata/strike.cpp
 marketdata/swaptionvolcurve.cpp
 marketdata/todaysmarket.cpp
 marketdata/todaysmarketparameters.cpp
+marketdata/wrappedmarket.cpp
 marketdata/yieldcurve.cpp
 marketdata/yieldvolcurve.cpp
 model/calibrationbasket.cpp
@@ -206,6 +207,7 @@ marketdata/structuredcurveerror.hpp
 marketdata/swaptionvolcurve.hpp
 marketdata/todaysmarket.hpp
 marketdata/todaysmarketparameters.hpp
+marketdata/wrappedmarket.hpp
 marketdata/yieldcurve.hpp
 marketdata/yieldvolcurve.hpp
 model/calibrationbasket.hpp
