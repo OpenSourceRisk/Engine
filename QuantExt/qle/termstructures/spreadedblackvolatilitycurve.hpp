@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file spreadeddiscountcurve.hpp
-    \brief spreaded discount term structure
+/*! \file spreadedblackvolatilitycurve.hpp
+    \brief Spreaded Black volatility curve
     \ingroup termstructures
 */
 
@@ -25,38 +25,38 @@
 
 #include <ql/math/interpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
-
-#include <boost/make_shared.hpp>
+#include <ql/quote.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
-/*! Curve taking a reference curve and discount factor quotes, that are used to overlay the reference
-  curve with a spread. The quotes are interpolated loglinearly. The spread curve is given in terms of
-  times relative to the reference date, which means that the spread will float with a changing reference
-  date in the reference curve. */
-class SpreadedDiscountCurve : public YieldTermStructure, public LazyObject {
+//! Spreaedd Black volatility curve modelled as variance curve
+class SpreadedBlackVolatilityCurve : public LazyObject, public BlackVolatilityTermStructure {
 public:
-    //! times should be consistent with reference ts day counter
-    SpreadedDiscountCurve(const Handle<YieldTermStructure>& referenceCurve, const std::vector<Time>& times,
-                          const std::vector<Handle<Quote>>& quotes);
-
+    /*! - times should be consistent with reference ts day counter
+        - if useAtmReferenceVolsOnly, only vols with strike Null<Real>() are read from the referenceVol,
+          otherwise the full reference vol surface (if it is one) is used
+     */
+    SpreadedBlackVolatilityCurve(const Handle<BlackVolTermStructure>& referenceVol, const std::vector<Time>& times,
+                                 const std::vector<Handle<Quote>>& volSpreads,
+                                 const bool useAtmReferenceVolsOnly = false);
     Date maxDate() const override;
-    void update() override;
     const Date& referenceDate() const override;
-
     Calendar calendar() const override;
     Natural settlementDays() const override;
-
-protected:
-    void performCalculations() const override;
-    DiscountFactor discountImpl(Time t) const override;
+    Real minStrike() const override;
+    Real maxStrike() const override;
+    void update() override;
 
 private:
-    Handle<YieldTermStructure> referenceCurve_;
+    void performCalculations() const override;
+    Real blackVolImpl(Time t, Real) const override;
+
+    Handle<BlackVolTermStructure> referenceVol_;
     std::vector<Time> times_;
-    std::vector<Handle<Quote>> quotes_;
+    std::vector<Handle<Quote>> volSpreads_;
+    bool useAtmReferenceVolsOnly_;
     mutable std::vector<Real> data_;
     boost::shared_ptr<Interpolation> interpolation_;
 };

@@ -16,47 +16,47 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file spreadeddiscountcurve.hpp
-    \brief spreaded discount term structure
-    \ingroup termstructures
+/*! \file spreadedcorrelationcurve.hpp
+    \brief Spreaded correlation curve
 */
 
 #pragma once
 
+#include <qle/termstructures/correlationtermstructure.hpp>
+
 #include <ql/math/interpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
-
-#include <boost/make_shared.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
-/*! Curve taking a reference curve and discount factor quotes, that are used to overlay the reference
-  curve with a spread. The quotes are interpolated loglinearly. The spread curve is given in terms of
-  times relative to the reference date, which means that the spread will float with a changing reference
-  date in the reference curve. */
-class SpreadedDiscountCurve : public YieldTermStructure, public LazyObject {
+//! Spreaded Correlation Curve
+class SpreadedCorrelationCurve : public CorrelationTermStructure, public LazyObject {
 public:
-    //! times should be consistent with reference ts day counter
-    SpreadedDiscountCurve(const Handle<YieldTermStructure>& referenceCurve, const std::vector<Time>& times,
-                          const std::vector<Handle<Quote>>& quotes);
+    /*! - times should be consistent with reference ts day counter
+        - if useAtmReferenceCorrsOnly, only corrs with strike Null<Real>() are read from the referenceVol,
+          otherwise the full reference vol surface (if it is one) is used
+     */
+    SpreadedCorrelationCurve(const Handle<CorrelationTermStructure>& referenceCorrelation,
+                             const std::vector<Time>& times, const std::vector<Handle<Quote>>& corrSpreads,
+                             const bool useAtmReferenceVolsOnly = false);
+    //@}
 
     Date maxDate() const override;
-    void update() override;
     const Date& referenceDate() const override;
-
     Calendar calendar() const override;
     Natural settlementDays() const override;
-
-protected:
-    void performCalculations() const override;
-    DiscountFactor discountImpl(Time t) const override;
+    Time minTime() const override;
+    void update() override;
 
 private:
-    Handle<YieldTermStructure> referenceCurve_;
+    Real correlationImpl(Time t, Real strike) const override;
+    void performCalculations() const override;
+
+    Handle<CorrelationTermStructure> referenceCorrelation_;
     std::vector<Time> times_;
-    std::vector<Handle<Quote>> quotes_;
+    std::vector<Handle<Quote>> corrSpreads_;
+    bool useAtmReferenceCorrsOnly_;
     mutable std::vector<Real> data_;
     boost::shared_ptr<Interpolation> interpolation_;
 };
