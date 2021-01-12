@@ -250,7 +250,6 @@
 #include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
-#include <qle/termstructures/constantyoyinflationoptionletvolatility.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
@@ -303,10 +302,20 @@
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <qle/termstructures/probabilitytraits.hpp>
+#include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
+#include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
+#include <qle/termstructures/spreadedcorrelationcurve.hpp>
+#include <qle/termstructures/spreadedcpivolatilitysurface.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
+#include <qle/termstructures/spreadedinflationcurve.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility.hpp>
+#include <qle/termstructures/spreadedoptionletvolatility2.hpp>
+#include <qle/termstructures/spreadedpricetermstructure.hpp>
 #include <qle/termstructures/spreadedsmilesection.hpp>
+#include <qle/termstructures/spreadedsmilesection2.hpp>
+#include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
+#include <qle/termstructures/spreadedyoyvolsurface.hpp>
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
@@ -324,7 +333,6 @@
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
 #include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
-#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
 #include <qle/time/actual364.hpp>

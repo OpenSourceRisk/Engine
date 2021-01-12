@@ -196,10 +196,10 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
 }
 
-Handle<QuantExt::YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key,
+Handle<YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key,
                                                                            const string& configuration) const {
     require(MarketObject::YoYInflationCapFloorVol, key, configuration);
-    return lookup<Handle<QuantExt::YoYOptionletVolatilitySurface>>(yoyCapFloorVolSurfaces_, key, configuration,
+    return lookup<Handle<YoYOptionletVolatilitySurface>>(yoyCapFloorVolSurfaces_, key, configuration,
                                                                    "yoy inflation capfloor curve");
 }
 

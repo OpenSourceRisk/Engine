@@ -16,47 +16,45 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file spreadeddiscountcurve.hpp
-    \brief spreaded discount term structure
+/*! \file spreadedsurvivalprobabilitytermstructure.hpp
+    \brief spreaded default term structure
     \ingroup termstructures
 */
 
 #pragma once
 
-#include <ql/math/interpolation.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
-
-#include <boost/make_shared.hpp>
+#include <ql/quote.hpp>
+#include <ql/termstructures/credit/survivalprobabilitystructure.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
-/*! Curve taking a reference curve and discount factor quotes, that are used to overlay the reference
-  curve with a spread. The quotes are interpolated loglinearly. The spread curve is given in terms of
-  times relative to the reference date, which means that the spread will float with a changing reference
-  date in the reference curve. */
-class SpreadedDiscountCurve : public YieldTermStructure, public LazyObject {
+//! Spreaded Default Term Structure, the spread is given in terms of loglinearly interpolated survival probabilities.
+class SpreadedSurvivalProbabilityTermStructure : public SurvivalProbabilityStructure, public LazyObject {
 public:
     //! times should be consistent with reference ts day counter
-    SpreadedDiscountCurve(const Handle<YieldTermStructure>& referenceCurve, const std::vector<Time>& times,
-                          const std::vector<Handle<Quote>>& quotes);
-
+    SpreadedSurvivalProbabilityTermStructure(const Handle<DefaultProbabilityTermStructure>& referenceCurve,
+                                             const std::vector<Time>& times, const std::vector<Handle<Quote>>& spreads);
+    //@}
+    //! \name TermStructure interface
+    //@{
+    DayCounter dayCounter() const override;
     Date maxDate() const override;
-    void update() override;
+    Time maxTime() const override;
     const Date& referenceDate() const override;
-
     Calendar calendar() const override;
     Natural settlementDays() const override;
-
-protected:
-    void performCalculations() const override;
-    DiscountFactor discountImpl(Time t) const override;
-
+    //@}
 private:
-    Handle<YieldTermStructure> referenceCurve_;
+    void performCalculations() const override;
+    Probability survivalProbabilityImpl(Time) const override;
+    void update() override;
+
+    Handle<DefaultProbabilityTermStructure> referenceCurve_;
     std::vector<Time> times_;
-    std::vector<Handle<Quote>> quotes_;
+    std::vector<Handle<Quote>> spreads_;
     mutable std::vector<Real> data_;
     boost::shared_ptr<Interpolation> interpolation_;
 };
