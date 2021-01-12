@@ -179,6 +179,7 @@ marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
 marketdata/commoditycurve.hpp
 marketdata/commodityvolcurve.hpp
+marketdata/compositeloader.hpp
 marketdata/correlationcurve.hpp
 marketdata/csvloader.hpp
 marketdata/curvespec.hpp
