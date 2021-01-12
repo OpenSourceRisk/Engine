@@ -735,6 +735,22 @@ Position::Type parsePositionType(const std::string& s) {
     }
 }
 
+Protection::Side parseProtectionSide(const std::string& s) {
+    static map<string, Protection::Side> m = {
+        {"Buyer", Protection::Buyer},
+        {"Seller", Protection::Seller},
+        {"B", Protection::Buyer},
+        {"S", Protection::Seller}
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Protection side \"" << s << "\" not recognized");
+    }
+}
+
 Settlement::Type parseSettlementType(const std::string& s) {
     static map<string, Settlement::Type> m = {
         {"Cash", Settlement::Cash},
