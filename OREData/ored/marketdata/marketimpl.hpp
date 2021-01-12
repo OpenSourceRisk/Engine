@@ -228,7 +228,7 @@ protected:
     mutable map<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>> baseCorrelations_;
     mutable map<pair<string, string>, Handle<Quote>> recoveryRates_;
     mutable map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
-    mutable map<pair<string, string>, Handle<QuantExt::YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;
+    mutable map<pair<string, string>, Handle<YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;
     mutable map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
     mutable map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;
     mutable map<pair<string, string>, Handle<CPIVolatilitySurface>> cpiInflationCapFloorVolatilitySurfaces_;

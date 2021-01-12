@@ -837,9 +837,6 @@
     <ClInclude Include="qle\cashflows\strippedcapflooredcpicoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\constantyoyinflationoptionletvolatility.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
     <ClInclude Include="qle\termstructures\dynamiccpivolatilitystructure.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -986,6 +983,36 @@
     </ClInclude>
     <ClInclude Include="qle\instruments\vanillaforwardoption.hpp">
       <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedblackvolatilitycurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedblackvolatilitysurfacemoneyness.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedcorrelationcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedcpivolatilitysurface.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedinflationcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedoptionletvolatility2.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedpricetermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedsmilesection2.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedsurvivalprobabilitytermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedyoyvolsurface.hpp">
+      <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1582,9 +1609,6 @@
     <ClCompile Include="qle\cashflows\strippedcapflooredcpicoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\constantyoyinflationoptionletvolatility.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
     <ClCompile Include="qle\termstructures\dynamiccpivolatilitystructure.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
@@ -1683,6 +1707,36 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\analyticeuropeanforwardengine.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedblackvolatilitycurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedblackvolatilitysurfacemoneyness.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedcorrelationcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedcpivolatilitysurface.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedinflationcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedoptionletvolatility2.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedpricetermstructure.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedsmilesection2.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedsurvivalprobabilitytermstructure.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedyoyvolsurface.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

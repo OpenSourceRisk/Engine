@@ -21,7 +21,6 @@
 #include <ored/utilities/log.hpp>
 
 #include <ql/experimental/inflation/interpolatedyoyoptionletstripper.hpp>
-#include <ql/experimental/inflation/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/matrix.hpp>
@@ -124,7 +123,6 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
         if (md->asofDate() == asof && (md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR ||
                                        md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR)) {
 
-            DLOG("Remaining quotes " << remainingQuotes);
             boost::shared_ptr<InflationCapFloorQuote> q = boost::dynamic_pointer_cast<InflationCapFloorQuote>(md);
 
             if (config->type() == InflationCapFloorVolatilityCurveConfig::Type::ZC) {
@@ -505,14 +503,10 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
             boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex, hovs, nominalTS);
 
-        boost::shared_ptr<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>> interpVolSurface =
-            boost::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
-                yoySurface->settlementDays(), yoySurface->calendar(), yoySurface->businessDayConvention(),
-                yoySurface->dayCounter(), yoySurface->observationLag(), yoySurface, cfEngine, yoyStripper, 0);
-
-        boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> newSurface =
-            boost::make_shared<QuantExt::YoYOptionletVolatilitySurface>(interpVolSurface, VolatilityType::Normal);
-        yoyVolSurface_ = newSurface;
+        yoyVolSurface_ = boost::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
+            yoySurface->settlementDays(), yoySurface->calendar(), yoySurface->businessDayConvention(),
+            yoySurface->dayCounter(), yoySurface->observationLag(), yoySurface, cfEngine, yoyStripper, 0, Linear(),
+            VolatilityType::Normal);
     }
 }
 

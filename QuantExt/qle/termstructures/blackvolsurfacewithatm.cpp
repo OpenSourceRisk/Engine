@@ -42,7 +42,7 @@ BlackVolatilityWithATM::BlackVolatilityWithATM(const boost::shared_ptr<BlackVolT
 Volatility BlackVolatilityWithATM::blackVolImpl(Time t, Real strike) const {
     if (strike == Null<Real>() || strike == 0) {
         // calculate fwd(t)
-        strike = spot_->value() * yield2_->discount(t) / yield1_->discount(t);
+        strike = spot_->value() * yield2_->discount(t, true) / yield1_->discount(t, true);
     }
     return surface_->blackVol(t, strike);
 }

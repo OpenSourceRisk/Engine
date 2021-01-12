@@ -29,7 +29,7 @@
 #include <ored/marketdata/loader.hpp>
 
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
-#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
+#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 
 namespace ore {
 namespace data {
