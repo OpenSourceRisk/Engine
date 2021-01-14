@@ -112,7 +112,7 @@ int OREApp::run() {
          *Build Pricing Engine Factory
          */
         out_ << setw(tab_) << left << "Engine factory... " << flush;
-        engineFactory_ = buildEngineFactory(market_, "", true);
+        engineFactory_ = buildEngineFactory(market_, "setup", true);
         out_ << "OK" << endl;
 
         /******************************
