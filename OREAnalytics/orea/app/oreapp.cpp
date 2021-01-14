@@ -112,7 +112,7 @@ int OREApp::run() {
          *Build Pricing Engine Factory
          */
         out_ << setw(tab_) << left << "Engine factory... " << flush;
-        engineFactory_ = buildEngineFactory(market_);
+        engineFactory_ = buildEngineFactory(market_, "", true);
         out_ << "OK" << endl;
 
         /******************************
@@ -453,7 +453,8 @@ boost::shared_ptr<CrossAssetModelData> OREApp::getCrossAssetModelData() {
 }
 
 boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market,
-                                                            const string& groupName) const {
+                                                            const string& groupName,
+                                                            const bool generateAdditionalResults) const {
     MEM_LOG;
     LOG("Building an engine factory")
 
@@ -462,6 +463,7 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     string pricingEnginesFile = inputPath_ + "/" + params_->get(groupName, "pricingEnginesFile");
     if (params_->get(groupName, "pricingEnginesFile") != "")
         engineData->fromFile(pricingEnginesFile);
+    engineData->globalParameters()["GenerateAdditionalResults"] = generateAdditionalResults ? "true" : "false";
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
@@ -1306,15 +1308,16 @@ boost::shared_ptr<MarketImpl> OREApp::getMarket() const {
 }
 
 boost::shared_ptr<EngineFactory> OREApp::buildEngineFactoryFromXMLString(const boost::shared_ptr<Market>& market,
-                                                                         const std::string& pricingEngineXML) {
+                                                                         const std::string& pricingEngineXML,
+                                                                         const bool generateAdditionalResults) {
     DLOG("OREApp::buildEngineFactoryFromXMLString called");
 
     if (pricingEngineXML == "")
-        return buildEngineFactory(market);
+        return buildEngineFactory(market, "", generateAdditionalResults);
     else {
         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
         engineData->fromXMLString(pricingEngineXML);
-
+        engineData->globalParameters()["GenerateAdditionalResults"] = generateAdditionalResults ? "true" : "false";
         map<MarketContext, string> configurations;
         configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
         configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");

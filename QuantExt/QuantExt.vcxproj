@@ -667,6 +667,7 @@
     <ClInclude Include="qle\models\jyimpliedyoyinflationtermstructure.hpp" />
     <ClInclude Include="qle\models\jyimpliedzeroinflationtermstructure.hpp" />
     <ClInclude Include="qle\models\lgm.hpp" />
+    <ClInclude Include="qle\models\lgmcalibrationinfo.hpp" />
     <ClInclude Include="qle\models\lgmimplieddefaulttermstructure.hpp" />
     <ClInclude Include="qle\models\lgmimpliedyieldtermstructure.hpp" />
     <ClInclude Include="qle\models\linkablecalibratedmodel.hpp" />
@@ -933,6 +934,7 @@
     <ClCompile Include="qle\models\jyimpliedyoyinflationtermstructure.cpp" />
     <ClCompile Include="qle\models\jyimpliedzeroinflationtermstructure.cpp" />
     <ClCompile Include="qle\models\lgm.cpp" />
+    <ClCompile Include="qle\models\lgmcalibrationinfo.cpp" />
     <ClCompile Include="qle\models\lgmimplieddefaulttermstructure.cpp" />
     <ClCompile Include="qle\models\lgmimpliedyieldtermstructure.cpp" />
     <ClCompile Include="qle\models\linkablecalibratedmodel.cpp" />
