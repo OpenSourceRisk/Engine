@@ -128,25 +128,25 @@ void loadFixings(const map<string, set<Date>>& requestedFixings, const Conventio
 class F : public TopLevelFixture {
 public:
     Date today;
-    Conventions conventions;
+    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
     boost::shared_ptr<EngineFactory> engineFactory;
 
     F() {
         today = Date(12, Feb, 2019);
         Settings::instance().evaluationDate() = today;
 
-        conventions.fromFile(TEST_INPUT_FILE("market/conventions.xml"));
+        conventions->fromFile(TEST_INPUT_FILE("market/conventions.xml"));
 
-        TodaysMarketParameters todaysMarketParams;
-        todaysMarketParams.fromFile(TEST_INPUT_FILE("market/todaysmarket.xml"));
+        auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
+        todaysMarketParams->fromFile(TEST_INPUT_FILE("market/todaysmarket.xml"));
 
-        CurveConfigurations curveConfigs;
-        curveConfigs.fromFile(TEST_INPUT_FILE("market/curveconfig.xml"));
+        auto curveConfigs = boost::make_shared<CurveConfigurations>();
+        curveConfigs->fromFile(TEST_INPUT_FILE("market/curveconfig.xml"));
 
         string marketFile = TEST_INPUT_FILE("market/market.txt");
         string fixingsFile = TEST_INPUT_FILE("market/fixings_for_bootstrap.txt");
         string dividendsFile = TEST_INPUT_FILE("market/dividends.txt");
-        CSVLoader loader(marketFile, fixingsFile, dividendsFile, false);
+        auto loader = boost::make_shared<CSVLoader>(marketFile, fixingsFile, dividendsFile, false);
 
         bool continueOnError = false;
         boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
@@ -238,7 +238,7 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
         }
 
         // Add the fixings
-        loadFixings(m, conventions);
+        loadFixings(m, *conventions);
 
         // Trade should now not throw when we try to price it
         BOOST_CHECK_NO_THROW(p.trades()[0]->instrument()->NPV());
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
 
     map<string, set<Date>> expectedFixings = {{"EUHICPXT", inflationDates}, {"USCPI", inflationDates},
                                               {"UKRPI", inflationDates},    {"EUR-EURIBOR-3M", iborDates},
-                                              {"USD-FedFunds", oisDates},  {"USD-LIBOR-3M", iborDates}};
+                                              {"USD-FedFunds", oisDates},   {"USD-LIBOR-3M", iborDates}};
 
     // Populate empty fixings map using the function to be tested
     map<string, set<Date>> fixings;
@@ -375,7 +375,7 @@ BOOST_FIXTURE_TEST_CASE(testFxNotionalResettingSwapFirstCoupon, F) {
     BOOST_CHECK_THROW(p.trades()[0]->instrument()->NPV(), Error);
 
     // Add the fixings
-    loadFixings(m, conventions);
+    loadFixings(m, *conventions);
 
     // Trade should now not throw when we try to price it
     BOOST_CHECK_NO_THROW(p.trades()[0]->instrument()->NPV());
