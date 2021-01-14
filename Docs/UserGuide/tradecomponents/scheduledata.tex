@@ -80,7 +80,7 @@ Allowable values: A string where the last character must be D or W or
 M or Y.  The characters before that must be a positive integer. \\D
 $=$ Day, W $=$ Week, M $=$ Month, Y $=$ Year
 
-\item Calendar: The calendar used to generate schedule  dates. 
+\item Calendar: The calendar used to generate schedule  dates. Also used to determine payment dates (except for compounding OIS index legs, which use the index calendar to determine payment dates).
 
 Allowable values: See Table \ref{tab:calendar} Calendar.
 
@@ -122,11 +122,11 @@ The meanings and allowable values of the elements in a {\tt <Dates>} based secti
 
 \item Dates: a sub-node that determines that the schedule is set by specifying schedule dates explicitly. 
 
-\item Calendar [Optional]: Calendar used to determine payment dates, and also to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based. 
+\item Calendar [Optional]: Calendar used to determine the accrual schedule dates. Also used to determine payment dates (except for compounding OIS index legs, which use the index calendar), and also to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based. 
 
 Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to \emph{NullCalendar} if omitted, i.e. no holidays at all, not even on weekends.
 
-\item Convention [Optional]: Roll Convention to determine payment dates, and also used to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based.
+\item Convention [Optional]: Roll Convention to determine the accrual schedule dates, and also used to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based.
 
 Allowable values: See \lstinline!Roll Convention! in Table
 \ref{tab:allow_stand_data}. Defaults to \emph{Unadjusted} if omitted.
