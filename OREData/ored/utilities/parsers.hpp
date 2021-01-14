@@ -161,6 +161,12 @@ QuantLib::Compounding parseCompounding(const string& s);
 */
 QuantLib::Position::Type parsePositionType(const string& s);
 
+//! Convert text to QuantLib::Protection::Side
+/*!
+\ingroup utilities
+*/
+QuantLib::Protection::Side parseProtectionSide(const string& s);
+
 //! Convert text to QuantLib::Settlement::Type
 /*!
 \ingroup utilities
