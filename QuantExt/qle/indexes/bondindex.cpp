@@ -102,8 +102,8 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
     // simply discounting its cashflows
 
     if (price == Null<Real>()) {
-        price = vanillaBondEngine_->calculateNpv(bond_->settlementDate(fixingDate), bond_->cashflows(), incomeCurve_,
-                                                 conditionalOnSurvival_);
+        price = vanillaBondEngine_->calculateNpv(bond_->settlementDate(fixingDate), bond_->settlementDate(fixingDate),
+                                                 bond_->cashflows(), boost::none, incomeCurve_, conditionalOnSurvival_);
     }
 
     if (!dirty_) {
@@ -136,16 +136,18 @@ Real BondIndex::pastFixing(const Date& fixingDate) const {
     return price;
 }
 
-BondFuturesIndex::BondFuturesIndex(const QuantLib::Date& expiryDate, const std::string& securityName, const bool dirty, const bool relative,
-                     const Calendar& fixingCalendar, const boost::shared_ptr<QuantLib::Bond>& bond,
-                     const Handle<YieldTermStructure>& discountCurve,
-                     const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
-                     const Handle<Quote>& securitySpread, const Handle<YieldTermStructure>& incomeCurve,
-                     const bool conditionalOnSurvival)
-    : BondIndex(securityName, dirty, relative, fixingCalendar, bond, discountCurve, defaultCurve, recoveryRate, securitySpread, incomeCurve, conditionalOnSurvival), 
-        expiryDate_(expiryDate) {}
+BondFuturesIndex::BondFuturesIndex(const QuantLib::Date& expiryDate, const std::string& securityName, const bool dirty,
+                                   const bool relative, const Calendar& fixingCalendar,
+                                   const boost::shared_ptr<QuantLib::Bond>& bond,
+                                   const Handle<YieldTermStructure>& discountCurve,
+                                   const Handle<DefaultProbabilityTermStructure>& defaultCurve,
+                                   const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
+                                   const Handle<YieldTermStructure>& incomeCurve, const bool conditionalOnSurvival)
+    : BondIndex(securityName, dirty, relative, fixingCalendar, bond, discountCurve, defaultCurve, recoveryRate,
+                securitySpread, incomeCurve, conditionalOnSurvival),
+      expiryDate_(expiryDate) {}
 
-std::string BondFuturesIndex::name() const {         
+std::string BondFuturesIndex::name() const {
     if (name_ == "") {
         std::ostringstream o;
         o << "BOND-" << securityName() << "-" << QuantLib::io::iso_date(expiryDate_);
@@ -159,12 +161,13 @@ std::string BondFuturesIndex::name() const {
 
 Rate BondFuturesIndex::forecastFixing(const Date& fixingDate) const {
     Date today = Settings::instance().evaluationDate();
-    QL_REQUIRE(fixingDate >= today,
-               "BondFuturesIndex::forecastFixing(): fixingDate (" << fixingDate << ") must be >= today (" << today << ")");
+    QL_REQUIRE(fixingDate >= today, "BondFuturesIndex::forecastFixing(): fixingDate ("
+                                        << fixingDate << ") must be >= today (" << today << ")");
     QL_REQUIRE(bond_, "BondFuturesIndex::forecastFixing(): bond required");
 
-    Real price = vanillaBondEngine_->calculateNpv(bond()->settlementDate(expiryDate_), bond()->cashflows(), incomeCurve(),
-                                                 conditionalOnSurvival());
+    Real price =
+        vanillaBondEngine_->calculateNpv(bond()->settlementDate(expiryDate_), bond()->settlementDate(expiryDate_),
+                                         bond()->cashflows(), boost::none, incomeCurve(), conditionalOnSurvival());
 
     if (!dirty()) {
         price -= bond()->accruedAmount(expiryDate_) / 100.0 * bond()->notional(expiryDate_);

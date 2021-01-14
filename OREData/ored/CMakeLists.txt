@@ -50,6 +50,7 @@ marketdata/strike.cpp
 marketdata/swaptionvolcurve.cpp
 marketdata/todaysmarket.cpp
 marketdata/todaysmarketparameters.cpp
+marketdata/wrappedmarket.cpp
 marketdata/yieldcurve.cpp
 marketdata/yieldvolcurve.cpp
 model/calibrationbasket.cpp
@@ -178,6 +179,7 @@ marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
 marketdata/commoditycurve.hpp
 marketdata/commodityvolcurve.hpp
+marketdata/compositeloader.hpp
 marketdata/correlationcurve.hpp
 marketdata/csvloader.hpp
 marketdata/curvespec.hpp
@@ -206,6 +208,7 @@ marketdata/structuredcurveerror.hpp
 marketdata/swaptionvolcurve.hpp
 marketdata/todaysmarket.hpp
 marketdata/todaysmarketparameters.hpp
+marketdata/wrappedmarket.hpp
 marketdata/yieldcurve.hpp
 marketdata/yieldvolcurve.hpp
 model/calibrationbasket.hpp

@@ -33,6 +33,7 @@
 #include <ored/marketdata/cdsvolcurve.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
 #include <ored/marketdata/commodityvolcurve.hpp>
+#include <ored/marketdata/compositeloader.hpp>
 #include <ored/marketdata/correlationcurve.hpp>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/curvespec.hpp>
@@ -61,6 +62,7 @@
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/marketdata/wrappedmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/yieldvolcurve.hpp>
 #include <ored/model/calibrationbasket.hpp>

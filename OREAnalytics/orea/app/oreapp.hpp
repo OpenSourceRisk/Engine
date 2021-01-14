@@ -207,6 +207,9 @@ protected:
                                  const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
                                  const std::vector<Real>& p, const std::string& method, const Size mcSamples,
                                  const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix);
+    /*! Generate market data (based on the market data available in the loader passed as an argument) and return the
+     * generated data as a new loader, a nullptr can be returned if no data is generated */
+    virtual boost::shared_ptr<Loader> generateMarketData(const boost::shared_ptr<Loader>& loader) { return nullptr; }
 
     Size tab_, progressBarWidth_;
     //! ORE Input parameters
