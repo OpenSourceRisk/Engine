@@ -3591,6 +3591,9 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
   </Product>
   <GlobalParameters>
     <Parameter name="ContinueOnCalibrationError">true</Parameter>
+    <!-- typcially not present in a user configuration, but used internally -->
+    <Parameter name="Calibrate">true</Parameter>
+    <Parameter name="GenerateAdditionalResults"</Parameter>
   </GlobalParameters>
 \end{minted}
 \caption{Pricing engine configuration}
@@ -3630,9 +3633,16 @@ intended to allow the selection of optimised pricing engines for vanilla product
 \medskip
 In addition to product specific settings there is also a block with global parameters with the following meaning:
 \begin{itemize}
-\item ContinueOnCalibrationError If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
+\item ContinueOnCalibrationError: If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
   LGM model) will not cause the trade building to fail, instead a warning is logged and the trade is processed
   anyway. Optional, defaults to false.
+\item Calibrate: If false, model calibration is disabled. This flag is usually not present in a user configuration, but
+  only used internally for certain workflows within ORE which do not require a model calibration. Optional, defaults to
+  true.
+\item GenerateAdditionalResults: If false, the generation of additional results within pricing engines will be
+  suppressed (for those pricing engines which support this). This flag is usually not present in a user configuration,
+  but only used internally to improve the performance for processes which only rely on the NPV as a result from pricing
+  engines, e.g. when repricing trades under sensitivity or stress scenarios. Option, defaults to false.
 \end{itemize}
 
 %--------------------------------------------------------

@@ -53,19 +53,23 @@ public:
                                const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
                                Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
+
     //! alternative constructor (does not require default curve or recovery rate)
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve, const Handle<Quote>& securitySpread,
                                Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
 
     void calculate() const;
-    /*! Calculate the npv as of the npvDate.
+
+    /*! Calculate the npv as of the npvDate including cashflows eligible w.r.t. the given settlement date
         - If conditionalOnSurvival is set to true, the npv is computed conditional on the survival until the npvDate,
           otherwise the npv is including the default probability between today and the npvDate
         - If an incomeCurve is given, this is used to compound the npv from today to the npvDate, otherwise the curve
           built in the engine as discount curve + security Spread is used. */
-    Real calculateNpv(Date npvDate, const Leg& cashflows,
+    Real calculateNpv(const Date& npvDate, const Date& settlementDate, const Leg& cashflows,
+                      boost::optional<bool> includeSettlementDateFlows = boost::none,
                       const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
                       const bool conditionalOnSurvival = true) const;
+
     // inspectors
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; };
     Handle<DefaultProbabilityTermStructure> defaultCurve() const { return defaultCurve_; };
@@ -79,6 +83,8 @@ private:
     Handle<Quote> securitySpread_;
     Period timestepPeriod_;
     boost::optional<bool> includeSettlementDateFlows_;
+    // set by calculateNpv()
+    mutable Real compoundFactorSettlement_, cashflowsBeforeSettlementValue_;
 };
 } // namespace QuantExt
 
