@@ -840,5 +840,61 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
     LOG("AdditionalResults report written");
 }
 
+namespace {
+void addRowToMktCalRep(ore::data::Report& report, const std::string& config, const std::string& id,
+                       const std::string& resultId, const std::string& resultKey, const boost::any value) {
+    auto p = parseBoostAny(value);
+    report.next().add(config).add(id).add(resultId).add(resultKey).add(p.first).add(p.second);
+}
+} // namespace
+
+void ReportWriter::writeTodaysMarketCalibrationReport(
+    ore::data::Report& report, boost::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo) {
+    LOG("Writing TodaysMarketCalibration report");
+
+    report.addColumn("Configuration", string())
+        .addColumn("MarketObject", string())
+        .addColumn("ResultId", string())
+        .addColumn("ResultKey", string())
+        .addColumn("ResultType", string())
+        .addColumn("ResultValue", string());
+
+    // yield curve results
+
+    for (auto const& r : calibrationInfo->yieldCurveCalibrationInfo) {
+
+        if (!r.second->valid)
+            continue;
+
+        std::string config = r.first.second;
+        std::string id = r.first.first;
+
+        // fitted bond curve results
+
+        auto y = boost::dynamic_pointer_cast<FittedBondCurveCalibrationInfo>(r.second);
+        if (y) {
+            addRowToMktCalRep(report, config, id, "FittedBondCurve.FittingMethod", "", y->fittingMethod);
+            addRowToMktCalRep(report, config, id, "FittedBondCurve.Solution", "", y->solution);
+            addRowToMktCalRep(report, config, id, "FittedBondCurve.Iterations", "", y->iterations);
+            addRowToMktCalRep(report, config, id, "FittedBondCurve.CostValue", "", y->costValue);
+            for (Size i = 0; i < y->securities.size(); ++i) {
+                addRowToMktCalRep(report, config, id, "FittedBondCurve.MarketPrice", y->securities.at(i),
+                                  y->marketPrices.at(i));
+                addRowToMktCalRep(report, config, id, "FittedBondCurve.ModelPrice", y->securities.at(i),
+                                  y->modelPrices.at(i));
+                addRowToMktCalRep(report, config, id, "FittedBondCurve.MarketYield", y->securities.at(i),
+                                  y->marketYields.at(i));
+                addRowToMktCalRep(report, config, id, "FittedBondCurve.ModelYield", y->securities.at(i),
+                                  y->modelYields.at(i));
+            }
+        }
+    }
+
+    // ...
+
+    report.end();
+    LOG("TodaysMktCalibration report written");
+}
+
 } // namespace analytics
 } // namespace ore

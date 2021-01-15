@@ -30,7 +30,9 @@
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/market.hpp>
+#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
+
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
 namespace ore {
@@ -94,8 +96,7 @@ public:
         //! optional pointer to reference data, needed to build fitted bond curves
         const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         //! if true keep qloader quotes linked to yield ts, otherwise detach them
-        const bool preserveQuoteLinkage = false
-        );
+        const bool preserveQuoteLinkage = false);
 
     //! \name Inspectors
     //@{
@@ -103,7 +104,10 @@ public:
     YieldCurveSpec curveSpec() const { return curveSpec_; }
     const Date& asofDate() const { return asofDate_; }
     const Currency& currency() const { return currency_; }
+    // might be nullptr, if no info was produced for this curve
+    boost::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     //@}
+
 private:
     Date asofDate_;
     Currency currency_;
@@ -117,6 +121,7 @@ private:
     const Conventions& conventions_;
     RelinkableHandle<YieldTermStructure> h_;
     boost::shared_ptr<YieldTermStructure> p_;
+    boost::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo_;
 
     void buildDiscountCurve();
     void buildZeroCurve();

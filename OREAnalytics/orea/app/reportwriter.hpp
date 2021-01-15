@@ -32,6 +32,7 @@
 #include <orea/engine/sensitivitystream.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
 #include <ored/utilities/dategrid.hpp>
@@ -89,6 +90,8 @@ public:
                                         QuantLib::Real outputThreshold = 0.0, QuantLib::Size outputPrecision = 2);
 
     virtual void writeAdditionalResultsReport(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio);
+
+    virtual void writeTodaysMarketCalibrationReport(ore::data::Report& report, boost::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo);
     
     const std::string& nullString() const { return nullString_; }
 

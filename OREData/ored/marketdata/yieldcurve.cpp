@@ -19,8 +19,8 @@
 #include <ql/currencies/exchangeratemanager.hpp>
 #include <ql/experimental/futures/overnightindexfutureratehelper.hpp>
 #include <ql/indexes/ibor/usdlibor.hpp>
-#include <ql/math/randomnumbers/haltonrsg.hpp>
 #include <ql/math/functional.hpp>
+#include <ql/math/randomnumbers/haltonrsg.hpp>
 #include <ql/pricingengines/bond/bondfunctions.hpp>
 #include <ql/pricingengines/bond/discountingbondengine.hpp>
 #include <ql/quotes/derivedquote.hpp>
@@ -835,12 +835,16 @@ void YieldCurve::buildFittedBondCurve() {
         boost::dynamic_pointer_cast<FittedBondYieldCurveSegment>(curveSegments_[0]);
     QL_REQUIRE(curveSegment != nullptr, "could not cast to FittedBondYieldCurveSegment, this is unexpected");
 
+    // init calibration info for this curve
+
+    auto calInfo = boost::make_shared<FittedBondCurveCalibrationInfo>();
+
     // build vector of bond helpers
 
     auto quoteIDs = curveSegment->quotes();
     std::vector<boost::shared_ptr<QuantLib::Bond>> bonds;
     std::vector<boost::shared_ptr<BondHelper>> helpers;
-    std::vector<Real> marketPrices;
+    std::vector<Real> marketPrices, marketYields;
     std::vector<std::string> securityIDs;
     Date lastMaturity = Date::minDate(), firstMaturity = Date::maxDate();
 
@@ -894,12 +898,13 @@ void YieldCurve::buildFittedBondCurve() {
                 Date thisMaturity = qlInstr->maturityDate();
                 lastMaturity = std::max(lastMaturity, thisMaturity);
                 firstMaturity = std::min(firstMaturity, thisMaturity);
+                Real marketYield = qlInstr->yield(rescaledBondQuote->value(), ActualActual(), Continuous, NoFrequency);
                 DLOG("added bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
-                                   << ", clean price = " << rescaledBondQuote->value() << ", yield (cont,act/act) = "
-                                   << qlInstr->yield(rescaledBondQuote->value(), ActualActual(), Continuous,
-                                                     NoFrequency));
+                                   << ", clean price = " << rescaledBondQuote->value()
+                                   << ", yield (cont,act/act) = " << marketYield);
                 marketPrices.push_back(bondQuote->quote()->value());
                 securityIDs.push_back(securityID);
+                marketYields.push_back(marketYield);
             } else {
                 DLOG("skipped bond " << securityID << " with settlement date "
                                      << QuantLib::io::iso_date(qlInstr->settlementDate()) << ", isTradable = "
@@ -907,6 +912,10 @@ void YieldCurve::buildFittedBondCurve() {
             }
         }
     }
+
+    calInfo->securities = securityIDs;
+    calInfo->marketPrices = marketPrices;
+    calInfo->marketYields = marketYields;
 
     // fit bond curve to helpers
 
@@ -928,14 +937,17 @@ void YieldCurve::buildFittedBondCurve() {
     case InterpolationMethod::ExponentialSplines:
         method = boost::make_shared<ExponentialSplinesFitting>(true, Array(), ext::shared_ptr<OptimizationMethod>(),
                                                                Array(), minCutoffTime, maxCutoffTime);
+        calInfo->fittingMethod = "ExponentialSplines";
         break;
     case InterpolationMethod::NelsonSiegel:
         method = boost::make_shared<NelsonSiegelFitting>(Array(), ext::shared_ptr<OptimizationMethod>(), Array(),
                                                          minCutoffTime, maxCutoffTime);
+        calInfo->fittingMethod = "NelsonSiegel";
         break;
     case InterpolationMethod::Svensson:
         method = boost::make_shared<SvenssonFitting>(Array(), ext::shared_ptr<OptimizationMethod>(), Array(),
                                                      minCutoffTime, maxCutoffTime);
+        calInfo->fittingMethod = "Svensson";
         break;
     default:
         QL_FAIL("unknown fitting method");
@@ -946,12 +958,15 @@ void YieldCurve::buildFittedBondCurve() {
     case InterpolationMethod::ExponentialSplines:
         method = boost::make_shared<ExponentialSplinesFitting>(true, Array(), ext::shared_ptr<OptimizationMethod>(),
                                                                Array());
+        calInfo->fittingMethod = "ExponentialSplines";
         break;
     case InterpolationMethod::NelsonSiegel:
         method = boost::make_shared<NelsonSiegelFitting>(Array(), ext::shared_ptr<OptimizationMethod>(), Array());
+        calInfo->fittingMethod = "NelsonSiegel";
         break;
     case InterpolationMethod::Svensson:
         method = boost::make_shared<SvenssonFitting>(Array(), ext::shared_ptr<OptimizationMethod>(), Array());
+        calInfo->fittingMethod = "Svensson";
         break;
     default:
         QL_FAIL("unknown fitting method");
@@ -1011,13 +1026,15 @@ void YieldCurve::buildFittedBondCurve() {
     DLOG("   solution:   " << tmp->fitResults().solution());
     DLOG("   iterations: " << tmp->fitResults().numberOfIterations());
     DLOG("   cost value: " << minError);
+
+    std::vector<Real> modelPrices, modelYields;
     auto engine = boost::make_shared<DiscountingBondEngine>(Handle<YieldTermStructure>(tmp));
     for (Size i = 0; i < bonds.size(); ++i) {
         bonds[i]->setPricingEngine(engine);
-        DLOG("bond " << securityIDs[i] << ", model clean price = " << bonds[i]->cleanPrice()
-                     << ", yield (cont,actact) = "
-                     << bonds[i]->yield(bonds[i]->cleanPrice(), ActualActual(), Continuous, NoFrequency)
-                     << ", NPV = " << bonds[i]->NPV());
+        modelPrices.push_back(bonds[i]->cleanPrice());
+        modelYields.push_back(bonds[i]->yield(bonds[i]->cleanPrice(), ActualActual(), Continuous, NoFrequency));
+        DLOG("bond " << securityIDs[i] << ", model clean price = " << modelPrices.back()
+                     << ", yield (cont,actact) = " << modelYields.back() << ", NPV = " << bonds[i]->NPV());
     }
 
     Real tolerance = curveConfig_->bootstrapConfig().globalAccuracy() == Null<Real>()
@@ -1030,6 +1047,16 @@ void YieldCurve::buildFittedBondCurve() {
         tmp->enableExtrapolation();
 
     p_ = tmp;
+
+    Array solution = tmp->fitResults().solution();
+    calInfo->modelPrices = modelPrices;
+    calInfo->modelYields = modelYields;
+    calInfo->tolerance = tolerance;
+    calInfo->costValue = minError;
+    calInfo->solution = std::vector<double>(solution.begin(), solution.end());
+    calInfo->iterations = static_cast<int>(tmp->fitResults().numberOfIterations());
+    calInfo->valid = true;
+    calibrationInfo_ = calInfo;
 }
 
 void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment,
