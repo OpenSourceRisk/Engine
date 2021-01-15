@@ -98,25 +98,6 @@ public:
         //! If true, preserve link to loader quotes, this might heavily interfere with XVA simulations!
         const bool preserveQuoteLinkage = false);
 
-    /*! Constructor taking references. This ctor is deprecated, use the second ctor taking pointers instead.
-        TODO remove this ctor, remove the member reference variables */
-    TodaysMarket( //! Valuation date
-        const Date& asof,
-        //! Description of the market composition
-        const TodaysMarketParameters& params,
-        //! Market data loader
-        const Loader& loader,
-        //! Description of curve compositions
-        const CurveConfigurations& curveConfigs,
-        //! Repository of market conventions
-        const Conventions& conventions,
-        //! Continue even if build errors occur
-        const bool continueOnError = false,
-        //! Optional Load Fixings
-        const bool loadFixings = true,
-        //! Optional reference data manager, needed to build fitted bond curves
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
-
 private:
     // MarketImpl interface
     void require(const MarketObject o, const string& name, const string& configuration) const override;
@@ -124,15 +105,10 @@ private:
     // input parameters
 
     // only populated in ctor taking pointers
-    const boost::shared_ptr<TodaysMarketParameters> params_ref_;
-    const boost::shared_ptr<Loader> loader_ref_;
-    const boost::shared_ptr<CurveConfigurations> curveConfigs_ref_;
-    const boost::shared_ptr<Conventions> conventions_ref_;
-
-    // needed for the deprecated ctor taking references, TODO remove these
-    const TodaysMarketParameters& params_;
-    const Loader& loader_;
-    const CurveConfigurations curveConfigs_;
+    const boost::shared_ptr<TodaysMarketParameters> params_;
+    const boost::shared_ptr<Loader> loader_;
+    const boost::shared_ptr<CurveConfigurations> curveConfigs_;
+    const boost::shared_ptr<Conventions> conventions_;
 
     const bool continueOnError_;
     const bool loadFixings_;
