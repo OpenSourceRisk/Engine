@@ -64,6 +64,7 @@
     <ClInclude Include="ored\marketdata\cdsvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\commoditycurve.hpp" />
     <ClInclude Include="ored\marketdata\commodityvolcurve.hpp" />
+    <ClInclude Include="ored\marketdata\compositeloader.hpp" />
     <ClInclude Include="ored\marketdata\correlationcurve.hpp" />
     <ClInclude Include="ored\marketdata\csvloader.hpp" />
     <ClInclude Include="ored\marketdata\curvespec.hpp" />
@@ -91,6 +92,7 @@
     <ClInclude Include="ored\marketdata\swaptionvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarket.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarketparameters.hpp" />
+    <ClInclude Include="ored\marketdata\wrappedmarket.hpp" />
     <ClInclude Include="ored\marketdata\yieldcurve.hpp" />
     <ClInclude Include="ored\marketdata\inflationcapfloorvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\yieldvolcurve.hpp" />
@@ -267,6 +269,7 @@
     <ClCompile Include="ored\marketdata\swaptionvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\todaysmarket.cpp" />
     <ClCompile Include="ored\marketdata\todaysmarketparameters.cpp" />
+    <ClCompile Include="ored\marketdata\wrappedmarket.cpp" />
     <ClCompile Include="ored\marketdata\yieldcurve.cpp" />
     <ClCompile Include="ored\marketdata\inflationcapfloorvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\yieldvolcurve.cpp" />
