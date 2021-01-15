@@ -1031,7 +1031,7 @@ void YieldCurve::buildFittedBondCurve() {
     auto engine = boost::make_shared<DiscountingBondEngine>(Handle<YieldTermStructure>(tmp));
     for (Size i = 0; i < bonds.size(); ++i) {
         bonds[i]->setPricingEngine(engine);
-        modelPrices.push_back(bonds[i]->cleanPrice());
+        modelPrices.push_back(bonds[i]->cleanPrice() / 100.0);
         modelYields.push_back(bonds[i]->yield(bonds[i]->cleanPrice(), ActualActual(), Continuous, NoFrequency));
         DLOG("bond " << securityIDs[i] << ", model clean price = " << modelPrices.back()
                      << ", yield (cont,actact) = " << modelYields.back() << ", NPV = " << bonds[i]->NPV());
