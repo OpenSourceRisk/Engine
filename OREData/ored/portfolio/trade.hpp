@@ -137,6 +137,8 @@ public:
 
     const Date& maturity() const { return maturity_; }
 
+    //! returns any additional datum.
+    template <typename T> T additionalDatum(const std::string& tag) const;
     //! returns all additional data returned by the trade once built
     const std::map<std::string,boost::any>& additionalData() const;
 
@@ -183,5 +185,15 @@ private:
     Envelope envelope_;
     TradeActions tradeActions_;
 };
+
+template <class T>
+inline T Trade::additionalDatum(const std::string& tag) const {
+    std::map<std::string,boost::any>::const_iterator value =
+        additionalData_.find(tag);
+    QL_REQUIRE(value != additionalData_.end(),
+               tag << " not provided");
+    return boost::any_cast<T>(value->second);
+}
+
 } // namespace data
 } // namespace ore

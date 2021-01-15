@@ -615,7 +615,7 @@ void OREApp::writeInitialReports() {
     if (params_->hasGroup("additionalResults") && params_->get("additionalResults", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("additionalResults", "outputFileName");
         CSVFileReport addResultReport(fileName);
-        getReportWriter()->writeAdditionalResultsReport(addResultReport, portfolio_);
+        getReportWriter()->writeAdditionalResultsReport(addResultReport, portfolio_, market_, params_->get("npv", "baseCurrency"));
         out_ << "OK" << endl;
     } else {
         LOG("skip additional results");
