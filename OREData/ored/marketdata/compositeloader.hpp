@@ -28,8 +28,15 @@ public:
         if (!a_)
             return b_->loadQuotes(d);
         data_.clear();
-        data_.insert(data_.end(), a_->loadQuotes(d).begin(), a_->loadQuotes(d).end());
-        data_.insert(data_.end(), b_->loadQuotes(d).begin(), b_->loadQuotes(d).end());
+        // loadQuotes() might throw if no quotes are avaiable in one loader, which is not an error here
+        try {
+            data_.insert(data_.end(), a_->loadQuotes(d).begin(), a_->loadQuotes(d).end());
+        } catch (...) {
+        }
+        try {
+            data_.insert(data_.end(), b_->loadQuotes(d).begin(), b_->loadQuotes(d).end());
+        } catch (...) {
+        }
         return data_;
     }
 
