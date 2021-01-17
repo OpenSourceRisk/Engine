@@ -159,8 +159,12 @@ public:
         Real kvaTheirPdFloor = 0.03,
         //! Our KVA CVA Risk Weight
         Real kvaOurCvaRiskWeight = 0.05,
-        //! Their KVA CVA Risk Weight,
-        Real kvaTheirCvaRiskWeight = 0.05);
+        //! Their KVA CVA Risk Weight
+        Real kvaTheirCvaRiskWeight = 0.05,
+        //! Postfixes for flipView borrowing and lending curves for fva
+        const string& flipViewBorrowingCurvePostfix = "_BORROW", 
+        const string& flipViewLendingCurvePostfix = "_LEND"
+        );
 
     //! Return list of Trade IDs in the portfolio
     const vector<string>& tradeIds() { return tradeIds_; }
@@ -353,6 +357,9 @@ private:
     Real kvaTheirPdFloor_;
     Real kvaOurCvaRiskWeight_;
     Real kvaTheirCvaRiskWeight_;
+    bool flipViewXVA_;
+    string flipViewBorrowingCurvePostfix_;
+    string flipViewLendingCurvePostfix_;
 };
 } // namespace analytics
 } // namespace ore
