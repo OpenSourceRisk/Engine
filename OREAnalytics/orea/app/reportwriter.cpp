@@ -31,12 +31,16 @@
 #include <ql/errors.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/instruments/cashflowresults.hpp>
+#include <boost/timer/timer.hpp>
 #include <stdio.h>
+#include <iostream>
 
 using ore::data::to_string;
 using QuantLib::Date;
 using std::string;
 using std::vector;
+
+using boost::timer::cpu_timer;
 
 namespace ore {
 namespace analytics {
@@ -60,6 +64,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("Notional(Base)", double(), 2)
         .addColumn("NettingSet", string())
         .addColumn("CounterParty", string());
+
+    cpu_timer timer;
+
     for (auto trade : portfolio->trades()) {
         try {
             string npvCcy = trade->npvCurrency();
@@ -68,7 +75,12 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
             if (trade->notionalCurrency() != "" && trade->notionalCurrency() != baseCurrency)
                 fxNotional = market->fxSpot(trade->notionalCurrency() + baseCurrency, configuration)->value();
+
+            timer.start();
             Real npv = trade->instrument()->NPV();
+            timer.stop();
+            cout << "timer_output,trade," << trade->id() << "," << timer.elapsed().wall * 1e-9 << endl;
+
             QL_REQUIRE(std::isfinite(npv), "npv is not finite (" << npv << ")");
             Date maturity = trade->maturity();
             report.next()
