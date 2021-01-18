@@ -70,6 +70,8 @@ public:
     virtual void writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                           const std::string& nettingSetId);
 
+    virtual void writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess);
+    
     virtual void writeNettingSetCvaSensitivities(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                           const std::string& nettingSetId);
 

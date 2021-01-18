@@ -436,7 +436,6 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
         .addColumn("PFE", double())
         .addColumn("BaselEE", double())
         .addColumn("BaselEEE", double());
-
     report.next()
         .add(tradeId)
         .add(today)
@@ -449,6 +448,7 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
         .add(ee_b[0])
         .add(eee_b[0]);
     for (Size j = 0; j < dates.size(); ++j) {
+        
         Time time = dc.yearFraction(today, dates[j]);
         report.next()
             .add(tradeId)
@@ -465,7 +465,7 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
     report.end();
 }
 
-void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+void addNettingSetExposure(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                             const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
@@ -476,15 +476,6 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
     const vector<Real>& eee_b = postProcess->netEEE_B(nettingSetId);
     const vector<Real>& pfe = postProcess->netPFE(nettingSetId);
     const vector<Real>& ecb = postProcess->expectedCollateral(nettingSetId);
-    report.addColumn("NettingSet", string())
-        .addColumn("Date", Date())
-        .addColumn("Time", double(), 6)
-        .addColumn("EPE", double(), 2)
-        .addColumn("ENE", double(), 2)
-        .addColumn("PFE", double(), 2)
-        .addColumn("ExpectedCollateral", double(), 2)
-        .addColumn("BaselEE", double(), 2)
-        .addColumn("BaselEEE", double(), 2);
 
     report.next()
         .add(nettingSetId)
@@ -508,6 +499,37 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
             .add(ecb[j + 1])
             .add(ee_b[j + 1])
             .add(eee_b[j + 1]);
+    }
+}
+
+void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                            const string& nettingSetId) {
+    report.addColumn("NettingSet", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 6)
+        .addColumn("EPE", double(), 2)
+        .addColumn("ENE", double(), 2)
+        .addColumn("PFE", double(), 2)
+        .addColumn("ExpectedCollateral", double(), 2)
+        .addColumn("BaselEE", double(), 2)
+        .addColumn("BaselEEE", double(), 2);
+    addNettingSetExposure(report, postProcess, nettingSetId);
+    report.end();
+}
+
+void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess) {
+    report.addColumn("NettingSet", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 6)
+        .addColumn("EPE", double(), 2)
+        .addColumn("ENE", double(), 2)
+        .addColumn("PFE", double(), 2)
+        .addColumn("ExpectedCollateral", double(), 2)
+        .addColumn("BaselEE", double(), 2)
+        .addColumn("BaselEEE", double(), 2);
+    
+    for (auto n : postProcess->nettingSetIds()) {
+        addNettingSetExposure(report, postProcess, n);
     }
     report.end();
 }
