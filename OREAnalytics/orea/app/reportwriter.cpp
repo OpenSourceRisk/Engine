@@ -869,7 +869,10 @@ void addYieldCurveCalibrationInfo(ore::data::Report& report, const std::string& 
     auto y = boost::dynamic_pointer_cast<FittedBondCurveCalibrationInfo>(info);
     if (y) {
         addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.fittingMethod", "", "", "", y->fittingMethod);
-        addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.solution", "", "", "", y->solution);
+        for (Size k = 0; k < y->solution.size(); ++k) {
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.solution", std::to_string(k), "", "",
+                               y->solution[k]);
+        }
         addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.iterations", "", "", "", y->iterations);
         addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.costValue", "", "", "", y->costValue);
         for (Size i = 0; i < y->securities.size(); ++i) {
