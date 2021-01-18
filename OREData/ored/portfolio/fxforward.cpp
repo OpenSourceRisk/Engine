@@ -107,12 +107,6 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     instrument_->qlInstrument()->setPricingEngine(fxBuilder->engine(boughtCcy, soldCcy));
 
-    // set additionalData
-    additionalData_["boughtAmount"] = boughtAmount_;
-    additionalData_["soldAmount"] = soldAmount_;
-    additionalData_["boughtCurrency"] = boughtCurrency_;
-    additionalData_["soldCurrency"] = soldCurrency_;
-    
     DLOG("FxForward leg 0: " << legs_[0][0]->date() << " " << legs_[0][0]->amount());
     DLOG("FxForward leg 1: " << legs_[1][0]->date() << " " << legs_[1][0]->amount());
 }
