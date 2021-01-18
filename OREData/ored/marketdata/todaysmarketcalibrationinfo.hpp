@@ -24,23 +24,42 @@
 #pragma once
 
 #include <ql/math/array.hpp>
+#include <ql/time/date.hpp>
+#include <ql/time/period.hpp>
 #include <ql/utilities/null.hpp>
 
 #include <map>
 #include <string>
+#include <vector>
 
 namespace ore {
 namespace data {
 
+// yield curves
+
 struct YieldCurveCalibrationInfo {
     virtual ~YieldCurveCalibrationInfo() {}
-    bool valid = false;
+
+    // default periods to determine pillarDates relative to asof
+    const static std::vector<QuantLib::Period> defaultPeriods;
+
+    std::string dayCounter;
+    std::string currency;
+
+    std::vector<QuantLib::Date> pillarDates;
+    std::vector<double> zeroRates;
+    std::vector<double> discountFactors;
+    std::vector<double> times;
+};
+
+struct PiecewiseYieldCurveCalibrationInfo : public YieldCurveCalibrationInfo {
+    // ... add instrument types?
 };
 
 struct FittedBondCurveCalibrationInfo : public YieldCurveCalibrationInfo {
     std::string fittingMethod;
     std::vector<double> solution;
-    int iterations;
+    int iterations = 0;
     double costValue = QuantLib::Null<QuantLib::Real>();
     double tolerance = QuantLib::Null<QuantLib::Real>();
     std::vector<std::string> securities;
@@ -50,11 +69,40 @@ struct FittedBondCurveCalibrationInfo : public YieldCurveCalibrationInfo {
     std::vector<double> modelYields;
 };
 
+// inflation curves
+
+struct InflationCurveCalibrationInfo {
+    virtual ~InflationCurveCalibrationInfo() {}
+    std::string dayCounter;
+    std::string calendar;
+    QuantLib::Date baseDate;
+    std::vector<QuantLib::Date> pillarDates;
+    std::vector<double> times;
+};
+
+struct ZeroInflationCurveCalibrationInfo : public InflationCurveCalibrationInfo {
+    double baseCpi = 0.0;
+    std::vector<double> zeroRates;
+    std::vector<double> forwardCpis;
+};
+
+struct YoYInflationCurveCalibrationInfo : public InflationCurveCalibrationInfo {
+    std::vector<double> yoyRates;
+};
+
+// ... add more curve types here
+
+// main container
+
 struct TodaysMarketCalibrationInfo {
-    // type for identifiers (market object name, configuration)
-    using MarketObjectIdentifier = std::pair<std::string, std::string>;
-    // fitted bond curve calibration info
-    std::map<MarketObjectIdentifier, boost::shared_ptr<YieldCurveCalibrationInfo>> yieldCurveCalibrationInfo;
+    QuantLib::Date asof;
+    // discount, index and yield curves
+    std::map<std::string, boost::shared_ptr<YieldCurveCalibrationInfo>> yieldCurveCalibrationInfo;
+    // equity dividend yield curves
+    std::map<std::string, boost::shared_ptr<YieldCurveCalibrationInfo>> dividendCurveCalibrationInfo;
+    // inflation curves
+    std::map<std::string, boost::shared_ptr<InflationCurveCalibrationInfo>> inflationCurveCalibrationInfo;
+    // ...
 };
 
 } // namespace data

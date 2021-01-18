@@ -61,6 +61,7 @@
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
+#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/wrappedmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>

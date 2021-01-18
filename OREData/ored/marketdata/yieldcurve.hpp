@@ -186,11 +186,6 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
 //! Helper function for parsing interpolation variable
 YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const string& s);
 
-//! function to return the pillar dates for a YieldTermStructure, will return an
-// empty vector if it does not have pillar dates.
-// Implemented here as it checks the subclass that was built by the above class
-vector<Date> pillarDates(const Handle<YieldTermStructure>& h);
-
 //! Templated function to build a YieldTermStructure and apply interpolation methods to it
 template <template <class> class CurveType>
 boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates,

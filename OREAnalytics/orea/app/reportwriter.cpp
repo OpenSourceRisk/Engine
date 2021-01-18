@@ -841,53 +841,112 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
 }
 
 namespace {
-void addRowToMktCalRep(ore::data::Report& report, const std::string& config, const std::string& id,
-                       const std::string& resultId, const std::string& resultKey, const boost::any value) {
+void addRowMktCalReport(ore::data::Report& report, const std::string& moType, const std::string& moId,
+                        const std::string& resId, const std::string& key1, const std::string& key2,
+                        const std::string& key3, const boost::any& value) {
     auto p = parseBoostAny(value);
-    report.next().add(config).add(id).add(resultId).add(resultKey).add(p.first).add(p.second);
+    report.next().add(moType).add(moId).add(resId).add(key1).add(key2).add(key3).add(p.first).add(p.second);
 }
+
+void addYieldCurveCalibrationInfo(ore::data::Report& report, const std::string& id,
+                                  boost::shared_ptr<YieldCurveCalibrationInfo> info) {
+
+    if (info == nullptr)
+        return;
+
+    // common results
+    addRowMktCalReport(report, "yieldCurve", id, "dayCounter", "", "", "", info->dayCounter);
+    addRowMktCalReport(report, "yieldCurve", id, "currency", "", "", "", info->currency);
+
+    for (Size i = 0; i < info->pillarDates.size(); ++i) {
+        std::string key1 = ore::data::to_string(info->pillarDates[i]);
+        addRowMktCalReport(report, "yieldCurve", id, "time", key1, "", "", info->times.at(i));
+        addRowMktCalReport(report, "yieldCurve", id, "zeroRate", key1, "", "", info->zeroRates.at(i));
+        addRowMktCalReport(report, "yieldCurve", id, "discountFactor", key1, "", "", info->discountFactors.at(i));
+    }
+
+    // fitted bond curve results
+    auto y = boost::dynamic_pointer_cast<FittedBondCurveCalibrationInfo>(info);
+    if (y) {
+        addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.fittingMethod", "", "", "", y->fittingMethod);
+        addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.solution", "", "", "", y->solution);
+        addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.iterations", "", "", "", y->iterations);
+        addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.costValue", "", "", "", y->costValue);
+        for (Size i = 0; i < y->securities.size(); ++i) {
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.marketPrice", y->securities.at(i), "", "",
+                               y->marketPrices.at(i));
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.modelPrice", y->securities.at(i), "", "",
+                               y->modelPrices.at(i));
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.marketYield", y->securities.at(i), "", "",
+                               y->marketYields.at(i));
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.modelYield", y->securities.at(i), "", "",
+                               y->modelYields.at(i));
+        }
+    }
+}
+
+void addInflationCurveCalibrationInfo(ore::data::Report& report, const std::string& id,
+                                      boost::shared_ptr<InflationCurveCalibrationInfo> info) {
+    if (info == nullptr)
+        return;
+
+    // common results
+    addRowMktCalReport(report, "inflationCurve", id, "dayCounter", "", "", "", info->dayCounter);
+    addRowMktCalReport(report, "inflationCurve", id, "calendar", "", "", "", info->calendar);
+    addRowMktCalReport(report, "inflationCurve", id, "baseDate", "", "", "", info->baseDate);
+
+    // zero inflation
+    auto z = boost::dynamic_pointer_cast<ZeroInflationCurveCalibrationInfo>(info);
+    if (z) {
+        addRowMktCalReport(report, "inflationCurve", id, "baseCpi", "", "", "", z->baseCpi);
+        for (Size i = 0; i < z->pillarDates.size(); ++i) {
+            std::string key1 = ore::data::to_string(z->pillarDates[i]);
+            addRowMktCalReport(report, "inflationCurve", id, "time", key1, "", "", z->times.at(i));
+            addRowMktCalReport(report, "inflationCurve", id, "zeroRate", key1, "", "", z->zeroRates.at(i));
+            addRowMktCalReport(report, "inflationCurve", id, "cpi", key1, "", "", z->forwardCpis.at(i));
+        }
+    }
+
+    // yoy inflation
+    auto y = boost::dynamic_pointer_cast<YoYInflationCurveCalibrationInfo>(info);
+    if (y) {
+        for (Size i = 0; i < y->pillarDates.size(); ++i) {
+            std::string key1 = ore::data::to_string(y->pillarDates[i]);
+            addRowMktCalReport(report, "inflationCurve", id, "time", key1, "", "", y->times.at(i));
+            addRowMktCalReport(report, "inflationCurve", id, "yoyRate", key1, "", "", y->yoyRates.at(i));
+        }
+    }
+}
+
 } // namespace
 
 void ReportWriter::writeTodaysMarketCalibrationReport(
     ore::data::Report& report, boost::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo) {
     LOG("Writing TodaysMarketCalibration report");
 
-    report.addColumn("Configuration", string())
-        .addColumn("MarketObject", string())
+    report.addColumn("MarketObjectType", string())
+        .addColumn("MarketObjectId", string())
         .addColumn("ResultId", string())
-        .addColumn("ResultKey", string())
+        .addColumn("ResultKey1", string())
+        .addColumn("ResultKey2", string())
+        .addColumn("ResultKey3", string())
         .addColumn("ResultType", string())
         .addColumn("ResultValue", string());
 
     // yield curve results
 
     for (auto const& r : calibrationInfo->yieldCurveCalibrationInfo) {
+        addYieldCurveCalibrationInfo(report, r.first, r.second);
+    }
 
-        if (!r.second->valid)
-            continue;
+    for (auto const& r : calibrationInfo->dividendCurveCalibrationInfo) {
+        addYieldCurveCalibrationInfo(report, r.first, r.second);
+    }
 
-        std::string config = r.first.second;
-        std::string id = r.first.first;
+    // inflation curve results
 
-        // fitted bond curve results
-
-        auto y = boost::dynamic_pointer_cast<FittedBondCurveCalibrationInfo>(r.second);
-        if (y) {
-            addRowToMktCalRep(report, config, id, "FittedBondCurve.FittingMethod", "", y->fittingMethod);
-            addRowToMktCalRep(report, config, id, "FittedBondCurve.Solution", "", y->solution);
-            addRowToMktCalRep(report, config, id, "FittedBondCurve.Iterations", "", y->iterations);
-            addRowToMktCalRep(report, config, id, "FittedBondCurve.CostValue", "", y->costValue);
-            for (Size i = 0; i < y->securities.size(); ++i) {
-                addRowToMktCalRep(report, config, id, "FittedBondCurve.MarketPrice", y->securities.at(i),
-                                  y->marketPrices.at(i));
-                addRowToMktCalRep(report, config, id, "FittedBondCurve.ModelPrice", y->securities.at(i),
-                                  y->modelPrices.at(i));
-                addRowToMktCalRep(report, config, id, "FittedBondCurve.MarketYield", y->securities.at(i),
-                                  y->marketYields.at(i));
-                addRowToMktCalRep(report, config, id, "FittedBondCurve.ModelYield", y->securities.at(i),
-                                  y->modelYields.at(i));
-            }
-        }
+    for (auto const& r : calibrationInfo->inflationCurveCalibrationInfo) {
+        addInflationCurveCalibrationInfo(report, r.first, r.second);
     }
 
     // ...

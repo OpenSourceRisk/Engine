@@ -64,6 +64,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -242,6 +243,23 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
         if (extrapolation_) {
             h_->enableExtrapolation();
         }
+
+        // populate shared calibration info
+
+        if (calibrationInfo_ == nullptr)
+            calibrationInfo_ = boost::make_shared<YieldCurveCalibrationInfo>();
+        calibrationInfo_->dayCounter = zeroDayCounter_.name();
+        calibrationInfo_->currency = currency_.code();
+        if (calibrationInfo_->pillarDates.empty()) {
+            for (auto const& p : YieldCurveCalibrationInfo::defaultPeriods)
+                calibrationInfo_->pillarDates.push_back(asofDate_ + p);
+        }
+        for (auto const& d : calibrationInfo_->pillarDates) {
+            calibrationInfo_->zeroRates.push_back(p_->zeroRate(d, zeroDayCounter_, Continuous));
+            calibrationInfo_->discountFactors.push_back(p_->discount(d));
+            calibrationInfo_->times.push_back(p_->timeFromReference(d));
+        }
+
     } catch (QuantLib::Error& e) {
         QL_FAIL("yield curve building failed for curve " << curveSpec_.curveConfigID() << " on date "
                                                          << io::iso_date(asof) << ": " << e.what());
@@ -439,6 +457,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             yieldts->enableExtrapolation();
         }
         for (Size i = 0; i < instruments.size(); i++) {
+            // FIXME should that be pillarDate() in general?
             dates[i + 1] = instruments[i]->latestDate();
             zeros[i + 1] = yieldts->zeroRate(dates[i + 1], zeroDayCounter_, Continuous);
             discounts[i + 1] = yieldts->discount(dates[i + 1]);
@@ -454,6 +473,12 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             p_ = forwardcurve(dates, forwards, zeroDayCounter_, interpolationMethod_);
         else
             QL_FAIL("Interpolation variable not recognised.");
+    }
+
+    // set calibration info
+    calibrationInfo_ = boost::make_shared<PiecewiseYieldCurveCalibrationInfo>();
+    for (Size i = 0; i < instruments.size(); ++i) {
+        calibrationInfo_->pillarDates.push_back(instruments[i]->pillarDate());
     }
 
     return p_;
@@ -838,6 +863,8 @@ void YieldCurve::buildFittedBondCurve() {
     // init calibration info for this curve
 
     auto calInfo = boost::make_shared<FittedBondCurveCalibrationInfo>();
+    calInfo->dayCounter = zeroDayCounter_.name();
+    calInfo->currency = currency_.code();
 
     // build vector of bond helpers
 
@@ -1055,7 +1082,6 @@ void YieldCurve::buildFittedBondCurve() {
     calInfo->costValue = minError;
     calInfo->solution = std::vector<double>(solution.begin(), solution.end());
     calInfo->iterations = static_cast<int>(tmp->fitResults().numberOfIterations());
-    calInfo->valid = true;
     calibrationInfo_ = calInfo;
 }
 
@@ -2089,48 +2115,6 @@ boost::shared_ptr<FXSpotQuote> YieldCurve::getFxSpotQuote(string spotId) {
     fxSpotQuote =
         boost::make_shared<FXSpotQuote>(spot->value(), asofDate_, spotId, MarketDatum::QuoteType::RATE, unitCcy, ccy);
     return fxSpotQuote;
-}
-
-// Get Pillar Dates
-// we have to try to cast and then call dates() on the subclasses, a bit messy
-template <class T> inline void getPillarDates(const boost::shared_ptr<YieldTermStructure>& p, vector<Date>& d) {
-    if (d.size() == 0) {
-        boost::shared_ptr<T> ptr = boost::dynamic_pointer_cast<T>(p);
-        if (ptr)
-            d = ptr->dates();
-    }
-}
-
-vector<Date> pillarDates(const Handle<YieldTermStructure>& h) {
-    const boost::shared_ptr<YieldTermStructure>& p = h.currentLink();
-    vector<Date> d;
-
-    getPillarDates<InterpolatedDiscountCurve<QuantLib::Linear>>(p, d);
-    getPillarDates<InterpolatedDiscountCurve<QuantLib::LogLinear>>(p, d);
-    getPillarDates<InterpolatedDiscountCurve<QuantLib::Cubic>>(p, d);
-    getPillarDates<InterpolatedDiscountCurve<QuantLib::ConvexMonotone>>(p, d);
-    getPillarDates<InterpolatedForwardCurve<QuantLib::Linear>>(p, d);
-    getPillarDates<InterpolatedForwardCurve<QuantLib::LogLinear>>(p, d);
-    getPillarDates<InterpolatedForwardCurve<QuantLib::Cubic>>(p, d);
-    getPillarDates<InterpolatedForwardCurve<QuantLib::ConvexMonotone>>(p, d);
-    getPillarDates<InterpolatedZeroCurve<QuantLib::Linear>>(p, d);
-    getPillarDates<InterpolatedZeroCurve<QuantLib::LogLinear>>(p, d);
-    getPillarDates<InterpolatedZeroCurve<QuantLib::Cubic>>(p, d);
-    getPillarDates<InterpolatedZeroCurve<QuantLib::ConvexMonotone>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<ZeroYield, QuantLib::Linear, QuantExt::IterativeBootstrap>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<ZeroYield, QuantLib::LogLinear, QuantExt::IterativeBootstrap>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<ZeroYield, ConvexMonotone, QuantExt::IterativeBootstrap>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, QuantLib::Linear, QuantExt::IterativeBootstrap>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, QuantLib::LogLinear, QuantExt::IterativeBootstrap>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, Cubic, QuantExt::IterativeBootstrap>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, ConvexMonotone, QuantExt::IterativeBootstrap>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::Linear, QuantExt::IterativeBootstrap>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::LogLinear, QuantExt::IterativeBootstrap>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, Cubic, QuantExt::IterativeBootstrap>>(p, d);
-    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, ConvexMonotone, QuantExt::IterativeBootstrap>>(p, d);
-
-    return d;
 }
 
 } // namespace data
