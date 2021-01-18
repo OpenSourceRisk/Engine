@@ -876,6 +876,8 @@ void addYieldCurveCalibrationInfo(ore::data::Report& report, const std::string& 
         addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.iterations", "", "", "", y->iterations);
         addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.costValue", "", "", "", y->costValue);
         for (Size i = 0; i < y->securities.size(); ++i) {
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.bondMaturity", y->securities.at(i), "", "",
+                               y->securityMaturityDates.at(i));
             addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.marketPrice", y->securities.at(i), "", "",
                                y->marketPrices.at(i));
             addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.modelPrice", y->securities.at(i), "", "",

@@ -873,6 +873,7 @@ void YieldCurve::buildFittedBondCurve() {
     std::vector<boost::shared_ptr<BondHelper>> helpers;
     std::vector<Real> marketPrices, marketYields;
     std::vector<std::string> securityIDs;
+    std::vector<Date> securityMaturityDates;
     Date lastMaturity = Date::minDate(), firstMaturity = Date::maxDate();
 
     // not really relevant, we just need a working engine configuration so that the bond can be built
@@ -932,6 +933,7 @@ void YieldCurve::buildFittedBondCurve() {
                 marketPrices.push_back(bondQuote->quote()->value());
                 securityIDs.push_back(securityID);
                 marketYields.push_back(marketYield);
+                securityMaturityDates.push_back(thisMaturity);
             } else {
                 DLOG("skipped bond " << securityID << " with settlement date "
                                      << QuantLib::io::iso_date(qlInstr->settlementDate()) << ", isTradable = "
@@ -941,6 +943,7 @@ void YieldCurve::buildFittedBondCurve() {
     }
 
     calInfo->securities = securityIDs;
+    calInfo->securityMaturityDates = securityMaturityDates;
     calInfo->marketPrices = marketPrices;
     calInfo->marketYields = marketYields;
 

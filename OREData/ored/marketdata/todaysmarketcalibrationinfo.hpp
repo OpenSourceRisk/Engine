@@ -63,6 +63,7 @@ struct FittedBondCurveCalibrationInfo : public YieldCurveCalibrationInfo {
     double costValue = QuantLib::Null<QuantLib::Real>();
     double tolerance = QuantLib::Null<QuantLib::Real>();
     std::vector<std::string> securities;
+    std::vector<QuantLib::Date> securityMaturityDates;
     std::vector<double> marketPrices;
     std::vector<double> modelPrices;
     std::vector<double> marketYields;
