@@ -91,8 +91,13 @@ public:
 
     virtual void writeAdditionalResultsReport(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio);
 
-    virtual void writeTodaysMarketCalibrationReport(ore::data::Report& report, boost::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo);
-    
+    virtual void writeAdditionalResultsReport(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
+                                        boost::shared_ptr<Market> market, const std::string& baseCurrency);
+
+    virtual void
+    writeTodaysMarketCalibrationReport(ore::data::Report& report,
+                                       boost::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo);
+
     const std::string& nullString() const { return nullString_; }
 
 protected:

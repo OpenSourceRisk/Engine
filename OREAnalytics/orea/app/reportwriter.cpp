@@ -779,7 +779,7 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     LOG("Sensitivity report finished");
 }
 
-void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_ptr<Portfolio> portfolio) {
+void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<Market> market, const std::string& baseCurrency) {
     
     LOG("Writing AdditionalResults report");
 
@@ -790,6 +790,46 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
 
     for (auto trade : portfolio->trades()) {
         
+        // we first add any additional trade data.
+        string tradeId = trade->id();
+        Real notional2 = Null<Real>();
+        string notional2Ccy = "";
+        // Get the additional data for the current instrument.
+        auto additionalData = trade->additionalData();
+        for (const auto& kv : additionalData) {
+            auto p = parseBoostAny(kv.second);
+            report.next()
+                .add(tradeId)
+                .add(kv.first)
+                .add(p.first)
+                .add(p.second);
+        }
+
+        // if the 'notionalTwo' has been provided convert it to base currency
+        if (additionalData.count("notionalTwo") != 0 && additionalData.count("notionalTwoCurrency") != 0) {
+            notional2 = trade->additionalDatum<Real>("notionalTwo");
+            notional2Ccy = trade->additionalDatum<string>("notionalTwoCurrency");
+        }
+
+        auto additionalResults = trade->instrument()->qlInstrument()->additionalResults();
+        if (additionalResults.count("notionalTwo") != 0 && additionalResults.count("notionalTwoCurrency") != 0) {
+            notional2 = trade->instrument()->qlInstrument()->result<Real>("notionalTwo");
+            notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalTwoCurrency"); 
+        }
+
+        if (notional2 != Null<Real>() && notional2Ccy != "") {
+            Real fx = 1.0;
+            if (notional2Ccy != baseCurrency)
+                fx = market->fxSpot(notional2Ccy + baseCurrency)->value();
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(8) << notional2 * fx;
+            report.next()
+                .add(tradeId)
+                .add("notionalTwoInBaseCurrency")
+                .add("double")
+                .add(oss.str());
+        }
+
         // Just use the unadjusted trade ID in the additional results report for the main instrument.
         // If we have one or more additional instruments, use "_i" as suffix where i = 1, 2, 3, ... for each 
         // additional instrument in turn and underscore as prefix to reduce risk of ID clash. We also add the 
@@ -811,7 +851,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
 
             // Trade ID suffix for additional instruments. Put underscores to reduce risk of clash with other IDs in 
             // the portfolio (still a risk).
-            string tradeId = i == 0 ? trade->id() : ("_" + trade->id() + "_" + to_string(i));
+            tradeId = i == 0 ? trade->id() : ("_" + trade->id() + "_" + to_string(i));
 
             // Get the additional results for the current instrument.
             auto additionalResults = instrument->additionalResults();
