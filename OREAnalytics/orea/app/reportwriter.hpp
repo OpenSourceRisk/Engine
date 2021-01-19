@@ -89,8 +89,6 @@ public:
     virtual void writeSensitivityReport(ore::data::Report& report, const boost::shared_ptr<SensitivityStream>& ss,
                                         QuantLib::Real outputThreshold = 0.0, QuantLib::Size outputPrecision = 2);
 
-    virtual void writeAdditionalResultsReport(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio);
-
     virtual void writeAdditionalResultsReport(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
                                         boost::shared_ptr<Market> market, const std::string& baseCurrency);
 
