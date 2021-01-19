@@ -2412,8 +2412,9 @@ void ScenarioSimMarket::reset() {
     filter_ = boost::make_shared<ScenarioFilter>();
     // reset eval date
     Settings::instance().evaluationDate() = baseScenario_->asof();
-    // reset numeraire
+    // reset numeraire and label
     numeraire_ = baseScenario_->getNumeraire();
+    label_ = baseScenario_->label();
     // delete the sim data cache
     cachedSimData_.clear();
     cachedSimDataActive_.clear();
@@ -2612,6 +2613,7 @@ void ScenarioSimMarket::updateScenario(const Date& d) {
     boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
     QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
     numeraire_ = scenario->getNumeraire();
+    label_ = scenario->label();
     applyScenario(scenario);
 }
 
