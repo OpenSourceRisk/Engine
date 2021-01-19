@@ -91,6 +91,7 @@
     <ClInclude Include="ored\marketdata\structuredcurveerror.hpp" />
     <ClInclude Include="ored\marketdata\swaptionvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarket.hpp" />
+    <ClInclude Include="ored\marketdata\todaysmarketcalibrationinfo.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarketparameters.hpp" />
     <ClInclude Include="ored\marketdata\wrappedmarket.hpp" />
     <ClInclude Include="ored\marketdata\yieldcurve.hpp" />
@@ -268,6 +269,7 @@
     <ClCompile Include="ored\marketdata\strike.cpp" />
     <ClCompile Include="ored\marketdata\swaptionvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\todaysmarket.cpp" />
+    <ClCompile Include="ored\marketdata\todaysmarketcalibrationinfo.cpp" />
     <ClCompile Include="ored\marketdata\todaysmarketparameters.cpp" />
     <ClCompile Include="ored\marketdata\wrappedmarket.cpp" />
     <ClCompile Include="ored\marketdata\yieldcurve.cpp" />
