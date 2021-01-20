@@ -198,7 +198,8 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
                                                 gearingDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
-    XMLUtils::addChild(doc, node, "LocalCapFloor", localCapFloor_);
+    if(localCapFloor_)
+        XMLUtils::addChild(doc, node, "LocalCapFloor", localCapFloor_);
     return node;
 }
 
