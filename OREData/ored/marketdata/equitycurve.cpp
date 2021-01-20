@@ -28,8 +28,8 @@
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
 
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/currencycheck.hpp>
+#include <ored/utilities/parsers.hpp>
 
 #include <algorithm>
 #include <regex>
@@ -147,8 +147,9 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 }
             }
 
-            if ((config->type() == EquityCurveConfig::Type::ForwardPrice || config->type() == EquityCurveConfig::Type::ForwardDividendPrice) && md->asofDate() == asof &&
-                md->instrumentType() == MarketDatum::InstrumentType::EQUITY_FWD &&
+            if ((config->type() == EquityCurveConfig::Type::ForwardPrice ||
+                 config->type() == EquityCurveConfig::Type::ForwardDividendPrice) &&
+                md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::EQUITY_FWD &&
                 md->quoteType() == MarketDatum::QuoteType::PRICE) {
 
                 boost::shared_ptr<EquityForwardQuote> q = boost::dynamic_pointer_cast<EquityForwardQuote>(md);
@@ -252,7 +253,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         EquityCurveConfig::Type buildCurveType = curveType_;
 
         // for curveType ForwardPrice or OptionPremium poputuate the terms_ and quotes_ with forward prices
-        if (curveType_ == EquityCurveConfig::Type::ForwardPrice || curveType_ == EquityCurveConfig::Type::ForwardDividendPrice) {
+        if (curveType_ == EquityCurveConfig::Type::ForwardPrice ||
+            curveType_ == EquityCurveConfig::Type::ForwardDividendPrice) {
 
             DLOG("Building Equity Dividend Yield curve from Forward/Future prices");
 
@@ -313,13 +315,17 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                                 putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
 
                                 // convert strike to major currency if quoted in minor
-                                Real callStrike = convertMinorToMajorCurrency(calls[i]->ccy(), callAbsoluteStrike->strike());
-                                Real putStrike = convertMinorToMajorCurrency(puts[j]->ccy(), putAbsoluteStrike->strike());
+                                Real callStrike =
+                                    convertMinorToMajorCurrency(calls[i]->ccy(), callAbsoluteStrike->strike());
+                                Real putStrike =
+                                    convertMinorToMajorCurrency(puts[j]->ccy(), putAbsoluteStrike->strike());
                                 callStrikes.push_back(callStrike);
                                 putStrikes.push_back(putStrike);
                                 // convert premium to major currency if quoted in minor
-                                callPremiums.push_back(convertMinorToMajorCurrency(calls[i]->ccy(), calls[i]->quote()->value()));
-                                putPremiums.push_back(convertMinorToMajorCurrency(puts[j]->ccy(), puts[j]->quote()->value()));
+                                callPremiums.push_back(
+                                    convertMinorToMajorCurrency(calls[i]->ccy(), calls[i]->quote()->value()));
+                                putPremiums.push_back(
+                                    convertMinorToMajorCurrency(puts[j]->ccy(), puts[j]->quote()->value()));
                             }
                         }
                     }
@@ -368,9 +374,9 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             DLOG("Building flat Equity Dividend Yield curve as no quotes provided");
             // Return a flat curve @ 0%
             dividendYieldTermStructure = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(asof, 0.0, dc_));
-            equityIndex_ = boost::make_shared<EquityIndex>(spec.curveConfigID(), calendar,
-                                                           parseCurrency(config->currency()), equitySpot,
-                                                           forecastYieldTermStructure, dividendYieldTermStructure);
+            equityIndex_ =
+                boost::make_shared<EquityIndex>(spec.curveConfigID(), calendar, parseCurrency(config->currency()),
+                                                equitySpot, forecastYieldTermStructure, dividendYieldTermStructure);
             return;
         } else
             QL_FAIL("Invalid Equity curve configuration type for " << spec_.name());
@@ -424,9 +430,22 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         }
         dividendYieldTermStructure = Handle<YieldTermStructure>(divCurve);
 
-        equityIndex_ = boost::make_shared<EquityIndex>(spec.curveConfigID(), calendar,
-                                                       parseCurrency(config->currency()), equitySpot,
-                                                       forecastYieldTermStructure, dividendYieldTermStructure);
+        equityIndex_ =
+            boost::make_shared<EquityIndex>(spec.curveConfigID(), calendar, parseCurrency(config->currency()),
+                                            equitySpot, forecastYieldTermStructure, dividendYieldTermStructure);
+
+        // set calibration info
+
+        calibrationInfo_ = boost::make_shared<YieldCurveCalibrationInfo>();
+        calibrationInfo_->dayCounter = dc_.name();
+        calibrationInfo_->currency = config->currency();
+        for (auto const& p : YieldCurveCalibrationInfo::defaultPeriods) {
+            Date d = asof + p;
+            calibrationInfo_->pillarDates.push_back(d);
+            calibrationInfo_->zeroRates.push_back(dividendYieldTermStructure->zeroRate(d, dc_, Continuous));
+            calibrationInfo_->discountFactors.push_back(dividendYieldTermStructure->discount(d));
+            calibrationInfo_->times.push_back(dividendYieldTermStructure->timeFromReference(d));
+        }
 
     } catch (std::exception& e) {
         QL_FAIL("equity curve building failed: " << e.what());

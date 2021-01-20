@@ -110,6 +110,7 @@ models/infjyparameterization.cpp
 models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
 models/lgm.cpp
+models/lgmcalibrationinfo.cpp
 models/lgmimplieddefaulttermstructure.cpp
 models/lgmimpliedyieldtermstructure.cpp
 models/linkablecalibratedmodel.cpp
@@ -406,6 +407,7 @@ models/irlgm1fpiecewiselinearparametrization.hpp
 models/jyimpliedyoyinflationtermstructure.hpp
 models/jyimpliedzeroinflationtermstructure.hpp
 models/lgm.hpp
+models/lgmcalibrationinfo.hpp
 models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
 models/linkablecalibratedmodel.hpp

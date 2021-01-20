@@ -80,6 +80,8 @@
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace ore::data;
@@ -91,7 +93,14 @@ namespace {
 // Utility function that is in catch blocks below
 void processException(bool continueOnError, const std::exception& e, const std::string& curveId) {
     if (continueOnError) {
-        ALOG(StructuredCurveErrorMessage(curveId, "skipping this object in scenario sim market", e.what()));
+        std::string exceptionMessage = e.what();
+        /* We do not log a structured curve error message, if the exception message indicates that the problem
+           already occured in the init market. In this case we have already logged a structured error there. */
+        if (boost::starts_with(exceptionMessage, "did not find object ")) {
+            ALOG("CurveID: " << curveId << ": skipping this object in scenario sim market: " << exceptionMessage);
+        } else {
+            ALOG(StructuredCurveErrorMessage(curveId, "skipping this object in scenario sim market", exceptionMessage));
+        }
     } else {
         QL_FAIL(e.what());
     }
@@ -2412,8 +2421,9 @@ void ScenarioSimMarket::reset() {
     filter_ = boost::make_shared<ScenarioFilter>();
     // reset eval date
     Settings::instance().evaluationDate() = baseScenario_->asof();
-    // reset numeraire
+    // reset numeraire and label
     numeraire_ = baseScenario_->getNumeraire();
+    label_ = baseScenario_->label();
     // delete the sim data cache
     cachedSimData_.clear();
     cachedSimDataActive_.clear();
@@ -2612,6 +2622,7 @@ void ScenarioSimMarket::updateScenario(const Date& d) {
     boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
     QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
     numeraire_ = scenario->getNumeraire();
+    label_ = scenario->label();
     applyScenario(scenario);
 }
 

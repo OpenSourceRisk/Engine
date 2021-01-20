@@ -153,6 +153,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         // base zero / yoy rate: if given, take it, otherwise set it to first quote
         Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
 
+        std::vector<Date> pillarDates;
+
         interpolatedIndex_ = conv->interpolated();
         boost::shared_ptr<YoYInflationIndex> zc_to_yoy_conversion_index;
         if (config->type() == InflationCurveConfig::Type::ZC || derive_yoy_from_zc) {
@@ -184,6 +186,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     index->clone(Handle<ZeroInflationTermStructure>(
                         boost::dynamic_pointer_cast<ZeroInflationTermStructure>(curve_))),
                     interpolatedIndex_);
+            } else {
             }
         }
         if (config->type() == InflationCurveConfig::Type::YY) {
@@ -229,6 +232,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                         maturity, conv->fixCalendar(), conv->fixConvention(), conv->dayCounter(), index, nominalTs);
                 instrument->unregisterWith(Settings::instance().evaluationDate());
                 instruments.push_back(instrument);
+                pillarDates.push_back(instrument->pillarDate());
             }
             // base zero rate: if given, take it, otherwise set it to first quote
             Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
@@ -243,6 +247,62 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         }
         curve_->enableExtrapolation(config->extrapolate());
         curve_->unregisterWith(Settings::instance().evaluationDate());
+
+        // set calibration info
+
+        if (pillarDates.empty()) {
+            // default: fill pillar dates with monthly schedule up to last term given in the curve config (but max 60y)
+            Date maturity = asof + terms.back();
+            for (Size i = 1; i < 60 * 12; ++i) {
+                Date current = inflationPeriod(curve_->baseDate() + i * Months, curve_->frequency()).first;
+                if (current + curve_->observationLag() <= maturity)
+                    pillarDates.push_back(current);
+                else
+                    break;
+            }
+        }
+
+        if (config->type() == InflationCurveConfig::Type::YY) {
+            auto yoyCurve = boost::dynamic_pointer_cast<YoYInflationCurve>(curve_);
+            QL_REQUIRE(yoyCurve, "internal error: expected YoYInflationCurve (inflation curve builder)");
+            auto calInfo = boost::make_shared<YoYInflationCurveCalibrationInfo>();
+            calInfo->dayCounter = config->dayCounter().name();
+            calInfo->calendar = config->calendar().empty() ? "null" : config->calendar().name();
+            calInfo->baseDate = curve_->baseDate();
+            for (Size i = 0; i < pillarDates.size(); ++i) {
+                calInfo->pillarDates.push_back(pillarDates[i]);
+                calInfo->yoyRates.push_back(yoyCurve->yoyRate(pillarDates[i], 0 * Days));
+                calInfo->times.push_back(yoyCurve->timeFromReference(pillarDates[i]));
+            }
+            calibrationInfo_ = calInfo;
+        }
+
+        if (config->type() == InflationCurveConfig::Type::ZC) {
+            auto zcCurve = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(curve_);
+            QL_REQUIRE(zcCurve, "internal error: expected ZeroInflationCurve (inflation curve builder)");
+            auto zcIndex = conv->index()->clone(Handle<ZeroInflationTermStructure>(zcCurve));
+            auto calInfo = boost::make_shared<ZeroInflationCurveCalibrationInfo>();
+            calInfo->dayCounter = config->dayCounter().name();
+            calInfo->calendar = config->calendar().empty() ? "null" : config->calendar().name();
+            calInfo->baseDate = curve_->baseDate();
+            auto lim = inflationPeriod(curve_->baseDate(), curve_->frequency());
+            try {
+                calInfo->baseCpi = conv->index()->fixing(lim.first);
+            } catch (...) {
+            }
+            for (Size i = 0; i < pillarDates.size(); ++i) {
+                calInfo->pillarDates.push_back(pillarDates[i]);
+                calInfo->zeroRates.push_back(zcCurve->zeroRate(pillarDates[i], 0 * Days));
+                calInfo->times.push_back(zcCurve->timeFromReference(pillarDates[i]));
+                Real cpi = 0.0;
+                try {
+                    cpi = zcIndex->fixing(pillarDates[i]);
+                } catch (...) {
+                }
+                calInfo->forwardCpis.push_back(cpi);
+            }
+            calibrationInfo_ = calInfo;
+        }
 
     } catch (std::exception& e) {
         QL_FAIL("inflation curve building failed: " << e.what());

@@ -75,7 +75,7 @@ public:
     //! build engine factory for a given market from an XML String
     boost::shared_ptr<ore::data::EngineFactory>
     buildEngineFactoryFromXMLString(const boost::shared_ptr<ore::data::Market>& market,
-                                    const std::string& pricingEngineXML);
+                                    const std::string& pricingEngineXML, const bool generateAdditionalResults = false);
 
 protected:
     //! read setup from params_
@@ -92,7 +92,8 @@ protected:
     void getReferenceData();
     //! build engine factory for a given market
     virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market,
-                                                                const string& groupName = "setup") const;
+                                                                const string& groupName = "setup",
+                                                                const bool generateAdditionalResults = false) const;
     //! build trade factory
     boost::shared_ptr<TradeFactory> buildTradeFactory() const;
     //! build portfolio for a given market
