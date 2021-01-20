@@ -68,7 +68,7 @@ Real BlackOvernightIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
         Real sigma = capletVolatility()->volatility(lastRelevantFixingDate, effStrike);
         Real stdDev = sigma * std::sqrt(std::max(fixingStartTime, 0.0) +
                                         std::pow(fixingEndTime - std::max(fixingStartTime, 0.0), 3.0) /
-                                            std::pow(fixingEndTime - fixingStartTime, 2.0));
+                                            std::pow(fixingEndTime - fixingStartTime, 2.0) / 3.0);
         Real shift = capletVolatility()->displacement();
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
         Rate fixing = shiftedLn ? blackFormula(optionType, effStrike, effectiveIndexFixing_, stdDev, 1.0, shift)
@@ -88,7 +88,6 @@ Real cappedFlooredRate(Real r, Option::Type optionType, Real k) {
 } // namespace
 
 Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionType, Real effStrike) const {
-
     // We compuate a rate and a rawRate such that
     // rate * tau * nominal is the amount of the coupon with locally (i.e. daily) capped / floored rates
     // rawRate * tau * nominal is the amount of the coupon without capping / flooring the rate
@@ -173,13 +172,14 @@ Real BlackOvernightIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
             endDiscount *= std::pow(discountCutoffDate, dates[n] - dates[nCutoff]);
         }
 
-        // compute the average simple rate over the future period
+        // estimate the average daily rate over the future period (approximate the continously compounded rate)
         Real tau = coupon_->dayCounter().yearFraction(dates[i], dates.back());
-        Real averageRate = (startDiscount / endDiscount - 1.0) / tau;
+        Real averageRate = -std::log(endDiscount / startDiscount) / tau;
 
         // compute the value of a cap or floor with fixing in the middle of the future period
+        // (but accounting for the rate cutoff here)
         Time midPoint =
-            (capletVolatility()->timeFromReference(dates[i]) + capletVolatility()->timeFromReference(dates.back())) /
+            (capletVolatility()->timeFromReference(dates[i]) + capletVolatility()->timeFromReference(dates[nCutoff])) /
             2.0;
         Real stdDev = capletVolatility()->volatility(midPoint, effStrike) * std::sqrt(midPoint);
         Real shift = capletVolatility()->displacement();

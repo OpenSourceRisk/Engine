@@ -30,6 +30,9 @@ namespace QuantExt {
 using namespace QuantLib;
 
 //! Black overnight coupon pricer
+/* The methods that are implemented here to price capped / floored compounded ON coupons are
+   highly experimental and ad-hoc. As soon as a market best practice has evolved, the pricer
+   should be revised. */
 class BlackOvernightIndexedCouponPricer : public CappedFlooredOvernightIndexedCouponPricer {
 public:
     using CappedFlooredOvernightIndexedCouponPricer::CappedFlooredOvernightIndexedCouponPricer;

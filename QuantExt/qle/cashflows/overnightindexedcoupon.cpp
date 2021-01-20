@@ -332,7 +332,7 @@ Rate CappedFlooredOvernightIndexedCoupon::rate() const {
         floorletRate = pricer()->floorletRate(effectiveFloor());
     Rate capletRate = 0.;
     if (cap_ != Null<Real>())
-        capletRate = pricer()->capletRate(effectiveCap());
+        capletRate = (nakedOption_ && floor_ == Null<Real>() ? -1.0 : 1.0) * pricer()->capletRate(effectiveCap());
     return swapletRate + floorletRate - capletRate;
 }
 
