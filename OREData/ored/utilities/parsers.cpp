@@ -1000,6 +1000,26 @@ AssetClass parseAssetClass(const std::string& s) {
     }
 }
 
+
+std::ostream& operator<<(std::ostream& os, AssetClass a) {
+    switch (a) {
+    case AssetClass::EQ:
+        return os << "EQ";
+    case AssetClass::FX:
+        return os << "FX";
+    case AssetClass::COM:
+        return os << "COM";
+    case AssetClass::IR:
+        return os << "IR";
+    case AssetClass::INF:
+        return os << "INF";
+    case AssetClass::CR:
+        return os << "CR";
+    default:
+        QL_FAIL("Unknown AssetClass");
+    }
+}
+
 DeltaVolQuote::AtmType parseAtmType(const std::string& s) {
     static map<string, DeltaVolQuote::AtmType> m = {{"AtmNull", DeltaVolQuote::AtmNull},
                                                     {"AtmSpot", DeltaVolQuote::AtmSpot},
