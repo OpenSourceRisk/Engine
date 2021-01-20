@@ -33,20 +33,21 @@ using namespace QuantLib;
 class BlackOvernightIndexedCouponPricer : public CappedFlooredOvernightIndexedCouponPricer {
 public:
     using CappedFlooredOvernightIndexedCouponPricer::CappedFlooredOvernightIndexedCouponPricer;
-    virtual void initialize(const FloatingRateCoupon& coupon);
-    Real swapletPrice() const;
-    Rate swapletRate() const;
-    Real capletPrice(Rate effectiveCap) const;
-    Rate capletRate(Rate effectiveCap) const;
-    Real floorletPrice(Rate effectiveFloor) const;
-    Rate floorletRate(Rate effectiveFloor) const;
+    void initialize(const FloatingRateCoupon& coupon) override;
+    Real swapletPrice() const override;
+    Rate swapletRate() const override;
+    Real capletPrice(Rate effectiveCap) const override;
+    Rate capletRate(Rate effectiveCap) const override;
+    Real floorletPrice(Rate effectiveFloor) const override;
+    Rate floorletRate(Rate effectiveFloor) const override;
 
-protected:
-    Real optionletRate(Option::Type optionType, Real effStrike) const;
+private:
+    Real optionletRateGlobal(Option::Type optionType, Real effStrike) const;
+    Real optionletRateLocal(Option::Type optionType, Real effStrike) const;
 
     Real gearing_;
     ext::shared_ptr<IborIndex> index_;
-    Real effectiveIndexFixing_, swapletRate_, fixedAccrualPeriodRatio_;
+    Real effectiveIndexFixing_, swapletRate_;
 
     const CappedFlooredOvernightIndexedCoupon* coupon_;
 };
