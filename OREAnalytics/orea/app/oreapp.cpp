@@ -617,7 +617,25 @@ void OREApp::writeInitialReports() {
     if (params_->hasGroup("additionalResults") && params_->get("additionalResults", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("additionalResults", "outputFileName");
         CSVFileReport addResultReport(fileName);
-        getReportWriter()->writeAdditionalResultsReport(addResultReport, portfolio_);
+        getReportWriter()->writeAdditionalResultsReport(addResultReport, portfolio_, market_, params_->get("npv", "baseCurrency"));
+        out_ << "OK" << endl;
+    } else {
+        LOG("skip additional results");
+        out_ << "SKIP" << endl;
+    }
+
+    /*********************
+     * TodaysMarket calibration
+     */
+    out_ << setw(tab_) << left << "TodaysMarket Calibration... " << flush;
+    if (params_->hasGroup("todaysMarketCalibration") && params_->get("todaysMarketCalibration", "active") == "Y") {
+        string fileName = outputPath_ + "/" + params_->get("todaysMarketCalibration", "outputFileName");
+        CSVFileReport todaysMarketCalibrationReport(fileName);
+        auto todaysMarket = boost::dynamic_pointer_cast<TodaysMarket>(market_);
+        if(todaysMarket) {
+            getReportWriter()->writeTodaysMarketCalibrationReport(todaysMarketCalibrationReport,
+                                                                  todaysMarket->calibrationInfo());
+        }
         out_ << "OK" << endl;
     } else {
         LOG("skip additional results");

@@ -30,6 +30,7 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 
 namespace ore {
@@ -57,10 +58,13 @@ public:
 
     const bool interpolatedIndex() const { return interpolatedIndex_; }
 
+    boost::shared_ptr<InflationCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
+
 private:
     InflationCurveSpec spec_;
     boost::shared_ptr<InflationTermStructure> curve_;
     bool interpolatedIndex_;
+    boost::shared_ptr<InflationCurveCalibrationInfo> calibrationInfo_;
 };
 } // namespace data
 } // namespace ore

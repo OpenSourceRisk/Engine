@@ -49,6 +49,7 @@ marketdata/security.cpp
 marketdata/strike.cpp
 marketdata/swaptionvolcurve.cpp
 marketdata/todaysmarket.cpp
+marketdata/todaysmarketcalibrationinfo.cpp
 marketdata/todaysmarketparameters.cpp
 marketdata/wrappedmarket.cpp
 marketdata/yieldcurve.cpp
@@ -207,6 +208,7 @@ marketdata/strike.hpp
 marketdata/structuredcurveerror.hpp
 marketdata/swaptionvolcurve.hpp
 marketdata/todaysmarket.hpp
+marketdata/todaysmarketcalibrationinfo.hpp
 marketdata/todaysmarketparameters.hpp
 marketdata/wrappedmarket.hpp
 marketdata/yieldcurve.hpp

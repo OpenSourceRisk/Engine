@@ -28,6 +28,7 @@
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketimpl.hpp>
+#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
@@ -98,6 +99,8 @@ public:
         //! If true, preserve link to loader quotes, this might heavily interfere with XVA simulations!
         const bool preserveQuoteLinkage = false);
 
+    boost::shared_ptr<TodaysMarketCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
+
 private:
     // MarketImpl interface
     void require(const MarketObject o, const string& name, const string& configuration) const override;
@@ -148,6 +151,9 @@ private:
     // fx triangulation initially built using all fx spot quotes from the loader; this is provided to
     // curve builders that require fx spots (e.g. xccy discount curves)
     mutable FXTriangulation fxT_;
+
+    // calibration results
+    boost::shared_ptr<TodaysMarketCalibrationInfo> calibrationInfo_;
 
     // cached market objects, the key of the maps is the curve spec name, except for swap indices, see below
     mutable map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
