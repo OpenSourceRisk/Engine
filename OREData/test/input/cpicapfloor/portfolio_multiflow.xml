@@ -213,10 +213,10 @@
 	</CPILegData>
       </LegData>
       <Caps>
-	<Cap>0.03</Cap>
-      <FinalFlowCap>0.03</FinalFlowCap>
+	    <Cap>0.03</Cap>
       </Caps>
+      <FinalFlowCap>0.03</FinalFlowCap>
     </CapFloorData>
   </Trade>
-  
+
 </Portfolio>
