@@ -214,7 +214,8 @@ CPILeg::CPILeg(const Schedule& schedule, const ext::shared_ptr<ZeroInflationInde
     : schedule_(schedule), index_(index), baseCPI_(baseCPI), observationLag_(observationLag),
       paymentDayCounter_(Thirty360()), paymentAdjustment_(ModifiedFollowing), paymentCalendar_(schedule.calendar()),
       fixingDays_(std::vector<Natural>(1, 0)), observationInterpolation_(CPI::AsIndex), subtractInflationNominal_(true),
-      spreads_(std::vector<Real>(1, 0)), startDate_(schedule_.dates().front()) {
+      spreads_(std::vector<Real>(1, 0)), finalFlowCap_(Null<Real>()), finalFlowFloor_(Null<Real>()),
+      startDate_(schedule_.dates().front()) {
     QL_REQUIRE(schedule_.dates().size() > 0, "empty schedule passed to CPILeg");
 }
 
@@ -295,6 +296,16 @@ CPILeg& CPILeg::withCaps(const std::vector<Rate>& caps) {
 
 CPILeg& CPILeg::withFloors(Rate floor) {
     floors_ = std::vector<Rate>(1, floor);
+    return *this;
+}
+
+CPILeg& CPILeg::withFinalFlowCap(Rate cap) {
+    finalFlowCap_ = cap;
+    return *this;
+}
+
+CPILeg& CPILeg::withFinalFlowFloor(Rate floor) {
+    finalFlowFloor_ = floor;
     return *this;
 }
 
@@ -385,12 +396,11 @@ CPILeg::operator Leg() const {
         detail::get(notionals_, n, 0.0), index_, startDate_ - observationLag_, baseCPI_, fixingDate, paymentDate,
         subtractInflationNominal_, observationInterpolation_, index_->frequency());
 
-    if (caps_.size() == 0 && floors_.size() == 0) {
+    if (finalFlowCap_ == Null<Real>() && finalFlowFloor_ == Null<Real>()) {
         leg.push_back(xnl);
     } else {
         ext::shared_ptr<CappedFlooredCPICashFlow> cfxnl = ext::make_shared<CappedFlooredCPICashFlow>(
-            xnl, startDate_, observationLag_, detail::get(caps_, n, Null<Rate>()),
-            detail::get(floors_, n, Null<Rate>()));
+            xnl, startDate_, observationLag_, finalFlowCap_, finalFlowFloor_);
         leg.push_back(cfxnl);
     }
 
