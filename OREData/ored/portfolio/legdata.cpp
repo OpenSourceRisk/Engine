@@ -172,6 +172,11 @@ void FloatingLegData::fromXML(XMLNode* node) {
         nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
     else
         nakedOption_ = false;
+
+    if (XMLUtils::getChildNode(node, "LocalCapFloor"))
+        localCapFloor_ = XMLUtils::getChildValueAsBool(node, "LocalCapFloor", false);
+    else
+        localCapFloor_ = false;
 }
 
 XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
@@ -193,6 +198,8 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
                                                 gearingDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
+    if(localCapFloor_)
+        XMLUtils::addChild(doc, node, "LocalCapFloor", localCapFloor_);
     return node;
 }
 
@@ -990,7 +997,8 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                                                                      Null<Real>()))
                       .withFloors(buildScheduledVectorNormalised<Real>(floatData->floors(), floatData->capDates(),
                                                                        schedule, Null<Real>()))
-                      .withNakedOption(floatData->nakedOption());
+                      .withNakedOption(floatData->nakedOption())
+                      .withLocalCapFloor(floatData->localCapFloor());
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(index);
