@@ -1149,13 +1149,15 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
                                                ? conventions_.get(indexName)
                                                : nullptr);
                 }
-                depositHelper = boost::make_shared<DepositRateHelper>(hQuote, index);
+                depositHelper = boost::make_shared<DepositRateHelper>(
+                    hQuote, depositTerm, fwdStartDays, index->fixingCalendar(), index->businessDayConvention(),
+                    index->endOfMonth(), index->dayCounter());
             } else {
                 QL_REQUIRE(fwdStart.units() == Days, "The forward start time unit for deposits "
                                                      "must be expressed in days.");
-                depositHelper.reset(new DepositRateHelper(
+                depositHelper = boost::make_shared<DepositRateHelper>(
                     hQuote, depositTerm, fwdStartDays, depositConvention->calendar(), depositConvention->convention(),
-                    depositConvention->eom(), depositConvention->dayCounter()));
+                    depositConvention->eom(), depositConvention->dayCounter());
             }
             instruments.push_back(depositHelper);
         }
