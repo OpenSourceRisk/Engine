@@ -351,7 +351,7 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     for (Size i = 0; i < helpers.size(); ++i) {
         if (helpers[i]->latestDate() > asof) {
 
-            Date pillarDate = helpers[i]->latestDate();
+            Date pillarDate = helpers[i]->pillarDate();
             Probability sp = tmp->survivalProbability(pillarDate);
 
             // In some cases the bootstrapped survival probability at one tenor will be `close` to that at a previous

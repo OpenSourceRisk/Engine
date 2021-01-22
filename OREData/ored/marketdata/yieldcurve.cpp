@@ -461,8 +461,7 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
             yieldts->enableExtrapolation();
         }
         for (Size i = 0; i < instruments.size(); i++) {
-            // FIXME should that be pillarDate() in general?
-            dates[i + 1] = instruments[i]->latestDate();
+            dates[i + 1] = instruments[i]->pillarDate();
             zeros[i + 1] = yieldts->zeroRate(dates[i + 1], zeroDayCounter_, Continuous);
             discounts[i + 1] = yieldts->discount(dates[i + 1]);
             forwards[i + 1] = yieldts->forwardRate(dates[i + 1], dates[i + 1], zeroDayCounter_, Continuous);
