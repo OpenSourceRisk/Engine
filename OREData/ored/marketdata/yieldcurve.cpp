@@ -276,7 +276,11 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
 }
 
 boost::shared_ptr<YieldTermStructure>
-YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instruments) {
+YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
+
+    // Ensure that the instruments are sorted. This is done in IterativeBootstrap, but we need
+    // a sorted instruments vector in the code here as well.
+    std::sort(instruments.begin(), instruments.end(), QuantLib::detail::BootstrapHelperSorter());
 
     // Get configuration values for bootstrap
     Real accuracy = curveConfig_->bootstrapConfig().accuracy();

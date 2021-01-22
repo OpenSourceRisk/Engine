@@ -319,6 +319,10 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
         }
     }
 
+    // Ensure that the helpers are sorted. This is done in IterativeBootstrap, but we need
+    // a sorted instruments vector in the code here as well.
+    std::sort(helpers.begin(), helpers.end(), QuantLib::detail::BootstrapHelperSorter());
+
     // Get configuration values for bootstrap
     Real accuracy = config.bootstrapConfig().accuracy();
     Real globalAccuracy = config.bootstrapConfig().globalAccuracy();
