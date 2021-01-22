@@ -140,7 +140,7 @@ void EquityForwardCurveStripper::performCalculations() const {
                 if (it_lower == strikes.end())
                     it_lower = std::prev(it_lower);
                 amerStrikes[1] = *it_lower;
-                amerStrikes[0] = *it_lower ? it_lower == strikes.begin() : *std::prev(it_lower);
+                amerStrikes[0] = (it_lower == strikes.begin()) ? *it_lower  : *std::prev(it_lower);
 
                 // for American options we first get the implied vol from the American premiums
                 // we use these to construct the European prices in order to apply put call parity
