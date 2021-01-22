@@ -1124,6 +1124,9 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
             Natural fwdStartDays = static_cast<Natural>(fwdStart.length());
             Handle<Quote> hQuote(depositQuote->quote());
 
+            QL_REQUIRE(fwdStart.units() == Days, "The forward start time unit for deposits "
+                                                 "must be expressed in days.");
+
             if (depositConvention->indexBased()) {
                 // indexName will have the form ccy-name so examples would be:
                 // EUR-EONIA, USD-FedFunds, EUR-EURIBOR, USD-LIBOR, etc.
@@ -1153,8 +1156,6 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
                     hQuote, depositTerm, fwdStartDays, index->fixingCalendar(), index->businessDayConvention(),
                     index->endOfMonth(), index->dayCounter());
             } else {
-                QL_REQUIRE(fwdStart.units() == Days, "The forward start time unit for deposits "
-                                                     "must be expressed in days.");
                 depositHelper = boost::make_shared<DepositRateHelper>(
                     hQuote, depositTerm, fwdStartDays, depositConvention->calendar(), depositConvention->convention(),
                     depositConvention->eom(), depositConvention->dayCounter());
