@@ -181,7 +181,7 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
     XMLUtils::addChild(doc, node, "IborIndex", iborIndex_);
     XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
-    XMLUtils::addGenericChildAsList(doc, node, "Tenors", atmTenors_);
+    XMLUtils::addGenericChildAsList(doc, node, "AtmTenors", atmTenors_);
     XMLUtils::addChild(doc, node, "SettlementDays", static_cast<int>(settleDays_));
     XMLUtils::addChild(doc, node, "InterpolateOn", interpolateOn_);
     XMLUtils::addChild(doc, node, "TimeInterpolation", timeInterpolation_);

@@ -159,6 +159,7 @@
 	  <Caps>
 	    <Cap>0.03</Cap>
 	  </Caps>
+      <FinalFlowCap>0.03</FinalFlowCap>
         </CPILegData>
       </LegData>
     </SwapData>
@@ -212,9 +213,9 @@
 	</CPILegData>
       </LegData>
       <Caps>
-	<Cap>0.03</Cap>
+	    <Cap>0.03</Cap>
       </Caps>
     </CapFloorData>
   </Trade>
-  
+
 </Portfolio>
