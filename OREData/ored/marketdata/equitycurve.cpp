@@ -292,10 +292,13 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
                 // Split the quotes into call and puts
                 for (auto q : oqt) {
-                    if (q->isCall()) {
-                        calls.push_back(q);
-                    } else {
-                        puts.push_back(q);
+                    if (q->quote()->value() > 0) {
+                        if (q->isCall()) {
+                            calls.push_back(q);
+                        }
+                        else {
+                            puts.push_back(q);
+                        }
                     }
                 }
 
@@ -331,25 +334,29 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                     }
                 }
 
-                QL_REQUIRE(callDates.size() > 0 && putDates.size() > 0,
-                           "Must provide valid overlapping call and put quotes");
-                DLOG("Found " << callDates.size() << " Call and Put Option Volatilities");
+                if (callDates.size() > 0 && putDates.size() > 0) {                    
+                        DLOG("Found " << callDates.size() << " Call and Put Option Volatilities");
 
-                DLOG("Building a Sparce Volatility surface for calls and puts");
-                // Build a Black Variance Sparse matrix
-                boost::shared_ptr<OptionPriceSurface> callSurface =
-                    boost::make_shared<OptionPriceSurface>(asof, callDates, callStrikes, callPremiums, dc_);
-                boost::shared_ptr<OptionPriceSurface> putSurface =
-                    boost::make_shared<OptionPriceSurface>(asof, putDates, putStrikes, putPremiums, dc_);
-                DLOG("CallSurface contains " << callSurface->expiries().size() << " expiries.");
+                        DLOG("Building a Sparce Volatility surface for calls and puts");
+                        // Build a Black Variance Sparse matrix
+                        boost::shared_ptr<OptionPriceSurface> callSurface =
+                            boost::make_shared<OptionPriceSurface>(asof, callDates, callStrikes, callPremiums, dc_);
+                        boost::shared_ptr<OptionPriceSurface> putSurface =
+                            boost::make_shared<OptionPriceSurface>(asof, putDates, putStrikes, putPremiums, dc_);
+                        DLOG("CallSurface contains " << callSurface->expiries().size() << " expiries.");
 
-                DLOG("Stripping equity forwards from the option premium surfaces");
-                boost::shared_ptr<EquityForwardCurveStripper> efcs = boost::make_shared<EquityForwardCurveStripper>(
-                    callSurface, putSurface, forecastYieldTermStructure, equitySpot, config->exerciseStyle());
+                        DLOG("Stripping equity forwards from the option premium surfaces");
+                        boost::shared_ptr<EquityForwardCurveStripper> efcs = boost::make_shared<EquityForwardCurveStripper>(
+                            callSurface, putSurface, forecastYieldTermStructure, equitySpot, config->exerciseStyle());
 
-                // set terms and quotes from the stripper
-                terms_ = efcs->expiries();
-                quotes_ = efcs->forwards();
+                        // set terms and quotes from the stripper
+                        terms_ = efcs->expiries();
+                        quotes_ = efcs->forwards();
+                }
+                else {
+                    DLOG("No overlapping call and put quotes for equity " << spec.curveConfigID() << " building NoDividends curve");
+                    buildCurveType = EquityCurveConfig::Type::NoDividends;
+                }
             }
         }
 
