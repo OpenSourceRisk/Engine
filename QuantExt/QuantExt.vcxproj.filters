@@ -1035,6 +1035,9 @@
     <ClInclude Include="qle\models\annuitymapping.hpp">
       <Filter>models</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\cnyrepofix.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

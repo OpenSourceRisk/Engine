@@ -175,6 +175,11 @@ static struct test_data index_data[] = {
     {"CAD-BA-1Y", "CDOR1Y Actual/365 (Fixed)", 1 * Years},
 
     {"CNY-SHIBOR-3M", "Shibor3M Actual/360", 3 * Months},
+    {"CNY-REPOFIX-1D", "CNY-REPOFIXTN Actual/365 (Fixed)", 1 * Days},
+    {"CNY-REPOFIX-7D", "CNY-REPOFIX1W Actual/365 (Fixed)", 1 * Weeks},
+    {"CNY-REPOFIX-1W", "CNY-REPOFIX1W Actual/365 (Fixed)", 1 * Weeks},
+    {"CNY-REPOFIX-14D", "CNY-REPOFIX2W Actual/365 (Fixed)", 2 * Weeks},
+    {"CNY-REPOFIX-2W", "CNY-REPOFIX2W Actual/365 (Fixed)", 2 * Weeks},
 
     {"CZK-PRIBOR-6M", "CZK-PRIBOR6M Actual/360", 6 * Months},
 
@@ -296,6 +301,10 @@ static struct test_data index_data[] = {
     {"IDR-IDRFIX-6M", "IDR-IDRFIX6M Actual/360", 6 * Months},
     {"INR-MIFOR-6M", "INR-MIFOR6M Actual/365 (Fixed)", 6 * Months},
     {"MXN-TIIE-6M", "MXN-TIIE6M Actual/360", 6 * Months},
+    {"MXN-TIIE-28D", "MXN-TIIE4W Actual/360", 4 * Weeks},
+    {"MXN-TIIE-4W", "MXN-TIIE4W Actual/360", 4 * Weeks},
+    {"MXN-TIIE-91D", "MXN-TIIE3M Actual/360", 3 * Months},
+    {"MXN-TIIE-3M", "MXN-TIIE3M Actual/360", 3 * Months},
     {"PLN-WIBOR-6M", "PLN-WIBOR6M Actual/365 (Fixed)", 6 * Months},
     {"SKK-BRIBOR-6M", "SKK-BRIBOR6M Actual/360", 6 * Months},
     {"THB-THBFIX-6M", "THBFIX6M Actual/365 (Fixed)", 6 * Months},
@@ -313,6 +322,8 @@ static struct test_data index_data[] = {
     {"KRW-KORIBOR-4M", "KRW-KORIBOR4M Actual/365 (Fixed)", 4 * Months},
     {"KRW-KORIBOR-5M", "KRW-KORIBOR5M Actual/365 (Fixed)", 5 * Months},
     {"KRW-KORIBOR-6M", "KRW-KORIBOR6M Actual/365 (Fixed)", 6 * Months},
+    {"KRW-CD-91D", "KRW-CD3M Actual/365 (Fixed)", 3 * Months},
+    {"KRW-CD-3M", "KRW-CD3M Actual/365 (Fixed)", 3 * Months},
 
     {"TWD-TAIBOR-1M", "TWD-TAIBOR1M Actual/365 (Fixed)", 1 * Months},
     {"TWD-TAIBOR-2M", "TWD-TAIBOR2M Actual/365 (Fixed)", 2 * Months},
