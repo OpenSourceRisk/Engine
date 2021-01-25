@@ -692,6 +692,36 @@ in the convention input file.
 
 Also notice that customised indices can not be used in cap / floor volatility surface configurations.
 
+\subsubsection{Inflation Index Conventions}
+A node with the name \lstinline!ZeroInflationIndex! is used to store data for the creation of a new inflation index. This avoids having to add the index definition to the C++ code and recompile. Note that the \lstinline!ZeroInflationIndex! node should be placed before its use in any other convention, e.g.\ in an \lstinline!InflationSwap! convention, to avoid an error due to the new index itself not being created. If the \lstinline!Id! node matches an existing inflation index, the newly created index will take precedence and its defintion will be used in the code for the given \lstinline!Id!.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<ZeroInflationIndex>
+  <Id>...</Id>
+  <RegionName>...</RegionName>
+  <RegionCode>...</RegionCode>
+  <Revised>...</Revised>
+  <Frequency>...</Frequency>
+  <AvailabilityLag>...</AvailabilityLag>
+  <Currency>...</Currency>
+</ZeroInflationIndex>
+\end{minted}
+\caption{\emph{ZeroInflationIndex} node}
+\label{lst:zero_inflation_index_conventions}
+\end{listing}
+
+The meaning of each element is as follows:
+\begin{itemize}
+\item \lstinline!Id!: The new inflation index name.
+\item \lstinline!RegionName!: The name of the region with which the inflation index is associated.
+\item \lstinline!RegionCode!: A code for the region with which the inflation index is associated.
+\item \lstinline!Revised!: A boolean flag indicating whether the index is a revised index or not. This is generally set to \lstinline!false! but is left as an option to align with the C++ \lstinline!InflationIndex! class definition.
+\item \lstinline!Frequency!: A valid frequency indicating the publication frequency of the inflation index, generally \lstinline!Monthly!, \lstinline!Quarterly! or \lstinline!Annual!.
+\item \lstinline!AvailabilityLag!: A valid period indicating the lag between the inflation index publication for a given period and the period itself. For example, if March's inflation index value is published in April, the \lstinline!AvailabilityLag! would be \lstinline!1M!.
+\item \lstinline!Currency!: The ISO currency code of the currency associated with the inflation index, generally the currency of the region.
+\end{itemize}
+
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{Swap Index Conventions}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

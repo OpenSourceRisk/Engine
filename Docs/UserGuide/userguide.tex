@@ -5195,6 +5195,7 @@ floor price surface.
           <IndexInterpolated>false</IndexInterpolated>
           <ObservationLag>3M</ObservationLag>
           <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
+          <QuoteIndex>...</QuoteIndex>
       </InflationCapFloorVolatility>
 \end{minted}
 \caption{Inflation ZC cap floor volatility surface configuration}
@@ -5221,6 +5222,7 @@ floor price surface.
 \item {\tt IndexInterpolated}: Flag indicating whether the index should be interpolating.
 \item {\tt Observation Lag}: The observation lag applicable to the term structure.
 \item {\tt YieldTermStructure}: The nominal term structure.
+\item \lstinline!QuoteIndex!: An optional node allowing the user to provide an alternative index name for forming the quotes that will be used in building the cap floor surface. If this node is not provided, the \lstinline!Index! node value is used in quote construction. For example, quotes must be created from each strike and each tenor and these quotes are subsequently looked up in the market data when building the cap floor volatility surface. The quotes are formed by concatenating \lstinline![Type]_INFLATIONCAPFLOOR!, \lstinline!PRICE! or \lstinline!RATE_[Vol_Type]VOL!, \lstinline![Index_Name]!, \lstinline![Tenor]!, \lstinline!C! or \lstinline!F! and \lstinline![Strike]! delimited by \lstinline!/!. If \lstinline!QuoteIndex! is provided, it is used as the \lstinline![Index_Name]! token. If it is not provided \lstinline!Index! is used as usual.
 \end{itemize}
 
 \subsubsection{CDS Volatilities}
