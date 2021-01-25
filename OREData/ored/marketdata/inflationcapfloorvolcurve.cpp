@@ -119,6 +119,9 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
     Size remainingQuotes = tenors.size() * strikes.size();
     Size quotesRead = 0;
 
+    // Quotes index can differ from the index for which we are building the surface.
+    string quoteIndex = config->quoteIndex().empty() ? config->index() : config->quoteIndex();
+
     // We take the first capfloor shift quote that we find in the file matching the
     // currency and index tenor
     for (auto& md : loader.loadQuotes(asof)) {
@@ -133,7 +136,7 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
                 q = boost::dynamic_pointer_cast<YyInflationCapFloorQuote>(md);
             }
 
-            if (q != NULL && q->index() == spec.index() && q->quoteType() == volatilityType) {
+            if (q != NULL && q->index() == quoteIndex && q->quoteType() == volatilityType) {
 
                 quotesRead++;
 
@@ -272,6 +275,9 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
     Matrix cPrice(capStrikes.size(), capStrikes.size() == 0 ? 0 : terms.size(), Null<Real>()),
         fPrice(floorStrikes.size(), floorStrikes.size() == 0 ? 0 : terms.size(), Null<Real>());
 
+    // Quotes index can differ from the index for which we are building the surface.
+    string quoteIndex = config->quoteIndex().empty() ? config->index() : config->quoteIndex();
+
     // We loop over all market data, looking for quotes that match the configuration
     for (auto& md : loader.loadQuotes(asof)) {
 
@@ -286,7 +292,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                 q = boost::dynamic_pointer_cast<YyInflationCapFloorQuote>(md);
             }
 
-            if (q != NULL && q->index() == spec.index() && md->quoteType() == MarketDatum::QuoteType::PRICE) {
+            if (q != NULL && q->index() == quoteIndex && md->quoteType() == MarketDatum::QuoteType::PRICE) {
                 auto it1 = std::find(terms.begin(), terms.end(), q->term());
                 Real strike = parseReal(q->strike());
                 Size strikeIdx = Null<Size>();

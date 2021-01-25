@@ -472,6 +472,7 @@
       <xs:element type="bool" name="IndexInterpolated" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="ObservationLag" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="YieldTermStructure" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="QuoteIndex" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="yieldCurves">
