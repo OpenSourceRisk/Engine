@@ -197,7 +197,7 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
 }
 
 XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("CapFloorVolatility");
+    XMLNode* node = doc.allocNode("InflationCapFloorVolatility");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
@@ -207,7 +207,7 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     } else if (type_ == Type::YY) {
         XMLUtils::addChild(doc, node, "Type", "YY");
     } else
-        QL_FAIL("Unknown Type in InflationCapFloorPriceSurfaceConfig::toXML()");
+        QL_FAIL("Unknown Type in InflationCapFloorVolatilityCurveConfig::toXML()");
 
     if (quoteType_ == QuoteType::Price) {
         XMLUtils::addChild(doc, node, "QuoteType", "Price");
