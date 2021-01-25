@@ -676,7 +676,8 @@ DateGeneration::Rule parseDateGenerationRule(const string& s) {
                                                   {"TwentiethIMM", DateGeneration::TwentiethIMM},
                                                   {"OldCDS", DateGeneration::OldCDS},
                                                   {"CDS2015", DateGeneration::CDS2015},
-                                                  {"CDS", DateGeneration::CDS}};
+                                                  {"CDS", DateGeneration::CDS},
+                                                  {"LastWednesday", DateGeneration::LastWednesday}};
 
     auto it = m.find(s);
     if (it != m.end()) {

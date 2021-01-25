@@ -7,5 +7,5 @@ services:
       context: ../
       dockerfile: Docker/Dockerfile-ORE-Debug
       args:
-        - quantlib_version=1.18_9505aa90f
+        - quantlib_version=1.18_66f634787
         - num_cores=16
