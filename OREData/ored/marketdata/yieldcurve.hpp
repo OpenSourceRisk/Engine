@@ -149,7 +149,7 @@ private:
     const boost::shared_ptr<ReferenceDataManager> referenceData_;
     const bool preserveQuoteLinkage_;
 
-    boost::shared_ptr<YieldTermStructure> piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instruments);
+    boost::shared_ptr<YieldTermStructure> piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments);
 
     /* Functions to build RateHelpers from yield curve segments */
     void addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment,
