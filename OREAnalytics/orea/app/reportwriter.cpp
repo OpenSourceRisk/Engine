@@ -59,10 +59,11 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("Notional(Base)", double(), 2)
         .addColumn("NettingSet", string())
         .addColumn("CounterParty", string())
-        // Custom outputs added below:
-        .addColumn("DiscountFactorAtMat(dom)", double(), 6)
-        .addColumn("Volatility(VanOpt)", double(), 6) // Vanilla Options
-        .addColumn("ForwardPrice(Eq)", double(), 6);
+        // Custom option outputs added below:
+        .addColumn("ForecastDiscountFactor", double(), 6)
+        .addColumn("DividendDiscountFactor", double(), 6)
+        .addColumn("Volatility", double(), 6) // Vanilla Options
+        .addColumn("ForwardPrice(Equity)", double(), 6);
 
     for (auto trade : portfolio->trades()) {
         try {
@@ -93,15 +94,14 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(trade->envelope().nettingSetId())
                 .add(trade->envelope().counterparty());
 
-            // Custom outputs below
-            // Domestic discount factor at maturity
-            Real domDisc = market->discountCurve(trade->notionalCurrency(), configuration)->discount(maturity);
-            report.add(domDisc);
+            //// Custom outputs below
 
             // Option volatility output
             boost::shared_ptr<QuantLib::VanillaOption> qlVanOpt =
                 boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trade->instrument()->qlInstrument());
             if (qlVanOpt) {
+                Real forDisc = 0.0;
+                Real divDisc = 0.0;
                 Volatility blackVol = 0.0;
                 Real fwdPrice = 0.0;
 
@@ -111,12 +111,14 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                     const std::string& assetName = eqoTrn->asset(); // or equivalently equityName()
                     blackVol = market->equityVol(assetName)->blackVol(maturity, eqoTrn->strike());
                     
-                    Real divDisc = market->equityDividendCurve(assetName, configuration)->discount(maturity);
+                    forDisc = market->equityCurve(assetName, configuration)->equityForecastCurve()->discount(maturity);
+                    divDisc = market->equityCurve(assetName, configuration)->equityDividendCurve()->discount(maturity);
                     Real eqSpot = market->equitySpot(assetName, configuration)->value();
-                    fwdPrice = eqSpot * divDisc / domDisc;
+
+                    fwdPrice = eqSpot * divDisc / forDisc;
 
                     DLOG("Derived forward price " << std::setprecision(12) << std::fixed << fwdPrice << " for maturity " << maturity << ", spot " << eqSpot
-                        << ", dividend discount " << divDisc << ", and domestic discount " << domDisc << ".");
+                        << ", dividend discount " << divDisc << ", and forecast discount " << forDisc << ".");
                 } else if (trade->tradeType() == "FxOption") {
                     boost::shared_ptr<ore::data::FxOption> fxoTrn =
                         boost::dynamic_pointer_cast<ore::data::FxOption>(trade);
@@ -128,10 +130,14 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                     // const std::string& assetName = comoTrn->asset();
                     // blackVol = market->commodityVolatility(assetName)->blackVol(maturity, comoTrn->strike());
                 }
+                report.add(forDisc);
+                report.add(divDisc);
                 report.add(blackVol);
                 report.add(fwdPrice);
             } else {
                 // Need to output something if not VanillaOption trade
+                report.add(Null<Real>());
+                report.add(Null<Real>());
                 report.add(Null<Real>());
                 report.add(Null<Real>());
             }
