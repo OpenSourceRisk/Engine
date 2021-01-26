@@ -49,30 +49,8 @@ pair<Date, Period> getStartAndLag(const Date& asof, const InflationSwapConventio
         return make_pair(asof, conv.observationLag());
     }
 
-    // Get schedule and check not empty
-    const Schedule& ps = conv.publicationSchedule();
-    QL_REQUIRE(!ps.empty(), "InflationCurve: roll on publication is true for " << conv.id() <<
-        " but the publication schedule is empty.");
-
-    // Check the schedule dates cover the as of date.
-    const vector<Date>& ds = ps.dates();
-    QL_REQUIRE(ds.front() < asof, "InflationCurve: first date in the publication schedule (" <<
-        io::iso_date(ds.front()) << ") should be before the as of date (" << io::iso_date(asof) << ").");
-    QL_REQUIRE(asof < ds.back(), "InflationCurve: last date in the publication schedule (" <<
-        io::iso_date(ds.back()) << ") should be after the as of date (" << io::iso_date(asof) << ").");
-
-    // Find d such that d_- < asof <= d. If necessary, move to the next publication schedule date. We 
-    // know that there is another date because asof < ds.back() is checked above.
-    auto it = lower_bound(ds.begin(), ds.end(), asof);
-    Date d = *it;
-    if (asof == d && conv.publicationRoll() == IPR::OnPublicationDate) {
-        d = *next(it);
-    }
-
-    // Move d back availibility lag and the 15th of that month is the helper's start date.
-    // Note: the 15th of the month is specific to AU CPI. We may need to generalise later.
-    d -= conv.index()->availabilityLag();
-    d = Date(15, d.month(), d.year());
+    // If there is a publication roll, call getStart to retrieve the date.
+    Date d = getInflationSwapStart(asof, conv);
 
     // Date in inflation period related to the inflation index value.
     Date dateInPeriod = d - Period(conv.index()->frequency());
@@ -370,5 +348,42 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         QL_FAIL("inflation curve building failed: unknown error");
     }
 }
+
+QuantLib::Date getInflationSwapStart(const Date& asof, const InflationSwapConvention& conv) {
+
+    using IPR = InflationSwapConvention::PublicationRoll;
+
+    // If no roll schedule, just return (as of, convention's obs lag).
+    if (conv.publicationRoll() == IPR::None) {
+        return asof;
+    }
+
+    // Get schedule and check not empty
+    const Schedule& ps = conv.publicationSchedule();
+    QL_REQUIRE(!ps.empty(), "InflationCurve: roll on publication is true for " << conv.id() <<
+        " but the publication schedule is empty.");
+
+    // Check the schedule dates cover the as of date.
+    const vector<Date>& ds = ps.dates();
+    QL_REQUIRE(ds.front() < asof, "InflationCurve: first date in the publication schedule (" <<
+        io::iso_date(ds.front()) << ") should be before the as of date (" << io::iso_date(asof) << ").");
+    QL_REQUIRE(asof < ds.back(), "InflationCurve: last date in the publication schedule (" <<
+        io::iso_date(ds.back()) << ") should be after the as of date (" << io::iso_date(asof) << ").");
+
+    // Find d such that d_- < asof <= d. If necessary, move to the next publication schedule date. We 
+    // know that there is another date because asof < ds.back() is checked above.
+    auto it = lower_bound(ds.begin(), ds.end(), asof);
+    Date d = *it;
+    if (asof == d && conv.publicationRoll() == IPR::OnPublicationDate) {
+        d = *next(it);
+    }
+
+    // Move d back availibility lag and the 15th of that month is the helper's start date.
+    // Note: the 15th of the month is specific to AU CPI. We may need to generalise later.
+    d -= conv.index()->availabilityLag();
+
+    return Date(15, d.month(), d.year());
+}
+
 } // namespace data
 } // namespace ore
