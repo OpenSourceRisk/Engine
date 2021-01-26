@@ -1256,5 +1256,32 @@ std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule 
     }
 }
 
+InflationSwapConvention::PublicationRoll parseInflationSwapPublicationRoll(const string& s) {
+    using IPR = InflationSwapConvention::PublicationRoll;
+    if (s == "None") {
+        return IPR::None;
+    } else if (s == "OnPublicationDate") {
+        return IPR::OnPublicationDate;
+    } else if (s == "AfterPublicationDate") {
+        return IPR::AfterPublicationDate;
+    } else {
+        QL_FAIL("InflationSwapConvention::PublicationRoll '" << s << "' not known, expect " <<
+            "'None', 'OnPublicationDate' or 'AfterPublicationDate'");
+    }
+}
+
+ostream& operator<<(ostream& os, InflationSwapConvention::PublicationRoll pr) {
+    using IPR = InflationSwapConvention::PublicationRoll;
+    if (pr == IPR::None) {
+        return os << "None";
+    } else if (pr == IPR::OnPublicationDate) {
+        return os << "OnPublicationDate";
+    } else if (pr == IPR::AfterPublicationDate) {
+        return os << "AfterPublicationDate";
+    } else {
+        QL_FAIL("Unknown InflationSwapConvention::PublicationRoll.");
+    }
+}
+
 } // namespace data
 } // namespace ore
