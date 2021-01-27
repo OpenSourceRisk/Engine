@@ -279,14 +279,14 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 }
             }
             if (quotes_.size() == 0) {
-                WLOG("No Equity Forward quotes provided for " << config->curveID()
+                LOG("No Equity Forward quotes provided for " << config->curveID()
                     << ", continuing without dividend curve.");
                 buildCurveType = EquityCurveConfig::Type::NoDividends;
             }
         } else if (curveType_ == EquityCurveConfig::Type::OptionPremium) {
 
             if (oqt.size() == 0) {
-                WLOG("No Equity Option quotes provided for " << config->curveID()
+                LOG("No Equity Option quotes provided for " << config->curveID()
                                                              << ", continuing without dividend curve.");
                 buildCurveType = EquityCurveConfig::Type::NoDividends;
             } else {
