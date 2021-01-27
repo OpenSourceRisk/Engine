@@ -37,7 +37,7 @@ using namespace ore::data;
 namespace {
 
 // Utility function to derive the inflation swap start date and curve observation lag from the as of date and 
-// convention. In general, we take this simply to be (as of date, convention's obs lag). However, for AU CPI for 
+// convention. In general, we take this simply to be (as of date, Period()). However, for AU CPI for 
 // example, this is more complicated and we need to account for this here if the inflation swap conventions provide 
 // us with a publication schedule and tell us to roll on that schedule.
 pair<Date, Period> getStartAndLag(const Date& asof, const InflationSwapConvention& conv) {
@@ -46,7 +46,7 @@ pair<Date, Period> getStartAndLag(const Date& asof, const InflationSwapConventio
 
     // If no roll schedule, just return (as of, convention's obs lag).
     if (conv.publicationRoll() == IPR::None) {
-        return make_pair(asof, conv.observationLag());
+        return make_pair(asof, Period());
     }
 
     // If there is a publication roll, call getStart to retrieve the date.
@@ -182,7 +182,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         // Get helper start date and curve's obs lag.
         auto p = getStartAndLag(asof, *conv);
         Date swapStart = p.first;
-        Period curveObsLag = p.second;
+        Period curveObsLag = p.second == Period() ? config->lag() : p.second;
 
         // construct curve (ZC or YY depending on configuration)
 
