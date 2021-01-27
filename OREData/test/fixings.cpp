@@ -104,7 +104,7 @@ map<tuple<string, Date>, Fixing> dummyFixings() {
 }
 
 // Load the requested fixings
-void loadFixings(const map<string, set<Date>>& requestedFixings, const Conventions& conventions) {
+void loadFixings(const map<string, set<Date>>& requestedFixings, const boost::shared_ptr<Conventions>& conventions) {
 
     // Get the dummy fixings that we have provided in the input directory
     auto fixingValues = dummyFixings();
@@ -238,7 +238,7 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes,
         }
 
         // Add the fixings
-        loadFixings(m, *conventions);
+        loadFixings(m, conventions);
 
         // Trade should now not throw when we try to price it
         BOOST_CHECK_NO_THROW(p.trades()[0]->instrument()->NPV());
@@ -375,7 +375,7 @@ BOOST_FIXTURE_TEST_CASE(testFxNotionalResettingSwapFirstCoupon, F) {
     BOOST_CHECK_THROW(p.trades()[0]->instrument()->NPV(), Error);
 
     // Add the fixings
-    loadFixings(m, *conventions);
+    loadFixings(m, conventions);
 
     // Trade should now not throw when we try to price it
     BOOST_CHECK_NO_THROW(p.trades()[0]->instrument()->NPV());

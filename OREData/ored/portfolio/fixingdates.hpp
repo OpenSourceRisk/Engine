@@ -220,8 +220,12 @@ void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<Fixi
     date of the month. This function scans the \p fixings map, and moves any inflation fixing dates from the 1st of
     the month to the last day of the month. The key in the \p fixings map is the index name and the value is the set
     of dates for which we require the fixings.
+
+    If inflation indices have been set up via ZeroInflationIndex entries in the Conventions, the \p conventions 
+    should be passed here. If not, the default \c nullptr parameter will be sufficient.
 */
-void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings);
+void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings,
+    const boost::shared_ptr<Conventions>& conventions = nullptr);
 
 /*! Add index and fixing date pairs to \p fixings that will be potentially needed to build a TodaysMarket.
 
