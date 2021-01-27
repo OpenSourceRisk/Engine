@@ -256,11 +256,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         if (curveType_ == EquityCurveConfig::Type::ForwardPrice ||
             curveType_ == EquityCurveConfig::Type::ForwardDividendPrice) {
 
-            if (qt.size() == 0) {
-                WLOG("No Equity Forward quotes provided for " << config->curveID()
-                    << ", continuing without dividend curve.");
-                buildCurveType = EquityCurveConfig::Type::NoDividends;
-            } else {
+            if (qt.size() > 0) {
                 DLOG("Building Equity Dividend Yield curve from Forward/Future prices");
 
                 // sort quotes and terms in case of wild-card
@@ -281,6 +277,11 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         quotes_.push_back(convertMinorToMajorCurrency(qt[i]->ccy(), qt[i]->quote()->value()));
                     }
                 }
+            }
+            if (quotes_.size() == 0) {
+                WLOG("No Equity Forward quotes provided for " << config->curveID()
+                    << ", continuing without dividend curve.");
+                buildCurveType = EquityCurveConfig::Type::NoDividends;
             }
         } else if (curveType_ == EquityCurveConfig::Type::OptionPremium) {
 
