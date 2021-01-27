@@ -435,10 +435,10 @@ void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<Fixi
     }
 }
 
-void amendInflationFixingDates(map<string, set<Date>>& fixings) {
+void amendInflationFixingDates(map<string, set<Date>>& fixings, const boost::shared_ptr<Conventions>& conventions) {
     // Loop over indices and amend any that are of type InflationIndex
     for (auto& kv : fixings) {
-        if (isInflationIndex(kv.first)) {
+        if (isInflationIndex(kv.first, conventions)) {
             // We have an inflation index
             set<Date> newDates;
             for (const Date& d : kv.second) {

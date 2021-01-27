@@ -286,6 +286,12 @@ enum class AssetClass { EQ, FX, COM, IR, INF, CR };
 */
 AssetClass parseAssetClass(const std::string& s);
 
+//! Write ore::data::AssetClass to stream
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, AssetClass a);
+
 //! Convert text to QuantLib::DeltaVolQuote::AtmType
 /*!
 \ingroup utilities

@@ -112,7 +112,7 @@ int OREApp::run() {
          *Build Pricing Engine Factory
          */
         out_ << setw(tab_) << left << "Engine factory... " << flush;
-        engineFactory_ = buildEngineFactory(market_);
+        engineFactory_ = buildEngineFactory(market_, "setup", true);
         out_ << "OK" << endl;
 
         /******************************
@@ -453,7 +453,8 @@ boost::shared_ptr<CrossAssetModelData> OREApp::getCrossAssetModelData() {
 }
 
 boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market,
-                                                            const string& groupName) const {
+                                                            const string& groupName,
+                                                            const bool generateAdditionalResults) const {
     MEM_LOG;
     LOG("Building an engine factory")
 
@@ -462,6 +463,7 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     string pricingEnginesFile = inputPath_ + "/" + params_->get(groupName, "pricingEnginesFile");
     if (params_->get(groupName, "pricingEnginesFile") != "")
         engineData->fromFile(pricingEnginesFile);
+    engineData->globalParameters()["GenerateAdditionalResults"] = generateAdditionalResults ? "true" : "false";
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
@@ -615,7 +617,25 @@ void OREApp::writeInitialReports() {
     if (params_->hasGroup("additionalResults") && params_->get("additionalResults", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("additionalResults", "outputFileName");
         CSVFileReport addResultReport(fileName);
-        getReportWriter()->writeAdditionalResultsReport(addResultReport, portfolio_);
+        getReportWriter()->writeAdditionalResultsReport(addResultReport, portfolio_, market_, params_->get("npv", "baseCurrency"));
+        out_ << "OK" << endl;
+    } else {
+        LOG("skip additional results");
+        out_ << "SKIP" << endl;
+    }
+
+    /*********************
+     * TodaysMarket calibration
+     */
+    out_ << setw(tab_) << left << "TodaysMarket Calibration... " << flush;
+    if (params_->hasGroup("todaysMarketCalibration") && params_->get("todaysMarketCalibration", "active") == "Y") {
+        string fileName = outputPath_ + "/" + params_->get("todaysMarketCalibration", "outputFileName");
+        CSVFileReport todaysMarketCalibrationReport(fileName);
+        auto todaysMarket = boost::dynamic_pointer_cast<TodaysMarket>(market_);
+        if(todaysMarket) {
+            getReportWriter()->writeTodaysMarketCalibrationReport(todaysMarketCalibrationReport,
+                                                                  todaysMarket->calibrationInfo());
+        }
         out_ << "OK" << endl;
     } else {
         LOG("skip additional results");
@@ -1316,15 +1336,16 @@ boost::shared_ptr<MarketImpl> OREApp::getMarket() const {
 }
 
 boost::shared_ptr<EngineFactory> OREApp::buildEngineFactoryFromXMLString(const boost::shared_ptr<Market>& market,
-                                                                         const std::string& pricingEngineXML) {
+                                                                         const std::string& pricingEngineXML,
+                                                                         const bool generateAdditionalResults) {
     DLOG("OREApp::buildEngineFactoryFromXMLString called");
 
     if (pricingEngineXML == "")
-        return buildEngineFactory(market);
+        return buildEngineFactory(market, "", generateAdditionalResults);
     else {
         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
         engineData->fromXMLString(pricingEngineXML);
-
+        engineData->globalParameters()["GenerateAdditionalResults"] = generateAdditionalResults ? "true" : "false";
         map<MarketContext, string> configurations;
         configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
         configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");

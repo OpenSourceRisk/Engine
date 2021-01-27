@@ -785,10 +785,10 @@ public:
         Date asof(26, February, 2016);
         Settings::instance().evaluationDate() = asof;
 
-        MarketDataLoader loader;
-        TodaysMarketParameters params = *marketParameters();
-        CurveConfigurations configs = *curveConfigurations();
-        Conventions convs = *conventions();
+        auto loader = boost::make_shared<MarketDataLoader>();
+        auto params = marketParameters();
+        auto configs = curveConfigurations();
+        auto convs = conventions();
 
         BOOST_TEST_MESSAGE("Creating TodaysMarket Instance");
         market = boost::make_shared<TodaysMarket>(asof, params, loader, configs, convs);

@@ -369,26 +369,37 @@ Calendar parseCalendar(const string& s, const string& newName) {
         { "ZAC", SouthAfrica() },
         { "ZAX", SouthAfrica() },
 
-        // fallback to TARGET for these emerging ccys
-        {"AED", TARGET()},
-        {"BHD", TARGET()},
-        {"CLF", TARGET()},
-        {"EGP", TARGET()},
-        {"KWD", TARGET()},
-        {"KZT", TARGET()},
-        {"MAD", TARGET()},
-        {"MXV", TARGET()},
-        {"NGN", TARGET()},
-        {"OMR", TARGET()},
-        {"PKR", TARGET()},
-        {"QAR", TARGET()},
-        {"UYU", TARGET()},
-        {"TND", TARGET()},
-        {"VND", TARGET()},
-        {"AOA", TARGET()},
-        {"ETB", TARGET()},
-        {"GEL", TARGET()},
-        {"XOF", TARGET()},
+        // fallback to WeekendsOnly for these emerging ccys
+        {"AED", WeekendsOnly()},
+        {"BHD", WeekendsOnly()},
+        {"CLF", WeekendsOnly()},
+        {"EGP", WeekendsOnly()},
+        {"KWD", WeekendsOnly()},
+        {"KZT", WeekendsOnly()},
+        {"MAD", WeekendsOnly()},
+        {"MXV", WeekendsOnly()},
+        {"NGN", WeekendsOnly()},
+        {"OMR", WeekendsOnly()},
+        {"PKR", WeekendsOnly()},
+        {"QAR", WeekendsOnly()},
+        {"UYU", WeekendsOnly()},
+        {"TND", WeekendsOnly()},
+        {"VND", WeekendsOnly()},
+        // new GFMA currencies
+        {"AOA", WeekendsOnly()},
+        {"BGN", WeekendsOnly()},
+        {"ETB", WeekendsOnly()},
+        {"GEL", WeekendsOnly()},
+        {"GHS", WeekendsOnly()},
+        {"HRK", WeekendsOnly()},
+        {"JOD", WeekendsOnly()},
+        {"KES", WeekendsOnly()},
+        {"LKR", WeekendsOnly()},
+        {"MUR", WeekendsOnly()},
+        {"RSD", WeekendsOnly()},
+        {"UGX", WeekendsOnly()},
+        {"XOF", WeekendsOnly()},
+        {"ZMW", WeekendsOnly()},
 
         // ISO 10383 MIC Exchange
         {"BVMF", Brazil(Brazil::Exchange)},
@@ -997,6 +1008,26 @@ AssetClass parseAssetClass(const std::string& s) {
         return it->second;
     } else {
         QL_FAIL("AssetClass \"" << s << "\" not recognized");
+    }
+}
+
+
+std::ostream& operator<<(std::ostream& os, AssetClass a) {
+    switch (a) {
+    case AssetClass::EQ:
+        return os << "EQ";
+    case AssetClass::FX:
+        return os << "FX";
+    case AssetClass::COM:
+        return os << "COM";
+    case AssetClass::IR:
+        return os << "IR";
+    case AssetClass::INF:
+        return os << "INF";
+    case AssetClass::CR:
+        return os << "CR";
+    default:
+        QL_FAIL("Unknown AssetClass");
     }
 }
 

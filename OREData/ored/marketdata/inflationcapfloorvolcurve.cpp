@@ -44,7 +44,9 @@ namespace data {
 InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloorVolatilityCurveSpec spec,
                                                      const Loader& loader, const CurveConfigurations& curveConfigs,
                                                      map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                                                     map<string, boost::shared_ptr<InflationCurve>>& inflationCurves) {
+                                                     map<string, boost::shared_ptr<InflationCurve>>& inflationCurves,
+                                                     const boost::shared_ptr<Conventions>& conventions)
+    : conventions_(conventions) {
     try {
         const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>& config =
             curveConfigs.inflationCapFloorVolCurveConfig(spec.curveConfigID());
@@ -117,6 +119,9 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
     Size remainingQuotes = tenors.size() * strikes.size();
     Size quotesRead = 0;
 
+    // Quotes index can differ from the index for which we are building the surface.
+    string quoteIndex = config->quoteIndex().empty() ? config->index() : config->quoteIndex();
+
     // We take the first capfloor shift quote that we find in the file matching the
     // currency and index tenor
     for (auto& md : loader.loadQuotes(asof)) {
@@ -131,7 +136,7 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
                 q = boost::dynamic_pointer_cast<YyInflationCapFloorQuote>(md);
             }
 
-            if (q != NULL && q->index() == spec.index() && q->quoteType() == volatilityType) {
+            if (q != NULL && q->index() == quoteIndex && q->quoteType() == volatilityType) {
 
                 quotesRead++;
 
@@ -189,7 +194,8 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
                 boost::dynamic_pointer_cast<YoYInflationTermStructure>(ts);
             QL_REQUIRE(yyTs, "YoY Inflation curve required for vol surface " << index->name());
             index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                parseZeroInflationIndex(config->index(), true), true, Handle<YoYInflationTermStructure>(yyTs));
+                parseZeroInflationIndex(config->index(), true, Handle<ZeroInflationTermStructure>(), conventions_),
+                true, Handle<YoYInflationTermStructure>(yyTs));
         }
 
         boost::shared_ptr<YoYInflationOptionletVolStripper> volStripper =
@@ -217,7 +223,7 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
             QL_REQUIRE(ts,
                        "inflation term structure " << config->indexCurve() << " was expected to be zero, but is not");
             index = parseZeroInflationIndex(config->index(), it2->second->interpolatedIndex(),
-                                            Handle<ZeroInflationTermStructure>(ts));
+                                            Handle<ZeroInflationTermStructure>(ts), conventions_);
         } else {
             QL_FAIL("The zero inflation curve, " << config->indexCurve()
                                                  << ", required in building the inflation cap floor vol surface "
@@ -269,6 +275,9 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
     Matrix cPrice(capStrikes.size(), capStrikes.size() == 0 ? 0 : terms.size(), Null<Real>()),
         fPrice(floorStrikes.size(), floorStrikes.size() == 0 ? 0 : terms.size(), Null<Real>());
 
+    // Quotes index can differ from the index for which we are building the surface.
+    string quoteIndex = config->quoteIndex().empty() ? config->index() : config->quoteIndex();
+
     // We loop over all market data, looking for quotes that match the configuration
     for (auto& md : loader.loadQuotes(asof)) {
 
@@ -283,7 +292,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                 q = boost::dynamic_pointer_cast<YyInflationCapFloorQuote>(md);
             }
 
-            if (q != NULL && q->index() == spec.index() && md->quoteType() == MarketDatum::QuoteType::PRICE) {
+            if (q != NULL && q->index() == quoteIndex && md->quoteType() == MarketDatum::QuoteType::PRICE) {
                 auto it1 = std::find(terms.begin(), terms.end(), q->term());
                 Real strike = parseReal(q->strike());
                 Size strikeIdx = Null<Size>();
@@ -385,7 +394,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
             QL_REQUIRE(ts,
                        "inflation term structure " << config->indexCurve() << " was expected to be zero, but is not");
             index = parseZeroInflationIndex(config->index(), it2->second->interpolatedIndex(),
-                                            Handle<ZeroInflationTermStructure>(ts));
+                                            Handle<ZeroInflationTermStructure>(ts), conventions_);
         } else {
             QL_FAIL("The zero inflation curve, " << config->indexCurve()
                                                  << ", required in building the inflation cap floor price surface "
@@ -452,15 +461,16 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
             if (yyTs) {
                 useMarketYoyCurve_ = true;
                 index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                    parseZeroInflationIndex(config->index(), true), true, Handle<YoYInflationTermStructure>(yyTs));
+                    parseZeroInflationIndex(config->index(), true, Handle<ZeroInflationTermStructure>(), conventions_),
+                    true, Handle<YoYInflationTermStructure>(yyTs));
             } else {
                 useMarketYoyCurve_ = false;
                 boost::shared_ptr<ZeroInflationTermStructure> zeroTs =
                     boost::dynamic_pointer_cast<ZeroInflationTermStructure>(ts);
                 QL_REQUIRE(zeroTs,
                            "Inflation term structure " << config->indexCurve() << "must be of type YoY or Zero");
-                index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                    parseZeroInflationIndex(config->index(), true, Handle<ZeroInflationTermStructure>(zeroTs)), true,
+                index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(parseZeroInflationIndex(
+                    config->index(), true, Handle<ZeroInflationTermStructure>(zeroTs), conventions_), true,
                     Handle<YoYInflationTermStructure>());
             }
         } else {

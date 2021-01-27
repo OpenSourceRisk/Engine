@@ -166,7 +166,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Calendar calendar = parseCalendar(bondData_.calendar());
     QL_REQUIRE(!bondData_.settlementDays().empty(),
                "no bond settlement days given, if reference data is used, check if securityId '"
-                   << bondData_.securityId() << "' is present.");
+                   << bondData_.securityId() << "' is present and of type Bond.");
     Natural settlementDays = parseInteger(bondData_.settlementDays());
     boost::shared_ptr<QuantLib::Bond> bond;
 

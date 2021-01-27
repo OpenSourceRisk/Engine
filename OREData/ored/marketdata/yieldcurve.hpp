@@ -30,7 +30,9 @@
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/market.hpp>
+#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
+
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
 namespace ore {
@@ -94,8 +96,7 @@ public:
         //! optional pointer to reference data, needed to build fitted bond curves
         const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         //! if true keep qloader quotes linked to yield ts, otherwise detach them
-        const bool preserveQuoteLinkage = false
-        );
+        const bool preserveQuoteLinkage = false);
 
     //! \name Inspectors
     //@{
@@ -103,7 +104,10 @@ public:
     YieldCurveSpec curveSpec() const { return curveSpec_; }
     const Date& asofDate() const { return asofDate_; }
     const Currency& currency() const { return currency_; }
+    // might be nullptr, if no info was produced for this curve
+    boost::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     //@}
+
 private:
     Date asofDate_;
     Currency currency_;
@@ -117,6 +121,7 @@ private:
     const Conventions& conventions_;
     RelinkableHandle<YieldTermStructure> h_;
     boost::shared_ptr<YieldTermStructure> p_;
+    boost::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo_;
 
     void buildDiscountCurve();
     void buildZeroCurve();
@@ -144,7 +149,7 @@ private:
     const boost::shared_ptr<ReferenceDataManager> referenceData_;
     const bool preserveQuoteLinkage_;
 
-    boost::shared_ptr<YieldTermStructure> piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instruments);
+    boost::shared_ptr<YieldTermStructure> piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments);
 
     /* Functions to build RateHelpers from yield curve segments */
     void addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment,
@@ -180,11 +185,6 @@ private:
 YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string& s);
 //! Helper function for parsing interpolation variable
 YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const string& s);
-
-//! function to return the pillar dates for a YieldTermStructure, will return an
-// empty vector if it does not have pillar dates.
-// Implemented here as it checks the subclass that was built by the above class
-vector<Date> pillarDates(const Handle<YieldTermStructure>& h);
 
 //! Templated function to build a YieldTermStructure and apply interpolation methods to it
 template <template <class> class CurveType>

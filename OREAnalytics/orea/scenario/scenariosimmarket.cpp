@@ -80,6 +80,8 @@
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 
+#include <boost/algorithm/string.hpp>
+
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace ore::data;
@@ -91,7 +93,14 @@ namespace {
 // Utility function that is in catch blocks below
 void processException(bool continueOnError, const std::exception& e, const std::string& curveId) {
     if (continueOnError) {
-        ALOG(StructuredCurveErrorMessage(curveId, "skipping this object in scenario sim market", e.what()));
+        std::string exceptionMessage = e.what();
+        /* We do not log a structured curve error message, if the exception message indicates that the problem
+           already occured in the init market. In this case we have already logged a structured error there. */
+        if (boost::starts_with(exceptionMessage, "did not find object ")) {
+            ALOG("CurveID: " << curveId << ": skipping this object in scenario sim market: " << exceptionMessage);
+        } else {
+            ALOG(StructuredCurveErrorMessage(curveId, "skipping this object in scenario sim market", exceptionMessage));
+        }
     } else {
         QL_FAIL(e.what());
     }
@@ -1696,8 +1705,8 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         Handle<ZeroInflationTermStructure> its(zeroCurve);
                         its->enableExtrapolation();
-                        boost::shared_ptr<ZeroInflationIndex> i =
-                            ore::data::parseZeroInflationIndex(name, false, Handle<ZeroInflationTermStructure>(its));
+                        boost::shared_ptr<ZeroInflationIndex> i = parseZeroInflationIndex(name, false,
+                            Handle<ZeroInflationTermStructure>(its), boost::make_shared<Conventions>(conventions_));
                         Handle<ZeroInflationIndex> zh(i);
                         zeroInflationIndices_.insert(pair<pair<string, string>, Handle<ZeroInflationIndex>>(
                             make_pair(Market::defaultConfiguration, name), zh));

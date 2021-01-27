@@ -2563,6 +2563,7 @@ type can be (so far) in
 \item npv
 \item cashflow
 \item additionalResults
+\item todaysMarketCalibration
 \item curves
 \item simulation
 \item xva
@@ -2598,12 +2599,16 @@ the list above.
     <Parameter name="active">Y</Parameter>
     <Parameter name="outputFileName">additional\_results.csv</Parameter>
   </Analytic> 
+  <Analytic type="todaysMarketCalibration">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="outputFileName">todaysmarketcalibration.csv</Parameter>
+  </Analytic>
   <Analytic type="...">
     <!-- ... -->
   </Analytic>      
 </Analytics>      
 \end{minted}
-\caption{ORE analytics: npv, cashflow and curves}
+\caption{ORE analytics: npv, cashflow, curves, additional results, todays market calibratino}
 \label{lst:ore_analytics}
 \end{listing}
 
@@ -2670,6 +2675,9 @@ example\_swaption & vega & double & 309237709.5 \\
 \label{additionalreport}
 \end{center}
 \end{table}
+
+The todaysMarketCalibration analytic writes a report containing information on the build of the t0 market.
+
 \medskip The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulation which evolves the market as
 specified in the simulation config file. The primary result is an NPV cube file, i.e. valuations of all trades in the
 portfolio file (see section Setup), for all future points in time on the simulation grid and for all paths. Apart from
@@ -3591,6 +3599,9 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
   </Product>
   <GlobalParameters>
     <Parameter name="ContinueOnCalibrationError">true</Parameter>
+    <!-- typcially not present in a user configuration, but used internally -->
+    <Parameter name="Calibrate">true</Parameter>
+    <Parameter name="GenerateAdditionalResults"</Parameter>
   </GlobalParameters>
 \end{minted}
 \caption{Pricing engine configuration}
@@ -3630,9 +3641,16 @@ intended to allow the selection of optimised pricing engines for vanilla product
 \medskip
 In addition to product specific settings there is also a block with global parameters with the following meaning:
 \begin{itemize}
-\item ContinueOnCalibrationError If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
+\item ContinueOnCalibrationError: If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
   LGM model) will not cause the trade building to fail, instead a warning is logged and the trade is processed
   anyway. Optional, defaults to false.
+\item Calibrate: If false, model calibration is disabled. This flag is usually not present in a user configuration, but
+  only used internally for certain workflows within ORE which do not require a model calibration. Optional, defaults to
+  true.
+\item GenerateAdditionalResults: If false, the generation of additional results within pricing engines will be
+  suppressed (for those pricing engines which support this). This flag is usually not present in a user configuration,
+  but only used internally to improve the performance for processes which only rely on the NPV as a result from pricing
+  engines, e.g. when repricing trades under sensitivity or stress scenarios. Option, defaults to false.
 \end{itemize}
 
 %--------------------------------------------------------
@@ -4059,7 +4077,7 @@ the relevant calibration instrument times and the parameter's initial values are
 empty and giving a single value in the \lstinline!InitialValue! node is the clearest XML setup in this case.
 
 \begin{listing}[H]
-\begin{minted}[fontsize=\footnotesize]{xml}	
+\begin{minted}[fontsize=\footnotesize]{xml}
 <JarrowYildirim index="EUHICPXT">
   <Currency>EUR</Currency>
   <CalibrationType>Bootstrap</CalibrationType>
@@ -4122,7 +4140,7 @@ also allowed and it has the structure shown in Listing \ref{lst:yoy_cf_calibrati
 be a maturity period e.g.\ \lstinline!5Y!. The \lstinline!Strike! should be an absolute strike level for the year on year cap or floor e.g.\ \lstinline!0.01! for 1\%.
 
 \begin{listing}[H]
-\begin{minted}[fontsize=\footnotesize]{xml}	
+\begin{minted}[fontsize=\footnotesize]{xml}
 <YoYCapFloor>
   <Type>...</Type>
   <Tenor>...</Tenor>
@@ -4139,7 +4157,7 @@ Finally, the instantaneous correlation structure is specified as follows.
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<CrossAssetModel>	
+<CrossAssetModel>
   <!-- ... -->
   <InstantaneousCorrelations>
     <Correlation factor1="IR:EUR" factor2="IR:USD">0.3</Correlation>
@@ -5177,6 +5195,7 @@ floor price surface.
           <IndexInterpolated>false</IndexInterpolated>
           <ObservationLag>3M</ObservationLag>
           <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
+          <QuoteIndex>...</QuoteIndex>
       </InflationCapFloorVolatility>
 \end{minted}
 \caption{Inflation ZC cap floor volatility surface configuration}
@@ -5203,6 +5222,7 @@ floor price surface.
 \item {\tt IndexInterpolated}: Flag indicating whether the index should be interpolating.
 \item {\tt Observation Lag}: The observation lag applicable to the term structure.
 \item {\tt YieldTermStructure}: The nominal term structure.
+\item \lstinline!QuoteIndex!: An optional node allowing the user to provide an alternative index name for forming the quotes that will be used in building the cap floor surface. If this node is not provided, the \lstinline!Index! node value is used in quote construction. For example, quotes must be created from each strike and each tenor and these quotes are subsequently looked up in the market data when building the cap floor volatility surface. The quotes are formed by concatenating \lstinline![Type]_INFLATIONCAPFLOOR!, \lstinline!PRICE! or \lstinline!RATE_[Vol_Type]VOL!, \lstinline![Index_Name]!, \lstinline![Tenor]!, \lstinline!C! or \lstinline!F! and \lstinline![Strike]! delimited by \lstinline!/!. If \lstinline!QuoteIndex! is provided, it is used as the \lstinline![Index_Name]! token. If it is not provided \lstinline!Index! is used as usual.
 \end{itemize}
 
 \subsubsection{CDS Volatilities}
