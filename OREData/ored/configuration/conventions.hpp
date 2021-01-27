@@ -31,6 +31,7 @@
 #include <ql/indexes/swapindex.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 namespace ore {
 namespace data {
@@ -65,6 +66,7 @@ public:
         IborIndex,
         OvernightIndex,
         SwapIndex,
+        ZeroInflationIndex,
         InflationSwap,
         SecuritySpread,
         CMSSpreadOption,
@@ -100,13 +102,20 @@ protected:
 /*!
   \ingroup market
 */
-class Conventions : public XMLSerializable {
+class Conventions : public XMLSerializable, public boost::enable_shared_from_this<Conventions> {
 public:
     //! Default constructor
     Conventions() {}
 
     /*! Returns the convention if found and throws if not */
     boost::shared_ptr<Convention> get(const string& id) const;
+
+    /*! Get a convention with the given \p id and \p type. If no convention of the given \p type with the given \p id
+        is found, the first element of the returned pair is \c false and the second element is a \c nullptr. If a
+        convention is found, the first element of the returned pair is \c true and the second element holds the
+        convention.
+    */
+    std::pair<bool, boost::shared_ptr<Convention>> get(const std::string& id, const Convention::Type& type) const;
 
     //! Checks if we have a convention with the given \p id
     bool has(const std::string& id) const;
@@ -408,7 +417,6 @@ public:
     IborIndexConvention(const string& id, const string& fixingCalendar, const string& dayCounter,
                         const Size settlementDays, const string& businessDayConvention, const bool endOfMonth);
 
-    const string& id() const { return id_; }
     const string& fixingCalendar() const { return strFixingCalendar_; }
     const string& dayCounter() const { return strDayCounter_; }
     const Size settlementDays() const { return settlementDays_; }
@@ -437,7 +445,6 @@ public:
     OvernightIndexConvention(const string& id, const string& fixingCalendar, const string& dayCounter,
                              const Size settlementDays);
 
-    const string& id() const { return id_; }
     const string& fixingCalendar() const { return strFixingCalendar_; }
     const string& dayCounter() const { return strDayCounter_; }
     const Size settlementDays() const { return settlementDays_; }
@@ -1021,11 +1028,13 @@ private:
 
 class InflationSwapConvention : public Convention {
 public:
-    InflationSwapConvention() {}
+    InflationSwapConvention(const boost::shared_ptr<Conventions>& conventions = nullptr);
+
     InflationSwapConvention(const string& id, const string& strFixCalendar, const string& strFixConvention,
                             const string& strDayCounter, const string& strIndex, const string& strInterpolated,
                             const string& strObservationLag, const string& strAdjustInfObsDates,
-                            const string& strInfCalendar, const string& strInfConvention);
+                            const string& strInfCalendar, const string& strInfConvention,
+                            const boost::shared_ptr<Conventions>& conventions = nullptr);
 
     const Calendar& fixCalendar() const { return fixCalendar_; }
     BusinessDayConvention fixConvention() const { return fixConvention_; }
@@ -1063,6 +1072,8 @@ private:
     string strAdjustInfObsDates_;
     string strInfCalendar_;
     string strInfConvention_;
+
+    boost::shared_ptr<Conventions> conventions_;
 };
 
 //! Container for storing Bond Spread Rate conventions
@@ -1420,6 +1431,46 @@ private:
     string strSwitchTenor_;
     string strLongTermAtmType_;
     string strLongTermDeltaType_;
+};
+
+/*! Container for storing zero inflation index conventions
+   \ingroup marketdata
+*/
+class ZeroInflationIndexConvention : public Convention {
+public:
+    //! Constructor.
+    ZeroInflationIndexConvention();
+
+    //! Detailed constructor.
+    ZeroInflationIndexConvention(const std::string& id,
+        const std::string& regionName,
+        const std::string& regionCode,
+        bool revised,
+        const std::string& frequency,
+        const std::string& availabilityLag,
+        const std::string& currency);
+
+    QuantLib::Region region() const;
+    bool revised() const { return revised_; }
+    QuantLib::Frequency frequency() const { return frequency_; }
+    const QuantLib::Period& availabilityLag() const { return availabilityLag_; }
+    const QuantLib::Currency& currency() const { return currency_; }
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    void build() override;
+
+private:
+    std::string regionName_;
+    std::string regionCode_;
+    bool revised_;
+    std::string strFrequency_;
+    std::string strAvailabilityLag_;
+    std::string strCurrency_;
+
+    QuantLib::Frequency frequency_;
+    QuantLib::Period availabilityLag_;
+    QuantLib::Currency currency_;
 };
 
 } // namespace data

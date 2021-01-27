@@ -75,7 +75,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                             config->type() == InflationCurveConfig::Type::YY))) {
 
                 boost::shared_ptr<ZcInflationSwapQuote> q = boost::dynamic_pointer_cast<ZcInflationSwapQuote>(md);
-                if (q != NULL && q->index() == spec.index()) {
+                if (q) {
                     auto it = std::find(strQuotes.begin(), strQuotes.end(), q->name());
                     if (it != strQuotes.end()) {
                         QL_REQUIRE(quotes[it - strQuotes.begin()].empty(), "duplicate quote " << q->name());
@@ -86,7 +86,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 }
 
                 boost::shared_ptr<YoYInflationSwapQuote> q2 = boost::dynamic_pointer_cast<YoYInflationSwapQuote>(md);
-                if (q2 != NULL && q2->index() == spec.index()) {
+                if (q2) {
                     auto it = std::find(strQuotes.begin(), strQuotes.end(), q2->name());
                     if (it != strQuotes.end()) {
                         QL_REQUIRE(quotes[it - strQuotes.begin()].empty(), "duplicate quote " << q2->name());
