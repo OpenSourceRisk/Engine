@@ -71,6 +71,15 @@ public:
     bool nakedOption() const { return nakedOption_; }
     //@}
 
+    //! \name Modifiers
+    //@{
+    vector<double>& caps() { return caps_; }
+    vector<string>& capDates() { return capDates_; }
+    vector<double>& floors() { return floors_; }
+    vector<string>& floorDates() { return floorDates_; }
+    bool& nakedOption() { return nakedOption_; }
+    //@}
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;

@@ -94,8 +94,8 @@ Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const boost::sh
     }
 
     std::map<std::string, std::string> qlToOREIndexNames;
-    applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
     qlToOREIndexNames[index->name()] = indexName;
+    applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
     addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
     return result;
 }

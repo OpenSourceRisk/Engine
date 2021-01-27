@@ -746,6 +746,9 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element type="xs:string" name="PremiumAmount" minOccurs="0"/>
+      <xs:element type="premiumCurrencyCode" name="PremiumCurrency" minOccurs="0"/>
+      <xs:element type="xs:string" name="PremiumPayDate" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
