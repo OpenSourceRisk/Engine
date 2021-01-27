@@ -33,6 +33,8 @@
 #include <qle/cashflows/couponpricer.hpp>
 #include <qle/cashflows/cpicoupon.hpp>
 #include <qle/cashflows/cpicouponpricer.hpp>
+#include <qle/cashflows/durationadjustedcmscoupon.hpp>
+#include <qle/cashflows/durationadjustedcmscoupontsrpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
@@ -153,6 +155,7 @@
 #include <qle/math/trace.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/pathgeneratorfactory.hpp>
+#include <qle/models/annuitymapping.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/cirppconstantparametrization.hpp>
@@ -190,6 +193,7 @@
 #include <qle/models/lgmcalibrationinfo.hpp>
 #include <qle/models/lgmimplieddefaulttermstructure.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
+#include <qle/models/linearannuitymapping.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 #include <qle/models/parametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
