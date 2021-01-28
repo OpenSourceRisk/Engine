@@ -977,18 +977,21 @@ XMLNode* CdsConvention::toXML(XMLDocument& doc) {
 
 InflationSwapConvention::InflationSwapConvention(const boost::shared_ptr<Conventions>& conventions)
     : fixConvention_(Following), interpolated_(false), adjustInfObsDates_(false),
-      infConvention_(Following), conventions_(conventions) {}
+      infConvention_(Following), conventions_(conventions), publicationRoll_(PublicationRoll::None) {}
 
 InflationSwapConvention::InflationSwapConvention(const string& id, const string& strFixCalendar,
                                                  const string& strFixConvention, const string& strDayCounter,
                                                  const string& strIndex, const string& strInterpolated,
                                                  const string& strObservationLag, const string& strAdjustInfObsDates,
                                                  const string& strInfCalendar, const string& strInfConvention,
-                                                 const boost::shared_ptr<Conventions>& conventions)
+                                                 const boost::shared_ptr<Conventions>& conventions,
+                                                 PublicationRoll publicationRoll,
+                                                 const boost::shared_ptr<ScheduleData>& publicationScheduleData)
     : Convention(id, Type::InflationSwap), strFixCalendar_(strFixCalendar), strFixConvention_(strFixConvention),
       strDayCounter_(strDayCounter), strIndex_(strIndex), strInterpolated_(strInterpolated),
       strObservationLag_(strObservationLag), strAdjustInfObsDates_(strAdjustInfObsDates),
-      strInfCalendar_(strInfCalendar), strInfConvention_(strInfConvention), conventions_(conventions) {
+      strInfCalendar_(strInfCalendar), strInfConvention_(strInfConvention), conventions_(conventions),
+      publicationRoll_(publicationRoll), publicationScheduleData_(publicationScheduleData) {
     build();
 }
 
@@ -1002,6 +1005,11 @@ void InflationSwapConvention::build() {
     adjustInfObsDates_ = parseBool(strAdjustInfObsDates_);
     infCalendar_ = parseCalendar(strInfCalendar_);
     infConvention_ = parseBusinessDayConvention(strInfConvention_);
+    if (publicationRoll_ != PublicationRoll::None) {
+        QL_REQUIRE(publicationScheduleData_, "Publication roll is " << publicationRoll_ << " for " << id() <<
+            " so expect non-null publication schedule data.");
+        publicationSchedule_ = makeSchedule(*publicationScheduleData_);
+    }
 }
 
 void InflationSwapConvention::fromXML(XMLNode* node) {
@@ -1020,6 +1028,20 @@ void InflationSwapConvention::fromXML(XMLNode* node) {
     strAdjustInfObsDates_ = XMLUtils::getChildValue(node, "AdjustInflationObservationDates", true);
     strInfCalendar_ = XMLUtils::getChildValue(node, "InflationCalendar", true);
     strInfConvention_ = XMLUtils::getChildValue(node, "InflationConvention", true);
+
+    publicationRoll_ = PublicationRoll::None;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "PublicationRoll")) {
+        publicationRoll_ = parseInflationSwapPublicationRoll(XMLUtils::getNodeValue(n));
+    }
+
+    if (publicationRoll_ != PublicationRoll::None) {
+        XMLNode* n = XMLUtils::getChildNode(node, "PublicationSchedule");
+        QL_REQUIRE(n, "PublicationRoll is " << publicationRoll_ << " for " << id() <<
+            " so expect non-empty PublicationSchedule.");
+        publicationScheduleData_ = boost::make_shared<ScheduleData>();
+        publicationScheduleData_->fromXML(n);
+    }
+
     build();
 }
 
@@ -1036,6 +1058,18 @@ XMLNode* InflationSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "AdjustInflationObservationDates", strAdjustInfObsDates_);
     XMLUtils::addChild(doc, node, "InflationCalendar", strInfCalendar_);
     XMLUtils::addChild(doc, node, "InflationConvention", strInfConvention_);
+
+    if (publicationRoll_ != PublicationRoll::None) {
+        XMLUtils::addChild(doc, node, "RollOnPublication", to_string(publicationRoll_));
+        QL_REQUIRE(publicationScheduleData_, "PublicationRoll is " << publicationRoll_ << " for "
+            << id() << " so expect PublicationSchedule.");
+
+        // Need to change the name from ScheduleData to PublicationSchedule.
+        XMLNode* n = publicationScheduleData_->toXML(doc);
+        XMLUtils::setNodeName(doc, n, "PublicationSchedule");
+        XMLUtils::appendNode(node, n);
+    }
+
     return node;
 }
 

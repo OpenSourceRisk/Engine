@@ -305,6 +305,7 @@
       <xs:enumeration value="ThirdFriday"/>
       <xs:enumeration value="MondayAfterThirdFriday"/>
       <xs:enumeration value="TuesdayAfterThirdFriday"/>
+      <xs:enumeration value="LastWednesday"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -662,6 +663,52 @@
       <xs:enumeration value="SecuritySpread"/>
       <xs:enumeration value="Correlation"/>
       <xs:enumeration value="CPR"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="scheduleData">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="Rules">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="date" name="StartDate"/>
+            <xs:element type="date" name="EndDate"/>
+            <xs:element type="xs:string" name="Tenor"/>
+            <xs:element type="calendar" name="Calendar" minOccurs="0"/>
+            <xs:element type="businessDayConvention" name="Convention"/>
+            <xs:element type="businessDayConvention" name="TermConvention"/>
+            <xs:element type="dateRule" name="Rule" minOccurs="0"/>
+            <xs:element type="bool" name="EndOfMonth" minOccurs="0"/>
+            <xs:element type="date" name="FirstDate" minOccurs="0"/>
+            <xs:element type="date" name="LastDate" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Dates">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="calendar" name="Calendar" minOccurs="0"/>
+            <xs:element type="businessDayConvention" name="Convention" minOccurs="0"/>
+            <xs:element type="xs:string" name="Tenor" minOccurs="0"/>
+            <xs:element type="bool" name="EndOfMonth" minOccurs="0"/>
+            <xs:element name="Dates">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="date" name="Date" maxOccurs="unbounded"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:simpleType name="publicationRoll">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="None"/>
+      <xs:enumeration value="OnPublicationDate"/>
+      <xs:enumeration value="AfterPublicationDate"/>
     </xs:restriction>
   </xs:simpleType>
 
