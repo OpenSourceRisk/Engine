@@ -325,6 +325,9 @@ CappedFlooredOvernightIndexedCoupon::CappedFlooredOvernightIndexedCoupon(
             cap_ = floor;
             floor_ = cap;
         }
+    } else {
+        cap_ = cap;
+        floor_ = floor;
     }
     if (cap_ != Null<Real>() && floor_ != Null<Real>()) {
         QL_REQUIRE(cap_ >= floor, "cap level (" << cap_ << ") less than floor level (" << floor_ << ")");
