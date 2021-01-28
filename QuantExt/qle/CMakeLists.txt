@@ -51,6 +51,7 @@ indexes/bondindex.cpp
 indexes/commodityindex.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
+indexes/ibor/boebaserate.cpp
 indexes/ibor/brlcdi.cpp
 indexes/ibor/ester.cpp
 indexes/ibor/primeindex.cpp
@@ -288,6 +289,7 @@ indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/genericindex.hpp
 indexes/ibor/audbbsw.hpp
+indexes/ibor/boebaserate.hpp
 indexes/ibor/brlcdi.hpp
 indexes/ibor/chfsaron.hpp
 indexes/ibor/chftois.hpp
