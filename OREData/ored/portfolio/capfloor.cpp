@@ -63,13 +63,11 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     std::string underlyingIndex, qlIndexName;
     boost::shared_ptr<QuantLib::Instrument> qlInstrument;
 
-    // Account for long / short multiplier and isPayer flag. The latter will flip the position type
-    // if set to payer. In the following we expect the qlInstrument to be set up as a long cap or
-    // floor resp. as a collar which by definition is a long cap + short floor (this is opposite to
-    // the definition of a leg with naked option = true!)
+    // Account for long / short multiplier. In the following we expect the qlInstrument to be set up
+    // as a long cap resp. a long floor resp. as a collar which by definition is a long cap + short floor
+    // (this is opposite to the definition of a leg with naked option = true!)
+    // The isPayer flag in the leg data is ignored.
     Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
-    if (legData_.isPayer())
-        multiplier *= -1.0;
 
     if (legData_.legType() == "Floating") {
 
