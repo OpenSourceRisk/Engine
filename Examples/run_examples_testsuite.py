@@ -41,7 +41,7 @@ class TestExamples(unittest.TestCase):
     def compAllFiles(self, comp_config):
         if os.path.isdir(os.path.join(os.getcwd(), 'ExpectedOutput')):
             for f in get_files('ExpectedOutput'):
-                self.compFiles(os.path.join('Output', f), os.path.join('ExpectedOutput', f), comp_config)
+                self.compFiles(os.path.join('ExpectedOutput', f), os.path.join('Output', f), comp_config)
         else:
             self.logger.warning('No ExpectedOutput folder detected, skipped.')
 
