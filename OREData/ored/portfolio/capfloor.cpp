@@ -120,6 +120,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // - BMA coupons
             // - Ibor coupons with sub periods (hasSubPeriods = true)
             // - averaged ON coupons (isAveraged = true)
+
             ALOG("CapFloor trade " << id()
                                    << " on a) BMA or b) sub periods Ibor or c) averaged ON underlying (index = '"
                                    << underlyingIndex
@@ -269,7 +270,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         // Create QL CPI CapFloor instruments and add to a composite
         qlInstrument = boost::make_shared<CompositeInstrument>();
-        bool legIsPayer = legData_.isPayer();
         maturity_ = Date::minDate();
         for (Size i = 0; i < legs_[0].size(); ++i) {
             DLOG("Create composite " << i);
