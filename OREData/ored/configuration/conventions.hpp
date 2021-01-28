@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/portfolio/schedule.hpp>
 #include <ql/experimental/futures/overnightindexfuture.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/indexes/iborindex.hpp>
@@ -1028,13 +1029,22 @@ private:
 
 class InflationSwapConvention : public Convention {
 public:
+    //! Rule for determining when inflation swaps roll to observing latest inflation index release.
+    enum class PublicationRoll {
+        None,
+        OnPublicationDate,
+        AfterPublicationDate
+    };
+
     InflationSwapConvention(const boost::shared_ptr<Conventions>& conventions = nullptr);
 
     InflationSwapConvention(const string& id, const string& strFixCalendar, const string& strFixConvention,
                             const string& strDayCounter, const string& strIndex, const string& strInterpolated,
                             const string& strObservationLag, const string& strAdjustInfObsDates,
                             const string& strInfCalendar, const string& strInfConvention,
-                            const boost::shared_ptr<Conventions>& conventions = nullptr);
+                            const boost::shared_ptr<Conventions>& conventions = nullptr,
+                            PublicationRoll publicationRoll = PublicationRoll::None,
+                            const boost::shared_ptr<ScheduleData>& publicationScheduleData = nullptr);
 
     const Calendar& fixCalendar() const { return fixCalendar_; }
     BusinessDayConvention fixConvention() const { return fixConvention_; }
@@ -1046,6 +1056,8 @@ public:
     bool adjustInfObsDates() const { return adjustInfObsDates_; }
     const Calendar& infCalendar() const { return infCalendar_; }
     BusinessDayConvention infConvention() const { return infConvention_; }
+    PublicationRoll publicationRoll() const { return publicationRoll_; }
+    const Schedule& publicationSchedule() const { return publicationSchedule_; }
 
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
@@ -1061,8 +1073,9 @@ private:
     bool adjustInfObsDates_;
     Calendar infCalendar_;
     BusinessDayConvention infConvention_;
+    Schedule publicationSchedule_;
 
-    // Strings to store the inputs
+    // Store the inputs
     string strFixCalendar_;
     string strFixConvention_;
     string strDayCounter_;
@@ -1072,8 +1085,9 @@ private:
     string strAdjustInfObsDates_;
     string strInfCalendar_;
     string strInfConvention_;
-
     boost::shared_ptr<Conventions> conventions_;
+    PublicationRoll publicationRoll_;
+    boost::shared_ptr<ScheduleData> publicationScheduleData_;
 };
 
 //! Container for storing Bond Spread Rate conventions

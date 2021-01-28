@@ -352,14 +352,17 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
 
 bool isGenericIborIndex(const string& indexName) { return indexName.find("-GENERIC-") != string::npos; }
 
-bool isInflationIndex(const string& indexName, const boost::shared_ptr<Conventions>& conventions) {
+pair<bool, boost::shared_ptr<ZeroInflationIndex>> isInflationIndex(const string& indexName,
+    const boost::shared_ptr<Conventions>& conventions) {
+
+    boost::shared_ptr<ZeroInflationIndex> index;
     try {
         // Currently, only way to have an inflation index is to have a ZeroInflationIndex
-        parseZeroInflationIndex(indexName, false, Handle<ZeroInflationTermStructure>(), conventions);
+        index = parseZeroInflationIndex(indexName, false, Handle<ZeroInflationTermStructure>(), conventions);
     } catch (...) {
-        return false;
+        return make_pair(false, nullptr);
     }
-    return true;
+    return make_pair(true, index);
 }
 
 bool isEquityIndex(const string& indexName) {
