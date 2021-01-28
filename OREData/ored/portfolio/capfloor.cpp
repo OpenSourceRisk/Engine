@@ -168,11 +168,15 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::shared_ptr<SwapIndex> index = hIndex.currentLink();
         qlIndexName = index->name();
 
-        // for a collar we want a long cap, short floor (definition) and have to flip signs here
         vector<bool> legPayers;
         if (capFloorType == QuantLib::CapFloor::Collar)
+            // long cap, short floor
             legPayers = {true, false};
-        else
+        else if(capFloorType == QuantLib::CapFloor::Cap)
+            // long cap
+            legPayers = {true, false};
+        else if(capFloorType == QuantLib::CapFloor::Floor)
+            // long floor
             legPayers = {false, true};
         legs_.push_back(makeCMSLeg(legData_, index, engineFactory, caps_, floors_));
         legs_.push_back(makeCMSLeg(legData_, index, engineFactory));
