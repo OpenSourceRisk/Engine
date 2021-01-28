@@ -31,6 +31,7 @@
 #include <ored/portfolio/builders/cpicapfloor.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/builders/creditdefaultswapoption.hpp>
+#include <ored/portfolio/builders/durationadjustedcms.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityfuturesoption.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
@@ -40,6 +41,7 @@
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
+#include <ored/portfolio/durationadjustedcmslegbuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/utilities/log.hpp>
@@ -174,13 +176,14 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityAmericanOptionBAWEngineBuilder>());
 
     registerBuilder(boost::make_shared<EquityFutureEuropeanOptionEngineBuilder>());
-    
+
     registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
     registerBuilder(boost::make_shared<DiscountingForwardBondEngineBuilder>());
 
     registerBuilder(boost::make_shared<AnalyticHaganCmsCouponPricerBuilder>());
     registerBuilder(boost::make_shared<NumericalHaganCmsCouponPricerBuilder>());
     registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
+    registerBuilder(boost::make_shared<data::LinearTsrDurationAdjustedCmsCouponPricerBuilder>());
 
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
     registerBuilder(boost::make_shared<BlackCdsOptionEngineBuilder>());
@@ -190,6 +193,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<CommodityAmericanOptionFDEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityAmericanOptionBAWEngineBuilder>());
 
+    registerLegBuilder(boost::make_shared<DurationAdjustedCmsLegBuilder>());
     registerLegBuilder(boost::make_shared<FixedLegBuilder>());
     registerLegBuilder(boost::make_shared<ZeroCouponFixedLegBuilder>());
     registerLegBuilder(boost::make_shared<FloatingLegBuilder>());
