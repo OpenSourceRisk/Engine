@@ -12,7 +12,7 @@
 #include <qle/cashflows/durationadjustedcmscoupontsrpricer.hpp>
 #include <qle/models/linearannuitymapping.hpp>
 
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 
 #include <ql/time/date.hpp>
 #include <ql/cashflows/cmscoupon.hpp>
@@ -25,7 +25,7 @@
 using namespace QuantExt;
 using namespace QuantLib;
 
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(DurationAdjustedCouponTest)
 
