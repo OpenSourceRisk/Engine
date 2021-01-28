@@ -31,7 +31,6 @@
 #include <ql/errors.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/instruments/cashflowresults.hpp>
-#include <boost/timer/timer.hpp>
 #include <stdio.h>
 
 using ore::data::to_string;
@@ -61,7 +60,6 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("Notional(Base)", double(), 2)
         .addColumn("NettingSet", string())
         .addColumn("CounterParty", string());
-
     for (auto trade : portfolio->trades()) {
         try {
             string npvCcy = trade->npvCurrency();
