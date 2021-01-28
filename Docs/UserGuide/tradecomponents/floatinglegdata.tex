@@ -241,8 +241,9 @@ If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \
   above.
 
 \item NakedOption [Optional]: Optional node, if \emph{true} the leg represents only the embedded floor, cap or collar.
-  By convention the embedded floor (cap) are considered long if the leg is a receiver leg, otherwise short. For a
-  collar the floor is long and the cap is short if the leg is a receiver leg.
+  By convention the embedded floor (or cap) are considered long if the leg is a receiver leg, otherwise short. For a
+  collar the floor is long and the cap is short if the leg is a receiver leg. Notice that this is exactly opposite to
+  the definition of a collar in \ref{ss:capfloor}.
 
  Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
 

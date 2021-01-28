@@ -41,15 +41,13 @@ namespace data {
 
 void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
-    DLOG("CapFloor::build() called for trade " << id());
+    DLOG("CapFloor::build() called for trade " << id() << ", leg type is " << legData_.legType());
 
-    // Make sure the leg is floating or CMS
     QL_REQUIRE((legData_.legType() == "Floating") || (legData_.legType() == "CMS") ||
                    (legData_.legType() == "DurationAdjustedCMS") || (legData_.legType() == "CPI") ||
                    (legData_.legType() == "YY"),
                "CapFloor build error, LegType must be Floating, CMS, DurationAdjustedCMS, CPI or YY");
 
-    // Determine if we have a cap, a floor or a collar
     QL_REQUIRE(caps_.size() > 0 || floors_.size() > 0, "CapFloor build error, no cap rates or floor rates provided");
     QuantLib::CapFloor::Type capFloorType;
     if (floors_.size() == 0) {
@@ -60,16 +58,19 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         capFloorType = QuantLib::CapFloor::Collar;
     }
 
-    // Clear legs before building
     legs_.clear();
-
     boost::shared_ptr<EngineBuilder> builder;
     std::string underlyingIndex, qlIndexName;
     boost::shared_ptr<QuantLib::Instrument> qlInstrument;
 
+    // Account for long / short multiplier and isPayer flag. The latter will flip the position type
+    // if set to payer. In the following we expect the qlInstrument to be set up as a long cap or
+    // floor resp. as a collar which by definition is a long cap + short floor (this is opposite to
+    // the definition of a leg with naked option = true!)
     Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
+    if (legData_.isPayer())
+        multiplier *= -1.0;
 
-    DLOG("Building cap/floor on leg of type " << legData_.legType());
     if (legData_.legType() == "Floating") {
 
         boost::shared_ptr<FloatingLegData> floatData =
@@ -168,14 +169,16 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::shared_ptr<SwapIndex> index = hIndex.currentLink();
         qlIndexName = index->name();
 
-        bool payer = (parsePositionType(longShort_) == Position::Long ? false : true);
-        vector<bool> legPayers_;
+        // for a collar we want a long cap, short floor (definition) and have to flip signs here
+        vector<bool> legPayers;
+        if (capFloorType == QuantLib::CapFloor::Collar)
+            legPayers = {true, false};
+        else
+            legPayers = {false, true};
         legs_.push_back(makeCMSLeg(legData_, index, engineFactory, caps_, floors_));
-        legPayers_.push_back(!payer);
         legs_.push_back(makeCMSLeg(legData_, index, engineFactory));
-        legPayers_.push_back(payer);
 
-        qlInstrument = boost::make_shared<QuantLib::Swap>(legs_, legPayers_);
+        qlInstrument = boost::make_shared<QuantLib::Swap>(legs_, legPayers);
         boost::shared_ptr<SwapEngineBuilderBase> cmsCapFloorBuilder =
             boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
         qlInstrument->setPricingEngine(cmsCapFloorBuilder->engine(parseCurrency(legData_.currency())));
@@ -270,64 +273,41 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         maturity_ = Date::minDate();
         for (Size i = 0; i < legs_[0].size(); ++i) {
             DLOG("Create composite " << i);
-            Real nominal, gearing, gearingSign;
+            Real nominal, gearing;
             Date paymentDate;
             boost::shared_ptr<CPICoupon> coupon = boost::dynamic_pointer_cast<CPICoupon>(legs_[0][i]);
             boost::shared_ptr<CPICashFlow> cashflow = boost::dynamic_pointer_cast<CPICashFlow>(legs_[0][i]);
             if (coupon) {
                 nominal = coupon->nominal();
                 gearing = coupon->fixedRate() * coupon->accrualPeriod();
-                gearingSign = gearing >= 0.0 ? 1.0 : -1.0;
                 paymentDate = coupon->date();
             } else if (cashflow) {
                 nominal = cashflow->notional();
                 gearing = 1.0; // no gearing here
-                gearingSign = 1.0;
                 paymentDate = cashflow->date();
             } else {
                 QL_FAIL("Failed to interprete CPI flow");
             }
 
             if (capFloorType == QuantLib::CapFloor::Cap || capFloorType == QuantLib::CapFloor::Collar) {
-                Option::Type type = legIsPayer ? Option::Put : Option::Call;
-                // long call, short put, consistent with IR and YOY caps/floors/collars
-                Real sign = type == Option::Call ? gearingSign : -gearingSign;
                 boost::shared_ptr<CPICapFloor> capfloor =
-                    boost::make_shared<CPICapFloor>(type, nominal, startDate, baseCPI, paymentDate, cal, conv, cal,
-                                                    conv, caps_[i], zeroIndex, observationLag, interpolation);
+                    boost::make_shared<CPICapFloor>(Option::Call, nominal, startDate, baseCPI, paymentDate, cal, conv,
+                                                    cal, conv, caps_[i], zeroIndex, observationLag, interpolation);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
-                boost::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, sign * gearing);
-                // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
-                //                                << " sign*gearing=" << sign * gearing);
+                boost::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
-                // if (coupon) {
-                //   std::cout << "CapFloor CPI Coupon " << std::endl
-                // 	    << "  payment date = " << QuantLib::io::iso_date(paymentDate) << std::endl
-                // 	    << "  nominal = " << nominal << std::endl
-                // 	    << "  gearing = " << gearing << std::endl
-                // 	    << "  start date = " << startDate << std::endl
-                // 	    << "  baseCPI = " << baseCPI << std::endl
-                // 	    << "  index  = " << zeroIndex->name() << std::endl
-                // 	    << "  lag = " << observationLag << std::endl
-                // 	    << "  interpolation = " << interpolation << std::endl;
-                //   }
             }
 
             if (capFloorType == QuantLib::CapFloor::Floor || capFloorType == QuantLib::CapFloor::Collar) {
-                Option::Type type = legIsPayer ? Option::Call : Option::Put;
-                // long call, short put, consistent with IR and YOY caps/floors/collars
-                Real sign = type == Option::Call ? gearingSign : -gearingSign;
+                // for collars we want a long cap, short floor
+                Real sign = capFloorType == QuantLib::CapFloor::Floor ? 1.0 : -1.0;
                 boost::shared_ptr<CPICapFloor> capfloor =
-                    boost::make_shared<CPICapFloor>(type, nominal, startDate, baseCPI, paymentDate, cal, conv, cal,
-                                                    conv, floors_[i], zeroIndex, observationLag, interpolation);
+                    boost::make_shared<CPICapFloor>(Option::Put, nominal, startDate, baseCPI, paymentDate, cal, conv,
+                                                    cal, conv, floors_[i], zeroIndex, observationLag, interpolation);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 boost::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, sign * gearing);
-                // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
-                //                                << " sign*gearing=" << sign * gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
             }
-
-            // DLOG(id() << " CPI CapFloor Composite NPV " << composite->NPV());
         }
 
     } else if (legData_.legType() == "YY") {
@@ -394,7 +374,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         maturity_ = boost::dynamic_pointer_cast<QuantLib::YoYInflationCapFloor>(qlInstrument)->maturityDate();
     } else {
-        QL_FAIL("Invalid legType for CapFloor");
+        QL_FAIL("Invalid legType " << legData_.legType() << " for CapFloor");
     }
 
     // If premium data is provided
@@ -429,7 +409,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Fill in remaining Trade member data
     legCurrencies_.push_back(legData_.currency());
-    legPayers_.push_back(legData_.isPayer());
+    legPayers_.push_back(false); // already accounted for via the instrument multiplier
     npvCurrency_ = legData_.currency();
     notionalCurrency_ = legData_.currency();
     notional_ = currentNotional(legs_[0]);

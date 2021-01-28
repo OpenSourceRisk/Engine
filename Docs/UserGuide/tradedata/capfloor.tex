@@ -1,15 +1,20 @@
 \subsubsection{Cap/Floor}
+\label{ss:capfloor}
 
 The \lstinline!CapFloorData! node is the trade data container for the \emph{CapFloor} trade type.  It's a cap, floor or collar
 (i.e. a portfolio of a long cap and a short floor for a long position in the collar) on a series of Ibor or CMS rates. The
 \lstinline!CapFloorData! node contains a \lstinline!LongShort! sub-node which indicates whether the cap (floor, collar)
 is long or short, and a \lstinline!LegData!  sub-node where the
-LegType can be set to \emph{Floating}, \emph{CMS}, \emph{CPI}
+LegType can be set to \emph{Floating}, \emph{CMS}, \emph{DurationAdjustedCMS}, \emph{CPI}
 or \emph{YY}, plus elements for the Cap and Floor rates. An example structure with Cap rates is shown in in Listing
 \ref{lst:capfloor_data}. A \lstinline!CapFloorData! node must have either \lstinline!Caps! or \lstinline!Floors!
 elements, or both. In the case of both (I.e. a collar with long cap and short floor) the sequence is that  \lstinline!Caps! elements must be above the \lstinline!Floors! elements. Note that 
 the \lstinline!Caps! and \lstinline!Floors! elements must be outside the \lstinline!LegData! sub-node, i.e. a \emph{CapFloor} 
 can't have a capped or floored  \emph{Floating}  or \emph{CMS} leg.
+THe \emph{Payer} flag in the LegData subnode should be set to false, because the position type (long, short) is already
+defined by the \emph{LongShort} flag. If the \emph{Payer} flag is set to true, this will effectively flip the position
+type once again. Notice that the signs in the definition of a collar (long cap, short floor) for the CapFloor
+instruments is exactly opposite to \ref{ss:floatingleg_data}.
 
 \begin{listing}[H]
 %\hrule\medskip
