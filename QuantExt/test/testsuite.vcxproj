@@ -662,6 +662,7 @@
     <ClCompile Include="discountcurve.cpp" />
     <ClCompile Include="discountingcommodityforwardengine.cpp" />
     <ClCompile Include="discountratiomodifiedcurve.cpp" />
+    <ClCompile Include="durationadjustedcmscoupon.cpp" />
     <ClCompile Include="dynamicblackvoltermstructure.cpp" />
     <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="equityblackvolsurfaceproxy.cpp" />

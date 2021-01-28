@@ -139,9 +139,9 @@ public:
     Date fixingDate() const override { return underlying_->fixingDate(); }
     //@}
     //! cap
-    Rate cap() const { return cap_; }
+    Rate cap() const;
     //! floor
-    Rate floor() const { return floor_; }
+    Rate floor() const;
     //! effective cap of fixing
     Rate effectiveCap() const;
     //! effective floor of fixing

@@ -28,6 +28,8 @@ cashflows/commodityindexedcashflow.cpp
 cashflows/couponpricer.cpp
 cashflows/cpicoupon.cpp
 cashflows/cpicouponpricer.cpp
+cashflows/durationadjustedcmscoupon.cpp
+cashflows/durationadjustedcmscoupontsrpricer.cpp
 cashflows/equitycoupon.cpp
 cashflows/equitycouponpricer.cpp
 cashflows/floatingannuitycoupon.cpp
@@ -88,6 +90,7 @@ instruments/tenorbasisswap.cpp
 math/deltagammavar.cpp
 math/fillemptymatrix.cpp
 methods/multipathgeneratorbase.cpp
+models/annuitymapping.cpp
 models/cdsoptionhelper.cpp
 models/cirppimplieddefaulttermstructure.cpp
 models/cmscaphelper.cpp
@@ -114,6 +117,7 @@ models/lgm.cpp
 models/lgmcalibrationinfo.cpp
 models/lgmimplieddefaulttermstructure.cpp
 models/lgmimpliedyieldtermstructure.cpp
+models/linearannuitymapping.cpp
 models/linkablecalibratedmodel.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
@@ -254,6 +258,8 @@ cashflows/commodityindexedcashflow.hpp
 cashflows/couponpricer.hpp
 cashflows/cpicoupon.hpp
 cashflows/cpicouponpricer.hpp
+cashflows/durationadjustedcmscoupon.hpp
+cashflows/durationadjustedcmscoupontsrpricer.hpp
 cashflows/equitycoupon.hpp
 cashflows/equitycouponpricer.hpp
 cashflows/floatingannuitycoupon.hpp
@@ -375,6 +381,7 @@ math/stabilisedglls.hpp
 math/trace.hpp
 methods/multipathgeneratorbase.hpp
 methods/pathgeneratorfactory.hpp
+models/annuitymapping.hpp
 models/cdsoptionhelper.hpp
 models/cirppconstantfellerparametrization.hpp
 models/cirppconstantparametrization.hpp
@@ -412,6 +419,7 @@ models/lgm.hpp
 models/lgmcalibrationinfo.hpp
 models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
+models/linearannuitymapping.hpp
 models/linkablecalibratedmodel.hpp
 models/parametrization.hpp
 models/piecewiseconstanthelper.hpp
