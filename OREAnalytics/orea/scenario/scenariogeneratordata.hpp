@@ -61,8 +61,10 @@ public:
                           SequenceType sequenceType, long seed, Size samples,
                           SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                           SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7)
-        : discretization_(discretization), grid_(dateGrid), sequenceType_(sequenceType), seed_(seed), samples_(samples),
-          ordering_(ordering), directionIntegers_(directionIntegers) {}
+        : discretization_(discretization), sequenceType_(sequenceType), seed_(seed), samples_(samples),
+          ordering_(ordering), directionIntegers_(directionIntegers) {
+            setGrid(dateGrid);
+    }
 
     void clear();
 
@@ -75,7 +77,7 @@ public:
     //! \name Inspectors
     //@{
     CrossAssetStateProcess::discretization discretization() const { return discretization_; }
-    boost::shared_ptr<DateGrid> grid() const { return grid_; }
+    boost::shared_ptr<DateGrid> getGrid() const { return grid_; }
     SequenceType sequenceType() const { return sequenceType_; }
     long seed() const { return seed_; }
     Size samples() const { return samples_; }
