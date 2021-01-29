@@ -230,6 +230,21 @@ void CPILegData::fromXML(XMLNode* node) {
     caps_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Caps", "Cap", "startDate", capDates_, &parseReal);
     floors_ =
         XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Floors", "Floor", "startDate", floorDates_, &parseReal);
+
+    finalFlowCap_ = Null<Real>();
+    if (auto n = XMLUtils::getChildNode(node, "FinalFlowCap")) {
+        string v = XMLUtils::getNodeValue(n);
+        if (!v.empty())
+            finalFlowCap_ = parseReal(XMLUtils::getNodeValue(n));
+    }
+
+    finalFlowFloor_ = Null<Real>();
+    if (auto n = XMLUtils::getChildNode(node, "FinalFlowFloor")) {
+        string v = XMLUtils::getNodeValue(n);
+        if (!v.empty())
+            finalFlowFloor_ = parseReal(XMLUtils::getNodeValue(n));
+    }
+
     if (XMLUtils::getChildNode(node, "NakedOption"))
         nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
     else
@@ -247,6 +262,10 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "SubtractInflationNotional", subtractInflationNominal_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
+    if(finalFlowCap_ != Null<Real>())
+        XMLUtils::addChild(doc, node, "FinalFlowCap", finalFlowCap_);
+    if(finalFlowFloor_ != Null<Real>())
+        XMLUtils::addChild(doc, node, "FinalFlowFloor", finalFlowFloor_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
@@ -1153,11 +1172,19 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     if (couponFloor)
         cpiLeg.withFloors(buildScheduledVector(cpiLegData->floors(), cpiLegData->floorDates(), schedule));
 
+    bool finalFlowCapFloor = cpiLegData->finalFlowCap() != Null<Real>() || cpiLegData->finalFlowFloor() != Null<Real>();
+
+    if (cpiLegData->finalFlowCap() != Null<Real>())
+        cpiLeg.withFinalFlowCap(cpiLegData->finalFlowCap());
+
+    if (cpiLegData->finalFlowFloor() != Null<Real>())
+        cpiLeg.withFinalFlowFloor(cpiLegData->finalFlowFloor());
+
     Leg leg = cpiLeg.operator Leg();
     Size n = leg.size();
     QL_REQUIRE(n > 0, "Empty CPI Leg");
 
-    if (couponCapFloor) {
+    if (couponCapFloor || finalFlowCapFloor) {
 
         string indexName = index->name();
         // remove blanks (FIXME)
@@ -1184,14 +1211,14 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
 
             boost::shared_ptr<CappedFlooredCPICoupon> cfCpiCoupon =
                 boost::dynamic_pointer_cast<CappedFlooredCPICoupon>(leg[i]);
-            if (cfCpiCoupon) {
+            if (cfCpiCoupon && couponCapFloor) {
                 cfCpiCoupon->setPricer(couponPricer);
-            } else {
-                boost::shared_ptr<CappedFlooredCPICashFlow> cfCpiCashFlow =
-                    boost::dynamic_pointer_cast<CappedFlooredCPICashFlow>(leg[i]);
-                if (cfCpiCashFlow) {
-                    cfCpiCashFlow->setPricer(cashFlowPricer);
-                }
+            }
+
+            boost::shared_ptr<CappedFlooredCPICashFlow> cfCpiCashFlow =
+                boost::dynamic_pointer_cast<CappedFlooredCPICashFlow>(leg[i]);
+            if (cfCpiCashFlow && finalFlowCapFloor) {
+                cfCpiCashFlow->setPricer(cashFlowPricer);
             }
         }
     }
@@ -1210,15 +1237,9 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
         leg.pop_back();
     }
 
-    // build naked option leg if required
-    if (couponCapFloor && cpiLegData->nakedOption()) {
+    // build naked option leg if required and we have at least one cap/floor present in the coupon or the final flow
+    if ((couponCapFloor || finalFlowCapFloor) && cpiLegData->nakedOption()) {
         leg = StrippedCappedFlooredCPICouponLeg(leg);
-        // fix for missing registration in ql 1.13
-        for (auto const& t : leg) {
-            auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredCPICoupon>(t);
-            if (s != nullptr)
-                s->registerWith(s->underlying());
-        }
     }
 
     return leg;
@@ -1770,7 +1791,8 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             } else if (boost::starts_with(indexing.index(), "BOND-")) {
                 // if we build a bond index, we add the required fixings for the bond underlying
                 boost::shared_ptr<BondIndex> bi = parseBondIndex(indexing.index());
-                QL_REQUIRE(!(boost::dynamic_pointer_cast<BondFuturesIndex>(bi)), "BondFuture Legs are not yet supported");
+                QL_REQUIRE(!(boost::dynamic_pointer_cast<BondFuturesIndex>(bi)),
+                           "BondFuture Legs are not yet supported");
                 BondData bondData(bi->securityName(), 1.0);
                 index = buildBondIndex(bondData, indexing.indexIsDirty(), indexing.indexIsRelative(),
                                        parseCalendar(indexing.indexFixingCalendar()),

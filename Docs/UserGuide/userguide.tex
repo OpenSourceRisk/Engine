@@ -4077,7 +4077,7 @@ the relevant calibration instrument times and the parameter's initial values are
 empty and giving a single value in the \lstinline!InitialValue! node is the clearest XML setup in this case.
 
 \begin{listing}[H]
-\begin{minted}[fontsize=\footnotesize]{xml}	
+\begin{minted}[fontsize=\footnotesize]{xml}
 <JarrowYildirim index="EUHICPXT">
   <Currency>EUR</Currency>
   <CalibrationType>Bootstrap</CalibrationType>
@@ -4140,7 +4140,7 @@ also allowed and it has the structure shown in Listing \ref{lst:yoy_cf_calibrati
 be a maturity period e.g.\ \lstinline!5Y!. The \lstinline!Strike! should be an absolute strike level for the year on year cap or floor e.g.\ \lstinline!0.01! for 1\%.
 
 \begin{listing}[H]
-\begin{minted}[fontsize=\footnotesize]{xml}	
+\begin{minted}[fontsize=\footnotesize]{xml}
 <YoYCapFloor>
   <Type>...</Type>
   <Tenor>...</Tenor>
@@ -4157,7 +4157,7 @@ Finally, the instantaneous correlation structure is specified as follows.
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<CrossAssetModel>	
+<CrossAssetModel>
   <!-- ... -->
   <InstantaneousCorrelations>
     <Correlation factor1="IR:EUR" factor2="IR:USD">0.3</Correlation>
@@ -5195,6 +5195,7 @@ floor price surface.
           <IndexInterpolated>false</IndexInterpolated>
           <ObservationLag>3M</ObservationLag>
           <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
+          <QuoteIndex>...</QuoteIndex>
       </InflationCapFloorVolatility>
 \end{minted}
 \caption{Inflation ZC cap floor volatility surface configuration}
@@ -5221,6 +5222,7 @@ floor price surface.
 \item {\tt IndexInterpolated}: Flag indicating whether the index should be interpolating.
 \item {\tt Observation Lag}: The observation lag applicable to the term structure.
 \item {\tt YieldTermStructure}: The nominal term structure.
+\item \lstinline!QuoteIndex!: An optional node allowing the user to provide an alternative index name for forming the quotes that will be used in building the cap floor surface. If this node is not provided, the \lstinline!Index! node value is used in quote construction. For example, quotes must be created from each strike and each tenor and these quotes are subsequently looked up in the market data when building the cap floor volatility surface. The quotes are formed by concatenating \lstinline![Type]_INFLATIONCAPFLOOR!, \lstinline!PRICE! or \lstinline!RATE_[Vol_Type]VOL!, \lstinline![Index_Name]!, \lstinline![Tenor]!, \lstinline!C! or \lstinline!F! and \lstinline![Strike]! delimited by \lstinline!/!. If \lstinline!QuoteIndex! is provided, it is used as the \lstinline![Index_Name]! token. If it is not provided \lstinline!Index! is used as usual.
 \end{itemize}
 
 \subsubsection{CDS Volatilities}
@@ -5738,6 +5740,7 @@ This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning
 \input{../../Docs/UserGuide/tradecomponents/indexings}
 \input{../../Docs/UserGuide/tradecomponents/cashflowleg}
 \input{../../Docs/UserGuide/tradecomponents/cmsleg}
+\input{../../Docs/UserGuide/tradecomponents/durationadjustedcmsleg}
 \input{../../Docs/UserGuide/tradecomponents/cmsspreadleg}
 \input{../../Docs/UserGuide/tradecomponents/digitalcmsspreadleg}
 \input{../../Docs/UserGuide/tradecomponents/equityleg}

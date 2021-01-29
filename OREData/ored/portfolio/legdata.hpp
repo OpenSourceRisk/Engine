@@ -275,11 +275,13 @@ public:
                const vector<double>& rates, const vector<string>& rateDates = std::vector<string>(),
                bool subtractInflationNominal = true, const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
-               const vector<string>& floorDates = vector<string>(), bool nakedOption = false)
+               const vector<string>& floorDates = vector<string>(), double finalFlowCap = Null<Real>(),
+               double finalFlowFloor = Null<Real>(), bool nakedOption = false)
         : LegAdditionalData("CPI"), index_(index), startDate_(startDate), baseCPI_(baseCPI),
           observationLag_(observationLag), interpolation_(interpolation), rates_(rates), rateDates_(rateDates),
           subtractInflationNominal_(subtractInflationNominal), caps_(caps), capDates_(capDates), floors_(floors),
-          floorDates_(floorDates), nakedOption_(nakedOption) {
+          floorDates_(floorDates), finalFlowCap_(finalFlowCap), finalFlowFloor_(finalFlowFloor),
+          nakedOption_(nakedOption) {
         indices_.insert(index_);
     }
 
@@ -297,6 +299,8 @@ public:
     const vector<string>& capDates() const { return capDates_; }
     const vector<double>& floors() const { return floors_; }
     const vector<string>& floorDates() const { return floorDates_; }
+    double finalFlowCap() const { return finalFlowCap_; }
+    double finalFlowFloor() const { return finalFlowFloor_; }
     bool nakedOption() const { return nakedOption_; }
     //@}
 
@@ -318,6 +322,8 @@ private:
     vector<string> capDates_;
     vector<double> floors_;
     vector<string> floorDates_;
+    double finalFlowCap_;
+    double finalFlowFloor_;
     bool nakedOption_;
 
     static LegDataRegister<CPILegData> reg_;

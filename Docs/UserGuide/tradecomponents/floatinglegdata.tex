@@ -43,7 +43,7 @@ The meanings and allowable values of the elements in the \lstinline!FloatingLegD
   identifies the relevant fixings and yield curve of the floating leg.  
 
   Allowable values: An alphanumeric string of the form CCY-INDEX-TERM. CCY, INDEX and TERM must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TERM must be an integer followed by D, W,
-  M or Y. See Table \ref{tab:indices}.
+  M or Y. See Table \ref{tab:indices}. TERM is not required for Overnight indices.
 
 \item IsAveraged [Optional]:  For cases where there are multiple index fixings over a period \emph{true} indicates that
   the average of the fixings is used to calculate the coupon.  \emph{false} indicates that the coupon is calculated by
@@ -241,8 +241,9 @@ If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \
   above.
 
 \item NakedOption [Optional]: Optional node, if \emph{true} the leg represents only the embedded floor, cap or collar.
-  By convention the embedded floor (cap) are considered long if the leg is a receiver leg, otherwise short. For a
-  collar the floor is long and the cap is short if the leg is a receiver leg.
+  By convention the embedded floor (or cap) are considered long if the leg is a receiver leg, otherwise short. For a
+  collar the floor is long and the cap is short if the leg is a receiver leg. Notice that this is opposite to
+  the definition of a collar in \ref{ss:capfloor}.
 
  Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
 

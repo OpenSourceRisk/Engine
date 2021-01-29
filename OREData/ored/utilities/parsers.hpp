@@ -370,5 +370,11 @@ FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::st
 //! Write QuantLib::OvernightIndexFuture::NettingType to stream
 std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule t);
 
+//! Convert text to InflationSwapConvention::PublicationRoll
+InflationSwapConvention::PublicationRoll parseInflationSwapPublicationRoll(const std::string& s);
+
+//! Write InflationSwapConvention::PublicationRoll to stream
+std::ostream& operator<<(std::ostream& os, InflationSwapConvention::PublicationRoll pr);
+
 } // namespace data
 } // namespace ore

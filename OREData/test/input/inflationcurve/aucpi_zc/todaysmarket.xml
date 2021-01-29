@@ -1,0 +1,13 @@
+<TodaysMarket>
+  <YieldCurves id="default"/>
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="AUD">Yield/AUD/AUD-AONIA</DiscountingCurve>
+  </DiscountingCurves>
+  <IndexForwardingCurves id="default">
+    <Index name="AUD-AONIA">Yield/AUD/AUD-AONIA</Index>
+  </IndexForwardingCurves>
+  <ZeroInflationIndexCurves id="default">
+    <ZeroInflationIndexCurve name="AUCPI">Inflation/AUCPI/AUCPI_ZC_Swaps</ZeroInflationIndexCurve>
+  </ZeroInflationIndexCurves>
+</TodaysMarket>
+

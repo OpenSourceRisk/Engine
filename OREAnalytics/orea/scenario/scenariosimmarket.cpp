@@ -1706,8 +1706,8 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         Handle<ZeroInflationTermStructure> its(zeroCurve);
                         its->enableExtrapolation();
-                        boost::shared_ptr<ZeroInflationIndex> i =
-                            ore::data::parseZeroInflationIndex(name, false, Handle<ZeroInflationTermStructure>(its));
+                        boost::shared_ptr<ZeroInflationIndex> i = parseZeroInflationIndex(name, false,
+                            Handle<ZeroInflationTermStructure>(its), boost::make_shared<Conventions>(conventions_));
                         Handle<ZeroInflationIndex> zh(i);
                         zeroInflationIndices_.insert(pair<pair<string, string>, Handle<ZeroInflationIndex>>(
                             make_pair(Market::defaultConfiguration, name), zh));

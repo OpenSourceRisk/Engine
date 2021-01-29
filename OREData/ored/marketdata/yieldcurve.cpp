@@ -276,7 +276,11 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
 }
 
 boost::shared_ptr<YieldTermStructure>
-YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instruments) {
+YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
+
+    // Ensure that the instruments are sorted. This is done in IterativeBootstrap, but we need
+    // a sorted instruments vector in the code here as well.
+    std::sort(instruments.begin(), instruments.end(), QuantLib::detail::BootstrapHelperSorter());
 
     // Get configuration values for bootstrap
     Real accuracy = curveConfig_->bootstrapConfig().accuracy();
@@ -457,8 +461,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             yieldts->enableExtrapolation();
         }
         for (Size i = 0; i < instruments.size(); i++) {
-            // FIXME should that be pillarDate() in general?
-            dates[i + 1] = instruments[i]->latestDate();
+            dates[i + 1] = instruments[i]->pillarDate();
             zeros[i + 1] = yieldts->zeroRate(dates[i + 1], zeroDayCounter_, Continuous);
             discounts[i + 1] = yieldts->discount(dates[i + 1]);
             forwards[i + 1] = yieldts->forwardRate(dates[i + 1], dates[i + 1], zeroDayCounter_, Continuous);
@@ -1121,6 +1124,9 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
             Natural fwdStartDays = static_cast<Natural>(fwdStart.length());
             Handle<Quote> hQuote(depositQuote->quote());
 
+            QL_REQUIRE(fwdStart.units() == Days, "The forward start time unit for deposits "
+                                                 "must be expressed in days.");
+
             if (depositConvention->indexBased()) {
                 // indexName will have the form ccy-name so examples would be:
                 // EUR-EONIA, USD-FedFunds, EUR-EURIBOR, USD-LIBOR, etc.
@@ -1146,13 +1152,13 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
                                                ? conventions_.get(indexName)
                                                : nullptr);
                 }
-                depositHelper = boost::make_shared<DepositRateHelper>(hQuote, index);
+                depositHelper = boost::make_shared<DepositRateHelper>(
+                    hQuote, depositTerm, fwdStartDays, index->fixingCalendar(), index->businessDayConvention(),
+                    index->endOfMonth(), index->dayCounter());
             } else {
-                QL_REQUIRE(fwdStart.units() == Days, "The forward start time unit for deposits "
-                                                     "must be expressed in days.");
-                depositHelper.reset(new DepositRateHelper(
+                depositHelper = boost::make_shared<DepositRateHelper>(
                     hQuote, depositTerm, fwdStartDays, depositConvention->calendar(), depositConvention->convention(),
-                    depositConvention->eom(), depositConvention->dayCounter()));
+                    depositConvention->eom(), depositConvention->dayCounter());
             }
             instruments.push_back(depositHelper);
         }

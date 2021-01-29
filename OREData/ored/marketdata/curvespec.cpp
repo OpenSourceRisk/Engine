@@ -75,8 +75,6 @@ std::ostream& operator<<(std::ostream& os, const CurveSpec::CurveType& t) {
         return os << "CDSVolatility";
     case CurveSpec::CurveType::Inflation:
         return os << "Inflation";
-    case CurveSpec::CurveType::InflationCapFloorPrice:
-        return os << "InflationCapFloorPrice";
     case CurveSpec::CurveType::InflationCapFloorVolatility:
         return os << "InflationCapFloorVolatility";
     case CurveSpec::CurveType::Equity:

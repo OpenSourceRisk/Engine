@@ -517,6 +517,8 @@
     <ClInclude Include="qle\cashflows\couponpricer.hpp" />
     <ClInclude Include="qle\cashflows\cpicoupon.hpp" />
     <ClInclude Include="qle\cashflows\cpicouponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\durationadjustedcmscoupon.hpp" />
+    <ClInclude Include="qle\cashflows\durationadjustedcmscoupontsrpricer.hpp" />
     <ClInclude Include="qle\cashflows\equitycoupon.hpp" />
     <ClInclude Include="qle\cashflows\equitycouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\floatingannuitycoupon.hpp" />
@@ -552,6 +554,7 @@
     <ClInclude Include="qle\indexes\genericindex.hpp" />
     <ClInclude Include="qle\indexes\ibor\audbbsw.hpp" />
     <ClInclude Include="qle\indexes\ibor\brlcdi.hpp" />
+    <ClInclude Include="qle\indexes\ibor\boebaserate.hpp" />
     <ClInclude Include="qle\indexes\ibor\chfsaron.hpp" />
     <ClInclude Include="qle\indexes\ibor\chftois.hpp" />
     <ClInclude Include="qle\indexes\ibor\clpcamara.hpp" />
@@ -633,6 +636,7 @@
     <ClInclude Include="qle\math\stabilisedglls.hpp" />
     <ClInclude Include="qle\math\trace.hpp" />
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
+    <ClInclude Include="qle\models\annuitymapping.hpp" />
     <ClInclude Include="qle\models\cdsoptionhelper.hpp" />
     <ClInclude Include="qle\models\cirppconstantfellerparametrization.hpp" />
     <ClInclude Include="qle\models\cirppconstantparametrization.hpp" />
@@ -670,6 +674,7 @@
     <ClInclude Include="qle\models\lgmcalibrationinfo.hpp" />
     <ClInclude Include="qle\models\lgmimplieddefaulttermstructure.hpp" />
     <ClInclude Include="qle\models\lgmimpliedyieldtermstructure.hpp" />
+    <ClInclude Include="qle\models\linearannuitymapping.hpp" />
     <ClInclude Include="qle\models\linkablecalibratedmodel.hpp" />
     <ClInclude Include="qle\models\parametrization.hpp" />
     <ClInclude Include="qle\models\piecewiseconstanthelper.hpp" />
@@ -851,6 +856,8 @@
     <ClCompile Include="qle\cashflows\couponpricer.cpp" />
     <ClCompile Include="qle\cashflows\cpicoupon.cpp" />
     <ClCompile Include="qle\cashflows\cpicouponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\durationadjustedcmscoupon.cpp" />
+    <ClCompile Include="qle\cashflows\durationadjustedcmscoupontsrpricer.cpp" />
     <ClCompile Include="qle\cashflows\equitycoupon.cpp" />
     <ClCompile Include="qle\cashflows\equitycouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\floatingannuitycoupon.cpp" />
@@ -875,6 +882,7 @@
     <ClCompile Include="qle\indexes\commodityindex.cpp" />
     <ClCompile Include="qle\indexes\equityindex.cpp" />
     <ClCompile Include="qle\indexes\fxindex.cpp" />
+    <ClCompile Include="qle\indexes\ibor\boebaserate.cpp" />
     <ClCompile Include="qle\indexes\ibor\brlcdi.cpp" />
     <ClCompile Include="qle\indexes\ibor\ester.cpp" />
     <ClCompile Include="qle\indexes\ibor\primeindex.cpp" />
@@ -911,6 +919,7 @@
     <ClCompile Include="qle\math\deltagammavar.cpp" />
     <ClCompile Include="qle\math\fillemptymatrix.cpp" />
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
+    <ClCompile Include="qle\models\annuitymapping.cpp" />
     <ClCompile Include="qle\models\cdsoptionhelper.cpp" />
     <ClCompile Include="qle\models\cirppimplieddefaulttermstructure.cpp" />
     <ClCompile Include="qle\models\cmscaphelper.cpp" />
@@ -937,6 +946,7 @@
     <ClCompile Include="qle\models\lgmcalibrationinfo.cpp" />
     <ClCompile Include="qle\models\lgmimplieddefaulttermstructure.cpp" />
     <ClCompile Include="qle\models\lgmimpliedyieldtermstructure.cpp" />
+    <ClCompile Include="qle\models\linearannuitymapping.cpp" />
     <ClCompile Include="qle\models\linkablecalibratedmodel.cpp" />
     <ClCompile Include="qle\models\parametrization.cpp" />
     <ClCompile Include="qle\models\piecewiseconstanthelper.cpp" />

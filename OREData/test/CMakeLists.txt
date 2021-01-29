@@ -32,6 +32,7 @@ fxswap.cpp
 fxtriangulation.cpp
 indices.cpp
 inflationcapfloor.cpp
+inflationcurve.cpp
 legdata.cpp
 mxnircurves.cpp
 optionpaymentdata.cpp

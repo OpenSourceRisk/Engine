@@ -369,26 +369,37 @@ Calendar parseCalendar(const string& s, const string& newName) {
         { "ZAC", SouthAfrica() },
         { "ZAX", SouthAfrica() },
 
-        // fallback to TARGET for these emerging ccys
-        {"AED", TARGET()},
-        {"BHD", TARGET()},
-        {"CLF", TARGET()},
-        {"EGP", TARGET()},
-        {"KWD", TARGET()},
-        {"KZT", TARGET()},
-        {"MAD", TARGET()},
-        {"MXV", TARGET()},
-        {"NGN", TARGET()},
-        {"OMR", TARGET()},
-        {"PKR", TARGET()},
-        {"QAR", TARGET()},
-        {"UYU", TARGET()},
-        {"TND", TARGET()},
-        {"VND", TARGET()},
-        {"AOA", TARGET()},
-        {"ETB", TARGET()},
-        {"GEL", TARGET()},
-        {"XOF", TARGET()},
+        // fallback to WeekendsOnly for these emerging ccys
+        {"AED", WeekendsOnly()},
+        {"BHD", WeekendsOnly()},
+        {"CLF", WeekendsOnly()},
+        {"EGP", WeekendsOnly()},
+        {"KWD", WeekendsOnly()},
+        {"KZT", WeekendsOnly()},
+        {"MAD", WeekendsOnly()},
+        {"MXV", WeekendsOnly()},
+        {"NGN", WeekendsOnly()},
+        {"OMR", WeekendsOnly()},
+        {"PKR", WeekendsOnly()},
+        {"QAR", WeekendsOnly()},
+        {"UYU", WeekendsOnly()},
+        {"TND", WeekendsOnly()},
+        {"VND", WeekendsOnly()},
+        // new GFMA currencies
+        {"AOA", WeekendsOnly()},
+        {"BGN", WeekendsOnly()},
+        {"ETB", WeekendsOnly()},
+        {"GEL", WeekendsOnly()},
+        {"GHS", WeekendsOnly()},
+        {"HRK", WeekendsOnly()},
+        {"JOD", WeekendsOnly()},
+        {"KES", WeekendsOnly()},
+        {"LKR", WeekendsOnly()},
+        {"MUR", WeekendsOnly()},
+        {"RSD", WeekendsOnly()},
+        {"UGX", WeekendsOnly()},
+        {"XOF", WeekendsOnly()},
+        {"ZMW", WeekendsOnly()},
 
         // ISO 10383 MIC Exchange
         {"BVMF", Brazil(Brazil::Exchange)},
@@ -665,7 +676,8 @@ DateGeneration::Rule parseDateGenerationRule(const string& s) {
                                                   {"TwentiethIMM", DateGeneration::TwentiethIMM},
                                                   {"OldCDS", DateGeneration::OldCDS},
                                                   {"CDS2015", DateGeneration::CDS2015},
-                                                  {"CDS", DateGeneration::CDS}};
+                                                  {"CDS", DateGeneration::CDS},
+                                                  {"LastWednesday", DateGeneration::LastWednesday}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -1241,6 +1253,33 @@ std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule 
     else {
         QL_FAIL("Internal error: unknown FutureConvention::DateGenerationRule - check implementation of operator<< "
                 "for this enum");
+    }
+}
+
+InflationSwapConvention::PublicationRoll parseInflationSwapPublicationRoll(const string& s) {
+    using IPR = InflationSwapConvention::PublicationRoll;
+    if (s == "None") {
+        return IPR::None;
+    } else if (s == "OnPublicationDate") {
+        return IPR::OnPublicationDate;
+    } else if (s == "AfterPublicationDate") {
+        return IPR::AfterPublicationDate;
+    } else {
+        QL_FAIL("InflationSwapConvention::PublicationRoll '" << s << "' not known, expect " <<
+            "'None', 'OnPublicationDate' or 'AfterPublicationDate'");
+    }
+}
+
+ostream& operator<<(ostream& os, InflationSwapConvention::PublicationRoll pr) {
+    using IPR = InflationSwapConvention::PublicationRoll;
+    if (pr == IPR::None) {
+        return os << "None";
+    } else if (pr == IPR::OnPublicationDate) {
+        return os << "OnPublicationDate";
+    } else if (pr == IPR::AfterPublicationDate) {
+        return os << "AfterPublicationDate";
+    } else {
+        QL_FAIL("Unknown InflationSwapConvention::PublicationRoll.");
     }
 }
 
