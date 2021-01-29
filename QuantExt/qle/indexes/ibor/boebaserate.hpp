@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file boebaserateindex.hpp
+/*! \file boebaserate.hpp
     \brief Bank of England base rate index,
     https://www.bankrate.com/uk/mortgages/bank-of-england-base-rate/
     \ingroup indexes
