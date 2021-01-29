@@ -210,7 +210,12 @@ EquityLeg::operator Leg() const {
     }
 
     Size numPeriods = schedule_.size() - 1;
-
+    
+    if (valuationSchedule_.size() > 0) {
+        QL_REQUIRE(valuationSchedule_.size() == schedule_.size(),
+                   "mismatch in valuationSchedule (" << valuationSchedule_.size() << ") and scheduleData (" <<  schedule_.size() << ") sizes");
+    }
+    
     for (Size i = 0; i < numPeriods; ++i) {
         startDate = schedule_.date(i);
         endDate = schedule_.date(i + 1);
