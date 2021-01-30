@@ -668,6 +668,7 @@
     <ClCompile Include="fxtriangulation.cpp" />
     <ClCompile Include="indices.cpp" />
     <ClCompile Include="inflationcapfloor.cpp" />
+    <ClCompile Include="inflationcurve.cpp" />
     <ClCompile Include="legdata.cpp" />
     <ClCompile Include="mxnircurves.cpp" />
     <ClCompile Include="optionpaymentdata.cpp" />

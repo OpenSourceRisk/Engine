@@ -27,6 +27,7 @@ deposit.cpp
 discountcurve.cpp
 discountingcommodityforwardengine.cpp
 discountratiomodifiedcurve.cpp
+durationadjustedcmscoupon.cpp
 dynamicblackvoltermstructure.cpp
 dynamicswaptionvolmatrix.cpp
 equityblackvolsurfaceproxy.cpp

@@ -145,7 +145,7 @@ void TodaysMarket::initialise(const Date& asof) {
     if (loadFixings_) {
         // Apply them now in case a curve builder needs them
         LOG("Todays Market Loading Fixings");
-        applyFixings(loader_->loadFixings(), *conventions_);
+        applyFixings(loader_->loadFixings(), conventions_);
         LOG("Todays Market Loading Fixing done.");
     }
 
@@ -822,7 +822,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 QL_REQUIRE(ts,
                            "expected zero inflation term structure for index " << node.name << ", but could not cast");
                 // index is not interpolated
-                auto tmp = parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>(ts));
+                auto tmp = parseZeroInflationIndex(node.name, false,
+                    Handle<ZeroInflationTermStructure>(ts), conventions_);
                 zeroInflationIndices_[make_pair(configuration, node.name)] = Handle<ZeroInflationIndex>(tmp);
             }
 
@@ -835,7 +836,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                            "expected yoy inflation term structure for index " << node.name << ", but could not cast");
                 yoyInflationIndices_[make_pair(configuration, node.name)] =
                     Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                        parseZeroInflationIndex(node.name, false), false, Handle<YoYInflationTermStructure>(ts)));
+                        parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>(), conventions_),
+                        false, Handle<YoYInflationTermStructure>(ts)));
             }
             break;
         }
@@ -850,7 +852,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Building InflationCapFloorVolatilitySurface for asof " << asof_);
                 boost::shared_ptr<InflationCapFloorVolCurve> inflationCapFloorVolCurve =
                     boost::make_shared<InflationCapFloorVolCurve>(asof_, *infcapfloorspec, *loader_, *curveConfigs_,
-                                                                  requiredYieldCurves_, requiredInflationCurves_);
+                                                                  requiredYieldCurves_, requiredInflationCurves_,
+                                                                  conventions_);
                 itr = requiredInflationCapFloorVolCurves_
                           .insert(make_pair(infcapfloorspec->name(), inflationCapFloorVolCurve))
                           .first;

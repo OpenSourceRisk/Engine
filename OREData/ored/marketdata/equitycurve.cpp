@@ -256,30 +256,37 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         if (curveType_ == EquityCurveConfig::Type::ForwardPrice ||
             curveType_ == EquityCurveConfig::Type::ForwardDividendPrice) {
 
-            DLOG("Building Equity Dividend Yield curve from Forward/Future prices");
+            if (qt.size() > 0) {
+                DLOG("Building Equity Dividend Yield curve from Forward/Future prices");
 
-            // sort quotes and terms in case of wild-card
-            if (wcFlag) {
-                QL_REQUIRE(quotesRead > 0, "Wild card quote specified, but no quotes read.")
+                // sort quotes and terms in case of wild-card
+                if (wcFlag) {
+                    QL_REQUIRE(quotesRead > 0, "Wild card quote specified, but no quotes read.")
 
-                // sort
-                std::sort(qt.begin(), qt.end(),
-                          [](const boost::shared_ptr<EquityForwardQuote>& a,
-                             const boost::shared_ptr<EquityForwardQuote>& b) -> bool {
-                              return a->expiryDate() < b->expiryDate();
-                          });
+                        // sort
+                        std::sort(qt.begin(), qt.end(),
+                            [](const boost::shared_ptr<EquityForwardQuote>& a,
+                                const boost::shared_ptr<EquityForwardQuote>& b) -> bool {
+                        return a->expiryDate() < b->expiryDate();
+                    });
 
-                // populate individual quote, term vectors
-                for (Size i = 0; i < qt.size(); i++) {
-                    terms_.push_back(qt[i]->expiryDate());
-                    // convert quote from minor to major currency if needed
-                    quotes_.push_back(convertMinorToMajorCurrency(qt[i]->ccy(), qt[i]->quote()->value()));
+                    // populate individual quote, term vectors
+                    for (Size i = 0; i < qt.size(); i++) {
+                        terms_.push_back(qt[i]->expiryDate());
+                        // convert quote from minor to major currency if needed
+                        quotes_.push_back(convertMinorToMajorCurrency(qt[i]->ccy(), qt[i]->quote()->value()));
+                    }
                 }
+            }
+            if (quotes_.size() == 0) {
+                LOG("No Equity Forward quotes provided for " << config->curveID()
+                    << ", continuing without dividend curve.");
+                buildCurveType = EquityCurveConfig::Type::NoDividends;
             }
         } else if (curveType_ == EquityCurveConfig::Type::OptionPremium) {
 
             if (oqt.size() == 0) {
-                WLOG("No Equity Option quotes provided for " << config->curveID()
+                LOG("No Equity Option quotes provided for " << config->curveID()
                                                              << ", continuing without dividend curve.");
                 buildCurveType = EquityCurveConfig::Type::NoDividends;
             } else {

@@ -975,15 +975,23 @@ XMLNode* CdsConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+InflationSwapConvention::InflationSwapConvention(const boost::shared_ptr<Conventions>& conventions)
+    : fixConvention_(Following), interpolated_(false), adjustInfObsDates_(false),
+      infConvention_(Following), conventions_(conventions), publicationRoll_(PublicationRoll::None) {}
+
 InflationSwapConvention::InflationSwapConvention(const string& id, const string& strFixCalendar,
                                                  const string& strFixConvention, const string& strDayCounter,
                                                  const string& strIndex, const string& strInterpolated,
                                                  const string& strObservationLag, const string& strAdjustInfObsDates,
-                                                 const string& strInfCalendar, const string& strInfConvention)
+                                                 const string& strInfCalendar, const string& strInfConvention,
+                                                 const boost::shared_ptr<Conventions>& conventions,
+                                                 PublicationRoll publicationRoll,
+                                                 const boost::shared_ptr<ScheduleData>& publicationScheduleData)
     : Convention(id, Type::InflationSwap), strFixCalendar_(strFixCalendar), strFixConvention_(strFixConvention),
       strDayCounter_(strDayCounter), strIndex_(strIndex), strInterpolated_(strInterpolated),
       strObservationLag_(strObservationLag), strAdjustInfObsDates_(strAdjustInfObsDates),
-      strInfCalendar_(strInfCalendar), strInfConvention_(strInfConvention) {
+      strInfCalendar_(strInfCalendar), strInfConvention_(strInfConvention), conventions_(conventions),
+      publicationRoll_(publicationRoll), publicationScheduleData_(publicationScheduleData) {
     build();
 }
 
@@ -992,11 +1000,16 @@ void InflationSwapConvention::build() {
     fixConvention_ = parseBusinessDayConvention(strFixConvention_);
     dayCounter_ = parseDayCounter(strDayCounter_);
     interpolated_ = parseBool(strInterpolated_);
-    index_ = parseZeroInflationIndex(strIndex_, interpolated_);
+    index_ = parseZeroInflationIndex(strIndex_, interpolated_, Handle<ZeroInflationTermStructure>(), conventions_);
     observationLag_ = parsePeriod(strObservationLag_);
     adjustInfObsDates_ = parseBool(strAdjustInfObsDates_);
     infCalendar_ = parseCalendar(strInfCalendar_);
     infConvention_ = parseBusinessDayConvention(strInfConvention_);
+    if (publicationRoll_ != PublicationRoll::None) {
+        QL_REQUIRE(publicationScheduleData_, "Publication roll is " << publicationRoll_ << " for " << id() <<
+            " so expect non-null publication schedule data.");
+        publicationSchedule_ = makeSchedule(*publicationScheduleData_);
+    }
 }
 
 void InflationSwapConvention::fromXML(XMLNode* node) {
@@ -1015,6 +1028,20 @@ void InflationSwapConvention::fromXML(XMLNode* node) {
     strAdjustInfObsDates_ = XMLUtils::getChildValue(node, "AdjustInflationObservationDates", true);
     strInfCalendar_ = XMLUtils::getChildValue(node, "InflationCalendar", true);
     strInfConvention_ = XMLUtils::getChildValue(node, "InflationConvention", true);
+
+    publicationRoll_ = PublicationRoll::None;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "PublicationRoll")) {
+        publicationRoll_ = parseInflationSwapPublicationRoll(XMLUtils::getNodeValue(n));
+    }
+
+    if (publicationRoll_ != PublicationRoll::None) {
+        XMLNode* n = XMLUtils::getChildNode(node, "PublicationSchedule");
+        QL_REQUIRE(n, "PublicationRoll is " << publicationRoll_ << " for " << id() <<
+            " so expect non-empty PublicationSchedule.");
+        publicationScheduleData_ = boost::make_shared<ScheduleData>();
+        publicationScheduleData_->fromXML(n);
+    }
+
     build();
 }
 
@@ -1031,6 +1058,18 @@ XMLNode* InflationSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "AdjustInflationObservationDates", strAdjustInfObsDates_);
     XMLUtils::addChild(doc, node, "InflationCalendar", strInfCalendar_);
     XMLUtils::addChild(doc, node, "InflationConvention", strInfConvention_);
+
+    if (publicationRoll_ != PublicationRoll::None) {
+        XMLUtils::addChild(doc, node, "RollOnPublication", to_string(publicationRoll_));
+        QL_REQUIRE(publicationScheduleData_, "PublicationRoll is " << publicationRoll_ << " for "
+            << id() << " so expect PublicationSchedule.");
+
+        // Need to change the name from ScheduleData to PublicationSchedule.
+        XMLNode* n = publicationScheduleData_->toXML(doc);
+        XMLUtils::setNodeName(doc, n, "PublicationSchedule");
+        XMLUtils::appendNode(node, n);
+    }
+
     return node;
 }
 
@@ -1535,6 +1574,66 @@ XMLNode* FxOptionConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+ZeroInflationIndexConvention::ZeroInflationIndexConvention()
+    : revised_(false), frequency_(Monthly) {}
+
+ZeroInflationIndexConvention::ZeroInflationIndexConvention(
+    const string& id,
+    const string& regionName,
+    const string& regionCode,
+    bool revised,
+    const string& frequency,
+    const string& availabilityLag,
+    const string& currency)
+    : Convention(id, Type::ZeroInflationIndex),
+      regionName_(regionName),
+      regionCode_(regionCode),
+      revised_(revised),
+      strFrequency_(frequency),
+      strAvailabilityLag_(availabilityLag),
+      strCurrency_(currency),
+      frequency_(Monthly) {}
+
+QuantLib::Region ZeroInflationIndexConvention::region() const {
+    return QuantLib::CustomRegion(regionName_, regionCode_);
+}
+
+void ZeroInflationIndexConvention::build() {
+    frequency_ = parseFrequency(strFrequency_);
+    availabilityLag_ = parsePeriod(strAvailabilityLag_);
+    currency_ = parseCurrency(strCurrency_);
+}
+
+void ZeroInflationIndexConvention::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "ZeroInflationIndex");
+    type_ = Type::ZeroInflationIndex;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+
+    regionName_ = XMLUtils::getChildValue(node, "RegionName", true);
+    regionCode_ = XMLUtils::getChildValue(node, "RegionCode", true);
+    revised_ = parseBool(XMLUtils::getChildValue(node, "Revised", true));
+    strFrequency_ = XMLUtils::getChildValue(node, "Frequency", true);
+    strAvailabilityLag_ = XMLUtils::getChildValue(node, "AvailabilityLag", true);
+    strCurrency_ = XMLUtils::getChildValue(node, "Currency", true);
+
+    build();
+}
+
+XMLNode* ZeroInflationIndexConvention::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("ZeroInflationIndex");
+    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "RegionName", regionName_);
+    XMLUtils::addChild(doc, node, "RegionCode", regionCode_);
+    XMLUtils::addChild(doc, node, "Revised", revised_);
+    XMLUtils::addChild(doc, node, "Frequency", strFrequency_);
+    XMLUtils::addChild(doc, node, "AvailabilityLag", strAvailabilityLag_);
+    XMLUtils::addChild(doc, node, "Currency", strCurrency_);
+
+    return node;
+}
+
 void Conventions::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "Conventions");
@@ -1579,7 +1678,7 @@ void Conventions::fromXML(XMLNode* node) {
         } else if (childName == "SwapIndex") {
             convention.reset(new SwapIndexConvention());
         } else if (childName == "InflationSwap") {
-            convention.reset(new InflationSwapConvention());
+            convention.reset(new InflationSwapConvention(shared_from_this()));
         } else if (childName == "CmsSpreadOption") {
             convention.reset(new CmsSpreadOptionConvention());
         } else if (childName == "CommodityForward") {
@@ -1592,6 +1691,8 @@ void Conventions::fromXML(XMLNode* node) {
             convention = boost::make_shared<IborIndexConvention>();
         } else if (childName == "OvernightIndex") {
             convention = boost::make_shared<OvernightIndexConvention>();
+        } else if (childName == "ZeroInflationIndex") {
+            convention = boost::make_shared<ZeroInflationIndexConvention>();
         } else {
             // No need to QL_FAIL here, just go to the next one
             WLOG("Convention name, " << childName << ", not recognized.");
@@ -1631,13 +1732,18 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
     return it->second;
 }
 
+pair<bool, boost::shared_ptr<Convention>> Conventions::get(const string& id, const Convention::Type& type) const {
+    auto c = data_.find(id);
+    if (c == data_.end() || c->second->type() != type)
+        return make_pair(false, nullptr);
+    else
+        return make_pair(true, c->second);
+}
+
 bool Conventions::has(const string& id) const { return data_.count(id) == 1; }
 
 bool Conventions::has(const std::string& id, const Convention::Type& type) const {
-    auto c = data_.find(id);
-    if (c == data_.end())
-        return false;
-    return c->second->type() == type;
+    return get(id, type).first;
 }
 
 void Conventions::add(const boost::shared_ptr<Convention>& convention) {
