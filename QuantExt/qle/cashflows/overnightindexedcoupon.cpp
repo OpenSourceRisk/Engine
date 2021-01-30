@@ -315,12 +315,29 @@ CappedFlooredOvernightIndexedCoupon::CappedFlooredOvernightIndexedCoupon(
                          underlying->accrualEndDate(), underlying->fixingDays(), underlying->index(),
                          underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(),
                          underlying->referencePeriodEnd(), underlying->dayCounter(), false),
-      underlying_(underlying), cap_(cap), floor_(floor), nakedOption_(nakedOption), localCapFloor_(localCapFloor) {
-    registerWith(underlying_);
+      underlying_(underlying), nakedOption_(nakedOption), localCapFloor_(localCapFloor) {
+
+    if (!localCapFloor) {
+        if (gearing_ > 0.0) {
+            cap_ = cap;
+            floor_ = floor;
+        } else {
+            cap_ = floor;
+            floor_ = cap;
+        }
+    } else {
+        cap_ = cap;
+        floor_ = floor;
+    }
     if (cap_ != Null<Real>() && floor_ != Null<Real>()) {
         QL_REQUIRE(cap_ >= floor, "cap level (" << cap_ << ") less than floor level (" << floor_ << ")");
     }
+    registerWith(underlying_);
 }
+
+Rate CappedFlooredOvernightIndexedCoupon::cap() const { return gearing_ > 0.0 ? cap_ : floor_; }
+
+Rate CappedFlooredOvernightIndexedCoupon::floor() const { return gearing_ > 0.0 ? floor_ : cap_; }
 
 Rate CappedFlooredOvernightIndexedCoupon::rate() const {
     QL_REQUIRE(underlying_->pricer(), "pricer not set");
