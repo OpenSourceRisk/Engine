@@ -376,5 +376,14 @@ InflationSwapConvention::PublicationRoll parseInflationSwapPublicationRoll(const
 //! Write InflationSwapConvention::PublicationRoll to stream
 std::ostream& operator<<(std::ostream& os, InflationSwapConvention::PublicationRoll pr);
 
+//! Write QuantLib::SobolBrownianGenerator::Ordering to stream
+std::ostream& operator<<(std::ostream& os, SobolBrownianGenerator::Ordering t);
+    
+//! Write QuantLib::SobolRsg::DirectionIntegers to stream
+std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t);
+    
+//! Enum to string used in ScenarioGeneratorData's toXML
+std::ostream& operator<<(std::ostream& os, QuantExt::CrossAssetStateProcess::discretization type);
+
 } // namespace data
 } // namespace ore

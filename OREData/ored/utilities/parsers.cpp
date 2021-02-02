@@ -1283,5 +1283,50 @@ ostream& operator<<(ostream& os, InflationSwapConvention::PublicationRoll pr) {
     }
 }
 
+std::ostream& operator<<(std::ostream& os, SobolBrownianGenerator::Ordering t) {
+    static map<SobolBrownianGenerator::Ordering, string> m = {{SobolBrownianGenerator::Ordering::Factors, "Factors"},
+                                                              {SobolBrownianGenerator::Ordering::Steps, "Steps"},
+                                                              {SobolBrownianGenerator::Ordering::Diagonal, "Diagonal"}};
+    auto it = m.find(t);
+    if (it != m.end()) {
+        return os << it->second;
+    } else {
+        QL_FAIL("Internal error: unknown SobolBrownianGenerator::Ordering - check implementation of operator<< "
+                "for this enum");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t) {
+    static map<SobolRsg::DirectionIntegers, string> m = {
+        {SobolRsg::DirectionIntegers::Unit, "Unit"},
+        {SobolRsg::DirectionIntegers::Jaeckel, "Jaeckel"},
+        {SobolRsg::DirectionIntegers::SobolLevitan, "SobolLevitan"},
+        {SobolRsg::DirectionIntegers::SobolLevitanLemieux, "SobolLevitanLemieux"},
+        {SobolRsg::DirectionIntegers::JoeKuoD5, "JoeKuoD5"},
+        {SobolRsg::DirectionIntegers::JoeKuoD6, "JoeKuoD6"},
+        {SobolRsg::DirectionIntegers::JoeKuoD7, "JoeKuoD7"},
+        {SobolRsg::DirectionIntegers::Kuo, "Kuo"},
+        {SobolRsg::DirectionIntegers::Kuo2, "Kuo2"},
+        {SobolRsg::DirectionIntegers::Kuo3, "Kuo3"}};
+    auto it = m.find(t);
+    if (it != m.end()) {
+        return os << it->second;
+    } else {
+        QL_FAIL("Internal error: unknown SobolRsg::DirectionIntegers - check implementation of operator<< "
+                "for this enum");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, QuantExt::CrossAssetStateProcess::discretization dis) {
+    switch (dis) {
+    case QuantExt::CrossAssetStateProcess::exact:
+        return out << "Exact";
+    case QuantExt::CrossAssetStateProcess::euler:
+        return out << "Euler";
+    default:
+        return out << "?";
+    }
+}
+
 } // namespace data
 } // namespace ore
