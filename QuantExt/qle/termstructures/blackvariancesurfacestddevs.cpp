@@ -27,12 +27,11 @@ namespace QuantExt {
 
 BlackVarianceSurfaceStdDevs::BlackVarianceSurfaceStdDevs(
     const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& stdDevs,
-    const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix, const DayCounter& dayCounter,
-    const boost::shared_ptr<EqFxIndexBase>& index, bool stickyStrike,
-    bool flatExtrapMoneyness)
-    : BlackVarianceSurfaceMoneyness(cal, spot, times, stdDevs, blackVolMatrix, dayCounter, stickyStrike),
-    index_(index), flatExtrapolateMoneyness_(flatExtrapMoneyness) {
-    
+    const std::vector<std::vector<Handle<Quote>>>& blackVolMatrix, const DayCounter& dayCounter,
+    const boost::shared_ptr<EqFxIndexBase>& index, bool stickyStrike, bool flatExtrapMoneyness)
+    : BlackVarianceSurfaceMoneyness(cal, spot, times, stdDevs, blackVolMatrix, dayCounter, stickyStrike), index_(index),
+      flatExtrapolateMoneyness_(flatExtrapMoneyness) {
+
     // set up atm variance curve - maybe just take ATM vols in
     vector<Real>::const_iterator it = find(stdDevs.begin(), stdDevs.end(), 0.0);
     QL_REQUIRE(it != stdDevs.end(), "atm D is required."); // this might fail
@@ -92,17 +91,28 @@ Real BlackVarianceSurfaceStdDevs::moneyness(Time t, Real strike) const {
 
 void BlackVarianceSurfaceStdDevs::populateVolMatrix(
     const QuantLib::Handle<QuantLib::BlackVolTermStructure>& termStructre,
-    vector<vector<Handle<Quote> > >& quotesToPopulate, const std::vector<QuantLib::Period>& expiries,
+    vector<vector<Handle<Quote>>>& quotesToPopulate, const std::vector<Real>& times,
     const std::vector<Real>& stdDevPoints, const QuantLib::Interpolation& forwardCurve,
     const QuantLib::Interpolation atmVolCurve) {
 
-    for (Size j = 0; j < expiries.size(); j++) {
-        Date tmpDate = termStructre->referenceDate() +
-                       expiries[j]; // todo: is the reference date of this termstructure as the asof date
-        Time tmpTime = termStructre->timeFromReference(tmpDate);
+    // check that quotesToPopulate container has the correct dimensions
+
+    QL_REQUIRE(quotesToPopulate.size() == stdDevPoints.size(),
+               "BlackVarianceSurfaceStdDevs::populateVolMatrix(): quotesToPopulate size ("
+                   << quotesToPopulate.size() << ") does not match stdDevPoints size (" << stdDevPoints.size() << ")");
+    for (Size i = 0; i < stdDevPoints.size(); ++i) {
+        QL_REQUIRE(quotesToPopulate[i].size() == times.size(),
+                   "BlackVarianceSurfaceStdDevs::populateVolMatrix(): quotesToPopulate["
+                       << i << "] size (" << quotesToPopulate[i].size() << ") does not match times size ("
+                       << times.size() << ")");
+    }
+
+    // populate quotesToPopulate container
+
+    for (Size j = 0; j < times.size(); j++) {
         for (Size i = 0; i < stdDevPoints.size(); i++) {
-            Real tmpStrike = forwardCurve(tmpTime) * exp(atmVolCurve(tmpTime) * sqrt(tmpTime) * stdDevPoints[i]);
-            Volatility vol = termStructre->blackVol(tmpDate, tmpStrike, true);
+            Real tmpStrike = forwardCurve(times[j]) * exp(atmVolCurve(times[j]) * sqrt(times[j]) * stdDevPoints[i]);
+            Volatility vol = termStructre->blackVol(times[j], tmpStrike, true);
             boost::shared_ptr<QuantLib::SimpleQuote> q(new SimpleQuote(vol));
             quotesToPopulate[i][j] = Handle<Quote>(q);
         }

@@ -33,6 +33,8 @@
 #include <qle/cashflows/couponpricer.hpp>
 #include <qle/cashflows/cpicoupon.hpp>
 #include <qle/cashflows/cpicouponpricer.hpp>
+#include <qle/cashflows/durationadjustedcmscoupon.hpp>
+#include <qle/cashflows/durationadjustedcmscoupontsrpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
@@ -68,6 +70,7 @@
 #include <qle/indexes/genericiborindex.hpp>
 #include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
+#include <qle/indexes/ibor/boebaserate.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/indexes/ibor/chfsaron.hpp>
 #include <qle/indexes/ibor/chftois.hpp>
@@ -153,6 +156,7 @@
 #include <qle/math/trace.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/pathgeneratorfactory.hpp>
+#include <qle/models/annuitymapping.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/cirppconstantparametrization.hpp>
@@ -187,8 +191,10 @@
 #include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgm.hpp>
+#include <qle/models/lgmcalibrationinfo.hpp>
 #include <qle/models/lgmimplieddefaulttermstructure.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
+#include <qle/models/linearannuitymapping.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 #include <qle/models/parametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
@@ -250,7 +256,6 @@
 #include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
-#include <qle/termstructures/constantyoyinflationoptionletvolatility.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
@@ -303,10 +308,20 @@
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <qle/termstructures/probabilitytraits.hpp>
+#include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
+#include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
+#include <qle/termstructures/spreadedcorrelationcurve.hpp>
+#include <qle/termstructures/spreadedcpivolatilitysurface.hpp>
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
+#include <qle/termstructures/spreadedinflationcurve.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility.hpp>
+#include <qle/termstructures/spreadedoptionletvolatility2.hpp>
+#include <qle/termstructures/spreadedpricetermstructure.hpp>
 #include <qle/termstructures/spreadedsmilesection.hpp>
+#include <qle/termstructures/spreadedsmilesection2.hpp>
+#include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
+#include <qle/termstructures/spreadedyoyvolsurface.hpp>
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
@@ -324,7 +339,6 @@
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
 #include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
-#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
 #include <qle/time/actual364.hpp>

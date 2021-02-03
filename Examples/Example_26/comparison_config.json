@@ -1,0 +1,27 @@
+{
+  "csv_settings": {
+    "files": {
+      ".*(flows|cashflow).*.csv": {
+        "keys": [
+          "TradeId",
+          "Type",
+          "CashflowNo",
+          "LegNo"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Amount"
+            ],
+            "optional_names": [
+              "PresentValue",
+              "DiscountFactor"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-8
+          }
+        ]
+      }
+    }
+  }
+}

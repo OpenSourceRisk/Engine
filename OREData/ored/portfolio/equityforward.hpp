@@ -37,16 +37,17 @@ using std::string;
 */
 class EquityForward : public Trade {
 public:
-    EquityForward() : Trade("EquityForward") {}
-    EquityForward(Envelope& env, string longShort, EquityUnderlying equityUnderlying, string currency, double quantity,
-                  string maturityDate, double strike)
+    EquityForward() : Trade("EquityForward"), quantity_(0.0), strike_(0.0) {}
+    EquityForward(Envelope& env, string longShort, EquityUnderlying equityUnderlying, string currency,
+                  QuantLib::Real quantity, string maturityDate, QuantLib::Real strike, string strikeCurrency = "")
         : Trade("EquityForward", env), longShort_(longShort), equityUnderlying_(equityUnderlying), currency_(currency),
-          quantity_(quantity), maturityDate_(maturityDate), strike_(strike) {}
+          quantity_(quantity), maturityDate_(maturityDate), strike_(strike), strikeCurrency_(strikeCurrency) {}
 
     void build(const boost::shared_ptr<EngineFactory>&) override;
 
     //! Add underlying Equity names
-    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     string longShort() { return longShort_; }
     const string& eqName() const { return equityUnderlying_.name(); }
@@ -54,6 +55,7 @@ public:
     double quantity() { return quantity_; }
     string maturityDate() { return maturityDate_; }
     double strike() { return strike_; }
+    string strikeCurrency() { return strikeCurrency_; }
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
@@ -62,9 +64,10 @@ private:
     string longShort_;
     EquityUnderlying equityUnderlying_;
     string currency_;
-    double quantity_;
+    QuantLib::Real quantity_;
     string maturityDate_;
-    double strike_;
+    QuantLib::Real strike_;
+    string strikeCurrency_;
 };
 } // namespace data
 } // namespace ore

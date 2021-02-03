@@ -59,13 +59,25 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     npvCurrency_ = currency_;
     maturity_ = maturity;
 
-    // We really need today's spot to get the correct notional.
-    // But rather than having it move around we use strike * quantity
-    notional_ = strike_ * quantity_;
+    // notional_ = strike_ * quantity_;
+    notional_ = Null<Real>(); // is handled by override of notional()
     notionalCurrency_ = currency_;
 }
 
-std::map<AssetClass, std::set<std::string>> CommodityForward::underlyingIndices() const {
+QuantLib::Real CommodityForward::notional() const {
+    // try to get the notional from the additional results of the instrument
+    try {
+        return instrument_->qlInstrument()->result<Real>("currentNotional");
+    } catch (const std::exception& e) {
+        if (strcmp(e.what(), "currentNotional not provided"))
+            ALOG("error when retrieving notional: " << e.what());
+    }
+    // if not provided, return null
+    return Null<Real>();
+}
+
+std::map<AssetClass, std::set<std::string>>
+CommodityForward::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::COM, std::set<std::string>({commodityName_})}};
 }
 

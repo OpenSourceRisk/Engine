@@ -81,7 +81,10 @@ public:
     /*! Return the full required fixing information */
     const RequiredFixings& requiredFixings() const { return requiredFixings_; }
 
-    virtual std::map<AssetClass, std::set<std::string>> underlyingIndices() const { return {}; }
+    virtual std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const {
+        return {};
+    }
 
     //! \name Serialisation
     //@{
@@ -133,6 +136,12 @@ public:
     virtual string notionalCurrency() const { return notionalCurrency_; }
 
     const Date& maturity() const { return maturity_; }
+
+    //! returns any additional datum.
+    template <typename T> T additionalDatum(const std::string& tag) const;
+    //! returns all additional data returned by the trade once built
+    const std::map<std::string,boost::any>& additionalData() const;
+
     //@}
 
     //! \name Utility
@@ -169,11 +178,22 @@ protected:
                     const boost::shared_ptr<EngineFactory>& factory, const string& configuration);
 
     RequiredFixings requiredFixings_;
+    mutable std::map<std::string,boost::any> additionalData_;
 
 private:
     string id_;
     Envelope envelope_;
     TradeActions tradeActions_;
 };
+
+template <class T>
+inline T Trade::additionalDatum(const std::string& tag) const {
+    std::map<std::string,boost::any>::const_iterator value =
+        additionalData_.find(tag);
+    QL_REQUIRE(value != additionalData_.end(),
+               tag << " not provided");
+    return boost::any_cast<T>(value->second);
+}
+
 } // namespace data
 } // namespace ore

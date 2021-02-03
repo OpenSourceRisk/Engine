@@ -134,6 +134,7 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
 
     Option::Type callPut = (swap.side() == Protection::Buyer) ? Option::Call : Option::Put;
 
+    results.additionalResults = swap.additionalResults();
     // TODO: accuont for defaults between option trade data evaluation date
     if (strike != Null<Real>()) {
         Real strikeSpread = couponSpread;

@@ -125,6 +125,18 @@ QuantLib::DayCounter parseDayCounter(const string& s);
  */
 QuantLib::Currency parseCurrency(const string& s);
 
+//! Convert text to QuantLib::Currency for minor currencies e.g GBp -> GBPCurrency()
+/*!
+  \ingroup utilities
+ */
+QuantLib::Currency parseMinorCurrency(const string& s);
+
+//! Convert text to QuantLib::Currency
+/*!
+  \ingroup utilities
+ */
+QuantLib::Currency parseCurrencyWithMinors(const string& s);
+
 //! Convert text to QuantLib::DateGeneration::Rule
 /*!
   \ingroup utilities
@@ -148,6 +160,12 @@ QuantLib::Compounding parseCompounding(const string& s);
 \ingroup utilities
 */
 QuantLib::Position::Type parsePositionType(const string& s);
+
+//! Convert text to QuantLib::Protection::Side
+/*!
+\ingroup utilities
+*/
+QuantLib::Protection::Side parseProtectionSide(const string& s);
 
 //! Convert text to QuantLib::Settlement::Type
 /*!
@@ -268,6 +286,12 @@ enum class AssetClass { EQ, FX, COM, IR, INF, CR };
 */
 AssetClass parseAssetClass(const std::string& s);
 
+//! Write ore::data::AssetClass to stream
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, AssetClass a);
+
 //! Convert text to QuantLib::DeltaVolQuote::AtmType
 /*!
 \ingroup utilities
@@ -345,6 +369,21 @@ FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::st
 
 //! Write QuantLib::OvernightIndexFuture::NettingType to stream
 std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule t);
+
+//! Convert text to InflationSwapConvention::PublicationRoll
+InflationSwapConvention::PublicationRoll parseInflationSwapPublicationRoll(const std::string& s);
+
+//! Write InflationSwapConvention::PublicationRoll to stream
+std::ostream& operator<<(std::ostream& os, InflationSwapConvention::PublicationRoll pr);
+
+//! Write QuantLib::SobolBrownianGenerator::Ordering to stream
+std::ostream& operator<<(std::ostream& os, SobolBrownianGenerator::Ordering t);
+    
+//! Write QuantLib::SobolRsg::DirectionIntegers to stream
+std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t);
+    
+//! Enum to string used in ScenarioGeneratorData's toXML
+std::ostream& operator<<(std::ostream& os, QuantExt::CrossAssetStateProcess::discretization type);
 
 } // namespace data
 } // namespace ore

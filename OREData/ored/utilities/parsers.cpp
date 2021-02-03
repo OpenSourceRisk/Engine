@@ -359,23 +359,47 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"BEF", Belgium()},
         {"LUF", Luxembourg()},
         {"ATS", QuantExt::Austria()},
+         
+        // Minor Currencies
+        { "GBp", UnitedKingdom() },
+        { "GBX", UnitedKingdom() },
+        { "ILa", QuantLib::Israel() },
+        { "ILX", QuantLib::Israel() },
+        { "ZAc", SouthAfrica() },
+        { "ZAC", SouthAfrica() },
+        { "ZAX", SouthAfrica() },
 
-        // fallback to TARGET for these emerging ccys
-        {"AED", TARGET()},
-        {"BHD", TARGET()},
-        {"CLF", TARGET()},
-        {"EGP", TARGET()},
-        {"KWD", TARGET()},
-        {"KZT", TARGET()},
-        {"MAD", TARGET()},
-        {"MXV", TARGET()},
-        {"NGN", TARGET()},
-        {"OMR", TARGET()},
-        {"PKR", TARGET()},
-        {"QAR", TARGET()},
-        {"UYU", TARGET()},
-        {"TND", TARGET()},
-        {"VND", TARGET()},
+        // fallback to WeekendsOnly for these emerging ccys
+        {"AED", WeekendsOnly()},
+        {"BHD", WeekendsOnly()},
+        {"CLF", WeekendsOnly()},
+        {"EGP", WeekendsOnly()},
+        {"KWD", WeekendsOnly()},
+        {"KZT", WeekendsOnly()},
+        {"MAD", WeekendsOnly()},
+        {"MXV", WeekendsOnly()},
+        {"NGN", WeekendsOnly()},
+        {"OMR", WeekendsOnly()},
+        {"PKR", WeekendsOnly()},
+        {"QAR", WeekendsOnly()},
+        {"UYU", WeekendsOnly()},
+        {"TND", WeekendsOnly()},
+        {"VND", WeekendsOnly()},
+        // new GFMA currencies
+        {"AOA", WeekendsOnly()},
+        {"BGN", WeekendsOnly()},
+        {"ETB", WeekendsOnly()},
+        {"GEL", WeekendsOnly()},
+        {"GHS", WeekendsOnly()},
+        {"HRK", WeekendsOnly()},
+        {"JOD", WeekendsOnly()},
+        {"KES", WeekendsOnly()},
+        {"LKR", WeekendsOnly()},
+        {"MUR", WeekendsOnly()},
+        {"RSD", WeekendsOnly()},
+        {"UGX", WeekendsOnly()},
+        {"XOF", WeekendsOnly()},
+        {"ZMW", WeekendsOnly()},
 
         // ISO 10383 MIC Exchange
         {"BVMF", Brazil(Brazil::Exchange)},
@@ -524,6 +548,11 @@ DayCounter parseDayCounter(const string& s) {
     static map<string, DayCounter> m = {{"A360", Actual360()},
                                         {"Actual/360", Actual360()},
                                         {"ACT/360", Actual360()},
+                                        {"Act/360", Actual360()},
+                                        {"A360 (Incl Last)", Actual360(true)},
+                                        {"Actual/360 (Incl Last)", Actual360(true)},
+                                        {"ACT/360 (Incl Last)", Actual360(true)},
+                                        {"Act/360 (Incl Last)", Actual360(true)},
                                         {"A365", Actual365Fixed()},
                                         {"A365F", Actual365Fixed()},
                                         {"Actual/365 (Fixed)", Actual365Fixed()},
@@ -531,6 +560,8 @@ DayCounter parseDayCounter(const string& s) {
                                         {"ACT/365.FIXED", Actual365Fixed()},
                                         {"ACT/365", Actual365Fixed()},
                                         {"ACT/365L", Actual365Fixed()},
+                                        {"Act/365", Actual365Fixed()},
+                                        {"Act/365L", Actual365Fixed()},
                                         {"T360", Thirty360(Thirty360::USA)},
                                         {"30/360", Thirty360(Thirty360::USA)},
                                         {"30/360 (Bond Basis)", Thirty360(Thirty360::USA)},
@@ -581,32 +612,58 @@ DayCounter parseDayCounter(const string& s) {
 
 Currency parseCurrency(const string& s) {
     static map<string, Currency> m = {
-        {"ATS", ATSCurrency()}, {"AUD", AUDCurrency()}, {"BEF", BEFCurrency()}, {"BRL", BRLCurrency()},
-        {"CAD", CADCurrency()}, {"CHF", CHFCurrency()}, {"CNH", CNHCurrency()}, {"CNY", CNYCurrency()},
-        {"CZK", CZKCurrency()}, {"DEM", DEMCurrency()}, {"DKK", DKKCurrency()}, {"EUR", EURCurrency()},
-        {"ESP", ESPCurrency()}, {"FIM", FIMCurrency()}, {"FRF", FRFCurrency()}, {"GBP", GBPCurrency()},
-        {"GRD", GRDCurrency()}, {"HKD", HKDCurrency()}, {"HUF", HUFCurrency()}, {"IEP", IEPCurrency()},
-        {"ITL", ITLCurrency()}, {"INR", INRCurrency()}, {"ISK", ISKCurrency()}, {"JPY", JPYCurrency()},
-        {"KRW", KRWCurrency()}, {"LUF", LUFCurrency()}, {"NLG", NLGCurrency()}, {"NOK", NOKCurrency()},
-        {"NZD", NZDCurrency()}, {"PLN", PLNCurrency()}, {"PTE", PTECurrency()}, {"RON", RONCurrency()},
-        {"SEK", SEKCurrency()}, {"SGD", SGDCurrency()}, {"THB", THBCurrency()}, {"TRY", TRYCurrency()},
-        {"TWD", TWDCurrency()}, {"USD", USDCurrency()}, {"ZAR", ZARCurrency()}, {"ARS", ARSCurrency()},
-        {"CLP", CLPCurrency()}, {"COP", COPCurrency()}, {"IDR", IDRCurrency()}, {"ILS", ILSCurrency()},
-        {"KWD", KWDCurrency()}, {"PEN", PENCurrency()}, {"PKR", PKRCurrency()}, {"MXN", MXNCurrency()},
-        {"SAR", SARCurrency()}, {"RUB", RUBCurrency()}, {"TND", TNDCurrency()}, {"MYR", MYRCurrency()},
-        {"UAH", UAHCurrency()}, {"KZT", KZTCurrency()}, {"QAR", QARCurrency()}, {"MXV", MXVCurrency()},
-        {"CLF", CLFCurrency()}, {"EGP", EGPCurrency()}, {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()},
-        {"VND", VNDCurrency()}, {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()},
-        {"MAD", MADCurrency()}, {"UYU", UYUCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()},
-        {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"KES", KESCurrency()}, {"LKR", LKRCurrency()},
-        {"RSD", RSDCurrency()}, {"COU", COUCurrency()}, {"MUR", MURCurrency()}, {"UGX", UGXCurrency()},
-        {"ZMW", ZMWCurrency()}, {"GHS", GHSCurrency()}, {"JOD", JODCurrency()}, {"HRK", HRKCurrency()}};
+        {"AED", AEDCurrency()}, {"AOA", AOACurrency()}, {"ARS", ARSCurrency()}, {"ATS", ATSCurrency()}, 
+        {"AUD", AUDCurrency()}, {"BEF", BEFCurrency()}, {"BGN", BGNCurrency()}, {"BHD", BHDCurrency()}, 
+        {"BRL", BRLCurrency()}, {"CAD", CADCurrency()}, {"CHF", CHFCurrency()}, {"CLF", CLFCurrency()}, 
+        {"CLP", CLPCurrency()}, {"CNH", CNHCurrency()}, {"CNY", CNYCurrency()}, {"COP", COPCurrency()}, 
+        {"COU", COUCurrency()}, {"CZK", CZKCurrency()}, {"DEM", DEMCurrency()}, {"DKK", DKKCurrency()}, 
+        {"EGP", EGPCurrency()}, {"ESP", ESPCurrency()}, {"ETB", ETBCurrency()}, {"EUR", EURCurrency()}, 
+        {"FIM", FIMCurrency()}, {"FRF", FRFCurrency()}, {"GBP", GBPCurrency()}, {"GEL", GELCurrency()}, 
+        {"GHS", GHSCurrency()}, {"GRD", GRDCurrency()}, {"HKD", HKDCurrency()}, {"HRK", HRKCurrency()}, 
+        {"HUF", HUFCurrency()}, {"IDR", IDRCurrency()}, {"IEP", IEPCurrency()}, {"ILS", ILSCurrency()}, 
+        {"INR", INRCurrency()}, {"ISK", ISKCurrency()}, {"ITL", ITLCurrency()}, {"JOD", JODCurrency()}, 
+        {"JPY", JPYCurrency()}, {"KES", KESCurrency()}, {"KRW", KRWCurrency()}, {"KWD", KWDCurrency()}, 
+        {"KZT", KZTCurrency()}, {"LKR", LKRCurrency()}, {"LUF", LUFCurrency()}, {"MAD", MADCurrency()}, 
+        {"MUR", MURCurrency()}, {"MXN", MXNCurrency()}, {"MXV", MXVCurrency()}, {"MYR", MYRCurrency()}, 
+        {"NGN", NGNCurrency()}, {"NLG", NLGCurrency()}, {"NOK", NOKCurrency()}, {"NZD", NZDCurrency()}, 
+        {"OMR", OMRCurrency()}, {"PEN", PENCurrency()}, {"PHP", PHPCurrency()}, {"PKR", PKRCurrency()}, 
+        {"PLN", PLNCurrency()}, {"PTE", PTECurrency()}, {"QAR", QARCurrency()}, {"RON", RONCurrency()}, 
+        {"RSD", RSDCurrency()}, {"RUB", RUBCurrency()}, {"SAR", SARCurrency()}, {"SEK", SEKCurrency()}, 
+        {"SGD", SGDCurrency()}, {"THB", THBCurrency()}, {"TND", TNDCurrency()}, {"TRY", TRYCurrency()}, 
+        {"TWD", TWDCurrency()}, {"UAH", UAHCurrency()}, {"UGX", UGXCurrency()}, {"USD", USDCurrency()}, 
+        {"UYU", UYUCurrency()}, {"VND", VNDCurrency()}, {"XAG", XAGCurrency()}, {"XAU", XAUCurrency()}, 
+        {"XOF", XOFCurrency()}, {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"ZAR", ZARCurrency()},
+        {"ZMW", ZMWCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;
     } else {
         QL_FAIL("Currency \"" << s << "\" not recognized");
+    }
+}
+
+Currency parseMinorCurrency(const string& s) {
+    static map<string, Currency> m = {
+        {"GBp", GBPCurrency()}, {"GBX", GBPCurrency()},
+        {"ILa", ILSCurrency()}, {"ILX", ILSCurrency()},
+        {"ZAc", ZARCurrency()}, {"ZAC", ZARCurrency()}, {"ZAX", ZARCurrency()} };
+    
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    }
+    else {
+        QL_FAIL("Currency \"" << s << "\" not recognized");
+    }
+}
+
+Currency parseCurrencyWithMinors(const string& s) {
+    try {
+        return parseCurrency(s);
+    } catch (...) {
+        // try to parse as a minor currency if fails
+        return parseMinorCurrency(s);
     }
 }
 
@@ -619,7 +676,8 @@ DateGeneration::Rule parseDateGenerationRule(const string& s) {
                                                   {"TwentiethIMM", DateGeneration::TwentiethIMM},
                                                   {"OldCDS", DateGeneration::OldCDS},
                                                   {"CDS2015", DateGeneration::CDS2015},
-                                                  {"CDS", DateGeneration::CDS}};
+                                                  {"CDS", DateGeneration::CDS},
+                                                  {"LastWednesday", DateGeneration::LastWednesday}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -686,6 +744,22 @@ Position::Type parsePositionType(const std::string& s) {
         return it->second;
     } else {
         QL_FAIL("Position type \"" << s << "\" not recognized");
+    }
+}
+
+Protection::Side parseProtectionSide(const std::string& s) {
+    static map<string, Protection::Side> m = {
+        {"Buyer", Protection::Buyer},
+        {"Seller", Protection::Seller},
+        {"B", Protection::Buyer},
+        {"S", Protection::Seller}
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Protection side \"" << s << "\" not recognized");
     }
 }
 
@@ -938,6 +1012,26 @@ AssetClass parseAssetClass(const std::string& s) {
     }
 }
 
+
+std::ostream& operator<<(std::ostream& os, AssetClass a) {
+    switch (a) {
+    case AssetClass::EQ:
+        return os << "EQ";
+    case AssetClass::FX:
+        return os << "FX";
+    case AssetClass::COM:
+        return os << "COM";
+    case AssetClass::IR:
+        return os << "IR";
+    case AssetClass::INF:
+        return os << "INF";
+    case AssetClass::CR:
+        return os << "CR";
+    default:
+        QL_FAIL("Unknown AssetClass");
+    }
+}
+
 DeltaVolQuote::AtmType parseAtmType(const std::string& s) {
     static map<string, DeltaVolQuote::AtmType> m = {{"AtmNull", DeltaVolQuote::AtmNull},
                                                     {"AtmSpot", DeltaVolQuote::AtmSpot},
@@ -1159,6 +1253,78 @@ std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule 
     else {
         QL_FAIL("Internal error: unknown FutureConvention::DateGenerationRule - check implementation of operator<< "
                 "for this enum");
+    }
+}
+
+InflationSwapConvention::PublicationRoll parseInflationSwapPublicationRoll(const string& s) {
+    using IPR = InflationSwapConvention::PublicationRoll;
+    if (s == "None") {
+        return IPR::None;
+    } else if (s == "OnPublicationDate") {
+        return IPR::OnPublicationDate;
+    } else if (s == "AfterPublicationDate") {
+        return IPR::AfterPublicationDate;
+    } else {
+        QL_FAIL("InflationSwapConvention::PublicationRoll '" << s << "' not known, expect " <<
+            "'None', 'OnPublicationDate' or 'AfterPublicationDate'");
+    }
+}
+
+ostream& operator<<(ostream& os, InflationSwapConvention::PublicationRoll pr) {
+    using IPR = InflationSwapConvention::PublicationRoll;
+    if (pr == IPR::None) {
+        return os << "None";
+    } else if (pr == IPR::OnPublicationDate) {
+        return os << "OnPublicationDate";
+    } else if (pr == IPR::AfterPublicationDate) {
+        return os << "AfterPublicationDate";
+    } else {
+        QL_FAIL("Unknown InflationSwapConvention::PublicationRoll.");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, SobolBrownianGenerator::Ordering t) {
+    static map<SobolBrownianGenerator::Ordering, string> m = {{SobolBrownianGenerator::Ordering::Factors, "Factors"},
+                                                              {SobolBrownianGenerator::Ordering::Steps, "Steps"},
+                                                              {SobolBrownianGenerator::Ordering::Diagonal, "Diagonal"}};
+    auto it = m.find(t);
+    if (it != m.end()) {
+        return os << it->second;
+    } else {
+        QL_FAIL("Internal error: unknown SobolBrownianGenerator::Ordering - check implementation of operator<< "
+                "for this enum");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t) {
+    static map<SobolRsg::DirectionIntegers, string> m = {
+        {SobolRsg::DirectionIntegers::Unit, "Unit"},
+        {SobolRsg::DirectionIntegers::Jaeckel, "Jaeckel"},
+        {SobolRsg::DirectionIntegers::SobolLevitan, "SobolLevitan"},
+        {SobolRsg::DirectionIntegers::SobolLevitanLemieux, "SobolLevitanLemieux"},
+        {SobolRsg::DirectionIntegers::JoeKuoD5, "JoeKuoD5"},
+        {SobolRsg::DirectionIntegers::JoeKuoD6, "JoeKuoD6"},
+        {SobolRsg::DirectionIntegers::JoeKuoD7, "JoeKuoD7"},
+        {SobolRsg::DirectionIntegers::Kuo, "Kuo"},
+        {SobolRsg::DirectionIntegers::Kuo2, "Kuo2"},
+        {SobolRsg::DirectionIntegers::Kuo3, "Kuo3"}};
+    auto it = m.find(t);
+    if (it != m.end()) {
+        return os << it->second;
+    } else {
+        QL_FAIL("Internal error: unknown SobolRsg::DirectionIntegers - check implementation of operator<< "
+                "for this enum");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, QuantExt::CrossAssetStateProcess::discretization dis) {
+    switch (dis) {
+    case QuantExt::CrossAssetStateProcess::exact:
+        return out << "Exact";
+    case QuantExt::CrossAssetStateProcess::euler:
+        return out << "Euler";
+    default:
+        return out << "?";
     }
 }
 

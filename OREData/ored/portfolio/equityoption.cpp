@@ -21,6 +21,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/utilities/currencycheck.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
@@ -40,6 +41,12 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     // Populate the index_ in case the option is automatic exercise.
     const boost::shared_ptr<Market>& market = engineFactory->market();
     index_ = *market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing));
+    
+    // check the equity currency
+    Currency equityCurrency = market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing))->currency();
+    QL_REQUIRE(!equityCurrency.empty(), "No equity currency in equityCurve for equity " << assetName_);
+    QL_REQUIRE(equityCurrency == parseCurrencyWithMinors(currency_), 
+        "EquityCurrency " << equityCurrency << " must match Option currency " << currency_ << " for trade " << id());
 
     // Build the trade using the shared functionality in the base class.
     VanillaOptionTrade::build(engineFactory);
@@ -52,6 +59,20 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     }
 }
 
+void EquityOption::setCcyStrike() {
+    Currency ccy = parseCurrencyWithMinors(localCurrency_);
+    currency_ = ccy.code();
+    // if we have a minor currency, convert the strike
+    if (!strikeCurrency_.empty()) {
+        QL_REQUIRE(parseCurrencyWithMinors(strikeCurrency_) == ccy,
+            "Stike currency " << strikeCurrency_ << " does not match option currency " << currency_ << " for trade " << id());
+        strike_ = convertMinorToMajorCurrency(strikeCurrency_, strike_);
+    } else {
+        DLOG("No StrikeCurrency provided, using Option currency " << localCurrency_);
+        strike_ = convertMinorToMajorCurrency(localCurrency_, localStrike_);
+    }
+}
+
 void EquityOption::fromXML(XMLNode* node) {
     VanillaOptionTrade::fromXML(node);
     XMLNode* eqNode = XMLUtils::getChildNode(node, "EquityOptionData");
@@ -61,9 +82,11 @@ void EquityOption::fromXML(XMLNode* node) {
     if (!tmp)
         tmp = XMLUtils::getChildNode(eqNode, "Name");
     equityUnderlying_.fromXML(tmp);
-    currency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
-    strike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
+    localCurrency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
+    localStrike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
+    strikeCurrency_ = XMLUtils::getChildValue(eqNode, "StrikeCurrency", false);
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
+    setCcyStrike();
 }
 
 XMLNode* EquityOption::toXML(XMLDocument& doc) {
@@ -73,14 +96,16 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
 
     XMLUtils::appendNode(eqNode, option_.toXML(doc));
     XMLUtils::appendNode(eqNode, equityUnderlying_.toXML(doc));
-    XMLUtils::addChild(doc, eqNode, "Currency", currency_);
-    XMLUtils::addChild(doc, eqNode, "Strike", strike_);
+    XMLUtils::addChild(doc, eqNode, "Currency", localCurrency_);
+    XMLUtils::addChild(doc, eqNode, "Strike", localStrike_);
+    if (!strikeCurrency_.empty())
+        XMLUtils::addChild(doc, eqNode, "StrikeCurrency", strikeCurrency_);
     XMLUtils::addChild(doc, eqNode, "Quantity", quantity_);
 
     return node;
 }
 
-std::map<AssetClass, std::set<std::string>> EquityOption::underlyingIndices() const {
+std::map<AssetClass, std::set<std::string>> EquityOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::EQ, std::set<std::string>({equityName()})}};
 }
 

@@ -51,5 +51,27 @@ public:
     HRKCurrency();
 };
 
+//! Bulgarian lev
+/*! The ISO three-letter code is BGN; the numeric code is 975.
+ It is divided into 100 stotinki.
+
+ \ingroup currencies
+*/
+class BGNCurrency : public Currency {
+public:
+    BGNCurrency();
+};
+
+//! Georgian lari
+/*! The ISO three-letter code is GEL; the numeric code is 981.
+ It is divided into 100 tetri.
+
+ \ingroup currencies
+*/
+class GELCurrency : public Currency {
+public:
+    GELCurrency();
+};
+
 } // namespace QuantExt
 #endif

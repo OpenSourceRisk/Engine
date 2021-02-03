@@ -121,7 +121,8 @@ map<Date, HelperValues> jyHelperValues(const vector<boost::shared_ptr<Calibratio
 
 } // namespace
 
-std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+std::string getCalibrationDetails(LgmCalibrationInfo& info,
+                                  const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                                   const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
@@ -129,6 +130,7 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
         << std::setw(14) << "(diff)" << std::setw(14) << "irlgm1fAlpha" << std::setw(14) << "irlgm1fKappa"
         << std::setw(16) << "irlgm1fHwSigma\n";
     Real t = 0.0, modelAlpha = 0.0, modelKappa = 0.0, modelHwSigma = 0.0;
+    info.lgmCalibrationData.clear();
     for (Size j = 0; j < basket.size(); j++) {
         Real modelValue = basket[j]->modelValue();
         Real marketValue = basket[j]->marketValue();
@@ -150,6 +152,8 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
             << std::setw(14) << marketVol << std::setw(14) << volDiff << std::setw(14) << modelValue << std::setw(14)
             << marketValue << std::setw(14) << valueDiff << std::setw(14) << modelAlpha << std::setw(14) << modelKappa
             << std::setw(16) << modelHwSigma << "\n";
+        info.lgmCalibrationData.push_back(
+            LgmCalibrationData{t, modelVol, marketVol, modelValue, marketValue, modelAlpha, modelKappa, modelHwSigma});
     }
     if (parametrization != nullptr) {
         // report alpha, kappa at t_expiry^+ for last expiry

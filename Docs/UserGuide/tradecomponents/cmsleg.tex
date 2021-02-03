@@ -9,7 +9,7 @@ Listing \ref{lst:cmslegdata} shows an example for a leg of type CMS.
       <LegData>
         <LegType>CMS</LegType>
         <Payer>false</Payer>
-        <Currency>GBP</Currency>
+        <Currency>EUR</Currency>
         <Notionals>
           <Notional>10000000</Notional>
         </Notionals>
@@ -77,7 +77,7 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
   the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
   above.
 \item NakedOption [Optional]: If \emph{true} the leg represents only the embedded floor, cap or collar.
-  By convention the embedded floor (cap) are considered long if the leg is a receiver leg, otherwise short. For a
+  By convention the embedded floor (or cap) are considered long if the leg is a receiver leg, otherwise short. For a
   collar the floor is long and the cap is short if the leg is a receiver leg.
   
 Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.

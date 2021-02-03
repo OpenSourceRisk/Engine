@@ -48,7 +48,7 @@ FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
     QuantLib::Currency domesticCcy = ore::data::parseCurrency(data->domesticCcy());
     std::string ccyPair = ccy.code() + domesticCcy.code();
 
-    LOG("Start building FxBs model for ccyPair")
+    LOG("Start building FxBs model for " << ccyPair);
 
     // get market data
     fxSpot_ = market_->fxSpot(ccyPair, configuration_);

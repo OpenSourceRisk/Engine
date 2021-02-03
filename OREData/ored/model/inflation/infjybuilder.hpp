@@ -84,7 +84,7 @@ private:
     // We may need these depending on the calibration instrument types.
     QuantLib::Handle<QuantLib::CPIVolatilitySurface> cpiVolatility_;
     boost::shared_ptr<QuantLib::YoYInflationIndex> yoyInflationIndex_;
-    QuantLib::Handle<QuantExt::YoYOptionletVolatilitySurface> yoyVolatility_;
+    QuantLib::Handle<QuantLib::YoYOptionletVolatilitySurface> yoyVolatility_;
 
     // Helper flag used in the forceRecalculate() method.
     bool forceCalibration_ = false;

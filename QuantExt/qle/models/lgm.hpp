@@ -26,6 +26,7 @@
 
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
+#include <qle/models/lgmcalibrationinfo.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
@@ -95,9 +96,15 @@ public:
         return res;
     }
 
+    /*! set info on how the model was calibrated */
+    void setCalibrationInfo(const LgmCalibrationInfo& calibrationInfo) { calibrationInfo_ = calibrationInfo; }
+    /*! get info on how the model was calibrated */
+    const LgmCalibrationInfo& getCalibrationInfo() const { return calibrationInfo_; }
+
 private:
     boost::shared_ptr<IrLgm1fParametrization> parametrization_;
     boost::shared_ptr<StochasticProcess1D> stateProcess_;
+    LgmCalibrationInfo calibrationInfo_;
 };
 
 typedef LinearGaussMarkovModel LGM;

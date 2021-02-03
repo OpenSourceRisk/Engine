@@ -87,6 +87,7 @@ private:
     EquityVolatilityCurveSpec spec_;
     boost::shared_ptr<BlackVolTermStructure> vol_;
     QuantLib::Calendar calendar_;
+    QuantLib::Currency currency_;
     QuantLib::DayCounter dayCounter_;
 };
 } // namespace data

@@ -37,7 +37,7 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void applyFixings(const vector<Fixing>& fixings, const data::Conventions& conventions) {
+void applyFixings(const vector<Fixing>& fixings, const boost::shared_ptr<data::Conventions>& conventions) {
     Size count = 0;
     map<string, boost::shared_ptr<Index>> cache;
     cpu_timer timer;

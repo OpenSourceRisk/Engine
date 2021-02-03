@@ -73,6 +73,7 @@ Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, co
         return iborIndex(key, configuration)->forwardingTermStructure();
     }
     // no ibor index found under key => look for a genuine yield curve
+    DLOG("no ibor index found under '" << key << "' - look for a genuine yield curve");
     if (type == YieldCurveType::Discount)
         require(MarketObject::DiscountCurve, key, configuration);
     else if (type == YieldCurveType::Yield)
@@ -82,7 +83,7 @@ Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, co
     else {
         QL_FAIL("yield curve type not handled");
     }
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, type, configuration, "yield curve");
+    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, type, configuration, "yield curve / ibor index");
 }
 
 Handle<YieldTermStructure> MarketImpl::discountCurve(const string& key, const string& configuration) const {
@@ -195,10 +196,10 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
 }
 
-Handle<QuantExt::YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key,
+Handle<YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key,
                                                                            const string& configuration) const {
     require(MarketObject::YoYInflationCapFloorVol, key, configuration);
-    return lookup<Handle<QuantExt::YoYOptionletVolatilitySurface>>(yoyCapFloorVolSurfaces_, key, configuration,
+    return lookup<Handle<YoYOptionletVolatilitySurface>>(yoyCapFloorVolSurfaces_, key, configuration,
                                                                    "yoy inflation capfloor curve");
 }
 

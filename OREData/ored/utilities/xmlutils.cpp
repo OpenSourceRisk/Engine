@@ -244,6 +244,10 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, bool v
     addChild(doc, n, name, s);
 }
 
+void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const Period& value) {
+    addChild(doc, n, name, convertToString(value));
+}
+
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* parent, const string& name, const vector<Real>& values) {
     vector<string> strings(values.size());
     std::transform(values.begin(), values.end(), strings.begin(), [](Real x) { return convertToString2(x); });
@@ -285,6 +289,11 @@ int XMLUtils::getChildValueAsInt(XMLNode* node, const string& name, bool mandato
 bool XMLUtils::getChildValueAsBool(XMLNode* node, const string& name, bool mandatory, bool defaultValue) {
     string s = getChildValue(node, name, mandatory);
     return s == "" ? defaultValue : parseBool(s);
+}
+
+Period XMLUtils::getChildValueAsPeriod(XMLNode* node, const string& name, bool mandatory) {
+    string s = getChildValue(node, name, mandatory);
+    return s == "" ? 0 * Days : parsePeriod(s);
 }
 
 vector<string> XMLUtils::getChildrenValues(XMLNode* parent, const string& names, const string& name, bool mandatory) {

@@ -47,7 +47,8 @@ public:
     void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
 
     //! Add underlying Commodity names
-    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! \name Serialisation
     //@{

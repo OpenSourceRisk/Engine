@@ -750,7 +750,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // clang-format on
 
     configs->equityCurveConfig("SP5") = boost::make_shared<EquityCurveConfig>(
-        "SP5", "", "USD1D", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes);
+        "SP5", "", "USD1D", "USD", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes);
 
     vector<string> eqVolQuotes = {"EQUITY_OPTION/RATE_LNVOL/SP5/USD/1Y/ATMF",
                                   "EQUITY_OPTION/RATE_LNVOL/SP5/USD/2018-02-26/ATMF"};
@@ -785,10 +785,10 @@ public:
         Date asof(26, February, 2016);
         Settings::instance().evaluationDate() = asof;
 
-        MarketDataLoader loader;
-        TodaysMarketParameters params = *marketParameters();
-        CurveConfigurations configs = *curveConfigurations();
-        Conventions convs = *conventions();
+        auto loader = boost::make_shared<MarketDataLoader>();
+        auto params = marketParameters();
+        auto configs = curveConfigurations();
+        auto convs = conventions();
 
         BOOST_TEST_MESSAGE("Creating TodaysMarket Instance");
         market = boost::make_shared<TodaysMarket>(asof, params, loader, configs, convs);

@@ -45,6 +45,7 @@
 #include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
+#include <qle/indexes/ibor/boebaserate.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/indexes/ibor/chfsaron.hpp>
 #include <qle/indexes/ibor/chftois.hpp>
@@ -260,7 +261,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"SEK-SIOR", boost::make_shared<SEKSior>()},       {"COP-IBR", boost::make_shared<COPIbr>()},
         {"BRL-CDI", boost::make_shared<BRLCdi>()},         {"NOK-NOWA", boost::make_shared<Nowa>()},
         {"CLP-CAMARA", boost::make_shared<CLPCamara>()},   {"NZD-OCR", boost::make_shared<Nzocr>()},
-        {"PLN-POLONIA", boost::make_shared<PLNPolonia>()}, {"INR-MIBOROIS", boost::make_shared<INRMiborOis>()}};
+        {"PLN-POLONIA", boost::make_shared<PLNPolonia>()}, {"INR-MIBOROIS", boost::make_shared<INRMiborOis>()},
+	{"GBP-BOEBaseRate", boost::make_shared<BOEBaseRateIndex>()}};
 
     // Map from our _unique internal name_ to an ibor index (the period does not matter here)
     static map<string, boost::shared_ptr<IborIndexParser>> iborIndices = {
@@ -350,13 +352,35 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     QL_FAIL("parseIborIndex \"" << s << "\" not recognized");
 }
 
-bool isGenericIndex(const string& indexName) { return indexName.find("-GENERIC-") != string::npos; }
+bool isGenericIborIndex(const string& indexName) { return indexName.find("-GENERIC-") != string::npos; }
 
-bool isInflationIndex(const string& indexName) {
+pair<bool, boost::shared_ptr<ZeroInflationIndex>> isInflationIndex(const string& indexName,
+    const boost::shared_ptr<Conventions>& conventions) {
+
+    boost::shared_ptr<ZeroInflationIndex> index;
     try {
         // Currently, only way to have an inflation index is to have a ZeroInflationIndex
-        parseZeroInflationIndex(indexName);
+        index = parseZeroInflationIndex(indexName, false, Handle<ZeroInflationTermStructure>(), conventions);
     } catch (...) {
+        return make_pair(false, nullptr);
+    }
+    return make_pair(true, index);
+}
+
+bool isEquityIndex(const string& indexName) {
+    try {
+        parseEquityIndex(indexName);
+    } catch (...) {
+        return false;
+    }
+    return true;
+}
+
+bool isGenericIndex(const string& indexName) {
+    try {
+        parseGenericIndex(indexName);
+    }
+    catch (...) {
         return false;
     }
     return true;
@@ -443,8 +467,21 @@ private:
     Frequency frequency_;
 };
 
-boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, bool isInterpolated,
-                                                              const Handle<ZeroInflationTermStructure>& h) {
+boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s,
+    bool isInterpolated,
+    const Handle<ZeroInflationTermStructure>& h,
+    const boost::shared_ptr<Conventions>& conventions) {
+
+    // If conventions are non-null and we have provided a convention of type InflationIndex with a name equal to the 
+    // string s, we use that convention to construct the inflation index.
+    if (conventions) {
+        pair<bool, boost::shared_ptr<Convention>> p = conventions->get(s, Convention::Type::ZeroInflationIndex);
+        if (p.first) {
+            auto c = boost::dynamic_pointer_cast<ZeroInflationIndexConvention>(p.second);
+            return boost::make_shared<ZeroInflationIndex>(s, c->region(), c->revised(), isInterpolated,
+                c->frequency(), c->availabilityLag(), c->currency(), h);
+        }
+    }
 
     static map<string, boost::shared_ptr<ZeroInflationIndexParserBase>> m = {
         {"AUCPI", boost::make_shared<ZeroInflationIndexParserWithFrequency<AUCPI>>(Quarterly)},
@@ -479,12 +516,45 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
     }
 }
 
-boost::shared_ptr<BondIndex> parseBondIndex(const string& s) {
-    std::vector<string> tokens;
-    split(tokens, s, boost::is_any_of("-"));
-    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": BOND-SECURITY");
-    QL_REQUIRE(tokens[0] == "BOND", "expected first token to be BOND");
-    return boost::make_shared<BondIndex>(tokens[1]);
+boost::shared_ptr<BondIndex> parseBondIndex(const string& name) {
+
+    // Make sure the prefix is correct
+    string prefix = name.substr(0, 5);
+    QL_REQUIRE(prefix == "BOND-", "A bond index string must start with 'BOND-' but got " << prefix);
+
+    // Now take the remainder of the string
+    // for spot indices, this should just be the bond name
+    // for future indices, this is of the form NAME-YYYY-MM or NAME-YYYY-MM-DD where NAME is the commodity name
+    // (possibly containing hyphens) and YYYY-MM(-DD) is the expiry date of the futures contract
+    Date expiry;
+    string nameWoPrefix = name.substr(5);
+    string bondName = nameWoPrefix;
+
+    // Check for form NAME-YYYY-MM-DD
+    if (nameWoPrefix.size() > 10) {
+        string test = nameWoPrefix.substr(nameWoPrefix.size() - 10);
+        if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}-\\d{2}"))) {
+            expiry = parseDate(test);
+            bondName = nameWoPrefix.substr(0, nameWoPrefix.size() - test.size() - 1);
+        }
+    }
+
+    // Check for form NAME-YYYY-MM if NAME-YYYY-MM-DD failed
+    if (expiry == Date() && nameWoPrefix.size() > 7) {
+        string test = nameWoPrefix.substr(nameWoPrefix.size() - 7);
+        if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}"))) {
+            expiry = parseDate(test + "-01");
+            bondName = nameWoPrefix.substr(0, nameWoPrefix.size() - test.size() - 1);
+        }
+    }
+
+    // Create and return the required future index
+    if (expiry != Date()) {
+        return boost::make_shared<BondFuturesIndex>(expiry, bondName);
+    } else {
+        return boost::make_shared<BondIndex>(bondName);
+    }
+
 }
 
 boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name, const Calendar& cal,
@@ -528,11 +598,12 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
     }
 }
 
-boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& conventions) {
+boost::shared_ptr<Index> parseIndex(const string& s, const boost::shared_ptr<Conventions>& conventions) {
     boost::shared_ptr<QuantLib::Index> ret_idx;
     // if we have an ibor index convention we parse s using this (and throw if we don't succeed)
-    if (conventions.has(s, Convention::Type::IborIndex) || conventions.has(s, Convention::Type::OvernightIndex)) {
-        ret_idx = parseIborIndex(s, Handle<YieldTermStructure>(), conventions.get(s));
+    if (conventions && (conventions->has(s, Convention::Type::IborIndex) || 
+        conventions->has(s, Convention::Type::OvernightIndex))) {
+        ret_idx = parseIborIndex(s, Handle<YieldTermStructure>(), conventions->get(s));
     } else {
         // otherwise we try to parse the ibor index without conventions
         try {
@@ -542,14 +613,14 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
     }
     if (!ret_idx) {
         // if we have a swap index convention we parse s using this (and throw if we don't succeed)
-        if (conventions.has(s, Convention::Type::SwapIndex)) {
-            auto c = boost::dynamic_pointer_cast<SwapIndexConvention>(conventions.get(s));
-            QL_REQUIRE(conventions.has(c->conventions(), Convention::Type::Swap),
+        if (conventions && conventions->has(s, Convention::Type::SwapIndex)) {
+            auto c = boost::dynamic_pointer_cast<SwapIndexConvention>(conventions->get(s));
+            QL_REQUIRE(conventions->has(c->conventions(), Convention::Type::Swap),
                        "do not have swap conventions for '" << c->conventions()
                                                             << "', required from swap index convention '" << s << "'");
             ret_idx =
                 parseSwapIndex(s, Handle<YieldTermStructure>(), Handle<YieldTermStructure>(),
-                               boost::dynamic_pointer_cast<IRSwapConvention>(conventions.get(c->conventions())), c);
+                               boost::dynamic_pointer_cast<IRSwapConvention>(conventions->get(c->conventions())), c);
         } else {
             // otherwise try to parse a swap index without conventions
             try {
@@ -560,7 +631,7 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseZeroInflationIndex(s);
+            ret_idx = parseZeroInflationIndex(s, false, Handle<ZeroInflationTermStructure>(), conventions);
         } catch (...) {
         }
     }

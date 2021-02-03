@@ -96,7 +96,11 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
     string dc = XMLUtils::getChildValue(node, "DayCounter", true);
     dayCounter_ = parseDayCounter(dc);
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
+
     allowNegativeRates_ = false;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "AllowNegativeRates")) {
+        allowNegativeRates_ = parseBool(XMLUtils::getNodeValue(n));
+    }
 
     if (type_ == Type::Benchmark) {
         benchmarkCurveID_ = XMLUtils::getChildValue(node, "BenchmarkCurve", true);
@@ -110,9 +114,6 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         Real dummy;
         if (!tryParseReal(recoveryRateQuote_, dummy))
             quotes_.insert(quotes_.end(), recoveryRateQuote_);
-        if (XMLNode* n = XMLUtils::getChildNode(node, "AllowNegativeRates")) {
-            allowNegativeRates_ = parseBool(XMLUtils::getNodeValue(n));
-        }
     } else if (type_ == Type::MultiSection) {
         multiSectionSourceCurveIds_ = XMLUtils::getChildrenValues(node, "SourceCurves", "SourceCurve", true);
         multiSectionSwitchDates_ = XMLUtils::getChildrenValues(node, "SwitchDates", "SwitchDate", true);
@@ -154,7 +155,10 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         }
 
         string s = XMLUtils::getChildValue(node, "RunningSpread", false);
-        QL_REQUIRE(s != "" || type_ != Type::Price, "'RunningSpread' required when type is 'Price'")
+        if (s.empty() && type_ == Type::Price) {
+            DLOG("'RunningSpread' is empty and type is 'Price' for default curve " << curveID_ <<
+                " so the running spread will need to be provided in the market quote.");
+        }
         if (s != "") {
             if (type_ == Type::Price) {
                 runningSpread_ = parseReal(s);
@@ -210,7 +214,6 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addGenericChildAsList(doc, node, "Pillars", pillars_);
         XMLUtils::addChild(doc, node, "SpotLag", (int)spotLag_);
         XMLUtils::addChild(doc, node, "Calendar", calendar_.name());
-        XMLUtils::addChild(doc, node, "AllowNegativeRates", allowNegativeRates_);
     } else if (type_ == Type::MultiSection) {
         XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
         XMLUtils::addChildren(doc, node, "SourceCurves", "SourceCurve", multiSectionSourceCurveIds_);
@@ -231,6 +234,8 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "ImplyDefaultFromMarket", *implyDefaultFromMarket_);
 
     XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
+
+    XMLUtils::addChild(doc, node, "AllowNegativeRates", allowNegativeRates_);
 
     return node;
 }

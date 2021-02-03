@@ -87,17 +87,34 @@ boost::shared_ptr<IborIndex> parseIborIndex(
 bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index,
                        const boost::shared_ptr<Convention>& c = nullptr);
 
-//! Return true if the \p indexName is that of a generic index, otherwise false
+//! Return true if the \p indexName is that of a generic ibor index, otherwise false
 /*!
     \ingroup utilities
 */
-bool isGenericIndex(const string& indexName);
+bool isGenericIborIndex(const string& indexName);
 
-//! Return true if the \p indexName is that of an InflationIndex, otherwise false
+/*! Returns true as the first element in the pair if the \p indexName is that of an InflationIndex. The second element 
+    in the pair is an instance of the inflation index. If \p indexName is not an inflation index, the first element in 
+    the pair is \c false and the second element is a \c nullptr.
+
+    If inflation indices have been set up via ZeroInflationIndex entries in the Conventions, the \p conventions
+    should be passed here. If not, the default \c nullptr parameter will be sufficient.
+
+    \ingroup utilities
+*/
+std::pair<bool, boost::shared_ptr<QuantLib::ZeroInflationIndex>> isInflationIndex(const std::string& indexName,
+    const boost::shared_ptr<Conventions>& conventions = nullptr);
+
+//! Return true if the \p indexName is that of an EquityIndex, otherwise false
 /*!
     \ingroup utilities
 */
-bool isInflationIndex(const std::string& indexName);
+bool isEquityIndex(const std::string& indexName);
+
+/*! Return true if the \p indexName is that of an GenericIndex, otherwise false
+    \ingroup utilities
+*/
+bool isGenericIndex(const std::string& indexName);
 
 //! Convert std::string (e.g SP5) to QuantExt::EquityIndex
 /*!
@@ -121,7 +138,8 @@ parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = H
  */
 boost::shared_ptr<ZeroInflationIndex>
 parseZeroInflationIndex(const string& s, bool isInterpolated = false,
-                        const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
+                        const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>(),
+                        const boost::shared_ptr<Conventions>& conventions = nullptr);
 
 //! Convert std::string to QuantExt::BondIndex
 /*!
@@ -152,7 +170,7 @@ boost::shared_ptr<QuantLib::Index> parseGenericIndex(const string& s);
 /*!
     \ingroup utilities
 */
-boost::shared_ptr<Index> parseIndex(const string& s, const Conventions& conventions = Conventions());
+boost::shared_ptr<Index> parseIndex(const string& s, const boost::shared_ptr<Conventions>& conventions = nullptr);
 
 //! Return true if the \p indexName is that of an overnight index, otherwise false
 /*! \ingroup utilities

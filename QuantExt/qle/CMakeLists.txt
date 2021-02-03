@@ -28,6 +28,8 @@ cashflows/commodityindexedcashflow.cpp
 cashflows/couponpricer.cpp
 cashflows/cpicoupon.cpp
 cashflows/cpicouponpricer.cpp
+cashflows/durationadjustedcmscoupon.cpp
+cashflows/durationadjustedcmscoupontsrpricer.cpp
 cashflows/equitycoupon.cpp
 cashflows/equitycouponpricer.cpp
 cashflows/floatingannuitycoupon.cpp
@@ -51,6 +53,7 @@ indexes/bondindex.cpp
 indexes/commodityindex.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
+indexes/ibor/boebaserate.cpp
 indexes/ibor/brlcdi.cpp
 indexes/ibor/ester.cpp
 indexes/ibor/primeindex.cpp
@@ -87,6 +90,7 @@ instruments/tenorbasisswap.cpp
 math/deltagammavar.cpp
 math/fillemptymatrix.cpp
 methods/multipathgeneratorbase.cpp
+models/annuitymapping.cpp
 models/cdsoptionhelper.cpp
 models/cirppimplieddefaulttermstructure.cpp
 models/cmscaphelper.cpp
@@ -110,8 +114,10 @@ models/infjyparameterization.cpp
 models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
 models/lgm.cpp
+models/lgmcalibrationinfo.cpp
 models/lgmimplieddefaulttermstructure.cpp
 models/lgmimpliedyieldtermstructure.cpp
+models/linearannuitymapping.cpp
 models/linkablecalibratedmodel.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
@@ -166,7 +172,6 @@ termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
 termstructures/capfloortermvolsurface.cpp
-termstructures/constantyoyinflationoptionletvolatility.cpp
 termstructures/correlationtermstructure.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
@@ -196,10 +201,20 @@ termstructures/optionletstripper1.cpp
 termstructures/optionletstripper2.cpp
 termstructures/pricetermstructure.cpp
 termstructures/pricetermstructureadapter.cpp
+termstructures/spreadedblackvolatilitycurve.cpp
+termstructures/spreadedblackvolatilitysurfacemoneyness.cpp
+termstructures/spreadedcorrelationcurve.cpp
+termstructures/spreadedcpivolatilitysurface.cpp
 termstructures/spreadeddiscountcurve.cpp
+termstructures/spreadedinflationcurve.cpp
 termstructures/spreadedoptionletvolatility.cpp
+termstructures/spreadedoptionletvolatility2.cpp
+termstructures/spreadedpricetermstructure.cpp
 termstructures/spreadedsmilesection.cpp
+termstructures/spreadedsmilesection2.cpp
+termstructures/spreadedsurvivalprobabilitytermstructure.cpp
 termstructures/spreadedswaptionvolatility.cpp
+termstructures/spreadedyoyvolsurface.cpp
 termstructures/strippedoptionletadapter2.cpp
 termstructures/strippedyoyinflationoptionletvol.cpp
 termstructures/subperiodsswaphelper.cpp
@@ -243,6 +258,8 @@ cashflows/commodityindexedcashflow.hpp
 cashflows/couponpricer.hpp
 cashflows/cpicoupon.hpp
 cashflows/cpicouponpricer.hpp
+cashflows/durationadjustedcmscoupon.hpp
+cashflows/durationadjustedcmscoupontsrpricer.hpp
 cashflows/equitycoupon.hpp
 cashflows/equitycouponpricer.hpp
 cashflows/floatingannuitycoupon.hpp
@@ -278,6 +295,7 @@ indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/genericindex.hpp
 indexes/ibor/audbbsw.hpp
+indexes/ibor/boebaserate.hpp
 indexes/ibor/brlcdi.hpp
 indexes/ibor/chfsaron.hpp
 indexes/ibor/chftois.hpp
@@ -363,6 +381,7 @@ math/stabilisedglls.hpp
 math/trace.hpp
 methods/multipathgeneratorbase.hpp
 methods/pathgeneratorfactory.hpp
+models/annuitymapping.hpp
 models/cdsoptionhelper.hpp
 models/cirppconstantfellerparametrization.hpp
 models/cirppconstantparametrization.hpp
@@ -397,8 +416,10 @@ models/irlgm1fpiecewiselinearparametrization.hpp
 models/jyimpliedyoyinflationtermstructure.hpp
 models/jyimpliedzeroinflationtermstructure.hpp
 models/lgm.hpp
+models/lgmcalibrationinfo.hpp
 models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
+models/linearannuitymapping.hpp
 models/linkablecalibratedmodel.hpp
 models/parametrization.hpp
 models/piecewiseconstanthelper.hpp
@@ -460,7 +481,6 @@ termstructures/capfloortermvolcurve.hpp
 termstructures/capfloortermvolsurface.hpp
 termstructures/commodityaveragebasispricecurve.hpp
 termstructures/commoditybasispricecurve.hpp
-termstructures/constantyoyinflationoptionletvolatility.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
 termstructures/crossccybasisswaphelper.hpp
@@ -513,10 +533,20 @@ termstructures/pricecurve.hpp
 termstructures/pricetermstructure.hpp
 termstructures/pricetermstructureadapter.hpp
 termstructures/probabilitytraits.hpp
+termstructures/spreadedblackvolatilitycurve.hpp
+termstructures/spreadedblackvolatilitysurfacemoneyness.hpp
+termstructures/spreadedcorrelationcurve.hpp
+termstructures/spreadedcpivolatilitysurface.hpp
 termstructures/spreadeddiscountcurve.hpp
+termstructures/spreadedinflationcurve.hpp
 termstructures/spreadedoptionletvolatility.hpp
+termstructures/spreadedoptionletvolatility2.hpp
+termstructures/spreadedpricetermstructure.hpp
 termstructures/spreadedsmilesection.hpp
+termstructures/spreadedsmilesection2.hpp
+termstructures/spreadedsurvivalprobabilitytermstructure.hpp
 termstructures/spreadedswaptionvolatility.hpp
+termstructures/spreadedyoyvolsurface.hpp
 termstructures/staticallycorrectedyieldtermstructure.hpp
 termstructures/strippedcpivolatilitystructure.hpp
 termstructures/strippedoptionletadapter.hpp
@@ -534,7 +564,6 @@ termstructures/yieldplusdefaultyieldtermstructure.hpp
 termstructures/yoyinflationcurveobservermoving.hpp
 termstructures/yoyinflationcurveobserverstatic.hpp
 termstructures/yoyinflationoptionletvolstripper.hpp
-termstructures/yoyoptionletvolatilitysurface.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp
 time/actual364.hpp

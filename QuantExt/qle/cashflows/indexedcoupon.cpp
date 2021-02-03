@@ -114,24 +114,38 @@ IndexedCouponLeg::operator Leg() const {
     Leg resultLeg;
     resultLeg.reserve(underlyingLeg_.size());
 
-    QL_REQUIRE(valuationSchedule_.empty() || valuationSchedule_.size() == underlyingLeg_.size() + 1,
-               "IndexedCouponLeg: valuation schedule size ("
-                   << valuationSchedule_.size() << ") inconsistent with underlying leg size (" << underlyingLeg_.size()
-                   << ") + 1");
-
     for (Size i = 0; i < underlyingLeg_.size(); ++i) {
         auto cpn = boost::dynamic_pointer_cast<Coupon>(underlyingLeg_[i]);
         QL_REQUIRE(cpn, "IndexedCouponLeg: coupon required");
 
+        bool firstValuationDate = (i == 0);
         Date fixingDate;
         if (valuationSchedule_.empty()) {
             fixingDate = inArrearsFixing_ ? cpn->accrualEndDate() : cpn->accrualStartDate();
-        } else
-            fixingDate = inArrearsFixing_ ? valuationSchedule_.date(i + 1) : valuationSchedule_.date(i);
+        } else {
+            if (valuationSchedule_.size() == underlyingLeg_.size() + 1) {
+                // valuation schedule corresponds one to one to underlying schedule
+                fixingDate = inArrearsFixing_ ? valuationSchedule_.date(i + 1) : valuationSchedule_.date(i);
+            } else {
+                // look for the latest valuation date less or equal to the underlying accrual start date (if
+                // the indexing is using in advance fixing) resp. accrual end date (for in arrears fixing)
+                auto valDates = valuationSchedule_.dates();
+                Date refDate = inArrearsFixing_ ? cpn->accrualEndDate() : cpn->accrualStartDate();
+                Size index =
+                    std::distance(valDates.begin(), std::upper_bound(valDates.begin(), valDates.end(), refDate));
+                QL_REQUIRE(index > 0, "IndexedCouponLeg: First valuation date ("
+                                          << valDates.front() << ") must be leq accrual "
+                                          << (inArrearsFixing_ ? "end" : "start") << " date ("
+                                          << cpn->accrualStartDate() << ") of the " << (i + 1)
+                                          << "th coupon in the underlying leg");
+                fixingDate = valuationSchedule_.date(index - 1);
+                firstValuationDate = (index == 1);
+            }
+        }
 
         fixingDate = fixingCalendar_.advance(fixingDate, -static_cast<int>(fixingDays_), Days, fixingConvention_);
 
-        if (i == 0 && initialFixing_ != Null<Real>()) {
+        if (firstValuationDate && initialFixing_ != Null<Real>()) {
             resultLeg.push_back(boost::make_shared<IndexedCoupon>(cpn, qty_, initialFixing_));
         } else {
             resultLeg.push_back(boost::make_shared<IndexedCoupon>(cpn, qty_, index_, fixingDate));

@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/portfolio/schedule.hpp>
 #include <ql/experimental/futures/overnightindexfuture.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/indexes/iborindex.hpp>
@@ -31,6 +32,7 @@
 #include <ql/indexes/swapindex.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 namespace ore {
 namespace data {
@@ -65,6 +67,7 @@ public:
         IborIndex,
         OvernightIndex,
         SwapIndex,
+        ZeroInflationIndex,
         InflationSwap,
         SecuritySpread,
         CMSSpreadOption,
@@ -100,13 +103,20 @@ protected:
 /*!
   \ingroup market
 */
-class Conventions : public XMLSerializable {
+class Conventions : public XMLSerializable, public boost::enable_shared_from_this<Conventions> {
 public:
     //! Default constructor
     Conventions() {}
 
     /*! Returns the convention if found and throws if not */
     boost::shared_ptr<Convention> get(const string& id) const;
+
+    /*! Get a convention with the given \p id and \p type. If no convention of the given \p type with the given \p id
+        is found, the first element of the returned pair is \c false and the second element is a \c nullptr. If a
+        convention is found, the first element of the returned pair is \c true and the second element holds the
+        convention.
+    */
+    std::pair<bool, boost::shared_ptr<Convention>> get(const std::string& id, const Convention::Type& type) const;
 
     //! Checks if we have a convention with the given \p id
     bool has(const std::string& id) const;
@@ -408,7 +418,6 @@ public:
     IborIndexConvention(const string& id, const string& fixingCalendar, const string& dayCounter,
                         const Size settlementDays, const string& businessDayConvention, const bool endOfMonth);
 
-    const string& id() const { return id_; }
     const string& fixingCalendar() const { return strFixingCalendar_; }
     const string& dayCounter() const { return strDayCounter_; }
     const Size settlementDays() const { return settlementDays_; }
@@ -437,7 +446,6 @@ public:
     OvernightIndexConvention(const string& id, const string& fixingCalendar, const string& dayCounter,
                              const Size settlementDays);
 
-    const string& id() const { return id_; }
     const string& fixingCalendar() const { return strFixingCalendar_; }
     const string& dayCounter() const { return strDayCounter_; }
     const Size settlementDays() const { return settlementDays_; }
@@ -965,11 +973,13 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CdsConvention() {}
+    CdsConvention();
+
     //! Detailed constructor
     CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                   const string& strFrequency, const string& strPaymentConvention, const string& strRule,
-                  const string& dayCounter, const string& settlesAccrual, const string& paysAtDefaultTime);
+                  const string& dayCounter, const string& settlesAccrual, const string& paysAtDefaultTime,
+                  const string& strUpfrontSettlementDays = "", const string& lastPeriodDayCounter = "");
     //@}
 
     //! \name Inspectors
@@ -982,6 +992,8 @@ public:
     const DayCounter& dayCounter() const { return dayCounter_; }
     bool settlesAccrual() const { return settlesAccrual_; }
     bool paysAtDefaultTime() const { return paysAtDefaultTime_; }
+    Natural upfrontSettlementDays() const { return upfrontSettlementDays_; }
+    const DayCounter& lastPeriodDayCounter() const { return lastPeriodDayCounter_; }
     //@}
 
     //! \name Serialisation
@@ -999,6 +1011,8 @@ private:
     DayCounter dayCounter_;
     bool settlesAccrual_;
     bool paysAtDefaultTime_;
+    Natural upfrontSettlementDays_;
+    DayCounter lastPeriodDayCounter_;
 
     // Strings to store the inputs
     string strSettlementDays_;
@@ -1009,15 +1023,28 @@ private:
     string strDayCounter_;
     string strSettlesAccrual_;
     string strPaysAtDefaultTime_;
+    string strUpfrontSettlementDays_;
+    string strLastPeriodDayCounter_;
 };
 
 class InflationSwapConvention : public Convention {
 public:
-    InflationSwapConvention() {}
+    //! Rule for determining when inflation swaps roll to observing latest inflation index release.
+    enum class PublicationRoll {
+        None,
+        OnPublicationDate,
+        AfterPublicationDate
+    };
+
+    InflationSwapConvention(const boost::shared_ptr<Conventions>& conventions = nullptr);
+
     InflationSwapConvention(const string& id, const string& strFixCalendar, const string& strFixConvention,
                             const string& strDayCounter, const string& strIndex, const string& strInterpolated,
                             const string& strObservationLag, const string& strAdjustInfObsDates,
-                            const string& strInfCalendar, const string& strInfConvention);
+                            const string& strInfCalendar, const string& strInfConvention,
+                            const boost::shared_ptr<Conventions>& conventions = nullptr,
+                            PublicationRoll publicationRoll = PublicationRoll::None,
+                            const boost::shared_ptr<ScheduleData>& publicationScheduleData = nullptr);
 
     const Calendar& fixCalendar() const { return fixCalendar_; }
     BusinessDayConvention fixConvention() const { return fixConvention_; }
@@ -1029,6 +1056,8 @@ public:
     bool adjustInfObsDates() const { return adjustInfObsDates_; }
     const Calendar& infCalendar() const { return infCalendar_; }
     BusinessDayConvention infConvention() const { return infConvention_; }
+    PublicationRoll publicationRoll() const { return publicationRoll_; }
+    const Schedule& publicationSchedule() const { return publicationSchedule_; }
 
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
@@ -1044,8 +1073,9 @@ private:
     bool adjustInfObsDates_;
     Calendar infCalendar_;
     BusinessDayConvention infConvention_;
+    Schedule publicationSchedule_;
 
-    // Strings to store the inputs
+    // Store the inputs
     string strFixCalendar_;
     string strFixConvention_;
     string strDayCounter_;
@@ -1055,6 +1085,9 @@ private:
     string strAdjustInfObsDates_;
     string strInfCalendar_;
     string strInfConvention_;
+    boost::shared_ptr<Conventions> conventions_;
+    PublicationRoll publicationRoll_;
+    boost::shared_ptr<ScheduleData> publicationScheduleData_;
 };
 
 //! Container for storing Bond Spread Rate conventions
@@ -1373,7 +1406,8 @@ private:
 };
 
 //! Container for storing FX Option conventions
-/*!
+/*! Defining a switchTenor is optional. It is set to 0 * Days if no switch tenor is defined. In this case
+    longTermAtmType and longTermDeltaType are set to atmType and deltaType respectively.
 \ingroup marketdata
 */
 class FxOptionConvention : public Convention {
@@ -1381,13 +1415,17 @@ public:
     //! \name Constructors
     //@{
     FxOptionConvention() {}
-    FxOptionConvention(const string& id, const string& atmType, const string& deltaType);
+    FxOptionConvention(const string& id, const string& atmType, const string& deltaType, const string& switchTenor = "",
+                       const string& longTermAtmType = "", const string& longTermDeltaType = "");
     //@}
 
     //! \name Inspectors
     //@{
     const DeltaVolQuote::AtmType& atmType() const { return atmType_; }
     const DeltaVolQuote::DeltaType& deltaType() const { return deltaType_; }
+    const Period& switchTenor() const { return switchTenor_; }
+    const DeltaVolQuote::AtmType& longTermAtmType() const { return longTermAtmType_; }
+    const DeltaVolQuote::DeltaType& longTermDeltaType() const { return longTermDeltaType_; }
     //@}
 
     //! \name Serialisation
@@ -1397,12 +1435,56 @@ public:
     virtual void build();
     //@}
 private:
-    DeltaVolQuote::AtmType atmType_;
-    DeltaVolQuote::DeltaType deltaType_;
+    DeltaVolQuote::AtmType atmType_, longTermAtmType_;
+    DeltaVolQuote::DeltaType deltaType_, longTermDeltaType_;
+    Period switchTenor_;
 
     // Strings to store the inputs
     string strAtmType_;
     string strDeltaType_;
+    string strSwitchTenor_;
+    string strLongTermAtmType_;
+    string strLongTermDeltaType_;
+};
+
+/*! Container for storing zero inflation index conventions
+   \ingroup marketdata
+*/
+class ZeroInflationIndexConvention : public Convention {
+public:
+    //! Constructor.
+    ZeroInflationIndexConvention();
+
+    //! Detailed constructor.
+    ZeroInflationIndexConvention(const std::string& id,
+        const std::string& regionName,
+        const std::string& regionCode,
+        bool revised,
+        const std::string& frequency,
+        const std::string& availabilityLag,
+        const std::string& currency);
+
+    QuantLib::Region region() const;
+    bool revised() const { return revised_; }
+    QuantLib::Frequency frequency() const { return frequency_; }
+    const QuantLib::Period& availabilityLag() const { return availabilityLag_; }
+    const QuantLib::Currency& currency() const { return currency_; }
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    void build() override;
+
+private:
+    std::string regionName_;
+    std::string regionCode_;
+    bool revised_;
+    std::string strFrequency_;
+    std::string strAvailabilityLag_;
+    std::string strCurrency_;
+
+    QuantLib::Frequency frequency_;
+    QuantLib::Period availabilityLag_;
+    QuantLib::Currency currency_;
 };
 
 } // namespace data

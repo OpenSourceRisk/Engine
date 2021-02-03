@@ -112,7 +112,7 @@ int OREApp::run() {
          *Build Pricing Engine Factory
          */
         out_ << setw(tab_) << left << "Engine factory... " << flush;
-        engineFactory_ = buildEngineFactory(market_);
+        engineFactory_ = buildEngineFactory(market_, "setup", true);
         out_ << "OK" << endl;
 
         /******************************
@@ -453,7 +453,8 @@ boost::shared_ptr<CrossAssetModelData> OREApp::getCrossAssetModelData() {
 }
 
 boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market,
-                                                            const string& groupName) const {
+                                                            const string& groupName,
+                                                            const bool generateAdditionalResults) const {
     MEM_LOG;
     LOG("Building an engine factory")
 
@@ -462,6 +463,7 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     string pricingEnginesFile = inputPath_ + "/" + params_->get(groupName, "pricingEnginesFile");
     if (params_->get(groupName, "pricingEnginesFile") != "")
         engineData->fromFile(pricingEnginesFile);
+    engineData->globalParameters()["GenerateAdditionalResults"] = generateAdditionalResults ? "true" : "false";
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
@@ -513,9 +515,10 @@ boost::shared_ptr<ScenarioGeneratorData> OREApp::getScenarioGeneratorData() {
     string simulationConfigFile = inputPath_ + "/" + params_->get("simulation", "simulationConfigFile");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->fromFile(simulationConfigFile);
-    DLOG("grid size=" << sgd->grid()->size() << ", dates=" << sgd->grid()->dates().size()
-                      << ", valuationDates=" << sgd->grid()->valuationDates().size()
-                      << ", closeOutDates=" << sgd->grid()->closeOutDates().size());
+    auto grid = sgd->getGrid();
+    DLOG("grid size=" << grid->size() << ", dates=" << grid->dates().size()
+                      << ", valuationDates=" << grid->valuationDates().size()
+                      << ", closeOutDates=" << grid->closeOutDates().size());
     useCloseOutLag_ = sgd->withCloseOutLag();
     useMporStickyDate_ = sgd->withMporStickyDate();
     return sgd;
@@ -615,7 +618,25 @@ void OREApp::writeInitialReports() {
     if (params_->hasGroup("additionalResults") && params_->get("additionalResults", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("additionalResults", "outputFileName");
         CSVFileReport addResultReport(fileName);
-        getReportWriter()->writeAdditionalResultsReport(addResultReport, portfolio_);
+        getReportWriter()->writeAdditionalResultsReport(addResultReport, portfolio_, market_, params_->get("npv", "baseCurrency"));
+        out_ << "OK" << endl;
+    } else {
+        LOG("skip additional results");
+        out_ << "SKIP" << endl;
+    }
+
+    /*********************
+     * TodaysMarket calibration
+     */
+    out_ << setw(tab_) << left << "TodaysMarket Calibration... " << flush;
+    if (params_->hasGroup("todaysMarketCalibration") && params_->get("todaysMarketCalibration", "active") == "Y") {
+        string fileName = outputPath_ + "/" + params_->get("todaysMarketCalibration", "outputFileName");
+        CSVFileReport todaysMarketCalibrationReport(fileName);
+        auto todaysMarket = boost::dynamic_pointer_cast<TodaysMarket>(market_);
+        if(todaysMarket) {
+            getReportWriter()->writeTodaysMarketCalibrationReport(todaysMarketCalibrationReport,
+                                                                  todaysMarket->calibrationInfo());
+        }
         out_ << "OK" << endl;
     } else {
         LOG("skip additional results");
@@ -867,7 +888,7 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     LOG("Load Simulation Market Parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData = getSimMarketData();
     boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
-    grid_ = sgd->grid();
+    grid_ = sgd->getGrid();
     samples_ = sgd->samples();
 
     if (buildSimMarket_) {
@@ -1136,7 +1157,7 @@ void OREApp::runPostProcessor() {
     if (!cubeInterpreter_) {
         boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
         if (sgd->withCloseOutLag())
-            cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->grid());
+            cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->getGrid());
         else
             cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
     }
@@ -1283,8 +1304,6 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
             }
             loader = boost::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings);
             out_ << "OK" << endl;
-            market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs_, conventions_,
-                                                       continueOnError_, true, lazyMarketBuilding_, referenceData_);
         } else {
             WLOG("No market data loaded from file");
         }
@@ -1293,9 +1312,21 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
         loader = boost::make_shared<InMemoryLoader>();
         loadDataFromBuffers(*boost::static_pointer_cast<InMemoryLoader>(loader), marketData, fixingData,
                             implyTodaysFixings);
-        market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs_, conventions_,
-                                                   continueOnError_, true, lazyMarketBuilding_, referenceData_);
     }
+
+    // add generated data to the loader (implied bond spreads, ...)
+    boost::shared_ptr<Loader> jointLoader;
+    auto generatedData = generateMarketData(loader);
+    if (generatedData != nullptr) {
+        jointLoader = boost::make_shared<CompositeLoader>(loader, generatedData);
+    } else {
+        jointLoader = loader;
+    }
+
+    // build market
+    market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, jointLoader, curveConfigs_, conventions_,
+                                               continueOnError_, true, lazyMarketBuilding_, referenceData_);
+
     LOG("Today's market built");
     MEM_LOG;
 }
@@ -1306,15 +1337,16 @@ boost::shared_ptr<MarketImpl> OREApp::getMarket() const {
 }
 
 boost::shared_ptr<EngineFactory> OREApp::buildEngineFactoryFromXMLString(const boost::shared_ptr<Market>& market,
-                                                                         const std::string& pricingEngineXML) {
+                                                                         const std::string& pricingEngineXML,
+                                                                         const bool generateAdditionalResults) {
     DLOG("OREApp::buildEngineFactoryFromXMLString called");
 
     if (pricingEngineXML == "")
-        return buildEngineFactory(market);
+        return buildEngineFactory(market, "", generateAdditionalResults);
     else {
         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
         engineData->fromXMLString(pricingEngineXML);
-
+        engineData->globalParameters()["GenerateAdditionalResults"] = generateAdditionalResults ? "true" : "false";
         map<MarketContext, string> configurations;
         configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
         configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");

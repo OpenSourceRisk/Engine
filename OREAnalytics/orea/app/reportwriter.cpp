@@ -436,7 +436,6 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
         .addColumn("PFE", double())
         .addColumn("BaselEE", double())
         .addColumn("BaselEEE", double());
-
     report.next()
         .add(tradeId)
         .add(today)
@@ -449,6 +448,7 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
         .add(ee_b[0])
         .add(eee_b[0]);
     for (Size j = 0; j < dates.size(); ++j) {
+        
         Time time = dc.yearFraction(today, dates[j]);
         report.next()
             .add(tradeId)
@@ -465,7 +465,7 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
     report.end();
 }
 
-void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+void addNettingSetExposure(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                             const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
@@ -476,15 +476,6 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
     const vector<Real>& eee_b = postProcess->netEEE_B(nettingSetId);
     const vector<Real>& pfe = postProcess->netPFE(nettingSetId);
     const vector<Real>& ecb = postProcess->expectedCollateral(nettingSetId);
-    report.addColumn("NettingSet", string())
-        .addColumn("Date", Date())
-        .addColumn("Time", double(), 6)
-        .addColumn("EPE", double(), 2)
-        .addColumn("ENE", double(), 2)
-        .addColumn("PFE", double(), 2)
-        .addColumn("ExpectedCollateral", double(), 2)
-        .addColumn("BaselEE", double(), 2)
-        .addColumn("BaselEEE", double(), 2);
 
     report.next()
         .add(nettingSetId)
@@ -508,6 +499,37 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
             .add(ecb[j + 1])
             .add(ee_b[j + 1])
             .add(eee_b[j + 1]);
+    }
+}
+
+void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                            const string& nettingSetId) {
+    report.addColumn("NettingSet", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 6)
+        .addColumn("EPE", double(), 2)
+        .addColumn("ENE", double(), 2)
+        .addColumn("PFE", double(), 2)
+        .addColumn("ExpectedCollateral", double(), 2)
+        .addColumn("BaselEE", double(), 2)
+        .addColumn("BaselEEE", double(), 2);
+    addNettingSetExposure(report, postProcess, nettingSetId);
+    report.end();
+}
+
+void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess) {
+    report.addColumn("NettingSet", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 6)
+        .addColumn("EPE", double(), 2)
+        .addColumn("ENE", double(), 2)
+        .addColumn("PFE", double(), 2)
+        .addColumn("ExpectedCollateral", double(), 2)
+        .addColumn("BaselEE", double(), 2)
+        .addColumn("BaselEEE", double(), 2);
+    
+    for (auto n : postProcess->nettingSetIds()) {
+        addNettingSetExposure(report, postProcess, n);
     }
     report.end();
 }
@@ -779,7 +801,7 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     LOG("Sensitivity report finished");
 }
 
-void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_ptr<Portfolio> portfolio) {
+void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<Market> market, const std::string& baseCurrency) {
     
     LOG("Writing AdditionalResults report");
 
@@ -790,6 +812,46 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
 
     for (auto trade : portfolio->trades()) {
         
+        // we first add any additional trade data.
+        string tradeId = trade->id();
+        Real notional2 = Null<Real>();
+        string notional2Ccy = "";
+        // Get the additional data for the current instrument.
+        auto additionalData = trade->additionalData();
+        for (const auto& kv : additionalData) {
+            auto p = parseBoostAny(kv.second);
+            report.next()
+                .add(tradeId)
+                .add(kv.first)
+                .add(p.first)
+                .add(p.second);
+        }
+
+        // if the 'notionalTwo' has been provided convert it to base currency
+        if (additionalData.count("notionalTwo") != 0 && additionalData.count("notionalTwoCurrency") != 0) {
+            notional2 = trade->additionalDatum<Real>("notionalTwo");
+            notional2Ccy = trade->additionalDatum<string>("notionalTwoCurrency");
+        }
+
+        auto additionalResults = trade->instrument()->qlInstrument()->additionalResults();
+        if (additionalResults.count("notionalTwo") != 0 && additionalResults.count("notionalTwoCurrency") != 0) {
+            notional2 = trade->instrument()->qlInstrument()->result<Real>("notionalTwo");
+            notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalTwoCurrency"); 
+        }
+
+        if (notional2 != Null<Real>() && notional2Ccy != "") {
+            Real fx = 1.0;
+            if (notional2Ccy != baseCurrency)
+                fx = market->fxSpot(notional2Ccy + baseCurrency)->value();
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(8) << notional2 * fx;
+            report.next()
+                .add(tradeId)
+                .add("notionalTwoInBaseCurrency")
+                .add("double")
+                .add(oss.str());
+        }
+
         // Just use the unadjusted trade ID in the additional results report for the main instrument.
         // If we have one or more additional instruments, use "_i" as suffix where i = 1, 2, 3, ... for each 
         // additional instrument in turn and underscore as prefix to reduce risk of ID clash. We also add the 
@@ -811,7 +873,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
 
             // Trade ID suffix for additional instruments. Put underscores to reduce risk of clash with other IDs in 
             // the portfolio (still a risk).
-            string tradeId = i == 0 ? trade->id() : ("_" + trade->id() + "_" + to_string(i));
+            tradeId = i == 0 ? trade->id() : ("_" + trade->id() + "_" + to_string(i));
 
             // Get the additional results for the current instrument.
             auto additionalResults = instrument->additionalResults();
@@ -838,6 +900,126 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
     report.end();
 
     LOG("AdditionalResults report written");
+}
+
+namespace {
+void addRowMktCalReport(ore::data::Report& report, const std::string& moType, const std::string& moId,
+                        const std::string& resId, const std::string& key1, const std::string& key2,
+                        const std::string& key3, const boost::any& value) {
+    auto p = parseBoostAny(value);
+    report.next().add(moType).add(moId).add(resId).add(key1).add(key2).add(key3).add(p.first).add(p.second);
+}
+
+void addYieldCurveCalibrationInfo(ore::data::Report& report, const std::string& id,
+                                  boost::shared_ptr<YieldCurveCalibrationInfo> info) {
+
+    if (info == nullptr)
+        return;
+
+    // common results
+    addRowMktCalReport(report, "yieldCurve", id, "dayCounter", "", "", "", info->dayCounter);
+    addRowMktCalReport(report, "yieldCurve", id, "currency", "", "", "", info->currency);
+
+    for (Size i = 0; i < info->pillarDates.size(); ++i) {
+        std::string key1 = ore::data::to_string(info->pillarDates[i]);
+        addRowMktCalReport(report, "yieldCurve", id, "time", key1, "", "", info->times.at(i));
+        addRowMktCalReport(report, "yieldCurve", id, "zeroRate", key1, "", "", info->zeroRates.at(i));
+        addRowMktCalReport(report, "yieldCurve", id, "discountFactor", key1, "", "", info->discountFactors.at(i));
+    }
+
+    // fitted bond curve results
+    auto y = boost::dynamic_pointer_cast<FittedBondCurveCalibrationInfo>(info);
+    if (y) {
+        addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.fittingMethod", "", "", "", y->fittingMethod);
+        for (Size k = 0; k < y->solution.size(); ++k) {
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.solution", std::to_string(k), "", "",
+                               y->solution[k]);
+        }
+        addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.iterations", "", "", "", y->iterations);
+        addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.costValue", "", "", "", y->costValue);
+        for (Size i = 0; i < y->securities.size(); ++i) {
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.bondMaturity", y->securities.at(i), "", "",
+                               y->securityMaturityDates.at(i));
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.marketPrice", y->securities.at(i), "", "",
+                               y->marketPrices.at(i));
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.modelPrice", y->securities.at(i), "", "",
+                               y->modelPrices.at(i));
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.marketYield", y->securities.at(i), "", "",
+                               y->marketYields.at(i));
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.modelYield", y->securities.at(i), "", "",
+                               y->modelYields.at(i));
+        }
+    }
+}
+
+void addInflationCurveCalibrationInfo(ore::data::Report& report, const std::string& id,
+                                      boost::shared_ptr<InflationCurveCalibrationInfo> info) {
+    if (info == nullptr)
+        return;
+
+    // common results
+    addRowMktCalReport(report, "inflationCurve", id, "dayCounter", "", "", "", info->dayCounter);
+    addRowMktCalReport(report, "inflationCurve", id, "calendar", "", "", "", info->calendar);
+    addRowMktCalReport(report, "inflationCurve", id, "baseDate", "", "", "", info->baseDate);
+
+    // zero inflation
+    auto z = boost::dynamic_pointer_cast<ZeroInflationCurveCalibrationInfo>(info);
+    if (z) {
+        addRowMktCalReport(report, "inflationCurve", id, "baseCpi", "", "", "", z->baseCpi);
+        for (Size i = 0; i < z->pillarDates.size(); ++i) {
+            std::string key1 = ore::data::to_string(z->pillarDates[i]);
+            addRowMktCalReport(report, "inflationCurve", id, "time", key1, "", "", z->times.at(i));
+            addRowMktCalReport(report, "inflationCurve", id, "zeroRate", key1, "", "", z->zeroRates.at(i));
+            addRowMktCalReport(report, "inflationCurve", id, "cpi", key1, "", "", z->forwardCpis.at(i));
+        }
+    }
+
+    // yoy inflation
+    auto y = boost::dynamic_pointer_cast<YoYInflationCurveCalibrationInfo>(info);
+    if (y) {
+        for (Size i = 0; i < y->pillarDates.size(); ++i) {
+            std::string key1 = ore::data::to_string(y->pillarDates[i]);
+            addRowMktCalReport(report, "inflationCurve", id, "time", key1, "", "", y->times.at(i));
+            addRowMktCalReport(report, "inflationCurve", id, "yoyRate", key1, "", "", y->yoyRates.at(i));
+        }
+    }
+}
+
+} // namespace
+
+void ReportWriter::writeTodaysMarketCalibrationReport(
+    ore::data::Report& report, boost::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo) {
+    LOG("Writing TodaysMarketCalibration report");
+
+    report.addColumn("MarketObjectType", string())
+        .addColumn("MarketObjectId", string())
+        .addColumn("ResultId", string())
+        .addColumn("ResultKey1", string())
+        .addColumn("ResultKey2", string())
+        .addColumn("ResultKey3", string())
+        .addColumn("ResultType", string())
+        .addColumn("ResultValue", string());
+
+    // yield curve results
+
+    for (auto const& r : calibrationInfo->yieldCurveCalibrationInfo) {
+        addYieldCurveCalibrationInfo(report, r.first, r.second);
+    }
+
+    for (auto const& r : calibrationInfo->dividendCurveCalibrationInfo) {
+        addYieldCurveCalibrationInfo(report, r.first, r.second);
+    }
+
+    // inflation curve results
+
+    for (auto const& r : calibrationInfo->inflationCurveCalibrationInfo) {
+        addInflationCurveCalibrationInfo(report, r.first, r.second);
+    }
+
+    // ...
+
+    report.end();
+    LOG("TodaysMktCalibration report written");
 }
 
 } // namespace analytics
