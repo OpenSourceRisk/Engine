@@ -565,7 +565,6 @@
       <xs:element type="xs:boolean" name="Payer" minOccurs="0"/>
       <xs:element type="legType" name="LegType"/>
       <xs:element type="currencyCode" name="Currency"/>
-      <xs:element type="businessDayConvention" name="PaymentConvention"/>
       <xs:element type="dayCounter" name="DayCounter"/>
       <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="0"/>
       <xs:element type="xs:integer" name="PaymentLag" minOccurs="0"/>

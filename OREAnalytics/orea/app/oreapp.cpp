@@ -515,9 +515,10 @@ boost::shared_ptr<ScenarioGeneratorData> OREApp::getScenarioGeneratorData() {
     string simulationConfigFile = inputPath_ + "/" + params_->get("simulation", "simulationConfigFile");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->fromFile(simulationConfigFile);
-    DLOG("grid size=" << sgd->grid()->size() << ", dates=" << sgd->grid()->dates().size()
-                      << ", valuationDates=" << sgd->grid()->valuationDates().size()
-                      << ", closeOutDates=" << sgd->grid()->closeOutDates().size());
+    auto grid = sgd->getGrid();
+    DLOG("grid size=" << grid->size() << ", dates=" << grid->dates().size()
+                      << ", valuationDates=" << grid->valuationDates().size()
+                      << ", closeOutDates=" << grid->closeOutDates().size());
     useCloseOutLag_ = sgd->withCloseOutLag();
     useMporStickyDate_ = sgd->withMporStickyDate();
     return sgd;
@@ -887,7 +888,7 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     LOG("Load Simulation Market Parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData = getSimMarketData();
     boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
-    grid_ = sgd->grid();
+    grid_ = sgd->getGrid();
     samples_ = sgd->samples();
 
     if (buildSimMarket_) {
@@ -1156,7 +1157,7 @@ void OREApp::runPostProcessor() {
     if (!cubeInterpreter_) {
         boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
         if (sgd->withCloseOutLag())
-            cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->grid());
+            cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->getGrid());
         else
             cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
     }
