@@ -811,7 +811,6 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
         .addColumn("ResultValue", string());
 
     for (auto trade : portfolio->trades()) {
-        
         // we first add any additional trade data.
         string tradeId = trade->id();
         Real notional2 = Null<Real>();
@@ -833,10 +832,12 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
             notional2Ccy = trade->additionalDatum<string>("notionalTwoCurrency");
         }
 
-        auto additionalResults = trade->instrument()->qlInstrument()->additionalResults();
-        if (additionalResults.count("notionalTwo") != 0 && additionalResults.count("notionalTwoCurrency") != 0) {
-            notional2 = trade->instrument()->qlInstrument()->result<Real>("notionalTwo");
-            notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalTwoCurrency"); 
+        if (trade->instrument()->qlInstrument()) {
+            auto additionalResults = trade->instrument()->qlInstrument()->additionalResults();
+            if (additionalResults.count("notionalTwo") != 0 && additionalResults.count("notionalTwoCurrency") != 0) {
+                notional2 = trade->instrument()->qlInstrument()->result<Real>("notionalTwo");
+                notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalTwoCurrency"); 
+            }
         }
 
         if (notional2 != Null<Real>() && notional2Ccy != "") {
