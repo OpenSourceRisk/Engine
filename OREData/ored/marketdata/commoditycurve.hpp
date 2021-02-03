@@ -127,6 +127,9 @@ template <template <class> class CurveType, typename... Args> void CommodityCurv
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantExt::LogLinearFlat>>(args...);
     } else if (interpolationMethod_ == "CubicFlat") {
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantExt::CubicFlat>>(args...);
+    } else if (interpolationMethod_ == "Hermite" || interpolationMethod_ == "CubicParabolic") {
+        commodityPriceCurve_ =
+            boost::make_shared<CurveType<QuantLib::Cubic>>(args..., QuantLib::Cubic(QuantLib::CubicInterpolation::Parabolic));
     } else {
         QL_FAIL("The interpolation method, " << interpolationMethod_ << ", is not supported.");
     }
